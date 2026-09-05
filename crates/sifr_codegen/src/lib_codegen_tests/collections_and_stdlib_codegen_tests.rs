@@ -458,7 +458,7 @@ fn test_list_repeat_lowers_without_vec_mul_shape() {
     assert!(
         generated
             .rust_source
-            .contains("std::iter::repeat(SifrInt::from_i64(0))")
+            .contains("std::iter::repeat(sifr_generated_repeat_value)")
     );
     assert!(!generated.rust_source.contains("__sifr_repeat_out.extend("));
 }

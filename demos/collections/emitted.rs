@@ -125,7 +125,7 @@ mod sifr_generated_project_nominals {
         pub fn get(&self, key: &T, default: &SifrInt) -> SifrInt {
             let val: Option<SifrInt> = self.counts.get(key).cloned();
             let Some(val) = val else {
-                return default.clone();
+                return (*default).clone();
             };
             val
         }
@@ -174,7 +174,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = right;
                             {
-                                let sifr_generated_index_raw = i.clone();
+                                let sifr_generated_index_raw = &i;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -187,7 +187,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = left;
                             {
-                                let sifr_generated_index_raw = j.clone();
+                                let sifr_generated_index_raw = &j;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -270,7 +270,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = right;
                             {
-                                let sifr_generated_index_raw = i.clone();
+                                let sifr_generated_index_raw = &i;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -283,7 +283,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = left;
                             {
-                                let sifr_generated_index_raw = j.clone();
+                                let sifr_generated_index_raw = &j;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -391,7 +391,8 @@ mod sifr_generated_project_nominals {
     }
     impl<T: Clone> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
-        pub fn new(items: Option<Vec<T>>, maxlen: Option<SifrInt>) -> Self {
+        pub fn new(items: Option<Vec<T>>, maxlen: Option<&SifrInt>) -> Self {
+            let maxlen: Option<SifrInt> = maxlen.cloned();
             let mut data: Vec<T> = Vec::new();
             if let Some(items) = items {
                 let start: SifrInt = if let Some(maxlen) = maxlen.clone()
@@ -600,14 +601,14 @@ fn collect_set_and_counter_actual() -> Vec<bool> {
     actual.push(counts.get(&"x".to_string(), &SifrInt::from_i64(0)) == SifrInt::from_i64(3));
     actual.push(
         format!("{:?}", counts.most_common(&Some(SifrInt::from_i64(2)))).as_str()
-            == "[(\"x\", 3), (\"y\", 2)]".to_string().as_str(),
+            == "[(\"x\", 3), (\"y\", 2)]",
     );
     actual
 }
 fn collect_deque_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut d: SifrGeneratedStdlibSifrX2ecollectionsX2edeque<SifrInt> =
-        SifrGeneratedStdlibSifrX2ecollectionsX2edeque::new(None, Some(SifrInt::from_i64(2)));
+        SifrGeneratedStdlibSifrX2ecollectionsX2edeque::new(None, Some(&SifrInt::from_i64(2)));
     d.append(&SifrInt::from_i64(10));
     d.append(&SifrInt::from_i64(20));
     d.append(&SifrInt::from_i64(30));

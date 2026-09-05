@@ -5,8 +5,8 @@ struct Entity {
     id: SifrInt,
 }
 impl Entity {
-    const fn new(id: SifrInt) -> Self {
-        let sifr_generated_field_value_08b72e07b55c3ac0_6964: SifrInt = id;
+    fn new(id: &SifrInt) -> Self {
+        let sifr_generated_field_value_08b72e07b55c3ac0_6964: SifrInt = (*id).clone();
         Self {
             id: sifr_generated_field_value_08b72e07b55c3ac0_6964,
         }
@@ -39,7 +39,7 @@ impl ::std::convert::From<Person> for Entity {
     }
 }
 impl Person {
-    const fn new(id: SifrInt, name: String) -> Self {
+    fn new(id: &SifrInt, name: String) -> Self {
         let sifr_generated_parent = Entity::new(id);
         let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
         Self {
@@ -75,9 +75,9 @@ impl ::std::convert::From<Employee> for Person {
     }
 }
 impl Employee {
-    const fn new(id: SifrInt, name: String, level: SifrInt) -> Self {
+    fn new(id: &SifrInt, name: String, level: &SifrInt) -> Self {
         let sifr_generated_parent = Person::new(id, name);
-        let sifr_generated_field_value_e8ddc90a9d7c709d_6c6576656c: SifrInt = level;
+        let sifr_generated_field_value_e8ddc90a9d7c709d_6c6576656c: SifrInt = (*level).clone();
         Self {
             person: sifr_generated_parent,
             level: sifr_generated_field_value_e8ddc90a9d7c709d_6c6576656c,
@@ -103,9 +103,9 @@ fn sum_items(values: &[SifrInt]) -> SifrInt {
 fn main() {
     println!("variance_rules inheritance and variance corrections demo:");
     let emp: Employee = Employee::new(
-        SifrInt::from_i64(11),
+        &SifrInt::from_i64(11),
         "Lin".to_string(),
-        SifrInt::from_i64(4),
+        &SifrInt::from_i64(4),
     );
     println!("{}", emp.person.name);
     println!(

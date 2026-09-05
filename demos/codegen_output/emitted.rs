@@ -50,7 +50,7 @@ impl Item {
             let mut sifr_generated_concat: String =
                 String::with_capacity(6usize.saturating_add(0usize));
             sifr_generated_concat.push_str("Item: ");
-            sifr_generated_concat.push_str(self.name.clone().as_str());
+            sifr_generated_concat.push_str(self.name.as_str());
             sifr_generated_concat
         }
     }
@@ -124,7 +124,7 @@ fn main() {
         let sifr_generated_guard_0 = SifrGeneratedWithGuard0 {
             ctx: sifr_generated_ctx_0,
         };
-        let _ = sifr_generated_guard_0.ctx.sifr_generated_enter__();
+        let _t = sifr_generated_guard_0.ctx.sifr_generated_enter__();
         println!("doing work inside with block");
     }
     let item: Item = Item::new("Widget".to_string());

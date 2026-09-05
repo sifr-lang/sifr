@@ -9,8 +9,7 @@ fn main() {
     ];
     let doubled: Vec<SifrInt> = Box::new(
         nums.iter()
-            .cloned()
-            .map(|x| ::std::ops::Mul::mul(&x, &SifrInt::from_i64(2))),
+            .map(|x| ::std::ops::Mul::mul(x, &SifrInt::from_i64(2))),
     )
     .collect::<Vec<_>>();
     let evens: Vec<SifrInt> = Box::new(

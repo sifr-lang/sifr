@@ -125,8 +125,8 @@ source must be a normalized relative path in the declaring package.
 `server-version` is the minimum version for that provider artifact. A proving
 profile can use the same or a newer version.
 
-Portable libraries add one provider table for each supported family. Milestone
-15 qualifies PostgreSQL. Milestones 16 and 17 add MySQL and SQLite evidence.
+Portable libraries add one provider table for each supported family.
+PostgreSQL, MySQL, and SQLite each require provider-specific evidence.
 
 ## Authoring example
 
@@ -225,7 +225,7 @@ through normal static control flow.
 ## Qualification ownership
 
 The provider-neutral harness is in `sifr_sql_contract` and `sifr_frontend`.
-PostgreSQL DDL and capability evidence is in `sifr_sql_postgresql`.
+PostgreSQL DDL and query-feature evidence is in `sifr_sql_postgresql`.
 
 The permanent `schema-polymorphism` verification suite runs:
 

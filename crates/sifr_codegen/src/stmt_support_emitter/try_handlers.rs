@@ -120,11 +120,9 @@ impl RustEmitter {
             let handler_binding = if handler_name == "_" {
                 None
             } else {
-                let cloned_error = RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(err_ident.to_string())),
-                    method: "clone".to_string(),
-                    args: vec![],
-                };
+                // The handler chain is mutually exclusive. Its selected arm owns
+                // the carrier; only the unmatched arm propagates that same value.
+                let cloned_error = RustExpr::Ident(err_ident.to_string());
                 let binding_value = source_error_type
                     .zip(handler.error_resolved_type.as_ref())
                     .map_or_else(

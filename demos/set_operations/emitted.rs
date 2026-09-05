@@ -9,8 +9,8 @@ fn main() {
     ]);
     println!("{}", SifrInt::from(fruits.len()));
     fruits.insert("date".to_string());
-    println!("{}", fruits.contains(&"date".to_string()));
-    fruits.remove(&"banana".to_string());
+    println!("{}", fruits.contains("date"));
+    fruits.remove("banana");
     println!("{}", SifrInt::from(fruits.len()));
     let nums: HashSet<SifrInt> = HashSet::from([
         SifrInt::from_i64(10),

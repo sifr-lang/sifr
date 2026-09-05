@@ -24,12 +24,16 @@ impl ::std::fmt::Display for Color {
 }
 impl Color {
     #[expect(
-        clippy::unused_self,
+        clippy::trivially_copy_pass_by_ref,
         reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     fn name(&self) -> String {
         format!("{self:?}")
     }
+    #[expect(
+        clippy::trivially_copy_pass_by_ref,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     const fn value(&self) -> SifrInt {
         SifrInt::from_i64(*self as i64)
     }
@@ -56,6 +60,10 @@ impl ::std::fmt::Display for HttpStatus {
     }
 }
 impl HttpStatus {
+    #[expect(
+        clippy::trivially_copy_pass_by_ref,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     const fn value(&self) -> SifrInt {
         SifrInt::from_i64(*self as i64)
     }
@@ -80,12 +88,20 @@ impl ::std::fmt::Display for Direction {
     }
 }
 impl Direction {
+    #[expect(
+        clippy::trivially_copy_pass_by_ref,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     const fn is_vertical(&self) -> bool {
         match self {
             Self::North => true,
             Self::East => false,
         }
     }
+    #[expect(
+        clippy::trivially_copy_pass_by_ref,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     fn opposite(&self) -> String {
         match self {
             Self::North => "SOUTH".to_string(),

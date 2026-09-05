@@ -10,7 +10,7 @@ fn main() {
     println!("{}", ::std::ops::BitAnd::bitand(&a, &b));
     println!("{}", ::std::ops::BitOr::bitor(&a, &b));
     println!("{}", ::std::ops::BitXor::bitxor(&a, &b));
-    println!("{}", a.clone().shl_known_valid(2_usize));
+    println!("{}", a.shl_known_valid(2_usize));
     println!("{}", a.shr_known_valid(1_usize));
     let x: SifrInt = SifrInt::from_i64(42);
     println!("{}", !x);
@@ -30,11 +30,9 @@ fn main() {
     println!("{flags}");
     flags = flags.shr_known_valid(2_usize);
     println!("{flags}");
-    let mut p: SifrInt = SifrInt::from_i64(0);
-    let mut q: SifrInt = SifrInt::from_i64(0);
     let r: SifrInt = SifrInt::from_i64(99);
-    q.clone_from(&r);
-    p.clone_from(&q);
+    let q: SifrInt = r.clone();
+    let p: SifrInt = q.clone();
     println!("{p}");
     println!("{q}");
     println!("{r}");

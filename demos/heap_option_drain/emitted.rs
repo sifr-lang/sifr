@@ -5,14 +5,10 @@ pub mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_sift_down<T: Clone + 'static + PartialOrd>(
-        data: &mut Vec<T>,
+        data: &mut [T],
         mut pos: SifrInt,
-        n: SifrInt,
+        n: &SifrInt,
     ) {
         let mut done: bool = false;
         while !done {
@@ -25,7 +21,7 @@ pub mod sifr_generated_generated_support {
                 &::std::ops::Mul::mul(&SifrInt::from_i64(2), &pos),
                 &SifrInt::from_i64(2),
             );
-            if left < n {
+            if &left < n {
                 let s_val: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
                     let sifr_generated_checked_read_index = &smallest;
@@ -51,7 +47,7 @@ pub mod sifr_generated_generated_support {
                     smallest = left;
                 }
             }
-            if right < n {
+            if &right < n {
                 let s_val2_value_8b32ab056d206424: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
                     let sifr_generated_checked_read_index = &smallest;
@@ -105,7 +101,7 @@ pub mod sifr_generated_generated_support {
                         {
                             let sifr_generated_assign_value = tmp_sm;
                             {
-                                let sifr_generated_index_raw = pos.clone();
+                                let sifr_generated_index_raw = &pos;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(data.len());
                                 if let Some(sifr_generated_elem) =
@@ -120,7 +116,7 @@ pub mod sifr_generated_generated_support {
                         {
                             let sifr_generated_assign_value = tmp_pos;
                             {
-                                let sifr_generated_index_raw = smallest.clone();
+                                let sifr_generated_index_raw = &smallest;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(data.len());
                                 if let Some(sifr_generated_elem) =
@@ -137,7 +133,7 @@ pub mod sifr_generated_generated_support {
         }
     }
     pub(super) fn sifr_generated_sift_up<T: Clone + 'static + PartialOrd>(
-        heap: &mut Vec<T>,
+        heap: &mut [T],
         mut pos: SifrInt,
     ) {
         let mut done: bool = false;
@@ -172,7 +168,7 @@ pub mod sifr_generated_generated_support {
                                 {
                                     let sifr_generated_assign_value = c_val;
                                     {
-                                        let sifr_generated_index_raw = parent.clone();
+                                        let sifr_generated_index_raw = &parent;
                                         let sifr_generated_index_normalized =
                                             sifr_generated_index_raw
                                                 .normalize_index_or_len(heap.len());
@@ -188,7 +184,7 @@ pub mod sifr_generated_generated_support {
                                 {
                                     let sifr_generated_assign_value = p_val;
                                     {
-                                        let sifr_generated_index_raw = pos.clone();
+                                        let sifr_generated_index_raw = &pos;
                                         let sifr_generated_index_normalized =
                                             sifr_generated_index_raw
                                                 .normalize_index_or_len(heap.len());
@@ -262,7 +258,7 @@ pub mod sifr_generated_generated_support {
                     }
                 }
             }
-            sifr_generated_sift_down(heap, SifrInt::from_i64(0), n2);
+            sifr_generated_sift_down(heap, SifrInt::from_i64(0), &n2);
         }
         top
     }

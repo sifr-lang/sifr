@@ -35,7 +35,7 @@ fn main() {
     let mut hex_ok: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let parsed_hex: Vec<u8> = {
-            let s: String = "73696672".to_string();
+            let s: &str = "73696672";
             let mut cleaned = String::new();
             for ch in s.chars() {
                 if ch.is_ascii_whitespace() {

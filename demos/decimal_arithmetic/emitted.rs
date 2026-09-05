@@ -174,15 +174,13 @@ fn main() {
         }?;
         let negative_floor: BigDecimal = {
             let sifr_generated_bigdecimal_left = BigDecimal::new(
-                    ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[237]),
-                    1,
-                )
-                .clone();
+                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[237]),
+                1,
+            );
             let sifr_generated_bigdecimal_right = BigDecimal::new(
-                    ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[1]),
-                    0,
-                )
-                .clone();
+                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[1]),
+                0,
+            );
             if ::bigdecimal::Zero::is_zero(&sifr_generated_bigdecimal_right) {
                 Err(DivisionError::new("division by zero".to_string()))
             } else {
@@ -192,8 +190,10 @@ fn main() {
                             ::bigdecimal::RoundingMode::HalfEven,
                         )
                         .round_decimal_ref(
-                            &(&sifr_generated_bigdecimal_left
-                                / &sifr_generated_bigdecimal_right)
+                            &::std::ops::Div::div(
+                                    &sifr_generated_bigdecimal_left,
+                                    &sifr_generated_bigdecimal_right,
+                                )
                                 .with_scale_round(0, ::bigdecimal::RoundingMode::Floor),
                         ),
                 )
@@ -204,15 +204,13 @@ fn main() {
             )?;
         let negative_remainder: BigDecimal = {
             let sifr_generated_bigdecimal_left = BigDecimal::new(
-                    ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[237]),
-                    1,
-                )
-                .clone();
+                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[237]),
+                1,
+            );
             let sifr_generated_bigdecimal_right = BigDecimal::new(
-                    ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[1]),
-                    0,
-                )
-                .clone();
+                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[1]),
+                0,
+            );
             if ::bigdecimal::Zero::is_zero(&sifr_generated_bigdecimal_right) {
                 Err(DivisionError::new("division by zero".to_string()))
             } else {
@@ -222,11 +220,17 @@ fn main() {
                             ::bigdecimal::RoundingMode::HalfEven,
                         )
                         .round_decimal_ref(
-                            &(&sifr_generated_bigdecimal_left
-                                - (&sifr_generated_bigdecimal_left
-                                    / &sifr_generated_bigdecimal_right)
-                                    .with_scale_round(0, ::bigdecimal::RoundingMode::Floor)
-                                    * &sifr_generated_bigdecimal_right),
+                            &::std::ops::Sub::sub(
+                                &sifr_generated_bigdecimal_left,
+                                ::std::ops::Mul::mul(
+                                    ::std::ops::Div::div(
+                                            &sifr_generated_bigdecimal_left,
+                                            &sifr_generated_bigdecimal_right,
+                                        )
+                                        .with_scale_round(0, ::bigdecimal::RoundingMode::Floor),
+                                    &sifr_generated_bigdecimal_right,
+                                ),
+                            ),
                         ),
                 )
             }
@@ -260,12 +264,13 @@ fn main() {
         "{}",
         Decimal::from_i128_with_scale(25_i128, 1).round_dp_with_strategy(
             {
-                let sifr_generated_scale = 0;
-                (if sifr_generated_scale < 0 {
+                let sifr_generated_scale = 0_i32;
+                if sifr_generated_scale < 0 {
                     0
                 } else {
                     sifr_generated_scale
-                }) as u32
+                }
+                .cast_unsigned()
             },
             ::rust_decimal::RoundingStrategy::MidpointNearestEven
         )
@@ -274,12 +279,13 @@ fn main() {
         "{}",
         Decimal::from_i128_with_scale(25_i128, 1).round_dp_with_strategy(
             {
-                let sifr_generated_scale = 0;
-                (if sifr_generated_scale < 0 {
+                let sifr_generated_scale = 0_i32;
+                if sifr_generated_scale < 0 {
                     0
                 } else {
                     sifr_generated_scale
-                }) as u32
+                }
+                .cast_unsigned()
             },
             ::rust_decimal::RoundingStrategy::MidpointNearestEven
         )
@@ -296,14 +302,13 @@ fn main() {
             ::std::num::NonZeroU64::MIN.saturating_add(27),
             ::bigdecimal::RoundingMode::HalfEven
         )
-        .round_decimal_ref(
-            &(precise
-                + BigDecimal::new(
-                    ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[0]),
-                    0
-                )
-                .clone())
-        )
+        .round_decimal_ref(&::std::ops::Add::add(
+            precise,
+            BigDecimal::new(
+                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[0]),
+                0
+            )
+        ))
     );
     println!(
         "{}",

@@ -34,13 +34,13 @@ fn main() {
         ::std::num::NonZeroU64::MIN.saturating_add(27),
         ::bigdecimal::RoundingMode::HalfEven,
     )
-    .round_decimal_ref(
-        &(b + BigDecimal::new(
+    .round_decimal_ref(&::std::ops::Add::add(
+        b,
+        BigDecimal::new(
             ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[4]),
             0,
-        )
-        .clone()),
-    );
+        ),
+    ));
     assert_eq!(
         b_plus,
         BigDecimal::new(

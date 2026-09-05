@@ -80,14 +80,14 @@ fn main() {
         let mut sifr_generated_concat: String =
             String::with_capacity(13usize.saturating_add(0usize));
         sifr_generated_concat.push_str("pair first = ");
-        sifr_generated_concat.push_str(p.first.clone().to_string().as_str());
+        sifr_generated_concat.push_str(p.first.to_string().as_str());
         sifr_generated_concat
     });
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(14usize.saturating_add(0usize));
         sifr_generated_concat.push_str("pair second = ");
-        sifr_generated_concat.push_str(p.second.clone().to_string().as_str());
+        sifr_generated_concat.push_str(p.second.to_string().as_str());
         sifr_generated_concat
     });
     let p2: Pair<SifrInt> = p.swap();
@@ -95,7 +95,7 @@ fn main() {
         let mut sifr_generated_concat: String =
             String::with_capacity(16usize.saturating_add(0usize));
         sifr_generated_concat.push_str("swapped first = ");
-        sifr_generated_concat.push_str(p2.first.clone().to_string().as_str());
+        sifr_generated_concat.push_str(p2.first.to_string().as_str());
         sifr_generated_concat
     });
     println!("{}", {
@@ -106,7 +106,7 @@ fn main() {
         sifr_generated_concat
     });
     let sp: Pair<String> = Pair::new("hello".to_string(), "world".to_string());
-    let _ = sp.swap();
+    let _sp2: Pair<String> = sp.swap();
     println!("str pair swap ok = true");
     let mut s: Stack<SifrInt> = Stack::new(Vec::new());
     s.push(&SifrInt::from_i64(1));

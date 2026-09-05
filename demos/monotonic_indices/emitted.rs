@@ -15,7 +15,7 @@ fn active_indices(flags: &[bool]) -> Vec<SifrInt> {
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
                 .get(sifr_generated_checked_read_normalized)
-                .cloned()
+                .copied()
         }) else {
             continue;
         };

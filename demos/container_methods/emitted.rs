@@ -51,15 +51,15 @@ fn main() {
         SifrInt::from_i64(4),
     );
     println!("{}", {
-        let mut sifr_generated_count = 0;
+        let mut sifr_generated_count = 0usize;
         if pair.0 == SifrInt::from_i64(4) {
-            sifr_generated_count += 1;
+            sifr_generated_count = sifr_generated_count.saturating_add(1usize);
         }
         if pair.1 == SifrInt::from_i64(4) {
-            sifr_generated_count += 1;
+            sifr_generated_count = sifr_generated_count.saturating_add(1usize);
         }
         if pair.2 == SifrInt::from_i64(4) {
-            sifr_generated_count += 1;
+            sifr_generated_count = sifr_generated_count.saturating_add(1usize);
         }
         SifrInt::from(sifr_generated_count)
     });
@@ -70,7 +70,7 @@ fn main() {
             let sifr_generated_stop = 3usize;
             let mut sifr_generated_result = None;
             if sifr_generated_result.is_none()
-                && (0usize >= sifr_generated_start && 0usize < sifr_generated_stop)
+                && (sifr_generated_start == 0usize && 0usize < sifr_generated_stop)
                 && pair.0 == SifrInt::from_i64(4)
             {
                 sifr_generated_result = Some(SifrInt::from(0usize));

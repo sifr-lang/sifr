@@ -11,10 +11,6 @@ pub mod sifr_generated_generated_support {
     pub(super) fn fnmatch(name: &str, pattern: &str) -> bool {
         sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_match(
         name: &str,
         mut ni: SifrInt,
@@ -24,7 +20,7 @@ pub mod sifr_generated_generated_support {
         while pi < pattern.chars().count() {
             let pc: Option<String> = {
                 let sifr_generated_string_chars = pattern.chars().collect::<Vec<char>>();
-                let sifr_generated_string_index = pi.clone();
+                let sifr_generated_string_index = &pi;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_string_chars.len());
                 sifr_generated_string_chars
@@ -53,7 +49,7 @@ pub mod sifr_generated_generated_support {
                 if pc != "?" {
                     let nc: Option<String> = {
                         let sifr_generated_string_chars = name.chars().collect::<Vec<char>>();
-                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index = &ni;
                         let sifr_generated_string_index_normalized = sifr_generated_string_index
                             .normalize_index_or_len(sifr_generated_string_chars.len());
                         sifr_generated_string_chars
@@ -236,11 +232,11 @@ fn collect_glob_actual() -> Vec<bool> {
         sifr_generated_concat
     };
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("mkdir -p {base}"))?;
+        let _mk: String = run_command(&format!("mkdir -p {base}"))?;
         write_text(&format!("{base}/a.txt"), "a")?;
         write_text(&format!("{base}/b.txt"), "b")?;
         write_text(&format!("{base}/.hidden.txt"), "h")?;
-        let txt: Vec<String> = glob(&base, "*.txt");
+        let txt: Vec<String> = glob(base.as_str(), "*.txt");
         let txt_ok: bool = txt.len() == SifrInt::from_i64(2)
             && {
                 let sifr_generated_checked_read_collection = &txt;
@@ -283,7 +279,7 @@ fn collect_glob_actual() -> Vec<bool> {
                 } == Some("b.txt"))
             });
         actual.push(txt_ok);
-        let hidden: Vec<String> = glob(&base, ".*.txt");
+        let hidden: Vec<String> = glob(base.as_str(), ".*.txt");
         let hidden_ok: bool = hidden.len() == SifrInt::from_i64(1) && {
             let sifr_generated_checked_read_collection = &hidden;
             let sifr_generated_checked_read_index = SifrInt::from_i64(0);
@@ -305,7 +301,7 @@ fn collect_glob_actual() -> Vec<bool> {
             } == Some(".hidden.txt"))
         });
         actual.push(hidden_ok);
-        let wildcard_q: Vec<String> = glob(&base, "?.txt");
+        let wildcard_q: Vec<String> = glob(base.as_str(), "?.txt");
         let wildcard_q_ok: bool = wildcard_q.len() == SifrInt::from_i64(2)
             && {
                 let sifr_generated_checked_read_collection = &wildcard_q;
@@ -348,7 +344,7 @@ fn collect_glob_actual() -> Vec<bool> {
                 } == Some("b.txt"))
             });
         actual.push(wildcard_q_ok);
-        let none: Vec<String> = glob(&base, "*.csv");
+        let none: Vec<String> = glob(base.as_str(), "*.csv");
         actual.push(none.len() == SifrInt::from_i64(0));
         let missing: Vec<String> = glob(&format!("{base}_missing"), "*.txt");
         actual.push(missing.len() == SifrInt::from_i64(0));
@@ -356,11 +352,11 @@ fn collect_glob_actual() -> Vec<bool> {
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         let e = sifr_generated_try_err;
-        let _ = e.message;
+        let _ = e.message.clone();
         actual = vec![false, false, false, false, false];
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("rm -rf {base}"))?;
+        let _clean: String = run_command(&format!("rm -rf {base}"))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

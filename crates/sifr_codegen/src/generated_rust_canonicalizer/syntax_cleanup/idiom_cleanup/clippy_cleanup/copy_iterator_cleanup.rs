@@ -1,6 +1,7 @@
 #[derive(Default)]
 struct CopyVectorSourceCollector {
     sources: HashSet<String>,
+    invalidated: HashSet<String>,
 }
 
 impl Visit<'_> for CopyVectorSourceCollector {
@@ -9,15 +10,28 @@ impl Visit<'_> for CopyVectorSourceCollector {
             && type_is_copy_vector(&typed.ty)
             && let Some(name) = simple_pattern_name(&typed.pat)
         {
-            self.sources.insert(name);
+            if !self.invalidated.contains(&name) {
+                self.sources.insert(name);
+            }
         } else if let Some(init) = &local.init
             && let syn::Expr::Reference(reference) = init.expr.as_ref()
             && let syn::Expr::Path(path) = reference.expr.as_ref()
-            && path.path.get_ident().is_some_and(|name|
-                self.sources.contains(&name.to_string()))
+            && path
+                .path
+                .get_ident()
+                .is_some_and(|name| self.sources.contains(&name.to_string()))
             && let Some(name) = simple_pattern_name(&local.pat)
         {
-            self.sources.insert(name);
+            if !self.invalidated.contains(&name) {
+                self.sources.insert(name);
+            }
+        } else if let Some(init) = &local.init
+            && matches!(init.expr.as_ref(), syn::Expr::Reference(reference)
+                if matches!(reference.expr.as_ref(), syn::Expr::Path(_)))
+            && let Some(name) = simple_pattern_name(&local.pat)
+        {
+            self.sources.remove(&name);
+            self.invalidated.insert(name);
         }
         visit::visit_local(self, local);
     }
@@ -44,11 +58,35 @@ fn type_is_copy_vector(ty: &syn::Type) -> bool {
                         | "usize")))
 }
 
+fn type_is_copy_slice(ty: &syn::Type) -> bool {
+    let syn::Type::Reference(reference) = ty else {
+        return false;
+    };
+    let syn::Type::Slice(slice) = reference.elem.as_ref() else {
+        return false;
+    };
+    matches!(slice.elem.as_ref(), syn::Type::Path(element)
+        if element.path.segments.last().is_some_and(|segment|
+            matches!(segment.ident.to_string().as_str(),
+                "bool" | "char" | "f32" | "f64" | "i8" | "i16" | "i32" | "i64"
+                    | "i128" | "isize" | "u8" | "u16" | "u32" | "u64" | "u128"
+                    | "usize")))
+}
+
 struct CopyIteratorRewriter<'names> {
     sources: &'names HashSet<String>,
 }
 
 impl VisitMut for CopyIteratorRewriter<'_> {
+    fn visit_local_mut(&mut self, local: &mut syn::Local) {
+        visit_mut::visit_local_mut(self, local);
+        if local_pattern_is_copy_option(&local.pat)
+            && let Some(init) = &mut local.init
+        {
+            ForceCopiedIterator.visit_expr_mut(&mut init.expr);
+        }
+    }
+
     fn visit_expr_method_call_mut(&mut self, call: &mut syn::ExprMethodCall) {
         visit_mut::visit_expr_method_call_mut(self, call);
         if call.method == "map"
@@ -59,8 +97,10 @@ impl VisitMut for CopyIteratorRewriter<'_> {
             && matches!(unary.op, syn::UnOp::Deref(_))
             && matches!(unary.expr.as_ref(), syn::Expr::Path(path)
                 if path.path.is_ident(&binding.ident))
-            && matches!(call.receiver.as_ref(), syn::Expr::MethodCall(source)
-                if matches!(source.method.to_string().as_str(), "get" | "iter"))
+            && let syn::Expr::MethodCall(source) = call.receiver.as_ref()
+            && matches!(source.method.to_string().as_str(), "get" | "iter")
+            && expression_root_name(&source.receiver)
+                .is_some_and(|name| self.sources.contains(&name))
         {
             call.method = syn::Ident::new("copied", call.method.span());
             call.args.clear();
@@ -83,4 +123,37 @@ impl VisitMut for CopyIteratorRewriter<'_> {
     fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
         rewrite_macro_expressions(self, rust_macro);
     }
+}
+
+struct ForceCopiedIterator;
+
+impl VisitMut for ForceCopiedIterator {
+    fn visit_expr_method_call_mut(&mut self, call: &mut syn::ExprMethodCall) {
+        visit_mut::visit_expr_method_call_mut(self, call);
+        if call.method == "cloned" && call.args.is_empty() {
+            call.method = syn::Ident::new("copied", call.method.span());
+        }
+    }
+}
+
+fn local_pattern_is_copy_option(pattern: &syn::Pat) -> bool {
+    let syn::Pat::Type(typed) = pattern else {
+        return false;
+    };
+    let syn::Type::Path(path) = typed.ty.as_ref() else {
+        return false;
+    };
+    let Some(option) = path.path.segments.last() else {
+        return false;
+    };
+    let syn::PathArguments::AngleBracketed(arguments) = &option.arguments else {
+        return false;
+    };
+    option.ident == "Option"
+        && matches!(arguments.args.first(), Some(syn::GenericArgument::Type(syn::Type::Path(element)))
+            if element.path.segments.last().is_some_and(|segment|
+                matches!(segment.ident.to_string().as_str(),
+                    "bool" | "char" | "f32" | "f64" | "i8" | "i16" | "i32" | "i64"
+                        | "i128" | "isize" | "u8" | "u16" | "u32" | "u64" | "u128"
+                        | "usize")))
 }

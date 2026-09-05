@@ -53,72 +53,72 @@ pub mod sifr_generated_generated_support {
                 alg,
                 data.to_vec(),
                 "md5".to_string(),
-                SifrInt::from_i64(16),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(16),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha1" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha1".to_string(),
-                SifrInt::from_i64(20),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(20),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha224" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha224".to_string(),
-                SifrInt::from_i64(28),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(28),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha256" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha256".to_string(),
-                SifrInt::from_i64(32),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(32),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha384" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha384".to_string(),
-                SifrInt::from_i64(48),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(48),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "sha512" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha512".to_string(),
-                SifrInt::from_i64(64),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(64),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "blake2b" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "blake2b".to_string(),
-                SifrInt::from_i64(64),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(64),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "blake2s" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "blake2s".to_string(),
-                SifrInt::from_i64(32),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(32),
+                &SifrInt::from_i64(64),
             );
         }
         SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
             alg,
             data.to_vec(),
             "unknown".to_string(),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
         )
     }
     pub(super) fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
@@ -139,7 +139,7 @@ pub mod sifr_generated_generated_support {
         } else if algorithm == "blake2s" {
             return blake2s_bytes(data);
         }
-        Vec::new()
+        Vec::<u8>::new()
     }
     pub(super) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
@@ -229,26 +229,18 @@ pub mod sifr_generated_generated_support {
     pub(super) fn sifr_generated_localtime_intrinsic(epoch: f64) -> String {
         ::sifr_stdlib::time::localtime(epoch)
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn sifr_generated_is_leap_year(year: SifrInt) -> bool {
+    pub(super) fn sifr_generated_is_leap_year(year: &SifrInt) -> bool {
         year.floor_mod_known_nonzero(&SifrInt::from_i64(4)) == SifrInt::from_i64(0)
             && year.floor_mod_known_nonzero(&SifrInt::from_i64(100)) != SifrInt::from_i64(0)
             || year.floor_mod_known_nonzero(&SifrInt::from_i64(400)) == SifrInt::from_i64(0)
     }
-    pub(super) fn sifr_generated_days_in_year(year: SifrInt) -> SifrInt {
+    pub(super) fn sifr_generated_days_in_year(year: &SifrInt) -> SifrInt {
         if sifr_generated_is_leap_year(year) {
             return SifrInt::from_i64(366);
         }
         SifrInt::from_i64(365)
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn sifr_generated_days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
+    pub(super) fn sifr_generated_days_in_month(year: &SifrInt, month: &SifrInt) -> SifrInt {
         let month_days: Vec<SifrInt> = vec![
             SifrInt::from_i64(31),
             SifrInt::from_i64(28),
@@ -263,7 +255,7 @@ pub mod sifr_generated_generated_support {
             SifrInt::from_i64(30),
             SifrInt::from_i64(31),
         ];
-        let idx: SifrInt = ::std::ops::Sub::sub(&month, &SifrInt::from_i64(1));
+        let idx: SifrInt = ::std::ops::Sub::sub(month, &SifrInt::from_i64(1));
         let d: Option<SifrInt> = {
             let sifr_generated_checked_read_collection = &month_days;
             let sifr_generated_checked_read_index = &idx;
@@ -273,7 +265,7 @@ pub mod sifr_generated_generated_support {
                 .get(sifr_generated_checked_read_normalized)
                 .cloned()
         };
-        if month == SifrInt::from_i64(2) && sifr_generated_is_leap_year(year) {
+        if month == &SifrInt::from_i64(2) && sifr_generated_is_leap_year(year) {
             return SifrInt::from_i64(29);
         }
         let Some(d) = d else {
@@ -281,17 +273,13 @@ pub mod sifr_generated_generated_support {
         };
         d
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
+    pub(super) fn sifr_generated_substring(value: &str, start: &SifrInt, end: &SifrInt) -> String {
         let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let mut result: String = String::new();
-        let mut i: SifrInt = start;
-        while i < end {
+        let mut i: SifrInt = (*start).clone();
+        while &i < end {
             let ch: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_value.len());
                 sifr_generated_chars_value
@@ -348,7 +336,7 @@ pub mod sifr_generated_generated_support {
         let mut i: SifrInt = SifrInt::from_i64(0);
         while i < sifr_generated_chars_text.len() {
             let ch_opt: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_text.len());
                 sifr_generated_chars_text
@@ -358,7 +346,7 @@ pub mod sifr_generated_generated_support {
             .map(|character| character.to_string());
             let ch_opt_value_58c5362056f71db8 = ch_opt?;
             let ch: String = ch_opt_value_58c5362056f71db8;
-            let digit_opt: Option<SifrInt> = sifr_generated_digit_value(&ch);
+            let digit_opt: Option<SifrInt> = sifr_generated_digit_value(ch.as_str());
             let digit_opt_value_c39685cb2782ed00 = digit_opt?;
             let digit: SifrInt = digit_opt_value_c39685cb2782ed00;
             out = ::std::ops::Add::add(&::std::ops::Mul::mul(&out, &SifrInt::from_i64(10)), &digit);
@@ -366,67 +354,55 @@ pub mod sifr_generated_generated_support {
         }
         Some(out)
     }
-    pub(super) fn sifr_generated_int_or_negative_one(value: Option<SifrInt>) -> SifrInt {
-        let Some(value) = value else {
+    pub(super) fn sifr_generated_int_or_negative_one(value: Option<&SifrInt>) -> SifrInt {
+        let value: Option<SifrInt> = value.cloned();
+        let Some(value_value_7ce4fd9430e80cea) = value else {
             return ::std::ops::Neg::neg(&SifrInt::from_i64(1));
         };
-        value
+        value_value_7ce4fd9430e80cea
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_day_of_year(
-        year: SifrInt,
-        month: SifrInt,
-        day: SifrInt,
+        year: &SifrInt,
+        month: &SifrInt,
+        day: &SifrInt,
     ) -> SifrInt {
         let mut yday: SifrInt = SifrInt::from_i64(0);
         let mut m: SifrInt = SifrInt::from_i64(1);
-        while m < month {
-            yday = ::std::ops::Add::add(
-                &yday,
-                &sifr_generated_days_in_month(year.clone(), m.clone()),
-            );
+        while &m < month {
+            yday = ::std::ops::Add::add(&yday, &sifr_generated_days_in_month(year, &m));
             m = ::std::ops::Add::add(&m, &SifrInt::from_i64(1));
         }
-        ::std::ops::Add::add(&yday, &day)
+        ::std::ops::Add::add(&yday, day)
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn sifr_generated_weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
+    pub(super) fn sifr_generated_weekday(
+        year: &SifrInt,
+        month: &SifrInt,
+        day: &SifrInt,
+    ) -> SifrInt {
         let mut days_since_epoch: SifrInt = SifrInt::from_i64(0);
-        if year >= SifrInt::from_i64(1970) {
+        if year >= &SifrInt::from_i64(1970) {
             let mut y: SifrInt = SifrInt::from_i64(1970);
-            while y < year {
-                days_since_epoch = ::std::ops::Add::add(
-                    &days_since_epoch,
-                    &sifr_generated_days_in_year(y.clone()),
-                );
+            while &y < year {
+                days_since_epoch =
+                    ::std::ops::Add::add(&days_since_epoch, &sifr_generated_days_in_year(&y));
                 y = ::std::ops::Add::add(&y, &SifrInt::from_i64(1));
             }
         } else {
             let mut y: SifrInt = SifrInt::from_i64(1969);
-            while y >= year {
-                days_since_epoch = ::std::ops::Sub::sub(
-                    &days_since_epoch,
-                    &sifr_generated_days_in_year(y.clone()),
-                );
+            while &y >= year {
+                days_since_epoch =
+                    ::std::ops::Sub::sub(&days_since_epoch, &sifr_generated_days_in_year(&y));
                 y = ::std::ops::Sub::sub(&y, &SifrInt::from_i64(1));
             }
         }
         let mut m: SifrInt = SifrInt::from_i64(1);
-        while m < month {
-            days_since_epoch = ::std::ops::Add::add(
-                &days_since_epoch,
-                &sifr_generated_days_in_month(year.clone(), m.clone()),
-            );
+        while &m < month {
+            days_since_epoch =
+                ::std::ops::Add::add(&days_since_epoch, &sifr_generated_days_in_month(year, &m));
             m = ::std::ops::Add::add(&m, &SifrInt::from_i64(1));
         }
         days_since_epoch = ::std::ops::Sub::sub(
-            &::std::ops::Add::add(&days_since_epoch, &day),
+            &::std::ops::Add::add(&days_since_epoch, day),
             &SifrInt::from_i64(1),
         );
         let mut wd: SifrInt = ::std::ops::Add::add(&SifrInt::from_i64(3), &days_since_epoch)
@@ -436,32 +412,32 @@ pub mod sifr_generated_generated_support {
         }
         wd
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn sifr_generated_valid_date(year: SifrInt, month: SifrInt, day: SifrInt) -> bool {
-        if year <= SifrInt::from_i64(0) {
+    pub(super) fn sifr_generated_valid_date(
+        year: &SifrInt,
+        month: &SifrInt,
+        day: &SifrInt,
+    ) -> bool {
+        if year <= &SifrInt::from_i64(0) {
             return false;
         }
-        if month < SifrInt::from_i64(1) || month > SifrInt::from_i64(12) {
+        if month < &SifrInt::from_i64(1) || month > &SifrInt::from_i64(12) {
             return false;
         }
         let max_day: SifrInt = sifr_generated_days_in_month(year, month);
-        day >= SifrInt::from_i64(1) && day <= max_day
+        day >= &SifrInt::from_i64(1) && day <= &max_day
     }
-    pub(super) const fn sifr_generated_invalid_struct_time()
-    -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+    pub(super) fn sifr_generated_invalid_struct_time() -> SifrGeneratedStdlibSifrX2etimeX2estructTime
+    {
         SifrGeneratedStdlibSifrX2etimeX2estructTime::new(
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
         )
     }
     #[expect(
@@ -580,24 +556,54 @@ pub mod sifr_generated_generated_support {
         {
             return sifr_generated_invalid_struct_time();
         }
-        let year: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-            &sifr_generated_substring(rendered, SifrInt::from_i64(0), SifrInt::from_i64(4)),
-        ));
-        let month: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-            &sifr_generated_substring(rendered, SifrInt::from_i64(5), SifrInt::from_i64(7)),
-        ));
-        let day: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-            &sifr_generated_substring(rendered, SifrInt::from_i64(8), SifrInt::from_i64(10)),
-        ));
-        let hour: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-            &sifr_generated_substring(rendered, SifrInt::from_i64(11), SifrInt::from_i64(13)),
-        ));
-        let minute: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-            &sifr_generated_substring(rendered, SifrInt::from_i64(14), SifrInt::from_i64(16)),
-        ));
-        let second: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-            &sifr_generated_substring(rendered, SifrInt::from_i64(17), SifrInt::from_i64(19)),
-        ));
+        let year: SifrInt = sifr_generated_int_or_negative_one(
+            sifr_generated_parse_decimal(&sifr_generated_substring(
+                rendered,
+                &SifrInt::from_i64(0),
+                &SifrInt::from_i64(4),
+            ))
+            .as_ref(),
+        );
+        let month: SifrInt = sifr_generated_int_or_negative_one(
+            sifr_generated_parse_decimal(&sifr_generated_substring(
+                rendered,
+                &SifrInt::from_i64(5),
+                &SifrInt::from_i64(7),
+            ))
+            .as_ref(),
+        );
+        let day: SifrInt = sifr_generated_int_or_negative_one(
+            sifr_generated_parse_decimal(&sifr_generated_substring(
+                rendered,
+                &SifrInt::from_i64(8),
+                &SifrInt::from_i64(10),
+            ))
+            .as_ref(),
+        );
+        let hour: SifrInt = sifr_generated_int_or_negative_one(
+            sifr_generated_parse_decimal(&sifr_generated_substring(
+                rendered,
+                &SifrInt::from_i64(11),
+                &SifrInt::from_i64(13),
+            ))
+            .as_ref(),
+        );
+        let minute: SifrInt = sifr_generated_int_or_negative_one(
+            sifr_generated_parse_decimal(&sifr_generated_substring(
+                rendered,
+                &SifrInt::from_i64(14),
+                &SifrInt::from_i64(16),
+            ))
+            .as_ref(),
+        );
+        let second: SifrInt = sifr_generated_int_or_negative_one(
+            sifr_generated_parse_decimal(&sifr_generated_substring(
+                rendered,
+                &SifrInt::from_i64(17),
+                &SifrInt::from_i64(19),
+            ))
+            .as_ref(),
+        );
         if year < SifrInt::from_i64(0)
             || month < SifrInt::from_i64(0)
             || day < SifrInt::from_i64(0)
@@ -607,31 +613,30 @@ pub mod sifr_generated_generated_support {
         {
             return sifr_generated_invalid_struct_time();
         }
-        if !sifr_generated_valid_date(year.clone(), month.clone(), day.clone()) {
+        if !sifr_generated_valid_date(&year, &month, &day) {
             return sifr_generated_invalid_struct_time();
         }
-        let wday: SifrInt = sifr_generated_weekday(year.clone(), month.clone(), day.clone());
-        let yday_value_75753d4973d2a3ce: SifrInt =
-            sifr_generated_day_of_year(year.clone(), month.clone(), day.clone());
+        let wday: SifrInt = sifr_generated_weekday(&year, &month, &day);
+        let yday_value_75753d4973d2a3ce: SifrInt = sifr_generated_day_of_year(&year, &month, &day);
         SifrGeneratedStdlibSifrX2etimeX2estructTime::new(
-            year,
-            month,
-            day,
-            hour,
-            minute,
-            second,
-            wday,
-            yday_value_75753d4973d2a3ce,
-            SifrInt::from_i64(0),
+            &year,
+            &month,
+            &day,
+            &hour,
+            &minute,
+            &second,
+            &wday,
+            &yday_value_75753d4973d2a3ce,
+            &SifrInt::from_i64(0),
         )
     }
     pub(super) fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_gmtime_intrinsic(epoch);
-        sifr_generated_to_struct_time(&rendered)
+        sifr_generated_to_struct_time(rendered.as_str())
     }
     pub(super) fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_localtime_intrinsic(epoch);
-        sifr_generated_to_struct_time(&rendered)
+        sifr_generated_to_struct_time(rendered.as_str())
     }
 }
 mod sifr_generated_project_nominals {
@@ -647,21 +652,21 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         #[must_use]
-        pub const fn new(
+        pub fn new(
             algorithm: String,
             data: Vec<u8>,
             name: String,
-            digest_size: SifrInt,
-            block_size: SifrInt,
+            digest_size: &SifrInt,
+            block_size: &SifrInt,
         ) -> Self {
             let sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d: String =
                 algorithm;
             let sifr_generated_field_value_90770dc80a1c57ce_5f64617461: Vec<u8> = data;
             let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
             let sifr_generated_field_value_6344303e03c9f7c7_6469676573745f73697a65: SifrInt =
-                digest_size;
+                (*digest_size).clone();
             let sifr_generated_field_value_e190162752f8783e_626c6f636b5f73697a65: SifrInt =
-                block_size;
+                (*block_size).clone();
             Self {
                 algorithm: sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d,
                 data: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
@@ -695,30 +700,35 @@ mod sifr_generated_project_nominals {
             clippy::too_many_arguments,
             reason = "generated signature preserves the typed Sifr callable contract"
         )]
-        pub const fn new(
-            tm_year: SifrInt,
-            tm_mon: SifrInt,
-            tm_mday_argument_a505494cd43c9214: SifrInt,
-            tm_hour: SifrInt,
-            tm_min_argument_103d514d457d4a49: SifrInt,
-            tm_sec: SifrInt,
-            tm_wday_argument_d5143a059ed34c12: SifrInt,
-            tm_yday_argument_6b9a41f3b9220250: SifrInt,
-            tm_isdst: SifrInt,
+        pub fn new(
+            tm_year: &SifrInt,
+            tm_mon: &SifrInt,
+            tm_mday_argument_a505494cd43c9214: &SifrInt,
+            tm_hour: &SifrInt,
+            tm_min_argument_103d514d457d4a49: &SifrInt,
+            tm_sec: &SifrInt,
+            tm_wday_argument_d5143a059ed34c12: &SifrInt,
+            tm_yday_argument_6b9a41f3b9220250: &SifrInt,
+            tm_isdst: &SifrInt,
         ) -> Self {
-            let sifr_generated_field_value_72897bf3bc91df5a_746d5f79656172: SifrInt = tm_year;
-            let sifr_generated_field_value_1029314d456c6adf_746d5f6d6f6e: SifrInt = tm_mon;
+            let sifr_generated_field_value_72897bf3bc91df5a_746d5f79656172: SifrInt =
+                (*tm_year).clone();
+            let sifr_generated_field_value_1029314d456c6adf_746d5f6d6f6e: SifrInt =
+                (*tm_mon).clone();
             let sifr_generated_field_value_a505494cd43c9214_746d5f6d646179: SifrInt =
-                tm_mday_argument_a505494cd43c9214;
-            let sifr_generated_field_value_129c5b76af381059_746d5f686f7572: SifrInt = tm_hour;
+                (*tm_mday_argument_a505494cd43c9214).clone();
+            let sifr_generated_field_value_129c5b76af381059_746d5f686f7572: SifrInt =
+                (*tm_hour).clone();
             let sifr_generated_field_value_103d514d457d4a49_746d5f6d696e: SifrInt =
-                tm_min_argument_103d514d457d4a49;
-            let sifr_generated_field_value_f3d84e4dc71632a0_746d5f736563: SifrInt = tm_sec;
+                (*tm_min_argument_103d514d457d4a49).clone();
+            let sifr_generated_field_value_f3d84e4dc71632a0_746d5f736563: SifrInt =
+                (*tm_sec).clone();
             let sifr_generated_field_value_d5143a059ed34c12_746d5f77646179: SifrInt =
-                tm_wday_argument_d5143a059ed34c12;
+                (*tm_wday_argument_d5143a059ed34c12).clone();
             let sifr_generated_field_value_6b9a41f3b9220250_746d5f79646179: SifrInt =
-                tm_yday_argument_6b9a41f3b9220250;
-            let sifr_generated_field_value_d0ec16f562c1ee92_746d5f6973647374: SifrInt = tm_isdst;
+                (*tm_yday_argument_6b9a41f3b9220250).clone();
+            let sifr_generated_field_value_d0ec16f562c1ee92_746d5f6973647374: SifrInt =
+                (*tm_isdst).clone();
             Self {
                 tm_year: sifr_generated_field_value_72897bf3bc91df5a_746d5f79656172,
                 tm_mon: sifr_generated_field_value_1029314d456c6adf_746d5f6d6f6e,
@@ -763,8 +773,8 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2etimeX2estructTime {
         #[must_use]
         pub fn isoformat(&self) -> String {
-            let y: String = self.tm_year.clone().to_string();
-            let mut mo: String = self.tm_mon.clone().to_string();
+            let y: String = self.tm_year.to_string();
+            let mut mo: String = self.tm_mon.to_string();
             if mo.chars().count() < SifrInt::from_i64(2) {
                 mo = {
                     let mut sifr_generated_concat: String =
@@ -774,7 +784,7 @@ mod sifr_generated_project_nominals {
                     sifr_generated_concat
                 };
             }
-            let mut d: String = self.tm_mday.clone().to_string();
+            let mut d: String = self.tm_mday.to_string();
             if d.chars().count() < SifrInt::from_i64(2) {
                 d = {
                     let mut sifr_generated_concat: String =
@@ -784,7 +794,7 @@ mod sifr_generated_project_nominals {
                     sifr_generated_concat
                 };
             }
-            let mut h: String = self.tm_hour.clone().to_string();
+            let mut h: String = self.tm_hour.to_string();
             if h.chars().count() < SifrInt::from_i64(2) {
                 h = {
                     let mut sifr_generated_concat: String =
@@ -794,7 +804,7 @@ mod sifr_generated_project_nominals {
                     sifr_generated_concat
                 };
             }
-            let mut mi: String = self.tm_min.clone().to_string();
+            let mut mi: String = self.tm_min.to_string();
             if mi.chars().count() < SifrInt::from_i64(2) {
                 mi = {
                     let mut sifr_generated_concat: String =
@@ -804,7 +814,7 @@ mod sifr_generated_project_nominals {
                     sifr_generated_concat
                 };
             }
-            let mut s: String = self.tm_sec.clone().to_string();
+            let mut s: String = self.tm_sec.to_string();
             if s.chars().count() < SifrInt::from_i64(2) {
                 s = {
                     let mut sifr_generated_concat: String =
@@ -1108,7 +1118,7 @@ fn demo_time() {
     });
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let parsed: String = strptime("2024-01-15 10:30:00", "%Y-%m-%d %H:%M:%S")?;
-        let _ = parsed.chars().collect::<Vec<char>>();
+        let _chars_parsed: Vec<char> = parsed.chars().collect::<Vec<char>>();
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(14usize.saturating_add(0usize));
@@ -1136,7 +1146,7 @@ fn demo_time() {
 fn demo_base64() {
     println!("=== base64 new intrinsics ===");
     let encoded: String = b32encode("hello world");
-    let _ = encoded.chars().collect::<Vec<char>>();
+    let _chars_encoded: Vec<char> = encoded.chars().collect::<Vec<char>>();
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(20usize.saturating_add(0usize));
@@ -1149,7 +1159,7 @@ fn demo_base64() {
         sifr_generated_concat
     });
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let decoded: String = b32decode(&encoded)?;
+        let decoded: String = b32decode(encoded.as_str())?;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(12usize.saturating_add(decoded.len()));

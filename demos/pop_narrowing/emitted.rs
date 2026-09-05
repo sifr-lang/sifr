@@ -29,7 +29,7 @@ fn drain_front(values: &mut Vec<SifrInt>) -> SifrInt {
 }
 fn main() {
     assert_eq!(
-        drain(&[
+        drain(&mut vec![
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
             SifrInt::from_i64(3),
@@ -39,7 +39,7 @@ fn main() {
     );
     assert_eq!(drain(&mut Vec::new()), SifrInt::from_i64(0));
     assert_eq!(
-        drain_front(&[
+        drain_front(&mut vec![
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
             SifrInt::from_i64(3),

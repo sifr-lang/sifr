@@ -7,8 +7,8 @@ struct TreeNode {
     right: Option<Box<Self>>,
 }
 impl TreeNode {
-    const fn new(val: SifrInt, left: Option<Box<Self>>, right: Option<Box<Self>>) -> Self {
-        let sifr_generated_field_value_690422194ed16e3c_76616c: SifrInt = val;
+    fn new(val: &SifrInt, left: Option<Box<Self>>, right: Option<Box<Self>>) -> Self {
+        let sifr_generated_field_value_690422194ed16e3c_76616c: SifrInt = (*val).clone();
         let sifr_generated_field_value_24b070ada2041cb0_6c656674: Option<Box<Self>> = left;
         let sifr_generated_field_value_76aaaa535714d805_7269676874: Option<Box<Self>> = right;
         Self {
@@ -30,7 +30,7 @@ fn tree_value_sum(node: Option<&TreeNode>) -> SifrInt {
     )
 }
 fn paired_tree_value_sum(p: Option<&TreeNode>, q: Option<&TreeNode>) -> SifrInt {
-    if !p.is_some() && !q.is_some() {
+    if p.is_none() && q.is_none() {
         return SifrInt::from_i64(0);
     }
     let (Some(p), Some(q)) = (p, q) else {
@@ -45,24 +45,24 @@ fn paired_tree_value_sum(p: Option<&TreeNode>, q: Option<&TreeNode>) -> SifrInt 
     )
 }
 fn main() {
-    let left_a: TreeNode = TreeNode::new(SifrInt::from_i64(2), None, None);
-    let right_a: TreeNode = TreeNode::new(SifrInt::from_i64(3), None, None);
+    let left_a: TreeNode = TreeNode::new(&SifrInt::from_i64(2), None, None);
+    let right_a: TreeNode = TreeNode::new(&SifrInt::from_i64(3), None, None);
     let root_a: TreeNode = TreeNode::new(
-        SifrInt::from_i64(1),
+        &SifrInt::from_i64(1),
         Some(Box::new(left_a)),
         Some(Box::new(right_a)),
     );
-    let left_b_value_2fdbe280d22f35cd: TreeNode = TreeNode::new(SifrInt::from_i64(2), None, None);
-    let right_b_value_824555ba1ee1cde4: TreeNode = TreeNode::new(SifrInt::from_i64(3), None, None);
+    let left_b_value_2fdbe280d22f35cd: TreeNode = TreeNode::new(&SifrInt::from_i64(2), None, None);
+    let right_b_value_824555ba1ee1cde4: TreeNode = TreeNode::new(&SifrInt::from_i64(3), None, None);
     let root_b_value_f7653824868658a4: TreeNode = TreeNode::new(
-        SifrInt::from_i64(1),
+        &SifrInt::from_i64(1),
         Some(Box::new(left_b_value_2fdbe280d22f35cd)),
         Some(Box::new(right_b_value_824555ba1ee1cde4)),
     );
-    let left_c_value_2fdbe180d22f341a: TreeNode = TreeNode::new(SifrInt::from_i64(2), None, None);
-    let right_c_value_824556ba1ee1cf97: TreeNode = TreeNode::new(SifrInt::from_i64(3), None, None);
+    let left_c_value_2fdbe180d22f341a: TreeNode = TreeNode::new(&SifrInt::from_i64(2), None, None);
+    let right_c_value_824556ba1ee1cf97: TreeNode = TreeNode::new(&SifrInt::from_i64(3), None, None);
     let root_c_value_f765392486865a57: TreeNode = TreeNode::new(
-        SifrInt::from_i64(1),
+        &SifrInt::from_i64(1),
         Some(Box::new(left_c_value_2fdbe180d22f341a)),
         Some(Box::new(right_c_value_824556ba1ee1cf97)),
     );

@@ -3,24 +3,21 @@ pub mod sifr_generated_generated_support {
     use crate::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
     pub(super) use ::sifr_runtime::SifrInt;
     pub(super) use ::std::collections::HashMap;
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn bisect_left<T: Clone + 'static + PartialOrd>(
         a: &[T],
         x: &T,
-        lo: SifrInt,
-        hi: Option<SifrInt>,
+        lo: &SifrInt,
+        hi: Option<&SifrInt>,
     ) -> SifrInt {
-        let mut left: SifrInt = lo;
+        let hi: Option<SifrInt> = hi.cloned();
+        let mut left: SifrInt = (*lo).clone();
         if left < SifrInt::from_i64(0) {
             left = SifrInt::from_i64(0);
         }
         let mut right: SifrInt = SifrInt::from(a.len());
         if hi.is_none() {
             right = SifrInt::from(a.len());
-        } else if let Some(hi) = hi.clone() {
+        } else if let Some(hi) = hi {
             if hi < SifrInt::from_i64(0) {
                 right = SifrInt::from_i64(0);
             } else if hi > a.len() {
@@ -53,24 +50,21 @@ pub mod sifr_generated_generated_support {
         }
         left
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn bisect_right<T: Clone + 'static + PartialOrd>(
         a: &[T],
         x: &T,
-        lo: SifrInt,
-        hi: Option<SifrInt>,
+        lo: &SifrInt,
+        hi: Option<&SifrInt>,
     ) -> SifrInt {
-        let mut left: SifrInt = lo;
+        let hi: Option<SifrInt> = hi.cloned();
+        let mut left: SifrInt = (*lo).clone();
         if left < SifrInt::from_i64(0) {
             left = SifrInt::from_i64(0);
         }
         let mut right: SifrInt = SifrInt::from(a.len());
         if hi.is_none() {
             right = SifrInt::from(a.len());
-        } else if let Some(hi) = hi.clone() {
+        } else if let Some(hi) = hi {
             if hi < SifrInt::from_i64(0) {
                 right = SifrInt::from_i64(0);
             } else if hi > a.len() {
@@ -106,19 +100,21 @@ pub mod sifr_generated_generated_support {
     pub(super) fn insort_left<T: Clone + 'static + PartialOrd>(
         a: &mut Vec<T>,
         x: &T,
-        lo: SifrInt,
-        hi: Option<SifrInt>,
+        lo: &SifrInt,
+        hi: Option<&SifrInt>,
     ) {
-        let pos: SifrInt = bisect_left(a, x, lo, hi);
+        let hi: Option<SifrInt> = hi.cloned();
+        let pos: SifrInt = bisect_left(a, x, lo, hi.as_ref());
         a.insert(pos.clamp_slice_bound(a.len()), x.clone());
     }
     pub(super) fn insort_right<T: Clone + 'static + PartialOrd>(
         a: &mut Vec<T>,
         x: &T,
-        lo: SifrInt,
-        hi: Option<SifrInt>,
+        lo: &SifrInt,
+        hi: Option<&SifrInt>,
     ) {
-        let pos: SifrInt = bisect_right(a, x, lo, hi);
+        let hi: Option<SifrInt> = hi.cloned();
+        let pos: SifrInt = bisect_right(a, x, lo, hi.as_ref());
         a.insert(pos.clamp_slice_bound(a.len()), x.clone());
     }
     pub(super) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
@@ -154,14 +150,10 @@ pub mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_sift_down<T: Clone + 'static + PartialOrd>(
-        data: &mut Vec<T>,
+        data: &mut [T],
         mut pos: SifrInt,
-        n: SifrInt,
+        n: &SifrInt,
     ) {
         let mut done: bool = false;
         while !done {
@@ -174,7 +166,7 @@ pub mod sifr_generated_generated_support {
                 &::std::ops::Mul::mul(&SifrInt::from_i64(2), &pos),
                 &SifrInt::from_i64(2),
             );
-            if left < n {
+            if &left < n {
                 let s_val: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
                     let sifr_generated_checked_read_index = &smallest;
@@ -200,7 +192,7 @@ pub mod sifr_generated_generated_support {
                     smallest = left;
                 }
             }
-            if right < n {
+            if &right < n {
                 let s_val2_value_8b32ab056d206424: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
                     let sifr_generated_checked_read_index = &smallest;
@@ -254,7 +246,7 @@ pub mod sifr_generated_generated_support {
                         {
                             let sifr_generated_assign_value = tmp_sm;
                             {
-                                let sifr_generated_index_raw = pos.clone();
+                                let sifr_generated_index_raw = &pos;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(data.len());
                                 if let Some(sifr_generated_elem) =
@@ -269,7 +261,7 @@ pub mod sifr_generated_generated_support {
                         {
                             let sifr_generated_assign_value = tmp_pos;
                             {
-                                let sifr_generated_index_raw = smallest.clone();
+                                let sifr_generated_index_raw = &smallest;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(data.len());
                                 if let Some(sifr_generated_elem) =
@@ -286,7 +278,7 @@ pub mod sifr_generated_generated_support {
         }
     }
     pub(super) fn sifr_generated_sift_up<T: Clone + 'static + PartialOrd>(
-        heap: &mut Vec<T>,
+        heap: &mut [T],
         mut pos: SifrInt,
     ) {
         let mut done: bool = false;
@@ -321,7 +313,7 @@ pub mod sifr_generated_generated_support {
                                 {
                                     let sifr_generated_assign_value = c_val;
                                     {
-                                        let sifr_generated_index_raw = parent.clone();
+                                        let sifr_generated_index_raw = &parent;
                                         let sifr_generated_index_normalized =
                                             sifr_generated_index_raw
                                                 .normalize_index_or_len(heap.len());
@@ -337,7 +329,7 @@ pub mod sifr_generated_generated_support {
                                 {
                                     let sifr_generated_assign_value = p_val;
                                     {
-                                        let sifr_generated_index_raw = pos.clone();
+                                        let sifr_generated_index_raw = &pos;
                                         let sifr_generated_index_normalized =
                                             sifr_generated_index_raw
                                                 .normalize_index_or_len(heap.len());
@@ -362,7 +354,7 @@ pub mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
+    pub(super) fn heapify<T: Clone + 'static + PartialOrd>(data: &mut [T]) {
         "Convert list to a min-heap in-place. O(n) time.".to_string();
         let n: SifrInt = SifrInt::from(data.len());
         let mut i: SifrInt = ::std::ops::Sub::sub(
@@ -370,7 +362,7 @@ pub mod sifr_generated_generated_support {
             &SifrInt::from_i64(1),
         );
         while i >= SifrInt::from_i64(0) {
-            sifr_generated_sift_down(data, i.clone(), n.clone());
+            sifr_generated_sift_down(data, i.clone(), &n);
             i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
         }
     }
@@ -423,20 +415,16 @@ pub mod sifr_generated_generated_support {
                     }
                 }
             }
-            sifr_generated_sift_down(heap, SifrInt::from_i64(0), n2);
+            sifr_generated_sift_down(heap, SifrInt::from_i64(0), &n2);
         }
         top
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+    pub(super) fn nsmallest<T: Clone + 'static + PartialOrd>(n: &SifrInt, data: &[T]) -> Vec<T> {
         let mut heap: Vec<T> = data.to_vec();
         heapify(&mut heap);
         let mut result: Vec<T> = Vec::new();
         let mut count: SifrInt = SifrInt::from_i64(0);
-        while count < n {
+        while &count < n {
             if heap.len() == SifrInt::from_i64(0) {
                 return result;
             }
@@ -448,15 +436,11 @@ pub mod sifr_generated_generated_support {
         }
         result
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
-        if n <= SifrInt::from_i64(0) {
+    pub(super) fn nlargest<T: Clone + 'static + PartialOrd>(n: &SifrInt, data: &[T]) -> Vec<T> {
+        if n <= &SifrInt::from_i64(0) {
             return Vec::new();
         }
-        if n >= data.len() {
+        if n >= &SifrInt::from(data.len()) {
             let mut result: Vec<T> = Vec::new();
             for val in data.iter().cloned() {
                 result.push(val);
@@ -476,7 +460,7 @@ pub mod sifr_generated_generated_support {
         let mut i: SifrInt =
             ::std::ops::Sub::sub(&SifrInt::from(all_sorted.len()), &SifrInt::from_i64(1));
         let mut count: SifrInt = SifrInt::from_i64(0);
-        while count < n {
+        while &count < n {
             if i < SifrInt::from_i64(0) {
                 return result2;
             }
@@ -675,7 +659,7 @@ mod sifr_generated_project_nominals {
         pub fn get(&self, key: &T, default: &SifrInt) -> SifrInt {
             let val: Option<SifrInt> = self.counts.get(key).cloned();
             let Some(val) = val else {
-                return default.clone();
+                return (*default).clone();
             };
             val
         }
@@ -757,7 +741,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = right;
                             {
-                                let sifr_generated_index_raw = i.clone();
+                                let sifr_generated_index_raw = &i;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -770,7 +754,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = left;
                             {
-                                let sifr_generated_index_raw = j.clone();
+                                let sifr_generated_index_raw = &j;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -853,7 +837,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = right;
                             {
-                                let sifr_generated_index_raw = i.clone();
+                                let sifr_generated_index_raw = &i;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -866,7 +850,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = left;
                             {
-                                let sifr_generated_index_raw = j.clone();
+                                let sifr_generated_index_raw = &j;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -1032,8 +1016,8 @@ fn demo_heapq() {
         SifrInt::from_i64(8),
         SifrInt::from_i64(4),
     ];
-    let small3: Vec<SifrInt> = nsmallest(SifrInt::from_i64(3), &items);
-    let large3: Vec<SifrInt> = nlargest(SifrInt::from_i64(3), &items);
+    let small3: Vec<SifrInt> = nsmallest(&SifrInt::from_i64(3), &items);
+    let large3: Vec<SifrInt> = nlargest(&SifrInt::from_i64(3), &items);
     println!("3 smallest:");
     println!("{small3:?}");
     println!("3 largest:");
@@ -1053,13 +1037,13 @@ fn demo_bisect() {
     let pos_left: SifrInt = bisect_left(
         &sorted_ints,
         &SifrInt::from_i64(6),
-        SifrInt::from_i64(0),
+        &SifrInt::from_i64(0),
         None,
     );
     let pos_right: SifrInt = bisect_right(
         &sorted_ints,
         &SifrInt::from_i64(5),
-        SifrInt::from_i64(0),
+        &SifrInt::from_i64(0),
         None,
     );
     println!("insert 6 at position (left):");
@@ -1069,7 +1053,7 @@ fn demo_bisect() {
     insort_left(
         &mut sorted_ints,
         &SifrInt::from_i64(6),
-        SifrInt::from_i64(0),
+        &SifrInt::from_i64(0),
         None,
     );
     println!("after insort_left(6):");
@@ -1080,19 +1064,24 @@ fn demo_bisect() {
         SifrInt::from_i64(2),
         SifrInt::from_i64(3),
     ];
-    insort_right(&mut data, &SifrInt::from_i64(2), SifrInt::from_i64(0), None);
+    insort_right(
+        &mut data,
+        &SifrInt::from_i64(2),
+        &SifrInt::from_i64(0),
+        None,
+    );
     println!("after insort_right(2) with duplicates:");
     println!("{data:?}");
     insort_left(
         &mut sorted_ints,
         &SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
+        &SifrInt::from_i64(0),
         None,
     );
     insort_right(
         &mut sorted_ints,
         &SifrInt::from_i64(10),
-        SifrInt::from_i64(0),
+        &SifrInt::from_i64(0),
         None,
     );
     println!("after more inserts:");

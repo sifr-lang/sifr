@@ -29,6 +29,7 @@ from inventory_gates import (  # noqa: E402
     gate_freshness as run_freshness_gate,
     gate_inventory as run_inventory_gate,
 )
+from failure_artifacts import discard_failed_run_cargo_target, preserve_clippy_output  # noqa: E402
 from quality_policy import (  # noqa: E402
     STRICT_CLIPPY_ARGS,
     assert_negative_pattern,
@@ -609,22 +610,6 @@ def gate_rustfmt(entries: list[Entry], args: argparse.Namespace) -> None:
             shutil.rmtree(run_root, ignore_errors=True)
 
 
-def discard_failed_run_cargo_target(run_root: Path, cargo_target_dir: Path) -> None:
-    """Keep source/diagnostic evidence but bound failed-run compiler artifacts."""
-    shutil.rmtree(cargo_target_dir, ignore_errors=True)
-    marker = run_root / "failed-cargo-target-cleanup.json"
-    marker.parent.mkdir(parents=True, exist_ok=True)
-    marker.write_text(
-        json.dumps(
-            {"removed": cargo_target_dir.relative_to(run_root).as_posix()},
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-
-
 def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("clippy")
     run_root = TARGET_ROOT / run
@@ -664,6 +649,7 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
                     cargo_target_dir,
                 )
                 actual = parse_clippy_diagnostics(result.stdout, crate_root_inner)
+                preserve_clippy_output(run_root, entry.id, result)
                 if result.returncode != 0 and not actual:
                     raise RuntimeError(
                         f"{entry.id}: clippy failed without classifiable diagnostics\n"
@@ -817,6 +803,7 @@ def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
                     STRICT_CLIPPY_ARGS,
                     cargo_target_dir,
                 )
+                preserve_clippy_output(run_root, entry.id, result)
                 diagnostics = parse_clippy_diagnostics(result.stdout, crate_root_inner)
                 if result.returncode != 0 and not diagnostics:
                     raise RuntimeError(

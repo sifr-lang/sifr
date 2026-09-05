@@ -123,7 +123,9 @@ fn async_dict_comprehension_clones_a_non_copy_key_reused_by_its_value() {
     );
 
     assert!(
-        rust_code.contains(".insert(value.clone(), &value + &SifrInt::from_i64(100));"),
+        rust_code.contains(
+            ".insert(value.clone(), ::std::ops::Add::add(&value, &SifrInt::from_i64(100)));"
+        ),
         "{rust_code}"
     );
     syn::parse_file(&rust_code).expect("async dictionary comprehension Rust should parse");
@@ -367,7 +369,7 @@ fn test_arithmetic_codegen() {
 
     let rust_code = generate_rust(&module);
     assert!(rust_code.contains("fn add(a: SifrInt, b: SifrInt) -> SifrInt"));
-    assert!(rust_code.contains("&a + &b"));
+    assert!(rust_code.contains("std::ops::Add::add(&a, &b)"));
 }
 
 // --- Codegen Quality Tests ---

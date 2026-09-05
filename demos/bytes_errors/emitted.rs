@@ -48,13 +48,13 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         bad_size = true;
     }
     let mut bad_values: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let _ = {
-            let sifr_generated_vals = vec![SifrInt::from_i64(0), SifrInt::from_i64(999)];
+            let sifr_generated_vals = [SifrInt::from_i64(0), SifrInt::from_i64(999)];
             let mut sifr_generated_out = Vec::new();
             for sifr_generated_pair in sifr_generated_vals.iter().enumerate() {
                 sifr_generated_out.push(sifr_generated_pair.1.try_to_u8().map_err(|_error| {
@@ -71,13 +71,13 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         bad_values = true;
     }
     let mut bad_hex: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let _ = {
-            let s: String = "GG".to_string();
+            let s: &str = "GG";
             let mut cleaned = String::new();
             for ch in s.chars() {
                 if ch.is_ascii_whitespace() {
@@ -110,34 +110,34 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         bad_hex = true;
     }
     let mut bad_codec: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let codec: String = "definitely-not-a-codec".to_string();
-        let _ = ::sifr_runtime::encoding::encode_bytes("abc", &codec, "strict").map_err(
-            |sifr_generated_message| ParseError {
+        let _encoded: Vec<u8> = ::sifr_runtime::encoding::encode_bytes("abc", &codec, "strict")
+            .map_err(|sifr_generated_message| ParseError {
                 message: sifr_generated_message,
-            },
-        )?;
+            })?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         bad_codec = true;
     }
     let mut bad_utf8: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let _ = ::sifr_runtime::encoding::decode_text(&[255_u8], "utf-8", "strict").map_err(
-            |sifr_generated_message| ParseError {
-                message: sifr_generated_message,
-            },
-        )?;
+        let _invalid_utf8: String =
+            ::sifr_runtime::encoding::decode_text(&[255_u8], "utf-8", "strict").map_err(
+                |sifr_generated_message| ParseError {
+                    message: sifr_generated_message,
+                },
+            )?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         bad_utf8 = true;
     }
     assert!(bad_size);

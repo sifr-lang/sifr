@@ -67,7 +67,7 @@ fn main() {
     let mut from_ints_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let from_list: Vec<u8> = {
-            let sifr_generated_vals = vec![
+            let sifr_generated_vals = [
                 SifrInt::from_i64(83),
                 SifrInt::from_i64(105),
                 SifrInt::from_i64(102),
@@ -133,7 +133,7 @@ fn main() {
     let mut from_hex_ok: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let from_hex: Vec<u8> = {
-            let s: String = "53 69 66 72".to_string();
+            let s: &str = "53 69 66 72";
             let mut cleaned = String::new();
             for ch in s.chars() {
                 if ch.is_ascii_whitespace() {

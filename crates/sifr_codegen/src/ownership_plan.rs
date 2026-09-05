@@ -9,6 +9,9 @@ impl crate::RustEmitter {
         source: &sifr_ir::HirExpr,
         lowered: RustExpr,
     ) -> RustExpr {
+        if let RustExpr::Literal(crate::RustLiteral::Str(value)) = lowered {
+            return RustExpr::Literal(crate::RustLiteral::StaticStr(value));
+        }
         if matches!(
             source,
             sifr_ir::HirExpr::Name { name, ty, .. }
@@ -121,7 +124,7 @@ impl crate::RustEmitter {
 ///
 /// Borrowed `str` and sequence parameters are unsized views. Calling `clone()` on
 /// either view only copies the reference, so ownership boundaries must use this
-/// plan instead of constructing clone expressions ad hoc.
+/// plan for each owned materialization.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum OwnedMaterialization {
     ToOwned,

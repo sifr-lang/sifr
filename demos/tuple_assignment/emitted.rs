@@ -6,9 +6,9 @@ struct Pair {
     y: SifrInt,
 }
 impl Pair {
-    const fn new(x: SifrInt, y: SifrInt) -> Self {
-        let sifr_generated_field_value_af63f54c86021707_78: SifrInt = x;
-        let sifr_generated_field_value_af63f44c86021554_79: SifrInt = y;
+    fn new(x: &SifrInt, y: &SifrInt) -> Self {
+        let sifr_generated_field_value_af63f54c86021707_78: SifrInt = (*x).clone();
+        let sifr_generated_field_value_af63f44c86021554_79: SifrInt = (*y).clone();
         Self {
             x: sifr_generated_field_value_af63f54c86021707_78,
             y: sifr_generated_field_value_af63f44c86021554_79,
@@ -26,9 +26,9 @@ struct RunningBounds {
     right: SifrInt,
 }
 impl RunningBounds {
-    const fn new(left: SifrInt, right: SifrInt) -> Self {
-        let sifr_generated_field_value_24b070ada2041cb0_6c656674: SifrInt = left;
-        let sifr_generated_field_value_76aaaa535714d805_7269676874: SifrInt = right;
+    fn new(left: &SifrInt, right: &SifrInt) -> Self {
+        let sifr_generated_field_value_24b070ada2041cb0_6c656674: SifrInt = (*left).clone();
+        let sifr_generated_field_value_76aaaa535714d805_7269676874: SifrInt = (*right).clone();
         Self {
             left: sifr_generated_field_value_24b070ada2041cb0_6c656674,
             right: sifr_generated_field_value_76aaaa535714d805_7269676874,
@@ -38,7 +38,7 @@ impl RunningBounds {
 impl RunningBounds {
     fn rotate(&mut self, next_value: &SifrInt) {
         let (sifr_generated_tuple_unpack_0, sifr_generated_tuple_unpack_1) =
-            (self.right.clone(), next_value.clone());
+            (self.right.clone(), (*next_value).clone());
         self.left = sifr_generated_tuple_unpack_0;
         self.right = sifr_generated_tuple_unpack_1;
     }
@@ -54,9 +54,9 @@ impl RunningBounds {
                     .saturating_add(1usize),
             );
             sifr_generated_concat.push('(');
-            sifr_generated_concat.push_str(self.left.clone().to_string().as_str());
+            sifr_generated_concat.push_str(self.left.to_string().as_str());
             sifr_generated_concat.push_str(", ");
-            sifr_generated_concat.push_str(self.right.clone().to_string().as_str());
+            sifr_generated_concat.push_str(self.right.to_string().as_str());
             sifr_generated_concat.push(')');
             sifr_generated_concat
         }
@@ -76,15 +76,12 @@ fn swap_pair(pair: &mut Pair) {
 fn add_points(points: &[(SifrInt, SifrInt)]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for point in points.iter().cloned() {
-        total = ::std::ops::Add::add(
-            &total,
-            &::std::ops::Add::add(&point.0.clone(), &point.1.clone()),
-        );
+        total = ::std::ops::Add::add(&total, &::std::ops::Add::add(&point.0.clone(), &point.1));
     }
     total
 }
 fn main() {
-    let mut pair: Pair = Pair::new(SifrInt::from_i64(2), SifrInt::from_i64(5));
+    let mut pair: Pair = Pair::new(&SifrInt::from_i64(2), &SifrInt::from_i64(5));
     swap_pair(&mut pair);
     assert_eq!(pair.x, SifrInt::from_i64(5));
     assert_eq!(pair.y, SifrInt::from_i64(2));
@@ -97,7 +94,7 @@ fn main() {
         SifrInt::from_i64(21)
     );
     let mut bounds: RunningBounds =
-        RunningBounds::new(SifrInt::from_i64(10), SifrInt::from_i64(20));
+        RunningBounds::new(&SifrInt::from_i64(10), &SifrInt::from_i64(20));
     bounds.rotate(&SifrInt::from_i64(30));
     assert_eq!(bounds.left, SifrInt::from_i64(20));
     assert_eq!(bounds.right, SifrInt::from_i64(30));

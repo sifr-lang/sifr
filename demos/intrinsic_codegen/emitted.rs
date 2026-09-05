@@ -36,16 +36,12 @@ pub use sifr_generated_project_nominals::ValueError;
     clippy::assertions_on_constants,
     reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
-#[expect(
-    clippy::suboptimal_flops,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
 fn main() {
     let base: f64 = 9.0_f64;
     let root: f64 = sqrt(base);
     let rounded_down: SifrInt = floor(3.9_f64);
     let rounded_up_value_c84a77e463db860a: SifrInt = ceil(3.1_f64);
-    let powered: f64 = 2_f64.powf(3_f64);
+    let powered: f64 = 2_f64.powi(3);
     let mut rounded: SifrInt = SifrInt::from_i64(0);
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let converted_rounded: SifrInt = SifrInt::from_f64_trunc(3.6_f64.round_ties_even())
@@ -56,7 +52,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         assert!(false);
     }
     let angle: f64 = atan2(1.0_f64, 1.0_f64);

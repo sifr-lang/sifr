@@ -30,7 +30,7 @@ impl Counter {
 }
 impl Counter {
     fn increment(&mut self) {
-        self.count += SifrInt::from_i64(1);
+        self.count = ::std::ops::Add::add(&self.count, &SifrInt::from_i64(1));
     }
 }
 impl ::std::fmt::Display for Counter {
@@ -142,7 +142,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         return;
     }
     println!(
@@ -241,7 +241,8 @@ fn main() {
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(scores.len());
                 if let Some(sifr_generated_elem) = scores.get_mut(sifr_generated_index_normalized) {
-                    *sifr_generated_elem -= sifr_generated_assign_value;
+                    *sifr_generated_elem =
+                        ::std::ops::Sub::sub(&*sifr_generated_elem, &sifr_generated_assign_value);
                 } else {
                     return Err(IndexError::new("collection index out of range".to_string()));
                 }
@@ -254,7 +255,8 @@ fn main() {
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(scores.len());
                 if let Some(sifr_generated_elem) = scores.get_mut(sifr_generated_index_normalized) {
-                    *sifr_generated_elem *= sifr_generated_assign_value;
+                    *sifr_generated_elem =
+                        ::std::ops::Mul::mul(&*sifr_generated_elem, &sifr_generated_assign_value);
                 } else {
                     return Err(IndexError::new("collection index out of range".to_string()));
                 }
@@ -263,7 +265,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         return;
     }
     let s0: Option<SifrInt> = {

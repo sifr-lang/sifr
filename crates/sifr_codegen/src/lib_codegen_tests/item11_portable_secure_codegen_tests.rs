@@ -34,7 +34,10 @@ def reuse_owned_string() -> str:
         generated.contains("let __sifr_repeat_src: &str = &"),
         "{generated}"
     );
-    assert!(generated.contains("+ SifrInt::from_i64(1)"), "{generated}");
+    assert!(
+        generated.contains("std::ops::Add::add(&count, SifrInt::from_i64(1))"),
+        "{generated}"
+    );
     assert!(!generated.contains("to_usize_proven"), "{generated}");
     assert!(!generated.contains(".repeat("), "{generated}");
 }

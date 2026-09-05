@@ -104,9 +104,6 @@ pub mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(super) trait SifrGeneratedAdd: Sized {}
-    impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
-    impl SifrGeneratedAdd for String {}
     pub(super) fn sifr_generated_islice_impl<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
         start: SifrInt,
@@ -132,15 +129,12 @@ pub mod sifr_generated_generated_support {
             },
         ))
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn islice<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
-        start_or_stop: Option<SifrInt>,
+        start_or_stop: Option<&SifrInt>,
         slice_args: &[Option<SifrInt>],
     ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
+        let start_or_stop: Option<SifrInt> = start_or_stop.cloned();
         if slice_args.len() > SifrInt::from_i64(2) {
             return Err(ValueError::new(
                 "islice: expected at most stop and step after start".to_string(),
@@ -329,16 +323,16 @@ pub mod sifr_generated_generated_support {
     pub(super) fn sifr_generated_find_index_from(
         text: &str,
         needle: &str,
-        start: SifrInt,
+        start: &SifrInt,
     ) -> SifrInt {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let sifr_generated_chars_needle: Vec<char> = needle.chars().collect::<Vec<char>>();
-        if start < SifrInt::from_i64(0) {
+        if start < &SifrInt::from_i64(0) {
             return ::std::ops::Neg::neg(&SifrInt::from_i64(1));
         }
         if sifr_generated_chars_needle.len() == SifrInt::from_i64(0) {
-            if start <= sifr_generated_chars_text.len() {
-                return start;
+            if start <= &SifrInt::from(sifr_generated_chars_text.len()) {
+                return (*start).clone();
             }
             return ::std::ops::Neg::neg(&SifrInt::from_i64(1));
         }
@@ -346,9 +340,9 @@ pub mod sifr_generated_generated_support {
             &SifrInt::from(sifr_generated_chars_text.len()),
             &SifrInt::from(sifr_generated_chars_needle.len()),
         );
-        let mut i: SifrInt = start;
+        let mut i: SifrInt = (*start).clone();
         while i <= max_start {
-            if &{
+            if {
                 let sifr_generated_slice_src = &sifr_generated_chars_text;
                 let sifr_generated_slice_len = sifr_generated_slice_src.len();
                 let sifr_generated_slice_start = i.clamp_slice_bound(sifr_generated_slice_len);
@@ -373,10 +367,10 @@ pub mod sifr_generated_generated_support {
     pub(super) fn sifr_generated_findall_for_finditer(
         pattern: &str,
         text: &str,
-        flags: SifrInt,
+        flags: &SifrInt,
     ) -> Result<Vec<String>, RegexError> {
-        if flags != SifrInt::from_i64(0) {
-            return re_findall_flags(pattern, text, flags);
+        if flags != &SifrInt::from_i64(0) {
+            return re_findall_flags(pattern, text, (*flags).clone());
         }
         re_findall(pattern, text)
     }
@@ -387,16 +381,14 @@ pub mod sifr_generated_generated_support {
         let mut matches: Vec<SifrGeneratedStdlibSifrX2ereX2eMatch> = Vec::new();
         let mut cursor: SifrInt = SifrInt::from_i64(0);
         for found in found_items.iter().cloned() {
-            let mut start: SifrInt = sifr_generated_find_index_from(text, &found, cursor.clone());
+            let mut start: SifrInt = sifr_generated_find_index_from(text, &found, &cursor);
             if start < SifrInt::from_i64(0) {
                 start.clone_from(&cursor);
             }
             let found_len: SifrInt = SifrInt::from(found.chars().count());
             let end: SifrInt = ::std::ops::Add::add(&start, &found_len);
             matches.push(SifrGeneratedStdlibSifrX2ereX2eMatch::new(
-                found,
-                start,
-                end.clone(),
+                found, &start, &end,
             ));
             if found_len == SifrInt::from_i64(0) {
                 cursor = ::std::ops::Add::add(&end, &SifrInt::from_i64(1));
@@ -406,21 +398,17 @@ pub mod sifr_generated_generated_support {
         }
         matches
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_finditer_materialize(
         pattern: &str,
         text: &str,
-        flags: SifrInt,
+        flags: &SifrInt,
     ) -> Result<Vec<SifrGeneratedStdlibSifrX2ereX2eMatch>, RegexError> {
         let sifr_generated_try_res: Result<
             Result<Vec<SifrGeneratedStdlibSifrX2ereX2eMatch>, RegexError>,
             RegexError,
         > = (|| {
             let found_items: Vec<String> =
-                sifr_generated_findall_for_finditer(pattern, text, flags.clone())?;
+                sifr_generated_findall_for_finditer(pattern, text, flags)?;
             Ok(Ok(sifr_generated_finditer_from_items(&found_items, text)))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
@@ -437,7 +425,7 @@ pub mod sifr_generated_generated_support {
             RegexError,
         > = (|| {
             let matches: Vec<SifrGeneratedStdlibSifrX2ereX2eMatch> =
-                sifr_generated_finditer_materialize(pattern, text, SifrInt::from_i64(0))?;
+                sifr_generated_finditer_materialize(pattern, text, &SifrInt::from_i64(0))?;
             Ok(Ok(sifr_generated_iter_matches(matches)))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
@@ -509,10 +497,11 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ereX2eMatch {
         #[must_use]
-        pub const fn new(matched: String, start: SifrInt, end: SifrInt) -> Self {
+        pub fn new(matched: String, start: &SifrInt, end: &SifrInt) -> Self {
             let sifr_generated_field_value_057487a7ae39ff66_5f6d617463686564: String = matched;
-            let sifr_generated_field_value_f46e9a817c26293e_5f7374617274: SifrInt = start;
-            let sifr_generated_field_value_3daa7443932b3d2b_5f656e64: SifrInt = end;
+            let sifr_generated_field_value_f46e9a817c26293e_5f7374617274: SifrInt =
+                (*start).clone();
+            let sifr_generated_field_value_3daa7443932b3d2b_5f656e64: SifrInt = (*end).clone();
             Self {
                 matched: sifr_generated_field_value_057487a7ae39ff66_5f6d617463686564,
                 start: sifr_generated_field_value_f46e9a817c26293e_5f7374617274,
@@ -632,10 +621,6 @@ mod sifr_generated_project_unions {
 use crate::sifr_generated_generated_support::{finditer, getpid, islice, run_command, write_text};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0;
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
 fn adapt_to_iterable(it: Box<dyn Iterator<Item = SifrInt>>) -> Vec<SifrInt> {
     it.collect::<Vec<_>>()
 }
@@ -696,7 +681,7 @@ fn main() {
         (),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
     > = (|| {
-        let _ = run_command(&format!("mkdir -p {base}/nested"))
+        let _mk: String = run_command(&format!("mkdir -p {base}/nested"))
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0,
             )?;
@@ -718,8 +703,8 @@ fn main() {
             )?;
         let sliced_entries: Box<dyn Iterator<Item = String>> = islice(
                 Box::new(entries_it),
-                Some(SifrInt::from_i64(2)),
-                &Vec::new(),
+                Some(&SifrInt::from_i64(2)),
+                &Vec::<Option<SifrInt>>::new(),
             )
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
@@ -750,7 +735,7 @@ fn main() {
         }
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("rm -rf {base}"))?;
+        let _rm: String = run_command(&format!("rm -rf {base}"))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

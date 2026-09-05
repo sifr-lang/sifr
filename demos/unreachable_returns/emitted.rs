@@ -6,15 +6,11 @@ const fn inferred(flag: bool) -> SifrInt {
     }
     SifrInt::from_i64(2)
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn consume(n: SifrInt) -> SifrInt {
-    ::std::ops::Add::add(&n, &SifrInt::from_i64(1))
+fn consume(n: &SifrInt) -> SifrInt {
+    ::std::ops::Add::add(n, &SifrInt::from_i64(1))
 }
 fn main() {
     println!("unreachable_returns diagnostics and consumer integration demo:");
-    println!("{}", consume(inferred(true)));
-    println!("{}", consume(inferred(false)));
+    println!("{}", consume(&inferred(true)));
+    println!("{}", consume(&inferred(false)));
 }

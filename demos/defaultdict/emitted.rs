@@ -9,7 +9,8 @@ mod sifr_generated_project_nominals {
     }
     impl<T: Clone> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
-        pub fn new(items: Option<Vec<T>>, maxlen: Option<SifrInt>) -> Self {
+        pub fn new(items: Option<Vec<T>>, maxlen: Option<&SifrInt>) -> Self {
+            let maxlen: Option<SifrInt> = maxlen.cloned();
             let mut data: Vec<T> = Vec::new();
             if let Some(items) = items {
                 let start: SifrInt = if let Some(maxlen) = maxlen.clone()
@@ -63,13 +64,13 @@ fn main() {
     {
         groups
             .entry("hit".to_string())
-            .or_insert(Vec::new())
+            .or_default()
             .push("hot".to_string());
     };
     {
         groups
             .entry("hit".to_string())
-            .or_insert(Vec::new())
+            .or_default()
             .push("hut".to_string());
     };
     assert_eq!(
@@ -82,12 +83,12 @@ fn main() {
     let mut seen: HashMap<SifrInt, HashSet<String>> = HashMap::new();
     {
         seen.entry(SifrInt::from_i64(1))
-            .or_insert(HashSet::new())
+            .or_default()
             .insert("a".to_string());
     };
     {
         seen.entry(SifrInt::from_i64(1))
-            .or_insert(HashSet::new())
+            .or_default()
             .insert("b".to_string());
     };
     assert!(

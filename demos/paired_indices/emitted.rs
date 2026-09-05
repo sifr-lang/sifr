@@ -10,7 +10,7 @@ fn edge_pairs_text(text: &str) -> String {
     let mut out: String = String::new();
     while left < right {
         let Some(sifr_generated_checked_value_0) = {
-            let sifr_generated_string_index = left.clone();
+            let sifr_generated_string_index = &left;
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
             sifr_generated_chars_text
@@ -21,7 +21,7 @@ fn edge_pairs_text(text: &str) -> String {
             break;
         };
         let Some(sifr_generated_checked_value_1) = {
-            let sifr_generated_string_index = right.clone();
+            let sifr_generated_string_index = &right;
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
             sifr_generated_chars_text

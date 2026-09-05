@@ -56,7 +56,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         return;
     }
     println!("{nums:?}");

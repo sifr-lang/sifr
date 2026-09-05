@@ -69,17 +69,17 @@ fn main() {
     let scores = &*SIFR_GENERATED_SIFR_HOISTED_DICT_0;
     println!(
         "{}",
-        scores.get("x").cloned().map_or_else(
-            || "None".to_string(),
-            |sifr_generated_v| sifr_generated_v.to_string()
-        )
+        scores
+            .get("x")
+            .cloned()
+            .unwrap_or_else(|| "None".to_string(),)
     );
     println!(
         "{}",
-        scores.get("z").cloned().map_or_else(
-            || "None".to_string(),
-            |sifr_generated_v| sifr_generated_v.to_string()
-        )
+        scores
+            .get("z")
+            .cloned()
+            .unwrap_or_else(|| "None".to_string(),)
     );
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let sifr_generated_unpack_source = &nums;

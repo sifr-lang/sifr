@@ -4,10 +4,6 @@ pub mod sifr_generated_generated_support {
     pub(super) fn fnmatch(name: &str, pattern: &str) -> bool {
         sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_match(
         name: &str,
         mut ni: SifrInt,
@@ -17,7 +13,7 @@ pub mod sifr_generated_generated_support {
         while pi < pattern.chars().count() {
             let pc: Option<String> = {
                 let sifr_generated_string_chars = pattern.chars().collect::<Vec<char>>();
-                let sifr_generated_string_index = pi.clone();
+                let sifr_generated_string_index = &pi;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_string_chars.len());
                 sifr_generated_string_chars
@@ -46,7 +42,7 @@ pub mod sifr_generated_generated_support {
                 if pc != "?" {
                     let nc: Option<String> = {
                         let sifr_generated_string_chars = name.chars().collect::<Vec<char>>();
-                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index = &ni;
                         let sifr_generated_string_index_normalized = sifr_generated_string_index
                             .normalize_index_or_len(sifr_generated_string_chars.len());
                         sifr_generated_string_chars
@@ -124,11 +120,8 @@ fn collect_filter_actual() -> Vec<bool> {
         "notes.txt".to_string(),
         "lib.py".to_string(),
     ];
-    actual.push(
-        format!("{:?}", filter(&names, "*.py")).as_str()
-            == "[\"main.py\", \"lib.py\"]".to_string().as_str(),
-    );
-    actual.push(format!("{:?}", filter(&names, "README*")).as_str() == "[]".to_string().as_str());
+    actual.push(format!("{:?}", filter(&names, "*.py")).as_str() == "[\"main.py\", \"lib.py\"]");
+    actual.push(format!("{:?}", filter(&names, "README*")).as_str() == "[]");
     actual
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {

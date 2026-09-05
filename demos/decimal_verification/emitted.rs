@@ -31,13 +31,7 @@ pub mod sifr_generated_generated_support {
         }
     }
     pub(super) fn from_str(value: &str) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
-        let str_value: Option<String> = Some({
-            let mut sifr_generated_concat: String =
-                String::with_capacity(value.len().saturating_add(0usize));
-            sifr_generated_concat.push_str(value);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        });
+        let str_value: Option<String> = Some(value.to_string());
         SifrGeneratedStdlibSifrX2ejsonX2eJsonValue::new(
             "str".to_string(),
             None,
@@ -135,10 +129,11 @@ mod sifr_generated_project_nominals {
         pub fn new(
             kind: String,
             bool_value: Option<bool>,
-            int_value: Option<SifrInt>,
+            int_value: Option<&SifrInt>,
             float_value: Option<f64>,
             str_value: Option<String>,
         ) -> Self {
+            let int_value: Option<SifrInt> = int_value.cloned();
             let sifr_generated_field_value_ef9c96d721673243_6b696e64: String = kind;
             let sifr_generated_field_value_49c3632d5fc42247_626f6f6c5f76616c7565: Option<bool> =
                 bool_value;
@@ -377,10 +372,9 @@ fn main() {
         let bd_floor_value_78a84cd7a18822c2: BigDecimal = {
             let sifr_generated_bigdecimal_left = bd.clone();
             let sifr_generated_bigdecimal_right = BigDecimal::new(
-                    ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[2]),
-                    0,
-                )
-                .clone();
+                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[2]),
+                0,
+            );
             if ::bigdecimal::Zero::is_zero(&sifr_generated_bigdecimal_right) {
                 Err(DivisionError::new("division by zero".to_string()))
             } else {
@@ -390,8 +384,10 @@ fn main() {
                             ::bigdecimal::RoundingMode::HalfEven,
                         )
                         .round_decimal_ref(
-                            &(&sifr_generated_bigdecimal_left
-                                / &sifr_generated_bigdecimal_right)
+                            &::std::ops::Div::div(
+                                    &sifr_generated_bigdecimal_left,
+                                    &sifr_generated_bigdecimal_right,
+                                )
                                 .with_scale_round(0, ::bigdecimal::RoundingMode::Floor),
                         ),
                 )
@@ -401,12 +397,11 @@ fn main() {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a239X3a5X3aclass26X3asifrX2ebuiltinX2eDivisionError1X3a048X3a5X3aclass35X3asifrX2ebuiltinX2eDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass26X3asifrX2ebuiltinX2eDivisionError1X3a0,
             )?;
         let bd_remainder_value_c770fb6e5eee30f3: BigDecimal = {
-            let sifr_generated_bigdecimal_left = bd.clone();
+            let sifr_generated_bigdecimal_left = bd;
             let sifr_generated_bigdecimal_right = BigDecimal::new(
-                    ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[2]),
-                    0,
-                )
-                .clone();
+                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[2]),
+                0,
+            );
             if ::bigdecimal::Zero::is_zero(&sifr_generated_bigdecimal_right) {
                 Err(DivisionError::new("division by zero".to_string()))
             } else {
@@ -416,11 +411,17 @@ fn main() {
                             ::bigdecimal::RoundingMode::HalfEven,
                         )
                         .round_decimal_ref(
-                            &(&sifr_generated_bigdecimal_left
-                                - (&sifr_generated_bigdecimal_left
-                                    / &sifr_generated_bigdecimal_right)
-                                    .with_scale_round(0, ::bigdecimal::RoundingMode::Floor)
-                                    * &sifr_generated_bigdecimal_right),
+                            &::std::ops::Sub::sub(
+                                &sifr_generated_bigdecimal_left,
+                                ::std::ops::Mul::mul(
+                                    ::std::ops::Div::div(
+                                            &sifr_generated_bigdecimal_left,
+                                            &sifr_generated_bigdecimal_right,
+                                        )
+                                        .with_scale_round(0, ::bigdecimal::RoundingMode::Floor),
+                                    &sifr_generated_bigdecimal_right,
+                                ),
+                            ),
                         ),
                 )
             }
@@ -465,9 +466,9 @@ fn main() {
         let baseline_d: String = baseline_tmp_d
             .round_dp_with_strategy(
                 {
-                    let sifr_generated_scale = 3;
-                    (if sifr_generated_scale < 0 { 0 } else { sifr_generated_scale })
-                        as u32
+                    let sifr_generated_scale = 3_i32;
+                    if sifr_generated_scale < 0 { 0 } else { sifr_generated_scale }
+                        .cast_unsigned()
                 },
                 ::rust_decimal::RoundingStrategy::MidpointNearestEven,
             )
@@ -477,18 +478,18 @@ fn main() {
                 ::bigdecimal::RoundingMode::HalfEven,
             )
             .round_decimal_ref(
-                &(BigDecimal::new(
+                &::std::ops::Add::add(
+                    BigDecimal::new(
                         ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(
                             &[39, 228, 27, 50, 70, 190, 201, 177, 110, 57, 129, 21],
                         ),
                         28,
-                    )
-                    .clone()
-                    + BigDecimal::new(
-                            ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[0]),
-                            0,
-                        )
-                        .clone()),
+                    ),
+                    BigDecimal::new(
+                        ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[0]),
+                        0,
+                    ),
+                ),
             )
             .round(6)
             .to_string();
@@ -525,8 +526,9 @@ fn main() {
                     SifrGeneratedUnion8X3asequence5X3aunion1X3a239X3a5X3aclass26X3asifrX2ebuiltinX2eDivisionError1X3a048X3a5X3aclass35X3asifrX2ebuiltinX2eDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass35X3asifrX2ebuiltinX2eDecimalConversionError1X3a0,
                 )?;
             assert_eq!(
-                loop_tmp_d.round_dp_with_strategy({ let sifr_generated_scale = 3; (if
-                sifr_generated_scale < 0 { 0 } else { sifr_generated_scale }) as u32 },
+                loop_tmp_d.round_dp_with_strategy({ let sifr_generated_scale = 3_i32; if
+                sifr_generated_scale < 0 { 0 } else { sifr_generated_scale }
+                .cast_unsigned() },
                 ::rust_decimal::RoundingStrategy::MidpointNearestEven).to_string(),
                 baseline_d
             );
@@ -534,11 +536,10 @@ fn main() {
                 ::bigdecimal::Context::new(::std::num::NonZeroU64::MIN
                 .saturating_add(27), ::bigdecimal::RoundingMode::HalfEven)
                 .round_decimal_ref(&
-                (BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
-                [39, 228, 27, 50, 70, 190, 201, 177, 110, 57, 129, 21]), 28).clone() +
+                ::std::ops::Add::add(BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
+                [39, 228, 27, 50, 70, 190, 201, 177, 110, 57, 129, 21]), 28),
                 BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
-                [0]), 0).clone())).round(6).to_string(),
-                baseline_bd_value_ad11946794caa821
+                [0]), 0))).round(6).to_string(), baseline_bd_value_ad11946794caa821
             );
             i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }

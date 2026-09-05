@@ -14,7 +14,7 @@ fn main() {
     for c in s.chars().map(|c| c.to_string()) {
         output.push(c);
     }
-    let _ = &*SIFR_GENERATED_SIFR_HOISTED_DICT_0;
+    let _d = &*SIFR_GENERATED_SIFR_HOISTED_DICT_0;
     let keys: Vec<String> = vec!["a".to_string(), "b".to_string()];
     for k in keys.iter().cloned() {
         output.push(k);

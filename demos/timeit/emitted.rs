@@ -44,31 +44,23 @@ pub mod sifr_generated_generated_support {
         }
         elapsed
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
+    pub(super) fn timeit(stmt: impl Fn(), number: &SifrInt) -> f64 {
         let start: f64 = perf_counter();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while i < number {
+        while &i < number {
             stmt();
             i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
         let end: f64 = perf_counter();
         sifr_generated_elapsed_non_negative(start, end)
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
+    pub(super) fn repeat(stmt: impl Fn(), count: &SifrInt, number: &SifrInt) -> Vec<f64> {
         let mut results: Vec<f64> = Vec::new();
         let mut r: SifrInt = SifrInt::from_i64(0);
-        while r < count {
+        while &r < count {
             let start: f64 = perf_counter();
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while i < number {
+            while &i < number {
                 stmt();
                 i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
@@ -124,18 +116,20 @@ fn collect_timer_actual() -> Vec<bool> {
 }
 fn collect_repeat_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
-    let elapsed: f64 = timeit(workload, SifrInt::from_i64(10));
+    let elapsed: f64 = timeit(workload, &SifrInt::from_i64(10));
     actual.push(elapsed >= 0.0_f64);
-    let repeated: Vec<f64> = repeat(workload, SifrInt::from_i64(3), SifrInt::from_i64(10));
+    let repeated: Vec<f64> = repeat(workload, &SifrInt::from_i64(3), &SifrInt::from_i64(10));
     actual.push(repeated.len() == SifrInt::from_i64(3));
     actual.push(all_non_negative(&repeated));
     actual
 }
 fn collect_edge_actual() -> Vec<bool> {
     vec![
-        repeat(workload, SifrInt::from_i64(0), SifrInt::from_i64(5)).len() == SifrInt::from_i64(0),
-        timeit(workload, SifrInt::from_i64(0)) >= 0.0_f64,
-        repeat(workload, SifrInt::from_i64(2), SifrInt::from_i64(0)).len() == SifrInt::from_i64(2),
+        repeat(workload, &SifrInt::from_i64(0), &SifrInt::from_i64(5)).len()
+            == SifrInt::from_i64(0),
+        timeit(workload, &SifrInt::from_i64(0)) >= 0.0_f64,
+        repeat(workload, &SifrInt::from_i64(2), &SifrInt::from_i64(0)).len()
+            == SifrInt::from_i64(2),
     ]
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {

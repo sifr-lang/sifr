@@ -498,7 +498,7 @@ fn removes_only_mutability_that_the_rendered_rust_body_does_not_require() {
     let canonical = canonicalize_generated_rust_source(source)
         .expect("rendered mutability should follow actual mutable Rust uses");
 
-    assert!(canonical.contains("text: String"), "{canonical}");
+    assert!(canonical.contains("text: &str"), "{canonical}");
     assert!(!canonical.contains("mut text"), "{canonical}");
     assert!(!canonical.contains("mut error"), "{canonical}");
     assert!(canonical.contains("mut buffer: Buffer"), "{canonical}");

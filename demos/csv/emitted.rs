@@ -29,13 +29,13 @@ pub mod sifr_generated_generated_support {
         dialect: &SifrGeneratedStdlibSifrX2ecsvX2eDialect,
     ) -> SifrGeneratedStdlibSifrX2ecsvX2eDialect {
         SifrGeneratedStdlibSifrX2ecsvX2eDialect::new(
-            dialect.delimiter.to_string(),
-            dialect.quotechar.to_string(),
-            dialect.escapechar.to_string(),
+            dialect.delimiter.clone(),
+            dialect.quotechar.clone(),
+            dialect.escapechar.clone(),
             dialect.doublequote,
             dialect.skipinitialspace,
-            dialect.lineterminator.to_string(),
-            dialect.quoting.clone(),
+            dialect.lineterminator.clone(),
+            &dialect.quoting,
         )
     }
     pub(super) fn sifr_generated_validate_char(name: &str, value: &str) {
@@ -58,7 +58,7 @@ pub mod sifr_generated_generated_support {
         doublequote: bool,
         skipinitialspace: bool,
         lineterminator: &str,
-        quoting: SifrInt,
+        quoting: &SifrInt,
     ) -> SifrGeneratedStdlibSifrX2ecsvX2eDialect {
         let Some(dialect) = dialect.as_ref() else {
             return SifrGeneratedStdlibSifrX2ecsvX2eDialect::new(
@@ -88,16 +88,27 @@ pub mod sifr_generated_generated_support {
     pub(super) fn sifr_generated_append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
         rows.push(row);
     }
-    pub(super) fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
-        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-        if index < SifrInt::from_i64(0) || index >= sifr_generated_chars_text.len() {
+    pub(super) fn sifr_generated_char_at(text: &str, index: &SifrInt) -> String {
+        let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
+            char,
+        > = text.chars().collect::<Vec<char>>();
+        if index < &SifrInt::from_i64(0)
+            || index
+                >= &SifrInt::from(
+                    sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                        .len(),
+                )
+        {
             return String::new();
         }
         let ch: Option<String> = {
             let sifr_generated_string_index = index;
-            let sifr_generated_string_index_normalized =
-                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-            sifr_generated_chars_text
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(
+                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                    .len(),
+            );
+            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
                 .get(sifr_generated_string_index_normalized)
                 .copied()
         }
@@ -108,13 +119,13 @@ pub mod sifr_generated_generated_support {
         ch
     }
     pub(super) fn sifr_generated_first_char(text: &str) -> String {
-        sifr_generated_char_at(text, SifrInt::from_i64(0))
+        sifr_generated_char_at(text, &SifrInt::from_i64(0))
     }
     pub(super) fn sifr_generated_last_char(text: &str) -> String {
-        let _ = text.chars().collect::<Vec<char>>();
+        let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         sifr_generated_char_at(
             text,
-            ::std::ops::Sub::sub(SifrInt::from(text.chars().count()), SifrInt::from_i64(1)),
+            &::std::ops::Sub::sub(SifrInt::from(text.chars().count()), SifrInt::from_i64(1)),
         )
     }
     #[expect(
@@ -133,7 +144,7 @@ pub mod sifr_generated_generated_support {
         escapechar: &str,
         doublequote: bool,
         skipinitialspace: bool,
-        quoting: SifrInt,
+        quoting: &SifrInt,
     ) -> Vec<String> {
         let rows: Vec<Vec<String>> = parse_csv(
             line,
@@ -180,10 +191,6 @@ pub mod sifr_generated_generated_support {
         clippy::ref_option,
         reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn parse_csv(
         text: &str,
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
@@ -192,19 +199,21 @@ pub mod sifr_generated_generated_support {
         escapechar: &str,
         doublequote: bool,
         skipinitialspace: bool,
-        quoting: SifrInt,
+        quoting: &SifrInt,
     ) -> Vec<Vec<String>> {
         let quotechar = quotechar.to_owned();
-        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
+        let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
+            char,
+        > = text.chars().collect::<Vec<char>>();
         let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
             dialect,
             delimiter,
-            quotechar,
+            quotechar.as_str(),
             escapechar,
             doublequote,
             skipinitialspace,
             "\n",
-            quoting.clone(),
+            quoting,
         );
         let mut rows: Vec<Vec<String>> = Vec::new();
         let mut row: Vec<String> = Vec::new();
@@ -212,16 +221,19 @@ pub mod sifr_generated_generated_support {
         let mut in_quotes: bool = false;
         let mut field_started: bool = false;
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while i < sifr_generated_chars_text.len() {
-            let ch_value: String = sifr_generated_char_at(text, i.clone());
+        while i < sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+            .len()
+        {
+            let ch_value: String = sifr_generated_char_at(text, &i);
             if in_quotes {
                 if !resolved.escapechar.clone().is_empty() && ch_value == resolved.escapechar {
                     if ::std::ops::Add::add(&i, &SifrInt::from_i64(1))
-                        < sifr_generated_chars_text.len()
+                        < sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                            .len()
                     {
                         let escaped_value: String = sifr_generated_char_at(
                             text,
-                            ::std::ops::Add::add(&i, &SifrInt::from_i64(1)),
+                            &::std::ops::Add::add(&i, &SifrInt::from_i64(1)),
                         );
                         field.push_str(escaped_value.as_str());
                         i = ::std::ops::Add::add(&i, &SifrInt::from_i64(2));
@@ -235,10 +247,11 @@ pub mod sifr_generated_generated_support {
                     let quotechar: String = sifr_generated_quotechar_value(&resolved);
                     if resolved.doublequote
                         && ::std::ops::Add::add(&i, &SifrInt::from_i64(1))
-                            < sifr_generated_chars_text.len()
+                            < sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                                .len()
                         && sifr_generated_char_at(
                             text,
-                            ::std::ops::Add::add(&i, &SifrInt::from_i64(1)),
+                            &::std::ops::Add::add(&i, &SifrInt::from_i64(1)),
                         ) == quotechar
                     {
                         field.push_str(quotechar.as_str());
@@ -258,11 +271,13 @@ pub mod sifr_generated_generated_support {
                 continue;
             }
             if !resolved.escapechar.clone().is_empty() && ch_value == resolved.escapechar {
-                if ::std::ops::Add::add(&i, &SifrInt::from_i64(1)) < sifr_generated_chars_text.len()
+                if ::std::ops::Add::add(&i, &SifrInt::from_i64(1))
+                    < sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                        .len()
                 {
                     let escaped_plain_value: String = sifr_generated_char_at(
                         text,
-                        ::std::ops::Add::add(&i, &SifrInt::from_i64(1)),
+                        &::std::ops::Add::add(&i, &SifrInt::from_i64(1)),
                     );
                     field.push_str(escaped_plain_value.as_str());
                     field_started = true;
@@ -296,9 +311,12 @@ pub mod sifr_generated_generated_support {
             if ch_value == "\n" || ch_value == "\r" {
                 if ch_value == "\r"
                     && ::std::ops::Add::add(&i, &SifrInt::from_i64(1))
-                        < sifr_generated_chars_text.len()
-                    && sifr_generated_char_at(text, ::std::ops::Add::add(&i, &SifrInt::from_i64(1)))
-                        == "\n"
+                        < sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                            .len()
+                    && sifr_generated_char_at(
+                        text,
+                        &::std::ops::Add::add(&i, &SifrInt::from_i64(1)),
+                    ) == "\n"
                 {
                     i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 }
@@ -344,7 +362,7 @@ pub mod sifr_generated_generated_support {
         if dialect.quoting == sifr_generated_const_51554f54455f4e4f4e45() {
             return false;
         }
-        if field.contains(dialect.delimiter.clone().as_str()) {
+        if field.contains(dialect.delimiter.as_str()) {
             return true;
         }
         if field.contains(&"\n".to_string()) || field.contains(&"\r".to_string()) {
@@ -373,13 +391,7 @@ pub mod sifr_generated_generated_support {
         dialect: &SifrGeneratedStdlibSifrX2ecsvX2eDialect,
     ) -> String {
         let quotechar: String = sifr_generated_quotechar_value(dialect);
-        let mut escaped: String = {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(field.len().saturating_add(0usize));
-            sifr_generated_concat.push_str(field);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        };
+        let mut escaped: String = field.to_string();
         if escaped.contains(&quotechar) {
             if dialect.doublequote || dialect.escapechar.clone().is_empty() {
                 escaped = escaped.replace(&quotechar, &format!("{quotechar}{quotechar}"));
@@ -405,25 +417,17 @@ pub mod sifr_generated_generated_support {
         field: &str,
         dialect: &SifrGeneratedStdlibSifrX2ecsvX2eDialect,
     ) -> String {
-        let mut result: String = {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(field.len().saturating_add(0usize));
-            sifr_generated_concat.push_str(field);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        };
-        if result.contains(dialect.delimiter.clone().as_str())
-            && !dialect.escapechar.clone().is_empty()
-        {
+        let mut result: String = field.to_string();
+        if result.contains(dialect.delimiter.as_str()) && !dialect.escapechar.clone().is_empty() {
             result = result.replace(
-                &dialect.delimiter.clone(),
+                dialect.delimiter.as_str(),
                 &format!("{}{}", dialect.escapechar, dialect.delimiter),
             );
         }
-        if result.contains(&"\n".to_string()) && !dialect.escapechar.clone().is_empty() {
+        if result.contains('\n') && !dialect.escapechar.clone().is_empty() {
             result = result.replace('\n', &format!("{}\n", dialect.escapechar));
         }
-        if result.contains(&"\r".to_string()) && !dialect.escapechar.clone().is_empty() {
+        if result.contains('\r') && !dialect.escapechar.clone().is_empty() {
             result = result.replace('\r', &format!("{}\r", dialect.escapechar));
         }
         if !dialect.quotechar.clone().is_empty() {
@@ -457,7 +461,7 @@ pub mod sifr_generated_generated_support {
         escapechar: &str,
         doublequote: bool,
         skipinitialspace: bool,
-        quoting: SifrInt,
+        quoting: &SifrInt,
     ) -> String {
         let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
             dialect,
@@ -500,7 +504,7 @@ pub mod sifr_generated_generated_support {
         doublequote: bool,
         skipinitialspace: bool,
         lineterminator: &str,
-        quoting: SifrInt,
+        quoting: &SifrInt,
     ) -> String {
         let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
             dialect,
@@ -523,14 +527,14 @@ pub mod sifr_generated_generated_support {
         )]
         for row in rows.iter() {
             rendered.push(format_row(
-                row,
+                &row,
                 &None,
-                &resolved_delimiter,
-                &resolved_quotechar,
-                &resolved_escapechar,
+                resolved_delimiter.as_str(),
+                resolved_quotechar.as_str(),
+                resolved_escapechar.as_str(),
                 resolved.doublequote,
                 resolved.skipinitialspace,
-                resolved.quoting.clone(),
+                &resolved.quoting,
             ));
         }
         rendered.join(&resolved_lineterminator)
@@ -543,10 +547,6 @@ pub mod sifr_generated_generated_support {
         clippy::ref_option,
         reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn reader_from_path(
         path: &str,
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
@@ -555,7 +555,7 @@ pub mod sifr_generated_generated_support {
         escapechar: &str,
         doublequote: bool,
         skipinitialspace: bool,
-        quoting: SifrInt,
+        quoting: &SifrInt,
     ) -> Result<SifrGeneratedStdlibSifrX2ecsvX2ereader, IOError> {
         let sifr_generated_try_res: Result<
             Result<SifrGeneratedStdlibSifrX2ecsvX2ereader, IOError>,
@@ -563,14 +563,14 @@ pub mod sifr_generated_generated_support {
         > = (|| {
             let text: String = read_text(path)?;
             Ok(Ok(SifrGeneratedStdlibSifrX2ecsvX2ereader::new(
-                text,
-                dialect.clone(),
-                delimiter.to_owned(),
-                quotechar.to_owned(),
-                escapechar.to_owned(),
+                text.as_str(),
+                &dialect.clone(),
+                delimiter,
+                quotechar,
+                escapechar,
                 doublequote,
                 skipinitialspace,
-                quoting.clone(),
+                quoting,
             )))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
@@ -596,7 +596,7 @@ pub mod sifr_generated_generated_support {
         doublequote: bool,
         skipinitialspace: bool,
         lineterminator: &str,
-        quoting: SifrInt,
+        quoting: &SifrInt,
     ) -> Result<(), IOError> {
         let payload: String = format_csv(
             rows,
@@ -609,7 +609,7 @@ pub mod sifr_generated_generated_support {
             lineterminator,
             quoting,
         );
-        write_text(path, &payload)
+        write_text(path, payload.as_str())
     }
     pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
@@ -682,15 +682,15 @@ mod sifr_generated_project_nominals {
             doublequote: bool,
             skipinitialspace: bool,
             lineterminator: String,
-            quoting: SifrInt,
+            quoting: &SifrInt,
         ) -> Self {
-            let mut resolved_quoting: SifrInt = quoting;
-            sifr_generated_validate_char("delimiter", &delimiter);
+            let mut resolved_quoting: SifrInt = (*quoting).clone();
+            sifr_generated_validate_char("delimiter", delimiter.as_str());
             if !quotechar.is_empty() {
-                sifr_generated_validate_char("quotechar", &quotechar);
+                sifr_generated_validate_char("quotechar", quotechar.as_str());
             }
             if !escapechar.is_empty() {
-                sifr_generated_validate_char("escapechar", &escapechar);
+                sifr_generated_validate_char("escapechar", escapechar.as_str());
             }
             if quotechar.is_empty()
                 && resolved_quoting != sifr_generated_const_51554f54455f4e4f4e45()
@@ -749,40 +749,36 @@ mod sifr_generated_project_nominals {
             clippy::too_many_arguments,
             reason = "generated signature preserves the typed Sifr callable contract"
         )]
-        #[expect(
-            clippy::needless_pass_by_value,
-            reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-        )]
         pub fn new(
-            text: String,
-            dialect: Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
-            delimiter: String,
-            quotechar: String,
-            escapechar: String,
+            text: &str,
+            dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
+            delimiter: &str,
+            quotechar: &str,
+            escapechar: &str,
             doublequote: bool,
             skipinitialspace: bool,
-            quoting: SifrInt,
+            quoting: &SifrInt,
         ) -> Self {
             let resolved_dialect: SifrGeneratedStdlibSifrX2ecsvX2eDialect =
                 sifr_generated_resolve_dialect(
-                    &dialect,
-                    &delimiter,
-                    &quotechar,
-                    &escapechar,
+                    dialect,
+                    delimiter,
+                    quotechar,
+                    escapechar,
                     doublequote,
                     skipinitialspace,
                     "\n",
                     quoting,
                 );
             let rows: Vec<Vec<String>> = parse_csv(
-                &text,
+                text,
                 &None,
-                &resolved_dialect.delimiter.to_string(),
-                &resolved_dialect.quotechar.to_string(),
-                &resolved_dialect.escapechar.to_string(),
+                resolved_dialect.delimiter.as_str(),
+                resolved_dialect.quotechar.as_str(),
+                resolved_dialect.escapechar.as_str(),
                 resolved_dialect.doublequote,
                 resolved_dialect.skipinitialspace,
-                resolved_dialect.quoting.clone(),
+                &resolved_dialect.quoting,
             );
             let sifr_generated_field_value_ac4a5fa27eb34095_6469616c656374: SifrGeneratedStdlibSifrX2ecsvX2eDialect = resolved_dialect;
             let sifr_generated_field_value_d742ae5cfb4259e3_5f726f7773: Vec<Vec<String>> = rows;
@@ -799,6 +795,10 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn rows(&self) -> Vec<Vec<String>> {
             let mut result: Vec<Vec<String>> = Vec::new();
+            #[expect(
+                clippy::explicit_iter_loop,
+                reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+            )]
             for row in self.rows.iter() {
                 let mut copied: Vec<String> = Vec::new();
                 #[expect(
@@ -824,29 +824,25 @@ mod sifr_generated_project_nominals {
             clippy::too_many_arguments,
             reason = "generated signature preserves the typed Sifr callable contract"
         )]
-        #[expect(
-            clippy::needless_pass_by_value,
-            reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-        )]
         pub fn new(
-            dialect: Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
-            delimiter: String,
-            quotechar: String,
-            escapechar: String,
+            dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
+            delimiter: &str,
+            quotechar: &str,
+            escapechar: &str,
             doublequote: bool,
             skipinitialspace: bool,
-            lineterminator: String,
-            quoting: SifrInt,
+            lineterminator: &str,
+            quoting: &SifrInt,
         ) -> Self {
             let resolved_dialect: SifrGeneratedStdlibSifrX2ecsvX2eDialect =
                 sifr_generated_resolve_dialect(
-                    &dialect,
-                    &delimiter,
-                    &quotechar,
-                    &escapechar,
+                    dialect,
+                    delimiter,
+                    quotechar,
+                    escapechar,
                     doublequote,
                     skipinitialspace,
-                    &lineterminator,
+                    lineterminator,
                     quoting,
                 );
             let sifr_generated_field_value_ac4a5fa27eb34095_6469616c656374: SifrGeneratedStdlibSifrX2ecsvX2eDialect = resolved_dialect;
@@ -883,7 +879,7 @@ mod sifr_generated_project_nominals {
                 true,
                 false,
                 "\n",
-                SifrInt::from_i64(0),
+                &SifrInt::from_i64(0),
             )
         }
     }
@@ -917,9 +913,9 @@ fn collect_parse_actual() -> Vec<bool> {
         "",
         true,
         false,
-        SifrInt::from_i64(0),
+        &SifrInt::from_i64(0),
     );
-    actual.push(format!("{parsed:?}").as_str() == "[\"a\", \"b\", \"c\"]".to_string().as_str());
+    actual.push(format!("{parsed:?}").as_str() == "[\"a\", \"b\", \"c\"]");
     actual.push(
         format_csv(
             &[
@@ -933,49 +929,44 @@ fn collect_parse_actual() -> Vec<bool> {
             true,
             false,
             "\n",
-            SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
         )
         .as_str()
-            == "1,2\n3,4".to_string().as_str(),
+            == "1,2\n3,4",
     );
     actual
 }
 fn collect_object_and_file_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let r: SifrGeneratedStdlibSifrX2ecsvX2ereader = SifrGeneratedStdlibSifrX2ecsvX2ereader::new(
-        "name,age\nalice,30".to_string(),
-        None,
-        ",".to_string(),
-        "\"".to_string(),
-        String::new(),
+        "name,age\nalice,30",
+        &None,
+        ",",
+        "\"",
+        "",
         true,
         false,
-        SifrInt::from_i64(0),
+        &SifrInt::from_i64(0),
     );
-    actual.push(
-        format!("{:?}", r.rows()).as_str()
-            == "[[\"name\", \"age\"], [\"alice\", \"30\"]]"
-                .to_string()
-                .as_str(),
-    );
+    actual.push(format!("{:?}", r.rows()).as_str() == "[[\"name\", \"age\"], [\"alice\", \"30\"]]");
     let mut w: SifrGeneratedStdlibSifrX2ecsvX2ewriter = SifrGeneratedStdlibSifrX2ecsvX2ewriter::new(
-        None,
-        ",".to_string(),
-        "\"".to_string(),
-        String::new(),
+        &None,
+        ",",
+        "\"",
+        "",
         true,
         false,
-        "\n".to_string(),
-        SifrInt::from_i64(0),
+        "\n",
+        &SifrInt::from_i64(0),
     );
     w.writerow(&["alice".to_string(), "30".to_string()]);
-    actual.push(w.getvalue().as_str() == "alice,30".to_string().as_str());
+    actual.push(w.getvalue().as_str() == "alice,30");
     let path: String = "/tmp/sifr_csv_csv_demo.csv".to_string();
     let mut csv_file_ok: bool = false;
     let mut missing_rejected: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         writer_to_path(
-            &path,
+            path.as_str(),
             &[
                 vec!["h1".to_string(), "h2".to_string()],
                 vec!["v1".to_string(), "v2".to_string()],
@@ -987,17 +978,17 @@ fn collect_object_and_file_actual() -> Vec<bool> {
             true,
             false,
             "\n",
-            SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
         )?;
         let rf: SifrGeneratedStdlibSifrX2ecsvX2ereader = reader_from_path(
-            &path,
+            path.as_str(),
             &None,
             ",",
             "\"",
             "",
             true,
             false,
-            SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
         )?;
         csv_file_ok = format!("{:?}", rf.rows()) == "[[\"h1\", \"h2\"], [\"v1\", \"v2\"]]";
         Ok(())
@@ -1008,7 +999,7 @@ fn collect_object_and_file_actual() -> Vec<bool> {
     }
     actual.push(csv_file_ok);
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = reader_from_path(
+        let _missing: SifrGeneratedStdlibSifrX2ecsvX2ereader = reader_from_path(
             "/tmp/sifr_csv_csv_demo_missing.csv",
             &None,
             ",",
@@ -1016,7 +1007,7 @@ fn collect_object_and_file_actual() -> Vec<bool> {
             "",
             true,
             false,
-            SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
         )?;
         Ok(())
     })();

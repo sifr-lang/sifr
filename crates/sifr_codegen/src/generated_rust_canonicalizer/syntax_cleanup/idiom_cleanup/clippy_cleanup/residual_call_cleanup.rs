@@ -34,7 +34,7 @@ impl VisitMut for CheckedReadIndexBorrowRewriter<'_> {
                 .is_some_and(|name| self.sifr_ints.contains(&name))
         {
             let source = clone.receiver.as_ref();
-            init.expr = Box::new(syn::parse_quote!(&#source));
+            *init.expr = syn::parse_quote!(&#source);
         }
     }
 
@@ -49,8 +49,10 @@ impl VisitMut for RedundantLiteralIdentityConversionRewriter {
         let syn::Expr::MethodCall(conversion) = expression else {
             return;
         };
-        if !matches!(conversion.method.to_string().as_str(), "to_string" | "to_owned")
-            || !conversion.args.is_empty()
+        if !matches!(
+            conversion.method.to_string().as_str(),
+            "to_string" | "to_owned"
+        ) || !conversion.args.is_empty()
             || !matches!(conversion.receiver.as_ref(), syn::Expr::Call(call)
                 if matches!(call.func.as_ref(), syn::Expr::Path(path)
                     if path.path.is_ident("identity"))
@@ -111,9 +113,10 @@ struct StringMapLiteralLookupRewriter<'names> {
 impl VisitMut for StringMapLiteralLookupRewriter<'_> {
     fn visit_expr_method_call_mut(&mut self, call: &mut syn::ExprMethodCall) {
         visit_mut::visit_expr_method_call_mut(self, call);
-        if !matches!(call.method.to_string().as_str(), "contains_key" | "get" | "get_mut" | "remove")
-            || !expression_root_name(&call.receiver)
-                .is_some_and(|name| self.maps.contains(&name))
+        if !matches!(
+            call.method.to_string().as_str(),
+            "contains_key" | "get" | "get_mut" | "remove"
+        ) || !expression_root_name(&call.receiver).is_some_and(|name| self.maps.contains(&name))
         {
             return;
         }
@@ -123,8 +126,10 @@ impl VisitMut for StringMapLiteralLookupRewriter<'_> {
         let syn::Expr::MethodCall(conversion) = reference.expr.as_ref() else {
             return;
         };
-        if matches!(conversion.method.to_string().as_str(), "to_string" | "to_owned")
-            && conversion.args.is_empty()
+        if matches!(
+            conversion.method.to_string().as_str(),
+            "to_string" | "to_owned"
+        ) && conversion.args.is_empty()
             && matches!(conversion.receiver.as_ref(), syn::Expr::Lit(literal)
                 if matches!(literal.lit, syn::Lit::Str(_)))
         {
@@ -169,10 +174,13 @@ fn repeated_char_replacement(
     let syn::Expr::MethodCall(call) = expression else {
         return None;
     };
-    let [syn::Expr::Lit(pattern), syn::Expr::Lit(replacement)] = call.args.iter().collect::<Vec<_>>().as_slice() else {
+    let [syn::Expr::Lit(pattern), syn::Expr::Lit(replacement)] =
+        call.args.iter().collect::<Vec<_>>().as_slice()
+    else {
         return None;
     };
-    let (syn::Lit::Char(character), syn::Lit::Str(replacement)) = (&pattern.lit, &replacement.lit) else {
+    let (syn::Lit::Char(character), syn::Lit::Str(replacement)) = (&pattern.lit, &replacement.lit)
+    else {
         return None;
     };
     if call.method != "replace" {

@@ -6,8 +6,8 @@ struct Entry {
     next: Option<Box<Self>>,
 }
 impl Entry {
-    const fn new(value: SifrInt, next: Option<Box<Self>>) -> Self {
-        let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = value;
+    fn new(value: &SifrInt, next: Option<Box<Self>>) -> Self {
+        let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = (*value).clone();
         let sifr_generated_field_value_e5316cbaa025f028_6e657874: Option<Box<Self>> = next;
         Self {
             value: sifr_generated_field_value_7ce4fd9430e80cea_76616c7565,
@@ -15,10 +15,6 @@ impl Entry {
         }
     }
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
 fn chain_text(entry: Option<&Entry>) -> String {
     let Some(entry) = entry.as_ref() else {
         return ".".to_string();
@@ -33,10 +29,6 @@ fn chain_text(entry: Option<&Entry>) -> String {
         sifr_generated_concat
     }
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
 fn second_value(entry: Option<&Entry>) -> SifrInt {
     let Some(entry) = entry.as_ref() else {
         return SifrInt::from_i64(0);
@@ -45,17 +37,17 @@ fn second_value(entry: Option<&Entry>) -> SifrInt {
     let Some(next_entry_value_1788d7cc138c4323) = next_entry else {
         return SifrInt::from_i64(0);
     };
-    next_entry_value_1788d7cc138c4323.value
+    next_entry_value_1788d7cc138c4323.value.clone()
 }
 fn main() {
     let chain: Option<Entry> = Some(Entry::new(
-        SifrInt::from_i64(4),
+        &SifrInt::from_i64(4),
         Some(Box::new(Entry::new(
-            SifrInt::from_i64(2),
-            Some(Box::new(Entry::new(SifrInt::from_i64(6), None))),
+            &SifrInt::from_i64(2),
+            Some(Box::new(Entry::new(&SifrInt::from_i64(6), None))),
         ))),
     ));
-    let short: Option<Entry> = Some(Entry::new(SifrInt::from_i64(9), None));
+    let short: Option<Entry> = Some(Entry::new(&SifrInt::from_i64(9), None));
     assert_eq!(chain_text(chain.as_ref()), "4->2->6->.");
     assert_eq!(chain_text(None), ".");
     assert_eq!(second_value(chain.as_ref()), SifrInt::from_i64(2));

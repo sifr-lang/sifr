@@ -268,7 +268,7 @@ fn main() {
     let empty: Vec<f64> = Vec::new();
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> =
         (|| {
-            let _ = compute_mean(&empty)?;
+            let _mean2: f64 = compute_mean(&empty)?;
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -287,7 +287,7 @@ fn main() {
     }
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2egraphlibX2eCycleError> =
         (|| {
-            let _ = topo_sort(true)?;
+            let _order2: SifrInt = topo_sort(true)?;
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -298,8 +298,8 @@ fn main() {
         (),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0,
     > = (|| {
-        let _ = SifrInt::parse_decimal(
-                &"not_a_number".to_string(),
+        let _val: SifrInt = SifrInt::parse_decimal(
+                "not_a_number",
                 ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS,
             )
             .map_err(|e| ParseError {
@@ -308,7 +308,7 @@ fn main() {
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0,
             )?;
-        let _ = compute_mean(&empty)
+        let _mean3_value_1dfeeebaa86aa660: f64 = compute_mean(&empty)
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0,
             )?;

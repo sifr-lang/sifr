@@ -16,9 +16,11 @@ fn id(value: &str) -> MigrationNodeId {
 #[test]
 fn migration_lowering_uses_compiler_generated_nominal_state_types() {
     let baseline = id("baseline");
-    let migration_id = id("m1");
-    let input = MigrationStateIdentity::new("sifr.sql.migration.state.m1.baseline.0.aaaa");
-    let output = MigrationStateIdentity::new("sifr.sql.migration.state.m1.baseline.1.bbbb");
+    let migration_id = id("migration_001");
+    let input =
+        MigrationStateIdentity::new("sifr.sql.migration.state.migration_001.baseline.0.aaaa");
+    let output =
+        MigrationStateIdentity::new("sifr.sql.migration.state.migration_001.baseline.1.bbbb");
     let step = CompiledMigrationStep {
         id: id("callback"),
         input_state: input.clone(),

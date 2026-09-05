@@ -1,4 +1,28 @@
 pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
+    if rewrite_negated_sifr_int_literal(expression)
+        || rewrite_double_negated_is_empty(expression)
+        || rewrite_option_map_or_none(expression)
+        || remove_clone_before_as_str(expression)
+        || remove_message_conversion_before_as_str(expression)
+        || rewrite_known_string_identity_mapper(expression)
+        || remove_temporary_collection_clone(expression)
+        || rewrite_borrowed_callback_arguments(expression)
+        || rewrite_cloned_option_identity_mapper(expression)
+        || rewrite_vec_copy_extend(expression)
+        || rewrite_integer_float_power(expression)
+        || rewrite_generated_usize_increment(expression)
+        || rewrite_clone_then_to_vec(expression)
+        || rewrite_generated_owned_to_vec(expression)
+        || rewrite_bigdecimal_operation(expression)
+    {
+        return;
+    }
+    if rewrite_boolean_if_expression(expression) {
+        return;
+    }
+    if remove_clone_before_string_conversion(expression) {
+        return;
+    }
     if rewrite_known_string_error_map(expression) {
         return;
     }
@@ -22,6 +46,13 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
     }
     if rewrite_known_borrowed_string_call(expression)
         || rewrite_count_without_cloning(expression)
+        || rewrite_entry_default(expression)
+        || rewrite_integer_float_power(expression)
+        || rewrite_nonminimal_option_test(expression)
+        || rewrite_nan_self_comparison(expression)
+        || rewrite_nonnegative_unsigned_cast(expression)
+        || rewrite_usize_zero_ordering(expression)
+        || rewrite_borrow_only_cloned_map(expression)
         || rewrite_usize_len_subtraction(expression)
         || rewrite_constructor_clone(expression)
         || remove_redundant_owned_string_conversion(expression)
@@ -36,12 +67,14 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
     if rewrite_borrowed_vec_literal(expression) {
         return;
     }
-    if rewrite_generated_deref_add_assign(expression) {
+    if rewrite_generated_sifr_int_assign(expression) {
         return;
     }
     let syn::Expr::Binary(binary) = expression else {
         return;
     };
+    remove_generated_owned_block_reference(binary);
+    rewrite_owned_literal_comparison(binary);
     rewrite_owned_comparison_constructors(binary);
     rewrite_owned_tuple_field_string_comparison(binary);
     remove_comparison_operand_clones(binary);
@@ -60,12 +93,12 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
     let Some((operation, method)) = exact_integer_operation(&binary.op) else {
         return;
     };
-    if !mentions_sifr_int(&binary.left)
-        && !mentions_sifr_int(&binary.right)
-        && !(matches!(binary.left.as_ref(), syn::Expr::Reference(_))
+    if !(mentions_sifr_int(&binary.left)
+        || mentions_sifr_int(&binary.right)
+        || (matches!(binary.left.as_ref(), syn::Expr::Reference(_))
             && matches!(binary.right.as_ref(), syn::Expr::Reference(_)))
-        && !(matches!(binary.left.as_ref(), syn::Expr::Path(path) if path.path.is_ident("self"))
-            && matches!(binary.right.as_ref(), syn::Expr::Path(path) if path.path.is_ident("rhs")))
+        || (matches!(binary.left.as_ref(), syn::Expr::Path(path) if path.path.is_ident("self"))
+            && matches!(binary.right.as_ref(), syn::Expr::Path(path) if path.path.is_ident("rhs"))))
     {
         return;
     }
@@ -74,6 +107,23 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
     let operation = syn::Ident::new(operation, proc_macro2::Span::call_site());
     let method = syn::Ident::new(method, proc_macro2::Span::call_site());
     *expression = syn::parse_quote!(::std::ops::#operation::#method(#left, #right));
+}
+
+fn remove_clone_before_string_conversion(expression: &mut syn::Expr) -> bool {
+    let syn::Expr::MethodCall(conversion) = expression else {
+        return false;
+    };
+    if conversion.method != "to_string" || !conversion.args.is_empty() {
+        return false;
+    }
+    let syn::Expr::MethodCall(clone) = conversion.receiver.as_ref() else {
+        return false;
+    };
+    if clone.method != "clone" || !clone.args.is_empty() {
+        return false;
+    }
+    conversion.receiver = clone.receiver.clone();
+    true
 }
 
 fn rewrite_owned_tuple_field_string_comparison(binary: &mut syn::ExprBinary) {
@@ -112,19 +162,33 @@ fn rewrite_lossless_decimal_scale_cast(expression: &mut syn::Expr) -> bool {
     true
 }
 
-fn rewrite_generated_deref_add_assign(expression: &mut syn::Expr) -> bool {
+fn rewrite_generated_sifr_int_assign(expression: &mut syn::Expr) -> bool {
     let syn::Expr::Binary(binary) = expression else {
         return false;
     };
-    if !matches!(binary.op, syn::BinOp::AddAssign(_))
-        || !matches!(binary.left.as_ref(), syn::Expr::Unary(unary)
-            if matches!(unary.op, syn::UnOp::Deref(_)))
-    {
+    let (operation, method) = match binary.op {
+        syn::BinOp::AddAssign(_) => ("Add", "add"),
+        syn::BinOp::SubAssign(_) => ("Sub", "sub"),
+        syn::BinOp::MulAssign(_) => ("Mul", "mul"),
+        _ => return false,
+    };
+    let generated_element = matches!(binary.left.as_ref(), syn::Expr::Unary(unary)
+        if matches!(unary.op, syn::UnOp::Deref(_))
+            && matches!(unary.expr.as_ref(), syn::Expr::Path(path)
+                if path.path.get_ident().is_some_and(|name|
+                    name.to_string().starts_with("sifr_generated_elem"))));
+    let exact_count_field = matches!(binary.left.as_ref(), syn::Expr::Field(field)
+        if matches!(&field.member, syn::Member::Named(name) if name == "count")
+            && matches!(field.base.as_ref(), syn::Expr::Path(path) if path.path.is_ident("self")))
+        && mentions_sifr_int(&binary.right);
+    if !generated_element && !exact_count_field {
         return false;
     }
     let left = binary.left.as_ref();
     let right = binary.right.as_ref();
-    *expression = syn::parse_quote!(#left = ::std::ops::Add::add(&#left, &#right));
+    let operation = syn::Ident::new(operation, proc_macro2::Span::call_site());
+    let method = syn::Ident::new(method, proc_macro2::Span::call_site());
+    *expression = syn::parse_quote!(#left = ::std::ops::#operation::#method(&#left, &#right));
     true
 }
 
@@ -194,8 +258,8 @@ fn rewrite_redundant_generated_parent_clone(expression: &mut syn::Expr) -> bool 
         return false;
     }
     let mut field = field.clone();
-    field.base = parent_clone.receiver.clone();
-    outer.receiver = Box::new(syn::Expr::Field(field));
+    field.base.clone_from(&parent_clone.receiver);
+    *outer.receiver = syn::Expr::Field(field);
     true
 }
 
@@ -219,7 +283,9 @@ fn rewrite_generated_sort_comparison(expression: &mut syn::Expr) -> bool {
         || !matches!(argument.expr.as_ref(), syn::Expr::Path(path)
             if path.path.get_ident().is_some_and(|name|
                 name.to_string().starts_with("sifr_generated_sorted_")))
-        || !receiver_name.to_string().starts_with("sifr_generated_sorted_")
+        || !receiver_name
+            .to_string()
+            .starts_with("sifr_generated_sorted_")
     {
         return false;
     }
@@ -234,12 +300,9 @@ fn rewrite_known_borrowed_string_call(expression: &mut syn::Expr) -> bool {
     let syn::Expr::Path(path) = call.func.as_ref() else {
         return false;
     };
-    if !path
-        .path
-        .segments
-        .last()
-        .is_some_and(|segment| matches!(segment.ident.to_string().as_str(), "strftime" | "strptime"))
-    {
+    if !path.path.segments.last().is_some_and(|segment| {
+        matches!(segment.ident.to_string().as_str(), "strftime" | "strptime")
+    }) {
         return false;
     }
     let mut changed = false;
@@ -250,8 +313,10 @@ fn rewrite_known_borrowed_string_call(expression: &mut syn::Expr) -> bool {
         let syn::Expr::MethodCall(conversion) = reference.expr.as_ref() else {
             continue;
         };
-        if matches!(conversion.method.to_string().as_str(), "to_owned" | "to_string")
-            && conversion.args.is_empty()
+        if matches!(
+            conversion.method.to_string().as_str(),
+            "to_owned" | "to_string"
+        ) && conversion.args.is_empty()
             && matches!(conversion.receiver.as_ref(), syn::Expr::Lit(literal)
                 if matches!(literal.lit, syn::Lit::Str(_)))
         {
@@ -272,8 +337,7 @@ fn rewrite_count_without_cloning(expression: &mut syn::Expr) -> bool {
     let syn::Expr::MethodCall(cloned) = count.receiver.as_ref() else {
         return false;
     };
-    if !matches!(cloned.method.to_string().as_str(), "cloned" | "copied")
-        || !cloned.args.is_empty()
+    if !matches!(cloned.method.to_string().as_str(), "cloned" | "copied") || !cloned.args.is_empty()
     {
         return false;
     }
@@ -310,7 +374,8 @@ fn rewrite_constructor_clone(expression: &mut syn::Expr) -> bool {
         return false;
     };
     if matches!(call.func.as_ref(), syn::Expr::Path(path)
-        if path.path.segments.iter().rev().nth(1).is_some_and(|segment| segment.ident == "SifrInt"))
+        if path.path.segments.iter().rev().nth(1).is_some_and(|segment|
+            matches!(segment.ident.to_string().as_str(), "SifrInt" | "BigDecimal")))
     {
         *expression = clone.receiver.as_ref().clone();
         return true;
@@ -462,16 +527,18 @@ fn rewrite_collected_query(expression: &mut syn::Expr) -> bool {
         return true;
     }
     if query.method == "contains" && query.args.len() == 1 {
-        let Some(syn::GenericArgument::Type(syn::Type::Path(container))) =
-            collect.turbofish.as_ref().and_then(|fish| fish.args.first())
+        let Some(syn::GenericArgument::Type(syn::Type::Path(container))) = collect
+            .turbofish
+            .as_ref()
+            .and_then(|fish| fish.args.first())
         else {
             return false;
         };
-        if !container
+        if container
             .path
             .segments
             .last()
-            .is_some_and(|segment| segment.ident == "HashSet")
+            .is_none_or(|segment| segment.ident != "HashSet")
         {
             return false;
         }
@@ -674,16 +741,8 @@ fn rewrite_borrowed_vec_literal(expression: &mut syn::Expr) -> bool {
     let syn::Expr::Reference(reference) = expression else {
         return false;
     };
-    if reference.mutability.is_none()
-        && matches!(reference.expr.as_ref(), syn::Expr::Call(call)
-            if matches!(call.func.as_ref(), syn::Expr::Path(path)
-                if path.path.segments.len() == 2
-                    && path.path.segments[0].ident == "String"
-                    && path.path.segments[1].ident == "new")
-                && call.args.is_empty())
-    {
-        *expression = syn::parse_quote!("");
-        return true;
+    if reference.mutability.is_some() {
+        return false;
     }
     let syn::Expr::Macro(vector) = reference.expr.as_ref() else {
         return false;

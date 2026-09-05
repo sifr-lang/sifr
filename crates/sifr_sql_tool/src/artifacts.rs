@@ -87,7 +87,7 @@ fn build_once(authority: &ProfileAuthority) -> Result<SchemaBuildArtifacts, Sche
     }
 
     let generated =
-        generate_profile_module(authority).map_err(|failure| contract_error(&failure))?;
+        generate_profile_module(authority).map_err(|failure| schema_failure(&failure))?;
     let dependency_slice = complete_dependency_slice(authority)?;
     let runtime_manifest = authority.runtime_manifest(dependency_slice);
     let dependency_index = dependency_index(authority);
@@ -158,7 +158,7 @@ fn complete_dependency_slice(
                 properties: object.semantic.keys().cloned().collect(),
             });
     minimum_schema_slice(&authority.profile.schema, requests, [])
-        .map_err(|failure| contract_error(&failure))
+        .map_err(|failure| schema_failure(&failure))
 }
 
 fn dependency_index(authority: &ProfileAuthority) -> SchemaDependencyIndex {
@@ -189,7 +189,7 @@ fn canonical_json<T: Serialize>(value: &T) -> Result<Vec<u8>, SchemaLifecycleErr
     Ok(bytes)
 }
 
-fn contract_error(failure: &sifr_sql_contract::SchemaContractError) -> SchemaLifecycleError {
+fn schema_failure(failure: &sifr_sql_contract::SchemaContractError) -> SchemaLifecycleError {
     error(
         SchemaLifecycleErrorKind::InvalidAuthority,
         format!("cannot build schema artifacts: {failure}"),

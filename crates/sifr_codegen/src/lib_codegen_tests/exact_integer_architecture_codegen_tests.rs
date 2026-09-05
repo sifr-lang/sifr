@@ -62,7 +62,9 @@ fn emitted_integer_operators_use_exact_runtime_operations() {
     assert!(rust.contains("floor_mod_known_nonzero"), "{rust}");
     assert!(rust.contains(".pow_known_valid("), "{rust}");
     assert!(
-        rust.contains("&SifrInt::from_i64(9223372036854775807) + &SifrInt::from_i64(2)"),
+        rust.contains(
+            "std::ops::Add::add(&SifrInt::from_i64(9223372036854775807), &SifrInt::from_i64(2))"
+        ),
         "{rust}"
     );
 }

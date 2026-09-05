@@ -16,7 +16,7 @@ RECORD = ROOT / "verification/areas/sql_platform/data/sqlite_qualification.json"
 
 def validate(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
-    if data.get("schema_version") != 1 or data.get("milestone") != "sql_17_sqlite_provider":
+    if data.get("schema_version") != 1 or data.get("provider") != "sqlite":
         errors.append("SQLite qualification identity is invalid")
     libraries = data.get("supported_libraries", [])
     if libraries != [{"version": "3.53.2", "version_number": 3053002, "compile_flags": []}]:
@@ -131,6 +131,9 @@ def validate(data: dict[str, Any]) -> list[str]:
 
 def self_test(data: dict[str, Any]) -> int:
     mutations = []
+    wrong_provider = copy.deepcopy(data)
+    wrong_provider["provider"] = "postgresql"
+    mutations.append(wrong_provider)
     wrong_version = copy.deepcopy(data)
     wrong_version["toolchain"]["rusqlite"] = "0.39.0"
     mutations.append(wrong_version)

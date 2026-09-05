@@ -5,14 +5,10 @@ pub mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_sift_down_max<T: Clone + 'static + PartialOrd>(
-        data: &mut Vec<T>,
+        data: &mut [T],
         mut pos: SifrInt,
-        n: SifrInt,
+        n: &SifrInt,
     ) {
         let mut done: bool = false;
         while !done {
@@ -25,7 +21,7 @@ pub mod sifr_generated_generated_support {
                 &::std::ops::Mul::mul(&SifrInt::from_i64(2), &pos),
                 &SifrInt::from_i64(2),
             );
-            if left < n {
+            if &left < n {
                 let current_val: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
                     let sifr_generated_checked_read_index = &largest;
@@ -51,7 +47,7 @@ pub mod sifr_generated_generated_support {
                     largest = left;
                 }
             }
-            if right < n {
+            if &right < n {
                 let current_val2_value_4fa82455325b79cc: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
                     let sifr_generated_checked_read_index = &largest;
@@ -105,7 +101,7 @@ pub mod sifr_generated_generated_support {
                         {
                             let sifr_generated_assign_value = tmp_largest;
                             {
-                                let sifr_generated_index_raw = pos.clone();
+                                let sifr_generated_index_raw = &pos;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(data.len());
                                 if let Some(sifr_generated_elem) =
@@ -120,7 +116,7 @@ pub mod sifr_generated_generated_support {
                         {
                             let sifr_generated_assign_value = tmp_pos;
                             {
-                                let sifr_generated_index_raw = largest.clone();
+                                let sifr_generated_index_raw = &largest;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(data.len());
                                 if let Some(sifr_generated_elem) =
@@ -136,7 +132,7 @@ pub mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn sifr_generated_heapify_max<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
+    pub(super) fn sifr_generated_heapify_max<T: Clone + 'static + PartialOrd>(data: &mut [T]) {
         "Convert list to a max-heap in-place. O(n) time.".to_string();
         let n: SifrInt = SifrInt::from(data.len());
         let mut i: SifrInt = ::std::ops::Sub::sub(
@@ -144,7 +140,7 @@ pub mod sifr_generated_generated_support {
             &SifrInt::from_i64(1),
         );
         while i >= SifrInt::from_i64(0) {
-            sifr_generated_sift_down_max(data, i.clone(), n.clone());
+            sifr_generated_sift_down_max(data, i.clone(), &n);
             i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
         }
     }
@@ -193,12 +189,12 @@ pub mod sifr_generated_generated_support {
                     }
                 }
             }
-            sifr_generated_sift_down_max(heap, SifrInt::from_i64(0), n2);
+            sifr_generated_sift_down_max(heap, SifrInt::from_i64(0), &n2);
         }
         top
     }
     pub(super) fn sifr_generated_heapreplace_max<T: Clone + 'static + PartialOrd>(
-        heap: &mut Vec<T>,
+        heap: &mut [T],
         item: T,
     ) -> Option<T> {
         "Pop and return the largest item, then push item onto the heap.\n    Returns None if the heap is empty. O(log n) time."
@@ -227,7 +223,7 @@ pub mod sifr_generated_generated_support {
             }
         }
         let heap_len: SifrInt = SifrInt::from(heap.len());
-        sifr_generated_sift_down_max(heap, SifrInt::from_i64(0), heap_len);
+        sifr_generated_sift_down_max(heap, SifrInt::from_i64(0), &heap_len);
         top
     }
 }

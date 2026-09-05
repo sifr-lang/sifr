@@ -36,7 +36,7 @@ fn main() {
         "pow(2, 10) = 1024"
     );
     let mut result: String = String::new();
-    let mut sifr_generated_chars_result: Vec<char> = result.chars().collect::<Vec<char>>();
+    let mut sifr_generated_chars_result: Vec<char> = Vec::new();
     for i in SifrRange::new_known_nonzero(
         SifrInt::from_i64(0),
         SifrInt::from_i64(10),

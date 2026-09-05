@@ -62,9 +62,9 @@ pub mod sifr_generated_generated_support {
     pub(super) fn search_flags(
         pattern: &str,
         text: &str,
-        flags: SifrInt,
+        flags: &SifrInt,
     ) -> Result<Option<String>, RegexError> {
-        re_find_flags(pattern, text, flags)
+        re_find_flags(pattern, text, (*flags).clone())
     }
     pub(super) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
         re_replace(pattern, replacement, text)
@@ -162,7 +162,7 @@ fn collect_primary_actual() -> Vec<bool> {
         let case_fold: Option<String> = search_flags(
             "hello",
             "HELLO",
-            sifr_generated_const_49474e4f524543415345(),
+            &sifr_generated_const_49474e4f524543415345(),
         )?;
         case_fold_ok = case_fold.is_some();
         Ok(())

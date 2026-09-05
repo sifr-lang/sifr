@@ -59,7 +59,8 @@ struct Pool {
 
 impl Pool {
     fn new(config: PoolConfig) -> Self {
-        let workers = __sifr_parallel_worker_count(config.workers);
+        let PoolConfig { workers } = config;
+        let workers = __sifr_parallel_worker_count(workers);
         match __sifr_build_parallel_pool(workers) {
             Ok(pool) => {
                 return Self {

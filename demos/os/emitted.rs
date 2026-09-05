@@ -138,16 +138,16 @@ fn collect_filesystem_actual() -> Vec<bool> {
     let mut stat_ok: bool = false;
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        mkdir(&base)?;
-        write_text(&file_path, "demo")?;
-        os_flow_ok = is_dir(&base) && is_file(&file_path);
-        let entries: Vec<String> = listdir(&base)?;
+        mkdir(base.as_str())?;
+        write_text(file_path.as_str(), "demo")?;
+        os_flow_ok = is_dir(base.as_str()) && is_file(file_path.as_str());
+        let entries: Vec<String> = listdir(base.as_str())?;
         list_ok = entries.len() >= SifrInt::from_i64(1);
-        let size: SifrInt = stat(&file_path)?;
+        let size: SifrInt = stat(file_path.as_str())?;
         stat_ok = size > SifrInt::from_i64(0);
-        remove_file(&file_path)?;
-        rmdir(&base)?;
-        cleanup_ok = !is_dir(&base);
+        remove_file(file_path.as_str())?;
+        rmdir(base.as_str())?;
+        cleanup_ok = !is_dir(base.as_str());
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

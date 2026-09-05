@@ -7,7 +7,7 @@ fn summarize(values: &[SifrInt]) -> SifrInt {
         reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
     )]
     for value in values.iter() {
-        if value > SifrInt::from_i64(10) {
+        if value > &SifrInt::from_i64(10) {
             total = ::std::ops::Add::add(&total, value);
         } else {
             total = ::std::ops::Add::add(&total, &SifrInt::from_i64(1));

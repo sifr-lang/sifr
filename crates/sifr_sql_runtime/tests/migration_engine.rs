@@ -58,7 +58,7 @@ fn graph(with_backfill: bool) -> MigrationExecutionPlan {
     let before = "a".repeat(64);
     let after = "b".repeat(64);
     let baseline = id("baseline");
-    let migration_id = id("m1");
+    let migration_id = id("migration_001");
     let mut steps = vec![step(
         "ddl",
         &before,
@@ -129,7 +129,7 @@ fn transactional_graph() -> MigrationExecutionPlan {
     let mut graph = graph(false);
     let migration = graph
         .migrations
-        .get_mut(&id("m1"))
+        .get_mut(&id("migration_001"))
         .expect("test migration should exist");
     let path = migration
         .paths
@@ -366,11 +366,14 @@ fn engine_records_lock_steps_heads_checksums_and_fingerprints() {
         .execute(&graph, &mut runtime)
         .expect("migration should complete");
     assert_eq!(report.status, MigrationExecutionStatus::Complete);
-    assert_eq!(report.heads, BTreeSet::from([id("m1")]));
+    assert_eq!(report.heads, BTreeSet::from([id("migration_001")]));
     assert_eq!(report.schema_fingerprint, after);
     assert!(!runtime.locked);
     assert!(runtime.ledger.in_progress.is_none());
-    assert_eq!(runtime.ledger.applied[&id("m1")].checksum, "c".repeat(64));
+    assert_eq!(
+        runtime.ledger.applied[&id("migration_001")].checksum,
+        "c".repeat(64)
+    );
     assert!(report.events.len() >= 8);
 }
 
@@ -459,9 +462,9 @@ fn checksum_drift_schema_drift_and_provider_panics_fail_closed() {
     let after = graph.target_fingerprint.clone();
     let mut runtime = FakeRuntime::new(&graph, Vec::new());
     runtime.ledger.applied.insert(
-        id("m1"),
+        id("migration_001"),
         AppliedMigrationRecord {
-            migration: id("m1"),
+            migration: id("migration_001"),
             checksum: "d".repeat(64),
             path_parent: id("baseline"),
             prior_heads: BTreeSet::from([id("baseline")]),
@@ -581,7 +584,7 @@ fn explicit_reverse_plan_rolls_back_to_the_recorded_prior_heads() {
     let after = graph.target_fingerprint.clone();
     graph
         .migrations
-        .get_mut(&id("m1"))
+        .get_mut(&id("migration_001"))
         .and_then(|migration| migration.paths.get_mut(&id("baseline")))
         .expect("migration path")
         .rollback = Some(vec![step(
@@ -626,7 +629,7 @@ fn forward_execution_refuses_pending_rollback_progress_at_the_target_head() {
         .expect("forward migration");
     runtime.ledger.in_progress = Some(InProgressMigrationRecord {
         direction: MigrationDirection::Rollback,
-        migration: id("m1"),
+        migration: id("migration_001"),
         parent: id("baseline"),
         migration_checksum: "c".repeat(64),
         completed_steps: BTreeMap::new(),

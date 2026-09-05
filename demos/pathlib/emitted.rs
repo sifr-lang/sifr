@@ -125,13 +125,7 @@ pub mod sifr_generated_generated_support {
     pub(super) fn join_path(base: &str, child: &str) -> String {
         let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
         if sifr_generated_chars_base.len() == SifrInt::from_i64(0) {
-            return {
-                let mut sifr_generated_concat: String =
-                    String::with_capacity(child.len().saturating_add(0usize));
-                sifr_generated_concat.push_str(child);
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
+            return child.to_string();
         }
         let last: Option<String> = {
             let sifr_generated_string_index =
@@ -174,7 +168,7 @@ pub mod sifr_generated_generated_support {
         );
         while i >= SifrInt::from_i64(0) {
             let ch: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
                 sifr_generated_chars_path
@@ -206,13 +200,7 @@ pub mod sifr_generated_generated_support {
             }
             i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
         }
-        {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(path.len().saturating_add(0usize));
-            sifr_generated_concat.push_str(path);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        }
+        path.to_string()
     }
     pub(super) fn sifr_generated_iter_list_str(
         entries: Vec<String>,
@@ -405,8 +393,8 @@ pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2epathlibX2ePath;
 fn collect_path_helpers_actual() -> Vec<bool> {
     vec![
-        basename("/tmp/demo.txt").as_str() == "demo.txt".to_string().as_str(),
-        join_path("/tmp", "demo.txt").as_str() == "/tmp/demo.txt".to_string().as_str(),
+        basename("/tmp/demo.txt").as_str() == "demo.txt",
+        join_path("/tmp", "demo.txt").as_str() == "/tmp/demo.txt",
     ]
 }
 fn collect_path_class_actual() -> Vec<bool> {
@@ -450,7 +438,7 @@ fn collect_missing_path_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut missing_rejected: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = SifrGeneratedStdlibSifrX2epathlibX2ePath::new(
+        let _bad: String = SifrGeneratedStdlibSifrX2epathlibX2ePath::new(
             "/tmp/sifr_pathlib_pathlib_demo_missing.txt".to_string(),
         )
         .read_text()?;

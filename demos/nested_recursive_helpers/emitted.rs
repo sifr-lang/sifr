@@ -6,8 +6,8 @@ struct Entry {
     next: Option<Box<Self>>,
 }
 impl Entry {
-    const fn new(value: SifrInt, next: Option<Box<Self>>) -> Self {
-        let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = value;
+    fn new(value: &SifrInt, next: Option<Box<Self>>) -> Self {
+        let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = (*value).clone();
         let sifr_generated_field_value_e5316cbaa025f028_6e657874: Option<Box<Self>> = next;
         Self {
             value: sifr_generated_field_value_7ce4fd9430e80cea_76616c7565,
@@ -29,14 +29,14 @@ fn collect_values(root: Option<&Entry>) -> String {
 }
 fn main() {
     let short: Entry = Entry::new(
-        SifrInt::from_i64(1),
-        Some(Box::new(Entry::new(SifrInt::from_i64(2), None))),
+        &SifrInt::from_i64(1),
+        Some(Box::new(Entry::new(&SifrInt::from_i64(2), None))),
     );
     let long: Entry = Entry::new(
-        SifrInt::from_i64(4),
+        &SifrInt::from_i64(4),
         Some(Box::new(Entry::new(
-            SifrInt::from_i64(5),
-            Some(Box::new(Entry::new(SifrInt::from_i64(6), None))),
+            &SifrInt::from_i64(5),
+            Some(Box::new(Entry::new(&SifrInt::from_i64(6), None))),
         ))),
     );
     assert_eq!(collect_values(None), "[]");

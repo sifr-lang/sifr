@@ -60,10 +60,64 @@ pub(super) fn fold_assignment_conditionals(
     }
 }
 
+pub(super) fn rewrite_empty_character_cache_initializers(statements: &mut [syn::Stmt]) {
+    for index in 1..statements.len() {
+        let Some(empty_string) = empty_string_local_name(&statements[index - 1]) else {
+            continue;
+        };
+        let syn::Stmt::Local(cache) = &mut statements[index] else {
+            continue;
+        };
+        if !local_has_vec_char_type(&syn::Stmt::Local(cache.clone())) {
+            continue;
+        }
+        let Some(init) = &mut cache.init else {
+            continue;
+        };
+        if matches!(init.expr.as_ref(), syn::Expr::MethodCall(collect)
+            if collect.method == "collect" && collect.args.is_empty()
+                && matches!(collect.receiver.as_ref(), syn::Expr::MethodCall(chars)
+                    if chars.method == "chars" && chars.args.is_empty()
+                        && matches!(chars.receiver.as_ref(), syn::Expr::Path(path)
+                            if path.path.is_ident(&empty_string))))
+        {
+            *init.expr = syn::parse_quote!(Vec::new());
+        }
+    }
+}
+
+fn empty_string_local_name(statement: &syn::Stmt) -> Option<String> {
+    let syn::Stmt::Local(local) = statement else {
+        return None;
+    };
+    let init = local.init.as_ref()?;
+    let syn::Expr::Call(call) = init.expr.as_ref() else {
+        return None;
+    };
+    matches!(call.func.as_ref(), syn::Expr::Path(path)
+        if path.path.segments.len() == 2
+            && path.path.segments[0].ident == "String"
+            && path.path.segments[1].ident == "new"
+            && call.args.is_empty())
+    .then(|| assignment_pattern_name(&local.pat))
+    .flatten()
+}
+
+fn assignment_pattern_name(pattern: &syn::Pat) -> Option<String> {
+    match pattern {
+        syn::Pat::Ident(binding) if binding.subpat.is_none() => Some(binding.ident.to_string()),
+        syn::Pat::Type(typed) => assignment_pattern_name(&typed.pat),
+        syn::Pat::Paren(paren) => assignment_pattern_name(&paren.pat),
+        _ => None,
+    }
+}
+
 fn expression_is_replaceable_initializer(expression: &syn::Expr, statement: &syn::Stmt) -> bool {
     crate::discardability::syntax_expression_is_discardable(expression)
         || (matches!(expression, syn::Expr::Path(_)) && local_has_bool_type(statement))
-        || (local_has_string_type(statement) && is_owned_string_literal(expression))
+        || (local_has_string_type(statement) && is_owned_string_copy(expression))
+        || (local_has_vec_type(statement) && is_empty_vec(expression))
+        || (local_has_vec_char_type(statement) && is_chars_collection(expression))
         || (local_has_option_type(statement)
             && matches!(expression, syn::Expr::Path(path) if path.path.is_ident("None")))
         || matches!(expression,
@@ -75,6 +129,29 @@ fn expression_is_replaceable_initializer(expression: &syn::Expr, statement: &syn
                     && matches!(call.args.first(), Some(syn::Expr::MethodCall(method))
                         if method.method == "len" && method.args.is_empty())
                     && call.args.len() == 1)
+}
+
+fn local_has_vec_char_type(statement: &syn::Stmt) -> bool {
+    let syn::Stmt::Local(local) = statement else {
+        return false;
+    };
+    matches!(&local.pat, syn::Pat::Type(typed)
+        if matches!(typed.ty.as_ref(), syn::Type::Path(path)
+            if path.path.segments.last().is_some_and(|segment|
+                segment.ident == "Vec"
+                    && matches!(&segment.arguments, syn::PathArguments::AngleBracketed(arguments)
+                        if matches!(arguments.args.first(), Some(syn::GenericArgument::Type(
+                            syn::Type::Path(element))) if element.path.is_ident("char"))))))
+}
+
+fn is_chars_collection(expression: &syn::Expr) -> bool {
+    let syn::Expr::MethodCall(collect) = expression else {
+        return false;
+    };
+    collect.method == "collect"
+        && collect.args.is_empty()
+        && matches!(collect.receiver.as_ref(), syn::Expr::MethodCall(chars)
+            if chars.method == "chars" && chars.args.is_empty())
 }
 
 fn local_has_option_type(statement: &syn::Stmt) -> bool {
@@ -94,12 +171,29 @@ fn local_has_string_type(statement: &syn::Stmt) -> bool {
         if matches!(typed.ty.as_ref(), syn::Type::Path(path) if path.path.is_ident("String")))
 }
 
-fn is_owned_string_literal(expression: &syn::Expr) -> bool {
+fn is_owned_string_copy(expression: &syn::Expr) -> bool {
     matches!(expression, syn::Expr::MethodCall(call)
-        if matches!(call.method.to_string().as_str(), "to_owned" | "to_string")
+        if matches!(call.method.to_string().as_str(), "clone" | "to_owned" | "to_string")
             && call.args.is_empty()
-            && matches!(call.receiver.as_ref(), syn::Expr::Lit(literal)
-                if matches!(literal.lit, syn::Lit::Str(_))))
+            && matches!(call.receiver.as_ref(), syn::Expr::Path(_) | syn::Expr::Lit(_)))
+}
+
+fn local_has_vec_type(statement: &syn::Stmt) -> bool {
+    let syn::Stmt::Local(local) = statement else {
+        return false;
+    };
+    matches!(&local.pat, syn::Pat::Type(typed)
+        if matches!(typed.ty.as_ref(), syn::Type::Path(path)
+            if path.path.segments.last().is_some_and(|segment| segment.ident == "Vec")))
+}
+
+fn is_empty_vec(expression: &syn::Expr) -> bool {
+    matches!(expression, syn::Expr::Call(call)
+        if call.args.is_empty()
+            && matches!(call.func.as_ref(), syn::Expr::Path(path)
+                if path.path.segments.len() == 2
+                    && path.path.segments[0].ident == "Vec"
+                    && path.path.segments[1].ident == "new"))
 }
 
 fn local_has_bool_type(statement: &syn::Stmt) -> bool {

@@ -33,12 +33,8 @@ fn demo_augmented_assign() {
     items.extend(vec![SifrInt::from_i64(3), SifrInt::from_i64(4)]);
     println!("List += length: {}", SifrInt::from(items.len()));
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn classify(n: SifrInt) -> String {
-    if n > SifrInt::from_i64(0) {
+fn classify(n: &SifrInt) -> String {
+    if n > &SifrInt::from_i64(0) {
         "positive".to_string()
     } else {
         "non-positive".to_string()
@@ -99,11 +95,7 @@ fn demo_negative_indexing() {
                 .get(sifr_generated_string_index_normalized)
                 .copied()
         }
-        .map(|character| character.to_string())
-        .map_or_else(
-            || "None".to_string(),
-            |sifr_generated_v| sifr_generated_v.to_string()
-        )
+        .map_or_else(|| "None".to_string(), |character| character.to_string())
     );
 }
 fn demo_step_slicing() {
@@ -201,7 +193,7 @@ fn demo_string_methods() {
                     .unwrap_or_default()
             })
             .collect::<Vec<_>>()
-            .join(&" ".to_string())
+            .join(" ")
     );
     println!(
         "Is alpha: {}",
@@ -255,10 +247,7 @@ fn demo_dict_methods() {
         ("b".to_string(), SifrInt::from_i64(2)),
         ("c".to_string(), SifrInt::from_i64(3)),
     ]);
-    println!(
-        "Dict contains \'a\': {}",
-        d.contains_key("a".to_string().as_str())
-    );
+    println!("Dict contains \'a\': {}", d.contains_key("a"));
     println!("Dict length: {}", SifrInt::from(d.len()));
     d.clear();
     println!("After clear: {}", SifrInt::from(d.len()));
@@ -277,7 +266,7 @@ fn demo_chained_comparisons() {
 }
 fn demo_string_multiply() {
     println!("{}", {
-        let sifr_generated_repeat_src: &str = &"=".to_string();
+        let sifr_generated_repeat_src: &str = "=";
         let sifr_generated_n = SifrInt::from_i64(30);
         if sifr_generated_n <= 0 {
             String::new()
@@ -294,7 +283,7 @@ fn demo_string_multiply() {
     });
     println!("  String Multiplication Demo");
     println!("{}", {
-        let sifr_generated_repeat_src: &str = &"-".to_string();
+        let sifr_generated_repeat_src: &str = "-";
         let sifr_generated_n = SifrInt::from_i64(30);
         if sifr_generated_n <= 0 {
             String::new()
@@ -353,7 +342,7 @@ fn demo_loop_else() {
         reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
     )]
     for item in items.iter() {
-        if item == target {
+        if item == &target {
             println!("Found target!");
             sifr_generated_broke = true;
             break;
@@ -401,10 +390,10 @@ fn demo_builtins() {
 }
 fn main() {
     demo_augmented_assign();
-    println!("classify(5): {}", classify(SifrInt::from_i64(5)));
+    println!("classify(5): {}", classify(&SifrInt::from_i64(5)));
     println!(
         "classify(-3): {}",
-        classify(::std::ops::Neg::neg(&SifrInt::from_i64(3)))
+        classify(&::std::ops::Neg::neg(&SifrInt::from_i64(3)))
     );
     println!("{}", greet("Alice", "Hello", "!"));
     println!("{}", greet("Bob", "Hi", "!"));

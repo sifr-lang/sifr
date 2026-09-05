@@ -27,7 +27,7 @@ fn mutate_and_return(mut items: Vec<SifrInt>) -> Vec<SifrInt> {
     }
     items
 }
-fn mutate_borrowed(items: &mut Vec<SifrInt>) -> SifrInt {
+fn mutate_borrowed(items: &mut [SifrInt]) -> SifrInt {
     if items.len() > SifrInt::from_i64(0) {
         {
             let sifr_generated_assign_value = SifrInt::from_i64(14);

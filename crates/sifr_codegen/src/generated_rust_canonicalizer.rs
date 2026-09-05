@@ -6,17 +6,18 @@ use syn::visit_mut::{self, VisitMut};
 mod api_cleanup;
 mod enum_variant_cleanup;
 mod field_name_cleanup;
-mod format_capture;
+pub(crate) mod format_capture;
 mod identifier_canonicalizer;
 mod identifier_policy;
 mod item_demand;
 mod item_dependencies;
 mod local_name_cleanup;
+mod marker_trait_cleanup;
 mod member_demand;
 mod method_demand;
 mod project_support_pruning;
 pub(crate) use project_support_pruning::{
-    import_generated_support_in_project_nominals,
+    import_generated_support_in_project_nominals, import_project_bindings_in_project_nominals,
     import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
     render_generated_support_import,
 };
@@ -36,6 +37,7 @@ use item_dependencies::IdentifierCollector;
 use item_dependencies::{
     all_item_identifier_names, impl_self_type_name, item_definition_name, item_dependency_names,
 };
+use marker_trait_cleanup::prune_unused_marker_traits;
 use member_demand::prune_removed_generated_trait_methods;
 use member_demand::prune_unused_members;
 use method_demand::{demanded_inherent_method_names, prune_inherent_methods};
@@ -81,9 +83,18 @@ pub(crate) fn rewrite_project_borrowed_string_literals(
             })
         })
         .collect::<Result<Vec<_>, _>>()?;
+    for file in &mut files {
+        syntax_cleanup::apply_local_scalar_borrow_plans(file);
+    }
     let signatures = syntax_cleanup::collect_project_borrowed_string_params(&files);
+    let shared_slices = api_cleanup::collect_project_shared_slice_params(&files);
+    let scalar_borrows = syntax_cleanup::collect_project_scalar_borrow_plans(&files);
+    let mutability_facts = syntax_cleanup::collect_project_mutability_facts(&files);
     for file in &mut files {
         syntax_cleanup::rewrite_project_borrowed_string_literals(file, &signatures);
+        api_cleanup::rewrite_project_shared_slice_calls(file, &shared_slices);
+        syntax_cleanup::apply_project_scalar_borrow_plans(file, &scalar_borrows);
+        syntax_cleanup::apply_project_mutability_facts(file, &mutability_facts);
     }
     for (source, file) in sources.iter_mut().zip(files) {
         **source = prettyplease::unparse(&file);
@@ -118,6 +129,7 @@ fn prune_closed_generated_binary(source: &str) -> Result<Option<String>, String>
     prune_inherent_methods(&mut file.items, &demanded_methods);
     prune_unused_members(&mut file);
     prune_removed_generated_trait_methods(&mut file.items);
+    prune_unused_marker_traits(&mut file.items);
     prune_item_scope(&mut file.items, &HashSet::from(["main".to_string()]), true);
     prune_unused_members(&mut file);
     prune_removed_generated_trait_methods(&mut file.items);

@@ -23,7 +23,7 @@ fn multi_module_support_has_one_private_owner_and_a_strict_size_budget() {
     assert!(
         generated
             .project_union_prelude
-            .contains("pub(crate) fn shared_operation")
+            .contains("pub(super) fn shared_operation")
     );
     assert!(
         !generated
@@ -41,7 +41,7 @@ fn multi_module_support_has_one_private_owner_and_a_strict_size_budget() {
         assert!(!source.contains("fn shared_operation"));
         assert_eq!(
             source
-                .matches("use crate::__sifr_generated_support::{shared_operation};")
+                .matches("use crate::__sifr_generated_support::shared_operation;")
                 .count(),
             1
         );

@@ -214,3 +214,16 @@ fn exact_range_is_lazy_bidirectional_and_not_i64_bounded() {
         ]
     );
 }
+#[test]
+fn owned_decimal_string_conversion_preserves_exact_values() {
+    for text in [
+        "0",
+        "-1",
+        "9223372036854775807",
+        "9223372036854775808",
+        "-184467440737095516160",
+    ] {
+        let value = exact(text);
+        assert_eq!(String::from(value), text);
+    }
+}

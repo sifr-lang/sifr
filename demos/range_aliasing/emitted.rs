@@ -25,8 +25,8 @@ fn sum_reverse(nums: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for i in SifrRange::new_known_nonzero(
         ::std::ops::Sub::sub(&n, &SifrInt::from_i64(1)),
-        -SifrInt::from_i64(1),
-        -SifrInt::from_i64(1),
+        SifrInt::from_i64(-1),
+        SifrInt::from_i64(-1),
     ) {
         let Some(sifr_generated_checked_value_1) = ({
             let sifr_generated_checked_read_collection = &nums;
@@ -107,7 +107,7 @@ fn main() {
         ]),
         SifrInt::from_i64(10)
     );
-    assert_eq!(sum_reverse(&Vec::new()), SifrInt::from_i64(0));
+    assert_eq!(sum_reverse(&[]), SifrInt::from_i64(0));
     assert_eq!(
         sum_reverse_while(&[
             SifrInt::from_i64(1),
@@ -117,7 +117,7 @@ fn main() {
         ]),
         SifrInt::from_i64(10)
     );
-    assert_eq!(sum_reverse_while(&Vec::new()), SifrInt::from_i64(0));
+    assert_eq!(sum_reverse_while(&[]), SifrInt::from_i64(0));
     assert_eq!(
         append_growth_product(&[
             SifrInt::from_i64(2),
@@ -126,5 +126,5 @@ fn main() {
         ]),
         SifrInt::from_i64(1)
     );
-    assert_eq!(append_growth_product(&Vec::new()), SifrInt::from_i64(1));
+    assert_eq!(append_growth_product(&[]), SifrInt::from_i64(1));
 }

@@ -1,11 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn greater_than_two(x: SifrInt) -> bool {
-    x > SifrInt::from_i64(2)
+fn greater_than_two(x: &SifrInt) -> bool {
+    x > &SifrInt::from_i64(2)
 }
 fn main() {
     let nums: Vec<SifrInt> = vec![
@@ -22,7 +18,7 @@ fn main() {
             nums.iter()
                 .filter(|&sifr_generated_filter_item| {
                     let sifr_generated_filter_value = sifr_generated_filter_item.clone();
-                    greater_than_two(sifr_generated_filter_value)
+                    greater_than_two(&sifr_generated_filter_value)
                 })
                 .cloned()
         )

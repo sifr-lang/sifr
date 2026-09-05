@@ -3,7 +3,7 @@
 use crate::{RustExpr, RustParam, RustType};
 
 fn string_lit(value: &str) -> RustExpr {
-    RustExpr::Literal(crate::RustLiteral::Str(value.to_string()))
+    RustExpr::Literal(crate::RustLiteral::StaticStr(value.to_string()))
 }
 
 fn runtime_call(func: &str, args: Vec<RustExpr>) -> RustExpr {
@@ -49,6 +49,17 @@ fn ref_arg(expr: RustExpr) -> RustExpr {
     }
 }
 
+fn string_view(expr: RustExpr) -> RustExpr {
+    match expr {
+        RustExpr::Literal(
+            crate::RustLiteral::Str(value) | crate::RustLiteral::StaticStr(value),
+        ) => RustExpr::Literal(crate::RustLiteral::StaticStr(value)),
+        RustExpr::Clone(value) => string_view(*value),
+        value @ RustExpr::Ref { .. } => value,
+        value => ref_arg(value),
+    }
+}
+
 pub(crate) fn lower_str_encode_result(args: &[RustExpr]) -> Option<RustExpr> {
     let (text, encoding, errors) = match args {
         [text] => (text.clone(), string_lit("utf-8"), string_lit("strict")),
@@ -59,7 +70,11 @@ pub(crate) fn lower_str_encode_result(args: &[RustExpr]) -> Option<RustExpr> {
     Some(map_string_error(
         runtime_call(
             "encode_bytes",
-            vec![ref_arg(text), ref_arg(encoding), ref_arg(errors)],
+            vec![
+                string_view(text),
+                string_view(encoding),
+                string_view(errors),
+            ],
         ),
         "ParseError",
     ))
@@ -75,7 +90,7 @@ pub(crate) fn lower_bytes_decode_result(args: &[RustExpr]) -> Option<RustExpr> {
     Some(map_string_error(
         runtime_call(
             "decode_text",
-            vec![ref_arg(data), ref_arg(encoding), ref_arg(errors)],
+            vec![ref_arg(data), string_view(encoding), string_view(errors)],
         ),
         "ParseError",
     ))

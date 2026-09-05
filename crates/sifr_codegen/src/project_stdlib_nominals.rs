@@ -45,9 +45,14 @@ impl ProjectNominalRegistry {
     }
 
     fn register_builtin(&mut self, name: &str, rust_name: String) {
-        let identity = crate::builtin_error_identity(name)
-            .expect("project builtin registration requires a builtin error name");
-        self.register_shared(identity, rust_name);
+        let identity = crate::builtin_error_identity(name);
+        assert!(
+            identity.is_some(),
+            "project builtin registration requires a builtin error name"
+        );
+        if let Some(identity) = identity {
+            self.register_shared(identity, rust_name);
+        }
     }
 }
 

@@ -219,7 +219,7 @@ fn factors_shared_branch_prefix_after_condition_evaluation() {
         .expect("a common branch prefix should have one evaluation after the condition");
 
     assert_eq!(
-        canonical.matches("let value = result.clone()").count(),
+        canonical.matches("let value = result;").count(),
         1,
         "{canonical}"
     );
@@ -252,7 +252,7 @@ fn factors_shared_if_let_prefix_without_invalid_let_expression() {
         "{canonical}"
     );
     assert!(
-        canonical.contains("let sifr_generated_shared_branch_value = value.clone()"),
+        canonical.contains("let sifr_generated_shared_branch_value = value;"),
         "{canonical}"
     );
     assert!(
@@ -345,7 +345,7 @@ fn preserves_if_let_suffix_that_reads_a_shadowing_pattern_binding() {
 fn folds_generated_conditional_initialization_without_losing_branch_effects() {
     let source = r#"
         fn choose(flag: bool, nested: bool, input: &str) -> (String, Vec<i64>, i64) {
-            let mut text = {
+            let mut text: String = {
                 let mut sifr_generated_concat = String::with_capacity(input.len());
                 sifr_generated_concat.push_str(input);
                 sifr_generated_concat.push_str("");
@@ -353,14 +353,14 @@ fn folds_generated_conditional_initialization_without_losing_branch_effects() {
             };
             if flag { text = "yes".to_string(); } else { text = "no".to_string(); }
             let mut side = 0;
-            let mut values = Vec::new();
+            let mut values: Vec<i64> = Vec::new();
             if flag { values = vec![1]; side = 1; } else { values = vec![2]; side = 2; }
             let mut origin = 0;
             if flag { origin = 1; } else if nested { origin = 2; } else { return (text, values, side); }
             (text, values, origin + side)
         }
         fn wrapped(value: String) -> String {
-            let mut selected = String::new();
+            let mut selected: String = String::new();
             { selected = value; }
             selected
         }
@@ -369,8 +369,14 @@ fn folds_generated_conditional_initialization_without_losing_branch_effects() {
     let canonical = canonicalize_generated_rust_source(source)
         .expect("generated replace-then-branch scaffolding should become conditional initializers");
 
-    assert!(canonical.contains("let text = if flag"), "{canonical}");
-    assert!(canonical.contains("let values = if flag"), "{canonical}");
+    assert!(
+        canonical.contains("let text: String = if flag"),
+        "{canonical}"
+    );
+    assert!(
+        canonical.contains("let values: Vec<i64> = if flag"),
+        "{canonical}"
+    );
     assert!(canonical.contains("let origin = if flag"), "{canonical}");
     assert!(
         canonical.contains("const fn wrapped(value: String) -> String {\n    value\n}"),

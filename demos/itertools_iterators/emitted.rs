@@ -95,8 +95,6 @@ pub mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(super) trait SifrGeneratedAdd: Sized {}
-    impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
     pub(super) fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
         let iterables = iterables.to_vec();
         Box::new(SifrGeneratedGenerator::new(
@@ -172,15 +170,12 @@ pub mod sifr_generated_generated_support {
             },
         ))
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn islice<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
-        start_or_stop: Option<SifrInt>,
+        start_or_stop: Option<&SifrInt>,
         slice_args: &[Option<SifrInt>],
     ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
+        let start_or_stop: Option<SifrInt> = start_or_stop.cloned();
         if slice_args.len() > SifrInt::from_i64(2) {
             return Err(ValueError::new(
                 "islice: expected at most stop and step after start".to_string(),
@@ -293,7 +288,7 @@ fn main() {
                 ]
                 .into_iter(),
             ),
-            Some(SifrInt::from_i64(1)),
+            Some(&SifrInt::from_i64(1)),
             &[Some(SifrInt::from_i64(5)), Some(SifrInt::from_i64(2))],
         )?;
         println!("{:?}", sliced.collect::<Vec<_>>());

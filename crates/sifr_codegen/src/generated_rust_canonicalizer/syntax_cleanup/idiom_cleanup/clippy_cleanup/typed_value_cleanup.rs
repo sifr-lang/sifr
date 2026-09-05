@@ -1,300 +1,18 @@
-pub(super) fn rewrite_owned_string_clones(signature: &syn::Signature, body: &mut syn::Block) {
-    if signature
-        .receiver()
-        .is_some_and(|receiver| matches!(receiver.kind, syn::ReceiverKind::Reference(..)))
-    {
-        SharedSelfBorrowRewriter.visit_block_mut(body);
-    }
-    let borrowed_parameters = signature
-        .inputs
-        .iter()
-        .filter_map(|argument| {
-            let syn::FnArg::Typed(parameter) = argument else {
-                return None;
-            };
-            matches!(parameter.ty.as_ref(), syn::Type::Reference(_))
-                .then(|| simple_pattern_name(&parameter.pat))
-                .flatten()
-        })
-        .collect::<HashSet<_>>();
-    let mut owned_strings = signature
-        .inputs
-        .iter()
-        .filter_map(|argument| {
-            let syn::FnArg::Typed(parameter) = argument else {
-                return None;
-            };
-            if !type_is_owned_string(&parameter.ty) {
-                return None;
-            }
-            simple_pattern_name(&parameter.pat)
-        })
-        .collect::<HashSet<_>>();
-    let mut collector = OwnedStringLocalCollector::default();
-    collector.visit_block(body);
-    owned_strings.extend(collector.names);
-    owned_strings.retain(|name| !borrowed_parameters.contains(name));
-    OwnedStringCloneRewriter {
-        names: &owned_strings,
-    }
-    .visit_block_mut(body);
-    TypedStringInitializerRewriter {
-        borrowed_roots: &borrowed_parameters,
-    }
-    .visit_block_mut(body);
-
-    let mut optional_strings = OptionStringLocalCollector::default();
-    optional_strings.visit_block(body);
-    OwnedOptionStringIdentityRewriter {
-        names: &optional_strings.names,
-    }
-    .visit_block_mut(body);
-
-    let mut owned_vectors = signature
-        .inputs
-        .iter()
-        .filter_map(|argument| {
-            let syn::FnArg::Typed(parameter) = argument else {
-                return None;
-            };
-            (type_is_owned_vector(&parameter.ty))
-                .then(|| simple_pattern_name(&parameter.pat))
-                .flatten()
-        })
-        .collect::<HashSet<_>>();
-    let mut vector_collector = OwnedVectorLocalCollector::default();
-    vector_collector.visit_block(body);
-    owned_vectors.extend(vector_collector.names);
-    OwnedVectorCloneRewriter {
-        names: &owned_vectors,
-    }
-    .visit_block_mut(body);
-
-    let mut sifr_ints = signature
-        .inputs
-        .iter()
-        .filter_map(|argument| {
-            let syn::FnArg::Typed(parameter) = argument else {
-                return None;
-            };
-            type_is_sifr_int(&parameter.ty)
-                .then(|| simple_pattern_name(&parameter.pat))
-                .flatten()
-        })
-        .collect::<HashSet<_>>();
-    let mut int_collector = SifrIntLocalCollector::default();
-    int_collector.visit_block(body);
-    sifr_ints.extend(int_collector.names);
-    SifrIntOperationRewriter { names: &sifr_ints }.visit_block_mut(body);
-    rewrite_residual_typed_calls(body, &sifr_ints);
-
-    BorrowedCopyUnionCloneRewriter {
-        borrowed_roots: &borrowed_parameters,
-    }
-    .visit_block_mut(body);
-
-    let mut borrowed_slice_bindings = BorrowedSliceBindingCollector::default();
-    borrowed_slice_bindings.visit_block(body);
-    BorrowedBindingReferenceRewriter {
-        names: &borrowed_slice_bindings.names,
-    }
-    .visit_block_mut(body);
-
-    let borrowed_strings = signature
-        .inputs
-        .iter()
-        .filter_map(|argument| {
-            let syn::FnArg::Typed(parameter) = argument else {
-                return None;
-            };
-            matches!(parameter.ty.as_ref(), syn::Type::Reference(reference)
-                if matches!(reference.elem.as_ref(), syn::Type::Path(path)
-                    if path.path.is_ident("str")))
-            .then(|| simple_pattern_name(&parameter.pat))
-            .flatten()
-        })
-        .collect::<HashSet<_>>();
-    BorrowedBindingReferenceRewriter {
-        names: &borrowed_strings,
-    }
-    .visit_block_mut(body);
-
-    DoubleReferenceCloneFromRewriter {
-        borrowed: &borrowed_parameters,
-    }
-    .visit_block_mut(body);
-
-    let mut copy_sources = CopyVectorSourceCollector::default();
-    copy_sources.visit_block(body);
-    CopyIteratorRewriter {
-        sources: &copy_sources.sources,
-    }
-    .visit_block_mut(body);
-
-    let mut generic_string_owners = GenericStringOwnerCollector::default();
-    generic_string_owners.visit_block(body);
-    GenericStringFieldConversionRewriter {
-        owners: &generic_string_owners.names,
-    }
-    .visit_block_mut(body);
-}
-
-struct DoubleReferenceCloneFromRewriter<'names> {
-    borrowed: &'names HashSet<String>,
-}
-
-impl VisitMut for DoubleReferenceCloneFromRewriter<'_> {
-    fn visit_expr_method_call_mut(&mut self, call: &mut syn::ExprMethodCall) {
-        visit_mut::visit_expr_method_call_mut(self, call);
-        if call.method != "clone_from" || call.args.len() != 1 {
-            return;
-        }
-        let Some(syn::Expr::Reference(reference)) = call.args.first() else {
-            return;
-        };
-        if reference.mutability.is_none()
-            && matches!(reference.expr.as_ref(), syn::Expr::Path(path)
-                if path.path.get_ident().is_some_and(|name|
-                    self.borrowed.contains(&name.to_string())))
-        {
-            call.args[0] = reference.expr.as_ref().clone();
-        }
-    }
-
-    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
-}
-
-#[derive(Default)]
-struct GenericStringOwnerCollector {
+struct OwnedStringLocalCollector<'returns> {
     names: HashSet<String>,
+    option_names: HashSet<String>,
+    tuple_string_fields: HashMap<String, Vec<bool>>,
+    tuple_string_returns: &'returns HashMap<String, Vec<bool>>,
 }
 
-impl Visit<'_> for GenericStringOwnerCollector {
+impl Visit<'_> for OwnedStringLocalCollector<'_> {
     fn visit_local(&mut self, local: &syn::Local) {
         if let syn::Pat::Type(typed) = &local.pat
-            && type_has_string_argument(&typed.ty)
+            && type_is_option_string(&typed.ty)
             && let Some(name) = simple_pattern_name(&typed.pat)
         {
-            self.names.insert(name);
+            self.option_names.insert(name);
         }
-        visit::visit_local(self, local);
-    }
-
-    fn visit_item(&mut self, _item: &syn::Item) {}
-}
-
-fn type_has_string_argument(ty: &syn::Type) -> bool {
-    let syn::Type::Path(path) = ty else {
-        return false;
-    };
-    path.path.segments.iter().any(|segment| {
-        matches!(&segment.arguments, syn::PathArguments::AngleBracketed(arguments)
-            if arguments.args.iter().any(|argument|
-                matches!(argument, syn::GenericArgument::Type(inner)
-                    if type_is_owned_string(inner))))
-    })
-}
-
-struct GenericStringFieldConversionRewriter<'names> {
-    owners: &'names HashSet<String>,
-}
-
-impl VisitMut for GenericStringFieldConversionRewriter<'_> {
-    fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
-        visit_mut::visit_expr_mut(self, expression);
-        let syn::Expr::MethodCall(conversion) = expression else {
-            return;
-        };
-        if !matches!(conversion.method.to_string().as_str(), "clone" | "to_owned" | "to_string")
-            || !conversion.args.is_empty()
-            || !matches!(conversion.receiver.as_ref(), syn::Expr::Field(field)
-                if matches!(field.base.as_ref(), syn::Expr::Path(path)
-                    if path.path.get_ident().is_some_and(|name|
-                        self.owners.contains(&name.to_string()))))
-        {
-            return;
-        }
-        *expression = conversion.receiver.as_ref().clone();
-    }
-
-    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
-
-    fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
-        let Ok(mut arguments) = rust_macro.parse_body_with(
-            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-        ) else {
-            return;
-        };
-        for argument in &mut arguments {
-            self.visit_expr_mut(argument);
-        }
-        rust_macro.tokens = arguments.to_token_stream();
-    }
-}
-
-#[derive(Default)]
-struct BorrowedSliceBindingCollector {
-    names: HashSet<String>,
-}
-
-impl Visit<'_> for BorrowedSliceBindingCollector {
-    fn visit_local(&mut self, local: &syn::Local) {
-        let borrowed_source = local.init.as_ref().is_some_and(|init| {
-            matches!(init.expr.as_ref(), syn::Expr::MethodCall(call)
-                if call.method == "as_slice" && call.args.is_empty())
-                || matches!(init.expr.as_ref(), syn::Expr::Path(path)
-                    if path.path.get_ident().is_some_and(|name|
-                        self.names.contains(&name.to_string())))
-        });
-        if borrowed_source {
-            collect_owned_pattern_names(&local.pat, &mut self.names);
-        }
-        visit::visit_local(self, local);
-    }
-
-    fn visit_item(&mut self, _item: &syn::Item) {}
-}
-
-struct BorrowedBindingReferenceRewriter<'names> {
-    names: &'names HashSet<String>,
-}
-
-impl VisitMut for BorrowedBindingReferenceRewriter<'_> {
-    fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
-        visit_mut::visit_expr_mut(self, expression);
-        if let syn::Expr::Reference(reference) = expression
-            && reference.mutability.is_none()
-            && matches!(reference.expr.as_ref(), syn::Expr::Path(path)
-                if path.path.get_ident().is_some_and(|name|
-                    self.names.contains(&name.to_string())))
-        {
-            *expression = reference.expr.as_ref().clone();
-        }
-    }
-
-    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
-
-    fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
-        let Ok(mut arguments) = rust_macro.parse_body_with(
-            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-        ) else {
-            return;
-        };
-        for argument in &mut arguments {
-            self.visit_expr_mut(argument);
-        }
-        rust_macro.tokens = arguments.to_token_stream();
-    }
-}
-
-#[derive(Default)]
-struct OwnedStringLocalCollector {
-    names: HashSet<String>,
-    tuple_string_fields: HashMap<String, Vec<bool>>,
-}
-
-impl Visit<'_> for OwnedStringLocalCollector {
-    fn visit_local(&mut self, local: &syn::Local) {
         if let syn::Pat::Type(typed) = &local.pat
             && type_is_owned_string(&typed.ty)
             && let Some(name) = simple_pattern_name(&typed.pat)
@@ -328,10 +46,136 @@ impl Visit<'_> for OwnedStringLocalCollector {
                 }
             }
         }
+        if let syn::Pat::Tuple(pattern) = &local.pat
+            && let Some(initializer) = &local.init
+            && let syn::Expr::Call(call) = initializer.expr.as_ref()
+            && let syn::Expr::Path(path) = call.func.as_ref()
+            && path.qself.is_none()
+            && path.path.segments.len() == 1
+            && let Some(function) = path.path.get_ident()
+            && let Some(fields) =
+                self.tuple_string_returns
+                    .get(&format!("{}#{}", function, call.args.len()))
+            && !fields.is_empty()
+        {
+            for (element, is_string) in pattern.elems.iter().zip(fields) {
+                if *is_string && let Some(name) = simple_pattern_name(element) {
+                    self.names.insert(name);
+                }
+            }
+        }
+        if let syn::Pat::TupleStruct(pattern) = &local.pat
+            && pattern
+                .path
+                .segments
+                .last()
+                .is_some_and(|segment| segment.ident == "Some")
+            && pattern.elems.len() == 1
+            && let Some(element) = pattern.elems.first()
+            && let Some(name) = simple_pattern_name(element)
+            && local.init.as_ref().is_some_and(|init| {
+                matches!(init.expr.as_ref(), syn::Expr::Path(path)
+                    if path.path.get_ident().is_some_and(|source|
+                        self.option_names.contains(&source.to_string())))
+            })
+        {
+            self.names.insert(name);
+        }
         visit::visit_local(self, local);
     }
 
     fn visit_item(&mut self, _item: &syn::Item) {}
+
+    fn visit_expr_if(&mut self, branch: &syn::ExprIf) {
+        if let syn::Expr::Let(condition) = branch.cond.as_ref()
+            && matches!(condition.expr.as_ref(), syn::Expr::Path(path)
+                if path.path.get_ident().is_some_and(|source|
+                    self.option_names.contains(&source.to_string())))
+        {
+            collect_owned_pattern_names(&condition.pat, &mut self.names);
+        }
+        visit::visit_expr_if(self, branch);
+    }
+}
+
+struct BorrowedStringBindingCollector<'names> {
+    option_roots: &'names HashSet<String>,
+    active: HashSet<String>,
+}
+
+impl VisitMut for BorrowedStringBindingCollector<'_> {
+    fn visit_block_mut(&mut self, block: &mut syn::Block) {
+        let outer = self.active.clone();
+        for statement in &mut block.stmts {
+            self.visit_stmt_mut(statement);
+            let syn::Stmt::Local(local) = statement else {
+                continue;
+            };
+            let bound = pattern_binding_names(&local.pat);
+            self.active.retain(|name| !bound.contains(name));
+            if let Some(name) = borrowed_option_string_binding(local, self.option_roots) {
+                self.active.insert(name);
+            }
+        }
+        self.active = outer;
+    }
+
+    fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
+        visit_mut::visit_expr_mut(self, expression);
+        let syn::Expr::MethodCall(call) = expression else {
+            return;
+        };
+        if matches!(call.method.to_string().as_str(), "to_owned" | "to_string")
+            && call.args.is_empty()
+            && matches!(call.receiver.as_ref(), syn::Expr::Path(path)
+                if path.path.get_ident().is_some_and(|name|
+                    self.active.contains(&name.to_string())))
+        {
+            call.method = syn::Ident::new("clone", call.method.span());
+        }
+    }
+
+    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
+}
+
+fn borrowed_option_string_binding(
+    local: &syn::Local,
+    option_roots: &HashSet<String>,
+) -> Option<String> {
+    if let syn::Pat::TupleStruct(pattern) = &local.pat
+        && pattern
+            .path
+            .segments
+            .last()
+            .is_some_and(|segment| segment.ident == "Some")
+        && pattern.elems.len() == 1
+        && let Some(name) = pattern.elems.first().and_then(simple_pattern_name)
+        && local.init.as_ref().is_some_and(|init| {
+            matches!(init.expr.as_ref(), syn::Expr::MethodCall(call)
+                    if call.method == "as_ref"
+                        && call.args.is_empty()
+                        && matches!(call.receiver.as_ref(), syn::Expr::Path(path)
+                            if path.path.get_ident().is_some_and(|root|
+                                option_roots.contains(&root.to_string()))))
+        })
+    {
+        Some(name)
+    } else {
+        None
+    }
+}
+
+fn pattern_binding_names(pattern: &syn::Pat) -> HashSet<String> {
+    struct Collector(HashSet<String>);
+    impl Visit<'_> for Collector {
+        fn visit_pat_ident(&mut self, binding: &syn::PatIdent) {
+            self.0.insert(binding.ident.to_string());
+            visit::visit_pat_ident(self, binding);
+        }
+    }
+    let mut collector = Collector(HashSet::new());
+    collector.visit_pat(pattern);
+    collector.0
 }
 
 struct TypedStringInitializerRewriter<'names> {
@@ -498,7 +342,7 @@ impl VisitMut for OwnedOptionStringIdentityRewriter<'_> {
                         if path.path.is_ident(&binding)))
         {
             let binding = syn::Ident::new(&binding, proc_macro2::Span::call_site());
-            mapper.body = Box::new(syn::parse_quote!(#binding));
+            *mapper.body = syn::parse_quote!(#binding);
         }
     }
 
@@ -519,12 +363,13 @@ impl VisitMut for OwnedOptionStringIdentityRewriter<'_> {
 
 struct OwnedStringCloneRewriter<'names> {
     names: &'names HashSet<String>,
+    borrowed: &'names HashSet<String>,
 }
 
 impl VisitMut for OwnedStringCloneRewriter<'_> {
     fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
         visit_mut::visit_expr_mut(self, expression);
-        if rewrite_identity_string_concat(expression, self.names) {
+        if rewrite_identity_string_concat(expression, self.names, self.borrowed) {
             return;
         }
         let syn::Expr::MethodCall(call) = expression else {
@@ -569,17 +414,36 @@ impl VisitMut for OwnedStringCloneRewriter<'_> {
 }
 
 #[derive(Default)]
-struct OwnedVectorLocalCollector {
+struct UsizeLocalCollector {
     names: HashSet<String>,
 }
 
-impl Visit<'_> for OwnedVectorLocalCollector {
+impl Visit<'_> for UsizeLocalCollector {
     fn visit_local(&mut self, local: &syn::Local) {
-        if let syn::Pat::Type(typed) = &local.pat
-            && type_is_owned_vector(&typed.ty)
-            && let Some(name) = simple_pattern_name(&typed.pat)
-        {
-            self.names.insert(name);
+        if let Some(name) = simple_pattern_name(&local.pat) {
+            let typed = matches!(&local.pat, syn::Pat::Type(typed)
+                if matches!(typed.ty.as_ref(), syn::Type::Path(path) if path.path.is_ident("usize")));
+            let inferred = local
+                .init
+                .as_ref()
+                .is_some_and(|init| match init.expr.as_ref() {
+                    syn::Expr::Lit(literal) => matches!(&literal.lit, syn::Lit::Int(value)
+                    if value.suffix() == "usize"
+                        || (name.starts_with("sifr_generated_count")
+                            && value.base10_digits() == "0")),
+                    syn::Expr::MethodCall(call) => matches!(
+                        call.method.to_string().as_str(),
+                        "len" | "clamp_slice_bound"
+                    ),
+                    syn::Expr::Path(path) => path
+                        .path
+                        .get_ident()
+                        .is_some_and(|source| self.names.contains(&source.to_string())),
+                    _ => false,
+                });
+            if typed || inferred {
+                self.names.insert(name);
+            }
         }
         visit::visit_local(self, local);
     }
@@ -587,126 +451,37 @@ impl Visit<'_> for OwnedVectorLocalCollector {
     fn visit_item(&mut self, _item: &syn::Item) {}
 }
 
-struct OwnedVectorCloneRewriter<'names> {
+struct UsizeCounterRewriter<'names> {
     names: &'names HashSet<String>,
 }
 
-impl VisitMut for OwnedVectorCloneRewriter<'_> {
+impl VisitMut for UsizeCounterRewriter<'_> {
     fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
         visit_mut::visit_expr_mut(self, expression);
-        let syn::Expr::MethodCall(call) = expression else {
-            return;
-        };
-        if call.method == "to_vec"
-            && call.args.is_empty()
-            && expression_root_name(&call.receiver).is_some_and(|name| self.names.contains(&name))
-        {
-            call.method = syn::Ident::new("clone", call.method.span());
-            return;
-        }
-        if call.method != "collect"
-            || !call.args.is_empty()
-            || !matches!(call.turbofish.as_ref().and_then(|fish| fish.args.first()),
-                Some(syn::GenericArgument::Type(syn::Type::Path(path)))
-                    if path.path.segments.last().is_some_and(|segment| segment.ident == "Vec"))
-        {
-            return;
-        }
-        let syn::Expr::MethodCall(cloned) = call.receiver.as_ref() else {
-            return;
-        };
-        let syn::Expr::MethodCall(iterated) = cloned.receiver.as_ref() else {
-            return;
-        };
-        if cloned.method == "cloned"
-            && cloned.args.is_empty()
-            && iterated.method == "iter"
-            && iterated.args.is_empty()
-            && expression_root_name(&iterated.receiver)
-                .is_some_and(|name| self.names.contains(&name))
-        {
-            let receiver = iterated.receiver.as_ref();
-            *expression = syn::parse_quote!(#receiver.clone());
-        }
-    }
-
-    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
-
-    fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
-        let Ok(mut arguments) = rust_macro.parse_body_with(
-            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-        ) else {
-            return;
-        };
-        for argument in &mut arguments {
-            self.visit_expr_mut(argument);
-        }
-        rust_macro.tokens = arguments.to_token_stream();
-    }
-}
-
-#[derive(Default)]
-struct SifrIntLocalCollector {
-    names: HashSet<String>,
-}
-
-impl Visit<'_> for SifrIntLocalCollector {
-    fn visit_local(&mut self, local: &syn::Local) {
-        if let syn::Pat::Type(typed) = &local.pat
-            && type_is_sifr_int(&typed.ty)
-            && let Some(name) = simple_pattern_name(&typed.pat)
-        {
-            self.names.insert(name);
-        }
-        visit::visit_local(self, local);
-    }
-
-    fn visit_item(&mut self, _item: &syn::Item) {}
-}
-
-struct SifrIntOperationRewriter<'names> {
-    names: &'names HashSet<String>,
-}
-
-impl VisitMut for SifrIntOperationRewriter<'_> {
-    fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
-        visit_mut::visit_expr_mut(self, expression);
-        if let syn::Expr::MethodCall(call) = expression
-            && matches!(
-                call.method.to_string().as_str(),
-                "checked_to_f64" | "to_bigint"
-            )
-            && call.args.is_empty()
-            && let syn::Expr::MethodCall(clone) = call.receiver.as_ref()
-            && clone.method == "clone"
-            && clone.args.is_empty()
-            && expression_root_name(&clone.receiver).is_some_and(|name| self.names.contains(&name))
-        {
-            call.receiver = clone.receiver.clone();
-            return;
-        }
         let syn::Expr::Binary(binary) = expression else {
             return;
         };
-        let Some((operation, method)) = exact_integer_operation(&binary.op) else {
-            return;
-        };
-        if !expression_root_name(&binary.left).is_some_and(|name| self.names.contains(&name))
-            && !expression_root_name(&binary.right).is_some_and(|name| self.names.contains(&name))
+        if !matches!(binary.op, syn::BinOp::AddAssign(_))
+            || !matches!(binary.left.as_ref(), syn::Expr::Path(path)
+                if path.path.get_ident().is_some_and(|name| self.names.contains(&name.to_string())))
+            || !matches!(binary.right.as_ref(), syn::Expr::Lit(literal)
+                if matches!(&literal.lit, syn::Lit::Int(value)
+                    if value.base10_digits() == "1"))
         {
             return;
         }
-        let left = binary.left.clone();
-        let right = binary.right.clone();
-        let operation = syn::Ident::new(operation, proc_macro2::Span::call_site());
-        let method = syn::Ident::new(method, proc_macro2::Span::call_site());
-        *expression = syn::parse_quote!(::std::ops::#operation::#method(#left, #right));
+        let left = binary.left.as_ref();
+        *expression = syn::parse_quote!(#left = (#left).saturating_add(1usize));
     }
 
     fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
 }
 
-fn rewrite_identity_string_concat(expression: &mut syn::Expr, owned: &HashSet<String>) -> bool {
+fn rewrite_identity_string_concat(
+    expression: &mut syn::Expr,
+    owned: &HashSet<String>,
+    borrowed: &HashSet<String>,
+) -> bool {
     let syn::Expr::Block(block) = expression else {
         return false;
     };
@@ -750,7 +525,7 @@ fn rewrite_identity_string_concat(expression: &mut syn::Expr, owned: &HashSet<St
         if value.is_some() {
             return false;
         }
-        value = owned_string_from_as_str(argument, owned);
+        value = copied_string_from_as_str(argument, owned, borrowed);
         if value.is_none() {
             return false;
         }
@@ -778,7 +553,19 @@ fn is_string_buffer_initializer(expression: &syn::Expr) -> bool {
         )
 }
 
-fn owned_string_from_as_str(expression: &syn::Expr, owned: &HashSet<String>) -> Option<syn::Expr> {
+fn copied_string_from_as_str(
+    expression: &syn::Expr,
+    owned: &HashSet<String>,
+    borrowed: &HashSet<String>,
+) -> Option<syn::Expr> {
+    if let syn::Expr::Path(path) = expression
+        && path.qself.is_none()
+        && path.path.segments.len() == 1
+        && borrowed.contains(&path.path.segments[0].ident.to_string())
+    {
+        let receiver = syn::Expr::Path(path.clone());
+        return Some(syn::parse_quote!(#receiver.to_string()));
+    }
     let syn::Expr::MethodCall(as_str) = expression else {
         return None;
     };
@@ -786,17 +573,16 @@ fn owned_string_from_as_str(expression: &syn::Expr, owned: &HashSet<String>) -> 
         return None;
     }
     match as_str.receiver.as_ref() {
-        syn::Expr::Path(path)
-            if path.qself.is_none()
-                && path.path.segments.len() == 1
-                && path
-                    .path
-                    .segments
-                    .first()
-                    .is_some_and(|segment| owned.contains(&segment.ident.to_string())) =>
-        {
+        syn::Expr::Path(path) if path.qself.is_none() && path.path.segments.len() == 1 => {
             let receiver = syn::Expr::Path(path.clone());
-            Some(syn::parse_quote!(#receiver.clone()))
+            let name = path.path.segments.first()?.ident.to_string();
+            if owned.contains(&name) {
+                Some(syn::parse_quote!(#receiver.clone()))
+            } else if borrowed.contains(&name) {
+                Some(syn::parse_quote!(#receiver.to_string()))
+            } else {
+                None
+            }
         }
         syn::Expr::MethodCall(clone) if clone.method == "clone" && clone.args.is_empty() => {
             Some(syn::Expr::MethodCall(clone.clone()))
@@ -821,12 +607,6 @@ fn type_is_option_string(ty: &syn::Type) -> bool {
     };
     segment.ident == "Option"
         && matches!(arguments.args.first(), Some(syn::GenericArgument::Type(inner)) if type_is_owned_string(inner))
-}
-
-fn type_is_owned_vector(ty: &syn::Type) -> bool {
-    matches!(ty, syn::Type::Path(path)
-        if path.qself.is_none()
-            && path.path.segments.last().is_some_and(|segment| segment.ident == "Vec"))
 }
 
 fn type_is_sifr_int(ty: &syn::Type) -> bool {

@@ -26,7 +26,7 @@ fn classify(n: SifrInt) -> SifrInt {
         Err(ValueError::new("non-positive".to_string()))
     };
     sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         SifrInt::from_i64(99)
     })
 }

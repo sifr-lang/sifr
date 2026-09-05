@@ -95,8 +95,6 @@ pub mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(super) trait SifrGeneratedAdd: Sized {}
-    impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
     pub(super) fn sifr_generated_collect_iterator<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
     ) -> Vec<T> {
@@ -181,15 +179,12 @@ pub mod sifr_generated_generated_support {
             },
         ))
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn islice<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
-        start_or_stop: Option<SifrInt>,
+        start_or_stop: Option<&SifrInt>,
         slice_args: &[Option<SifrInt>],
     ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
+        let start_or_stop: Option<SifrInt> = start_or_stop.cloned();
         if slice_args.len() > SifrInt::from_i64(2) {
             return Err(ValueError::new(
                 "islice: expected at most stop and step after start".to_string(),
@@ -393,9 +388,9 @@ pub mod sifr_generated_generated_support {
                         if next_index < current_pool_value_8d0aa685cb481a75.len() {
                             let sifr_generated_try_res: Result<(), IndexError> = (|| {
                                 {
-                                    let sifr_generated_assign_value = next_index.clone();
+                                    let sifr_generated_assign_value = next_index;
                                     {
-                                        let sifr_generated_index_raw = position.clone();
+                                        let sifr_generated_index_raw = &position;
                                         let sifr_generated_index_normalized =
                                             sifr_generated_index_raw
                                                 .normalize_index_or_len(indices.len());
@@ -414,7 +409,7 @@ pub mod sifr_generated_generated_support {
                             })(
                             );
                             if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _ = sifr_generated_try_err;
+                                let _e = sifr_generated_try_err;
                                 return;
                             }
                             advanced = true;
@@ -423,7 +418,7 @@ pub mod sifr_generated_generated_support {
                                 {
                                     let sifr_generated_assign_value = SifrInt::from_i64(0);
                                     {
-                                        let sifr_generated_index_raw = position.clone();
+                                        let sifr_generated_index_raw = &position;
                                         let sifr_generated_index_normalized =
                                             sifr_generated_index_raw
                                                 .normalize_index_or_len(indices.len());
@@ -442,7 +437,7 @@ pub mod sifr_generated_generated_support {
                             })(
                             );
                             if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _ = sifr_generated_try_err;
+                                let _e = sifr_generated_try_err;
                                 return;
                             }
                             position = ::std::ops::Sub::sub(&position, &SifrInt::from_i64(1));
@@ -552,7 +547,7 @@ pub mod sifr_generated_generated_support {
                         {
                             let sifr_generated_assign_value = next_position.clone();
                             {
-                                let sifr_generated_index_raw = position.clone();
+                                let sifr_generated_index_raw = &position;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(indices.len());
                                 if let Some(sifr_generated_elem) =
@@ -569,11 +564,11 @@ pub mod sifr_generated_generated_support {
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                        let _ = sifr_generated_try_err;
+                        let _e = sifr_generated_try_err;
                         return;
                     }
                     let mut cursor: SifrInt =
-                        ::std::ops::Add::add(&position.clone(), &SifrInt::from_i64(1));
+                        ::std::ops::Add::add(&position, &SifrInt::from_i64(1));
                     while cursor < r {
                         let previous: Option<SifrInt> = {
                             let sifr_generated_checked_read_collection = &indices;
@@ -598,7 +593,7 @@ pub mod sifr_generated_generated_support {
                             {
                                 let sifr_generated_assign_value = next_position.clone();
                                 {
-                                    let sifr_generated_index_raw = cursor.clone();
+                                    let sifr_generated_index_raw = &cursor;
                                     let sifr_generated_index_normalized = sifr_generated_index_raw
                                         .normalize_index_or_len(indices.len());
                                     if let Some(sifr_generated_elem) =
@@ -616,7 +611,7 @@ pub mod sifr_generated_generated_support {
                         })(
                         );
                         if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                            let _ = sifr_generated_try_err;
+                            let _e = sifr_generated_try_err;
                             return;
                         }
                         cursor = ::std::ops::Add::add(&cursor, &SifrInt::from_i64(1));
@@ -793,7 +788,7 @@ fn main() {
                 ]
                 .into_iter(),
             ),
-            Some(SifrInt::from_i64(1)),
+            Some(&SifrInt::from_i64(1)),
             &[Some(SifrInt::from_i64(5)), Some(SifrInt::from_i64(2))],
         )?;
         assert_eq!(format!("{:?}", sliced.collect::<Vec<_>>()), "[20, 40]");

@@ -54,6 +54,11 @@ impl<'ast> Visit<'ast> for ExternalItemRefCollector<'_> {
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        self.refs.extend(
+            crate::generated_rust_canonicalizer::format_capture::names(rust_macro)
+                .into_iter()
+                .filter(|name| self.candidate_names.contains(name)),
+        );
         collect_macro_token_refs_rec(&rust_macro.tokens, &HashSet::new(), |name| {
             if self.candidate_names.contains(name) {
                 self.refs.insert(name.to_string());

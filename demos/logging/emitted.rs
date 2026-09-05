@@ -69,13 +69,13 @@ pub mod sifr_generated_generated_support {
         })
     }
     pub(super) fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
-        sifr_generated_file_close(&handle.id.clone());
+        sifr_generated_file_close(handle.id.as_str());
     }
     pub(super) fn file_write_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
         data: &[u8],
     ) -> Result<(), IOError> {
-        sifr_generated_file_write_bytes(&handle.id.clone(), data)
+        sifr_generated_file_write_bytes(handle.id.as_str(), data)
     }
     pub(super) fn gettempdir() -> String {
         ::sifr_stdlib::fs::gettempdir()
@@ -120,13 +120,13 @@ pub mod sifr_generated_generated_support {
     }
     pub(super) fn utf8() -> SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(
-            sifr_generated_const_454e434f44494e475f55544638(),
+            &sifr_generated_const_454e434f44494e475f55544638(),
         )
     }
     pub(super) fn strict_decode_handler() -> SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler
     {
         SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler::new(
-            sifr_generated_const_4445434f44455f4552524f52535f535452494354(),
+            &sifr_generated_const_4445434f44455f4552524f52535f535452494354(),
         )
     }
     #[expect(
@@ -154,7 +154,7 @@ pub mod sifr_generated_generated_support {
         SifrGeneratedStdlibSifrX2eencodingX2eEncodeError,
     > {
         let handler_name: String = sifr_generated_encode_handler_name(errors);
-        sifr_generated_encoding_encode_outcome(text, &enc.label.clone(), &handler_name)
+        sifr_generated_encoding_encode_outcome(text, enc.label.as_str(), handler_name.as_str())
     }
     #[expect(
         clippy::ref_option,
@@ -256,9 +256,9 @@ pub mod sifr_generated_generated_support {
         enc: &Option<SifrGeneratedStdlibSifrX2eencodingX2eEncoding>,
     ) -> SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         let Some(enc) = enc.as_ref() else {
-            return SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new("utf-8".to_string());
+            return SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new("utf-8");
         };
-        SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(enc.label.clone())
+        SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(&enc.label)
     }
     #[expect(
         clippy::ref_option,
@@ -270,12 +270,12 @@ pub mod sifr_generated_generated_support {
         let Some(errors) = errors.as_ref() else {
             return strict_decode_handler();
         };
-        SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler::new(errors.name.clone())
+        SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler::new(&errors.name)
     }
     pub(super) fn sifr_generated_encode_errors_from_decode_errors(
         errors: &SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler,
     ) -> SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler {
-        SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler::new(errors.name.clone())
+        SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler::new(&errors.name)
     }
     pub(super) fn open_binary(
         path: &str,
@@ -320,7 +320,7 @@ pub mod sifr_generated_generated_support {
                 sifr_generated_decode_errors_or_default(errors);
             let encode_errors: SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler =
                 sifr_generated_encode_errors_from_decode_errors(&decode_errors);
-            let binary: SifrGeneratedIoBinaryFileHandle = open_binary(path, &binary_mode)?;
+            let binary: SifrGeneratedIoBinaryFileHandle = open_binary(path, binary_mode.as_str())?;
             Ok(Ok(SifrGeneratedIoTextFileHandle::new(
                 binary,
                 text_encoding,
@@ -381,8 +381,8 @@ pub mod sifr_generated_generated_support {
         non_snake_case,
         reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
-    pub(super) fn basicConfig(level: SifrInt) -> SifrGeneratedStdlibSifrX2eloggingX2eLogger {
-        set_global_level(level.clone());
+    pub(super) fn basicConfig(level: &SifrInt) -> SifrGeneratedStdlibSifrX2eloggingX2eLogger {
+        set_global_level((*level).clone());
         SifrGeneratedStdlibSifrX2eloggingX2eLogger::new("root".to_string(), level)
     }
     #[expect(
@@ -391,7 +391,7 @@ pub mod sifr_generated_generated_support {
     )]
     pub(super) fn getLogger(name: &str) -> SifrGeneratedStdlibSifrX2eloggingX2eLogger {
         let level: SifrInt = get_global_level();
-        SifrGeneratedStdlibSifrX2eloggingX2eLogger::new(name.to_owned(), level)
+        SifrGeneratedStdlibSifrX2eloggingX2eLogger::new(name.to_owned(), &level)
     }
     pub(super) fn run_command(cmd: &str) -> Result<String, IOError> {
         ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
@@ -558,8 +558,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         #[must_use]
-        pub const fn new(label: String) -> Self {
-            let sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c: String = label;
+        pub fn new(label: &str) -> Self {
+            let sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c: String = label.to_string();
             Self {
                 label: sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c,
             }
@@ -576,8 +576,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler {
         #[must_use]
-        pub const fn new(name: String) -> Self {
-            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
+        pub fn new(name: &str) -> Self {
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name.to_string();
             Self {
                 name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
             }
@@ -594,8 +594,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler {
         #[must_use]
-        pub const fn new(name: String) -> Self {
-            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
+        pub fn new(name: &str) -> Self {
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name.to_string();
             Self {
                 name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
             }
@@ -813,9 +813,10 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eloggingX2eFileHandler {
         #[must_use]
-        pub fn new(path: String, level: SifrInt) -> Self {
-            let sifr_generated_field_value_0e74a76ec4f48c05_5f70617468: String = path;
-            let sifr_generated_field_value_70fb616fceb1e22c_5f6c6576656c: SifrInt = level;
+        pub fn new(path: &str, level: &SifrInt) -> Self {
+            let sifr_generated_field_value_0e74a76ec4f48c05_5f70617468: String = path.to_string();
+            let sifr_generated_field_value_70fb616fceb1e22c_5f6c6576656c: SifrInt =
+                (*level).clone();
             let sifr_generated_field_value_07cfd6c6e0ac9648_5f666f726d6174746572: SifrGeneratedStdlibSifrX2eloggingX2eFormatter = SifrGeneratedStdlibSifrX2eloggingX2eFormatter::new(
                 "%(levelname)s:%(name)s:%(message)s".to_string(),
             );
@@ -828,8 +829,7 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eloggingX2eFileHandler {
         pub fn set_formatter(&mut self, fmt: &SifrGeneratedStdlibSifrX2eloggingX2eFormatter) {
-            self.formatter =
-                SifrGeneratedStdlibSifrX2eloggingX2eFormatter::new(fmt.fmt.to_string());
+            self.formatter = SifrGeneratedStdlibSifrX2eloggingX2eFormatter::new(fmt.fmt.clone());
         }
     }
     impl SifrGeneratedStdlibSifrX2eloggingX2eFileHandler {
@@ -858,7 +858,7 @@ mod sifr_generated_project_nominals {
                 let mut fh: SifrGeneratedIoTextFileHandle =
                     open_text(&self.path, "a", &Some(utf8()), &None)?;
                 let sifr_generated_try_res: Result<(), IOError> = (|| {
-                    fh.write(&line)?;
+                    fh.write(line.as_str())?;
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -895,9 +895,10 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eloggingX2eLogger {
         #[must_use]
-        pub fn new(name: String, level: SifrInt) -> Self {
+        pub fn new(name: String, level: &SifrInt) -> Self {
             let sifr_generated_field_value_2570757371473f6d_5f6e616d65: String = name;
-            let sifr_generated_field_value_70fb616fceb1e22c_5f6c6576656c: SifrInt = level;
+            let sifr_generated_field_value_70fb616fceb1e22c_5f6c6576656c: SifrInt =
+                (*level).clone();
             let sifr_generated_field_value_1fb1dcbc22de0cba_5f6c6f675f70617468: String =
                 String::new();
             let sifr_generated_field_value_15ca476e60592199_5f68616e646c65725f6b696e64: String =
@@ -929,13 +930,7 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eloggingX2eLogger {
         pub fn set_file(&mut self, path: &str) {
-            self.log_path = {
-                let mut sifr_generated_concat: String =
-                    String::with_capacity(path.len().saturating_add(0usize));
-                sifr_generated_concat.push_str(path);
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
+            self.log_path = path.to_string();
         }
     }
     impl SifrGeneratedStdlibSifrX2eloggingX2eLogger {
@@ -985,7 +980,7 @@ mod sifr_generated_project_nominals {
                         let mut fh: SifrGeneratedIoTextFileHandle =
                             open_text(&self.handler_path, "a", &Some(utf8()), &None)?;
                         let sifr_generated_try_res: Result<(), IOError> = (|| {
-                            fh.write(&line)?;
+                            fh.write(line.as_str())?;
                             Ok(())
                         })(
                         );
@@ -1015,7 +1010,7 @@ mod sifr_generated_project_nominals {
                 sifr_generated_concat.push('[');
                 sifr_generated_concat.push_str(level);
                 sifr_generated_concat.push_str("] ");
-                sifr_generated_concat.push_str(self.name_field.clone().as_str());
+                sifr_generated_concat.push_str(self.name_field.as_str());
                 sifr_generated_concat.push_str(": ");
                 sifr_generated_concat.push_str(msg);
                 sifr_generated_concat
@@ -1143,14 +1138,14 @@ fn collect_logger_actual(base: &str) -> Vec<bool> {
     };
     let mut app_ok_value_828654428d62c35b: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        write_text(&app_log, "")?;
+        write_text(app_log.as_str(), "")?;
         let mut app: SifrGeneratedStdlibSifrX2eloggingX2eLogger = getLogger("demo");
-        app.set_file(&app_log);
+        app.set_file(app_log.as_str());
         app.set_level(&sifr_generated_const_494e464f());
         app.info("start");
         app.warning("warn");
         app.debug("hidden");
-        let app_content: String = read_text(&app_log)?;
+        let app_content: String = read_text(app_log.as_str())?;
         app_ok_value_828654428d62c35b = app_content == "[INFO] demo: start\n[WARNING] demo: warn\n";
         Ok(())
     })();
@@ -1180,25 +1175,25 @@ fn collect_root_and_handler_actual(base: &str) -> Vec<bool> {
     let mut root_ok_value_e7314d1096284148: bool = false;
     let mut handler_ok_value_e929b95cdc6e8fce: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        write_text(&root_log, "")?;
-        write_text(&handler_log, "")?;
+        write_text(root_log.as_str(), "")?;
+        write_text(handler_log.as_str(), "")?;
         let mut root: SifrGeneratedStdlibSifrX2eloggingX2eLogger =
-            basicConfig(sifr_generated_const_5741524e494e47());
-        root.set_file(&root_log);
+            basicConfig(&sifr_generated_const_5741524e494e47());
+        root.set_file(root_log.as_str());
         root.info("skip");
         root.error("boom");
-        let root_content: String = read_text(&root_log)?;
+        let root_content: String = read_text(root_log.as_str())?;
         root_ok_value_e7314d1096284148 = root_content == "[ERROR] root: boom\n";
         let mut handler: SifrGeneratedStdlibSifrX2eloggingX2eFileHandler =
             SifrGeneratedStdlibSifrX2eloggingX2eFileHandler::new(
-                handler_log.clone(),
-                SifrInt::from_i64(0),
+                handler_log.as_str(),
+                &SifrInt::from_i64(0),
             );
         handler.set_formatter(&SifrGeneratedStdlibSifrX2eloggingX2eFormatter::new(
             "%(levelname)s:%(message)s".to_string(),
         ));
         handler.emit("INFO", "demo", "formatted");
-        let handler_content: String = read_text(&handler_log)?;
+        let handler_content: String = read_text(handler_log.as_str())?;
         handler_ok_value_e929b95cdc6e8fce = handler_content == "INFO:formatted\n";
         Ok(())
     })();
@@ -1220,9 +1215,9 @@ fn collect_safety_actual(base: &str) -> Vec<bool> {
         sifr_generated_concat
     };
     let mut bad: SifrGeneratedStdlibSifrX2eloggingX2eLogger = getLogger("bad");
-    bad.set_file(&missing_log);
+    bad.set_file(missing_log.as_str());
     bad.error("should fail");
-    let missing_safe: bool = !exists(&missing_log);
+    let missing_safe: bool = !exists(missing_log.as_str());
     actual.push(missing_safe);
     actual.push(
         sifr_generated_const_494e464f() == SifrInt::from_i64(20)
@@ -1234,7 +1229,7 @@ fn collect_cleanup_actual(base: &str) -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("rm -rf {base}"))?;
+        let _cleanup: String = run_command(&format!("rm -rf {base}"))?;
         cleanup_ok = !exists(base);
         Ok(())
     })();
@@ -1256,17 +1251,17 @@ fn main() {
     let mut actual: Vec<bool> = Vec::new();
     let base: String = mktemp_path("sifr_logging_logging_demo_");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("mkdir -p {base}"))?;
+        let _mk: String = run_command(&format!("mkdir -p {base}"))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         let e = sifr_generated_try_err;
         let _ = e.message;
     }
-    append_all(&mut actual, &collect_logger_actual(&base));
-    append_all(&mut actual, &collect_root_and_handler_actual(&base));
-    append_all(&mut actual, &collect_safety_actual(&base));
-    append_all(&mut actual, &collect_cleanup_actual(&base));
+    append_all(&mut actual, &collect_logger_actual(base.as_str()));
+    append_all(&mut actual, &collect_root_and_handler_actual(base.as_str()));
+    append_all(&mut actual, &collect_safety_actual(base.as_str()));
+    append_all(&mut actual, &collect_cleanup_actual(base.as_str()));
     assert_bool_vector_eq(&actual, &expected);
     println!("logging logging parity demo: pass");
 }

@@ -1,14 +1,18 @@
 pub(super) fn remove_last_use_clones(statements: &mut [syn::Stmt]) {
     let mut locally_owned = HashSet::new();
+    let mut locally_borrowed = HashSet::new();
     for statement in statements.iter() {
         let syn::Stmt::Local(local) = statement else {
             continue;
         };
-        if local
-            .init
-            .as_ref()
-            .is_none_or(|init| !expression_produces_borrowed_binding(&init.expr))
-        {
+        let produces_borrow = local.init.as_ref().is_some_and(|init| {
+            expression_produces_borrowed_binding(&init.expr)
+                || expression_root_name(&init.expr)
+                    .is_some_and(|name| locally_borrowed.contains(&name))
+        });
+        if produces_borrow {
+            collect_owned_pattern_names(&local.pat, &mut locally_borrowed);
+        } else {
             let mut bindings = HashSet::new();
             collect_owned_pattern_names(&local.pat, &mut bindings);
             let self_shadowing = local.init.as_ref().is_some_and(|init| {
@@ -16,7 +20,15 @@ pub(super) fn remove_last_use_clones(statements: &mut [syn::Stmt]) {
                     .iter()
                     .any(|name| expression_mentions_name(&init.expr, name))
             });
-            if !self_shadowing {
+            let cloned_from_borrow = local.init.as_ref().is_some_and(|init| {
+                init.diverge.is_some()
+                    && matches!(init.expr.as_ref(), syn::Expr::MethodCall(clone)
+                        if clone.method == "clone"
+                            && clone.args.is_empty()
+                            && matches!(clone.receiver.as_ref(), syn::Expr::Unary(dereference)
+                                if matches!(dereference.op, syn::UnOp::Deref(_))))
+            });
+            if !self_shadowing || cloned_from_borrow {
                 locally_owned.extend(bindings);
             }
         }
@@ -97,6 +109,18 @@ impl VisitMut for CollectedLengthUseRewriter<'_> {
     }
 
     fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
+
+    fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
+        let Ok(mut arguments) = rust_macro.parse_body_with(
+            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+        ) else {
+            return;
+        };
+        for argument in &mut arguments {
+            self.visit_expr_mut(argument);
+        }
+        rust_macro.tokens = arguments.to_token_stream();
+    }
 }
 
 fn expression_mentions_name(expression: &syn::Expr, name: &str) -> bool {
@@ -212,108 +236,17 @@ pub(super) fn replace_unused_underscore_bindings(statements: &mut [syn::Stmt]) {
         let syn::Stmt::Local(local) = statement else {
             continue;
         };
-        rewrite_discarded_error_message_copy(local);
         let Some(name) = simple_pattern_name(&local.pat) else {
             continue;
         };
-        if name.starts_with('_') && uses.counts.get(&name).copied().unwrap_or(0) == 0 {
+        if name.starts_with('_')
+            && uses.counts.get(&name).copied().unwrap_or(0) == 0
+            && local.init.as_ref().is_some_and(|init| {
+                crate::discardability::syntax_expression_is_discardable(&init.expr)
+            })
+        {
             local.pat = syn::parse_quote!(_);
-            rewrite_discarded_error_message_copy(local);
         }
-    }
-}
-
-pub(super) fn add_complex_local_type_expectation(local: &mut syn::Local) {
-    local.attrs.retain(|attribute| {
-        !attribute.path().is_ident("expect")
-            || !attribute.meta.to_token_stream().to_string().contains(
-                "this generated carrier preserves nested typed Sifr error and tuple structure",
-            ) && !attribute
-                .meta
-                .to_token_stream()
-                .to_string()
-                .contains("generated Rust preserves the typed Sifr mapping key")
-    });
-    if let Some(init) = &local.init
-        && simple_pattern_name(&local.pat).as_deref() == Some("sifr_generated_assign_key")
-        && let syn::Expr::MethodCall(conversion) = init.expr.as_ref()
-        && conversion.args.is_empty()
-        && let syn::Expr::Path(source) = conversion.receiver.as_ref()
-        && source.path.is_ident("option_name")
-    {
-        let reason = syn::LitStr::new(
-            "language necessity: generated Rust preserves the typed Sifr mapping key while control-flow ownership remains branch-local; owner Item 12; remove when keyed assignment lowering carries path-sensitive last-use proof",
-            proc_macro2::Span::call_site(),
-        );
-        local
-            .attrs
-            .push(syn::parse_quote!(#[expect(clippy::redundant_clone, reason = #reason)]));
-        if conversion.method == "to_owned" || conversion.method == "to_string" {
-            local
-                .attrs
-                .push(syn::parse_quote!(#[expect(clippy::implicit_clone, reason = #reason)]));
-        }
-    }
-    if let syn::Pat::Type(typed) = &local.pat
-        && type_contains_large_nested_result_tuple(&typed.ty)
-    {
-        let reason = syn::LitStr::new(
-            "language necessity: this generated carrier preserves nested typed Sifr error and tuple structure; owner Item 12; remove when the carrier representation changes",
-            proc_macro2::Span::call_site(),
-        );
-        local
-            .attrs
-            .push(syn::parse_quote!(#[expect(clippy::type_complexity, reason = #reason)]));
-    }
-}
-
-fn type_contains_large_nested_result_tuple(ty: &syn::Type) -> bool {
-    let syn::Type::Path(outer) = ty else {
-        return false;
-    };
-    let Some(outer_result) = outer.path.segments.last() else {
-        return false;
-    };
-    let syn::PathArguments::AngleBracketed(outer_arguments) = &outer_result.arguments else {
-        return false;
-    };
-    let Some(syn::GenericArgument::Type(syn::Type::Path(inner))) = outer_arguments.args.first()
-    else {
-        return false;
-    };
-    let Some(inner_result) = inner.path.segments.last() else {
-        return false;
-    };
-    let syn::PathArguments::AngleBracketed(inner_arguments) = &inner_result.arguments else {
-        return false;
-    };
-    matches!(inner_arguments.args.first(), Some(syn::GenericArgument::Type(syn::Type::Tuple(tuple))) if tuple.elems.len() >= 6)
-}
-
-fn rewrite_discarded_error_message_copy(local: &mut syn::Local) {
-    if matches!(local.pat, syn::Pat::Wild(_))
-        && let Some(init) = &mut local.init
-        && let syn::Expr::MethodCall(call) = init.expr.as_ref()
-        && call.method == "to_string"
-        && call.args.is_empty()
-        && matches!(call.receiver.as_ref(), syn::Expr::Field(field)
-            if matches!(&field.member, syn::Member::Named(name) if name == "message"))
-    {
-        init.expr = call.receiver.clone();
-    } else if matches!(local.pat, syn::Pat::Wild(_))
-        && let Some(init) = &mut local.init
-        && let syn::Expr::MethodCall(call) = init.expr.as_ref()
-        && call.method == "clone"
-        && call.args.is_empty()
-        && matches!(call.receiver.as_ref(), syn::Expr::Path(path)
-            if path.qself.is_none()
-                && path.path.segments.len() == 1
-                && path.path.segments[0]
-                    .ident
-                    .to_string()
-                    .starts_with("sifr_generated_try_err"))
-    {
-        init.expr = call.receiver.clone();
     }
 }
 
@@ -346,6 +279,15 @@ fn remove_last_use_clones_with_owned(
     }
     let mut used_later = HashSet::new();
     for statement in statements.iter_mut().rev() {
+        let unused_local = if let syn::Stmt::Local(local) = statement {
+            let names =
+                crate::generated_rust_canonicalizer::syntax_cleanup::identifier_names_in_pattern(
+                    &local.pat,
+                );
+            names.iter().all(|name| !used_later.contains(name))
+        } else {
+            false
+        };
         if let syn::Stmt::Local(local) = statement {
             let mut bindings = HashSet::new();
             collect_owned_pattern_names(&local.pat, &mut bindings);
@@ -367,12 +309,50 @@ fn remove_last_use_clones_with_owned(
                 .then_some(name.clone())
             })
             .collect::<HashSet<_>>();
-        LastUseCloneRemover {
-            movable: &movable,
-            remaining: counts.counts.clone(),
+        if let syn::Stmt::Expr(syn::Expr::If(branch), _) = statement {
+            rewrite_terminal_branch(branch, &movable, counts.counts.clone());
+        } else if !unused_local {
+            LastUseCloneRemover {
+                movable: &movable,
+                remaining: counts.counts.clone(),
+            }
+            .visit_stmt_mut(statement);
         }
-        .visit_stmt_mut(statement);
         used_later.extend(counts.counts.into_keys());
+    }
+}
+
+fn rewrite_terminal_branch(
+    branch: &mut syn::ExprIf,
+    movable: &HashSet<String>,
+    counts: HashMap<String, usize>,
+) {
+    // Only a complete statement has no expression siblings which could still
+    // borrow its inputs. Mutually exclusive branch bodies each get one walk.
+    LastUseCloneRemover {
+        movable,
+        remaining: counts,
+    }
+    .visit_expr_mut(&mut branch.cond);
+    let mut then_owned = movable.clone();
+    let mut condition = IdentifierUseCounter::default();
+    condition.visit_condition(&branch.cond);
+    for name in &condition.shadowed {
+        then_owned.remove(name);
+    }
+    remove_last_use_clones_with_owned(&mut branch.then_branch.stmts, &then_owned, false);
+    if let Some((_, alternative)) = &mut branch.else_branch {
+        match alternative.as_mut() {
+            syn::Expr::Block(block) => {
+                remove_last_use_clones_with_owned(&mut block.block.stmts, movable, false);
+            }
+            syn::Expr::If(next) => {
+                let mut counts = IdentifierUseCounter::default();
+                counts.visit_expr_if(next);
+                rewrite_terminal_branch(next, movable, counts.counts);
+            }
+            _ => {}
+        }
     }
 }
 
@@ -475,50 +455,7 @@ fn simple_pattern_name(pattern: &syn::Pat) -> Option<String> {
     }
 }
 
-#[derive(Default)]
-struct IdentifierUseCounter {
-    counts: HashMap<String, usize>,
-}
-
-#[derive(Default)]
-struct ClosureCaptureCollector {
-    names: HashSet<String>,
-}
-
-impl Visit<'_> for ClosureCaptureCollector {
-    fn visit_expr_closure(&mut self, closure: &syn::ExprClosure) {
-        let mut uses = IdentifierUseCounter::default();
-        uses.visit_expr(&closure.body);
-        self.names.extend(uses.counts.into_keys());
-        visit::visit_expr_closure(self, closure);
-    }
-
-    fn visit_item(&mut self, _item: &syn::Item) {}
-}
-
-impl Visit<'_> for IdentifierUseCounter {
-    fn visit_expr_path(&mut self, path: &syn::ExprPath) {
-        if path.qself.is_none()
-            && path.path.segments.len() == 1
-            && let Some(segment) = path.path.segments.first()
-        {
-            *self.counts.entry(segment.ident.to_string()).or_default() += 1;
-        }
-        visit::visit_expr_path(self, path);
-    }
-
-    fn visit_item(&mut self, _item: &syn::Item) {}
-
-    fn visit_macro(&mut self, rust_macro: &syn::Macro) {
-        if let Ok(arguments) = rust_macro.parse_body_with(
-            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-        ) {
-            for argument in &arguments {
-                self.visit_expr(argument);
-            }
-        }
-    }
-}
+include!("lexical_uses.rs");
 
 struct LastUseCloneRemover<'names> {
     movable: &'names HashSet<String>,
@@ -631,7 +568,8 @@ fn expression_produces_owned_if_let_binding(expression: &syn::Expr) -> bool {
 fn expression_produces_borrowed_binding(expression: &syn::Expr) -> bool {
     matches!(expression, syn::Expr::Reference(_))
         || matches!(expression, syn::Expr::MethodCall(call)
-            if matches!(call.method.to_string().as_str(), "as_ref" | "as_mut"))
+            if matches!(call.method.to_string().as_str(),
+                "as_ref" | "as_mut" | "as_deref" | "as_deref_mut"))
 }
 
 fn collect_owned_pattern_names(pattern: &syn::Pat, owned: &mut HashSet<String>) {
@@ -674,147 +612,59 @@ fn collect_owned_pattern_names(pattern: &syn::Pat, owned: &mut HashSet<String>) 
     }
 }
 
-struct BorrowOnlyLoopBindingUse<'binding> {
-    binding: &'binding str,
-    owned_use: bool,
-}
-
-struct BindingShadowCollector<'binding> {
-    binding: &'binding str,
-    found: bool,
-}
-
-impl Visit<'_> for BindingShadowCollector<'_> {
-    fn visit_expr_let(&mut self, let_: &syn::ExprLet) {
-        self.visit_expr(&let_.expr);
-        if pattern_contains_name(&let_.pat, self.binding) {
-            self.found = true;
-        }
-    }
-
-    fn visit_local(&mut self, local: &syn::Local) {
-        if pattern_contains_name(&local.pat, self.binding) {
-            self.found = true;
-        }
-        visit::visit_local(self, local);
-    }
-
-    fn visit_item(&mut self, _item: &syn::Item) {}
-}
-
-impl Visit<'_> for BorrowOnlyLoopBindingUse<'_> {
-    fn visit_expr_if(&mut self, branch: &syn::ExprIf) {
-        if let syn::Expr::Let(let_) = branch.cond.as_ref() {
-            self.visit_expr(&let_.expr);
-            if !pattern_contains_name(&let_.pat, self.binding) {
-                self.visit_block(&branch.then_branch);
-            }
-            if let Some((_, alternative)) = &branch.else_branch {
-                self.visit_expr(alternative);
-            }
-            return;
-        }
-        visit::visit_expr_if(self, branch);
-    }
-
-    fn visit_expr_method_call(&mut self, call: &syn::ExprMethodCall) {
-        if matches!(call.receiver.as_ref(), syn::Expr::Path(path)
-            if path.path.is_ident(self.binding))
-        {
-            for argument in &call.args {
-                self.visit_expr(argument);
-            }
-            return;
-        }
-        visit::visit_expr_method_call(self, call);
-    }
-
-    fn visit_expr_binary(&mut self, binary: &syn::ExprBinary) {
-        if comparison_operator(&binary.op) {
-            return;
-        }
-        visit::visit_expr_binary(self, binary);
-    }
-
-    fn visit_expr_reference(&mut self, reference: &syn::ExprReference) {
-        if matches!(reference.expr.as_ref(), syn::Expr::Path(path)
-            if path.path.is_ident(self.binding))
-        {
-            return;
-        }
-        visit::visit_expr_reference(self, reference);
-    }
-
-    fn visit_expr_path(&mut self, path: &syn::ExprPath) {
-        if path.qself.is_none() && path.path.is_ident(self.binding) {
-            self.owned_use = true;
-            return;
-        }
-        visit::visit_expr_path(self, path);
-    }
-
-    fn visit_macro(&mut self, rust_macro: &syn::Macro) {
-        if rust_macro
-            .tokens
-            .to_string()
-            .split_whitespace()
-            .any(|token| token == self.binding)
-        {
-            self.owned_use = true;
-            return;
-        }
-        visit::visit_macro(self, rust_macro);
-    }
-
-    fn visit_item(&mut self, _item: &syn::Item) {}
-}
-
-fn pattern_contains_name(pattern: &syn::Pat, expected: &str) -> bool {
-    match pattern {
-        syn::Pat::Ident(binding) => binding.ident == expected,
-        syn::Pat::Paren(paren) => pattern_contains_name(&paren.pat, expected),
-        syn::Pat::Reference(reference) => pattern_contains_name(&reference.pat, expected),
-        syn::Pat::Type(typed) => pattern_contains_name(&typed.pat, expected),
-        syn::Pat::Tuple(tuple) => tuple
-            .elems
-            .iter()
-            .any(|element| pattern_contains_name(element, expected)),
-        syn::Pat::TupleStruct(tuple) => tuple
-            .elems
-            .iter()
-            .any(|element| pattern_contains_name(element, expected)),
-        _ => false,
-    }
-}
-
-struct BorrowedLoopComparisonRewriter<'binding> {
-    binding: &'binding str,
-}
-
-impl VisitMut for BorrowedLoopComparisonRewriter<'_> {
-    fn visit_expr_binary_mut(&mut self, binary: &mut syn::ExprBinary) {
-        visit_mut::visit_expr_binary_mut(self, binary);
-        if !comparison_operator(&binary.op) {
-            return;
-        }
-        if matches!(binary.left.as_ref(), syn::Expr::Path(path) if path.path.is_ident(self.binding))
-            && let syn::Expr::Unary(right) = binary.right.as_ref()
-            && matches!(right.op, syn::UnOp::Deref(_))
-        {
-            binary.right = right.expr.clone();
-        }
-        if matches!(binary.right.as_ref(), syn::Expr::Path(path) if path.path.is_ident(self.binding))
-            && let syn::Expr::Unary(left) = binary.left.as_ref()
-            && matches!(left.op, syn::UnOp::Deref(_))
-        {
-            binary.left = left.expr.clone();
-        }
-    }
-
-    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
-}
+include!("borrowed_loop_binding.rs");
 
 impl VisitMut for LastUseCloneRemover<'_> {
+    fn visit_block_mut(&mut self, block: &mut syn::Block) {
+        let mut movable = self.movable.clone();
+        for statement in &mut block.stmts {
+            let mut nested = LastUseCloneRemover {
+                movable: &movable,
+                remaining: std::mem::take(&mut self.remaining),
+            };
+            nested.visit_stmt_mut(statement);
+            self.remaining = nested.remaining;
+            if let syn::Stmt::Local(local) = statement {
+                for name in
+                    crate::generated_rust_canonicalizer::syntax_cleanup::identifier_names_in_pattern(
+                        &local.pat,
+                    )
+                {
+                    movable.remove(&name);
+                }
+            }
+        }
+    }
+
+    fn visit_expr_if_mut(&mut self, branch: &mut syn::ExprIf) {
+        self.visit_expr_mut(&mut branch.cond);
+        let mut movable = self.movable.clone();
+        let mut condition = IdentifierUseCounter::default();
+        condition.visit_condition(&branch.cond);
+        for name in &condition.shadowed {
+            movable.remove(name);
+        }
+        let mut nested = LastUseCloneRemover {
+            movable: &movable,
+            remaining: std::mem::take(&mut self.remaining),
+        };
+        nested.visit_block_mut(&mut branch.then_branch);
+        self.remaining = nested.remaining;
+        if let Some((_, alternative)) = &mut branch.else_branch {
+            self.visit_expr_mut(alternative);
+        }
+    }
+
+    fn visit_local_mut(&mut self, local: &mut syn::Local) {
+        // An unused clone can call user code, and a named unused binding retains
+        // the value until scope exit. Neither is an ownership-transfer proof.
+        if simple_pattern_name(&local.pat).is_some_and(|name| name.starts_with('_'))
+            || matches!(local.pat, syn::Pat::Wild(_))
+        {
+            return;
+        }
+        visit_mut::visit_local_mut(self, local);
+    }
     fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
         visit_mut::visit_expr_mut(self, expression);
         let syn::Expr::MethodCall(call) = expression else {
@@ -835,15 +685,68 @@ impl VisitMut for LastUseCloneRemover<'_> {
         if path.qself.is_none()
             && path.path.segments.len() == 1
             && let Some(segment) = path.path.segments.first()
+            && self.movable.contains(&segment.ident.to_string())
             && let Some(remaining) = self.remaining.get_mut(&segment.ident.to_string())
         {
             *remaining = remaining.saturating_sub(1);
         }
     }
 
+    fn visit_expr_call_mut(&mut self, call: &mut syn::ExprCall) {
+        if let Some(closure) = immediately_called_closure(&call.func) {
+            let mut closure = closure.clone();
+            // Arguments can still borrow a capture before the call starts.
+            let mut movable = self.movable.clone();
+            for argument in &call.args {
+                movable.retain(|name| !expression_mentions_name(argument, name));
+            }
+            for input in &closure.inputs {
+                for name in
+                    crate::generated_rust_canonicalizer::syntax_cleanup::identifier_names_in_pattern(
+                        input,
+                    )
+                {
+                    movable.remove(&name);
+                }
+            }
+            let mut nested = LastUseCloneRemover {
+                movable: &movable,
+                remaining: std::mem::take(&mut self.remaining),
+            };
+            nested.visit_expr_mut(&mut closure.body);
+            self.remaining = nested.remaining;
+            *call.func = syn::parse_quote!((#closure));
+        }
+        self.visit_expr_mut(&mut call.func);
+        let protected = call
+            .args
+            .iter()
+            .enumerate()
+            .map(|(index, argument)| {
+                terminal_clone_root(argument).is_some_and(|name| {
+                    call.args.iter().enumerate().any(|(other, sibling)| {
+                        other != index
+                            && expression_mentions_name(sibling, &name)
+                            && !clones_disjoint_fields(argument, sibling)
+                    })
+                })
+            })
+            .collect::<Vec<_>>();
+        for (argument, protected) in call.args.iter_mut().zip(protected) {
+            if protected && let syn::Expr::MethodCall(clone) = argument {
+                self.visit_expr_mut(&mut clone.receiver);
+            } else {
+                self.visit_expr_mut(argument);
+            }
+        }
+    }
+
     fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
 
-    fn visit_expr_for_loop_mut(&mut self, _for_loop: &mut syn::ExprForLoop) {}
+    fn visit_expr_for_loop_mut(&mut self, for_loop: &mut syn::ExprForLoop) {
+        // The iterator expression executes once; the body may execute repeatedly.
+        self.visit_expr_mut(&mut for_loop.expr);
+    }
 
     fn visit_expr_while_mut(&mut self, _while_loop: &mut syn::ExprWhile) {}
 
@@ -862,6 +765,43 @@ impl VisitMut for LastUseCloneRemover<'_> {
         }
         rust_macro.tokens = arguments.to_token_stream();
     }
+}
+
+fn clones_disjoint_fields(left: &syn::Expr, right: &syn::Expr) -> bool {
+    fn field(expression: &syn::Expr) -> Option<&syn::ExprField> {
+        let syn::Expr::MethodCall(call) = expression else {
+            return None;
+        };
+        if call.method != "clone" || !call.args.is_empty() {
+            return None;
+        }
+        if let syn::Expr::Field(field) = call.receiver.as_ref() {
+            Some(field)
+        } else {
+            None
+        }
+    }
+    matches!((field(left), field(right)), (Some(left), Some(right))
+        if left.base.to_token_stream().to_string() == right.base.to_token_stream().to_string()
+            && left.member != right.member)
+}
+
+fn immediately_called_closure(expression: &syn::Expr) -> Option<&syn::ExprClosure> {
+    match expression {
+        syn::Expr::Closure(closure) => Some(closure),
+        syn::Expr::Paren(paren) => immediately_called_closure(&paren.expr),
+        syn::Expr::Group(group) => immediately_called_closure(&group.expr),
+        _ => None,
+    }
+}
+
+fn terminal_clone_root(expression: &syn::Expr) -> Option<String> {
+    let syn::Expr::MethodCall(call) = expression else {
+        return None;
+    };
+    (call.method == "clone" && call.args.is_empty())
+        .then(|| expression_root_name(&call.receiver))
+        .flatten()
 }
 
 struct LoopControlCollector {

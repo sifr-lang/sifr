@@ -474,6 +474,10 @@ impl<'ast> Visit<'ast> for RustIdentifierCollector {
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        self.names
+            .extend(crate::generated_rust_canonicalizer::format_capture::names(
+                rust_macro,
+            ));
         collect_macro_token_refs_rec(&rust_macro.tokens, &HashSet::new(), |name| {
             self.names.insert(name.to_string());
         });

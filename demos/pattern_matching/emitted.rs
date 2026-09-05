@@ -34,8 +34,8 @@ impl ::std::fmt::Display for Point {
         write!(f, "Point(x={}, y={})", self.x, self.y)
     }
 }
-fn describe_number(x: SifrInt) -> String {
-    match x {
+fn describe_number(x: &SifrInt) -> String {
+    match (*x).clone() {
         SifrInt::Small(0) => "zero".to_string(),
         SifrInt::Small(1) => "one".to_string(),
         SifrInt::Small(2) => "two".to_string(),
@@ -54,12 +54,12 @@ fn classify_http(method: &str) -> String {
         {
             "write".to_string()
         }
-        sifr_generated_s if sifr_generated_s == "DELETE" => "delete".to_string(),
+        "DELETE" => "delete".to_string(),
         _ => "other".to_string(),
     }
 }
-fn classify_score(score: SifrInt) -> String {
-    match score {
+fn classify_score(score: &SifrInt) -> String {
+    match (*score).clone() {
         n if n >= SifrInt::from_i64(90) => "A".to_string(),
         n if n >= SifrInt::from_i64(80) => "B".to_string(),
         n if n >= SifrInt::from_i64(70) => "C".to_string(),
@@ -67,11 +67,8 @@ fn classify_score(score: SifrInt) -> String {
         _ => "F".to_string(),
     }
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn describe_optional(x: Option<SifrInt>) -> String {
+fn describe_optional(x: Option<&SifrInt>) -> String {
+    let x: Option<SifrInt> = x.cloned();
     if x.is_none() {
         "nothing".to_string()
     } else {
@@ -114,7 +111,7 @@ fn classify_point(p: &Point) -> String {
             y: SifrInt::Small(0),
             ..
         } => {
-            let _ = px.clone();
+            let _px = px.clone();
             "on x-axis".to_string()
         }
         Point {
@@ -122,12 +119,12 @@ fn classify_point(p: &Point) -> String {
             y: py,
             ..
         } => {
-            let _ = py.clone();
+            let _py = py.clone();
             "on y-axis".to_string()
         }
         Point { x: px, y: py, .. } => {
-            let _ = px.clone();
-            let _ = py.clone();
+            let _px = px.clone();
+            let _py = py.clone();
             "general".to_string()
         }
     }
@@ -148,13 +145,13 @@ fn classify_quadrant(p: &Point) -> String {
             ..
         } => "origin".to_string(),
         Point { x: px, y: py, .. } if *px > SifrInt::from_i64(0) && *py > SifrInt::from_i64(0) => {
-            let _ = px.clone();
-            let _ = py.clone();
+            let _px = px.clone();
+            let _py = py.clone();
             "Q1".to_string()
         }
         Point { x: px, y: py, .. } if *px < SifrInt::from_i64(0) && *py > SifrInt::from_i64(0) => {
-            let _ = px.clone();
-            let _ = py.clone();
+            let _px = px.clone();
+            let _py = py.clone();
             "Q2".to_string()
         }
         _ => "other".to_string(),
@@ -162,21 +159,21 @@ fn classify_quadrant(p: &Point) -> String {
 }
 fn main() {
     println!("=== Literal Patterns ===");
-    println!("{}", describe_number(SifrInt::from_i64(0)));
-    println!("{}", describe_number(SifrInt::from_i64(1)));
-    println!("{}", describe_number(SifrInt::from_i64(42)));
+    println!("{}", describe_number(&SifrInt::from_i64(0)));
+    println!("{}", describe_number(&SifrInt::from_i64(1)));
+    println!("{}", describe_number(&SifrInt::from_i64(42)));
     println!("=== OR Patterns ===");
     println!("{}", classify_http("GET"));
     println!("{}", classify_http("POST"));
     println!("{}", classify_http("DELETE"));
     println!("{}", classify_http("OPTIONS"));
     println!("=== Guard Patterns ===");
-    println!("{}", classify_score(SifrInt::from_i64(95)));
-    println!("{}", classify_score(SifrInt::from_i64(85)));
-    println!("{}", classify_score(SifrInt::from_i64(55)));
+    println!("{}", classify_score(&SifrInt::from_i64(95)));
+    println!("{}", classify_score(&SifrInt::from_i64(85)));
+    println!("{}", classify_score(&SifrInt::from_i64(55)));
     println!("=== Optional Matching ===");
     println!("{}", describe_optional(None));
-    println!("{}", describe_optional(Some(SifrInt::from_i64(42))));
+    println!("{}", describe_optional(Some(&SifrInt::from_i64(42))));
     println!("=== Union Matching ===");
     let a: SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr =
         make_int_union();

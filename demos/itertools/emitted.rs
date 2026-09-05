@@ -145,7 +145,7 @@ pub mod sifr_generated_generated_support {
                 pair.push(value.clone());
                 result.push(pair);
                 {
-                    let sifr_generated_assign_value = value.clone();
+                    let sifr_generated_assign_value = value;
                     {
                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                         let sifr_generated_index_normalized =
@@ -163,22 +163,18 @@ pub mod sifr_generated_generated_support {
         }
         result
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn batched<T: Clone + 'static>(
         data: &[T],
-        n: SifrInt,
+        n: &SifrInt,
     ) -> Result<Vec<Vec<T>>, ValueError> {
-        if n <= SifrInt::from_i64(0) {
+        if n <= &SifrInt::from_i64(0) {
             return Err(ValueError::new("batched: n must be > 0".to_string()));
         }
         let mut result: Vec<Vec<T>> = Vec::new();
         let mut current_batch: Vec<T> = Vec::new();
         for value in data.iter().cloned() {
             current_batch.push(value);
-            if current_batch.len() == n {
+            if &SifrInt::from(current_batch.len()) == n {
                 result.push(current_batch.clone());
                 current_batch = Vec::new();
             }
@@ -231,7 +227,7 @@ pub mod sifr_generated_generated_support {
                             let next_val: T = SifrGeneratedAdd::sifr_generated_add(prev, item);
                             let sifr_generated_try_res: Result<(), IndexError> = (|| {
                                 {
-                                    let sifr_generated_assign_value = next_val.clone();
+                                    let sifr_generated_assign_value = next_val;
                                     {
                                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                                         let sifr_generated_index_normalized =
@@ -252,7 +248,7 @@ pub mod sifr_generated_generated_support {
                             })(
                             );
                             if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _ = sifr_generated_try_err;
+                                let _e = sifr_generated_try_err;
                                 return;
                             }
                         }
@@ -389,7 +385,7 @@ fn collect_core_actual() -> Vec<bool> {
             .collect::<Vec<_>>()
         )
         .as_str()
-            == "[1, 2, 3]".to_string().as_str(),
+            == "[1, 2, 3]",
         format!(
             "{:?}",
             pairwise(
@@ -404,7 +400,7 @@ fn collect_core_actual() -> Vec<bool> {
             )
         )
         .as_str()
-            == "[[1, 2], [2, 3], [3, 4]]".to_string().as_str(),
+            == "[[1, 2], [2, 3], [3, 4]]",
     ];
     let mut batched_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -418,7 +414,7 @@ fn collect_core_actual() -> Vec<bool> {
             ]
             .into_iter()
             .collect::<Vec<_>>(),
-            SifrInt::from_i64(2),
+            &SifrInt::from_i64(2),
         )?;
         batched_ok = format!("{bat:?}") == "[[1, 2], [3, 4], [5]]";
         Ok(())
@@ -445,7 +441,7 @@ fn collect_core_actual() -> Vec<bool> {
             .collect::<Vec<_>>()
         )
         .as_str()
-            == "[1, 3, 6]".to_string().as_str(),
+            == "[1, 3, 6]",
     );
     actual.push(
         format!(
@@ -457,7 +453,7 @@ fn collect_core_actual() -> Vec<bool> {
             .collect::<Vec<_>>()
         )
         .as_str()
-            == "[5, 6, 5, 6, 5]".to_string().as_str(),
+            == "[5, 6, 5, 6, 5]",
     );
     actual
 }
@@ -467,7 +463,7 @@ fn collect_negative_actual() -> Vec<bool> {
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let sifr_generated_bad: Vec<Vec<SifrInt>> = batched(
             &vec![SifrInt::from_i64(1)].into_iter().collect::<Vec<_>>(),
-            SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
         )?;
         let _ = sifr_generated_bad;
         Ok(())

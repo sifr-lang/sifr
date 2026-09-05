@@ -47,7 +47,7 @@ fn main() {
             {
                 sifr_generated_result = Some(SifrInt::from(sifr_generated_i));
             }
-            sifr_generated_i += 1;
+            sifr_generated_i = sifr_generated_i.saturating_add(1usize);
         }
         sifr_generated_result
     };
@@ -68,7 +68,7 @@ fn main() {
             {
                 sifr_generated_result = Some(SifrInt::from(sifr_generated_i));
             }
-            sifr_generated_i += 1;
+            sifr_generated_i = sifr_generated_i.saturating_add(1usize);
         }
         sifr_generated_result
     };
@@ -107,7 +107,7 @@ fn main() {
     let floats: Vec<f64> = vec![3.14_f64, 1.0_f64, 2.71_f64, 0.5_f64];
     println!("sorted floats:");
     println!("{:?}", {
-        let mut sifr_generated_sorted_values = floats.iter().copied().collect::<Vec<_>>();
+        let mut sifr_generated_sorted_values = floats;
         sifr_generated_sorted_values.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                 sifr_generated_sorted_left

@@ -5,8 +5,8 @@ struct CountdownIter {
     current: SifrInt,
 }
 impl CountdownIter {
-    const fn new(start: SifrInt) -> Self {
-        let sifr_generated_field_value_2a2e8a5afcc8d89a_63757272656e74: SifrInt = start;
+    fn new(start: &SifrInt) -> Self {
+        let sifr_generated_field_value_2a2e8a5afcc8d89a_63757272656e74: SifrInt = (*start).clone();
         Self {
             current: sifr_generated_field_value_2a2e8a5afcc8d89a_63757272656e74,
         }
@@ -32,8 +32,8 @@ struct Countdown {
     start: SifrInt,
 }
 impl Countdown {
-    const fn new(start: SifrInt) -> Self {
-        let sifr_generated_field_value_ee5d97ad45ad251f_7374617274: SifrInt = start;
+    fn new(start: &SifrInt) -> Self {
+        let sifr_generated_field_value_ee5d97ad45ad251f_7374617274: SifrInt = (*start).clone();
         Self {
             start: sifr_generated_field_value_ee5d97ad45ad251f_7374617274,
         }
@@ -67,24 +67,21 @@ impl ::std::fmt::Display for Countdown {
     }
 }
 fn main() {
-    let countdown: Countdown = Countdown::new(SifrInt::from_i64(4));
+    let countdown: Countdown = Countdown::new(&SifrInt::from_i64(4));
     println!(
         "{:?}",
-        countdown
-            .clone()
-            .sifr_generated_iter__()
-            .collect::<Vec<_>>()
+        countdown.sifr_generated_iter__().collect::<Vec<_>>()
     );
     println!(
         "{:?}",
         Box::new(countdown.sifr_generated_reversed__()).collect::<Vec<_>>()
     );
     let mut running_total: SifrInt = SifrInt::from_i64(0);
-    for value in Countdown::new(SifrInt::from_i64(4)).sifr_generated_iter__() {
+    for value in Countdown::new(&SifrInt::from_i64(4)).sifr_generated_iter__() {
         running_total = ::std::ops::Add::add(&running_total, &value);
     }
     println!("{running_total}");
-    let mut it: CountdownIter = CountdownIter::new(SifrInt::from_i64(2));
+    let mut it: CountdownIter = CountdownIter::new(&SifrInt::from_i64(2));
     println!(
         "{}",
         it.sifr_generated_next__().map_or_else(

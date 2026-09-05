@@ -25,7 +25,7 @@ pub mod sifr_generated_generated_support {
         );
         while i >= SifrInt::from_i64(0) {
             let ch: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
                 sifr_generated_chars_path
@@ -57,13 +57,7 @@ pub mod sifr_generated_generated_support {
             }
             i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
         }
-        {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(path.len().saturating_add(0usize));
-            sifr_generated_concat.push_str(path);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        }
+        path.to_string()
     }
     pub(super) fn dirname(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
@@ -73,7 +67,7 @@ pub mod sifr_generated_generated_support {
         );
         while i >= SifrInt::from_i64(0) {
             let ch: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
                 sifr_generated_chars_path
@@ -166,11 +160,7 @@ pub mod sifr_generated_generated_support {
     pub(super) fn sifr_generated_next_candidate(prefix: &str) -> String {
         mktemp_path(prefix)
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn sifr_generated_collision_message(kind: &str, attempts: SifrInt) -> String {
+    pub(super) fn sifr_generated_collision_message(kind: &str, attempts: &SifrInt) -> String {
         {
             let mut sifr_generated_concat: String = String::with_capacity(
                 9usize
@@ -193,12 +183,12 @@ pub mod sifr_generated_generated_support {
         while attempts < max_attempts {
             let path: String = sifr_generated_next_candidate(prefix);
             let path_for_check: String = path.clone();
-            if exists(&path) {
+            if exists(path.as_str()) {
                 attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                 continue;
             }
             let sifr_generated_try_res: Result<Result<String, IOError>, IOError> = (|| {
-                write_text(&path, "")?;
+                write_text(path.as_str(), "")?;
                 Ok(Ok(path))
             })();
             match sifr_generated_try_res {
@@ -206,8 +196,8 @@ pub mod sifr_generated_generated_support {
                     return sifr_generated_ret_val;
                 }
                 Err(sifr_generated_try_err) => {
-                    let e = sifr_generated_try_err.clone();
-                    if exists(&path_for_check) {
+                    let e = sifr_generated_try_err;
+                    if exists(path_for_check.as_str()) {
                         attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                         continue;
                     }
@@ -217,7 +207,7 @@ pub mod sifr_generated_generated_support {
         }
         Err(IOError::new(sifr_generated_collision_message(
             "mkstemp",
-            max_attempts,
+            &max_attempts,
         )))
     }
     pub(super) fn mkdtemp(prefix: &str) -> Result<String, IOError> {
@@ -226,12 +216,12 @@ pub mod sifr_generated_generated_support {
         while attempts < max_attempts {
             let path: String = sifr_generated_next_candidate(prefix);
             let path_for_check: String = path.clone();
-            if exists(&path) {
+            if exists(path.as_str()) {
                 attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                 continue;
             }
             let sifr_generated_try_res: Result<Result<String, IOError>, IOError> = (|| {
-                mkdir(&path)?;
+                mkdir(path.as_str())?;
                 Ok(Ok(path))
             })();
             match sifr_generated_try_res {
@@ -239,8 +229,8 @@ pub mod sifr_generated_generated_support {
                     return sifr_generated_ret_val;
                 }
                 Err(sifr_generated_try_err) => {
-                    let e = sifr_generated_try_err.clone();
-                    if exists(&path_for_check) {
+                    let e = sifr_generated_try_err;
+                    if exists(path_for_check.as_str()) {
                         attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                         continue;
                     }
@@ -250,7 +240,7 @@ pub mod sifr_generated_generated_support {
         }
         Err(IOError::new(sifr_generated_collision_message(
             "mkdtemp",
-            max_attempts,
+            &max_attempts,
         )))
     }
     pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
@@ -336,14 +326,14 @@ fn collect_tempfile_actual() -> Vec<bool> {
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let file_path: String = mkstemp("sifr_tempfile_tmp_")?;
         let dir_path: String = mkdtemp("sifr_tempfile_tmpd_")?;
-        actual.push(exists(&file_path));
-        actual.push(exists(&dir_path));
-        let preview_name: String = basename(&preview_path);
+        actual.push(exists(file_path.as_str()));
+        actual.push(exists(dir_path.as_str()));
+        let preview_name: String = basename(preview_path.as_str());
         let sifr_generated_chars_preview_name: Vec<char> =
             preview_name.chars().collect::<Vec<char>>();
-        let file_name: String = basename(&file_path);
+        let file_name: String = basename(file_path.as_str());
         let sifr_generated_chars_file_name: Vec<char> = file_name.chars().collect::<Vec<char>>();
-        let dir_name: String = basename(&dir_path);
+        let dir_name: String = basename(dir_path.as_str());
         let sifr_generated_chars_dir_name: Vec<char> = dir_name.chars().collect::<Vec<char>>();
         let preview_has_prefix: bool = sifr_generated_chars_preview_name.len()
             > "sifr_tempfile_preview_".to_string().chars().count()
@@ -400,7 +390,7 @@ fn collect_tempfile_actual() -> Vec<bool> {
                 )
             } == "sifr_tempfile_tmpd_";
         actual.push(preview_has_prefix && file_has_prefix && dir_has_prefix);
-        let temp_root: String = dirname(&preview_path);
+        let temp_root: String = dirname(preview_path.as_str());
         let missing_parent_name: String = "__sifr_tempfile_missing_parent__".to_string();
         let missing_parent_path: String = {
             let mut sifr_generated_concat: String = String::with_capacity(
@@ -421,11 +411,11 @@ fn collect_tempfile_actual() -> Vec<bool> {
             sifr_generated_concat.push_str("/bad_");
             sifr_generated_concat
         };
-        let _ = run_command(&format!("rm -rf {missing_parent_path}"))?;
+        let _rm_missing: String = run_command(&format!("rm -rf {missing_parent_path}"))?;
         let mut missing_error: bool = false;
         let sifr_generated_try_res: Result<(), IOError> = (|| {
-            let unexpected_file: String = mkstemp(&missing_prefix)?;
-            let _ = run_command(&format!("rm -f {unexpected_file}"))?;
+            let unexpected_file: String = mkstemp(missing_prefix.as_str())?;
+            let _rm_unexpected: String = run_command(&format!("rm -f {unexpected_file}"))?;
             missing_error = false;
             Ok(())
         })();
@@ -435,19 +425,19 @@ fn collect_tempfile_actual() -> Vec<bool> {
             missing_error = true;
         }
         actual.push(missing_error);
-        let _ = run_command(&format!("rm -f {file_path}"))?;
-        let _ = run_command(&format!("rm -rf {dir_path}"))?;
-        let _ = run_command(&format!("rm -rf {missing_parent_path}"))?;
-        let cleaned: bool = !exists(&file_path) && !exists(&dir_path);
+        let _c1: String = run_command(&format!("rm -f {file_path}"))?;
+        let _c2: String = run_command(&format!("rm -rf {dir_path}"))?;
+        let _c3: String = run_command(&format!("rm -rf {missing_parent_path}"))?;
+        let cleaned: bool = !exists(file_path.as_str()) && !exists(dir_path.as_str());
         actual.push(cleaned);
         let next_path: String = mkstemp("sifr_tempfile_tmp_")?;
         actual.push(next_path != file_path);
-        let _ = run_command(&format!("rm -f {next_path}"))?;
+        let _c4: String = run_command(&format!("rm -f {next_path}"))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         let e = sifr_generated_try_err;
-        let _ = e.message;
+        let _ = e.message.clone();
         actual = vec![false, false, false, false, false, false];
     }
     actual

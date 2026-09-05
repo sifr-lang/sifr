@@ -33,7 +33,7 @@ fn main() {
             sifr_generated_hex
         };
         let restored: Vec<u8> = {
-            let s: String = as_hex.clone();
+            let s: &str = &as_hex;
             let mut cleaned = String::new();
             for ch in s.chars() {
                 if ch.is_ascii_whitespace() {

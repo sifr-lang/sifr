@@ -97,7 +97,7 @@ mod sifr_generated_project_nominals {
         pub fn get(&self, key: &T, default: &SifrInt) -> SifrInt {
             let val: Option<SifrInt> = self.counts.get(key).cloned();
             let Some(val) = val else {
-                return default.clone();
+                return (*default).clone();
             };
             val
         }
@@ -141,7 +141,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = right;
                             {
-                                let sifr_generated_index_raw = i.clone();
+                                let sifr_generated_index_raw = &i;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -154,7 +154,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = left;
                             {
-                                let sifr_generated_index_raw = j.clone();
+                                let sifr_generated_index_raw = &j;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -369,7 +369,7 @@ fn main() {
     println!("'hello' as hex: {hex_hello}");
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let hex_bytes: Vec<u8> = {
-            let s: String = "536966".to_string();
+            let s: &str = "536966";
             let mut cleaned = String::new();
             for ch in s.chars() {
                 if ch.is_ascii_whitespace() {

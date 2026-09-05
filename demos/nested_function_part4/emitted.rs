@@ -1,10 +1,6 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn collect_value_groups(items: &[SifrInt], limit: SifrInt) -> Vec<Vec<SifrInt>> {
+fn collect_value_groups(items: &[SifrInt], limit: &SifrInt) -> Vec<Vec<SifrInt>> {
     fn dfs(
         i: &SifrInt,
         cur: &mut Vec<SifrInt>,
@@ -17,12 +13,12 @@ fn collect_value_groups(items: &[SifrInt], limit: SifrInt) -> Vec<Vec<SifrInt>> 
             result.push(cur.clone());
             return;
         }
-        if i < SifrInt::from_i64(0) || i >= items.len() || total > limit {
+        if i < &SifrInt::from_i64(0) || i >= &SifrInt::from(items.len()) || total > limit {
             return;
         }
         let Some(sifr_generated_checked_value_0) = ({
             let sifr_generated_checked_read_collection = &items;
-            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_index = (*i).clone();
             let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
@@ -33,20 +29,20 @@ fn collect_value_groups(items: &[SifrInt], limit: SifrInt) -> Vec<Vec<SifrInt>> 
         };
         cur.push(sifr_generated_checked_value_0.clone());
         dfs(
-            &i.clone(),
+            i,
             cur,
             &::std::ops::Add::add(total, sifr_generated_checked_value_0),
             items,
-            &limit.clone(),
+            limit,
             result,
         );
         cur.pop();
         dfs(
             &::std::ops::Add::add(i, &SifrInt::from_i64(1)),
             cur,
-            &total.clone(),
+            total,
             items,
-            &limit.clone(),
+            limit,
             result,
         );
     }
@@ -56,7 +52,7 @@ fn collect_value_groups(items: &[SifrInt], limit: SifrInt) -> Vec<Vec<SifrInt>> 
         &mut Vec::new(),
         &SifrInt::from_i64(0),
         items,
-        &limit,
+        limit,
         &mut result,
     );
     result
@@ -68,13 +64,13 @@ fn collect_prefixes(nums: &[SifrInt]) -> Vec<Vec<SifrInt>> {
         result: &mut Vec<Vec<SifrInt>>,
         subset: &mut Vec<SifrInt>,
     ) {
-        if i < SifrInt::from_i64(0) || i >= nums.len() {
+        if i < &SifrInt::from_i64(0) || i >= &SifrInt::from(nums.len()) {
             result.push(subset.clone());
             return;
         }
         let Some(sifr_generated_checked_value_2) = ({
             let sifr_generated_checked_read_collection = &nums;
-            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_index = (*i).clone();
             let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
@@ -114,7 +110,7 @@ fn main() {
                     SifrInt::from_i64(2),
                     SifrInt::from_i64(4)
                 ],
-                SifrInt::from_i64(4)
+                &SifrInt::from_i64(4)
             )
         ),
         "[[1, 1, 1, 1], [1, 1, 2], [2, 2], [4]]"

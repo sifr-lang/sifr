@@ -72,17 +72,30 @@ pub(crate) fn lower_bytes_from_hex(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
+    let source = match arg_expr(args, 0) {
+        RustExpr::Clone(inner) => *inner,
+        other => other,
+    };
+    let source = match source {
+        RustExpr::Literal(RustLiteral::Str(text)) => {
+            RustExpr::Literal(RustLiteral::StaticStr(text))
+        }
+        source @ RustExpr::Ref { .. } => source,
+        other => RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(other),
+        },
+    };
     Some(RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
                 mutable: false,
                 name: "s".to_string(),
-                ty: Some(RustType::String_),
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(arg_expr(args, 0)),
-                    method: "to_string".to_string(),
-                    args: vec![],
-                },
+                ty: Some(RustType::Ref {
+                    mutable: false,
+                    inner: Box::new(RustType::Str),
+                }),
+                value: source,
             },
             RustStmt::Let {
                 mutable: true,

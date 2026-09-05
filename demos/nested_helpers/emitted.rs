@@ -24,13 +24,13 @@ fn expand_keyed_strings(keys: &str) -> Vec<String> {
         keys: &str,
         res: &mut Vec<String>,
     ) {
-        if i < SifrInt::from_i64(0) || i >= keys.chars().count() {
+        if i < &SifrInt::from_i64(0) || i >= &SifrInt::from(keys.chars().count()) {
             res.push(cur.to_string());
             return;
         }
         let Some(sifr_generated_checked_value_0) = {
             let sifr_generated_string_chars = keys.chars().collect::<Vec<char>>();
-            let sifr_generated_string_index = i.clone();
+            let sifr_generated_string_index = i;
             let sifr_generated_string_index_normalized = sifr_generated_string_index
                 .normalize_index_or_len(sifr_generated_string_chars.len());
             sifr_generated_string_chars
@@ -62,15 +62,11 @@ fn expand_keyed_strings(keys: &str) -> Vec<String> {
     let mut res: Vec<String> = Vec::new();
     let key_to_suffixes = &*SIFR_GENERATED_SIFR_HOISTED_DICT_0;
     if keys.chars().count() > SifrInt::from_i64(0) {
-        backtrack(&SifrInt::from_i64(0), "", &key_to_suffixes, keys, &mut res);
+        backtrack(&SifrInt::from_i64(0), "", key_to_suffixes, keys, &mut res);
     }
     res
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn count_configurations(n: SifrInt) -> SifrInt {
+fn count_configurations(n: &SifrInt) -> SifrInt {
     fn backtrack(
         i: &SifrInt,
         cols: &mut HashSet<SifrInt>,
@@ -82,7 +78,8 @@ fn count_configurations(n: SifrInt) -> SifrInt {
             return SifrInt::from_i64(1);
         }
         let mut count: SifrInt = SifrInt::from_i64(0);
-        for j in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1))
+        for j in
+            SifrRange::new_known_nonzero(SifrInt::from_i64(0), (*n).clone(), SifrInt::from_i64(1))
         {
             if cols.contains(&j)
                 || posdiag.contains(&::std::ops::Add::add(i, &j))
@@ -100,7 +97,7 @@ fn count_configurations(n: SifrInt) -> SifrInt {
                     cols,
                     posdiag,
                     negdiag,
-                    &n.clone(),
+                    n,
                 ),
             );
             cols.remove(&j);
@@ -114,18 +111,14 @@ fn count_configurations(n: SifrInt) -> SifrInt {
         &mut HashSet::new(),
         &mut HashSet::new(),
         &mut HashSet::new(),
-        &n,
+        n,
     )
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn find_root(n: SifrInt, par: &[SifrInt]) -> SifrInt {
-    if n < SifrInt::from_i64(0) || n >= par.len() {
+fn find_root(n: &SifrInt, par: &[SifrInt]) -> SifrInt {
+    if n < &SifrInt::from_i64(0) || n >= &SifrInt::from(par.len()) {
         return SifrInt::from_i64(0);
     }
-    let mut p: SifrInt = n.clone();
+    let mut p: SifrInt = (*n).clone();
     while p >= SifrInt::from_i64(0) && p < par.len() && {
         let sifr_generated_checked_read_collection = &par;
         let sifr_generated_checked_read_index = &p;
@@ -152,7 +145,7 @@ fn find_root(n: SifrInt, par: &[SifrInt]) -> SifrInt {
     }
     p
 }
-fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<SifrInt>) -> bool {
+fn union_nodes(n1: &SifrInt, n2: &SifrInt, par: &mut [SifrInt], rank: &mut [SifrInt]) -> bool {
     let p1: SifrInt = find_root(n1, par);
     let p2: SifrInt = find_root(n2, par);
     if p1 < SifrInt::from_i64(0)
@@ -193,7 +186,7 @@ fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<
         {
             let sifr_generated_assign_value = p1.clone();
             {
-                let sifr_generated_index_raw = p2.clone();
+                let sifr_generated_index_raw = &p2;
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(par.len());
                 if let Some(sifr_generated_elem) = par.get_mut(sifr_generated_index_normalized) {
@@ -203,11 +196,11 @@ fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<
         }
         {
             let sifr_generated_assign_value = ::std::ops::Add::add(
-                &sifr_generated_checked_value_4.clone(),
-                &sifr_generated_checked_value_5.clone(),
+                &sifr_generated_checked_value_4,
+                &sifr_generated_checked_value_5,
             );
             {
-                let sifr_generated_index_raw = p1.clone();
+                let sifr_generated_index_raw = &p1;
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(rank.len());
                 if let Some(sifr_generated_elem) = rank.get_mut(sifr_generated_index_normalized) {
@@ -219,7 +212,7 @@ fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<
         {
             let sifr_generated_assign_value = p2.clone();
             {
-                let sifr_generated_index_raw = p1;
+                let sifr_generated_index_raw = &p1;
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(par.len());
                 if let Some(sifr_generated_elem) = par.get_mut(sifr_generated_index_normalized) {
@@ -233,7 +226,7 @@ fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<
                 &sifr_generated_checked_value_4,
             );
             {
-                let sifr_generated_index_raw = p2;
+                let sifr_generated_index_raw = &p2;
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(rank.len());
                 if let Some(sifr_generated_elem) = rank.get_mut(sifr_generated_index_normalized) {
@@ -268,7 +261,7 @@ fn detect_first_cycle(edges: &[(SifrInt, SifrInt)]) -> Vec<SifrInt> {
         sifr_generated_list_comp
     };
     for (n1, n2) in edges.iter().cloned() {
-        if !union_nodes(n1.clone(), n2.clone(), &mut par, &mut rank) {
+        if !union_nodes(&n1, &n2, &mut par, &mut rank) {
             return vec![n1, n2];
         }
     }
@@ -280,7 +273,7 @@ fn main() {
         "[\"ad\", \"ae\", \"af\", \"bd\", \"be\", \"bf\", \"cd\", \"ce\", \"cf\"]"
     );
     assert_eq!(
-        count_configurations(SifrInt::from_i64(4)),
+        count_configurations(&SifrInt::from_i64(4)),
         SifrInt::from_i64(2)
     );
     assert_eq!(

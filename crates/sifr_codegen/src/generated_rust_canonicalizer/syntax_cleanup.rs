@@ -7,16 +7,27 @@ use super::local_name_cleanup::{
     disambiguate_similar_parameter_names,
 };
 
+mod borrowed_scalar_parameters;
+mod borrowed_value_parameters;
 mod dead_assignment_cleanup;
+mod discardable_expression;
 mod identifier_collection;
 mod identity_conversion_cleanup;
 mod idiom_cleanup;
 mod let_else_cleanup;
 mod liveness;
 mod mutability_cleanup;
+mod pattern_predicates;
+mod redundant_borrow_cleanup;
+mod scoped_imports;
+mod typed_expression_cleanup;
 mod typed_fallback_cleanup;
 
 use dead_assignment_cleanup::remove_dead_generated_assignments;
+use discardable_expression::{
+    disposable_typed_unit_binding, expression_is_discardable, expression_is_literal_unit,
+    simple_binding_name,
+};
 pub(super) use identifier_collection::{
     expression_has_control_carrier, statement_identifier_names,
 };
@@ -28,29 +39,69 @@ use mutability_cleanup::remove_unneeded_mutability;
 use mutability_cleanup::{
     collect_local_method_facts, collect_mutating_method_names, remove_unneeded_parameter_mutability,
 };
+pub(super) use pattern_predicates::is_wildcard_result_pattern;
+use pattern_predicates::{is_none_pattern, is_wildcard_option_pattern};
 
 pub(super) fn canonicalize_syntax(file: &mut syn::File) {
+    idiom_cleanup::rewrite_borrow_only_string_parameters(file);
+    borrowed_scalar_parameters::rewrite_borrow_only_scalar_parameters(file);
+    borrowed_value_parameters::rewrite_borrow_only_value_parameters(file);
+    redundant_borrow_cleanup::remove_redundant_local_call_borrows(file);
+    super::api_cleanup::rewrite_slice_parameter_apis(file);
     identity_conversion_cleanup::remove_known_sifr_int_identity_conversions(file);
     let mutating_methods = collect_mutating_method_names(file);
     let local_method_facts = collect_local_method_facts(file);
+    let tuple_string_returns = idiom_cleanup::collect_tuple_string_returns(file);
     CanonicalSyntaxRewriter {
         mutating_methods: &mutating_methods,
         local_method_facts: &local_method_facts,
+        tuple_string_returns: &tuple_string_returns,
     }
     .visit_file_mut(file);
     idiom_cleanup::canonicalize_idioms(file, &mutating_methods);
+    typed_expression_cleanup::rewrite(file);
     typed_fallback_cleanup::canonicalize_typed_fallbacks(file);
+}
+
+pub(super) fn collect_project_scalar_borrow_plans(
+    files: &[syn::File],
+) -> std::collections::HashMap<String, borrowed_scalar_parameters::ScalarBorrowPlan> {
+    borrowed_scalar_parameters::collect_project_plans(files)
+}
+
+pub(super) fn apply_local_scalar_borrow_plans(file: &mut syn::File) {
+    borrowed_scalar_parameters::rewrite_borrow_only_scalar_parameters(file);
+}
+
+pub(super) fn apply_project_scalar_borrow_plans(
+    file: &mut syn::File,
+    plans: &std::collections::HashMap<String, borrowed_scalar_parameters::ScalarBorrowPlan>,
+) {
+    borrowed_scalar_parameters::apply_project_plans(file, plans);
+}
+
+pub(super) fn collect_project_mutability_facts(
+    files: &[syn::File],
+) -> mutability_cleanup::ProjectMutabilityFacts {
+    mutability_cleanup::collect_project_mutability_facts(files)
+}
+
+pub(super) fn apply_project_mutability_facts(
+    file: &mut syn::File,
+    facts: &mutability_cleanup::ProjectMutabilityFacts,
+) {
+    mutability_cleanup::apply_project_mutability_facts(file, facts);
 }
 
 pub(super) fn collect_project_borrowed_string_params(
     files: &[syn::File],
-) -> std::collections::HashMap<String, Vec<bool>> {
+) -> idiom_cleanup::BorrowedStringSignatures {
     idiom_cleanup::collect_project_borrowed_string_params(files)
 }
 
 pub(super) fn rewrite_project_borrowed_string_literals(
     file: &mut syn::File,
-    signatures: &std::collections::HashMap<String, Vec<bool>>,
+    signatures: &idiom_cleanup::BorrowedStringSignatures,
 ) {
     idiom_cleanup::rewrite_project_borrowed_string_literals(file, signatures);
 }
@@ -58,12 +109,12 @@ pub(super) fn rewrite_project_borrowed_string_literals(
 struct CanonicalSyntaxRewriter<'methods> {
     mutating_methods: &'methods HashSet<String>,
     local_method_facts: &'methods mutability_cleanup::LocalMethodFacts,
+    tuple_string_returns: &'methods std::collections::HashMap<String, Vec<bool>>,
 }
 
 impl VisitMut for CanonicalSyntaxRewriter<'_> {
     fn visit_item_fn_mut(&mut self, function: &mut syn::ItemFn) {
         remove_explicit_unit_return(&mut function.sig);
-        borrow_nested_recursive_sifr_int_parameters(&mut function.block);
         disambiguate_similar_parameter_names(&mut function.sig, &mut function.block);
         remove_unneeded_parameter_mutability(
             &mut function.sig,
@@ -71,7 +122,11 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
             self.mutating_methods,
             self.local_method_facts,
         );
-        idiom_cleanup::rewrite_owned_string_clones(&function.sig, &mut function.block);
+        idiom_cleanup::rewrite_owned_string_clones(
+            &function.sig,
+            &mut function.block,
+            self.tuple_string_returns,
+        );
         idiom_cleanup::remove_last_use_parameter_clones(&function.sig, &mut function.block);
         visit_mut::visit_item_fn_mut(self, function);
         disambiguate_similar_names_across_nested_scopes(&function.sig, &mut function.block);
@@ -89,7 +144,11 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
             self.mutating_methods,
             self.local_method_facts,
         );
-        idiom_cleanup::rewrite_owned_string_clones(&method.sig, &mut method.block);
+        idiom_cleanup::rewrite_owned_string_clones(
+            &method.sig,
+            &mut method.block,
+            self.tuple_string_returns,
+        );
         idiom_cleanup::remove_last_use_parameter_clones(&method.sig, &mut method.block);
         visit_mut::visit_impl_item_fn_mut(self, method);
         disambiguate_similar_names_across_nested_scopes(&method.sig, &mut method.block);
@@ -175,112 +234,6 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
             && let syn::Expr::Block(block) = closure.body.as_mut()
         {
             normalize_tail_position(&mut block.block.stmts);
-        }
-    }
-}
-
-fn borrow_nested_recursive_sifr_int_parameters(body: &mut syn::Block) {
-    let candidates = body
-        .stmts
-        .iter()
-        .filter_map(|statement| match statement {
-            syn::Stmt::Item(syn::Item::Fn(function)) => Some(function),
-            _ => None,
-        })
-        .filter_map(|function| {
-            let borrowed = function
-                .sig
-                .inputs
-                .iter()
-                .enumerate()
-                .filter_map(|(index, argument)| {
-                    let syn::FnArg::Typed(parameter) = argument else {
-                        return None;
-                    };
-                    let syn::Pat::Ident(binding) = parameter.pat.as_ref() else {
-                        return None;
-                    };
-                    matches!(parameter.ty.as_ref(), syn::Type::Path(path)
-                        if path.path.segments.last().is_some_and(|segment|
-                            segment.ident == "SifrInt"))
-                    .then(|| {
-                        super::source_expectations::parameter_is_only_borrowed(
-                            &function.block,
-                            &binding.ident.to_string(),
-                        )
-                        .then_some((index, binding.ident.to_string()))
-                    })
-                    .flatten()
-                })
-                .collect::<Vec<_>>();
-            (!borrowed.is_empty()
-                && super::source_expectations::body_calls_function(
-                    &function.block,
-                    &function.sig.ident,
-                ))
-            .then(|| (function.sig.ident.to_string(), borrowed))
-        })
-        .collect::<Vec<_>>();
-    for (function_name, parameters) in candidates {
-        for statement in &mut body.stmts {
-            let syn::Stmt::Item(syn::Item::Fn(function)) = statement else {
-                continue;
-            };
-            if function.sig.ident != function_name {
-                continue;
-            }
-            for (index, name) in &parameters {
-                let Some(syn::FnArg::Typed(parameter)) = function.sig.inputs.iter_mut().nth(*index)
-                else {
-                    continue;
-                };
-                let ty = parameter.ty.as_ref();
-                parameter.ty = Box::new(syn::parse_quote!(&#ty));
-                RemoveDirectReferenceToName { name }.visit_block_mut(&mut function.block);
-            }
-        }
-        BorrowRecursiveCallArguments {
-            function_name: &function_name,
-            indices: parameters.iter().map(|(index, _)| *index).collect(),
-        }
-        .visit_block_mut(body);
-    }
-}
-
-struct RemoveDirectReferenceToName<'name> {
-    name: &'name str,
-}
-
-impl VisitMut for RemoveDirectReferenceToName<'_> {
-    fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
-        visit_mut::visit_expr_mut(self, expression);
-        if let syn::Expr::Reference(reference) = expression
-            && matches!(reference.expr.as_ref(), syn::Expr::Path(path)
-                if path.path.is_ident(self.name))
-        {
-            *expression = reference.expr.as_ref().clone();
-        }
-    }
-}
-
-struct BorrowRecursiveCallArguments<'name> {
-    function_name: &'name str,
-    indices: HashSet<usize>,
-}
-
-impl VisitMut for BorrowRecursiveCallArguments<'_> {
-    fn visit_expr_call_mut(&mut self, call: &mut syn::ExprCall) {
-        visit_mut::visit_expr_call_mut(self, call);
-        if !matches!(call.func.as_ref(), syn::Expr::Path(path)
-            if path.path.is_ident(self.function_name))
-        {
-            return;
-        }
-        for (index, argument) in call.args.iter_mut().enumerate() {
-            if self.indices.contains(&index) && !matches!(argument, syn::Expr::Reference(_)) {
-                let value = argument.clone();
-                *argument = syn::parse_quote!(&#value);
-            }
         }
     }
 }
@@ -711,31 +664,6 @@ fn discarded_match_error_check(local: &syn::Local) -> Option<syn::Stmt> {
     ))
 }
 
-pub(super) fn is_wildcard_result_pattern(pattern: &syn::Pat, variant: &str) -> bool {
-    let syn::Pat::TupleStruct(tuple) = pattern else {
-        return false;
-    };
-    tuple
-        .path
-        .segments
-        .last()
-        .is_some_and(|segment| segment.ident == variant)
-        && matches!(tuple.elems.first(), Some(syn::Pat::Wild(_)))
-}
-
-fn is_wildcard_option_pattern(pattern: &syn::Pat, variant: &str) -> bool {
-    is_wildcard_result_pattern(pattern, variant)
-}
-
-fn is_none_pattern(pattern: &syn::Pat) -> bool {
-    matches!(pattern,
-        syn::Pat::Path(path) if path.path.is_ident("None")
-    ) || matches!(pattern,
-        syn::Pat::Ident(binding)
-            if binding.ident == "None" && binding.subpat.is_none()
-    )
-}
-
 fn expression_always_returns(expression: &syn::Expr) -> bool {
     match expression {
         syn::Expr::Return(_) => true,
@@ -819,43 +747,5 @@ fn suppress_unused_pattern_bindings_inner(
             suppress_unused_pattern_bindings_inner(&mut paren.pat, used, reserved);
         }
         _ => {}
-    }
-}
-
-fn simple_binding_name(pattern: &syn::Pat) -> Option<String> {
-    match pattern {
-        syn::Pat::Ident(binding) if binding.subpat.is_none() => Some(binding.ident.to_string()),
-        syn::Pat::Type(typed) => simple_binding_name(&typed.pat),
-        syn::Pat::Paren(paren) => simple_binding_name(&paren.pat),
-        _ => None,
-    }
-}
-
-fn expression_is_discardable(expression: &syn::Expr) -> bool {
-    crate::discardability::syntax_expression_is_discardable(expression)
-}
-
-fn expression_is_literal_unit(expression: &syn::Expr) -> bool {
-    match expression {
-        syn::Expr::Tuple(tuple) => tuple.elems.is_empty(),
-        syn::Expr::Paren(paren) => expression_is_literal_unit(&paren.expr),
-        _ => false,
-    }
-}
-
-fn disposable_typed_unit_binding(pattern: &syn::Pat, referenced_later: &HashSet<String>) -> bool {
-    let syn::Pat::Type(typed) = pattern else {
-        return false;
-    };
-    let syn::Type::Tuple(tuple) = typed.ty.as_ref() else {
-        return false;
-    };
-    if !tuple.elems.is_empty() {
-        return false;
-    }
-    match typed.pat.as_ref() {
-        syn::Pat::Wild(_) => true,
-        syn::Pat::Ident(binding) => !referenced_later.contains(&binding.ident.to_string()),
-        _ => false,
     }
 }

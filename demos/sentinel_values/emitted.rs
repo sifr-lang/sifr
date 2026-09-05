@@ -7,7 +7,7 @@ fn smallest_or_zero(values: &[SifrInt]) -> SifrInt {
         reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
     )]
     for value in values.iter() {
-        if value < best {
+        if value < &best {
             best.clone_from(value);
         }
     }
@@ -26,6 +26,6 @@ fn main() {
         ]),
         SifrInt::from_i64(3)
     );
-    assert_eq!(smallest_or_zero(&Vec::new()), SifrInt::from_i64(0));
+    assert_eq!(smallest_or_zero(&[]), SifrInt::from_i64(0));
     println!("sentinel_values: ok");
 }

@@ -51,18 +51,17 @@ use crate::sifr_generated_generated_support::{assert_vector_eq, b64encode};
 pub use sifr_generated_project_nominals::ParseError;
 fn main() {
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let _ = ::sifr_runtime::encoding::decode_text(&[255_u8], "utf-8", "strict").map_err(
-            |sifr_generated_message| ParseError {
+        let _bad: String = ::sifr_runtime::encoding::decode_text(&[255_u8], "utf-8", "strict")
+            .map_err(|sifr_generated_message| ParseError {
                 message: sifr_generated_message,
-            },
-        )?;
-        println!("{}", false);
+            })?;
+        println!("false");
         assert_eq!(false.to_string(), "true");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
-        println!("{}", true);
+        let _e = sifr_generated_try_err;
+        println!("true");
         assert_eq!(true.to_string(), "true");
     }
     let inputs: Vec<String> = vec![
@@ -86,5 +85,5 @@ fn main() {
         actual.push(b64encode(s));
     }
     assert_vector_eq(&actual, &expected);
-    println!("{}", true);
+    println!("true");
 }

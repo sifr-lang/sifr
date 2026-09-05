@@ -14,8 +14,7 @@ fn main() {
     ];
     let doubled: Vec<SifrInt> = Box::new(
         nums.iter()
-            .cloned()
-            .map(|x| ::std::ops::Mul::mul(&x, &SifrInt::from_i64(2))),
+            .map(|x| ::std::ops::Mul::mul(x, &SifrInt::from_i64(2))),
     )
     .collect::<Vec<_>>();
     println!("{doubled:?}");
@@ -48,7 +47,7 @@ fn main() {
             reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
         )]
         for x in nums.iter() {
-            if x > SifrInt::from_i64(2) {
+            if x > &SifrInt::from_i64(2) {
                 sifr_generated_list_comp.push(::std::ops::Mul::mul(x, x));
             }
         }

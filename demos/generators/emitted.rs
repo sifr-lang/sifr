@@ -166,8 +166,12 @@ fn main() {
         SifrInt::from_i64(4),
         SifrInt::from_i64(5),
     ];
-    for x in nums.iter().cloned() {
-        println!("{}", ::std::ops::Mul::mul(&x, &x));
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for x in nums.iter() {
+        println!("{}", ::std::ops::Mul::mul(x, x));
     }
     {
         struct SifrGeneratedWithGuard0 {
@@ -182,7 +186,7 @@ fn main() {
         let sifr_generated_guard_0 = SifrGeneratedWithGuard0 {
             ctx: sifr_generated_ctx_0,
         };
-        let _ = sifr_generated_guard_0.ctx.sifr_generated_enter__();
+        let _t = sifr_generated_guard_0.ctx.sifr_generated_enter__();
         println!("doing work");
     }
     println!("done");

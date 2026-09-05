@@ -689,7 +689,7 @@ def zeros(n: int) -> list[int]:
     );
 
     assert!(
-        generated.contains("std::iter::repeat(SifrInt::from_i64(0))"),
+        generated.contains("std::iter::repeat(sifr_generated_repeat_value)"),
         "{generated}"
     );
     assert!(generated.contains("collect::<Vec<_>>()"), "{generated}");

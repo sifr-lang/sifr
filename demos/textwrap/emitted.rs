@@ -41,9 +41,9 @@ pub mod sifr_generated_generated_support {
         }
         normalized
     }
-    pub(super) fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
+    pub(super) fn sifr_generated_expand_tabs_impl(text: &str, tabsize: &SifrInt) -> String {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-        let mut effective_tabsize: SifrInt = tabsize;
+        let mut effective_tabsize: SifrInt = (*tabsize).clone();
         if effective_tabsize <= SifrInt::from_i64(0) {
             effective_tabsize = SifrInt::from_i64(1);
         }
@@ -55,7 +55,7 @@ pub mod sifr_generated_generated_support {
         let mut i: SifrInt = SifrInt::from_i64(0);
         while i < sifr_generated_chars_text.len() {
             let ch_opt: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_text.len());
                 sifr_generated_chars_text
@@ -96,33 +96,27 @@ pub mod sifr_generated_generated_support {
     pub(super) fn sifr_generated_prepare_text(
         text: &str,
         expand_tabs: bool,
-        tabsize: SifrInt,
+        tabsize: &SifrInt,
         replace_whitespace: bool,
     ) -> String {
-        let mut prepared: String = {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(text.len().saturating_add(0usize));
-            sifr_generated_concat.push_str(text);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        };
+        let mut prepared: String = text.to_string();
         if expand_tabs {
-            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize);
+            prepared = sifr_generated_expand_tabs_impl(prepared.as_str(), tabsize);
         }
         if replace_whitespace {
-            prepared = sifr_generated_replace_whitespace_chars(&prepared, true);
+            prepared = sifr_generated_replace_whitespace_chars(prepared.as_str(), true);
         }
         prepared
     }
     pub(super) fn sifr_generated_normalize_whitespace(text: &str) -> String {
-        sifr_generated_prepare_text(text, true, SifrInt::from_i64(8), true)
+        sifr_generated_prepare_text(text, true, &SifrInt::from_i64(8), true)
     }
     pub(super) fn sifr_generated_has_non_whitespace(text: &str) -> bool {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let mut i: SifrInt = SifrInt::from_i64(0);
         while i < sifr_generated_chars_text.len() {
             let ch: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_text.len());
                 sifr_generated_chars_text
@@ -149,26 +143,14 @@ pub mod sifr_generated_generated_support {
         break_on_hyphens: bool,
     ) -> Vec<String> {
         if !break_on_hyphens {
-            return vec![{
-                let mut sifr_generated_concat: String =
-                    String::with_capacity(word.len().saturating_add(0usize));
-                sifr_generated_concat.push_str(word);
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            }];
+            return vec![word.to_string()];
         }
         let parts: Vec<String> = word
             .split('-')
             .map(::std::string::ToString::to_string)
             .collect::<Vec<String>>();
         if parts.len() <= SifrInt::from_i64(1) {
-            return vec![{
-                let mut sifr_generated_concat: String =
-                    String::with_capacity(word.len().saturating_add(0usize));
-                sifr_generated_concat.push_str(word);
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            }];
+            return vec![word.to_string()];
         }
         let mut units: Vec<String> = Vec::new();
         let mut index: SifrInt = SifrInt::from_i64(0);
@@ -196,7 +178,7 @@ pub mod sifr_generated_generated_support {
         let sifr_generated_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
         let mut start: SifrInt = SifrInt::from_i64(0);
         while start < sifr_generated_chars_line.len() && {
-            let sifr_generated_string_index = start.clone();
+            let sifr_generated_string_index = &start;
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_line.len());
             sifr_generated_chars_line
@@ -206,7 +188,7 @@ pub mod sifr_generated_generated_support {
         .map(|character| character.to_string())
         .is_some_and(|_checked_value_2| {
             {
-                let sifr_generated_string_index = start.clone();
+                let sifr_generated_string_index = &start;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_line.len());
                 sifr_generated_chars_line
@@ -250,28 +232,18 @@ pub mod sifr_generated_generated_support {
         if drop_whitespace {
             return sifr_generated_trim_line(line);
         }
-        {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(line.len().saturating_add(0usize));
-            sifr_generated_concat.push_str(line);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        }
+        line.to_string()
     }
-    pub(super) fn sifr_generated_wrap_impl(text: &str, width: SifrInt) -> Vec<String> {
+    pub(super) fn sifr_generated_wrap_impl(text: &str, width: &SifrInt) -> Vec<String> {
         let normalized: String = sifr_generated_normalize_whitespace(text);
-        sifr_generated_wrap_with_indents(&normalized, width, "", "", true, true)
+        sifr_generated_wrap_with_indents(normalized.as_str(), width, "", "", true, true)
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_effective_content_width(
-        total_width: SifrInt,
+        total_width: &SifrInt,
         indent: &str,
     ) -> SifrInt {
         let available: SifrInt =
-            ::std::ops::Sub::sub(&total_width, &SifrInt::from(indent.chars().count()));
+            ::std::ops::Sub::sub(total_width, &SifrInt::from(indent.chars().count()));
         if available <= SifrInt::from_i64(0) {
             return SifrInt::from_i64(1);
         }
@@ -293,13 +265,9 @@ pub mod sifr_generated_generated_support {
             result.push(candidate);
         }
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_wrap_with_indents(
         text: &str,
-        total_width: SifrInt,
+        total_width: &SifrInt,
         initial_indent: &str,
         subsequent_indent: &str,
         break_on_hyphens: bool,
@@ -311,10 +279,10 @@ pub mod sifr_generated_generated_support {
             .collect::<Vec<String>>();
         let mut result: Vec<String> = Vec::new();
         let mut current: String = String::new();
-        let mut sifr_generated_chars_current: Vec<char> = current.chars().collect::<Vec<char>>();
+        let mut sifr_generated_chars_current: Vec<char> = Vec::new();
         let mut first_line: bool = true;
         let mut current_limit: SifrInt =
-            sifr_generated_effective_content_width(total_width.clone(), initial_indent);
+            sifr_generated_effective_content_width(total_width, initial_indent);
         #[expect(
             clippy::explicit_iter_loop,
             reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
@@ -359,19 +327,17 @@ pub mod sifr_generated_generated_support {
                     if first_line {
                         sifr_generated_push_current_line(
                             &mut result,
-                            &current,
+                            current.as_str(),
                             initial_indent,
                             drop_whitespace,
                         );
                         first_line = false;
-                        current_limit = sifr_generated_effective_content_width(
-                            total_width.clone(),
-                            subsequent_indent,
-                        );
+                        current_limit =
+                            sifr_generated_effective_content_width(total_width, subsequent_indent);
                     } else {
                         sifr_generated_push_current_line(
                             &mut result,
-                            &current,
+                            current.as_str(),
                             subsequent_indent,
                             drop_whitespace,
                         );
@@ -385,14 +351,14 @@ pub mod sifr_generated_generated_support {
             if first_line {
                 sifr_generated_push_current_line(
                     &mut result,
-                    &current,
+                    current.as_str(),
                     initial_indent,
                     drop_whitespace,
                 );
             } else {
                 sifr_generated_push_current_line(
                     &mut result,
-                    &current,
+                    current.as_str(),
                     subsequent_indent,
                     drop_whitespace,
                 );
@@ -400,14 +366,14 @@ pub mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn wrap(text: &str, width: SifrInt) -> Result<Vec<String>, ValueError> {
-        if width <= SifrInt::from_i64(0) {
+    pub(super) fn wrap(text: &str, width: &SifrInt) -> Result<Vec<String>, ValueError> {
+        if width <= &SifrInt::from_i64(0) {
             return Err(ValueError::new("wrap: width must be > 0".to_string()));
         }
         Ok(sifr_generated_wrap_impl(text, width))
     }
-    pub(super) fn fill(text: &str, width: SifrInt) -> Result<String, ValueError> {
-        if width <= SifrInt::from_i64(0) {
+    pub(super) fn fill(text: &str, width: &SifrInt) -> Result<String, ValueError> {
+        if width <= &SifrInt::from_i64(0) {
             return Err(ValueError::new("fill: width must be > 0".to_string()));
         }
         let lines: Vec<String> = sifr_generated_wrap_impl(text, width);
@@ -450,7 +416,7 @@ pub mod sifr_generated_generated_support {
                 while j < sifr_generated_chars_line.len() {
                     if !done {
                         let ch: Option<String> = {
-                            let sifr_generated_string_index = j.clone();
+                            let sifr_generated_string_index = &j;
                             let sifr_generated_string_index_normalized =
                                 sifr_generated_string_index
                                     .normalize_index_or_len(sifr_generated_chars_line.len());
@@ -566,25 +532,21 @@ pub mod sifr_generated_generated_support {
         }
         result
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn shorten(text: &str, width: SifrInt) -> String {
+    pub(super) fn shorten(text: &str, width: &SifrInt) -> String {
         let normalized: String = sifr_generated_normalize_whitespace(text);
         let words: Vec<String> = normalized
             .split(' ')
             .map(::std::string::ToString::to_string)
             .collect::<Vec<String>>();
         let mut result: String = String::new();
-        let mut sifr_generated_chars_result: Vec<char> = result.chars().collect::<Vec<char>>();
+        let mut sifr_generated_chars_result: Vec<char> = Vec::new();
         for word in words.iter().cloned() {
             let sifr_generated_chars_word: Vec<char> = word.chars().collect::<Vec<char>>();
             if sifr_generated_chars_word.len() == SifrInt::from_i64(0) {
             } else if sifr_generated_chars_result.len() == SifrInt::from_i64(0) {
                 result = word;
                 sifr_generated_chars_result = result.chars().collect::<Vec<char>>();
-            } else if ::std::ops::Add::add(
+            } else if &::std::ops::Add::add(
                 &::std::ops::Add::add(
                     &::std::ops::Add::add(
                         &SifrInt::from(sifr_generated_chars_result.len()),
@@ -640,41 +602,38 @@ pub use sifr_generated_project_nominals::ValueError;
 fn collect_wrap_fill_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let lines: Vec<String> = wrap("alpha\tbeta\ngamma", SifrInt::from_i64(10))?;
-        actual.push(
-            format!("{lines:?}").as_str() == "[\"alpha beta\", \"gamma\"]".to_string().as_str(),
-        );
+        let lines: Vec<String> = wrap("alpha\tbeta\ngamma", &SifrInt::from_i64(10))?;
+        actual.push(format!("{lines:?}").as_str() == "[\"alpha beta\", \"gamma\"]");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         actual.push(false);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let filled: String = fill("alpha\tbeta\ngamma", SifrInt::from_i64(10))?;
+        let filled: String = fill("alpha\tbeta\ngamma", &SifrInt::from_i64(10))?;
         actual.push(filled == "alpha beta\ngamma");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         actual.push(false);
     }
     actual
 }
 fn collect_other_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![
-        dedent("  x\n  y").as_str() == "x\ny".to_string().as_str(),
-        indent("x\n \ny", ">> ").as_str() == ">> x\n \n>> y".to_string().as_str(),
-        shorten("alpha beta gamma", SifrInt::from_i64(16)).as_str()
-            == "alpha beta [...]".to_string().as_str(),
+        dedent("  x\n  y").as_str() == "x\ny",
+        indent("x\n \ny", ">> ").as_str() == ">> x\n \n>> y",
+        shorten("alpha beta gamma", &SifrInt::from_i64(16)).as_str() == "alpha beta [...]",
     ];
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let wrap_empty: Vec<String> = wrap("", SifrInt::from_i64(5))?;
-        actual.push(format!("{wrap_empty:?}").as_str() == "[]".to_string().as_str());
+        let wrap_empty: Vec<String> = wrap("", &SifrInt::from_i64(5))?;
+        actual.push(format!("{wrap_empty:?}").as_str() == "[]");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         actual.push(false);
     }
     actual

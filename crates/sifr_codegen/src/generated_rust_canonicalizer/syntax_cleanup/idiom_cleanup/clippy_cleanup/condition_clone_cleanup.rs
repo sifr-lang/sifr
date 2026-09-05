@@ -7,19 +7,12 @@ fn remove_shadowing_condition_clones(
         let syn::Stmt::Expr(syn::Expr::If(branch), _) = &mut statements[index] else {
             continue;
         };
-        let else_uses = branch
-            .else_branch
-            .as_ref()
-            .map(|(_, alternative)| expression_identifier_uses(alternative))
-            .unwrap_or_default();
         let movable = owned_parameters
             .iter()
-            .filter(|name| {
-                !suffix_uses.contains_key(*name) && !else_uses.contains_key(*name)
-            })
+            .filter(|name| !suffix_uses.contains_key(*name))
             .cloned()
             .collect();
-        ShadowingConditionCloneRemover { movable }.visit_expr_mut(&mut branch.cond);
+        ShadowingConditionCloneRemover { movable }.visit_expr_if_mut(branch);
     }
 }
 
@@ -42,20 +35,26 @@ struct ShadowingConditionCloneRemover {
 }
 
 impl VisitMut for ShadowingConditionCloneRemover {
-    fn visit_expr_let_mut(&mut self, let_: &mut syn::ExprLet) {
-        visit_mut::visit_expr_let_mut(self, let_);
-        let syn::Expr::MethodCall(clone) = let_.expr.as_ref() else {
-            return;
-        };
-        let Some(name) = expression_root_name(&clone.receiver) else {
-            return;
-        };
-        if clone.method == "clone"
-            && clone.args.is_empty()
-            && self.movable.contains(&name)
-            && pattern_contains_name(&let_.pat, &name)
+    fn visit_expr_if_mut(&mut self, branch: &mut syn::ExprIf) {
+        if let syn::Expr::Let(let_) = branch.cond.as_mut()
+            && let syn::Expr::MethodCall(clone) = let_.expr.as_ref()
+            && let Some(name) = expression_root_name(&clone.receiver)
         {
-            let_.expr = clone.receiver.clone();
+            let used_in_alternative =
+                branch.else_branch.as_ref().is_some_and(|(_, alternative)| {
+                    expression_identifier_uses(alternative).contains_key(&name)
+                });
+            if clone.method == "clone"
+                && clone.args.is_empty()
+                && self.movable.contains(&name)
+                && pattern_contains_name(&let_.pat, &name)
+                && !used_in_alternative
+            {
+                let_.expr = clone.receiver.clone();
+            }
+        }
+        if let Some((_, alternative)) = &mut branch.else_branch {
+            self.visit_expr_mut(alternative);
         }
     }
 

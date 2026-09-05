@@ -57,13 +57,7 @@ pub mod sifr_generated_generated_support {
         if ch == "F" {
             return "f".to_string();
         }
-        {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(ch.len().saturating_add(0usize));
-            sifr_generated_concat.push_str(ch);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        }
+        ch.to_string()
     }
     pub(super) fn sifr_generated_is_hex_char(ch: &str) -> bool {
         if ch == "0" {
@@ -185,17 +179,13 @@ pub mod sifr_generated_generated_support {
         }
         ::std::ops::Neg::neg(&SifrInt::from_i64(1))
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
+    pub(super) fn sifr_generated_substring(value: &str, start: &SifrInt, end: &SifrInt) -> String {
         let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let mut result: String = String::new();
-        let mut i: SifrInt = start;
-        while i < end {
+        let mut i: SifrInt = (*start).clone();
+        while &i < end {
             let ch: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_value.len());
                 sifr_generated_chars_value
@@ -219,7 +209,7 @@ pub mod sifr_generated_generated_support {
         let mut i: SifrInt = SifrInt::from_i64(0);
         while i < sifr_generated_chars_prefix.len() {
             let left: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_value.len());
                 sifr_generated_chars_value
@@ -228,7 +218,7 @@ pub mod sifr_generated_generated_support {
             }
             .map(|character| character.to_string());
             let right: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_prefix.len());
                 sifr_generated_chars_prefix
@@ -250,23 +240,20 @@ pub mod sifr_generated_generated_support {
     pub(super) fn sifr_generated_canonical_uuid_text(
         input_text: &str,
     ) -> Result<String, ValueError> {
-        let mut normalized_input: String = {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(input_text.len().saturating_add(0usize));
-            sifr_generated_concat.push_str(input_text);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        };
+        let mut normalized_input: String = input_text.to_string();
         let mut sifr_generated_chars_normalized_input: Vec<char> =
-            normalized_input.chars().collect::<Vec<char>>();
-        if sifr_generated_starts_with(&normalized_input, "urn:uuid:") {
-            normalized_input = sifr_generated_substring(
-                &normalized_input,
-                SifrInt::from_i64(9),
-                SifrInt::from(normalized_input.chars().count()),
-            );
-            sifr_generated_chars_normalized_input = normalized_input.chars().collect::<Vec<char>>();
-        }
+            if sifr_generated_starts_with(normalized_input.as_str(), "urn:uuid:") {
+                {
+                    normalized_input = sifr_generated_substring(
+                        normalized_input.as_str(),
+                        &SifrInt::from_i64(9),
+                        &SifrInt::from(normalized_input.chars().count()),
+                    );
+                    normalized_input.chars().collect::<Vec<char>>()
+                }
+            } else {
+                normalized_input.chars().collect::<Vec<char>>()
+            };
         if sifr_generated_chars_normalized_input.len() >= SifrInt::from_i64(2) {
             let first: Option<String> = {
                 let sifr_generated_string_index = SifrInt::from_i64(0);
@@ -291,9 +278,9 @@ pub mod sifr_generated_generated_support {
             .map(|character| character.to_string());
             if first == Some("{".to_string()) && last == Some("}".to_string()) {
                 normalized_input = sifr_generated_substring(
-                    &normalized_input,
-                    SifrInt::from_i64(1),
-                    ::std::ops::Sub::sub(
+                    normalized_input.as_str(),
+                    &SifrInt::from_i64(1),
+                    &::std::ops::Sub::sub(
                         SifrInt::from(normalized_input.chars().count()),
                         SifrInt::from_i64(1),
                     ),
@@ -303,12 +290,11 @@ pub mod sifr_generated_generated_support {
             }
         }
         let input_len: SifrInt = SifrInt::from(sifr_generated_chars_normalized_input.len());
-        let mut hex_only: String = String::new();
-        let mut sifr_generated_chars_hex_only: Vec<char> = hex_only.chars().collect::<Vec<char>>();
+        let mut sifr_generated_chars_hex_only: Vec<char> = Vec::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
         while i < input_len {
             let ch_opt: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_normalized_input.len());
                 sifr_generated_chars_normalized_input
@@ -320,12 +306,11 @@ pub mod sifr_generated_generated_support {
                 let ch: String = ch_opt;
                 if ch == "-" {
                 } else {
-                    if !sifr_generated_is_hex_char(&ch) {
+                    if !sifr_generated_is_hex_char(ch.as_str()) {
                         return Err(ValueError::new("invalid UUID hex string".to_string()));
                     }
                     let sifr_generated_string_concat_hex_only_0 =
-                        sifr_generated_to_lower_hex_char(&ch);
-                    hex_only.push_str(sifr_generated_string_concat_hex_only_0.as_str());
+                        sifr_generated_to_lower_hex_char(ch.as_str());
                     sifr_generated_chars_hex_only
                         .extend(sifr_generated_string_concat_hex_only_0.as_str().chars());
                 }
@@ -395,7 +380,7 @@ pub mod sifr_generated_generated_support {
                 canonical.push('-');
             }
             let part: Option<String> = {
-                let sifr_generated_string_index = j.clone();
+                let sifr_generated_string_index = &j;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_hex_only.len());
                 sifr_generated_chars_hex_only
@@ -411,7 +396,7 @@ pub mod sifr_generated_generated_support {
         Ok(canonical)
     }
     pub(super) fn uuid4_obj() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid4())
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(&uuid4())
     }
     pub(super) fn uuid_from_hex(
         hex_str: &str,
@@ -421,7 +406,9 @@ pub mod sifr_generated_generated_support {
             ValueError,
         > = (|| {
             let canonical: String = sifr_generated_canonical_uuid_text(hex_str)?;
-            Ok(Ok(SifrGeneratedStdlibSifrX2euuidX2eUUID::new(canonical)))
+            Ok(Ok(SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
+                canonical.as_str(),
+            )))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
             let e = sifr_generated_try_err;
@@ -432,22 +419,20 @@ pub mod sifr_generated_generated_support {
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid3_text(&namespace.to_str(), name))
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(&uuid3_text(&namespace.to_str(), name))
     }
     pub(super) fn uuid5(
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid5_text(&namespace.to_str(), name))
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(&uuid5_text(&namespace.to_str(), name))
     }
     #[expect(
         non_snake_case,
         reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     pub(super) fn NAMESPACE_DNS() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
-            "6ba7b810-9dad-11d1-80b4-00c04fd430c8".to_string(),
-        )
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
     }
 }
 mod sifr_generated_project_nominals {
@@ -459,8 +444,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2euuidX2eUUID {
         #[must_use]
-        pub const fn new(hex_str: String) -> Self {
-            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str;
+        pub fn new(hex_str: &str) -> Self {
+            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str.to_string();
             Self {
                 hex: sifr_generated_field_value_123cb3437a89ad57_5f686578,
             }
@@ -474,7 +459,7 @@ mod sifr_generated_project_nominals {
             while i < self.hex.chars().count() {
                 let ch: Option<String> = {
                     let sifr_generated_string_chars = self.hex.chars().collect::<Vec<char>>();
-                    let sifr_generated_string_index = i.clone();
+                    let sifr_generated_string_index = &i;
                     let sifr_generated_string_index_normalized = sifr_generated_string_index
                         .normalize_index_or_len(sifr_generated_string_chars.len());
                     sifr_generated_string_chars
@@ -595,7 +580,7 @@ fn collect_generated_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let id_text: String = uuid4();
     let sifr_generated_chars_id_text: Vec<char> = id_text.chars().collect::<Vec<char>>();
-    actual.push(is_canonical_shape(&id_text));
+    actual.push(is_canonical_shape(id_text.as_str()));
     actual.push(
         {
             let sifr_generated_string_index = SifrInt::from_i64(14);
@@ -646,7 +631,7 @@ fn collect_negative_and_class_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut invalid_rejected: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = uuid_from_hex("invalid")?;
+        let _bad: SifrGeneratedStdlibSifrX2euuidX2eUUID = uuid_from_hex("invalid")?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -656,13 +641,8 @@ fn collect_negative_and_class_actual() -> Vec<bool> {
     }
     actual.push(invalid_rejected);
     let ctor_passthrough: SifrGeneratedStdlibSifrX2euuidX2eUUID =
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
-            "550e8400-e29b-41d4-a716-44665544000z".to_string(),
-        );
-    actual.push(
-        ctor_passthrough.to_str().as_str()
-            == "550e8400-e29b-41d4-a716-44665544000z".to_string().as_str(),
-    );
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new("550e8400-e29b-41d4-a716-44665544000z");
+    actual.push(ctor_passthrough.to_str().as_str() == "550e8400-e29b-41d4-a716-44665544000z");
     let mut ctor_curly_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let ctor_curly: SifrGeneratedStdlibSifrX2euuidX2eUUID =

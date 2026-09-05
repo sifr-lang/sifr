@@ -75,6 +75,7 @@ impl<'ast> Visit<'ast> for IdentifierCollector {
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
         visit::visit_macro(self, rust_macro);
+        self.names.extend(super::format_capture::names(rust_macro));
         self.collect_tokens(rust_macro.tokens.clone());
     }
 

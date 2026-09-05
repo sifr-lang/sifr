@@ -22,7 +22,6 @@ mod sifr_generated_project_unions {
 }
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a224X3a5X3aclass11X3amainX2eCircle1X3a024X3a5X3aclass11X3amainX2eSquare1X3a0;
-pub trait Printable {}
 #[derive(Debug, Clone)]
 struct Vec2 {
     x: f64,
@@ -54,9 +53,8 @@ impl ::std::fmt::Display for Vec2 {
         write!(f, "Vec2({}, {})", self.x, self.y)
     }
 }
-impl Printable for Vec2 {}
 #[derive(Debug, Clone, PartialEq)]
-struct Circle {
+pub struct Circle {
     radius: f64,
 }
 impl Circle {
@@ -72,9 +70,8 @@ impl ::std::fmt::Display for Circle {
         write!(f, "Circle(radius={})", self.radius)
     }
 }
-impl Printable for Circle {}
 #[derive(Debug, Clone, PartialEq)]
-struct Square {
+pub struct Square {
     side: f64,
 }
 impl Square {
@@ -90,7 +87,6 @@ impl ::std::fmt::Display for Square {
         write!(f, "Square(side={})", self.side)
     }
 }
-impl Printable for Square {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Port(SifrInt);
 impl Port {

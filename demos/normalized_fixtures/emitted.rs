@@ -47,7 +47,7 @@ fn parseNumber(s: &str) -> SifrInt {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while i < sifr_generated_chars_s.len() {
         let Some(sifr_generated_checked_value_0) = {
-            let sifr_generated_string_index = i.clone();
+            let sifr_generated_string_index = &i;
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_s.len());
             sifr_generated_chars_s
@@ -58,7 +58,7 @@ fn parseNumber(s: &str) -> SifrInt {
             break;
         };
         let ch: String = sifr_generated_checked_value_0;
-        let d: SifrInt = parseDigit(&ch);
+        let d: SifrInt = parseDigit(ch.as_str());
         if d < SifrInt::from_i64(0) {
             return ::std::ops::Neg::neg(&SifrInt::from_i64(1));
         }

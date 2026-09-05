@@ -422,6 +422,13 @@ impl RustEmitter {
             if let Some(iter_ft) = Self::class_method_signature_for_iter_for_ir(methods, "__iter__")
             {
                 if iter_ft.params.is_empty() {
+                    let class_source = if iter_ft.receiver
+                        == Some(sifr_type_system::ReceiverConvention::SharedBorrow)
+                    {
+                        lowered_source.clone()
+                    } else {
+                        class_source.clone()
+                    };
                     let iter_call = crate::RustExpr::MethodCall {
                         receiver: Box::new(class_source.clone()),
                         method: "__iter__".to_string(),

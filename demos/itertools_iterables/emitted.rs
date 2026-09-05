@@ -111,10 +111,6 @@ pub mod sifr_generated_generated_support {
         }
     }
     impl SifrGeneratedAdd for String {
-        #[expect(
-            clippy::needless_pass_by_value,
-            reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-        )]
         fn sifr_generated_add(mut self, rhs: Self) -> Self {
             self.push_str(&rhs);
             self
@@ -145,15 +141,12 @@ pub mod sifr_generated_generated_support {
             },
         ))
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn islice<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
-        start_or_stop: Option<SifrInt>,
+        start_or_stop: Option<&SifrInt>,
         slice_args: &[Option<SifrInt>],
     ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
+        let start_or_stop: Option<SifrInt> = start_or_stop.cloned();
         if slice_args.len() > SifrInt::from_i64(2) {
             return Err(ValueError::new(
                 "islice: expected at most stop and step after start".to_string(),
@@ -255,7 +248,7 @@ pub mod sifr_generated_generated_support {
                             let next_val: T = SifrGeneratedAdd::sifr_generated_add(prev, item);
                             let sifr_generated_try_res: Result<(), IndexError> = (|| {
                                 {
-                                    let sifr_generated_assign_value = next_val.clone();
+                                    let sifr_generated_assign_value = next_val;
                                     {
                                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                                         let sifr_generated_index_normalized =
@@ -276,7 +269,7 @@ pub mod sifr_generated_generated_support {
                             })(
                             );
                             if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _ = sifr_generated_try_err;
+                                let _e = sifr_generated_try_err;
                                 return;
                             }
                         }
@@ -524,12 +517,8 @@ use crate::sifr_generated_generated_support::{
 };
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0;
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn lt3(x: SifrInt) -> bool {
-    x < SifrInt::from_i64(3)
+fn lt3(x: &SifrInt) -> bool {
+    x < &SifrInt::from_i64(3)
 }
 #[expect(
     clippy::too_many_lines,
@@ -545,7 +534,7 @@ fn main() {
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let sliced: Box<dyn Iterator<Item = SifrInt>> = islice(
             Box::new(nums.clone().into_iter()),
-            Some(SifrInt::from_i64(1)),
+            Some(&SifrInt::from_i64(1)),
             &[Some(SifrInt::from_i64(4)), Some(SifrInt::from_i64(2))],
         )?;
         println!("{:?}", sliced.collect::<Vec<_>>());
@@ -575,11 +564,7 @@ fn main() {
     );
     println!(
         "{:?}",
-        takewhile(
-            |sifr_generated_arg0| lt3(sifr_generated_arg0.clone()),
-            Box::new(nums.clone().into_iter())
-        )
-        .collect::<Vec<_>>()
+        takewhile(lt3, Box::new(nums.into_iter())).collect::<Vec<_>>()
     );
     let base: String = {
         let mut sifr_generated_concat: String =
@@ -592,7 +577,7 @@ fn main() {
         (),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
     > = (|| {
-        let _ = run_command(&format!("mkdir -p {base}"))
+        let _mk: String = run_command(&format!("mkdir -p {base}"))
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0,
             )?;
@@ -614,8 +599,8 @@ fn main() {
             )?;
         let sliced_entries: Box<dyn Iterator<Item = String>> = islice(
                 Box::new(entries_it),
-                Some(SifrInt::from_i64(1)),
-                &Vec::new(),
+                Some(&SifrInt::from_i64(1)),
+                &Vec::<Option<SifrInt>>::new(),
             )
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
@@ -633,7 +618,7 @@ fn main() {
                     "{}", { let mut sifr_generated_concat : String =
                     String::with_capacity(9usize.saturating_add(0usize));
                     sifr_generated_concat.push_str("ioerror: "); sifr_generated_concat
-                    .push_str(e.message.to_string().as_str()); sifr_generated_concat }
+                    .push_str(e.message.as_str()); sifr_generated_concat }
                 );
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
@@ -651,7 +636,7 @@ fn main() {
         }
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("rm -rf {base}"))?;
+        let _rm: String = run_command(&format!("rm -rf {base}"))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -660,7 +645,7 @@ fn main() {
             let mut sifr_generated_concat: String =
                 String::with_capacity(17usize.saturating_add(0usize));
             sifr_generated_concat.push_str("cleanup ioerror: ");
-            sifr_generated_concat.push_str(e.message.to_string().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
     }

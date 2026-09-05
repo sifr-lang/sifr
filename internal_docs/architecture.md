@@ -492,6 +492,11 @@ large-file check and a representative project check.
   is a structured build diagnostic, never an unformatted fallback.
   Materialization repeats this fail-closed check for synthetic namespace and
   bridge files that do not exist at the earlier emit boundary.
+  Type-dependent cleanup uses lexical facts from declared signatures, fields,
+  imports, patterns, and iterator operations. Unknown local bindings hide outer
+  facts. Collection rewrites require compatible source and destination types.
+  Callback ownership contracts remain intact. Owned integer-to-string conversion
+  consumes the integer through `From<SifrInt> for String`.
 - Both shapes materialize through the same generated-binary-project path. Native
   build state uses local sysroot and package paths only while Cargo resolves and
   builds it. The source-only materialization boundary then replaces that local

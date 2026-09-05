@@ -1,4 +1,32 @@
-pub(super) fn remove_unnecessary_owned_iteration(for_loop: &mut syn::ExprForLoop) {
+pub(super) fn collect_boxed_iterable_fields(file: &syn::File) -> HashSet<String> {
+    struct Collector {
+        names: HashSet<String>,
+    }
+
+    impl Visit<'_> for Collector {
+        fn visit_field(&mut self, field: &syn::Field) {
+            if matches!(&field.ty, syn::Type::Path(path)
+                if path.path.segments.last().is_some_and(|segment|
+                    segment.ident == "Box"))
+                && let Some(name) = &field.ident
+            {
+                self.names.insert(name.to_string());
+            }
+            visit::visit_field(self, field);
+        }
+    }
+
+    let mut collector = Collector {
+        names: HashSet::new(),
+    };
+    collector.visit_file(file);
+    collector.names
+}
+
+pub(super) fn remove_unnecessary_owned_iteration(
+    for_loop: &mut syn::ExprForLoop,
+    borrowed_names: &HashSet<String>,
+) {
     let mut owned = HashSet::new();
     collect_owned_pattern_names(&for_loop.pat, &mut owned);
     remove_clones_from_return_expressions(&mut for_loop.body, &owned);
@@ -58,30 +86,23 @@ pub(super) fn remove_unnecessary_owned_iteration(for_loop: &mut syn::ExprForLoop
         && matches!(cloned.receiver.as_ref(), syn::Expr::MethodCall(iterated)
             if iterated.method == "iter" && iterated.args.is_empty())
     {
-        if let Some(binding) = simple_pattern_name(&for_loop.pat) {
-            let mut uses = BorrowOnlyLoopBindingUse {
-                binding: &binding,
-                owned_use: false,
-            };
-            uses.visit_block(&for_loop.body);
-            if uses.owned_use {
-                return;
-            }
-            for_loop.expr = cloned.receiver.clone();
-            BorrowedLoopComparisonRewriter { binding: &binding }
-                .visit_block_mut(&mut for_loop.body);
-            return;
-        }
         let mut bindings = HashSet::new();
         collect_owned_pattern_names(&for_loop.pat, &mut bindings);
-        if bindings.iter().any(|binding| {
+        let requires_owned_value = bindings.iter().any(|binding| {
             let mut uses = BorrowOnlyLoopBindingUse {
                 binding,
                 owned_use: false,
             };
             uses.visit_block(&for_loop.body);
             uses.owned_use
-        }) {
+        });
+        if requires_owned_value {
+            LoopBindingUseRewriter {
+                owned: &bindings,
+                borrowed: &HashSet::new(),
+            }
+            .visit_block_mut(&mut for_loop.body);
+            remove_last_use_clones_with_owned(&mut for_loop.body.stmts, &bindings, false);
             return;
         }
         for_loop.expr = cloned.receiver.clone();
@@ -91,25 +112,26 @@ pub(super) fn remove_unnecessary_owned_iteration(for_loop: &mut syn::ExprForLoop
         }
         .visit_block_mut(&mut for_loop.body);
         for binding in &bindings {
-            BorrowedLoopComparisonRewriter { binding }.visit_block_mut(&mut for_loop.body);
+            BorrowedLoopComparisonRewriter {
+                binding,
+                borrowed_names,
+            }
+            .visit_block_mut(&mut for_loop.body);
         }
         return;
     }
-    let Some(binding) = simple_pattern_name(&for_loop.pat) else {
+    if let syn::Expr::Macro(vector) = for_loop.expr.as_ref()
+        && vector.mac.path.is_ident("vec")
+    {
+        let elements = vector.mac.tokens.clone();
+        *for_loop.expr = syn::parse_quote!([#elements]);
         return;
-    };
+    }
     if let syn::Expr::MethodCall(iterated) = for_loop.expr.as_ref()
         && iterated.method == "iter"
         && iterated.args.is_empty()
     {
         let path_receiver = matches!(iterated.receiver.as_ref(), syn::Expr::Path(_));
-        let direct_field_receiver = matches!(iterated.receiver.as_ref(), syn::Expr::Field(field)
-            if matches!(&field.member, syn::Member::Named(name)
-                if matches!(name.to_string().as_str(), "data" | "fallbacks")));
-        if direct_field_receiver {
-            let receiver = iterated.receiver.as_ref().clone();
-            for_loop.expr = Box::new(syn::parse_quote!(&#receiver));
-        }
         if path_receiver {
             let reason = syn::LitStr::new(
                 "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime",
@@ -123,31 +145,125 @@ pub(super) fn remove_unnecessary_owned_iteration(for_loop: &mut syn::ExprForLoop
                         .to_string()
                         .contains("explicit_iter_loop")
             }) {
-                for_loop
-                    .attrs
-                    .push(syn::parse_quote!(#[expect(clippy::explicit_iter_loop, reason = #reason)]));
+                for_loop.attrs.push(
+                    syn::parse_quote!(#[expect(clippy::explicit_iter_loop, reason = #reason)]),
+                );
             }
         }
-        let mut shadow = BindingShadowCollector {
-            binding: &binding,
-            found: false,
-        };
-        shadow.visit_block(&for_loop.body);
-        if !shadow.found {
+        let mut bindings = HashSet::new();
+        collect_owned_pattern_names(&for_loop.pat, &mut bindings);
+        let simple_binding = simple_pattern_name(&for_loop.pat);
+        let shadowed = simple_binding.as_deref().is_some_and(|binding| {
+            let mut shadow = BindingShadowCollector {
+                binding,
+                found: false,
+            };
+            shadow.visit_block(&for_loop.body);
+            shadow.found
+        });
+        if !shadowed {
             LoopBindingUseRewriter {
                 owned: &HashSet::new(),
-                borrowed: &HashSet::from([binding.clone()]),
+                borrowed: &bindings,
             }
             .visit_block_mut(&mut for_loop.body);
+            for binding in &bindings {
+                BorrowedLoopComparisonRewriter {
+                    binding,
+                    borrowed_names,
+                }
+                .visit_block_mut(&mut for_loop.body);
+            }
         }
-        if binding.starts_with('_') {
+        if let Some(binding) = simple_pattern_name(&for_loop.pat)
+            && binding.starts_with('_')
+        {
             let mut uses = IdentifierUseCounter::default();
             uses.visit_block(&for_loop.body);
             if uses.counts.get(&binding).copied().unwrap_or(0) == 0 {
-                for_loop.pat = Box::new(syn::parse_quote!(_));
+                *for_loop.pat = syn::parse_quote!(_);
             }
         }
     }
+}
+
+pub(super) fn refresh_explicit_iteration_expectation(
+    for_loop: &mut syn::ExprForLoop,
+    boxed_fields: &HashSet<String>,
+) {
+    let syn::Expr::MethodCall(iterated) = for_loop.expr.as_ref() else {
+        return;
+    };
+    if iterated.method != "iter" || !iterated.args.is_empty() {
+        return;
+    }
+    let syn::Expr::Field(field) = iterated.receiver.as_ref() else {
+        return;
+    };
+    let syn::Member::Named(name) = &field.member else {
+        return;
+    };
+    if boxed_fields.contains(&name.to_string()) {
+        return;
+    }
+    let reason = syn::LitStr::new(
+        "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime",
+        proc_macro2::Span::call_site(),
+    );
+    if !for_loop.attrs.iter().any(|attribute| {
+        attribute.path().is_ident("expect")
+            && attribute
+                .meta
+                .to_token_stream()
+                .to_string()
+                .contains("explicit_iter_loop")
+    }) {
+        for_loop
+            .attrs
+            .push(syn::parse_quote!(#[expect(clippy::explicit_iter_loop, reason = #reason)]));
+    }
+}
+
+fn borrow_comparison_operand(operand: &mut Box<syn::Expr>) {
+    if matches!(operand.as_ref(), syn::Expr::Reference(_)) {
+        return;
+    }
+    if let syn::Expr::Unary(unary) = operand.as_ref()
+        && matches!(unary.op, syn::UnOp::Deref(_))
+    {
+        *operand = unary.expr.clone();
+        return;
+    }
+    let value = operand.as_ref().clone();
+    **operand = syn::parse_quote!(&#value);
+}
+
+struct BorrowedLoopComparisonRewriter<'binding> {
+    binding: &'binding str,
+    borrowed_names: &'binding HashSet<String>,
+}
+
+impl VisitMut for BorrowedLoopComparisonRewriter<'_> {
+    fn visit_expr_binary_mut(&mut self, binary: &mut syn::ExprBinary) {
+        visit_mut::visit_expr_binary_mut(self, binary);
+        if !comparison_operator(&binary.op) {
+            return;
+        }
+        if matches!(binary.left.as_ref(), syn::Expr::Path(path) if path.path.is_ident(self.binding))
+            && !expression_root_name(&binary.right)
+                .is_some_and(|name| self.borrowed_names.contains(&name))
+        {
+            borrow_comparison_operand(&mut binary.right);
+        }
+        if matches!(binary.right.as_ref(), syn::Expr::Path(path) if path.path.is_ident(self.binding))
+            && !expression_root_name(&binary.left)
+                .is_some_and(|name| self.borrowed_names.contains(&name))
+        {
+            borrow_comparison_operand(&mut binary.left);
+        }
+    }
+
+    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
 }
 
 fn rewrite_materialized_loop_binding_uses(
@@ -217,6 +333,16 @@ struct LoopBindingUseRewriter<'names> {
 }
 
 impl VisitMut for LoopBindingUseRewriter<'_> {
+    fn visit_expr_method_call_mut(&mut self, call: &mut syn::ExprMethodCall) {
+        self.visit_expr_mut(&mut call.receiver);
+        for argument in &mut call.args {
+            if call.method == "clone_from" && matches!(argument, syn::Expr::Reference(_)) {
+                continue;
+            }
+            self.visit_expr_mut(argument);
+        }
+    }
+
     fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
         visit_mut::visit_expr_mut(self, expression);
         if let syn::Expr::Reference(reference) = expression
@@ -231,18 +357,13 @@ impl VisitMut for LoopBindingUseRewriter<'_> {
         let syn::Expr::MethodCall(call) = expression else {
             return;
         };
-        if matches!(call.method.to_string().as_str(), "to_owned" | "to_string")
-            && call.args.is_empty()
+        if matches!(
+            call.method.to_string().as_str(),
+            "to_owned" | "to_string" | "to_vec"
+        ) && call.args.is_empty()
             && matches!(call.receiver.as_ref(), syn::Expr::Path(path)
                 if path.path.get_ident().is_some_and(|name|
-                    self.owned.contains(&name.to_string())))
-        {
-            call.method = syn::Ident::new("clone", call.method.span());
-        } else if matches!(call.method.to_string().as_str(), "to_owned" | "to_string")
-            && call.args.is_empty()
-            && matches!(call.receiver.as_ref(), syn::Expr::Path(path)
-                if path.path.get_ident().is_some_and(|name|
-                    self.borrowed.contains(&name.to_string())))
+                    self.owned.contains(&name.to_string()) || self.borrowed.contains(&name.to_string())))
         {
             call.method = syn::Ident::new("clone", call.method.span());
         }

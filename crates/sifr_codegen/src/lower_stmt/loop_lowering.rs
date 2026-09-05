@@ -402,6 +402,13 @@ pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -
             };
             if let Some(iter_ft) = class_method_signature(methods, "__iter__") {
                 if iter_ft.params.is_empty() {
+                    let class_source = if iter_ft.receiver
+                        == Some(sifr_type_system::ReceiverConvention::SharedBorrow)
+                    {
+                        lowered_iter.clone()
+                    } else {
+                        class_source.clone()
+                    };
                     let iter_call = RustExpr::MethodCall {
                         receiver: Box::new(class_source.clone()),
                         method: "__iter__".to_string(),

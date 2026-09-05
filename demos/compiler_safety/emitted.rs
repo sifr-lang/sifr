@@ -63,8 +63,8 @@ struct Config {
     callback: Box<dyn Fn(SifrInt) -> SifrInt>,
 }
 impl Config {
-    fn new(value: SifrInt, callback: impl Fn(SifrInt) -> SifrInt + 'static) -> Self {
-        let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = value;
+    fn new(value: &SifrInt, callback: impl Fn(SifrInt) -> SifrInt + 'static) -> Self {
+        let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = (*value).clone();
         let sifr_generated_field_value_31d52eaacb529206_63616c6c6261636b: Box<
             dyn Fn(SifrInt) -> SifrInt,
         > = Box::new(callback);
@@ -74,12 +74,8 @@ impl Config {
         }
     }
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
 fn double(x: SifrInt) -> SifrInt {
-    ::std::ops::Mul::mul(&x, &SifrInt::from_i64(2))
+    ::std::ops::Mul::mul(x, &SifrInt::from_i64(2))
 }
 fn demo_early_return() -> Vec<String> {
     let mut output: Vec<String> = vec!["Opening: data.csv".to_string()];
@@ -200,7 +196,7 @@ fn main() {
     events.push("Disconnecting: postgres".to_string());
     events.push("Closing: input.txt".to_string());
     events.push("=== Callable Struct Field ===".to_string());
-    let c: Config = Config::new(SifrInt::from_i64(21), double);
+    let c: Config = Config::new(&SifrInt::from_i64(21), double);
     (c.callback)(c.value.clone());
     events.push(c.value.to_string());
     events.push("=== Compiler Hardening Demo Complete ===".to_string());

@@ -24,12 +24,12 @@ fn pattern_recursive() -> SifrInt {
 fn pattern_recursive_capture() -> SifrInt {
     fn sum_up(i: &SifrInt, acc: &SifrInt, limit: &SifrInt) -> SifrInt {
         if i > limit {
-            return acc.clone();
+            return (*acc).clone();
         }
         sum_up(
             &::std::ops::Add::add(i, &SifrInt::from_i64(1)),
             &::std::ops::Add::add(acc, i),
-            &limit.clone(),
+            limit,
         )
     }
     let limit: SifrInt = SifrInt::from_i64(100);
@@ -50,7 +50,7 @@ fn pattern_multiple() -> String {
         sifr_generated_concat.push('!');
         sifr_generated_concat
     };
-    exclaim(&greet(&"Sifr".to_string()))
+    exclaim(&greet("Sifr"))
 }
 fn pattern_params() -> SifrInt {
     fn power(base: &SifrInt, exp: &SifrInt) -> SifrInt {
@@ -59,10 +59,7 @@ fn pattern_params() -> SifrInt {
         }
         ::std::ops::Mul::mul(
             base,
-            &power(
-                &base.clone(),
-                &::std::ops::Sub::sub(exp, &SifrInt::from_i64(1)),
-            ),
+            &power(base, &::std::ops::Sub::sub(exp, &SifrInt::from_i64(1))),
         )
     }
     let a: SifrInt = power(&SifrInt::from_i64(2), &SifrInt::from_i64(10));

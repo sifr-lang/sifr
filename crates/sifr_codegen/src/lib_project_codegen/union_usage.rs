@@ -1,4 +1,7 @@
-use super::*;
+use super::{
+    HashMap, HashSet, HirModule, Renderer, RustFile, RustItem, StdlibCode,
+    register_imported_union_types,
+};
 
 pub(crate) struct ProjectUnionUsage {
     pub(crate) unions: HashMap<String, Vec<sifr_type_system::Type>>,

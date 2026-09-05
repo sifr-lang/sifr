@@ -222,6 +222,43 @@ pub(crate) fn import_generated_support_in_project_nominals(
     Ok(prettyplease::unparse(&prelude))
 }
 
+pub(crate) fn import_project_bindings_in_project_nominals(
+    prelude_source: &str,
+    candidates: &HashSet<String>,
+) -> Result<String, String> {
+    let mut prelude = syn::parse_file(prelude_source)
+        .map_err(|error| format!("failed to parse generated project prelude: {error}"))?;
+    for item in &mut prelude.items {
+        let syn::Item::Mod(module) = item else {
+            continue;
+        };
+        if module.ident != "__sifr_project_nominals" {
+            continue;
+        }
+        let Some((_, items)) = &mut module.content else {
+            continue;
+        };
+        let nested_source = prettyplease::unparse(&syn::File {
+            shebang: None,
+            frontmatter: None,
+            attrs: Vec::new(),
+            items: items.clone(),
+        });
+        let required =
+            crate::stdlib_filter::rust_source_referenced_item_names(&nested_source, candidates);
+        if required.is_empty() {
+            break;
+        }
+        let mut names = required.into_iter().collect::<Vec<_>>();
+        names.sort();
+        let import = syn::parse_str::<syn::Item>(&format!("use crate::{{{}}};", names.join(",")))
+            .map_err(|error| format!("failed to build project binding import: {error}"))?;
+        items.insert(0, import);
+        break;
+    }
+    Ok(prettyplease::unparse(&prelude))
+}
+
 pub(crate) fn render_generated_support_import(required: &HashSet<String>) -> String {
     let mut required = required.iter().collect::<Vec<_>>();
     required.sort();

@@ -6,14 +6,27 @@ const EXPECTATION_REASON_MARKER: &str =
     "generated Rust preserves this exact typed Sifr source contract";
 const EXPECTATION_REASON: &str = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics";
 
+#[derive(Clone, Copy)]
+pub(super) struct FunctionExpectationContext<'a> {
+    pub owner_has_display: bool,
+    pub trait_impl: bool,
+    pub visibility: &'a syn::Visibility,
+    pub copy_receiver_lint: bool,
+}
+
 pub(super) fn refresh_function_expectations(
     attrs: &mut Vec<syn::Attribute>,
     signature: &syn::Signature,
     body: &syn::Block,
-    owner_has_display: bool,
-    trait_impl: bool,
-    restricted_api: bool,
+    context: FunctionExpectationContext<'_>,
 ) {
+    let FunctionExpectationContext {
+        owner_has_display,
+        trait_impl,
+        visibility,
+        copy_receiver_lint,
+    } = context;
+    let restricted_api = !matches!(visibility, syn::Visibility::Public(_));
     remove_generated_expectations(attrs);
     let mut shape = FunctionShape::default();
     shape.visit_signature(signature);
@@ -42,40 +55,28 @@ pub(super) fn refresh_function_expectations(
     if restricted_api && signature.inputs.iter().any(argument_is_ref_option) {
         add_expectation(attrs, "ref_option");
     }
-    if signature.inputs.iter().any(|argument| {
-        let syn::FnArg::Typed(parameter) = argument else {
-            return false;
-        };
-        !matches!(parameter.ty.as_ref(), syn::Type::Reference(_))
-            && !type_is_bare_generic(&parameter.ty, signature)
-            && !type_is_copy_value(&parameter.ty)
-            && !pattern_is_mutable(&parameter.pat)
-            && simple_pattern_name(&parameter.pat).is_some_and(|name| {
-                parameter_is_only_borrowed(body, &name)
-                    && !parameter_has_known_consuming_method(body, &name, &parameter.ty)
-            })
-    }) {
-        add_expectation(attrs, "needless_pass_by_value");
-    }
-    if signature.inputs.iter().any(|argument| {
-        matches!(argument, syn::FnArg::Typed(parameter)
-            if parameter.ty.to_token_stream().to_string().ends_with("SifrInt")
-                && simple_pattern_name(&parameter.pat).is_some())
-    }) && body_calls_function(body, &signature.ident)
-    {
-        add_expectation(attrs, "needless_pass_by_value");
-    }
     if signature.asyncness.is_some() && !shape.has_await {
         add_expectation(attrs, "unused_async");
         if trait_impl || signature.receiver().is_some_and(receiver_is_mutable) {
             add_expectation(attrs, "unused_async_trait_impl");
         }
     }
-    if signature.ident == "isclose" || shape.has_nonzero_float_equality {
+    if shape.has_nonzero_float_equality && signature.ident != "assert_not_almost_eq" {
         add_expectation(attrs, "float_cmp");
     }
     if shape.has_suboptimal_float_power {
         add_expectation(attrs, "suboptimal_flops");
+    }
+    if shape.has_manual_float_midpoint {
+        add_expectation(attrs, "manual_midpoint");
+    }
+    if copy_receiver_lint
+        && signature.receiver().is_some_and(|receiver| {
+            matches!(receiver.kind, syn::ReceiverKind::Reference(..))
+                && receiver.mutability.is_none()
+        })
+    {
+        add_expectation(attrs, "trivially_copy_pass_by_ref");
     }
     if restricted_api
         && !trait_impl
@@ -102,13 +103,6 @@ fn receiver_is_mutable(receiver: &syn::Receiver) -> bool {
             .contains("& mut self")
 }
 
-fn type_is_copy_value(ty: &syn::Type) -> bool {
-    matches!(ty, syn::Type::Path(path) if path.qself.is_none()
-        && path.path.segments.last().is_some_and(|segment| matches!(segment.ident.to_string().as_str(),
-            "bool" | "char" | "f32" | "f64" | "i8" | "i16" | "i32" | "i64" | "i128"
-                | "isize" | "u8" | "u16" | "u32" | "u64" | "u128" | "usize")))
-}
-
 pub(super) fn refresh_struct_expectations(attrs: &mut Vec<syn::Attribute>, fields: &syn::Fields) {
     remove_generated_expectations(attrs);
     let named = fields.iter().collect::<Vec<_>>();
@@ -129,53 +123,6 @@ pub(super) fn refresh_struct_expectations(attrs: &mut Vec<syn::Attribute>, field
         ty.contains("dyn :: std :: future :: Future") && ty.len() > 200
     }) {
         add_expectation(attrs, "type_complexity");
-    }
-}
-
-fn parameter_has_known_consuming_method(body: &syn::Block, name: &str, ty: &syn::Type) -> bool {
-    if !ty.to_token_stream().to_string().contains("TcpStream") {
-        return false;
-    }
-    let mut use_ = ConsumingMethodUse { name, found: false };
-    use_.visit_block(body);
-    use_.found
-}
-
-struct ConsumingMethodUse<'name> {
-    name: &'name str,
-    found: bool,
-}
-
-impl Visit<'_> for ConsumingMethodUse<'_> {
-    fn visit_expr_method_call(&mut self, call: &syn::ExprMethodCall) {
-        if matches!(call.receiver.as_ref(), syn::Expr::Path(path) if path.path.is_ident(self.name))
-            && call.method == "split"
-        {
-            self.found = true;
-            return;
-        }
-        visit::visit_expr_method_call(self, call);
-    }
-}
-
-fn type_is_bare_generic(ty: &syn::Type, signature: &syn::Signature) -> bool {
-    let syn::Type::Path(path) = ty else {
-        return false;
-    };
-    let Some(identifier) = path.path.get_ident() else {
-        return false;
-    };
-    signature
-        .generics
-        .type_params()
-        .any(|parameter| parameter.ident == *identifier)
-}
-
-fn pattern_is_mutable(pattern: &syn::Pat) -> bool {
-    match pattern {
-        syn::Pat::Ident(binding) => binding.mutability.is_some(),
-        syn::Pat::Type(typed) => pattern_is_mutable(&typed.pat),
-        _ => false,
     }
 }
 
@@ -207,152 +154,6 @@ fn argument_is_ref_option(argument: &syn::FnArg) -> bool {
         if matches!(reference.elem.as_ref(), syn::Type::Path(path)
             if path.path.segments.last().is_some_and(|part| part.ident == "Option")))
         && simple_pattern_name(&parameter.pat).is_some()
-}
-
-pub(super) fn parameter_is_only_borrowed(body: &syn::Block, name: &str) -> bool {
-    let mut uses = ParameterBorrowUse {
-        name,
-        borrowed: 0,
-        other: 0,
-    };
-    uses.visit_block(body);
-    uses.borrowed > 0 && uses.other == 0
-}
-
-struct ParameterBorrowUse<'name> {
-    name: &'name str,
-    borrowed: usize,
-    other: usize,
-}
-
-impl Visit<'_> for ParameterBorrowUse<'_> {
-    fn visit_expr_async(&mut self, asynchronous: &syn::ExprAsync) {
-        let mut uses = ParameterNameUse {
-            name: self.name,
-            found: false,
-        };
-        uses.visit_block(&asynchronous.block);
-        if uses.found {
-            self.other += 1;
-            return;
-        }
-        visit::visit_expr_async(self, asynchronous);
-    }
-
-    fn visit_block(&mut self, block: &syn::Block) {
-        for statement in &block.stmts {
-            if let syn::Stmt::Local(local) = statement {
-                if let Some(init) = &local.init {
-                    self.visit_expr(&init.expr);
-                    if let Some((_, diverge)) = &init.diverge {
-                        self.visit_expr(diverge);
-                    }
-                }
-                if pattern_binds_name(&local.pat, self.name) {
-                    return;
-                }
-            } else {
-                self.visit_stmt(statement);
-            }
-        }
-    }
-
-    fn visit_expr_if(&mut self, branch: &syn::ExprIf) {
-        if let syn::Expr::Let(let_) = branch.cond.as_ref() {
-            self.visit_expr(&let_.expr);
-            if !pattern_binds_name(&let_.pat, self.name) {
-                self.visit_block(&branch.then_branch);
-            }
-            if let Some((_, alternative)) = &branch.else_branch {
-                self.visit_expr(alternative);
-            }
-            return;
-        }
-        visit::visit_expr_if(self, branch);
-    }
-
-    fn visit_expr_closure(&mut self, closure: &syn::ExprClosure) {
-        if closure.capture.is_some() {
-            let mut uses = ParameterNameUse {
-                name: self.name,
-                found: false,
-            };
-            uses.visit_expr(&closure.body);
-            if uses.found {
-                self.other += 1;
-                return;
-            }
-        }
-        visit::visit_expr_closure(self, closure);
-    }
-
-    fn visit_expr_binary(&mut self, binary: &syn::ExprBinary) {
-        if matches!(
-            binary.op,
-            syn::BinOp::Eq(_)
-                | syn::BinOp::Ne(_)
-                | syn::BinOp::Lt(_)
-                | syn::BinOp::Le(_)
-                | syn::BinOp::Gt(_)
-                | syn::BinOp::Ge(_)
-        ) {
-            for operand in [&binary.left, &binary.right] {
-                if matches!(operand.as_ref(), syn::Expr::Path(path) if path.path.is_ident(self.name))
-                {
-                    self.borrowed += 1;
-                } else {
-                    self.visit_expr(operand);
-                }
-            }
-            return;
-        }
-        visit::visit_expr_binary(self, binary);
-    }
-
-    fn visit_expr_reference(&mut self, reference: &syn::ExprReference) {
-        if matches!(reference.expr.as_ref(), syn::Expr::Path(path)
-            if path.path.is_ident(self.name))
-        {
-            self.borrowed += 1;
-            return;
-        }
-        visit::visit_expr_reference(self, reference);
-    }
-
-    fn visit_expr_method_call(&mut self, call: &syn::ExprMethodCall) {
-        if matches!(call.receiver.as_ref(), syn::Expr::Path(path) if path.path.is_ident(self.name))
-            && !call.method.to_string().starts_with("into_")
-            && !matches!(
-                call.method.to_string().as_str(),
-                "and_then"
-                    | "map"
-                    | "map_or"
-                    | "map_or_else"
-                    | "ok_or"
-                    | "ok_or_else"
-                    | "unwrap"
-                    | "unwrap_or"
-                    | "unwrap_or_else"
-            )
-        {
-            self.borrowed += 1;
-            for argument in &call.args {
-                self.visit_expr(argument);
-            }
-            return;
-        }
-        visit::visit_expr_method_call(self, call);
-    }
-
-    fn visit_expr_path(&mut self, path: &syn::ExprPath) {
-        if path.path.is_ident(self.name) {
-            self.other += 1;
-            return;
-        }
-        visit::visit_expr_path(self, path);
-    }
-
-    fn visit_item(&mut self, _item: &syn::Item) {}
 }
 
 fn pattern_binds_name(pattern: &syn::Pat, name: &str) -> bool {
@@ -399,6 +200,9 @@ impl Visit<'_> for ParameterNameUse<'_> {
     fn visit_item(&mut self, _item: &syn::Item) {}
 
     fn visit_macro(&mut self, rust_macro: &syn::Macro) {
+        if super::format_capture::names(rust_macro).contains(self.name) {
+            self.found = true;
+        }
         if rust_macro
             .tokens
             .to_string()
@@ -603,25 +407,32 @@ struct FunctionShape {
     asserts_constant: bool,
     has_approximate_constant: bool,
     has_await: bool,
-    has_arithmetic_binary: bool,
     has_nonzero_float_equality: bool,
     has_suboptimal_float_power: bool,
+    has_manual_float_midpoint: bool,
     float_bindings: HashSet<String>,
 }
 
 impl<'ast> Visit<'ast> for FunctionShape {
+    fn visit_signature(&mut self, signature: &'ast syn::Signature) {
+        for argument in &signature.inputs {
+            if let syn::FnArg::Typed(parameter) = argument
+                && matches!(parameter.ty.as_ref(), syn::Type::Path(path)
+                    if path.path.is_ident("f64"))
+                && let Some(name) = simple_pattern_name(&parameter.pat)
+            {
+                self.float_bindings.insert(name);
+            }
+        }
+        visit::visit_signature(self, signature);
+    }
+
     fn visit_expr_await(&mut self, expression: &'ast syn::ExprAwait) {
         self.has_await = true;
         visit::visit_expr_await(self, expression);
     }
 
     fn visit_expr_binary(&mut self, expression: &'ast syn::ExprBinary) {
-        if matches!(
-            expression.op,
-            syn::BinOp::Add(_) | syn::BinOp::Sub(_) | syn::BinOp::Mul(_)
-        ) {
-            self.has_arithmetic_binary = true;
-        }
         if matches!(expression.op, syn::BinOp::Eq(_) | syn::BinOp::Ne(_))
             && !is_zero_float_literal(&expression.left)
             && !is_zero_float_literal(&expression.right)
@@ -631,6 +442,30 @@ impl<'ast> Visit<'ast> for FunctionShape {
                 || expression_is_float_binding(&expression.right, &self.float_bindings))
         {
             self.has_nonzero_float_equality = true;
+        }
+        if matches!(
+            expression.op,
+            syn::BinOp::Add(_)
+                | syn::BinOp::Sub(_)
+                | syn::BinOp::AddAssign(_)
+                | syn::BinOp::SubAssign(_)
+        ) && (matches!(unparenthesized(&expression.left), syn::Expr::Binary(product)
+                if matches!(product.op, syn::BinOp::Mul(_)))
+            || matches!(unparenthesized(&expression.right), syn::Expr::Binary(product)
+                    if matches!(product.op, syn::BinOp::Mul(_))))
+            && (expression_contains_float_signal(&expression.left, &self.float_bindings)
+                || expression_contains_float_signal(&expression.right, &self.float_bindings))
+        {
+            self.has_suboptimal_float_power = true;
+        }
+        if matches!(expression.op, syn::BinOp::Div(_))
+            && matches!(unparenthesized(&expression.left), syn::Expr::Binary(sum)
+                if matches!(sum.op, syn::BinOp::Add(_)))
+            && matches!(expression.right.as_ref(), syn::Expr::Lit(literal)
+                if matches!(&literal.lit, syn::Lit::Float(value)
+                    if value.base10_parse::<f64>().is_ok_and(|value| value.to_bits() == 2.0_f64.to_bits())))
+        {
+            self.has_manual_float_midpoint = true;
         }
         visit::visit_expr_binary(self, expression);
     }
@@ -642,19 +477,20 @@ impl<'ast> Visit<'ast> for FunctionShape {
                 self.visit_expr(diverge);
             }
         }
-        if let syn::Pat::Type(typed) = &local.pat
-            && matches!(typed.ty.as_ref(), syn::Type::Path(path) if path.path.is_ident("f64"))
-            && let Some(name) = simple_pattern_name(&typed.pat)
-        {
-            self.float_bindings.insert(name);
+        if let Some(name) = simple_pattern_name(&local.pat) {
+            let typed_float = matches!(&local.pat, syn::Pat::Type(typed)
+                if matches!(typed.ty.as_ref(), syn::Type::Path(path)
+                    if path.path.is_ident("f64")));
+            let generated_approximation_binding = matches!(
+                name.as_str(),
+                "sifr_generated_lhs" | "sifr_generated_rhs" | "sifr_generated_tol"
+            ) && local.init.as_ref().is_some_and(|init| {
+                expression_contains_float_signal(&init.expr, &self.float_bindings)
+            });
+            if typed_float || generated_approximation_binding {
+                self.float_bindings.insert(name);
+            }
         }
-    }
-
-    fn visit_expr_method_call(&mut self, expression: &'ast syn::ExprMethodCall) {
-        if matches!(expression.method.to_string().as_str(), "powf" | "powi") {
-            self.has_suboptimal_float_power = true;
-        }
-        visit::visit_expr_method_call(self, expression);
     }
 
     fn visit_lit_float(&mut self, literal: &'ast syn::LitFloat) {
@@ -688,12 +524,61 @@ impl<'ast> Visit<'ast> for FunctionShape {
         if let Ok(arguments) = rust_macro.parse_body_with(
             syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
         ) {
+            if matches!(
+                rust_macro
+                    .path
+                    .segments
+                    .last()
+                    .map(|segment| segment.ident.to_string())
+                    .as_deref(),
+                Some("assert_eq" | "assert_ne")
+            ) && arguments.iter().any(|argument| {
+                nonzero_float_literal(argument)
+                    || expression_is_float_binding(argument, &self.float_bindings)
+            }) {
+                self.has_nonzero_float_equality = true;
+            }
             for argument in &arguments {
                 self.visit_expr(argument);
             }
         }
         visit::visit_macro(self, rust_macro);
     }
+}
+
+fn unparenthesized(mut expression: &syn::Expr) -> &syn::Expr {
+    while let syn::Expr::Paren(paren) = expression {
+        expression = &paren.expr;
+    }
+    expression
+}
+
+fn expression_contains_float_signal(expression: &syn::Expr, names: &HashSet<String>) -> bool {
+    struct FloatSignal<'names> {
+        names: &'names HashSet<String>,
+        found: bool,
+    }
+    impl Visit<'_> for FloatSignal<'_> {
+        fn visit_lit_float(&mut self, _literal: &syn::LitFloat) {
+            self.found = true;
+        }
+
+        fn visit_expr_path(&mut self, path: &syn::ExprPath) {
+            if path
+                .path
+                .get_ident()
+                .is_some_and(|name| self.names.contains(&name.to_string()))
+            {
+                self.found = true;
+            }
+        }
+    }
+    let mut signal = FloatSignal {
+        names,
+        found: false,
+    };
+    signal.visit_expr(expression);
+    signal.found
 }
 
 fn nonzero_float_literal(expression: &syn::Expr) -> bool {

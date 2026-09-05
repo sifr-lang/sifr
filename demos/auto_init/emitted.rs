@@ -69,9 +69,9 @@ struct Rectangle {
     height: SifrInt,
 }
 impl Rectangle {
-    const fn new(width: SifrInt, height: SifrInt) -> Self {
-        let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = width;
-        let sifr_generated_field_value_17720bf67d347222_686569676874: SifrInt = height;
+    fn new(width: &SifrInt, height: &SifrInt) -> Self {
+        let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = (*width).clone();
+        let sifr_generated_field_value_17720bf67d347222_686569676874: SifrInt = (*height).clone();
         Self {
             width: sifr_generated_field_value_dbdacd932fd1e9bf_7769647468,
             height: sifr_generated_field_value_17720bf67d347222_686569676874,
@@ -94,9 +94,9 @@ impl ::std::fmt::Display for Rectangle {
                     .saturating_add(1usize),
             );
             sifr_generated_concat.push_str("Rectangle(");
-            sifr_generated_concat.push_str(self.width.clone().to_string().as_str());
+            sifr_generated_concat.push_str(self.width.to_string().as_str());
             sifr_generated_concat.push('x');
-            sifr_generated_concat.push_str(self.height.clone().to_string().as_str());
+            sifr_generated_concat.push_str(self.height.to_string().as_str());
             sifr_generated_concat.push(')');
             sifr_generated_concat
         })
@@ -112,14 +112,14 @@ fn main() {
         let mut sifr_generated_concat: String =
             String::with_capacity(10usize.saturating_add(0usize));
         sifr_generated_concat.push_str("point x = ");
-        sifr_generated_concat.push_str(p.x.clone().to_string().as_str());
+        sifr_generated_concat.push_str(p.x.to_string().as_str());
         sifr_generated_concat
     });
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(10usize.saturating_add(0usize));
         sifr_generated_concat.push_str("point y = ");
-        sifr_generated_concat.push_str(p.y.clone().to_string().as_str());
+        sifr_generated_concat.push_str(p.y.to_string().as_str());
         sifr_generated_concat
     });
     println!("{}", {
@@ -157,7 +157,7 @@ fn main() {
         let mut sifr_generated_concat: String =
             String::with_capacity(25usize.saturating_add(0usize));
         sifr_generated_concat.push_str("config timeout default = ");
-        sifr_generated_concat.push_str(c1.timeout.clone().to_string().as_str());
+        sifr_generated_concat.push_str(c1.timeout.to_string().as_str());
         sifr_generated_concat
     });
     println!("{}", {
@@ -179,7 +179,7 @@ fn main() {
         let mut sifr_generated_concat: String =
             String::with_capacity(24usize.saturating_add(0usize));
         sifr_generated_concat.push_str("config timeout custom = ");
-        sifr_generated_concat.push_str(c2.timeout.clone().to_string().as_str());
+        sifr_generated_concat.push_str(c2.timeout.to_string().as_str());
         sifr_generated_concat
     });
     println!("{}", {
@@ -201,7 +201,7 @@ fn main() {
         sifr_generated_concat.push_str(person.to_string().as_str());
         sifr_generated_concat
     });
-    let r: Rectangle = Rectangle::new(SifrInt::from_i64(5), SifrInt::from_i64(3));
+    let r: Rectangle = Rectangle::new(&SifrInt::from_i64(5), &SifrInt::from_i64(3));
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(12usize.saturating_add(0usize));

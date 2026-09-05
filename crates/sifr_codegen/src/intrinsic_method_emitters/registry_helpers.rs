@@ -432,14 +432,21 @@ pub(crate) fn registry_iterable_to_owned_iter_expr_from_lowered(
         Type::Class { name, methods, .. } => {
             let class_source = match iter_plan.source_access_mode {
                 crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
+                    receiver: Box::new(RustExpr::Paren(Box::new(lowered.clone()))),
                     method: "clone".to_string(),
                     args: vec![],
                 },
-                crate::helpers::SourceAccessMode::Consume => lowered,
+                crate::helpers::SourceAccessMode::Consume => lowered.clone(),
             };
             if let Some(iter_ft) = registry_class_method_signature(methods, "__iter__") {
                 if iter_ft.params.is_empty() {
+                    let class_source = if iter_ft.receiver
+                        == Some(sifr_type_system::ReceiverConvention::SharedBorrow)
+                    {
+                        lowered.clone()
+                    } else {
+                        class_source.clone()
+                    };
                     let iter_call = RustExpr::MethodCall {
                         receiver: Box::new(class_source.clone()),
                         method: "__iter__".to_string(),

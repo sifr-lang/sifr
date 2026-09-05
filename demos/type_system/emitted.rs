@@ -19,8 +19,8 @@ mod sifr_generated_project_unions {
 }
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr;
-const fn create_user(id: SifrInt, _: &str) -> SifrInt {
-    id
+fn create_user(id: &SifrInt, _: &str) -> SifrInt {
+    (*id).clone()
 }
 fn handle_command(cmd: &str) -> String {
     if cmd == "start" {
@@ -48,7 +48,7 @@ fn find_user(name: &str) -> Option<String> {
     None
 }
 fn main() {
-    let uid: SifrInt = create_user(SifrInt::from_i64(42), "alice");
+    let uid: SifrInt = create_user(&SifrInt::from_i64(42), "alice");
     println!("{uid}");
     println!("{}", handle_command("start"));
     println!("{}", handle_command("stop"));

@@ -220,6 +220,15 @@ pub fn generate_rust_test_project_with_metadata(
             "failed to prune generated test-project owners: {error}"
         ))
     })?;
+    project_union_prelude = crate::import_project_bindings_in_project_nominals(
+        &project_union_prelude,
+        &all_union_names,
+    )
+    .map_err(|error| {
+        CodegenError::new(format!(
+            "failed to import test-project unions into nominals: {error}"
+        ))
+    })?;
     if !support_source.trim().is_empty() {
         let visible_support = crate_visible_generated_support_source(&support_source);
         let visible_support = crate::import_project_prelude_bindings_in_generated_support(
@@ -313,19 +322,19 @@ pub fn generate_rust_test_project_with_metadata(
             "pub mod __sifr_generated_support {{\n{}}}\n",
             visible_support.trim_end()
         );
-        project_union_prelude = if !test_support_names.is_empty() {
+        project_union_prelude = if test_support_names.is_empty() {
+            [support_module.trim(), project_union_prelude.trim()]
+                .into_iter()
+                .filter(|source| !source.is_empty())
+                .collect::<Vec<_>>()
+                .join("\n\n")
+        } else {
             format!(
                 "{}\n\n{}\n\n{}",
                 support_module.trim_end(),
                 crate::render_generated_support_import(&test_support_names),
                 project_union_prelude.trim()
             )
-        } else {
-            [support_module.trim(), project_union_prelude.trim()]
-                .into_iter()
-                .filter(|source| !source.is_empty())
-                .collect::<Vec<_>>()
-                .join("\n\n")
         };
     }
 

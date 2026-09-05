@@ -116,6 +116,9 @@ impl<'ast> Visit<'ast> for ItemRefCollector<'_> {
             self.try_insert_ref(&first.ident.to_string());
         }
         self.collect_macro_token_refs(&node.tokens);
+        for name in crate::generated_rust_canonicalizer::format_capture::names(node) {
+            self.try_insert_ref(&name);
+        }
         visit::visit_macro(self, node);
     }
 }

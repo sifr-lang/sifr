@@ -229,6 +229,7 @@ pub fn generate_rust_multi_with_metadata(
     );
     let union_usage =
         project_union_usage(modules, &project_codegen_code, structural_interop_enabled);
+    let all_union_names = union_usage.unions.keys().cloned().collect::<HashSet<_>>();
     let structural_record_identities = if structural_interop_enabled {
         crate::structural_impl_codegen::structural_record_identities_for_project(modules)
     } else {
@@ -364,6 +365,15 @@ pub fn generate_rust_multi_with_metadata(
     )
     .map_err(|error| {
         CodegenError::new(format!("failed to prune generated project owners: {error}"))
+    })?;
+    project_union_prelude = crate::import_project_bindings_in_project_nominals(
+        &project_union_prelude,
+        &all_union_names,
+    )
+    .map_err(|error| {
+        CodegenError::new(format!(
+            "failed to import project unions into nominals: {error}"
+        ))
     })?;
     if !support_source.trim().is_empty() {
         let visible_support = crate_visible_generated_support_source(&support_source);

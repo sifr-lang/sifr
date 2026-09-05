@@ -1,23 +1,15 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 use ::std::collections::HashMap;
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn guarded_lookup(table: &HashMap<SifrInt, SifrInt>, key: SifrInt) -> SifrInt {
-    let Some(sifr_generated_checked_value_0) = table.get(&key) else {
+fn guarded_lookup(table: &HashMap<SifrInt, SifrInt>, key: &SifrInt) -> SifrInt {
+    let Some(sifr_generated_checked_value_0) = table.get(key) else {
         return ::std::ops::Neg::neg(&SifrInt::from_i64(1));
     };
     (*sifr_generated_checked_value_0).clone()
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn expression_lookup(table: &HashMap<SifrInt, SifrInt>, base: SifrInt) -> SifrInt {
+fn expression_lookup(table: &HashMap<SifrInt, SifrInt>, base: &SifrInt) -> SifrInt {
     let Some(sifr_generated_checked_value_2) =
-        table.get(&::std::ops::Add::add(&base, &SifrInt::from_i64(1)))
+        table.get(&::std::ops::Add::add(base, &SifrInt::from_i64(1)))
     else {
         return ::std::ops::Neg::neg(&SifrInt::from_i64(1));
     };
@@ -43,19 +35,19 @@ fn main() {
         (SifrInt::from_i64(4), SifrInt::from_i64(40)),
     ]);
     assert_eq!(
-        guarded_lookup(&t, SifrInt::from_i64(2)),
+        guarded_lookup(&t, &SifrInt::from_i64(2)),
         SifrInt::from_i64(20)
     );
     assert_eq!(
-        guarded_lookup(&t, SifrInt::from_i64(3)),
+        guarded_lookup(&t, &SifrInt::from_i64(3)),
         ::std::ops::Neg::neg(SifrInt::from_i64(1))
     );
     assert_eq!(
-        expression_lookup(&t, SifrInt::from_i64(1)),
+        expression_lookup(&t, &SifrInt::from_i64(1)),
         SifrInt::from_i64(20)
     );
     assert_eq!(
-        expression_lookup(&t, SifrInt::from_i64(2)),
+        expression_lookup(&t, &SifrInt::from_i64(2)),
         ::std::ops::Neg::neg(SifrInt::from_i64(1))
     );
     assert_eq!(

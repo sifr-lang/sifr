@@ -5,14 +5,10 @@ pub mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_sift_down<T: Clone + 'static + PartialOrd>(
-        data: &mut Vec<T>,
+        data: &mut [T],
         mut pos: SifrInt,
-        n: SifrInt,
+        n: &SifrInt,
     ) {
         let mut done: bool = false;
         while !done {
@@ -25,7 +21,7 @@ pub mod sifr_generated_generated_support {
                 &::std::ops::Mul::mul(&SifrInt::from_i64(2), &pos),
                 &SifrInt::from_i64(2),
             );
-            if left < n {
+            if &left < n {
                 let s_val: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
                     let sifr_generated_checked_read_index = &smallest;
@@ -51,7 +47,7 @@ pub mod sifr_generated_generated_support {
                     smallest = left;
                 }
             }
-            if right < n {
+            if &right < n {
                 let s_val2_value_8b32ab056d206424: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
                     let sifr_generated_checked_read_index = &smallest;
@@ -105,7 +101,7 @@ pub mod sifr_generated_generated_support {
                         {
                             let sifr_generated_assign_value = tmp_sm;
                             {
-                                let sifr_generated_index_raw = pos.clone();
+                                let sifr_generated_index_raw = &pos;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(data.len());
                                 if let Some(sifr_generated_elem) =
@@ -120,7 +116,7 @@ pub mod sifr_generated_generated_support {
                         {
                             let sifr_generated_assign_value = tmp_pos;
                             {
-                                let sifr_generated_index_raw = smallest.clone();
+                                let sifr_generated_index_raw = &smallest;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(data.len());
                                 if let Some(sifr_generated_elem) =
@@ -137,7 +133,7 @@ pub mod sifr_generated_generated_support {
         }
     }
     pub(super) fn sifr_generated_sift_up<T: Clone + 'static + PartialOrd>(
-        heap: &mut Vec<T>,
+        heap: &mut [T],
         mut pos: SifrInt,
     ) {
         let mut done: bool = false;
@@ -172,7 +168,7 @@ pub mod sifr_generated_generated_support {
                                 {
                                     let sifr_generated_assign_value = c_val;
                                     {
-                                        let sifr_generated_index_raw = parent.clone();
+                                        let sifr_generated_index_raw = &parent;
                                         let sifr_generated_index_normalized =
                                             sifr_generated_index_raw
                                                 .normalize_index_or_len(heap.len());
@@ -188,7 +184,7 @@ pub mod sifr_generated_generated_support {
                                 {
                                     let sifr_generated_assign_value = p_val;
                                     {
-                                        let sifr_generated_index_raw = pos.clone();
+                                        let sifr_generated_index_raw = &pos;
                                         let sifr_generated_index_normalized =
                                             sifr_generated_index_raw
                                                 .normalize_index_or_len(heap.len());
@@ -213,7 +209,7 @@ pub mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
+    pub(super) fn heapify<T: Clone + 'static + PartialOrd>(data: &mut [T]) {
         "Convert list to a min-heap in-place. O(n) time.".to_string();
         let n: SifrInt = SifrInt::from(data.len());
         let mut i: SifrInt = ::std::ops::Sub::sub(
@@ -221,7 +217,7 @@ pub mod sifr_generated_generated_support {
             &SifrInt::from_i64(1),
         );
         while i >= SifrInt::from_i64(0) {
-            sifr_generated_sift_down(data, i.clone(), n.clone());
+            sifr_generated_sift_down(data, i.clone(), &n);
             i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
         }
     }
@@ -274,20 +270,16 @@ pub mod sifr_generated_generated_support {
                     }
                 }
             }
-            sifr_generated_sift_down(heap, SifrInt::from_i64(0), n2);
+            sifr_generated_sift_down(heap, SifrInt::from_i64(0), &n2);
         }
         top
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+    pub(super) fn nsmallest<T: Clone + 'static + PartialOrd>(n: &SifrInt, data: &[T]) -> Vec<T> {
         let mut heap: Vec<T> = data.to_vec();
         heapify(&mut heap);
         let mut result: Vec<T> = Vec::new();
         let mut count: SifrInt = SifrInt::from_i64(0);
-        while count < n {
+        while &count < n {
             if heap.len() == SifrInt::from_i64(0) {
                 return result;
             }
@@ -299,15 +291,11 @@ pub mod sifr_generated_generated_support {
         }
         result
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
-        if n <= SifrInt::from_i64(0) {
+    pub(super) fn nlargest<T: Clone + 'static + PartialOrd>(n: &SifrInt, data: &[T]) -> Vec<T> {
+        if n <= &SifrInt::from_i64(0) {
             return Vec::new();
         }
-        if n >= data.len() {
+        if n >= &SifrInt::from(data.len()) {
             let mut result: Vec<T> = Vec::new();
             for val in data.iter().cloned() {
                 result.push(val);
@@ -327,7 +315,7 @@ pub mod sifr_generated_generated_support {
         let mut i: SifrInt =
             ::std::ops::Sub::sub(&SifrInt::from(all_sorted.len()), &SifrInt::from_i64(1));
         let mut count: SifrInt = SifrInt::from_i64(0);
-        while count < n {
+        while &count < n {
             if i < SifrInt::from_i64(0) {
                 return result2;
             }
@@ -407,17 +395,11 @@ fn collect_actual() -> Vec<bool> {
         SifrInt::from_i64(1),
         SifrInt::from_i64(5),
     ];
-    actual.push(
-        format!("{:?}", nsmallest(SifrInt::from_i64(3), &items)).as_str()
-            == "[1, 3, 5]".to_string().as_str(),
-    );
-    actual.push(
-        format!("{:?}", nlargest(SifrInt::from_i64(2), &items)).as_str()
-            == "[9, 7]".to_string().as_str(),
-    );
+    actual.push(format!("{:?}", nsmallest(&SifrInt::from_i64(3), &items)).as_str() == "[1, 3, 5]");
+    actual.push(format!("{:?}", nlargest(&SifrInt::from_i64(2), &items)).as_str() == "[9, 7]");
     let mut empty_heap: Vec<SifrInt> = Vec::new();
     actual.push(heappop(&mut empty_heap).is_none());
-    actual.push(format!("{items:?}").as_str() == "[9, 3, 7, 1, 5]".to_string().as_str());
+    actual.push(format!("{items:?}").as_str() == "[9, 3, 7, 1, 5]");
     actual
 }
 fn main() {

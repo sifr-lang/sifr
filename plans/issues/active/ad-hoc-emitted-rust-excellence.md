@@ -188,7 +188,7 @@ It does not broaden the active item.
 | 10A | merged | Module-scoped builtin error shadow identities | Project support demand preserves user-defined and builtin error identities per module, without crate-wide suppression or dangling generated paths. |
 | 11 | merged | Portable and secure generated projects | Reviewed candidate `78c28c1e4c42bd85d685d3a3cffdf132fcdfcc40` is preserved and merged through Item 11A after its consumed gate's stale companions were regenerated. |
 | 11A | merged | Generated-companion freshness and Item 11 integration | The reviewed Item 11 candidate and all 15 compiler-regenerated companions are merged through a separately bounded review and gate without rerunning Item 11's consumed gate. |
-| 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
+| 12 | in progress | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
 
 ## Item Acceptance Contracts
@@ -759,9 +759,38 @@ item can close.
   support-layout propagation, identity-presence enforcement, single-evaluation
   string receiver lowering, and the unchanged SQL coverage/taxonomy gate
   failures.
-- Item 12 residual semantic completion and full-corpus qualification is next.
-  It is implementation/qualification only. Item 12A is closure-only and
-  receives the sole whole-phase review.
+- Item 12 is in progress on `codex/emitted-rust-excellence-item-12`, preserving
+  recovery commits `4bc460de6a176c23d0faf6cb5a3686cb5846a3cc` and
+  `40faa5ea3221e96a7cc2064d8c5787aded76c96e`. Neither commit is closure evidence.
+  The replacement worker adopted the existing compiler and generated-output
+  changes. The current compiler passes all 1,447 codegen unit tests and 90 runtime tests.
+  Evidence is `target/item12-completion-all-units.log`. This is partial working-tree
+  evidence, not exact-SHA qualification. Strict SQL coverage classification,
+  taxonomy, profile self-tests, SQL provider checks, HIR, and file-size checks
+  pass. The stdlib governance selection passes all four variants.
+  The native repetition regression exposed a typed-empty-list annotation
+  lost by tail-binding cleanup; `target/item12-native-abi-regression.log`
+  retains the compiler diagnostic. Earlier runtime-namespace argument
+  borrowing was repaired and has a dedicated passing codegen regression.
+  The full 91-project Clippy audit failed; retained evidence is
+  `target/sifr_generated_code_quality/clippy-1788593723-99038`.
+  The companion diagnostic run `companions-1788594004-8716` was stopped after
+  the complete project audit established that this candidate could not qualify.
+  Its retained per-case diagnostics are partial evidence, not a 262-case pass.
+  The next repair batch preserves empty-vector element types, checks both
+  collection types before iterator rewrites, transfers selected handler errors,
+  tracks declared field and shadow types, preserves constructor and callback
+  ABIs, and removes duplicate nested-branch traversal. All nine exact-integer
+  integration tests pass in `target/item12-owned-integer-native.log`.
+  Workspace Clippy passes in `target/item12-completion-workspace-clippy-final.log`.
+  Full qualification, final regeneration, review, and the sole merge gate
+  remain. E2E and algorithmic runs were stopped after the native ABI failure;
+  their partial outputs must not be reported as passes.
+  Item 12A remains closure-only and receives the sole whole-phase review.
+- The current user instruction supersedes the older gate ordering above:
+  skip create-PR when this session will merge the reviewed SHA; run one
+  merge-profile gate on the final implementation SHA and never repeat it.
+  No Item 12 exact-SHA Opus review or merge-profile gate has been consumed.
 - No whole-phase review has been consumed.
-- Next action: start Item 12 in a new session and stop after its own merge or
-  blocker.
+- Next action: finish Item 12's remaining producer repairs,
+  qualify the final compiler, then review and merge Item 12 only.

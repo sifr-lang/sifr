@@ -3,8 +3,12 @@ use ::sifr_runtime::SifrInt;
 fn accumulate(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     let mut apply = || {
-        for value in values.iter().cloned() {
-            total += value;
+        #[expect(
+            clippy::explicit_iter_loop,
+            reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+        )]
+        for value in values.iter() {
+            total = ::std::ops::Add::add(&total, value);
         }
     };
     apply();

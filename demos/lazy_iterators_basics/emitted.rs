@@ -94,8 +94,6 @@ pub mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(super) trait SifrGeneratedAdd: Sized {}
-    impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
     pub(super) fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
         let iterables = iterables.to_vec();
         Box::new(SifrGeneratedGenerator::new(
@@ -130,12 +128,8 @@ pub mod sifr_generated_generated_support {
 }
 use crate::sifr_generated_generated_support::{chain, count};
 use ::sifr_runtime::SifrInt;
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
 fn square(n: SifrInt) -> SifrInt {
-    ::std::ops::Mul::mul(&n, &n)
+    ::std::ops::Mul::mul(n.clone(), n)
 }
 fn main() {
     let nums: Vec<SifrInt> = vec![

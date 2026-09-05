@@ -44,6 +44,10 @@ fn main() {
         ("alice".to_string(), SifrInt::from_i64(95)),
         ("bob".to_string(), SifrInt::from_i64(87)),
     ];
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
     for (name, _score) in pairs.iter() {
         println!("{name}");
     }

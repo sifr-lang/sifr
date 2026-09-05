@@ -64,7 +64,7 @@ impl Circle {
         {
             let mut sifr_generated_concat: String =
                 String::with_capacity(0usize.saturating_add(3usize).saturating_add(0usize));
-            sifr_generated_concat.push_str(self.shape.name.clone().as_str());
+            sifr_generated_concat.push_str(self.shape.name.as_str());
             sifr_generated_concat.push_str(" r=");
             sifr_generated_concat.push_str(self.radius.to_string().as_str());
             sifr_generated_concat
@@ -125,7 +125,7 @@ impl Rectangle {
                     .saturating_add(1usize)
                     .saturating_add(0usize),
             );
-            sifr_generated_concat.push_str(self.shape.name.clone().as_str());
+            sifr_generated_concat.push_str(self.shape.name.as_str());
             sifr_generated_concat.push(' ');
             sifr_generated_concat.push_str(self.width.to_string().as_str());
             sifr_generated_concat.push('x');

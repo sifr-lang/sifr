@@ -100,7 +100,7 @@ fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
         "generator else branch should be preserved"
     );
     assert!(
-        cond_region.contains("i = &i + &SifrInt::from_i64(1);"),
+        cond_region.contains("i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));"),
         "generator else branch body should be preserved"
     );
 }

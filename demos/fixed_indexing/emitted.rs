@@ -19,7 +19,7 @@ fn second_or_zero(values: &[SifrInt]) -> SifrInt {
     clippy::too_many_lines,
     reason = "one generated Rust function preserves one typed Sifr function"
 )]
-fn neighbor_min_cost(cost: &mut Vec<SifrInt>) -> SifrInt {
+fn neighbor_min_cost(cost: &mut [SifrInt]) -> SifrInt {
     let Some(sifr_generated_checked_value_1) = ({
         let sifr_generated_checked_read_collection = &cost;
         let sifr_generated_checked_read_index = SifrInt::from_i64(0);
@@ -44,8 +44,8 @@ fn neighbor_min_cost(cost: &mut Vec<SifrInt>) -> SifrInt {
     };
     for i in SifrRange::new_known_nonzero(
         ::std::ops::Sub::sub(&SifrInt::from(cost.len()), &SifrInt::from_i64(3)),
-        -SifrInt::from_i64(1),
-        -SifrInt::from_i64(1),
+        SifrInt::from_i64(-1),
+        SifrInt::from_i64(-1),
     ) {
         let Some(sifr_generated_checked_value_3) = ({
             let sifr_generated_checked_read_collection = &cost;
@@ -89,7 +89,7 @@ fn neighbor_min_cost(cost: &mut Vec<SifrInt>) -> SifrInt {
                 ),
             );
             {
-                let sifr_generated_index_raw = i.clone();
+                let sifr_generated_index_raw = &i;
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(cost.len());
                 if let Some(sifr_generated_elem) = cost.get_mut(sifr_generated_index_normalized) {
@@ -133,7 +133,7 @@ fn main() {
         SifrInt::from_i64(0)
     );
     assert_eq!(
-        neighbor_min_cost(&[
+        neighbor_min_cost(&mut [
             SifrInt::from_i64(10),
             SifrInt::from_i64(15),
             SifrInt::from_i64(20)

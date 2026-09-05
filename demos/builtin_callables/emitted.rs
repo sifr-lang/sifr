@@ -7,7 +7,7 @@ pub mod sifr_generated_generated_support {
     )]
     pub(super) fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
-            let _ = value?;
+            let _out: T = value?;
             Ok(())
         })();
         if let Err(_e) = sifr_generated_try_res {
@@ -20,7 +20,7 @@ pub mod sifr_generated_generated_support {
     )]
     pub(super) fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
-            let _ = value?;
+            let _out: T = value?;
             assert!(false);
             Ok(())
         })();
@@ -65,19 +65,11 @@ use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
 pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::ValueError;
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn negate(x: SifrInt) -> SifrInt {
-    ::std::ops::Sub::sub(&SifrInt::from_i64(0), &x)
+fn negate(x: &SifrInt) -> SifrInt {
+    ::std::ops::Sub::sub(&SifrInt::from_i64(0), x)
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn add(x: SifrInt, y: SifrInt) -> SifrInt {
-    ::std::ops::Add::add(&x, &y)
+fn add(x: &SifrInt, y: &SifrInt) -> SifrInt {
+    ::std::ops::Add::add(x, y)
 }
 #[expect(
     clippy::too_many_lines,
@@ -103,18 +95,13 @@ fn main() {
     );
     println!("{:?}", {
         let mut sifr_generated_dict_ctor = vec![("compiler".to_string(), SifrInt::from_i64(1))]
-            .clone()
             .into_iter()
             .collect::<std::collections::HashMap<_, _>>();
-        sifr_generated_dict_ctor.extend(
-            {
-                let mut sifr_generated_registry_dict_literal = ::std::collections::HashMap::new();
-                sifr_generated_registry_dict_literal
-                    .insert("demo".to_string(), SifrInt::from_i64(2));
-                sifr_generated_registry_dict_literal
-            }
-            .clone(),
-        );
+        sifr_generated_dict_ctor.extend({
+            let mut sifr_generated_registry_dict_literal = ::std::collections::HashMap::new();
+            sifr_generated_registry_dict_literal.insert("demo".to_string(), SifrInt::from_i64(2));
+            sifr_generated_registry_dict_literal
+        });
         sifr_generated_dict_ctor
     });
     println!("=== helpers ===");
@@ -148,7 +135,7 @@ fn main() {
         .into_iter()
         .map(|sifr_generated_sorted_value| {
             (
-                negate(sifr_generated_sorted_value.clone()),
+                negate(&sifr_generated_sorted_value),
                 sifr_generated_sorted_value,
             )
         })
@@ -250,7 +237,7 @@ fn main() {
             .map(|sifr_generated_map_item| {
                 let sifr_generated_map_arg_0 = sifr_generated_map_item.0;
                 let sifr_generated_map_arg_1 = sifr_generated_map_item.1;
-                add(sifr_generated_map_arg_0, sifr_generated_map_arg_1)
+                add(&sifr_generated_map_arg_0, &sifr_generated_map_arg_1)
             })
         )
         .collect::<Vec<_>>()

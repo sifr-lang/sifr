@@ -327,7 +327,7 @@ fn test_render_expr_lowering_rewrites_module_constant_ident() {
     };
 
     let code = render_strict_lowered_expr(&mut emitter, &expr);
-    assert!(code.contains("LIMIT +"));
+    assert!(code.contains("std::ops::Add::add(&LIMIT,"));
 }
 
 #[test]

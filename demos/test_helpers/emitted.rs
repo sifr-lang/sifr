@@ -54,18 +54,15 @@ pub mod sifr_generated_generated_support {
         }
         total
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_float_int(
-        value: SifrInt,
+        value: &SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let sifr_generated_try_res: Result<
             Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError>,
             SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0,
         > = (|| {
-            let converted: f64 = value
+            let converted: f64 = (*value)
+                .clone()
                 .checked_to_f64()
                 .map_err(|sifr_generated_float_error| match sifr_generated_float_error {
                     ::sifr_runtime::IntegerFloatConversionError::Overflow => {
@@ -111,19 +108,15 @@ pub mod sifr_generated_generated_support {
                 }
             })
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_divide_by_int(
         numerator: f64,
-        denominator: SifrInt,
+        denominator: &SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let sifr_generated_try_res: Result<
             Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError>,
             SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
         > = (|| {
-            let divisor: f64 = sifr_generated_float_int(denominator.clone())?;
+            let divisor: f64 = sifr_generated_float_int(denominator)?;
             Ok(Ok(numerator / divisor))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
@@ -143,8 +136,12 @@ pub mod sifr_generated_generated_support {
             ));
         }
         let total: f64 = sifr_generated_sum(data);
-        sifr_generated_divide_by_int(total, count)
+        sifr_generated_divide_by_int(total, &count)
     }
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     pub(super) fn variance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -158,7 +155,7 @@ pub mod sifr_generated_generated_support {
             (f64,),
             SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
         > = (|| {
-            let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
+            let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), &n)?;
             Ok((avg,))
         })();
         let (avg,) = match sifr_generated_try_res {
@@ -175,8 +172,12 @@ pub mod sifr_generated_generated_support {
             let diff: f64 = val - avg;
             total += diff * diff;
         }
-        sifr_generated_divide_by_int(total, ::std::ops::Sub::sub(&n, &SifrInt::from_i64(1)))
+        sifr_generated_divide_by_int(total, &::std::ops::Sub::sub(&n, &SifrInt::from_i64(1)))
     }
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     pub(super) fn pvariance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -190,7 +191,7 @@ pub mod sifr_generated_generated_support {
             (f64,),
             SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
         > = (|| {
-            let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
+            let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), &n)?;
             Ok((avg,))
         })();
         let (avg,) = match sifr_generated_try_res {
@@ -207,8 +208,12 @@ pub mod sifr_generated_generated_support {
             let diff: f64 = val - avg;
             total += diff * diff;
         }
-        sifr_generated_divide_by_int(total, n.clone())
+        sifr_generated_divide_by_int(total, &n)
     }
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     pub(super) fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -222,7 +227,7 @@ pub mod sifr_generated_generated_support {
             (f64,),
             SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
         > = (|| {
-            let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
+            let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), &n)?;
             Ok((avg,))
         })();
         let (avg,) = match sifr_generated_try_res {
@@ -245,7 +250,7 @@ pub mod sifr_generated_generated_support {
         > = (|| {
             let v: f64 = sifr_generated_divide_by_int(
                 total,
-                ::std::ops::Sub::sub(&n, &SifrInt::from_i64(1)),
+                &::std::ops::Sub::sub(&n, &SifrInt::from_i64(1)),
             )?;
             Ok((v,))
         })();
@@ -260,6 +265,10 @@ pub mod sifr_generated_generated_support {
         };
         Ok(sqrt(v))
     }
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     pub(super) fn pstdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -273,7 +282,7 @@ pub mod sifr_generated_generated_support {
             (f64,),
             SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
         > = (|| {
-            let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
+            let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), &n)?;
             Ok((avg,))
         })();
         let (avg,) = match sifr_generated_try_res {
@@ -294,7 +303,7 @@ pub mod sifr_generated_generated_support {
             (f64,),
             SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
         > = (|| {
-            let v: f64 = sifr_generated_divide_by_int(total, n.clone())?;
+            let v: f64 = sifr_generated_divide_by_int(total, &n)?;
             Ok((v,))
         })();
         let (v,) = match sifr_generated_try_res {
@@ -374,6 +383,10 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2estatisticsX2e
 #[expect(
     clippy::too_many_lines,
     reason = "one generated Rust function preserves one typed Sifr function"
+)]
+#[expect(
+    clippy::float_cmp,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     let data: Vec<f64> = vec![
@@ -493,7 +506,7 @@ fn main() {
             let mut sifr_generated_concat: String =
                 String::with_capacity(18usize.saturating_add(0usize));
             sifr_generated_concat.push_str("statistics error: ");
-            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
         assert_eq!(

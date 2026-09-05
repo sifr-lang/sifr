@@ -6,10 +6,6 @@ pub mod sifr_generated_generated_support {
         clippy::assertions_on_constants,
         reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
-    #[expect(
-        clippy::float_cmp,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn assert_not_almost_eq(actual: f64, expected: f64, tolerance: f64) {
         assert!(tolerance >= 0.0_f64);
         if actual == expected {
@@ -19,7 +15,7 @@ pub mod sifr_generated_generated_support {
         if diff < 0.0_f64 {
             diff = 0.0_f64 - diff;
         }
-        if diff != diff {
+        if diff.is_nan() {
             return;
         }
         assert!(diff > tolerance);
@@ -42,7 +38,7 @@ pub mod sifr_generated_generated_support {
     )]
     pub(super) fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
-            let _ = value?;
+            let _out: T = value?;
             Ok(())
         })();
         if let Err(_e) = sifr_generated_try_res {
@@ -55,7 +51,7 @@ pub mod sifr_generated_generated_support {
     )]
     pub(super) fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
-            let _ = value?;
+            let _out: T = value?;
             assert!(false);
             Ok(())
         })();
@@ -259,9 +255,12 @@ fn parse_num(s: &str) -> Result<SifrInt, ValueError> {
     }
     Ok(SifrInt::from_i64(10))
 }
+#[expect(
+    clippy::float_cmp,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn main() {
     println!("=== Core equality/truth assertions ===");
-    assert_eq!("sifr", "sifr");
     assert_ne!("sifr", "rust");
     assert!(SifrInt::from_i64(2) > SifrInt::from_i64(1));
     {
@@ -301,7 +300,7 @@ fn main() {
     );
     assert_ge(&SifrInt::from_i64(5), &SifrInt::from_i64(5));
     assert!(
-        "a".to_string() < "b".to_string(),
+        "a" < "b".to_string().as_str(),
         "assert_lt failed: a is not < b"
     );
     assert_le(&"b".to_string(), &"b".to_string());

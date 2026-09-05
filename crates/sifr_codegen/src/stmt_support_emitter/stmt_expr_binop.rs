@@ -201,6 +201,53 @@ macro_rules! stmt_expr_binop {
                     (_, (true, true)) => (lowered_right.clone(), lowered_left.clone()),
                     _ => return Ok(None),
                 };
+                if let crate::RustExpr::Vec(elements) = &collection_expr
+                    && elements.len() == 1
+                {
+                    let item = crate::RustExpr::Ident("sifr_generated_repeat_value".to_string());
+                    let count = crate::RustExpr::Ident("sifr_generated_repeat_count".to_string());
+                    let item_binding = crate::RustStmt::Let {
+                        mutable: false, name: "sifr_generated_repeat_value".to_string(),
+                        ty: None, value: elements[0].clone(),
+                    };
+                    let count_binding = crate::RustStmt::Let {
+                        mutable: false, name: "sifr_generated_repeat_count".to_string(),
+                        ty: None, value: count_expr.clone(),
+                    };
+                    let bindings = if is_count_like(resolved_left_ty) {
+                        vec![count_binding, item_binding]
+                    } else { vec![item_binding, count_binding] };
+                    let integer = |value| crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["SifrInt".to_string(), "from_i64".to_string()])),
+                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(value))],
+                    };
+                    let repeat = crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["std".to_string(), "iter".to_string(), "repeat".to_string()])),
+                        args: vec![item],
+                    };
+                    let range = crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["".to_string(), "sifr_runtime".to_string(), "SifrRange".to_string(), "new_known_nonzero".to_string()])),
+                        args: vec![integer(0), count, integer(1)],
+                    };
+                    let values = crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(repeat), method: "zip".to_string(), args: vec![range],
+                        }),
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named { name: "sifr_generated_pair".to_string(), ty: crate::RustType::Named("_".to_string()) }],
+                            body: Box::new(crate::RustExpr::Field {
+                                expr: Box::new(crate::RustExpr::Ident("sifr_generated_pair".to_string())), field: "0".to_string(),
+                            }), is_move: false,
+                        }],
+                    };
+                    return Ok(Some(crate::RustExpr::Block {
+                        stmts: bindings,
+                        expr: Some(Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(values), method: "collect::<Vec<_>>".to_string(), args: vec![],
+                        })),
+                    }));
+                }
                 return Ok(Some(crate::RustExpr::Block {
                     stmts: vec![
                         crate::RustStmt::Let {

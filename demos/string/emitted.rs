@@ -81,11 +81,11 @@ use crate::sifr_generated_generated_support::{
 use ::sifr_runtime::SifrInt;
 fn collect_capwords_actual() -> Vec<bool> {
     vec![
-        capwords("hello world").as_str() == "Hello World".to_string().as_str(),
-        capwords("hello\tworld").as_str() == "Hello World".to_string().as_str(),
-        capwords("hello\nworld").as_str() == "Hello World".to_string().as_str(),
-        capwords("one\u{b}two\u{c}three").as_str() == "One Two Three".to_string().as_str(),
-        capwords("  one   two  ").as_str() == "One Two".to_string().as_str(),
+        capwords("hello world").as_str() == "Hello World",
+        capwords("hello\tworld").as_str() == "Hello World",
+        capwords("hello\nworld").as_str() == "Hello World",
+        capwords("one\u{b}two\u{c}three").as_str() == "One Two Three",
+        capwords("  one   two  ").as_str() == "One Two",
     ]
 }
 fn collect_constants_actual() -> Vec<bool> {

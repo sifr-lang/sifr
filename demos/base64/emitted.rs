@@ -55,7 +55,7 @@ pub mod sifr_generated_generated_support {
     pub(super) fn b16decode(s: &str) -> Result<String, ParseError> {
         let sifr_generated_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
             let data: Vec<u8> = {
-                let s: String = s.to_string();
+                let s: &str = s;
                 let mut cleaned = String::new();
                 for ch in s.chars() {
                     if ch.is_ascii_whitespace() {
@@ -229,11 +229,13 @@ fn collect_positive_actual() -> Vec<String> {
     let urlsafe_encoded: String = encode_urlsafe_b64_or_empty("hello");
     let urlsafe_encoded_for_decode: String = urlsafe_encoded.clone();
     actual.push(urlsafe_encoded);
-    actual.push(decode_urlsafe_b64_or_empty(&urlsafe_encoded_for_decode));
+    actual.push(decode_urlsafe_b64_or_empty(
+        urlsafe_encoded_for_decode.as_str(),
+    ));
     let b16_encoded: String = b16_encode_or_empty("Hi");
     let b16_encoded_for_decode: String = b16_encoded.clone();
     actual.push(b16_encoded);
-    actual.push(b16_decode_or_empty(&b16_encoded_for_decode));
+    actual.push(b16_decode_or_empty(b16_encoded_for_decode.as_str()));
     actual
 }
 fn collect_decode_actual_ok(inputs: &[String]) -> Vec<bool> {
@@ -250,7 +252,7 @@ fn collect_decode_actual_ok(inputs: &[String]) -> Vec<bool> {
             Ok(())
         })();
         if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-            let _ = sifr_generated_try_err;
+            let _e = sifr_generated_try_err;
             actual_ok.push(false);
         }
     }

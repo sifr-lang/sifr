@@ -113,35 +113,27 @@ impl Printable for Product {
 fn identity<T: Clone + 'static>(x: &T) -> T {
     x.clone()
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn repeat<T: Clone + 'static>(x: &T, n: SifrInt) -> Vec<T> {
+fn repeat<T: Clone + 'static>(x: &T, n: &SifrInt) -> Vec<T> {
     let mut result: Vec<T> = Vec::new();
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while i < n {
+    while &i < n {
         result.push(x.clone());
         i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
     }
     result
 }
-fn show(item: Box<dyn Printable>) {
+fn show(item: &dyn Printable) {
     println!("{}", item.display());
 }
 #[expect(
     clippy::approx_constant,
     reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
-#[expect(
-    clippy::suboptimal_flops,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
 fn main() {
     println!("=== PEP 695 Generic Functions ===");
     println!("{}", identity(&SifrInt::from_i64(42)));
     println!("{}", identity(&"hello".to_string()));
-    println!("{:?}", repeat(&"x".to_string(), SifrInt::from_i64(3)));
+    println!("{:?}", repeat(&"x".to_string(), &SifrInt::from_i64(3)));
     println!("=== PEP 695 Generic Classes ===");
     let c: Container<SifrInt> = Container::new(SifrInt::from_i64(99));
     println!("{}", c.get());
@@ -150,8 +142,8 @@ fn main() {
     println!("=== Protocol Method Dispatch ===");
     let u: User = User::new("Alice".to_string());
     let pr: Product = Product::new("Widget".to_string(), 9.99_f64);
-    show(Box::new(u));
-    show(Box::new(pr));
+    show(&u);
+    show(&pr);
     println!("=== Multi-Generator Comprehensions ===");
     let matrix: Vec<Vec<SifrInt>> = vec![
         vec![
@@ -189,7 +181,7 @@ fn main() {
     println!("{}", sin(0.0_f64));
     println!("{}", cos(0.0_f64));
     println!("{}", fabs(-42.0_f64));
-    println!("{}", 2_f64.powf(10_f64));
+    println!("{}", 2_f64.powi(10));
     println!(
         "{:?}",
         SifrInt::from_f64_trunc(3.14_f64.round_ties_even()).ok_or_else(|| ValueError {

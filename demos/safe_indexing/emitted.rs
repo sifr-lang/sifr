@@ -147,17 +147,17 @@ fn main() {
         ("alice".to_string(), SifrInt::from_i64(25)),
         ("bob".to_string(), SifrInt::from_i64(30)),
     ]);
-    let g: Option<SifrInt> = data.get("alice".to_string().as_str()).cloned();
+    let g: Option<SifrInt> = data.get("alice").cloned();
     if let Some(g) = g {
         println!("get alice: {g}");
     }
-    let gm: Option<SifrInt> = data.get("missing".to_string().as_str()).cloned();
+    let gm: Option<SifrInt> = data.get("missing").cloned();
     if let Some(gm) = gm {
         println!("get missing: {gm}");
     } else {
         println!("get missing: None");
     }
-    let p: Option<SifrInt> = data.remove("bob".to_string().as_str());
+    let p: Option<SifrInt> = data.remove("bob");
     if let Some(p) = p {
         println!("popped bob: {p}");
     }

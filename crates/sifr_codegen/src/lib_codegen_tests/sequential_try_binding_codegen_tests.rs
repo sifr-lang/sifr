@@ -636,7 +636,7 @@ def handle(flag: bool) -> Result[str, OtherError]:
 "#,
     );
 
-    assert!(generated.contains("Into::<BaseError>::into(__sifr_try_variant_error.clone())"));
+    assert!(generated.contains("Into::<BaseError>::into(__sifr_try_variant_error)"));
     assert!(generated.contains("Err(__sifr_try_variant_error)"));
     syn::parse_file(&generated).expect("user error parent-handler Rust should parse");
 }

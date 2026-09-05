@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
+use syn::visit_mut::VisitMut;
 
 pub(super) fn collect_mutating_method_names(file: &syn::File) -> HashSet<String> {
     let mut collector = MutatingMethodCollector::default();
@@ -18,6 +19,48 @@ pub(super) fn collect_local_method_facts(file: &syn::File) -> LocalMethodFacts {
     let mut collector = LocalMethodFactCollector::default();
     collector.visit_file(file);
     collector.facts
+}
+
+pub(crate) struct ProjectMutabilityFacts {
+    mutating_methods: HashSet<String>,
+    local_method_facts: LocalMethodFacts,
+}
+
+pub(super) fn collect_project_mutability_facts(files: &[syn::File]) -> ProjectMutabilityFacts {
+    let mut method_collector = MutatingMethodCollector::default();
+    let mut fact_collector = LocalMethodFactCollector::default();
+    for file in files {
+        method_collector.visit_file(file);
+        fact_collector.visit_file(file);
+    }
+    ProjectMutabilityFacts {
+        mutating_methods: method_collector.names,
+        local_method_facts: fact_collector.facts,
+    }
+}
+
+pub(super) fn apply_project_mutability_facts(file: &mut syn::File, facts: &ProjectMutabilityFacts) {
+    FileMutabilityRewriter {
+        mutating_methods: &facts.mutating_methods,
+        local_method_facts: &facts.local_method_facts,
+    }
+    .visit_file_mut(file);
+}
+
+struct FileMutabilityRewriter<'facts> {
+    mutating_methods: &'facts HashSet<String>,
+    local_method_facts: &'facts LocalMethodFacts,
+}
+
+impl syn::visit_mut::VisitMut for FileMutabilityRewriter<'_> {
+    fn visit_block_mut(&mut self, block: &mut syn::Block) {
+        syn::visit_mut::visit_block_mut(self, block);
+        remove_unneeded_mutability(
+            &mut block.stmts,
+            self.mutating_methods,
+            self.local_method_facts,
+        );
+    }
 }
 
 #[derive(Default)]
@@ -42,8 +85,11 @@ impl<'ast> Visit<'ast> for LocalMethodFactCollector {
                 self.facts.shared.insert(key);
             }
             if let syn::ReturnType::Type(_, ty) = &method.sig.output
-                && let Some(returned) = type_owner_name(ty)
+                && let Some(mut returned) = type_owner_name(ty)
             {
+                if returned == "Self" {
+                    returned.clone_from(&owner);
+                }
                 self.facts
                     .returns_by_method
                     .entry(method.sig.ident.to_string())

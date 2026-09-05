@@ -1,6 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-fn increment(x: Option<SifrInt>) -> SifrInt {
+fn increment(x: Option<&SifrInt>) -> SifrInt {
+    let x: Option<SifrInt> = x.cloned();
     let Some(x) = x else {
         return SifrInt::from_i64(0);
     };
@@ -19,11 +20,7 @@ fn double(x: Option<f64>) -> f64 {
 fn safe_len(items: &Option<Vec<String>>) -> SifrInt {
     SifrInt::from(items.as_ref().map_or(0_usize, ::std::vec::Vec::len))
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn merge_lists(a: Vec<SifrInt>, b: Vec<SifrInt>) -> Vec<SifrInt> {
+fn merge_lists(a: Vec<SifrInt>, b: &[SifrInt]) -> Vec<SifrInt> {
     {
         let mut sifr_generated_v = a;
         sifr_generated_v.extend(b.iter().cloned());
@@ -36,7 +33,7 @@ fn merge_lists(a: Vec<SifrInt>, b: Vec<SifrInt>) -> Vec<SifrInt> {
 )]
 fn main() {
     let v: Option<SifrInt> = Some(SifrInt::from_i64(10));
-    println!("{}", increment(v));
+    println!("{}", increment(v.as_ref()));
     let f: Option<f64> = Some(3.14_f64);
     println!("{}", double(f));
     let names: Option<Vec<String>> = Some(vec![
@@ -51,7 +48,7 @@ fn main() {
             SifrInt::from_i64(2),
             SifrInt::from_i64(3),
         ],
-        vec![
+        &[
             SifrInt::from_i64(4),
             SifrInt::from_i64(5),
             SifrInt::from_i64(6),

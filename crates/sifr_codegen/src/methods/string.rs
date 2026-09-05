@@ -573,10 +573,7 @@ pub(super) fn lower_title(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
             args: vec![],
         }),
         method: "join".to_string(),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(RustExpr::Literal(RustLiteral::Str(" ".to_string()))),
-        }],
+        args: vec![RustExpr::Literal(RustLiteral::StaticStr(" ".to_string()))],
     })
 }
 

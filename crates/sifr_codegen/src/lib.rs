@@ -19,7 +19,7 @@ pub use generated_rust_canonicalizer::{
     finalize_formatted_generated_rust_source_with_project_consts,
 };
 pub(crate) use generated_rust_canonicalizer::{
-    import_generated_support_in_project_nominals,
+    import_generated_support_in_project_nominals, import_project_bindings_in_project_nominals,
     import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
     render_generated_support_import,
 };

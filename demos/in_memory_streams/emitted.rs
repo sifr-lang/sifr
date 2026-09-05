@@ -13,8 +13,9 @@ pub mod sifr_generated_generated_support {
     }
     pub(super) fn sifr_generated_file_read_bytes(
         handle: &str,
-        size: Option<SifrInt>,
+        size: Option<&SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
+        let size: Option<SifrInt> = size.cloned();
         ::sifr_stdlib::fs::file_read_bytes(
             handle,
             size.map(::sifr_runtime::interop::SifrIntBridge::from),
@@ -44,19 +45,20 @@ pub mod sifr_generated_generated_support {
         })
     }
     pub(super) fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
-        sifr_generated_file_close(&handle.id.clone());
+        sifr_generated_file_close(handle.id.as_str());
     }
     pub(super) fn file_read_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
-        size: Option<SifrInt>,
+        size: Option<&SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
-        sifr_generated_file_read_bytes(&handle.id.clone(), size)
+        let size: Option<SifrInt> = size.cloned();
+        sifr_generated_file_read_bytes(handle.id.as_str(), size.as_ref())
     }
     pub(super) fn file_write_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
         data: &[u8],
     ) -> Result<(), IOError> {
-        sifr_generated_file_write_bytes(&handle.id.clone(), data)
+        sifr_generated_file_write_bytes(handle.id.as_str(), data)
     }
     pub(super) fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
@@ -64,11 +66,7 @@ pub mod sifr_generated_generated_support {
     pub(super) fn sifr_generated_closed_stream_error() -> String {
         "I/O operation on closed stream".to_string()
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn sifr_generated_invalid_whence_error(whence: SifrInt) -> String {
+    pub(super) fn sifr_generated_invalid_whence_error(whence: &SifrInt) -> String {
         {
             let mut sifr_generated_concat: String =
                 String::with_capacity(16usize.saturating_add(0usize));
@@ -77,11 +75,7 @@ pub mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn sifr_generated_negative_seek_error(offset: SifrInt) -> String {
+    pub(super) fn sifr_generated_negative_seek_error(offset: &SifrInt) -> String {
         {
             let mut sifr_generated_concat: String =
                 String::with_capacity(24usize.saturating_add(0usize));
@@ -203,7 +197,7 @@ mod sifr_generated_project_nominals {
             if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
-            file_read_bytes(&self.handle, size.clone())
+            file_read_bytes(&self.handle, (*size).as_ref())
         }
     }
     impl SifrGeneratedIoBinaryFileHandle {
@@ -248,8 +242,9 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eioX2eStringIO {
         #[must_use]
-        pub const fn new(initial: String) -> Self {
-            let sifr_generated_field_value_b60ec91c25cb3d78_5f627566666572: String = initial;
+        pub fn new(initial: &str) -> Self {
+            let sifr_generated_field_value_b60ec91c25cb3d78_5f627566666572: String =
+                initial.to_string();
             let sifr_generated_field_value_d0bd94583b33fdec_5f637572736f72: SifrInt =
                 SifrInt::from_i64(0);
             let sifr_generated_field_value_8bc7f577e5ffacda_5f636c6f736564: bool = false;
@@ -320,9 +315,8 @@ mod sifr_generated_project_nominals {
             };
             let tail_start: SifrInt =
                 ::std::ops::Add::add(&self.cursor.clone(), &SifrInt::from(data.chars().count()));
-            let mut right: String = String::new();
-            if tail_start < self.buffer.chars().count() {
-                right = {
+            let right: String = if tail_start < self.buffer.chars().count() {
+                {
                     let sifr_generated_slice_src =
                         self.buffer.clone().chars().collect::<Vec<char>>();
                     let sifr_generated_slice_len = sifr_generated_slice_src.len();
@@ -339,8 +333,10 @@ mod sifr_generated_project_nominals {
                             )
                             .copied(),
                     )
-                };
-            }
+                }
+            } else {
+                String::new()
+            };
             self.buffer = {
                 let mut sifr_generated_concat: String = String::with_capacity(
                     left.len()
@@ -372,13 +368,11 @@ mod sifr_generated_project_nominals {
             } else if whence == &SifrInt::from_i64(2) {
                 origin = SifrInt::from(self.buffer.chars().count());
             } else {
-                return Err(IOError::new(sifr_generated_invalid_whence_error(
-                    whence.clone(),
-                )));
+                return Err(IOError::new(sifr_generated_invalid_whence_error(whence)));
             }
             let mut next_pos: SifrInt = ::std::ops::Add::add(&origin, offset);
             if next_pos < SifrInt::from_i64(0) {
-                return Err(IOError::new(sifr_generated_negative_seek_error(next_pos)));
+                return Err(IOError::new(sifr_generated_negative_seek_error(&next_pos)));
             }
             let end: SifrInt = SifrInt::from(self.buffer.chars().count());
             if next_pos > end {
@@ -461,7 +455,7 @@ mod sifr_generated_project_nominals {
             }
             if self.cursor == self.buffer.len() {
                 self.buffer = {
-                    let mut sifr_generated_v = self.buffer.clone().to_vec();
+                    let mut sifr_generated_v = self.buffer.clone();
                     sifr_generated_v.extend(data.iter().copied());
                     sifr_generated_v
                 };
@@ -487,9 +481,8 @@ mod sifr_generated_project_nominals {
             };
             let tail_start: SifrInt =
                 ::std::ops::Add::add(&self.cursor.clone(), &SifrInt::from(data.len()));
-            let mut right: Vec<u8> = Vec::new();
-            if tail_start < self.buffer.len() {
-                right = {
+            let right: Vec<u8> = if tail_start < self.buffer.len() {
+                {
                     let sifr_generated_slice_src = &self.buffer.clone();
                     let sifr_generated_slice_len = sifr_generated_slice_src.len();
                     let sifr_generated_slice_start =
@@ -503,17 +496,18 @@ mod sifr_generated_project_nominals {
                                 sifr_generated_slice_stop
                                     .saturating_sub(sifr_generated_slice_start),
                             )
-                            .cloned(),
+                            .copied(),
                     )
-                };
-            }
+                }
+            } else {
+                Vec::<u8>::new()
+            };
             self.buffer = {
                 let mut sifr_generated_v = {
                     let mut sifr_generated_v = left;
                     sifr_generated_v.extend(data.iter().copied());
                     sifr_generated_v
-                }
-                .to_vec();
+                };
                 sifr_generated_v.extend(right.iter().copied());
                 sifr_generated_v
             };
@@ -536,13 +530,11 @@ mod sifr_generated_project_nominals {
             } else if whence == &SifrInt::from_i64(2) {
                 origin = SifrInt::from(self.buffer.len());
             } else {
-                return Err(IOError::new(sifr_generated_invalid_whence_error(
-                    whence.clone(),
-                )));
+                return Err(IOError::new(sifr_generated_invalid_whence_error(whence)));
             }
             let mut next_pos: SifrInt = ::std::ops::Add::add(&origin, offset);
             if next_pos < SifrInt::from_i64(0) {
-                return Err(IOError::new(sifr_generated_negative_seek_error(next_pos)));
+                return Err(IOError::new(sifr_generated_negative_seek_error(&next_pos)));
             }
             let end: SifrInt = SifrInt::from(self.buffer.len());
             if next_pos > end {
@@ -589,9 +581,9 @@ fn main() {
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let mut sio: SifrGeneratedStdlibSifrX2eioX2eStringIO =
-            SifrGeneratedStdlibSifrX2eioX2eStringIO::new("sample".to_string());
+            SifrGeneratedStdlibSifrX2eioX2eStringIO::new("sample");
         sio.write("1")?;
-        let _ = sio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
+        let _seek: SifrInt = sio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
         let text_value: String = sio.read(&None)?;
         stringio_ok = text_value == "1ample";
         let sifr_generated_try_res: Result<(), IOError> = (|| {
@@ -609,9 +601,10 @@ fn main() {
         }
         let mut bio: SifrGeneratedStdlibSifrX2eioX2eBytesIO =
             SifrGeneratedStdlibSifrX2eioX2eBytesIO::new(vec![97_u8, 98_u8, 99_u8]);
-        let _ = bio.seek(&SifrInt::from_i64(3), &SifrInt::from_i64(0))?;
+        let _seek_b_value_78f19d0c500eec0b: SifrInt =
+            bio.seek(&SifrInt::from_i64(3), &SifrInt::from_i64(0))?;
         bio.write_bytes(&[100_u8])?;
-        let _ = bio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
+        let _seek_b0: SifrInt = bio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
         let bytes_value: Vec<u8> = bio.read_bytes(&None)?;
         bytesio_ok = bytes_value == vec![97_u8, 98_u8, 99_u8, 100_u8];
         let sifr_generated_try_res: Result<(), IOError> = (|| {
@@ -627,14 +620,14 @@ fn main() {
             let _ = e.message;
             bytesio_negative_seek_ok = true;
         }
-        let mut writer: SifrGeneratedIoBinaryFileHandle = open_binary(&path, "wb")?;
+        let mut writer: SifrGeneratedIoBinaryFileHandle = open_binary(path.as_str(), "wb")?;
         writer.write_bytes(&[
             114_u8, 117_u8, 110_u8, 116_u8, 105_u8, 109_u8, 101_u8, 45_u8, 105_u8, 110_u8, 95_u8,
             109_u8, 101_u8, 109_u8, 111_u8, 114_u8, 121_u8, 95_u8, 115_u8, 116_u8, 114_u8, 101_u8,
             97_u8, 109_u8, 115_u8,
         ])?;
         writer.close();
-        let mut reader: SifrGeneratedIoBinaryFileHandle = open_binary(&path, "rb")?;
+        let mut reader: SifrGeneratedIoBinaryFileHandle = open_binary(path.as_str(), "rb")?;
         let loaded: Vec<u8> = reader.read_bytes(&None)?;
         reader.close();
         binary_file_ok = loaded
@@ -650,10 +643,10 @@ fn main() {
         let _ = e.message;
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        if exists(&path) {
-            remove_file(&path)?;
+        if exists(path.as_str()) {
+            remove_file(path.as_str())?;
         }
-        cleanup_ok = !exists(&path);
+        cleanup_ok = !exists(path.as_str());
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

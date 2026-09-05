@@ -9,7 +9,7 @@ struct Capture {
     range: Range<usize>,
 }
 
-pub(super) fn names(rust_macro: &syn::Macro) -> HashSet<String> {
+pub(crate) fn names(rust_macro: &syn::Macro) -> HashSet<String> {
     format_string(rust_macro)
         .map(|format| {
             captures(&format)
@@ -157,7 +157,7 @@ fn identifier_end(text: &str, start: usize, end: usize) -> Option<usize> {
 
 fn is_identifier(name: &str) -> bool {
     identifier_end(name, 0, name.len()) == Some(name.len())
-        && syn::parse_str::<syn::Ident>(name).is_ok()
+        && (name == "self" || syn::parse_str::<syn::Ident>(name).is_ok())
 }
 
 fn is_identifier_start(character: char) -> bool {

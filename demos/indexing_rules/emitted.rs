@@ -29,7 +29,7 @@ fn main() {
         {
             let sifr_generated_assign_value = SifrInt::from_i64(9);
             {
-                let sifr_generated_index_raw = -SifrInt::from_i64(1);
+                let sifr_generated_index_raw = SifrInt::from_i64(-1);
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(items.len());
                 if let Some(sifr_generated_elem) = items.get_mut(sifr_generated_index_normalized) {
@@ -42,7 +42,7 @@ fn main() {
         {
             let sifr_generated_assign_value = SifrInt::from_i64(5);
             {
-                let sifr_generated_index_raw = -SifrInt::from_i64(2);
+                let sifr_generated_index_raw = SifrInt::from_i64(-2);
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(items.len());
                 if let Some(sifr_generated_elem) = items.get_mut(sifr_generated_index_normalized) {
@@ -55,7 +55,7 @@ fn main() {
         }
         {
             let sifr_generated_delete_target = &mut items;
-            let sifr_generated_idx_raw = -SifrInt::from_i64(1);
+            let sifr_generated_idx_raw = SifrInt::from_i64(-1);
             let sifr_generated_idx_norm =
                 sifr_generated_idx_raw.normalize_index_or_len(sifr_generated_delete_target.len());
             if sifr_generated_idx_norm < sifr_generated_delete_target.len() {
@@ -66,7 +66,7 @@ fn main() {
         }
         {
             let sifr_generated_delete_target = &mut items;
-            let sifr_generated_idx_raw = -SifrInt::from_i64(5);
+            let sifr_generated_idx_raw = SifrInt::from_i64(-5);
             let sifr_generated_idx_norm =
                 sifr_generated_idx_raw.normalize_index_or_len(sifr_generated_delete_target.len());
             if sifr_generated_idx_norm < sifr_generated_delete_target.len() {
@@ -78,7 +78,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
     }
     println!("indexing_rules indexing and semantics parity fixes demo:");
     println!("{items:?}");

@@ -23,14 +23,14 @@ pub mod sifr_generated_generated_support {
         .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
         .collect()
     }
-    pub(super) fn isleap(year: SifrInt) -> bool {
-        calendar_isleap(year)
+    pub(super) fn isleap(year: &SifrInt) -> bool {
+        calendar_isleap((*year).clone())
     }
-    pub(super) fn weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
-        calendar_weekday(year, month, day)
+    pub(super) fn weekday(year: &SifrInt, month: &SifrInt, day: &SifrInt) -> SifrInt {
+        calendar_weekday((*year).clone(), (*month).clone(), (*day).clone())
     }
-    pub(super) fn monthrange(year: SifrInt, month: SifrInt) -> Vec<SifrInt> {
-        calendar_monthrange(year, month)
+    pub(super) fn monthrange(year: &SifrInt, month: &SifrInt) -> Vec<SifrInt> {
+        calendar_monthrange((*year).clone(), (*month).clone())
     }
     pub(super) fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
@@ -125,7 +125,7 @@ pub mod sifr_generated_generated_support {
     pub(super) fn sifr_generated_split_option_line(
         line: &str,
         allow_no_value: bool,
-        line_no: SifrInt,
+        line_no: &SifrInt,
     ) -> Result<(String, Option<String>), SifrGeneratedStdlibSifrX2econfigparserX2eParsingError>
     {
         let delimiter: Option<String> = sifr_generated_find_delimiter(line);
@@ -194,9 +194,10 @@ pub mod sifr_generated_generated_support {
         let stripped_value: Option<String> = Some(raw_value.trim().to_string());
         Ok((key, stripped_value))
     }
-    pub(super) fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
+    pub(super) fn sifr_generated_char_at(text: &str, index: &SifrInt) -> String {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-        if index < SifrInt::from_i64(0) || index >= sifr_generated_chars_text.len() {
+        if index < &SifrInt::from_i64(0) || index >= &SifrInt::from(sifr_generated_chars_text.len())
+        {
             return String::new();
         }
         let ch: Option<String> = {
@@ -213,16 +214,12 @@ pub mod sifr_generated_generated_support {
         };
         ch
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     pub(super) fn sifr_generated_resolve_interpolation(
         value: &str,
         merged: &HashMap<String, Option<String>>,
-        depth: SifrInt,
+        depth: &SifrInt,
     ) -> String {
-        if depth >= SifrInt::from_i64(8) {
+        if depth >= &SifrInt::from_i64(8) {
             return {
                 let mut sifr_generated_concat: String =
                     String::with_capacity(value.len().saturating_add(0usize));
@@ -244,28 +241,28 @@ pub mod sifr_generated_generated_support {
         let mut replaced: bool = false;
         let mut i: SifrInt = SifrInt::from_i64(0);
         while i < value.chars().count() {
-            let ch: String = sifr_generated_char_at(value, i.clone());
+            let ch: String = sifr_generated_char_at(value, &i);
             if ch == "%"
                 && ::std::ops::Add::add(&i, &SifrInt::from_i64(1)) < value.chars().count()
-                && sifr_generated_char_at(value, ::std::ops::Add::add(&i, &SifrInt::from_i64(1)))
+                && sifr_generated_char_at(value, &::std::ops::Add::add(&i, &SifrInt::from_i64(1)))
                     == "("
             {
                 let mut j: SifrInt = ::std::ops::Add::add(&i, &SifrInt::from_i64(2));
                 let mut key: String = String::new();
                 let mut matched: bool = false;
                 while j < value.chars().count() {
-                    let part: String = sifr_generated_char_at(value, j.clone());
+                    let part: String = sifr_generated_char_at(value, &j);
                     if part == ")"
                         && ::std::ops::Add::add(&j, &SifrInt::from_i64(1)) < value.chars().count()
                         && sifr_generated_char_at(
                             value,
-                            ::std::ops::Add::add(&j, &SifrInt::from_i64(1)),
+                            &::std::ops::Add::add(&j, &SifrInt::from_i64(1)),
                         ) == "s"
                     {
                         matched = true;
-                        let normalized_key: String = sifr_generated_normalize_option(&key);
+                        let normalized_key: String = sifr_generated_normalize_option(key.as_str());
                         let replacement: Option<String> =
-                            sifr_generated_lookup_option(merged, &normalized_key);
+                            sifr_generated_lookup_option(merged, normalized_key.as_str());
                         if replacement.is_none() {
                             result.push_str("%(");
                             result.push_str(key.as_str());
@@ -289,9 +286,9 @@ pub mod sifr_generated_generated_support {
         }
         if replaced {
             return sifr_generated_resolve_interpolation(
-                &result,
+                result.as_str(),
                 merged,
-                ::std::ops::Add::add(&depth, &SifrInt::from_i64(1)),
+                &::std::ops::Add::add(depth, &SifrInt::from_i64(1)),
             );
         }
         result
@@ -338,74 +335,46 @@ pub mod sifr_generated_generated_support {
     pub(super) fn unescape(s: &str) -> String {
         html_unescape(s)
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn add(a: SifrInt, b: SifrInt) -> SifrInt {
-        ::std::ops::Add::add(&a, &b)
+    pub(super) fn add(a: &SifrInt, b: &SifrInt) -> SifrInt {
+        ::std::ops::Add::add(a, b)
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn sub(a: SifrInt, b: SifrInt) -> SifrInt {
-        ::std::ops::Sub::sub(&a, &b)
+    pub(super) fn sub(a: &SifrInt, b: &SifrInt) -> SifrInt {
+        ::std::ops::Sub::sub(a, b)
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn mul(a: SifrInt, b: SifrInt) -> SifrInt {
-        ::std::ops::Mul::mul(&a, &b)
+    pub(super) fn mul(a: &SifrInt, b: &SifrInt) -> SifrInt {
+        ::std::ops::Mul::mul(a, b)
     }
-    pub(super) fn floordiv(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
+    pub(super) fn floordiv(a: &SifrInt, b: &SifrInt) -> Result<SifrInt, DivisionError> {
         {
-            let sifr_generated_floor_left: SifrInt = a;
-            let sifr_generated_floor_right: SifrInt = b;
+            let sifr_generated_floor_left: SifrInt = (*a).clone();
+            let sifr_generated_floor_right: SifrInt = (*b).clone();
             sifr_generated_floor_left
                 .checked_floor_div(&sifr_generated_floor_right)
                 .ok_or_else(|| DivisionError::new("division by zero".to_string()))
         }
     }
-    pub(super) fn mod_val(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
+    pub(super) fn mod_val(a: &SifrInt, b: &SifrInt) -> Result<SifrInt, DivisionError> {
         {
-            let sifr_generated_floor_left: SifrInt = a;
-            let sifr_generated_floor_right: SifrInt = b;
+            let sifr_generated_floor_left: SifrInt = (*a).clone();
+            let sifr_generated_floor_right: SifrInt = (*b).clone();
             sifr_generated_floor_left
                 .checked_floor_mod(&sifr_generated_floor_right)
                 .ok_or_else(|| DivisionError::new("division by zero".to_string()))
         }
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn neg(a: SifrInt) -> SifrInt {
-        ::std::ops::Neg::neg(&a)
+    pub(super) fn neg(a: &SifrInt) -> SifrInt {
+        ::std::ops::Neg::neg(a)
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn lt(a: SifrInt, b: SifrInt) -> bool {
+    pub(super) fn lt(a: &SifrInt, b: &SifrInt) -> bool {
         a < b
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn eq(a: SifrInt, b: SifrInt) -> bool {
+    pub(super) fn eq(a: &SifrInt, b: &SifrInt) -> bool {
         a == b
     }
-    #[expect(
-        clippy::needless_pass_by_value,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
-    pub(super) fn getitem<T: Clone + 'static>(items: &[T], index: SifrInt) -> Option<T> {
+    pub(super) fn getitem<T: Clone + 'static>(items: &[T], index: &SifrInt) -> Option<T> {
         {
             let sifr_generated_checked_read_collection = &items;
-            let sifr_generated_checked_read_index = &index;
+            let sifr_generated_checked_read_index = (*index).clone();
             let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
@@ -413,7 +382,7 @@ pub mod sifr_generated_generated_support {
                 .cloned()
         }
     }
-    pub(super) fn itemgetter<T: Clone + 'static>(items: &[T], index: SifrInt) -> Option<T> {
+    pub(super) fn itemgetter<T: Clone + 'static>(items: &[T], index: &SifrInt) -> Option<T> {
         getitem(items, index)
     }
     pub(super) fn sys_version() -> String {
@@ -467,8 +436,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2econfigparserX2eParsingError {
         #[must_use]
-        pub const fn new(line: SifrInt, message: String) -> Self {
-            let sifr_generated_field_value_bf4ba5ad694f5907_6c696e65: SifrInt = line;
+        pub fn new(line: &SifrInt, message: String) -> Self {
+            let sifr_generated_field_value_bf4ba5ad694f5907_6c696e65: SifrInt = (*line).clone();
             let sifr_generated_field_value_546401b5d2a8d2a4_6d657373616765: String = message;
             Self {
                 line: sifr_generated_field_value_bf4ba5ad694f5907_6c696e65,
@@ -607,7 +576,7 @@ mod sifr_generated_project_nominals {
                     .to_string();
                     if section_name.is_empty() {
                         return Err(SifrGeneratedStdlibSifrX2econfigparserX2eParsingError::new(
-                            line_no,
+                            &line_no,
                             "section name is empty".to_string(),
                         ));
                     }
@@ -617,7 +586,7 @@ mod sifr_generated_project_nominals {
                     }
                     if self.strict && self.sections.contains_key(&section_name) {
                         return Err(SifrGeneratedStdlibSifrX2econfigparserX2eParsingError::new(
-                            line_no,
+                            &line_no,
                             format!("duplicate section: {section_name}"),
                         ));
                     }
@@ -640,21 +609,17 @@ mod sifr_generated_project_nominals {
                 > = (|| {
                     let parsed_option_pair: (String, Option<String>) =
                         sifr_generated_split_option_line(
-                            &line,
+                            line.as_str(),
                             self.allow_no_value,
-                            line_no.clone(),
+                            &line_no,
                         )?;
                     let (option_name, option_value) = parsed_option_pair;
-                    let _ = option_name.chars().collect::<Vec<char>>();
+                    let _chars_option_name: Vec<char> = option_name.chars().collect::<Vec<char>>();
                     if current_section.is_empty() || current_section == default_section {
                         {
                             let sifr_generated_assign_value =
                                 sifr_generated_copy_optional_str(&option_value);
                             {
-                                #[expect(
-                                    clippy::redundant_clone,
-                                    reason = "language necessity: generated Rust preserves the typed Sifr mapping key while control-flow ownership remains branch-local; owner Item 12; remove when keyed assignment lowering carries path-sensitive last-use proof"
-                                )]
                                 let sifr_generated_assign_key = option_name.clone();
                                 self.defaults
                                     .insert(sifr_generated_assign_key, sifr_generated_assign_value);
@@ -682,7 +647,7 @@ mod sifr_generated_project_nominals {
                             {
                                 return Err(
                                     SifrGeneratedStdlibSifrX2econfigparserX2eParsingError::new(
-                                        line_no.clone(),
+                                        &line_no,
                                         format!("duplicate option: {option_name}"),
                                     ),
                                 );
@@ -693,10 +658,6 @@ mod sifr_generated_project_nominals {
                                 let sifr_generated_assign_value =
                                     sifr_generated_copy_optional_str(&option_value);
                                 {
-                                    #[expect(
-                                        clippy::redundant_clone,
-                                        reason = "language necessity: generated Rust preserves the typed Sifr mapping key while control-flow ownership remains branch-local; owner Item 12; remove when keyed assignment lowering carries path-sensitive last-use proof"
-                                    )]
                                     let sifr_generated_assign_key = option_name.clone();
                                     updated_section.insert(
                                         sifr_generated_assign_key,
@@ -803,7 +764,7 @@ mod sifr_generated_project_nominals {
                 if section_name != *section {
                     continue;
                 }
-                if sifr_generated_has_option_key(&section_values, &normalized) {
+                if sifr_generated_has_option_key(&section_values, normalized.as_str()) {
                     return true;
                 }
                 return self.defaults.contains_key(&normalized);
@@ -825,10 +786,11 @@ mod sifr_generated_project_nominals {
                 self.sifr_generated_merged_section(section);
             let default_section: String = sifr_generated_default_section();
             if *section == default_section {
-                if !sifr_generated_has_option_key(&merged, &normalized) {
+                if !sifr_generated_has_option_key(&merged, normalized.as_str()) {
                     return sifr_generated_copy_optional_str(fallback);
                 }
-                let raw_value: Option<String> = sifr_generated_lookup_option(&merged, &normalized);
+                let raw_value: Option<String> =
+                    sifr_generated_lookup_option(&merged, normalized.as_str());
                 let raw_value = raw_value?;
                 if raw {
                     return Some(raw_value);
@@ -836,13 +798,13 @@ mod sifr_generated_project_nominals {
                 return Some(sifr_generated_resolve_interpolation(
                     &raw_value,
                     &merged,
-                    SifrInt::from_i64(0),
+                    &SifrInt::from_i64(0),
                 ));
             }
             if !self.has_section(section) {
-                if sifr_generated_has_option_key(&self.defaults, &normalized) {
+                if sifr_generated_has_option_key(&self.defaults, normalized.as_str()) {
                     let default_value: Option<String> =
-                        sifr_generated_lookup_option(&self.defaults, &normalized);
+                        sifr_generated_lookup_option(&self.defaults, normalized.as_str());
                     let default_value = default_value?;
                     if raw {
                         return Some(default_value);
@@ -850,15 +812,16 @@ mod sifr_generated_project_nominals {
                     return Some(sifr_generated_resolve_interpolation(
                         &default_value,
                         &merged,
-                        SifrInt::from_i64(0),
+                        &SifrInt::from_i64(0),
                     ));
                 }
                 return sifr_generated_copy_optional_str(fallback);
             }
-            if !sifr_generated_has_option_key(&merged, &normalized) {
+            if !sifr_generated_has_option_key(&merged, normalized.as_str()) {
                 return sifr_generated_copy_optional_str(fallback);
             }
-            let raw_value2: Option<String> = sifr_generated_lookup_option(&merged, &normalized);
+            let raw_value2: Option<String> =
+                sifr_generated_lookup_option(&merged, normalized.as_str());
             let raw_value2_value_7ff8214b5ccf9553 = raw_value2?;
             if raw {
                 return Some(raw_value2_value_7ff8214b5ccf9553);
@@ -866,7 +829,7 @@ mod sifr_generated_project_nominals {
             Some(sifr_generated_resolve_interpolation(
                 &raw_value2_value_7ff8214b5ccf9553,
                 &merged,
-                SifrInt::from_i64(0),
+                &SifrInt::from_i64(0),
             ))
         }
     }
@@ -900,11 +863,11 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ezipfileX2eZipFile {
         #[must_use]
-        pub const fn new(path: String, mode: String, compression: SifrInt) -> Self {
-            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path;
-            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode;
+        pub fn new(path: &str, mode: &str, compression: &SifrInt) -> Self {
+            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path.to_string();
+            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode.to_string();
             let sifr_generated_field_value_fb545b3ab0be00f5_636f6d7072657373696f6e: SifrInt =
-                compression;
+                (*compression).clone();
             Self {
                 path: sifr_generated_field_value_03c52d0debd70676_70617468,
                 mode: sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465,
@@ -1005,6 +968,10 @@ pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2econfigparserX2eConfigParser;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2econfigparserX2eParsingError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ezipfileX2eZipFile;
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
 fn demo_operator() {
     println!("=== operator ===");
     println!("{}", {
@@ -1012,7 +979,7 @@ fn demo_operator() {
             String::with_capacity(13usize.saturating_add(0usize));
         sifr_generated_concat.push_str("add(10, 5) = ");
         sifr_generated_concat.push_str(
-            add(SifrInt::from_i64(10), SifrInt::from_i64(5))
+            add(&SifrInt::from_i64(10), &SifrInt::from_i64(5))
                 .to_string()
                 .as_str(),
         );
@@ -1023,7 +990,7 @@ fn demo_operator() {
             String::with_capacity(13usize.saturating_add(0usize));
         sifr_generated_concat.push_str("sub(10, 5) = ");
         sifr_generated_concat.push_str(
-            sub(SifrInt::from_i64(10), SifrInt::from_i64(5))
+            sub(&SifrInt::from_i64(10), &SifrInt::from_i64(5))
                 .to_string()
                 .as_str(),
         );
@@ -1034,7 +1001,7 @@ fn demo_operator() {
             String::with_capacity(12usize.saturating_add(0usize));
         sifr_generated_concat.push_str("mul(3, 4) = ");
         sifr_generated_concat.push_str(
-            mul(SifrInt::from_i64(3), SifrInt::from_i64(4))
+            mul(&SifrInt::from_i64(3), &SifrInt::from_i64(4))
                 .to_string()
                 .as_str(),
         );
@@ -1045,7 +1012,11 @@ fn demo_operator() {
             String::with_capacity(17usize.saturating_add(0usize));
         sifr_generated_concat.push_str("floordiv(7, 2) = ");
         sifr_generated_concat.push_str(
-            format!("{:?}", floordiv(SifrInt::from_i64(7), SifrInt::from_i64(2))).as_str(),
+            format!(
+                "{:?}",
+                floordiv(&SifrInt::from_i64(7), &SifrInt::from_i64(2))
+            )
+            .as_str(),
         );
         sifr_generated_concat
     });
@@ -1054,7 +1025,11 @@ fn demo_operator() {
             String::with_capacity(16usize.saturating_add(0usize));
         sifr_generated_concat.push_str("mod_val(7, 2) = ");
         sifr_generated_concat.push_str(
-            format!("{:?}", mod_val(SifrInt::from_i64(7), SifrInt::from_i64(2))).as_str(),
+            format!(
+                "{:?}",
+                mod_val(&SifrInt::from_i64(7), &SifrInt::from_i64(2))
+            )
+            .as_str(),
         );
         sifr_generated_concat
     });
@@ -1062,7 +1037,7 @@ fn demo_operator() {
         let mut sifr_generated_concat: String =
             String::with_capacity(10usize.saturating_add(0usize));
         sifr_generated_concat.push_str("neg(42) = ");
-        sifr_generated_concat.push_str(neg(SifrInt::from_i64(42)).to_string().as_str());
+        sifr_generated_concat.push_str(neg(&SifrInt::from_i64(42)).to_string().as_str());
         sifr_generated_concat
     });
     println!("{}", {
@@ -1070,7 +1045,7 @@ fn demo_operator() {
             String::with_capacity(11usize.saturating_add(0usize));
         sifr_generated_concat.push_str("lt(3, 5) = ");
         sifr_generated_concat.push_str(
-            lt(SifrInt::from_i64(3), SifrInt::from_i64(5))
+            lt(&SifrInt::from_i64(3), &SifrInt::from_i64(5))
                 .to_string()
                 .as_str(),
         );
@@ -1081,7 +1056,7 @@ fn demo_operator() {
             String::with_capacity(11usize.saturating_add(0usize));
         sifr_generated_concat.push_str("eq(5, 5) = ");
         sifr_generated_concat.push_str(
-            eq(SifrInt::from_i64(5), SifrInt::from_i64(5))
+            eq(&SifrInt::from_i64(5), &SifrInt::from_i64(5))
                 .to_string()
                 .as_str(),
         );
@@ -1097,7 +1072,7 @@ fn demo_operator() {
             String::with_capacity(25usize.saturating_add(0usize));
         sifr_generated_concat.push_str("itemgetter([1,2,3], 1) = ");
         sifr_generated_concat.push_str(
-            itemgetter(&items, SifrInt::from_i64(1))
+            itemgetter(&items, &SifrInt::from_i64(1))
                 .map_or_else(
                     || "None".to_string(),
                     |sifr_generated_v| sifr_generated_v.to_string(),
@@ -1113,27 +1088,27 @@ fn demo_calendar() {
         let mut sifr_generated_concat: String =
             String::with_capacity(15usize.saturating_add(0usize));
         sifr_generated_concat.push_str("isleap(2000) = ");
-        sifr_generated_concat.push_str(isleap(SifrInt::from_i64(2000)).to_string().as_str());
+        sifr_generated_concat.push_str(isleap(&SifrInt::from_i64(2000)).to_string().as_str());
         sifr_generated_concat
     });
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(15usize.saturating_add(0usize));
         sifr_generated_concat.push_str("isleap(1900) = ");
-        sifr_generated_concat.push_str(isleap(SifrInt::from_i64(1900)).to_string().as_str());
+        sifr_generated_concat.push_str(isleap(&SifrInt::from_i64(1900)).to_string().as_str());
         sifr_generated_concat
     });
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(15usize.saturating_add(0usize));
         sifr_generated_concat.push_str("isleap(2024) = ");
-        sifr_generated_concat.push_str(isleap(SifrInt::from_i64(2024)).to_string().as_str());
+        sifr_generated_concat.push_str(isleap(&SifrInt::from_i64(2024)).to_string().as_str());
         sifr_generated_concat
     });
     let wd: SifrInt = weekday(
-        SifrInt::from_i64(2024),
-        SifrInt::from_i64(1),
-        SifrInt::from_i64(1),
+        &SifrInt::from_i64(2024),
+        &SifrInt::from_i64(1),
+        &SifrInt::from_i64(1),
     );
     println!("{}", {
         let mut sifr_generated_concat: String =
@@ -1142,7 +1117,7 @@ fn demo_calendar() {
         sifr_generated_concat.push_str(wd.to_string().as_str());
         sifr_generated_concat
     });
-    let mr: Vec<SifrInt> = monthrange(SifrInt::from_i64(2024), SifrInt::from_i64(2));
+    let mr: Vec<SifrInt> = monthrange(&SifrInt::from_i64(2024), &SifrInt::from_i64(2));
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(24usize.saturating_add(0usize));
@@ -1169,7 +1144,7 @@ fn demo_calendar() {
 fn demo_html() {
     println!("=== html ===");
     let s: String = "<b>Hi & Bye</b>".to_string();
-    let esc: String = escape(&s, true);
+    let esc: String = escape(s.as_str(), true);
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(26usize.saturating_add(esc.len()));
@@ -1177,7 +1152,7 @@ fn demo_html() {
         sifr_generated_concat.push_str(esc.as_str());
         sifr_generated_concat
     });
-    let unesc: String = unescape(&esc);
+    let unesc: String = unescape(esc.as_str());
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(44usize.saturating_add(unesc.len()));
@@ -1257,7 +1232,7 @@ fn demo_configparser() {
 fn demo_gzip() {
     println!("=== gzip ===");
     let data: String = "Sifr stdlib gzip compression!".to_string();
-    let compressed: Vec<u8> = compress(&data);
+    let compressed: Vec<u8> = compress(data.as_str());
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(21usize.saturating_add(0usize));
@@ -1295,9 +1270,9 @@ fn demo_zipfile() {
     println!("=== zipfile ===");
     let zf: SifrGeneratedStdlibSifrX2ezipfileX2eZipFile =
         SifrGeneratedStdlibSifrX2ezipfileX2eZipFile::new(
-            "/tmp/sifr_demo_zipfile.zip".to_string(),
-            "a".to_string(),
-            SifrInt::from_i64(0),
+            "/tmp/sifr_demo_zipfile.zip",
+            "a",
+            &SifrInt::from_i64(0),
         );
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         zf.create()?;
@@ -1349,7 +1324,7 @@ fn demo_zipfile() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
     }
 }
 fn main() {

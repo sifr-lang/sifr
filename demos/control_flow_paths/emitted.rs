@@ -20,13 +20,10 @@ mod sifr_generated_project_nominals {
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
 pub use sifr_generated_project_nominals::ValueError;
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn evaluate(seed: SifrInt) -> SifrInt {
+fn evaluate(seed: &SifrInt) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for n in SifrRange::new_known_nonzero(SifrInt::from_i64(0), seed.clone(), SifrInt::from_i64(1))
+    for n in
+        SifrRange::new_known_nonzero(SifrInt::from_i64(0), (*seed).clone(), SifrInt::from_i64(1))
     {
         if n == SifrInt::from_i64(1) {
             continue;
@@ -42,20 +39,16 @@ fn evaluate(seed: SifrInt) -> SifrInt {
     }
     total
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn safe(seed: SifrInt) -> SifrInt {
+fn safe(seed: &SifrInt) -> SifrInt {
     let sifr_generated_try_res: Result<SifrInt, ValueError> = (|| {
-        let value: SifrInt = evaluate(seed.clone());
+        let value: SifrInt = evaluate(seed);
         if value > SifrInt::from_i64(3) {
             return Ok(value);
         }
         Err(ValueError::new("too small".to_string()))
     })();
     sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let _ = sifr_generated_try_err;
+        let _e = sifr_generated_try_err;
         SifrInt::from_i64(42)
     })
 }
@@ -64,7 +57,7 @@ const fn unreachable_tail() -> SifrInt {
 }
 fn main() {
     println!("cfg flow activation regression matrix demo:");
-    println!("{}", safe(SifrInt::from_i64(8)));
-    println!("{}", safe(SifrInt::from_i64(3)));
+    println!("{}", safe(&SifrInt::from_i64(8)));
+    println!("{}", safe(&SifrInt::from_i64(3)));
     println!("{}", unreachable_tail());
 }

@@ -545,10 +545,7 @@ impl RustEmitter {
                                 "parse_decimal".to_string(),
                             ])),
                             args: vec![
-                                crate::RustExpr::Ref {
-                                    mutable: false,
-                                    expr: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                                },
+                                self.string_view_expr(&args[0], lowered),
                                 crate::RustExpr::Path(vec![
                                     "sifr_runtime".to_string(),
                                     "DEFAULT_MAX_INTEGER_DIGITS".to_string(),

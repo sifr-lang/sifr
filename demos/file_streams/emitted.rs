@@ -16,8 +16,9 @@ pub mod sifr_generated_generated_support {
     }
     pub(super) fn sifr_generated_file_read_bytes(
         handle: &str,
-        size: Option<SifrInt>,
+        size: Option<&SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
+        let size: Option<SifrInt> = size.cloned();
         ::sifr_stdlib::fs::file_read_bytes(
             handle,
             size.map(::sifr_runtime::interop::SifrIntBridge::from),
@@ -31,19 +32,20 @@ pub mod sifr_generated_generated_support {
         ::sifr_stdlib::fs::file_write_bytes(handle, data).map_err(sifr_generated_io_err)
     }
     pub(super) fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
-        sifr_generated_file_close(&handle.id.clone());
+        sifr_generated_file_close(handle.id.as_str());
     }
     pub(super) fn file_read_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
-        size: Option<SifrInt>,
+        size: Option<&SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
-        sifr_generated_file_read_bytes(&handle.id.clone(), size)
+        let size: Option<SifrInt> = size.cloned();
+        sifr_generated_file_read_bytes(handle.id.as_str(), size.as_ref())
     }
     pub(super) fn file_write_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
         data: &[u8],
     ) -> Result<(), IOError> {
-        sifr_generated_file_write_bytes(&handle.id.clone(), data)
+        sifr_generated_file_write_bytes(handle.id.as_str(), data)
     }
     pub(super) fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
@@ -141,7 +143,7 @@ mod sifr_generated_project_nominals {
             if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
-            file_read_bytes(&self.handle, size.clone())
+            file_read_bytes(&self.handle, (*size).as_ref())
         }
     }
     impl SifrGeneratedIoFileHandle {
@@ -215,8 +217,8 @@ fn main() {
     let mut binary_ok: bool = false;
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        write_text(&path, "alpha\nbeta")?;
-        let lines: Vec<String> = read_lines(&path)?;
+        write_text(path.as_str(), "alpha\nbeta")?;
+        let lines: Vec<String> = read_lines(path.as_str())?;
         text_ok = lines.len() == SifrInt::from_i64(2)
             && {
                 let sifr_generated_checked_read_collection = &lines;
@@ -301,10 +303,10 @@ fn main() {
         let _ = e.message;
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        if exists(&path) {
-            remove_file(&path)?;
+        if exists(path.as_str()) {
+            remove_file(path.as_str())?;
         }
-        cleanup_ok = !exists(&path);
+        cleanup_ok = !exists(path.as_str());
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

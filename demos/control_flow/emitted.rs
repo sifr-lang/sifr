@@ -2,25 +2,18 @@
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
 use ::std::collections::HashMap;
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn sum_range(n: SifrInt) -> SifrInt {
+fn sum_range(n: &SifrInt) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {
+    for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), (*n).clone(), SifrInt::from_i64(1))
+    {
         total = ::std::ops::Add::add(&total, &i);
     }
     total
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn fizzbuzz(n: SifrInt) {
+fn fizzbuzz(n: &SifrInt) {
     for i in SifrRange::new_known_nonzero(
         SifrInt::from_i64(1),
-        ::std::ops::Add::add(&n, &SifrInt::from_i64(1)),
+        ::std::ops::Add::add(n, &SifrInt::from_i64(1)),
         SifrInt::from_i64(1),
     ) {
         if i.floor_mod_known_nonzero(&SifrInt::from_i64(15)) == SifrInt::from_i64(0) {
@@ -43,8 +36,8 @@ fn fizzbuzz(n: SifrInt) {
         }
     }
 }
-fn countdown(n: SifrInt) {
-    let mut i: SifrInt = n;
+fn countdown(n: &SifrInt) {
+    let mut i: SifrInt = (*n).clone();
     while i > SifrInt::from_i64(0) {
         println!("{i}");
         i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
@@ -65,9 +58,9 @@ static SIFR_GENERATED_SIFR_HOISTED_DICT_0: ::std::sync::LazyLock<HashMap<String,
 )]
 fn main() {
     println!("=== While Loop: Countdown ===");
-    countdown(SifrInt::from_i64(5));
+    countdown(&SifrInt::from_i64(5));
     println!("=== For Loop: Sum of 0..9 ===");
-    let s: SifrInt = sum_range(SifrInt::from_i64(10));
+    let s: SifrInt = sum_range(&SifrInt::from_i64(10));
     println!("Sum of range(10) = {s}");
     println!("=== Nested Loops: Multiplication Table ===");
     for i in SifrRange::new_known_nonzero(
@@ -164,7 +157,7 @@ fn main() {
     let missing: bool = numbers.contains(&SifrInt::from_i64(9));
     println!("9 in list: {missing}");
     println!("=== Tuples ===");
-    let _ = (
+    let _point: (SifrInt, SifrInt, String) = (
         SifrInt::from_i64(10),
         SifrInt::from_i64(20),
         "origin".to_string(),
@@ -173,7 +166,7 @@ fn main() {
     println!("=== Tuple Unpacking ===");
     let pair: (String, SifrInt) = ("Sifr".to_string(), SifrInt::from_i64(2025));
     let (name, year) = pair;
-    let _ = name.chars().collect::<Vec<char>>();
+    let _chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
     println!("{name} was born in {year}");
     println!("=== F-Strings ===");
     let a: SifrInt = SifrInt::from_i64(7);
@@ -189,5 +182,5 @@ fn main() {
     println!("Starts with \'sifr\': {}", lang.starts_with("sifr"));
     println!("Ends with \'lang\': {}", lang.ends_with("lang"));
     println!("=== FizzBuzz (1-15) ===");
-    fizzbuzz(SifrInt::from_i64(15));
+    fizzbuzz(&SifrInt::from_i64(15));
 }

@@ -7,7 +7,7 @@ fn collect_vowels(text: &str) -> String {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while i < sifr_generated_chars_text.len() {
         let Some(sifr_generated_checked_value_0) = {
-            let sifr_generated_string_index = i.clone();
+            let sifr_generated_string_index = &i;
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
             sifr_generated_chars_text
@@ -71,7 +71,7 @@ fn main() {
         ]),
         SifrInt::from_i64(15)
     );
-    assert_eq!(head_or_zero(&Vec::new()), SifrInt::from_i64(0));
+    assert_eq!(head_or_zero(&[]), SifrInt::from_i64(0));
     assert_eq!(
         head_or_zero(&[SifrInt::from_i64(9), SifrInt::from_i64(1)]),
         SifrInt::from_i64(9)

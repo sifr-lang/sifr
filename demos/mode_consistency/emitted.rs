@@ -10,7 +10,7 @@ use crate::helper::value;
 use ::sifr_runtime::SifrInt;
 fn main() {
     println!("mode_consistency parity regression matrix demo:");
-    println!("{}", value(SifrInt::from_i64(1)));
+    println!("{}", value(&SifrInt::from_i64(1)));
 }
 
 // src/helper.rs
@@ -21,13 +21,9 @@ pub const fn sifr_generated_const_42415345() -> SifrInt {
     SifrInt::from_i64(5)
 }
 #[must_use]
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-pub fn value(x: SifrInt) -> SifrInt {
+pub fn value(x: &SifrInt) -> SifrInt {
     ::std::ops::Add::add(
         &::std::ops::Add::add(&sifr_generated_const_42415345(), &floor(2.9_f64)),
-        &x,
+        x,
     )
 }

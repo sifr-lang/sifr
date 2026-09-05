@@ -91,6 +91,9 @@ fn remove_unused_imported_functions(
     for item in items.iter() {
         if !matches!(item, syn::Item::Use(_)) {
             referenced.visit_item(item);
+            if let Some(name) = super::item_definition_name(item) {
+                sibling_bindings.insert(name);
+            }
         } else if let syn::Item::Use(import) = item
             && !is_generated_support_import(import)
         {
@@ -251,6 +254,7 @@ impl Visit<'_> for NonImportPathCollector {
         if path.leading_colon.is_none()
             && let Some(first) = path.segments.first()
             && !self.is_bound(&first.ident.to_string())
+            && !is_primitive_name(&first.ident.to_string())
         {
             self.names.insert(first.ident.to_string());
         }
@@ -360,6 +364,7 @@ impl Visit<'_> for NonImportPathCollector {
     fn visit_item_use(&mut self, _item: &syn::ItemUse) {}
 
     fn visit_macro(&mut self, rust_macro: &syn::Macro) {
+        self.names.extend(super::format_capture::names(rust_macro));
         if let Ok(arguments) = rust_macro.parse_body_with(
             syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
         ) {
@@ -368,6 +373,29 @@ impl Visit<'_> for NonImportPathCollector {
             }
         }
     }
+}
+
+fn is_primitive_name(name: &str) -> bool {
+    matches!(
+        name,
+        "bool"
+            | "char"
+            | "str"
+            | "f32"
+            | "f64"
+            | "i8"
+            | "i16"
+            | "i32"
+            | "i64"
+            | "i128"
+            | "isize"
+            | "u8"
+            | "u16"
+            | "u32"
+            | "u64"
+            | "u128"
+            | "usize"
+    )
 }
 
 impl NonImportPathCollector {

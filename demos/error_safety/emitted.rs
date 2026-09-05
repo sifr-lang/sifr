@@ -143,39 +143,35 @@ impl ::std::fmt::Display for AppError {
     }
 }
 impl ::std::error::Error for AppError {}
-fn validate_age(age: SifrInt) -> Result<SifrInt, ValueError> {
-    if age < SifrInt::from_i64(0) {
+fn validate_age(age: &SifrInt) -> Result<SifrInt, ValueError> {
+    if age < &SifrInt::from_i64(0) {
         return Err(ValueError::new("age must be positive".to_string()));
     }
-    if age > SifrInt::from_i64(150) {
+    if age > &SifrInt::from_i64(150) {
         return Err(ValueError::new("too large".to_string()));
     }
-    Ok(age)
+    Ok((*age).clone())
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
-fn safe_divide(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
-    if b == SifrInt::from_i64(0) {
+fn safe_divide(a: &SifrInt, b: &SifrInt) -> Result<SifrInt, DivisionError> {
+    if b == &SifrInt::from_i64(0) {
         return Err(DivisionError::new("division by zero".to_string()));
     }
-    Ok(a.floor_div_known_nonzero(&b))
+    Ok(a.floor_div_known_nonzero(b))
 }
-fn check_input(x: SifrInt) -> Result<SifrInt, AppError> {
-    if x < SifrInt::from_i64(0) {
+fn check_input(x: &SifrInt) -> Result<SifrInt, AppError> {
+    if x < &SifrInt::from_i64(0) {
         return Err(AppError::new("invalid input".to_string()));
     }
-    Ok(x)
+    Ok((*x).clone())
 }
-fn process_age(age: SifrInt) -> Result<SifrInt, ValueError> {
-    if age < SifrInt::from_i64(0) {
+fn process_age(age: &SifrInt) -> Result<SifrInt, ValueError> {
+    if age < &SifrInt::from_i64(0) {
         return Err(ValueError::new("age must be positive".to_string()));
     }
-    if age > SifrInt::from_i64(150) {
+    if age > &SifrInt::from_i64(150) {
         return Err(ValueError::new("too large".to_string()));
     }
-    Ok(age)
+    Ok((*age).clone())
 }
 #[expect(
     clippy::too_many_lines,
@@ -184,7 +180,7 @@ fn process_age(age: SifrInt) -> Result<SifrInt, ValueError> {
 fn main() {
     println!("=== Built-in Error Classes ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = validate_age(::std::ops::Neg::neg(&SifrInt::from_i64(5)))?;
+        let _age: SifrInt = validate_age(&::std::ops::Neg::neg(&SifrInt::from_i64(5)))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -192,7 +188,7 @@ fn main() {
         println!("caught ValueError: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), DivisionError> = (|| {
-        let _ = safe_divide(SifrInt::from_i64(10), SifrInt::from_i64(0))?;
+        let _result: SifrInt = safe_divide(&SifrInt::from_i64(10), &SifrInt::from_i64(0))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -200,13 +196,11 @@ fn main() {
         println!("caught DivisionError: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let _ = SifrInt::parse_decimal(
-            &"not_a_number".to_string(),
-            ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS,
-        )
-        .map_err(|e| ParseError {
-            message: e.to_string(),
-        })?;
+        let _n: SifrInt =
+            SifrInt::parse_decimal("not_a_number", ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS)
+                .map_err(|e| ParseError {
+                    message: e.to_string(),
+                })?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -215,7 +209,7 @@ fn main() {
     }
     println!("=== Custom Error Classes ===");
     let sifr_generated_try_res: Result<(), AppError> = (|| {
-        let _ = check_input(::std::ops::Neg::neg(&SifrInt::from_i64(1)))?;
+        let _val: SifrInt = check_input(&::std::ops::Neg::neg(&SifrInt::from_i64(1)))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -224,7 +218,7 @@ fn main() {
     }
     println!("=== Exhaustiveness: Specific Except Arms ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = validate_age(::std::ops::Neg::neg(&SifrInt::from_i64(10)))?;
+        let _a: SifrInt = validate_age(&::std::ops::Neg::neg(&SifrInt::from_i64(10)))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -236,7 +230,7 @@ fn main() {
         (),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
     > = (|| {
-        let _ = validate_age(SifrInt::from_i64(200))
+        let _b: SifrInt = validate_age(&SifrInt::from_i64(200))
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
             )?;
@@ -260,7 +254,7 @@ fn main() {
     }
     println!("=== Error Propagation ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = process_age(::std::ops::Neg::neg(&SifrInt::from_i64(1)))?;
+        let _c: SifrInt = process_age(&::std::ops::Neg::neg(&SifrInt::from_i64(1)))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -269,13 +263,12 @@ fn main() {
     }
     println!("=== Multiple Try/Except ===");
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let parsed: SifrInt = SifrInt::parse_decimal(
-            &"42".to_string(),
-            ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS,
-        )
-        .map_err(|e| ParseError {
-            message: e.to_string(),
-        })?;
+        let parsed: SifrInt =
+            SifrInt::parse_decimal("42", ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS).map_err(
+                |e| ParseError {
+                    message: e.to_string(),
+                },
+            )?;
         println!("parsed: {parsed}");
         Ok(())
     })();
@@ -284,7 +277,7 @@ fn main() {
         println!("parse error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let validated: SifrInt = validate_age(SifrInt::from_i64(42))?;
+        let validated: SifrInt = validate_age(&SifrInt::from_i64(42))?;
         println!("validated: {validated}");
         Ok(())
     })();
@@ -293,7 +286,7 @@ fn main() {
         println!("validation error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), DivisionError> = (|| {
-        let divided: SifrInt = safe_divide(SifrInt::from_i64(42), SifrInt::from_i64(6))?;
+        let divided: SifrInt = safe_divide(&SifrInt::from_i64(42), &SifrInt::from_i64(6))?;
         println!("result: {divided}");
         Ok(())
     })();

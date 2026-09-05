@@ -157,8 +157,12 @@ def rust_code_lines(source: str) -> list[str]:
 
 def pattern_matches(policy: PatternPolicy, code: str) -> bool:
     for match in policy.pattern.finditer(code):
-        if policy.id == "direct-index" and re.fullmatch(r"let\s*\[[^\n]+", match.group(0)):
-            continue
+        if policy.id == "direct-index":
+            matched = match.group(0)
+            if re.fullmatch(r"let\s*\[[^\n]+", matched):
+                continue
+            if re.fullmatch(r"mut\s*\[[^\n]+", matched):
+                continue
         return True
     return False
 
@@ -515,6 +519,11 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
     slice_pattern = "let [head, middle @ .., tail] = values.as_slice() else { return; };"
     if pattern_matches(PATTERN_BY_ID["direct-index"], slice_pattern):
         raise AssertionError("direct-index scanner rejected a refutable slice pattern")
+    mutable_slice_type = "fn update(values: &mut [SifrInt]) {}"
+    if pattern_matches(PATTERN_BY_ID["direct-index"], mutable_slice_type):
+        raise AssertionError("direct-index scanner rejected a mutable slice type")
+    if not pattern_matches(PATTERN_BY_ID["direct-index"], "let value = values[0];"):
+        raise AssertionError("direct-index scanner accepted a direct indexing expression")
 
     missing_category = copy.deepcopy(debt)
     missing_category.pop("freshness")

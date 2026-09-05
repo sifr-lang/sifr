@@ -18,7 +18,7 @@ RUNTIME_CARGO = ROOT / "crates/sifr_sql_mysql_runtime/Cargo.toml"
 
 def validate(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
-    if data.get("schema_version") != 1 or data.get("milestone") != "sql_16_mysql_provider":
+    if data.get("schema_version") != 1 or data.get("provider") != "mysql":
         errors.append("MySQL qualification identity is invalid")
     series = data.get("supported_series", [])
     if [item.get("series") for item in series] != ["8.4", "9.7", "26.7"]:
@@ -88,6 +88,9 @@ def validate(data: dict[str, Any]) -> list[str]:
 
 def self_test(data: dict[str, Any]) -> int:
     mutations = []
+    wrong_provider = copy.deepcopy(data)
+    wrong_provider["provider"] = "postgresql"
+    mutations.append(wrong_provider)
     wrong_series = copy.deepcopy(data)
     wrong_series["supported_series"] = wrong_series["supported_series"][:-1]
     mutations.append(wrong_series)

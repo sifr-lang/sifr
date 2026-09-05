@@ -11,12 +11,13 @@ fn main() {
     assert_eq!(
         d.round_dp_with_strategy(
             {
-                let sifr_generated_scale = 2;
-                (if sifr_generated_scale < 0 {
+                let sifr_generated_scale = 2_i32;
+                if sifr_generated_scale < 0 {
                     0
                 } else {
                     sifr_generated_scale
-                }) as u32
+                }
+                .cast_unsigned()
             },
             ::rust_decimal::RoundingStrategy::MidpointNearestEven
         )
@@ -26,12 +27,13 @@ fn main() {
     assert_eq!(
         d.round_dp_with_strategy(
             {
-                let sifr_generated_scale = 2;
-                (if sifr_generated_scale < 0 {
+                let sifr_generated_scale = 2_i32;
+                if sifr_generated_scale < 0 {
                     0
                 } else {
                     sifr_generated_scale
-                }) as u32
+                }
+                .cast_unsigned()
             },
             ::rust_decimal::RoundingStrategy::MidpointNearestEven
         )

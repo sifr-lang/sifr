@@ -8,7 +8,12 @@ use super::source_expectations::{
 };
 
 mod slice_parameter_cleanup;
-use slice_parameter_cleanup::rewrite_slice_only_vec_parameters;
+mod visibility_cleanup;
+pub(super) use slice_parameter_cleanup::{
+    collect_project_shared_slice_params, rewrite_project_shared_slice_calls,
+    rewrite_slice_only_vec_parameters, rewrite_slice_parameter_apis,
+};
+use visibility_cleanup::publicize_public_enum_field_owners;
 
 pub(super) fn improve_generated_api_items(items: &mut [syn::Item], source: &str) {
     improve_generated_api_items_with_project_consts(items, source, &HashSet::new());
@@ -70,11 +75,13 @@ fn improve_generated_api_items_with_project_consts(
     source: &str,
     project_const_functions: &HashSet<String>,
 ) {
+    publicize_public_enum_field_owners(items);
     loop {
         let mut before_const = const_callable_paths(items);
         before_const.extend(project_const_functions.iter().cloned());
         let before_eq = derived_eq_owners(items);
         improve_generated_api_items_once(items, &before_const, &before_eq, source);
+        slice_parameter_cleanup::rewrite_shared_slice_calls(items);
         let mut after_const = const_callable_paths(items);
         after_const.extend(project_const_functions.iter().cloned());
         if after_const == before_const && derived_eq_owners(items) == before_eq {
@@ -90,6 +97,7 @@ fn improve_generated_api_items_once(
     source: &str,
 ) {
     let display_owners = display_implementation_owners(items);
+    let copy_owners = derived_copy_owners(items);
     for item in items {
         match item {
             syn::Item::Fn(function) => improve_function_api(
@@ -102,6 +110,7 @@ fn improve_generated_api_items_once(
                     owner: None,
                     owner_has_display: false,
                     trait_impl: false,
+                    copy_receiver_lint: false,
                     const_callables,
                     source,
                 },
@@ -129,6 +138,10 @@ fn improve_generated_api_items_once(
                                 owner: owner.as_deref(),
                                 owner_has_display,
                                 trait_impl,
+                                copy_receiver_lint: !trait_impl
+                                    && owner
+                                        .as_ref()
+                                        .is_some_and(|owner| copy_owners.contains(owner)),
                                 const_callables,
                                 source,
                             },
@@ -242,6 +255,7 @@ struct ApiContext<'context> {
     owner: Option<&'context str>,
     owner_has_display: bool,
     trait_impl: bool,
+    copy_receiver_lint: bool,
     const_callables: &'context HashSet<String>,
     source: &'context str,
 }
@@ -261,9 +275,12 @@ fn improve_function_api(
         attrs,
         signature,
         body,
-        context.owner_has_display,
-        context.trait_impl,
-        !matches!(visibility, syn::Visibility::Public(_)),
+        super::source_expectations::FunctionExpectationContext {
+            owner_has_display: context.owner_has_display,
+            trait_impl: context.trait_impl,
+            visibility,
+            copy_receiver_lint: context.copy_receiver_lint,
+        },
     );
     if matches!(visibility, syn::Visibility::Public(_)) {
         if !matches!(signature.output, syn::ReturnType::Default)
@@ -534,6 +551,18 @@ struct ConstCompatibilityChecker<'scope> {
 }
 
 impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
+    fn visit_local(&mut self, local: &'ast syn::Local) {
+        if local
+            .init
+            .as_ref()
+            .is_some_and(|init| init.diverge.is_some())
+        {
+            self.compatible = false;
+            return;
+        }
+        visit::visit_local(self, local);
+    }
+
     fn visit_macro(&mut self, _rust_macro: &'ast syn::Macro) {
         self.compatible = false;
     }
@@ -800,7 +829,29 @@ fn derived_eq_owners(items: &[syn::Item]) -> HashSet<String> {
     owners
 }
 
+fn derived_copy_owners(items: &[syn::Item]) -> HashSet<String> {
+    items
+        .iter()
+        .filter_map(|item| match item {
+            syn::Item::Enum(enum_)
+                if attributes_derive(&enum_.attrs, "Copy")
+                    && enum_
+                        .variants
+                        .iter()
+                        .all(|variant| variant.fields.is_empty()) =>
+            {
+                Some(enum_.ident.to_string())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
 fn attributes_derive_eq(attrs: &[syn::Attribute]) -> bool {
+    attributes_derive(attrs, "Eq")
+}
+
+fn attributes_derive(attrs: &[syn::Attribute], target: &str) -> bool {
     attrs.iter().any(|attribute| {
         let syn::Meta::List(meta) = &attribute.meta else {
             return false;
@@ -810,7 +861,7 @@ fn attributes_derive_eq(attrs: &[syn::Attribute]) -> bool {
                 .tokens
                 .to_string()
                 .split(|character: char| !character.is_alphanumeric() && character != '_')
-                .any(|name| name == "Eq")
+                .any(|name| name == target)
     })
 }
 

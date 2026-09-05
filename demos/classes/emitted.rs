@@ -84,7 +84,7 @@ impl ::std::fmt::Display for Rectangle {
     }
 }
 #[derive(Debug, Clone, PartialEq)]
-struct Circle {
+pub struct Circle {
     radius: f64,
 }
 impl Circle {
@@ -101,7 +101,7 @@ impl ::std::fmt::Display for Circle {
     }
 }
 #[derive(Debug, Clone, PartialEq)]
-struct Square {
+pub struct Square {
     side: f64,
 }
 impl Square {
@@ -124,10 +124,10 @@ struct Color {
     b: SifrInt,
 }
 impl Color {
-    const fn new(r: SifrInt, g: SifrInt, b: SifrInt) -> Self {
-        let sifr_generated_field_value_af63ef4c86020cd5_72: SifrInt = r;
-        let sifr_generated_field_value_af63da4c8601e926_67: SifrInt = g;
-        let sifr_generated_field_value_af63df4c8601f1a5_62: SifrInt = b;
+    fn new(r: &SifrInt, g: &SifrInt, b: &SifrInt) -> Self {
+        let sifr_generated_field_value_af63ef4c86020cd5_72: SifrInt = (*r).clone();
+        let sifr_generated_field_value_af63da4c8601e926_67: SifrInt = (*g).clone();
+        let sifr_generated_field_value_af63df4c8601f1a5_62: SifrInt = (*b).clone();
         Self {
             r: sifr_generated_field_value_af63ef4c86020cd5_72,
             g: sifr_generated_field_value_af63da4c8601e926_67,
@@ -184,14 +184,14 @@ fn main() {
     );
     println!("=== Hash ===");
     let red: Color = Color::new(
-        SifrInt::from_i64(255),
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
+        &SifrInt::from_i64(255),
+        &SifrInt::from_i64(0),
+        &SifrInt::from_i64(0),
     );
     let also_red: Color = Color::new(
-        SifrInt::from_i64(255),
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
+        &SifrInt::from_i64(255),
+        &SifrInt::from_i64(0),
+        &SifrInt::from_i64(0),
     );
     let h1: SifrInt = {
         let mut sifr_generated_hash = ::std::collections::hash_map::DefaultHasher::new();

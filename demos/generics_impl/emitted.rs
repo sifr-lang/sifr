@@ -14,32 +14,20 @@ fn first<T: Clone + 'static>(items: &[T]) -> Option<T> {
             .cloned()
     }
 }
-fn apply(f: impl Fn(SifrInt) -> SifrInt, x: SifrInt) -> SifrInt {
-    f(x)
+fn apply(f: impl Fn(SifrInt) -> SifrInt, x: &SifrInt) -> SifrInt {
+    f((*x).clone())
 }
-fn apply_twice(f: impl Fn(SifrInt) -> SifrInt, x: SifrInt) -> SifrInt {
-    f(f(x))
+fn apply_twice(f: impl Fn(SifrInt) -> SifrInt, x: &SifrInt) -> SifrInt {
+    f(f((*x).clone()))
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
 fn double(x: SifrInt) -> SifrInt {
-    ::std::ops::Mul::mul(&x, &SifrInt::from_i64(2))
+    ::std::ops::Mul::mul(x, &SifrInt::from_i64(2))
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
 fn add_one(x: SifrInt) -> SifrInt {
-    ::std::ops::Add::add(&x, &SifrInt::from_i64(1))
+    ::std::ops::Add::add(x, &SifrInt::from_i64(1))
 }
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
-)]
 fn square(x: SifrInt) -> SifrInt {
-    ::std::ops::Mul::mul(&x, &x)
+    ::std::ops::Mul::mul(x.clone(), x)
 }
 fn main() {
     let a: SifrInt = identity(&SifrInt::from_i64(42));
@@ -67,8 +55,8 @@ fn main() {
     } else if let Some(missing_word) = missing_word {
         println!("{missing_word}");
     }
-    println!("{}", apply(double, SifrInt::from_i64(5)));
-    println!("{}", apply(add_one, SifrInt::from_i64(99)));
-    println!("{}", apply_twice(add_one, SifrInt::from_i64(5)));
-    println!("{}", apply_twice(square, SifrInt::from_i64(3)));
+    println!("{}", apply(double, &SifrInt::from_i64(5)));
+    println!("{}", apply(add_one, &SifrInt::from_i64(99)));
+    println!("{}", apply_twice(add_one, &SifrInt::from_i64(5)));
+    println!("{}", apply_twice(square, &SifrInt::from_i64(3)));
 }

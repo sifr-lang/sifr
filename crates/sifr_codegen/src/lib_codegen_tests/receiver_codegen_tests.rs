@@ -293,7 +293,7 @@ class Owner:
             panic!("self-free statement after the branch should retain its order:\n{rust_code}")
         });
     let reverse_dependency = rust_code
-        .find("let doubled: SifrInt = &__sifr_self.count.clone() * &SifrInt::from_i64(2)")
+        .find("let doubled: SifrInt = ::std::ops::Mul::mul(&__sifr_self.count.clone(), &SifrInt::from_i64(2))")
         .expect("self-dependent local should use the synthetic receiver");
     let dependency_assert = rust_code
         .find("assert_eq!(&doubled, &SifrInt::from_i64(2))")
