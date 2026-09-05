@@ -265,7 +265,7 @@ mod sifr_generated_project_nominals {
                 if &maybe_size >= &SifrInt::from_i64(0) {
                     let requested: SifrInt = &start + &maybe_size;
                     if &requested < &end {
-                        end = requested;
+                        end = requested.clone();
                     }
                 }
             }
@@ -419,7 +419,7 @@ mod sifr_generated_project_nominals {
                 if &maybe_size >= &SifrInt::from_i64(0) {
                     let requested: SifrInt = &start + &maybe_size;
                     if &requested < &end {
-                        end = requested;
+                        end = requested.clone();
                     }
                 }
             }

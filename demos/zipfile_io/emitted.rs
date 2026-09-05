@@ -280,7 +280,7 @@ mod sifr_generated_project_nominals {
                 } else {
                     let requested_end: SifrInt = &self.cursor.clone() + &requested_size;
                     if &requested_end < &end {
-                        end = requested_end;
+                        end = requested_end.clone();
                     }
                 }
             }

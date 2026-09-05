@@ -218,6 +218,27 @@ Fixture 0048 tests each optional matrix read before its corresponding write.
 The matrix changes preserve read/write order and raise `IndexError` on absent values.
 They do not substitute a default or remove an original case.
 
+#### Item 12B continuation implementation evidence
+
+Compiler implementation `580e3374c3aac2aa669ad06354fba02c618e0942` completes the recorded dependency batch.
+Commit `18ab9bd969e70876a99875d8c719ad8b8d4daeb3` updates the existing union-rendering test expectation.
+External candidate `0ef88e8b4f4906e410a3b2e9216248c11149b247` completes the two remaining source contracts.
+No retained Item 12 compiler changes were imported.
+
+Evidence under `/tmp/sifr-item12b.akguMz/`:
+
+- `continuation-focused-4.log`: all 17 Item 12B regressions pass.
+- `continuation-codegen-full-2.log`: all 1,425 codegen tests pass.
+- `continuation-clippy.log`: strict codegen Clippy passes.
+- `continuation-build.log`: the new compiler build passes.
+- Formatting and file-size/HIR guardrails pass; the size check covers 3,760 files.
+
+The compiler binary SHA-256 is
+`04e449044644533db98fad9289d89355078f12b3e3bbd9bdb77d7f42398dfbfa`.
+These are focused and crate-level results, not full-corpus qualification.
+The earlier complete failing matrices remain historical evidence.
+No Opus review or merge-profile gate has run.
+
 #### Incorporated Item 12D: Native corpus emission dependencies
 
 State: incorporated into Item 12B under the continuation authority.

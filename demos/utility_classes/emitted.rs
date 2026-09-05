@@ -1474,7 +1474,7 @@ mod sifr_generated_project_nominals {
                         message: e.to_string(),
                     })?;
                     if &parsed_count > &SifrInt::from_i64(0) {
-                        exact = parsed_count;
+                        exact = parsed_count.clone();
                     }
                     Ok(())
                 })();
@@ -1594,7 +1594,7 @@ mod sifr_generated_project_nominals {
                         message: e.to_string(),
                     })?;
                     if &parsed_count > &SifrInt::from_i64(0) {
-                        exact = parsed_count;
+                        exact = parsed_count.clone();
                     }
                     Ok(())
                 })();
@@ -1915,7 +1915,7 @@ mod sifr_generated_project_nominals {
                                 }
                             }
                         }
-                        i = next_i2;
+                        i = next_i2.clone();
                         positional_index = &positional_index + &SifrInt::from_i64(1);
                         continue;
                     }
