@@ -23,7 +23,7 @@ def main():
     try:
         _mk: str = run_command("mkdir -p " + base)
         _w: None = write_text(base + "/a.txt", "demo")
-        _w2: None = write_text(base + "/b.txt", "demo")
+        _second_file_write: None = write_text(base + "/b.txt", "demo")
 
         root: Path = Path(base + "")
         entries_it: Iterator[str] = root.iterdir()

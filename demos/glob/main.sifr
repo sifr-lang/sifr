@@ -9,9 +9,9 @@ def collect_glob_actual() -> list[bool]:
     base: str = "/tmp/sifr_glob_glob_demo_" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base)
-        _w1: None = write_text(base + "/a.txt", "a")
-        _w2: None = write_text(base + "/b.txt", "b")
-        _w3: None = write_text(base + "/.hidden.txt", "h")
+        _first_file_write: None = write_text(base + "/a.txt", "a")
+        _second_file_write: None = write_text(base + "/b.txt", "b")
+        _hidden_file_write: None = write_text(base + "/.hidden.txt", "h")
 
         txt: list[str] = glob(base, "*.txt")
         txt_ok: bool = len(txt) == 2 and txt[0] == "a.txt" and txt[1] == "b.txt"

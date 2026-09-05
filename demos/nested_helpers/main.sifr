@@ -52,18 +52,18 @@ def find_root(n: int, par: list[int]) -> int:
     return p
 
 def union_nodes(n1: int, n2: int, mut par: list[int], mut rank: list[int]) -> bool:
-    p1 = find_root(n1, par)
-    p2 = find_root(n2, par)
-    if p1 < 0 or p1 >= len(rank) or p1 >= len(par) or p2 < 0 or p2 >= len(rank) or p2 >= len(par):
+    left_root = find_root(n1, par)
+    right_root = find_root(n2, par)
+    if left_root < 0 or left_root >= len(rank) or left_root >= len(par) or right_root < 0 or right_root >= len(rank) or right_root >= len(par):
         return False
-    if p1 == p2:
+    if left_root == right_root:
         return False
-    if rank[p1] > rank[p2]:
-        par[p2] = p1
-        rank[p1] = rank[p1] + rank[p2]
+    if rank[left_root] > rank[right_root]:
+        par[right_root] = left_root
+        rank[left_root] = rank[left_root] + rank[right_root]
     else:
-        par[p1] = p2
-        rank[p2] = rank[p2] + rank[p1]
+        par[left_root] = right_root
+        rank[right_root] = rank[right_root] + rank[left_root]
     return True
 
 def detect_first_cycle(edges: list[tuple[int, int]]) -> list[int]:

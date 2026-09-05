@@ -143,20 +143,20 @@ fn find_root(n: SifrInt, par: &[SifrInt]) -> SifrInt {
     p.clone()
 }
 fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<SifrInt>) -> bool {
-    let p1: SifrInt = find_root(n1.clone(), par);
-    let p2: SifrInt = find_root(n2.clone(), par);
-    if &p1 < &SifrInt::from_i64(0)
-        || &p1 >= &SifrInt::from(rank.len())
-        || &p1 >= &SifrInt::from(par.len())
-        || &p2 < &SifrInt::from_i64(0)
-        || &p2 >= &SifrInt::from(rank.len())
-        || &p2 >= &SifrInt::from(par.len())
+    let left_root: SifrInt = find_root(n1.clone(), par);
+    let right_root: SifrInt = find_root(n2.clone(), par);
+    if &left_root < &SifrInt::from_i64(0)
+        || &left_root >= &SifrInt::from(rank.len())
+        || &left_root >= &SifrInt::from(par.len())
+        || &right_root < &SifrInt::from_i64(0)
+        || &right_root >= &SifrInt::from(rank.len())
+        || &right_root >= &SifrInt::from(par.len())
     {
         return false;
     }
     let Some(sifr_generated_checked_value_4) = ({
         let sifr_generated_checked_read_collection = &rank;
-        let sifr_generated_checked_read_index = p1.clone();
+        let sifr_generated_checked_read_index = left_root.clone();
         let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
             .normalize_index_or_len(sifr_generated_checked_read_collection.len());
         sifr_generated_checked_read_collection
@@ -167,7 +167,7 @@ fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<
     };
     let Some(sifr_generated_checked_value_5) = ({
         let sifr_generated_checked_read_collection = &rank;
-        let sifr_generated_checked_read_index = p2.clone();
+        let sifr_generated_checked_read_index = right_root.clone();
         let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
             .normalize_index_or_len(sifr_generated_checked_read_collection.len());
         sifr_generated_checked_read_collection
@@ -176,14 +176,14 @@ fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<
     }) else {
         return false;
     };
-    if &p1 == &p2 {
+    if &left_root == &right_root {
         return false;
     }
     if sifr_generated_checked_value_4.clone() > sifr_generated_checked_value_5.clone() {
         {
-            let sifr_generated_assign_value = p1.clone();
+            let sifr_generated_assign_value = left_root.clone();
             {
-                let sifr_generated_index_raw = p2.clone();
+                let sifr_generated_index_raw = right_root.clone();
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(par.len());
                 if let Some(sifr_generated_elem) = par.get_mut(sifr_generated_index_normalized) {
@@ -195,7 +195,7 @@ fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<
             let sifr_generated_assign_value =
                 &sifr_generated_checked_value_4.clone() + &sifr_generated_checked_value_5.clone();
             {
-                let sifr_generated_index_raw = p1.clone();
+                let sifr_generated_index_raw = left_root.clone();
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(rank.len());
                 if let Some(sifr_generated_elem) = rank.get_mut(sifr_generated_index_normalized) {
@@ -205,9 +205,9 @@ fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<
         }
     } else {
         {
-            let sifr_generated_assign_value = p2.clone();
+            let sifr_generated_assign_value = right_root.clone();
             {
-                let sifr_generated_index_raw = p1.clone();
+                let sifr_generated_index_raw = left_root.clone();
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(par.len());
                 if let Some(sifr_generated_elem) = par.get_mut(sifr_generated_index_normalized) {
@@ -219,7 +219,7 @@ fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<
             let sifr_generated_assign_value =
                 &sifr_generated_checked_value_5.clone() + &sifr_generated_checked_value_4.clone();
             {
-                let sifr_generated_index_raw = p2.clone();
+                let sifr_generated_index_raw = right_root.clone();
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(rank.len());
                 if let Some(sifr_generated_elem) = rank.get_mut(sifr_generated_index_normalized) {

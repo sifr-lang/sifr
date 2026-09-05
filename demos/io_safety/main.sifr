@@ -85,7 +85,7 @@ def demo_read_lines():
 def demo_append():
     print("=== Append Text ===")
     try:
-        w1: None = write_text("/tmp/sifr_io_demo_append.txt", "first")
+        initial_write: None = write_text("/tmp/sifr_io_demo_append.txt", "first")
         a: None = append_text("/tmp/sifr_io_demo_append.txt", " second")
         content: str = read_text("/tmp/sifr_io_demo_append.txt")
         print(f"appended: {content}")

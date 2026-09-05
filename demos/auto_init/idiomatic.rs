@@ -95,10 +95,10 @@ fn main() {
     println!("point y = {}", p.y);
     println!("point str = {p}");
 
-    let p2 = Point::new(3, 4);
-    let p3 = Point::new(5, 6);
-    println!("point eq = {}", p == p2);
-    println!("point neq = {}", p == p3);
+    let equal_point = Point::new(3, 4);
+    let different_point = Point::new(5, 6);
+    println!("point eq = {}", p == equal_point);
+    println!("point neq = {}", p == different_point);
 
     let c1 = Config::default();
     println!("config debug default = {}", c1.debug);
