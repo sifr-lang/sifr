@@ -1,5 +1,7 @@
 # TypeScript-Go Architecture Transfer: Bucketed Indexes And Safe Parallel Lanes
 
+Status: merged in [#2259](https://github.com/sifr-lang/sifr/pull/2259)
+
 bucketed symbol-index surface scales editor symbol/import queries without weakening deterministic compiler
 identity.
 
@@ -36,3 +38,18 @@ mutation, package graph mutation, and codegen state.
 bucketed symbol-index surface defines the allowed lane policy only. It does not start background worker
 execution; later work must still prove snapshot ownership, cancellation,
 and deterministic publication before using these lanes.
+
+## Validation
+
+- `cargo test -p sifr_analysis symbol_index -- --nocapture` -> PASS
+- `cargo test -p sifr_analysis worker_lanes -- --nocapture` -> PASS
+- `cargo test -p sifr_analysis` -> PASS, 20 tests
+- `cargo fmt --check` -> PASS
+- `cargo clippy -p sifr_analysis -p sifr_frontend -- -D warnings` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
+- `python3 verification/areas/developer_tooling/check_tooling_readiness.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_tooling_readiness.py --self-test` -> PASS
+- `git diff --check` -> PASS
+- `python3 scripts/check_file_size_guardrails.py` -> PASS
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 261.03s, advisory: group skew is high

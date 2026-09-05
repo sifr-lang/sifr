@@ -1,5 +1,7 @@
 # TypeScript-Go Architecture Transfer: Source Provider
 
+status: implemented
+
 The source-provider boundary is the only semantic source access boundary in the
 compiler. A source operation must use one active `SourceProvider`. The operation
 must not create a new disk provider in a lower compiler layer.
@@ -98,3 +100,15 @@ can remain for these non-semantic operations:
 A direct filesystem read must move behind `SourceProvider` if its result can
 change parsing, lowering, type checking, import resolution, formatting, linting,
 package selection, or editor analysis.
+
+## Validation
+
+Run these focused checks after a source-provider change:
+
+- `python3 scripts/check_source_crate_dependency_direction.py`
+- `python3 scripts/check_source_crate_dependency_direction.py --self-test`
+- source-provider and frontend mode-parity tests;
+- formatter and linter path tests;
+- package source-map, offline, and public-API tests;
+- LSP snapshot and stale-result tests;
+- the repository file-size guardrail.

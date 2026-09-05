@@ -1,5 +1,7 @@
 # TypeScript-Go Architecture Transfer: Guardrails
 
+status: source-provider workstream preflight gate
+
 This document is the implementation guardrail for the
 `typescript-go-compiler-architecture-transfer record` source-provider workstream. It records
 the actual pre-session state before source-provider behavior migration. Later

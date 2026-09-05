@@ -1,5 +1,7 @@
 # TypeScript-Go Architecture Transfer: Project Residency, Watchers, And Build Info
 
+Status: merged in [#2261](https://github.com/sifr-lang/sifr/pull/2261)
+
 project-residency surface keeps long-lived compiler-service sessions bounded without making generated
 metadata authoritative.
 
@@ -33,3 +35,15 @@ watcher/config snapshot state from the remaining retained session inputs.
 fingerprint, package/config identity, and source hashes match the active
 workspace. Rejected metadata clears the retained build-info snapshot and never
 hides source, config, package, or compiler-option changes.
+
+## Validation
+
+- `cargo test -p sifr_frontend workspace_session` -> PASS, 8 tests
+- `cargo test -p sifr_frontend` -> PASS, 42 tests
+- `cargo fmt --check` -> PASS
+- `cargo clippy -p sifr_frontend -- -D warnings` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
+- `git diff --check` -> PASS
+- `python3 scripts/check_file_size_guardrails.py` -> PASS
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 292.53s, advisory: group skew is high

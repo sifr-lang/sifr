@@ -1,5 +1,7 @@
 # TypeScript-Go Architecture Transfer: LSP Scheduler Queues
 
+status: merged in [#2253](https://github.com/sifr-lang/sifr/pull/2253)
+
 LSP scheduler makes LSP request scheduling concrete while deliberately keeping execution
 serialized until LSP scheduler adds cancellation tokens, progress, and worker execution.
 `sifr_lsp::RequestQueue` now stores FIFO queues per lane:
@@ -31,3 +33,17 @@ Current limitations:
   matching retained body when a queued request is cancelled
 - background index work is represented by a scheduler lane and fairness tests,
   but no background worker is started in LSP scheduler
+
+Validation so far:
+
+- `cargo test -p sifr_lsp` -> PASS, 13 tests
+- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py` -> PASS
+- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
+- `cargo fmt --check` -> PASS
+- `cargo clippy -p sifr_lsp -- -D warnings` -> PASS
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `cargo clippy --workspace -- -D warnings` -> PASS
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 263.26s, advisory: group skew is high

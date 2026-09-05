@@ -1,5 +1,7 @@
 # TypeScript-Go Architecture Transfer: Fingerprints And Cache Keys
 
+status: cache-key identity implementation status
+
 cache-key identity makes cache identity explicit before Sifr starts reusing compiler-service
 entries across snapshots. It does not introduce parse, HIR, diagnostic, or index
 reuse; cache-key identity owns reuse and reference-counted cache storage.
@@ -72,3 +74,24 @@ Those values affect stale-result publication and editor routing, but they do not
 change parse, source-map, HIR, diagnostic, lint, format, symbol, or flow results
 when source content, workspace/package context, compiler fingerprint, and query
 policy are unchanged. cache-key identity tests pin this omission before cache-key identity introduces reuse.
+
+## Validation
+
+cache-key identity focused validation so far:
+
+- `cargo fmt --check`
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
+- `cargo test -p sifr_frontend cache_key -- --nocapture`
+- `cargo test -p sifr_frontend`
+- `cargo test -p sifr_analysis -p sifr_lsp`
+- `cargo test -p sifr_driver`
+- `cargo test -p sifr -- --skip test_e2e_pass`
+- `cargo clippy -p sifr_frontend -- -D warnings`
+- `cargo clippy --workspace -- -D warnings`
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
+  `target/validation_lane_reports/create-pr.latest.json`, wall time 338.91s,
+  advisories: warm wall-time budget exceeded; group skew is high

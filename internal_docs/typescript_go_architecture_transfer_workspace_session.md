@@ -1,5 +1,7 @@
 # TypeScript-Go Architecture Transfer: Workspace Session
 
+status: workspace-session owner implementation status
+
 workspace-session owner introduces the mutable compiler-service owner in `sifr_frontend` while
 leaving analysis-query migration to workspace-session owner. The session is intentionally serialized:
 callers mutate overlays or reload project state, then freeze the current state
@@ -64,3 +66,25 @@ successful `reload` paths populate both views.
 `WorkspaceSession::context` is an inspection escape hatch during the session and
 snapshot migration and should not become the long-term query surface once
 snapshots are canonical.
+
+## Validation
+
+workspace-session owner focused validation so far:
+
+- `cargo test -p sifr_frontend workspace_session`
+- `cargo test -p sifr_frontend`
+- `cargo test -p sifr_analysis`
+- `cargo test -p sifr_lsp`
+- `cargo test -p sifr -- --skip test_e2e_pass`
+- `cargo clippy --workspace -- -D warnings`
+- `cargo fmt --check`
+- `git diff --check`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
+  `target/validation_lane_reports/create-pr.latest.json`, wall time 261.09s
+
+The validation list is focused on the workspace-session owner data-model surface plus the work's
+authoritative create-pr gate.

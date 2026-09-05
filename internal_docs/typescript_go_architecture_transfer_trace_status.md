@@ -1,5 +1,7 @@
 # TypeScript-Go Architecture Transfer: Trace And Status Surfaces
 
+Status: merged via [#2263](https://github.com/sifr-lang/sifr/pull/2263)
+
 trace/status normalizes compiler-service trace and status output so stale requests,
 cache state, invalidation, and editor-facing readiness can be explained from a
 single snapshot.
@@ -35,3 +37,25 @@ building the symbol index on demand. If the index has not been built yet, the
 status reports unavailable readiness. LSP analysis open/update paths feed
 last-update latency counters into workspace status. `sifr trace <file>` prints
 a representative CLI trace/status snapshot for project or single-file inputs.
+
+## Validation
+
+- `cargo test -p sifr_frontend workspace_session -- --nocapture` -> PASS, 9 tests
+- `cargo test -p sifr_frontend` -> PASS, 43 tests
+- `cargo test -p sifr_analysis dependency_sensitive_invalidation_is_explained_in_trace -- --nocapture` -> PASS
+- `cargo test -p sifr_analysis stale_snapshot_is_rejected_after_update -- --nocapture` -> PASS
+- `cargo test -p sifr_analysis` -> PASS, 21 tests
+- `cargo test -p sifr_lsp debug_trace_request_exposes_lsp_trace_events -- --nocapture` -> PASS
+- `cargo test -p sifr_lsp active_request_cancellation_fails_scheduler_boundary_checks -- --nocapture` -> PASS
+- `cargo test -p sifr_lsp diagnostic_job_version_guard_rejects_stale_capture -- --nocapture` -> PASS
+- `cargo test -p sifr_lsp` -> PASS, 24 tests
+- `cargo test -p sifr trace_entrypoint_renders_status_and_trace_snapshot -- --nocapture` -> PASS
+- `cargo test -p sifr -- --skip test_e2e_pass` -> PASS, 57 unit tests and 33 non-pass e2e tests
+- `cargo check -p sifr_frontend -p sifr_analysis -p sifr_lsp -p sifr` -> PASS
+- `cargo fmt --check` -> PASS
+- `cargo clippy -p sifr_frontend -p sifr_analysis -p sifr_lsp -p sifr -- -D warnings` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
+- `git diff --check` -> PASS
+- `python3 scripts/check_file_size_guardrails.py` -> PASS
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 295.57s, advisory: group skew is high

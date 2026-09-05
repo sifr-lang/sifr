@@ -1,5 +1,7 @@
 # TypeScript-Go Architecture Transfer: LSP Persistent Session
 
+status: persistent LSP session implementation status
+
 Persistent LSP session ownership moves LSP analysis out of `DocumentStore` and into the serialized
 language-server session. This keeps execution single-threaded while making the
 compiler-service owner explicit before later dirty-scope, scheduler, cancellation,
@@ -50,3 +52,25 @@ snapshot method still rejects stale workspace snapshots by captured
 Persistent LSP session ownership does not introduce async scheduling,
 cancellation, debounce, or precise dirty scopes. Those remain scheduler,
 cancellation/progress, and dirty-scope responsibilities.
+
+## Validation
+
+Focused validation so far:
+
+- `cargo test -p sifr_lsp`
+- `cargo test -p sifr_analysis`
+- `cargo test -p sifr_frontend`
+- `cargo test -p sifr -- --skip test_e2e_pass`
+- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py`
+- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py --self-test`
+- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py`
+- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py --self-test`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
+- `cargo fmt --check`
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
+- `cargo clippy --workspace -- -D warnings`
+- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
+  `target/validation_lane_reports/create-pr.latest.json`, wall time 227.66s
