@@ -630,6 +630,48 @@ Main's intervening changes rename demo variables and a regex test; they do not c
 Native qualification was rerun in full with the corrected compiler.
 The retained Item 12 compiler candidate is not used as qualification evidence.
 
+#### Item 12B terminal checkpoint: external review authentication blocker
+
+State: blocked before review and merge; Item 12B is not closed.
+This checkpoint supersedes earlier scope-adjudication stops. Builtin registration and the recorded native-execution dependencies are authorized and implemented inside Item 12B.
+
+- Qualified Sifr candidate: `4096a2e93b5fec3725c56c0a940dde995069d1f5`.
+  Compiler implementation: `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`.
+  Later checkpoint commits change records only.
+- [Sifr PR #3694](https://github.com/sifr-lang/sifr/pull/3694), branch `codex/emitted-rust-excellence-item-12b`, remains draft.
+- [Corpus PR #48](https://github.com/sifr-lang/leetcode/pull/48), branch `codex/item12b-source-contracts`, remains draft at `da4a0e8680c6b50c5544d77bfb92e9e4cddf1ab1`.
+- Complete current qualification: 90/90 repaired fixtures pass check and native execution; all original cases remain.
+  Codegen tests pass 1,435/1,435, including all 26 focused regressions.
+  Strict codegen Clippy, fmt, file-size/HIR guardrails, and 264-companion freshness pass.
+- Canonical `leetcode-full` passes 411/411 checks at `7f3930ab4b05cd5ab50edb897be6a56329ab43f6`.
+  Its unchanged front-end/corpus inputs support explicit reuse; it is not relabeled as a later-SHA run.
+  Native qualification was repeated with the corrected compiler.
+- Corrected compiler SHA-256: `d47774bba160db3903b9143071352af3b3001d6ec16173731cad5811b4b7abad`.
+- Evidence root: `/tmp/sifr-item12b.akguMz/`.
+  Use `native-qualified/matrix.json`, `leetcode-full-7f393-results.json`, `leetcode-full-final.log`, and `borrow-final-*.log`.
+- The retained Item 12 candidate `8ad089a9458f35fcfa228e93fe44f4d69731828b` remains separate and unchanged.
+  No remaining Item 12 or Item 12A implementation was started.
+
+The initial Opus request and both permitted request retries failed without a verdict.
+Retained logs report: `Failed to authenticate: OAuth session expired and could not be refreshed`.
+The official subscription sign-in was attempted. Interactive authentication could not complete with the available browser access.
+The pending login process was cancelled; no account, billing mode, or security setting was changed.
+No review approval, remediation review, create-PR gate, merge-profile gate, or merge has occurred.
+The known SQL coverage issue remains separately owned; no new gate result is claimed.
+
+The request logs remain outside Git in:
+`opus-4096a2e93b5fec3725c56c0a940dde995069d1f5.zO2RVq/claude.log`,
+`opus-4096a2e93b5fec3725c56c0a940dde995069d1f5.pYOvQr/claude.log`, and
+`opus-4096a2e93b5fec3725c56c0a940dde995069d1f5.NtmhgZ/claude.log`, under the evidence root.
+The first log is empty; the later two retain the OAuth failure.
+The [Sifr blocker record](https://github.com/sifr-lang/sifr/pull/3694#issuecomment-5553738037)
+and [corpus blocker record](https://github.com/sifr-lang/leetcode/pull/48#issuecomment-5553738178) preserve the handoff publicly.
+
+Exact next action: the account owner completes `claude auth login --claudeai` for the already-configured subscription account.
+Then resume the initial exact-SHA review against the current record-only PR head, with both repository candidates identified.
+Reuse valid qualification evidence. At most one remediation review and one merge-profile gate remain.
+Do not run a create-PR gate, start another item, or merge without the required review and validation.
+
 #### Item 12B required tests
 
 These commands run from the isolated Sifr worktree after the bounded implementation.
