@@ -298,7 +298,7 @@ fn main() {
     println!(
         "Union [1,2,3] | [3,4,5]: length = {}",
         SifrInt::from(
-            left.union(&right)
+            left.r#union(&right)
                 .cloned()
                 .collect::<std::collections::HashSet<_>>()
                 .len()

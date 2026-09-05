@@ -38,8 +38,30 @@ pub(crate) const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "WorkerError",
 ];
 
+/// A catalog-validated builtin name. Its canonical identity is total.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct BuiltinError {
+    name: &'static str,
+}
+
+impl BuiltinError {
+    pub(crate) fn all() -> impl Iterator<Item = Self> {
+        BUILTIN_ERROR_CLASSES.iter().map(|name| Self { name })
+    }
+
+    pub(crate) fn from_name(name: &str) -> Option<Self> {
+        Self::all().find(|builtin| builtin.name == name)
+    }
+
+    pub(crate) const fn name(self) -> &'static str {
+        self.name
+    }
+
+    pub(crate) fn identity(self) -> String {
+        format!("sifr.builtin.{}", self.name)
+    }
+}
+
 pub(crate) fn builtin_error_identity(name: &str) -> Option<String> {
-    BUILTIN_ERROR_CLASSES
-        .contains(&name)
-        .then(|| format!("sifr.builtin.{name}"))
+    BuiltinError::from_name(name).map(BuiltinError::identity)
 }

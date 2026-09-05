@@ -400,7 +400,7 @@ mod sifr_generated_generated_support {
         } else {
             let last: Option<String> = {
                 let sifr_generated_string_index =
-                    SifrInt::from(root.chars().count()) - SifrInt::from_i64(1);
+                    &SifrInt::from(root.chars().count()) - &SifrInt::from_i64(1);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_root.len());
                 sifr_generated_chars_root
@@ -854,7 +854,7 @@ mod sifr_generated_project_nominals {
                     let e2 = sifr_generated_try_err.clone();
                     let _ = e2.message.clone();
                 }
-                fh.close();
+                (&mut fh).close();
                 Ok(())
             })();
             if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -984,7 +984,7 @@ mod sifr_generated_project_nominals {
                             let e2 = sifr_generated_try_err.clone();
                             let _ = e2.message.clone();
                         }
-                        fh.close();
+                        (&mut fh).close();
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1028,7 +1028,7 @@ mod sifr_generated_project_nominals {
                         let e2 = sifr_generated_try_err.clone();
                         let _ = e2.message.clone();
                     }
-                    fh.close();
+                    (&mut fh).close();
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1142,8 +1142,8 @@ fn collect_logger_actual(base: &str) -> Vec<bool> {
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         write_text(&app_log, &String::new())?;
         let mut app: SifrGeneratedStdlibSifrX2eloggingX2eLogger = getLogger(&"demo".to_string());
-        app.set_file(&app_log);
-        app.set_level(&sifr_generated_const_494e464f());
+        (&mut app).set_file(&app_log);
+        (&mut app).set_level(&sifr_generated_const_494e464f());
         app.info(&"start".to_string());
         app.warning(&"warn".to_string());
         app.debug(&"hidden".to_string());
@@ -1179,7 +1179,7 @@ fn collect_root_and_handler_actual(base: &str) -> Vec<bool> {
         write_text(&handler_log, &String::new())?;
         let mut root: SifrGeneratedStdlibSifrX2eloggingX2eLogger =
             basicConfig(sifr_generated_const_5741524e494e47());
-        root.set_file(&root_log);
+        (&mut root).set_file(&root_log);
         root.info(&"skip".to_string());
         root.error(&"boom".to_string());
         let root_content: String = read_text(&root_log)?;
@@ -1189,7 +1189,7 @@ fn collect_root_and_handler_actual(base: &str) -> Vec<bool> {
                 handler_log.to_string(),
                 SifrInt::from_i64(0),
             );
-        handler.set_formatter(&SifrGeneratedStdlibSifrX2eloggingX2eFormatter::new(
+        (&mut handler).set_formatter(&SifrGeneratedStdlibSifrX2eloggingX2eFormatter::new(
             "%(levelname)s:%(message)s".to_string(),
         ));
         handler.emit(
@@ -1218,7 +1218,7 @@ fn collect_safety_actual(base: &str) -> Vec<bool> {
         sifr_generated_concat
     };
     let mut bad: SifrGeneratedStdlibSifrX2eloggingX2eLogger = getLogger(&"bad".to_string());
-    bad.set_file(&missing_log);
+    (&mut bad).set_file(&missing_log);
     bad.error(&"should fail".to_string());
     let missing_safe: bool = !exists(&missing_log);
     actual.push(missing_safe);

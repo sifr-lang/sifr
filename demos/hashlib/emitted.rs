@@ -497,15 +497,15 @@ fn contains(values: &[String], needle: &str) -> bool {
 fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
     let mut actual: Vec<String> = Vec::new();
     let mut h: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = sha256(&Vec::new());
-    h.update(&vec![97_u8]);
-    h.update(&vec![98_u8, 99_u8]);
+    (&mut h).update(&vec![97_u8]);
+    (&mut h).update(&vec![98_u8, 99_u8]);
     actual.push(
         (h.hexdigest().as_str() == sha256(&vec![97_u8, 98_u8, 99_u8]).hexdigest().as_str())
             .to_string(),
     );
     actual.push((&SifrInt::from(h.digest().len()) == &SifrInt::from_i64(32)).to_string());
     let mut c: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = copy_hash(&h);
-    c.update(&vec![120_u8]);
+    (&mut c).update(&vec![120_u8]);
     actual.push(
         (c.hexdigest().as_str()
             == sha256(&vec![97_u8, 98_u8, 99_u8, 120_u8])

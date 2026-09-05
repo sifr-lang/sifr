@@ -2934,7 +2934,7 @@ mod sifr_generated_project_nominals {
                     let e2 = sifr_generated_try_err.clone();
                     let _ = e2.message.clone();
                 }
-                fh.close();
+                (&mut fh).close();
                 Ok(())
             })();
             if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -3049,7 +3049,7 @@ mod sifr_generated_project_nominals {
                             let e2 = sifr_generated_try_err.clone();
                             let _ = e2.message.clone();
                         }
-                        fh.close();
+                        (&mut fh).close();
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -3093,7 +3093,7 @@ mod sifr_generated_project_nominals {
                         let e2 = sifr_generated_try_err.clone();
                         let _ = e2.message.clone();
                     }
-                    fh.close();
+                    (&mut fh).close();
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -3576,9 +3576,9 @@ fn main() {
                 SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler::new(sifr_generated_errors),
             ))
         })()?;
-        f.write(&"hello from open()\n".to_string())?;
-        f.write(&"second line\n".to_string())?;
-        f.close();
+        (&mut f).write(&"hello from open()\n".to_string())?;
+        (&mut f).write(&"second line\n".to_string())?;
+        (&mut f).close();
         let content: String = read_text(&path)?;
         let _chars_content: Vec<char> = content.chars().collect::<Vec<char>>();
         println!("{}", {
@@ -3651,8 +3651,8 @@ fn main() {
             let sifr_generated_guard_0 = SifrGeneratedWithGuard0 {
                 ctx: sifr_generated_ctx_0,
             };
-            let fw = sifr_generated_guard_0.ctx.sifr_generated_enter__();
-            fw.write(&"context manager works".to_string())?;
+            let mut fw = sifr_generated_guard_0.ctx.sifr_generated_enter__();
+            (&mut fw).write(&"context manager works".to_string())?;
         }
         let result: String = read_text(&path2_value_3f11d2a7be5fa58c)?;
         println!("{}", {
@@ -3711,7 +3711,7 @@ fn main() {
         let _chars_content2_value_6aa5e9a973436389: Vec<char> = content2_value_ee7eb2d0c2b58110
             .chars()
             .collect::<Vec<char>>();
-        fr.close();
+        (&mut fr).close();
         println!("{}", {
             let mut sifr_generated_concat: String = String::with_capacity(15usize);
             sifr_generated_concat.push_str("open read ok = ");

@@ -368,8 +368,8 @@ fn collect_actual() -> Vec<bool> {
     heappush(&mut heap, &SifrInt::from_i64(3));
     let first: Option<SifrInt> = heappop(&mut heap);
     let second: Option<SifrInt> = heappop(&mut heap);
-    actual.push(first.is_some() && first == Some(SifrInt::from_i64(1).clone()));
-    actual.push(second.is_some() && second == Some(SifrInt::from_i64(3).clone()));
+    actual.push(first.is_some() && first == Some(SifrInt::from_i64(1)));
+    actual.push(second.is_some() && second == Some(SifrInt::from_i64(3)));
     let mut data: Vec<SifrInt> = vec![
         SifrInt::from_i64(4),
         SifrInt::from_i64(2),
@@ -379,7 +379,7 @@ fn collect_actual() -> Vec<bool> {
     ];
     heapify(&mut data);
     let top: Option<SifrInt> = heappop(&mut data);
-    actual.push(top.is_some() && top == Some(SifrInt::from_i64(1).clone()));
+    actual.push(top.is_some() && top == Some(SifrInt::from_i64(1)));
     let items: Vec<SifrInt> = vec![
         SifrInt::from_i64(9),
         SifrInt::from_i64(3),

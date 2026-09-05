@@ -147,7 +147,7 @@ impl RustEmitter {
                     let key_arg = Self::build_dict_lookup_key_arg_for_ir(
                         Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
                     );
-                    let pushed_arg = self.clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
+                    let pushed_arg = self.materialize_reusable_value_for_ir(&args[0], lowered_arg);
                     return Some(crate::RustExpr::Block {
                         stmts: vec![crate::RustStmt::IfLet {
                             pattern: "Some(__elem)".to_string(),
@@ -289,6 +289,7 @@ impl RustEmitter {
             }
             _ => Vec::new(),
         };
+        self.adapt_owned_mapping_default(object_ty, method, args, &mut arg_exprs);
         for (index, target_ty) in collection_element_targets {
             if let (Some(argument), Some(lowered_arg)) = (args.get(index), arg_exprs.get_mut(index))
             {
@@ -298,7 +299,7 @@ impl RustEmitter {
                     lowered_arg.clone(),
                 );
                 *lowered_arg =
-                    self.clone_owned_append_arg_expr_for_ir(argument, lowered_arg.clone());
+                    self.materialize_reusable_value_for_ir(argument, lowered_arg.clone());
             }
         }
 
@@ -672,6 +673,14 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Option<crate::RustExpr> {
+        if let HirExpr::Index { object, index, ty } = expr
+            && !crate::helpers::is_option_type(ty)
+            && let Some(lowered) = self
+                .lower_non_option_index_expr_for_ir(object, index)
+                .ok()?
+        {
+            return Some(lowered);
+        }
         if matches!(
             expr,
             HirExpr::ListLiteral { .. }

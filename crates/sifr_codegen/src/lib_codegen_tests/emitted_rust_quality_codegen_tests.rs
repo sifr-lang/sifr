@@ -68,10 +68,7 @@ def make_dict(items: list[tuple[str, int]]) -> dict[str, int]:
         "{generated}"
     );
     assert!(generated.contains("vec![97u8]"), "{generated}");
-    assert!(
-        generated.contains("let __sifr_empty_list_literal: Vec<SifrInt> = vec![]"),
-        "{generated}"
-    );
+    assert!(generated.contains("Vec::<SifrInt>::new()"), "{generated}");
     assert!(
         generated.contains("collect::<std::collections::HashMap<_, _>>()"),
         "{generated}"

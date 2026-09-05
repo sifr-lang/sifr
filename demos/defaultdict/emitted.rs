@@ -19,7 +19,7 @@ mod sifr_generated_project_nominals {
                 } else {
                     SifrInt::from_i64(0)
                 };
-                let mut i: SifrInt = start;
+                let mut i: SifrInt = start.clone();
                 while &i < &SifrInt::from(items.len()) {
                     let item_value_2841a0c596d6f426: Option<T> = {
                         let sifr_generated_checked_read_collection = &items;

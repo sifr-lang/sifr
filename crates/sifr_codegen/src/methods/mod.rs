@@ -669,7 +669,7 @@ mod tests {
             lower_method(&set_ty, "union", "s", &["other".to_string()]).expect("set union lowers");
         assert_eq!(
             render_expr(&set_union.expr),
-            "s.union(&other).cloned().collect::<std::collections::HashSet<_>>()"
+            "s.r#union(&other).cloned().collect::<std::collections::HashSet<_>>()"
         );
 
         let set_intersection = lower_method(&set_ty, "intersection", "s", &["other".to_string()])

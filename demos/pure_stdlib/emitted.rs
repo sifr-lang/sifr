@@ -2616,7 +2616,7 @@ fn main() {
     ]);
     let c2: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
         from_list(&vec!["b".to_string(), "c".to_string(), "d".to_string()]);
-    c1.update(&c2);
+    (&mut c1).update(&c2);
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(16usize + 3usize);
         sifr_generated_concat.push_str("after update: a=");
@@ -2637,7 +2637,7 @@ fn main() {
         from_list(&vec!["x".to_string(), "x".to_string(), "y".to_string()]);
     let c4: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
         from_list(&vec!["x".to_string()]);
-    c3.subtract(&c4);
+    (&mut c3).subtract(&c4);
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(18usize);
         sifr_generated_concat.push_str("after subtract: x=");
@@ -2659,7 +2659,7 @@ fn main() {
     });
     let mut cc: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
         from_list(&vec!["a".to_string(), "b".to_string()]);
-    cc.update(&from_list(&vec!["b".to_string(), "c".to_string()]));
+    (&mut cc).update(&from_list(&vec!["b".to_string(), "c".to_string()]));
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(16usize);
         sifr_generated_concat.push_str("counter_add b = ");
@@ -2672,7 +2672,7 @@ fn main() {
     });
     let mut cd: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
         from_list(&vec!["a".to_string(), "a".to_string(), "b".to_string()]);
-    cd.subtract(&from_list(&vec!["a".to_string()]));
+    (&mut cd).subtract(&from_list(&vec!["a".to_string()]));
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(16usize);
         sifr_generated_concat.push_str("counter_sub a = ");

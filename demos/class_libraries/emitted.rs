@@ -947,7 +947,7 @@ mod sifr_generated_project_nominals {
                 SifrGeneratedStdlibSifrX2egraphlibX2eCycleError,
             > = (|| {
                 let full_order: Vec<SifrInt> = topological_sort(
-                    self.max_node.clone() + SifrInt::from_i64(1),
+                    &self.max_node.clone() + &SifrInt::from_i64(1),
                     &self.from_nodes,
                     &self.to_nodes,
                 )?;
@@ -1354,7 +1354,7 @@ mod sifr_generated_project_nominals {
                             let e2 = sifr_generated_try_err.clone();
                             let _ = e2.message.clone();
                         }
-                        fh.close();
+                        (&mut fh).close();
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1398,7 +1398,7 @@ mod sifr_generated_project_nominals {
                         let e2 = sifr_generated_try_err.clone();
                         let _ = e2.message.clone();
                     }
-                    fh.close();
+                    (&mut fh).close();
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1681,8 +1681,8 @@ fn main() {
     println!("=== TopologicalSorter ===");
     let mut ts: SifrGeneratedStdlibSifrX2egraphlibX2eTopologicalSorter =
         SifrGeneratedStdlibSifrX2egraphlibX2eTopologicalSorter::new();
-    ts.add(&SifrInt::from_i64(1), &SifrInt::from_i64(0));
-    ts.add(&SifrInt::from_i64(2), &SifrInt::from_i64(1));
+    (&mut ts).add(&SifrInt::from_i64(1), &SifrInt::from_i64(0));
+    (&mut ts).add(&SifrInt::from_i64(2), &SifrInt::from_i64(1));
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2egraphlibX2eCycleError> =
         (|| {
             let order: Vec<SifrInt> = ts.static_order()?;
@@ -1741,7 +1741,7 @@ fn main() {
     log.info(&"application started".to_string());
     log.warning(&"disk space low".to_string());
     log.debug(&"this should not appear at INFO level".to_string());
-    log.set_level(&SifrInt::from_i64(10));
+    (&mut log).set_level(&SifrInt::from_i64(10));
     log.debug(&"now visible after level change".to_string());
     println!("=== Match ===");
     let m: SifrGeneratedStdlibSifrX2ereX2eMatch = SifrGeneratedStdlibSifrX2ereX2eMatch::new(
