@@ -54,7 +54,7 @@ Both permitted Item12B reviews returned SATISFIED. The replacement gate failed.
 No new compiler/fixture repair, further review, or gate is authorized by that
 consumed allowance. These are later items, not an assertion that Item12B is closed.
 
-## Later Item12G: dependency-checker demo path identity
+## Item12G: dependency-checker demo path identity (merged)
 
 Confirmed pre-existing at exact base `b475ebdcd37081aa2860d9c348ace4100b546eff`.
 `verification/areas/python_interop/runner/dependency_versions.py:46` constructs
@@ -90,6 +90,39 @@ demo input, and reject the original concatenated stale-path mutation. The named
 suite additionally retains all seven existing version, artifact, ownership, and
 service-image negative checks. Runner/test/docs-only changes require no Sifr
 create-PR or merge-profile gate under the explicit Item12G user instructions.
+
+### Item12G closure evidence
+
+[PR #3695](https://github.com/sifr-lang/sifr/pull/3695) merged on 2026-09-05.
+Reviewed candidate: `1cb24bdd088bddf42077f6e42112e53bba7c3562`.
+Merge SHA: `2b114727441f1adc3ed807adc0c41543ddab5b78`.
+The three commands above passed on that candidate: 4/4 focused tests,
+1/1 dependency-versions variant with all seven original negative mutations,
+and the canonical 3,754-file size guardrail. The dependency audit covers two
+projects, 19 packages, two locks, and two service images. Other compiled Python
+capabilities are explicitly unselected, not qualified by this evidence.
+
+The [one exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3695#issuecomment-5554835685)
+returned **SATISFIED**, no blockers. No remediation review or Sifr gates ran.
+Evidence root: `/tmp/sifr-item12g.B8fCer/`; validation receipt:
+`evidence-1cb24bdd088bddf42077f6e42112e53bba7c3562.md`; review:
+`opus-1cb24bdd088bddf42077f6e42112e53bba7c3562.biQjAq/response.md`;
+suite report: `sifr/target/verification/areas/python-interop-results.json`.
+Blocker: none. This resolves only the dependency-versions failure in the
+historical five-failure Item12B report. Its other failures and exhausted
+review/gate history remain unchanged.
+
+### Deferred Python verification runner maintenance (not started)
+
+Owner: Python interop verification. These are non-blocking Opus follow-ups,
+separate from Items12H–12K and not implemented by Item12G:
+
+- The new focused regression command is recorded but not selected by the area
+  manifest. Evaluate continuous discovery/enrollment of standalone runner tests
+  through the canonical area mechanism; preserve existing suite semantics.
+- The focused test imports its sibling using the registered unittest discovery
+  start directory. If broader discovery is adopted, make sibling imports work
+  under that selected runner as well. The recorded invocation already passes.
 
 ## Later Item12H: project-wide generated-field identity
 
@@ -143,10 +176,9 @@ error propagation. Do not broaden accepted errors or suppress diagnostics.
 
 ## Required next action
 
-Assign bounded dependency work with explicit review/validation limits. Relevant
-canonical suites are dependency-versions, binding-authoring, callback-examples,
-async-declaration-examples, and async-context-examples in the Python interop area.
-Qualify all cases affected by each shared mechanism, not only the first example.
-Then adjudicate how Item12B's already-approved candidate can obtain required
-merge evidence without silently resetting its exhausted review/gate budgets.
-No work on these later items was started in this recording change.
+Item12G is merged and complete. Stop its worker after publishing the closure
+record. The orchestrator may next assign bounded Item12H to a fresh isolated
+worker, then Item12I and Item12J in order. Use the named validation mapping
+above and preserve each item's review/gate limits. Item12K's expressly approved
+integration allowance follows dependency qualification; it does not reset
+Item12B's exhausted history. No Item12H–12K code was written by Item12G.
