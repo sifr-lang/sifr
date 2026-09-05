@@ -1,6 +1,6 @@
 # wave_psp_c2 Review - Pass 2 (Gap Analysis & CPython Parity)
 
-**Reviewer:** Claude (External Review)
+**Reviewer:** agent (External Review)
 **Scope:** Text, Pattern, and Formatting Modules (`string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, `calendar`)
 **Date:** 2026-03-17
 

@@ -169,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn item10a_nested_support_traits_violate_the_flat_owner_invariant() {
+    fn nested_support_traits_violate_the_flat_owner_invariant() {
         let error = rust_source_required_trait_names(
             "fn run(value: Wrapper) { value.render(); }",
             "mod nested { trait RenderSupport { fn render(&self); } }",

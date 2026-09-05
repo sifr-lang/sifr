@@ -1,7 +1,7 @@
 # Phase 18 Review: Milestone 18_4 CLI Resolver Trigger-Matrix Closure
 
 **Review Date**: 2026-03-05
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Phase Status**: Completed (2026-03-05)
 
 ---

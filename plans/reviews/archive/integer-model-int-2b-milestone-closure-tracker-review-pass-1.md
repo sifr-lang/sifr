@@ -1,6 +1,6 @@
 # INT-2B Milestone Closure Tracker — Review Pass 1
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Date: 2026-05-06
 Branch under review: `int-2b-milestone-closure-tracker` (uncommitted working tree at HEAD `95cf5e67`)
 Phase tracker: [issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md](issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md)

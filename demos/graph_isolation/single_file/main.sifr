@@ -1,4 +1,3 @@
-# Reference: graph_isolation_single_file
 # single-file fixture for matrix coverage
 
 def main():

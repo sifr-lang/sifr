@@ -29,7 +29,7 @@ preserving the 17 intentionally retained compiler operations and migrating
   primitive-construction, and former-name collision regressions.
 - [x] Run focused check/emit/build/run coverage, guardrails, and the create-PR
   gate.
-- [x] Run Claude Opus review rounds until `SATISFIED`, merge the M3 PR, and
+- [x] Run agent review rounds until `SATISFIED`, merge the M3 PR, and
   update the phase record.
 
 ## Typed ID inventory
@@ -64,5 +64,5 @@ name.
   clean temporary Cargo cache: crate tests 130,922 ms / 600,000 ms, runtime
   platform 59,782 ms / 120,000 ms, E2E 402,726 ms / 600,000 ms, and 129/129
   E2E fixtures passed. The 869.28-second cold-cache wall time was advisory.
-- Claude Opus review rounds 1, 2, and 3 returned `SATISFIED`; round 3 verified
+- agent review rounds 1, 2, and 3 returned `SATISFIED`; round 3 verified
   the local-shadowing reconciliation introduced from the round-2 advisory.

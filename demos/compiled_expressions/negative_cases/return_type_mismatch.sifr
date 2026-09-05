@@ -1,4 +1,3 @@
-# Reference: compiled_expressions
 # compiled-expressions-sample negative-path demo
 # Must fail in lowering/type-checking with an explicit return-type mismatch diagnostic.
 

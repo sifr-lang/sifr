@@ -1,4 +1,3 @@
-# Reference: recursive_for_else
 # negative path: typo in recursive call inside for-else must be diagnosed
 
 def main():

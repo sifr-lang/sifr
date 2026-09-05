@@ -1,3 +1,2 @@
-# Reference: mode_consistency
 def value(x: int) -> int:
     return 'bad'

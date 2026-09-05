@@ -1,4 +1,3 @@
-# Reference: resolver_triggers
 import helper
 
 def main():

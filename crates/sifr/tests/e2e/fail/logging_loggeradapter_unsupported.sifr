@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_runtime_0_logging_loggeradapter_unsupported
+# Logging loggeradapter unsupported.
 from sifr.logging import LoggerAdapter
 
 

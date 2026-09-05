@@ -35,7 +35,7 @@ and all associated policy and matrix bindings. No Clippy allow was added.
   5/5, Python interop passed 19/19, Rust interop passed 10/10, and E2E passed
   140/140. Its receipt has SHA-256
   `b66324f0e626aabbadaac8cb390375b2387fb10d3e2da665c49e71a38c1adc7e`.
-- Claude Opus returned `SATISFIED` on the final candidate with no blocking
+- agent returned `SATISFIED` on the final candidate with no blocking
   findings. The response has SHA-256
   `f221135d4c7c45b27cf6d1fbe450974cf54f5d3cee4d2e6429b6718419b4e8e9`.
 - The authoritative merge gate exited 0 on the same candidate. Generated-code

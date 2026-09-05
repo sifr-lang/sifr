@@ -16,7 +16,7 @@ pub(super) fn mktemp_dir(name: &str) -> std::path::PathBuf {
 }
 
 #[test]
-fn item10a_build_project_preserves_module_scoped_builtin_error_shadow_identities() {
+fn build_project_preserves_module_scoped_builtin_error_shadow_identities() {
     let dir = mktemp_dir("module_scoped_builtin_error_shadow");
     let main_file = dir.join("main.sifr");
     let build_out = dir.join("build_out");

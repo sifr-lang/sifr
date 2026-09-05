@@ -69,7 +69,7 @@ Platform rules: [platform_rules.md](../platform/platform_rules.md).
 | concurrency_runtime_process | concurrency_runtime_process_traceability.md | sifr.process sync/async child supervision, owned pipes, text mode, shell_exec effect, timeout/cancel | sync/async subprocess loopback, pipe ownership, shell effect, process cancellation fixtures |
 | concurrency_runtime_shutdown | concurrency_runtime_shutdown_traceability.md | structured signals, cleanup stacks, explicit task Context, diagnostics/tracing policy | shutdown stream, cleanup under cancellation, context propagation, signal.signal/warnings rejection fixtures |
 | concurrency_runtime_typed_ipc | concurrency_runtime_typed_ipc_design.md | typed IPC frame protocol, schema identity, version negotiation, malformed-frame errors, payload diagnostics | schema accept/reject, unsupported payload, malformed frame, cancellation frame fixtures |
-| concurrency_runtime_readiness | concurrency_runtime_readiness_traceability.md | docs, demos, validation profiles, panic scans, final inventory readiness, final external PASS review | structured task demo, channel pipeline demo, offload demo, process demo, shutdown/cleanup demo |
+| concurrency_runtime_readiness | concurrency_runtime_readiness_traceability.md | docs, demos, validation profiles, panic scans, final inventory readiness, final external PASS validation | structured task demo, channel pipeline demo, offload demo, process demo, shutdown/cleanup demo |
 
 ## Regeneration
 

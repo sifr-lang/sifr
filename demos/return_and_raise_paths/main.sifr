@@ -1,4 +1,3 @@
-# Reference: return_and_raise_paths
 # return_and_raise_paths control-flow effect query unification demo
 # Exercises unified always-exit analysis across try/except and branch exits.
 

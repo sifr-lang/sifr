@@ -2,7 +2,7 @@
 
 **Phase**: `ad-hoc-structured-data-and-class-surface-parity-expansion`
 **Wave**: `wave_psp_struct_2` - Collections and CLI Class-Surface Expansion
-**Reviewer**: Claude (Pass 2 - Production-Grade)
+**Reviewer**: agent (Pass 2 - Production-Grade)
 **Date**: 2026-03-18
 **Status**: **APPROVED**
 

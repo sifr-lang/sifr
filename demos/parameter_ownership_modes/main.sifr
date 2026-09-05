@@ -1,0 +1,24 @@
+# Declare borrowed, mutable, owned, and owned mutable parameters.
+
+def borrowed_view(items: list[int]) -> int:
+    return len(items)
+
+def borrowed_mut_view(mut items: list[int]) -> int:
+    return len(items)
+
+def take_owned(own items: list[int]) -> list[int]:
+    return items
+
+def take_owned_mutable(own mut items: list[int]) -> list[int]:
+    return items
+
+def take_owned_mutable_reordered(mut own items: list[int]) -> list[int]:
+    return items
+
+def main():
+    values: list[int] = [1, 2, 3]
+    moved_once: list[int] = take_owned(values)
+    moved_twice: list[int] = take_owned_mutable(moved_once)
+    moved_thrice: list[int] = take_owned_mutable_reordered(moved_twice)
+    print(borrowed_view(moved_thrice))
+    print(borrowed_mut_view(moved_thrice))

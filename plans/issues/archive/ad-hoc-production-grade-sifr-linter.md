@@ -772,4 +772,4 @@ scripts/run_all_tests.sh
 
 ## Execution Log
 
-- `2026-05-26`: phase drafted after local Ruff linter/config/server scan and Claude subsystem review passes.
+- `2026-05-26`: phase drafted after local Ruff linter/config/server scan and agent subsystem review passes.

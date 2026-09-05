@@ -1,10 +1,10 @@
 # Rust Interop `certification_3` Review — Round 5
 
-Reviewer: Claude Opus 5 (`medium`)
+Reviewer: agent (`medium`)
 
 Result: **SATISFIED**
 
-Opus confirmed:
+agent confirmed:
 
 - abort-profile discovery is gated to packages that own structured
   call-scoped callback targets and runs once per unique package;

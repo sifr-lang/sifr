@@ -37,7 +37,7 @@ python3 verification/areas/performance/check_budgets.py
 `scripts/run_all_tests.sh --profile create-pr` runs manifest validation, benchmark
 negative seeds, budget/waiver negative seeds, the checked-in baseline budget
 gate, and a minimal frontend-query smoke. `--profile merge`, `nightly`, and
-`release` run the same schema and negative checks, execute a reviewed
+`release` run the same schema and negative checks, execute an approved
 representative subset with the manifest sample counts into
 `target/performance/representative.budget.latest.json` for `merge` and
 `target/performance/full.budget.latest.json` for `nightly` and `release`, and
@@ -104,10 +104,10 @@ cannot feed a prior run to the budget diagnostic.
 
 Full-corpus benchmark execution and baseline refresh remain explicit. Budget
 baselines and trend baselines are separate governed artifacts. Updating
-`data/baselines.json` changes blocking thresholds and uses the reviewed budget
+`data/baselines.json` changes blocking thresholds and uses the approved budget
 workflow:
 
-Refresh baselines intentionally after review:
+Refresh baselines intentionally after validation:
 
 ```bash
 python3 verification/areas/performance/run_benchmarks.py --capture-baseline

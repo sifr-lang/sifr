@@ -313,7 +313,7 @@ The milestone closure production-grade review (`reviews/phase-ad-hoc-python-sour
 
 ## Review Metadata
 
-- **Reviewer:** Claude Code (phase-closure completion review)
+- **Reviewer:** agent (phase-closure completion review)
 - **Artifacts reviewed:**
   - Phase planning: `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
   - Execution checklist: `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`

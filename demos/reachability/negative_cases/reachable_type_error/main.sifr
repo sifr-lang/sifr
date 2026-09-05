@@ -1,4 +1,3 @@
-# Reference: reachability
 # reachability negative case
 # Reachable return type mismatch should remain rejected.
 

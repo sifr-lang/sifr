@@ -75,7 +75,7 @@ Severity: low (cosmetic/policy).
 
 ---
 
-## Codex follow-up
+## agent follow-up
 
 Addressed after this review:
 

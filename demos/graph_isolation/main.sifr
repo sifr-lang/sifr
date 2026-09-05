@@ -1,4 +1,3 @@
-# Reference: graph_isolation
 # graph_isolation graph and isolation regression matrix demo
 
 from helper import value

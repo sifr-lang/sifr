@@ -1,5 +1,3 @@
-# Reference: iter_fix_generator_iterators
-# Reference: canonical-iteration-model-and-lazy-parity-readiness
 def gen_pairs(limit: int) -> Iterator[int]:
     i: int = 0
     while i < limit:

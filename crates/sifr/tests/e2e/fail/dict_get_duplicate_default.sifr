@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_a2_dict_get_duplicate_default
+# Dict get duplicate default.
 def main():
     data: dict[str, int] = {"x": 1}
     value: int = data.get("x", 1, default=2)

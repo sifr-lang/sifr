@@ -1,5 +1,3 @@
-# Reference: borrow_hardening
-# Reference: borrow-hardening
 # Exclusivity Error Demo
 # ======================
 # This file demonstrates that Sifr correctly detects

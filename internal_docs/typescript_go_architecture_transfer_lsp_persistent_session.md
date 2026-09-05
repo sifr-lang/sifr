@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer: LSP Persistent Session
 
-status: persistent LSP session implementation review
+status: persistent LSP session implementation status
 
 Persistent LSP session ownership moves LSP analysis out of `DocumentStore` and into the serialized
 language-server session. This keeps execution single-threaded while making the

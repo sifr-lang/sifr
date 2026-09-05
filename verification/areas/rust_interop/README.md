@@ -5,14 +5,14 @@ This area tracks Rust interop verification.
 The canonical design is `internal_docs/rust_interop_architecture.md`. This
 area is the compatibility inventory for Rust interop: it names every fixture
 required by the architecture, records tier assignment, reserves diagnostic
-families, and publishes the compatibility matrix used by docs and reviewers.
+families, and publishes the compatibility matrix used by docs and maintainers.
 
 The fixture matrix is contract-first. Every fixture must declare both positive
 and negative evidence, and every fixture directory must contain concrete source
 files for those evidence IDs. A compatibility row can use `supported`,
 `supported-through-bridge`, or `unsupported-by-design` only when both evidence
 directions are `passing`. Rows that are still `planned` or otherwise incomplete
-must be categorized as `future-owned-by-separate-phase`.
+must be categorized as `tracked-unsupported`.
 
 ## Fixture Layout
 
@@ -174,8 +174,8 @@ headroom is insufficient.
   local or shared bridge; direct binding is not implied.
 - `unsupported-by-design`: the rejected surface has passing diagnostic evidence
   and no fallback path.
-- `future-owned-by-separate-phase`: at least one evidence direction is not
-  passing. The row must point at a concrete active issue or phase.
+- `tracked-unsupported`: at least one evidence direction is not
+  passing. The row must point at a concrete active issue.
 
 ## Runner Modules
 

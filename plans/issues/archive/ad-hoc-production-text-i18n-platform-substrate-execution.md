@@ -36,52 +36,52 @@ Execution order: this is the first phase in the split production-stdlib sequence
   - `reviews/ad-hoc-production-stdlib-platform-parity-planning-review-pass-3.md`
   - `reviews/ad-hoc-production-stdlib-platform-parity-planning-review-pass-4.md`
 - Final combined review result before split: `PASS`.
-- Split-phase Claude review:
+- Split-phase agent review:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-1-constrained.md`
   - Result: `FAIL`; cross-phase dependency and ownership gaps were remediated across the split phase docs.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-2-constrained.md`
   - Result: `FAIL`; remaining ownership/disposition gaps were remediated across the split phase docs.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-3-constrained.md`
   - Result: `FAIL`; remaining sequencing/error-surface gaps were remediated across the split phase docs.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-4-constrained.md`
   - Result: `FAIL`; remaining async-context/file/default-encoding/thread-error gaps were remediated across the split phase docs.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-5-constrained.md`
   - Result: `FAIL`; remaining contextvars/future-cancellation/open-policy/worker-typing gaps were remediated across the split phase docs.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-6-constrained.md`
   - Result: `FAIL`; remaining executor map/timeout/cancellation/heterogeneous-future gaps and text-wrapper gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-7-constrained.md`
   - Result: `FAIL`; remaining executor state-machine, `StringIO`, `threading.local`, and codec error-handler gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-8-constrained.md`
   - Result: `FAIL`; remaining Future.cancel, wait partition, executor.map timeout, and text handler gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-9-constrained.md`
   - Result: `FAIL`; remaining executor deadline/cancellation/wait fallback and codec handler classification gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-10-constrained.md`
   - Result: `FAIL`; remaining handler enforcement, partial iteration, FIRST_EXCEPTION trigger, and shutdown pending/running gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-11-constrained.md`
   - Result: `FAIL`; remaining future ownership/lifecycle and shutdown observability gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-12-constrained.md`
   - Result: `FAIL`; remaining `wait()` ownership, cancelled result typing, and incremental codec finalization gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-13-constrained.md`
   - Result: `FAIL`; remaining `gather()` ownership/result typing, `as_completed()` timeout signaling, codec recoverable-error, and `TaskGroup` aggregation gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-14-constrained.md`
   - Result: `FAIL`; remaining network error hierarchy, TLS socket ownership, workload classification, handler model, concurrency gate, text decision, and review-gate gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-15-constrained.md`
   - Result: `FAIL`; remaining TLS wrap failure-state, `signal.pause`, and text-i18n dependency milestone gaps were remediated.
-- Final split-phase Claude follow-up:
+- Final split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-16-constrained.md`
   - Result: `PASS`; no material implementation-blocking gaps remained.
 - Final implementation-readiness scan:

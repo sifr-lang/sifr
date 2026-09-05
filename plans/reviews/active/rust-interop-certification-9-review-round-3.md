@@ -2,7 +2,7 @@
 
 **Head:** `b5497901d4d7c7d90a65d03402708f6642e913ea` · **Base:** `origin/main` = `f188986482e` (the `certification_8` merge, PR #3067) · **PR:** #3069 (`DRAFT`) · 2 commits, 36 files, +1865/−98.
 
-Scope note: the local `main` ref was stale by one merge commit; `git diff main...HEAD` therefore misleadingly shows 65 files including all of `certification_8`. All judgements below use the true merge base `f18898648` / `gh pr diff 3069`. Shared-worktree changes outside the commits (`editor_integrations`, leetcode corpus, `.cert5probe/`, `.claude/`, stray `*.webp`, `plans/phases/43_interoperability.md`, the untracked round-3 placeholder) are excluded as specified.
+Scope note: the local `main` ref was stale by one merge commit; `git diff main...HEAD` therefore misleadingly shows 65 files including all of `certification_8`. All judgements below use the true merge base `f18898648` / `gh pr diff 3069`. Shared-worktree changes outside the commits (`editor_integrations`, leetcode corpus, `.cert5probe/`, `.agent/`, stray `*.webp`, `plans/phases/43_interoperability.md`, the untracked round-3 placeholder) are excluded as specified.
 
 ## Independent verification performed
 

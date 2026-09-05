@@ -1,4 +1,3 @@
-# Reference: pop_narrowing
 # driver/package architecture / pop_narrowing behavior group 10 demo: non-empty flow narrows list.pop() to T.
 
 def drain(mut values: list[int]) -> int:

@@ -6,11 +6,11 @@ status: planning-approved
 
 Use as much of the existing Sifr Ruff fork and ty/Ruff tooling architecture as is actually cheaper and more maintainable than rebuilding it, while preserving one Sifr semantic authority.
 
-This document records the frontend query architecture reuse audit. It replaces an open-ended future audit: developer tooling surface implementation must follow this strategy unless a reviewed PR updates this file first.
+This document records the frontend query architecture reuse audit. It replaces an open-ended future audit: developer tooling surface implementation must follow this strategy unless an approved PR updates this file first.
 
-## Sources Reviewed
+## Sources Examined
 
-Primary external docs reviewed on 2026-05-16:
+Primary external docs examined on 2026-05-16:
 
 - `https://docs.astral.sh/ty/features/diagnostics/`
 - `https://docs.astral.sh/ty/features/language-server/`
@@ -19,7 +19,7 @@ Primary external docs reviewed on 2026-05-16:
 - `https://docs.astral.sh/ty/exclusions/`
 - `https://docs.astral.sh/ty/reference/rules/`
 
-Local fork code reviewed:
+Local fork code examined:
 
 - `third_party/ruff/crates/ty_server/`
 - `third_party/ruff/crates/ty_ide/`
@@ -33,7 +33,7 @@ Local fork code reviewed:
 - `third_party/ruff/crates/ruff_source_file/`
 - `third_party/ruff/crates/ruff_text_size/`
 
-Additional local LSP implementation files reviewed for the final frontend query architecture rules:
+Additional local LSP implementation files examined for the final frontend query architecture rules:
 
 - `third_party/ruff/crates/ty_server/src/capabilities.rs`
 - `third_party/ruff/crates/ty_server/src/server/main_loop.rs`
@@ -54,7 +54,7 @@ Additional local LSP implementation files reviewed for the final frontend query 
 - `third_party/ruff/crates/ty_server/tests/e2e/`
 - `third_party/ruff/crates/ty_completion_eval/`
 
-Current Sifr code reviewed:
+Current Sifr code examined:
 
 - `crates/sifr_diagnostics/`
 - root `Cargo.toml`
@@ -110,7 +110,7 @@ The smart path is not to fork ty wholesale. The smart path is to reuse the gener
 | `lsp-types` | reuse-direct | Generic LSP data model. No Python semantics. |
 | `ty_server` initialization and capability negotiation | adapt | Strong implementation pattern for client capabilities, position encodings, pull/push diagnostics, semantic tokens, inlay hints, rename, and workspace configuration. Must rename commands/settings and remove Python-specific capabilities. |
 | `ty_server` request dispatch traits and response discipline | adapt | The code enforces one response per request, structured protocol errors, cancellation retry paths, and clear sync/background handler separation. Sifr should adapt the pattern, not blindly copy all handlers. |
-| `ty_server` main loop and scheduler | adapt-with-review | Useful event loop, request queue, latency-sensitive worker split, cancellation, and snapshot model. However, current `Session` is coupled to `ty_project::ProjectDatabase`; Sifr should implement a Sifr-owned `Session` over `AnalysisHost` and may copy generic scheduler structure. |
+| `ty_server` main loop and scheduler | adapt-with-constraints | Useful event loop, request queue, latency-sensitive worker split, cancellation, and snapshot model. However, current `Session` is coupled to `ty_project::ProjectDatabase`; Sifr should implement a Sifr-owned `Session` over `AnalysisHost` and may copy generic scheduler structure. |
 | `ty_server` document model | adapt | `TextDocument`, `DocumentVersion`, full/incremental change application, URI keys, UTF-8/UTF-16/UTF-32 position encoding, and stale-version discipline are directly useful. Remove notebook behavior because notebooks are not part of the current Sifr production editor target. |
 | `ty_server` location/range conversion | adapt | Range conversion and URI-carrying location helpers are valuable. Replace `ruff_db::File` and notebook mapping with Sifr `FileId`, `SourceUri`, and `SourceMapView`. |
 | `ty_server` diagnostics publication lifecycle | adapt | Pull and push diagnostics, document-version tagging, dynamic registration, related information support, and settings diagnostics are good patterns. Diagnostic payloads must be generated from `sifr_diagnostics`. |
@@ -200,7 +200,7 @@ value = legacy_call()  # sifr: ignore[unused-import]
 Rules:
 
 - Require explicit rule ids for Sifr suppression comments.
-- No bare `sifr: ignore` in production code unless a reviewed policy explicitly permits it.
+- No bare `sifr: ignore` in production code unless a documented policy explicitly permits it.
 - `sifr: ignore[...]` can suppress only policy rules.
 - Unknown rule ids produce a warning or error according to the policy-rule configuration.
 - Unused suppression comments are reported by a policy rule similar to ty's `unused-ignore-comment`.
@@ -266,8 +266,8 @@ Production developer tooling surface may depend on:
 
 - `lsp-server`
 - `lsp-types`
-- generic crates already used by ty/Ruff server shell patterns, after normal dependency review
-- Sifr-owned crates: `sifr_syntax`, `sifr_frontend`, `sifr_analysis`, `sifr_diagnostics`, plus reviewed Sifr-owned formatter and policy-rule modules
+- generic crates already used by ty/Ruff server shell patterns, after normal dependency validation
+- Sifr-owned crates: `sifr_syntax`, `sifr_frontend`, `sifr_analysis`, `sifr_diagnostics`, plus validated Sifr-owned formatter and policy-rule modules
 - selected copied/adapted modules from `ty_server`, `ruff_server`, or `ty_project` after they are moved behind Sifr-owned APIs and cleaned of Python assumptions
 
 Production developer tooling surface must not depend on:
@@ -311,7 +311,7 @@ The planning decision is complete only when these are reflected in frontend quer
 
 - `internal_docs/tooling_reuse_strategy.md` is a source-of-truth planning input, not a future artifact.
 - developer tooling surface no longer defers the reuse audit as an open-ended task.
-- developer tooling surface requires implementation to follow this decision matrix or update it by reviewed PR.
+- developer tooling surface requires implementation to follow this decision matrix or update it by approved PR.
 - Tooling guardrails reject forbidden Python semantic dependencies.
 - Diagnostics planning explicitly keeps `sifr_diagnostics` canonical and adopts only selected ty/Ruff concepts.
 - Rule/suppression/exclusion planning distinguishes hard correctness diagnostics from configurable policy rules.

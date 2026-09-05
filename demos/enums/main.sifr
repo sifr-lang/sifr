@@ -1,4 +1,3 @@
-# Reference: enum type-system work
 # Source issue: 195-enum type-system work.md
 # Demo: enum type-system work
 # Showcases enum types with variants, values, methods, pattern matching, and dict keys.

@@ -1,7 +1,7 @@
 # M7 Review — LSP and Tooling Sysroot Integration (pass 2)
 
 Branch: `sifr-sysroot-stdlib-m7-lsp-tooling`
-Reviewer: Opus 4.7
+Reviewer: agent
 Scope: Re-audit current diff against `M7` tasks/acceptance/validation in
 `plans/issues/active/ad-hoc-sifr-sysroot-stdlib-toolchain.md` lines 437–476,
 verifying that pass-1 blockers and high-severity concerns have been addressed.

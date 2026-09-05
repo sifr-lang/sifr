@@ -4,7 +4,7 @@ Scope of change (uncommitted, docs-only):
 - `internal_docs/diagnostic_emission_inventory.md`
 - `issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md`
 
-Reviewer: Claude (read-only verification — no files modified).
+Reviewer: agent (read-only verification — no files modified).
 
 ## Verification matrix
 

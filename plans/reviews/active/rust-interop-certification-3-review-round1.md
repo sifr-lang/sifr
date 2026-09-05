@@ -1,6 +1,6 @@
 # Rust Interop `certification_3` Review — Round 1
 
-Reviewer: Claude Opus 5 (`medium`)
+Reviewer: agent (`medium`)
 
 Scope: call-scoped callback runtime implementation and evidence. The unrelated
 parallel `opaque_resource_matrix` category-only edit was explicitly excluded.

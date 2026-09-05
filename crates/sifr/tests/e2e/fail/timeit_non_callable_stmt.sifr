@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_d2_timeit_non_callable_stmt
+# Timeit non callable stmt.
 from sifr.timeit import timeit
 
 

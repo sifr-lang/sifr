@@ -1,4 +1,3 @@
-# Reference: mode_consistency
 from helper import value
 
 def test_matrix_fixture():

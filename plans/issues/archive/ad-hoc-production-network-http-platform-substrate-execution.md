@@ -27,17 +27,17 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 
 ## Planning Reviews
 
-- Initial Claude planning review covered the original combined stdlib scan.
-  - Full-file Claude attempts stalled before output and produced no retained review content.
+- Initial agent planning review covered the original combined stdlib scan.
+  - Full-file agent attempts stalled before output and produced no retained review content.
   - Embedded-summary review completed:
     - `reviews/ad-hoc-production-stdlib-platform-parity-planning-review-pass-1d.md`
   - Result: `FAIL`; blockers folded into the original phase draft.
-- Follow-up Claude planning reviews on the original parity plan:
+- Follow-up agent planning reviews on the original parity plan:
   - `reviews/ad-hoc-production-stdlib-platform-parity-planning-review-pass-2.md`
   - `reviews/ad-hoc-production-stdlib-platform-parity-planning-review-pass-3.md`
   - `reviews/ad-hoc-production-stdlib-platform-parity-planning-review-pass-4.md`
   - Result: original split-phase parity plan reached `PASS`, then was superseded by the cleaner production-substrate scope.
-- Split-phase Claude reviews:
+- Split-phase agent reviews:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-1-constrained.md` through `reviews/ad-hoc-production-split-stdlib-phases-review-pass-20-sifr-namespace-readiness.md`
   - Result: previous parity-oriented phase docs reached readiness, then were superseded for this network/web phase only by the product-boundary reset recorded below.
 - Reviewer-driven scope reset:
@@ -90,121 +90,121 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - Clean-language and dependency-ring review:
   - Source: local review after the concurrency/runtime substrate cleanup and dependency-policy creation.
   - Result: phase doc tightened to remove the future CPython-shaped adapter path, classify Python-shaped network/web modules as rejected or unsupported diagnostics, replace the flat Rust ecosystem table with dependency-ring decisions, reject implementation-time crate-family discovery, align Tokio features with the concurrency/runtime provider boundary, and add a network-owned security/resource model.
-  - Claude review attempt: `reviews/ad-hoc-production-network-http-platform-substrate-review-pass-1.md` was started but produced no content and was removed; no external review result was retained for this pass.
+  - agent review attempt: `reviews/ad-hoc-production-network-http-platform-substrate-review-pass-1.md` was started but produced no content and was removed; no external review result was retained for this pass.
 - Reviewer dependency and contract tightening:
   - Source: user-provided review notes on Hyper tracing, UDP gating, URL/IDNA, TLS build/platform contracts, DNS semantics, byte buffers, HTTP substrate types, body streams, Hyper-Util conditionality, and M5 formatting.
   - Result: `PASS after contract fixes`; all required fixes were applied in the phase doc.
   - Remediations: removed Hyper's unstable `tracing` feature, made Hyper-Util conditional/internal-only, made UDP M0-gated, added URL/IDNA guard, added TLS generated-build and platform-verifier host requirements, added TLS write/flush/shutdown contract, added public byte-buffer and DNS semantics gates, defined `sifr.http` substrate type/body stream contracts, clarified crate patch versions as M0 lockfile pins, fixed M5 inventory indentation, and clarified Content-Encoding compression versus HPACK.
-- Claude implementation-readiness review pass 1:
+- agent implementation-readiness review pass 1:
   - `reviews/ad-hoc-production-network-http-platform-substrate-implementation-readiness-review-pass-1.md`
-  - Result: `PASS`; Claude found no blocking implementation-readiness gaps.
+  - Result: `PASS`; agent found no blocking implementation-readiness gaps.
   - Non-blocking polish applied afterward: clarified conditional `server-graceful`, assigned metrics schema ownership to the runtime/networking phase owner, and added direct/transitive `h2` lockfile coherence requirements.
-- Claude implementation-readiness review pass 2:
+- agent implementation-readiness review pass 2:
   - `reviews/ad-hoc-production-network-http-platform-substrate-implementation-readiness-review-pass-2.md`
-  - Result: `PASS`; Claude confirmed the post-pass-1 polish introduced no contradictions and found no remaining CPython fallback path, dependency-ring gap, unmade provider/ecosystem decision, M0 contract hole, milestone-ordering conflict, security/resource omission, or text/runtime provider substitution risk.
+  - Result: `PASS`; agent confirmed the post-pass-1 polish introduced no contradictions and found no remaining CPython fallback path, dependency-ring gap, unmade provider/ecosystem decision, M0 contract hole, milestone-ordering conflict, security/resource omission, or text/runtime provider substitution risk.
 - Reviewer serving-scale and stream-shape review:
   - Source: user-provided review on the unowned multi-core serving story, missing TCP full-duplex API shape, and missing TCP half-close semantics.
   - Result: `PASS after M0 contract fixes`; the phase now records a single-runtime-worker-per-process v1 serving boundary, requires M0 to create or link the multi-core serving follow-up, adds owned `TcpStream` split halves as the full-duplex model, and makes write-side TCP half-close an M1 substrate requirement.
-- Claude Opus implementation-readiness review pass 1:
-  - `reviews/ad-hoc-production-network-http-platform-substrate-opus-review-pass-1.md`
+- agent implementation-readiness review pass 1:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-agent-review-pass-1-2.md`
   - Result: `CONDITIONAL PASS`; body-stream contract ownership, `TcpStream.split()` failure shape, write-after-`shutdown_write`, and unsplit half-close handle disposition needed contract fixes.
   - Remediations: M0 now owns body-stream contract definition while M4 implements it, `split()` is infallible and affine-consuming, write-after-shutdown returns a stable typed error, unsplit `shutdown_write()` preserves read usability, split-half close/error evidence must come from underlying socket state, the serving-scale follow-up needs a stable recorded identifier, URL/IDNA backend approval requires text/i18n owner sign-off, M3 namespace ownership is explicit, Phase 41 deferred capability scope is explicit, and Hyper-Util graceful shutdown has a Sifr-owned baseline.
-- Claude Opus implementation-readiness review pass 2:
-  - `reviews/ad-hoc-production-network-http-platform-substrate-opus-review-pass-2.md`
+- agent implementation-readiness review pass 2:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-agent-review-pass-2-2.md`
   - Result: `PASS`; all pass-1 blockers and recommended edits were verified as remediated, no new blocking contradictions or decision-by-discovery holes remained, and the phase was judged implementation-ready for M0.
 - Reviewer TLS full-duplex disposition:
   - Source: user-provided follow-up review after the serving-scale, TCP split, and TCP half-close fixes.
   - Result: accepted; the phase now explicitly accepts owned `TlsStream.split()` into `TlsReadHalf` / `TlsWriteHalf`, defines TLS `close_notify()` as the write-side close operation instead of TCP-style `shutdown_write()`, requires write-after-close-notify typed errors, and adds M0 definition gates plus M2 implementation and loopback coverage for TLS full-duplex behavior.
-- Claude Fable TLS full-duplex review pass 1:
-  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-1.md`
+- agent TLS full-duplex review pass 1:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-agent-review-pass-1.md`
   - Result: `CONDITIONAL PASS`; TLS full-duplex was substantively correct, but TLS stream contract ownership still said M2 could define the contract, and the TLS close/flush/split feasibility details needed M0 clarifications.
   - Remediations: M0 now owns TLS stream and TLS full-duplex contract definition before M2 starts; M2 implements that contract. The TLS contract now records close-notify/TCP half-close disposition as an M0 decision, requires successful `close_notify()` to flush accepted plaintext and the close alert or return typed partial-progress evidence, records TLS version coverage in loopback fixtures, and documents the lock-backed/synchronized implementation expectation through accepted Tokio/tokio-rustls utilities rather than bespoke TLS session sharing.
-- Claude Fable TLS full-duplex review pass 2:
-  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-2.md`
+- agent TLS full-duplex review pass 2:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-agent-review-pass-2.md`
   - Result: `PASS`; the pass-1 TLS contract ownership blocker and all four recommended M0-gate edits were verified as remediated, no new blocking contradictions or decision-by-discovery holes were introduced, and the phase was judged implementation-ready for M0.
   - Follow-up polish: the phase now explicitly records deterministic `flush` behavior after successful `close_notify()` with no pending application data, and M2 DoD echoes the TLS-version fixture requirement.
-- Claude Fable TLS full-duplex review pass 3:
-  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-3.md`
+- agent TLS full-duplex review pass 3:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-agent-review-pass-3.md`
   - Result: `PASS`; the post-pass-2 polish was verified as non-contradictory, the TLS M0 definition to M2 implementation ownership chain remained intact, and no new implementation-readiness blockers were found.
   - Follow-up polish: M2 DoD now also echoes repeated `close_notify` and empty-flush-after-close-notify fixture coverage.
-- Claude Fable broad implementation-readiness review pass 4:
-  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-4.md`
+- agent broad implementation-readiness review pass 4:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-agent-review-pass-4.md`
   - Result: `CONDITIONAL PASS`; HTTP/2 abuse limits were incorrectly worded as M4-defined instead of M0-defined/M4-implemented, and the terminal-state list omitted text/i18n M2, M2.5, and M3 labels.
   - Remediations: M0 now owns HTTP/2 abuse limits before M4 starts, the terminal-state vocabulary includes all text/i18n provider labels used by M0 DoD, process-runtime provider state is explicit, `UrlError` is named, stale `sifr.asyncio` baseline wording was removed, request-smuggling/header-normalization ownership is M0-defined, Phase 41 names this substrate dependency, and the shared platform contract status is updated to approved shared baseline.
-- Claude Fable broad implementation-readiness review pass 5:
-  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-5.md`
+- agent broad implementation-readiness review pass 5:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-agent-review-pass-5.md`
   - Result: `PASS`; pass-4 blockers were verified as fixed, all seven polish edits were checked against the repo, and no remaining implementation-readiness blockers were found.
   - Follow-up polish: Phase 41 dependency wording now includes `sifr.url`, the shared platform contract status cites review passes 3a-3d, and the historical dependency checklist includes process runtime M4.
-- Claude Fable final follow-up verification pass 6:
-  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-6.md`
+- agent final follow-up verification pass 6:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-agent-review-pass-6.md`
   - Result: `PASS`; the pass-5 follow-ups were verified as non-contradictory, the main substrate doc remained unchanged from the pass-5-verified state, and the phase remained implementation-ready for M0.
 - Final reviewer cleanup pass:
-  - Source: user-provided final review attached in Codex.
+  - Source: user-provided final review attached in agent.
   - Result: `PASS with small cleanup edits`; the phase was judged ready for M0 execution planning, with cleanup requested for byte-buffer placeholder naming, Hyper-Util proof artifacts, Ring 5 absence proof, TLS `close()` disposition, HTTP/2 priority/extension behavior, and the UDP production-consumer burden.
   - Remediations: API examples now use `ByteBuffer` as an explicit M0 placeholder instead of lowercase `bytes`; `hyper_util_necessity.md` is required if Hyper-Util is enabled; M0 generated release snapshots must prove Ring 5 dev/test/demo crates are absent from production feature combinations; M0 must define `TlsStream.close()` / `TlsWriteHalf.close()` disposition; HTTP/2 priority and extension-frame behavior is an explicit M0 decision; and UDP acceptance now requires both a named production consumer and a reason TCP/TLS/HTTP loopback fixtures are insufficient.
-- Claude Fable final cleanup verification pass 7:
-  - `reviews/ad-hoc-production-network-http-platform-substrate-fable-review-pass-7.md`
+- agent final cleanup verification pass 7:
+  - `reviews/ad-hoc-production-network-http-platform-substrate-agent-review-pass-7.md`
   - Result: `PASS`; all six final reviewer cleanup edits were verified as coherent, the ledger matched the diff, and no new implementation-readiness blockers were found.
-- Claude Opus M0 implementation review pass 1:
-  - `reviews/ad-hoc-production-network-http-m0-opus-review-pass-1.md`
+- agent M0 implementation review pass 1:
+  - `reviews/ad-hoc-production-network-http-m0-agent-review-pass-1.md`
   - Result: `FAIL`; M0 artifacts existed but several M0-owned decisions were still deferred to M1/M2/M4.
   - Remediations: M0 now resolves `ByteBuffer` to built-in `bytes`; defines TLS `close()`/`close_notify` disposition; defines HTTP/2 limits, priority/extension handling, header normalization, request-smuggling rules, `sifr.http` type table including trailers, body stream contract, body/header size limits, URL authority rules, and redaction rules; records public `SO_REUSEPORT` deferral; adds `network_http_dependency_audit.md`; expands golden/e2e unsupported import coverage; and expands the Decision Index.
-- Claude Opus M0 implementation review pass 2:
-  - `reviews/ad-hoc-production-network-http-m0-opus-review-pass-2.md`
+- agent M0 implementation review pass 2:
+  - `reviews/ad-hoc-production-network-http-m0-agent-review-pass-2.md`
   - Result: `PASS`; all pass-1 blocking findings B1-B11 and non-blocking follow-ups were verified as remediated. Reviewer stated the M0 PR is safe to open and merge, and M1 can safely start after validation evidence is recorded.
-- Claude Opus M1 implementation review pass 1:
-  - `reviews/ad-hoc-production-network-http-m1-opus-review-pass-1.md`
+- agent M1 implementation review pass 1:
+  - `reviews/ad-hoc-production-network-http-m1-agent-review-pass-1.md`
   - Result: `FAIL`; reviewer blocked on global `+ Send` validation, infallible affine `TcpStream.split()`, and cancellation fixture coverage.
   - Remediations: reran create-pr validation after the global sendability change, made `TcpStream.split()` infallible end-to-end with public `TcpStream.close(own self)`, added in-flight `accept()` cancellation coverage, removed unused M1 dependency emission, and documented M1 runtime behavior.
-- Claude Opus M1 implementation review pass 2:
-  - `reviews/ad-hoc-production-network-http-m1-opus-review-pass-2.md`
+- agent M1 implementation review pass 2:
+  - `reviews/ad-hoc-production-network-http-m1-agent-review-pass-2.md`
   - Result: `PASS`; reviewer accepted the M1 PR for opening after remediation, with the full merge gate required before closure.
-- Claude Opus M2 implementation review pass 1:
-  - `reviews/ad-hoc-production-network-http-m2-opus-review-pass-1.md`
+- agent M2 implementation review pass 1:
+  - `reviews/ad-hoc-production-network-http-m2-agent-review-pass-1.md`
   - Result: `FAIL`; reviewer blocked on a non-deterministic public TLS fixture certificate that expired after 24 hours.
   - Remediations: replaced the embedded localhost fixture certificate with a long-lived `CA:FALSE` localhost/127.0.0.1 SAN certificate, lifted repeated `close_notify()` and post-close-notify `flush()` into the public e2e fixture, tightened runtime mTLS/invalid-root assertions to expected failing sides, and made the e2e generated Tokio dependency explicitly include `net`.
-- Claude Opus M2 implementation review pass 3:
-  - `reviews/ad-hoc-production-network-http-m2-opus-review-pass-3.md`
+- agent M2 implementation review pass 3:
+  - `reviews/ad-hoc-production-network-http-m2-agent-review-pass-3.md`
   - Result: `PASS`; reviewer verified the fixture certificate time-bomb was fixed, the public close-notify fixture coverage was expanded, the runtime rejection tests were tightened, no new blockers were introduced, and the implementation is ready for PR opening after the required validation gates.
-- Claude Opus M2 final branch-tip review pass 4:
-  - `reviews/ad-hoc-production-network-http-m2-opus-review-pass-4.md`
+- agent M2 final branch-tip review pass 4:
+  - `reviews/ad-hoc-production-network-http-m2-agent-review-pass-4.md`
   - Result: `PASS`; reviewer verified the final branch tip after the validation-contract follow-up commit, found no blocking issues, accepted the full merge-gate evidence, and stated PR #2496 is acceptable to merge now.
-- Claude Opus M3 implementation review pass 2:
-  - `reviews/ad-hoc-production-network-http-m3-opus-review-pass-2.md`
+- agent M3 implementation review pass 2:
+  - `reviews/ad-hoc-production-network-http-m3-agent-review-pass-2.md`
   - Result: `FAIL`; reviewer blocked on percent-encoded non-ASCII URL host bytes bypassing the IDNA guard and stale path-normalization traceability language.
   - Remediations: URL authority guard now rejects non-ASCII percent-decoded host bytes before `url` crate parsing; fixtures cover `%C3%A9.example` rejection, `%61.example` acceptance, IPv4 parsing, IPv6 building, and `%2F` path preservation; M3 traceability now records WHATWG dot-segment behavior instead of claiming raw path preservation; generated helpers enforce inventory hard caps for URL/query/header primitives; header canonicalization and embedded `=` cookie values are fixture-covered.
-- Claude Opus M3 implementation review pass 3:
-  - `reviews/ad-hoc-production-network-http-m3-opus-review-pass-3.md`
+- agent M3 implementation review pass 3:
+  - `reviews/ad-hoc-production-network-http-m3-agent-review-pass-3.md`
   - Result: `PASS`; reviewer verified the IDNA bypass and path-normalization traceability blockers are fully remediated, found no new implementation blockers, and stated M3 is acceptable to open as a PR after the standard create-pr validation gates pass.
-- Claude Opus M3 final branch-tip review pass 4:
-  - `reviews/ad-hoc-production-network-http-m3-opus-review-pass-4.md`
+- agent M3 final branch-tip review pass 4:
+  - `reviews/ad-hoc-production-network-http-m3-agent-review-pass-4.md`
   - Result: `FAIL`; reviewer found no code or contract blockers, but blocked on evidentiary drift because `target/validation_lane_reports/merge.latest.json` had been overwritten by an in-progress merge lane whose performance step had failed.
   - Remediation: allowed that lane to complete; the final `target/validation_lane_reports/merge.latest.json` now records a full merge-gate `PASS` with all 14 lane steps, wall time 783.02s, hardening failures 0, and high e2e group skew as the only advisory.
-- Claude Opus M3 final branch-tip review pass 5:
-  - `reviews/ad-hoc-production-network-http-m3-opus-review-pass-5.md`
+- agent M3 final branch-tip review pass 5:
+  - `reviews/ad-hoc-production-network-http-m3-agent-review-pass-5.md`
   - Result: `PASS`; reviewer verified the pass-4 evidentiary blocker was closed by the final full merge-gate report, found no new code or contract blockers, and stated PR #2497 was acceptable to merge.
-- Claude Opus M4 implementation review pass 2:
-  - `reviews/ad-hoc-production-network-http-m4-opus-review-pass-2.md`
+- agent M4 implementation review pass 2:
+  - `reviews/ad-hoc-production-network-http-m4-agent-review-pass-2.md`
   - Result: `FAIL`; reviewer blocked on missing HTTP/2 conformance coverage, malformed HTTP/1 typed-error coverage, conflated request/response body limits, public harness exposure, and missing serving-scale follow-up linkage.
   - Remediations: added runtime tests for malformed HTTP/1 typed errors, independent request/response body limits, HTTP/2 SETTINGS/HPACK/GOAWAY, and RST_STREAM cancellation; split `sifr.http_transport` from public `sifr.http`; added ordinary-import rejection coverage; and linked the serving-scale handoff to `issues/ad-hoc-network-http-serving-scale-follow-up.md`.
-- Claude Opus M4 implementation review pass 3:
-  - `reviews/ad-hoc-production-network-http-m4-opus-review-pass-3.md`
+- agent M4 implementation review pass 3:
+  - `reviews/ad-hoc-production-network-http-m4-agent-review-pass-3.md`
   - Result: `FAIL`; reviewer accepted the pass-2 remediations but blocked on the process-global e2e harness gate because parallel pass/fail compilation could race.
   - Remediation: replaced the environment-variable gate with `sifr_lowering::LoweringOptions`, threaded the per-compile option through frontend/driver single-file compilation, and made the e2e directive route only marked fixtures through `compile_with_metadata_allowing_http_transport_harness`.
-- Claude Opus M4 implementation review pass 4:
-  - `reviews/ad-hoc-production-network-http-m4-opus-review-pass-4.md`
+- agent M4 implementation review pass 4:
+  - `reviews/ad-hoc-production-network-http-m4-agent-review-pass-4.md`
   - Result: `PASS`; reviewer verified the process-global harness gate was removed, ordinary user compilation still rejects `sifr.http_transport` with `SIFR-IMPORT-0009`, M4 HTTP runtime coverage and dependency snapshots satisfy the phase contract, and M4 is acceptable to open as a PR after the standard create-pr validation gate.
 - M4 private harness follow-up:
   - Removed `sifr.http_transport` from the embedded stdlib source inventory and deleted the stale source file; the driver now seeds the module only as test-harness metadata plus Rust wrappers that call `sifr_runtime::http`.
   - Ordinary user imports still go through the default lowering path and fail with `SIFR-IMPORT-0009`; directive-marked e2e fixtures opt into `compile_with_metadata_allowing_http_transport_harness` on a per-compile basis.
-- Claude Opus M4 follow-up review pass 5:
-  - `reviews/ad-hoc-production-network-http-m4-opus-review-pass-5g.md`
+- agent M4 follow-up review pass 5:
+  - `reviews/ad-hoc-production-network-http-m4-agent-review-pass-5g.md`
   - Result: `PASS`; reviewer accepted the private-harness follow-up, verified `sifr.http_transport` is no longer embedded in `STDLIB_SOURCES`, ordinary imports reject with `SIFR-IMPORT-0009`, the owned-parameter fixture update is consistent, and PR #2498 can be updated after the create-pr validation rerun.
-- Claude Opus M5 closeout review pass 1:
-  - `reviews/ad-hoc-production-network-http-m5-opus-review-pass-1.md`
+- agent M5 closeout review pass 1:
+  - `reviews/ad-hoc-production-network-http-m5-agent-review-pass-1.md`
   - Result: `PASS`; reviewer found no blocking findings, accepted the public/private HTTP transport boundary, confirmed the GCQ and validation manifest scoping, confirmed the broad generated-code demos stall is pre-existing and non-blocking for this M5 PR, and stated M5 is acceptable to proceed after the standard create-pr and merge gates pass.
-- Claude Opus final full-phase closure review pass 2:
-  - `reviews/ad-hoc-production-network-http-final-opus-review-pass-2.md`
+- agent final full-phase closure review pass 2:
+  - `reviews/ad-hoc-production-network-http-final-agent-review-pass-2.md`
   - Result: `PASS`; reviewer found no blocking findings, verified the public/private HTTP transport boundary, CPython-shaped surface rejection, Ring 5 dependency isolation, M5 validation gates, and closed inventory state, and stated the phase may be marked `completed, audited` after the closure diff is committed and standard local validation passes.
 - M0 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2494
@@ -214,32 +214,32 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - M1 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2495
   - Merge commit: `ce5a411f4284404a1a374f77c0176351771e7cb9`
-  - Scope: added public `sifr.net`, private `_sifr.net` intrinsics, optional `sifr_runtime/net`, network codegen helpers, deterministic TCP loopback/split/half-close/cancellation fixtures, UDP deferral coverage, and M1 Opus review artifacts.
+  - Scope: added public `sifr.net`, private `_sifr.net` intrinsics, optional `sifr_runtime/net`, network codegen helpers, deterministic TCP loopback/split/half-close/cancellation fixtures, UDP deferral coverage, and M1 agent review artifacts.
   - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `6c88bbd5f56035b488c4ad85a18061ab2b804fd2`; report `target/validation_lane_reports/merge.latest.json`; advisories were warm wall-time budget exceeded and high group skew only.
 - M2 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2496
   - Merge commit: `742ea9f33dcac821d5abb644156d97dd2d7876cc`
-  - Scope: added public `sifr.tls`, private `_sifr.tls` intrinsics, optional `sifr_runtime/tls`, TLS codegen helpers, Rustls/Tokio-Rustls runtime integration, deterministic TLS loopback/split/close-notify/config-error fixtures, dependency snapshots, and M2 Opus review artifacts.
+  - Scope: added public `sifr.tls`, private `_sifr.tls` intrinsics, optional `sifr_runtime/tls`, TLS codegen helpers, Rustls/Tokio-Rustls runtime integration, deterministic TLS loopback/split/close-notify/config-error fixtures, dependency snapshots, and M2 agent review artifacts.
   - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `28d845c86b94cceb84bf3e29872498f18fdd7980`; report `target/validation_lane_reports/merge.latest.json`; advisory was high e2e group skew only.
 - M3 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2497
   - Merge commit: `9a3ee4d18a12ab6ddaa9174aebea591a891c4651`
-  - Scope: added public `sifr.url` and `sifr.http` primitives, private `_sifr.url` and `_sifr.http` intrinsics, generated URL/query/percent and header/cookie runtime helpers, locked URL/header/cookie dependency emission, deterministic M3 e2e fixtures, dependency snapshots, and M3 Opus review artifacts.
+  - Scope: added public `sifr.url` and `sifr.http` primitives, private `_sifr.url` and `_sifr.http` intrinsics, generated URL/query/percent and header/cookie runtime helpers, locked URL/header/cookie dependency emission, deterministic M3 e2e fixtures, dependency snapshots, and M3 agent review artifacts.
   - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `3dc98f4df5665cbe137934192e04593709b10f26`; report `target/validation_lane_reports/merge.latest.json`; all 14 lane steps passed, wall time 783.02s, hardening failures 0, advisory was high e2e group skew only.
 - M4 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2498
   - Merge commit: `e442dd321087c2f5b7bae0b29c804f4e09ca8b81`
-  - Scope: added Hyper/H2-backed HTTP/1.1 and HTTP/2 runtime transport over M1 TCP and M2 TLS handles, public `sifr.http` body/head primitives, private driver-seeded `sifr.http_transport` e2e harness, deterministic HTTP/1/h2c/HTTPS-H2 loopback fixtures, dependency snapshots, transport traceability, and M4 Opus review artifacts.
+  - Scope: added Hyper/H2-backed HTTP/1.1 and HTTP/2 runtime transport over M1 TCP and M2 TLS handles, public `sifr.http` body/head primitives, private driver-seeded `sifr.http_transport` e2e harness, deterministic HTTP/1/h2c/HTTPS-H2 loopback fixtures, dependency snapshots, transport traceability, and M4 agent review artifacts.
   - Merge-gate validation: `scripts/run_all_tests.sh` passed for head `8ea0280766eaedb08a2af335eb9dc95e1aff9b3b` before the final review-ledger commit; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 138 pass fixtures with report signature `4ede7c71d86f381c`; advisory was high e2e group skew only. The final review-ledger commit reran `scripts/run_all_tests.sh --profile create-pr` successfully with report signature `50edc954137c87b4`.
 - M5 implementation merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2499
   - Merge commit: `23c0e36b48e6f672b5509d83115d6c482e9ae287`
-  - Scope: added public Network/HTTP substrate docs, internal architecture handoff docs, TCP/TLS/HTTP substrate demos, generated-code quality coverage for network demos, validation-lane network fixture membership, M5 traceability closure, and the M5 Opus review artifact.
+  - Scope: added public Network/HTTP substrate docs, internal architecture handoff docs, TCP/TLS/HTTP substrate demos, generated-code quality coverage for network demos, validation-lane network fixture membership, M5 traceability closure, and the M5 agent review artifact.
   - Merge-gate validation: `scripts/run_all_tests.sh --profile create-pr` passed with 132 pass fixtures and report signature `5edef8cd4b961ef8`; `scripts/run_all_tests.sh` passed with 145 pass fixtures and report signature `ed0733e95709bedc`. The only final merge-gate advisory was high e2e group skew.
 - Implementation-readiness merge ledger:
   - PR: https://github.com/sifr-lang/sifr/pull/2490
   - Merge commit: `f30e31f9e`
-  - Scope: finalized network/HTTP implementation-readiness planning contracts, including UDP gating, URL/IDNA behavior, TLS build/platform semantics, DNS/address resolution, byte buffers, HTTP substrate/body stream types, Hyper/Hyper-Util boundaries, metrics ownership, direct/transitive `h2` lockfile coherence, and retained Claude implementation-readiness review artifacts.
+  - Scope: finalized network/HTTP implementation-readiness planning contracts, including UDP gating, URL/IDNA behavior, TLS build/platform semantics, DNS/address resolution, byte buffers, HTTP substrate/body stream types, Hyper/Hyper-Util boundaries, metrics ownership, direct/transitive `h2` lockfile coherence, and retained agent implementation-readiness review artifacts.
   - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` required before PR.
 
 ## Planning Review Remediation Retained In This Phase
@@ -283,19 +283,19 @@ CPython-shaped public networking/web modules are no longer this phase's objectiv
 - [x] Add explicit v1 serving-scale boundary: this phase is single-runtime-worker per process, and M0 must create or link the follow-up that owns multi-core serving throughput.
 - [x] Add TCP full-duplex ownership contract using owned split read/write halves instead of shared mutable stream aliasing.
 - [x] Add TCP write-side half-close as an M1 substrate requirement with M0 semantics for repeated shutdown, split-half behavior, cancellation, and partial-progress evidence.
-- [x] Resolve Claude Opus pass 1 blockers: M0 owns body-stream contract definition, `TcpStream.split()` is infallible, write-after-shutdown is typed, and unsplit `shutdown_write()` preserves the read side.
-- [x] Record Claude Opus pass 2 `PASS` confirming no remaining implementation-readiness blockers.
+- [x] Resolve agent pass 1 blockers: M0 owns body-stream contract definition, `TcpStream.split()` is infallible, write-after-shutdown is typed, and unsplit `shutdown_write()` preserves the read side.
+- [x] Record agent pass 2 `PASS` confirming no remaining implementation-readiness blockers.
 - [x] Add explicit TLS full-duplex disposition with owned split halves and `close_notify` write-side close semantics.
-- [x] Resolve Claude Fable pass 1 blocker: M0 owns TLS stream/full-duplex contract definition and M2 implements it.
-- [x] Record Claude Fable pass 2 `PASS` confirming the TLS contract ownership fix and no remaining implementation-readiness blockers.
-- [x] Add Fable pass 2 polish for post-`close_notify` flush behavior and TLS-version fixture coverage in M2 DoD.
-- [x] Record Claude Fable pass 3 `PASS` confirming the final TLS polish did not introduce gaps.
-- [x] Resolve Claude Fable pass 4 blockers: M0 owns HTTP/2 abuse limits and terminal-state vocabulary includes all text/i18n provider labels used by M0.
-- [x] Apply Claude Fable pass 4 polish: explicit process-runtime state, named `UrlError`, current baseline wording, request-smuggling ownership, Phase 41 backlink, and platform-contract status refresh.
-- [x] Record Claude Fable pass 5 `PASS` confirming no remaining implementation-readiness blockers.
-- [x] Record Claude Fable pass 6 `PASS` confirming the pass-5 follow-up edits did not introduce gaps.
+- [x] Resolve agent pass 1 blocker: M0 owns TLS stream/full-duplex contract definition and M2 implements it.
+- [x] Record agent pass 2 `PASS` confirming the TLS contract ownership fix and no remaining implementation-readiness blockers.
+- [x] Add agent pass 2 polish for post-`close_notify` flush behavior and TLS-version fixture coverage in M2 DoD.
+- [x] Record agent pass 3 `PASS` confirming the final TLS polish did not introduce gaps.
+- [x] Resolve agent pass 4 blockers: M0 owns HTTP/2 abuse limits and terminal-state vocabulary includes all text/i18n provider labels used by M0.
+- [x] Apply agent pass 4 polish: explicit process-runtime state, named `UrlError`, current baseline wording, request-smuggling ownership, Phase 41 backlink, and platform-contract status refresh.
+- [x] Record agent pass 5 `PASS` confirming no remaining implementation-readiness blockers.
+- [x] Record agent pass 6 `PASS` confirming the pass-5 follow-up edits did not introduce gaps.
 - [x] Apply final reviewer cleanup edits for byte-buffer placeholder naming, Hyper-Util proof, Ring 5 absence proof, TLS close disposition, HTTP/2 priority/extensions, and UDP acceptance burden.
-- [x] Record Claude Fable pass 7 `PASS` confirming the final reviewer cleanup edits did not introduce gaps.
+- [x] Record agent pass 7 `PASS` confirming the final reviewer cleanup edits did not introduce gaps.
 
 ## Implementation PRs
 
@@ -395,7 +395,7 @@ M3 focused validation:
 | `SIFR_E2E_FIXTURE_MANIFEST=<M3 fixtures> SIFR_E2E_CACHE_DIR=target/sifr_e2e_cache/m3-focused SIFR_E2E_DISABLE_CACHE=0 cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` | PASS | Selected batch e2e run for `network_http_m3_header_cookie` and `network_http_m3_url_query_percent`; 2 passed, 0 failed, cache hits 0/2 after the IPv6 fixture change. |
 | `cargo test -p sifr_stdlib --test network_http_dependency_snapshots -- --nocapture` | PASS | Verifies M0-M3 generated dependency snapshots, exact URL/header crate specs, Sifr-owned cookie-header handling without an external cookie crate, and Ring 5 absence from M3 production dependencies. |
 | `cargo fmt --check` | PASS | Rust formatting check. |
-| `cargo clippy --workspace -- -D warnings` | PASS | Workspace clippy gate passed after Opus pass-3 remediation. |
+| `cargo clippy --workspace -- -D warnings` | PASS | Workspace clippy gate passed after agent pass-3 remediation. |
 | `scripts/run_e2e_pass.sh` | PASS | Full e2e pass suite completed 138 pass fixtures with 0 failures; report signature `4ede7c71d86f381c`. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
 | `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed after the pass-4 evidentiary blocker; report `target/validation_lane_reports/merge.latest.json`; all 14 lane steps passed, wall time 783.02s, hardening failures 0, advisory: high e2e group skew only. |
@@ -445,21 +445,21 @@ M5 focused validation:
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed for the M5 closeout branch after an earlier transient `text_i18n_encoding_io` e2e failure was isolated and cold-rerun successfully; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 132 pass fixtures with report signature `5edef8cd4b961ef8`; advisory: warm wall-time budget exceeded due to the cold e2e cache rebuild. |
 | `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed for the M5 closeout branch; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 145 pass fixtures with report signature `ed0733e95709bedc`; advisory: high e2e group skew only. |
 
-Post-closure Fable High gap review:
+Post-closure agent High gap review:
 
 | Review / remediation | Result | Notes |
 | --- | --- | --- |
-| `reviews/ad-hoc-production-network-http-fable-full-phase-review-pass-1.md` | FAIL | Fable found six closure blockers: net/TLS timeout overflow could panic, error-taxonomy evidence overstated variant/nested classes, dependency snapshot/audit drift, stdlib/runtime tests missing from the authoritative validation script, phase contract status still draft, and serving-scale handoff wording missing from public docs. |
-| `reviews/ad-hoc-production-network-http-fable-gap-fixes-opus-review-pass-1.md` | PASS | Opus verified all six Fable blockers were addressed and requested a non-blocking cleanup sweep for residual variant-style wording outside the rewritten taxonomy plus stronger snapshot structural checks. |
-| `reviews/ad-hoc-production-network-http-fable-gap-fixes-opus-review-pass-2.md` | PASS | Opus verified the cleanup sweep and hardened snapshot checks, with no blocking findings. |
-| `reviews/ad-hoc-production-network-http-fable-full-phase-review-pass-2.md` | PASS | Fable High verified all six pass-1 blockers were fixed at root cause. Remaining findings were merge mechanics and non-blocking wording under-claims, both remediated before the local gates were recorded. |
+| `reviews/ad-hoc-production-network-http-agent-full-phase-review-pass-1.md` | FAIL | agent found six closure blockers: net/TLS timeout overflow could panic, error-taxonomy evidence overstated variant/nested classes, dependency snapshot/audit drift, stdlib/runtime tests missing from the authoritative validation script, phase contract status still draft, and serving-scale handoff wording missing from public docs. |
+| `reviews/ad-hoc-production-network-http-agent-gap-fixes-agent-review-pass-1.md` | PASS | agent verified all six agent blockers were addressed and requested a non-blocking cleanup sweep for residual variant-style wording outside the rewritten taxonomy plus stronger snapshot structural checks. |
+| `reviews/ad-hoc-production-network-http-agent-gap-fixes-agent-review-pass-2.md` | PASS | agent verified the cleanup sweep and hardened snapshot checks, with no blocking findings. |
+| `reviews/ad-hoc-production-network-http-agent-full-phase-review-pass-2.md` | PASS | agent High verified all six pass-1 blockers were fixed at root cause. Remaining findings were merge mechanics and non-blocking wording under-claims, both remediated before the local gates were recorded. |
 | Error taxonomy amendment | accepted for remediation | The shipped API remains the flat public error classes in `lib/sifr/{net,tls,url,http}.sifr`: `NetError`, `TlsError`, `CertificateError`, `UrlError`, `HeaderError`, `ProtocolError`, `BodyError`, and `HttpError`. The unshipped variant/nested names from earlier planning (`DnsError`, `ConnectError`, `TimeoutError`, `CancelledError`, `TooLargeError`, `NetError::Dns`, `HttpError::Tls`, and similar paths) are not public API. Evidence remains deterministic in the owning public error class message. A future variant-rich taxonomy requires a new reviewed amendment and migration plan. |
 | Runtime timeout overflow fix | done | Shared runtime timeout validation now rejects overflow-sized finite floats before `Duration::from_secs_f64`, with runtime unit coverage and network e2e coverage for `timeout=1e20`. |
 | Dependency evidence remediation | done | `network_http_dependency_snapshots.json` is regenerated from actual generator output and `crates/sifr_stdlib/tests/network_http_dependency_snapshots.rs` compares the JSON against `generated_cargo_dependencies()`, `required_features`, and `must_not_include` fields to prevent drift. |
 | Validation gate remediation | done | `scripts/run_all_tests.sh` now runs `cargo test -p sifr_stdlib`, `cargo test -p sifr_runtime`, and `cargo test -p sifr_runtime --features http` as part of crate tests. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Post-remediation create-pr validation passed; report `target/validation_lane_reports/create-pr.latest.json`; e2e create-pr manifest completed 132 pass fixtures with report signature `5edef8cd4b961ef8`; advisory: warm wall-time budget exceeded on a cold e2e cache. |
 | `scripts/run_all_tests.sh` | PASS | Post-remediation merge-gate validation passed; report `target/validation_lane_reports/merge.latest.json`; e2e merge manifest completed 145 pass fixtures with report signature `ed0733e95709bedc`; hardening failures 0; advisory: high e2e group skew only. |
-| [PR #2501](https://github.com/sifr-lang/sifr/pull/2501) | merged | Carries the post-closure Fable High gap remediation, Opus review loop, Fable follow-up PASS, and local create-pr/merge-gate evidence. |
+| [PR #2501](https://github.com/sifr-lang/sifr/pull/2501) | merged | Carries the post-closure agent High gap remediation, agent review loop, agent follow-up PASS, and local create-pr/merge-gate evidence. |
 
 Required baseline commands:
 
@@ -491,8 +491,8 @@ Opening the M0 implementation PR is blocked until the artifact locations and sch
 ## Review Ownership
 
 - Phase owner: runtime/networking implementation owner.
-- Designated compiler/runtime reviewer for M0: Claude Opus via `.cursor/skills/talk-to-claude-opus`; human compiler/runtime reviewer request remains required on the GitHub PR before merge.
-- External/final review fallback: unused; M5 and phase closure used the designated Opus reviewer loop instead.
+- Designated compiler/runtime reviewer for M0: agent via `agent review`; human compiler/runtime reviewer request remains required on the GitHub PR before merge.
+- External/final review fallback: unused; M5 and phase closure used the designated agent reviewer loop instead.
 
 ## CPython Evidence Scan
 

@@ -153,4 +153,4 @@ status: completed
   - `demos/recursive_records/main.sifr` retained the compiler-side recursive constructor fix, but its final call-site shape was also normalized to explicit option-typed locals to avoid repeated temporary ownership moves.
 - Merged PR links:
 - `https://github.com/sifr-lang/sifr/pull/1435`
-- final implementation review: `tmp/claude_phase_final_impl_review.md` (`no actionable findings`)
+- final implementation review: `tmp/agent_phase_final_impl_review.md` (`no actionable findings`)

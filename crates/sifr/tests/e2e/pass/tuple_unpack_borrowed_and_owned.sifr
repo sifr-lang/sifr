@@ -1,4 +1,4 @@
-# Reference: declaration_first_python_buffer_unpack_ownership
+# Tuple unpack borrowed and owned.
 from sifr.test import assert_eq
 
 

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_runtime_2_zip_bzip2_constant_unsupported
+# Zip bzip2 constant unsupported.
 from sifr.zipfile import ZIP_BZIP2
 
 

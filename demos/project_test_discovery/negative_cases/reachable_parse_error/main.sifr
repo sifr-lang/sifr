@@ -1,4 +1,3 @@
-# Reference: project_test_discovery
 # negative path: reachable parse errors should fail in both project and test discovery.
 
 from helper import value

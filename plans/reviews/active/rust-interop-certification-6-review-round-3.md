@@ -2,7 +2,7 @@
 
 Date: 2026-07-28
 
-Reviewer: Claude Opus 5 (`--effort medium`)
+Reviewer: agent (`--effort medium`)
 
 Reviewed head: `eb44ddace9`
 
@@ -32,7 +32,7 @@ Clone verified non-`Copy` captures into an isolated closure-construction scope
 before emitting the owning closure, preserve the enclosing bindings, reject
 callable captures without verified nested/top-level provenance, add lowering
 and generated-build regressions including loop attachment, correct the docs,
-validate, and repeat the exact Opus review.
+validate, and repeat the exact agent review.
 
 ## Resolution
 

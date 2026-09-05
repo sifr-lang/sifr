@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_struct_1_configparser_converter_registration_unsupported
+# Configparser converter registration unsupported.
 from sifr.configparser import ConfigParser
 
 

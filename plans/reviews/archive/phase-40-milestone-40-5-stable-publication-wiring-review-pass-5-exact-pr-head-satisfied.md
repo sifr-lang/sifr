@@ -36,6 +36,6 @@ I found **no** path that activates stable before exact release and Marketplace s
 - Secret narrowing is pinned by literal substring, not by execution assertion; a `test -z "${GH_TOKEN:-}"` in the existing fake `vsce`/dispatcher would make it behavioral.
 - `test_public_smoke_adapter` uses a fake dispatcher and fake `sifr`, so the real receipt-discovery path isn't executed. I verified it by reading instead: `generate_version_installer.sh:582-590` puts the manifest at `${install_root}/install.json`, and `self_update_receipt.rs:99-107` finds it from the `bin/` parent without needing `HOME` — matching the already-merged `run_schema_bootstrap_public_smoke.sh:92-97` precedent, which also omits `HOME` on the `sifr` call.
 - Untested-but-shared: the evidence-commit iteration of the ancestry loop, `publish_stable_release.py:143` `target_commitish` equality on resume, and `_recover_realized_mutation`'s `sha256_file` on a hypothetical directory matching `SNAPSHOT_RE`.
-- `plans/reviews/active/phase-40-milestone-40-5-stable-publication-wiring-review-pass-5-exact-pr-head.{md,claude.log}` are 0-byte and untracked, so outside the PR. I modified no file.
+- `plans/reviews/active/phase-40-milestone-40-5-stable-publication-wiring-review-pass-5-exact-pr-head.{md,agent.log}` are 0-byte and untracked, so outside the PR. I modified no file.
 
 SATISFIED

@@ -1,6 +1,6 @@
 # Review: INT-2B — Reserved-width (`int128` / `uint128`) shadowing policy documentation
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Date: 2026-05-06
 Branch: `int-2b-reserved-width-shadowing-policy`
 Phase: [issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md](issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md), milestone INT-2B (carry-over follow-up at line 439)

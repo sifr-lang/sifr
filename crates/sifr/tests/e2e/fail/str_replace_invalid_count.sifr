@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_a2_str_replace_invalid_count
+# Str replace invalid count.
 def main():
     text: str = "aaaa"
     updated: str = text.replace("a", "b", count="two")

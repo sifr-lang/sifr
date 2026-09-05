@@ -2,7 +2,7 @@
 
 **Phase:** `issues/ad-hoc-runtime-and-file-object-parity-expansion.md`
 **Wave:** `wave_psp_runtime_3` (logging/time/timeit object-surface expansion)
-**Reviewer:** Claude (ad-hoc completion gap review)
+**Reviewer:** agent (ad-hoc completion gap review)
 **Date:** 2026-03-20
 
 ## Executive Summary

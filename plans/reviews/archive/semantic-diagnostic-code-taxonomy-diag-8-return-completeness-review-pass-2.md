@@ -68,7 +68,7 @@ None remaining. The pass-1 nit was addressed exactly as suggested.
 ### Observations (no action required)
 
 - The previously noted untracked `verification/leetcode/full_corpus_failure_taxonomy_*.json` snapshots still contain pre-coded "type error: function '…' must return a value of type '…'" strings. They remain out of scope for this slice; if a later slice commits them, they should be re-keyed to `SIFR-FLOW-0004`.
-- After PR merge, the slice-1 issue-tracker bullet on [issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:87](issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:87) should flip to `[x] … implementation complete and reviewer-satisfied: … PR: …` and a paired `[x] Claude implementation review for milestone_diag_8 slice 1 …` line should be appended (mirroring the slice-5 pair pattern at lines 85–86), with the `report_signature`/`wall_time` from the final `scripts/run_all_tests.sh --profile quick` run recorded.
+- After PR merge, the slice-1 issue-tracker bullet on [issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:87](issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:87) should flip to `[x] … implementation complete and reviewer-satisfied: … PR: …` and a paired `[x] agent implementation review for milestone_diag_8 slice 1 …` line should be appended (mirroring the slice-5 pair pattern at lines 85–86), with the `report_signature`/`wall_time` from the final `scripts/run_all_tests.sh --profile quick` run recorded.
 
 ## Verdict
 

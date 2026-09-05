@@ -330,9 +330,9 @@ and the obvious `as f64` cast loses precision. Specify whether equality and
 (returning `Result[bool, FloatPrecisionLossError]`). Add a Validation Matrix
 row covering this.
 
-### G6. INT-0 acceptance criterion "Claude review artifacts present" is weak
+### G6. INT-0 acceptance criterion "agent review artifacts present" is weak
 
-INT-0 has a checkbox for "Claude review artifacts for design and phase plan
+INT-0 has a checkbox for "agent review artifacts for design and phase plan
 are present under `reviews/`". This is true today (passes 1–5 plus this pass)
 but is not a gate that prevents INT-0 from regressing. A cleaner gate is "the
 two specific artifact filenames are listed in the Review History block of the

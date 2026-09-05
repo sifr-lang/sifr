@@ -25,4 +25,4 @@ Verified against `origin/main`:
 - `python3 scripts/check_file_size_guardrails.py` → PASS, `2246 files, limit 900 lines` (re-run locally)
 - Ledger diff is 50 lines, docs-only (single tracked file: `issues/...substrate-execution.md`)
 
-**Minor observation (not a failure):** the untracked `reviews/ad-hoc-production-concurrency-runtime-m5-metrics-ledger-review-pass-1.md` and `.claude.log` siblings are 0 bytes — placeholders for this very ledger review pass, outside the closure diff scope.
+**Minor observation (not a failure):** the untracked `reviews/ad-hoc-production-concurrency-runtime-m5-metrics-ledger-review-pass-1.md` and `.agent.log` siblings are 0 bytes — placeholders for this very ledger review pass, outside the closure diff scope.

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_8_reversed_runtime_iterator_not_reversible
+# Reversed runtime iterator not reversible.
 from sifr.pathlib import Path
 
 

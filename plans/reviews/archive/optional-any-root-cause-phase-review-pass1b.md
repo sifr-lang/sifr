@@ -1,6 +1,6 @@
 # Review: Optional/Any Root-Cause Closure Phase (Pass 1b)
 
-Reviewer: Claude
+Reviewer: agent
 Date: 2026-04-06
 Phase document: `issues/ad-hoc-phase-optional-any-root-cause-closure-2026-04-06.md`
 

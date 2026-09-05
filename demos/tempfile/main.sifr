@@ -1,4 +1,3 @@
-# Reference: tempfile
 from sifr.tempfile import mktemp_path, mkstemp, mkdtemp
 from sifr.io import exists
 from sifr.os import run_command

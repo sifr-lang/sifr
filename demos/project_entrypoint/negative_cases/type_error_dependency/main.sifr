@@ -1,4 +1,3 @@
-# Reference: project_entrypoint
 # negative path: frontend must report type mismatch from imported dependency module.
 
 from helper import adjusted

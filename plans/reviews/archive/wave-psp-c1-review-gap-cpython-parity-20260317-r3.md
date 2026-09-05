@@ -1,7 +1,7 @@
 # wave_psp_c1 Review - Gap Analysis and CPython Parity (2026-03-17 R3)
 
 **Phase**: Structured Parsing and Serialization (PSP)
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Date**: 2026-03-17
 
 ## Executive Summary

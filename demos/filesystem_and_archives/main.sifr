@@ -1,5 +1,3 @@
-# Reference: filesystem_archive_surface
-# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.io import read_text, write_text
 from sifr.pathlib import Path
 from sifr.glob import glob

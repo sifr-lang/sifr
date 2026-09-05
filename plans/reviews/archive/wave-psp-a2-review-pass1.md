@@ -1,6 +1,6 @@
 # Wave PSP-A2 Review: Core Object Models and Builtin Semantics
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-15
 **Wave:** `wave_psp_a2` (milestone_psp_2)
 **Status:** APPROVED - Implementation complete with no critical issues

@@ -1,3 +1,2 @@
-# Reference: project_check
 def area_like(r: float) -> float:
     return 'bad'

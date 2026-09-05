@@ -1,7 +1,7 @@
 # wave_psp_d1 Review: CPython Parity and Implementation Gap Analysis
 
 **Date**: 2026-03-16
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Wave**: `wave_psp_d1` — Filesystem, Paths, and Archives
 **Phase**: `ad-hoc-python-source-parity-and-builtin-stdlib-surface`
 

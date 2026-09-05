@@ -267,7 +267,7 @@ Key documents verified:
 ### 7.3 Sign-off
 
 ```
-Reviewer: Claude Code (Agent)
+Reviewer: agent (Agent)
 Date: 2026-03-19
 Outcome: APPROVED
 ```

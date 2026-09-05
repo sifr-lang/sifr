@@ -342,7 +342,7 @@ group at a time, then reran full demo and LeetCode emitted-code scans.
 
 Group-by-group review:
 
-- Arrays & Hashing and Two Pointers were reviewed individually with Claude.
+- Arrays & Hashing and Two Pointers were reviewed individually with agent.
 - Groups 3 through 18 were audited sequentially in NeetCode README order.
 - The JavaScript README group has no mapped Sifr fixtures and was recorded as
   not applicable for emitted Rust quality.

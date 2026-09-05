@@ -10,7 +10,7 @@ Phase: Stdlib Architecture (extends the existing chain after `milestone_stdlib_c
 
 This plan synthesizes findings from three audit documents:
 
-1. **`stdlib_cpython_parity_audit_opus.md`** — Module-by-module detail with coverage %, blockers, quick-wins, and intrinsic gaps for all 37 stdlib modules.
+1. **`stdlib_cpython_parity_audit_agent.md`** — Module-by-module detail with coverage %, blockers, quick-wins, and intrinsic gaps for all 37 stdlib modules.
 2. **`stdlib_cpython_parity_audit_gpt.md`** — Cross-cutting findings: naming mismatches, class rollout status, safety contract gaps, function-signature parity.
 3. **`cpython_test_suite_portability_research.md`** — Analysis of CPython's test suite portability: ~60-80% of assertions are directly portable, `assert_almost_eq` is the critical enabler, and Tier 1 modules (math, statistics, json, re) offer the highest ROI.
 

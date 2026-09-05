@@ -1,4 +1,3 @@
-# Reference: diagnostic_exit_codes
 # negative path: equivalent frontend failure should render equivalently in check/build/run.
 
 from helper import doubled

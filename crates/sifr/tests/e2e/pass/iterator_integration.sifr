@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_8_downstream_alignment_readiness
+# Iterator integration.
 from sifr.test import assert_bool_vector_eq
 from sifr.re import finditer, Match
 from sifr.pathlib import Path

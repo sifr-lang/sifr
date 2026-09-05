@@ -1,6 +1,6 @@
 ## Scope
 
-`HEAD == origin/main == afd25c392`, so the working tree *is* the diff (32 tracked files + 4 untracked work files). Excluded per instruction: `editor_integrations`, `verification/areas/algorithmic_compatibility/corpora/leetcode`, `.cert5probe/`, `.claude/`, the two stray `*.webp`, `plans/phases/43_interoperability.md`, and the `ecosystem_backend_certification` hunk in `rust_interop_compatibility_matrix.json`.
+`HEAD == origin/main == afd25c392`, so the working tree *is* the diff (32 tracked files + 4 untracked work files). Excluded per instruction: `editor_integrations`, `verification/areas/algorithmic_compatibility/corpora/leetcode`, `.cert5probe/`, `.agent/`, the two stray `*.webp`, `plans/phases/43_interoperability.md`, and the `ecosystem_backend_certification` hunk in `rust_interop_compatibility_matrix.json`.
 
 **Exclusion confirmed separate:** `git diff` renders two independent hunks — `@@ -396,8` (backend row → `supported`, drops `future_owner`) and `@@ -434,15` (`proc_macro_trust` promotion). No shared context lines; the proc_macro_trust promotion stands alone and is internally complete (category + both evidence statuses + notes).
 
@@ -37,6 +37,6 @@ No actionable findings. Non-blocking observations, none of which invalidate a mi
 - **Fallback attribution (nit).** The prepass fallback is `declarations.first()` rather than a bridge-preferring pick, so a package with several declarations and a never-referenced build-time dependency anchors the diagnostic on whichever declaration comes first. Fail-closed, and the message still names the dependency and the exact `[trust]` key, so guidance stays correct.
 - **Headroom (nit).** `check_fixture_matrix.py` is 899 and `package_rust_interop_build_tests.rs` is exactly 900 — at the guardrail limit. The next addition to either forces a split.
 - **Self-test arithmetic (informational).** 183 → 184 while three fixture-matrix controls were added, i.e. ~2 scenario mutation cases were consolidated during the marker rewording. I probed the affected properties directly (above) and they still reject mutation, so this is bookkeeping, not lost coverage.
-- **Artifacts (pre-merge chore).** Both `…round-1.claude.log` and `…round-2.claude.log` are 0 bytes and all four review artifacts are untracked; they need staging with the PR. I left the empty round-2 file untouched, since this run was read-only.
+- **Artifacts (pre-merge chore).** Both `…round-1.agent.log` and `…round-2.agent.log` are 0 bytes and all four review artifacts are untracked; they need staging with the PR. I left the empty round-2 file untouched, since this run was read-only.
 
 VERDICT: SATISFIED

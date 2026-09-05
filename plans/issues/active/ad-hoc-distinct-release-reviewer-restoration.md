@@ -62,4 +62,4 @@ phase rules.
 - [ ] Normal, rollback, and incident roll-forward operations reject initiating
   owner self-approval.
 - [ ] Focused distribution suites, workflow contracts, the authoritative local
-  gates, and repeated Opus review pass.
+  gates, and repeated agent review pass.

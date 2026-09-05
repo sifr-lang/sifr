@@ -1,4 +1,3 @@
-# Reference: module_assembly
 from z_provider import z
 from a_provider import a
 

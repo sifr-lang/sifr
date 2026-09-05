@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_rng_2_sha3_object_model_unsupported
+# Sha3 object model unsupported.
 from sifr.hashlib import HashObject, sha3_256_obj
 
 

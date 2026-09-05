@@ -46,9 +46,9 @@ suppress a required checked `KeyError`.
 
 ## Source Evidence
 
-- [Opus review round 1](https://github.com/sifr-lang/sifr/pull/3108#issuecomment-5225915101)
+- [agent review round 1](https://github.com/sifr-lang/sifr/pull/3108#issuecomment-5225915101)
   records the pre-existing delete, bucket-method mutation, defaultdict
   list/set, attribute-rooted, and error-message findings.
-- [Opus review round 2](https://github.com/sifr-lang/sifr/pull/3108#issuecomment-5225915170)
+- [agent review round 2](https://github.com/sifr-lang/sifr/pull/3108#issuecomment-5225915170)
   confirms the stale delete guard, missing delete error, and defaultdict
   list/set gaps are pre-existing and non-blocking for PR #3108.

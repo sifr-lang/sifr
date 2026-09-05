@@ -1,4 +1,3 @@
-# Reference: decimal_diagnostics
 def main():
     d: decimal = Decimal("1.2345")
     x: decimal = d.round(29)

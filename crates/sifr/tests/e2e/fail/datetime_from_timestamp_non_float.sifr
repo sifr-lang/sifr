@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_e1_datetime_from_timestamp_non_float
+# Datetime from timestamp non float.
 from sifr.datetime import from_timestamp
 
 

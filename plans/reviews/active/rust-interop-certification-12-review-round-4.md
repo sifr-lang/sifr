@@ -29,7 +29,7 @@ The round-3 blocker is fully resolved. No new actionable issue remains in commit
 ## No scope leakage
 
 - Delta touches only `plans/issues/active/rust-interop-runtime-ecosystem-certification.md` and two review artifacts. `git diff --name-only 3867b21d5 eca5abb7d -- crates/ verification/ scripts/ docs/ internal_docs/ Cargo.lock` → **empty**. Round 3's freshly reproduced implementation gates (both mandatory `#[ignore]`d generated-package tests, workspace Clippy, the load-bearing `target: "sifr_cli_noise"` mutation proof) are therefore untouched by this delta and carry forward.
-- Excluded live-tree paths all absent from head: `.cert5probe`, `.claude`, `plans/phases/43_interoperability.md`, `logo 06.48.53.webp`, `docs/logo/logo.webp 08-03-09-514.webp`, `verification/areas/algorithmic_compatibility/corpora/leetcode`, and no round-4 artifact.
+- Excluded live-tree paths all absent from head: `.cert5probe`, `.agent`, `plans/phases/43_interoperability.md`, `logo 06.48.53.webp`, `docs/logo/logo.webp 08-03-09-514.webp`, `verification/areas/algorithmic_compatibility/corpora/leetcode`, and no round-4 artifact.
 - Submodule pointers unchanged vs base (`editor_integrations`, `verification/areas/algorithmic_compatibility` → empty diff) despite showing ` M` live.
 - **The `ecosystem_backend_certification` promotion is unstaged only and confirmed absent.** At head the row is `future-owned-by-separate-phase` with `future_owner` set and both evidence directions `planned`; `ecosystem_cli_certification` alone is `supported-through-bridge` with both directions `passing`. The worktree hunk flipping backend to `"supported"` and dropping `future_owner` exists only in `git diff`, not in `HEAD`.
 

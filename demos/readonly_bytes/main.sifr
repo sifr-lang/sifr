@@ -1,5 +1,3 @@
-# Reference: bytes_readonly_bytes
-# Reference: first-class-bytes-and-binary-surface-foundation
 from sifr.io import exists
 from sifr.os import remove_file
 

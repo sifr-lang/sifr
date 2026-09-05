@@ -4,7 +4,7 @@ Status: in_progress
 Capability: `issues/python-source-parity-and-builtin-stdlib-surface.md`
 Capability: `stdlib_parity_a1`
 
-## Inputs Reviewed
+## Inputs Validationed
 
 - `../cpython/Lib/test/test_builtin.py`
 - `../cpython/Lib/test/test_list.py`

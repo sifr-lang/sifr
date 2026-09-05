@@ -1,4 +1,4 @@
-Reconciliation pass verdict from Claude output stream:
+Reconciliation pass verdict from agent output stream:
 
 Owner counts from CSV (all 38 rows):
 - compiler_fix: 25
@@ -14,4 +14,4 @@ Conclusion:
 - The 22 figure was a manual counting error in pass2.
 
 Trace note:
-- Captured from Claude stdout because direct reviewer file writes were blocked.
+- Captured from agent stdout because direct reviewer file writes were blocked.

@@ -2,7 +2,7 @@
 
 - Reviewed commit: `4d6d8399e`
 - Base: `origin/main`
-- Reviewer: Claude Opus 5, medium effort
+- Reviewer: agent, medium effort
 - Verdict: **SATISFIED**
 
 ## Closure

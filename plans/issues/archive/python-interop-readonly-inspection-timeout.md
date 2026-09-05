@@ -48,7 +48,7 @@ and negative cache polarity, prove one inspection per resolver, and verify
   165 insertions and 10 deletions; the largest touched first-party source file
   remained below 900 lines.
 - [x] Milestone, full-implementation, integrated, final exact-candidate, and
-  timeout-provenance Claude Opus reviews returned `SATISFIED` with no blocking
+  timeout-provenance agent reviews returned `SATISFIED` with no blocking
   findings. Final review evidence is keyed outside the reviewed Git tree by
   candidate SHA as required by the phase-closure workflow.
 

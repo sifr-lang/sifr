@@ -1,3 +1,2 @@
-# Reference: reachable_imports
 # This file is intentionally invalid and must be ignored by import-closure discovery.
 def broken(:

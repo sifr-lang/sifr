@@ -1,9 +1,9 @@
 # TypeScript-Go Architecture Transfer: Guardrails
 
-status: source-provider workstream preflight gate
+status: source-provider implementation preflight gate
 
 This document is the implementation guardrail for the
-`typescript-go-compiler-architecture-transfer record` source-provider workstream. It records
+`typescript-go-compiler-architecture-transfer record` source-provider implementation. It records
 the actual pre-session state before source-provider behavior migration. Later
 codebase work may update this file and its checker when it intentionally replaces
 one of these current limitations.
@@ -16,30 +16,30 @@ classified as non-semantic exceptions.
 
 ## Locked Terms
 
-The source-provider workstream locks the following terms before behavior migration starts:
+The source-provider implementation locks the following terms before behavior migration starts:
 
 - `sifr_source`: bottom-of-graph source text, line-map, source-file metadata,
   source hash, and UTF-8/UTF-16/UTF-32 position conversion authority.
 - `SourceProvider`: future semantic file-system boundary in `sifr_frontend` for
   disk, overlay, tracking, package, directory, canonicalization, and failed
-	  lookup reads. Not implemented in this workstream.
+	  lookup reads. Not implemented in this implementation.
 - `WorkspaceSession`: future mutable owner of workspace compiler-service state.
-	  Not implemented in this workstream.
+	  Not implemented in this implementation.
 - `WorkspaceSnapshot`: future immutable captured state shared by analysis, LSP,
   lint, format, diagnostics, package tooling, and future API handles. Not
-	  implemented in this workstream.
+	  implemented in this implementation.
 - `DirtyScope`, `DirtyReason`, `ImportSignature`, `ExportSignature`,
   `ModuleSignature`, `CompilerFingerprint`, `CacheKeyFingerprint`,
   `FlowGraph`, `QueryReadiness`, and `.sifrbuildinfo`: locked architecture terms
-  for later work, not behavior in this workstream.
+  for later work, not behavior in this implementation.
 
 ## Current Direct-Read, Probe, And Documented Effect Inventory
 
 These production filesystem reads and path probes are semantic inputs, tooling
-inputs, package identity inputs, or command-surface inputs. The source-provider workstream must route
+inputs, package identity inputs, or command-surface inputs. The source-provider implementation must route
 semantic entries through a typed source provider or explicitly reclassify a row
 as a non-semantic exception. Path probes are listed alongside content and
-directory reads so the workstream can track successful and failed lookup dependencies
+directory reads so the source provider can track successful and failed lookup dependencies
 without treating probes as source content reads.
 
 | Area | Current site | Current behavior | Source-provider expectation |
@@ -55,15 +55,15 @@ without treating probes as source content reads.
 | Linter config and discovery | `crates/sifr_lint/src/config.rs:48`, `crates/sifr_lint/src/config.rs:72`, `crates/sifr_lint/src/discovery.rs:29`, `crates/sifr_lint/src/discovery.rs:33`, `crates/sifr_lint/src/discovery.rs:79` | Linter config lookup and target discovery probe files/directories and read `sifr.toml`. | Short-lived provider with tracked config and discovery reads. |
 | Formatter standalone input | `crates/sifr_format/src/lib.rs:177`, `crates/sifr_format/src/lib.rs:180`, `crates/sifr_format/src/lib.rs:197`, `crates/sifr_format/src/lib.rs:215`, `crates/sifr_format/src/lib.rs:446`, `crates/sifr_format/src/lib.rs:456` | Formatter checks path shape, walks directories, reads source, and writes formatted files. | Short-lived provider for reads; writes remain command-output effects. |
 | Formatter config | `crates/sifr_format/src/config.rs:85`, `crates/sifr_format/src/config.rs:109` | Formatter config lookup probes candidate files and reads `sifr.toml`. | Short-lived provider with tracked config reads. |
-| Package offline availability | `crates/sifr_package/src/cargo/lock_modes.rs:46` | Offline dependency validation probes whether package roots are available. | Provider-tracked package metadata probe or reviewed package-management exception. |
+| Package offline availability | `crates/sifr_package/src/cargo/lock_modes.rs:46` | Offline dependency validation probes whether package roots are available. | Provider-tracked package metadata probe or a documented package-management exception. |
 | Package manifest read | `crates/sifr_package/src/manifest/sifr.rs:55` | Package identity reads `sifr.toml` directly. | Provider-tracked package/config identity input. |
 | Package manifest validation | `crates/sifr_package/src/manifest/validate.rs:14`, `crates/sifr_package/src/manifest/validate.rs:43`, `crates/sifr_package/src/manifest/validate.rs:44` | Package manifest validation probes the source root and exported source files. | Provider-tracked directory/file probes. |
 | Package source-map traversal | `crates/sifr_package/src/imports/source_map.rs:240`, `crates/sifr_package/src/imports/source_map.rs:254` | Package source-map construction recursively reads package source-root directories and probes child directories. | Provider-tracked directory reads and path probes. |
 | Package namespace API | `crates/sifr_package/src/imports/namespace_api.rs:32`, `crates/sifr_package/src/imports/namespace_api.rs:264` | Package public API extraction reads `__init__.sifr` and probes child namespaces. | Provider-tracked package source reads and probes. |
-| Package source layout | `crates/sifr_package/src/source/layout.rs:30` | Pure-marker validation reads generated package source files. | Reviewed provider-backed package tooling read or non-semantic generated-output exception. |
+| Package source layout | `crates/sifr_package/src/source/layout.rs:30` | Pure-marker validation reads generated package source files. | Provider-backed package tooling read or a non-semantic generated-output exception. |
 | Package Python bridge inventory | `crates/sifr_package/src/python/bridge_inventory/filesystem.rs:94`, `crates/sifr_package/src/python/bridge_inventory/filesystem.rs:147`, `crates/sifr_package/src/python/bridge_inventory/mod.rs:195`, `crates/sifr_package/src/python/bridge_resolution.rs:126` | Bridge discovery enumerates the fixed package-owned source root, descends package directories, validates the generated archive inventory, and re-reads inventoried UTF-8 source for the embedded runtime table while verifying its digest. | Package implementation, embedding, and archive identity inputs; keep inventoried until a package-aware source snapshot owns bridge discovery, source capture, and generated inventory validation. |
 | Package session discovery and targets | `crates/sifr_package/src/ops/session_discovery.rs:6`, `crates/sifr_package/src/ops/session_discovery.rs:13`, `crates/sifr_package/src/ops/session_discovery.rs:25`, `crates/sifr_package/src/ops/session_targets.rs:17`, `crates/sifr_package/src/ops/session_targets.rs:34`, `crates/sifr_package/src/ops/session_targets.rs:42` | Package CLI/session discovery probes manifests and the source root. | Provider-tracked package session reads and probes where they affect compilation. |
-| CLI lint command reads | `crates/sifr/src/lint_cli.rs:308`, `crates/sifr/src/lint_cli.rs:496`, `crates/sifr/src/lint_cli.rs:499` | CLI lint command reads individual files for linting and probes path exclusion/start-dir shape. | Provider-backed for semantic source reads; CLI target filtering remains a documented command-surface probe until the source-provider workstream classifies it. |
+| CLI lint command reads | `crates/sifr/src/lint_cli.rs:308`, `crates/sifr/src/lint_cli.rs:496`, `crates/sifr/src/lint_cli.rs:499` | CLI lint command reads individual files for linting and probes path exclusion/start-dir shape. | Provider-backed for semantic source reads; CLI target filtering remains a documented command-surface probe until the source-provider implementation classifies it. |
 | CLI check/package command reads | `crates/sifr/src/check_and_package_commands.rs:239`, `crates/sifr/src/check_and_package_commands.rs:256`, `crates/sifr/src/check_and_package_commands.rs:417`, `crates/sifr/src/check_and_package_commands.rs:418`, `crates/sifr/src/check_and_package_commands.rs:610`, `crates/sifr/src/check_and_package_commands.rs:679`, `crates/sifr/src/check_and_package_commands.rs:720`, `crates/sifr/src/check_and_package_commands.rs:743`, `crates/sifr/src/check_and_package_commands.rs:746`, `crates/sifr/src/check_and_package_commands.rs:751`, `crates/sifr/src/check_and_package_commands.rs:778`, `crates/sifr/src/check_and_package_commands.rs:807` | CLI package/check command surfaces probe targets and cache paths and read package sources for command output. | Provider-backed for semantic source reads; command-output/cache probes remain documented exceptions where non-semantic. |
 | Package Python certification reads | `crates/sifr/src/package_python_certifications.rs:14`, `crates/sifr/src/python_cli.rs:590`, `crates/sifr/src/python_cli.rs:648`, `crates/sifr/src/python_dlpack_certification_cli.rs:64`, `crates/sifr_package/src/python/arrow_certification.rs:261`, `crates/sifr_package/src/python/arrow_certification.rs:328` | Arrow and DLPack certification activation and authoring probe the package-root artifact and reject non-regular or symlinked executable fixtures before hashing or execution. | Package certification and archive identity inputs; keep inventoried until a package-aware metadata snapshot owns certification artifact and fixture state. |
 | Package Python binding authoring reads | `crates/sifr/src/python_binding_cli.rs:148`, `crates/sifr/src/python_binding_cli.rs:340`, `crates/sifr/src/python_binding_cli.rs:384`, `crates/sifr/src/python_binding_cli.rs:462`, `crates/sifr/src/python_runtime_context.rs:145`, `crates/sifr/src/python_runtime_context.rs:146`, `crates/sifr_package/src/python/binding_validation.rs:220` | Binding generation, frozen recheck, and ordinary package validation probe the versioned artifact, reject symlinked output ancestors and non-regular generated/typing files, and validate canonical package containment before hashing or writing. | Package authoring and build identity inputs; keep inventoried until a package-aware metadata snapshot owns binding artifacts and consumed typing sources. |
@@ -82,7 +82,7 @@ directory digest now participates in both probe and final-build cache
 identity, and remains in this inventory until a package-aware snapshot owns
 SQLx metadata.
 
-Permitted exceptions for the source-provider workstream:
+Permitted exceptions for the source-provider implementation:
 
 - CLI stdin reads are not workspace identity until later explicitly modeled.
 - Generated-output and test-harness reads under tests, verification, and
@@ -103,9 +103,9 @@ Permitted exceptions for the source-provider workstream:
   output and repair-state effects unless a later package-aware snapshot work
   promotes a specific read into package identity.
 
-## Source-Provider Workstream Disposition
+## Source Provider Implementation Disposition
 
-The source-provider workstream introduced `sifr_frontend::SourceProvider` and moved the following rows
+The source-provider implementation introduced `sifr_frontend::SourceProvider` and moved the following rows
 behind provider-backed APIs while keeping disk-backed compatibility wrappers for
 pre-session callers:
 
@@ -126,7 +126,7 @@ identity.
 
 ## Current Source-Map Guardrail
 
-The source-provider workstream replaced the old `SourceMapView` stubs. Current guardrail:
+The source-provider implementation replaced the old `SourceMapView` stubs. Current guardrail:
 
 - `SourceMapView::text_position_to_span` delegates to
   `sifr_source::SourceText::byte_offset_with_encoding`.
@@ -138,7 +138,7 @@ The source-provider workstream replaced the old `SourceMapView` stubs. Current g
 ## Historical LSP Reality And Source-Provider Update
 
 `internal_docs/lsp_server.md` describes both implemented developer tooling surface behavior and
-future compiler-service layers. At the source-provider workstream planning gate:
+future compiler-service layers. At the source-provider implementation planning gate:
 
 - `DocumentStore` still owns per-document analysis hosts.
 - `DocumentState::rebuild` calls `AnalysisHost::open_single_file` with
@@ -216,7 +216,7 @@ type hierarchy, code actions, formatting, and generated Rust preview
 ### Future Rule Update Obligations
 
 - The source-provider rule must either route every non-exempt inventory row through `SourceProvider`
-  or update this inventory with a reviewed exception before acceptance.
+  or update this inventory with a documented exception before acceptance.
 - The workspace-session rule must move overlay lifecycle and tracked dependency records into
   `WorkspaceSession` snapshots instead of leaving them as one-off provider
   outputs.

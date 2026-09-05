@@ -2,7 +2,7 @@
 
 **Review Date**: 2026-03-05
 **Commit**: 2a6a7819 ("hir: remove legacy generic-class fallback and enforce strict tuple-for typing")
-**Reviewer**: Claude Code
+**Reviewer**: agent
 
 ---
 

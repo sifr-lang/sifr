@@ -53,7 +53,7 @@ This is complete. M1 implementers can build `ruff_rule_config_audit.json` from t
 
 Line 66:
 ```
-- `2026-05-26`: Claude phase review pass 4 found the new rule-family audit complete and implementation-ready, with precision edits requested for the audit manifest schema and Ruff's deprecated `extend-ignore` surface. Both edits were applied before final review.
+- `2026-05-26`: agent phase review pass 4 found the new rule-family audit complete and implementation-ready, with precision edits requested for the audit manifest schema and Ruff's deprecated `extend-ignore` surface. Both edits were applied before final review.
 ```
 
 This is correct: it records the review finding, the two precision edits requested, and that both were applied.

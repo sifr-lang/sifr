@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_d2_process_runtime_platform
+# Process runtime and platform.
 from sifr.os import run_command, getcwd
 from sifr.env import getenv, getenv_opt
 from sifr.sys import argv, version, platform, maxsize

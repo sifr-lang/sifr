@@ -1,0 +1,15 @@
+# Capture typed values and update them with nonlocal.
+
+def accumulate(values: list[int]) -> int:
+    total = 0
+
+    def apply() -> None:
+        nonlocal total
+        for value in values:
+            total += value
+
+    apply()
+    return total
+
+def main():
+    assert str(accumulate([3, 1, 4, 1, 5])) == '14'

@@ -1,4 +1,3 @@
-# Reference: module_cycle_diagnostics
 # module_cycle_diagnostics deterministic module graph and cycle diagnostics demo
 # Deterministic dependency ordering must produce stable project compilation.
 

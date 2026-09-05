@@ -123,6 +123,6 @@ All platform functions produce deterministic outputs:
 
 ---
 
-*Reviewer: Claude Opus 4.6*
+*Reviewer: agent*
 *Date: 2026-03-09*
 *Branch: phase30-part27-platform-review-pass2*

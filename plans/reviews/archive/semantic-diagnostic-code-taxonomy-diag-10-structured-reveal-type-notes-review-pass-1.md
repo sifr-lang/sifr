@@ -1,8 +1,8 @@
-# Claude Review: milestone_diag_10 slice 3 structured reveal_type notes
+# agent Review: milestone_diag_10 slice 3 structured reveal_type notes
 
 Date: 2026-05-03
-Reviewer skill: `.cursor/skills/talk-to-claude`
-Invocation: `claude -p --permission-mode bypassPermissions --output-format stream-json --include-partial-messages --verbose --max-budget-usd 1`
+Reviewer skill: `agent review`
+Invocation: `agent review
 
 ## Validation Provided To Reviewer
 

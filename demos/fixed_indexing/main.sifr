@@ -1,4 +1,3 @@
-# Reference: fixed_indexing
 # driver/package architecture / fixed_indexing behavior group 12 demo: fixed-index reads after explicit len guards.
 
 def second_or_zero(values: list[int]) -> int:

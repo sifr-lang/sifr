@@ -4,7 +4,7 @@
 **Execution ledger**: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
 **Review type**: milestone-level closure production-grade check (pass 2)
 **Date**: 2026-03-21
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Commit under review**: `8e9406a2` (pass-1 remediation merged)
 
 ---
@@ -196,7 +196,7 @@ All production-grade criteria are satisfied:
 ---
 
 *Review completed: 2026-03-21*
-*Reviewer: Claude Code*
+*Reviewer: agent*
 *Phase: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion*
 *Review type: milestone-closure-review-pass-2 (production-grade check)*
 *Commit: 8e9406a2 (pass-1 remediation)*

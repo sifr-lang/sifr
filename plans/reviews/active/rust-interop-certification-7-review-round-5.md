@@ -2,7 +2,7 @@
 
 - Reviewed commit: `c48034f21`
 - Base: `origin/main`
-- Reviewer: Claude Opus 5, medium effort
+- Reviewer: agent, medium effort
 - Verdict: findings; not satisfied
 
 ## Prior closure

@@ -1,4 +1,3 @@
-# Reference: logging
 from sifr.logging import getLogger, basicConfig, FileHandler, Formatter
 from sifr.logging import Logger, INFO, WARNING
 from sifr.io import write_text, read_text, exists

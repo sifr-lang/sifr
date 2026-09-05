@@ -11,7 +11,7 @@ def has_equals_pair(own pairs: list[str]) -> bool:
     return has_equals
 
 def main():
-    inputs: list[str] = ["SIFR_ENV_P30_MISSING", ""]
+    inputs: list[str] = ["SIFR_ENV_PARITY_MISSING", ""]
     expected: list[str] = ["fallback", "fallback"]
     actual: list[str] = []
     for key in inputs:

@@ -384,7 +384,7 @@ The milestone meets all exit criteria defined in the planning document and is re
 ## Sign-off
 
 ```
-Reviewer: Claude Code (Agent)
+Reviewer: agent (Agent)
 Date: 2026-03-19
 Outcome: APPROVED FOR MILESTONE CLOSURE PRODUCTION READINESS
 Scope: Milestone closure level (waves 0-5)

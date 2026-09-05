@@ -54,7 +54,7 @@ The compiler may still emit language scaffolding, Rust interop bridge glue,
 panic wrappers, exact-int conversions, entrypoint machinery, and runtime call
 glue. It must not implement stdlib behavior through intrinsic dispatch, pasted
 preambles, or handwritten Rust source literals. During migration, compiler
-native stdlib glue is permitted only as an explicit, reviewed, shrinking,
+native stdlib glue is permitted only as an explicit, validated, shrinking,
 machine-readable exception in
 `internal_docs/stdlib_retained_compiler_intrinsics.toml`.
 
@@ -202,7 +202,7 @@ executable evidence, not just adapter code.
 `scripts/check_sysroot_stdlib_resource_certification_gate.py` enforces this
 boundary during validation by pinning each resource-sensitive stdlib surface to
 its required Rust interop compatibility matrix rows. Broad ecosystem rows are
-not handed off wholesale. The stdlib native boundary phase splits and owns only
+not handed off wholesale. The stdlib native boundary owns only
 the narrow stdlib-blocking core rows it proves, such as
 `opaque_resource_core`, `async_runtime_core`, `callback_subscription_core`, and
 possibly `callbacks_call_scoped_core`. Call-scoped callback runtime behavior is
@@ -225,7 +225,7 @@ Retained compiler-native stdlib glue is guarded separately by
 `scripts/check_stdlib_native_intrinsic_allowlist.py`. The guard compares the
 active `sifr_codegen` intrinsic dispatcher, registry module files, and preamble
 module files against the allowlist so new compiler-native stdlib behavior must
-be reviewed as retained language/runtime glue instead of drifting back into
+be retained as retained language/runtime glue instead of drifting back into
 generic stdlib intrinsics.
 
 ## Installed Layout
@@ -364,7 +364,7 @@ is_source_tree_development_mode()
 ```
 
 That predicate is true only for local development builds under an explicit
-debug/dev build marker or equivalent reviewed build-time configuration. It
+debug/dev build marker or equivalent declared build-time configuration. It
 answers only whether the tool may auto-resolve or materialize a development
 sysroot. It does not allow different stdlib inventory rules, runtime path
 rules, embedded stdlib fallback, or repository ancestor scanning after
@@ -929,7 +929,7 @@ Release certification compiles and runs the same representative program with
 the source-tree compiler/sysroot and an extracted installed sysroot. The
 program crosses retained typed intrinsics and migrated private Rust bridges;
 the certification requires identical behavior and normalized generated Cargo
-dependency plans, with the latter checked against the reviewed boundary
+dependency plans, with the latter checked against the defined boundary
 snapshot.
 
 Private stdlib Rust interop uses the normal Rust interop contract plus a
@@ -1153,8 +1153,8 @@ The planner-owned expectation is the source of truth for minimal features.
 
 ## Compatibility Guarantees
 
-- Public `sifr.*` APIs remain stable unless changed through normal stdlib API
-  review.
+- Public `sifr.*` APIs remain stable unless changed through the normal stdlib
+  API process.
 - User imports of `_sifr.*` remain rejected.
 - Generated runtime code must not contain data-dependent `unwrap()` or
   `expect()` in user-triggerable paths.

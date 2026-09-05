@@ -1,6 +1,6 @@
 # Review Pass 1 — Ad-hoc Phase: LeetCode 18-Failure Root-Cause Closure (2026-04-08)
 
-Reviewer: Claude
+Reviewer: agent
 Reviewed artifacts:
 
 - `issues/ad-hoc-phase-leetcode-18-failure-root-cause-closure-2026-04-08.md`

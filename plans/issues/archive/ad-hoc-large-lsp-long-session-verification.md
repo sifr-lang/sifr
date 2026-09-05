@@ -29,7 +29,7 @@ architecture delivered there.
 - `verification/tooling/lsp_large_session.py --mode full` is documented and
   writes JSON evidence under `target/lsp_large_session/`.
 - The verifier samples LSP RSS during the session, not just at process exit.
-- Claude Opus review passes are recorded under `reviews/` and the final pass is
+- agent review passes are recorded under `reviews/` and the final pass is
   satisfied.
 
 ## Progress

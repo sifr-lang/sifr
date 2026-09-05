@@ -27,7 +27,7 @@ Status: completed via [#2267](https://github.com/sifr-lang/sifr/pull/2267)
 
 Final phase closure:
 
-- Claude full implementation review pass 1 -> SATISFIED (`reviews/typescript-go-architecture-transfer-full-implementation-review-pass-1.md`)
+- agent full implementation review pass 1 -> SATISFIED (`reviews/typescript-go-architecture-transfer-full-implementation-review-pass-1.md`)
 - Latest authoritative milestone gates: M16 `scripts/run_all_tests.sh --profile quick` -> PASS, wall time 295.57s; M17 `scripts/run_all_tests.sh --profile quick` -> PASS, wall time 279.93s
 - All listed milestones M0-M17 are merged, and the final review found no blocking phase-level findings.
 
@@ -70,9 +70,9 @@ M10 local validation so far:
 - `cargo clippy -p sifr_frontend -- -D warnings`
 - `git diff --check`
 - `python3 scripts/check_file_size_guardrails.py`
-- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m10-snapshot-reuse-review-pass-1.md`)
-- Claude reviewer pass 2 -> SATISFIED with residual recommendations (`reviews/typescript-go-m10-snapshot-reuse-review-pass-2.md`)
-- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m10-snapshot-reuse-review-pass-3.md`)
+- agent reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m10-snapshot-reuse-review-pass-1.md`)
+- agent reviewer pass 2 -> SATISFIED with residual recommendations (`reviews/typescript-go-m10-snapshot-reuse-review-pass-2.md`)
+- agent reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m10-snapshot-reuse-review-pass-3.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 330.61s, advisories: warm wall-time budget exceeded; group skew is high
 
 M11 local validation so far:
@@ -86,9 +86,9 @@ M11 local validation so far:
 - `cargo clippy -p sifr_lsp -- -D warnings` -> PASS
 - `git diff --check`
 - `python3 scripts/check_file_size_guardrails.py`
-- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m11-lsp-scheduler-review-pass-1.md`)
-- Claude reviewer pass 2 -> SATISFIED with residual low-priority cleanup (`reviews/typescript-go-m11-lsp-scheduler-review-pass-2.md`)
-- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m11-lsp-scheduler-review-pass-3.md`)
+- agent reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m11-lsp-scheduler-review-pass-1.md`)
+- agent reviewer pass 2 -> SATISFIED with residual low-priority cleanup (`reviews/typescript-go-m11-lsp-scheduler-review-pass-2.md`)
+- agent reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m11-lsp-scheduler-review-pass-3.md`)
 - `cargo clippy --workspace -- -D warnings` -> PASS
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 263.26s, advisory: group skew is high
 
@@ -109,9 +109,9 @@ M12 local validation so far:
 - `python3 -m py_compile verification/performance/lsp_query_bench.py verification/performance/check_budgets.py verification/performance/run_benchmarks.py verification/tooling/check_typescript_go_m1_guardrails.py` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
-- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-1.md`)
-- Claude reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-2.md`)
-- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-3.md`)
+- agent reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-1.md`)
+- agent reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-2.md`)
+- agent reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m12-lsp-latency-budgets-review-pass-3.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 256.95s, advisory: group skew is high
 
 M13 local validation so far:
@@ -130,9 +130,9 @@ M13 local validation so far:
 - `python3 scripts/check_diagnostic_cancel_usage.py` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
-- Claude reviewer pass 1 -> SATISFIED with residual cleanup (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-1.md`)
-- Claude reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-2.md`)
-- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-3.md`)
+- agent reviewer pass 1 -> SATISFIED with residual cleanup (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-1.md`)
+- agent reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-2.md`)
+- agent reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m13-lsp-cancellation-progress-watchdog-review-pass-3.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 280.41s, advisory: group skew is high
 
 M14 local validation so far:
@@ -148,9 +148,9 @@ M14 local validation so far:
 - `python3 verification/tooling/check_phase36_closeout.py --self-test` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
-- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m14-bucketed-indexes-review-pass-1.md`)
-- Claude reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m14-bucketed-indexes-review-pass-2.md`)
-- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m14-bucketed-indexes-review-pass-3.md`)
+- agent reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m14-bucketed-indexes-review-pass-1.md`)
+- agent reviewer pass 2 -> SATISFIED with residual cleanup (`reviews/typescript-go-m14-bucketed-indexes-review-pass-2.md`)
+- agent reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m14-bucketed-indexes-review-pass-3.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 261.03s, advisory: group skew is high
 
 M15 local validation so far:
@@ -163,9 +163,9 @@ M15 local validation so far:
 - `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
-- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m15-project-residency-review-pass-1.md`)
-- Claude reviewer pass 2 -> SATISFIED (`reviews/typescript-go-m15-project-residency-review-pass-2.md`)
-- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m15-project-residency-review-pass-3.md`)
+- agent reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m15-project-residency-review-pass-1.md`)
+- agent reviewer pass 2 -> SATISFIED (`reviews/typescript-go-m15-project-residency-review-pass-2.md`)
+- agent reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m15-project-residency-review-pass-3.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 292.53s, advisory: group skew is high
 
 M16 local validation so far:
@@ -188,8 +188,8 @@ M16 local validation so far:
 - `python3 verification/tooling/check_typescript_go_m1_guardrails.py --self-test` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
-- Claude reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m16-trace-status-review-pass-1.md`)
-- Claude reviewer pass 2 -> SATISFIED with residual recommendations (`reviews/typescript-go-m16-trace-status-review-pass-2.md`)
+- agent reviewer pass 1 -> CHANGES_REQUESTED (`reviews/typescript-go-m16-trace-status-review-pass-1.md`)
+- agent reviewer pass 2 -> SATISFIED with residual recommendations (`reviews/typescript-go-m16-trace-status-review-pass-2.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 295.57s, advisory: group skew is high
 
 M17 local validation so far:
@@ -206,8 +206,8 @@ M17 local validation so far:
 - `cargo clippy -p sifr_analysis -p sifr -- -D warnings` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
 - `git diff --check` -> PASS
-- Claude reviewer pass 1 -> SATISFIED with residual recommendations (`reviews/typescript-go-m17-editor-corpus-snapshot-handles-review-pass-1.md`)
-- Claude reviewer pass 2 -> SATISFIED (`reviews/typescript-go-m17-editor-corpus-snapshot-handles-review-pass-2.md`)
+- agent reviewer pass 1 -> SATISFIED with residual recommendations (`reviews/typescript-go-m17-editor-corpus-snapshot-handles-review-pass-1.md`)
+- agent reviewer pass 2 -> SATISFIED (`reviews/typescript-go-m17-editor-corpus-snapshot-handles-review-pass-2.md`)
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 279.93s, advisory: group skew is high
 
 M4 local validation so far:
@@ -300,11 +300,11 @@ M8 local validation so far:
 - `cargo test -p sifr -- --skip test_e2e_pass`
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 306.27s, advisories: warm wall-time budget exceeded; group skew is high
-- Claude reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m8-first-class-flow-graph-review-pass-3.md`)
+- agent reviewer pass 3 -> SATISFIED (`reviews/typescript-go-m8-first-class-flow-graph-review-pass-3.md`)
 - M8 loop-else follow-up: `cargo fmt --check`, `cargo test -p sifr_hir flow_graph -- --nocapture`, `cargo clippy -p sifr_hir -- -D warnings`
-- Claude reviewer loop-else follow-up pass 1 -> SATISFIED (`reviews/typescript-go-m8-loop-else-follow-up-review-pass-1.md`)
+- agent reviewer loop-else follow-up pass 1 -> SATISFIED (`reviews/typescript-go-m8-loop-else-follow-up-review-pass-1.md`)
 - M8 closeout quick validation: `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 280.58s, advisory: group skew is high
-- Claude reviewer closeout pass 1 -> SATISFIED (`reviews/typescript-go-m8-closeout-review-pass-1.md`)
+- agent reviewer closeout pass 1 -> SATISFIED (`reviews/typescript-go-m8-closeout-review-pass-1.md`)
 
 M9 local validation so far:
 
@@ -322,7 +322,7 @@ M9 local validation so far:
 - `cargo clippy -p sifr_frontend -- -D warnings`
 - `cargo clippy --workspace -- -D warnings`
 - `scripts/run_all_tests.sh --profile quick` -> PASS, report `target/validation_lane_reports/quick.latest.json`, wall time 338.91s, advisories: warm wall-time budget exceeded; group skew is high
-- Claude reviewer pass 7 -> SATISFIED (`reviews/typescript-go-m9-fingerprints-cache-keys-review-pass-7.md`)
+- agent reviewer pass 7 -> SATISFIED (`reviews/typescript-go-m9-fingerprints-cache-keys-review-pass-7.md`)
 
 ## Purpose
 

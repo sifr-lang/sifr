@@ -1,3 +1,2 @@
-# Reference: module_cycle_diagnostics
 def value() -> int:
     return 41

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_bytes_3_write_bytes_rejects_int_list
+# Bytes write bytes rejects int list.
 def main():
     path: str = "/tmp/sifr_bytes_write_bytes_rejects_int_list.bin"
     fh = open(path, "wb")

@@ -31,7 +31,7 @@ None blocking.
 **Execution ledger — implementation, validation, and pending review loop recorded.**
 - `issues/…execution.md:1629-1635` records the implementation entry (preamble struct rework, format! cleanup, benchmark binary build, shared build dir, traceability status flip).
 - `:1637-1650` records validation evidence including the pre-existing pristine-main perf-budget failure shape (`median 1951.153ms vs threshold 1334.139ms`), the full `cargo fmt`/`clippy`/`hir`/`file-size` chain, both create-pr (`report_signature=50edc954137c87b4`) and merge (`wall_time=853.82s`, `report_signature=4ede7c71d86f381c`) gate results, with the advisory-only warm wall-time note retained.
-- `:1652-1654` records the "Pending final Opus implementation review" review-loop placeholder, ready to absorb this PASS.
+- `:1652-1654` records the "Pending final agent implementation review" review-loop placeholder, ready to absorb this PASS.
 
 **File-size guardrail.** `process_async_runtime.rs` (786), `process_async_child_runtime.rs` (625), `lib_modules_and_codegen.rs` (864), `runtime.rs` (116), `run_benchmarks.py` (672) — all under the 900-line cap.
 

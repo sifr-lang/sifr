@@ -1,4 +1,4 @@
-# Reference: stdlib_intrinsic_direct_v2
+# Stdlib intrinsic direct import.
 # expect-error[col=1]: SIFR-IMPORT-0001
 # Test that direct import from _sifr.fs is blocked for user code
 from _sifr.fs import read_text

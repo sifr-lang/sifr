@@ -1,3 +1,3 @@
-# Reference: stdlib_parity_bytes_2_encode_non_string_codec
+# Bytes encode non string codec.
 def main() -> None:
     _bad: bytes = "abc".encode(1)

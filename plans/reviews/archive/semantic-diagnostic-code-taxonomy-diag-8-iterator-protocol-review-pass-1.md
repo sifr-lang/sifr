@@ -1,7 +1,7 @@
 # Review: `milestone_diag_8` slice 5 — Iterator/Reversible Protocol Diagnostics Migration
 
 **Review round:** pass 1
-**Reviewer:** Claude (implementation review)
+**Reviewer:** agent (implementation review)
 **Branch:** `codex/diag-next-slice-original`
 **Files changed:** `protocol_diagnostics.rs`, `classes.rs`, `diagnostic_emission_inventory.md`, `ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md`
 **New fixture:** `invalid_iter_parameter_signature.sifr`

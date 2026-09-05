@@ -179,4 +179,4 @@ wave_30_1d meets all production-grade criteria:
 ---
 
 *Review generated: 2026-03-10*
-*Reviewer: Claude Opus 4.6*
+*Reviewer: agent*

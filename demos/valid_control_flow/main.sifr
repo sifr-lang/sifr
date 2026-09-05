@@ -1,4 +1,3 @@
-# Reference: valid_control_flow
 # valid_control_flow cfg validity invariants demo
 # Exercises branch/loop CFG construction paths under invariant-checked build.
 

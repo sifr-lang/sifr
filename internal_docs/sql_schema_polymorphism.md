@@ -125,8 +125,7 @@ source must be a normalized relative path in the declaring package.
 `server-version` is the minimum version for that provider artifact. A proving
 profile can use the same or a newer version.
 
-Portable libraries add one provider table for each supported family. Milestone
-15 qualifies PostgreSQL. Milestones 16 and 17 add MySQL and SQLite evidence.
+Portable libraries add one provider table for each supported family. Provider qualification covers PostgreSQL, MySQL, and SQLite.
 
 ## Authoring example
 

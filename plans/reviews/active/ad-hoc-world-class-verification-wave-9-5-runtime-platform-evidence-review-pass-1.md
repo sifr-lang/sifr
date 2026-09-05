@@ -4,7 +4,7 @@ Code-review stance against the Wave 9.5 task list in `plans/issues/active/ad-hoc
 
 ### Blockers
 
-**None.** No correctness, network-policy, schema-fail-closed, overclaim, accounting, or guardrail blocker. Implementation satisfies the W9.5 task list and the platform-policy rule. Another Opus review round is not required before PR.
+**None.** No correctness, network-policy, schema-fail-closed, overclaim, accounting, or guardrail blocker. Implementation satisfies the W9.5 task list and the platform-policy rule. Another agent review round is not required before PR.
 
 ### Verifications passed during review
 

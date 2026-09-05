@@ -2,7 +2,7 @@
 
 Status: complete
 Started: 2026-03-14
-Phase owner: Codex (GPT-5)
+Phase owner: agent
 Source phase: `issues/ad-hoc-python-source-parity-and-builtin-stdlib-surface.md`
 Current active wave: `none (phase closed)`
 

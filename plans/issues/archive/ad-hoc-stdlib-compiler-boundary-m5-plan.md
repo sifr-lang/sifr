@@ -26,7 +26,7 @@ deterministic bootstrap diagnostic.
   dependency, fallback APIs, fallback manifest field, and removed placeholders.
 - [x] Run affected checks/tests, native fixtures, all guards, workspace Clippy,
   file-size checks, and the authoritative create-PR gate.
-- [x] Run Claude Opus review rounds until `SATISFIED`.
+- [x] Run agent review rounds until `SATISFIED`.
 - [x] Merge the M5 PR and update the phase record with its link.
 
 ## Deletion inventory
@@ -59,7 +59,7 @@ deterministic bootstrap diagnostic.
   and missing private modules/members become structured
   `SIFR-STDLIB-0003` diagnostics. The lowering regression proves an absent
   compiled private member is `SIFR-NAME-0004`, with no recovery path.
-- Claude Opus review round 1 returned `SATISFIED`. Because its artifact
+- agent review round 1 returned `SATISFIED`. Because its artifact
   omitted findings it referenced, round 2 repeated the full review with a
   complete acceptance-by-acceptance record, reported no findings, and ended
   `SATISFIED`.

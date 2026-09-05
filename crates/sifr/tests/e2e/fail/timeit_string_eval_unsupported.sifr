@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_runtime_0_timeit_string_eval_unsupported
+# Timeit string eval unsupported.
 from sifr.timeit import timeit
 
 

@@ -1,3 +1,2 @@
-# Reference: diagnostic_exit_codes
 def doubled(x: int) -> int:
     return 'bad'

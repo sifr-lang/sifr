@@ -1,6 +1,6 @@
 # Review: `milestone_diag_8` slice 4 — Context-Manager Protocol Diagnostics Migration
 
-**Reviewer**: Claude code review
+**Reviewer**: agent review
 **Branch**: `codex/diag-next-slice-original`
 **Scope**: Residual context-manager protocol diagnostics for `with` expressions → `SIFR-PROTO-0003`
 **Files changed**:

@@ -1,5 +1,3 @@
-# Reference: safe_indexing
-# Reference: safe-indexing
 # safe_indexing demo
 # Showcases: safe list/dict/string indexing, Option returns,
 #            collection methods, del statement, negative indexing

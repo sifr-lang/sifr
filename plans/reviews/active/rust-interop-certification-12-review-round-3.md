@@ -144,7 +144,7 @@ error: ecosystem_backend_certification: supported rows require passing positive 
 error: compatibility category is unused: future-owned-by-separate-phase
 ```
 
-**Excluded paths absent from HEAD** (`git cat-file -e`): `.cert5probe`, `.claude`, `plans/phases/43_interoperability.md`, `logo 06.48.53.webp`, `docs/logo/logo.webp 08-03-09-514.webp`, `verification/areas/algorithmic_compatibility/corpora/leetcode`.
+**Excluded paths absent from HEAD** (`git cat-file -e`): `.cert5probe`, `.agent`, `plans/phases/43_interoperability.md`, `logo 06.48.53.webp`, `docs/logo/logo.webp 08-03-09-514.webp`, `verification/areas/algorithmic_compatibility/corpora/leetcode`.
 
 **Submodule pointers unchanged vs base:** `git diff b3f663a17 3867b21d5 -- editor_integrations verification/areas/algorithmic_compatibility` → empty, despite both showing ` M` in the live worktree.
 

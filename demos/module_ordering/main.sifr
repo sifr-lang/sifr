@@ -1,4 +1,3 @@
-# Reference: module_ordering
 from consumer import value
 
 def main():

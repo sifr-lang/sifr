@@ -2,7 +2,7 @@
 
 **Phase**: ad-hoc-runtime-and-file-object-parity-expansion
 **Wave**: wave_psp_runtime_4 (synchronous subprocess boundary cleanup and governance closure)
-**Reviewer**: Claude (completion-gap analysis)
+**Reviewer**: agent (completion-gap analysis)
 **Date**: 2026-03-20
 
 ## Executive Summary

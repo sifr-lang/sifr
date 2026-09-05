@@ -1,6 +1,6 @@
 # Review Pass 2: recursive_node_and_field_expression_surface (2026-04-04 Rerun)
 
-- **Reviewer**: Claude Opus 4.6 (automated)
+- **Reviewer**: agent (automated)
 - **Date**: 2026-04-04
 - **Input artifacts**:
   - `issues/recursive-node-field-surface-breakdown-2026-04-04.md`

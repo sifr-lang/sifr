@@ -3,7 +3,7 @@
 **Document:** `issues/ad-hoc-test-strategy-and-validation-lane-redesign.md`
 **Status:** Implementation complete; external review in progress
 **Review pass:** 3a (production-grade code assessment)
-**Assessor:** Claude Code
+**Assessor:** agent
 **Date:** 2026-03-16
 
 ---

@@ -1,6 +1,6 @@
 # Phase 31 Strategy Synthesis Review — Pass 1
 
-Reviewer: Claude Opus 4.6
+Reviewer: agent
 Date: 2026-03-26
 Input: `issues/phase31-strategy-synthesis-review.md` (dated 2026-03-24)
 Evidence: `verification/leetcode/phase31_current_full_results_20260321.json`

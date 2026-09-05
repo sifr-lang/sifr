@@ -1,4 +1,3 @@
-# Reference: nested_helpersd
 # driver/package architecture nested_helpers demo: nested-helper canonical closure
 
 # Example 1: typed nested helper with explicit dict-key guard.

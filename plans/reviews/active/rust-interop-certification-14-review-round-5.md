@@ -1,6 +1,6 @@
 ## Independent Final Review — Round 5, Rust Interop `certification_14` / Track A closeout
 
-**Head reviewed:** `8f16565969641c464f1107fe25b15820323d1b9a` (merge of `origin/main` `ca7731aa8`-descendant into `5c94b0695` "Certify Rust interop runtime ecosystem"). Read-only: no file edited, no lane launched. `git status` is byte-identical to the session snapshot (the leetcode submodule marker is only `.DS_Store` noise inside the submodule, unchanged by me). Excluded per instruction: `editor_integrations`, the leetcode corpus, `.cert5probe/`, `.claude/`, stray `*.webp`, untracked `plans/phases/43_interoperability.md` (a draft Phase 43 doc that contradicts nothing here), and dormant Track B.
+**Head reviewed:** `8f16565969641c464f1107fe25b15820323d1b9a` (merge of `origin/main` `ca7731aa8`-descendant into `5c94b0695` "Certify Rust interop runtime ecosystem"). Read-only: no file edited, no lane launched. `git status` is byte-identical to the session snapshot (the leetcode submodule marker is only `.DS_Store` noise inside the submodule, unchanged by me). Excluded per instruction: `editor_integrations`, the leetcode corpus, `.cert5probe/`, `.agent/`, stray `*.webp`, untracked `plans/phases/43_interoperability.md` (a draft Phase 43 doc that contradicts nothing here), and dormant Track B.
 
 ### Merge-integration verdict: no regression, no file overlap
 

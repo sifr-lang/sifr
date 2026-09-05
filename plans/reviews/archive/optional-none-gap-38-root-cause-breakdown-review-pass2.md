@@ -1,4 +1,4 @@
-Second-pass audit verdict from Claude output stream:
+Second-pass audit verdict from agent output stream:
 
 Verdict: PASS with one correction required.
 
@@ -17,4 +17,4 @@ Verdict: PASS with one correction required.
 
 Trace note:
 - This pass contained an incorrect owner-count claim later reconciled in pass3.
-- Captured from Claude stdout because direct reviewer file writes were blocked.
+- Captured from agent stdout because direct reviewer file writes were blocked.

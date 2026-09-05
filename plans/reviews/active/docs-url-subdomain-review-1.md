@@ -11,7 +11,7 @@ These are **not in the archive** the user excluded, and per CLAUDE.md they are t
 - `plans/roadmap.md:28` — global rule states the URL as `https://sifr.sh/docs/errors/<CODE>`. Mirrors `internal_docs/architecture.md:887` which was updated; the roadmap should match.
 - `plans/phases/27_diagnostics_error_recovery_and_stability_contract.md:25` and `:84` — active phase plan that defines this URL contract.
 - `plans/phases/38_docs_and_documentation.md:24` and `:53` — active phase plan referencing the URL for diagnostic-page publishing.
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-reference-review-pass-1.md:17` — active review; also note its inline line number (`registry.rs:287`) has drifted to `registry.rs:305`.
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-reference-review-pass-1.md:17` — active review; also note its inline line number (`registry.rs:287`) has drifted to `registry.rs:305`.
 
 Recommend updating these in this PR (or a fast follow-up) alongside `internal_docs/architecture.md`.
 

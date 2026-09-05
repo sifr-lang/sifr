@@ -1,5 +1,3 @@
-# Reference: parse_safety
-# Reference: compiler-feature-history
 # Demo: parse_safety
 # All parse/decode intrinsics now return Result[T, E] instead of panicking.
 # Invalid input is caught via try/except with specific error types:

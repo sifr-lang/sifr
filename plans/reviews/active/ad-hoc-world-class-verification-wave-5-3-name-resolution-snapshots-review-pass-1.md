@@ -1,6 +1,6 @@
 # Wave 5.3 Name-Resolution Snapshots — Review Pass 1
 
-Reviewer: Claude Opus (review pass 1)
+Reviewer: agent (review pass 1)
 Branch: `codex/wave-5-3-name-resolution-snapshots`
 Scope under review:
 - `crates/sifr_lowering/src/lib.rs`
@@ -78,6 +78,6 @@ None.
 4. Extract `project_function`/`type_name`/`expr_kind` into a shared `snapshot_projection` module before Wave 5.4 adds a fourth projection, to avoid pushing `hir_snapshot_tests.rs` past the 900-line cap. (Deferred from Wave 5.2 review pass 2.)
 5. Consider giving the `MethodCall` record a distinct path suffix (e.g., `let:total/value`) so paths uniquely key records across the full projection.
 
-## Whether another Opus review round is required after fixes
+## Whether another agent review round is required after fixes
 
 **No.** The slice is genuinely executable, the matrix and projection round-trip correctly, the inventory checker enforces claim coverage symmetrically, and tracker claims are accurate. The non-blocking findings can be folded into the same PR (or tracked explicitly in the Wave 5.3 notes as deferred risks before Wave 5.4 starts adding broader name/type rows) without another full review round.

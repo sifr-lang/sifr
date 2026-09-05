@@ -1,4 +1,3 @@
-# Reference: itertools
 from sifr.itertools import chain, pairwise, batched, accumulate, cycle
 from sifr.test import assert_bool_vector_eq
 

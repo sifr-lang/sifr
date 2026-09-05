@@ -26,7 +26,7 @@ the originating `WorkspaceSnapshotId` plus graph/source `AnalysisRevision`.
 Resolving a handle against a different snapshot returns `StaleSnapshot`.
 
 These handles are not exported from `sifr_analysis`; they prepare the compiler
-API shape without exposing a public compiler API in this workstream.
+API shape without exposing a public compiler API in this implementation.
 
 ## Package Diagnostics
 
@@ -55,6 +55,4 @@ enforces both non-duplication directions.
 - `cargo clippy -p sifr_analysis -p sifr -- -D warnings` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
 - `git diff --check` -> PASS
-- Claude reviewer pass 1 -> SATISFIED with residual recommendations
-- Claude reviewer pass 2 -> SATISFIED
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 279.93s, advisory: group skew is high

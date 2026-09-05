@@ -321,4 +321,4 @@ This phase may close only when:
 7. All runnable demos compile and run.
 8. Typed defaultdict internals use `__sifr_defaultdict_*`, with no remaining `__compat_defaultdict_*` names.
 9. Local validation evidence is recorded in the execution checklist.
-10. Claude planning and final-readiness reviews have returned `READY` after all blocking findings are addressed.
+10. agent planning and final-readiness reviews have returned `READY` after all blocking findings are addressed.

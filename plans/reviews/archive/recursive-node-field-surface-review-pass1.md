@@ -1,6 +1,6 @@
 # Review Pass 1: recursive_node_and_field_expression_surface (2026-04-04 Rerun)
 
-- **Reviewer**: Claude Opus 4.6 (automated)
+- **Reviewer**: agent (automated)
 - **Date**: 2026-04-04
 - **Scope**: All 34 fixture rows in `recursive_node_field_surface_20260404_inventory.csv`
 - **Cross-referenced against**: full diagnostics (`recursive_node_field_34_diagnostics_20260404.txt`), taxonomy JSON (`full_corpus_failure_taxonomy_20260404_live_rerun1.json`), breakdown issue (`recursive-node-field-surface-breakdown-2026-04-04.md`)

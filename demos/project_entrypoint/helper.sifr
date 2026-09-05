@@ -1,4 +1,3 @@
-# Reference: project_entrypoint
 from sifr.math import floor
 
 def adjusted(value: int) -> int:

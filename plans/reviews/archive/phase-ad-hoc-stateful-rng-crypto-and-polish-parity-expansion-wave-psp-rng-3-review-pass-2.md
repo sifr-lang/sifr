@@ -265,5 +265,5 @@ None required. The wave is production-ready.
 
 | Role | Name | Date |
 |------|------|------|
-| Reviewer | Claude | 2026-03-21 |
+| Reviewer | agent | 2026-03-21 |
 | Phase owner | Yaser Al-Najjar | — |

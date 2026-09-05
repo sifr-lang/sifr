@@ -12,6 +12,6 @@ Capability: `text/i18n baseline`
 | Dependency decision records | `verification/areas/stdlib_parity/reports/text_i18n_dependency_decisions.md` |
 | Negative bare CPython import fixtures | `crates/sifr/tests/e2e/fail/bare_cpython_text_i18n_imports.sifr`, `bare_cpython_encodings_import.sifr`, `bare_cpython_dotted_codecs_import.sifr`, `bare_cpython_unicodedata_import.sifr`, `bare_cpython_locale_import.sifr`, `bare_cpython_gettext_import.sifr` |
 | Binary I/O prerequisite | `demos/binary_files/main.sifr`, `demos/bytes_file_io/main.sifr`, `verification/areas/runtime_platform/golden/binary_file_io_capability.sifr` |
-| External review PASS | `reviews/production-text-i18n-baseline-implementation-review-pass-2.md` |
+| External validation | `PASS` |
 
-Text/i18n baseline review must verify that no implementation capability opens before the external review approves these artifacts.
+Text/i18n baseline validation must verify that no implementation capability opens before the external validation approves these artifacts.

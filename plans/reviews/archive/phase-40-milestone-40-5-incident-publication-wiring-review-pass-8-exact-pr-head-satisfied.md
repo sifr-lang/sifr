@@ -9,7 +9,7 @@
 | `gh pr view 3047 --json headRefOid` | `341b312f50de61c549f1bde01a6676f248231d02` | ✓ |
 | Branch / base | expected branch; base `main`, `OPEN`, `MERGEABLE` | ✓ |
 | Merge-base vs `main` | `0f59a48b3` (a commit on `main`'s first-parent history); `main` has since advanced by unrelated Rust-interop merges, so HEAD is not a descendant of the current tip — GitHub still reports `MERGEABLE` | ✓ (non-blocking, below) |
-| Worktree | clean except this pass's own untracked 0-byte artifact slots (`…pass-8-exact-pr-head.md`, `.claude.log`); no active review `.md` is tracked | ✓ no implementation drift |
+| Worktree | clean except this pass's own untracked 0-byte artifact slots (`…pass-8-exact-pr-head.md`, `.agent.log`); no active review `.md` is tracked | ✓ no implementation drift |
 | Diff scope | 63 files, +6238/−620 vs `0f59a48b3`; delta over pass 7 is exactly 5 files | ✓ |
 
 ## Pass-7 sole actionable — re-derived and closed

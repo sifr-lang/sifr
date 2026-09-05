@@ -2,7 +2,7 @@
 
 **Phase**: `ad-hoc-first-class-bytes-and-binary-surface-foundation`
 **Wave**: `wave_psp_bytes_0` (Architecture Lock)
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Date**: 2026-03-19
 **Status**: Production-Grade Ready
 

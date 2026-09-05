@@ -2,7 +2,7 @@
 
 Date: 2026-07-28
 
-Reviewer: Claude Opus 5 (`--effort medium`)
+Reviewer: agent (`--effort medium`)
 
 Reviewed head: `2ab9b244e`
 
@@ -31,7 +31,7 @@ Restore capture type fidelity for attribute- and method-derived locals, and
 give genuinely unresolved captures an explicit contract diagnostic. Reject
 direct and transitive mutating retained captures before Cargo with
 `SIFR-RUST-CB-0001`, add lowering and generated-build evidence, qualify the
-docs, run the authoritative gate, and repeat the exact Opus review.
+docs, run the authoritative gate, and repeat the exact agent review.
 
 ## Resolution
 

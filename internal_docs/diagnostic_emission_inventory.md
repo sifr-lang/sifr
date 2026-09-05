@@ -95,7 +95,7 @@ The public `CompileError` abstraction and the transitional `CompilerDiagnostic` 
 | `crates/sifr_driver/src/build/workspace.rs` | 7 | temporary dir, cargo manifest, rustc/cargo execution, binary artifact failures | `SIFR-BUILD-0002..0006` by operation. |
 | `crates/sifr_driver/src/stdlib/bootstrap.rs` | 4 | embedded stdlib parse/typecheck/bootstrap failure | `SIFR-STDLIB-0001..0003` for embedded stdlib bootstrap defects; internal if invariant-only. |
 | `crates/sifr_driver/src/stdlib/cache.rs` | 1 | stdlib cache build reuse failure | `SIFR-STDLIB-0004` or `SIFR-BUILD-*` depending on failing operation. |
-| `crates/sifr_driver/src/workspace/mod.rs` | 2 | manifest parse/source-root validation | Existing `SIFR-WORKSPACE-0001..0004` reviewed and kept if templates remain precise. |
+| `crates/sifr_driver/src/workspace/mod.rs` | 2 | manifest parse/source-root validation | Existing `SIFR-WORKSPACE-0001..0004` evaluated and kept if templates remain precise. |
 | `crates/sifr_driver/src/test_runner/execution.rs` | 8 | test-runner compile/run/build failures | `SIFR-BUILD-*` for generated Rust test harness build/run operations. |
 | `crates/sifr_driver/src/test_runner/orchestrator.rs` | 2 | test orchestration failure and frontend error forwarding | `BUILD-*` for orchestration; forwarded frontend diagnostics retain original identity. |
 | `crates/sifr/src/main.rs` | 1 | CLI panic boundary carries `SIFR-INTERNAL-0001` | CLI should render diagnostics from driver; direct construction should disappear. |
@@ -119,7 +119,7 @@ Current public-code mechanisms to remove:
 | Message-embedded pseudo-code | decimal/type-system messages and fixture expectations | removed in `decimal diagnostic cleanup` behavior group 1; decimal diagnostics now carry top-level `SIFR-DECIMAL-*` codes with no secondary message code | keep top-level `SIFR-DECIMAL-*` identity and no message-embedded pseudo-code |
 | Test-only hard-coded diagnostics | CLI renderer and driver diagnostics tests | locks renderer behavior to legacy compiler-stage buckets and pseudo-code text | renderer/harness tests construct canonical diagnostics through `sifr_diagnostics` fixtures |
 
-Workspace code review for `diagnostic registry population`:
+Workspace notes for `diagnostic registry population`:
 
 - Keep `SIFR-WORKSPACE-0001` for malformed `sifr.toml` parsing.
 - Keep `SIFR-WORKSPACE-0002` for a `[source].root` path that escapes the workspace root.
@@ -269,7 +269,7 @@ Warnings and notes are part of the same diagnostic stream and cannot remain unco
 
 | Surface | Current sites | Current behavior | Target code / owner |
 | --- | ---: | --- | --- |
-| retired arithmetic overflow warning | no producer remains after exact-integer lowering | no warning is emitted; checked operations use typed error channels | retired `SIFR-TYPE-0901`; Item 8 removed its dead IR, registry, renderer, catalog, and docs paths |
+| retired arithmetic overflow warning | no producer remains after exact-integer lowering | no warning is emitted; checked operations use typed error channels | retired `SIFR-TYPE-0901`; Error-flow cleanup removed its dead IR, registry, renderer, catalog, and docs paths |
 | `ctx.warn(...)` unreachable statement | 1 in `lower/statements.rs` | warning string when a statement after guaranteed exit is ignored | `SIFR-FLOW-0901` warning |
 | `ctx.warn(...)` exhaustive-return validation panic recovery | 1 in `lower/typing_and_functions.rs` | warning string after `catch_unwind` skips control-flow validation | wrong-layer internal boundary; route as `SIFR-INTERNAL-0001` or eliminate panic path rather than keeping a user warning |
 | `ctx.reveal_types` | `reveal_type(...)` in `lower/builtin_calls.rs`; guarded-index reveal propagation in `lower/guarded_index.rs` | note-like developer output currently stored as strings | `SIFR-TYPE-0902` note with `revealed_type` arg and recovery-cap participation |

@@ -70,7 +70,7 @@ Acceptance criteria:
 - Architecture no longer treats source-level `int` as Rust `Copy` or public `BigInt` as the arbitrary-precision target.
 - `ArithmeticLimitError`, `FloatOverflowError`, `FloatPrecisionLossError`, `JsonIntegerRangeError`, and `JsonLimitError` have documented parents and fields.
 - Inventory names the parser/AST, HIR, type checker, codegen, driver/runtime, stdlib, verification, and docs surfaces affected.
-- Review history names the most recent Claude review artifact and a human/codex acknowledgement that blocking findings were addressed.
+- Review history names the most recent agent review artifact and a human/codex acknowledgement that blocking findings were addressed.
 
 Validation:
 
@@ -363,7 +363,7 @@ Scope:
 - Add fuzz/property tests for parsing, narrowing, arithmetic budgets, serialization profiles, and fixed-width helper APIs.
 - Verify generated Rust panic-shape gates across pass fixtures.
 - Run full validation and record closure artifacts.
-- Produce a final phase closure review with Claude and human review notes if applicable.
+- Produce a final phase closure review with agent and human review notes if applicable.
 
 Acceptance criteria:
 
@@ -383,9 +383,9 @@ Validation:
 
 ## Review History
 
-- [x] Claude review pass 1 completed for original contract: `reviews/integer-model-fixed-width-contract-review-pass-1.md`.
-- [x] Claude review pass 2 completed after addressing pass 1 findings: `reviews/integer-model-fixed-width-contract-review-pass-2.md`.
-- [x] Claude review pass 3 completed after lock-ready polish: `reviews/integer-model-fixed-width-contract-review-pass-3.md`.
+- [x] agent review pass 1 completed for original contract: `reviews/integer-model-fixed-width-contract-review-pass-1.md`.
+- [x] agent review pass 2 completed after addressing pass 1 findings: `reviews/integer-model-fixed-width-contract-review-pass-2.md`.
+- [x] agent review pass 3 completed after lock-ready polish: `reviews/integer-model-fixed-width-contract-review-pass-3.md`.
 - [x] Principal-engineer broader-surface review pass 4 completed: `reviews/integer-model-fixed-width-contract-review-pass-4-broader-surfaces.md`.
 - [x] Principal-engineer broader-surface review pass 5 completed after pass 4 polish: `reviews/integer-model-fixed-width-contract-review-pass-5-broader-surfaces-final.md`.
 - [x] Phase-plan review pass 1 completed after splitting design and milestones: `reviews/integer-model-phase-plan-review-pass-1.md`.

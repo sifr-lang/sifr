@@ -183,7 +183,7 @@ wave_psp_ext_4 has successfully completed the waiver-ledger reduction and exit-c
 
 ## Review Metadata
 
-- Reviewer: Claude Code (production-grade review)
+- Reviewer: agent (production-grade review)
 - Artifacts reviewed:
   - `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`
   - `verification/stdlib/wave_psp_b2_cpython_traceability.md`

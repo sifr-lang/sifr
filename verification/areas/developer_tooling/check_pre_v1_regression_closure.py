@@ -87,8 +87,8 @@ def require_string(payload: dict[str, Any], key: str, context: str) -> str:
 
 
 def validate_inventory(contract: dict[str, Any]) -> None:
-    if contract.get("schema_version") != 1:
-        raise GuardError("regression closure schema_version must be 1")
+    if contract.get("schema_version") != 2:
+        raise GuardError("regression closure schema_version must be 2")
     baseline = contract.get("baseline")
     if not isinstance(baseline, dict):
         raise GuardError("regression closure baseline must be an object")
@@ -208,9 +208,9 @@ def validate_create_pr_locks(contract: dict[str, Any], payload: dict[str, Any], 
         if not source.is_file():
             raise GuardError(f"locked create-PR fixture is missing: {source}")
 
-    decision = contract.get("item_10h_return_capture_twin_decision")
+    decision = contract.get("return_capture_coverage_decision")
     if decision != "not-added-existing-return-capture-coverage":
-        raise GuardError("Item 10H return-capture twin decision drifted")
+        raise GuardError("Return-capture twin decision drifted")
     return_capture_test = (
         repo_root
         / "crates"
@@ -220,7 +220,7 @@ def validate_create_pr_locks(contract: dict[str, Any], payload: dict[str, Any], 
         / "async_runtime_codegen_tests.rs"
     ).read_text(encoding="utf-8")
     if "fn test_try_finally_runs_cleanup_before_timeout_propagates()" not in return_capture_test:
-        raise GuardError("existing Item 10H return-capture regression coverage is missing")
+        raise GuardError("existing Return-capture regression coverage is missing")
 
 
 def validate_all(repo_root: Path = REPO_ROOT) -> None:

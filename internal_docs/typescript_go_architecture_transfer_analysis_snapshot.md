@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer: Analysis Snapshot
 
-status: analysis snapshot implementation review
+status: analysis snapshot implementation status
 
 analysis snapshot migrates editor-facing analysis from revision-token snapshots to captured
 `WorkspaceSnapshot` handles while preserving serialized execution. The

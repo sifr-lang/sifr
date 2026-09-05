@@ -26,7 +26,7 @@ Smoke mode is part of local validation:
 verification/areas/developer_tooling/lsp_large_session.py --mode smoke
 ```
 
-Full mode is a manual qualification check for explicit large-session review:
+Full mode is a manual qualification check for explicit large-session validation:
 
 ```bash
 verification/areas/developer_tooling/lsp_large_session.py --mode full

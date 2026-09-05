@@ -1,4 +1,3 @@
-# Reference: math
 # math math parity demo
 from sifr.math import (
     cbrt, exp2, fma, log_base, isclose,

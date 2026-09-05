@@ -24,7 +24,7 @@ These structure rules apply to CPython parity fixtures. They are not a blanket s
 rule for unrelated non-parity e2e fixtures.
 
 Enforcement model:
-- These rules are intended to be enforced through normal module review and readiness review.
+- These rules are intended to be enforced through normal module validation and readiness validation.
 - A dedicated structural-validation script is optional future hardening, not a baseline
   requirement for CPython parity readiness.
 
@@ -36,6 +36,6 @@ Enforcement model:
 3. Keep positive-path, negative-path, and safety-adaptation assertions explicit and easy
    to locate inside the approved parity scope.
 4. Keep fixture ordering, test data, and assertion grouping deterministic so failures are
-   reproducible and reviewer-friendly.
+   reproducible and validator-friendly.
 5. Reuse this baseline format unless a module-specific extension is explicitly justified
    in the readiness tracking docs.

@@ -235,7 +235,7 @@ fn missing_metadata_is_not_repaired_from_generated_rust() {
 }
 
 #[test]
-fn item11_materialized_project_is_locked_portable_and_relocatable() {
+fn materialized_project_is_locked_portable_and_relocatable() {
     let source = r#"
 def repeat_text(text: str, count: int) -> str:
     return text * count
@@ -251,7 +251,7 @@ def main():
     let first = tempfile::tempdir().expect("first materialization root");
     let report = sifr_driver::materialize_single_file(
         source,
-        Path::new("item11_portable.sifr"),
+        Path::new("portable_project.sifr"),
         first.path(),
     )
     .unwrap_or_else(|errors| {

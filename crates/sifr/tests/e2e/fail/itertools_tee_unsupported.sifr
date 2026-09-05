@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_0_itertools_tee_unsupported
+# Itertools tee unsupported.
 from sifr.itertools import tee
 
 

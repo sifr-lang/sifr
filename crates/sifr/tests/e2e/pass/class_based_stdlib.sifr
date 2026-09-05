@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_e2_class_heavy_custom_cleanup
+# Class based stdlib.
 from sifr.argparse import ArgumentParser, Namespace
 from sifr.ipaddress import ip_address, AddressValueError, IPv4Address
 from sifr.uuid import uuid4_obj, uuid_from_hex, UUID

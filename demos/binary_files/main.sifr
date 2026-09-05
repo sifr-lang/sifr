@@ -1,5 +1,3 @@
-# Reference: runtime_binary_files
-# Reference: runtime-and-file-object-parity-expansion
 from sifr.io import exists
 from sifr.os import remove_file
 

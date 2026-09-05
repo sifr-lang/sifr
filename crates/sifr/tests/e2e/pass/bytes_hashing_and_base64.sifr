@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_rng_2_hashlib_base64_bytes_native_surface
+# Bytes hashing and base64.
 from sifr.base64 import (
     b64decode_bytes, b64encode_bytes,
     urlsafe_b64decode_bytes, urlsafe_b64encode_bytes

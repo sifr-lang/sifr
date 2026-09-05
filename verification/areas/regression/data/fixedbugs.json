@@ -30,7 +30,7 @@
     },
     {
       "id": "FB-0004",
-      "issue": "pre-v1 canonical contract regression closure Item 8",
+      "issue": "control-flow graph validation",
       "root_cause_category": "cfg-invariant-panic-path",
       "suite_location": "verification/areas/regression/fixtures/crashes/CR-0001_cfg_invariant_minimized.sifr",
       "command": "check",

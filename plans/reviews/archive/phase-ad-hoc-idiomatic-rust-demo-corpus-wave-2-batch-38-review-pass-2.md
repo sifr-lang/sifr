@@ -5,7 +5,7 @@
   - `demos/safe_indexing/idiomatic.rs`
   - `demos/guarded_sequence_index/idiomatic.rs`
 - Review method:
-  - External production-grade `claude -p` review run per file.
+  - External production-grade `agent review` review run per file.
   - Prompts were short, behavior-driven, and constrained toward one-line verdicts for transport stability.
 
 ### Results

@@ -1,4 +1,3 @@
-# Reference: constrained_typevars
 # constrained_typevars TypeVar constraint enforcement demo
 # Shows TypeVar constraints/bounds accepting valid concrete instantiations only.
 from typing import TypeVar

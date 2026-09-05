@@ -1,6 +1,6 @@
 ## Independent Final Review — Rust Interop certification_14 / Track A closeout
 
-**Scope reviewed.** Working-tree diff vs `origin/main` (the branch has zero commits ahead; all certification_14 work is uncommitted): `crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs`, both scenario validators, two fixture `sifr.toml`/`README.md` pairs, and the four planning documents. Excluded per instruction: `editor_integrations`, `verification/areas/algorithmic_compatibility/corpora/leetcode`, `.cert5probe/`, `.claude/`, stray `*.webp`, `plans/phases/43_interoperability.md`, and dormant Track B.
+**Scope reviewed.** Working-tree diff vs `origin/main` (the branch has zero commits ahead; all certification_14 work is uncommitted): `crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs`, both scenario validators, two fixture `sifr.toml`/`README.md` pairs, and the four planning documents. Excluded per instruction: `editor_integrations`, `verification/areas/algorithmic_compatibility/corpora/leetcode`, `.cert5probe/`, `.agent/`, stray `*.webp`, `plans/phases/43_interoperability.md`, and dormant Track B.
 
 ### Validation I reproduced independently
 

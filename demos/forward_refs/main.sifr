@@ -1,5 +1,3 @@
-# Reference: forward_refs
-# Reference: compiler-feature-history
 # Forward type references allow functions to mention classes declared later.
 
 # --- Functions using classes defined BELOW ---

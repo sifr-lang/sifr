@@ -1,6 +1,6 @@
 # milestone_psp_7 Review Pass 1
 
-**Reviewer:** Codex
+**Reviewer:** agent
 **Date:** 2026-03-16
 **Scope:** Parity governance, exit closure inventory, and waiver governance for milestone_psp_7
 

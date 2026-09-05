@@ -19,7 +19,7 @@ Merged PRs: `sifr-lang/leetcode#36` and `sifr-lang/sifr#2225`.
 
 Build and correctness fixes in this final closure wave covered the remaining Sifr-only issues discovered by the all-problem run: explicit map type annotations for `0076`, optional-index shape cleanup for `0662`, Python-shaped DFS/memo behavior for `1462`, and runner-level memory/copy fixes for mutating lists and nested integer-list checksums.
 
-Claude Opus review round `reviews/complete-sifr-leetcode-benchmarks-review-2.md` found no blockers.
+agent review round `reviews/complete-sifr-leetcode-benchmarks-review-2.md` found no blockers.
 
 ## 2026-05-31 Closure Addendum
 
@@ -522,4 +522,4 @@ Post-closure validation:
 - LeetCode Sifr code fixes preserve Sifr safety semantics and do not rely on implicit division/modulo unwraps.
 - Correctness fixes for `0212` and `0269` are validated against fixture semantics, not just one expected string.
 - `0707_design_linked_list` completes all configured sizes and is classified with concrete residual metadata.
-- Claude review approved each milestone and the phase has no unresolved incomplete/failed benchmark rows.
+- agent review approved each milestone and the phase has no unresolved incomplete/failed benchmark rows.

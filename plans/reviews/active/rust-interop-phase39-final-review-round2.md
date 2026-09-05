@@ -14,7 +14,7 @@ None.
 
 #### Low
 
-1. **Roadmap row (`plans/roadmap.md:79`) addresses round 1 finding 1 in full.** Status moved `planned` → `completed, audited`, matching the existing convention used by `:67-77` (e.g., Phase 37.1 `:77`). The completion note cites PR range `#2702-#2728`, final local `create-pr` validation, the Opus closeout review, and links both active follow-ups (`rust-interop-runtime-ecosystem-certification.md` for future-owned surfaces and the new `rust-interop-verification-matrix-hardening.md` for verifier carry-overs). Consistent with AGENTS.md §"Planning and tracking files". ✓
+1. **Roadmap row (`plans/roadmap.md:79`) addresses round 1 finding 1 in full.** Status moved `planned` → `completed, audited`, matching the existing convention used by `:67-77` (e.g., Phase 37.1 `:77`). The completion note cites PR range `#2702-#2728`, final local `create-pr` validation, the agent closeout review, and links both active follow-ups (`rust-interop-runtime-ecosystem-certification.md` for future-owned surfaces and the new `rust-interop-verification-matrix-hardening.md` for verifier carry-overs). Consistent with AGENTS.md §"Planning and tracking files". ✓
 
 2. **M39.13 status line (`plans/phases/39_rust_interop.md:271`) addresses both staged corrections.** `opened` → `merged` for PR #2728 lands as round 1 required, and the trailing sentence routes non-blocking verifier carry-overs to the new active issue with a correctly-resolved relative path (`../issues/active/rust-interop-verification-matrix-hardening.md`). The existing reviewer sign-off reference to `rust-interop-milestone39-13-review-round5.md` is preserved. ✓
 

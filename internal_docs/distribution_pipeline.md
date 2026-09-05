@@ -303,7 +303,7 @@ checksums are written.
 Run the capability demo from a clean checkout:
 
 ```bash
-demos/stable_candidate_qualification_demo.sh
+demos/stable_candidate_qualification/run.sh
 ```
 
 It builds and qualifies the real host artifact, installs it in isolation, runs
@@ -547,7 +547,7 @@ verification/areas/distribution_release/cases/site_release_workflow_contract.sh
 Run the capability demo with:
 
 ```bash
-demos/stable_self_update_demo.sh
+demos/stable_self_update/run.sh
 ```
 
 It performs a forced beta-to-stable handoff and an ordinary
@@ -633,7 +633,7 @@ days, source/profile/toolchain/submodule drift, any changed transported byte,
 supporting report or release-note drift, and a stale live index identity. It
 then emits—without mutation—the exact proposed generation/index, 20 artifact
 identities, Marketplace VSIX binding, site base commit, and evidence/source
-identities for protected-environment review. The summary is immutable for 30
+identities for protected-environment approval. The summary is immutable for 30
 days; its plan, release-report, qualification, live-index, and proposed-index
 digests are explicit reusable-workflow outputs, and the later publish job must
 consume the exact summary digest.
@@ -712,7 +712,7 @@ workflow with the exact canonical stable-site-facts digest, verifies the public
 stable installer/update/asset/Marketplace and withdrawal-documentation facts,
 and exercises both working-client and out-of-band recovery. Roll-forward also
 emits the exact stable release sign-off; both operations emit a schema-v2
-incident sign-off correlated to the protected approver, site run, deployed
+incident sign-off correlated to the protected reviewer, site run, deployed
 commit, smoke evidence, and optional release sign-off. Resume either finishes a
 pending attempt with a newly allocated non-reused generation or proves the
 approved mutation is already live and performs no second index replacement.
@@ -737,7 +737,7 @@ migration, or fallback is retained.
 
 Both bootstrap stages run in the `stable-release` environment. Publish reads
 the workflow run's GitHub approval history and fails unless it contains an
-authorized environment approver. The default requires a login distinct from
+authorized environment reviewer. The default requires a login distinct from
 `GITHUB_TRIGGERING_ACTOR`; the canonical unexpired single-maintainer waiver
 allows the named owner only for the two bootstrap stages. Its checked-in digest
 is pinned by the protected workflow, and any distinct reviewer takes precedence
@@ -798,5 +798,5 @@ uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite stable-publication
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite incident-governance
-demos/stable_incident_recovery_demo.sh
+demos/stable_incident_recovery/run.sh
 ```

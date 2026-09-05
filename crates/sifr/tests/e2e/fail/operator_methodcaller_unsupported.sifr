@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_b2_operator_methodcaller_unsupported
+# Operator methodcaller unsupported.
 from sifr.operator import methodcaller
 
 

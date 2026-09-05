@@ -1,6 +1,6 @@
 # Review: Focus-4 Root-Cause Closure Package (Pass 3)
 
-Reviewer: Claude Opus 4.6
+Reviewer: agent
 Date: 2026-04-06
 
 ## Prior Review History

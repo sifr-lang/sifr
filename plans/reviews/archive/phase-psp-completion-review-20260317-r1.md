@@ -1,7 +1,7 @@
 # Phase PSP Completion Review: ad-hoc-python-source-parity-and-builtin-stdlib-surface
 
 **Review Date**: 2026-03-17
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Phase Status**: **COMPLETE**
 **Worktree**: `/Users/yaseralnajjar/.codex/worktrees/0761/codebase`
 

@@ -15,18 +15,18 @@ certification is reopened separately in
 
 | Milestone | Status | Evidence |
 | --- | --- | --- |
-| M0. Architecture Baseline and Inventory | completed, merged | Baseline tables added to [`internal_docs/sifr_sysroot_and_stdlib_architecture.md`][sysroot-stdlib-architecture]; migration registry added at `internal_docs/stdlib_native_surface_ownership.toml`; local create-pr validation and Opus review were satisfied in merged [PR #2741](https://github.com/sifr-lang/sifr/pull/2741). |
+| M0. Architecture Baseline and Inventory | completed, merged | Baseline tables added to [`internal_docs/sifr_sysroot_and_stdlib_architecture.md`][sysroot-stdlib-architecture]; migration registry added at `internal_docs/stdlib_native_surface_ownership.toml`; local create-pr validation and agent review were satisfied in merged [PR #2741](https://github.com/sifr-lang/sifr/pull/2741). |
 | M1. Sysroot Identity and Resolver Skeleton | completed, merged | `crates/sifr_sysroot` adds manifest parsing, layout validation, resolver precedence, digest canonicalization, development source-tree sysroot resolution, and CLI `sifr --print sysroot` support in merged [PR #2743](https://github.com/sifr-lang/sifr/pull/2743). |
 | M2. Rename Current Compiler Stdlib Crate | completed, merged | Merged in [PR #2745](https://github.com/sifr-lang/sifr/pull/2745). The compiler-side crate is now `crates/sifr_stdlib_model`, freeing `sifr_stdlib` for the generated-program crate. |
 | M3. Create Generated-Program `sifr_stdlib` Crate | completed, merged | `crates/sifr_stdlib` now provides the generated-program crate foundation with narrow feature gates, runtime-backed wrapper APIs, feature-plan expectations, installed-layout checks, and representative feature-tree snapshots in merged [PR #2747](https://github.com/sifr-lang/sifr/pull/2747). |
 | M4. Full Sysroot Workspace and Source Layout | completed, merged | Merged in [PR #2750](https://github.com/sifr-lang/sifr/pull/2750). Public stdlib sources now live under `stdlib/sifr`, private `_sifr` placeholders are present under `stdlib/_sifr`, sysroot validation covers both stdlib crates and source roots, and CLI/LSP definitions load from the resolved sysroot source inventory. |
-| M5. Generated Cargo Uses Sysroot Crates and Vendor | completed, merged | Merged in [PR #2752](https://github.com/sifr-lang/sifr/pull/2752). Generated Cargo now consumes `SysrootDependencyPlan`, emits sysroot `sifr_runtime`/`sifr_stdlib` path dependencies with `default-features = false`, applies sysroot vendor config invocation-scoped for Sifr-managed builds, reports sysroot identity, and vendors the sysroot workspace graph. Local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory; Opus review pass 2 was satisfied for PR readiness with non-blocking package/offline fixture follow-ups. |
-| M6. Distribution Artifact and Installer Update | completed, merged | Merged in [PR #2753](https://github.com/sifr-lang/sifr/pull/2753). Release artifacts now package `bin/sifr` plus the complete sysroot, validate archive contents before checksums/installer generation, write schema-2 receipts with `sysroot_path`, and preserve binary/sysroot pairing through self-update. Focused validation passed: `cargo test -p sifr self_update`, `cargo test -p sifr_sysroot`, distribution release representative suite, and developer tooling TypeScript-Go transfer suite. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. Opus review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. Opus review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
-| M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. Opus review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
+| M5. Generated Cargo Uses Sysroot Crates and Vendor | completed, merged | Merged in [PR #2752](https://github.com/sifr-lang/sifr/pull/2752). Generated Cargo now consumes `SysrootDependencyPlan`, emits sysroot `sifr_runtime`/`sifr_stdlib` path dependencies with `default-features = false`, applies sysroot vendor config invocation-scoped for Sifr-managed builds, reports sysroot identity, and vendors the sysroot workspace graph. Local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory; agent review pass 2 was satisfied for PR readiness with non-blocking package/offline fixture follow-ups. |
+| M6. Distribution Artifact and Installer Update | completed, merged | Merged in [PR #2753](https://github.com/sifr-lang/sifr/pull/2753). Release artifacts now package `bin/sifr` plus the complete sysroot, validate archive contents before checksums/installer generation, write schema-2 receipts with `sysroot_path`, and preserve binary/sysroot pairing through self-update. Focused validation passed: `cargo test -p sifr self_update`, `cargo test -p sifr_sysroot`, distribution release representative suite, and developer tooling TypeScript-Go transfer suite. agent review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
+| M7. LSP and Tooling Sysroot Source/Navigation Integration | completed, merged | Merged in [PR #2754](https://github.com/sifr-lang/sifr/pull/2754). Sysroot public/private stdlib files now flow into frontend source maps with source origins, analysis/LSP overlay hosts consume sysroot tooling sources, the stdlib symbol bucket is populated from parser-backed installed public sources, public stdlib import/call-site definitions route to installed sysroot URIs, and public stdlib implementation files can navigate to private declaration files without exposing `_sifr` declarations to user completion. agent review pass 3 was satisfied after splitting proactive sysroot diagnostics and generated/synthetic origin production to M7b; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
+| M7b. Tooling Sysroot Diagnostics and Synthetic Origins | completed, merged | Merged in [PR #2755](https://github.com/sifr-lang/sifr/pull/2755). Tooling sysroot probes now feed proactive LSP diagnostics and structured `sifr/sysroot` broken/mismatch responses with observed paths; development LSP/CLI root and toolchain comparison coverage verifies local build parity; generated Rust preview metadata now carries production `GeneratedSupport` and `CompilerSynthetic` source-map entries from real compiler output. agent review pass 2 was satisfied; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
+| M8. Rust Interop Context for Private Stdlib Declarations | completed, merged | Merged in [PR #2756](https://github.com/sifr-lang/sifr/pull/2756). The branch adds a compiler-owned synthetic package context for private `_sifr` Rust interop declarations, resolves private targets only to canonical sysroot `sifr_stdlib`/`sifr_runtime` crates, applies sysroot trust without extending trust to user packages, keeps sysroot interop in sysroot-only vendor mode, and routes probes through sysroot runtime/vendor inputs. agent review pass 2 is satisfied after hardening merged user+sysroot context validation and sysroot interop dependency-plan cache fingerprints; local `scripts/run_all_tests.sh --profile create-pr` passed with only the warm wall-time advisory. |
 | M9-M13 | completed, merged | M9 wave 1 merged in [PR #2757](https://github.com/sifr-lang/sifr/pull/2757), migrating `_sifr.platform` and `_sifr.html` to private Rust interop declarations backed by `sifr_stdlib` features. M9 wave 2 merged in [PR #2759](https://github.com/sifr-lang/sifr/pull/2759), migrating `_sifr.calendar` the same way. M9 wave 3 merged in [PR #2761](https://github.com/sifr-lang/sifr/pull/2761), migrating `_sifr.uuid` the same way. M9 wave 4 merged in [PR #2763](https://github.com/sifr-lang/sifr/pull/2763), migrating `_sifr.math` the same way. M9 wave 5 merged in [PR #2765](https://github.com/sifr-lang/sifr/pull/2765), migrating `_sifr.crypto` hash functions used by `sifr.hashlib` while retaining intrinsic fallback for unmigrated crypto helpers. M9 wave 6 merged in [PR #2767](https://github.com/sifr-lang/sifr/pull/2767), migrating infallible base64/base32 encoders while explicitly deferring fallible decode/options to M10. M10 wave 1 merged in [PR #2769](https://github.com/sifr-lang/sifr/pull/2769), migrating fallible base64/base32 decode/options through typed result-error direct interop. M10 wave 2 merged in [PR #2771](https://github.com/sifr-lang/sifr/pull/2771), migrating `_sifr.regex`/`sifr.re` through private Rust interop backed by `sifr_stdlib::regex` while retaining the separate direct regex dependency for `sifr.pathlib` glob lowering. M10 wave 3 merged in [PR #2776](https://github.com/sifr-lang/sifr/pull/2776), migrating `_sifr.url`/`sifr.url` through private Rust interop backed by `sifr_stdlib::url`. M10 wave 4 merged in [PR #2778](https://github.com/sifr-lang/sifr/pull/2778), migrating `_sifr.toml`/`sifr.tomllib` through private Rust interop backed by `sifr_stdlib::toml`. M10 wave 5 merged in [PR #2780](https://github.com/sifr-lang/sifr/pull/2780), migrating `_sifr.json`/`sifr.json` through private Rust interop backed by `sifr_stdlib::json` token adapters while preserving `JSONDecodeError` location fields and JSON integer profile errors. M10 wave 6 merged in [PR #2781](https://github.com/sifr-lang/sifr/pull/2781), migrating `_sifr.encoding`/`sifr.encoding` through private Rust interop backed by `sifr_stdlib::encoding` while preserving public `DecodeError`/`EncodeError` wrappers. M10 wave 7 merged in [PR #2782](https://github.com/sifr-lang/sifr/pull/2782), migrating `_sifr.unicode`/`sifr.unicode` through private Rust interop backed by `sifr_stdlib::unicode` while preserving public `UnicodeDataError` wrappers and Unicode segmentation tuple payloads. M10 wave 8 merged in [PR #2784](https://github.com/sifr-lang/sifr/pull/2784), migrating `_sifr.i18n`/`sifr.i18n` through private Rust interop backed by `sifr_stdlib::i18n` while preserving public i18n error wrappers. M10 wave 9 merged in [PR #2785](https://github.com/sifr-lang/sifr/pull/2785), migrating `_sifr.compress`/`sifr.gzip`/`sifr.zipfile` through private Rust interop backed by `sifr_stdlib` gzip and zipfile adapters. M10 wave 10 merged in [PR #2787](https://github.com/sifr-lang/sifr/pull/2787), migrating `_sifr.datetime` through private Rust interop backed by the `sifr_stdlib` time feature and fixing grouped E2E fixture planning for datetime/compression stdlib features. M10 wave 11 merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789), splitting `_sifr.bytes` so `encode_utf8` and `bytes_to_hex` move to private `sifr_stdlib::bytes` adapters while first-class bytes constructors, hex parsing, strict hex formatting, and encode/decode method glue remain compiler-owned. M10 wave 12 merged in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791), splitting `_sifr.collections` so set helpers and legacy JSON-string `defaultdict_*` helpers move to private `sifr_stdlib::collections` adapters while Counter/defaultdict language glue and core collection behavior remain compiler-owned. M13 closeout merged in [PR #2810](https://github.com/sifr-lang/sifr/pull/2810), completing a post-main adapter-policy re-audit, explicit sysroot CPython differential runs, exact TLS/HTTP native-link trust, E2E sysroot helper cleanup without env/ancestor fallback discovery, direct `list[int]` Rust interop argument bridging for private collections adapters, and a full merge validation run: `scripts/run_all_tests.sh` passed with hardening `variants=261 failures=0`; only warm wall-time and batching-skew advisories remained. |
-| Post-M10 Adapter Policy Adherence Audit | completed, merged | Merged in [PR #2774](https://github.com/sifr-lang/sifr/pull/2774). The audit classified completed M9/M10 private bindings, added executable guards for direct `sifr_stdlib` targets and trust separation, documented residual `_sifr.crypto` random scope, and passed Opus review pass 2 plus local `scripts/run_all_tests.sh --profile create-pr` with only the warm wall-time advisory. |
+| Post-M10 Adapter Policy Adherence Audit | completed, merged | Merged in [PR #2774](https://github.com/sifr-lang/sifr/pull/2774). The audit classified completed M9/M10 private bindings, added executable guards for direct `sifr_stdlib` targets and trust separation, documented residual `_sifr.crypto` random scope, and passed agent review pass 2 plus local `scripts/run_all_tests.sh --profile create-pr` with only the warm wall-time advisory. |
 
 Latest merged waves: M13 wave 1 installed toolchain certification merged in
 [PR #2808](https://github.com/sifr-lang/sifr/pull/2808), M13 wave 2 doctor and
@@ -78,13 +78,13 @@ stub form and compiler-owned effective no-panic policy.
 - M10 wave 11 bytes helper interop split: merged in [PR #2789](https://github.com/sifr-lang/sifr/pull/2789).
 - M10 wave 12 collections helper interop split: merged in [PR #2791](https://github.com/sifr-lang/sifr/pull/2791).
 - M11 certification-gate audit: [PR #2793](https://github.com/sifr-lang/sifr/pull/2793) merged.
-- M12 wave 1 retained intrinsic allowlist guard: [PR #2795](https://github.com/sifr-lang/sifr/pull/2795) merged after local implementation, Opus review pass 2, and create-pr validation completed on `m12-retained-intrinsic-allowlist`.
-- M12 wave 2 verification target-binary normalization: [PR #2797](https://github.com/sifr-lang/sifr/pull/2797) merged after local implementation, Opus review pass 2, and create-pr validation completed on `m12-target-binary-normalization`.
-- M12 wave 3 native ownership registry retirement: [PR #2799](https://github.com/sifr-lang/sifr/pull/2799) merged after local implementation, Opus review pass 1, and create-pr validation completed on `m12-remove-native-ownership-registry`.
-- M12 wave 4 migrated-intrinsic closure guard: [PR #2803](https://github.com/sifr-lang/sifr/pull/2803) merged after local implementation, Opus review pass 4, and create-pr validation completed on `m12-migration-closure-guard`.
-- M13 wave 1 installed toolchain certification: [PR #2808](https://github.com/sifr-lang/sifr/pull/2808) opened after post-main local implementation, Opus review pass 5, installed sysroot smoke/heavy certification, and create-pr validation completed on `m13-installed-toolchain-certification`.
-- M13 wave 2 doctor and self-update certification: [PR #2809](https://github.com/sifr-lang/sifr/pull/2809) opened after local implementation, Opus review pass 2, installed smoke certification, and create-pr validation completed on `m13-doctor-self-update-certification`.
-- M13 phase closeout: [PR #2810](https://github.com/sifr-lang/sifr/pull/2810) merged after Opus review pass 2 satisfaction, `scripts/run_all_tests.sh --profile create-pr`, and full local merge validation via `scripts/run_all_tests.sh` on 2026-07-06 with `hardening=variants=261 failures=0 blocking_failures=0`.
+- M12 wave 1 retained intrinsic allowlist guard: [PR #2795](https://github.com/sifr-lang/sifr/pull/2795) merged after local implementation, agent review pass 2, and create-pr validation completed on `m12-retained-intrinsic-allowlist`.
+- M12 wave 2 verification target-binary normalization: [PR #2797](https://github.com/sifr-lang/sifr/pull/2797) merged after local implementation, agent review pass 2, and create-pr validation completed on `m12-target-binary-normalization`.
+- M12 wave 3 native ownership registry retirement: [PR #2799](https://github.com/sifr-lang/sifr/pull/2799) merged after local implementation, agent review pass 1, and create-pr validation completed on `m12-remove-native-ownership-registry`.
+- M12 wave 4 migrated-intrinsic closure guard: [PR #2803](https://github.com/sifr-lang/sifr/pull/2803) merged after local implementation, agent review pass 4, and create-pr validation completed on `m12-migration-closure-guard`.
+- M13 wave 1 installed toolchain certification: [PR #2808](https://github.com/sifr-lang/sifr/pull/2808) opened after post-main local implementation, agent review pass 5, installed sysroot smoke/heavy certification, and create-pr validation completed on `m13-installed-toolchain-certification`.
+- M13 wave 2 doctor and self-update certification: [PR #2809](https://github.com/sifr-lang/sifr/pull/2809) opened after local implementation, agent review pass 2, installed smoke certification, and create-pr validation completed on `m13-doctor-self-update-certification`.
+- M13 phase closeout: [PR #2810](https://github.com/sifr-lang/sifr/pull/2810) merged after agent review pass 2 satisfaction, `scripts/run_all_tests.sh --profile create-pr`, and full local merge validation via `scripts/run_all_tests.sh` on 2026-07-06 with `hardening=variants=261 failures=0 blocking_failures=0`.
 
 ## Design Reference
 
@@ -626,7 +626,7 @@ M8 implementation evidence:
 - Sysroot interop dependency planning injects required sysroot crates without
   switching to package-owned vendor mode and records those injected crates in
   the dependency-plan cache fingerprint.
-- Opus review pass 2 returned `VERDICT: PASS`; focused validation passed for
+- agent review pass 2 returned `VERDICT: PASS`; focused validation passed for
   formatting, diff whitespace, file-size guardrails, driver/codegen check,
   sysroot interop tests, sysroot probe tests, and `sifr_codegen`/`sifr_driver`
   unit/doc tests.
@@ -717,7 +717,7 @@ Wave 1 implementation evidence:
   `CARGO_TARGET_DIR=target/m9-create-pr CARGO_BUILD_JOBS=1 uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite self-test --suite scaffold --suite env --suite tier1 --suite callbacks --suite dataframes --suite ml --suite libraries --suite cloud-boto3`.
 - Local create-pr validation passed with zero failures across freshly written
   area results: `CARGO_TARGET_DIR=target/m9-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
-- Opus review passes 3, 4, and 5 returned `VERDICT: PASS`; non-blocking feedback was
+- agent review passes 3, 4, and 5 returned `VERDICT: PASS`; non-blocking feedback was
   addressed by documenting/testing sysroot probe feature derivation,
   documenting the retained stdlib-model bootstrap signatures, and adding the
   Python-runtime/native-link follow-up validation plus probe manifest
@@ -767,7 +767,7 @@ Wave 2 implementation evidence:
 - Local create-pr validation passed with zero failures:
   `CARGO_TARGET_DIR=target/m9-calendar-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
   The run reported the existing warm wall-time budget advisory only.
-- Opus review passes 1 and 2 returned `VERDICT: PASS`. Pass 2 reviewed the
+- agent review passes 1 and 2 returned `VERDICT: PASS`. Pass 2 reviewed the
   follow-up `i128` weekday arithmetic hardening for extreme `i64` years.
 
 Wave 3 status: `_sifr.uuid` is migrated to private
@@ -805,7 +805,7 @@ Wave 3 implementation evidence:
 - Local create-pr validation passed with zero failures:
   `CARGO_TARGET_DIR=target/m9-uuid-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
   The run reported warm wall-time and cache-hit advisories only.
-- Opus review pass 1 returned `VERDICT: PASS` for the UUID migration.
+- agent review pass 1 returned `VERDICT: PASS` for the UUID migration.
 
 Wave 4 status: `_sifr.math` is migrated to private
 `@rust(sifr_stdlib.math.*)` declarations backed by the narrow `math` feature in
@@ -843,7 +843,7 @@ Wave 4 implementation evidence:
   `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/stdlib_import_test.sifr`;
   `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_math_semantic_corrections_subset.sifr`;
   `CARGO_TARGET_DIR=target/m9-math CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_math_parity_expanded_matrix.sifr`.
-- Opus review pass 2 returned `VERDICT: PASS` after mirroring the math bridge
+- agent review pass 2 returned `VERDICT: PASS` after mirroring the math bridge
   helper export filter into frontend query diagnostics.
 - Local create-pr validation passed with zero failures:
   `scripts/run_all_tests.sh --profile create-pr`. The run reported the warm
@@ -899,7 +899,7 @@ Wave 5 implementation evidence:
   `cargo fmt --check`;
   `git diff --check`;
   `python3 scripts/check_file_size_guardrails.py`.
-- Opus review pass 1 returned `VERDICT: PASS` for the hash migration,
+- agent review pass 1 returned `VERDICT: PASS` for the hash migration,
   including the public `sifr.hashlib` wrapper aliases and partial
   `_sifr.crypto` fallback behavior.
 - Local create-pr validation passed with zero failures:
@@ -945,7 +945,7 @@ Wave 6 implementation evidence:
   `CARGO_TARGET_DIR=target/m9-base-encoding CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_base64_rfc4648_vectors.sifr`;
   `CARGO_TARGET_DIR=target/m9-base-encoding CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_base64_strictness_subset.sifr`;
   `CARGO_TARGET_DIR=target/m9-base-encoding CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/base64_bytes_decode_errors.sifr`.
-- Opus review pass 5 returned `VERDICT: PASS` for the base64/base32 encoder
+- agent review pass 5 returned `VERDICT: PASS` for the base64/base32 encoder
   migration boundary, including the M10 deferral for fallible decode/option
   helpers and the temporary direct `base64` dependency retained for fallback
   lowering.
@@ -1030,7 +1030,7 @@ Wave 1 implementation evidence:
   `cargo fmt --check`;
   `git diff --check`;
   `python3 scripts/check_file_size_guardrails.py`.
-- Opus review pass 1 returned `VERDICT: PASS` for the M10 wave 1
+- agent review pass 1 returned `VERDICT: PASS` for the M10 wave 1
   implementation.
 - Local create-pr validation passed:
   `CARGO_TARGET_DIR=target/m10-base64-error-bridge-create-pr CARGO_BUILD_JOBS=1 scripts/run_all_tests.sh --profile create-pr`.
@@ -1086,7 +1086,7 @@ Wave 2 implementation evidence:
   `cargo fmt --check`;
   `git diff --check`;
   `python3 scripts/check_file_size_guardrails.py`.
-- Opus review pass 1 returned `VERDICT: PASS` for the M10 wave 2 regex
+- agent review pass 1 returned `VERDICT: PASS` for the M10 wave 2 regex
   interop migration.
 
 Wave 3 status: completed and merged in [PR #2776](https://github.com/sifr-lang/sifr/pull/2776).
@@ -1196,7 +1196,7 @@ Wave 4 implementation evidence:
   `CARGO_TARGET_DIR=target/m10-toml-interop CARGO_BUILD_JOBS=1 target/m10-toml-interop/debug/sifr run crates/sifr/tests/e2e/pass/structured_data_formats.sifr`;
   `CARGO_TARGET_DIR=target/m10-toml-interop CARGO_BUILD_JOBS=1 target/m10-toml-interop/debug/sifr run crates/sifr/tests/e2e/pass/parse_safety_error_paths.sifr`;
   `CARGO_TARGET_DIR=target/m10-toml-interop CARGO_BUILD_JOBS=1 target/m10-toml-interop/debug/sifr run crates/sifr/tests/e2e/pass/panic_free_stdlib_errors.sifr`.
-- Opus review pass 1 returned `VERDICT: PASS` with a non-blocking ownership
+- agent review pass 1 returned `VERDICT: PASS` with a non-blocking ownership
   registry wording note; pass 2 returned `VERDICT: PASS` after that wording
   was updated. Final pass 3 returned `VERDICT: PASS` with no blockers after
   the create-pr evidence and stale-LSP diagnosis were recorded.
@@ -1255,19 +1255,19 @@ Wave 5 implementation evidence:
   and generated bridge field Rust types when adding sysroot interop crates, so
   generated auxiliary bridge sources and generated Cargo dependencies stay in
   sync.
-- Opus review pass 1 found that the batch E2E harness still planned direct
+- agent review pass 1 found that the batch E2E harness still planned direct
   JSON `serde_json` dependencies and that the primitive `json_dumps` wrapper
   had dropped Decimal/BigDecimal behavior. Both blockers were fixed: the batch
   harness now routes `sifr.json` and `_sifr.json` through `sifr_stdlib` with the
   `json` feature, `json_dumps` preserves the prior primitive/decimal subset,
   and mixed JSON/TOML pass fixtures import the explicit `toml_loads` wrapper to
   avoid flattened public `loads` name collisions in grouped builds.
-- Opus review pass 2 returned `VERDICT: PASS` with no blockers. Non-blocking
+- agent review pass 2 returned `VERDICT: PASS` with no blockers. Non-blocking
   follow-ups were limited to future bridge-corruption ergonomics, qualified
   typed-error dispatch, richer limit/range runtime assertions, and documenting
   that `json_dumps` now exposes the supported primitive/decimal union instead
   of the old intrinsic `Any` signature.
-- Opus review pass 3 returned `VERDICT: PASS` after the generated-Cargo
+- agent review pass 3 returned `VERDICT: PASS` after the generated-Cargo
   manifest fix for auxiliary JSON bridge error structs that reference
   `sifr_runtime::interop::SifrIntBridge`. Non-blocking follow-ups were limited
   to future tightening of scan invariants and tests, plus previously recorded
@@ -1360,7 +1360,7 @@ Wave 6 implementation evidence:
   generated-code quality (`1133700ms`), crate tests (`984102ms`),
   runtime platform (`778230ms`), and e2e pass (`388329ms`). The only advisory
   was the warm wall-time budget.
-- Opus review pass 1 returned `VERDICT: PASS`. Non-blocking follow-ups were
+- agent review pass 1 returned `VERDICT: PASS`. Non-blocking follow-ups were
   limited to pruning now-unreachable outcome signatures from the intrinsic
   model, removing the now-no-op `EncodingRs` required-feature marker, and
   considering a future fused outcome bridge helper to avoid recomputing
@@ -1419,7 +1419,7 @@ Wave 7 implementation evidence:
   (`989921ms`), runtime platform (`598158ms`), generated-code quality
   (`912406ms`), and e2e pass (`368934ms`). The only advisory was the warm
   wall-time budget.
-- Opus review pass 1 returned `VERDICT: PASS`. The review found no blocking
+- agent review pass 1 returned `VERDICT: PASS`. The review found no blocking
   issues; non-blocking follow-up was limited to doc drift in text/i18n
   dependency docs, which this wave updated before PR.
 
@@ -1477,7 +1477,7 @@ Wave 8 implementation evidence:
   crate tests (`1033721ms`), generated-code quality (`966221ms`), runtime
   platform (`655354ms`), and e2e pass (`364206ms`). The only advisory was the
   warm wall-time budget.
-- Opus review pass 2 returned `VERDICT: PASS`. The review found no blocking
+- agent review pass 2 returned `VERDICT: PASS`. The review found no blocking
   issues; non-blocking follow-ups were limited to stale empty-placeholder
   artifact notes from an earlier failed reviewer launch and optional future
   cleanup of legacy i18n alias functions.
@@ -1527,11 +1527,11 @@ Wave 9 implementation evidence:
   `CARGO_TARGET_DIR=target/m10-compression-run4 CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/cpython_zipfile_subset.sifr`;
   `CARGO_TARGET_DIR=target/m10-compression-run5 CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/filesystem_paths_and_archives.sifr`;
   `CARGO_TARGET_DIR=target/m10-compression-run6 CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/tempfile_and_zipfile.sifr`.
-- Opus review pass 1 returned `VERDICT: NON-BLOCKING APPROVAL`. The review
+- agent review pass 1 returned `VERDICT: NON-BLOCKING APPROVAL`. The review
   found no adapter-policy blockers; post-review cleanup finalized empty zip
   archives as valid readable archives, added zip byte-read unit coverage, and
   documented the historically infallible gzip compression adapter invariant.
-- Opus review pass 2 returned `VERDICT: PASS` with no blockers. The review
+- agent review pass 2 returned `VERDICT: PASS` with no blockers. The review
   confirmed adapter-policy adherence, public API preservation, registry
   removal, dependency planning, lockfile narrowing, and validation sufficiency.
 - Local create-pr validation passed with zero failures:
@@ -1587,8 +1587,8 @@ Wave 10 implementation evidence:
   `CARGO_TARGET_DIR=target/m10-datetime-run6 CARGO_BUILD_JOBS=1 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/panic_free_stdlib_errors.sifr`;
   `CARGO_TARGET_DIR=target/m10-datetime-validation CARGO_BUILD_JOBS=1 cargo test -p sifr test_generate_cargo_toml_stateless_sysroot_modules_enable_stdlib_features -- --nocapture`;
   `CARGO_TARGET_DIR=target/m10-datetime-validation CARGO_BUILD_JOBS=1 cargo test -p sifr test_generate_cargo_toml_migrated_url_regex_modules_enable_stdlib_features -- --nocapture`.
-- Opus review pass 3 returned `PASS WITH NON-BLOCKING NOTES`; the actionable
-  grouped fixture manifest note was fixed in this wave. Opus review pass 4
+- agent review pass 3 returned `PASS WITH NON-BLOCKING NOTES`; the actionable
+  grouped fixture manifest note was fixed in this wave. agent review pass 4
   returned `VERDICT: PASS`, confirming the grouped fixture manifest concern is
   resolved. Local create-pr validation passed with only the warm wall-time
   advisory:
@@ -1637,9 +1637,9 @@ Wave 11 implementation evidence:
   `CARGO_TARGET_DIR=target/m10-bytes-e2e CARGO_BUILD_JOBS=1 target/m10-bytes-harness/debug/sifr run crates/sifr/tests/e2e/pass/bytes_basics.sifr`;
   `CARGO_TARGET_DIR=target/m10-bytes-e2e CARGO_BUILD_JOBS=1 target/m10-bytes-harness/debug/sifr run crates/sifr/tests/e2e/pass/base64_bytes_decode_errors.sifr`;
   `CARGO_TARGET_DIR=target/m10-bytes-e2e CARGO_BUILD_JOBS=1 target/m10-bytes-harness/debug/sifr run crates/sifr/tests/e2e/pass/bytes_hashing_and_base64.sifr`.
-- Opus review pass 1 returned `PASS WITH NON-BLOCKING NOTES`; the note to
+- agent review pass 1 returned `PASS WITH NON-BLOCKING NOTES`; the note to
   document why `bytes_to_hex` still returns `Result` despite infallible
-  formatting was addressed in `crates/sifr_stdlib/src/bytes.rs`. Opus review
+  formatting was addressed in `crates/sifr_stdlib/src/bytes.rs`. agent review
   pass 2 returned `PASS`.
 - The full create-pr gate found two metadata/documentation issues before the
   rerun: `sifr_stdlib` feature `bytes` needed coverage-matrix classification,
@@ -1704,13 +1704,13 @@ Wave 12 implementation evidence:
   reported `failures=0`, `blocking_failures=0`, `e2e=132 passed, 0 failed`,
   and kept only the warm wall-time budget advisory. The slowest step was
   `python_interop` (`2808916ms`); the full lane wall time was `7588.01s`.
-- Opus review pass 1 returned `PASS` with follow-up asks to remove stale
+- agent review pass 1 returned `PASS` with follow-up asks to remove stale
   old-name model entries and confirm new files are staged before PR. The stale
   `new_set`/`set_*`/`defaultdict_*` model entries were removed, leaving only
-  private `_*_impl` adapter names plus retained Counter metadata. Opus review
+  private `_*_impl` adapter names plus retained Counter metadata. agent review
   pass 2 returned `PASS` with an optional convention cleanup for `item: int`;
   `_set_add_impl` and `_set_remove_impl` now mark `own item: int` in
-  `stdlib/_sifr/collections.sifr`. Opus review pass 3 returned `PASS` and
+  `stdlib/_sifr/collections.sifr`. agent review pass 3 returned `PASS` and
   cleared the wave for merge.
 
 Acceptance:
@@ -1878,7 +1878,7 @@ Validation:
 
 M11 gate audit status: merged in
 [PR #2793](https://github.com/sifr-lang/sifr/pull/2793) after local
-implementation, Opus review, and create-pr validation passed.
+implementation, agent review, and create-pr validation passed.
 
 The M11 resource submilestones are not safe to migrate yet. The Rust interop
 compatibility matrix still marks `opaque_resource_matrix`,
@@ -1908,7 +1908,7 @@ M11 gate audit implementation evidence:
   `python3 scripts/check_hir_maintainability_guardrails.py`;
   `python3 scripts/check_file_size_guardrails.py`;
   `git diff --check`.
-- Opus review pass 1 and pass 2 returned `VERDICT: PASS` with no required
+- agent review pass 1 and pass 2 returned `VERDICT: PASS` with no required
   fixes. Pass 2 left only cosmetic/non-blocking suggestions; the script now
   includes the blank-line cleanup noted there.
 - The first full create-pr attempt caught delivery-plan taxonomy wording in
@@ -1964,7 +1964,7 @@ Validation:
 - `scripts/run_all_tests.sh --profile create-pr`
 - `scripts/run_all_tests.sh`
 
-M12 wave 1 status: local implementation, Opus review pass 2, and create-pr
+M12 wave 1 status: local implementation, agent review pass 2, and create-pr
 validation complete on `m12-retained-intrinsic-allowlist`;
 [PR #2795](https://github.com/sifr-lang/sifr/pull/2795) is merged.
 
@@ -1993,14 +1993,14 @@ M12 wave 1 implementation evidence:
   fresh `CARGO_TARGET_DIR` did not yet contain `debug/sifr`. The harness now
   builds the configured target binary once and then runs smoke fixtures through
   that binary.
-- Opus review pass 1 in
+- agent review pass 1 in
   `plans/reviews/active/m12-retained-intrinsic-allowlist-review-pass1.md`
   returned `VERDICT: PASS` with no blockers. Low-severity notes were limited
   to documentation-registry self-test drift, pre-existing collections helper
   file naming, intentional scope caveats, regex/parser fragility if the
   dispatcher shape changes, broader self-test coverage opportunities, and a
   cosmetic duplicate reason check.
-- Opus review pass 2 in
+- agent review pass 2 in
   `plans/reviews/active/m12-retained-intrinsic-allowlist-review-pass2.md`
   returned `VERDICT: PASS` with no blockers after the audit-fixture harness
   fix. The only new low-severity note was a pre-existing stale-binary risk in
@@ -2033,7 +2033,7 @@ M12 wave 1 implementation evidence:
   reruns for this wave should prefer an absolute `CARGO_TARGET_DIR` while
   preserving the same `SIFR_LSP_COMMAND` binary pairing.
 
-M12 wave 2 status: local implementation, focused validation, Opus review pass
+M12 wave 2 status: local implementation, focused validation, agent review pass
 2, full create-pr validation, and [PR #2797](https://github.com/sifr-lang/sifr/pull/2797)
 merge complete on `m12-target-binary-normalization`.
 
@@ -2057,13 +2057,13 @@ M12 wave 2 implementation evidence:
 - `verification/areas/algorithmic_compatibility/runner.py` uses the shared
   resolver for representative, full-corpus, and leetcode-check suites instead
   of forcing `target/debug/sifr`.
-- Opus review pass 1 in
+- agent review pass 1 in
   `plans/reviews/active/m12-target-binary-normalization-review-pass1.md`
   returned `VERDICT: PASS` with no blockers. Low-severity findings requested
   recording the actual resolved binary in algorithmic result `argv` fields and
   preserving explicit `--sifr-bin target/debug/sifr` intent when
   `CARGO_TARGET_DIR` is also set; both were fixed before pass 2.
-- Opus review pass 2 in
+- agent review pass 2 in
   `plans/reviews/active/m12-target-binary-normalization-review-pass2.md`
   returned `VERDICT: PASS` with no blockers.
 - Focused validation passed:
@@ -2096,7 +2096,7 @@ M12 wave 2 implementation evidence:
   hazard while preserving LSP/binary pairing.
 
 M12 wave 3 status: merged in [PR #2799](https://github.com/sifr-lang/sifr/pull/2799)
-after local implementation, focused validation, Opus review pass 1, and full
+after local implementation, focused validation, agent review pass 1, and full
 create-pr validation completed on `m12-remove-native-ownership-registry`.
 
 This wave deletes the broad native-surface ownership registry now that M9-M10
@@ -2119,7 +2119,7 @@ M12 wave 3 implementation evidence:
   `internal_docs/stdlib_retained_compiler_intrinsics.toml`, and
   resource-shaped migration is blocked by the matrix-backed certification gate.
 - `internal_docs/architecture.md` no longer links to the deleted registry.
-- Opus review pass 1 in
+- agent review pass 1 in
   `plans/reviews/active/m12-remove-native-ownership-registry-review-pass1.md`
   returned `VERDICT: PASS` with no findings. The reviewer confirmed the M11
   invariant remains intact and M12's broad-registry cleanup goal is met.
@@ -2161,7 +2161,7 @@ M12 wave 4 implementation evidence:
   dispatcher arms for completed migrated intrinsic names, rejects a restored
   `internal_docs/stdlib_native_surface_ownership.toml`, and rejects stale
   deleted-registry phrases in
-  `internal_docs/sifr_sysroot_and_stdlib_architecture.md`. Opus review pass 2
+  `internal_docs/sifr_sysroot_and_stdlib_architecture.md`. agent review pass 2
   found missing retired coverage for `encode_utf8`; the guard now also covers
   the migrated set/defaultdict helper names and self-tests guarded and
   `Named(...)` dispatch forms.
@@ -2187,13 +2187,13 @@ M12 wave 4 implementation evidence:
   `uv run --project verification --locked python verification/areas/coverage_matrix/runner.py --suite readiness`;
   `python3 scripts/check_file_size_guardrails.py`;
   `git diff --check`.
-- After Opus review pass 2 fixes, validation passed:
+- After agent review pass 2 fixes, validation passed:
   `python3 -m py_compile scripts/check_stdlib_migration_closure.py`;
   `python3 scripts/check_stdlib_migration_closure.py`;
   `python3 scripts/check_stdlib_migration_closure.py --self-test`;
   `uv run --project verification --locked python verification/areas/coverage_matrix/runner.py --suite readiness`;
   `git diff --check`.
-- Opus review pass 4 in
+- agent review pass 4 in
   `plans/reviews/active/m12-migration-closure-guard-review-pass4.md` returned
   `VERDICT: PASS` after earlier passes drove fixes for the omitted review diff,
   callback taxonomy wording, `encode_utf8` retired coverage, migrated
@@ -2214,7 +2214,7 @@ M12 wave 4 implementation evidence:
 
 Close the phase with an installed-toolchain certification pass.
 
-M13 wave 1 status: local implementation, post-main validation, and Opus review
+M13 wave 1 status: local implementation, post-main validation, and agent review
 pass 5 are complete in [PR #2808](https://github.com/sifr-lang/sifr/pull/2808)
 on `m13-installed-toolchain-certification`.
 
@@ -2298,10 +2298,10 @@ M13 wave 1 focused validation:
   slowest step `e2e_pass_suite` `357186ms`/`600000ms` pass, `crate_tests`
   `102910ms`/`600000ms` pass, `runtime_platform_suites`
   `39749ms`/`120000ms` pass. Advisory only: warm wall-time budget exceeded.
-- Opus review pass 4 reported no blocking findings and one cleanup; pass 5
+- agent review pass 4 reported no blocking findings and one cleanup; pass 5
   confirmed the cleanup and marked the wave ready to proceed.
 
-M13 wave 2 status: local implementation, installed smoke validation, Opus
+M13 wave 2 status: local implementation, installed smoke validation, agent
 review pass 2, and full create-pr validation are complete in
 [PR #2809](https://github.com/sifr-lang/sifr/pull/2809) on
 `m13-doctor-self-update-certification`.
@@ -2320,7 +2320,7 @@ M13 wave 2 focused validation:
 - `python3 -m py_compile verification/areas/sysroot_release/runner.py`
 - `cargo fmt --check`
 - `CARGO_TARGET_DIR=target/validation-m13-wave2 CARGO_INCREMENTAL=0 uv run --project verification --locked python -m sifr_verify areas run --area sysroot_release --suite host-installed-smoke` passed with installed doctor/self-update snapshots, broken `doctor --json`, installed LSP, installed emit, and repo/home path-leakage scans; elapsed `104168ms`, repository scan covered 10 artifacts.
-- Opus review pass 1 reported no blockers and suggested three tightening checks; pass 2 confirmed those checks and marked the wave ready for PR.
+- agent review pass 1 reported no blockers and suggested three tightening checks; pass 2 confirmed those checks and marked the wave ready for PR.
 - Full create-pr validation:
   `CARGO_TARGET_DIR=target/validation-create-pr-m13-wave2 CARGO_INCREMENTAL=0
   scripts/run_all_tests.sh --profile create-pr` passed all blocking checks.
@@ -2330,7 +2330,7 @@ M13 wave 2 focused validation:
   report signature `5edef8cd4b961ef8`. Advisory only: warm wall-time budget
   exceeded.
 
-M13 phase closeout status: local implementation, no-fallback audit, Opus
+M13 phase closeout status: local implementation, no-fallback audit, agent
 review pass 2, full create-pr validation, and full merge-gate validation are
 complete in [PR #2810](https://github.com/sifr-lang/sifr/pull/2810) on
 `m13-phase-closeout`.
@@ -2354,7 +2354,7 @@ M13 phase closeout evidence:
   codegen structured/intrinsic tests, direct Rust integer-list interop,
   driver native-link evidence policy, stateless collections codegen, and CPython
   differential release-binary execution.
-- Opus review pass 1b reported no blocking findings and one TOML dependency
+- agent review pass 1b reported no blocking findings and one TOML dependency
   matching advisory; pass 2 confirmed the advisory was addressed and stated:
   "I am satisfied with the full implementation."
 - Full create-pr validation:

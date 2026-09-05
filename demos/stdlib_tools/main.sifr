@@ -1,4 +1,3 @@
-# Reference: stdlib_polish
 # Source issue: stdlib_polish.md
 # stdlib_polish Demo
 # Showcases: API alignment, monotonic clocks, timeit with Callable, new intrinsics

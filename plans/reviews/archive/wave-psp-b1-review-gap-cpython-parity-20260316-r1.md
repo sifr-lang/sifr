@@ -1,7 +1,7 @@
 # wave_psp_b1 Review: Collections Objects and Ordered Helpers
 
 **Review Date:** 2026-03-16
-**Reviewer:** Claude (Codex)
+**Reviewer:** agent (agent)
 **Wave Status:** done
 **CPython Sources:** `Lib/test/test_collections.py`, `Lib/test/test_bisect.py`, `Lib/test/test_heapq.py`
 

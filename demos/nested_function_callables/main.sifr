@@ -1,0 +1,28 @@
+# Pass typed nested helpers to higher-order functions.
+
+def apply_twice(f: Callable[[int], int], value: int) -> int:
+    return f(f(value))
+
+def score(base: int) -> int:
+    offset: int = 3
+
+    def add_offset(x: int) -> int:
+        return x + offset
+
+    def amplify(x: int) -> int:
+        return x * 2
+
+    adjusted: int = apply_twice(add_offset, base)
+    return amplify(adjusted)
+
+def bounded_sum(limit: int) -> int:
+    def helper(i: int, acc: int) -> int:
+        if i > limit:
+            return acc
+        return helper(i + 1, acc + i)
+
+    return helper(1, 0)
+
+def main():
+    assert score(4) == 20
+    assert bounded_sum(5) == 15

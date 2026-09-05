@@ -48,5 +48,5 @@ All low severity; none are blockers.
 
 - **B1: satisfied.** Per-target dispatch is now wired end-to-end (harness, manifest, validator).
 - **B2: satisfied.** Nightly/release no longer double-execute `property` / `fuzz-smoke`.
-- **Another Opus review round after fixes: not required.** B1 and B2 are closed and no new findings reach blocker severity. O1–O5 are minor and can ride either in this PR or in a follow-up note.
+- **Another agent review round after fixes: not required.** B1 and B2 are closed and no new findings reach blocker severity. O1–O5 are minor and can ride either in this PR or in a follow-up note.
 - **Is the remaining full merge run sufficient before PR?** Yes, conditional on it (a) passing without regressing the 132/132 e2e/fuzz-property variants, (b) recording warm/cold wall time inside the 15 min warm / 25 min cold budget per Wave 7 phase rule, and (c) confirming the merge plan actually executes `fuzz_property:fuzz-smoke` (not just emits it). No further code changes are needed beforehand; the optional follow-ups above can be folded in as policy/comment-only deltas if you choose, but they are not gating.

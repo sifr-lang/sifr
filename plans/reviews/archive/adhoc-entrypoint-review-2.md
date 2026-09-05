@@ -1,7 +1,7 @@
 # Ad Hoc Phase Review: Entrypoint Compilation Unification and Dependency Metadata Closure
 
 **Review Date:** 2026-03-10
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Status:** In Review (Milestone 5)
 **Phase Document:** `issues/ad-hoc-entrypoint-compilation-unification-and-dependency-metadata-closure.md`
 

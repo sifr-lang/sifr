@@ -1,4 +1,3 @@
-# Reference: fnmatch
 from sifr.fnmatch import fnmatch, filter
 from sifr.test import assert_bool_vector_eq
 

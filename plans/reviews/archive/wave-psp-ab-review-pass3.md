@@ -1,6 +1,6 @@
 # Wave PSP-A/B Review Pass 3: Implementation Quality and CPython Parity Assessment
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-16
 **Waves Reviewed:** `wave_psp_a1`, `wave_psp_a2`, `wave_psp_b1`, `wave_psp_b2`
 **Status:** Actionable findings identified

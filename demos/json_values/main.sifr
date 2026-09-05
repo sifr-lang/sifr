@@ -1,5 +1,3 @@
-# Reference: struct_json_values
-# Reference: structured-data-and-class-surface-parity-expansion
 from sifr.json import JsonValue, from_array, from_int, from_object, from_str, dumps, loads
 
 

@@ -16,7 +16,7 @@ I've reviewed the four edited files, the round 1 review, the two review files in
 
 **N1 (asymmetric PR hyperlinks): FIXED.** Issue lines 41-42 now hyperlink #2681 and #2682.
 
-**N2 (review-4 cited as closeout sign-off): FIXED.** Issue line 50 ("PR3 Opus reviews reported no blockers through `…live-examples-review-4.md`") and line 51 ("Closeout Opus review is tracked in `…closeout-review-1.md`") correctly partition PR3-scope from closeout-scope, matching review-4's self-described "delta only" scope.
+**N2 (review-4 cited as closeout sign-off): FIXED.** Issue line 50 ("PR3 agent reviews reported no blockers through `…live-examples-review-4.md`") and line 51 ("Closeout agent review is tracked in `…closeout-review-1.md`") correctly partition PR3-scope from closeout-scope, matching review-4's self-described "delta only" scope.
 
 **N3 (no real-services pass evidence): NOT addressed in this branch.** The issue and exit evidence still record `structured-skip` only, because the local Docker daemon was unavailable. Round 1 explicitly classified this as "not a strict blocker against the recorded design" since the live profile is opt-in and Docker-gated. Carrying the same classification into round 2: not a blocker for opening this PR as a closeout-progress PR; remains a credibility note against the issue's "real examples with real dependencies" objective and should be closed by at least one Docker-available pass before the phase is flipped to `complete`.
 

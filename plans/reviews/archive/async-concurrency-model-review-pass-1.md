@@ -1,6 +1,6 @@
 # Review: Sifr Async and Concurrency Model Proposal
 
-**Reviewer:** Claude Opus 4.7
+**Reviewer:** agent
 **Date:** 2026-05-09
 **Document:** `internal_docs/async_concurrency_model.md`
 **Branch:** `codex/figure-out-concurrency`

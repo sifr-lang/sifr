@@ -192,7 +192,7 @@ for policy fixes outside the native LSP/CLI surfaces.
 
 ## Versioning Policy
 
-LSP 3.17 is the developer tooling surface target. Any `lsp-types` version bump requires a reviewed PR that records adopted capabilities, deferred capabilities, compatibility impact, and protocol matrix changes. Silent adoption of new LSP surfaces is forbidden.
+LSP 3.17 is the developer tooling surface target. Any `lsp-types` version bump requires a documented PR that records adopted capabilities, deferred capabilities, compatibility impact, and protocol matrix changes. Silent adoption of new LSP surfaces is forbidden.
 
 ## LSP protocol layer Protocol Coverage
 

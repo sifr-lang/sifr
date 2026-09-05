@@ -1,5 +1,3 @@
-# Reference: import semantics work
-# Reference: imports
 # models.sifr - Data models for the application
 
 class User:

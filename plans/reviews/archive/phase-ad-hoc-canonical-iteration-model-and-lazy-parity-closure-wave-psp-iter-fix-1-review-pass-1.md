@@ -180,7 +180,7 @@ fn homogeneous_tuple_iter_element_type(elems: &[Type]) -> Option<Type> {
 
 ## Review Metadata
 
-- **Reviewer**: Claude Code
+- **Reviewer**: agent
 - **Review pass**: 1 (completion-gap check)
 - **Files examined**:
   - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`

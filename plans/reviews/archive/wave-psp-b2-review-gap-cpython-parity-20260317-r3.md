@@ -1,7 +1,7 @@
 # wave_psp_b2 Review: Implementation Gaps and CPython Parity
 
 **Review Date:** 2026-03-17
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Wave Scope:** iterators (itertools), functional (functools.reduce), randomness (random, secrets), operator helpers
 
 ---

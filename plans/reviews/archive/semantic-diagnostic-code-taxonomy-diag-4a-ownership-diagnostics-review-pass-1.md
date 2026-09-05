@@ -88,7 +88,7 @@ These are *correctly* not part of slice 2b.15's stated scope (the slice scope ex
 
 ### F6. Tracker entry minor (informational)
 
-`issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:50` correctly opens slice 2b.15 with `[ ]` and "PR: pending". When this review is addressed and the slice merges, the standard "Claude implementation review for `milestone_diag_4a` slice 2b.15 completed ..." row needs to be appended (matching the format used at lines 67/66/etc.). No action now; just the usual close-out step.
+`issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:50` correctly opens slice 2b.15 with `[ ]` and "PR: pending". When this review is addressed and the slice merges, the standard "agent implementation review for `milestone_diag_4a` slice 2b.15 completed ..." row needs to be appended (matching the format used at lines 67/66/etc.). No action now; just the usual close-out step.
 
 ## Behavior regressions
 

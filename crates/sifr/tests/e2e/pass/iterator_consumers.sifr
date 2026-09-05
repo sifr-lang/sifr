@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_3_concrete_iterator_codegen
+# Iterator consumers.
 # stdlib_parity_iter_fix_3: concrete iterator codegen pipeline readiness
 
 def is_even(x: int) -> bool:

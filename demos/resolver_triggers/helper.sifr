@@ -1,3 +1,2 @@
-# Reference: resolver_triggers
 def value() -> int:
     return 18

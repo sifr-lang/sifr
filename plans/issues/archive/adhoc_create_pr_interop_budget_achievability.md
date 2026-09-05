@@ -32,7 +32,7 @@ reopen or weaken the governed representative performance budgets.
 | --- | --- | --- |
 | M1: current-main diagnosis | Measure cold and successful-input states, inspect cache receipts and shared-cache completeness, and identify avoidable serialized or repeated work | complete |
 | M2: controlled policy/work repair | Make the required work achievable through governed resource use, cache-state policy, or removal of redundant work; add deterministic regression tests | complete |
-| M3: qualification and closure | Reproduce cold and warm passing verdicts, run create-PR and merge gates, obtain Claude Opus satisfaction, merge, and archive this record | complete |
+| M3: qualification and closure | Reproduce cold and warm passing verdicts, run create-PR and merge gates, obtain agent satisfaction, merge, and archive this record | complete |
 
 ## Initial Evidence
 
@@ -124,7 +124,7 @@ change any interop qualification input.
 
 ## Final Review and Merge Evidence
 
-Claude Opus reviewed base
+agent reviewed base
 `c3d347d7f732fef320a3e971ab91f7c18bc908ae` and final candidate
 `7b026aca8857d4a60844eecdaca2c768cb03ac38`. The reviewer returned
 `SATISFIED` with no blocking findings. The review response digest is
@@ -174,5 +174,5 @@ validation lanes, and dependent PR implementation are out of scope.
 - The canonical create-PR and merge gates pass on the final reviewed SHA, or
   an independently owned failure is recorded and isolated under the closure
   workflow.
-- Claude Opus returns `SATISFIED` with no blocking findings on the complete
+- agent returns `SATISFIED` with no blocking findings on the complete
   final implementation.

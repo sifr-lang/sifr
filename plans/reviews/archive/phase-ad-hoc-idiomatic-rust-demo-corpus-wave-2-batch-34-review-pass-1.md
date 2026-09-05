@@ -5,7 +5,7 @@
   - `demos/collection_cloning/idiomatic.rs`
   - `demos/own_mut_appends/idiomatic.rs`
 - Review method:
-  - External `claude -p` review run per file with embedded paired `main.sifr` and `idiomatic.rs` contents.
+  - External `agent review` review run per file with embedded paired `main.sifr` and `idiomatic.rs` contents.
   - Prompt constrained findings to actionable correctness bugs, semantic mismatches, or misleading reference patterns.
   - Per-file prompts were used because larger batch prompts have been unreliable in this workspace.
 

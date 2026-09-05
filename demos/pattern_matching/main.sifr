@@ -1,4 +1,3 @@
-# Reference: pattern-matching work
 # Source issue: 194-pattern-matching work.md
 from sifr.io import read_text
 

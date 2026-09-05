@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Embedded Python Interop
 
-> Status: complete. `milestone_py_0` through `milestone_py_12` are merged through PR #2677; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. Post-closeout verification hardening for runnable dependency examples is merged through PR #2691, PR #2694, and PR #2696 without changing the binding design decisions below.
+> Status: complete. `milestone_py_0` through `milestone_py_12` are merged through PR #2677; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 agent review, phase-level final implementation review, and local validation. Post-closeout verification hardening for runnable dependency examples is merged through PR #2691, PR #2694, and PR #2696 without changing the binding design decisions below.
 
 > Historical record: the current declaration-first architecture and root-only
 > requirement/trust authority supersede historical `allow-imports` descriptions
@@ -30,10 +30,10 @@
   - Added generated bootstrap that initializes the Python runtime before user `main` code for Python-enabled package builds.
   - Added `PYO3_PYTHON` build environment wiring so generated package binaries link/configure against the selected interpreter.
   - Added runtime lifecycle state with same-config repeated init, conflicting-config rejection, GIL attach/detach helpers, owned Python object tracking, and shutdown diagnostics.
-  - Added focused runtime, stdlib dependency, and driver bootstrap tests; Opus review approved and local `create-pr` validation passed.
+  - Added focused runtime, stdlib dependency, and driver bootstrap tests; agent review approved and local `create-pr` validation passed.
   - Merged via PR [#2667](https://github.com/sifr-lang/sifr/pull/2667).
 - [x] `milestone_py_3`: Opaque object operations and errors.
-  - Implementation prepared on branch `ad-hoc-python-interop-py3`; Opus review round 3 found no remaining blocking findings for py3, and local `create-pr` validation passed.
+  - Implementation prepared on branch `ad-hoc-python-interop-py3`; agent review round 3 found no remaining blocking findings for py3, and local `create-pr` validation passed.
   - Added `sifr.python` capability-token `Object`/structured `PythonError` surface over `_sifr.python` intrinsics; py3 accepts capability tokens as the practical opaque-object gate until a future sealed/extern class representation can remove the structural Sifr class surface.
   - Added runtime object handle operations for import, attr, string item access, calls, kwargs, explicit close, and context manager enter/exit.
   - Added runtime traceback capture and Python error family fields for import/attribute/item/call/conversion/resource/trust failures.
@@ -53,7 +53,7 @@
   - Fixed imported `list[Object]` wrapper compatibility by lowering public object containers to raw handle tuples at the intrinsic boundary.
   - Added a regression test proving failed record-field conversion does not leak partially-created handles.
   - Added py4 JSON/source fixtures and required them from the Python interop scaffold runner.
-  - Opus review round 2 reported no remaining blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - agent review round 2 reported no remaining blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2669](https://github.com/sifr-lang/sifr/pull/2669).
 - [x] `milestone_py_5`: Async/blocking integration.
   - Classified every public `sifr.python` boundary operation as `@blocking_io`, including explicit constructors, extractors, copy APIs, context operations, calls, and `run_coroutine_blocking`.
@@ -61,59 +61,59 @@
   - Made `py.Object` inherit `NonSend` and fixed stdlib bootstrap export metadata so imported stdlib parent markers survive real single-file and project checks.
   - Added async/offload lowering tests for direct Python call rejection, explicit coroutine blocking rejection, offloaded sendable Python work, non-Send object return rejection, and unclassified offload target rejection.
   - Added async-blocking verification fixtures and required them from the Python interop scaffold runner.
-  - Opus review round 1 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - agent review round 1 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2670](https://github.com/sifr-lang/sifr/pull/2670).
 - [x] `milestone_py_6`: Resource cleanup and leak diagnostics.
   - Added `py.with_context` with failure-aware `__exit__` plumbing and deterministic entered-handle cleanup on success, body failure, and normal `__exit__` failure paths.
   - Added runtime `resource_diagnostics` and `exit_context_with_error` operations with object double-close resource errors and recording context-manager coverage.
   - Added resource cleanup source fixtures for context-manager success, missing-enter failure, body failure, and outstanding diagnostics.
   - Documented the parser reservation for exact `py.with(...)` and the helper-owned entered-object rule.
-  - Opus review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - agent review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2671](https://github.com/sifr-lang/sifr/pull/2671).
 - [x] `milestone_py_7`: `Py_buffer` zero-copy core.
   - Added `py.BufferView` and explicit u8 buffer helpers for zero-copy acquisition, checked writable requests, explicit copy, and deterministic release.
   - Added runtime `PyBuffer<u8>` ownership tracking with shape, stride, contiguity, format, readonly, and double-release diagnostics.
   - Added numpy-buffer contract/source fixtures covering readonly bytes, memoryview, explicit copy, wrong dtype, writable-on-readonly, and use-after-release behavior.
-  - Opus review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - agent review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2672](https://github.com/sifr-lang/sifr/pull/2672).
 - [x] `milestone_py_8`: Arrow PyCapsule interop.
   - Added `py.ArrowCapsule` export, zero-copy-proof, copy-possible, and deterministic release helpers for Arrow array, stream, and schema PyCapsules.
   - Added runtime validation for exact Arrow capsule names, PyCapsule destructors, malformed capsules, destructor-less capsules, and double release.
   - Added pyarrow capsule contract/source fixtures covering pyarrow, polars, pandas, Pillow, unknown producer, malformed capsule, and copy-possible behavior.
-  - Opus review round 3 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - agent review round 3 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2673](https://github.com/sifr-lang/sifr/pull/2673).
 - [x] `milestone_py_9`: DLPack tensor interop.
   - Added `py.DlpackTensor` with DLPack one-shot capsule consumption, `"used_dltensor"` marking, metadata extraction, and exact-once deleter release.
   - Added runtime checks for CPU tensors, scalar null-shape tensors, double consumption, double release, unsupported dtype/device, and invalid capsule names.
   - Added torch DLPack contract/source fixtures covering NumPy, torch, tensorflow CPU paths and rejection cases.
-  - Opus review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - agent review round 2 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2674](https://github.com/sifr-lang/sifr/pull/2674).
 - [x] `milestone_py_10`: Python-to-Sifr callbacks.
   - Added compiler-lowered `py.local_callback` and `py.threadsafe_callback` registration for Sifr handlers returning `py.Object` results.
   - Added runtime callback registry dispatch, local same-stack escape checks, deterministic close/after-close behavior, and Sifr-error-to-Python-exception mapping.
   - Split shared Python wrapper types into `sifr.python_core` with targeted `sifr.python` re-export metadata preservation for blocking workloads and constructor defaults.
   - Added callback contract/source fixtures and native build coverage for real Sifr handler invocation through Python callables.
-  - Opus review round 4 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - agent review round 4 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2675](https://github.com/sifr-lang/sifr/pull/2675).
 - [x] `milestone_py_11`: Package certification matrix.
   - Expanded Tier 1 certification matrices, Tier 2/Tier 3 deterministic smoke matrices, and Tier 4 host-dependent skip evidence.
   - Added deterministic package certification reports with `matrix-passed` status for matrix-only evidence and explicit host-dependent skip counts.
   - Added representative package-family contract fixtures for web, data, DB, broker, cloud/AI, TLS/native, callbacks, and tensor surfaces.
-  - Opus review round 4 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
+  - agent review round 4 reported no blockers; local `create-pr` validation passed with only a warm wall-time advisory.
   - Merged via PR [#2676](https://github.com/sifr-lang/sifr/pull/2676).
 - [x] `milestone_py_12`: Documentation, diagnostics, and closeout.
   - Published public Python interop examples covering biip/schwifty, FastAPI, Kafka callbacks, pandas/pyarrow/polars Arrow, torch/tensorflow DLPack, and cloud/AI clients.
   - Recorded internal architecture evidence for runtime lifecycle, GIL/refcount ownership, environment probes, verification gates, and example-to-fixture mapping.
   - Confirmed active Python environment/trust diagnostics have stable codes, generated docs, structured JSON arguments, and positive/negative test references.
   - Recorded exit evidence in `verification/areas/python_interop/reports/python_interop_exit_evidence.md`.
-  - Opus py12 review round 4 and final implementation review round 4 reported no blockers after documented fixes.
+  - agent py12 review round 4 and final implementation review round 4 reported no blockers after documented fixes.
   - Local py12 validation passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests with cache hits `44/44` and 6 hardening variants with 0 failures, plus a warm wall-time advisory; default `scripts/run_all_tests.sh` completed 651 e2e pass tests and 260 hardening variants with 0 failures, plus warm wall-time and group-skew advisories.
   - Merged via PR [#2677](https://github.com/sifr-lang/sifr/pull/2677).
 - [x] `post_closeout_dataframe_examples`: Full runnable NumPy, pandas, and Polars examples.
   - Add area-local locked dependencies for NumPy, pandas, Polars, and pyarrow.
   - Add compiled Sifr examples that construct library objects, run real operations, convert results back to typed Sifr values, and assert expected outputs.
   - Add a `dataframe-examples` verification case that executes the examples through a temporary Sifr package linked to the area uv environment.
-  - Opus review round 1 reported no blockers and round 2 reported no blockers after stdout-marker, trust-root, timeout, cleanup, and `@blocking_io` helper fixes.
+  - agent review round 1 reported no blockers and round 2 reported no blockers after stdout-marker, trust-root, timeout, cleanup, and `@blocking_io` helper fixes.
   - Local create-pr validation passed on 2026-06-20: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests, Python interop `dataframe-examples` passed, and hardening variants reported 0 failures; warm wall-time/cache advisories only.
   - Merged via PR [#2691](https://github.com/sifr-lang/sifr/pull/2691).
 - [x] `post_closeout_ml_examples`: Full runnable torch and scikit-learn examples.
@@ -121,7 +121,7 @@
   - Add compiled Sifr examples that construct ML library objects, run real tensor/model operations, convert results back to typed Sifr values, and assert expected outputs.
   - Add an `ml-examples` verification case that executes the examples through temporary Sifr packages linked to the area uv environment.
   - Fix the DLPack stdlib wrapper to own raw tuple metadata with non-copy fields so executable tensor examples can validate real DLPack metadata/release.
-  - Opus review round 1 reported no blockers; round 2 reported no blockers after tightening runner wrapper callback types and deleting an unused stdlib helper.
+  - agent review round 1 reported no blockers; round 2 reported no blockers after tightening runner wrapper callback types and deleting an unused stdlib helper.
   - Local create-pr validation passed on 2026-06-20: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests, Python interop `ml-examples` passed, and hardening variants reported 0 failures; warm wall-time advisory only.
   - Merged via PR [#2694](https://github.com/sifr-lang/sifr/pull/2694).
 - [x] `post_closeout_library_examples`: Full runnable examples for remaining offline library contracts.
@@ -129,7 +129,7 @@
   - Add compiled Sifr examples for biip/schwifty, pyarrow, FastAPI/Pydantic/Starlette, cryptography/CFFI/certifi, boto3/botocore, redis/fakeredis/hiredis, and SQLAlchemy/psycopg.
   - Add a `library-examples` verification case that executes the examples through temporary Sifr packages linked to the area uv environment and select it in create-pr, merge, and release profiles.
   - Keep TensorFlow in host-dependent matrix/contract evidence because offline wheel and CPU-feature availability is platform-dependent; service-backed Redis/Postgres/Kafka/SNS/SQS behavior remains in the testcontainers-backed live profile.
-  - Opus review round 1 reported one blocker in boto3 response conversion; round 2 reported no blockers after stable `QueueUrl` projection, precise native trust roots, pyarrow producer assertion, Alembic/psycopg depth improvements, and documented Pydantic embedded-frame handling.
+  - agent review round 1 reported one blocker in boto3 response conversion; round 2 reported no blockers after stable `QueueUrl` projection, precise native trust roots, pyarrow producer assertion, Alembic/psycopg depth improvements, and documented Pydantic embedded-frame handling.
   - Targeted local validation passed on 2026-06-20: `--library-examples`, `runner.py --suite libraries`, `runner.py --suite scaffold`, runner self-test, JSON/profile plan checks, `cargo fmt --check`, and HIR maintainability guardrails.
   - Local create-pr validation passed on 2026-06-20: `scripts/run_all_tests.sh --profile create-pr` completed 132 e2e pass tests, Python interop `library-examples` passed in 19813 ms, and hardening variants reported 0 failures; warm wall-time advisory only.
   - Merged via PR [#2696](https://github.com/sifr-lang/sifr/pull/2696).

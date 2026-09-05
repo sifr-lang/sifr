@@ -1,5 +1,3 @@
-# Reference: stdlib_hardening
-# Reference: compiler-feature-history
 # compiler feature: stdlib hardening demo
 # Demonstrates: set type, set methods, set iteration
 

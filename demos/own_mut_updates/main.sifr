@@ -1,4 +1,3 @@
-# Reference: own_mut_updatesj
 # `own mut` parameters can be consumed, updated in place, and returned safely.
 
 def increment_all(own mut values: list[int]) -> list[int]:

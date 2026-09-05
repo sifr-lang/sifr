@@ -332,7 +332,7 @@ The wave set `wave_psp_bytes_0` through `wave_psp_bytes_5` is complete and ready
 ## Sign-off
 
 ```
-Reviewer: Claude Code (Agent)
+Reviewer: agent (Agent)
 Date: 2026-03-19
 Outcome: APPROVED FOR WAVE CLOSURE PRODUCTION READINESS
 Scope: Wave-closure level (waves 0-5)

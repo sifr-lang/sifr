@@ -416,6 +416,6 @@ directions; and proof that neither executor blocks.
 
 Each wave receives design alignment, focused tests, both authoritative local
 gates, a frozen-diff manual review, merge, and tracker status/link updates.
-After Wave 3, the complete M9 implementation receives one comprehensive Fable
+After Wave 3, the complete M9 implementation receives one comprehensive agent
 High milestone review across all merged wave diffs; actionable findings are
 fixed and re-reviewed before its tracker checkbox is closed.

@@ -1,6 +1,6 @@
 # Review: INT-1 Runtime Wave 1B — `SifrInt` fixed-width fallible conversions and `IntegerRangeError`
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Date: 2026-05-05
 Phase: `issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md`, milestone INT-1
 Wave-1 artifacts: `reviews/integer-model-int-1-runtime-wave-1-review-pass-1.md`, `reviews/integer-model-int-1-runtime-wave-1-review-pass-2.md`

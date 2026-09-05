@@ -1,6 +1,6 @@
 # Review Pass 2: Diag-11 Expression Str-Method Diagnostics Migration
 
-## Reviewer: Claude Code
+## Reviewer: agent
 ## Date: 2026-05-03
 ## Branch: codex/diag-11-raw-hir-expression-str-methods
 

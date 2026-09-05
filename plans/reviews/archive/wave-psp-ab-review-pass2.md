@@ -1,6 +1,6 @@
 # Wave PSP-AB Review Pass 2: Implementation Quality and CPython Parity Closure
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-16
 **Waves:** `wave_psp_a1`, `wave_psp_a2`, `wave_psp_b1`, `wave_psp_b2`
 **Status:** See individual wave sections

@@ -1,4 +1,3 @@
-# Reference: io
 from sifr.io import read_text, write_text, exists, append_text, read_lines
 from sifr.test import assert_bool_vector_eq
 

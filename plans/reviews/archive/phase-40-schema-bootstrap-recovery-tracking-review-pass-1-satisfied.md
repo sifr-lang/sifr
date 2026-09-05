@@ -23,6 +23,6 @@ Merge-base with `origin/main` = `3ce906c8445569039ebd762de0f346587464742a` (fast
 
 **Non-blocking observations (not findings)**
 1. The archive's parenthetical "(125/125 at lines 752, 704, 712, 1064)" is exact for 752/704/712; at the reviewed head, line 1064 is unrelated prose — the nearest 125-references are 1059 and 1071. The substantive claim (the complete-area convention is 125/125 elsewhere in the ledger) holds; this is a stale citation inside the archived historical text, not a claim the new ledger entry makes.
-2. Byte-exactness of the archive against the original active pass-4 file could not be mechanically confirmed: that file was untracked and no longer exists in the worktree, and the sibling `…pass-4-final.claude.log` is 0 bytes. Every independently checkable claim in the archived text verified, so the content is at minimum factually exact.
+2. Byte-exactness of the archive against the original active pass-4 file could not be mechanically confirmed: that file was untracked and no longer exists in the worktree, and the sibling `…pass-4-final.agent.log` is 0 bytes. Every independently checkable claim in the archived text verified, so the content is at minimum factually exact.
 
 ## VERDICT: SATISFIED

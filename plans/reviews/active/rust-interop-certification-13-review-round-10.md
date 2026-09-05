@@ -8,7 +8,7 @@
 
 ## Scope
 
-Full published delta `origin/main..f8ab7080c` — 12 commits, 59 files, +6471/−147. Excluded and not attributed: `editor_integrations`, the leetcode corpora submodule, `.cert5probe/`, `.claude/`, the two stray webp files, `plans/phases/43_interoperability.md`.
+Full published delta `origin/main..f8ab7080c` — 12 commits, 59 files, +6471/−147. Excluded and not attributed: `editor_integrations`, the leetcode corpora submodule, `.cert5probe/`, `.agent/`, the two stray webp files, `plans/phases/43_interoperability.md`.
 
 Delta since round 9 (`49020688d..f8ab7080c`): **2 Markdown files, +76/−0**; `git diff --name-only | grep -v '\.md$'` returns **0 files**. I therefore re-audited the whole implementation rather than only the last docs commit.
 
@@ -133,7 +133,7 @@ The two mandatory tests are `#[ignore]`d and bound in `fixture.json` to `profile
 ## 6. Chronology, checklist, PR scope
 
 - **Chronology accurate.** The round-9 bullet's five claims all check out against the artifact; the `denied.` restoration is byte-identical to the pre-regression text (round 8's R8-1 is closed). The cert-12 closeout bullet's factual claim is verifiable: `ea119724e325b3900ccca81db766114d76eb4efd` exists, is an ancestor of `origin/main`, and is the `#3076` merge commit. Verdict lines across nine artifacts read NOT SATISFIED ×6, SATISFIED (7), NOT SATISFIED (8), SATISFIED (9) — logged accurately.
-- **Checklist honest.** Six `certification_13` items `[x]`, each independently substantiated above; the final "focused and authoritative local gates, Opus review rounds, merge, unblock only `certification_14`" item correctly still `[ ]`. That item is the author's PR-lane step and is precisely what this round unblocks.
+- **Checklist honest.** Six `certification_13` items `[x]`, each independently substantiated above; the final "focused and authoritative local gates, agent review rounds, merge, unblock only `certification_14`" item correctly still `[ ]`. That item is the author's PR-lane step and is precisely what this round unblocks.
 - **PR metadata.** Title "Certify the Rust backend ecosystem bridge" matches the delta. The body's Summary, Root cause, and Validation sections are accurate against everything I measured, and it discloses both the cold-run overrun and the nonblocking warm advisory rather than eliding them.
 - **Unrelated changes preserved.** All excluded working-tree items remain untracked/unstaged and outside the delta; nothing stray entered any commit.
 

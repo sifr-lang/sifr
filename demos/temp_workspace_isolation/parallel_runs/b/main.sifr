@@ -1,3 +1,2 @@
-# Reference: temp_workspace_isolation
 def main():
     print('parallel-run-b')

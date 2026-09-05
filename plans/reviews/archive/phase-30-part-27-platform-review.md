@@ -95,6 +95,6 @@ This ensures CPython-style capitalization (not raw lowercase `std::env::consts::
 
 ---
 
-*Reviewer: Claude Opus 4.6*
+*Reviewer: agent*
 *Date: 2026-03-09*
 *Branch: phase30-part27-platform-review-pass1*

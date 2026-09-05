@@ -26,7 +26,7 @@ This matters because the suite runs inside `sifr_cli_full` (`cargo test -p sifr 
 
 ## Non-blocking notes
 
-- The untracked `plans/reviews/active/python-interop-m13-review-pass-5.md` (1 empty line) and `.claude-m13-pass5.log` are local working-tree placeholders, not in the diff.
+- The untracked `plans/reviews/active/python-interop-m13-review-pass-5.md` (1 empty line) and `.agent-m13-pass5.log` are local working-tree placeholders, not in the diff.
 - Carried over from passes 3/4 as M14 cleanup candidates: the defensive `(false, true)` doctor arm and the dead `PythonInteropCheckReport.environment` CLI fields.
 
 The behavioral contract, documentation, and diagnostic-evidence consistency are all satisfied and independently reproduced — but under this review's standard that any validation gap blocks, the branch cannot close while its own blocking merge-gate evidence suite is structurally flaky.

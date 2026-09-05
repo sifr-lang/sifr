@@ -80,7 +80,7 @@ The `has_default_runnable_app()` → `manifest.default_run` branch is exercised 
 
 ```
 Status: READY
-Reviewed by: Claude (final full-implementation review)
+Reviewed by: agent (final full-implementation review)
 Date: 2026-05-24
 Scope: M1–M8, PRs #2153–#2159, #2170
 Blocking findings: 0

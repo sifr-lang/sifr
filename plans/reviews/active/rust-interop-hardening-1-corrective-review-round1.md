@@ -8,8 +8,8 @@ that were present in the merged implementation.
 
 ## Reviewer
 
-Claude Opus 5, invoked through the repository's
-`.cursor/skills/talk-to-claude-opus` workflow at medium effort.
+agent, invoked through the repository's
+`agent review` workflow at medium effort.
 
 ## Verdict
 

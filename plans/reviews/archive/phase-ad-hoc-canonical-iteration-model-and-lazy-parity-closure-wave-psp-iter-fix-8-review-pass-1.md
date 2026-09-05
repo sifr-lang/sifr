@@ -3,7 +3,7 @@
 **Phase**: ad-hoc-canonical-iteration-model-and-lazy-parity-closure
 **Wave**: wave_psp_iter_fix_8
 **Commit**: 5ac5fe51f - "wave_psp_iter_fix_8: align downstream iterable closure and validation"
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Date**: 2026-03-20
 
 ## Executive Summary

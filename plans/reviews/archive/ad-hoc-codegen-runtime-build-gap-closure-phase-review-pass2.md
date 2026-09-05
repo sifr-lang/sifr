@@ -1,6 +1,6 @@
 # Review: Ad-hoc Phase — Codegen Runtime Build Gap Closure (Pass 2)
 
-Reviewer: Claude Opus 4.6
+Reviewer: agent
 Date: 2026-04-05
 Source: `issues/ad-hoc-codegen-runtime-build-gap-closure-phase-2026-04-05.md`
 Context: `issues/codegen-runtime-build-gap-root-cause-breakdown-2026-04-05-v3.md`

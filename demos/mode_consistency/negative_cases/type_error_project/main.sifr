@@ -1,4 +1,3 @@
-# Reference: mode_consistency
 # negative parity fixture: helper introduces a frontend type error.
 
 from helper import value

@@ -12,7 +12,7 @@ Substantively this branch is done. The round-7 conclusion holds in full, and the
 
 ## Scope
 
-Committed delta `origin/main..aa70a96d9` (9 commits, 57 files), focused on `aa70a96d9`. `HEAD` is exactly `aa70a96d9`; `git status` shows only the excluded working-tree items (`editor_integrations`, leetcode corpora submodule, `.cert5probe/`, `.claude/`, two stray webp files, `plans/phases/43_interoperability.md`, the empty round-8 placeholder). No production or test file is dirty, so everything I ran reflects the reviewed commit.
+Committed delta `origin/main..aa70a96d9` (9 commits, 57 files), focused on `aa70a96d9`. `HEAD` is exactly `aa70a96d9`; `git status` shows only the excluded working-tree items (`editor_integrations`, leetcode corpora submodule, `.cert5probe/`, `.agent/`, two stray webp files, `plans/phases/43_interoperability.md`, the empty round-8 placeholder). No production or test file is dirty, so everything I ran reflects the reviewed commit.
 
 Delta since round 7's SATISFIED: two `unraw()` call sites, 24 test lines, three documentation edits. `rust_interop_sqlx_offline.rs` and `rust_interop_sqlx_cfg.rs` are untouched by `aa70a96d9`.
 
@@ -95,7 +95,7 @@ The diff hunk shows it was collateral to the neighbouring tense edit, not an int
 ```
    transcript replay, and all self-tests. Workspace Clippy passes with warnings
 -  denied.
- - [Opus round 1](…)
+ - [agent round 1](…)
 ```
 
 Impact is confined to the certification record — no code, gate, or claim about capability is affected. It is nonetheless an inaccurate sentence in the milestone's own evidence log, introduced by the commit under review, in a checklist item marked complete. Fix: restore `denied.`

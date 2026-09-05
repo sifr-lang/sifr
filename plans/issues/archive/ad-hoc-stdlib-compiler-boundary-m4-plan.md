@@ -23,7 +23,7 @@ adapter while preserving generic source `Counter[T]`, typed language-owned
   those bodies reach primitive typed intrinsic HIR.
 - [x] Run generic Counter, typed defaultdict, bytes-wrapper, codegen, bootstrap,
   manifest, allowlist, file-size, and authoritative create-PR validation.
-- [x] Run Claude Opus review rounds until `SATISFIED`, merge the M4 PR, and
+- [x] Run agent review rounds until `SATISFIED`, merge the M4 PR, and
   update the phase record.
 
 ## Deletion inventory
@@ -67,6 +67,6 @@ adapter while preserving generic source `Counter[T]`, typed language-owned
   runtime platform 58,139 ms / 120,000 ms, E2E 31,402 ms / 600,000 ms, and
   130/130 E2E fixtures passed. The 445.61-second warm-target advisory was
   non-blocking.
-- Claude Opus review rounds 1 and 2 returned `SATISFIED`; the round-1 soft
+- agent review rounds 1 and 2 returned `SATISFIED`; the round-1 soft
   structured-intrinsic coverage gap was restored with retained bytes/test IDs
   and verified in round 2.

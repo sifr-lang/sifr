@@ -2,7 +2,7 @@
 
 **Branch:** `codex/diag-9-type-mismatch-primary-ranges`
 **Date:** 2026-05-03
-**Reviewer:** Claude Code review
+**Reviewer:** agent review
 **Validation passed:** `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=55.42s`)
 
 ## Summary

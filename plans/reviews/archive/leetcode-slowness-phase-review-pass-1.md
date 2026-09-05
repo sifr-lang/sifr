@@ -56,7 +56,7 @@
 | 5. Reproducible analyzer exists | ✓ |
 | 6. Metadata seeded and validated | ✓ |
 | 7. Post-fix re-benchmark protocol documented | ✓ |
-| 8. Claude review (this review) | ✓ |
+| 8. agent review (this review) | ✓ |
 | 9. Report avoids treating divergent as language evidence | ✓ |
 | 10. Implementation tracks defined | ✓ |
 
@@ -67,4 +67,4 @@ The implementation correctly:
 - Seeds metadata for 75 measured-slower + 53 incomplete/failed
 - Excludes known-divergent from apples-to-apples comparisons
 - Handles partial (`0234`) and failed (`0212`) special cases
-- Produces deterministic, diffable analyzer output
+- Produces deterministic, difagent analyzer output

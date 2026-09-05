@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer: Workspace Session
 
-status: workspace-session owner implementation review
+status: workspace-session owner implementation status
 
 workspace-session owner introduces the mutable compiler-service owner in `sifr_frontend` while
 leaving analysis-query migration to workspace-session owner. The session is intentionally serialized:

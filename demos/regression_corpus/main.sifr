@@ -1,4 +1,3 @@
-# Reference: regression_corpus
 # regression_corpus demo: fixedbugs and crashes corpus rules.
 
 def main():

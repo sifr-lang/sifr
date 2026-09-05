@@ -1270,25 +1270,25 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 
 | Milestone | Status | Pull request | Merge commit | Validation | Review | Notes |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 0 | completed | [#3582](https://github.com/sifr-lang/sifr/pull/3582) | `1a1cef93dc` | SQL 4/4; docs 1/1; dependency and runner checks pass | Opus `SATISFIED` on `7f3f6bc2c` | Architecture and dependency lock |
-| 1 | completed | [#3585](https://github.com/sifr-lang/sifr/pull/3585) | `1173cd9e20` | type system 140/140; focused template 13/13; property 15/15; fuzz 26/26; SQL and repository checks pass | Opus remediation `SATISFIED` on `56f131e1b` | Typed template strings; also corrects the Milestone 0 verification integration |
-| 2 | completed | [#3588](https://github.com/sifr-lang/sifr/pull/3588) | `955e97f6db` | affected packages, native fixture, HIR guard, and file-size guard pass | Opus round 2 closed both original blockers on `dd7ac3cdc`; one new mechanism defect is deferred | Structural record type system |
-| 3 | completed | [#3592](https://github.com/sifr-lang/sifr/pull/3592) | `9badcfc4aa` | component 14/14; diagnostics 32/32; package resolution 4/4; SQL 6/6; coverage 5/5; four-target qualification pass | Opus round 2 closed the original sandbox and diagnostics blockers on `3d97d7e35`; two new mechanism defects are deferred | Compiler component platform |
-| 4 | completed | [#3595](https://github.com/sifr-lang/sifr/pull/3595) | `40facaf98d` | contract 9/9; component 14/14; driver 2/2; package 149; SQL 10/10; coverage, Clippy, formatting, HIR, and file-size checks pass | Opus round 2 verified the original pipeline and credential fixes on `04e00c51b`; two new mechanisms are deferred | Canonical schema profiles, provider authority pipeline, generated modules, fingerprints, slices, diffs, and runtime manifests |
-| 5 | completed | [#3597](https://github.com/sifr-lang/sifr/pull/3597) | `7f2382ae68` | contract 9/9; runtime 9/9 plus 2 compile-fail doctests; diagnostics 32/32; SQL common qualification; strict Clippy and guards pass | Final exact-SHA Opus `SATISFIED` on `f7a3e5a35` | Provider-neutral type, bind, codec, cardinality, effect, error, runtime, and ownership contracts |
-| 6 | completed | [#3599](https://github.com/sifr-lang/sifr/pull/3599) | `9944bdd450` | SQL 19/19; coverage 4/4; contract 23/23; runtime 12/12 plus two doctests; frontend 3/3; driver 2/2; strict Clippy and guards pass | Opus remediation `SATISFIED` on `0abd5109f` | Query and fragment substrate, registry, generated identifier codec, HIR, runtime binding, and execution request lowering |
-| 7 | completed | [#3602](https://github.com/sifr-lang/sifr/pull/3602) | `46f1d06d8e` | PostgreSQL 13-18 native, component, and live matrices; SQL qualification, mutation, Clippy, and guards pass | Opus round 2 verified every original remediation on `6cd745149`; two new mechanisms are deferred | PostgreSQL schema and query compiler |
-| 8 | completed | [#3604](https://github.com/sifr-lang/sifr/pull/3604) | `e18e0a92d5` | SQL 4/4; PostgreSQL 13-18 native and component suites; contract, build-output, strict Clippy, and guards pass | Opus round 2 closed the original nested-star blocker on `94fbb6e0f`; one new semantic-flag mechanism is deferred | PostgreSQL advanced semantics, stable projections, codecs, fragments, and query-signature artifacts |
-| 9 | completed | [#3611](https://github.com/sifr-lang/sifr/pull/3611) | `9dc0e55e09` | common and provider runtime tests; SQL compiler and runtime qualification; strict Clippy and guards; exact PostgreSQL 13-18 live matrix | Opus remediation `SATISFIED` on `258f13a9a`; one new malformed-BOOL classification defect is deferred | Verified PostgreSQL runtime, sessions, transactions, streaming, caching, cleanup, and resource bounds |
-| 10 | completed | [#3617](https://github.com/sifr-lang/sifr/pull/3617) | `35926da677` | incremental-editor 2/2; SQL mutation 9/9; frontend 134; analysis 51; LSP 81; PostgreSQL component 14/14; strict Clippy and guards pass | Opus round 2 closed all four original blockers on `08e864bf6`; one new failure-isolation defect is deferred | Incremental compiler and editor experience |
-| 11 | completed | [#3619](https://github.com/sifr-lang/sifr/pull/3619) | `a20219da54` | host-tools 7/7; direct CLI 1/1; provisioning 1/1; analysis isolation 2/2; strict Clippy and guards pass | Two exact-SHA Opus reviews; round 2 verified the original blockers and deferred one Linux prerequisite plus new follow-ups under the continuation rule | Locked and confined host tool runner, structured provisioning, and inherited M10 failure isolation |
-| 12 | completed | [#3621](https://github.com/sifr-lang/sifr/pull/3621) | `73a69f691d` | schema-tool 6/6; provider 20/20; PostgreSQL 13-18 live catalog, artifact, and parity matrix; strict Clippy and guards pass | Opus remediation `SATISFIED` on `ba3629d63` | Deterministic pull, validation, build, canonical catalog normalization, and atomic artifact publication |
-| 13 | completed | [#3625](https://github.com/sifr-lang/sifr/pull/3625) | `6d28649ff9` | migration-engine 6/6; affected crates; workspace Clippy; formatting; HIR, file-size, SQL contract, metadata, and dependency guards pass | Opus remediation `SATISFIED` on `c6acf3da7`; one new merge mechanism is deferred under the continuation rule | Checked compiler graph, nominal migration HIR, closed runtime plan, recovery engine, and atomic artifacts |
-| 14 | completed | [#3627](https://github.com/sifr-lang/sifr/pull/3627) | `5b2aa585f4` | migration and PostgreSQL suites 9/9; live PostgreSQL 13-18 migration matrix; strict Clippy, formatting, guards, qualification, and mutation checks pass | Opus remediation `SATISFIED` on `a8f02da62`; two new mechanisms are deferred under the continuation rule | PostgreSQL DDL reflection, runtime plan v2, imports, locking, recovery, rollback, operator commands, and supported-major qualification |
-| 15 | completed | [#3630](https://github.com/sifr-lang/sifr/pull/3630) | `d878ecfe1a` | schema-polymorphism 7/7; PostgreSQL 13-18 component sandbox; affected tests, strict Clippy, formatting, and guards pass | Two exact-SHA Opus reviews; round 2 verified object accounting and deferred the new positional constraint-identity mechanism under the continuation rule | Structural requirements, compile-time witnesses, specialization, execution binding, and provider-owned capability and object accounts |
-| 16 | completed | [#3635](https://github.com/sifr-lang/sifr/pull/3635) | `70de2f82bb` | SQL platform 62/62; MySQL 8.4, 9.7, and 26.7 live matrices; affected tests, strict Clippy, formatting, and guards pass | Opus remediation `SATISFIED` on `5d585f4b0`; new mechanism suggestions are deferred under the continuation rule | Complete MySQL compiler, runtime, tools, migrations, provisioning, editor integration, and qualification |
-| 17 | completed | [#3640](https://github.com/sifr-lang/sifr/pull/3640) | `4a64e163ae` | SQLite provider 6/6; contract and package tests; strict Clippy; formatting and guards pass | Opus remediation `SATISFIED` on `22a87c70d`; new suggestions are deferred to Milestone 18 | Complete SQLite compiler, worker runtime, tools, migrations, provisioning, editor integration, and qualification |
-| 18 | completed | [#3645](https://github.com/sifr-lang/sifr/pull/3645) | `83a5f95d14` | integrated, build, provider, PostgreSQL 13-18 live, MySQL live, component, Clippy, formatting, HIR, and file-size evidence passed; one-shot gate dispositions recorded | Whole-phase Opus remediation `SATISFIED` on `c0c6ae255`; four new mechanisms deferred under the continuation rule | Final integration, live parity remediation, executable qualification, component rebuilds, and phase closure |
+| 0 | completed | [#3582](https://github.com/sifr-lang/sifr/pull/3582) | `1a1cef93dc` | SQL 4/4; docs 1/1; dependency and runner checks pass | agent `SATISFIED` on `7f3f6bc2c` | Architecture and dependency lock |
+| 1 | completed | [#3585](https://github.com/sifr-lang/sifr/pull/3585) | `1173cd9e20` | type system 140/140; focused template 13/13; property 15/15; fuzz 26/26; SQL and repository checks pass | agent remediation `SATISFIED` on `56f131e1b` | Typed template strings; also corrects the Milestone 0 verification integration |
+| 2 | completed | [#3588](https://github.com/sifr-lang/sifr/pull/3588) | `955e97f6db` | affected packages, native fixture, HIR guard, and file-size guard pass | agent round 2 closed both original blockers on `dd7ac3cdc`; one new mechanism defect is deferred | Structural record type system |
+| 3 | completed | [#3592](https://github.com/sifr-lang/sifr/pull/3592) | `9badcfc4aa` | component 14/14; diagnostics 32/32; package resolution 4/4; SQL 6/6; coverage 5/5; four-target qualification pass | agent round 2 closed the original sandbox and diagnostics blockers on `3d97d7e35`; two new mechanism defects are deferred | Compiler component platform |
+| 4 | completed | [#3595](https://github.com/sifr-lang/sifr/pull/3595) | `40facaf98d` | contract 9/9; component 14/14; driver 2/2; package 149; SQL 10/10; coverage, Clippy, formatting, HIR, and file-size checks pass | agent round 2 verified the original pipeline and credential fixes on `04e00c51b`; two new mechanisms are deferred | Canonical schema profiles, provider authority pipeline, generated modules, fingerprints, slices, diffs, and runtime manifests |
+| 5 | completed | [#3597](https://github.com/sifr-lang/sifr/pull/3597) | `7f2382ae68` | contract 9/9; runtime 9/9 plus 2 compile-fail doctests; diagnostics 32/32; SQL common qualification; strict Clippy and guards pass | Final exact-SHA agent `SATISFIED` on `f7a3e5a35` | Provider-neutral type, bind, codec, cardinality, effect, error, runtime, and ownership contracts |
+| 6 | completed | [#3599](https://github.com/sifr-lang/sifr/pull/3599) | `9944bdd450` | SQL 19/19; coverage 4/4; contract 23/23; runtime 12/12 plus two doctests; frontend 3/3; driver 2/2; strict Clippy and guards pass | agent remediation `SATISFIED` on `0abd5109f` | Query and fragment substrate, registry, generated identifier codec, HIR, runtime binding, and execution request lowering |
+| 7 | completed | [#3602](https://github.com/sifr-lang/sifr/pull/3602) | `46f1d06d8e` | PostgreSQL 13-18 native, component, and live matrices; SQL qualification, mutation, Clippy, and guards pass | agent round 2 verified every original remediation on `6cd745149`; two new mechanisms are deferred | PostgreSQL schema and query compiler |
+| 8 | completed | [#3604](https://github.com/sifr-lang/sifr/pull/3604) | `e18e0a92d5` | SQL 4/4; PostgreSQL 13-18 native and component suites; contract, build-output, strict Clippy, and guards pass | agent round 2 closed the original nested-star blocker on `94fbb6e0f`; one new semantic-flag mechanism is deferred | PostgreSQL advanced semantics, stable projections, codecs, fragments, and query-signature artifacts |
+| 9 | completed | [#3611](https://github.com/sifr-lang/sifr/pull/3611) | `9dc0e55e09` | common and provider runtime tests; SQL compiler and runtime qualification; strict Clippy and guards; exact PostgreSQL 13-18 live matrix | agent remediation `SATISFIED` on `258f13a9a`; one new malformed-BOOL classification defect is deferred | Verified PostgreSQL runtime, sessions, transactions, streaming, caching, cleanup, and resource bounds |
+| 10 | completed | [#3617](https://github.com/sifr-lang/sifr/pull/3617) | `35926da677` | incremental-editor 2/2; SQL mutation 9/9; frontend 134; analysis 51; LSP 81; PostgreSQL component 14/14; strict Clippy and guards pass | agent round 2 closed all four original blockers on `08e864bf6`; one new failure-isolation defect is deferred | Incremental compiler and editor experience |
+| 11 | completed | [#3619](https://github.com/sifr-lang/sifr/pull/3619) | `a20219da54` | host-tools 7/7; direct CLI 1/1; provisioning 1/1; analysis isolation 2/2; strict Clippy and guards pass | Two exact-SHA agent reviews; round 2 verified the original blockers and deferred one Linux prerequisite plus new follow-ups under the continuation rule | Locked and confined host tool runner, structured provisioning, and inherited M10 failure isolation |
+| 12 | completed | [#3621](https://github.com/sifr-lang/sifr/pull/3621) | `73a69f691d` | schema-tool 6/6; provider 20/20; PostgreSQL 13-18 live catalog, artifact, and parity matrix; strict Clippy and guards pass | agent remediation `SATISFIED` on `ba3629d63` | Deterministic pull, validation, build, canonical catalog normalization, and atomic artifact publication |
+| 13 | completed | [#3625](https://github.com/sifr-lang/sifr/pull/3625) | `6d28649ff9` | migration-engine 6/6; affected crates; workspace Clippy; formatting; HIR, file-size, SQL contract, metadata, and dependency guards pass | agent remediation `SATISFIED` on `c6acf3da7`; one new merge mechanism is deferred under the continuation rule | Checked compiler graph, nominal migration HIR, closed runtime plan, recovery engine, and atomic artifacts |
+| 14 | completed | [#3627](https://github.com/sifr-lang/sifr/pull/3627) | `5b2aa585f4` | migration and PostgreSQL suites 9/9; live PostgreSQL 13-18 migration matrix; strict Clippy, formatting, guards, qualification, and mutation checks pass | agent remediation `SATISFIED` on `a8f02da62`; two new mechanisms are deferred under the continuation rule | PostgreSQL DDL reflection, runtime plan v2, imports, locking, recovery, rollback, operator commands, and supported-major qualification |
+| 15 | completed | [#3630](https://github.com/sifr-lang/sifr/pull/3630) | `d878ecfe1a` | schema-polymorphism 7/7; PostgreSQL 13-18 component sandbox; affected tests, strict Clippy, formatting, and guards pass | Two exact-SHA agent reviews; round 2 verified object accounting and deferred the new positional constraint-identity mechanism under the continuation rule | Structural requirements, compile-time witnesses, specialization, execution binding, and provider-owned capability and object accounts |
+| 16 | completed | [#3635](https://github.com/sifr-lang/sifr/pull/3635) | `70de2f82bb` | SQL platform 62/62; MySQL 8.4, 9.7, and 26.7 live matrices; affected tests, strict Clippy, formatting, and guards pass | agent remediation `SATISFIED` on `5d585f4b0`; new mechanism suggestions are deferred under the continuation rule | Complete MySQL compiler, runtime, tools, migrations, provisioning, editor integration, and qualification |
+| 17 | completed | [#3640](https://github.com/sifr-lang/sifr/pull/3640) | `4a64e163ae` | SQLite provider 6/6; contract and package tests; strict Clippy; formatting and guards pass | agent remediation `SATISFIED` on `22a87c70d`; new suggestions are deferred to Milestone 18 | Complete SQLite compiler, worker runtime, tools, migrations, provisioning, editor integration, and qualification |
+| 18 | completed | [#3645](https://github.com/sifr-lang/sifr/pull/3645) | `83a5f95d14` | integrated, build, provider, PostgreSQL 13-18 live, MySQL live, component, Clippy, formatting, HIR, and file-size evidence passed; one-shot gate dispositions recorded | Whole-phase agent remediation `SATISFIED` on `c0c6ae255`; four new mechanisms deferred under the continuation rule | Final integration, live parity remediation, executable qualification, component rebuilds, and phase closure |
 
 ## Deferred reviewer follow-up
 
@@ -1401,11 +1401,11 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   Rust formatting, Python compilation, diff hygiene, and file-size checks passed.
 - Gate disposition: no compiler source changed. The phase rule therefore skipped
   both Sifr repository gates.
-- Review round 1: Opus found one shared TLS provider regression on
+- Review round 1: agent found one shared TLS provider regression on
   `94c2bfb6362bede53f13cefbef92775f29119c94`.
 - Remediation: the final candidate preserved the accepted AWS-LC-RS provider and
   hardened the dependency and profile mutation checkers.
-- Review round 2: Opus returned `SATISFIED` with no blocking finding on
+- Review round 2: agent returned `SATISFIED` with no blocking finding on
   `7f3f6bc2cb5209b5cae64576cf1f11288be31f75`. The [published review](https://github.com/sifr-lang/sifr/pull/3582#issuecomment-5465914743)
   is keyed by that candidate.
 - Evidence scope: positive, negative, mutation, and property checks apply to this
@@ -1446,13 +1446,13 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   generated-code taxonomy debt. M1 corrected all SQL-owned findings. The
   generated-code owner corrected its findings on `main`. The full gate did not
   run again.
-- Review round 1: Opus returned `NOT SATISFIED` on
+- Review round 1: agent returned `NOT SATISFIED` on
   `78bd3e50b103fa71dc2dacbc0daa25c3ad587d5f`. It found discarded recursive
   format metadata, incomplete snapshot and source-map evidence, and a bad
   negative-fixture marker.
 - Remediation: one batch retained recursive metadata and added the required
   snapshot, every-offset, and negative-fixture evidence.
-- Review round 2: Opus returned `SATISFIED` with no blocking or follow-up finding
+- Review round 2: agent returned `SATISFIED` with no blocking or follow-up finding
   on `56f131e1bd8593527c0425fd6a67508683a861dd`. The [published review](https://github.com/sifr-lang/sifr/pull/3585#issuecomment-5466254530)
   records both rounds. No third review ran.
 - Base integration: current `main` changed exact-integer compiler paths after
@@ -1495,11 +1495,11 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   worktree did not initialize the LeetCode corpus gitlink. The corpus path was
   absent. The owning algorithmic issue records this external failure. The gate
   did not run again.
-- Review round 1: Opus found implicit clones in owned projection. It also found
+- Review round 1: agent found implicit clones in owned projection. It also found
   a mismatch between Sifr copy rules and physical Rust `Copy` behavior.
 - Remediation: the final candidate adds a projection HIR node, direct field
   moves, bounded Rust `Copy` derives, and recursive physical-copy checks.
-- Review round 2: Opus verified both original mechanisms. It found a new case
+- Review round 2: agent verified both original mechanisms. It found a new case
   for projection from a multi-field all-`int` record. The [published review](https://github.com/sifr-lang/sifr/pull/3588#issuecomment-5466767448)
   records the exact case. The phase rule assigns this case to Milestone 18 and
   prohibits a third review.
@@ -1542,14 +1542,14 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   stopped because the LeetCode profile manifest pointed to a corpus gitlink that
   was not initialized in this worktree. The owning Phase 31 record tracks this
   external repository-state failure. The gate did not run again.
-- Review round 1: Opus found that relaxed SIMD was not disabled, component
+- Review round 1: agent found that relaxed SIMD was not disabled, component
   diagnostics were outside the canonical global registry, and the non-SQL guest
   returned host-selected canned responses.
 - Remediation: the host now disables relaxed SIMD and canonicalizes NaNs. The
   compiler owns `SIFR-COMPONENT-0001` through `0009`, with catalog and baseline
   gates. A real Rust-built component parses each request and derives its result
   inside WebAssembly.
-- Review round 2: Opus verified the original sandbox and diagnostic mechanisms.
+- Review round 2: agent verified the original sandbox and diagnostic mechanisms.
   It found two new mechanisms: warm cache hits can bypass a lower input bound,
   and response spans can name documents outside the request. The [published
   review](https://github.com/sifr-lang/sifr/pull/3592#issuecomment-5467260005)
@@ -1599,7 +1599,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   existing `sqlite-context` typed-continuation compiler failure. The emitted
   Rust excellence issue assigns this exact defect to its active Item 3A. The
   gate did not run again.
-- Review round 1: Opus found local-name collisions, an arbitrary session-mode
+- Review round 1: agent found local-name collisions, an arbitrary session-mode
   value channel, no production source-to-provider authority path, and
   unsupported verification claims. The [published review](https://github.com/sifr-lang/sifr/pull/3595#issuecomment-5467626475)
   records the exact evidence.
@@ -1608,7 +1608,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   source identities are portable; verification uses executable component and
   driver cases; slice, overload, static-symbol, and host-limit behavior is
   stricter.
-- Review round 2: Opus verified the original authority and credential
+- Review round 2: agent verified the original authority and credential
   mechanisms. It found two new mechanisms: emitted-name encoding is not
   injective, and the claimed compiler profile registry has no production
   queryable consumer. The [published review](https://github.com/sifr-lang/sifr/pull/3595#issuecomment-5467626559)
@@ -1715,7 +1715,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   order, stores owned values, conditionally supports `Clone`, and consumes the
   bound query to produce an execution request with the compiler's exact
   cardinality and effect records.
-- Generated-name remediation: Opus found that boundary underscores could make
+- Generated-name remediation: agent found that boundary underscores could make
   two different generated paths collapse. The final codec escapes leading and
   trailing underscores, and the exact collision pair now has injectivity and
   round-trip regression coverage.
@@ -1737,12 +1737,12 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   corpus-root configuration before algorithmic compatibility. This is the same
   uninitialized-corpus repository-state failure already recorded by the owning
   verification phase. The gate did not run again.
-- Review round 1: Opus returned `NOT SATISFIED` because generated paths ending
+- Review round 1: agent returned `NOT SATISFIED` because generated paths ending
   and starting with underscores were not injective.
 - Remediation: the codec now escapes every boundary underscore and tests the
   exact colliding paths. The [published exact-SHA review](https://github.com/sifr-lang/sifr/pull/3599#issuecomment-5468661005)
   records the remediation and validation evidence.
-- Review round 2: Opus returned `SATISFIED` on the exact final candidate with no
+- Review round 2: agent returned `SATISFIED` on the exact final candidate with no
   blocking findings. The remaining suggestions are assigned in the deferred
   reviewer table, and the phase rule prohibits a third review.
 - Architecture update: the architecture overview and SQL documents now define
@@ -1797,7 +1797,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Merge gate: the one allowed run used the same exact final candidate. It stopped
   at the same live-suite and offline-profile contradiction before tests. The gate
   did not run again. Milestone 18 owns the verification-profile model correction.
-- Review round 1: Opus found gaps in the real server differential, view analysis,
+- Review round 1: agent found gaps in the real server differential, view analysis,
   declaration order, raw syntax shapes, operator and aggregate semantics, codec
   identities, qualification, explicit null writes, executable components,
   provider diagnostics, E strings, source checksums, spans, and unsafe-capability
@@ -1805,7 +1805,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Remediation: one batch implemented the missing provider mechanisms, regression
   fixtures, exact tooling authority, real component artifact pipeline, and live
   server evidence.
-- Review round 2: Opus verified every original remediation on the exact final
+- Review round 2: agent verified every original remediation on the exact final
   candidate. It returned `NOT SATISFIED` for two newly discovered mechanisms:
   scalar-subquery aggregate leakage into outer cardinality and explicit
   `DEFAULT` bypass of required-value checks. The
@@ -1872,7 +1872,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Merge gate: the one allowed run used the same exact final candidate. It stopped
   before tests on the same live-suite and offline-profile contradiction. The
   gate did not run again.
-- Review round 1: Opus returned `NOT SATISFIED` because set operands, CTEs, and
+- Review round 1: agent returned `NOT SATISFIED` because set operands, CTEs, and
   derived tables could hide `SELECT *` from expansion and exported-query
   rejection. The [published review](https://github.com/sifr-lang/sifr/pull/3604#issuecomment-5470202950)
   records the exact candidate and findings.
@@ -1881,7 +1881,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   analysis, preserves nested set flags, and tests direct, set, CTE, and derived
   forms. Distinct unions also cap duplicate-sensitive positive lower bounds at
   one.
-- Review round 2: Opus verified that the original star blocker is resolved. It
+- Review round 2: agent verified that the original star blocker is resolved. It
   returned `NOT SATISFIED` for a new mechanism: set results can inherit an
   operand-only `deterministic-order` flag. The
   [published review](https://github.com/sifr-lang/sifr/pull/3604#issuecomment-5470203053)
@@ -1926,7 +1926,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   data coverage.
 - Create-PR and merge gates: not run. This milestone changed no compiler source,
   so the user-approved phase rule makes both Sifr repository gates inapplicable.
-- Review round 1: Opus returned `NOT SATISFIED` because the ordinary PostgreSQL
+- Review round 1: agent returned `NOT SATISFIED` because the ordinary PostgreSQL
   compiler qualification still used a stale guest-source identity after the root
   manifests changed. The
   [published review](https://github.com/sifr-lang/sifr/pull/3611#issuecomment-5471125620)
@@ -1935,7 +1935,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   the final manifests. The ordinary compiler qualification and its SQL profile
   suite pass again. The same batch corrects inverted named-schema cache
   invalidation and adds a regression test.
-- Review round 2: Opus returned `SATISFIED` on the final candidate. The
+- Review round 2: agent returned `SATISFIED` on the final candidate. The
   [published review](https://github.com/sifr-lang/sifr/pull/3611#issuecomment-5471125721)
   verifies the original blocker, remediation, and full milestone contract.
 - Deferred follow-up: Milestone 18 owns malformed PostgreSQL boolean wire-length
@@ -1981,7 +1981,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Merge gate: the one allowed run used the same exact final candidate. It stopped
   before tests on the same live-suite and offline-profile contradiction. It did
   not run again.
-- Review round 1: Opus returned `NOT SATISFIED` because interpolation holes lost
+- Review round 1: agent returned `NOT SATISFIED` because interpolation holes lost
   Sifr routing, schema and provider analysis were not on the production path,
   incremental identities were test-only, and LSP cancellation was not wired to
   live requests.
@@ -1990,7 +1990,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   dependency fingerprints, relation scope, reverse identifier display, and
   request cancellation. It regenerated all six provider components and added
   focused regression evidence.
-- Review round 2: Opus verified the four original mechanisms and returned
+- Review round 2: agent verified the four original mechanisms and returned
   `NOT SATISFIED` for one new regression: SQL profile preparation can abort the
   complete analysis host. The
   [published review](https://github.com/sifr-lang/sifr/pull/3617#issuecomment-5471683360)
@@ -2049,7 +2049,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Merge gate: the one allowed run used the same exact final candidate. It stopped
   before tests because `merge` omits the same three required suites. It did not
   run again.
-- Review round 1: Opus returned `NOT SATISFIED` for advisory capabilities,
+- Review round 1: agent returned `NOT SATISFIED` for advisory capabilities,
   unusable external-tool topology, non-persisted hashes, Cargo execution
   substitution, invocation-only contamination checks, and source-grep evidence.
   The [published review](https://github.com/sifr-lang/sifr/pull/3619#issuecomment-5472000009)
@@ -2058,7 +2058,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   topology, build-then-direct execution, OS confinement, bounded output,
   application-time contamination checks, configuration hardening, structured
   provisioning commands, and behavioral evidence.
-- Review round 2: Opus verified the original corrections and returned
+- Review round 2: agent verified the original corrections and returned
   `NOT SATISFIED` because Linux validation does not provision or diagnose the
   Bubblewrap prerequisite. It also found a new declared-namespace typo-routing
   defect. The
@@ -2118,7 +2118,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   stopped before tests on the same required-suite contradiction and did not run
   again. The [published gate evidence](https://github.com/sifr-lang/sifr/pull/3621#issuecomment-5472348573)
   records both exact invocations.
-- Review round 1: Opus returned `NOT SATISFIED` because live catalogs used a
+- Review round 1: agent returned `NOT SATISFIED` because live catalogs used a
   parallel vocabulary instead of compiler-canonical `SchemaIR` types. They also
   fabricated `str` fallbacks for domains and composites. The
   [published review](https://github.com/sifr-lang/sifr/pull/3621#issuecomment-5472301449)
@@ -2127,7 +2127,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   canonical enum, domain, composite, range, and multirange data, separate
   PostgreSQL 14-or-newer multirange introspection, fail-closed unsupported-type
   behavior, full graph reload evidence, and live-versus-DDL parity evidence.
-- Review round 2: Opus verified both original blockers and returned `SATISFIED`
+- Review round 2: agent verified both original blockers and returned `SATISFIED`
   on the final candidate. The
   [published review](https://github.com/sifr-lang/sifr/pull/3621#issuecomment-5472337308)
   records the result. Its new mechanism findings and suggestions are assigned
@@ -2180,14 +2180,14 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   HIR maintainability, diff hygiene, and the 3,543-file size guard passed.
   Runtime dependency inspection found only Serde, `sifr_runtime`, and Tokio in
   the normal closure.
-- Review round 1: Opus returned `NOT SATISFIED` because the application runtime
+- Review round 1: agent returned `NOT SATISFIED` because the application runtime
   linked the compiler-only SQL contract and pulled Wasmtime into its dependency
   closure. The [published review](https://github.com/sifr-lang/sifr/pull/3625#issuecomment-5472602197)
   records the exact initial candidate.
 - Remediation: one batch added the closed runtime plan, host-side lowering,
   closed artifact serialization, a dependency regression guard, and stable
   topological branch execution evidence.
-- Review round 2: Opus verified the original blocker and returned `SATISFIED`
+- Review round 2: agent verified the original blocker and returned `SATISFIED`
   with no blocking finding. The
   [published review](https://github.com/sifr-lang/sifr/pull/3625#issuecomment-5472663451)
   records the exact final candidate. It found one new schema-changing merge
@@ -2241,13 +2241,13 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Repository validation: workspace and changed-target Clippy with warnings
   denied, formatting, HIR maintainability, the 900-line source guard,
   qualification checks, and mutation checks passed.
-- Review round 1: Opus returned `SATISFIED` with no blocking finding on the
+- Review round 1: agent returned `SATISFIED` with no blocking finding on the
   initial candidate. The
   [published review](https://github.com/sifr-lang/sifr/pull/3627#issuecomment-5475270496)
   records the exact SHA. One remediation batch hardened rollback direction,
   quoted-literal classification, additional autocommit families, plan lowering,
   exact qualification inventories, bootstrap locking, and dead reflection code.
-- Review round 2: Opus verified every remediation and returned `SATISFIED` with
+- Review round 2: agent verified every remediation and returned `SATISFIED` with
   no blocking finding. The
   [published review](https://github.com/sifr-lang/sifr/pull/3627#issuecomment-5475270707)
   records the exact final candidate. It found one new escape-string classifier
@@ -2298,7 +2298,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Repository validation: workspace Clippy and PostgreSQL all-target Clippy with
   warnings denied, formatting, HIR maintainability, the 900-line source guard,
   and diff hygiene passed.
-- Review round 1: Opus returned `NOT SATISFIED` on the initial candidate. It
+- Review round 1: agent returned `NOT SATISFIED` on the initial candidate. It
   found exact table-membership comparison and an incomplete effect-derived
   object envelope. The
   [published review](https://github.com/sifr-lang/sifr/pull/3630#issuecomment-5476737851)
@@ -2308,7 +2308,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   complete accessed-object account, with normalized PostgreSQL and undeclared
   predicate/assignment regression evidence. All six checked-in components were
   regenerated from the pinned toolchain.
-- Review round 2: Opus verified the provider-owned object account and returned
+- Review round 2: agent verified the provider-owned object account and returned
   `NOT SATISFIED` for a newly discovered positional constraint-identity
   mechanism. The
   [published review](https://github.com/sifr-lang/sifr/pull/3630#issuecomment-5477033586)
@@ -2354,14 +2354,14 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   Component qualification and mutation tests passed after each component rebuild.
 - Repository validation: strict Clippy passed for all M16 targets. Formatting,
   diff hygiene, HIR maintainability, and the 900-line source guard passed.
-- Review round 1: Opus returned `NOT SATISFIED` on the initial candidate. It
+- Review round 1: agent returned `NOT SATISFIED` on the initial candidate. It
   found a non-MySQL session-mode regression and an unbounded cancellation path.
   The [published review](https://github.com/sifr-lang/sifr/pull/3635#issuecomment-5480215882)
   records both blockers.
 - Remediation: dialect-mode comparison now limits character inputs to MySQL.
   Both cancellation paths use the same cleanup budget and evidence model.
   New tests cover PostgreSQL profile authority and live carrier cancellation.
-- Review round 2: Opus verified both corrections and returned `SATISFIED`.
+- Review round 2: agent verified both corrections and returned `SATISFIED`.
   The [published review](https://github.com/sifr-lang/sifr/pull/3635#issuecomment-5480280529)
   records the exact final candidate. New suggestions belong to Milestone 18.
   No third review ran.
@@ -2408,7 +2408,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   HIR maintainability, and the 900-line source guard passed. The checked-in
   WebAssembly component was rebuilt and its digest, size, target, and identity
   passed qualification.
-- Review round 1: Opus returned `NOT SATISFIED` on the initial candidate. It
+- Review round 1: agent returned `NOT SATISFIED` on the initial candidate. It
   found compiler/catalog divergence, missing common migration-engine behavior,
   attached-scope, grammar, semantic, runtime-lifecycle, requirement-harness,
   evidence, and documentation gaps.
@@ -2417,7 +2417,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   rowid rules are exact; provider metadata is separate; open is non-blocking;
   workers join; one-row reads report cardinality; migrations use the common
   engine; and qualification measures the actual bundled library.
-- Review round 2: Opus verified every original correction and returned
+- Review round 2: agent verified every original correction and returned
   `SATISFIED` with no blockers on the exact final candidate. The
   [published review](https://github.com/sifr-lang/sifr/pull/3640#issuecomment-5482865565)
   records the verdict. Its new suggestions and one pre-existing common migration
@@ -2471,13 +2471,13 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Repository validation: workspace Clippy passed with warnings denied. Rust
   formatting, Python compilation, diff hygiene, HIR maintainability, and the
   900-line file-size guard passed.
-- Review round 1: Opus returned `NOT SATISFIED` on the initial candidate. It
+- Review round 1: agent returned `NOT SATISFIED` on the initial candidate. It
   found unsafe decorator capture, global profile-name injection, declaration-only
   build claims, and missing exact-candidate live evidence.
 - Remediation: declaration discovery now requires explicit profile imports. The
   build modes are executable and profile-bound. The complete live lane exposed
   and closed the PostgreSQL type-generation and catalog-parity defects.
-- Review round 2: Opus returned `SATISFIED` for all four original blockers on
+- Review round 2: agent returned `SATISFIED` for all four original blockers on
   `c0c6ae255fc605fc58a24d93a15d5a08b8126121`. The final two commits only update
   repository guard classifications. No third review ran.
 - Deferred review work: four new non-blocking mechanisms are owned by
@@ -2509,7 +2509,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Merge commit: `0f01971c4d00cdf7e888360fc79c2703cbafb327`.
 - Runtime, codegen, and lowering suites passed on the reconciled candidate.
 - All 19 native cleanup fixtures passed on the reconciled candidate.
-- Both exact-SHA Opus reviews returned `SATISFIED` with no blocking findings.
+- Both exact-SHA agent reviews returned `SATISFIED` with no blocking findings.
 - SQL Milestone 18 owns the repository profile contradiction that stopped both
   allowed gates before tests.
 - Non-blocking hardening work remains in
@@ -2547,7 +2547,7 @@ Milestone 18 merged and closed the phase:
 - Final merge gate: ran once and stopped on missing ownership rows for seven
   pinned submodules. The ownership correction and its self-test pass. The gate
   did not run again.
-- Final whole-phase review: Opus remediation verdict `SATISFIED` on
+- Final whole-phase review: agent remediation verdict `SATISFIED` on
   `c0c6ae255fc605fc58a24d93a15d5a08b8126121` for all original blockers.
 - Final capability and verification inventory: complete, owned, executable, and
   free of pending or waived phase rows.

@@ -2,7 +2,7 @@
 
 PR: #2970
 
-Reviewer: Claude Opus 4.7 (`xhigh`)
+Reviewer: agent (`xhigh`)
 
 Verdict: **SATISFIED**
 

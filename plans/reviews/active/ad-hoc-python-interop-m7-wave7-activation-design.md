@@ -164,6 +164,6 @@ python3 scripts/check_hir_maintainability_guardrails.py
 
 The compiled async-declaration suite is part of `create-pr` itself. Then review
 the frozen diff
-until Opus is satisfied, open the implementation PR, perform an actual PR review
+until agent is satisfied, open the implementation PR, perform an actual PR review
 until satisfied, and merge. The tracker-only PR records the merged link and M7
 completion.

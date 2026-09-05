@@ -1,4 +1,3 @@
-# Reference: indexing_rules
 # indexing_rules indexing and semantics parity fixes demo
 #
 # Positive path: negative-index mutations and delete semantics are deterministic,

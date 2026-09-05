@@ -273,7 +273,7 @@ Split before implementation:
 ## Review And Closure
 
 Each wave receives design review, focused tests, the authoritative local
-create-PR gate, a frozen-diff Opus review until satisfied, an actual PR review
+create-PR gate, a frozen-diff agent review until satisfied, an actual PR review
 until satisfied, merge, and a tracker update with its merged link. After Wave 2
 the full M8 implementation receives a milestone-level review before the M8
 tracker checkbox is closed.

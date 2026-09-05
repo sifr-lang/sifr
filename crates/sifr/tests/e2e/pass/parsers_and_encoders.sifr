@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_struct_1_parser_serialization_expansion
+# Parsers and encoders.
 from sifr.json import JSONEncoder, JSONDecoder, JsonValue, from_array, from_int, from_object, from_str
 from sifr.configparser import ConfigParser, ParsingError, SectionProxy
 from sifr.csv import (

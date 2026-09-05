@@ -2,7 +2,7 @@
 
 Date: 2026-07-28
 
-Reviewer: Claude Opus 5 (`--effort medium`)
+Reviewer: agent (`--effort medium`)
 
 Reviewed head: `1afcea31c`
 
@@ -33,4 +33,4 @@ runtime claims were accurate.
 Emit valid nested retained handlers as move closures, traverse nested callable
 capture dependencies, transport retained-callback parameter metadata across
 modules, move abort enforcement before signature lookup, add regression
-coverage, validate, and run another exact Opus review.
+coverage, validate, and run another exact agent review.

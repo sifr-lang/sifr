@@ -1,5 +1,3 @@
-# Reference: clone_generic_cloning
-# Reference: ownership-aware-collection-lowering-and-clone-elision
 def main():
     pairs: list[tuple[int, int]] = [(2, 5), (4, 7)]
     totals: list[int] = []

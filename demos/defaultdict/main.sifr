@@ -1,4 +1,3 @@
-# Reference: defaultdict
 from sifr.collections import defaultdict, deque
 
 def main():

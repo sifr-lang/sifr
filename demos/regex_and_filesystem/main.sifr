@@ -1,5 +1,3 @@
-# Reference: parity_ext_regex_and_filesystem
-# Reference: python-source-parity-extension-waiver-reduction
 from sifr.re import finditer, compile, Match, Pattern
 from sifr.glob import iglob
 from sifr.pathlib import Path

@@ -3,7 +3,7 @@
 ## Review Metadata
 - **Review pass**: 1 (gap/closure audit)
 - **Branch state**: current main after PR #1897
-- **Reviewer**: Claude (automated gap audit)
+- **Reviewer**: agent (automated gap audit)
 - **Date**: 2026-05-08
 
 ---

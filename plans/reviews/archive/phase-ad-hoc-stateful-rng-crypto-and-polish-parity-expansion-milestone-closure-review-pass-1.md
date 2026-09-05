@@ -5,7 +5,7 @@
 **Review type**: milestone-level closure (wave-level completion + production-grade review cycles done)
 **Review pass**: 1
 **Date**: 2026-03-21
-**Reviewer**: Claude Code
+**Reviewer**: agent
 
 ---
 
@@ -246,6 +246,6 @@ All residual waivers are narrow, documented with rationale and revisit rules, an
 ---
 
 *Review completed: 2026-03-21*
-*Reviewer: Claude Code*
+*Reviewer: agent*
 *Phase: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion*
 *Review type: milestone-closure-review-pass-1*

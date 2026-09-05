@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_d1_zipfile_write_non_string_content
+# Zipfile write non string content.
 from sifr.zipfile import ZipFile
 
 

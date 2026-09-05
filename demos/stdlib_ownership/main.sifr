@@ -1,5 +1,3 @@
-# Reference: borrow_stdlib
-# Reference: compiler-feature-history
 # borrow_stdlib demo
 # Demonstrates Sifr's borrow-by-default model applied to the standard library.
 #

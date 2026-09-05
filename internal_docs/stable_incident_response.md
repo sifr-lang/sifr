@@ -10,9 +10,9 @@ release-publication workflow.
 
 - Release owner: `release/distribution`.
 - Incident owner: `release/distribution`.
-- Approval authority: a protected `stable-release` environment reviewer from
-  `release/distribution` who did not initiate the run. Initial and resume
-  attempts require distinct recorded approvals.
+- Approval authority: a protected `stable-release` environment approval from
+  `release/distribution` for a run not initiated by the same person. Initial
+  and resume attempts require distinct recorded approvals.
 - Acknowledgement target: 30 minutes from a qualifying trigger. This is
   deliberately longer than the bounded 20-minute site-deployment wait, so a
   terminal site timeout can release the metadata lease and be included in the
@@ -58,7 +58,7 @@ The durable incident identifier is used in all locations:
    facts, validation/communication/closure evidence, and incident sign-off
    assets in the governance release.
 3. The protected workflow prepare summary and attempt history, which bind the
-   exact evidence commit, paths, digests, approver, status, and mutations.
+   exact evidence commit, paths, digests, approval status, and mutations.
 4. The affected GitHub release notice and the stable release documentation
    incident notice. Public prose is landed with the GA documentation surface;
    the governed site facts already carry the active stable version and all
@@ -130,5 +130,5 @@ operation and receives no incident write permissions at this boundary.
 Run the capability demo with:
 
 ```bash
-demos/stable_incident_recovery_demo.sh
+demos/stable_incident_recovery/run.sh
 ```

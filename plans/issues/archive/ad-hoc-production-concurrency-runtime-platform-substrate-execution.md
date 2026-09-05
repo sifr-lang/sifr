@@ -45,52 +45,52 @@ Execution order: this is the second phase in the split production-stdlib sequenc
   - `reviews/ad-hoc-production-stdlib-platform-parity-planning-review-pass-3.md`
   - `reviews/ad-hoc-production-stdlib-platform-parity-planning-review-pass-4.md`
 - Final combined review result before split: `PASS`.
-- Split-phase Claude review:
+- Split-phase agent review:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-1-constrained.md`
   - Result: `FAIL`; cross-phase dependency and ownership gaps were remediated across the split phase docs.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-2-constrained.md`
   - Result: `FAIL`; remaining ownership/disposition gaps were remediated across the split phase docs.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-3-constrained.md`
   - Result: `FAIL`; remaining sequencing/error-surface gaps were remediated across the split phase docs.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-4-constrained.md`
   - Result: `FAIL`; remaining async-context/file/default-encoding/thread-error gaps were remediated across the split phase docs.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-5-constrained.md`
   - Result: `FAIL`; remaining contextvars/future-cancellation/open-policy/worker-typing gaps were remediated across the split phase docs.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-6-constrained.md`
   - Result: `FAIL`; remaining executor map/timeout/cancellation/heterogeneous-future gaps and text-wrapper gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-7-constrained.md`
   - Result: `FAIL`; remaining executor state-machine, `StringIO`, `threading.local`, and codec error-handler gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-8-constrained.md`
   - Result: `FAIL`; remaining Future.cancel, wait partition, executor.map timeout, and text handler gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-9-constrained.md`
   - Result: `FAIL`; remaining executor deadline/cancellation/wait fallback and codec handler classification gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-10-constrained.md`
   - Result: `FAIL`; remaining handler enforcement, partial iteration, FIRST_EXCEPTION trigger, and shutdown pending/running gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-11-constrained.md`
   - Result: `FAIL`; remaining future ownership/lifecycle and shutdown observability gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-12-constrained.md`
   - Result: `FAIL`; remaining `wait()` ownership, cancelled result typing, and incremental codec finalization gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-13-constrained.md`
   - Result: `FAIL`; remaining `gather()` ownership/result typing, `as_completed()` timeout signaling, codec recoverable-error, and `TaskGroup` aggregation gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-14-constrained.md`
   - Result: `FAIL`; remaining network error hierarchy, TLS socket ownership, workload classification, handler model, concurrency gate, text decision, and review-gate gaps were remediated.
-- Split-phase Claude follow-up:
+- Split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-15-constrained.md`
   - Result: `FAIL`; remaining TLS wrap failure-state, `signal.pause`, and text-i18n dependency milestone gaps were remediated.
-- Final split-phase Claude follow-up:
+- Final split-phase agent follow-up:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-16-constrained.md`
   - Result: `PASS`; no material implementation-blocking gaps remained for the previous CPython-shaped split.
 - Final implementation-readiness scan:
@@ -107,16 +107,16 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - Current substrate reframing review:
   - Source: reviewer thoughts provided by the user in `/Users/yaseralnajjar/.codex/attachments/e5616ec2-7eb9-4106-b2e0-723a513a8993/pasted-text.txt`.
   - Result: accepted direction; phase reframed from CPython stdlib parity to Sifr production concurrency/runtime substrate.
-- Substrate implementation-readiness Claude review:
+- Substrate implementation-readiness agent review:
   - `reviews/ad-hoc-production-concurrency-runtime-substrate-review-pass-1.md`
   - Result: `FAIL`; 12 implementation-readiness blockers were remediated across the phase and this ledger.
-- Substrate implementation-readiness Claude follow-up:
+- Substrate implementation-readiness agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-substrate-review-pass-2.md`
   - Result: `FAIL`; remaining `sifr.parallel` pool-sizing and post-M0 review gate gaps were remediated.
-- Substrate implementation-readiness Claude follow-up:
+- Substrate implementation-readiness agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-substrate-review-pass-3.md`
   - Result: `FAIL`; remaining M2 channel/sync sendability enforcement gap was remediated.
-- Final substrate implementation-readiness Claude follow-up:
+- Final substrate implementation-readiness agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-substrate-review-pass-4.md`
   - Result: `PASS`; no blocking implementation-readiness gaps remained.
 
@@ -135,10 +135,10 @@ Execution order: this is the second phase in the split production-stdlib sequenc
   - Result: accepted; this phase now requires wrapping mature Rust runtime/concurrency crates where suitable, locks accepted/rejected crate choices in the phase doc, defers any required surface that the selected ecosystem stack cannot satisfy, and forbids crate-family discovery during implementation.
 - Rust ecosystem-first expansion:
   - Result: accepted; locked crate decisions cover Tokio, Tokio Util, conditional Futures Util, Crossbeam Channel, Rayon, conditional targeted Rustix, tracing, metrics, thiserror, Serde, and Postcard, all hidden behind Sifr APIs with exact version/feature plans in the phase doc. Tokio remains `current_thread`; blocking I/O parallelism uses Tokio's blocking pool and CPU parallelism uses Rayon. Flume, async-channel, futures-channel, direct Parking Lot, new Once Cell, Scopeguard, production tracing-subscriber, IPC Serde JSON, Bincode, Signal Hook, Nix, direct Mio/Bytes/DashMap, runtime/language-facing Anyhow/Eyre, and bespoke replacements are not used in this phase.
-- Rust ecosystem dependency-lock Claude review:
+- Rust ecosystem dependency-lock agent review:
   - `reviews/ad-hoc-production-concurrency-runtime-rust-ecosystem-decisions-review-pass-1.md`
   - Result: `FAIL`; review findings were remediated by explicitly recording the `current_thread` Tokio runtime invariant, documenting that tokio-util 0.7.18 exposes `tokio_util::sync::CancellationToken` through `rt` rather than a nonexistent `sync` feature, aligning no-public-type lists, making tracing attribute macros unavailable, and clarifying Tokio `sync` wrappers in the ledger.
-- Rust ecosystem dependency-lock Claude follow-up:
+- Rust ecosystem dependency-lock agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-rust-ecosystem-decisions-review-pass-2.md`
   - Result: `PASS`; no blockers remained after the dependency-lock remediation.
 - Rust ecosystem dependency-lock elegance review:
@@ -149,24 +149,24 @@ Execution order: this is the second phase in the split production-stdlib sequenc
   - Result: `PASS`; all pass-3 polish was verified and no further meaningful dependency-lock polish remained.
 - General dependency policy addition:
   - Result: accepted; `internal_docs/dependency_policy.md` now defines dependency rings for compiler/tooling-only, generated-runtime core, stdlib feature-gated substrate, feature-specific protocol/data substrate, dev/test/demo-only, and rejected direct dependencies. The concurrency/runtime phase now applies those rings to its crate decisions, keeps Serde/Postcard M6 typed-IPC-only, allows `anyhow`/`eyre` only as contained compiler/tooling dependencies, and rejects `bincode` because Postcard is the selected typed IPC codec rather than because Bincode is pickle-like.
-- General dependency policy Claude review:
+- General dependency policy agent review:
   - `reviews/ad-hoc-production-concurrency-runtime-dependency-policy-review-pass-1.md`
   - Result: `PASS`; no blockers found. Non-blocking polish to include `futures-util` in Ring 2 examples was applied.
-- General dependency policy Claude follow-up:
+- General dependency policy agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-dependency-policy-review-pass-2.md`
   - Result: `PASS`; the `futures-util` Ring 2 policy addition stayed consistent with the phase ring table and introduced no drift.
 - Conditional dependency tightening review:
   - Result: accepted; `futures-util` is now conditional and added only if M1 proves `join_all`, `race`, `select`, or stream adapters would otherwise require substantial custom `Future`/`poll` code. `rustix` now requires a documented `std`/Tokio capability gap plus supported-host matrix rows and deterministic host-specific fixtures before use.
-- Conditional dependency tightening Claude review:
+- Conditional dependency tightening agent review:
   - `reviews/ad-hoc-production-concurrency-runtime-dependency-policy-review-pass-3.md`
   - Result: `PASS`; `futures-util` and `rustix` conditionality is consistent across dependency policy, phase table, resolved decision register, and execution ledger.
-- Decision-completeness Claude review:
+- Decision-completeness agent review:
   - `reviews/ad-hoc-production-concurrency-runtime-substrate-decision-completeness-pass-1.md`
   - Result: `FAIL`; `JoinSet` drop, Rayon pool architecture, task context API slots, post-M0 review fallback, `sifr.asyncio` veneer disposition, and dependency-record timing gaps were remediated.
-- Decision-completeness Claude follow-up:
+- Decision-completeness agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-substrate-decision-completeness-pass-2.md`
   - Result: `FAIL`; `JoinSet.join_all().await`, `JoinSet` submission API, and `Pool` instance API gaps were remediated.
-- Decision-completeness Claude follow-up:
+- Decision-completeness agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-substrate-decision-completeness-pass-3.md`
   - Result: `FAIL`; `JoinSet` result ordering/`JoinItemId` role gap was remediated, and non-blocking `race`/`select`, `parallel.map`, and shell-effect details were tightened.
 - Cross-phase decision-closure review:
@@ -175,7 +175,7 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - Final cross-phase decision delta review:
   - `reviews/ad-hoc-production-split-stdlib-phases-review-pass-25-final-delta.md`
   - Result: `PASS`; final `race`/`select` and no-bespoke-policy clarifications introduced no unmade or contradictory implementation decisions.
-- Final decision-completeness Claude follow-up:
+- Final decision-completeness agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-substrate-decision-completeness-pass-4.md`
   - Result: `PASS`; no blocking decision gaps remained.
 - Final blocker-only decision review:
@@ -199,49 +199,49 @@ Execution order: this is the second phase in the split production-stdlib sequenc
 - Final contract-level structured runtime review:
   - Source: reviewer notes provided by the user on 2026-06-06.
   - Result: accepted; post-M0 review fallback, observed `TaskGroup` failure semantics, `race`/`select` result containers, minimum `CancelOutcome` states, scoped process handle shape, IPC schema compatibility, `IpcSerializable` strictness, `sifr.subprocess` freeze status, async lock guard await rules, and offload error mapping were recorded in the phase contract.
-- Structured runtime work Claude follow-up:
+- Structured runtime work agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-5.md`
   - Result: `FAIL`; remaining `TaskGroup`/scope canonical owner, M1 sibling-cancellation DoD, process handle decision-register row, `sifr.subprocess` freeze wording, `select` call syntax, TaskGroup offload error binding, lock guard wording, no-public-Rust-types model wording, and `Task`/`BlockingTask` audit gaps were remediated.
-- Structured runtime work Claude follow-up:
+- Structured runtime work agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-6.md`
   - Result: `FAIL`; remaining `cancel_scope` stable-vs-optional contradiction was remediated, and non-blocking polish for supervised process examples, `spawn_scoped` orientation, and `race`/`select` loser evidence type was applied.
-- Structured runtime work Claude follow-up:
+- Structured runtime work agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-7.md`
   - Result: `FAIL`; remaining TaskGroup offload error binding versus `JoinSet.join_all()` wrapper alignment gap was remediated, and non-blocking polish for cancellation scope naming, process example pipe-access intent, and `JoinSet.join_all()` resolved-decision return type was applied.
-- Final structured runtime work Claude follow-up:
+- Final structured runtime work agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-8.md`
   - Result: `PASS`; TaskGroup offload error binding and `JoinSet.join_all()` wrapper alignment were verified, with only non-blocking wording/ledger polish applied.
-- Final blocker-only Claude verification:
+- Final blocker-only agent verification:
   - `reviews/ad-hoc-production-concurrency-runtime-structured-work-review-pass-9.md`
   - Result: `PASS`; no material blockers, contradictions, stale state vocabulary, missing binding decisions, or ambiguous contracts remained.
-- No-subprocess-compatibility Claude review:
+- No-subprocess-compatibility agent review:
   - `reviews/ad-hoc-production-concurrency-runtime-no-subprocess-compat-review-pass-1.md`
   - Result: `PASS`; docs were clean under the no-backward-compatibility, no-CPython-adapter, `sifr.process`-only decision, with only non-blocking wording/waiver-index polish applied.
-- Final no-subprocess-compatibility Claude verification:
+- Final no-subprocess-compatibility agent verification:
   - `reviews/ad-hoc-production-concurrency-runtime-no-subprocess-compat-review-pass-2.md`
   - Result: `PASS`; no backward-compatibility or CPython-shaped adapter commitment remained, and `sifr.subprocess` was verified as legacy implementation debt to remove, keep internal-test-only, or route to unsupported diagnostics.
-- M0 implementation Claude review:
+- M0 implementation agent review:
   - `reviews/ad-hoc-production-concurrency-runtime-m0-implementation-review-pass-1.md`
   - Result: `PASS`; CPython scan, inventory, evidence matrix, workload database, platform contract, host matrix, golden manifest entries, native namespace diagnostics, and M0/M0a gates met M0 requirements. Non-blocking polish for `sifr.contextlib`/`sifr.warnings` disposition and warnings diagnostic steering was applied.
-- M0a legacy-surface Claude review:
+- M0a legacy-surface agent review:
   - `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-1.md`
   - Result: `FAIL`; local validation recording, duplicate legacy-import fail fixtures, empty review artifact, and dead `sifr.asyncio` veneer lowering blockers were remediated.
-- M0a legacy-surface Claude follow-up:
+- M0a legacy-surface agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-2.md`
   - Result: `PASS`; public legacy modules were verified unreachable, `SIFR-IMPORT-0009` replacement diagnostics were verified, native task lowering was verified free of `sifr.asyncio` compatibility paths, demos/manifests/goldens were clean, validation evidence was recorded, and no blocker remained.
-- M0a final legacy-surface Claude confirmation:
+- M0a final legacy-surface agent confirmation:
   - `reviews/ad-hoc-production-concurrency-runtime-m0a-legacy-surface-review-pass-3.md`
   - Result: `PASS`; pass-1 blockers remained remediated in the current working tree, create-pr validation artifacts were verified with `70 passed`, `0 failed` e2e pass coverage and platform golden `pass=5`, `skip=2`, and the implementation was confirmed ready for the M0a PR.
 - Post-M0 external review gate:
   - `reviews/ad-hoc-production-concurrency-runtime-post-m0-external-review-pass-1.md`
   - Result: `PASS`; M0 substrate inventory, CPython scan evidence, workload database, platform contract, dependency decisions, M0a legacy surface removal, validation evidence, and M1 entry gates were verified. M1 may start.
-- M1 structured-async implementation Claude review:
+- M1 structured-async implementation agent review:
   - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-1.md`
   - Result: `PASS`; M1 structured task APIs, reserved `ctx` slots, named `select`, and shared spawn enforcement were verified. Non-blocking polish for arbitrary select-branch signature wording, `async_with.rs` decomposition, and sequential same-name task-owner cleanup was applied.
-- M1 structured-async implementation Claude review:
+- M1 structured-async implementation agent review:
   - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-2.md`
   - Result: `PASS`; `TaskGroup(ctx=None)`, `task.spawn_scoped(..., ctx=None)`, named-branch `task.select(first=..., second=...)`, existing task-boundary enforcement, traceability, manifests, and create-pr validation evidence were verified. Non-blocking demo/select and `spawn_scoped` model-doc polish was applied.
-- M1 final post-polish Claude follow-up:
+- M1 final post-polish agent follow-up:
   - `reviews/ad-hoc-production-concurrency-runtime-m1-structured-async-review-pass-5.md`
   - Result: `PASS`; demo select syntax, `spawn_scoped` and placeholder select docs, `task_owner_scope_state` extraction, same-name `TaskGroup` cleanup tests, line-cap status, ledger, traceability, and post-polish validation were verified. Reviewer is satisfied and M1 is ready to PR/merge.
 
@@ -1429,7 +1429,7 @@ M6 typed IPC closeout classification merge ledger:
 - PR: https://github.com/sifr-lang/sifr/pull/2467
 - Merge commit: `1606e5d0817af1cb6c0f05b56bf4e5636dfd7775`
 - Merged at: `2026-06-09T04:11:16Z`
-- Scope: docs-only M6 closeout classification, stale generated-worker wording cleanup, host-matrix classification update, roadmap/phase issue status update, validation evidence, and Opus closeout review artifacts.
+- Scope: docs-only M6 closeout classification, stale generated-worker wording cleanup, host-matrix classification update, roadmap/phase issue status update, validation evidence, and agent closeout review artifacts.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
 M6 typed IPC closeout classification merge-ledger review loop:
@@ -1456,7 +1456,7 @@ M7 traceability scaffold merge ledger:
 - PR: https://github.com/sifr-lang/sifr/pull/2469
 - Merge commit: `9b72f3f151cf5e241f3050e9debbadb633a7461d`
 - Merged at: `2026-06-09T04:25:38Z`
-- Scope: required M7 traceability artifact creation, M7 in-progress ledger status, open closeout gate tracking, M0-M6 closure input summary, and Opus scaffold review artifact.
+- Scope: required M7 traceability artifact creation, M7 in-progress ledger status, open closeout gate tracking, M0-M6 closure input summary, and agent scaffold review artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
 M7 traceability scaffold merge-ledger review loop:
@@ -1483,7 +1483,7 @@ M7 public documentation merge ledger:
 - PR: https://github.com/sifr-lang/sifr/pull/2473
 - Merge commit: `9a17a5fd76a701761b91604bd45ac7e58ecdf7bc`
 - Merged at: `2026-06-09T04:41:12Z`
-- Scope: public `docs/concurrency_runtime.md` coverage for `sifr.task`, `sifr.sync`, `sifr.runtime`, `sifr.parallel`, `sifr.process`, `sifr.signal`, `sifr.resource`, and `sifr.ipc`; M7 traceability public-doc rows marked complete after merge; validation evidence; and Opus public-docs review artifact.
+- Scope: public `docs/concurrency_runtime.md` coverage for `sifr.task`, `sifr.sync`, `sifr.runtime`, `sifr.parallel`, `sifr.process`, `sifr.signal`, `sifr.resource`, and `sifr.ipc`; M7 traceability public-doc rows marked complete after merge; validation evidence; and agent public-docs review artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
 M7 public documentation merge-ledger review loop:
@@ -1510,7 +1510,7 @@ M7 internal architecture audit merge ledger:
 - PR: https://github.com/sifr-lang/sifr/pull/2476
 - Merge commit: `d21d4da4e4e05c227fc0165ac719bde94ba3c0ec`
 - Merged at: `2026-06-09T04:48:39Z`
-- Scope: M7 production closure audit table in `internal_docs/structured_runtime_work_model.md`, main architecture pointer in `internal_docs/architecture.md`, M7 traceability architecture gate marked complete after merge, validation evidence, and Opus architecture-audit review artifact.
+- Scope: M7 production closure audit table in `internal_docs/structured_runtime_work_model.md`, main architecture pointer in `internal_docs/architecture.md`, M7 traceability architecture gate marked complete after merge, validation evidence, and agent architecture-audit review artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` and `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
 M7 internal architecture audit merge-ledger review loop:
@@ -1544,7 +1544,7 @@ M7 demo closure merge ledger:
 - PR: https://github.com/sifr-lang/sifr/pull/2479
 - Merge commit: `040dfa81138b2e4a8ccf97a7e825dd894c93eead`
 - Merged at: `2026-06-09T05:00:20Z`
-- Scope: four new concurrency runtime demos for CPU parallel map, async subprocess pipeline, structured shutdown, and cleanup under cancellation; validation of existing structured task group, producer/consumer channel pipeline, and blocking offload demos; M7 traceability demo gate marked complete after merge; validation evidence; and Opus demo-closure review artifact.
+- Scope: four new concurrency runtime demos for CPU parallel map, async subprocess pipeline, structured shutdown, and cleanup under cancellation; validation of existing structured task group, producer/consumer channel pipeline, and blocking offload demos; M7 traceability demo gate marked complete after merge; validation evidence; and agent demo-closure review artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
 M7 demo closure merge-ledger review loop:
@@ -1582,7 +1582,7 @@ M7 generated dependency and panic-scan evidence merge ledger:
 - PR: https://github.com/sifr-lang/sifr/pull/2482
 - Merge commit: `727f234511427e4dafa1644b39af4712a9a8c30b`
 - Merged at: `2026-06-09T05:37:13Z`
-- Scope: resolver-backed concurrency runtime dependency snapshots with an integration test, dedicated M7 generated-code quality manifest coverage for all seven required demos, generated parallel `try_map` bound cleanup required by the new clippy lane, M7 traceability for generated dependency and panic/emitted-code quality coverage, validation evidence, and Opus review artifact.
+- Scope: resolver-backed concurrency runtime dependency snapshots with an integration test, dedicated M7 generated-code quality manifest coverage for all seven required demos, generated parallel `try_map` bound cleanup required by the new clippy lane, M7 traceability for generated dependency and panic/emitted-code quality coverage, validation evidence, and agent review artifact.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
 M7 generated dependency and panic-scan evidence merge-ledger review loop:
@@ -1617,7 +1617,7 @@ M7 validation lane and inventory closure merge ledger:
 - PR: https://github.com/sifr-lang/sifr/pull/2485
 - Merge commit: `525f5695075ac42c2b71ac90d754ac750284ee56`
 - Merged at: `2026-06-09T06:12:51Z`
-- Scope: M7 inventory closure audit for validation lanes, inventory, platform golden, supported-host rows, and waiver/quarantine state; direct `spawn_blocking_basic` merge-lane coverage; generator and regenerated inventory artifacts updated to M7 inventory-audited status while preserving M2/M3/M5 closed evidence; M7 traceability for validation lane and inventory closure; validation evidence; and Opus review artifacts.
+- Scope: M7 inventory closure audit for validation lanes, inventory, platform golden, supported-host rows, and waiver/quarantine state; direct `spawn_blocking_basic` merge-lane coverage; generator and regenerated inventory artifacts updated to M7 inventory-audited status while preserving M2/M3/M5 closed evidence; M7 traceability for validation lane and inventory closure; validation evidence; and agent review artifacts.
 - Merge-ledger validation: docs-only ledger update; `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS.
 
 M7 validation lane and inventory closure merge-ledger review loop:
@@ -1658,26 +1658,26 @@ M7 final review and validation gate merge ledger:
 - PR: https://github.com/sifr-lang/sifr/pull/2488
 - Merge commit: `9a271d64b1e62b36a5365f0831cb990d83f8d4e9`
 - Merged at: `2026-06-09T07:29:51Z`
-- Scope: final generated process-async preamble and runtime diagnostic clippy cleanup, performance benchmark harness correction for direct `sifr` binary measurement and warm build-mode samples, full create-pr and merge validation evidence, final Opus implementation review `PASS`, and M7 closeout traceability final-gate status.
+- Scope: final generated process-async preamble and runtime diagnostic clippy cleanup, performance benchmark harness correction for direct `sifr` binary measurement and warm build-mode samples, full create-pr and merge validation evidence, final agent implementation review `PASS`, and M7 closeout traceability final-gate status.
 - Merge-ledger validation: docs-only final ledger update; `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS (`2273` files under the 900-line hand-maintained source limit).
 
 M7 final phase ledger review loop:
 
-- `reviews/ad-hoc-production-concurrency-runtime-m7-final-ledger-review-pass-1.md`: `PASS`; reviewer verified PR #2488's merge commit and timestamp, final implementation Opus `PASS` evidence, docs-only validation scope, M7 and roadmap completion status flips, closed final external review and merge-gate traceability rows, and no stale status contradiction. Final ledger is ready to PR/merge, and phase 36.4 is complete and audited once this ledger PR merges.
+- `reviews/ad-hoc-production-concurrency-runtime-m7-final-ledger-review-pass-1.md`: `PASS`; reviewer verified PR #2488's merge commit and timestamp, final implementation agent `PASS` evidence, docs-only validation scope, M7 and roadmap completion status flips, closed final external review and merge-gate traceability rows, and no stale status contradiction. Final ledger is ready to PR/merge, and phase 36.4 is complete and audited once this ledger PR merges.
 
-Post-closure fable host-matrix remediation:
+Post-closure agent host-matrix remediation:
 
-- `reviews/ad-hoc-production-concurrency-runtime-fable-final-review-pass-1.md`: `FAIL`; fable reviewer verified the closure chain but found stale active supported-host matrix rows for `Blocking I/O offload` and `CPU parallelism` still marked `blocked-on-concurrency-runtime-m3` after M3 and M7 closure.
+- `reviews/ad-hoc-production-concurrency-runtime-agent-final-review-pass-1.md`: `FAIL`; agent reviewer verified the closure chain but found stale active supported-host matrix rows for `Blocking I/O offload` and `CPU parallelism` still marked `blocked-on-concurrency-runtime-m3` after M3 and M7 closure.
 - Remediation: flipped those M3-owned rows to `supported` using existing `spawn_blocking_basic`, `join_set_spawn_blocking`, `spawn_cpu_basic`, `join_set_spawn_cpu_join_all_ordered`, `parallel_map_basic`, `parallel_try_map_basic`, and `parallel_pool_map_basic` evidence; refreshed `concurrency_runtime_m7_inventory_closure.md` stale pending wording.
-- `reviews/ad-hoc-production-concurrency-runtime-fable-final-review-pass-2.md`: `PASS`; fable reviewer verified the pass-1 blocker was fully remediated, the inventory audit no longer contradicts closed M7 status, and the closure record is internally consistent after this docs-only correction.
+- `reviews/ad-hoc-production-concurrency-runtime-agent-final-review-pass-2.md`: `PASS`; agent reviewer verified the pass-1 blocker was fully remediated, the inventory audit no longer contradicts closed M7 status, and the closure record is internally consistent after this docs-only correction.
 - Docs-only validation: `git diff --check` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS (`2274` files under the 900-line hand-maintained source limit).
 
 Post-closure cancellation-model provider record:
 
 - PR #2493: https://github.com/sifr-lang/sifr/pull/2493
 - Scope: clarified the completed provider cancellation model as abort-backed task-handle cancellation with typed observation, compiler-recognized `async with task.timeout(duration)` same-task timeout scopes, no public `cancel_scope` / `CancelScope` / cancellation-token surface, and conditional-only `tokio-util` dependency records.
-- `reviews/ad-hoc-production-concurrency-runtime-cancellation-fable-review-pass-2.md`: `FAIL`; fable reviewer verified the stale `cancel_scope` public-API records were fixed but found one remaining unconditional `tokio-util` dependency summary.
-- `reviews/ad-hoc-production-concurrency-runtime-cancellation-fable-review-pass-3.md`: `PASS`; fable reviewer verified the remaining blocker and wording notes were fixed, all changed files were staged, and no blocking findings remained.
+- `reviews/ad-hoc-production-concurrency-runtime-cancellation-agent-review-pass-2.md`: `FAIL`; agent reviewer verified the stale `cancel_scope` public-API records were fixed but found one remaining unconditional `tokio-util` dependency summary.
+- `reviews/ad-hoc-production-concurrency-runtime-cancellation-agent-review-pass-3.md`: `PASS`; agent reviewer verified the remaining blocker and wording notes were fixed, all changed files were staged, and no blocking findings remained.
 - Local validation: `git diff --cached --check` -> PASS; `python3 -m json.tool verification/stdlib/concurrency_runtime_substrate_inventory.json` -> PASS; `python3 scripts/check_file_size_guardrails.py` -> PASS (`2274` files under the 900-line hand-maintained source limit); `scripts/run_all_tests.sh --profile create-pr` -> PASS with wall-time advisory only (`125` e2e pass fixtures, `0` failed, `report_signature=50edc954137c87b4`).
 
 M5 signal `strsignal` value-helper implementation:
@@ -2597,7 +2597,7 @@ Create and keep current during implementation:
 
 ## Review Ownership
 
-- Designated compiler/runtime reviewer role: Claude Opus reviewer invoked through `.cursor/skills/talk-to-claude-opus` for M0 implementation review; phase owner remains runtime/stdlib implementation owner. M1 cannot start until post-M0 review returns `PASS` and M0a is complete.
+- Designated compiler/runtime reviewer role: agent reviewer invoked through `agent review` for M0 implementation review; phase owner remains runtime/stdlib implementation owner. M1 cannot start until post-M0 review returns `PASS` and M0a is complete.
 - Typed IPC design approval process: M6 requires a named design artifact reviewed by the phase owner and designated compiler/runtime reviewer, then recorded here before any serialization crate is selected.
 
 ## API Tier Decision Index

@@ -4,7 +4,7 @@
 **Execution ledger**: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
 **Review type**: post-closure CPython adaptation pass 2 — pass 1 remediation validation + residual gap analysis
 **Date**: 2026-03-21
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Commit under review**: `082ec517` (post-closure review pass 1 remediation merged — HEAD)
 **Phase status**: Production-grade closed; post-closure CPython adaptation pass 2 in progress
 
@@ -387,7 +387,7 @@ All governance documentation is consistent and accurate.
 ---
 
 *Review completed: 2026-03-21*
-*Reviewer: Claude Code*
+*Reviewer: agent*
 *Phase: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion*
 *Review type: post-closure-cpython-review-pass-2*
 *Commit: 082ec517 (post-closure remediation pass 1 — HEAD)*

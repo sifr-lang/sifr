@@ -2073,7 +2073,7 @@ capabilities = ["network", "credentials", "project-write"]
 ```
 
 The selected executable package is a direct, normal dependency and an exact
-workspace member. External provider tools use a reviewed workspace wrapper.
+workspace member. External provider tools use a trusted workspace wrapper.
 Sifr records the resolved graph in committed `sifr-tools.lock.json`. The tools
 member is not an application dependency. Sifr builds it for the explicit Sifr
 host target through the workspace `Cargo.lock`, then directly executes the

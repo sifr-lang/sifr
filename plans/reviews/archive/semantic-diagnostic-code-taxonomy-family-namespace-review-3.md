@@ -1,6 +1,6 @@
 # Review 3: Semantic Diagnostic Code Taxonomy — Final Verification After Patch Round
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Date: 2026-04-29
 Source: [issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md](../issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md)
 Repo state: branch `main`, head `c891177b`, proposal modified-uncommitted

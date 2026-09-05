@@ -84,4 +84,4 @@ All commands passed. The focused generated-code quality run passed before nightl
 
 ## Readiness Status
 
-The compiler and codebase verification readiness is complete from a local validation standpoint: create-pr, merge, nightly, and release profiles all pass locally with zero blocking failures, coverage matrix readiness is blocking in all profiles, and final reviewer sign-off is required before PR merge.
+The compiler and codebase verification readiness is complete from a local validation standpoint: create-pr, merge, nightly, and release profiles all pass locally with zero blocking failures, coverage matrix readiness is blocking in all profiles, and final approval is required before PR merge.

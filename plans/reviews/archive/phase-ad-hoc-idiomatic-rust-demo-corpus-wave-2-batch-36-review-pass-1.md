@@ -5,7 +5,7 @@
   - `demos/heap_option_drain/idiomatic.rs`
   - `demos/own_mut_updates/idiomatic.rs`
 - Review method:
-  - External `claude -p` review run per file.
+  - External `agent review` review run per file.
   - Prompts were concise and behavior-driven because that has been the most reliable reviewer transport in this workspace.
 
 ### Results

@@ -4,7 +4,7 @@ Scope of change since pass 1 (uncommitted, docs-only):
 - `issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md` L85 — wording refinement only.
 - `internal_docs/diagnostic_emission_inventory.md` — unchanged from pass 1.
 
-Reviewer: Claude (read-only verification — no files modified).
+Reviewer: agent (read-only verification — no files modified).
 
 ## What I re-checked
 

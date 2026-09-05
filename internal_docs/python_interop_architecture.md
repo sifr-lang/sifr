@@ -1,6 +1,6 @@
 # Embedded Python Interop Architecture
 
-This note records the production contract implemented by the embedded CPython interop phase. It complements the public guide in `docs/python-interop.mdx` and the verification surface in `verification/areas/python_interop/`.
+This note records the production contract implemented by embedded CPython interop. It complements the public guide in `docs/python-interop.mdx` and the verification surface in `verification/areas/python_interop/`.
 
 The declaration-first package-authoring layer is specified separately in
 [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md).

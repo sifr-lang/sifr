@@ -1,4 +1,3 @@
-# Reference: protocol_bounds
 # protocol_bounds protocol-bound strictness closure demo
 # Demonstrates strict protocol-bound validation when forwarding TypeVars.
 

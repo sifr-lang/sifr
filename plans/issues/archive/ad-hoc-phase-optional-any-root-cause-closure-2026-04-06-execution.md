@@ -44,9 +44,9 @@
 
 ## Review Log
 
-- completed: Claude pass1b -> `reviews/optional-any-root-cause-phase-review-pass1b.md`
-- completed: Claude pass2 -> `reviews/optional-any-root-cause-phase-review-pass2.md`
-- completed: Claude pass3 final audit (READY) -> `reviews/optional-any-root-cause-phase-review-pass3.md`
+- completed: agent pass1b -> `reviews/optional-any-root-cause-phase-review-pass1b.md`
+- completed: agent pass2 -> `reviews/optional-any-root-cause-phase-review-pass2.md`
+- completed: agent pass3 final audit (READY) -> `reviews/optional-any-root-cause-phase-review-pass3.md`
 
 ## Rerun Log
 

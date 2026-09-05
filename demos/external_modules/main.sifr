@@ -1,4 +1,3 @@
-# Reference: external_modules
 # external-modules-sample demo main module
 from worker import call
 

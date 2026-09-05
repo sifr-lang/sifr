@@ -1,6 +1,6 @@
 # Parity Governance Inventory
 
-Status: in_progress (updated by RNG readiness review-pass-2 approval on 2026-03-21; `stdlib_parity_rng_0`-`stdlib_parity_rng_3` are merged and production-review closed; RNG capability is production-grade closed)
+Status: in_progress (updated by RNG readiness validation-pass-2 approval on 2026-03-21; `stdlib_parity_rng_0`-`stdlib_parity_rng_3` are merged and production-validation closed; RNG capability is production-grade closed)
 Capability: `issues/python-source-parity-and-builtin-stdlib-surface.md`
 Execution ledger: `issues/python-source-parity-and-builtin-stdlib-surface-execution.md`
 Continuation capability (closed): `python-source-parity-extension-waiver-reduction record`

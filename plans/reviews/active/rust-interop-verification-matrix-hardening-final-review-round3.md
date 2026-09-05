@@ -4,7 +4,7 @@ Read-only. No files modified (`git status --porcelain` identical before and afte
 
 ### 1. Archive move and archived content — correct
 `plans/issues/active/rust-interop-verification-matrix-hardening.md` is deleted (` D` in status) and the successor lives at `plans/issues/archive/rust-interop-verification-matrix-hardening.md`. Diffing the archived file against `HEAD`'s active version shows the complete 284-line issue preserved verbatim except for exactly the intended closeout edits:
-- Status → "Completed and archived on 2026-07-26 after final Opus review and all local closure gates passed" (date matches today).
+- Status → "Completed and archived on 2026-07-26 after final agent review and all local closure gates passed" (date matches today).
 - Sibling link retargeted `rust-interop-runtime-ecosystem-certification.md` → `../active/…` (resolves).
 - Phase 40 dependency sentence corrected from `milestone_40_1` to `milestone_40_0`, which now matches Phase 40's actual structure (`40:53-58` requires the artifacts *before* `milestone_40_0`; registration is at `40:401-402` and `40:419-424`, both inside `milestone_40_0`, which spans `:363-487`). This closes the cross-doc drift carried since the phase40 round-3 iteration review.
 - `hardening_4` → merged with #3023 evidence; `hardening_5` → complete with the review/gate evidence.

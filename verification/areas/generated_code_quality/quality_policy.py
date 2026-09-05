@@ -11,6 +11,8 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
+from quality_owners import QUALITY_OWNERS
+
 STRICT_CLIPPY_ARGS = [
     "-D",
     "warnings",
@@ -46,27 +48,27 @@ STRICT_CLIPPY_ARGS = [
 @dataclasses.dataclass(frozen=True)
 class PatternPolicy:
     id: str
-    owner_item: int
+    owner: str
     pattern: re.Pattern[str]
 
 
 PATTERN_POLICIES = (
-    PatternPolicy("unwrap", 3, re.compile(r"\.unwrap\s*\(")),
-    PatternPolicy("expect", 3, re.compile(r"\.expect\s*\(")),
-    PatternPolicy("panic", 3, re.compile(r"\bpanic\s*!")),
-    PatternPolicy("todo", 3, re.compile(r"\btodo\s*!")),
-    PatternPolicy("unimplemented", 3, re.compile(r"\bunimplemented\s*!")),
-    PatternPolicy("unsafe", 3, re.compile(r"\bunsafe\b")),
-    PatternPolicy("allow-attribute", 8, re.compile(r"#\s*!?\s*\[\s*allow\s*\(")),
-    PatternPolicy("unreachable", 3, re.compile(r"\bunreachable\s*!")),
-    PatternPolicy("process-abort", 3, re.compile(r"\b(?:std|::std)::process::abort\s*\(")),
-    PatternPolicy("process-exit", 3, re.compile(r"\b(?:std|::std)::process::exit\s*\(")),
+    PatternPolicy("unwrap", "panic-safety", re.compile(r"\.unwrap\s*\(")),
+    PatternPolicy("expect", "panic-safety", re.compile(r"\.expect\s*\(")),
+    PatternPolicy("panic", "panic-safety", re.compile(r"\bpanic\s*!")),
+    PatternPolicy("todo", "panic-safety", re.compile(r"\btodo\s*!")),
+    PatternPolicy("unimplemented", "panic-safety", re.compile(r"\bunimplemented\s*!")),
+    PatternPolicy("unsafe", "panic-safety", re.compile(r"\bunsafe\b")),
+    PatternPolicy("allow-attribute", "canonicalization", re.compile(r"#\s*!?\s*\[\s*allow\s*\(")),
+    PatternPolicy("unreachable", "panic-safety", re.compile(r"\bunreachable\s*!")),
+    PatternPolicy("process-abort", "panic-safety", re.compile(r"\b(?:std|::std)::process::abort\s*\(")),
+    PatternPolicy("process-exit", "panic-safety", re.compile(r"\b(?:std|::std)::process::exit\s*\(")),
     PatternPolicy(
         "direct-index",
-        4,
+        "collection-access",
         re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*\s*\[[^\]\n]+\]"),
     ),
-    PatternPolicy("signed-to-usize", 11, re.compile(r"\bas\s+usize\b")),
+    PatternPolicy("signed-to-usize", "portability", re.compile(r"\bas\s+usize\b")),
 )
 PATTERN_BY_ID = {policy.id: policy for policy in PATTERN_POLICIES}
 DEBT_CATEGORIES = {"safety", "rustfmt", "clippy", "freshness"}
@@ -323,10 +325,8 @@ def validate_clippy_lint_owners(
 
 def load_debt(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict) or payload.get("schema_version") != 2:
-        raise ValueError("generated quality debt must use schema_version 2")
-    if payload.get("closure_item") != 12:
-        raise ValueError("generated quality debt must expire at Item 12")
+    if not isinstance(payload, dict) or payload.get("schema_version") != 3:
+        raise ValueError("generated quality debt must use schema_version 3")
     validate_debt_owners(payload)
     return payload
 
@@ -358,8 +358,10 @@ def compare_exact_debt(
 
 
 def validate_debt_owners(debt: dict[str, Any]) -> None:
+    if debt.get("completion_requirement") != "zero-debt":
+        raise ValueError("generated quality completion must require zero debt")
     structural_keys = set(debt).difference(
-        {"schema_version", "baseline_commit", "closure_item", "policy"}
+        {"schema_version", "baseline_commit", "completion_requirement", "policy"}
     )
     if structural_keys != DEBT_CATEGORIES:
         raise ValueError("generated quality debt must contain the exact category set")
@@ -373,12 +375,12 @@ def validate_debt_owners(debt: dict[str, Any]) -> None:
         section = debt.get(category)
         if not isinstance(section, dict):
             raise ValueError(f"missing debt section: {category}")
-        owner_items = section.get("owner_items")
-        if not isinstance(owner_items, list) or not owner_items:
-            raise ValueError(f"{category} debt must name owner_items")
-        if any(not isinstance(item, int) or isinstance(item, bool) or item not in range(1, 12) for item in owner_items):
-            raise ValueError(f"{category} debt owner_items must be Items 1 through 11")
-        allowed_fields = {"owner_items", "entries", "lint_owners"} if category == "clippy" else {"owner_items", "entries"}
+        owners = section.get("owners")
+        if not isinstance(owners, list) or not owners:
+            raise ValueError(f"{category} debt must name owners")
+        if any(not isinstance(owner, str) or owner not in QUALITY_OWNERS for owner in owners):
+            raise ValueError(f"{category} debt owners must name registered quality components")
+        allowed_fields = {"owners", "entries", "lint_owners"} if category == "clippy" else {"owners", "entries"}
         if set(section) != allowed_fields:
             raise ValueError(f"{category} debt must contain the exact required fields")
         lint_owners = section.get("lint_owners")
@@ -387,20 +389,19 @@ def validate_debt_owners(debt: dict[str, Any]) -> None:
             or any(
                 not isinstance(lint, str)
                 or not lint.strip()
-                or not isinstance(owner, int)
-                or isinstance(owner, bool)
-                or owner not in owner_items
+                or not isinstance(owner, str)
+                or owner not in owners
                 for lint, owner in lint_owners.items()
             )
         ):
-            raise ValueError("clippy debt lint_owners must map lint names to listed owner items")
+            raise ValueError("clippy debt lint_owners must map lint names to listed owners")
         entries = section.get("entries")
         if not isinstance(entries, dict):
             raise ValueError(f"{category} debt must contain an entries object")
         for entry_id, entry in entries.items():
             if not isinstance(entry_id, str) or not entry_id.strip():
                 raise ValueError(f"{category} debt entry ids must be non-empty text")
-            validate_debt_entry(category, entry_id, entry, owner_items, lint_owners)
+            validate_debt_entry(category, entry_id, entry, owners, lint_owners)
 
 
 def validate_signature_summary(summary: object, label: str) -> None:
@@ -418,7 +419,7 @@ def validate_debt_entry(
     category: str,
     entry_id: str,
     entry: object,
-    owner_items: list[int],
+    owners: list[str],
     lint_owners: object,
 ) -> None:
     label = f"{category} debt entry {entry_id}"
@@ -429,7 +430,7 @@ def validate_debt_entry(
             policy = PATTERN_BY_ID.get(policy_id)
             if policy is None:
                 raise ValueError(f"{label} names unknown policy {policy_id}")
-            if policy.owner_item not in owner_items:
+            if policy.owner not in owners:
                 raise ValueError(f"{label} policy {policy_id} has an unlisted owner")
             validate_signature_summary(summary, f"{label} policy {policy_id}")
         return
@@ -468,7 +469,7 @@ def require_empty_debt(debt: dict[str, Any]) -> None:
     if debt["clippy"]["lint_owners"]:
         remaining["clippy_lint_owners"] = debt["clippy"]["lint_owners"]
     if remaining:
-        raise RuntimeError(f"generated quality debt must be empty for phase closure: {remaining}")
+        raise RuntimeError(f"generated quality debt must be empty for quality completion: {remaining}")
 
 
 def validate_debt_selection_ids(debt: dict[str, Any], allowed: set[str]) -> None:
@@ -516,21 +517,25 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
     if pattern_matches(PATTERN_BY_ID["direct-index"], slice_pattern):
         raise AssertionError("direct-index scanner rejected a refutable slice pattern")
 
+    invalid_completion = copy.deepcopy(debt)
+    invalid_completion["completion_requirement"] = "allow-debt"
+    _expect_invalid(invalid_completion, "completion must require zero debt")
+
     missing_category = copy.deepcopy(debt)
     missing_category.pop("freshness")
     _expect_invalid(missing_category, "exact category set")
 
     unknown_category = copy.deepcopy(debt)
-    unknown_category["unknown"] = {"owner_items": [1], "entries": {}}
+    unknown_category["unknown"] = {"owners": ["corpus-governance"], "entries": {}}
     _expect_invalid(unknown_category, "exact category set")
 
     ownerless = copy.deepcopy(debt)
-    ownerless["safety"]["owner_items"] = []
-    _expect_invalid(ownerless, "must name owner_items")
+    ownerless["safety"]["owners"] = []
+    _expect_invalid(ownerless, "must name owners")
 
     invalid_owner = copy.deepcopy(debt)
-    invalid_owner["safety"]["owner_items"] = [12]
-    _expect_invalid(invalid_owner, "Items 1 through 11")
+    invalid_owner["safety"]["owners"] = ["unknown-component"]
+    _expect_invalid(invalid_owner, "registered quality components")
 
     missing_entries = copy.deepcopy(debt)
     missing_entries["safety"].pop("entries")
@@ -576,7 +581,7 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
         raise AssertionError("stale debt selection was accepted")
 
     stale_lint_owner = copy.deepcopy(debt)
-    stale_lint_owner["clippy"]["lint_owners"]["clippy::self_test_stale"] = 8
+    stale_lint_owner["clippy"]["lint_owners"]["clippy::self_test_stale"] = "canonicalization"
     try:
         validate_clippy_lint_owners({}, stale_lint_owner, require_exact=True)
     except RuntimeError as error:
@@ -586,7 +591,7 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
         raise AssertionError("stale Clippy lint owner was accepted")
 
     cross_selection_owner = copy.deepcopy(debt)
-    cross_selection_owner["clippy"]["lint_owners"]["clippy::self_test_other_selection"] = 10
+    cross_selection_owner["clippy"]["lint_owners"]["clippy::self_test_other_selection"] = "support-assembly"
     cross_selection_owner["clippy"]["entries"]["self-test-other-selection"] = {
         "clippy::self_test_other_selection": {
             "count": 1,
@@ -619,7 +624,7 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
         if "must be empty" not in str(error):
             raise
     else:
-        raise AssertionError("phase closure accepted non-empty debt")
+        raise AssertionError("quality completion accepted non-empty debt")
 
 
 def assert_negative_pattern(seed: Path, expected_policy: str) -> None:

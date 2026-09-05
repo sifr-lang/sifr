@@ -1,7 +1,7 @@
 # wave_psp_c1 Review - Gap Analysis: CPython Parity
 
 **Review Date:** 2026-03-17
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Phase:** Structured Parsing and Serialization (JSON, TOML, CSV, ConfigParser)
 
 ---

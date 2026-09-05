@@ -1,4 +1,3 @@
-# Reference: local_shadowingh
 # Local rebinding should stay predictable inside functions and branches.
 
 

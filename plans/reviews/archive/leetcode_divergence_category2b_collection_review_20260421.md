@@ -1,6 +1,6 @@
 # Category 2b Review: Collection / Index / Stdlib Ergonomics
 
-**Reviewer:** Claude (category review)
+**Reviewer:** agent (category review)
 **Date:** 2026-04-21
 **Fixtures reviewed:** 20 fixtures listed in Section 2b of `leetcode_divergence_decision_analysis_20260409.md`
 

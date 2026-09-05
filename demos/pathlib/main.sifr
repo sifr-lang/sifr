@@ -1,4 +1,3 @@
-# Reference: pathlib
 from sifr.pathlib import basename, join_path, Path
 from sifr.os import getpid
 from sifr.test import assert_bool_vector_eq

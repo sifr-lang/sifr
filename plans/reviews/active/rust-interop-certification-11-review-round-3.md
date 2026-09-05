@@ -14,7 +14,7 @@ The decisive pair of runs:
 - **The backend hunk is absent from the commit.** `git diff 3c9601d26 4c1fdeae6 -- rust_interop_compatibility_matrix.json` is a *single* hunk at `@@ -446,15` promoting only `cargo_locked_offline`. The `@@ -396,8` backend hunk exists solely as an unstaged worktree change. In the committed blob, `ecosystem_backend_certification` is still `future-owned-by-separate-phase`, `future_owner` present, tier 4, both evidence directions `planned`.
 - The only `ecosystem_backend` strings in the diff are prose inside the committed review markdown — no data/code hunk. No file matching `backend` is touched.
 - Future-owned set in the committed blob is exactly `{ecosystem_backend_certification, ecosystem_cli_certification}`.
-- No excluded artifact leaked in: no `*.webp`, `.cert5probe/`, `.claude/`, `editor_integrations`, leetcode corpus, `43_interoperability.md`, or round-3 draft.
+- No excluded artifact leaked in: no `*.webp`, `.cert5probe/`, `.agent/`, `editor_integrations`, leetcode corpus, `43_interoperability.md`, or round-3 draft.
 - `crates/`, `docs/`, `internal_docs/`, `scripts/` are **fully clean** in the worktree, so in-place cargo runs bind to the exact head. 2-dot and 3-dot diffs both yield 69 files, so the stale base introduces no drift.
 
 ### Independently re-run at the exact head

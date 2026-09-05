@@ -1,4 +1,3 @@
-# Reference: uuid
 from sifr.uuid import uuid4, uuid4_obj, uuid_from_hex, UUID, uuid3, uuid5, NAMESPACE_DNS
 from sifr.test import assert_bool_vector_eq
 

@@ -597,7 +597,7 @@ mod tests {
     use std::collections::HashSet;
 
     #[test]
-    fn item10a_single_file_user_error_suppresses_late_runtime_demand() {
+    fn single_file_user_error_suppresses_late_runtime_demand() {
         let mut demand = ModuleSupportDemand::default();
         demand.runtime.task_scope = true;
         demand
@@ -610,7 +610,7 @@ mod tests {
     }
 
     #[test]
-    fn item10a_project_merge_does_not_promote_a_module_shadow_to_a_crate_veto() {
+    fn project_merge_does_not_promote_a_module_shadow_to_a_crate_veto() {
         let mut module = ModuleSupportDemand::default();
         module
             .locally_shadowed_error_classes
@@ -628,7 +628,7 @@ mod tests {
             StdlibRustSource {
                 module: "sifr.fixture".to_string(),
                 source_path: "stdlib/sifr/fixture.sifr".to_string(),
-                source_sha256: "item-10a-fixture".to_string(),
+                source_sha256: "error-identity-fixture".to_string(),
                 nominal_types: HashSet::new(),
                 rust: "fn operation() -> Result<(), ValueError> { Ok(()) }\n".to_string(),
             },

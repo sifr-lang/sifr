@@ -1,5 +1,3 @@
-# Reference: return-type-inference-surface
-# Reference: compiler-feature-history
 # feature surface: Type Inference V2 Demo
 # Showcases return type inference when -> annotation is omitted
 

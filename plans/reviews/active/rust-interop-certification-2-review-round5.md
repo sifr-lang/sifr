@@ -2,7 +2,7 @@
 
 ## Reviewer
 
-Claude Opus 5 (`--effort medium`), read-only full working-tree review against
+agent (`--effort medium`), read-only full working-tree review against
 base commit `f76a99046`.
 
 ## Verdict
@@ -44,4 +44,4 @@ all maintainability/dependency guardrails.
 - Remove per-item hook-state contention while retaining worker-thread
   suppression, scope mapper diagnostics to the relevant compiler block, and
   register the generated runtime dependency explicitly.
-- Re-run full validation and repeat Opus review.
+- Re-run full validation and repeat agent review.

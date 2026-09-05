@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Production Network and HTTP Platform Substrate
 
-Status: completed, audited; post-closure Fable High gap remediation merged via [PR #2501](https://github.com/sifr-lang/sifr/pull/2501)
+Status: completed, audited; post-closure agent High gap remediation merged via [PR #2501](https://github.com/sifr-lang/sifr/pull/2501)
 Phase placement: third implementation phase in the split production-stdlib substrate sequence, after the text/Unicode/encoding/i18n runtime phase and the concurrency/process/runtime substrate phase, and before Phase 41 can claim protocol/runtime production readiness for networked programs. Multi-core serving throughput is explicitly owned by the serving-scale follow-up recorded in M0, not by this substrate phase.
 Phase owner: runtime/networking implementation with compiler import, effect, and codegen support
 
@@ -687,7 +687,7 @@ All fallible APIs must expose typed error results through the shipped public err
 - `HeaderError`
 - `BodyError`
 
-Post-closure Fable High amendment, 2026-06-12: the shipped API intentionally uses flat Sifr error classes carrying stable, user-readable evidence strings instead of a variant-based nested hierarchy. `DnsError`, `ConnectError`, `TimeoutError`, `TooLargeError`, and `CancelledError` remain unshipped names, not public classes. Lower-layer evidence is preserved in the owning public class message, for example network timeout/connect evidence in `NetError`, TLS transport/certificate evidence in `TlsError` or `CertificateError`, URL/size validation evidence in `UrlError`, and HTTP transport/protocol/body/header evidence in `HttpError`, `ProtocolError`, `BodyError`, or `HeaderError`. A future variant-rich taxonomy requires a new reviewed phase amendment and migration plan.
+Post-closure agent High amendment, 2026-06-12: the shipped API intentionally uses flat Sifr error classes carrying stable, user-readable evidence strings instead of a variant-based nested hierarchy. `DnsError`, `ConnectError`, `TimeoutError`, `TooLargeError`, and `CancelledError` remain unshipped names, not public classes. Lower-layer evidence is preserved in the owning public class message, for example network timeout/connect evidence in `NetError`, TLS transport/certificate evidence in `TlsError` or `CertificateError`, URL/size validation evidence in `UrlError`, and HTTP transport/protocol/body/header evidence in `HttpError`, `ProtocolError`, `BodyError`, or `HeaderError`. A future variant-rich taxonomy requires a new reviewed phase amendment and migration plan.
 
 `milestone_network_http_0` must keep the shared error mapping evidence aligned with the shipped classes:
 

@@ -22,7 +22,7 @@
 
 - Running `analyze_slowness.py` twice produces identical output ✓
 - `diff <(python3 benchmarks/analyze_slowness.py) <(python3 benchmarks/analyze_slowness.py)` returns zero differences ✓
-- Output is deterministic across runs, enabling diffable snapshots ✓
+- Output is deterministic across runs, enabling difagent snapshots ✓
 
 ### Report Semantics: CORRECTLY IMPLEMENTED
 
@@ -83,8 +83,8 @@ Pass-1 identified no blocking issues. This pass verifies:
 | 5. Reproducible analyzer exists | ✓ |
 | 6. Metadata seeded and validated | ✓ |
 | 7. Post-fix re-benchmark protocol documented | ✓ |
-| 8. Claude review pass 1 | ✓ (pass-1 satisfied) |
-| 9. Claude review pass 2 | ✓ (this review) |
+| 8. agent review pass 1 | ✓ (pass-1 satisfied) |
+| 9. agent review pass 2 | ✓ (this review) |
 | 10. Report avoids treating divergent as language evidence | ✓ |
 
 ### Reviewer Satisfied

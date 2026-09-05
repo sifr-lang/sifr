@@ -1,5 +1,3 @@
-# Reference: iter_fix_itertools_iterables
-# Reference: canonical-iteration-model-and-lazy-parity-readiness
 from sifr.itertools import islice, accumulate, compress, takewhile
 from sifr.pathlib import Path
 from sifr.io import write_text

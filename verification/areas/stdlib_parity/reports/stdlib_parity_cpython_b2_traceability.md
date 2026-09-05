@@ -1,6 +1,6 @@
 # `stdlib_parity_b2` CPython Traceability
 
-## Reviewed upstream families
+## Validationed upstream families
 
 | CPython family | Surface | Local regression/demo | State | Notes |
 | --- | --- | --- | --- | --- |

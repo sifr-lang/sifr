@@ -1,7 +1,7 @@
 # wave_psp_c1 Review - Gap & CPython Parity Analysis
 
 **Phase**: Structured Parsing and Serialization (JSON, TOML, CSV, ConfigParser)
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Date**: 2026-03-16
 **Branch**: main (current state)
 

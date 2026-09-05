@@ -157,7 +157,7 @@ The following baseline fractures are correctly recorded for later wave ownership
 
 ## Review Metadata
 
-- **Reviewer**: Claude Code
+- **Reviewer**: agent
 - **Review pass**: 1 (completion-gap check)
 - **Files examined**:
   - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`

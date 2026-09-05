@@ -1,4 +1,3 @@
-# Reference: cfg_flow_behavior
 # cfg flow activation regression matrix demo
 # Covers nested branching, loop exits, early return/raise, and unreachable tails.
 

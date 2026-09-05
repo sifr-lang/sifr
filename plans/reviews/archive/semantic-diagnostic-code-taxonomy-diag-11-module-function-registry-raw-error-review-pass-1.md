@@ -2,7 +2,7 @@
 
 Status: Approved.
 
-Claude reported that the review was complete and ready to write to this path, but the desktop handoff did not create the file without interactive write approval. The returned verdict was satisfied with no required fixes.
+agent reported that the review was complete and ready to write to this path, but the desktop handoff did not create the file without interactive write approval. The returned verdict was satisfied with no required fixes.
 
 Reviewed scope:
 

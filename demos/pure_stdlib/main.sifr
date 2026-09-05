@@ -1,5 +1,3 @@
-# Reference: stdlib_pure_expansion
-# Reference: compiler-feature-history
 # stdlib_pure_expansion demo
 # Demonstrates: new math functions, statistics with Result types,
 # random additions, functools.reduce, new itertools, Counter enhancements,

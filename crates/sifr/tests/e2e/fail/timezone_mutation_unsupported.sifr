@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_runtime_0_timezone_mutation_unsupported
+# Timezone mutation unsupported.
 from sifr.time import tzset
 
 

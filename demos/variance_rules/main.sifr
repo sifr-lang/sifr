@@ -1,4 +1,3 @@
-# Reference: variance_rules
 # variance_rules inheritance and variance corrections demo
 # Demonstrates transitive inheritance assignability and explicit mutable invariance.
 

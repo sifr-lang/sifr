@@ -1,5 +1,3 @@
-# Reference: rng_binary_hashing
-# Reference: stateful-rng-crypto-and-polish-parity-expansion
 from sifr.base64 import b64decode_bytes, b64encode_bytes
 from sifr.hashlib import HashObject, new
 

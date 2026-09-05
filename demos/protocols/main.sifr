@@ -1,5 +1,3 @@
-# Reference: protocols
-# Reference: protocols
 # Feature Demo: Protocols, Operators, and Discriminated Unions
 # Demonstrates: Protocol (trait), operator overloading, discriminated unions,
 #               newtype pattern, and class Display via __str__

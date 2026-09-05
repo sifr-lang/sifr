@@ -1605,12 +1605,12 @@ Each milestone requires:
 - local targeted validation;
 - `scripts/run_all_tests.sh --profile quick` before PR;
 - Cargo CLI alignment audit against current stable Cargo docs and local `cargo <subcommand> --help` output for every delegated subcommand touched by that milestone; additions, removals, unstable gates, and intentional exclusions must be recorded in the alignment matrix before closeout;
-- Claude review pass until READY;
+- agent review pass until READY;
 - issue update with status, validation output summary, and PR link.
 
 Full closeout requires:
 
-- final Claude full implementation review until READY;
+- final agent full implementation review until READY;
 - demo transcript for `sifr-demo-app` and `sifr-demo-workspace`;
 - full `scripts/run_all_tests.sh` unless blocked by a documented infrastructure issue;
 - docs and guardrails updated.

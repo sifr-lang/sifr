@@ -1,4 +1,3 @@
-# Reference: nested_recursive_helpersl
 # Nested recursive helpers can update local state without exposing it.
 
 class Entry:

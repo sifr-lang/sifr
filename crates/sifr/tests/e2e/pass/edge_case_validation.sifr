@@ -1,4 +1,4 @@
-# Reference: edge_case_safety
+# Edge case validation.
 # Edge case safety: validates all new input validation guards
 
 from sifr.random import randint

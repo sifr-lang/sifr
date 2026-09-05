@@ -1,4 +1,3 @@
-# Reference: decimal_conversions
 from sifr.json import dumps
 
 def main():

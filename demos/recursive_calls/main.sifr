@@ -1,4 +1,3 @@
-# Reference: recursive_calls
 # recursive_calls semantic query layer standardization demo
 # Validates canonical query behavior for call detection and local-scope analysis.
 

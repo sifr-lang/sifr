@@ -5,7 +5,7 @@
   - `demos/safe_indexing/idiomatic.rs`
   - `demos/guarded_sequence_index/idiomatic.rs`
 - Review method:
-  - External `claude -p` review run per file.
+  - External `agent review` review run per file.
   - Prompts were concise and behavior-driven for reviewer transport stability.
 
 ### Results

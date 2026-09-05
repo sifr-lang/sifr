@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_6_islice_non_iterable_input
+# Islice non iterable input.
 # expect-error: SIFR-TYPE-0002
 from sifr.itertools import islice
 

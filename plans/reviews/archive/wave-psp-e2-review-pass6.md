@@ -178,7 +178,7 @@ All implementations match CPython behavior as verified by:
 
 ## Review Metadata
 
-- Reviewer: Claude (Code Review Agent)
+- Reviewer: agent (Code Review Agent)
 - Date: 2026-03-16
 - Commit reviewed: a441b0dd
 - Files reviewed: 3 (argparse.sifr, ipaddress.sifr, graphlib.sifr)

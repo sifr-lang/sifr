@@ -1,4 +1,3 @@
-# Reference: project_test_discovery
 from helper import value
 
 def test_value():

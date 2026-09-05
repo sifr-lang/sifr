@@ -1,6 +1,6 @@
 # Phase 31 m31_c Slice 4 Review: Private heapq Max-Heap Compatibility
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-12
 **Slice:** `m31_c_slice_4_private_heapq_max_compat`
 **PR:** #1112

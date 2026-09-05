@@ -1,6 +1,6 @@
 # Review: milestone_diag_10 slice 4 - structured HIR warnings, pass 2
 
-Reviewer: Claude
+Reviewer: agent
 Date: 2026-05-03
 Branch: `codex/diag-10-structured-hir-warnings`
 

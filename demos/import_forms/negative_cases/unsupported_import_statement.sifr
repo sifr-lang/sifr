@@ -1,4 +1,3 @@
-# Reference: import_forms
 import helper
 
 def main():

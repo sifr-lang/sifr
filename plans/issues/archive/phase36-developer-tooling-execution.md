@@ -3,7 +3,7 @@
 Status: completed
 Source phase: `internal_docs/phases/36_developer_tooling_and_ecosystem_hooks.md`
 
-This issue tracks the sequential implementation loop for Phase 36. Each milestone requires implementation, local validation, Claude Opus review, PR review, merge, and tracker updates before the next milestone starts.
+This issue tracks the sequential implementation loop for Phase 36. Each milestone requires implementation, local validation, agent review, PR review, merge, and tracker updates before the next milestone starts.
 
 ## Milestones
 
@@ -30,7 +30,7 @@ Scope:
 - [x] Add m36.1 guardrails and negative self-tests for tooling contracts, dependency boundaries, LSP split-brain, and VS Code extension contract drift.
 - [x] Wire m36.1 developer tooling checks into `scripts/run_all_tests.sh`.
 - [x] Run local validation.
-- [x] Run Claude Opus review rounds until satisfied.
+- [x] Run agent review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2129>
 - [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2129>
 
@@ -72,7 +72,7 @@ Scope:
 - [x] Add `check_formatter_rules.py` and `check_rule_suppression_rules.py` with negative self-tests.
 - [x] Wire m36.2 checks into `scripts/run_all_tests.sh`.
 - [x] Run local validation.
-- [x] Run Claude Opus review rounds until satisfied.
+- [x] Run agent review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2130>
 - [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2130>
 
@@ -115,7 +115,7 @@ Scope:
 - [x] Add `check_analysis_snapshot_rules.py` and `check_analysis_split_brain.py` with negative self-tests.
 - [x] Wire m36.3 checks into `scripts/run_all_tests.sh`.
 - [x] Run local validation.
-- [x] Run Claude Opus review rounds until satisfied.
+- [x] Run agent review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2131>
 - [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2131>
 
@@ -154,7 +154,7 @@ Scope:
 - [x] Add editor query parity snapshots, completion-quality fixture, and `run_tooling_parity.py` with negative self-test.
 - [x] Wire m36.4 parity checks into `scripts/run_all_tests.sh`.
 - [x] Run local validation.
-- [x] Run Claude Opus review rounds until satisfied.
+- [x] Run agent review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2132>
 - [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2132>
 
@@ -195,7 +195,7 @@ Scope:
 - [x] Wire m36.5 protocol checks into `scripts/run_all_tests.sh`.
 - [x] Add Phase 35 `lsp-query-001-request-families` benchmark, baseline, and budget evidence.
 - [x] Run local validation.
-- [x] Run Claude Opus review rounds until satisfied.
+- [x] Run agent review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2133>
 - [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2133>
 
@@ -236,7 +236,7 @@ Scope:
 - [x] Add syntax asset drift checks against `sifr_syntax` tokenization fixtures.
 - [x] Add `check_editor_assets.py`.
 - [x] Run local validation.
-- [x] Run Claude Opus review rounds until satisfied.
+- [x] Run agent review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2134>
 - [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2134>
 
@@ -273,7 +273,7 @@ Scope:
 - [x] Add `.vsix` packaging, extension integration tests, and `vscode_extension_rules.json` validation.
 - [x] Ensure extension tests can launch the locally built `sifr lsp --stdio`.
 - [x] Run local validation.
-- [x] Run Claude Opus review rounds until satisfied.
+- [x] Run agent review rounds until satisfied.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2135>
 - [x] Merge PR: <https://github.com/sifr-lang/sifr/pull/2135>
 
@@ -307,7 +307,7 @@ Scope:
 - [x] Wire the m36.8 checks into `scripts/run_all_tests.sh`.
 - [x] Finalize LSP request-family budget coverage docs with no active LSP waivers.
 - [x] Run targeted closeout validation.
-- [x] Run Claude Opus review rounds until satisfied.
+- [x] Run agent review rounds until satisfied.
 - [x] Run `scripts/run_all_tests.sh --profile quick`.
 - [x] Run `scripts/run_all_tests.sh --profile pr`.
 - [x] Open PR: <https://github.com/sifr-lang/sifr/pull/2136>

@@ -1,17 +1,17 @@
 # Review: optional_none_gap_38 Root Cause Breakdown (phase 38, 2026-04-03)
 
-**Reviewer:** Claude Code  
-**Phase:** optional_none_gap_38_breakdown_2026-04-03  
+**Reviewer:** agent
+**Phase:** optional_none_gap_38_breakdown_2026-04-03
 **Sources:** `issues/optional-none-gap-38-root-cause-breakdown-2026-04-03.md`, `verification/leetcode/optional_none_gap_38_root_cause_inventory_20260403.csv`, `verification/leetcode/optional_none_gap_38_full_diagnostics_20260403_rerun.json`
 
 ## 1. Fixture Count: ALL 38 PRESENT, NO DUPLICATES
 
 The CSV contains exactly 38 data rows (all unique slugs) and the JSON diagnostics contain exactly 38 case entries. Every slug in the CSV appears exactly once in the diagnostics JSON. No slug appears in both files under different classifications.
 
-Confirmed exit=0 fixtures (11):  
+Confirmed exit=0 fixtures (11):
 `0002`, `0046`, `0088`, `0106`, `0452`, `0881`, `0948`, `1498`, `1700`, `1838`, `2300`
 
-Confirmed exit=1 fixtures (27):  
+Confirmed exit=1 fixtures (27):
 `0047`, `0057`, `0064`, `0103`, `0105`, `0108`, `0139`, `0150`, `0261`, `0287`, `0304`, `0329`, `0394`, `0417`, `0438`, `0567`, `0778`, `0802`, `0875`, `0904`, `0977`, `1203`, `1397`, `1423`, `1584`, `1631`, `1980`
 
 ## 2. Status Counts Match Diagnostics Exit Codes

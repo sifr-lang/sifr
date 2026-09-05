@@ -343,16 +343,16 @@ Validation notes:
 - Post-closeout reviewer passes both returned `Verdict: SATISFIED` in `reviews/clean-refactor-smells-review-1.md` and `reviews/clean-refactor-smells-review-2.md`.
 - Final module-layout cleanup replaced the remaining first-party hand-written Rust `include!` / `#[path]` split shape with conventional Rust modules and responsibility-based file locations.
 - Final module-layout cleanup validation passed with `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `git diff --check`, focused first-party scans for `include!`, `#[path]`, `rustfmt::skip`, `allow(unused_imports)`, and numeric split filenames, `scripts/run_all_tests.sh --profile quick`, and `scripts/run_all_tests.sh`.
-- Final module-layout Claude review returned `Satisfied` with no blocking findings in `reviews/include-module-refactor-review-round1.md`.
+- Final module-layout agent review returned `Satisfied` with no blocking findings in `reviews/include-module-refactor-review-round1.md`.
 - E2E runner cleanup removed the retired runner compatibility path from `crates/sifr/tests/e2e.rs` and its support modules, including compare-mode dispatch, legacy runner mode environment variables, and validation-lane mode metadata.
 - E2E runner cleanup validation passed with focused stale-runner scans, `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `git diff --check`, shell syntax checks, `python3 -m py_compile scripts/validation_lane.py`, `cargo test -p sifr --test e2e -- --skip test_e2e_pass`, `scripts/run_e2e_pass.sh --profile quick`, `scripts/run_all_tests.sh --profile quick`, and `scripts/run_all_tests.sh`.
-- E2E runner cleanup Claude review reached `Verdict: Satisfied` in `reviews/e2e-runner-cleanup-review-round2.md`.
+- E2E runner cleanup agent review reached `Verdict: Satisfied` in `reviews/e2e-runner-cleanup-review-round2.md`.
 - Codegen refactor polish replaced the remaining broad root re-exports in the touched statement-lowering roots with explicit surfaces, split near-cap statement-support and lower-statement modules by responsibility, and kept test functions private while retaining explicit helper visibility only for sibling test modules.
 - Codegen refactor polish validation passed with `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`, focused scans for `include!` and wildcard re-exports in the touched codegen roots/modules, and `scripts/run_all_tests.sh --profile quick`.
-- Codegen refactor polish Claude review returned `SATISFIED` in `reviews/codegen-refactor-polish-review-round1.md`.
+- Codegen refactor polish agent review returned `SATISFIED` in `reviews/codegen-refactor-polish-review-round1.md`.
 - Expr render cleanup removed stale `legacy_i64` terminology from the SifrInt promotion helpers and adjacent state comments, replacing it with current plain-`i64` storage naming.
 - Expr render cleanup validation passed with `cargo fmt --check`, `cargo check -p sifr_codegen`, focused legacy/backcompat scans, and `cargo test -p sifr_codegen expr_render_helpers::tests`.
-- Expr render cleanup Claude review returned `SATISFIED` in `reviews/expr-render-legacy-cleanup-review-round1.md`. The attempted quick validation progressed through the earlier guardrail and package lanes but was stopped after reproducing a pre-existing `cargo test -p sifr_lsp --doc` hang unrelated to this cleanup.
+- Expr render cleanup agent review returned `SATISFIED` in `reviews/expr-render-legacy-cleanup-review-round1.md`. The attempted quick validation progressed through the earlier guardrail and package lanes but was stopped after reproducing a pre-existing `cargo test -p sifr_lsp --doc` hang unrelated to this cleanup.
 
 ## Done Criteria
 

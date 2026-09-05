@@ -1,4 +1,3 @@
-# Reference: hir_analysis_behavior
 # hir analysis negative case
 # Mixed block forms with reachable return mismatch must fail.
 

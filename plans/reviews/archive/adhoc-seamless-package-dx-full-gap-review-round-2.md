@@ -1,6 +1,6 @@
 # Architecture Review: adhoc-seamless-package-dx.md (Round 2)
 
-**Reviewer:** Claude Code architecture review
+**Reviewer:** agent architecture review
 **Date:** 2026-05-20
 **Document:** `issues/adhoc-seamless-package-dx.md`
 **Implementation state:** Phase 37 complete, adhoc phase spec exists, implementation not started

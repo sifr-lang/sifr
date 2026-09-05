@@ -1,5 +1,3 @@
-# Reference: system-tools-sample
-# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.os import run_command, getcwd
 from sifr.env import getenv
 from sifr.sys import argv, version, platform

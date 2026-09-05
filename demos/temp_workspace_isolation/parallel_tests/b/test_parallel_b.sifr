@@ -1,4 +1,3 @@
-# Reference: temp_workspace_isolation
 from helper import value
 
 def test_parallel_b():

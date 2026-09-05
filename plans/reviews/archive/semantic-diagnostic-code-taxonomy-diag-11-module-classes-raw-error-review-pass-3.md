@@ -84,4 +84,4 @@ In `crates/sifr/tests/e2e/fail/class_unknown_parent.sifr`, the `# expect-error[c
 
 **Review pass**: 3 (final)
 **Date**: 2026-05-03
-**Reviewer**: Claude Code
+**Reviewer**: agent
