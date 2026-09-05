@@ -144,6 +144,62 @@ Do not fix only PythonError with a name-only special case.
 
 ## Later Item12I: macro-defined project support visibility
 
+### Item12H dependency handoff carried forward (2026-09-06)
+
+Item12H is terminal **blocked, not merged**. Draft
+[PR #3697](https://github.com/sifr-lang/sifr/pull/3697) preserves reviewed
+implementation `9b52ac20094608c8a31f252db99e49ef7c963384` and final record
+`b6e6210a97598fb631b929b2d4daf4012b41bb16`. Initial plus sole remediation
+reviews are consumed; final Opus verdict is SATISFIED. Its one merge-profile
+gate failed existing SQL coverage classifications (9 packages, 13 targets,
+1 stale PostgreSQL target). Focused 3/3, driver 581 active, and canonicalizer
+115 passed; full binding-authoring and strict Clippy did not pass.
+[Exact evidence](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555393502)
+and the complete owner record at that final record SHA remain authoritative,
+including deferred suggestions 12H-F1–F5. No 12H implementation is included here.
+This terminal handoff permits 12I to execute; 12K owns integrated qualification
+with preserved 12B/12C repairs, SQL classifications, and Python build/verification
+inputs. No earlier review or gate allowance is reset.
+
+### Item12I implementation and named validation (2026-09-06)
+
+Owned worktree: `/private/tmp/sifr-item12i.0l85Lu/sifr`; branch:
+`codex/emitted-rust-excellence-item-12i`; freshly fetched base:
+`4ce05473f58716a611ac190581bf0737ba15331e`. Parent and prior workers are
+read-only. Scope is the compiler-owned `tokio::task_local!` declaration grammar:
+preserve names, attributes, types, and cancellation operations; apply only
+crate visibility at the support relocation boundary; discover and prune each
+declared symbol using consumer demand in binary and test project assembly.
+Unknown macros and nested modules retain their visibility. No blanket exports
+or cancellation substitutes are introduced.
+
+Exact commands registered before any test execution:
+
+```bash
+cargo test -p sifr_codegen task_local_support
+cargo test -p sifr_codegen
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite callback-examples
+cargo clippy -p sifr_codegen --all-targets -- -D warnings
+cargo fmt --check
+python3 scripts/check_file_size_guardrails.py
+python3 scripts/check_hir_maintainability_guardrails.py
+git diff --check
+scripts/run_all_tests.sh --profile merge
+```
+
+The eight focused regressions cover exact macro identity, multiple declarations,
+attributes/types, crate visibility, unknown/nested macro boundaries, transitive
+and absent demand, a macro-only owner, both project modes, synchronous absence,
+and rejection of invalid compiler-owned declaration syntax. Compiler build for
+the named callback suite is setup, not a separate qualification claim. The sole
+merge-profile gate is reserved for the exact final reviewed implementation SHA;
+no create-PR gate or second merge gate is authorized. Reuse unchanged-input
+evidence and preserve failed/incomplete evidence honestly. 12H field identity,
+12J error channels, 12B/12C repairs and external qualification inputs stay out
+of scope. No 12J or 12K work starts in this session.
+
+### Original Item12I diagnostic provenance
+
 Three callback examples fail Rust E0425:
 `callback/asyncio_roundtrip.sifr`, `callback/reconciliation.sifr`, and
 `pubsub/declaration_callback.sifr`. The generated

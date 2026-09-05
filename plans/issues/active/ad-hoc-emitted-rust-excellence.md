@@ -193,8 +193,8 @@ It does not broaden the active item.
 | 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
 | 12D | recorded, not started | Native corpus emission dependencies | Adjudicate checked-read control flow and the complete native diagnostic inventory before Item 12B closure. |
 | 12G | merged | Dependency-checker demo path identity | Authoritative DLPack project path and computed-reference regressions merged in PR #3695; exact-SHA validation and Opus review passed. |
-| 12H | authorized: after 12G handoff | Project-wide generated-field identity | Repair declaration/consumer naming consistency across generated files. |
-| 12I | authorized: after 12H handoff | Macro-defined project support visibility | Repair cancellation task-local visibility without blanket exports. |
+| 12H | blocked: external qualification | Project-wide generated-field identity | Reviewed `9b52ac20094608c8a31f252db99e49ef7c963384` preserved in draft PR #3697; final record `b6e6210a97598fb631b929b2d4daf4012b41bb16`. One gate failed existing SQL coverage; 12K owns integration. |
+| 12I | in progress | Macro-defined project support visibility | Repair cancellation task-local visibility without blanket exports; isolated fresh-main worker and named validation recorded in the Python dependency issue. |
 | 12J | authorized: after 12I handoff | Async Python error-channel contract | Resolve the authoritative error contracts and preserve async semantics. |
 | 12K | authorized: integration after dependency qualification | Item 12B and Python dependency integration | Qualify the integrated candidate and merge the preserved work; do not reset Item 12B review history. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |

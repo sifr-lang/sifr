@@ -442,6 +442,10 @@ large-file check and a representative project check.
   only inside the generated crate. Canonical item fingerprints reject conflicting
   support bodies instead of silently selecting one, and Rust interop bridge types
   use the same exact-deduplication/fail-closed ownership rule.
+  Compiler-owned `tokio::task_local!` statics share one declaration parser for
+  visibility, symbol discovery, and dependency pruning. Each declaration is a
+  separate demand owner; project relocation grants crate visibility while
+  preserving its name, type, attributes, and Tokio cancellation behavior.
 - Generated-code simplification is structural at both boundaries. Typed
   `RustItem`/`RustStmt`/`RustExpr` optimization runs before rendering. After
   project metadata, inline stdlib, and bridge fragments have been assembled,
