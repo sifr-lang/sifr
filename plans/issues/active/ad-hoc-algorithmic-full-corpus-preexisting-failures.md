@@ -128,6 +128,98 @@ The exact-SHA review allowance and the single merge-profile gate remain unused.
 - The repair must preserve builtin-error identity and the registration invariant.
   It must not add a fallback or diagnostic suppression.
 
+#### Item 12B checkpoint: builtin repair passes; native qualification fails
+
+This checkpoint supersedes the earlier builtin-registration blocker.
+Item 12C is implemented inside Item 12B. Item 12B is not closed.
+
+- Sifr implementation candidate: `3f422b01633d23c2bc8d8ce8ca59057c6e56adea`.
+- External candidate: `330544ecf4f787c1a5fbed847469797ead92d24c`.
+- Both candidates are pushed. Neither repository has a PR or merge.
+- No Opus review, remediation review, or merge-profile gate was consumed.
+- The retained Item 12 compiler work remains separate and unchanged.
+
+Registration now accepts a validated `BuiltinError` token.
+The registry no longer performs a partial name lookup or calls `expect`.
+Two regressions cover canonical identities, module shadows, and rejected non-builtin names.
+
+The newly built compiler has SHA-256
+`dbe640b31bdd181b93f82d967dd9e7c82092146482c554fb14e96fe42f28a3c3`.
+The compiler binary and both source trees stayed unchanged throughout qualification.
+Evidence is under `/tmp/sifr-item12b.akguMz/`:
+
+- `builtin-focused.log`: both named builtin-registration regressions pass.
+- `builtin-codegen-full.log`: all 1,414 codegen tests pass, including all four ownership regressions.
+- `builtin-build.log`: the compiler build passes.
+- `builtin-clippy.log`: strict codegen crate Clippy passes.
+- Formatting, file-size (3,756 files), and HIR guardrails pass.
+- `leetcode-full-3f422.log`: the complete canonical 411-case check finishes.
+  It reports 410 passes and one failure, fixture 2002.
+  This is a complete failing result, not a partial pass or native qualification.
+  The canonical result is
+  `target/verification/areas/algorithmic-compatibility-results.json`.
+  Per-case results and taxonomy remain under
+  `target/verification/areas/algorithmic_compatibility/`.
+- `native-3f422/matrix.json`: complete coverage of all 90 changed source files.
+  Checks pass for 89 files. Native builds and runs pass for 43 files.
+  Native builds fail for 46 files. The failed check prevents the remaining native run.
+  Median and zigzag both pass their checks and native assertions.
+- `native-3f422/diagnostic_inventory.json`: every failing file, command, log, and diagnostic group.
+  The following counts overlap where one file has several diagnostics.
+
+| Diagnostic group | Files | Representative fixture |
+|---|---:|---|
+| Handler binding captured outside its scope | 13 | 0017 |
+| Reused value moved | 12 | 0072 |
+| Missing structured `TryExcept` lowering | 10 | 0044 |
+| Narrowed value compared with `None` | 8 | 0102 |
+| Missing `UnionFind.union` method emission | 4 | helpers/dsu |
+| Recursive optional field mutability | 3 | 0025 |
+| Nested assignment receives `Option<SifrInt>` instead of `SifrInt` | 1 | 0048 |
+| Borrowed `str` clone emission | 1 | 1397 |
+| Empty collection assertion type inference | 1 | 1203 |
+| Unreceived checked shift result in source | 1 | 2002 |
+
+The checked-shift receiving omission and approved ownership corrections remain Item 12B work.
+They are not external authority blockers.
+Other failures require control-flow, type-representation, or declaration-demand changes.
+Those mechanisms are not builtin registration or sentinel/repeat reuse.
+
+#### Later Item 12D: Native corpus emission dependencies
+
+State: recorded for scope adjudication, not started.
+Owner: compiler emission, tracked in this issue and the algorithmic issue.
+This item does not reopen Item 12C or request authority for its completed repair.
+
+The confirmed scope blocker is checked-read control-flow and optional representation.
+In fixture 0102, the source tests a left read only inside its left-length branch.
+Generated Rust inserts a left-read `let Some(...) else { break; }` before that branch.
+A second read narrows the value to `Vec<SifrInt>`, but its `None` comparison remains.
+The first transformation can terminate a valid right-only iteration.
+The second transformation fails Rust compilation with `E0277`.
+
+Evidence: `native-3f422/0102.emitted.rs:116` and
+`native-3f422/0102_binary_tree_level_order_traversal.run.log`.
+The relevant producer is `crates/sifr_codegen/src/checked_place.rs`.
+Its `checked_place_read_witness` path removes the optional representation.
+This producer is unchanged from the isolated base.
+A repair must preserve branch-local read demand, absence paths, and effect order.
+Removing source guards or adding a fallback would not correct that mechanism.
+
+The full diagnostic inventory also records structured exception lowering,
+handler capture scope, missing method emission, and assertion type inference.
+Their final producer-level decomposition remains unimplemented.
+The ownership groups stay in Item 12B rather than moving into this later item.
+
+Next action: adjudicate the newly recorded emission mechanisms as dependency scope.
+Then finish the approved source and ownership corrections on the preserved branch.
+Complete qualification on the final inputs before either repository merge.
+The exact-SHA Opus allowance and single merge-profile gate remain unused.
+
+All owned qualification commands completed. No background qualification run remains.
+No compiler, fixture, test, baseline, or safety policy changed after this evidence.
+Later commits update records only and do not claim a new implementation SHA pass.
+
 #### Item 12B implementation provenance
 
 The compiler changes start from the merged base, not the retained Item 12 candidate.
