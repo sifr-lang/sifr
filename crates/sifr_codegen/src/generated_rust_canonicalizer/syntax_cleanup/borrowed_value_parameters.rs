@@ -420,21 +420,16 @@ impl VisitMut for CallRewriter<'_> {
         let Some(owner) = owner else {
             return;
         };
-        let key = scoped_name_key(
+        let Ok(path) = syn::parse_str::<syn::Path>(&format!("{owner}::{}", call.method)) else {
+            return;
+        };
+        let plan = associated_or_free_plan(
+            self.plans,
             &self.modules,
-            Some(&owner),
-            &call.method.to_string(),
+            self.owner.as_deref(),
+            &path,
             call.args.len(),
         );
-        let plan = self.plans.get(&key).or_else(|| {
-            let suffix = format!("::{owner}::{}#{}", call.method, call.args.len());
-            let mut matches = self
-                .plans
-                .iter()
-                .filter_map(|(key, plan)| key.ends_with(&suffix).then_some(plan));
-            let plan = matches.next()?;
-            matches.next().is_none().then_some(plan)
-        });
         let Some(plan) = plan else {
             return;
         };
@@ -500,17 +495,11 @@ fn associated_or_free_plan<'plans>(
     if segments.first().is_some_and(|segment| segment == "Self") {
         segments[0] = self_owner?.to_string();
     }
-    if segments.first().is_some_and(|segment| segment == "crate") {
-        return plans.get(&format!("{}#{arguments}", segments[1..].join("::")));
+    if path.leading_colon.is_some() {
+        return None;
     }
-    for depth in (0..=modules.len()).rev() {
-        let mut qualified = modules[..depth].to_vec();
-        qualified.extend(segments.iter().cloned());
-        if let Some(plan) = plans.get(&format!("{}#{arguments}", qualified.join("::"))) {
-            return Some(plan);
-        }
-    }
-    None
+    let qualified = super::scoped_imports::qualified_path(modules, &segments)?;
+    plans.get(&format!("{}#{arguments}", qualified.join("::")))
 }
 
 fn scoped_key(modules: &[String], owner: Option<&str>, signature: &syn::Signature) -> String {
@@ -586,11 +575,14 @@ fn type_owner_name(ty: &syn::Type) -> String {
 
 fn type_path_name(ty: &syn::Type) -> Option<String> {
     match ty {
-        syn::Type::Path(path) => path
-            .path
-            .segments
-            .last()
-            .map(|segment| segment.ident.to_string()),
+        syn::Type::Path(path) if path.qself.is_none() && path.path.leading_colon.is_none() => Some(
+            path.path
+                .segments
+                .iter()
+                .map(|segment| segment.ident.to_string())
+                .collect::<Vec<_>>()
+                .join("::"),
+        ),
         syn::Type::Reference(reference) => type_path_name(&reference.elem),
         _ => None,
     }

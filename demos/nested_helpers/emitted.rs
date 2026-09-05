@@ -143,7 +143,7 @@ fn find_root(n: &SifrInt, par: &[SifrInt]) -> SifrInt {
         };
         p.clone_from(&sifr_generated_checked_value_3);
     }
-    p
+    p.clone()
 }
 fn union_nodes(n1: &SifrInt, n2: &SifrInt, par: &mut [SifrInt], rank: &mut [SifrInt]) -> bool {
     let p1: SifrInt = find_root(n1, par);

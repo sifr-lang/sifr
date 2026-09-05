@@ -62,7 +62,7 @@ fn main() {
     println!("{fact}");
     let fib: SifrInt = fibonacci(&SifrInt::from_i64(10));
     println!("{fib}");
-    let msg: String = greet(name.as_str());
+    let msg: String = greet(&name);
     println!("{msg}");
     let label: String = classify(&x);
     println!("{label}");

@@ -149,11 +149,13 @@ fn bytes_to_hex_or_empty(payload: &[u8]) -> String {
         };
         Ok(hx)
     };
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err;
-        let _ = e.message;
-        String::new()
-    })
+    sifr_generated_try_res.unwrap_or_else(
+        |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+            let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+            let _ = e.message;
+            String::new()
+        },
+    )
 }
 fn bytes_from_hex_to_text_or_empty(payload: &str) -> String {
     let sifr_generated_try_res: Result<String, ParseError> = (|| {
@@ -194,11 +196,13 @@ fn bytes_from_hex_to_text_or_empty(payload: &str) -> String {
             })?;
         Ok(txt)
     })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err;
-        let _ = e.message;
-        String::new()
-    })
+    sifr_generated_try_res.unwrap_or_else(
+        |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+            let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+            let _ = e.message;
+            String::new()
+        },
+    )
 }
 fn collect_invalid_actual_ok() -> Vec<bool> {
     let mut invalid_actual_ok: Vec<bool> = Vec::new();
@@ -238,8 +242,7 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
         invalid_actual_ok.push(true);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         invalid_actual_ok.push(false);
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
@@ -251,8 +254,7 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
         invalid_actual_ok.push(true);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         invalid_actual_ok.push(false);
     }
     invalid_actual_ok

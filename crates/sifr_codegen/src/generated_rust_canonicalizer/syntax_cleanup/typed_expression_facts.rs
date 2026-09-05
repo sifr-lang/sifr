@@ -118,6 +118,14 @@ fn collect_structures(
 }
 
 impl Rewriter<'_> {
+    fn declared_method(&self, receiver: &syn::Type, method: &proc_macro2::Ident) -> Option<&Callable> {
+        let syn::Type::Path(owner) = unreference(receiver) else { return None };
+        if owner.qself.is_some() { return None; }
+        let mut path = owner.path.clone();
+        path.segments.push(syn::PathSegment::from(method.clone()));
+        self.resolve(&path)
+    }
+
     fn expected_block(&mut self, block: &mut syn::Block, expected: &syn::Type) {
         let outer = self.bindings.clone();
         let returned_binding = block.stmts.last().and_then(|statement| match statement {

@@ -232,9 +232,9 @@ pub mod sifr_generated_generated_support {
                         ) == "s"
                     {
                         matched = true;
-                        let normalized_key: String = sifr_generated_normalize_option(key.as_str());
+                        let normalized_key: String = sifr_generated_normalize_option(&key);
                         let replacement: Option<String> =
-                            sifr_generated_lookup_option(merged, normalized_key.as_str());
+                            sifr_generated_lookup_option(merged, &normalized_key);
                         if replacement.is_none() {
                             result.push_str("%(");
                             result.push_str(key.as_str());
@@ -258,7 +258,7 @@ pub mod sifr_generated_generated_support {
         }
         if replaced {
             return sifr_generated_resolve_interpolation(
-                result.as_str(),
+                &result,
                 merged,
                 &::std::ops::Add::add(depth, &SifrInt::from_i64(1)),
             );
@@ -394,7 +394,7 @@ pub mod sifr_generated_generated_support {
         let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
             dialect,
             delimiter,
-            quotechar.as_str(),
+            &quotechar,
             escapechar,
             doublequote,
             skipinitialspace,
@@ -682,15 +682,14 @@ pub mod sifr_generated_generated_support {
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(JSONDecodeError::new(e.message))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                    _try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error;
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid integer metadata"
@@ -728,15 +727,14 @@ pub mod sifr_generated_generated_support {
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(JSONDecodeError::new(e.message))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                    _try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error;
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid float metadata".to_string(),
@@ -786,7 +784,7 @@ pub mod sifr_generated_generated_support {
             }
             if tag == "bool" {
                 let bool_token: String = sifr_generated_json_token_at(tokens, &payload_index)?;
-                let bool_value: bool = sifr_generated_json_decode_bool_token(bool_token.as_str())?;
+                let bool_value: bool = sifr_generated_json_decode_bool_token(&bool_token)?;
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2ejsonX2eJsonValue::new(
                         "bool".to_string(),
@@ -1198,11 +1196,7 @@ mod sifr_generated_project_nominals {
                     SifrGeneratedStdlibSifrX2econfigparserX2eParsingError,
                 > = (|| {
                     let parsed_option_pair: (String, Option<String>) =
-                        sifr_generated_split_option_line(
-                            line.as_str(),
-                            self.allow_no_value,
-                            &line_no,
-                        )?;
+                        sifr_generated_split_option_line(&line, self.allow_no_value, &line_no)?;
                     let (option_name, option_value) = parsed_option_pair;
                     let _chars_option_name: Vec<char> = option_name.chars().collect::<Vec<char>>();
                     if current_section.is_empty() || current_section == default_section {
@@ -1210,7 +1204,7 @@ mod sifr_generated_project_nominals {
                             let sifr_generated_assign_value =
                                 sifr_generated_copy_optional_str(&option_value);
                             {
-                                let sifr_generated_assign_key = option_name.clone();
+                                let sifr_generated_assign_key = option_name;
                                 self.defaults
                                     .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                             }
@@ -1248,7 +1242,7 @@ mod sifr_generated_project_nominals {
                                 let sifr_generated_assign_value =
                                     sifr_generated_copy_optional_str(&option_value);
                                 {
-                                    let sifr_generated_assign_key = option_name.clone();
+                                    let sifr_generated_assign_key = option_name;
                                     updated_section.insert(
                                         sifr_generated_assign_key,
                                         sifr_generated_assign_value,
@@ -1347,11 +1341,10 @@ mod sifr_generated_project_nominals {
                 self.sifr_generated_merged_section(section);
             let default_section: String = sifr_generated_default_section();
             if *section == default_section {
-                if !sifr_generated_has_option_key(&merged, normalized.as_str()) {
+                if !sifr_generated_has_option_key(&merged, &normalized) {
                     return sifr_generated_copy_optional_str(fallback);
                 }
-                let raw_value: Option<String> =
-                    sifr_generated_lookup_option(&merged, normalized.as_str());
+                let raw_value: Option<String> = sifr_generated_lookup_option(&merged, &normalized);
                 let raw_value = raw_value?;
                 if raw {
                     return Some(raw_value);
@@ -1363,9 +1356,9 @@ mod sifr_generated_project_nominals {
                 ));
             }
             if !self.has_section(section) {
-                if sifr_generated_has_option_key(&self.defaults, normalized.as_str()) {
+                if sifr_generated_has_option_key(&self.defaults, &normalized) {
                     let default_value: Option<String> =
-                        sifr_generated_lookup_option(&self.defaults, normalized.as_str());
+                        sifr_generated_lookup_option(&self.defaults, &normalized);
                     let default_value = default_value?;
                     if raw {
                         return Some(default_value);
@@ -1378,11 +1371,10 @@ mod sifr_generated_project_nominals {
                 }
                 return sifr_generated_copy_optional_str(fallback);
             }
-            if !sifr_generated_has_option_key(&merged, normalized.as_str()) {
+            if !sifr_generated_has_option_key(&merged, &normalized) {
                 return sifr_generated_copy_optional_str(fallback);
             }
-            let raw_value2: Option<String> =
-                sifr_generated_lookup_option(&merged, normalized.as_str());
+            let raw_value2: Option<String> = sifr_generated_lookup_option(&merged, &normalized);
             let raw_value2_value_7ff8214b5ccf9553 = raw_value2?;
             if raw {
                 return Some(raw_value2_value_7ff8214b5ccf9553);
@@ -1438,17 +1430,17 @@ mod sifr_generated_project_nominals {
             quoting: &SifrInt,
         ) -> Self {
             let mut resolved_quoting: SifrInt = (*quoting).clone();
-            sifr_generated_validate_char("delimiter", delimiter.as_str());
+            sifr_generated_validate_char("delimiter", &delimiter);
             if !quotechar.is_empty() {
-                sifr_generated_validate_char("quotechar", quotechar.as_str());
+                sifr_generated_validate_char("quotechar", &quotechar);
             }
             if !escapechar.is_empty() {
-                sifr_generated_validate_char("escapechar", escapechar.as_str());
+                sifr_generated_validate_char("escapechar", &escapechar);
             }
             if quotechar.is_empty()
                 && resolved_quoting != sifr_generated_const_51554f54455f4e4f4e45()
             {
-                resolved_quoting.clone_from(&sifr_generated_const_51554f54455f4e4f4e45());
+                resolved_quoting = sifr_generated_const_51554f54455f4e4f4e45();
             }
             let sifr_generated_field_value_894f6deb0b90819a_64656c696d69746572: String = delimiter;
             let sifr_generated_field_value_071afb87ccff598f_71756f746563686172: String = quotechar;
@@ -1574,11 +1566,11 @@ mod sifr_generated_project_nominals {
             reason = "generated signature preserves the typed Sifr callable contract"
         )]
         pub fn new(
-            text: &str,
+            text: String,
             dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
-            delimiter: &str,
-            quotechar: &str,
-            escapechar: &str,
+            delimiter: String,
+            quotechar: String,
+            escapechar: String,
             doublequote: bool,
             skipinitialspace: bool,
             quoting: &SifrInt,
@@ -1586,16 +1578,16 @@ mod sifr_generated_project_nominals {
             let resolved_dialect: SifrGeneratedStdlibSifrX2ecsvX2eDialect =
                 sifr_generated_resolve_dialect(
                     dialect,
-                    delimiter,
-                    quotechar,
-                    escapechar,
+                    &delimiter,
+                    &quotechar,
+                    &escapechar,
                     doublequote,
                     skipinitialspace,
                     "\n",
                     quoting,
                 );
             let rows: Vec<Vec<String>> = parse_csv(
-                text,
+                &text,
                 &None,
                 resolved_dialect.delimiter.as_str(),
                 resolved_dialect.quotechar.as_str(),
@@ -1943,7 +1935,7 @@ fn main() {
         SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0,
     > = (|| {
         let decoded_value: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue = decoder
-            .decode(encoded_value_8b21351fd8aea299.as_str())
+            .decode(&encoded_value_8b21351fd8aea299)
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0,
             )?;
@@ -1953,16 +1945,19 @@ fn main() {
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3asifrX2ebuiltinX2eError1X3a0(
-                sifr_generated_try_variant_error,
+                sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
             ) => {
-                let e = sifr_generated_try_variant_error;
+                let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                 let _ = e.message.to_string();
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a041X3a5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
-                sifr_generated_try_variant_error,
+                sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
             ) => {
-                let e = Error::new(sifr_generated_try_variant_error.message);
-                let _ = e.message.clone();
+                let e = Error::new(
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72
+                        .message,
+                );
+                let _ = e.message.to_string();
             }
         }
     }
@@ -2000,11 +1995,11 @@ fn main() {
     assert!(d.is_some());
     if let Some(d) = d {
         let r: SifrGeneratedStdlibSifrX2ecsvX2ereader = SifrGeneratedStdlibSifrX2ecsvX2ereader::new(
-            "a|b\n1|2",
+            "a|b\n1|2".to_string(),
             &Some(d),
-            ",",
-            "\"",
-            "",
+            ",".to_string(),
+            "\"".to_string(),
+            String::new(),
             true,
             false,
             &SifrInt::from_i64(0),

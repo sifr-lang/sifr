@@ -247,8 +247,7 @@ pub mod sifr_generated_generated_support {
                                 Ok(())
                             })(
                             );
-                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _e = sifr_generated_try_err;
+                            if let Err(_try_err) = sifr_generated_try_res {
                                 return;
                             }
                         }
@@ -419,8 +418,10 @@ fn collect_core_actual() -> Vec<bool> {
         batched_ok = format!("{bat:?}") == "[[1, 2], [3, 4], [5]]";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         let _ = e.message;
     }
     actual.push(batched_ok);
@@ -468,8 +469,10 @@ fn collect_negative_actual() -> Vec<bool> {
         let _ = sifr_generated_bad;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         invalid_batch_rejected = e.message.chars().count() > SifrInt::from_i64(0);
     }
     actual.push(invalid_batch_rejected);

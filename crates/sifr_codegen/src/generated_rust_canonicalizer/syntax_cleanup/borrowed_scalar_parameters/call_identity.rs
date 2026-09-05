@@ -28,72 +28,26 @@ fn call_plan<'plans>(
     path: &syn::Path,
     arguments: usize,
 ) -> Option<&'plans ScalarBorrowPlan> {
-    let segments = path
-        .segments
-        .iter()
-        .map(|segment| segment.ident.to_string())
-        .collect::<Vec<_>>();
-    let mut candidates = Vec::new();
-    let method_suffix = (segments.len() > 1).then(|| {
-        format!(
-            "{}::{}#{arguments}",
-            segments[segments.len() - 2],
-            segments[segments.len() - 1]
-        )
-    });
+    if path.leading_colon.is_some() {
+        return None;
+    }
+    let segments = path.segments.iter().map(|part| part.ident.to_string()).collect::<Vec<_>>();
     if segments.len() == 1 {
-        let mut local = modules.to_vec();
-        local.extend(functions.iter().cloned());
-        if local.last() == segments.first() {
-            candidates.push(format!("function:{}#{arguments}", local.join("::")));
+        // Rust block-local functions shadow enclosing declarations, never sibling modules.
+        for depth in (0..=functions.len()).rev() {
+            let mut local = modules.to_vec();
+            local.extend(functions[..depth].iter().cloned());
+            local.extend(segments.iter().cloned());
+            if let Some(plan) = plans.get(&format!("function:{}#{arguments}", local.join("::"))) {
+                return Some(plan);
+            }
         }
-        local.push(segments[0].clone());
-        candidates.push(format!("function:{}#{arguments}", local.join("::")));
-        if !functions.is_empty() {
-            let mut parent = modules.to_vec();
-            parent.extend(functions[..functions.len() - 1].iter().cloned());
-            parent.push(segments[0].clone());
-            candidates.push(format!("function:{}#{arguments}", parent.join("::")));
-        }
-    } else {
-        let mut qualified = segments.clone();
-        while matches!(
-            qualified.first().map(String::as_str),
-            Some("crate" | "self")
-        ) {
-            qualified.remove(0);
-        }
-        if !qualified.is_empty() {
-            candidates.push(format!("function:{}#{arguments}", qualified.join("::")));
-            candidates.push(format!("method:{}#{arguments}", qualified.join("::")));
-        }
-        let mut local_method = modules.to_vec();
-        local_method.extend(segments.iter().rev().take(2).rev().cloned());
-        candidates.push(format!("method:{}#{arguments}", local_method.join("::")));
+        return None;
     }
-    candidates.sort();
-    candidates.dedup();
-    let mut matched = candidates.into_iter().filter_map(|key| plans.get(&key));
-    if let Some(plan) = matched.next()
-        && matched.next().is_none()
-    {
-        return Some(plan);
-    }
-    let function_name = &segments[segments.len() - 1];
-    let top_level_function = format!("function:{function_name}#{arguments}");
-    let function_suffix = format!("::{function_name}#{arguments}");
-    let allow_function_fallback = segments.len() == 1;
-    let mut fallback = plans.iter().filter_map(|(key, plan)| {
-        let function_match = allow_function_fallback
-            && key.starts_with("function:")
-            && (key == &top_level_function || key.ends_with(&function_suffix));
-        let method_match = method_suffix
-            .as_ref()
-            .is_some_and(|suffix| key.starts_with("method:") && key.ends_with(suffix));
-        (function_match || method_match).then_some(plan)
-    });
-    let plan = fallback.next()?;
-    fallback.next().is_none().then_some(plan)
+    let qualified = super::scoped_imports::qualified_path(modules, &segments)?;
+    ["function", "method"].into_iter().find_map(|kind| {
+        plans.get(&format!("{kind}:{}#{arguments}", qualified.join("::")))
+    })
 }
 
 fn type_owner_name(ty: &syn::Type) -> String {

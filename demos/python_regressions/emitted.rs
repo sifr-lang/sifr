@@ -729,15 +729,14 @@ pub mod sifr_generated_generated_support {
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(JSONDecodeError::new(e.message))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                    _try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error;
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid integer metadata"
@@ -775,15 +774,14 @@ pub mod sifr_generated_generated_support {
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(JSONDecodeError::new(e.message))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                    _try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error;
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid float metadata".to_string(),
@@ -833,7 +831,7 @@ pub mod sifr_generated_generated_support {
             }
             if tag == "bool" {
                 let bool_token: String = sifr_generated_json_token_at(tokens, &payload_index)?;
-                let bool_value: bool = sifr_generated_json_decode_bool_token(bool_token.as_str())?;
+                let bool_value: bool = sifr_generated_json_decode_bool_token(&bool_token)?;
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2ejsonX2eJsonValue::new(
                         "bool".to_string(),
@@ -1416,9 +1414,9 @@ pub mod sifr_generated_generated_support {
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let error = sifr_generated_try_variant_error;
+                    let error = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(
                         SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                             error.message,
@@ -1426,9 +1424,9 @@ pub mod sifr_generated_generated_support {
                     )
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let error = sifr_generated_try_variant_error;
+                    let error = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(
                         SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                             error.message,
@@ -1704,10 +1702,10 @@ pub mod sifr_generated_generated_support {
     ) -> String {
         let mut prepared: String = text.to_string();
         if expand_tabs {
-            prepared = sifr_generated_expand_tabs_impl(prepared.as_str(), tabsize);
+            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize);
         }
         if replace_whitespace {
-            prepared = sifr_generated_replace_whitespace_chars(prepared.as_str(), true);
+            prepared = sifr_generated_replace_whitespace_chars(&prepared, true);
         }
         prepared
     }
@@ -1812,7 +1810,7 @@ pub mod sifr_generated_generated_support {
     }
     pub(super) fn sifr_generated_wrap_impl(text: &str, width: &SifrInt) -> Vec<String> {
         let normalized: String = sifr_generated_normalize_whitespace(text);
-        sifr_generated_wrap_with_indents(normalized.as_str(), width, "", "", true, true)
+        sifr_generated_wrap_with_indents(&normalized, width, "", "", true, true)
     }
     pub(super) fn sifr_generated_effective_content_width(
         total_width: &SifrInt,
@@ -1903,7 +1901,7 @@ pub mod sifr_generated_generated_support {
                     if first_line {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             initial_indent,
                             drop_whitespace,
                         );
@@ -1913,7 +1911,7 @@ pub mod sifr_generated_generated_support {
                     } else {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             subsequent_indent,
                             drop_whitespace,
                         );
@@ -1927,14 +1925,14 @@ pub mod sifr_generated_generated_support {
             if first_line {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     initial_indent,
                     drop_whitespace,
                 );
             } else {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     subsequent_indent,
                     drop_whitespace,
                 );

@@ -19,7 +19,7 @@ mod liveness;
 mod mutability_cleanup;
 mod pattern_predicates;
 mod redundant_borrow_cleanup;
-mod scoped_imports;
+pub(super) mod scoped_imports;
 mod typed_expression_cleanup;
 mod typed_fallback_cleanup;
 
@@ -73,6 +73,10 @@ pub(super) fn apply_local_scalar_borrow_plans(file: &mut syn::File) {
     borrowed_scalar_parameters::rewrite_borrow_only_scalar_parameters(file);
 }
 
+pub(super) fn apply_lexical_type_cleanup(file: &mut syn::File) {
+    typed_expression_cleanup::rewrite(file);
+}
+
 pub(super) fn apply_project_scalar_borrow_plans(
     file: &mut syn::File,
     plans: &std::collections::HashMap<String, borrowed_scalar_parameters::ScalarBorrowPlan>,
@@ -95,15 +99,15 @@ pub(super) fn apply_project_mutability_facts(
 
 pub(super) fn collect_project_borrowed_string_params(
     files: &[syn::File],
-) -> idiom_cleanup::BorrowedStringSignatures {
-    idiom_cleanup::collect_project_borrowed_string_params(files)
+) -> typed_expression_cleanup::ProjectTypeFacts {
+    typed_expression_cleanup::collect_project_facts(files)
 }
 
 pub(super) fn rewrite_project_borrowed_string_literals(
     file: &mut syn::File,
-    signatures: &idiom_cleanup::BorrowedStringSignatures,
+    signatures: &typed_expression_cleanup::ProjectTypeFacts,
 ) {
-    idiom_cleanup::rewrite_project_borrowed_string_literals(file, signatures);
+    typed_expression_cleanup::rewrite_with_facts(file, signatures);
 }
 
 struct CanonicalSyntaxRewriter<'methods> {

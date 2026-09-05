@@ -77,7 +77,7 @@ fn main() {
     println!("{length}");
     println!("{my_list:?}");
     let greeting: String = "Hello, Sifr!".to_string();
-    let first: String = get_first_char(greeting.as_str());
+    let first: String = get_first_char(&greeting);
     println!("{first}");
     println!("{greeting}");
     let owned_list: Vec<SifrInt> = vec![

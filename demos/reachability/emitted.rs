@@ -26,10 +26,7 @@ fn classify(flag: bool) -> SifrInt {
         }
         Err(ValueError::new("bad value".to_string()))
     })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let _e = sifr_generated_try_err;
-        SifrInt::from_i64(77)
-    })
+    sifr_generated_try_res.unwrap_or(SifrInt::from_i64(77))
 }
 fn main() {
     println!("reachability canonical flow truth queries demo:");

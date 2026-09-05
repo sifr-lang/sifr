@@ -125,11 +125,7 @@ pub mod sifr_generated_generated_support {
             let _names: Vec<String> = zip_namelist(path)?;
             Ok(true)
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            let _ = e.message;
-            false
-        })
+        sifr_generated_try_res.unwrap_or(false)
     }
     pub(super) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
@@ -168,14 +164,14 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2etempfileX2eNamedTemporaryFile {
         #[must_use]
-        pub fn new(mode: &str, delete: bool, prefix: &str) -> Self {
-            let mut candidate: String = mktemp_path(prefix);
-            while exists(candidate.as_str()) {
-                candidate = mktemp_path(prefix);
+        pub fn new(mode: String, delete: bool, prefix: String) -> Self {
+            let mut candidate: String = mktemp_path(&prefix);
+            while exists(&candidate) {
+                candidate = mktemp_path(&prefix);
             }
-            let _created_result: Result<(), IOError> = write_text(candidate.as_str(), "");
+            let _created_result: Result<(), IOError> = write_text(&candidate, "");
             let sifr_generated_field_value_0e74a76ec4f48c05_5f70617468: String = candidate;
-            let sifr_generated_field_value_e0efc38c5ec2afd5_5f6d6f6465: String = mode.to_string();
+            let sifr_generated_field_value_e0efc38c5ec2afd5_5f6d6f6465: String = mode;
             let sifr_generated_field_value_516ea6609f22db39_5f64656c657465: bool = delete;
             let sifr_generated_field_value_8bc7f577e5ffacda_5f636c6f736564: bool = false;
             let sifr_generated_field_value_12032f9cf5c44b7a_5f636c65616e6564: bool = false;
@@ -206,8 +202,12 @@ mod sifr_generated_project_nominals {
                     remove_file(&self.path_field)?;
                     Ok(())
                 })();
-                if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                    let e = sifr_generated_try_err;
+                if let Err(
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272,
+                ) = sifr_generated_try_res
+                {
+                    let e =
+                        sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                     return Err(e);
                 }
             }
@@ -311,9 +311,9 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ezipfileX2eZipFile {
         #[must_use]
-        pub fn new(path: &str, mode: &str, compression: &SifrInt) -> Self {
-            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path.to_string();
-            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode.to_string();
+        pub fn new(path: String, mode: String, compression: &SifrInt) -> Self {
+            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path;
+            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode;
             let sifr_generated_field_value_fb545b3ab0be00f5_636f6d7072657373696f6e: SifrInt =
                 (*compression).clone();
             Self {
@@ -422,21 +422,21 @@ fn main() {
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let mut temp_file: SifrGeneratedStdlibSifrX2etempfileX2eNamedTemporaryFile =
             SifrGeneratedStdlibSifrX2etempfileX2eNamedTemporaryFile::new(
-                "wb",
+                "wb".to_string(),
                 false,
-                "sifr_runtime_zipfile_io_",
+                "sifr_runtime_zipfile_io_".to_string(),
             );
         let tmp_path: String = temp_file.name();
         temp_file.close()?;
         temp_file.cleanup()?;
-        let tempfile_ok: bool = !exists(tmp_path.as_str());
-        if exists(zip_path.as_str()) {
-            remove_file(zip_path.as_str())?;
+        let tempfile_ok: bool = !exists(&tmp_path);
+        if exists(&zip_path) {
+            remove_file(&zip_path)?;
         }
         let writer: SifrGeneratedStdlibSifrX2ezipfileX2eZipFile =
             SifrGeneratedStdlibSifrX2ezipfileX2eZipFile::new(
-                zip_path.as_str(),
-                "w",
+                zip_path.clone(),
+                "w".to_string(),
                 &sifr_generated_const_5a49505f53544f524544(),
             );
         writer.create()?;
@@ -444,8 +444,8 @@ fn main() {
         writer.write_bytes("bin/raw.bin", &[0_u8, 1_u8, 2_u8])?;
         let reader: SifrGeneratedStdlibSifrX2ezipfileX2eZipFile =
             SifrGeneratedStdlibSifrX2ezipfileX2eZipFile::new(
-                zip_path.as_str(),
-                "r",
+                zip_path.clone(),
+                "r".to_string(),
                 &sifr_generated_const_5a49505f53544f524544(),
             );
         let payload: Vec<u8> = reader.read_bytes("bin/raw.bin")?;
@@ -464,15 +464,13 @@ fn main() {
                 sifr_generated_open_handle_result?;
             Ok(())
         })();
-        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-            let e = sifr_generated_try_err;
-            let _ = e.message;
+        if let Err(_try_err) = sifr_generated_try_res {
             open_rejected = true;
         }
         let bad_mode_writer: SifrGeneratedStdlibSifrX2ezipfileX2eZipFile =
             SifrGeneratedStdlibSifrX2ezipfileX2eZipFile::new(
-                zip_path.as_str(),
-                "rw",
+                zip_path.clone(),
+                "rw".to_string(),
                 &sifr_generated_const_5a49505f53544f524544(),
             );
         let sifr_generated_bad_mode_write_result: Result<(), IOError> =
@@ -482,33 +480,25 @@ fn main() {
             sifr_generated_bad_mode_write_result?;
             Ok(())
         })();
-        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-            let e = sifr_generated_try_err;
-            let _ = e.message;
+        if let Err(_try_err) = sifr_generated_try_res {
             bad_mode_rejected = true;
         }
         demo_ok = tempfile_ok
-            && is_zipfile(zip_path.as_str())
+            && is_zipfile(&zip_path)
             && payload == vec![0_u8, 1_u8, 2_u8]
             && handle_negative_ok
             && open_rejected
             && bad_mode_rejected;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
-        let _ = e.message;
-    }
+    let _ = sifr_generated_try_res;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        if exists(zip_path.as_str()) {
-            remove_file(zip_path.as_str())?;
+        if exists(&zip_path) {
+            remove_file(&zip_path)?;
         }
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
-        let _ = e.message;
-    }
+    let _ = sifr_generated_try_res;
     assert!(demo_ok);
     println!("runtime_zipfile_io_zipfile_lifecycle_demo: ok");
 }

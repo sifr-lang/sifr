@@ -5,6 +5,7 @@ use syn::visit_mut::{self, VisitMut};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct ScalarBorrowPlan {
+    identity: String,
     owned: Vec<usize>,
     borrowed: Vec<usize>,
     optional: Vec<usize>,
@@ -34,14 +35,18 @@ fn collect_plans(files: &[syn::File]) -> HashMap<String, ScalarBorrowPlan> {
             modules: Vec::new(),
             functions: Vec::new(),
             owner: None,
+            trait_implementation: false,
         };
         collector.visit_file(file);
     }
+    plans.retain(|key, _| !ambiguous.contains(key));
+    for file in files {
+        expand_imported_plans(file, &mut plans);
+    }
     let callable_value_uses = collect_callable_value_uses(files);
     let preserved_abis = callable_value_plan_keys(&plans, &callable_value_uses);
-    plans.retain(|key, _| !ambiguous.contains(key));
     for key in preserved_abis {
-        if let Some(plan) = plans.get_mut(&key) {
+        for plan in plans.values_mut().filter(|plan| plan.identity == key) {
             plan.consumed.clone_from(&plan.owned);
             plan.owned.clear();
             plan.borrowed.clear();
@@ -57,6 +62,7 @@ struct PlanCollector<'plans> {
     modules: Vec<String>,
     functions: Vec<String>,
     owner: Option<String>,
+    trait_implementation: bool,
 }
 
 impl Visit<'_> for PlanCollector<'_> {
@@ -73,17 +79,17 @@ impl Visit<'_> for PlanCollector<'_> {
 
     fn visit_item_impl(&mut self, implementation: &syn::ItemImpl) {
         let previous = self.owner.replace(type_owner_name(&implementation.self_ty));
+        let previous_trait = std::mem::replace(
+            &mut self.trait_implementation,
+            implementation.trait_.is_some(),
+        );
         visit::visit_item_impl(self, implementation);
         self.owner = previous;
+        self.trait_implementation = previous_trait;
     }
 
     fn visit_item_fn(&mut self, function: &syn::ItemFn) {
-        self.collect_signature(
-            &function.sig,
-            &function.block,
-            None,
-            !matches!(function.vis, syn::Visibility::Inherited),
-        );
+        self.collect_signature(&function.sig, &function.block, None, false);
         self.functions.push(function.sig.ident.to_string());
         visit::visit_item_fn(self, function);
         self.functions.pop();
@@ -95,7 +101,7 @@ impl Visit<'_> for PlanCollector<'_> {
             &function.sig,
             &function.block,
             owner.as_deref(),
-            !matches!(function.vis, syn::Visibility::Inherited),
+            self.trait_implementation,
         );
         self.functions.push(function.sig.ident.to_string());
         visit::visit_impl_item_fn(self, function);
@@ -109,7 +115,7 @@ impl PlanCollector<'_> {
         signature: &syn::Signature,
         block: &syn::Block,
         owner: Option<&str>,
-        _public_api: bool,
+        preserve_abi: bool,
     ) {
         let scalar_names = collect_sifr_int_bindings(signature, block);
         let mut owned = Vec::new();
@@ -144,12 +150,18 @@ impl PlanCollector<'_> {
             }
         }
         let key = scoped_signature_key(&self.modules, &self.functions, owner, signature);
-        let plan = ScalarBorrowPlan {
+        let mut plan = ScalarBorrowPlan {
+            identity: key.clone(),
             owned,
             borrowed,
             optional,
             consumed: Vec::new(),
         };
+        if preserve_abi {
+            plan.owned.clear();
+            plan.borrowed.clear();
+            plan.optional.clear();
+        }
         self.plans
             .entry(key.clone())
             .and_modify(|known| {
@@ -162,6 +174,37 @@ impl PlanCollector<'_> {
 }
 
 fn apply_plans(file: &mut syn::File, plans: &HashMap<String, ScalarBorrowPlan>) {
+    let mut expanded = plans.clone();
+    expand_imported_plans(file, &mut expanded);
+    let plans = &expanded;
+    apply_resolved_plans(file, plans);
+}
+
+pub(super) fn callable_value_abi_keys(file: &syn::File) -> HashSet<String> {
+    let files = std::slice::from_ref(file);
+    callable_value_plan_keys(&collect_plans(files), &collect_callable_value_uses(files))
+}
+
+fn expand_imported_plans(file: &syn::File, plans: &mut HashMap<String, ScalarBorrowPlan>) {
+    for kind in ["function", "method"] {
+        let prefix = format!("{kind}:");
+        let mut definitions = plans
+            .iter()
+            .filter_map(|(key, plan)| {
+                key.strip_prefix(&prefix)
+                    .map(|path| (path.to_string(), plan.clone()))
+            })
+            .collect::<HashMap<_, _>>();
+        super::scoped_imports::expand(file, &mut definitions);
+        plans.extend(
+            definitions
+                .into_iter()
+                .map(|(key, plan)| (format!("{prefix}{key}"), plan)),
+        );
+    }
+}
+
+fn apply_resolved_plans(file: &mut syn::File, plans: &HashMap<String, ScalarBorrowPlan>) {
     SignatureAndBodyRewriter {
         plans,
         modules: Vec::new(),
@@ -170,6 +213,7 @@ fn apply_plans(file: &mut syn::File, plans: &HashMap<String, ScalarBorrowPlan>) 
     }
     .visit_file_mut(file);
     ScalarCallRewriter {
+        owner: None,
         plans,
         modules: Vec::new(),
         functions: Vec::new(),

@@ -344,17 +344,19 @@ pub fn generate_rust_test_project_with_metadata(
             .saturating_add(test_rust_files.len())
             .saturating_add(1);
         let mut project_sources = Vec::with_capacity(source_count);
-        project_sources.push(&mut project_union_prelude);
-        project_sources.extend(support_rust_files.values_mut());
-        project_sources.extend(test_rust_files.values_mut());
-        crate::generated_rust_canonicalizer::rewrite_project_borrowed_string_literals(
-            &mut project_sources,
-        )
-        .map_err(|error| {
-            CodegenError::new(format!(
-                "failed to normalize generated test-project string borrows: {error}"
-            ))
-        })?;
+        project_sources.push(("", &mut project_union_prelude));
+        project_sources.extend(
+            support_rust_files
+                .iter_mut()
+                .map(|(name, source)| (name.as_str(), source)),
+        );
+        project_sources.extend(test_rust_files.values_mut().map(|source| ("", source)));
+        crate::generated_rust_canonicalizer::rewrite_named_project_borrows(&mut project_sources)
+            .map_err(|error| {
+                CodegenError::new(format!(
+                    "failed to normalize generated test-project string borrows: {error}"
+                ))
+            })?;
     }
 
     crate::retain_generated_dependency_metadata(

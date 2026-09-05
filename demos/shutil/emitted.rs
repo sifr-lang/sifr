@@ -212,12 +212,12 @@ fn collect_copy_move_tree_actual() -> Vec<bool> {
     let mut move_ok_value_16a723bbd15dd243: bool = false;
     let mut rmtree_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        mkdir(base.as_str())?;
-        write_text(src.as_str(), "demo")?;
-        copy(src.as_str(), copied.as_str())?;
+        mkdir(&base)?;
+        write_text(&src, "demo")?;
+        copy(&src, &copied)?;
         let mut copied_content_ok: bool = false;
         let sifr_generated_try_res: Result<(), IOError> = (|| {
-            let copied_content: String = read_text(copied.as_str())?;
+            let copied_content: String = read_text(&copied)?;
             copied_content_ok = copied_content == "demo";
             Ok(())
         })();
@@ -225,13 +225,13 @@ fn collect_copy_move_tree_actual() -> Vec<bool> {
             let e = sifr_generated_try_err;
             let _ = e.message;
         }
-        copy_ok = exists(src.as_str()) && exists(copied.as_str()) && copied_content_ok;
-        move_file(copied.as_str(), moved.as_str())?;
-        move_ok_value_16a723bbd15dd243 = exists(moved.as_str()) && !exists(copied.as_str());
-        mkdir(tree.as_str())?;
-        write_text(nested.as_str(), "nested")?;
-        rmtree(tree.as_str())?;
-        rmtree_ok = !exists(tree.as_str());
+        copy_ok = exists(&src) && exists(&copied) && copied_content_ok;
+        move_file(&copied, &moved)?;
+        move_ok_value_16a723bbd15dd243 = exists(&moved) && !exists(&copied);
+        mkdir(&tree)?;
+        write_text(&nested, "nested")?;
+        rmtree(&tree)?;
+        rmtree_ok = !exists(&tree);
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -248,8 +248,8 @@ fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
     let base: String = mktemp_path("sifr_shutil_shutil_demo_cleanup_");
     let mut base_ready: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        mkdir(base.as_str())?;
-        base_ready = exists(base.as_str());
+        mkdir(&base)?;
+        base_ready = exists(&base);
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -297,13 +297,13 @@ fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let _cleanup: String = run_command(&format!("rm -rf {base}"))?;
-        cleanup_ok = !exists(base.as_str());
+        cleanup_ok = !exists(&base);
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         let e = sifr_generated_try_err;
         let _ = e.message;
-        cleanup_ok = !exists(base.as_str());
+        cleanup_ok = !exists(&base);
     }
     actual.push(cleanup_ok);
     actual

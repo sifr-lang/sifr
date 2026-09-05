@@ -10,6 +10,10 @@ impl RustEmitter {
         stmt: &HirStmt,
         following_stmts: Option<&[HirStmt]>,
     ) {
+        let Some(normalized) = self.body_analysis.statement_for_lowering(stmt) else {
+            return;
+        };
+        let stmt = normalized.as_ref();
         self.lowering_stats.stmt_total += 1;
         if is_simple_stmt_candidate(stmt) {
             self.lowering_stats.stmt_candidate_total += 1;

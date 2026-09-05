@@ -1,6 +1,91 @@
 use super::generate_rust_from_source;
 
 #[test]
+fn item12_top_level_unused_projection_retains_only_effectful_receiver() {
+    let generated = generate_rust_from_source(
+        r#"
+class Payload:
+    value: str
+
+    def __init__(self, value: str):
+        self.value = value
+
+class Source:
+    calls: int
+
+    def __init__(self):
+        self.calls = 0
+
+    def read(mut self) -> Payload:
+        self.calls = self.calls + 1
+        return Payload("value")
+
+def use(mut source: Source) -> None:
+    _unused_call_projection: str = source.read().value
+    local = Payload("local")
+    _unused_name_projection: str = local.value
+"#,
+    );
+    assert_eq!(generated.matches("source.read()").count(), 1, "{generated}");
+    assert!(
+        !generated.contains("let _unused_call_projection"),
+        "{generated}"
+    );
+    assert!(
+        !generated.contains("let _unused_name_projection"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn item12_handler_bindings_follow_cached_body_and_capture_uses() {
+    let generated = generate_rust_from_source(
+        r#"
+def fail() -> Result[int, ValueError]:
+    raise ValueError("missing")
+
+def unused() -> None:
+    try:
+        value: int = fail()
+        print(value)
+    except ValueError as unused_error:
+        print("handled")
+
+def unused_projection() -> None:
+    try:
+        value: int = fail()
+        print(value)
+    except ValueError as projection_error:
+        _message: str = projection_error.message
+        print("handled")
+
+def retained_projection() -> None:
+    try:
+        value: int = fail()
+        print(value)
+    except ValueError as retained_error:
+        _retained: str = retained_error.message
+        def retained() -> str:
+            return _retained
+        print(retained())
+
+def captured() -> None:
+    try:
+        value: int = fail()
+        print(value)
+    except ValueError as captured_error:
+        def message() -> str:
+            return captured_error.message
+        print(message())
+"#,
+    );
+    assert!(!generated.contains("let unused_error ="), "{generated}");
+    assert!(!generated.contains("let projection_error ="), "{generated}");
+    assert!(generated.contains("let _retained"), "{generated}");
+    assert!(generated.contains("let captured_error ="), "{generated}");
+}
+
+#[test]
 fn item12_nontrivial_string_receiver_is_evaluated_once_for_bounded_operations() {
     let generated = generate_rust_from_source(
         r#"

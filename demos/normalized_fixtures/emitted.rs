@@ -58,7 +58,7 @@ fn parseNumber(s: &str) -> SifrInt {
             break;
         };
         let ch: String = sifr_generated_checked_value_0;
-        let d: SifrInt = parseDigit(ch.as_str());
+        let d: SifrInt = parseDigit(&ch);
         if d < SifrInt::from_i64(0) {
             return ::std::ops::Neg::neg(&SifrInt::from_i64(1));
         }

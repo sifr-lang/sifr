@@ -255,13 +255,13 @@ fn remove_last_use_clones_with_owned(
     owned_names: &HashSet<String>,
     rewrite_shadow_conditions: bool,
 ) {
-    let mut loop_control = LoopControlCollector { found: false };
+    let mut loop_control = LoopControlCollector::default();
     for statement in statements.iter() {
         loop_control.visit_stmt(statement);
     }
     if loop_control.found {
         if let Some(last_loop_control) = statements.iter().rposition(|statement| {
-            let mut collector = LoopControlCollector { found: false };
+            let mut collector = LoopControlCollector::default();
             collector.visit_stmt(statement);
             collector.found
         }) {
@@ -746,6 +746,17 @@ impl VisitMut for LastUseCloneRemover<'_> {
     fn visit_expr_for_loop_mut(&mut self, for_loop: &mut syn::ExprForLoop) {
         // The iterator expression executes once; the body may execute repeatedly.
         self.visit_expr_mut(&mut for_loop.expr);
+        if matches!(for_loop.body.stmts.last(), Some(syn::Stmt::Expr(syn::Expr::Break(exit), _))
+            if exit.label.is_none() && exit.expr.is_none())
+        {
+            let mut movable = self.movable.clone();
+            for name in crate::generated_rust_canonicalizer::syntax_cleanup::identifier_names_in_pattern(&for_loop.pat) {
+                movable.remove(&name);
+            }
+            let end = for_loop.body.stmts.len() - 1;
+            // A moved value cannot reach another iteration after this suffix.
+            remove_last_use_clones_with_owned(&mut for_loop.body.stmts[..end], &movable, false);
+        }
     }
 
     fn visit_expr_while_mut(&mut self, _while_loop: &mut syn::ExprWhile) {}
@@ -804,21 +815,7 @@ fn terminal_clone_root(expression: &syn::Expr) -> Option<String> {
         .flatten()
 }
 
-struct LoopControlCollector {
-    found: bool,
-}
-
-impl Visit<'_> for LoopControlCollector {
-    fn visit_expr_break(&mut self, _expression: &syn::ExprBreak) {
-        self.found = true;
-    }
-
-    fn visit_expr_continue(&mut self, _expression: &syn::ExprContinue) {
-        self.found = true;
-    }
-
-    fn visit_item(&mut self, _item: &syn::Item) {}
-}
+include!("loop_control_facts.rs");
 
 fn expression_root_name(expression: &syn::Expr) -> Option<String> {
     match expression {

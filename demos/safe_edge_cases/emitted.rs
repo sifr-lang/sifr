@@ -316,10 +316,8 @@ pub mod sifr_generated_generated_support {
             })?;
             Ok(Ok((year, month, day, hour, minute, second)))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let _e_5f65 = sifr_generated_try_err;
-            Err(ValueError::new("invalid datetime string".to_string()))
-        })
+        sifr_generated_try_res
+            .unwrap_or_else(|_try_err| Err(ValueError::new("invalid datetime string".to_string())))
     }
     #[expect(
         clippy::too_many_lines,
@@ -444,7 +442,7 @@ pub mod sifr_generated_generated_support {
                     SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
                 )?;
             let parts: (SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt) = sifr_generated_parse_datetime_iso(
-                    rendered.as_str(),
+                    &rendered,
                 )
                 .map_err(
                     SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
@@ -511,7 +509,9 @@ pub mod sifr_generated_generated_support {
             )
         })();
         sifr_generated_try_res
-            .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            .unwrap_or_else(|
+                sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272|
+            match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
@@ -959,9 +959,13 @@ pub mod sifr_generated_generated_support {
         sifr_generated_ensure_module_state_initialized();
         let mut r: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(&SifrInt::from_i64(0)));
-        let sifr_generated_set_result: Result<(), ValueError> =
-            r.setstate(&sifr_generated_build_state_from_module_storage());
-        let _ = sifr_generated_set_result;
+        let sifr_generated_try_res: Result<(), ValueError> = {
+            let sifr_generated_set_result: Result<(), ValueError> =
+                r.setstate(&sifr_generated_build_state_from_module_storage());
+            let _ = sifr_generated_set_result;
+            Ok(())
+        };
+        let _ = sifr_generated_try_res;
         r
     }
     pub(super) fn sifr_generated_sync_module_random(
@@ -1057,10 +1061,10 @@ pub mod sifr_generated_generated_support {
     ) -> String {
         let mut prepared: String = text.to_string();
         if expand_tabs {
-            prepared = sifr_generated_expand_tabs_impl(prepared.as_str(), tabsize);
+            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize);
         }
         if replace_whitespace {
-            prepared = sifr_generated_replace_whitespace_chars(prepared.as_str(), true);
+            prepared = sifr_generated_replace_whitespace_chars(&prepared, true);
         }
         prepared
     }
@@ -1165,7 +1169,7 @@ pub mod sifr_generated_generated_support {
     }
     pub(super) fn sifr_generated_wrap_impl(text: &str, width: &SifrInt) -> Vec<String> {
         let normalized: String = sifr_generated_normalize_whitespace(text);
-        sifr_generated_wrap_with_indents(normalized.as_str(), width, "", "", true, true)
+        sifr_generated_wrap_with_indents(&normalized, width, "", "", true, true)
     }
     pub(super) fn sifr_generated_effective_content_width(
         total_width: &SifrInt,
@@ -1256,7 +1260,7 @@ pub mod sifr_generated_generated_support {
                     if first_line {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             initial_indent,
                             drop_whitespace,
                         );
@@ -1266,7 +1270,7 @@ pub mod sifr_generated_generated_support {
                     } else {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             subsequent_indent,
                             drop_whitespace,
                         );
@@ -1280,14 +1284,14 @@ pub mod sifr_generated_generated_support {
             if first_line {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     initial_indent,
                     drop_whitespace,
                 );
             } else {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     subsequent_indent,
                     drop_whitespace,
                 );
@@ -1433,10 +1437,10 @@ pub mod sifr_generated_generated_support {
     ) -> Result<String, ValueError> {
         let mut normalized_input: String = input_text.to_string();
         let mut sifr_generated_chars_normalized_input: Vec<char> =
-            if sifr_generated_starts_with(normalized_input.as_str(), "urn:uuid:") {
+            if sifr_generated_starts_with(&normalized_input, "urn:uuid:") {
                 {
                     normalized_input = sifr_generated_substring(
-                        normalized_input.as_str(),
+                        &normalized_input,
                         &SifrInt::from_i64(9),
                         &SifrInt::from(normalized_input.chars().count()),
                     );
@@ -1469,7 +1473,7 @@ pub mod sifr_generated_generated_support {
             .map(|character| character.to_string());
             if first == Some("{".to_string()) && last == Some("}".to_string()) {
                 normalized_input = sifr_generated_substring(
-                    normalized_input.as_str(),
+                    &normalized_input,
                     &SifrInt::from_i64(1),
                     &::std::ops::Sub::sub(
                         SifrInt::from(normalized_input.chars().count()),
@@ -1497,11 +1501,11 @@ pub mod sifr_generated_generated_support {
                 let ch: String = ch_opt;
                 if ch == "-" {
                 } else {
-                    if !sifr_generated_is_hex_char(ch.as_str()) {
+                    if !sifr_generated_is_hex_char(&ch) {
                         return Err(ValueError::new("invalid UUID hex string".to_string()));
                     }
                     let sifr_generated_string_concat_hex_only_0 =
-                        sifr_generated_to_lower_hex_char(ch.as_str());
+                        sifr_generated_to_lower_hex_char(&ch);
                     sifr_generated_chars_hex_only
                         .extend(sifr_generated_string_concat_hex_only_0.as_str().chars());
                 }
@@ -1594,14 +1598,14 @@ pub mod sifr_generated_generated_support {
             ValueError,
         > = (|| {
             let canonical: String = sifr_generated_canonical_uuid_text(hex_str)?;
-            Ok(Ok(SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
-                canonical.as_str(),
-            )))
+            Ok(Ok(SifrGeneratedStdlibSifrX2euuidX2eUUID::new(canonical)))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(ValueError::new(e.message))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(ValueError::new(e.message))
+            },
+        )
     }
 }
 mod sifr_generated_project_nominals {
@@ -2218,8 +2222,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2euuidX2eUUID {
         #[must_use]
-        pub fn new(hex_str: &str) -> Self {
-            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str.to_string();
+        pub const fn new(hex_str: String) -> Self {
+            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str;
             Self {
                 hex: sifr_generated_field_value_123cb3437a89ad57_5f686578,
             }
@@ -2331,8 +2335,10 @@ fn main() {
         println!("randint(1, 10) = ok");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -2340,8 +2346,10 @@ fn main() {
         println!("should not reach here");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("randint(5, 3) -> ValueError: {}", e.message);
     }
     println!("=== 2. secrets.randbelow: Validates n > 0 ===");
@@ -2350,8 +2358,10 @@ fn main() {
         println!("randbelow(100) = ok");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -2359,8 +2369,10 @@ fn main() {
         println!("should not reach here");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("randbelow(0) -> ValueError: {}", e.message);
     }
     println!("=== 3. textwrap.wrap: Validates width > 0 ===");
@@ -2376,8 +2388,10 @@ fn main() {
         });
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(7usize.saturating_add(0usize));
@@ -2391,8 +2405,10 @@ fn main() {
         println!("should not reach here");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(30usize.saturating_add(0usize));
@@ -2421,8 +2437,10 @@ fn main() {
         });
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(7usize.saturating_add(0usize));
@@ -2436,8 +2454,10 @@ fn main() {
         println!("should not reach here");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(32usize.saturating_add(0usize));
@@ -2463,8 +2483,10 @@ fn main() {
             });
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(7usize.saturating_add(0usize));
@@ -2483,8 +2505,10 @@ fn main() {
             println!("should not reach here");
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("cyclic graph -> CycleError: {}", e.message);
     }
     println!("=== 6. uuid.uuid_from_hex: Validates hex format ===");
@@ -2494,8 +2518,10 @@ fn main() {
         println!("valid UUID hex: ok");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -2503,8 +2529,10 @@ fn main() {
         println!("should not reach here");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("invalid chars -> ValueError: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -2512,8 +2540,10 @@ fn main() {
         println!("should not reach here");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("wrong length -> ValueError: {}", e.message);
     }
     println!("=== 7. ipaddress.ip_to_int: Validates IPv4 format ===");
@@ -2522,8 +2552,10 @@ fn main() {
         println!("ip_to_int(192.168.1.1) = ok");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(7usize.saturating_add(0usize));
@@ -2537,8 +2569,10 @@ fn main() {
         println!("should not reach here");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(30usize.saturating_add(0usize));
@@ -2553,8 +2587,10 @@ fn main() {
         println!("from_timestamp(0.0) = ok");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -2563,8 +2599,10 @@ fn main() {
         println!("should not reach here");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("from_timestamp(invalid) -> ValueError: {}", e.message);
     }
     println!("=== 9. SubscriptAssign: Bounds-checked (IndexError) ===");
@@ -2596,8 +2634,7 @@ fn main() {
         }
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e_5f65 = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         println!("out-of-bounds assign -> IndexError");
     }
     println!("{}", {

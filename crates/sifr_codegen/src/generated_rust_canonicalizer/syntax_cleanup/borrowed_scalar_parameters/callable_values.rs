@@ -104,22 +104,7 @@ fn callable_value_plan_keys(
             .iter()
             .flat_map(|candidate| matching_plan_keys(plans, candidate))
             .collect::<HashSet<_>>();
-        if !exact_matches.is_empty() {
-            preserved.extend(exact_matches);
-            continue;
-        }
-        let Some(name) = callable.path.last() else {
-            continue;
-        };
-        let suffix = format!("::{name}#");
-        let fallback = plans
-            .keys()
-            .filter(|key| key.contains(&suffix))
-            .cloned()
-            .collect::<Vec<_>>();
-        if fallback.len() == 1 {
-            preserved.extend(fallback);
-        }
+        preserved.extend(exact_matches);
     }
     preserved
 }
@@ -165,8 +150,6 @@ fn callable_value_candidates(callable: &CallableValueUse) -> Vec<String> {
         local.extend(relative.iter().cloned());
         candidates.push(format!("function:{}", local.join("::")));
         candidates.push(format!("method:{}", local.join("::")));
-        candidates.push(format!("function:{}", relative.join("::")));
-        candidates.push(format!("method:{}", relative.join("::")));
     }
     candidates
 }
@@ -176,6 +159,6 @@ fn matching_plan_keys(plans: &HashMap<String, ScalarBorrowPlan>, identity: &str)
     plans
         .keys()
         .filter(|key| key.starts_with(&prefix))
-        .cloned()
+        .filter_map(|key| plans.get(key).map(|plan| plan.identity.clone()))
         .collect()
 }

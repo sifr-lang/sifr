@@ -275,15 +275,14 @@ pub mod sifr_generated_generated_support {
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(JSONDecodeError::new(e.message))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                    _try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error;
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid integer metadata"
@@ -321,15 +320,14 @@ pub mod sifr_generated_generated_support {
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(JSONDecodeError::new(e.message))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                    _try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error;
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid float metadata".to_string(),
@@ -379,7 +377,7 @@ pub mod sifr_generated_generated_support {
             }
             if tag == "bool" {
                 let bool_token: String = sifr_generated_json_token_at(tokens, &payload_index)?;
-                let bool_value: bool = sifr_generated_json_decode_bool_token(bool_token.as_str())?;
+                let bool_value: bool = sifr_generated_json_decode_bool_token(&bool_token)?;
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2ejsonX2eJsonValue::new(
                         "bool".to_string(),

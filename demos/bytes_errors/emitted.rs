@@ -47,8 +47,7 @@ fn main() {
         };
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         bad_size = true;
     }
     let mut bad_values: bool = false;
@@ -70,8 +69,7 @@ fn main() {
         };
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         bad_values = true;
     }
     let mut bad_hex: bool = false;
@@ -109,8 +107,7 @@ fn main() {
         };
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         bad_hex = true;
     }
     let mut bad_codec: bool = false;
@@ -122,8 +119,7 @@ fn main() {
             })?;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         bad_codec = true;
     }
     let mut bad_utf8: bool = false;
@@ -136,8 +132,7 @@ fn main() {
             )?;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         bad_utf8 = true;
     }
     assert!(bad_size);

@@ -4,7 +4,7 @@ use ::sifr_runtime::SifrRange;
 fn sum_forward(nums: &[SifrInt]) -> SifrInt {
     let n: SifrInt = SifrInt::from(nums.len());
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {
+    for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n, SifrInt::from_i64(1)) {
         let Some(sifr_generated_checked_value_0) = ({
             let sifr_generated_checked_read_collection = &nums;
             let sifr_generated_checked_read_index = i.clone();

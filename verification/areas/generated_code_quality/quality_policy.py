@@ -159,9 +159,8 @@ def pattern_matches(policy: PatternPolicy, code: str) -> bool:
     for match in policy.pattern.finditer(code):
         if policy.id == "direct-index":
             matched = match.group(0)
-            if re.fullmatch(r"let\s*\[[^\n]+", matched):
-                continue
-            if re.fullmatch(r"mut\s*\[[^\n]+", matched):
+            raw_identifier = code[max(0, match.start() - 2):match.start()] == "r#"
+            if not raw_identifier and re.fullmatch(r"(?:let|mut|in)\s*\[[^\n]+", matched):
                 continue
         return True
     return False
@@ -522,6 +521,11 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
     mutable_slice_type = "fn update(values: &mut [SifrInt]) {}"
     if pattern_matches(PATTERN_BY_ID["direct-index"], mutable_slice_type):
         raise AssertionError("direct-index scanner rejected a mutable slice type")
+    if pattern_matches(PATTERN_BY_ID["direct-index"], "for value in [1, 2] {}"):
+        raise AssertionError("direct-index scanner rejected iteration over an array")
+    for keyword in ("let", "mut", "in"):
+        if not pattern_matches(PATTERN_BY_ID["direct-index"], f"let value = r#{keyword}[0];"):
+            raise AssertionError("direct-index scanner accepted an indexed raw identifier")
     if not pattern_matches(PATTERN_BY_ID["direct-index"], "let value = values[0];"):
         raise AssertionError("direct-index scanner accepted a direct indexing expression")
 

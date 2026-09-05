@@ -217,8 +217,8 @@ fn main() {
     let mut binary_ok: bool = false;
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        write_text(path.as_str(), "alpha\nbeta")?;
-        let lines: Vec<String> = read_lines(path.as_str())?;
+        write_text(&path, "alpha\nbeta")?;
+        let lines: Vec<String> = read_lines(&path)?;
         text_ok = lines.len() == SifrInt::from_i64(2)
             && {
                 let sifr_generated_checked_read_collection = &lines;
@@ -303,10 +303,10 @@ fn main() {
         let _ = e.message;
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        if exists(path.as_str()) {
-            remove_file(path.as_str())?;
+        if exists(&path) {
+            remove_file(&path)?;
         }
-        cleanup_ok = !exists(path.as_str());
+        cleanup_ok = !exists(&path);
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

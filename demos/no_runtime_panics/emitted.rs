@@ -369,17 +369,18 @@ pub mod sifr_generated_generated_support {
             Ok(Ok(parsed))
         })();
         sifr_generated_try_res
-            .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            .unwrap_or_else(|
+                sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272|
+            match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(JSONDecodeError::new(e.message))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                    _try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error;
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid integer metadata"
@@ -415,17 +416,18 @@ pub mod sifr_generated_generated_support {
             Ok(Ok(parsed))
         })();
         sifr_generated_try_res
-            .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            .unwrap_or_else(|
+                sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272|
+            match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(JSONDecodeError::new(e.message))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                    _try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error;
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid float metadata".to_string(),
@@ -475,7 +477,7 @@ pub mod sifr_generated_generated_support {
             }
             if tag == "bool" {
                 let bool_token: String = sifr_generated_json_token_at(tokens, &payload_index)?;
-                let bool_value: bool = sifr_generated_json_decode_bool_token(bool_token.as_str())?;
+                let bool_value: bool = sifr_generated_json_decode_bool_token(&bool_token)?;
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2ejsonX2eJsonValue::new(
                         "bool".to_string(),
@@ -592,10 +594,12 @@ pub mod sifr_generated_generated_support {
                 sifr_generated_concat
             }))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(JSONDecodeError::new(e.message))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(JSONDecodeError::new(e.message))
+            },
+        )
     }
     pub(super) fn sifr_generated_json_decode_tokens(
         tokens: &[String],
@@ -613,10 +617,12 @@ pub mod sifr_generated_generated_support {
             }
             Ok(Ok(decoded.0))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(JSONDecodeError::new(e.message))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(JSONDecodeError::new(e.message))
+            },
+        )
     }
     pub(super) fn sifr_generated_json_append_tokens(
         mut tokens: Vec<String>,
@@ -681,10 +687,12 @@ pub mod sifr_generated_generated_support {
             let tokens: Vec<String> = json_load_tokens(s)?;
             Ok(sifr_generated_json_decode_tokens(&tokens))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(e)
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(e)
+            },
+        )
     }
     pub(super) fn loads(
         s: &str,
@@ -844,9 +852,13 @@ pub mod sifr_generated_generated_support {
         sifr_generated_ensure_module_state_initialized();
         let mut r: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(&SifrInt::from_i64(0)));
-        let sifr_generated_set_result: Result<(), ValueError> =
-            r.setstate(&sifr_generated_build_state_from_module_storage());
-        let _ = sifr_generated_set_result;
+        let sifr_generated_try_res: Result<(), ValueError> = {
+            let sifr_generated_set_result: Result<(), ValueError> =
+                r.setstate(&sifr_generated_build_state_from_module_storage());
+            let _ = sifr_generated_set_result;
+            Ok(())
+        };
+        let _ = sifr_generated_try_res;
         r
     }
     pub(super) fn sifr_generated_sync_module_random(
@@ -944,10 +956,10 @@ pub mod sifr_generated_generated_support {
     ) -> String {
         let mut prepared: String = text.to_string();
         if expand_tabs {
-            prepared = sifr_generated_expand_tabs_impl(prepared.as_str(), tabsize);
+            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize);
         }
         if replace_whitespace {
-            prepared = sifr_generated_replace_whitespace_chars(prepared.as_str(), true);
+            prepared = sifr_generated_replace_whitespace_chars(&prepared, true);
         }
         prepared
     }
@@ -1052,7 +1064,7 @@ pub mod sifr_generated_generated_support {
     }
     pub(super) fn sifr_generated_wrap_impl(text: &str, width: &SifrInt) -> Vec<String> {
         let normalized: String = sifr_generated_normalize_whitespace(text);
-        sifr_generated_wrap_with_indents(normalized.as_str(), width, "", "", true, true)
+        sifr_generated_wrap_with_indents(&normalized, width, "", "", true, true)
     }
     pub(super) fn sifr_generated_effective_content_width(
         total_width: &SifrInt,
@@ -1143,7 +1155,7 @@ pub mod sifr_generated_generated_support {
                     if first_line {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             initial_indent,
                             drop_whitespace,
                         );
@@ -1153,7 +1165,7 @@ pub mod sifr_generated_generated_support {
                     } else {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             subsequent_indent,
                             drop_whitespace,
                         );
@@ -1167,14 +1179,14 @@ pub mod sifr_generated_generated_support {
             if first_line {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     initial_indent,
                     drop_whitespace,
                 );
             } else {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     subsequent_indent,
                     drop_whitespace,
                 );
@@ -1716,10 +1728,12 @@ fn has_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
         let found: Option<String> = search(pattern, text)?;
         Ok(Ok(found.is_some()))
     })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let error = sifr_generated_try_err;
-        Err(RegexError::new(error.message))
-    })
+    sifr_generated_try_res.unwrap_or_else(
+        |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+            let error = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+            Err(RegexError::new(error.message))
+        },
+    )
 }
 #[expect(
     clippy::too_many_lines,
@@ -1734,8 +1748,10 @@ fn main() {
         println!("File content: {content}");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("read_text(nonexistent) -> IOError: {}", e.message);
     }
     println!();
@@ -1746,8 +1762,10 @@ fn main() {
         println!("Parsed JSON: {data}");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("loads(invalid) -> JSONDecodeError: {}", e.message);
     }
     println!();
@@ -1757,8 +1775,10 @@ fn main() {
         println!("Regex match result: {matched}");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("search(invalid) -> RegexError: {}", e.message);
     }
     println!();
@@ -1809,8 +1829,10 @@ fn main() {
         println!("Random value: {rval}");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("randint(5, 3) -> ValueError: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -1818,8 +1840,10 @@ fn main() {
         println!("Wrapped text: ok");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("wrap(text, 0) -> ValueError: {}", e.message);
     }
     let from_n: Vec<SifrInt> = vec![
@@ -1839,8 +1863,10 @@ fn main() {
             println!("Topologically sorted: ok");
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("topological_sort(cycle) -> CycleError: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -1848,8 +1874,10 @@ fn main() {
         println!("IP as int: {ip_int}");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("ip_to_int(bad) -> ValueError: {}", e.message);
     }
     println!();
@@ -1889,8 +1917,7 @@ fn main() {
         }
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         println!(
             "nums[99] = 42 -> IndexError, list len still {}",
             SifrInt::from(nums.len())

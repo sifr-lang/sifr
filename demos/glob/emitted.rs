@@ -236,7 +236,7 @@ fn collect_glob_actual() -> Vec<bool> {
         write_text(&format!("{base}/a.txt"), "a")?;
         write_text(&format!("{base}/b.txt"), "b")?;
         write_text(&format!("{base}/.hidden.txt"), "h")?;
-        let txt: Vec<String> = glob(base.as_str(), "*.txt");
+        let txt: Vec<String> = glob(&base, "*.txt");
         let txt_ok: bool = txt.len() == SifrInt::from_i64(2)
             && {
                 let sifr_generated_checked_read_collection = &txt;
@@ -279,7 +279,7 @@ fn collect_glob_actual() -> Vec<bool> {
                 } == Some("b.txt"))
             });
         actual.push(txt_ok);
-        let hidden: Vec<String> = glob(base.as_str(), ".*.txt");
+        let hidden: Vec<String> = glob(&base, ".*.txt");
         let hidden_ok: bool = hidden.len() == SifrInt::from_i64(1) && {
             let sifr_generated_checked_read_collection = &hidden;
             let sifr_generated_checked_read_index = SifrInt::from_i64(0);
@@ -301,7 +301,7 @@ fn collect_glob_actual() -> Vec<bool> {
             } == Some(".hidden.txt"))
         });
         actual.push(hidden_ok);
-        let wildcard_q: Vec<String> = glob(base.as_str(), "?.txt");
+        let wildcard_q: Vec<String> = glob(&base, "?.txt");
         let wildcard_q_ok: bool = wildcard_q.len() == SifrInt::from_i64(2)
             && {
                 let sifr_generated_checked_read_collection = &wildcard_q;
@@ -344,7 +344,7 @@ fn collect_glob_actual() -> Vec<bool> {
                 } == Some("b.txt"))
             });
         actual.push(wildcard_q_ok);
-        let none: Vec<String> = glob(base.as_str(), "*.csv");
+        let none: Vec<String> = glob(&base, "*.csv");
         actual.push(none.len() == SifrInt::from_i64(0));
         let missing: Vec<String> = glob(&format!("{base}_missing"), "*.txt");
         actual.push(missing.len() == SifrInt::from_i64(0));

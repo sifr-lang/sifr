@@ -89,8 +89,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         #[must_use]
-        pub fn new(label: &str) -> Self {
-            let sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c: String = label.to_string();
+        pub const fn new(label: String) -> Self {
+            let sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c: String = label;
             Self {
                 label: sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c,
             }
@@ -107,8 +107,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler {
         #[must_use]
-        pub fn new(name: &str) -> Self {
-            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name.to_string();
+        pub const fn new(name: String) -> Self {
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
             Self {
                 name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
             }
@@ -125,8 +125,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler {
         #[must_use]
-        pub fn new(name: &str) -> Self {
-            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name.to_string();
+        pub const fn new(name: String) -> Self {
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
             Self {
                 name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
             }
@@ -231,9 +231,9 @@ fn collect_io_roundtrip_actual() -> Vec<bool> {
     let path: String = "/tmp/sifr_io_io_demo.txt".to_string();
     let mut text_roundtrip_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        write_text(path.as_str(), "hello")?;
-        append_text(path.as_str(), "\nworld")?;
-        let content: String = read_text(path.as_str())?;
+        write_text(&path, "hello")?;
+        append_text(&path, "\nworld")?;
+        let content: String = read_text(&path)?;
         text_roundtrip_ok = content == "hello\nworld";
         Ok(())
     })();
@@ -242,7 +242,7 @@ fn collect_io_roundtrip_actual() -> Vec<bool> {
         let _ = e.message;
     }
     actual.push(text_roundtrip_ok);
-    actual.push(exists(path.as_str()));
+    actual.push(exists(&path));
     actual
 }
 fn collect_open_actual() -> Vec<bool> {
@@ -253,7 +253,7 @@ fn collect_open_actual() -> Vec<bool> {
     let mut eof_ok: bool = false;
     let mut missing_rejected: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let lines: Vec<String> = read_lines(path.as_str())?;
+        let lines: Vec<String> = read_lines(&path)?;
         first_ok = lines.len() >= SifrInt::from_i64(1) && {
             let sifr_generated_cmp_list = &lines;
             let sifr_generated_cmp_i = SifrInt::from_i64(0);
@@ -306,15 +306,11 @@ fn collect_open_actual() -> Vec<bool> {
                     SifrGeneratedIoNativeFileHandle::new(sifr_generated_handle_id),
                     sifr_generated_binary_mode,
                 ),
-                SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(
-                    sifr_generated_encoding.as_str(),
-                ),
+                SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(sifr_generated_encoding),
                 SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler::new(
-                    sifr_generated_errors.as_str(),
+                    sifr_generated_errors.clone(),
                 ),
-                SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler::new(
-                    sifr_generated_errors.as_str(),
-                ),
+                SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler::new(sifr_generated_errors),
             ))
         })()?;
         Ok(())

@@ -117,7 +117,12 @@ impl RustEmitter {
             }
 
             let handler_name = handler.name.as_deref().unwrap_or("_e");
-            let handler_binding = if handler_name == "_" {
+            let unused_binding = self
+                .body_analysis
+                .summary(&handler.body)
+                .is_some_and(|summary| !summary.uses_binding(handler_name));
+            let handler_binding = if handler.name.is_none() || handler_name == "_" || unused_binding
+            {
                 None
             } else {
                 // The handler chain is mutually exclusive. Its selected arm owns

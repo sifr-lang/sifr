@@ -154,9 +154,13 @@ pub mod sifr_generated_generated_support {
         sifr_generated_ensure_module_state_initialized();
         let mut r: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(&SifrInt::from_i64(0)));
-        let sifr_generated_set_result: Result<(), ValueError> =
-            r.setstate(&sifr_generated_build_state_from_module_storage());
-        let _ = sifr_generated_set_result;
+        let sifr_generated_try_res: Result<(), ValueError> = {
+            let sifr_generated_set_result: Result<(), ValueError> =
+                r.setstate(&sifr_generated_build_state_from_module_storage());
+            let _ = sifr_generated_set_result;
+            Ok(())
+        };
+        let _ = sifr_generated_try_res;
         r
     }
     pub(super) fn sifr_generated_sync_module_random(

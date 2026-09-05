@@ -1,7 +1,30 @@
 //! Resolve declared Rust imports, including re-exports, without basename lookup.
 use std::collections::HashMap;
 
-pub(super) fn expand<T: Clone>(file: &syn::File, definitions: &mut HashMap<String, T>) {
+pub(crate) fn qualified_path(scope: &[String], path: &[String]) -> Option<Vec<String>> {
+    let mut absolute = scope.to_vec();
+    let mut offset = 0;
+    match path.first()?.as_str() {
+        "crate" => {
+            absolute.clear();
+            offset = 1;
+        }
+        "self" => {
+            offset = 1;
+        }
+        "super" => {
+            while path.get(offset).is_some_and(|part| part == "super") {
+                absolute.pop()?;
+                offset += 1;
+            }
+        }
+        _ => {}
+    }
+    absolute.extend(path[offset..].iter().cloned());
+    Some(absolute)
+}
+
+pub(crate) fn expand<T: Clone>(file: &syn::File, definitions: &mut HashMap<String, T>) {
     let mut aliases = Vec::new();
     collect(&file.items, &[], &mut aliases);
     for _ in 0..aliases.len() {

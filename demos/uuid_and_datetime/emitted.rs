@@ -323,10 +323,8 @@ pub mod sifr_generated_generated_support {
             })?;
             Ok(Ok((year, month, day, hour, minute, second)))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let _e_5f65 = sifr_generated_try_err;
-            Err(ValueError::new("invalid datetime string".to_string()))
-        })
+        sifr_generated_try_res
+            .unwrap_or_else(|_try_err| Err(ValueError::new("invalid datetime string".to_string())))
     }
     #[expect(
         non_snake_case,
@@ -458,7 +456,7 @@ pub mod sifr_generated_generated_support {
                     SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
                 )?;
             let parts: (SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt) = sifr_generated_parse_datetime_iso(
-                    rendered.as_str(),
+                    &rendered,
                 )
                 .map_err(
                     SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
@@ -525,7 +523,9 @@ pub mod sifr_generated_generated_support {
             )
         })();
         sifr_generated_try_res
-            .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            .unwrap_or_else(|
+                sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272|
+            match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
@@ -564,8 +564,7 @@ pub mod sifr_generated_generated_support {
         })();
         match sifr_generated_try_res {
             Ok(sifr_generated_ret_val) => sifr_generated_ret_val,
-            Err(sifr_generated_try_err) => {
-                let _e_5f65 = sifr_generated_try_err;
+            Err(_try_err) => {
                 let parts: Vec<SifrInt> = datetime_now_struct();
                 let mut yr: SifrInt = SifrInt::from_i64(0);
                 let mut mo: SifrInt = SifrInt::from_i64(1);
@@ -699,20 +698,22 @@ pub mod sifr_generated_generated_support {
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(&uuid3_text(&namespace.to_str(), name))
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid3_text(&namespace.to_str(), name))
     }
     pub(super) fn uuid5(
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(&uuid5_text(&namespace.to_str(), name))
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid5_text(&namespace.to_str(), name))
     }
     #[expect(
         non_snake_case,
         reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     pub(super) fn NAMESPACE_DNS() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
+            "6ba7b810-9dad-11d1-80b4-00c04fd430c8".to_string(),
+        )
     }
 }
 mod sifr_generated_project_nominals {
@@ -1030,8 +1031,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2euuidX2eUUID {
         #[must_use]
-        pub fn new(hex_str: &str) -> Self {
-            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str.to_string();
+        pub const fn new(hex_str: String) -> Self {
+            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str;
             Self {
                 hex: sifr_generated_field_value_123cb3437a89ad57_5f686578,
             }
@@ -1157,8 +1158,7 @@ fn main() {
         epoch_ok = epoch_shifted.isoformat() == "1970-01-01T02:00:00+02:00";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e_5f65 = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         epoch_ok = false;
     }
     assert!(epoch_ok);

@@ -346,7 +346,7 @@ pub mod sifr_generated_generated_support {
             .map(|character| character.to_string());
             let ch_opt_value_58c5362056f71db8 = ch_opt?;
             let ch: String = ch_opt_value_58c5362056f71db8;
-            let digit_opt: Option<SifrInt> = sifr_generated_digit_value(ch.as_str());
+            let digit_opt: Option<SifrInt> = sifr_generated_digit_value(&ch);
             let digit_opt_value_c39685cb2782ed00 = digit_opt?;
             let digit: SifrInt = digit_opt_value_c39685cb2782ed00;
             out = ::std::ops::Add::add(&::std::ops::Mul::mul(&out, &SifrInt::from_i64(10)), &digit);
@@ -632,11 +632,11 @@ pub mod sifr_generated_generated_support {
     }
     pub(super) fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_gmtime_intrinsic(epoch);
-        sifr_generated_to_struct_time(rendered.as_str())
+        sifr_generated_to_struct_time(&rendered)
     }
     pub(super) fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_localtime_intrinsic(epoch);
-        sifr_generated_to_struct_time(rendered.as_str())
+        sifr_generated_to_struct_time(&rendered)
     }
 }
 mod sifr_generated_project_nominals {
@@ -1159,7 +1159,7 @@ fn demo_base64() {
         sifr_generated_concat
     });
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let decoded: String = b32decode(encoded.as_str())?;
+        let decoded: String = b32decode(&encoded)?;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(12usize.saturating_add(decoded.len()));

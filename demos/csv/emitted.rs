@@ -208,7 +208,7 @@ pub mod sifr_generated_generated_support {
         let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
             dialect,
             delimiter,
-            quotechar.as_str(),
+            &quotechar,
             escapechar,
             doublequote,
             skipinitialspace,
@@ -527,11 +527,11 @@ pub mod sifr_generated_generated_support {
         )]
         for row in rows.iter() {
             rendered.push(format_row(
-                &row,
+                row,
                 &None,
-                resolved_delimiter.as_str(),
-                resolved_quotechar.as_str(),
-                resolved_escapechar.as_str(),
+                &resolved_delimiter,
+                &resolved_quotechar,
+                &resolved_escapechar,
                 resolved.doublequote,
                 resolved.skipinitialspace,
                 &resolved.quoting,
@@ -563,11 +563,11 @@ pub mod sifr_generated_generated_support {
         > = (|| {
             let text: String = read_text(path)?;
             Ok(Ok(SifrGeneratedStdlibSifrX2ecsvX2ereader::new(
-                text.as_str(),
+                text,
                 &dialect.clone(),
-                delimiter,
-                quotechar,
-                escapechar,
+                delimiter.to_owned(),
+                quotechar.to_owned(),
+                escapechar.to_owned(),
                 doublequote,
                 skipinitialspace,
                 quoting,
@@ -609,7 +609,7 @@ pub mod sifr_generated_generated_support {
             lineterminator,
             quoting,
         );
-        write_text(path, payload.as_str())
+        write_text(path, &payload)
     }
     pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
@@ -685,17 +685,17 @@ mod sifr_generated_project_nominals {
             quoting: &SifrInt,
         ) -> Self {
             let mut resolved_quoting: SifrInt = (*quoting).clone();
-            sifr_generated_validate_char("delimiter", delimiter.as_str());
+            sifr_generated_validate_char("delimiter", &delimiter);
             if !quotechar.is_empty() {
-                sifr_generated_validate_char("quotechar", quotechar.as_str());
+                sifr_generated_validate_char("quotechar", &quotechar);
             }
             if !escapechar.is_empty() {
-                sifr_generated_validate_char("escapechar", escapechar.as_str());
+                sifr_generated_validate_char("escapechar", &escapechar);
             }
             if quotechar.is_empty()
                 && resolved_quoting != sifr_generated_const_51554f54455f4e4f4e45()
             {
-                resolved_quoting.clone_from(&sifr_generated_const_51554f54455f4e4f4e45());
+                resolved_quoting = sifr_generated_const_51554f54455f4e4f4e45();
             }
             let sifr_generated_field_value_894f6deb0b90819a_64656c696d69746572: String = delimiter;
             let sifr_generated_field_value_071afb87ccff598f_71756f746563686172: String = quotechar;
@@ -750,11 +750,11 @@ mod sifr_generated_project_nominals {
             reason = "generated signature preserves the typed Sifr callable contract"
         )]
         pub fn new(
-            text: &str,
+            text: String,
             dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
-            delimiter: &str,
-            quotechar: &str,
-            escapechar: &str,
+            delimiter: String,
+            quotechar: String,
+            escapechar: String,
             doublequote: bool,
             skipinitialspace: bool,
             quoting: &SifrInt,
@@ -762,16 +762,16 @@ mod sifr_generated_project_nominals {
             let resolved_dialect: SifrGeneratedStdlibSifrX2ecsvX2eDialect =
                 sifr_generated_resolve_dialect(
                     dialect,
-                    delimiter,
-                    quotechar,
-                    escapechar,
+                    &delimiter,
+                    &quotechar,
+                    &escapechar,
                     doublequote,
                     skipinitialspace,
                     "\n",
                     quoting,
                 );
             let rows: Vec<Vec<String>> = parse_csv(
-                text,
+                &text,
                 &None,
                 resolved_dialect.delimiter.as_str(),
                 resolved_dialect.quotechar.as_str(),
@@ -826,23 +826,23 @@ mod sifr_generated_project_nominals {
         )]
         pub fn new(
             dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
-            delimiter: &str,
-            quotechar: &str,
-            escapechar: &str,
+            delimiter: String,
+            quotechar: String,
+            escapechar: String,
             doublequote: bool,
             skipinitialspace: bool,
-            lineterminator: &str,
+            lineterminator: String,
             quoting: &SifrInt,
         ) -> Self {
             let resolved_dialect: SifrGeneratedStdlibSifrX2ecsvX2eDialect =
                 sifr_generated_resolve_dialect(
                     dialect,
-                    delimiter,
-                    quotechar,
-                    escapechar,
+                    &delimiter,
+                    &quotechar,
+                    &escapechar,
                     doublequote,
                     skipinitialspace,
-                    lineterminator,
+                    &lineterminator,
                     quoting,
                 );
             let sifr_generated_field_value_ac4a5fa27eb34095_6469616c656374: SifrGeneratedStdlibSifrX2ecsvX2eDialect = resolved_dialect;
@@ -939,11 +939,11 @@ fn collect_parse_actual() -> Vec<bool> {
 fn collect_object_and_file_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let r: SifrGeneratedStdlibSifrX2ecsvX2ereader = SifrGeneratedStdlibSifrX2ecsvX2ereader::new(
-        "name,age\nalice,30",
+        "name,age\nalice,30".to_string(),
         &None,
-        ",",
-        "\"",
-        "",
+        ",".to_string(),
+        "\"".to_string(),
+        String::new(),
         true,
         false,
         &SifrInt::from_i64(0),
@@ -951,12 +951,12 @@ fn collect_object_and_file_actual() -> Vec<bool> {
     actual.push(format!("{:?}", r.rows()).as_str() == "[[\"name\", \"age\"], [\"alice\", \"30\"]]");
     let mut w: SifrGeneratedStdlibSifrX2ecsvX2ewriter = SifrGeneratedStdlibSifrX2ecsvX2ewriter::new(
         &None,
-        ",",
-        "\"",
-        "",
+        ",".to_string(),
+        "\"".to_string(),
+        String::new(),
         true,
         false,
-        "\n",
+        "\n".to_string(),
         &SifrInt::from_i64(0),
     );
     w.writerow(&["alice".to_string(), "30".to_string()]);
@@ -966,7 +966,7 @@ fn collect_object_and_file_actual() -> Vec<bool> {
     let mut missing_rejected: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         writer_to_path(
-            path.as_str(),
+            &path,
             &[
                 vec!["h1".to_string(), "h2".to_string()],
                 vec!["v1".to_string(), "v2".to_string()],
@@ -981,7 +981,7 @@ fn collect_object_and_file_actual() -> Vec<bool> {
             &SifrInt::from_i64(0),
         )?;
         let rf: SifrGeneratedStdlibSifrX2ecsvX2ereader = reader_from_path(
-            path.as_str(),
+            &path,
             &None,
             ",",
             "\"",

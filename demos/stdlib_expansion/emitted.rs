@@ -362,7 +362,7 @@ pub mod sifr_generated_generated_support {
         let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
             dialect,
             delimiter,
-            quotechar.as_str(),
+            &quotechar,
             escapechar,
             doublequote,
             skipinitialspace,
@@ -1381,10 +1381,10 @@ pub mod sifr_generated_generated_support {
     ) -> String {
         let mut prepared: String = text.to_string();
         if expand_tabs {
-            prepared = sifr_generated_expand_tabs_impl(prepared.as_str(), tabsize);
+            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize);
         }
         if replace_whitespace {
-            prepared = sifr_generated_replace_whitespace_chars(prepared.as_str(), true);
+            prepared = sifr_generated_replace_whitespace_chars(&prepared, true);
         }
         prepared
     }
@@ -1489,7 +1489,7 @@ pub mod sifr_generated_generated_support {
     }
     pub(super) fn sifr_generated_wrap_impl(text: &str, width: &SifrInt) -> Vec<String> {
         let normalized: String = sifr_generated_normalize_whitespace(text);
-        sifr_generated_wrap_with_indents(normalized.as_str(), width, "", "", true, true)
+        sifr_generated_wrap_with_indents(&normalized, width, "", "", true, true)
     }
     pub(super) fn sifr_generated_effective_content_width(
         total_width: &SifrInt,
@@ -1580,7 +1580,7 @@ pub mod sifr_generated_generated_support {
                     if first_line {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             initial_indent,
                             drop_whitespace,
                         );
@@ -1590,7 +1590,7 @@ pub mod sifr_generated_generated_support {
                     } else {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             subsequent_indent,
                             drop_whitespace,
                         );
@@ -1604,14 +1604,14 @@ pub mod sifr_generated_generated_support {
             if first_line {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     initial_indent,
                     drop_whitespace,
                 );
             } else {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     subsequent_indent,
                     drop_whitespace,
                 );
@@ -1667,17 +1667,17 @@ mod sifr_generated_project_nominals {
             quoting: &SifrInt,
         ) -> Self {
             let mut resolved_quoting: SifrInt = (*quoting).clone();
-            sifr_generated_validate_char("delimiter", delimiter.as_str());
+            sifr_generated_validate_char("delimiter", &delimiter);
             if !quotechar.is_empty() {
-                sifr_generated_validate_char("quotechar", quotechar.as_str());
+                sifr_generated_validate_char("quotechar", &quotechar);
             }
             if !escapechar.is_empty() {
-                sifr_generated_validate_char("escapechar", escapechar.as_str());
+                sifr_generated_validate_char("escapechar", &escapechar);
             }
             if quotechar.is_empty()
                 && resolved_quoting != sifr_generated_const_51554f54455f4e4f4e45()
             {
-                resolved_quoting.clone_from(&sifr_generated_const_51554f54455f4e4f4e45());
+                resolved_quoting = sifr_generated_const_51554f54455f4e4f4e45();
             }
             let sifr_generated_field_value_894f6deb0b90819a_64656c696d69746572: String = delimiter;
             let sifr_generated_field_value_071afb87ccff598f_71756f746563686172: String = quotechar;
@@ -1894,7 +1894,7 @@ fn main() {
         SifrInt::from(
             chain(&[
                 vec![SifrInt::from_i64(1), SifrInt::from_i64(2)],
-                vec![SifrInt::from_i64(3), SifrInt::from_i64(4)]
+                vec![SifrInt::from_i64(3), SifrInt::from_i64(4)],
             ],)
             .count()
         ),

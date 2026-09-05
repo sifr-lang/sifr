@@ -45,10 +45,7 @@ fn main() {
         demo_ok = out == "runtime_subprocess";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
-        let _ = e.message;
-    }
+    let _ = sifr_generated_try_res;
     assert!(demo_ok);
     println!("runtime_subprocess_subprocess_removed_demo: ok");
 }

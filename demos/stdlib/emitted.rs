@@ -290,10 +290,8 @@ pub mod sifr_generated_generated_support {
             })?;
             Ok(Ok((year, month, day, hour, minute, second)))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let _e_5f65 = sifr_generated_try_err;
-            Err(ValueError::new("invalid datetime string".to_string()))
-        })
+        sifr_generated_try_res
+            .unwrap_or_else(|_try_err| Err(ValueError::new("invalid datetime string".to_string())))
     }
     #[expect(
         clippy::too_many_lines,
@@ -418,7 +416,7 @@ pub mod sifr_generated_generated_support {
                     SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
                 )?;
             let parts: (SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt) = sifr_generated_parse_datetime_iso(
-                    rendered.as_str(),
+                    &rendered,
                 )
                 .map_err(
                     SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
@@ -485,23 +483,25 @@ pub mod sifr_generated_generated_support {
             )
         })();
         sifr_generated_try_res
-            .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            .unwrap_or_else(|
+                sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272|
+            match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(ValueError::new(e.message))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(ValueError::new(e.message))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(ValueError::new(e.message))
                 }
             })
@@ -524,8 +524,7 @@ pub mod sifr_generated_generated_support {
         })();
         match sifr_generated_try_res {
             Ok(sifr_generated_ret_val) => sifr_generated_ret_val,
-            Err(sifr_generated_try_err) => {
-                let _e_5f65 = sifr_generated_try_err;
+            Err(_try_err) => {
                 let parts: Vec<SifrInt> = datetime_now_struct();
                 let mut yr: SifrInt = SifrInt::from_i64(0);
                 let mut mo: SifrInt = SifrInt::from_i64(1);
@@ -626,12 +625,14 @@ pub mod sifr_generated_generated_support {
             })();
             let (score_value_c10e63fbe7f624f5_binding,) = match sifr_generated_try_res {
                 Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-                Err(sifr_generated_try_err) => {
-                    match sifr_generated_try_err {
+                Err(
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272,
+                ) => {
+                    match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
                         SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
-                            sifr_generated_try_variant_error,
+                            sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                         ) => {
-                            let error = sifr_generated_try_variant_error;
+                            let error = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                             return Err(
                                 SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                                     FloatOverflowError::new(error.message),
@@ -639,9 +640,9 @@ pub mod sifr_generated_generated_support {
                             );
                         }
                         SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
-                            sifr_generated_try_variant_error,
+                            sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                         ) => {
-                            let error = sifr_generated_try_variant_error;
+                            let error = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                             return Err(
                                 SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                                     FloatPrecisionLossError::new(error.message),
@@ -787,11 +788,13 @@ pub mod sifr_generated_generated_support {
             Ok(Ok(numerator / denominator))
         })();
         sifr_generated_try_res
-            .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            .unwrap_or_else(|
+                sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272|
+            match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let error = sifr_generated_try_variant_error;
+                    let error = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(
                         SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                             FloatOverflowError::new(error.message),
@@ -799,9 +802,9 @@ pub mod sifr_generated_generated_support {
                     )
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let error = sifr_generated_try_variant_error;
+                    let error = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(
                         SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                             FloatPrecisionLossError::new(error.message),
@@ -1619,11 +1622,12 @@ pub mod sifr_generated_generated_support {
             Ok(Ok(parsed))
         })();
         sifr_generated_try_res
-            .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            .unwrap_or_else(|
+                sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272|
+            match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                    _try_variant_error,
                 ) => {
-                    let _e_5f65 = sifr_generated_try_variant_error;
                     Err(
                         TOMLDecodeError::new(
                             "TOML bridge payload has invalid integer metadata"
@@ -1632,9 +1636,9 @@ pub mod sifr_generated_generated_support {
                     )
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(TOMLDecodeError::new(e.message))
                 }
             })
@@ -1665,11 +1669,12 @@ pub mod sifr_generated_generated_support {
             Ok(Ok(parsed))
         })();
         sifr_generated_try_res
-            .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            .unwrap_or_else(|
+                sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272|
+            match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
-                    sifr_generated_try_variant_error,
+                    _try_variant_error,
                 ) => {
-                    let _e_5f65 = sifr_generated_try_variant_error;
                     Err(
                         TOMLDecodeError::new(
                             "TOML bridge payload has invalid float metadata".to_string(),
@@ -1677,9 +1682,9 @@ pub mod sifr_generated_generated_support {
                     )
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eTOMLDecodeError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let e = sifr_generated_try_variant_error;
+                    let e = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(TOMLDecodeError::new(e.message))
                 }
             })
@@ -1711,7 +1716,7 @@ pub mod sifr_generated_generated_support {
             let payload_index: SifrInt = ::std::ops::Add::add(index, &SifrInt::from_i64(1));
             if tag == "bool" {
                 let bool_token: String = sifr_generated_token_at(tokens, &payload_index)?;
-                let bool_value: bool = sifr_generated_decode_bool_token(bool_token.as_str())?;
+                let bool_value: bool = sifr_generated_decode_bool_token(&bool_token)?;
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2etomllibX2eTomlValue::new(
                         "bool".to_string(),
@@ -1848,10 +1853,12 @@ pub mod sifr_generated_generated_support {
                 sifr_generated_concat
             }))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(TOMLDecodeError::new(e.message))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(TOMLDecodeError::new(e.message))
+            },
+        )
     }
     pub(super) fn sifr_generated_decode_toml_tokens(
         tokens: &[String],
@@ -1869,10 +1876,12 @@ pub mod sifr_generated_generated_support {
             }
             Ok(Ok(decoded.0))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(TOMLDecodeError::new(e.message))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(TOMLDecodeError::new(e.message))
+            },
+        )
     }
     pub(super) fn loads(
         text: &str,
@@ -1884,10 +1893,12 @@ pub mod sifr_generated_generated_support {
             let tokens: Vec<String> = toml_parse_tokens(text)?;
             Ok(sifr_generated_decode_toml_tokens(&tokens))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(TOMLDecodeError::new(e.message))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(TOMLDecodeError::new(e.message))
+            },
+        )
     }
     pub(super) fn uuid4() -> String {
         ::sifr_stdlib::uuid::uuid4()
@@ -2556,7 +2567,6 @@ mod sifr_generated_project_nominals {
         }
     }
 }
-pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::FloatOverflowError;
 pub use sifr_generated_project_nominals::FloatPrecisionLossError;
 pub use sifr_generated_project_nominals::IOError;
@@ -2675,8 +2685,10 @@ fn main() {
         assert!(cwd.chars().count() > SifrInt::from_i64(0));
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let err = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("getcwd error: {}", err.message);
         assert_eq!(
             format!("getcwd error: {}", err.message),
@@ -2688,8 +2700,10 @@ fn main() {
         assert_eq!(SifrInt::from(matches.len()), SifrInt::from_i64(2));
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let err = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("regex error: {}", err.message);
         assert_eq!(
             format!("regex error: {}", err.message),
@@ -2713,8 +2727,10 @@ fn main() {
             assert_eq!(SifrInt::from(order.len()), SifrInt::from_i64(3));
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("error: {}", e.message);
     }
     let id: String = uuid4();
@@ -2764,24 +2780,23 @@ fn main() {
         assert!(close.len() > SifrInt::from_i64(0));
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        match sifr_generated_try_err {
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3asifrX2ebuiltinX2eError1X3a0(
-                sifr_generated_try_variant_error,
+                _try_variant_error,
             ) => {
-                let _e_5f65 = sifr_generated_try_variant_error;
                 assert!(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
-                sifr_generated_try_variant_error,
+                _try_variant_error,
             ) => {
-                let _e_5f65 = Error::new(sifr_generated_try_variant_error.message);
                 assert!(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
-                sifr_generated_try_variant_error,
+                _try_variant_error,
             ) => {
-                let _e_5f65 = Error::new(sifr_generated_try_variant_error.message);
                 assert!(false);
             }
         }
@@ -2798,8 +2813,10 @@ fn main() {
         assert!(toml_result.keys().len() > SifrInt::from_i64(0));
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let err = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("toml error: {}", err.message);
     }
     let dt_now: SifrGeneratedStdlibSifrX2edatetimeX2edatetime = now(&None);
@@ -2810,8 +2827,10 @@ fn main() {
         assert!(dt_epoch.isoformat().chars().count() > SifrInt::from_i64(0));
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("error: {}", e.message);
     }
     println!("stdlib_parity demo: all checks passed!");

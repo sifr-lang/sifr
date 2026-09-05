@@ -518,8 +518,7 @@ pub mod sifr_generated_generated_support {
                                 Ok(())
                             })(
                             );
-                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _e = sifr_generated_try_err;
+                            if let Err(_try_err) = sifr_generated_try_res {
                                 return;
                             }
                         }
@@ -785,9 +784,13 @@ pub mod sifr_generated_generated_support {
         sifr_generated_ensure_module_state_initialized();
         let mut r: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(&SifrInt::from_i64(0)));
-        let sifr_generated_set_result: Result<(), ValueError> =
-            r.setstate(&sifr_generated_build_state_from_module_storage());
-        let _ = sifr_generated_set_result;
+        let sifr_generated_try_res: Result<(), ValueError> = {
+            let sifr_generated_set_result: Result<(), ValueError> =
+                r.setstate(&sifr_generated_build_state_from_module_storage());
+            let _ = sifr_generated_set_result;
+            Ok(())
+        };
+        let _ = sifr_generated_try_res;
         r
     }
     pub(super) fn sifr_generated_sync_module_random(
@@ -1313,7 +1316,7 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn index(&self, value: &T, start: &SifrInt, stop: &Option<SifrInt>) -> Option<SifrInt> {
             let size: SifrInt = SifrInt::from(self.data.len());
-            let mut begin: SifrInt = start.clone();
+            let mut begin: SifrInt = (*start).clone();
             if begin < SifrInt::from_i64(0) {
                 begin = ::std::ops::Add::add(&size, &begin);
                 if begin < SifrInt::from_i64(0) {

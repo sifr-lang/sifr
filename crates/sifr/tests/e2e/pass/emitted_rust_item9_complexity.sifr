@@ -40,6 +40,13 @@ def slice_with_user_bound(value: str, _slice_len: int) -> str:
     return value[_slice_len:]
 
 
+class TextValue:
+    value: str
+
+    def __init__(self, value: str):
+        self.value = value
+
+
 class StringSource:
     calls: int
 
@@ -49,6 +56,10 @@ class StringSource:
     def text(mut self) -> str:
         self.calls = self.calls + 1
         return "x,x"
+
+    def object(mut self) -> TextValue:
+        self.calls = self.calls + 1
+        return TextValue("kept")
 
 
 class RepeatOrder:
@@ -76,6 +87,16 @@ def main():
     assert source.calls == 1
     assert source.text().replace("x", "y", 1) == "y,x"
     assert source.calls == 2
+    _unused_projection = source.object().value
+    assert source.calls == 3
+    stored = TextValue("retained")
+    _unused_local_projection = stored.value
+    _retained_projection = stored.value
+
+    def retain_projection() -> str:
+        return _retained_projection
+
+    assert retain_projection() == "retained"
 
     repeat_order = RepeatOrder()
     assert [repeat_order.next()] * repeat_order.next() == [1, 1]

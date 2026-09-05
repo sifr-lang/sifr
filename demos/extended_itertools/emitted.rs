@@ -267,8 +267,7 @@ pub mod sifr_generated_generated_support {
                                 Ok(())
                             })(
                             );
-                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _e = sifr_generated_try_err;
+                            if let Err(_try_err) = sifr_generated_try_res {
                                 return;
                             }
                             advanced = true;
@@ -295,8 +294,7 @@ pub mod sifr_generated_generated_support {
                                 Ok(())
                             })(
                             );
-                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _e = sifr_generated_try_err;
+                            if let Err(_try_err) = sifr_generated_try_res {
                                 return;
                             }
                             position = ::std::ops::Sub::sub(&position, &SifrInt::from_i64(1));
@@ -423,8 +421,7 @@ pub mod sifr_generated_generated_support {
                             Ok(())
                         })(
                         );
-                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                            let _e = sifr_generated_try_err;
+                        if let Err(_try_err) = sifr_generated_try_res {
                             return;
                         }
                         if next_remaining == SifrInt::from_i64(0) {
@@ -482,8 +479,7 @@ pub mod sifr_generated_generated_support {
                                     Ok(())
                                 })(
                                 );
-                                if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                    let _e = sifr_generated_try_err;
+                                if let Err(_try_err) = sifr_generated_try_res {
                                     return;
                                 }
                                 cursor = ::std::ops::Add::add(&cursor, &SifrInt::from_i64(1));
@@ -531,8 +527,7 @@ pub mod sifr_generated_generated_support {
                                 Ok(())
                             })(
                             );
-                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _e = sifr_generated_try_err;
+                            if let Err(_try_err) = sifr_generated_try_res {
                                 return;
                             }
                             position = ::std::ops::Sub::sub(&position, &SifrInt::from_i64(1));
@@ -610,8 +605,7 @@ pub mod sifr_generated_generated_support {
                                 Ok(())
                             })(
                             );
-                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _e = sifr_generated_try_err;
+                            if let Err(_try_err) = sifr_generated_try_res {
                                 return;
                             }
                             let mut row: Vec<T> = Vec::new();
@@ -708,7 +702,7 @@ pub mod sifr_generated_generated_support {
                         };
                         row.push(value_value_7ce4fd9430e80cea);
                     }
-                    sifr_generated_yielder.suspend(row.clone()).await;
+                    sifr_generated_yielder.suspend(row).await;
                     let mut position: SifrInt = ::std::ops::Sub::sub(&r, &SifrInt::from_i64(1));
                     while position >= SifrInt::from_i64(0) {
                         let current: Option<SifrInt> = {
@@ -773,8 +767,7 @@ pub mod sifr_generated_generated_support {
                         }
                         Ok(())
                     })();
-                    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                        let _e = sifr_generated_try_err;
+                    if let Err(_try_err) = sifr_generated_try_res {
                         return;
                     }
                     let mut cursor: SifrInt =
@@ -820,8 +813,7 @@ pub mod sifr_generated_generated_support {
                             Ok(())
                         })(
                         );
-                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                            let _e = sifr_generated_try_err;
+                        if let Err(_try_err) = sifr_generated_try_res {
                             return;
                         }
                         cursor = ::std::ops::Add::add(&cursor, &SifrInt::from_i64(1));
@@ -881,7 +873,7 @@ pub mod sifr_generated_generated_support {
                         };
                         row.push(value_value_7ce4fd9430e80cea);
                     }
-                    sifr_generated_yielder.suspend(row.clone()).await;
+                    sifr_generated_yielder.suspend(row).await;
                     let mut position: SifrInt = ::std::ops::Sub::sub(&r, &SifrInt::from_i64(1));
                     while position >= SifrInt::from_i64(0) {
                         let current: Option<SifrInt> = {
@@ -949,8 +941,7 @@ pub mod sifr_generated_generated_support {
                             Ok(())
                         })(
                         );
-                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                            let _e = sifr_generated_try_err;
+                        if let Err(_try_err) = sifr_generated_try_res {
                             return;
                         }
                         cursor = ::std::ops::Add::add(&cursor, &SifrInt::from_i64(1));
@@ -1034,8 +1025,7 @@ pub mod sifr_generated_generated_support {
                                 Ok(())
                             })(
                             );
-                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _e = sifr_generated_try_err;
+                            if let Err(_try_err) = sifr_generated_try_res {
                                 return;
                             }
                         }

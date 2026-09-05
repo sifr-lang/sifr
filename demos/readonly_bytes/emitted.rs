@@ -313,10 +313,10 @@ fn main() {
         let _ = e.message;
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        if exists(path.as_str()) {
-            remove_file(path.as_str())?;
+        if exists(&path) {
+            remove_file(&path)?;
         }
-        cleanup_ok = !exists(path.as_str());
+        cleanup_ok = !exists(&path);
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

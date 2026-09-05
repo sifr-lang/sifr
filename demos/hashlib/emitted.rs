@@ -60,10 +60,12 @@ pub mod sifr_generated_generated_support {
             let handle_id: String = sifr_generated_open_file(path, mode)?;
             Ok(Ok(SifrGeneratedIoNativeFileHandle::new(handle_id)))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(e)
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(e)
+            },
+        )
     }
     pub(super) fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
         sifr_generated_file_close(handle.id.as_str());
@@ -241,8 +243,8 @@ pub mod sifr_generated_generated_support {
         );
         let (handle,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-            Err(sifr_generated_try_err) => {
-                let e = sifr_generated_try_err;
+            Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) => {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                 return Err(SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError::new(
                     e.message,
                 ));
@@ -254,8 +256,8 @@ pub mod sifr_generated_generated_support {
         })();
         let (data,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-            Err(sifr_generated_try_err) => {
-                let e = sifr_generated_try_err;
+            Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) => {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                 file_close(&handle);
                 return Err(SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError::new(
                     e.message,
@@ -270,12 +272,14 @@ pub mod sifr_generated_generated_support {
             let h: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = new(name, &data)?;
             Ok(Ok(h.hexdigest()))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError::new(
-                e.message,
-            ))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError::new(
+                    e.message,
+                ))
+            },
+        )
     }
     pub(super) fn md5(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash("md5", data)
@@ -439,7 +443,7 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         pub fn update(&mut self, data: &[u8]) {
             self.data = {
-                let mut sifr_generated_v = self.data.clone();
+                let mut sifr_generated_v = self.data.clone().clone();
                 sifr_generated_v.extend(data.iter().copied());
                 sifr_generated_v
             };
@@ -538,8 +542,7 @@ fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
             actual.push(out);
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         actual.push("ERR".to_string());
     }
     actual
@@ -553,8 +556,7 @@ fn collect_negative_actual_ok() -> Vec<bool> {
         actual_ok.push(true);
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         actual_ok.push(false);
     }
     actual_ok
@@ -570,8 +572,8 @@ fn main() {
         "8e6537b695ff181bc341e32d8b8970485ac3513408e5eb1e8ba9fc5af1cd3f57".to_string(),
     ];
     let tmp_path: String = "tmp_hashlib_hashlib_demo.txt".to_string();
-    let _: Result<(), IOError> = write_text(tmp_path.as_str(), "file-data");
-    let actual: Vec<String> = collect_positive_actual(tmp_path.as_str());
+    let _: Result<(), IOError> = write_text(&tmp_path, "file-data");
+    let actual: Vec<String> = collect_positive_actual(&tmp_path);
     assert_vector_eq(&actual, &expected);
     let expected_ok: Vec<bool> = vec![false];
     let actual_ok: Vec<bool> = collect_negative_actual_ok();

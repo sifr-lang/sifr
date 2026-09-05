@@ -55,6 +55,7 @@ impl Rewriter<'_> {
                         structures: self.structures,
                         self_type: self.self_type.clone(),
                         scope: self.scope.clone(),
+                        module_depth: self.module_depth,
                         bindings: self.bindings.clone(),
                     };
                     nested.bind(&closure.inputs[0], Some(element));

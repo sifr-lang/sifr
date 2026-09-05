@@ -759,33 +759,52 @@ item can close.
   support-layout propagation, identity-presence enforcement, single-evaluation
   string receiver lowering, and the unchanged SQL coverage/taxonomy gate
   failures.
-- Item 12 is in progress on `codex/emitted-rust-excellence-item-12`, preserving
-  recovery commits `4bc460de6a176c23d0faf6cb5a3686cb5846a3cc` and
-  `40faa5ea3221e96a7cc2064d8c5787aded76c96e`. Neither commit is closure evidence.
-  The replacement worker adopted the existing compiler and generated-output
-  changes. The current compiler passes all 1,447 codegen unit tests and 90 runtime tests.
-  Evidence is `target/item12-completion-all-units.log`. This is partial working-tree
-  evidence, not exact-SHA qualification. Strict SQL coverage classification,
-  taxonomy, profile self-tests, SQL provider checks, HIR, and file-size checks
-  pass. The stdlib governance selection passes all four variants.
-  The native repetition regression exposed a typed-empty-list annotation
-  lost by tail-binding cleanup; `target/item12-native-abi-regression.log`
-  retains the compiler diagnostic. Earlier runtime-namespace argument
-  borrowing was repaired and has a dedicated passing codegen regression.
-  The full 91-project Clippy audit failed; retained evidence is
-  `target/sifr_generated_code_quality/clippy-1788593723-99038`.
-  The companion diagnostic run `companions-1788594004-8716` was stopped after
-  the complete project audit established that this candidate could not qualify.
-  Its retained per-case diagnostics are partial evidence, not a 262-case pass.
-  The next repair batch preserves empty-vector element types, checks both
-  collection types before iterator rewrites, transfers selected handler errors,
-  tracks declared field and shadow types, preserves constructor and callback
-  ABIs, and removes duplicate nested-branch traversal. All nine exact-integer
-  integration tests pass in `target/item12-owned-integer-native.log`.
-  Workspace Clippy passes in `target/item12-completion-workspace-clippy-final.log`.
-  Full qualification, final regeneration, review, and the sole merge gate
-  remain. E2E and algorithmic runs were stopped after the native ABI failure;
-  their partial outputs must not be reported as passes.
+- Item 12 is in progress on `codex/emitted-rust-excellence-item-12`.
+  Recovery commits `4bc460de6a176c23d0faf6cb5a3686cb5846a3cc` and
+  `40faa5ea3221e96a7cc2064d8c5787aded76c96e` remain preserved.
+  Candidate `05d9049db150901a5bdba07ce169a7874fdcd21d` preserves the first
+  replacement-worker repair batch. None of these commits is closure evidence.
+  The replacement worker adopted all existing compiler and generated-output work.
+  The latest unit run passes 1,458 codegen tests in
+  `target/item12-statement-entry-unit-tests.log`.
+  The unchanged runtime passes 90 unit tests and nine exact-integer integration
+  tests in `target/item12-completion-all-units.log` and
+  `target/item12-owned-integer-native.log`.
+  This is partial working-tree evidence, not full exact-SHA qualification.
+  Strict SQL classification, taxonomy, profile self-tests, provider checks,
+  HIR, and file-size checks pass. Stdlib governance passes four variants.
+  Repairs preserve empty-vector types, compatible collection element types,
+  error-carrier transfers, lexical shadows, constructor and callback ABIs,
+  and single-evaluation receivers. The native repetition regression passed
+  after its typed-empty-list repair. Its fixture now also tests unused
+  projections with effectful receivers and retained closure captures.
+  Final API normalization now reapplies lexical borrow facts.
+  Project analysis retains declared module paths and imported alias identities.
+  Typed cleanup replaces the adopted basename-based string rewrite.
+  Negative tests preserve unknown callees, string callbacks, scalar trait
+  methods, and same-named project functions with different contracts.
+  All 262 companions regenerated with that compiler.
+  Project-mode audit checks pass in
+  `target/item12-qualified-type-project-modes.json`.
+  The latest complete 91-project Clippy audit has no compiler errors.
+  It retains 37 diagnostics: nine unused underscore bindings, 27 redundant
+  clones, and one unnecessary lazy fallback.
+  Evidence is `target/sifr_generated_code_quality/clippy-1788599904-22328/clippy-summary.json`.
+  The current repair removes unused source string projections before cloning,
+  limits loop moves to proven terminal paths, and makes typed `None`
+  fallbacks eager. New tests cover captures, effectful receivers, labeled
+  repetition, and lookalike methods.
+  Module, method, and nested statement emission now consume the same cached projection
+  plan. Effectful receivers still execute. Workspace Clippy passes in
+  `target/item12-statement-entry-clippy.log`. Native regression execution passes in
+  `target/item12-statement-entry-native.log`. All 262 companions are fresh in
+  `target/item12-statement-entry-regeneration.log`.
+  The earlier audit `clippy-1788593723-99038` and stopped companion run
+  `companions-1788594004-8716` are historical failures, not current qualification.
+  Earlier E2E and algorithmic runs were stopped after a native ABI failure.
+  Their partial output is not passing evidence.
+  The compiler is frozen for qualification. Full qualification, review, and
+  the sole merge gate remain.
   Item 12A remains closure-only and receives the sole whole-phase review.
 - The current user instruction supersedes the older gate ordering above:
   skip create-PR when this session will merge the reviewed SHA; run one

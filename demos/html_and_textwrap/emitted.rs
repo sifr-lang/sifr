@@ -89,10 +89,10 @@ pub mod sifr_generated_generated_support {
     ) -> String {
         let mut prepared: String = text.to_string();
         if expand_tabs {
-            prepared = sifr_generated_expand_tabs_impl(prepared.as_str(), tabsize);
+            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize);
         }
         if replace_whitespace {
-            prepared = sifr_generated_replace_whitespace_chars(prepared.as_str(), true);
+            prepared = sifr_generated_replace_whitespace_chars(&prepared, true);
         }
         prepared
     }
@@ -281,7 +281,7 @@ pub mod sifr_generated_generated_support {
                     if first_line {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             initial_indent,
                             drop_whitespace,
                         );
@@ -291,7 +291,7 @@ pub mod sifr_generated_generated_support {
                     } else {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             subsequent_indent,
                             drop_whitespace,
                         );
@@ -305,14 +305,14 @@ pub mod sifr_generated_generated_support {
             if first_line {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     initial_indent,
                     drop_whitespace,
                 );
             } else {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     subsequent_indent,
                     drop_whitespace,
                 );
@@ -494,7 +494,7 @@ pub mod sifr_generated_generated_support {
         };
         if let Some(last_opt) = last_opt {
             let last: String = last_opt;
-            let mut base: String = sifr_generated_trim_line(last.as_str());
+            let mut base: String = sifr_generated_trim_line(&last);
             let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
             let mut available: SifrInt = ::std::ops::Sub::sub(
                 width,
@@ -520,7 +520,7 @@ pub mod sifr_generated_generated_support {
                 });
             }
             if drop_whitespace {
-                base = sifr_generated_trim_line(base.as_str());
+                base = sifr_generated_trim_line(&base);
             }
             if SifrInt::from_i64(0) <= last_index && last_index < result.len() {
                 {
@@ -584,8 +584,8 @@ mod sifr_generated_project_nominals {
         )]
         pub fn new(
             width: &SifrInt,
-            initial_indent: &str,
-            subsequent_indent: &str,
+            initial_indent: String,
+            subsequent_indent: String,
             expand_tabs: bool,
             tabsize: &SifrInt,
             replace_whitespace: bool,
@@ -593,14 +593,13 @@ mod sifr_generated_project_nominals {
             break_on_hyphens: bool,
             fix_sentence_endings: bool,
             max_lines: Option<&SifrInt>,
-            placeholder: &str,
+            placeholder: String,
         ) -> Self {
             let max_lines: Option<SifrInt> = max_lines.cloned();
             let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = (*width).clone();
             let sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74: String =
-                initial_indent.to_string();
-            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent
-                .to_string();
+                initial_indent;
+            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent;
             let sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273: bool =
                 expand_tabs;
             let mut safe_tabsize: SifrInt = (*tabsize).clone();
@@ -617,7 +616,7 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573: Option<SifrInt> =
                 max_lines;
             let sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572: String =
-                placeholder.to_string();
+                placeholder;
             Self {
                 width: sifr_generated_field_value_dbdacd932fd1e9bf_7769647468,
                 initial_indent: sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74,
@@ -646,7 +645,7 @@ mod sifr_generated_project_nominals {
                 self.replace_whitespace,
             );
             let mut lines: Vec<String> = sifr_generated_wrap_with_indents(
-                prepared.as_str(),
+                &prepared,
                 &self.width,
                 &self.initial_indent,
                 &self.subsequent_indent,
@@ -673,8 +672,8 @@ fn main() {
     let wrapper: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
         SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(
             &SifrInt::from_i64(8),
-            "",
-            "",
+            String::new(),
+            String::new(),
             true,
             &SifrInt::from_i64(8),
             true,
@@ -682,15 +681,15 @@ fn main() {
             false,
             false,
             None,
-            " [...]",
+            " [...]".to_string(),
         );
     let lines: Vec<String> = wrapper.wrap("alpha-beta gamma");
     assert_eq!(format!("{lines:?}"), "[\"alpha-beta\", \"gamma\"]");
     let keep_ws: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
         SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(
             &SifrInt::from_i64(10),
-            "",
-            "",
+            String::new(),
+            String::new(),
             true,
             &SifrInt::from_i64(8),
             true,
@@ -698,12 +697,12 @@ fn main() {
             true,
             false,
             None,
-            " [...]",
+            " [...]".to_string(),
         );
     assert_eq!(format!("{:?}", keep_ws.wrap("a  b")), "[\"a  b\"]");
     let text: String = "<a href=\"x\">\'ok\' & done</a>".to_string();
-    let escaped_default: String = escape(text.as_str(), true);
-    let escaped_no_quote: String = escape(text.as_str(), false);
+    let escaped_default: String = escape(&text, true);
+    let escaped_no_quote: String = escape(&text, false);
     assert_eq!(
         escaped_default.as_str(),
         "&lt;a href=&quot;x&quot;&gt;&#x27;ok&#x27; &amp; done&lt;/a&gt;"
@@ -716,5 +715,5 @@ fn main() {
             .to_string()
             .as_str()
     );
-    assert_eq!(unescape(escaped_default.as_str()), text);
+    assert_eq!(unescape(&escaped_default), text);
 }

@@ -15,15 +15,7 @@ mod structured_control_cleanup;
 
 use assignment_cleanup::{expression_uses_identifier, fold_assignment_conditionals};
 use borrowed_parameter_names::borrowed_parameter_names;
-pub(super) use borrowed_string_arguments::{
-    BorrowedStringSignatures, collect_project_borrowed_string_params,
-    rewrite_borrow_only_string_parameters, rewrite_project_borrowed_string_literals,
-};
-use borrowed_string_arguments::{
-    collect_borrowed_string_params, collect_owned_string_returns,
-    remove_returned_string_conversion, rewrite_borrowed_string_literal_arguments,
-    rewrite_lexical_borrowed_string_arguments,
-};
+pub(super) use borrowed_string_arguments::rewrite_borrow_only_string_parameters;
 use clippy_cleanup::{
     remove_discardable_expression_statements, remove_last_use_clones,
     remove_last_use_closure_input_clones, remove_needless_collected_length_bindings,
@@ -65,47 +57,23 @@ use structured_control_cleanup::{
 };
 
 pub(super) fn canonicalize_idioms(file: &mut syn::File, mutating_methods: &HashSet<String>) {
-    let borrowed_string_params = collect_borrowed_string_params(file);
-    let owned_string_returns = collect_owned_string_returns(file);
     let boxed_iterable_fields = clippy_cleanup::collect_boxed_iterable_fields(file);
     IdiomCleanup {
         mutating_methods,
-        borrowed_string_params: &borrowed_string_params,
-        owned_string_returns: &owned_string_returns,
         boxed_iterable_fields: &boxed_iterable_fields,
         borrowed_names: HashSet::new(),
-        owner: None,
     }
     .visit_file_mut(file);
 }
 
 struct IdiomCleanup<'methods> {
     mutating_methods: &'methods HashSet<String>,
-    borrowed_string_params: &'methods BorrowedStringSignatures,
-    owned_string_returns: &'methods HashSet<String>,
     boxed_iterable_fields: &'methods HashSet<String>,
     borrowed_names: HashSet<String>,
-    owner: Option<String>,
 }
 
 impl VisitMut for IdiomCleanup<'_> {
-    fn visit_item_impl_mut(&mut self, implementation: &mut syn::ItemImpl) {
-        let previous = self
-            .owner
-            .replace(borrowed_string_arguments::type_owner_name(
-                &implementation.self_ty,
-            ));
-        visit_mut::visit_item_impl_mut(self, implementation);
-        self.owner = previous;
-    }
-
     fn visit_item_fn_mut(&mut self, function: &mut syn::ItemFn) {
-        rewrite_lexical_borrowed_string_arguments(
-            &function.sig,
-            &mut function.block,
-            self.borrowed_string_params,
-            None,
-        );
         let previous = std::mem::replace(
             &mut self.borrowed_names,
             borrowed_parameter_names(&function.sig),
@@ -115,12 +83,6 @@ impl VisitMut for IdiomCleanup<'_> {
     }
 
     fn visit_impl_item_fn_mut(&mut self, function: &mut syn::ImplItemFn) {
-        rewrite_lexical_borrowed_string_arguments(
-            &function.sig,
-            &mut function.block,
-            self.borrowed_string_params,
-            self.owner.as_deref(),
-        );
         let previous = std::mem::replace(
             &mut self.borrowed_names,
             borrowed_parameter_names(&function.sig),
@@ -263,9 +225,7 @@ impl VisitMut for IdiomCleanup<'_> {
         rewrite_empty_string_comparison(expression);
         rewrite_redundant_borrowed_method_closure(expression);
         rewrite_redundant_method_closure(expression);
-        rewrite_borrowed_string_literal_arguments(expression, self.borrowed_string_params);
         clippy_cleanup::remove_generated_checked_value_clone_borrow(expression);
-        remove_returned_string_conversion(expression, self.owned_string_returns);
         rewrite_identity_constructor_closure(expression);
         rewrite_immediate_async_closure(expression);
         rewrite_result_identity_match(expression);

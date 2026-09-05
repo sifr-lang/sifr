@@ -132,9 +132,9 @@ pub mod sifr_generated_generated_support {
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let error = sifr_generated_try_variant_error;
+                    let error = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(
                         SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                             FloatOverflowError::new(error.message),
@@ -142,9 +142,9 @@ pub mod sifr_generated_generated_support {
                     )
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
-                    sifr_generated_try_variant_error,
+                    sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72,
                 ) => {
-                    let error = sifr_generated_try_variant_error;
+                    let error = sifr_generated_try_variant_error_user_736966725f67656e6572617465645f7472795f76617269616e745f6572726f72;
                     Err(
                         SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                             FloatPrecisionLossError::new(error.message),
@@ -694,7 +694,7 @@ pub mod sifr_generated_generated_support {
                     first_value = first_candidate;
                     has_first
                 });
-                if !has_first || !sifr_generated_is_identifier_start(first_value.as_str()) {
+                if !has_first || !sifr_generated_is_identifier_start(&first_value) {
                     if safe {
                         result.push_str("${");
                         result.push_str(name.as_str());
@@ -746,8 +746,7 @@ pub mod sifr_generated_generated_support {
                         sifr_generated_concat
                     }));
                 }
-                let mapped_value: Option<String> =
-                    sifr_generated_mapping_lookup(mapping, name.as_str());
+                let mapped_value: Option<String> = sifr_generated_mapping_lookup(mapping, &name);
                 let mut mapped_value_text: String = String::new();
                 if mapped_value.is_none() {
                     if safe {
@@ -771,7 +770,7 @@ pub mod sifr_generated_generated_support {
                 i = ::std::ops::Add::add(&j, &SifrInt::from_i64(1));
                 continue;
             }
-            if !sifr_generated_is_identifier_start(next_value.as_str()) {
+            if !sifr_generated_is_identifier_start(&next_value) {
                 if safe {
                     result.push('$');
                     result.push_str(next_value.as_str());
@@ -803,14 +802,14 @@ pub mod sifr_generated_generated_support {
                     continue;
                 };
                 let part2_value: String = part2_value_0c51dca7a1f9c3d2;
-                if !sifr_generated_is_identifier_continue(part2_value.as_str()) {
+                if !sifr_generated_is_identifier_continue(&part2_value) {
                     break;
                 }
                 name2_value_afb6e7fff26812dc.push_str(part2_value.as_str());
                 j2 = ::std::ops::Add::add(&j2, &SifrInt::from_i64(1));
             }
             let mapped_value2_value_48081efa5265009a: Option<String> =
-                sifr_generated_mapping_lookup(mapping, name2_value_afb6e7fff26812dc.as_str());
+                sifr_generated_mapping_lookup(mapping, &name2_value_afb6e7fff26812dc);
             let mut mapped_value2_text_value_302fac2b5e0e93a8: String = String::new();
             if mapped_value2_value_48081efa5265009a.is_none() {
                 if safe {
@@ -920,7 +919,7 @@ pub mod sifr_generated_generated_support {
                     ));
                 }
                 let value_value_7ce4fd9430e80cea: Option<String> =
-                    sifr_generated_mapping_lookup(values, field_name.as_str());
+                    sifr_generated_mapping_lookup(values, &field_name);
                 let Some(value_value_7ce4fd9430e80cea) = value_value_7ce4fd9430e80cea else {
                     return Err(ValueError::new({
                         let mut sifr_generated_concat: String =
@@ -1037,10 +1036,10 @@ pub mod sifr_generated_generated_support {
     ) -> String {
         let mut prepared: String = text.to_string();
         if expand_tabs {
-            prepared = sifr_generated_expand_tabs_impl(prepared.as_str(), tabsize);
+            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize);
         }
         if replace_whitespace {
-            prepared = sifr_generated_replace_whitespace_chars(prepared.as_str(), true);
+            prepared = sifr_generated_replace_whitespace_chars(&prepared, true);
         }
         prepared
     }
@@ -1229,7 +1228,7 @@ pub mod sifr_generated_generated_support {
                     if first_line {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             initial_indent,
                             drop_whitespace,
                         );
@@ -1239,7 +1238,7 @@ pub mod sifr_generated_generated_support {
                     } else {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             subsequent_indent,
                             drop_whitespace,
                         );
@@ -1253,14 +1252,14 @@ pub mod sifr_generated_generated_support {
             if first_line {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     initial_indent,
                     drop_whitespace,
                 );
             } else {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     subsequent_indent,
                     drop_whitespace,
                 );
@@ -1442,7 +1441,7 @@ pub mod sifr_generated_generated_support {
         };
         if let Some(last_opt) = last_opt {
             let last: String = last_opt;
-            let mut base: String = sifr_generated_trim_line(last.as_str());
+            let mut base: String = sifr_generated_trim_line(&last);
             let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
             let mut available: SifrInt = ::std::ops::Sub::sub(
                 width,
@@ -1468,7 +1467,7 @@ pub mod sifr_generated_generated_support {
                 });
             }
             if drop_whitespace {
-                base = sifr_generated_trim_line(base.as_str());
+                base = sifr_generated_trim_line(&base);
             }
             if SifrInt::from_i64(0) <= last_index && last_index < result.len() {
                 {
@@ -1581,9 +1580,9 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2edifflibX2eSequenceMatcher {
         #[must_use]
-        pub fn new(a: &str, b: &str) -> Self {
-            let sifr_generated_field_value_09534707b5e0a7dd_5f61: String = a.to_string();
-            let sifr_generated_field_value_09534407b5e0a2c4_5f62: String = b.to_string();
+        pub const fn new(a: String, b: String) -> Self {
+            let sifr_generated_field_value_09534707b5e0a7dd_5f61: String = a;
+            let sifr_generated_field_value_09534407b5e0a2c4_5f62: String = b;
             Self {
                 a: sifr_generated_field_value_09534707b5e0a7dd_5f61,
                 b: sifr_generated_field_value_09534407b5e0a2c4_5f62,
@@ -1613,9 +1612,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2estringX2eTemplate {
         #[must_use]
-        pub fn new(template: &str) -> Self {
-            let sifr_generated_field_value_33609a5e9eb92f4b_74656d706c617465: String =
-                template.to_string();
+        pub const fn new(template: String) -> Self {
+            let sifr_generated_field_value_33609a5e9eb92f4b_74656d706c617465: String = template;
             Self {
                 template: sifr_generated_field_value_33609a5e9eb92f4b_74656d706c617465,
             }
@@ -1687,8 +1685,8 @@ mod sifr_generated_project_nominals {
         )]
         pub fn new(
             width: &SifrInt,
-            initial_indent: &str,
-            subsequent_indent: &str,
+            initial_indent: String,
+            subsequent_indent: String,
             expand_tabs: bool,
             tabsize: &SifrInt,
             replace_whitespace: bool,
@@ -1696,14 +1694,13 @@ mod sifr_generated_project_nominals {
             break_on_hyphens: bool,
             fix_sentence_endings: bool,
             max_lines: Option<&SifrInt>,
-            placeholder: &str,
+            placeholder: String,
         ) -> Self {
             let max_lines: Option<SifrInt> = max_lines.cloned();
             let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = (*width).clone();
             let sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74: String =
-                initial_indent.to_string();
-            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent
-                .to_string();
+                initial_indent;
+            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent;
             let sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273: bool =
                 expand_tabs;
             let mut safe_tabsize: SifrInt = (*tabsize).clone();
@@ -1720,7 +1717,7 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573: Option<SifrInt> =
                 max_lines;
             let sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572: String =
-                placeholder.to_string();
+                placeholder;
             Self {
                 width: sifr_generated_field_value_dbdacd932fd1e9bf_7769647468,
                 initial_indent: sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74,
@@ -1749,7 +1746,7 @@ mod sifr_generated_project_nominals {
                 self.replace_whitespace,
             );
             let mut lines: Vec<String> = sifr_generated_wrap_with_indents(
-                prepared.as_str(),
+                &prepared,
                 &self.width,
                 &self.initial_indent,
                 &self.subsequent_indent,
@@ -1863,7 +1860,6 @@ mod sifr_generated_project_nominals {
         }
     }
 }
-pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::FloatOverflowError;
 pub use sifr_generated_project_nominals::FloatPrecisionLossError;
 pub use sifr_generated_project_nominals::ParseError;
@@ -1972,7 +1968,7 @@ pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X
 )]
 fn main() {
     let template: SifrGeneratedStdlibSifrX2estringX2eTemplate =
-        SifrGeneratedStdlibSifrX2estringX2eTemplate::new("Hello $name, mode=${mode}");
+        SifrGeneratedStdlibSifrX2estringX2eTemplate::new("Hello $name, mode=${mode}".to_string());
     let mut rendered_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let rendered: String = template.substitute(&{
@@ -1984,10 +1980,7 @@ fn main() {
         rendered_ok = rendered == "Hello Sifr, mode=c2";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
-        let _ = e.message;
-    }
+    let _ = sifr_generated_try_res;
     assert!(rendered_ok);
     let formatter: SifrGeneratedStdlibSifrX2estringX2eFormatter =
         SifrGeneratedStdlibSifrX2estringX2eFormatter::new();
@@ -2003,16 +1996,13 @@ fn main() {
         rendered_fmt_ok = rendered_fmt_value_a80ff414b6eb8e54 == "Status c2: ok";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
-        let _ = e.message;
-    }
+    let _ = sifr_generated_try_res;
     assert!(rendered_fmt_ok);
     let wrapper: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
         SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(
             &SifrInt::from_i64(8),
-            "> ",
-            ".. ",
+            "> ".to_string(),
+            ".. ".to_string(),
             true,
             &SifrInt::from_i64(8),
             true,
@@ -2020,7 +2010,7 @@ fn main() {
             true,
             false,
             None,
-            " [...]",
+            " [...]".to_string(),
         );
     let wrapped_value_2bd4345c4f3b90ce: Vec<String> = wrapper.wrap("alpha beta gamma");
     assert_eq!(
@@ -2030,17 +2020,14 @@ fn main() {
     let encoded: String = b64encode("hello");
     let mut decoded_ok: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let decoded: String = b64decode(encoded.as_str())?;
+        let decoded: String = b64decode(&encoded)?;
         decoded_ok = decoded == "hello";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
-        let _ = e.message;
-    }
+    let _ = sifr_generated_try_res;
     assert!(decoded_ok);
     let escaped: String = escape("<b>safe</b>", true);
-    assert_eq!(unescape(escaped.as_str()), "<b>safe</b>");
+    assert_eq!(unescape(&escaped), "<b>safe</b>");
     assert!(fnmatch("report.txt", "*.txt"));
     assert_eq!(translate("*.txt"), "(?s:.*\\.txt)\\z");
     let sifr_generated_try_res: Result<
@@ -2048,8 +2035,8 @@ fn main() {
         SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0,
     > = (|| {
         let ratio: f64 = SifrGeneratedStdlibSifrX2edifflibX2eSequenceMatcher::new(
-                "abcd",
-                "abed",
+                "abcd".to_string(),
+                "abed".to_string(),
             )
             .ratio()
             .map_err(|sifr_generated_e| match sifr_generated_e {
@@ -2074,21 +2061,18 @@ fn main() {
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3asifrX2ebuiltinX2eError1X3a0(
-                sifr_generated_try_variant_error,
+                _try_variant_error,
             ) => {
-                let _e_5f65 = sifr_generated_try_variant_error;
                 assert!(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
-                sifr_generated_try_variant_error,
+                _try_variant_error,
             ) => {
-                let _e_5f65 = Error::new(sifr_generated_try_variant_error.message);
                 assert!(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
-                sifr_generated_try_variant_error,
+                _try_variant_error,
             ) => {
-                let _e_5f65 = Error::new(sifr_generated_try_variant_error.message);
                 assert!(false);
             }
         }
@@ -2105,9 +2089,6 @@ fn main() {
         month_label_ok = month_label == "February 2024";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
-        let _ = e.message;
-    }
+    let _ = sifr_generated_try_res;
     assert!(month_label_ok);
 }

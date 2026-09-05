@@ -10,6 +10,8 @@ mod discardability;
 mod generated_dependency_metadata;
 mod generated_rust_canonicalizer;
 #[cfg(test)]
+mod generated_rust_canonicalizer_item12_control_flow_tests;
+#[cfg(test)]
 mod generated_rust_canonicalizer_item12_tests;
 mod generated_visibility;
 pub(crate) use generated_dependency_metadata::retain_generated_dependency_metadata;

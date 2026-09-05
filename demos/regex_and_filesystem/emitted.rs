@@ -258,7 +258,7 @@ pub mod sifr_generated_generated_support {
         let pattern = pattern.to_owned();
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<String>| {
-                let matches: Vec<String> = glob(directory.as_str(), pattern.as_str());
+                let matches: Vec<String> = glob(&directory, &pattern);
                 let mut i: SifrInt = SifrInt::from_i64(0);
                 while i < matches.len() {
                     let Some(sifr_generated_checked_value_2) = ({
@@ -836,7 +836,7 @@ fn main() {
         write_text(&format!("{base}/a.txt"), "a")?;
         write_text(&format!("{base}/sub/b.txt"), "b")?;
         assert_eq!(
-            format!("{:?}", iglob(base.as_str(), "*.txt").collect::<Vec<_>>()),
+            format!("{:?}", iglob(&base, "*.txt").collect::<Vec<_>>()),
             "[\"a.txt\"]"
         );
         let root: SifrGeneratedStdlibSifrX2epathlibX2ePath =

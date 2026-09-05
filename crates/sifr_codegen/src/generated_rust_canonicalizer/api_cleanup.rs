@@ -45,6 +45,7 @@ pub fn finalize_formatted_generated_rust_source_with_project_consts(
         source,
         project_const_functions,
     );
+    super::syntax_cleanup::apply_lexical_type_cleanup(&mut file);
     Ok(prettyplease::unparse(&file))
 }
 

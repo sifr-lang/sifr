@@ -199,7 +199,7 @@ pub mod sifr_generated_generated_support {
             .map(|character| character.to_string());
             let ch_opt_value_58c5362056f71db8 = ch_opt?;
             let ch: String = ch_opt_value_58c5362056f71db8;
-            let digit_opt: Option<SifrInt> = sifr_generated_digit_value(ch.as_str());
+            let digit_opt: Option<SifrInt> = sifr_generated_digit_value(&ch);
             let digit_opt_value_c39685cb2782ed00 = digit_opt?;
             let digit: SifrInt = digit_opt_value_c39685cb2782ed00;
             out = ::std::ops::Add::add(&::std::ops::Mul::mul(&out, &SifrInt::from_i64(10)), &digit);
@@ -491,11 +491,11 @@ pub mod sifr_generated_generated_support {
     }
     pub(super) fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_gmtime_intrinsic(epoch);
-        sifr_generated_to_struct_time(rendered.as_str())
+        sifr_generated_to_struct_time(&rendered)
     }
     pub(super) fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_localtime_intrinsic(epoch);
-        sifr_generated_to_struct_time(rendered.as_str())
+        sifr_generated_to_struct_time(&rendered)
     }
     pub(super) fn mktime(
         t: &SifrGeneratedStdlibSifrX2etimeX2estructTime,
@@ -845,7 +845,6 @@ mod sifr_generated_project_nominals {
         }
     }
 }
-pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::FloatOverflowError;
 pub use sifr_generated_project_nominals::FloatPrecisionLossError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2etimeX2estructTime;
@@ -1047,27 +1046,23 @@ fn collect_parse_and_safety_actual() -> Vec<bool> {
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a431X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3asifrX2ebuiltinX2eError1X3a0(
-                sifr_generated_try_variant_error,
+                _try_variant_error,
             ) => {
-                let _e_5f65 = sifr_generated_try_variant_error;
                 actual.push(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a431X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
-                sifr_generated_try_variant_error,
+                _try_variant_error,
             ) => {
-                let _e_5f65 = Error::new(sifr_generated_try_variant_error.message);
                 actual.push(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a431X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
-                sifr_generated_try_variant_error,
+                _try_variant_error,
             ) => {
-                let _e_5f65 = Error::new(sifr_generated_try_variant_error.message);
                 actual.push(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a431X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a044X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
-                sifr_generated_try_variant_error,
+                _try_variant_error,
             ) => {
-                let _e_5f65 = Error::new(sifr_generated_try_variant_error.message);
                 actual.push(false);
             }
         }

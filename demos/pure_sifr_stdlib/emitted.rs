@@ -248,7 +248,7 @@ fn main() {
     assert_eq!(h.chars().count(), SifrInt::from_i64(64));
     let encoded: String = b64encode("Hello!");
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let decoded: String = b64decode(encoded.as_str())?;
+        let decoded: String = b64decode(&encoded)?;
         assert_eq!(decoded, "Hello!");
         Ok(())
     })();

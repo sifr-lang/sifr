@@ -260,9 +260,9 @@ pub mod sifr_generated_generated_support {
                         ) == "s"
                     {
                         matched = true;
-                        let normalized_key: String = sifr_generated_normalize_option(key.as_str());
+                        let normalized_key: String = sifr_generated_normalize_option(&key);
                         let replacement: Option<String> =
-                            sifr_generated_lookup_option(merged, normalized_key.as_str());
+                            sifr_generated_lookup_option(merged, &normalized_key);
                         if replacement.is_none() {
                             result.push_str("%(");
                             result.push_str(key.as_str());
@@ -286,7 +286,7 @@ pub mod sifr_generated_generated_support {
         }
         if replaced {
             return sifr_generated_resolve_interpolation(
-                result.as_str(),
+                &result,
                 merged,
                 &::std::ops::Add::add(depth, &SifrInt::from_i64(1)),
             );
@@ -608,11 +608,7 @@ mod sifr_generated_project_nominals {
                     SifrGeneratedStdlibSifrX2econfigparserX2eParsingError,
                 > = (|| {
                     let parsed_option_pair: (String, Option<String>) =
-                        sifr_generated_split_option_line(
-                            line.as_str(),
-                            self.allow_no_value,
-                            &line_no,
-                        )?;
+                        sifr_generated_split_option_line(&line, self.allow_no_value, &line_no)?;
                     let (option_name, option_value) = parsed_option_pair;
                     let _chars_option_name: Vec<char> = option_name.chars().collect::<Vec<char>>();
                     if current_section.is_empty() || current_section == default_section {
@@ -620,7 +616,7 @@ mod sifr_generated_project_nominals {
                             let sifr_generated_assign_value =
                                 sifr_generated_copy_optional_str(&option_value);
                             {
-                                let sifr_generated_assign_key = option_name.clone();
+                                let sifr_generated_assign_key = option_name;
                                 self.defaults
                                     .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                             }
@@ -658,7 +654,7 @@ mod sifr_generated_project_nominals {
                                 let sifr_generated_assign_value =
                                     sifr_generated_copy_optional_str(&option_value);
                                 {
-                                    let sifr_generated_assign_key = option_name.clone();
+                                    let sifr_generated_assign_key = option_name;
                                     updated_section.insert(
                                         sifr_generated_assign_key,
                                         sifr_generated_assign_value,
@@ -764,7 +760,7 @@ mod sifr_generated_project_nominals {
                 if section_name != *section {
                     continue;
                 }
-                if sifr_generated_has_option_key(&section_values, normalized.as_str()) {
+                if sifr_generated_has_option_key(&section_values, &normalized) {
                     return true;
                 }
                 return self.defaults.contains_key(&normalized);
@@ -786,11 +782,10 @@ mod sifr_generated_project_nominals {
                 self.sifr_generated_merged_section(section);
             let default_section: String = sifr_generated_default_section();
             if *section == default_section {
-                if !sifr_generated_has_option_key(&merged, normalized.as_str()) {
+                if !sifr_generated_has_option_key(&merged, &normalized) {
                     return sifr_generated_copy_optional_str(fallback);
                 }
-                let raw_value: Option<String> =
-                    sifr_generated_lookup_option(&merged, normalized.as_str());
+                let raw_value: Option<String> = sifr_generated_lookup_option(&merged, &normalized);
                 let raw_value = raw_value?;
                 if raw {
                     return Some(raw_value);
@@ -802,9 +797,9 @@ mod sifr_generated_project_nominals {
                 ));
             }
             if !self.has_section(section) {
-                if sifr_generated_has_option_key(&self.defaults, normalized.as_str()) {
+                if sifr_generated_has_option_key(&self.defaults, &normalized) {
                     let default_value: Option<String> =
-                        sifr_generated_lookup_option(&self.defaults, normalized.as_str());
+                        sifr_generated_lookup_option(&self.defaults, &normalized);
                     let default_value = default_value?;
                     if raw {
                         return Some(default_value);
@@ -817,11 +812,10 @@ mod sifr_generated_project_nominals {
                 }
                 return sifr_generated_copy_optional_str(fallback);
             }
-            if !sifr_generated_has_option_key(&merged, normalized.as_str()) {
+            if !sifr_generated_has_option_key(&merged, &normalized) {
                 return sifr_generated_copy_optional_str(fallback);
             }
-            let raw_value2: Option<String> =
-                sifr_generated_lookup_option(&merged, normalized.as_str());
+            let raw_value2: Option<String> = sifr_generated_lookup_option(&merged, &normalized);
             let raw_value2_value_7ff8214b5ccf9553 = raw_value2?;
             if raw {
                 return Some(raw_value2_value_7ff8214b5ccf9553);
@@ -863,9 +857,9 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ezipfileX2eZipFile {
         #[must_use]
-        pub fn new(path: &str, mode: &str, compression: &SifrInt) -> Self {
-            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path.to_string();
-            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode.to_string();
+        pub fn new(path: String, mode: String, compression: &SifrInt) -> Self {
+            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path;
+            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode;
             let sifr_generated_field_value_fb545b3ab0be00f5_636f6d7072657373696f6e: SifrInt =
                 (*compression).clone();
             Self {
@@ -1144,7 +1138,7 @@ fn demo_calendar() {
 fn demo_html() {
     println!("=== html ===");
     let s: String = "<b>Hi & Bye</b>".to_string();
-    let esc: String = escape(s.as_str(), true);
+    let esc: String = escape(&s, true);
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(26usize.saturating_add(esc.len()));
@@ -1152,7 +1146,7 @@ fn demo_html() {
         sifr_generated_concat.push_str(esc.as_str());
         sifr_generated_concat
     });
-    let unesc: String = unescape(esc.as_str());
+    let unesc: String = unescape(&esc);
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(44usize.saturating_add(unesc.len()));
@@ -1232,7 +1226,7 @@ fn demo_configparser() {
 fn demo_gzip() {
     println!("=== gzip ===");
     let data: String = "Sifr stdlib gzip compression!".to_string();
-    let compressed: Vec<u8> = compress(data.as_str());
+    let compressed: Vec<u8> = compress(&data);
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(21usize.saturating_add(0usize));
@@ -1270,8 +1264,8 @@ fn demo_zipfile() {
     println!("=== zipfile ===");
     let zf: SifrGeneratedStdlibSifrX2ezipfileX2eZipFile =
         SifrGeneratedStdlibSifrX2ezipfileX2eZipFile::new(
-            "/tmp/sifr_demo_zipfile.zip",
-            "a",
+            "/tmp/sifr_demo_zipfile.zip".to_string(),
+            "a".to_string(),
             &SifrInt::from_i64(0),
         );
     let sifr_generated_try_res: Result<(), IOError> = (|| {
@@ -1323,9 +1317,7 @@ fn demo_zipfile() {
         remove_file("/tmp/sifr_demo_zipfile.zip")?;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
-    }
+    let _ = sifr_generated_try_res;
 }
 fn main() {
     demo_operator();

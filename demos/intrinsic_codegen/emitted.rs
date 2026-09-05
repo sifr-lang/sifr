@@ -51,8 +51,7 @@ fn main() {
         rounded = converted_rounded;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         assert!(false);
     }
     let angle: f64 = atan2(1.0_f64, 1.0_f64);

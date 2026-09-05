@@ -456,16 +456,18 @@ pub fn generate_rust_multi_with_metadata(
 
     {
         let mut project_sources = Vec::with_capacity(files.len().saturating_add(1));
-        project_sources.push(&mut project_union_prelude);
-        project_sources.extend(files.values_mut());
-        crate::generated_rust_canonicalizer::rewrite_project_borrowed_string_literals(
-            &mut project_sources,
-        )
-        .map_err(|error| {
-            CodegenError::new(format!(
-                "failed to normalize generated project string borrows: {error}"
-            ))
-        })?;
+        project_sources.push(("", &mut project_union_prelude));
+        project_sources.extend(
+            files
+                .iter_mut()
+                .map(|(name, source)| (if name == "main" { "" } else { name.as_str() }, source)),
+        );
+        crate::generated_rust_canonicalizer::rewrite_named_project_borrows(&mut project_sources)
+            .map_err(|error| {
+                CodegenError::new(format!(
+                    "failed to normalize generated project string borrows: {error}"
+                ))
+            })?;
     }
 
     crate::retain_generated_dependency_metadata(

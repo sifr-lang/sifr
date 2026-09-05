@@ -128,6 +128,15 @@ impl Rewriter<'_> {
                 }
                 let receiver = self.ty(&call.receiver)?;
                 let base = unreference(&receiver);
+                if let Some(method) = self.declared_method(base, &call.method)
+                    && method.signature.generics.params.is_empty()
+                {
+                    return match &method.signature.output {
+                        syn::ReturnType::Type(_, ty) if named(ty, "Self") => Some(base.clone()),
+                        syn::ReturnType::Type(_, ty) => Some(*ty.clone()),
+                        syn::ReturnType::Default => Some(syn::parse_quote!(())),
+                    };
+                }
                 match call.method.to_string().as_str() {
                     "to_string"
                         if named(base, "String") || named(base, "str") || named(base, "char") =>
@@ -200,6 +209,7 @@ impl Rewriter<'_> {
                             structures: self.structures,
                             self_type: self.self_type.clone(),
                             scope: self.scope.clone(),
+                            module_depth: self.module_depth,
                             bindings: self.bindings.clone(),
                         };
                         if closure.inputs.len() != 1 {
@@ -218,6 +228,7 @@ impl Rewriter<'_> {
                     structures: self.structures,
                     self_type: self.self_type.clone(),
                     scope: self.scope.clone(),
+                    module_depth: self.module_depth,
                     bindings: self.bindings.clone(),
                 };
                 for stmt in &block.block.stmts {

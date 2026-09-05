@@ -832,7 +832,7 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn index(&self, value: &T, start: &SifrInt, stop: &Option<SifrInt>) -> Option<SifrInt> {
             let size: SifrInt = SifrInt::from(self.data.len());
-            let mut begin: SifrInt = start.clone();
+            let mut begin: SifrInt = (*start).clone();
             if begin < SifrInt::from_i64(0) {
                 begin = ::std::ops::Add::add(&size, &begin);
                 if begin < SifrInt::from_i64(0) {

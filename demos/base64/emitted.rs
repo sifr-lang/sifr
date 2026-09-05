@@ -47,10 +47,12 @@ pub mod sifr_generated_generated_support {
             }
             .to_uppercase()))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(e)
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(e)
+            },
+        )
     }
     pub(super) fn b16decode(s: &str) -> Result<String, ParseError> {
         let sifr_generated_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
@@ -93,10 +95,12 @@ pub mod sifr_generated_generated_support {
                 ),
             )
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(e)
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(e)
+            },
+        )
     }
     pub(super) fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
@@ -181,22 +185,26 @@ fn decode_b64_or_empty(payload: &str) -> String {
         let decoded: String = b64decode(payload)?;
         Ok(decoded)
     })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err;
-        let _ = format!("unexpected: {}", e.message);
-        String::new()
-    })
+    sifr_generated_try_res.unwrap_or_else(
+        |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+            let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+            let _ = format!("unexpected: {}", e.message);
+            String::new()
+        },
+    )
 }
 fn decode_urlsafe_b64_or_empty(payload: &str) -> String {
     let sifr_generated_try_res: Result<String, ParseError> = (|| {
         let decoded: String = urlsafe_b64decode(payload)?;
         Ok(decoded)
     })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err;
-        let _ = format!("unexpected: {}", e.message);
-        String::new()
-    })
+    sifr_generated_try_res.unwrap_or_else(
+        |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+            let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+            let _ = format!("unexpected: {}", e.message);
+            String::new()
+        },
+    )
 }
 fn b16_encode_or_empty(payload: &str) -> String {
     let mut encoded: String = String::new();
@@ -205,8 +213,10 @@ fn b16_encode_or_empty(payload: &str) -> String {
         encoded = out;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         let _ = format!("unexpected: {}", e.message);
     }
     encoded
@@ -218,8 +228,10 @@ fn b16_decode_or_empty(payload: &str) -> String {
         decoded = out;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         let _ = format!("unexpected: {}", e.message);
     }
     decoded
@@ -229,13 +241,11 @@ fn collect_positive_actual() -> Vec<String> {
     let urlsafe_encoded: String = encode_urlsafe_b64_or_empty("hello");
     let urlsafe_encoded_for_decode: String = urlsafe_encoded.clone();
     actual.push(urlsafe_encoded);
-    actual.push(decode_urlsafe_b64_or_empty(
-        urlsafe_encoded_for_decode.as_str(),
-    ));
+    actual.push(decode_urlsafe_b64_or_empty(&urlsafe_encoded_for_decode));
     let b16_encoded: String = b16_encode_or_empty("Hi");
     let b16_encoded_for_decode: String = b16_encoded.clone();
     actual.push(b16_encoded);
-    actual.push(b16_decode_or_empty(b16_encoded_for_decode.as_str()));
+    actual.push(b16_decode_or_empty(&b16_encoded_for_decode));
     actual
 }
 fn collect_decode_actual_ok(inputs: &[String]) -> Vec<bool> {
@@ -251,8 +261,7 @@ fn collect_decode_actual_ok(inputs: &[String]) -> Vec<bool> {
             actual_ok.push(true);
             Ok(())
         })();
-        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-            let _e = sifr_generated_try_err;
+        if let Err(_try_err) = sifr_generated_try_res {
             actual_ok.push(false);
         }
     }

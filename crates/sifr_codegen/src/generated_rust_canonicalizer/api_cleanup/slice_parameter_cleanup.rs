@@ -36,8 +36,10 @@ pub(crate) fn rewrite_project_shared_slice_calls(
     file: &mut syn::File,
     plans: &HashMap<String, Vec<(usize, bool)>>,
 ) {
+    let mut expanded = plans.clone();
+    super::super::syntax_cleanup::scoped_imports::expand(file, &mut expanded);
     SharedSliceCallRewriter {
-        plans,
+        plans: &expanded,
         descend_modules: true,
         modules: Vec::new(),
         slice_bindings: HashSet::new(),
@@ -426,50 +428,17 @@ fn resolve_slice_call_plan<'plans>(
     path: &syn::Path,
     arguments: usize,
 ) -> Option<&'plans Vec<(usize, bool)>> {
+    if path.leading_colon.is_some() {
+        return None;
+    }
     let segments = path
         .segments
         .iter()
-        .map(|segment| segment.ident.to_string())
+        .map(|part| part.ident.to_string())
         .collect::<Vec<_>>();
-    let mut candidates = Vec::new();
-    if segments.len() == 1 {
-        let mut local = modules.to_vec();
-        local.push(segments[0].clone());
-        candidates.push(format!("{}#{arguments}", local.join("::")));
-    } else {
-        let mut qualified = segments;
-        while matches!(
-            qualified.first().map(String::as_str),
-            Some("crate" | "self")
-        ) {
-            qualified.remove(0);
-        }
-        candidates.push(format!("{}#{arguments}", qualified.join("::")));
-        let mut local = modules.to_vec();
-        local.extend(qualified);
-        candidates.push(format!("{}#{arguments}", local.join("::")));
-    }
-    candidates.sort();
-    candidates.dedup();
-    let mut matching = candidates.into_iter().filter_map(|key| plans.get(&key));
-    if let Some(plan) = matching.next()
-        && matching.next().is_none()
-    {
-        return Some(plan);
-    }
-    if path.segments.len() < 2 {
-        return None;
-    }
-    let suffix = format!(
-        "::{}::{}#{arguments}",
-        path.segments[path.segments.len() - 2].ident,
-        path.segments[path.segments.len() - 1].ident
-    );
-    let mut matching = plans
-        .iter()
-        .filter_map(|(key, plan)| key.ends_with(&suffix).then_some(plan));
-    let plan = matching.next()?;
-    matching.next().is_none().then_some(plan)
+    let qualified =
+        super::super::syntax_cleanup::scoped_imports::qualified_path(modules, &segments)?;
+    plans.get(&format!("{}#{arguments}", qualified.join("::")))
 }
 
 fn type_owner_name(ty: &syn::Type) -> String {

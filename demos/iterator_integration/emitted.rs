@@ -144,7 +144,7 @@ pub mod sifr_generated_generated_support {
         let mut actual_stop_value_351bdef5a4961be0: SifrInt = SifrInt::from_i64(0);
         let mut unbounded: bool = start_or_stop.is_none();
         if let Some(start_or_stop) = start_or_stop.clone() {
-            actual_stop_value_351bdef5a4961be0.clone_from(&start_or_stop);
+            actual_stop_value_351bdef5a4961be0 = start_or_stop;
         }
         let mut actual_step_value_353dfaf5a4b331da: SifrInt = SifrInt::from_i64(1);
         let mut argument_index: SifrInt = SifrInt::from_i64(0);
@@ -163,10 +163,10 @@ pub mod sifr_generated_generated_support {
                 if argument.is_none() {
                     unbounded = true;
                 } else if let Some(argument) = argument.clone() {
-                    actual_stop_value_351bdef5a4961be0.clone_from(&argument);
+                    actual_stop_value_351bdef5a4961be0 = argument;
                 }
             } else if let Some(argument) = argument.clone() {
-                actual_step_value_353dfaf5a4b331da.clone_from(&argument);
+                actual_step_value_353dfaf5a4b331da = argument;
             }
             argument_index = ::std::ops::Add::add(&argument_index, &SifrInt::from_i64(1));
         }

@@ -377,12 +377,12 @@ pub mod sifr_generated_generated_support {
         while attempts < max_attempts {
             let path: String = sifr_generated_next_candidate(prefix);
             let path_for_check: String = path.clone();
-            if exists(path.as_str()) {
+            if exists(&path) {
                 attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                 continue;
             }
             let sifr_generated_try_res: Result<Result<String, IOError>, IOError> = (|| {
-                write_text(path.as_str(), "")?;
+                write_text(&path, "")?;
                 Ok(Ok(path))
             })();
             match sifr_generated_try_res {
@@ -391,7 +391,7 @@ pub mod sifr_generated_generated_support {
                 }
                 Err(sifr_generated_try_err) => {
                     let e = sifr_generated_try_err;
-                    if exists(path_for_check.as_str()) {
+                    if exists(&path_for_check) {
                         attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                         continue;
                     }
@@ -410,12 +410,12 @@ pub mod sifr_generated_generated_support {
         while attempts < max_attempts {
             let path: String = sifr_generated_next_candidate(prefix);
             let path_for_check: String = path.clone();
-            if exists(path.as_str()) {
+            if exists(&path) {
                 attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                 continue;
             }
             let sifr_generated_try_res: Result<Result<String, IOError>, IOError> = (|| {
-                mkdir(path.as_str())?;
+                mkdir(&path)?;
                 Ok(Ok(path))
             })();
             match sifr_generated_try_res {
@@ -424,7 +424,7 @@ pub mod sifr_generated_generated_support {
                 }
                 Err(sifr_generated_try_err) => {
                     let e = sifr_generated_try_err;
-                    if exists(path_for_check.as_str()) {
+                    if exists(&path_for_check) {
                         attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                         continue;
                     }
@@ -503,9 +503,9 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ezipfileX2eZipFile {
         #[must_use]
-        pub fn new(path: &str, mode: &str, compression: &SifrInt) -> Self {
-            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path.to_string();
-            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode.to_string();
+        pub fn new(path: String, mode: String, compression: &SifrInt) -> Self {
+            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path;
+            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode;
             let sifr_generated_field_value_fb545b3ab0be00f5_636f6d7072657373696f6e: SifrInt =
                 (*compression).clone();
             Self {
@@ -611,9 +611,9 @@ fn main() {
             sifr_generated_concat.push_str("/note.txt");
             sifr_generated_concat
         };
-        write_text(source.as_str(), "hello d1")?;
+        write_text(&source, "hello d1")?;
         let sifr_generated_try_res: Result<(), IOError> = (|| {
-            let note_content: String = read_text(source.as_str())?;
+            let note_content: String = read_text(&source)?;
             println!("{}", {
                 let mut sifr_generated_concat: String =
                     String::with_capacity(15usize.saturating_add(note_content.len()));
@@ -646,7 +646,7 @@ fn main() {
             let mut sifr_generated_concat: String =
                 String::with_capacity(16usize.saturating_add(0usize));
             sifr_generated_concat.push_str("glob(\"*.txt\") = ");
-            sifr_generated_concat.push_str(format!("{:?}", glob(base.as_str(), "*.txt")).as_str());
+            sifr_generated_concat.push_str(format!("{:?}", glob(&base, "*.txt")).as_str());
             sifr_generated_concat
         });
         let copied: String = {
@@ -663,8 +663,8 @@ fn main() {
             sifr_generated_concat.push_str("/moved.txt");
             sifr_generated_concat
         };
-        copy(source.as_str(), copied.as_str())?;
-        move_file(copied.as_str(), moved.as_str())?;
+        copy(&source, &copied)?;
+        move_file(&copied, &moved)?;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(26usize.saturating_add(0usize));
@@ -724,8 +724,8 @@ fn main() {
         };
         let archive: SifrGeneratedStdlibSifrX2ezipfileX2eZipFile =
             SifrGeneratedStdlibSifrX2ezipfileX2eZipFile::new(
-                zip_path.as_str(),
-                "a",
+                zip_path,
+                "a".to_string(),
                 &SifrInt::from_i64(0),
             );
         let sifr_generated_try_res: Result<(), IOError> = (|| {
@@ -759,7 +759,7 @@ fn main() {
             });
         }
         let _rm_temp_file: String = run_command(&format!("rm -f {temp_file}"))?;
-        rmtree(temp_dir.as_str())?;
+        rmtree(&temp_dir)?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

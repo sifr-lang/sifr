@@ -79,6 +79,10 @@ impl RustEmitter {
         let reassigned_vars = collect_reassigned_vars(&func.body);
         let mut lowered_body = self.prepare_string_char_cache_stmts(func, &reassigned_vars);
         for stmt in &func.body {
+            let Some(normalized) = self.body_analysis.statement_for_lowering(stmt) else {
+                continue;
+            };
+            let stmt = normalized.as_ref();
             self.lowering_stats.stmt_total += 1;
             if is_simple_stmt_candidate(stmt) {
                 self.lowering_stats.stmt_candidate_total += 1;

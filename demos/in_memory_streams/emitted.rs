@@ -242,9 +242,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eioX2eStringIO {
         #[must_use]
-        pub fn new(initial: &str) -> Self {
-            let sifr_generated_field_value_b60ec91c25cb3d78_5f627566666572: String =
-                initial.to_string();
+        pub const fn new(initial: String) -> Self {
+            let sifr_generated_field_value_b60ec91c25cb3d78_5f627566666572: String = initial;
             let sifr_generated_field_value_d0bd94583b33fdec_5f637572736f72: SifrInt =
                 SifrInt::from_i64(0);
             let sifr_generated_field_value_8bc7f577e5ffacda_5f636c6f736564: bool = false;
@@ -455,7 +454,7 @@ mod sifr_generated_project_nominals {
             }
             if self.cursor == self.buffer.len() {
                 self.buffer = {
-                    let mut sifr_generated_v = self.buffer.clone();
+                    let mut sifr_generated_v = self.buffer.clone().clone();
                     sifr_generated_v.extend(data.iter().copied());
                     sifr_generated_v
                 };
@@ -581,7 +580,7 @@ fn main() {
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let mut sio: SifrGeneratedStdlibSifrX2eioX2eStringIO =
-            SifrGeneratedStdlibSifrX2eioX2eStringIO::new("sample");
+            SifrGeneratedStdlibSifrX2eioX2eStringIO::new("sample".to_string());
         sio.write("1")?;
         let _seek: SifrInt = sio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
         let text_value: String = sio.read(&None)?;
@@ -620,14 +619,14 @@ fn main() {
             let _ = e.message;
             bytesio_negative_seek_ok = true;
         }
-        let mut writer: SifrGeneratedIoBinaryFileHandle = open_binary(path.as_str(), "wb")?;
+        let mut writer: SifrGeneratedIoBinaryFileHandle = open_binary(&path, "wb")?;
         writer.write_bytes(&[
             114_u8, 117_u8, 110_u8, 116_u8, 105_u8, 109_u8, 101_u8, 45_u8, 105_u8, 110_u8, 95_u8,
             109_u8, 101_u8, 109_u8, 111_u8, 114_u8, 121_u8, 95_u8, 115_u8, 116_u8, 114_u8, 101_u8,
             97_u8, 109_u8, 115_u8,
         ])?;
         writer.close();
-        let mut reader: SifrGeneratedIoBinaryFileHandle = open_binary(path.as_str(), "rb")?;
+        let mut reader: SifrGeneratedIoBinaryFileHandle = open_binary(&path, "rb")?;
         let loaded: Vec<u8> = reader.read_bytes(&None)?;
         reader.close();
         binary_file_ok = loaded
@@ -643,10 +642,10 @@ fn main() {
         let _ = e.message;
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        if exists(path.as_str()) {
-            remove_file(path.as_str())?;
+        if exists(&path) {
+            remove_file(&path)?;
         }
-        cleanup_ok = !exists(path.as_str());
+        cleanup_ok = !exists(&path);
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

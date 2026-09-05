@@ -2,12 +2,18 @@ struct ScalarCallRewriter<'plans> {
     plans: &'plans HashMap<String, ScalarBorrowPlan>,
     modules: Vec<String>,
     functions: Vec<String>,
+    owner: Option<String>,
     borrowed_bindings: HashSet<String>,
     optional_borrowed_bindings: HashSet<String>,
     owned_optional_bindings: HashSet<String>,
 }
 
 impl VisitMut for ScalarCallRewriter<'_> {
+    fn visit_item_impl_mut(&mut self, implementation: &mut syn::ItemImpl) {
+        let previous = self.owner.replace(type_owner_name(&implementation.self_ty));
+        visit_mut::visit_item_impl_mut(self, implementation);
+        self.owner = previous;
+    }
     fn visit_item_mod_mut(&mut self, module: &mut syn::ItemMod) {
         let Some((_, items)) = &mut module.content else {
             return;
@@ -73,11 +79,18 @@ impl VisitMut for ScalarCallRewriter<'_> {
         if path.qself.is_some() {
             return;
         }
+        let mut callee = path.path.clone();
+        if let Some(first) = callee.segments.first_mut()
+            && first.ident == "Self"
+            && let Some(owner) = &self.owner
+        {
+            first.ident = syn::Ident::new(owner, first.ident.span());
+        }
         let Some(plan) = call_plan(
             self.plans,
             &self.modules,
             &self.functions,
-            &path.path,
+            &callee,
             call.args.len(),
         ) else {
             return;

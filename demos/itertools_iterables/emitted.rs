@@ -156,7 +156,7 @@ pub mod sifr_generated_generated_support {
         let mut actual_stop_value_351bdef5a4961be0: SifrInt = SifrInt::from_i64(0);
         let mut unbounded: bool = start_or_stop.is_none();
         if let Some(start_or_stop) = start_or_stop.clone() {
-            actual_stop_value_351bdef5a4961be0.clone_from(&start_or_stop);
+            actual_stop_value_351bdef5a4961be0 = start_or_stop;
         }
         let mut actual_step_value_353dfaf5a4b331da: SifrInt = SifrInt::from_i64(1);
         let mut argument_index: SifrInt = SifrInt::from_i64(0);
@@ -175,10 +175,10 @@ pub mod sifr_generated_generated_support {
                 if argument.is_none() {
                     unbounded = true;
                 } else if let Some(argument) = argument.clone() {
-                    actual_stop_value_351bdef5a4961be0.clone_from(&argument);
+                    actual_stop_value_351bdef5a4961be0 = argument;
                 }
             } else if let Some(argument) = argument.clone() {
-                actual_step_value_353dfaf5a4b331da.clone_from(&argument);
+                actual_step_value_353dfaf5a4b331da = argument;
             }
             argument_index = ::std::ops::Add::add(&argument_index, &SifrInt::from_i64(1));
         }
@@ -268,8 +268,7 @@ pub mod sifr_generated_generated_support {
                                 Ok(())
                             })(
                             );
-                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _e = sifr_generated_try_err;
+                            if let Err(_try_err) = sifr_generated_try_res {
                                 return;
                             }
                         }
@@ -372,10 +371,12 @@ pub mod sifr_generated_generated_support {
             let entries: Vec<String> = sifr_generated_iterdir_list(path)?;
             Ok(Ok(sifr_generated_iter_list_str(entries)))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err;
-            Err(e)
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(e)
+            },
+        )
     }
     pub(super) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
@@ -540,8 +541,10 @@ fn main() {
         println!("{:?}", sliced.collect::<Vec<_>>());
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(14usize.saturating_add(0usize));
@@ -608,8 +611,10 @@ fn main() {
         println!("{}", SifrInt::from(sliced_entries.count()));
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        match sifr_generated_try_err {
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
@@ -639,8 +644,10 @@ fn main() {
         let _rm: String = run_command(&format!("rm -rf {base}"))?;
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err;
+    if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+        sifr_generated_try_res
+    {
+        let e = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(17usize.saturating_add(0usize));

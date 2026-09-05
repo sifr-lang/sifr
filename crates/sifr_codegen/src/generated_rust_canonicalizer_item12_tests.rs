@@ -1,6 +1,143 @@
 use super::canonicalize_generated_rust_source;
 
 #[test]
+fn item12_qualified_string_calls_and_returns_preserve_unknown_abis() {
+    let source = r#"
+        mod known {
+            pub struct Reader;
+            impl Reader { pub fn write(&self, value: &str) -> usize { value.len() } }
+            pub fn render() -> String { String::new() }
+        }
+        fn check(reader: &other::Reader) {
+            reader.write(&"message".to_string());
+            other::render().to_string();
+        }
+    "#;
+    let canonical =
+        canonicalize_generated_rust_source(source).expect("qualified string identities");
+    let compact = canonical.split_whitespace().collect::<String>();
+    assert!(
+        compact.contains("reader.write(&\"message\".to_string())"),
+        "{canonical}"
+    );
+    assert!(
+        compact.contains("other::render().to_string()"),
+        "{canonical}"
+    );
+}
+
+#[test]
+fn item12_string_callbacks_and_scalar_trait_methods_keep_declared_abis() {
+    let source = r#"
+        fn length(value: String) -> usize { value.len() }
+        trait Compare { fn positive(value: SifrInt) -> bool; }
+        struct Number;
+        impl Compare for Number { fn positive(value: SifrInt) -> bool { value > SifrInt::from_i64(0) } }
+        pub fn run() {
+            let callback: fn(String) -> usize = length;
+            println!("{} {}", callback("x".to_string()), Number::positive(SifrInt::from_i64(1)));
+        }
+    "#;
+    let canonical =
+        canonicalize_generated_rust_source(source).expect("callback and trait contracts");
+    assert!(
+        canonical.contains("fn length(value: String)"),
+        "{canonical}"
+    );
+    assert!(
+        canonical.contains("fn positive(value: SifrInt)"),
+        "{canonical}"
+    );
+    assert!(
+        !canonical.contains("positive(value: &SifrInt)"),
+        "{canonical}"
+    );
+}
+
+#[test]
+fn item12_project_type_facts_follow_declared_module_imports() {
+    let mut left = "pub fn inspect(value: &str) -> usize { value.len() }".to_string();
+    let mut right = "pub fn inspect(value: String) -> String { value }".to_string();
+    let mut main = r#"
+        use crate::left::inspect as borrowed;
+        use crate::right::inspect as owned;
+        fn main() { println!("{} {}", borrowed(&"left".to_string()), owned("right".to_string())); }
+    "#
+    .to_string();
+    super::generated_rust_canonicalizer::rewrite_named_project_borrows(&mut [
+        ("left", &mut left),
+        ("right", &mut right),
+        ("", &mut main),
+    ])
+    .expect("project module identities");
+    let compact = main.split_whitespace().collect::<String>();
+    assert!(compact.contains("borrowed(\"left\")"), "{main}");
+    assert!(compact.contains("owned(\"right\".to_string())"), "{main}");
+}
+
+#[test]
+fn item12_borrow_plans_do_not_match_unrelated_qualified_callees() {
+    let source = r#"
+        mod local {
+            pub struct Reader;
+            impl Reader {
+                pub fn new(value: Option<SifrInt>) -> bool { value.is_some() }
+                pub fn read(&self, value: Option<String>) -> bool { value.is_some() }
+                pub fn rows(values: &[String]) -> usize { values.len() }
+            }
+        }
+        use local::Reader as KnownReader;
+        fn check(reader: &other::Reader, value: Option<SifrInt>, text: Option<String>, rows: Vec<String>) {
+            other::Reader::new(value);
+            reader.read(text);
+            other::Reader::rows(rows);
+            KnownReader::new(Some(SifrInt::from_i64(1)));
+        }
+    "#;
+    let canonical = canonicalize_generated_rust_source(source).expect("qualified callee identity");
+    let compact = canonical.split_whitespace().collect::<String>();
+    assert!(compact.contains("other::Reader::new(value)"), "{canonical}");
+    assert!(compact.contains("reader.read(text)"), "{canonical}");
+    assert!(compact.contains("other::Reader::rows(rows)"), "{canonical}");
+    assert!(
+        compact.contains("KnownReader::new(Some(&SifrInt::from_i64(1)))"),
+        "{canonical}"
+    );
+}
+
+#[test]
+fn item12_generic_self_constructor_keeps_optional_scalar_borrow_plan() {
+    let source = r#"
+        struct Queue<T> { values: Vec<T>, limit: Option<SifrInt> }
+        impl<T: Clone> Queue<T> {
+            fn new(values: Vec<T>, limit: Option<SifrInt>) -> Self { Self { values, limit } }
+            fn copy(&self) -> Self { Self::new(self.values.clone(), self.limit.clone()) }
+        }
+        fn main() { let queue = Queue::new(vec![true], None); println!("{}", queue.copy().values.len()); }
+    "#;
+    let canonical = canonicalize_generated_rust_source(source).expect("generic constructor ABI");
+    assert!(canonical.contains("limit: Option<&SifrInt>"), "{canonical}");
+    assert!(canonical.contains("self.limit.as_ref()"), "{canonical}");
+}
+
+#[test]
+fn item12_final_project_slice_plan_preserves_lexical_loop_item_borrows() {
+    let mut source = r#"
+        fn read(row: &Vec<String>) -> usize { row.len() }
+        fn rows(rows: &Vec<Vec<String>>) { for row in rows.iter() { println!("{}", read(&row)); } }
+    "#
+    .to_string();
+    super::generated_rust_canonicalizer::rewrite_project_borrowed_string_literals(&mut [
+        &mut source,
+    ])
+    .expect("project borrow plans");
+    source = super::generated_rust_canonicalizer::finalize_formatted_generated_rust_source(&source)
+        .expect("final API normalization must preserve lexical borrow facts");
+    let compact = source.split_whitespace().collect::<String>();
+    assert!(compact.contains("read(row)"), "{source}");
+}
+
+#[test]
 fn item12_tail_empty_collection_keeps_element_type_evidence() {
     let source = r#"
         fn main() {
@@ -243,7 +380,7 @@ fn item12_replacement_collapse_keeps_sequential_semantics_when_replacement_match
 }
 
 #[test]
-fn item12_project_string_rewrites_fail_closed_for_ambiguous_callees() {
+fn item12_project_string_rewrites_use_local_signatures_without_cross_module_guesses() {
     let mut borrowed = r#"
         fn resolve(_: &str) {}
         fn local() { resolve(&"local".to_string()); }
@@ -259,9 +396,9 @@ fn item12_project_string_rewrites_fail_closed_for_ambiguous_callees() {
         &mut borrowed,
         &mut owned,
     ])
-    .expect("ambiguous project calls must remain unchanged");
+    .expect("local signatures remain distinct from unresolved project calls");
 
-    assert!(borrowed.contains("&\"local\".to_string()"), "{borrowed}");
+    assert!(borrowed.contains("resolve(\"local\")"), "{borrowed}");
     assert!(
         owned.contains("other::resolve(\"external\".to_string())"),
         "{owned}"

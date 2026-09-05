@@ -92,7 +92,9 @@ pub mod sifr_generated_generated_support {
             Ok(Ok(converted))
         })();
         sifr_generated_try_res
-            .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            .unwrap_or_else(|
+                sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272|
+            match sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272 {
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
@@ -126,12 +128,15 @@ pub mod sifr_generated_generated_support {
             let divisor: f64 = sifr_generated_float_int(denominator)?;
             Ok(Ok(numerator / divisor))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let error = sifr_generated_try_err;
-            Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                error.message,
-            ))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                    error.message,
+                ))
+            },
+        )
     }
     pub(super) fn mean(
         data: &[f64],
@@ -238,8 +243,9 @@ pub mod sifr_generated_generated_support {
         })();
         let (avg,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-            Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err;
+            Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) => {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                     error.message,
                 ));
@@ -274,8 +280,9 @@ pub mod sifr_generated_generated_support {
         })();
         let (avg,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-            Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err;
+            Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) => {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                     error.message,
                 ));
@@ -298,8 +305,9 @@ pub mod sifr_generated_generated_support {
         })();
         let (v,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-            Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err;
+            Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) => {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                     error.message,
                 ));
@@ -332,12 +340,15 @@ pub mod sifr_generated_generated_support {
             let numerator: f64 = sifr_generated_float_int(&n)?;
             Ok(Ok(numerator / total))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let error = sifr_generated_try_err;
-            Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                error.message,
-            ))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                    error.message,
+                ))
+            },
+        )
     }
     pub(super) fn geometric_mean(
         data: &[f64],
@@ -364,12 +375,15 @@ pub mod sifr_generated_generated_support {
             let mean_log: f64 = sifr_generated_divide_by_int(log_sum, &n)?;
             Ok(Ok(exp(mean_log)))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let error = sifr_generated_try_err;
-            Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                error.message,
-            ))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                    error.message,
+                ))
+            },
+        )
     }
     pub(super) fn mode(
         data: &[SifrInt],
@@ -548,8 +562,10 @@ pub mod sifr_generated_generated_support {
             let (i_float, m_float_value_b0fecb9ab83ca525, n_float_value_15c49f18b6cbd018) =
                 match sifr_generated_try_res {
                     Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-                    Err(sifr_generated_try_err) => {
-                        let error = sifr_generated_try_err;
+                    Err(
+                        sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272,
+                    ) => {
+                        let error = sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                         return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                             error.message,
                         ));
@@ -566,8 +582,11 @@ pub mod sifr_generated_generated_support {
                 idx = converted_idx;
                 Ok(())
             })();
-            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                let error = sifr_generated_try_err;
+            if let Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) =
+                sifr_generated_try_res
+            {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                     error.message,
                 ));
@@ -581,8 +600,9 @@ pub mod sifr_generated_generated_support {
             })();
             let (idx_float,) = match sifr_generated_try_res {
                 Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-                Err(sifr_generated_try_err) => {
-                    let error = sifr_generated_try_err;
+                Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) => {
+                    let error =
+                        sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                     return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                         error.message,
                     ));
@@ -658,8 +678,9 @@ pub mod sifr_generated_generated_support {
         })();
         let (mx, my) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-            Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err;
+            Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) => {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                     error.message,
                 ));
@@ -728,8 +749,9 @@ pub mod sifr_generated_generated_support {
         })();
         let (mx, my) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-            Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err;
+            Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) => {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                     error.message,
                 ));
@@ -785,8 +807,9 @@ pub mod sifr_generated_generated_support {
         })();
         let (sx, sy) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-            Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err;
+            Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) => {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                     error.message,
                 ));
@@ -812,12 +835,15 @@ pub mod sifr_generated_generated_support {
             )?;
             Ok(Ok(covariance_value / (sx * sy)))
         })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let error = sifr_generated_try_err;
-            Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                error.message,
-            ))
-        })
+        sifr_generated_try_res.unwrap_or_else(
+            |sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272| {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
+                Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                    error.message,
+                ))
+            },
+        )
     }
     #[expect(
         clippy::suboptimal_flops,
@@ -848,8 +874,9 @@ pub mod sifr_generated_generated_support {
         })();
         let (mx, my) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-            Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err;
+            Err(sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272) => {
+                let error =
+                    sifr_generated_try_err_user_736966725f67656e6572617465645f7472795f657272;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                     error.message,
                 ));
@@ -1050,8 +1077,7 @@ fn collect_positive_actual() -> Vec<String> {
             mean_v_value_2128bd76457bb465 = out_mean;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         mean_ok = false;
     }
     actual.push((mean_ok && near(mean_v_value_2128bd76457bb465, 3.0_f64, 0.0001_f64)).to_string());
@@ -1063,8 +1089,7 @@ fn collect_positive_actual() -> Vec<String> {
             median_v_value_629d73c6ad2d498a = out_median_value_e18b9a6a10cf229e;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         median_ok = false;
     }
     actual.push(
@@ -1078,8 +1103,7 @@ fn collect_positive_actual() -> Vec<String> {
             variance_v_value_c6ec119b40af5f5f = out_variance;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         variance_ok = false;
     }
     actual.push(
@@ -1093,8 +1117,7 @@ fn collect_positive_actual() -> Vec<String> {
             stdev_v_value_999a1eeb2e7130ac = out_stdev;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         stdev_ok = false;
     }
     actual.push(
@@ -1115,8 +1138,7 @@ fn collect_positive_actual() -> Vec<String> {
             mode_v_value_bb35113315d412f3 = out_mode;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         mode_ok = false;
     }
     actual.push((mode_ok && mode_v_value_bb35113315d412f3 == SifrInt::from_i64(3)).to_string());
@@ -1134,8 +1156,7 @@ fn collect_positive_actual() -> Vec<String> {
             mm_v = out_mm_value_a8c419f8b8e571ce;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         mm_ok = false;
     }
     actual.push((mm_ok && mm_v.len() == SifrInt::from_i64(2)).to_string());
@@ -1152,8 +1173,7 @@ fn collect_positive_actual() -> Vec<String> {
             q_v = out_q;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         q_ok = false;
     }
     actual.push((q_ok && q_v.len() == SifrInt::from_i64(3)).to_string());
@@ -1167,8 +1187,7 @@ fn collect_positive_actual() -> Vec<String> {
             cov_v_value_a9f7ab8e40310a86 = out_cov_value_53f72fa1fcbfdd1c;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         cov_ok = false;
     }
     actual.push((cov_ok && near(cov_v_value_a9f7ab8e40310a86, 5.0_f64, 0.0001_f64)).to_string());
@@ -1180,8 +1199,7 @@ fn collect_positive_actual() -> Vec<String> {
             corr_v_value_89c9b7db45ca7e3a = out_corr;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         corr_ok = false;
     }
     actual.push((corr_ok && near(corr_v_value_89c9b7db45ca7e3a, 1.0_f64, 0.0001_f64)).to_string());
@@ -1193,8 +1211,7 @@ fn collect_positive_actual() -> Vec<String> {
             lr_v = out_lr_value_a8c002f8b8e161e2;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         lr_ok = false;
     }
     let mut lr_slope_ok: bool = false;
@@ -1237,8 +1254,7 @@ fn collect_positive_actual() -> Vec<String> {
             hmean_v_value_05026d4b1054e60b = out_hmean_value_2d8e4460e35f2ab9;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         hmean_ok_value_d81d368cc0568a61 = false;
     }
     actual.push(
@@ -1258,8 +1274,7 @@ fn collect_positive_actual() -> Vec<String> {
             gmean_v_value_b72d30944950c71e = out_gmean_value_8f3a392a67552bd4;
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         gmean_ok_value_92aed8f8945ba566 = false;
     }
     actual.push(
@@ -1273,13 +1288,12 @@ fn collect_error_actual_ok() -> Vec<bool> {
     let mut actual_ok: Vec<bool> = Vec::new();
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> =
         (|| {
-            let bad_mean: f64 = mean(&Vec::new())?;
+            let bad_mean: f64 = mean(&[])?;
             let _ = bad_mean.to_string();
             actual_ok.push(true);
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         actual_ok.push(false);
     }
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> =
@@ -1289,8 +1303,7 @@ fn collect_error_actual_ok() -> Vec<bool> {
             actual_ok.push(true);
             Ok(())
         })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         actual_ok.push(false);
     }
     actual_ok

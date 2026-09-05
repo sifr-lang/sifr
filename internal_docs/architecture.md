@@ -497,6 +497,11 @@ large-file check and a representative project check.
   facts. Collection rewrites require compatible source and destination types.
   Callback ownership contracts remain intact. Owned integer-to-string conversion
   consumes the integer through `From<SifrInt> for String`.
+  Project analysis retains each source module's declared path. Borrow plans and
+  imported aliases resolve to those identities, not matching function basenames.
+  Final API normalization reapplies lexical borrow facts after signature changes.
+  Cached HIR plans omit unused stored-string projections before Rust cloning.
+  Top-level and nested statement emission share these plans and preserve effectful receivers.
 - Both shapes materialize through the same generated-binary-project path. Native
   build state uses local sysroot and package paths only while Cargo resolves and
   builds it. The source-only materialization boundary then replaces that local

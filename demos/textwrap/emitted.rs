@@ -101,10 +101,10 @@ pub mod sifr_generated_generated_support {
     ) -> String {
         let mut prepared: String = text.to_string();
         if expand_tabs {
-            prepared = sifr_generated_expand_tabs_impl(prepared.as_str(), tabsize);
+            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize);
         }
         if replace_whitespace {
-            prepared = sifr_generated_replace_whitespace_chars(prepared.as_str(), true);
+            prepared = sifr_generated_replace_whitespace_chars(&prepared, true);
         }
         prepared
     }
@@ -236,7 +236,7 @@ pub mod sifr_generated_generated_support {
     }
     pub(super) fn sifr_generated_wrap_impl(text: &str, width: &SifrInt) -> Vec<String> {
         let normalized: String = sifr_generated_normalize_whitespace(text);
-        sifr_generated_wrap_with_indents(normalized.as_str(), width, "", "", true, true)
+        sifr_generated_wrap_with_indents(&normalized, width, "", "", true, true)
     }
     pub(super) fn sifr_generated_effective_content_width(
         total_width: &SifrInt,
@@ -327,7 +327,7 @@ pub mod sifr_generated_generated_support {
                     if first_line {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             initial_indent,
                             drop_whitespace,
                         );
@@ -337,7 +337,7 @@ pub mod sifr_generated_generated_support {
                     } else {
                         sifr_generated_push_current_line(
                             &mut result,
-                            current.as_str(),
+                            &current,
                             subsequent_indent,
                             drop_whitespace,
                         );
@@ -351,14 +351,14 @@ pub mod sifr_generated_generated_support {
             if first_line {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     initial_indent,
                     drop_whitespace,
                 );
             } else {
                 sifr_generated_push_current_line(
                     &mut result,
-                    current.as_str(),
+                    &current,
                     subsequent_indent,
                     drop_whitespace,
                 );
@@ -606,8 +606,7 @@ fn collect_wrap_fill_actual() -> Vec<bool> {
         actual.push(format!("{lines:?}").as_str() == "[\"alpha beta\", \"gamma\"]");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         actual.push(false);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -615,8 +614,7 @@ fn collect_wrap_fill_actual() -> Vec<bool> {
         actual.push(filled == "alpha beta\ngamma");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         actual.push(false);
     }
     actual
@@ -632,8 +630,7 @@ fn collect_other_actual() -> Vec<bool> {
         actual.push(format!("{wrap_empty:?}").as_str() == "[]");
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err;
+    if let Err(_try_err) = sifr_generated_try_res {
         actual.push(false);
     }
     actual
