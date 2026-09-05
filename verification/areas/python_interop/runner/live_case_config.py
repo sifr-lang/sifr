@@ -55,7 +55,9 @@ LIVE_CASES = {
         bridge_file="live_services/python_bridges/kafka_live.py",
         import_roots=("kafka", "threading"),
         native_roots=(),
-        stdout_marker="sifr-python-interop:live:kafka:callback=ack:resources=zero",
+        stdout_marker=(
+            "sifr-python-interop:live:kafka:version=3.0.11:callback=ack:resources=zero"
+        ),
         image_key="kafka",
     ),
     "pubsub": LiveCase(

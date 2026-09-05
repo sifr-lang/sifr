@@ -1,6 +1,9 @@
 import threading
 
+import kafka
 from kafka import KafkaConsumer, KafkaProducer
+
+EXPECTED_KAFKA_VERSION = "3.0.11"
 
 
 def _invoke_foreign(handler, value: str) -> str:
@@ -26,12 +29,15 @@ def _invoke_foreign(handler, value: str) -> str:
 
 
 def run(handler, endpoint: str, token: str) -> str:
+    if kafka.__version__ != EXPECTED_KAFKA_VERSION:
+        raise RuntimeError(
+            f"Expected kafka-python {EXPECTED_KAFKA_VERSION}, got {kafka.__version__}"
+        )
     topic = f"sifr-live-{token}"
     payload = token.encode("utf-8")
     producer = KafkaProducer(
         bootstrap_servers=endpoint,
         request_timeout_ms=30_000,
-        api_version_auto_timeout_ms=10_000,
     )
     try:
         producer.send(topic, payload).get(timeout=30)
@@ -47,7 +53,6 @@ def run(handler, endpoint: str, token: str) -> str:
         enable_auto_commit=False,
         consumer_timeout_ms=30_000,
         request_timeout_ms=30_000,
-        api_version_auto_timeout_ms=10_000,
     )
     observed = None
     try:
@@ -60,4 +65,7 @@ def run(handler, endpoint: str, token: str) -> str:
         raise RuntimeError(f"Kafka message mismatch: {observed!r}")
     if _invoke_foreign(handler, observed) != f"ack:{token}":
         raise RuntimeError("Kafka Sifr callback acknowledgement mismatch")
-    return "sifr-python-interop:live:kafka:callback=ack:resources=zero"
+    return (
+        f"sifr-python-interop:live:kafka:version={kafka.__version__}:"
+        "callback=ack:resources=zero"
+    )

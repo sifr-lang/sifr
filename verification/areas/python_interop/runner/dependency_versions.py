@@ -5,10 +5,11 @@ import ast
 import copy
 import json
 import re
-import tomllib
 from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
+
+import tomllib
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 AUDIT_PATH = (
@@ -29,6 +30,7 @@ EXPECTED_PROJECTS = {
             "fastapi",
             "hiredis",
             "httpx2",
+            "kafka-python",
             "numpy",
             "pandas",
             "polars",
@@ -334,6 +336,15 @@ def run_self_tests(audit: dict[str, object]) -> int:
     if not validate_project(project_name, expected, releases, project, stale_pyarrow):
         raise AssertionError("stale PyArrow mutation was not rejected")
 
+    stale_kafka = copy.deepcopy(lock)
+    next(
+        package
+        for package in stale_kafka["package"]
+        if isinstance(package, dict) and package.get("name") == "kafka-python"
+    )["version"] = "3.0.10"
+    if not validate_project(project_name, expected, releases, project, stale_kafka):
+        raise AssertionError("stale kafka-python mutation was not rejected")
+
     missing_artifact = copy.deepcopy(lock)
     next(
         package
@@ -365,7 +376,7 @@ def run_self_tests(audit: dict[str, object]) -> int:
     stale_image["service_images"][0]["latest_stable"] = "4.13.1"
     if not validate_service_images(stale_image):
         raise AssertionError("stale service-image mutation was not rejected")
-    return 7
+    return 8
 
 
 def main() -> int:
