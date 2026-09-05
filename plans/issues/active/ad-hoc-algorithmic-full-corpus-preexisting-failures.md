@@ -425,3 +425,30 @@ Evidence remains in the Item 12 worktree under `target/`:
 The corpus owner must reconcile these source contracts in `sifr-lang/leetcode`.
 Item 12 cannot close until the corrected external corpus passes its required
 qualification. The Item 12 worker changed no external files or acceptance rules.
+
+#### Item 12B authorization and required tests
+
+On 2026-09-05, the user authorized the same worker to repair these external
+fixtures and update Sifr's corpus pin. This supersedes the authority blocker.
+
+- Approved writes: source-contract repairs in `sifr-lang/leetcode`, its PR and
+  merge, then Sifr's gitlink update and the related issue records.
+- Preserve original algorithm behavior, cases, compiler safety, and acceptance
+  rules. Do not replace error handling with unchecked assumptions.
+- Keep Item 12's remaining compiler diagnostics outside this dependency item.
+- Use the retained Item 12 compiler candidate for focused checks and execution:
+
+```bash
+/tmp/sifr-item12-qualified.l0Kpiu/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0004_median_of_two_sorted_arrays.sifr
+/tmp/sifr-item12-qualified.l0Kpiu/sifr run verification/areas/algorithmic_compatibility/corpora/leetcode/src/0004_median_of_two_sorted_arrays.sifr
+/tmp/sifr-item12-qualified.l0Kpiu/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0006_zigzag_conversion.sifr
+/tmp/sifr-item12-qualified.l0Kpiu/sifr run verification/areas/algorithmic_compatibility/corpora/leetcode/src/0006_zigzag_conversion.sifr
+uv run --project verification --locked python -m sifr_verify areas run \
+  --area algorithmic_compatibility --suite leetcode-full
+```
+
+Verify and record which compiler the complete suite uses. Apply the same focused
+check and run commands to each additional repaired fixture. Preserve every case.
+Run the file-size guardrail and one exact-SHA merge-profile gate for the Sifr
+gitlink candidate, as required by the delegated item rules. Do not run a second
+gate or change Item 12 code during this dependency item.
