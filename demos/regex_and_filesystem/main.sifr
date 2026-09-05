@@ -29,8 +29,8 @@ def main():
     base: str = "/tmp/sifr_regex_filesystem_demo_" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base + "/sub")
-        _w1: None = write_text(base + "/a.txt", "a")
-        _w2: None = write_text(base + "/sub/b.txt", "b")
+        _root_file_write: None = write_text(base + "/a.txt", "a")
+        _nested_file_write: None = write_text(base + "/sub/b.txt", "b")
 
         assert str(list(iglob(base, "*.txt"))) == "[\"a.txt\"]"
         root: Path = Path(base + "")

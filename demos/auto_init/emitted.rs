@@ -117,18 +117,18 @@ fn main() {
         sifr_generated_concat.push_str(p.to_string().as_str());
         sifr_generated_concat
     });
-    let p2: Point = Point::new(SifrInt::from_i64(3), SifrInt::from_i64(4));
-    let p3: Point = Point::new(SifrInt::from_i64(5), SifrInt::from_i64(6));
+    let equal_point: Point = Point::new(SifrInt::from_i64(3), SifrInt::from_i64(4));
+    let different_point: Point = Point::new(SifrInt::from_i64(5), SifrInt::from_i64(6));
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(11usize);
         sifr_generated_concat.push_str("point eq = ");
-        sifr_generated_concat.push_str((p == p2).to_string().as_str());
+        sifr_generated_concat.push_str((p == equal_point).to_string().as_str());
         sifr_generated_concat
     });
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(12usize);
         sifr_generated_concat.push_str("point neq = ");
-        sifr_generated_concat.push_str((p == p3).to_string().as_str());
+        sifr_generated_concat.push_str((p == different_point).to_string().as_str());
         sifr_generated_concat
     });
     let c1: Config = Config::new(false, SifrInt::from_i64(30), "default".to_string());

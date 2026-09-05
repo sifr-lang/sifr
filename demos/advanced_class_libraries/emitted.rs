@@ -2881,18 +2881,24 @@ fn main() {
             sifr_generated_concat
         });
     }
-    let p2: SifrGeneratedStdlibSifrX2epathlibX2ePath =
+    let file_path: SifrGeneratedStdlibSifrX2epathlibX2ePath =
         SifrGeneratedStdlibSifrX2epathlibX2ePath::new("/tmp/myfile.txt".to_string());
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(14usize);
         sifr_generated_concat.push_str("with_suffix = ");
-        sifr_generated_concat.push_str(p2.with_suffix(&".csv".to_string()).to_str().as_str());
+        sifr_generated_concat
+            .push_str(file_path.with_suffix(&".csv".to_string()).to_str().as_str());
         sifr_generated_concat
     });
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(12usize);
         sifr_generated_concat.push_str("with_name = ");
-        sifr_generated_concat.push_str(p2.with_name(&"other.txt".to_string()).to_str().as_str());
+        sifr_generated_concat.push_str(
+            file_path
+                .with_name(&"other.txt".to_string())
+                .to_str()
+                .as_str(),
+        );
         sifr_generated_concat
     });
     let sifr_generated_try_res: Result<(), RegexError> = (|| {

@@ -1281,3 +1281,23 @@ on base `2af89e75e` in
 Final qualification owns the workflow repair. The diagnostic-baseline
 identity migration and pre-existing quality failures described above remain
 unresolved; these passing CLI results do not qualify the Clippy baseline.
+
+## Descriptive demo variables follow-up (2026-09-05)
+
+A second pass found no delivery-labelled `m12` path or content under `demos`,
+but found ambiguous numbered variable names in 12 demos and `m12` among the
+regex fixture's match results. Those variables now use semantic names.
+Affected emitted companions were regenerated and four idiomatic references
+were updated. Token comparison confirms that all 13 changed Sifr files
+contain identifier-only edits. No filename, fixture order, assertion, or
+expected output changed. The taxonomy guard now rejects abbreviated numbered
+variable declarations in demo Sifr and Rust files, including underscore
+prefixes, while retaining percentile and command-option exceptions.
+
+All 12 demos, the regex fixture, and the four edited idiomatic references
+built and ran successfully. Taxonomy mutation tests, the active-surface
+scan, and file-size checks passed. The final merge gate passed all 264
+companion freshness checks and reached guardrails, then reproduced the
+existing SQL coverage-classification blocker. Logs are under
+`target/demo-name-followup/`. Existing Clippy baseline debt and its unresolved
+migration were not refreshed.
