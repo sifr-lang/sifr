@@ -426,7 +426,126 @@ The corpus owner must reconcile these source contracts in `sifr-lang/leetcode`.
 Item 12 cannot close until the corrected external corpus passes its required
 qualification. The Item 12 worker changed no external files or acceptance rules.
 
-#### Item 12B authorization and required tests
+### Item 12B: Bounded algorithmic dependency repair
+
+On 2026-09-05, the user authorized the same worker to repair both repositories.
+
+- Scope: repair external conversion and index-error source contracts, plus the
+  compiler ownership mechanisms required to compile and execute those fixtures.
+- Compiler scope includes loop sentinel reuse, repeat-count reuse, directly
+  necessary same-mechanism corrections, and focused regression coverage.
+- External source changes preserve every original case and algorithm behavior.
+- The item includes the external PR/merge and the Sifr compiler/gitlink PR/merge.
+- Earlier restrictions against these compiler changes are superseded.
+  Unrelated Item 12 generated-quality work remains separate.
+- Implementation starts from Sifr base
+  `2dc4165fd9e7c34432a9b0d098188dc645aaca55` on the isolated Item 12B branch.
+  Any prerequisite from retained Item 12 work requires explicit path-level provenance.
+- External checkpoint `f6db5bd5d363b19a3040afd2a092f44ce32fd5bb`,
+  Sifr handoff `1efb8720fa827f3bf19de17c7f010e3009f0e484`, and retained
+  compiler candidate `8ad089a9458f35fcfa228e93fe44f4d69731828b` remain preserved.
+- Qualification uses a newly built compiler from the isolated candidate.
+  The retained frozen compiler is historical diagnostic evidence only.
+- Review: one exact-SHA Opus review identifies both repository candidates.
+  At most one remediation review is permitted. No whole-phase review is permitted.
+- Gate: one merge-profile gate covers the exact final Sifr candidate.
+  Skip create-PR. Do not repeat the merge gate.
+- Close Item 12B and update its records, then stop. Do not start Item 12 or 12A.
+
+#### Item 12B required tests
+
+These commands run from the isolated Sifr worktree after the bounded implementation.
+The focused regression names are fixed before test execution.
+
+```bash
+cargo build -p sifr
+cargo test -p sifr_codegen item12b_loop_sentinel_reuse
+cargo test -p sifr_codegen item12b_repeat_count_reuse
+cargo test -p sifr_codegen
+target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0004_median_of_two_sorted_arrays.sifr
+target/debug/sifr run verification/areas/algorithmic_compatibility/corpora/leetcode/src/0004_median_of_two_sorted_arrays.sifr
+target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0006_zigzag_conversion.sifr
+target/debug/sifr run verification/areas/algorithmic_compatibility/corpora/leetcode/src/0006_zigzag_conversion.sifr
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full
+cargo fmt --check
+cargo clippy -p sifr_codegen -- -D warnings
+python3 scripts/check_file_size_guardrails.py
+python3 scripts/check_hir_maintainability_guardrails.py
+scripts/run_all_tests.sh
+```
+
+Apply the same `check` and `run` commands to every repaired corpus fixture.
+Record the compiler SHA and binary digest for focused and full-corpus evidence.
+Include relevant additional changed crates in the Clippy command.
+Loop regressions cover repeated iterations, branch paths, and later sentinel uses.
+Repeat-count regressions cover later uses, nested scopes, and effectful counts.
+
+#### Item 12B checkpoint: qualification blocked on an unrelated Clippy defect
+
+State on 2026-09-05: implementation checkpoint preserved; Item 12B is not closed.
+
+- Sifr candidate: `673593f3ee234d58f03694e018abb145a843f787`,
+  branch `codex/emitted-rust-excellence-item-12b`.
+- External candidate: `330544ecf4f787c1a5fbed847469797ead92d24c`,
+  branch `codex/item12b-source-contracts` in `sifr-lang/leetcode`.
+- Both candidates are pushed. Neither repository has an Item 12B PR or merge.
+- No Opus review or merge-profile gate was consumed.
+- The isolated worktree remains `/tmp/sifr-item12b.akguMz/sifr`.
+  The retained Item 12 compiler candidate remains separate and unchanged.
+
+The newly built compiler has SHA-256
+`56ef1dac97c474d76341f77aebefa37e750002bdf82e6a6f6c5509a91d85847c`.
+The binary digest remained unchanged throughout this qualification attempt.
+
+Completed evidence under `/tmp/sifr-item12b.akguMz/`:
+
+- `codegen-singleton-full-2.log`: all 1,412 codegen tests pass.
+  This includes all four named Item 12B ownership regressions.
+- `compiler-singleton-build.log`: the compiler build passes.
+- `native-primary/0004_median_of_two_sorted_arrays.json`: check and native run pass.
+- `native-primary/0006_zigzag_conversion.json`: check and native run pass.
+  Each JSON record contains both candidate SHAs, input digests, commands, and logs.
+  These runs retain the original cases and execute the added ownership assertions.
+- `cargo fmt --check`: pass.
+- File-size guardrail: pass for 3,755 files, with the 900-line limit unchanged.
+- HIR maintainability guardrail: pass.
+
+Incomplete evidence is not a qualification pass:
+
+- `leetcode-full-candidate.log` contains 113 passing cases before interruption.
+  It is not a complete 411-case result.
+- The two helper checks pass, but their native runs were interrupted.
+  The remaining repaired fixtures still require their native runs.
+- The worker stopped all owned qualification processes after the scope blocker.
+  No background qualification process remains.
+- Earlier complete diagnostic matrices cover earlier inputs.
+  They do not qualify these candidates.
+
+`clippy.log` records the blocker from
+`cargo clippy -p sifr_codegen -- -D warnings`.
+The unchanged `project_stdlib_nominals.rs:45` uses `Option::expect` in
+`ProjectNominalRegistry::register_builtin`.
+This defect exists in base `2dc4165fd9e7c34432a9b0d098188dc645aaca55` and current
+main `2af89e75e5f97ec75e1b72c000fb3a6ebbbbb7cc`.
+It concerns builtin-error registration, not sentinel or repeat-count ownership.
+The worker did not suppress the diagnostic or import unrelated retained Item 12 code.
+
+Next action: authorize or merge the builtin-registration repair recorded as Item 12C.
+Then resume Item 12B qualification on the identified candidate inputs.
+Complete every required fixture run and the canonical full corpus before review.
+The exact-SHA review allowance and the single merge-profile gate remain unused.
+
+#### Deferred Item 12C: Pre-existing builtin-registration Clippy blocker
+
+- State: recorded only; not started.
+- Owner: compiler builtin-error registration.
+- Defect: `crates/sifr_codegen/src/project_stdlib_nominals.rs:45` fails strict
+  Clippy with `clippy::expect_used`.
+- Dependency: this unchanged defect blocks Item 12B's required crate Clippy check.
+- The repair must preserve builtin-error identity and the registration invariant.
+  It must not add a fallback or diagnostic suppression.
+
+#### Historical Item 12B authorization and required tests
 
 On 2026-09-05, the user authorized the same worker to repair these external
 fixtures and update Sifr's corpus pin. This supersedes the authority blocker.
@@ -453,7 +572,7 @@ Run the file-size guardrail and one exact-SHA merge-profile gate for the Sifr
 gitlink candidate, as required by the delegated item rules. Do not run a second
 gate or change Item 12 code during this dependency item.
 
-#### Item 12B native qualification blocker
+#### Historical Item 12B native qualification blocker
 
 The worker preserved the authorized record changes in Sifr commit
 `7193e9bca`. It isolated external repairs from the unmerged Item 12 compiler.
@@ -473,7 +592,7 @@ compilation with `SIFR-BUILD-0005` and Rust `E0382`.
 - Zigzag emission moves `numRows` into `sifr_generated_repeat_count` at line 91.
   The loop then borrows `numRows` at line 127.
 - These failures require compiler ownership-mechanism work, not another source
-  error-handling repair. Item 12B does not authorize that compiler work.
+  error-handling repair. The expanded Item 12B authority now includes that compiler work.
   The worker added no source workaround and changed no compiler files.
 
 Qualification used `/tmp/sifr-item12-qualified.l0Kpiu/sifr` from Item 12
