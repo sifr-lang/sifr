@@ -13,7 +13,7 @@
   ],
   "discoveries": [
     {"id": "algorithmic-sources", "root": "verification/areas/algorithmic_compatibility/corpora/leetcode", "pattern": "**/*.sifr", "expected_count": 416, "path_set_sha256": "27f4a05a7faf472689ca1e7bf6271b45f85b5979c4985fd3411f4274c47c6bca"},
-    {"id": "demo-emitted-companions", "root": "demos", "pattern": "**/emitted.rs", "expected_count": 261, "path_set_sha256": "b4ccec090a82da549e51e50788e4ec8a5730e1d8865c6fe8ba1f2e5aaba22b28"},
+    {"id": "demo-emitted-companions", "root": "demos", "pattern": "**/emitted.rs", "expected_count": 264, "path_set_sha256": "0afa329dbe5c3d3cc05f66c1ef8b8f38c550cea73ea3e9b40c8c56f01b62de23"},
     {"id": "e2e-pass-sources", "root": "crates/sifr/tests/e2e/pass", "pattern": "*.sifr", "expected_count": 726, "path_set_sha256": "e6c08898df0d93351df834efd381fd909a52a7baa01de740ad34c64b1b0c2f15"},
     {"id": "negative-gate-seeds", "root": "verification/areas/generated_code_quality/negative_seeds", "pattern": "*.rs", "expected_count": 18, "path_set_sha256": "0a8a896ebde0e2f32a39499098a6a415249123c7abdf095a06acaabd1f0baf1d"},
     {"id": "project-workspace-sources", "root": "verification/areas/project_workspace/fixtures", "pattern": "**/*.sifr", "expected_count": 21, "path_set_sha256": "a2d55ad3a81cbb46fa16bf65d9afcd29682470819dadf32da5a86dde56860d26"},

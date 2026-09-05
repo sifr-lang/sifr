@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "$0")/.." && pwd)"
+repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 work_root="$(mktemp -d "${TMPDIR:-/tmp}/sifr-stable-editor.XXXXXX")"
 trap 'rm -rf "${work_root}"' EXIT
 

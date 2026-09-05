@@ -70,3 +70,9 @@ The complete failure list is in `target/naming-cleanup/merge-gate.log` and
 This issue owns reconciling the coverage registry with the existing SQL
 package and target graph. No classification or coverage requirement was
 weakened during naming cleanup. The merge gate was not repeated.
+
+The subsequent demo directory follow-up ran its own final merge gate once on
+2026-09-05 and reproduced the same SQL coverage classifications failure.
+All 264 demo emitted companions passed freshness, along with the file-size,
+HIR, Rust interop, and naming checks. No SQL classifications changed.
+Evidence: `target/demo-layout/merge-gate.log`.

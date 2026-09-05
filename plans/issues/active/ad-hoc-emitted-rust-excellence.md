@@ -827,3 +827,22 @@ portability tests, two driver error-identity tests, the process-argument stdlib
 test, formatting, shell syntax, file-size and HIR guardrails, and diff checks.
 All 534 edited Sifr source files retain their non-comment content, and every
 fixture expectation remains in its original order.
+
+## Demo directory follow-up (2026-09-05)
+
+The three remaining standalone Sifr demos now have `main.sifr`, `emitted.rs`,
+and `idiomatic.rs` companions. Their Sifr sources are byte-identical to the
+previous commit. The companion inventory now contains 264 programs. Its
+Clippy selection identifier changed to `selection-ee7a2285bedf4da8`; existing
+debt counts and signatures were preserved. The quality-baseline reconciliation
+described above must cover this expanded selection.
+
+All three idiomatic references compiled and ran. The dependency-plan and typed
+compiler-boundary Sifr demos also ran. Native execution of the runtime
+observability demo fails with `SIFR-BUILD-0005` / Rust `E0433`: the generated
+Cargo project does not enable `sifr_stdlib`'s `runtime-observability` feature.
+The same failure reproduces with the original source from commit `79e04636d`.
+This issue owns the generated-project dependency-feature correction; no
+compiler or feature-selection workaround was added during the directory move.
+Evidence: `target/demo-layout/runtime_observability_boundary.log` and
+`target/demo-layout/original-runtime.log`.

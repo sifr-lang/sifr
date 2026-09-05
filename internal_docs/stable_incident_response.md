@@ -130,5 +130,5 @@ operation and receives no incident write permissions at this boundary.
 Run the capability demo with:
 
 ```bash
-demos/stable_incident_recovery_demo.sh
+demos/stable_incident_recovery/run.sh
 ```

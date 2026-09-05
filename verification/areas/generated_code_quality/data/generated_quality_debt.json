@@ -210,7 +210,7 @@
           "signature_sha256": "103b1b9d5e942cb89ab96251cdcd090c39096dedb7d3690e04f099d5e800a488"
         }
       },
-      "selection-7a69e9832bffd7ce": {
+      "selection-ee7a2285bedf4da8": {
         "clippy::absurd_extreme_comparisons": {
           "count": 1,
           "signature_sha256": "8ba6b79d4fc645be5d1957c70bc26c9c19669601bc1e12d42196feee12625be7"

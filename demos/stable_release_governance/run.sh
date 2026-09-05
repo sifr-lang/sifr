@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DEMO_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sifr-stable-release-governance.XXXXXX")"
 cleanup() {
   rm -rf "${DEMO_DIR}"

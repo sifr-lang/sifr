@@ -303,7 +303,7 @@ checksums are written.
 Run the capability demo from a clean checkout:
 
 ```bash
-demos/stable_candidate_qualification_demo.sh
+demos/stable_candidate_qualification/run.sh
 ```
 
 It builds and qualifies the real host artifact, installs it in isolation, runs
@@ -547,7 +547,7 @@ verification/areas/distribution_release/cases/site_release_workflow_contract.sh
 Run the capability demo with:
 
 ```bash
-demos/stable_self_update_demo.sh
+demos/stable_self_update/run.sh
 ```
 
 It performs a forced beta-to-stable handoff and an ordinary
@@ -798,5 +798,5 @@ uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite stable-publication
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite incident-governance
-demos/stable_incident_recovery_demo.sh
+demos/stable_incident_recovery/run.sh
 ```

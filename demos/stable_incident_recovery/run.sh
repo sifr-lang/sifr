@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DEMO_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/sifr-stable-incident-recovery.XXXXXX")"
 cleanup() {
   rm -rf "${DEMO_ROOT}"
