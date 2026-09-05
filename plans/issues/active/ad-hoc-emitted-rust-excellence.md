@@ -189,8 +189,9 @@ It does not broaden the active item.
 | 11 | merged | Portable and secure generated projects | Reviewed candidate `78c28c1e4c42bd85d685d3a3cffdf132fcdfcc40` is preserved and merged through Item 11A after its consumed gate's stale companions were regenerated. |
 | 11A | merged | Generated-companion freshness and Item 11 integration | The reviewed Item 11 candidate and all 15 compiler-regenerated companions are merged through a separately bounded review and gate without rerunning Item 11's consumed gate. |
 | 12 | blocked: external algorithmic corpus | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
-| 12B | blocked: Item 12C | Bounded algorithmic dependency repair | Preserve both repository candidates; complete qualification after the unrelated builtin-registration Clippy repair. |
-| 12C | recorded only | Builtin-registration Clippy blocker | Preserve builtin-error registration invariants and remove the pre-existing strict-Clippy failure. |
+| 12B | blocked: new emission scope | Bounded algorithmic dependency repair | Builtin registration passes. Complete repaired-fixture qualification exposes separate control-flow and type-emission defects; see Item 12D. |
+| 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
+| 12D | recorded, not started | Native corpus emission dependencies | Adjudicate checked-read control flow and the complete native diagnostic inventory before Item 12B closure. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
 
 ## Item Acceptance Contracts
@@ -683,15 +684,116 @@ Then resume Item 12B qualification on the identified candidate inputs.
 Complete every required fixture run and the canonical full corpus before review.
 The exact-SHA review allowance and the single merge-profile gate remain unused.
 
-#### Deferred Item 12C: Pre-existing builtin-registration Clippy blocker
+#### Incorporated Item 12C: Builtin-registration scope amendment
 
-- State: recorded only; not started.
+- State: incorporated into Item 12B by explicit user authority on 2026-09-05.
+- The earlier exclusion of this mechanism is superseded.
+- This repair has no separate item, review, or gate.
+- The implementation preserves both repository checkpoints and unrelated Item 12 work.
+- Registration must consume validated builtin identity without a fallback,
+  diagnostic suppression, or replacement panic.
+- Focused command, recorded before execution:
+  `cargo test -p sifr_codegen item12b_builtin_registration`.
+- The regressions cover canonical identities, module shadows, and rejected non-builtin names.
+- After this repair, resume the remaining Item 12B validation and closure steps.
 - Owner: compiler builtin-error registration.
 - Defect: `crates/sifr_codegen/src/project_stdlib_nominals.rs:45` fails strict
   Clippy with `clippy::expect_used`.
 - Dependency: this unchanged defect blocks Item 12B's required crate Clippy check.
 - The repair must preserve builtin-error identity and the registration invariant.
   It must not add a fallback or diagnostic suppression.
+
+#### Item 12B checkpoint: builtin repair passes; native qualification fails
+
+This checkpoint supersedes the earlier builtin-registration blocker.
+Item 12C is implemented inside Item 12B. Item 12B is not closed.
+
+- Sifr implementation candidate: `3f422b01633d23c2bc8d8ce8ca59057c6e56adea`.
+- External candidate: `330544ecf4f787c1a5fbed847469797ead92d24c`.
+- Both candidates are pushed. Neither repository has a PR or merge.
+- No Opus review, remediation review, or merge-profile gate was consumed.
+- The retained Item 12 compiler work remains separate and unchanged.
+
+Registration now accepts a validated `BuiltinError` token.
+The registry no longer performs a partial name lookup or calls `expect`.
+Two regressions cover canonical identities, module shadows, and rejected non-builtin names.
+
+The newly built compiler has SHA-256
+`dbe640b31bdd181b93f82d967dd9e7c82092146482c554fb14e96fe42f28a3c3`.
+The compiler binary and both source trees stayed unchanged throughout qualification.
+Evidence is under `/tmp/sifr-item12b.akguMz/`:
+
+- `builtin-focused.log`: both named builtin-registration regressions pass.
+- `builtin-codegen-full.log`: all 1,414 codegen tests pass, including all four ownership regressions.
+- `builtin-build.log`: the compiler build passes.
+- `builtin-clippy.log`: strict codegen crate Clippy passes.
+- Formatting, file-size (3,756 files), and HIR guardrails pass.
+- `leetcode-full-3f422.log`: the complete canonical 411-case check finishes.
+  It reports 410 passes and one failure, fixture 2002.
+  This is a complete failing result, not a partial pass or native qualification.
+  The canonical result is
+  `target/verification/areas/algorithmic-compatibility-results.json`.
+  Per-case results and taxonomy remain under
+  `target/verification/areas/algorithmic_compatibility/`.
+- `native-3f422/matrix.json`: complete coverage of all 90 changed source files.
+  Checks pass for 89 files. Native builds and runs pass for 43 files.
+  Native builds fail for 46 files. The failed check prevents the remaining native run.
+  Median and zigzag both pass their checks and native assertions.
+- `native-3f422/diagnostic_inventory.json`: every failing file, command, log, and diagnostic group.
+  The following counts overlap where one file has several diagnostics.
+
+| Diagnostic group | Files | Representative fixture |
+|---|---:|---|
+| Handler binding captured outside its scope | 13 | 0017 |
+| Reused value moved | 12 | 0072 |
+| Missing structured `TryExcept` lowering | 10 | 0044 |
+| Narrowed value compared with `None` | 8 | 0102 |
+| Missing `UnionFind.union` method emission | 4 | helpers/dsu |
+| Recursive optional field mutability | 3 | 0025 |
+| Nested assignment receives `Option<SifrInt>` instead of `SifrInt` | 1 | 0048 |
+| Borrowed `str` clone emission | 1 | 1397 |
+| Empty collection assertion type inference | 1 | 1203 |
+| Unreceived checked shift result in source | 1 | 2002 |
+
+The checked-shift receiving omission and approved ownership corrections remain Item 12B work.
+They are not external authority blockers.
+Other failures require control-flow, type-representation, or declaration-demand changes.
+Those mechanisms are not builtin registration or sentinel/repeat reuse.
+
+#### Later Item 12D: Native corpus emission dependencies
+
+State: recorded for scope adjudication, not started.
+Owner: compiler emission, tracked in this issue and the algorithmic issue.
+This item does not reopen Item 12C or request authority for its completed repair.
+
+The confirmed scope blocker is checked-read control-flow and optional representation.
+In fixture 0102, the source tests a left read only inside its left-length branch.
+Generated Rust inserts a left-read `let Some(...) else { break; }` before that branch.
+A second read narrows the value to `Vec<SifrInt>`, but its `None` comparison remains.
+The first transformation can terminate a valid right-only iteration.
+The second transformation fails Rust compilation with `E0277`.
+
+Evidence: `native-3f422/0102.emitted.rs:116` and
+`native-3f422/0102_binary_tree_level_order_traversal.run.log`.
+The relevant producer is `crates/sifr_codegen/src/checked_place.rs`.
+Its `checked_place_read_witness` path removes the optional representation.
+This producer is unchanged from the isolated base.
+A repair must preserve branch-local read demand, absence paths, and effect order.
+Removing source guards or adding a fallback would not correct that mechanism.
+
+The full diagnostic inventory also records structured exception lowering,
+handler capture scope, missing method emission, and assertion type inference.
+Their final producer-level decomposition remains unimplemented.
+The ownership groups stay in Item 12B rather than moving into this later item.
+
+Next action: adjudicate the newly recorded emission mechanisms as dependency scope.
+Then finish the approved source and ownership corrections on the preserved branch.
+Complete qualification on the final inputs before either repository merge.
+The exact-SHA Opus allowance and single merge-profile gate remain unused.
+
+All owned qualification commands completed. No background qualification run remains.
+No compiler, fixture, test, baseline, or safety policy changed after this evidence.
+Later commits update records only and do not claim a new implementation SHA pass.
 
 #### Item 12B historical checkpoint
 
