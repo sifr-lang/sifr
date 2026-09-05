@@ -5,7 +5,7 @@ with PR #2485 and the final readiness was completed by PR #2488 plus the
 post-merge readiness ledger.
 
 This audit closed the validation-lane and inventory checks before final readiness
-completion. Final external review and the full merge-gate validation are closed
+completion. Final external validation and the full merge-gate validation are closed
 in `verification/areas/stdlib_parity/reports/concurrency_runtime_readiness_traceability.md` and
 the execution ledger.
 
@@ -61,5 +61,5 @@ and is not owned by this capability.
 
 ## Remaining Capability Checks
 
-None in this audit. Final external review and full final validation are closed
+None in this audit. Final external validation and full final validation are closed
 in the readiness traceability artifact and execution ledger.

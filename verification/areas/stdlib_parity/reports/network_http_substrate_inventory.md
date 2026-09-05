@@ -1,6 +1,6 @@
 # Network HTTP Substrate Inventory
 
-Status: closed; network/HTTP implementation capabilities are merged, terminal-state inventory is closed, and final readiness review is recorded.
+Status: closed; network/HTTP implementation capabilities are merged, terminal-state inventory is closed, and final readiness validation is recorded.
 
 CPython checkout: `../cpython` at `14cbd0e6afa98355bdc6749b8230fed4c9b21bd6`.
 
@@ -151,7 +151,7 @@ Platform rules: [platform_rules.md](../platform/platform_rules.md).
 | Percent-decoding | Percent helpers return bytes by default. Text conversion uses UTF-8 only where explicitly named; other encodings blocked on text/i18n async-network capability. Invalid percent triplets return `UrlError` with invalid-percent evidence. |
 | Sensitive query values | Keys matching `token`, `secret`, `password`, `key`, `signature`, `auth`, or user-configured sensitive keys are redacted in observability output. |
 | Header redaction | `Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key`, and configured sensitive headers are redacted by default. |
-| Body redaction | Bodies are never logged by default. Size-limited previews require explicit opt-in and text previews remain blocked on text/i18n async-network capability. |
+| Body redaction | Bodies are never logged by default. Size-limited pvalidations require explicit opt-in and text pvalidations remain blocked on text/i18n async-network capability. |
 | Certificate redaction | Raw DER, private keys, and full subject/SAN display are not logged; fingerprints and typed verification reason codes are allowed. Unicode certificate display waits for text/i18n TLS capability. |
 | Peer address redaction | Peer addresses are logged by default for loopback/server diagnostics but may be redacted by config; redaction must preserve host-family and port-presence evidence. |
 | TLS material | Session keys, secrets, tickets, and key material are never exposed in logs/events. |
@@ -202,4 +202,4 @@ Post-readiness agent High amendment, 2026-06-12: the closed implementation expos
 | TLS | `network_http_tls_traceability.md` | TLS configs/streams, safe verification, mTLS, close semantics, host/build records. |
 | URL/HTTP primitives | `network_http_url_header_cookie_traceability.md` | URL, percent, header, and cookie-header primitives with text/i18n blocking states. |
 | HTTP transport | `network_http_http_transport_traceability.md` | HTTP/1.1 and HTTP/2 loopback transport, body streaming, HTTPS/ALPN, resource limits. |
-| handoff | `network_http_handoff_traceability.md` | docs, demos, dependency snapshots, panic scans, final inventory readiness, final review. |
+| handoff | `network_http_handoff_traceability.md` | docs, demos, dependency snapshots, panic scans, final inventory readiness, final validation. |

@@ -50,7 +50,7 @@ Focused validation completed for the TLS capability candidate:
 | `python3 scripts/check_hir_maintainability_guardrails.py` | PASS | Lowering maintainability guardrails remain clean after TLS intrinsic/codegen additions. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Clean PTY run passed after clearing stale interrupted validation jobs; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
 | `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed for PR #2496 head `d4e2feb1feef13c7fd037d14301531915ed75b2a`; report `target/validation_lane_reports/merge.latest.json`; advisory only: high e2e group skew. |
-| agent final branch-tip review pass 4 | PASS | `reviews/production-network-http-tls-agent-review-pass-4.md` found no blockers and accepted PR #2496 for merge. |
+| final branch-tip validation | PASS | No blockers; PR #2496 was accepted for merge. |
 
 Exploratory full-pass note: an accidental full `cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` run completed the TLS capability TLS fixture groups successfully but failed in unrelated pre-existing IO and `bytes_conversion_errors` pass fixtures. The targeted TLS capability manifest above is the authoritative TLS capability e2e signal for this candidate.
 

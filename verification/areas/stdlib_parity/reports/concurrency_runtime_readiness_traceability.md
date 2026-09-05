@@ -2,7 +2,7 @@
 
 Capability: `concurrency-runtime readiness inventory`
 
-Status: Closed. This readiness artifact is the readiness audit surface for docs, demos, validation profiles, panic scans, generated dependency snapshots, inventory readiness, and final external review. All required gates closed with PR #2488 and its recorded local validation and final review evidence.
+Status: Closed. This readiness artifact is the readiness audit surface for docs, demos, validation profiles, panic scans, generated dependency snapshots, inventory readiness, and final external validation. All required gates closed with PR #2488 and its recorded local validation and final validation evidence.
 
 ## Readiness Gates
 
@@ -22,7 +22,7 @@ Status: Closed. This readiness artifact is the readiness audit surface for docs,
 | Panic scan and emitted-code quality coverage | closed | `verification/areas/generated_code_quality/data/corpus_manifest.json` now has a dedicated `concurrency-runtime-capability` group for the seven required capability demos, and `verification/areas/generated_code_quality/generated_code_quality.py` requires those entries so the existing corpus, panic-scan, rustfmt, and clippy modes cover task, sync, offload, parallel, process, signal, and cleanup generated code. |
 | E2E fixture manifests | closed | `verification/areas/stdlib_parity/reports/concurrency_runtime_inventory_readiness.md` audits create-pr and merge profile coverage across task, sync, offload, parallel, process, signal/resource/runtime, and IPC families; `verification/areas/core_language/data/merge_e2e_manifest.json` now includes direct `spawn_blocking_basic` coverage in addition to existing `join_set_spawn_blocking` coverage. |
 | Inventory readiness | closed | `verification/areas/stdlib_parity/reports/concurrency_runtime_inventory_readiness.md` audits regenerated inventory status, production and legacy terminal states, CPython evidence, workload classifications, platform golden entries, supported-host rows, and waiver/quarantine state. |
-| Final external review | closed | External review recorded `PASS` for the closed inventory, implementation, validation evidence, and no readiness overclaim before PR #2488 merged. |
+| Final external validation | closed | External validation recorded `PASS` for the closed inventory, implementation, validation evidence, and no readiness overclaim before PR #2488 merged. |
 
 ## Readiness Inputs By Capability
 
@@ -46,7 +46,7 @@ Status: Closed. This readiness artifact is the readiness audit surface for docs,
 | Demo readiness | Add or validate the seven required demos and record commands. | complete |
 | Generated dependency and panic-scan evidence | Add generated Cargo dependency snapshots and generated-code quality coverage for concurrency paths. | complete |
 | Validation lane and inventory readiness | Audit manifests, platform golden entries, waivers, host-limited rows, workload database, CPython evidence matrix, and inventory. | complete |
-| Final review and merge gate | Run external review rounds until satisfied, then run `scripts/run_all_tests.sh` and complete the capability. | complete |
+| Final validation and merge gate | Run external validation rounds until satisfied, then run `scripts/run_all_tests.sh` and complete the capability. | complete |
 
 ## Validation Plan
 

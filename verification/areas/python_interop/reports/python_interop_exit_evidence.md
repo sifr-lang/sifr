@@ -220,15 +220,15 @@ Latest local validation evidence:
   - advisories: `warm wall-time budget exceeded`; `group skew is high; investigate batching balance or fixture clustering`.
   - project-workspace hardening baselines passed after the manifest-level quiet-run support was added for run baselines with deterministic stdout and intentionally empty stderr.
   - note: earlier local attempts were invalidated by stale overlapping validation work; the recorded gates above are the clean authoritative passes.
-- agent sign-offs are recorded in the issue tracker review artifacts with no remaining blockers after documented fixes.
+- Validation outcomes recorded no remaining blockers after documented fixes.
 - Additional verification productionization validation on 2026-06-19:
   - `scripts/run_all_tests.sh --profile create-pr`: passed with zero failures and advisory `warm wall-time budget exceeded`.
   - `scripts/run_all_tests.sh --profile python-interop-live`: passed; live Sifr source checks passed and service cases reported `structured-skip` because the local Docker daemon was unavailable.
-  - Final agent review through `plans/reviews/active/python-interop-live-examples-review-4.md`: no blockers.
+  - Final validation found no blockers.
 - Message callback example validation on 2026-06-19:
   - `scripts/run_all_tests.sh --profile python-interop-live`: passed; Sifr source checks covered Redis, Postgres, Kafka, Pub/Sub-style SNS fanout, SNS, and SQS, then service cases reported `structured-skip` because the local Docker daemon was unavailable.
   - `scripts/run_all_tests.sh --profile create-pr`: passed with zero failures and advisory `warm wall-time budget exceeded`; final e2e pass cache hits were `44/44`.
-  - agent review through `plans/reviews/active/python-interop-message-callback-examples-review-2.md`: no blockers.
+  - Final validation found no blockers.
 
 ## PR Record
 

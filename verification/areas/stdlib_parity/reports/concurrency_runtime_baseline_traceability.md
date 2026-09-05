@@ -15,4 +15,4 @@ Capability: `concurrency_runtime_baseline`
 
 ## Baseline Readiness Gate
 
-The baseline decision is complete only after a post-baseline external review returns `PASS` and the result is recorded in the execution ledger. The structured-tasks capability remains blocked until the legacy-surface capability removes, hides, or diagnoses legacy CPython-shaped public surfaces.
+The baseline decision is complete only after a post-baseline external validation returns `PASS` and the result is recorded in the execution ledger. The structured-tasks capability remains blocked until the legacy-surface capability removes, hides, or diagnoses legacy CPython-shaped public surfaces.

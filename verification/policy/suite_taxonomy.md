@@ -114,7 +114,7 @@ Every surface listed here must have at least one multi-error fixture in `recover
   `network_mode`, pinned-corpus policy, skip policy, and baseline metadata
   rules. Create-pr and merge stable-surface suites must be offline.
 - Suite runners must not hardcode fixture lists outside their owning manifest.
-- Manifest updates are review artifacts and follow normal PR review.
+- Manifest updates are validation artifacts and follow normal PR validation.
 - Corpus lifecycle and promotion rules: `verification/policy/regression_corpus.md`.
 - Deterministic sharding + flake policy: `verification/policy/deterministic_sharding_and_flake_policy.md`.
 - Structured artifact schema + retention: `verification/policy/artifact_schema_and_retention.md`.

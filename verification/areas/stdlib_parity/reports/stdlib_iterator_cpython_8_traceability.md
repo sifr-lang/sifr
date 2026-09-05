@@ -3,7 +3,7 @@
 Capability: `stdlib_parity_iter_fix_8`
 Scope: downstream iterator-sensitive alignment for inherited bytes/runtime/stdlib surfaces
 
-## Upstream references reviewed
+## Upstream references validated
 
 - `Lib/test/test_iter.py`
 - `Lib/test/test_generators.py`

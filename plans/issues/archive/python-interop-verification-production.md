@@ -48,7 +48,7 @@ Make embedded Python interop verification authoritative enough to prove real exa
 - Container-runtime/live-profile policy merged in PR #2681.
 - Testcontainers-backed live examples merged in PR #2682.
 - Final closeout-progress PR merged in PR #2683.
-- PR3 agent reviews reported no blockers through `plans/reviews/active/python-interop-live-examples-review-4.md`.
+- PR3 agent reviews reported no blockers through `plans/reviews/archive/python-interop-live-examples-review-4.md`.
 - Closeout agent reviews are tracked in `plans/reviews/active/python-interop-verification-closeout-review-1.md` and `plans/reviews/active/python-interop-verification-closeout-review-2.md`.
 - Latest local PR gate for the live examples passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed with zero failures and advisory `warm wall-time budget exceeded`.
 - Latest live profile evidence on 2026-06-19: `scripts/run_all_tests.sh --profile python-interop-live` passed; Sifr source checks passed, and service cases reported `structured-skip` because the local Docker daemon was unavailable.
