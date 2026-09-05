@@ -26,6 +26,35 @@ On 2026-09-05, the user authorized the same worker to repair both repositories.
   Skip create-PR. Do not repeat the merge gate.
 - Close Item 12B and update its records, then stop. Do not start Item 12 or 12A.
 
+#### Item 12B qualified implementation (before review and merge)
+
+State: implementation qualification passed; Item 12B remains open until review and merge.
+
+- Compiler source: `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`.
+- Compiler SHA-256: `d47774bba160db3903b9143071352af3b3001d6ec16173731cad5811b4b7abad`.
+- External corpus candidate: `da4a0e8680c6b50c5544d77bfb92e9e4cddf1ab1`.
+- `native-qualified/matrix.json`: 90/90 repaired fixtures pass both check and native execution.
+  This includes median, zigzag, browser history, all original assertions, and the added ownership cases.
+- `borrow-final-codegen.log`: 1,435/1,435 codegen tests pass, including all 26 focused corpus-repair regressions.
+- `borrow-final-focused.log`: the exact borrowed-parameter regression command selects and passes one test.
+- `borrow-final-clippy.log`, `borrow-final-fmt.log`, `borrow-final-size.log`, and `borrow-final-hir.log`: pass.
+- `borrow-final-demo-regeneration.log`: all 264 generated companions are fresh.
+- Evidence files above are under `/tmp/sifr-item12b.akguMz/`.
+- No Opus review or merge-profile gate has run yet. The create-PR gate remains skipped.
+
+The canonical `leetcode-full` command passes 411/411 cases with zero failures.
+Its immutable evidence is `leetcode-full-7f393-results.json` and `leetcode-full-final.log`.
+That run used compiler source `7f3930ab4b05cd5ab50edb897be6a56329ab43f6`, digest
+`68fbec4c7d99c843f0f75135e7c41b06d1552a0a769676f6df39982c6dc257f8`, and the same external corpus candidate.
+
+This front-end evidence is reused by input identity, not relabeled as a later-SHA run.
+The only subsequent compiler change is the nested arithmetic emitter's borrowed-operand adapter.
+The CLI check path calls `check_project` or `check_single_file`, then returns front-end diagnostics without Rust emission.
+The CLI source, driver, frontend/lowering/type-system/IR sources, stdlib, Cargo inputs, corpus, and algorithmic runner are unchanged.
+Main's intervening changes rename demo variables and a regex test; they do not change those inputs.
+Native qualification was rerun in full with the corrected compiler.
+The retained Item 12 compiler candidate is not used as qualification evidence.
+
 #### Item 12B required tests
 
 These commands run from the isolated Sifr worktree after the bounded implementation.
