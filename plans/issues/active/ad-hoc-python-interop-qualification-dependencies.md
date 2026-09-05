@@ -142,7 +142,7 @@ Future investigation must preserve type/module identity, collisions, imported
 consumers, struct literals, patterns, and member access across a project.
 Do not fix only PythonError with a name-only special case.
 
-## Later Item12I: macro-defined project support visibility
+## Item12I: macro-defined project support visibility
 
 ### Item12H dependency handoff carried forward (2026-09-06)
 
@@ -265,6 +265,76 @@ from base; no separate base runtime test was performed.
 Future repair must preserve macro-owned symbol identity, appropriate visibility,
 consumer demand, and cancellation semantics in normal and test project modes.
 Do not add blanket exports, suppressions, or substitute cancellation behavior.
+
+### Item12I terminal handoff (2026-09-06)
+
+**Blocked; reviewed implementation preserved, not merged.**
+
+- Draft [PR #3698](https://github.com/sifr-lang/sifr/pull/3698), reviewed/final
+  implementation SHA `f6e8afd964bb214a44c50271dcb2014ee8e828b4`; merge SHA none.
+  A subsequent record-only commit does not change its implementation inputs.
+  Owned branch/worktree/base are recorded above. Parent and retained workers
+  were not modified.
+- [The one exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3698#issuecomment-5555560780)
+  returned SATISFIED, no blocking findings. Zero remediation reviews. Raw
+  response: `opus.nQzU0u/response.md`; SHA-keyed copy:
+  `review-f6e8afd964bb214a44c50271dcb2014ee8e828b4.md` outside the Git tree.
+- Exact final candidate: focused tests 8/8; seven native callback examples
+  pass all 14 checks with no failures/skips, including the original three
+  E0425 cases, cancellation/cleanup reconciliation, and `close=drained`.
+  The named outer command still fails the unchanged filtered-suite partial
+  certification restriction. No bypass flag or complete-area expansion.
+  Final compiler binary SHA256:
+  `2a500a81a5f44098618b4a0ec010008d0158ea77cc2b9ef0c5e0c2e97b09f22d`;
+  native report SHA256:
+  `df8ca27a1c8ebff8e6b7458aa9119bcb6f21556095b59ee86e43e3ace8949ba7`.
+- Formatting, HIR, file-size (3,756 files), and diff checks pass. The candidate
+  emission byte-compares equal to the sole refreshed companion. Full codegen
+  and strict Clippy retain the externally owned failures recorded above;
+  neither command is a pass.
+- One exact-clean-SHA merge-profile gate failed (exit 1, 184.65s) at coverage
+  readiness: nine unclassified SQL packages, 13 unclassified targets, one
+  stale PostgreSQL library classification. Generated-companion freshness and
+  preceding guards passed; Rust interop passed 10/10 and the other three
+  coverage variants passed. Later Python-area, crate, and E2E stages were
+  not reached. No create-PR or second merge gate. Storage was checked:
+  246 GiB free, 8.5 GiB private target; no cleanup required.
+- SQL compiler/schema-tool verification owns the existing
+  [coverage blocker](ad-hoc-schema-first-sql-platform-review-follow-ups.md#coverage-registry-blocker-observed-during-naming-cleanup-2026-09-05).
+  Python interop verification owns bounded-suite certification; 12K must
+  establish complete-area promotable evidence. Preserved12B/12C compiler
+  repairs and12H inputs remain separate integration dependencies. No external
+  failure was repaired, waived, or reclassified here.
+- Evidence root: `/private/tmp/sifr-item12i.0l85Lu/`. Final receipt:
+  `evidence-f6e8afd964bb214a44c50271dcb2014ee8e828b4.md`. Exact-SHA files:
+  `focused-f6e8afd964bb214a44c50271dcb2014ee8e828b4.log`,
+  `callback-examples-f6e8afd964bb214a44c50271dcb2014ee8e828b4.log` and `.json`,
+  `python-results-f6e8afd964bb214a44c50271dcb2014ee8e828b4.json`,
+  `merge-f6e8afd964bb214a44c50271dcb2014ee8e828b4.log` and `.json`,
+  `coverage-matrix-f6e8afd964bb214a44c50271dcb2014ee8e828b4.json`, and
+  `rust-interop-f6e8afd964bb214a44c50271dcb2014ee8e828b4.json`. Reports are
+  copied outside target; evidence is published on PR #3698.
+- Stop after this record-only update; no12J/12K implementation. 12K must
+  qualify the integrated dependencies before an affected merge. Earlier
+  exhausted review/gate allowances remain exhausted.
+
+### Item12I deferred maintenance (not implemented)
+
+Opus classified these as suggestions, not blocking findings. Owner:
+generated-Rust support/dependency analysis. They are separate future work
+if the stated inputs are introduced; no new requirement is added to12I.
+
+- **12I-F1, multi-declaration utility consistency:** strip/partition/single-name
+  discovery utilities do not split before `parse_item_name`. Current emitters
+  use one declaration per invocation; future grouped emission should normalize
+  those boundaries. Current unsupported grouping retains rather than drops.
+- **12I-F2, empty macro representation:** splitting an empty `task_local! {}`
+  produces no entries. Empty invocations are not emitted today; decide whether
+  retaining an empty item is needed before introducing such emission.
+- **12I-F3, untrusted Rust diagnostic boundary:** malformed qualified declarations
+  use the existing visibility parser's compiler-invariant panic convention.
+  Current inputs are compiler-owned; introducing user-authored Rust into this
+  discovery path requires a diagnostic boundary.
 
 ## Later Item12J: async Python error-channel contract
 
