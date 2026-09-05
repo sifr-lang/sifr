@@ -54,6 +54,71 @@ Include relevant additional changed crates in the Clippy command.
 Loop regressions cover repeated iterations, branch paths, and later sentinel uses.
 Repeat-count regressions cover later uses, nested scopes, and effectful counts.
 
+#### Item 12B checkpoint: qualification blocked on an unrelated Clippy defect
+
+State on 2026-09-05: implementation checkpoint preserved; Item 12B is not closed.
+
+- Sifr candidate: `673593f3ee234d58f03694e018abb145a843f787`,
+  branch `codex/emitted-rust-excellence-item-12b`.
+- External candidate: `330544ecf4f787c1a5fbed847469797ead92d24c`,
+  branch `codex/item12b-source-contracts` in `sifr-lang/leetcode`.
+- Both candidates are pushed. Neither repository has an Item 12B PR or merge.
+- No Opus review or merge-profile gate was consumed.
+- The isolated worktree remains `/tmp/sifr-item12b.akguMz/sifr`.
+  The retained Item 12 compiler candidate remains separate and unchanged.
+
+The newly built compiler has SHA-256
+`56ef1dac97c474d76341f77aebefa37e750002bdf82e6a6f6c5509a91d85847c`.
+The binary digest remained unchanged throughout this qualification attempt.
+
+Completed evidence under `/tmp/sifr-item12b.akguMz/`:
+
+- `codegen-singleton-full-2.log`: all 1,412 codegen tests pass.
+  This includes all four named Item 12B ownership regressions.
+- `compiler-singleton-build.log`: the compiler build passes.
+- `native-primary/0004_median_of_two_sorted_arrays.json`: check and native run pass.
+- `native-primary/0006_zigzag_conversion.json`: check and native run pass.
+  Each JSON record contains both candidate SHAs, input digests, commands, and logs.
+  These runs retain the original cases and execute the added ownership assertions.
+- `cargo fmt --check`: pass.
+- File-size guardrail: pass for 3,755 files, with the 900-line limit unchanged.
+- HIR maintainability guardrail: pass.
+
+Incomplete evidence is not a qualification pass:
+
+- `leetcode-full-candidate.log` contains 113 passing cases before interruption.
+  It is not a complete 411-case result.
+- The two helper checks pass, but their native runs were interrupted.
+  The remaining repaired fixtures still require their native runs.
+- The worker stopped all owned qualification processes after the scope blocker.
+  No background qualification process remains.
+- Earlier complete diagnostic matrices cover earlier inputs.
+  They do not qualify these candidates.
+
+`clippy.log` records the blocker from
+`cargo clippy -p sifr_codegen -- -D warnings`.
+The unchanged `project_stdlib_nominals.rs:45` uses `Option::expect` in
+`ProjectNominalRegistry::register_builtin`.
+This defect exists in base `2dc4165fd9e7c34432a9b0d098188dc645aaca55` and current
+main `2af89e75e5f97ec75e1b72c000fb3a6ebbbbb7cc`.
+It concerns builtin-error registration, not sentinel or repeat-count ownership.
+The worker did not suppress the diagnostic or import unrelated retained Item 12 code.
+
+Next action: authorize or merge the builtin-registration repair recorded as Item 12C.
+Then resume Item 12B qualification on the identified candidate inputs.
+Complete every required fixture run and the canonical full corpus before review.
+The exact-SHA review allowance and the single merge-profile gate remain unused.
+
+#### Deferred Item 12C: Pre-existing builtin-registration Clippy blocker
+
+- State: recorded only; not started.
+- Owner: compiler builtin-error registration.
+- Defect: `crates/sifr_codegen/src/project_stdlib_nominals.rs:45` fails strict
+  Clippy with `clippy::expect_used`.
+- Dependency: this unchanged defect blocks Item 12B's required crate Clippy check.
+- The repair must preserve builtin-error identity and the registration invariant.
+  It must not add a fallback or diagnostic suppression.
+
 #### Item 12B implementation provenance
 
 The compiler changes start from the merged base, not the retained Item 12 candidate.
