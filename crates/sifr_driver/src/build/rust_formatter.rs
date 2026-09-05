@@ -10,6 +10,32 @@ const EMPTY_RUSTFMT_CONFIG: &str = "NUL";
 #[cfg(not(windows))]
 const EMPTY_RUSTFMT_CONFIG: &str = "/dev/null";
 
+pub(crate) fn canonicalize_project_fields<'a>(
+    root: &mut String,
+    modules: impl IntoIterator<Item = (&'a String, &'a mut String)>,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    let modules = modules.into_iter().collect::<Vec<_>>();
+    let sources = std::iter::once((String::new(), root.clone()))
+        .chain(
+            modules
+                .iter()
+                .map(|(module, source)| (module.replace('.', "::"), (**source).clone())),
+        )
+        .collect();
+    let canonical =
+        sifr_codegen::canonicalize_generated_rust_project(&sources).map_err(|message| {
+            vec![diagnostic_with_code(
+                format!("failed to canonicalize generated project: {message}"),
+                DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+            )]
+        })?;
+    root.clone_from(&canonical[""]);
+    for (module, source) in modules {
+        source.clone_from(&canonical[&module.replace('.', "::")]);
+    }
+    Ok(())
+}
+
 pub(crate) fn format_generated_rust(
     source: &str,
     label: &str,
@@ -127,6 +153,28 @@ fn format_generated_rust_with(
 #[cfg(test)]
 mod tests {
     use super::{format_generated_rust, format_generated_rust_with};
+
+    #[test]
+    fn project_field_identity_binary_and_test_root_modules() {
+        for root in [
+            "mod records; fn main() { let value = records::Value { __sifr_payload: 7 }; println!(\"{}\", value.__sifr_payload); }",
+            "mod records; #[cfg(test)] mod tests { use crate::records::Value; #[test] fn check() { let value = Value { __sifr_payload: 7 }; assert_eq!(value.__sifr_payload, 7); } }",
+        ] {
+            let mut root = root.to_string();
+            let mut modules = std::collections::BTreeMap::from([(
+                "records".to_string(),
+                "pub struct Value { pub __sifr_payload: i64 }".to_string(),
+            )]);
+            super::canonicalize_project_fields(&mut root, &mut modules)
+                .expect("shared project field registry");
+            let root = format_generated_rust(&root, "root.rs").expect("root formatting");
+            let declaration = format_generated_rust(&modules["records"], "records.rs")
+                .expect("module formatting");
+            assert!(declaration.contains("pub payload: i64"), "{declaration}");
+            assert!(root.contains("value.payload"), "{root}");
+            assert!(!root.contains("sifr_generated_payload"), "{root}");
+        }
+    }
 
     #[test]
     fn generated_rust_uses_the_canonical_toolchain_layout() {

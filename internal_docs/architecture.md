@@ -399,6 +399,14 @@ New crates added as compiler and runtime needs grow:
 
 ## Formatter Architecture
 
+Generated Rust field cleanup runs before identifier and layout cleanup. One
+registry resolves module-qualified nominal declarations, imports and re-exports,
+and typed field receivers across the complete generated project. Field spelling
+and collisions belong to that nominal owner; shorthand pattern/value bindings
+retain their separate local identities. Binary and test-project materialization
+use the same registry. External fields are not renamed, and an unresolved
+generated-field receiver is a code-generation diagnostic.
+
 The production Sifr formatter is Ruff-backed and in-process. `.sifr` source
 flows through `sifr_syntax` into the Sifr Ruff fork parser, AST, comments,
 trivia, and formatter rules, then through the Sifr-owned `sifr_format` wrapper.

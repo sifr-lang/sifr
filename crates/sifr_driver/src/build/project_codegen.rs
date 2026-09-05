@@ -74,6 +74,10 @@ pub(super) fn codegen_single_file_frontend(
 pub(super) fn format_generated_binary_project(
     mut generated: GeneratedBinaryProject,
 ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
+    super::rust_formatter::canonicalize_project_fields(
+        &mut generated.main_rs,
+        &mut generated.support_modules,
+    )?;
     generated.main_rs =
         super::rust_formatter::format_generated_rust(&generated.main_rs, "project main.rs")?;
     for (module_name, source) in &mut generated.support_modules {

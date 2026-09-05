@@ -124,7 +124,95 @@ separate from Items12H–12K and not implemented by Item12G:
   start directory. If broader discovery is adopted, make sibling imports work
   under that selected runner as well. The recorded invocation already passes.
 
-## Later Item12H: project-wide generated-field identity
+## Item12H: project-wide generated-field identity (implementation)
+
+Owned worktree: `/tmp/sifr-item12h.afJDbk/sifr`; branch:
+`codex/emitted-rust-excellence-item-12h`; base:
+`4ce05473f58716a611ac190581bf0737ba15331e` (freshly fetched main, including
+12G implementation and record merges). Parent and Item12B state are preserved.
+
+The bounded implementation resolves generated fields through a project registry
+keyed by Rust module and nominal declaration before identifier cleanup. Binary
+and test projects share the registry. Owner-local collisions, import aliases,
+re-exports, nested modules, typed receivers, initializers, and patterns use the
+same declaration mapping. External fields retain their spelling. Unknown
+generated-field receivers fail with a compiler diagnostic rather than a guessed
+global replacement. No PythonError-specific naming rule is introduced.
+
+Exact validation commands registered before test execution:
+
+```bash
+cargo test -p sifr_codegen project_field_identity
+cargo test -p sifr_codegen -p sifr_driver
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite binding-authoring
+cargo clippy -p sifr_codegen -p sifr_driver --all-targets -- -D warnings
+cargo fmt --check
+python3 scripts/check_file_size_guardrails.py
+python3 scripts/check_hir_maintainability_guardrails.py
+scripts/run_all_tests.sh --profile merge
+```
+
+The merge-profile command is reserved for the final reviewed SHA, once only.
+No create-PR gate runs in this merge session. Focused regressions include
+negative external-type/name-collision variants and unresolved-owner rejection.
+12I cancellation visibility and 12J error-channel contracts remain out of scope.
+
+The first crate run reached 1,412 passing codegen tests and three failures.
+The parsing-diagnostic prefix regression belongs to 12H and is corrected.
+Two list-repeat expectations fail upstream of canonicalization in unchanged
+`generate_rust_with_metadata`: `test_list_repeat_lowers_without_vec_mul_shape`
+and `single_element_list_repeat_uses_std_repeat_not_extend_loop`. Their producer
+and tests are outside 12H; Item12K must reconcile them with preserved Item12B
+before integration. This is source-path provenance, not an independent base run.
+Log: `/tmp/sifr-item12h.afJDbk/crate-tests-repair.log`. No assertion was weakened.
+The crate command stopped before driver tests. Follow-up constituent commands:
+
+```bash
+cargo test -p sifr_codegen rejects_invalid_assembled_source
+cargo test -p sifr_driver
+```
+
+Strict affected-crate Clippy reached the unchanged
+`crates/sifr_codegen/src/project_stdlib_nominals.rs:45` `expect_used` failure.
+This is the builtin-registration blocker already incorporated as Item12C into
+preserved Item12B; Item12K owns bringing that repair into the integrated base.
+Log: `/tmp/sifr-item12h.afJDbk/clippy.log`. No allowance or duplicate repair was
+added by 12H. The failed command is not passing qualification evidence.
+
+After the typed Result/closure repair, binding-authoring passed its native
+`binding runtime ok` assertion and the subsequent frozen binding/check
+immutability checks, then failed at `binding_authoring.py:362`: bytecode cache
+state changed in the initially clean area environment. Remaining assertions
+after that line were not reached. Log:
+`/tmp/sifr-item12h.afJDbk/binding-authoring-error-flow.log`.
+The only observed cache files are `_virtualenv.cpython-314.pyc` and
+`_distutils_hack/__init__.cpython-314.pyc`. The unchanged Sifr probes use `-B`
+and the unchanged embedded runtime sets `PyConfig.write_bytecode = 0`.
+The unchanged PyO3 build-config interpreter launcher lacks `-B`; startup during
+native dependency building is a suspected cause, not an independently proven
+base reproduction. Owner: Python build/verification, required 12K integration
+input. Do not disable the bytecode assertion or count a warmed-environment
+rerun as proof of clean-environment immutability. No repair is included in 12H.
+
+The restricted driver run was interrupted after native Cargo probes repeatedly
+failed under sandbox restrictions. One exact failed bridge-signature probe
+passed with required permissions (1/1); this is diagnostic evidence only.
+The affected driver command will use those permissions for final qualification.
+
+Additional focused final-candidate commands (registered before execution):
+
+```bash
+cargo test -p sifr_codegen generated_rust_canonicalizer
+cargo test -p sifr_driver project_field_identity
+cargo build --locked -p sifr
+# cwd: target/verification/areas/python_interop/binding-authoring
+/tmp/sifr-item12h.afJDbk/sifr/target/debug/sifr run src/main.sifr --frozen
+```
+
+The direct native command qualifies the original cross-module field mechanism;
+it does not replace the failed full binding-authoring suite. Final mechanism
+regressions also cover generic member chains, enum payloads, loop shadowing,
+declared method return identities, Result error closures and Err patterns.
 
 Binding-authoring fails with eight Rust E0560 diagnostics in generated
 `binding_authoring/math_python.rs`: initializers use

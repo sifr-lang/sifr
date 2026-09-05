@@ -193,7 +193,7 @@ It does not broaden the active item.
 | 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
 | 12D | recorded, not started | Native corpus emission dependencies | Adjudicate checked-read control flow and the complete native diagnostic inventory before Item 12B closure. |
 | 12G | merged | Dependency-checker demo path identity | Authoritative DLPack project path and computed-reference regressions merged in PR #3695; exact-SHA validation and Opus review passed. |
-| 12H | authorized: after 12G handoff | Project-wide generated-field identity | Repair declaration/consumer naming consistency across generated files. |
+| 12H | implemented; qualification in progress | Project-wide generated-field identity | Shared nominal/module field registry implemented; inherited compiler qualification and clean-environment bytecode blockers recorded for 12K. |
 | 12I | authorized: after 12H handoff | Macro-defined project support visibility | Repair cancellation task-local visibility without blanket exports. |
 | 12J | authorized: after 12I handoff | Async Python error-channel contract | Resolve the authoritative error contracts and preserve async semantics. |
 | 12K | authorized: integration after dependency qualification | Item 12B and Python dependency integration | Qualify the integrated candidate and merge the preserved work; do not reset Item 12B review history. |
@@ -643,6 +643,20 @@ artifact hashes, package ownership, and missing-input errors remain enforced.
   Helmholtz's retained candidate/index were not modified.
 - Blocker: none. Item12G is complete. Stop this worker after the record update;
   the orchestrator may assign Item12H to a fresh worker. No next-item code was written.
+
+### Item 12H: Project-wide generated-field identity qualification
+
+Item12H's isolated candidate is under qualification in
+`/tmp/sifr-item12h.afJDbk/sifr`, branch
+`codex/emitted-rust-excellence-item-12h`, from fresh main
+`4ce05473f58716a611ac190581bf0737ba15331e`. It preserves Item12B and parent state.
+The [Python owner issue](ad-hoc-python-interop-qualification-dependencies.md#item12h-project-wide-generated-field-identity-implementation)
+records exact commands, mechanism regressions, the original native field failure
+resolved by the candidate, and incomplete qualification. Inherited list-repeat
+test failures and the Item12C builtin-registration Clippy failure require 12K
+integration with preserved Item12B. A newly reached clean-environment bytecode
+immutability failure belongs to Python build/verification and also blocks 12K.
+No assertion, dependency, bytecode rule, or Item12I/12J mechanism was changed.
 
 ### Item 12B: Bounded algorithmic dependency repair
 
