@@ -61,5 +61,5 @@ and is not owned by this capability.
 
 ## Remaining Capability Checks
 
-None in this audit. Final external validation and full final validation are closed
+None in this audit. Final external validation and merge-gate validation are closed
 in the readiness traceability artifact and execution ledger.

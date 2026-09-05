@@ -77,7 +77,7 @@ Result:
 - LeetCode: 363 entries currently reach generated Rust and pass the emitted-code
   quality gates. The 48 remaining failures stop before emitted-code quality due
   to frontend/type/lowering compatibility gaps.
-- Validation rounds completed with generated-code audit findings resolved.
+- Generated-code audit findings are resolved.
 
 ## Post-Readiness Audit Behavior Group 2 (2026-05-14)
 
@@ -105,7 +105,7 @@ Evidence:
   `target/full_emitted_quality/leetcode-audit-set-two-postpatch-1778766274/report.jsonl`.
 - Reduced-allowlist generated clippy gate:
   `target/sifr_generated_code_quality/evidence/clippy-1778769689-83126.json`.
-- Validation rounds completed with behavior group 2 generated-code audit findings resolved.
+- Behavior group 2 generated-code audit findings are resolved.
 
 Result:
 
@@ -175,9 +175,9 @@ Evidence:
   `target/full_emitted_quality/demos-neetcode-final-1778787559/report.jsonl`.
 - Final LeetCode full scan:
   `target/full_emitted_quality/leetcode-neetcode-final-1778788537/report.jsonl`.
-- Validation coverage included Arrays & Hashing, Two Pointers, Groups 3 through
+- Coverage includes Arrays & Hashing, Two Pointers, Groups 3 through
   18, and the Trees map fix.
-- Final validation marked the NeetCode emitted-quality work complete.
+- The NeetCode emitted-quality work is complete.
 
 Result:
 

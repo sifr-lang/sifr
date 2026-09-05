@@ -33,7 +33,7 @@ developer tooling surface uses parser-validated syntax assets. TextMate and/or T
 
 editor asset layer provides `editor_integrations/syntaxes/sifr.tmLanguage.json` as the
 baseline TextMate grammar and `editor_integrations/syntaxes/sifr-token-scope-map.json`
-as the validated mapping from `sifr_syntax` token kinds to syntax scopes. The
+as the canonical mapping from `sifr_syntax` token kinds to syntax scopes. The
 mapping is validated against `verification/areas/performance/sifr_syntax_token_fixtures/`.
 
 ## Required Targets

@@ -67,8 +67,8 @@ that each checked-in manifest row remains represented here.
 | `--pvalidation` | `--pvalidation` | fmt_cli_pvalidation_flags |
 | `--no-pvalidation` | `--no-pvalidation` | fmt_cli_pvalidation_flags |
 | `--range <range>` | `--range <range>` | fmt_cli_single_file_range |
-| global `--config <file-or-override>` | `--config <file-or-override>` or validated Sifr equivalent | fmt_cli_config_override_precedence |
-| global `--isolated` | `--isolated` or validated Sifr equivalent | fmt_cli_isolated_ignores_config |
+| global `--config <file-or-override>` | `--config <file-or-override>` or supported Sifr equivalent | fmt_cli_config_override_precedence |
+| global `--isolated` | `--isolated` or supported Sifr equivalent | fmt_cli_isolated_ignores_config |
 | global logging flags used by formatter summaries | Sifr diagnostic/logging equivalent | fmt_cli_summary_and_error_streams |
 
 ## AST Coverage

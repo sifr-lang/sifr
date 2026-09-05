@@ -1,6 +1,6 @@
 # Text/I18n Substrate Inventory
 
-Status: capability complete; inventory classifications are terminal and final validation/validation evidence is attached.
+Status: capability complete; inventory classifications are terminal and final validation evidence is attached.
 
 Platform rules: [platform_rules.md](../platform/platform_rules.md)
 
@@ -134,7 +134,7 @@ Existing coverage also records in-memory `StringIO`/`BytesIO` seek/tell and use-
 | Unicode segmentation capability | Add grapheme and word segmentation iterators/boundaries using `unicode-segmentation`. |
 | URL/HTTP primitives | Add `LocaleId`, canonicalization, read-only `host_locale`, object-scoped number/date/plural/collation APIs using ICU4X compiled data. |
 | HTTP transport | Add native translation bundle/translator API, `.mo` parser, safe plural-expression parser, fallbacks, contexts, plural lookup, missing-key fallback, and missing-path errors. |
-| handoff | Add public/internal docs, demos, dependency snapshots, panic scans, final inventory readiness, final validation, and full validation. |
+| handoff | Add public/internal docs, demos, dependency snapshots, panic scans, final inventory readiness, and merge-gate validation. |
 
 ## Readiness Evidence
 

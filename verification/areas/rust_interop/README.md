@@ -5,7 +5,7 @@ This area tracks Rust interop verification.
 The canonical design is `internal_docs/rust_interop_architecture.md`. This
 area is the compatibility inventory for Rust interop: it names every fixture
 required by the architecture, records tier assignment, reserves diagnostic
-families, and publishes the compatibility matrix used by docs and approvers.
+families, and publishes the compatibility matrix used by docs and maintainers.
 
 The fixture matrix is contract-first. Every fixture must declare both positive
 and negative evidence, and every fixture directory must contain concrete source

@@ -119,7 +119,7 @@ Current public-code mechanisms to remove:
 | Message-embedded pseudo-code | decimal/type-system messages and fixture expectations | removed in `decimal diagnostic cleanup` behavior group 1; decimal diagnostics now carry top-level `SIFR-DECIMAL-*` codes with no secondary message code | keep top-level `SIFR-DECIMAL-*` identity and no message-embedded pseudo-code |
 | Test-only hard-coded diagnostics | CLI renderer and driver diagnostics tests | locks renderer behavior to legacy compiler-stage buckets and pseudo-code text | renderer/harness tests construct canonical diagnostics through `sifr_diagnostics` fixtures |
 
-Workspace validation notes for `diagnostic registry population`:
+Workspace notes for `diagnostic registry population`:
 
 - Keep `SIFR-WORKSPACE-0001` for malformed `sifr.toml` parsing.
 - Keep `SIFR-WORKSPACE-0002` for a `[source].root` path that escapes the workspace root.

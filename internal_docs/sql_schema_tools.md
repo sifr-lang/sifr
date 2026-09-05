@@ -150,7 +150,7 @@ The implementation uses the workspace's current stable selections:
 - SHA-2 `0.11.0` for content identities; and
 - tempfile `3.27.0` for sibling staging directories.
 
-Update these versions only through a approved Cargo dependency change. Run the
+Update these versions only through an approved Cargo dependency change. Run the
 complete provider qualification matrix after an update. Do not add a second SQL
 parser or an ORM to the schema tool. PostgreSQL remains the semantic authority
 for live catalog data.

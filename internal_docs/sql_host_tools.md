@@ -50,7 +50,7 @@ artifact path and prevents Cargo package-name ambiguity.
 
 ## Locked identity
 
-Sifr runs `cargo metadata --frozen`. Run this command after a validated tool
+Sifr runs `cargo metadata --frozen`. Run this command after selecting a trusted tool
 change:
 
 ```text
@@ -121,7 +121,7 @@ The closed capability vocabulary is:
 
 An unknown capability is an error. Package validation remains the trust boundary
 for native host code, in the same way as a trusted Rust backend package. Cargo
-build scripts and procedural macros execute while that validated package is
+build scripts and procedural macros execute while that trusted package is
 built, before runtime confinement begins. Package and lock validation are therefore
 also the explicit build-time trust boundary. The native sandbox confines only
 the built tool process.

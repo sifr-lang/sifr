@@ -364,7 +364,7 @@ is_source_tree_development_mode()
 ```
 
 That predicate is true only for local development builds under an explicit
-debug/dev build marker or equivalent validated build-time configuration. It
+debug/dev build marker or equivalent declared build-time configuration. It
 answers only whether the tool may auto-resolve or materialize a development
 sysroot. It does not allow different stdlib inventory rules, runtime path
 rules, embedded stdlib fallback, or repository ancestor scanning after
@@ -929,7 +929,7 @@ Release certification compiles and runs the same representative program with
 the source-tree compiler/sysroot and an extracted installed sysroot. The
 program crosses retained typed intrinsics and migrated private Rust bridges;
 the certification requires identical behavior and normalized generated Cargo
-dependency plans, with the latter checked against the validated boundary
+dependency plans, with the latter checked against the defined boundary
 snapshot.
 
 Private stdlib Rust interop uses the normal Rust interop contract plus a
