@@ -238,6 +238,38 @@ checkout, blocker or none, and completed/live handle disposition; then stop.
 Sole live implementer: Hooke (`01a0788c-f8c0-7763-ab1e-270c3f0c040e`).
 The authorized replacement gate is unrun at this registration.
 
+### Replacement candidate validation registration
+
+Main integrated normally with only a phase-record conflict; all five non-record
+B7/B8/B9 paths retain their approved main blobs. Compiler, corpus, lockfile,
+fixture, workflow and runner inputs match the original reviewed integration.
+Carry B9 closure from `4a4ba794de222569a108febf795224c19cd37309` below.
+Complete-tree and receipt authentication is recorded in owned
+`target/verification/areas/item12k-replacement-provenance.json`.
+
+Run these existing named commands after freezing the candidate:
+
+```bash
+python3 scripts/check_stdlib_manifest_schema.py
+python3 scripts/check_file_size_guardrails.py
+git diff --check origin/main HEAD
+python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py
+python3 verification/areas/developer_tooling/check_no_pre_v1_compatibility.py
+python3 verification/areas/developer_tooling/check_formatter_rules_manifests.py
+```
+
+The three tooling scans cover the combined integration inputs. Reuse unchanged
+B7/B8/B9 self-tests and B8's 14 focused regressions after input authentication.
+Reuse original semantic matrices under the same complete-input rule; do not
+label them fresh candidate runs. Changed compatibility-checker inputs require
+the one remaining exact-SHA remediation review. Original approval and bounded
+dependency approvals remain attributable to their actual SHAs. No initial
+review reset. On SATISFIED, run the single authorized replacement command
+`scripts/run_all_tests.sh --profile merge`; this is cumulative gate attempt two.
+The unchanged merge profile includes all full E2E fixtures, migrated stdlib
+lanes, and `cargo test -p sifr_driver --lib -- --ignored --test-threads=1`.
+Their full outcomes must pass before delivery. No third gate or next item.
+
 ## Original 12K terminal receipt: approved, externally blocked (2026-09-06)
 
 This is the current original 12K handoff. Earlier checkpoint statements below
@@ -988,6 +1020,55 @@ evidence outside the reviewed tree. After the independent normal main merge,
 update the owner and this phase record, publish terminal evidence, and stop.
 Original12K's one failed gate stays consumed; its unreached suites remain
 unreached. No integration requalification, corpus merge or later item is started.
+
+### B9 terminal closure
+
+[PR #3729](https://github.com/sifr-lang/sifr/pull/3729) merged normally on
+2026-09-06 at 21:02:12 UTC. Exact reviewed and validated candidate:
+`36a3f111276eeade52628f2a5e3778d146d31695`; normal merge:
+`fc9dbf04727577e93dec397b3570d7cfe4af33d0`. Owner #3724 is closed.
+Immediately before merge, explicit actual `origin/main` remained the reviewed
+base `a216019057fbb05ccfdc8c846c20ee3ecc7a639d` and the candidate was clean.
+The verified merge has that base and candidate as its parents, and its tree
+equals the reviewed candidate tree.
+
+All four named checks passed on the exact candidate. Diff validation used
+`git diff --check a216019057fbb05ccfdc8c846c20ee3ecc7a639d HEAD` to cover the
+committed change. File-size guard: 3757 files, limit 900 lines. The reference
+correction covers all eight failures; checker, all four formatter manifests,
+`.gitmodules`, Ruff gitlink and compiler/lockfile/fixture/workflow inputs are
+unchanged. Changed paths are only this phase record and the formatter reference.
+
+Counts: one initial Opus SATISFIED review, zero blocking findings, zero
+remediation reviews, one provider request, zero retries, zero create-pr gates,
+zero merge-profile gates, one normal merge. The reviewer reused the existing
+validation and ran no further tests. No second gate or review is required for
+this post-merge record-only update.
+
+[Full review and validation evidence](https://github.com/sifr-lang/sifr/pull/3729#issuecomment-5562147601)
+is published outside the reviewed Git tree, keyed by candidate SHA. Raw completed
+review in the owned root at `claude.vhPlZC/response.md`, SHA256
+`0b834091f3c3c0467131d96d46f60a1062c77e792da73561e20254d137b8cd8a`.
+Validation manifest in that root at
+`evidence/36a3f111276eeade52628f2a5e3778d146d31695.validation.json`, SHA256
+`08572ce1f35d25fc62da6889e2d2e2e3f30a5e1e78e98edb7e10551d11daa5e1`,
+records command/log hashes and unchanged input blob identities.
+
+The review's unrelated pre-existing network HTTP documentation spelling is
+recorded as later owner [#3730](https://github.com/sifr-lang/sifr/issues/3730).
+No correction was started and no mechanism defect or delivery dependency was
+established. The cosmetic diff-command observation is clarified above. The
+reviewer could not resolve the B8 record in its own clone; this implementer
+verified that receipt read-only in the preserved B8 clone before carrying it.
+Neither observation needs new implementation or another review.
+
+This closure record is pushed on the owned B9 branch after merge, outside the
+approved candidate, with no second main merge. Parent must carry this terminal
+receipt into its own orchestration record; parent and predecessor trees remain
+untouched. All worker command/review handles completed. Blocker: none. B9 is
+closed; stop here. Original12K remains approved/unmerged with its sole failed
+gate consumed and unreached suites still unreached. No integration/corpus merge,
+requalification, later item or optional follow-up implementation was started.
 
 ## Item 12K-B8: SQL integer spelling guard boundary (2026-09-06)
 
