@@ -56,6 +56,65 @@ defect on second review or external blocker must be recorded under its later
 owner, then stop. Normal edits, Claude execution, PR/push/merge and owner-issue
 updates are authorized. After the narrow merge and record update, stop.
 
+### B2 terminal receipt
+
+Status: **merged and closed**. [PR #3706](https://github.com/sifr-lang/sifr/pull/3706)
+merged on 2026-09-06 at 10:47:22 UTC as
+`770f1ab86050bc95abf05573b39c8c6d5238902e`; owner #3704 is CLOSED.
+Exact reviewed and validated implementation:
+`8be5b9ece92703fda44149bb79ec6ed077e23c10`; exact base:
+`4ce05473f58716a611ac190581bf0737ba15331e`. The base and candidate were
+unchanged immediately before merge. This post-merge documentation-only receipt
+is retained on the owned branch; its commit SHA is published in the terminal
+PR/issue evidence, outside the implementation it records.
+
+Changed paths relative to base:
+
+- `verification/areas/diagnostics/checks/code_coverage.py`: one exact-owner,
+  complete-constant-token extractor shared by source and active-list scans.
+- `verification/areas/diagnostics/checks/code_coverage_test.py`: 11 focused
+  regressions, including real unknown/non-active and required-use rejection.
+- `plans/issues/active/ad-hoc-emitted-rust-excellence.md`: authorization and
+  terminal record only.
+
+[Named validation evidence](https://github.com/sifr-lang/sifr/pull/3706#issuecomment-5558694390)
+covers the exact implementation SHA: direct code coverage exits 0 without
+diagnostics; focused tests pass 11/11; file-size guardrail passes 3755 files;
+Python syntax, phase-record review and working-tree/base-to-candidate diff
+checks pass. No compiler, lockfile, fixture or workflow changed. Create-PR
+gates: **0**; merge gates: **0**, explicitly skipped under B2 authorization.
+No full diagnostics-area pass is claimed; schema_sync was neither run nor
+investigated. Documentation-only receipt checks do not rerun implementation
+validation or consume another review/gate.
+
+[Initial exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3706#issuecomment-5558708053):
+**SATISFIED**, no blocking findings. Reviews: **1 initial, 0 remediation**;
+provider requests: **1 successful, 0 failed**. Atomic completed response:
+`/private/tmp/sifr-item12kb2.Qb9aoe/opus-8be5b9ece92703fda44149bb79ec6ed077e23c10.RIKxmf/response.md`,
+SHA256 `36f9c0915e2fc2151feb11fc7dcbd2517cf3706cd00040a9d0dbfbf659a8b23b`.
+All logs remain outside the approved tree under
+`/private/tmp/sifr-item12kb2.Qb9aoe/`, keyed by implementation SHA; their hashes
+are published with the named evidence. The review's read-only corpus comparison
+found 25 files losing only spurious matches, zero real registry names lost,
+and zero newly gained names. Approval covers B2 alone.
+
+Nonblocking findings have concrete later owners:
+
+- [#3707](https://github.com/sifr-lang/sifr/issues/3707),
+  `compiler/package-management`: pre-existing identifier matcher in the
+  separate Rust-interop outcome checker. Recorded, no implementation started.
+- [#3708](https://github.com/sifr-lang/sifr/issues/3708),
+  `compiler/diagnostics`: pre-existing textual comment/string matching policy
+  and optional isolation of test filesystem paths. Recorded, no implementation
+  started; these are not B2 blockers or B3 requirements.
+
+Blocker: **none**. Parent and old worker checkouts/indexes/targets remain
+unmodified. B1's approved stacked checkpoint, review and failed-gate counts
+are preserved; original 12K still has zero reviews/gates consumed. No B3,
+12K integration, residual Item 12, or whole-phase closure work was started.
+Exact next action for this worker: stop after publishing this receipt. The
+separately dispatched B3 owner handles #3705 in another session.
+
 Baseline commit: `e9df29f7e4cada7b376b2d455790f9c80a5647a0`
 
 ## Item12K continuation execution registration (2026-09-06)
