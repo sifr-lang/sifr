@@ -1,5 +1,6 @@
 mod adapter_defaults;
 mod async_python_error_channel;
+mod async_python_error_channel_native;
 mod attached_api_aliases;
 mod attached_api_audit;
 mod attached_api_codegen;

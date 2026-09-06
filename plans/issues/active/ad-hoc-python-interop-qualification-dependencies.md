@@ -240,6 +240,53 @@ contract before repairing all affected fixtures or the appropriate compiler
 mechanism. Preserve original assertions, async cleanup/cancellation, and
 error propagation. Do not broaden accepted errors or suppress diagnostics.
 
+## Item12J-R1 bounded remediation plan (2026-09-06)
+
+Owned worktree `/private/tmp/sifr-item12j-r1.9j9Uhf/sifr`, branch
+`codex/emitted-rust-excellence-item-12j-r1`, retaining implementation `f720a342`
+and record `60219b0` unchanged in history. Fetched `origin/main` is still
+`4ce05473f58716a611ac190581bf0737ba15331e`, the original reviewed base.
+The parent's intentional dirty records and every retained worker are read-only.
+The 2026-09-06 parent amendment is carried into this worktree's phase record.
+
+Implement only the initial review's 12J-R1 conversion omission. Conversion
+demand follows semantic ancestry and canonical nominal identities; project
+and test-project support use the project nominal path registry. Existing
+consuming inheritance conversions preserve inherited messages without cloning.
+No 12I integration or next-item implementation is authorized here.
+
+Register these focused native regressions before running tests, all selected by
+the original named `cargo test -p sifr_driver async_python_error_channel` command:
+
+- `async_python_error_channel_native_local_and_transitive_conversions`: emit,
+  build and run local root/transitive errors using direct raise and propagation.
+- `async_python_error_channel_native_stdlib_nominal_collisions`: emit, build and
+  run distinct CSV/configparser Error declarations with original message assertions.
+- `async_python_error_channel_native_project_aliases_and_collisions`: emit,
+  build and run re-exported aliases, a transitive imported error, two same-named
+  project errors, and a local
+  nominal named ValueError distinct from the builtin. The existing negative
+  regression retains rejection of a same-named nominal Error target.
+
+Run only the exact Item12J command list above, reusing original IR, lowering,
+and frontend evidence where their complete crate inputs remain unchanged.
+Run affected codegen/driver tests, compiler build, freshness, named async suites,
+strict Clippy and formatting/HIR/file-size checks after the complete correction.
+Freeze the corrected SHA before the sole remaining remediation Opus review.
+One exact-final-candidate merge-profile gate remains; create-PR is omitted.
+Known external failures remain owned and honestly failed. If they prevent
+independent merge, preserve the corrected reviewed candidate for 12K and stop.
+
+Deferred **12J-F4**, owner nominal error export ancestry: the native test setup
+also tried project-imported `class Error(ValueError)` and `class Error(Error)`
+as positive source cases. Both remain rejected with SIFR-RESULT-0003 when raised
+into builtin Error. R1 changes no lowering/frontend/export inputs relative to
+`60219b0`, so this is unchanged-input source-check evidence, not an independent
+base runtime run. The retained `focused-corrected.log` and `focused-native.log`
+under the R1 evidence root contain the diagnostics. The final native collision
+case uses `ValueError(Error)` and retains the original negative Error-target
+test. This source ancestry issue is not repaired by the conversion item.
+
 ## Required next action
 
 Item12G is merged. Items12H/12I have terminal blocked, approved-candidate handoffs;

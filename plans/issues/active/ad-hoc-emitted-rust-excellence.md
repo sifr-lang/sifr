@@ -196,6 +196,7 @@ It does not broaden the active item.
 | 12H | blocked: reviewed candidate preserved | Project-wide generated-field identity | Draft #3697, reviewed `9b52ac20094608c8a31f252db99e49ef7c963384`; sole gate failed SQL coverage. Retained record `b6e6210a97598fb631b929b2d4daf4012b41bb16` owns details and follow-ups. |
 | 12I | blocked: reviewed candidate preserved | Macro-defined project support visibility | Draft #3698, reviewed `f6e8afd964bb214a44c50271dcb2014ee8e828b4`; sole gate failed SQL coverage. Retained record `19ad69969a672d7b741122ded4dd879f2bdaf9ab` owns details and follow-ups. |
 | 12J | blocked: unapproved candidate preserved | Async Python error-channel contract | Draft #3699, reviewed `f720a342edd87004975355b478948f7eb5c8b406` NOT SATISFIED (12J-R1); native suites blocked by 12I. Terminal handoff at user checkpoint, zero remediation reviews and zero gates used. |
+| 12J-R1 | in progress: remaining remediation | Complete Item 12J non-builtin error conversions | Connect semantic error ancestry to conversion demand without resetting Item 12J's review or gate budget. |
 | 12K | authorized: integration after dependency qualification | Item 12B and Python dependency integration | Qualify the integrated candidate and merge the preserved work; do not reset Item 12B review history. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
 
@@ -678,6 +679,35 @@ integration.** Owned branch `codex/emitted-rust-excellence-item-12j`, worktree
   owns12J-R1 and separate12J-F1–F3 follow-ups. A separately assigned continuation
   must resolve12J-R1 and preserve the remaining one-remediation/one-gate caps.
   12K integration and all next-item implementation remain unstarted by this worker.
+
+### 2026-09-06 dependency handoff and bounded remediation
+
+12G is merged (PRs #3695/#3696). 12H and 12I are approved but unmerged
+candidates in draft PRs #3697/#3698; their sole gates failed externally owned
+SQL coverage classifications. Their complete handoffs and deferred findings
+remain in record commits `b6e6210a97598fb631b929b2d4daf4012b41bb16` and
+`19ad69969a672d7b741122ded4dd879f2bdaf9ab`.
+
+12J is unapproved, not merged: draft PR #3699, implementation
+`f720a342edd87004975355b478948f7eb5c8b406`, record
+`60219b080eadb519a813d9a84568552824be0754`. Its initial review found missing
+non-builtin error conversions (12J-R1); native async validation also depends
+on 12I. The original worker is closed. Assign a fresh worker to 12J-R1 before
+12K. This is the remaining remediation of 12J, not a new initial-review cycle.
+
+12J-R1 scope: connect semantic error ancestry to conversion demand for local,
+project-imported and stdlib errors, preserving nominal identity and the original
+runtime/error contract. Dependencies are the preserved 12J candidate and its
+initial review; 12I remains a separate native qualification dependency.
+Use the exact named validation in the Python owner issue at record `60219b0`,
+including `cargo test -p sifr_driver async_python_error_channel` and the
+`async-declaration-examples`/`async-context-examples` suites. Register focused
+emission/compilation regressions before testing. Finish this in-scope correction
+without absorbing known external failures. At most one remediation review and
+one final-candidate merge gate remain for 12J; no third review or budget reset.
+If external qualification still blocks merge, preserve the corrected reviewed
+candidate for 12K. New second-review mechanism defects become later bounded
+items. Do not integrate the unapproved 12J candidate as-is.
 
 ### Item 12B: Bounded algorithmic dependency repair
 

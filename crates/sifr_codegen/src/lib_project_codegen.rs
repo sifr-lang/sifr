@@ -406,6 +406,7 @@ pub fn generate_rust_multi_with_metadata(
         required_features.extend(codegen_result.required_features);
     }
 
+    project_support_demand.set_error_conversion_paths(&nominal_type_paths);
     let rendered_support = render_support(&project_support_demand, stdlib_code);
     used_stdlib_modules.extend(rendered_support.used_stdlib_modules.iter().cloned());
     required_features.extend(rendered_support.required_features.iter().copied());
