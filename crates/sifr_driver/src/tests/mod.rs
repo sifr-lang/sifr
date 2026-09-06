@@ -18,6 +18,7 @@ mod project_error_exports;
 mod project_generic_identity;
 mod project_graph;
 mod project_python_class_metadata;
+mod required_error_message;
 mod single_file_frontend;
 mod stdlib_exports;
 mod support;

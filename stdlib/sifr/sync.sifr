@@ -45,13 +45,13 @@ class Channel[T]:
 
     def push(mut self, own value: T) -> Result[None, ClosedError]:
         if self._closed:
-            raise ClosedError()
+            raise ClosedError("channel is closed")
         self._buffer.append(value)
         return None
 
     def pop(mut self) -> Result[T, ClosedError]:
         if len(self._buffer) == 0:
-            raise ClosedError()
+            raise ClosedError("channel is closed")
         value: T = self._buffer[0]
         self._buffer.pop(0)
         return value
@@ -188,7 +188,7 @@ class Semaphore:
         if self._permits > 0:
             self._permits = self._permits - 1
             return SemaphorePermit()
-        raise WouldBlockError()
+        raise WouldBlockError("lock is held")
 
 
 class Notify:

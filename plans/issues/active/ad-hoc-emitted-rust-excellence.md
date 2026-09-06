@@ -1786,6 +1786,89 @@ registration, named compiler/native validation, review, and gate are **unreached
 M1 used zero Opus reviews and zero gates; old 12J's two NOT SATISFIED reviews
 remain exhausted. No approved implementation SHA exists for M1.
 
+### Item12J-M1 user adjudication and implementation registration (2026-09-06)
+
+The user answered **"Do your recommendation through workers"** and explicitly
+authorized enforcing the required constructor-supplied string message for every
+error. The prior decision blocker is resolved: this supersedes preservation of
+message-less constructor calls and integer message overrides, which must now be
+rejected. History above remains evidence of the earlier unresolved decision.
+No Display-derived fallback, absent-message root representation, test weakening,
+or next-item implementation is authorized.
+
+Implementation notes for this authorization: error storage is seeded and checked
+in lowering, and both explicit and inherited constructors must have a required
+string input and complete their storage initialization. Pure error children
+forward the actual parent constructor; mixed non-error data parents retain their
+physical layout. Canonical nominal identity drives consuming root conversions,
+including projections through owned embedded parents, without Display fallback.
+Imported `Error` shadows and constructor-only stdlib nominals are handled in
+both project and test-project import ownership. These are directly necessary
+collision/export paths, not general 12K integration.
+
+The runtime's channel errors and the sync/parallel-map first-party callers now
+supply explicit messages. The opaque-state negative fixture changes its payload
+from representable `str` to unrepresentable `int`, preserving its original
+diagnostic assertion and purpose under the new inherited message contract.
+PythonError's native five-field assertion uses the existing package fixture's
+probed interpreter/native-link trust; it is not skipped or weakened. File-size
+splits isolate declaration diagnostics and project import binding ownership.
+
+This sole implementer owns independent checkout
+`/private/tmp/sifr-item12j-m1-required.vL5lSI/sifr`, branch
+`codex/item12j-m1-required-string`, retaining record `054a823b9aaafd388ddf1d944f1b7e50fcb95c29`
+and all original12J/R1 lineage. Parent and former workers' checkouts, indexes,
+targets, and evidence are read-only. Parent orchestrates only.
+
+Scope: consistent typed string storage; default/custom/inherited constructors;
+declaration and call diagnostics; nominal identity and exports; consuming root
+conversions. Preserve explicit string layouts including PythonError's exact
+five fields with no duplicate message storage or extra parameter. Migrate
+necessary first-party fixtures/demos/docs while preserving their purpose and
+assertions. Mixed-marker ancestry or other deferred findings are included only
+if directly necessary to this required-string contract, with explicit provenance.
+
+Before testing, register focused `required_error_message` regressions in lowering
+and driver for absent/integer/missing constructor diagnostics and positive
+own/inherited/default/custom/local/imported/stdlib/collision/project/test-project
+emission and native execution, including unused root-conversion demand and
+explicit consuming upcasts. Commands: `cargo test -p sifr_lowering required_error_message`,
+`cargo test -p sifr_driver required_error_message`, plus all named M1 commands:
+`cargo test -p sifr_driver async_python_error_channel`, `cargo test -p sifr_codegen`,
+`cargo test -p sifr_driver`, `cargo test -p sifr_ir`, `cargo test -p sifr_lowering`,
+`cargo test -p sifr_frontend`, `cargo test -p sifr_type_system`,
+`cargo build --locked -p sifr`,
+`python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --update`
+then without `--update`,
+`uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite async-declaration-examples --suite async-context-examples`,
+`cargo clippy --workspace -- -D warnings`, `cargo fmt --check`,
+`python3 scripts/check_hir_maintainability_guardrails.py`, and
+`python3 scripts/check_file_size_guardrails.py`.
+Finish bounded implementation before running tests, then iterate on in-scope
+failures. Inspect disk/private target before long Cargo runs. One initial
+exact-SHA Opus review and at most one remediation review remain unused, as does
+one `scripts/run_all_tests.sh --profile merge` on the approved final candidate;
+skip create-pr. A new second-review mechanism defect is later work and stops M1.
+Prior12J/R1 reviews remain NOT SATISFIED and exhausted; no budget is reset.
+
+12I cancellation-task-local native qualification, 12B codegen failures, 12C
+Clippy, TypeVar #3667, and SQL coverage remain externally owned. Finish M1
+before evaluating those blockers; preserve the corrected approved candidate
+for12K if they prevent merge. No gate without approval and no second gate.
+After merge/record, or an evidenced external block after correction/review,
+return item, PR, reviewed SHA, record SHA, merge SHA or none, evidence/paths,
+blocker or none and stop.
+
+Directly necessary provenance: the earlier12J-F1 mixed data-parent/Error-marker
+ancestry and12J-F4 imported parent named Error are included only where needed
+to ensure an accepted error retains its required string storage and root
+ancestry. Native regressions exercise both. Runtime channel producers and two
+parallel-map callers now supply explicit messages; their behavior/assertions
+are retained. Custom constructors that already compute an initialized string
+(such as configparser's section errors) retain that source contract.
+Fetched main remains `4ce05473f58716a611ac190581bf0737ba15331e`, with no base delta.
+Disk before initial Cargo validation: 209 GiB free, no private target yet.
+
 Only the phase and Python dependency Markdown records change. Documentation
 diff checking and the named file-size guard are recorded in external evidence
 `/private/tmp/sifr-item12j-m1.VO82Kk/evidence.md`, which will identify the final

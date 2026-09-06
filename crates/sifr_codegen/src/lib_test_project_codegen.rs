@@ -131,11 +131,7 @@ pub fn generate_rust_test_project_with_metadata(
             module_name,
             &stdlib_nominal_plan,
             &crate_root_modules,
-            &module
-                .classes
-                .iter()
-                .map(|class| sifr_type_system::source_class_rust_name(&class.name))
-                .collect(),
+            &crate::project_stdlib_nominals::project_module_binding_names(module),
         );
         support_rust_files.insert(
             (*module_name).to_string(),

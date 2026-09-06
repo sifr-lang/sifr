@@ -162,6 +162,8 @@ mod python_interop_tests;
 mod python_interop_validation_tests;
 #[cfg(test)]
 mod python_trust_tests;
+#[cfg(test)]
+mod required_error_message_tests;
 mod result_diagnostics;
 #[cfg(test)]
 mod result_diagnostics_tests;

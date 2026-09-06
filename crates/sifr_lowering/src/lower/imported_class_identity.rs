@@ -483,7 +483,7 @@ fn set_canonical_identities(ty: &mut Type, local_classes: &HashMap<String, Strin
                                 // A same-named base refers to the prior declaration
                                 // (notably builtin Error), never the class itself.
                                 .filter(|parent_identity| {
-                                    Some(*parent_identity) != identity.as_ref()
+                                    parent != "Error" && Some(*parent_identity) != identity.as_ref()
                                 })
                                 .map_or_else(|| parent.to_string(), Clone::clone)
                         })

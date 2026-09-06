@@ -6,8 +6,8 @@ use super::{
 };
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
 use crate::project_stdlib_nominals::{
-    extract_project_stdlib_nominal_prelude, project_stdlib_nominal_plan,
-    relocate_project_stdlib_nominals,
+    extract_project_stdlib_nominal_prelude, project_module_binding_names,
+    project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
 };
 use crate::project_union_prelude::render_project_union_prelude;
 use crate::render_project_structural_record_prelude;
@@ -379,11 +379,7 @@ pub fn generate_rust_multi_with_metadata(
             module_name,
             &stdlib_nominal_plan,
             &crate_root_modules,
-            &module
-                .classes
-                .iter()
-                .map(|class| source_class_rust_name(&class.name))
-                .collect(),
+            &project_module_binding_names(module),
         );
         let imports = [local_imports, union_imports]
             .into_iter()

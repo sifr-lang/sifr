@@ -158,7 +158,7 @@ impl<T: Clone> Channel<T> {
     fn push(&mut self, value: T) -> Result<(), ClosedError> {
         self.__sifr_with_state(|state| {
             if state.closed || !state.receiver_alive {
-                return Err(ClosedError::new());
+                return Err(ClosedError::new("channel is closed".to_string()));
             }
             state.buffer.push_back(value);
             self._recv_notify.notify_one();
@@ -182,7 +182,7 @@ impl<T: Clone> Channel<T> {
     fn pop(&mut self) -> Result<T, ClosedError> {
         match self.try_pop() {
             __SifrChannelPopState::Item(value) => Ok(value),
-            __SifrChannelPopState::Empty | __SifrChannelPopState::Closed => Err(ClosedError::new()),
+            __SifrChannelPopState::Empty | __SifrChannelPopState::Closed => Err(ClosedError::new("channel is closed".to_string())),
         }
     }
 }
@@ -212,7 +212,7 @@ impl<T: Clone> ChannelSender<T> {
             notified.as_mut().enable();
             match self._channel.try_push(value) {
                 __SifrChannelPushState::Sent => return Ok(()),
-                __SifrChannelPushState::Closed(_) => return Err(ClosedError::new()),
+                __SifrChannelPushState::Closed(_) => return Err(ClosedError::new("channel is closed".to_string())),
                 __SifrChannelPushState::Full(pending) => {
                     value = pending;
                     notified.await;
@@ -262,7 +262,7 @@ impl<T: Clone> ChannelReceiver<T> {
             notified.as_mut().enable();
             match self._channel.try_pop() {
                 __SifrChannelPopState::Item(value) => return Ok(value),
-                __SifrChannelPopState::Closed => return Err(ClosedError::new()),
+                __SifrChannelPopState::Closed => return Err(ClosedError::new("channel is closed".to_string())),
                 __SifrChannelPopState::Empty => notified.await,
             }
         }

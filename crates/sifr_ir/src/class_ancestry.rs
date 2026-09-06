@@ -17,10 +17,17 @@ impl HirClass {
         }) = self.parent_type.as_ref().map(Type::resolve_alias)
         {
             let parent = identity.as_ref().unwrap_or(name);
-            return Some(match parent_class {
+            let mut chain = match parent_class {
                 Some(chain) => format!("{parent}|{chain}"),
                 None => parent.clone(),
-            });
+            };
+            if !chain
+                .split('|')
+                .any(|ancestor| matches!(ancestor, "Error" | "sifr.builtin.Error"))
+            {
+                chain.push_str("|Error");
+            }
+            return Some(chain);
         }
         Some(
             self.parent_class
