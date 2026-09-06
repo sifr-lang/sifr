@@ -44,7 +44,7 @@ item becomes ready merely because these narrow checks pass. After valid 12K
 delivery, retain 12D,12E,12F,retained Item12,docs-only12A order. Parent only
 orchestrates; each new worker owns one fresh checkout/branch/index/temp root.
 
-- **12K-B7 / [#3722](https://github.com/sifr-lang/sifr/issues/3722)**: ready;
+- **12K-B7 / [#3722](https://github.com/sifr-lang/sifr/issues/3722)**: merged;
   depends on the terminal12K diagnosis, not on unmerged integration delivery.
   Restore the TypeScript-Go direct filesystem inventory for all 22 pre-existing
   sites in six missing paths. Explicitly adjudicate inline-test inventory
@@ -58,7 +58,7 @@ orchestrates; each new worker owns one fresh checkout/branch/index/temp root.
   independently deliverable PR; retain the integration checkout as read-only
   provenance. One exact-SHA review plus at most one remediation. No Sifr gates
   absent compiler/lockfile/fixture/workflow changes. Merge/update owner and stop.
-- **12K-B8 / [#3723](https://github.com/sifr-lang/sifr/issues/3723)**: recorded;
+- **12K-B8 / [#3723](https://github.com/sifr-lang/sifr/issues/3723)**: ready;
   execution dependency B7 terminal/merged. Distinguish three legitimate SQL
   dialect `bigint` spellings from removed Sifr scalar support. Preserve SQL names
   and real compatibility rejection; no broad suppression. Named tests:
@@ -73,10 +73,77 @@ orchestrates; each new worker owns one fresh checkout/branch/index/temp root.
   Named tests: `python3 verification/areas/developer_tooling/check_formatter_rules_manifests.py`
   and its `--self-test`, diff and file-size checks. Expected documentation-only.
 
-12K-B7 dispatched to Aristotle (`01a07867-1267-7321-aecc-7afdf3864dc4`),
-fresh no-history gpt-6-astra high worker. Arendt is closed; one live implementer.
-Exact base prompt and separate onboarding supplied. No B7 review/gate consumed
-at dispatch; its narrow main-based delivery must not absorb original12K's stack.
+12K-B7 Aristotle (`01a07867-1267-7321-aecc-7afdf3864dc4`) is closed after
+verified [PR3725 merge](https://github.com/sifr-lang/sifr/pull/3725), candidate
+`186365fb11abf7391db02d17c30a3c6d612d6658`, merge
+`4faa76803da67d22a2dfffdb81cc63bf16304fe0`. Four named checks pass, file-size3756;
+one SATISFIED initial review, zero remediation/retries/gates, one normal merge.
+Two Markdown paths only: transfer inventory and own phase record. All six paths
+and 22 scanner-line observations covered (17 production, five inline tests),
+without changing scanner behavior. Owner3722 is closed. [Review/evidence](https://github.com/sifr-lang/sifr/pull/3725#issuecomment-5561995836),
+[terminal handoff](https://github.com/sifr-lang/sifr/pull/3725#issuecomment-5562009279).
+Preserved clone `/private/tmp/sifr-item12k-b7.afEJYk/sifr`; post-merge record
+`daff4efbd00e5e922c1f2ce9a9eff686388a5da6` pushed on
+`codex/item12k-b7-inventory`, not merged to main. Next worker must carry this
+closure receipt into its own phase record so main does not retain stale status.
+Terminal manifest at sibling `evidence/terminal.json`, SHA256
+`f42226a2db1767794d9c68ca253235e88f92c732b95f6fd03e3245373ab80e09`.
+No live worker handles remain from B7. Original12K stack remains unmerged.
+
+12K-B8 dispatched to Copernicus (`01a07871-4fd6-7b02-a3be-b6f9cde8d518`),
+fresh no-history gpt-6-astra high, exact base prompt plus independent main-based
+onboarding. All predecessors closed; one live implementer. B8 starts with no
+review/provider/gate allowance consumed. B9 remains next.
+
+Later nonblocking tooling owner [#3726](https://github.com/sifr-lang/sifr/issues/3726)
+records existing path-only inventory enforcement and multiple calls per source
+line. It is not a new B7 defect, no per-site contract is inferred from line
+counts, and it does not change B8/B9 order or authorize integration requalification.
+
+These owners are authorized bounded dependency work. They must not repair the
+next owner, restart original12K qualification, merge its inherited stack, or
+conduct whole-phase review. Preserve completed and failed evidence accurately.
+
+## Item 12K-B8: SQL integer spelling guard boundary (2026-09-06)
+
+Owner: [#3723](https://github.com/sifr-lang/sifr/issues/3723). B7 is merged and
+its owner is closed, as recorded above. This section executes only B8; existing
+phase history below is preserved. Explicitly fetched `origin/main` and base:
+`4faa76803da67d22a2dfffdb81cc63bf16304fe0`.
+
+The sole implementer owns clone `/private/tmp/sifr-item12k-b8.TS6YQA/sifr`,
+branch `codex/item12k-b8-sql-compatibility`, independent Git index and sibling
+`evidence/`. Parent's two intentional Markdown edits and every predecessor
+checkout/target remain read-only. No original12K integration ancestry is imported.
+
+Implementation: recognize the three existing SQL database-integer mapping
+expressions in their exact owner paths, and exempt only each external spelling's
+matched literal span from `public-bigint`. Require the database representation,
+64-bit width, PostgreSQL aliases/signedness, and MySQL sign binding. Every other
+match (including on the same line) and every other guard rule remains enforced.
+Register the external SQL integer contract in the existing retained-contract
+registry. Preserve PostgreSQL/MySQL compiler sources and SQL behavior byte-for-byte.
+
+Named validation, registered before execution and run after implementation:
+
+- `python3 verification/areas/developer_tooling/check_no_pre_v1_compatibility.py`
+- `python3 verification/areas/developer_tooling/check_no_pre_v1_compatibility.py --self-test`
+- `python3 -m unittest discover -s verification/areas/developer_tooling -p test_no_pre_v1_compatibility.py -v`
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+
+Focused regressions cover all three real source sites; whitespace and Unicode
+offsets; altered database types, widths, aliases and sign bindings; wrong owner
+paths; removed Sifr types, spellings and diagnostics across scan roots; same-line,
+nearby and intra-expression forbidden matches; other rules; and retained registry
+membership. Only the checker, its Python tests, retained-contract registry and
+this phase record change. No compiler, lockfile, fixture or workflow changes:
+zero create-pr or merge-profile gates per user instruction.
+
+One exact-candidate Opus review is allowed, plus at most one remediation.
+Review evidence stays outside the reviewed tree and is published keyed by SHA.
+After the independent main merge, update this record and owner, publish the
+terminal receipt, and stop. B9 and original12K requalification are not started.
 
 ## Item 12K-B7: direct filesystem inventory restoration (2026-09-06)
 

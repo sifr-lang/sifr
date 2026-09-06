@@ -59,6 +59,7 @@ REQUIRED_CONTRACT_IDS = {
     "retained-external-file-formats",
     "retained-release-bootstrap-legacy-index",
     "retained-lint-deprecated-status",
+    "retained-sql-integer-spellings",
 }
 ALLOWED_CONTRACT_KINDS = {
     "external-dependency",
@@ -87,6 +88,47 @@ class Rule:
 
 def words_pattern(words: tuple[str, ...]) -> re.Pattern[str]:
     return re.compile(r"\b(?:" + "|".join(re.escape(word) for word in words) + r")\b")
+
+
+# These are external SQL contracts, not public Sifr scalar registrations.
+# Recognize the complete database mapping, then exempt only its literal span.
+# A path alone, a nearby SQL name, or another match on the same line grants
+# no exemption. Unrecognized/changed expressions fail closed for owner review.
+SQL_INTEGER_SPELLINGS = {
+    "crates/sifr_sql_postgresql/src/types.rs": re.compile(
+        r'\(\s*&\[\s*"int8"\s*,\s*(?P<spelling>"bigint")\s*,\s*'
+        r'"pg_catalog\.int8"\s*\]\s*,\s*DatabaseType::Integer\s*\{\s*'
+        r'sign:\s*IntegerSign::Signed\s*,\s*'
+        r'width:\s*IntegerWidth::Bits64\s*,?\s*\}\s*,?\s*\)'
+    ),
+    "crates/sifr_sql_mysql/src/types.rs": re.compile(
+        r'(?P<spelling>"bigint")\s*=>\s*DatabaseType::Integer\s*\{\s*'
+        r'sign\s*,\s*width:\s*IntegerWidth::Bits64\s*,?\s*\}\s*,'
+    ),
+    "crates/sifr_sql_postgresql/tests/postgresql_regressions.rs": re.compile(
+        r'\bDatabaseType::Integer\s*\{\s*'
+        r'width:\s*sifr_sql_contract::IntegerWidth::Bits64\s*,\s*'
+        r'\.\.\s*\}\s*=>\s*(?P<spelling>"bigint")\s*,'
+    ),
+}
+
+
+def sql_integer_spelling_spans(source: str, relative: str) -> set[tuple[int, int]]:
+    pattern = SQL_INTEGER_SPELLINGS.get(relative)
+    if pattern is None:
+        return set()
+    return {match.span("spelling") for match in pattern.finditer(source)}
+
+
+def rule_matches(
+    rule: Rule, line: str, offset: int, sql_spans: set[tuple[int, int]]
+) -> bool:
+    for pattern in rule.patterns:
+        for match in pattern.finditer(line):
+            span = (offset + match.start(), offset + match.end())
+            if rule.rule_id != "public-bigint" or span not in sql_spans:
+                return True
+    return False
 
 
 PUBLIC_STDLIB_ALIASES = (
@@ -362,19 +404,23 @@ def scan(root: Path) -> list[Failure]:
                 if should_skip(relative):
                     continue
                 try:
-                    lines = path.read_text(encoding="utf-8").splitlines()
+                    source = path.read_text(encoding="utf-8")
                 except UnicodeDecodeError:
                     continue
                 relative_text = relative.as_posix()
+                sql_spans = sql_integer_spelling_spans(source, relative_text)
                 if re.search(joined("SIFR-WORKSPACE-", "010") + r"[1-4]", filename):
                     failures.append(Failure("workspace-diagnostic-codes", relative, 1, "legacy workspace diagnostic code filename"))
-                for line_number, line in enumerate(lines, 1):
+                offset = 0
+                for line_number, raw_line in enumerate(source.splitlines(keepends=True), 1):
+                    line = raw_line.rstrip("\r\n")
                     alias = public_stdlib_alias(line, relative_text)
                     if alias is not None:
                         failures.append(Failure("public-stdlib-aliases", relative, line_number, f"public alias {alias}"))
                     for rule in RULES:
-                        if rule.applies_to(relative_text) and any(pattern.search(line) for pattern in rule.patterns):
+                        if rule.applies_to(relative_text) and rule_matches(rule, line, offset, sql_spans):
                             failures.append(Failure(rule.rule_id, relative, line_number, rule.description))
+                    offset += len(raw_line)
     return failures
 
 
