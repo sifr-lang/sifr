@@ -2,6 +2,33 @@
 
 Status: active; fresh sequential dependency workers authorized on 2026-09-05.
 
+## Original12K continuation checkpoint (2026-09-06)
+
+Integration candidate `fbe5ca93e61c5286268f2b42a768901a907544f4` preserves original
+12B/H/I/correctingM1 and B1 lineage, merged B2/B3 on mainf11e1cd and their
+post-merge records. Complete source/lock/runner/fixture/gitlink comparison proves
+the B1 Python30/30 (including all five named suites) and lowering1119 evidence
+has unchanged relevant inputs; authenticated reports remain in the retained
+B1 evidence root. No new Python execution is claimed or bypass introduced.
+Corpus stays8bcbe7a; old integration draft3701 and all dependency PRs are preserved.
+
+Fresh locked build, codegen1452, focused diagnostics11+7 and static guards pass.
+Canonical readiness fails1of4 at taxonomy's own self-test, caused by scanning
+the caller's absolute TMPDIR ancestor `sifr-item12k-cont.StPW7n`. This is later
+[12K-B4/#3712](https://github.com/sifr-lang/sifr/issues/3712), owner
+`compiler-verification`, not a Python/compiler regression or diagnostics3708.
+The taxonomy checker is identical on main/B1/candidate. No workaround or repair
+was made. Driver compilation was stopped; remaining crates/filters, native90,
+algorithmic411, full diagnostics, strict Clippy and E2E/stdlib gate qualification
+remain unreached. See the phase continuation checkpoint for exact logs/hashes.
+
+Owned checkout/evidence `/private/tmp/sifr-item12k-cont.StPW7n/`, branch
+`codex/item12k-continuation`; all parent/old checkouts stayed read-only.
+0initial/0remediation reviews,0provider requests,0gates,0merges; all original
+allowances remain unused. The linked replacement draft and separate record SHA
+are published externally. Parent dispatches the bounded B4 owner before another
+fresh12K continuation. This worker stops without next-item or whole-phase work.
+
 <!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
 Status: active, blocking Item12B merge; recorded only, not implemented.
 Owners: Python interop verification, codegen naming, project support assembly.

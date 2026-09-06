@@ -119,6 +119,65 @@ Baseline commit: `e9df29f7e4cada7b376b2d455790f9c80a5647a0`
 
 ## Item12K continuation execution registration (2026-09-06)
 
+### Continuation terminal checkpoint: external readiness blocker12K-B4
+
+**Blocked, not reviewed, not merged, not closed.** This checkpoint supersedes
+historical12K/B1/B2/B3 statuses below. Exact candidate
+`fbe5ca93e61c5286268f2b42a768901a907544f4` retains complete integrated/B1 lineage,
+latest main `f11e1cd7eef16a02063555bccc9fd8e19287833b`, and B2/B3 post-merge
+recordsa53b5d3/c508c143. Corpus remains `8bcbe7ab7939e5c8362c10f61a80e368022cc372`
+(unmerged leetcode48). No new compiler correction was needed. Original draft3701
+and all dependencies remain preserved. A linked replacement draft carries this
+checkpoint; its URL and the separate record SHA are in the external receipt.
+
+Fresh candidate evidence: locked build PASS; codegen1452passed/0failed/0ignored/
+0filtered (doc-tests0/0); B2/B3 focused11+7pass; fmt/HIR/diff PASS; file-size
+PASS3779files/900limit. Compiler SHA256
+`e03c7b5d004c38370881e934cfb97e9a30b244cb9c7db4fc65b3b7130ab911cc`,
+lockfile SHA256 `e5f4734fc985e8b3fc041b7a03795829c766b2b96c4fa351932c89b14d255320`.
+Canonical readiness ran once:4variants,3pass,1blocking failure. Registry,
+profile assignment and27negative readiness tests pass; taxonomy self-test
+raises `AssertionError: technical terminology was rejected` at line705 before
+the repository scan. Driver was stopped during compilation after confirmation
+of the external blocker (owned runner exit143); no driver pass is claimed.
+Remaining crates/driver filters, native90, algorithmic411, full diagnostics,
+strict Clippy and all E2E/migrated-stdlib gate coverage are UNREACHED.
+
+Later [12K-B4/#3712](https://github.com/sifr-lang/sifr/issues/3712) belongs to
+`compiler-verification`, separately from diagnostics follow-up3708. The unchanged
+checker creates self-test fixtures under caller TMPDIR, then scans every
+absolute-path ancestor for out-of-repository files. The regex matches `-item12k`
+in this worker's registered `sifr-item12k-cont.StPW7n` ancestor, rejecting valid
+`semantic_terms.rs` independently of content. Main/B1/candidate share checker
+blob `0d67883ab670bf0e199fd4fe88602b4b7d62bf7b`. A read-only filename
+classification confirms the path cause. No checker fix, temporary-root
+workaround, allowlist, audit weakening or repeated readiness run followed.
+
+Complete32,087-path provenance and authenticated B1 report/subreport hashes:
+`/private/tmp/sifr-item12k-cont.StPW7n/provenance-fbe5ca93e61c5286268f2b42a768901a907544f4.json`,
+SHA256 `dbca8e7e5a80ea7ed209bfafca5b3b0c10a60d65992b4231993ef751da08049f`.
+Only phase Markdown and five diagnostics schema/checker files differ from B1.
+Compiler/runtime/Python sources, fixtures, locks, runners, demos, toolchain
+files and gitlinks match. B1 Python30/30 (all five named suites), lowering1119/
+1existing ignored including3required-message tests, and demo264 remain reusable
+historical executions, not new runs. Readiness4/4 was not reused because its
+scan includes changed diagnostics files; fresh execution exposed12K-B4.
+
+Evidence root `/private/tmp/sifr-item12k-cont.StPW7n/` retains build/codegen/
+interrupted-driver/readiness logs,197-path diff list, roots-only native script
+(not executed), full provenance and blocker body. Canonical repository-local
+report `target/verification/areas/item12k-coverage-readiness.json` has SHA256
+`2f33095b31f442a855535ad6956ebc8b2a91f1c9896d71d2e82c612acb43573d`;
+readiness log SHA256 `2a94f13bdf2e050723bccd589f689266d11c6447a976b567dd4b232c3a026d60`.
+
+12K counts remain0initial reviews,0remediation,0provider requests/retries,
+0create-pr gates,0merge gates,0merges. Reviewed/merge SHA:none. No old allowance
+was reset. This separate documentation receipt receives no review/gate.
+Parent and retained checkouts/indexes/targets/dirty records stayed read-only.
+Next action: parent dispatches bounded B4 owner, then fresh12K continuation
+preserves this lineage and completes pending qualification before the unused
+review/gate. This worker stops; no12D/E/F,Item12,12A or whole-phase work starts.
+
 Integration completed on main `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
 Normal merge commits preserve both B2/B3 post-merge records. Only a Markdown
 insertion conflict required resolution; both records were retained. Relative
@@ -554,10 +613,11 @@ It does not broaden the active item.
 | 12J | blocked: both reviews exhausted, unapproved | Async Python error-channel contract | Draft #3699 preserves final reviewed candidate `4bc432f3474134b1a1d43202d39fd147893bb014`; initial and remediation reviews are NOT SATISFIED. No gate or merge. Message-storage follow-up 12J-M1 requires adjudication; 12I remains external. |
 | 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
 | 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
-| 12K | blocked: TypeVar prerequisite #3667 | Item 12B and Python dependency integration | Combined candidate `7e23785ab07cba6f925eed2f934c0304750f1d74` is preserved in draft PR #3701. Full lowering reproduces the two unchanged TypeVar assertions. No integration review, gate, or merge; see the terminal receipt below. |
+| 12K | blocked: taxonomy prerequisite #3712 | Item 12B and Python dependency integration | Candidate `fbe5ca93e61c5286268f2b42a768901a907544f4` preserves original lineage plus approvedB1 and mergedB2/B3. Fresh readiness3/4;0reviews/0gates/0merges. |
 | 12K-B1 | approved correction; gate blocked | TypeVar diagnostic assertion fidelity (#3667) | Draft #3702, reviewed `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`; named checks pass, Opus SATISFIED; one failed gate exposes 12K-B2/B3. Unmerged; see B1 terminal checkpoint above. |
-| 12K-B2 | later owner; not started | Canonical diagnostic-code matcher identity (#3704) | `compiler/diagnostics` owns SQL provider enum suffixes misidentified as canonical code references. No repair or qualification started. |
-| 12K-B3 | later owner; not started | Diagnostics schema synchronization (#3705) | `compiler/diagnostics` owns checked-in schema versus generator drift; mechanism still to establish. No regeneration or repair started. |
+| 12K-B2 | merged | Canonical diagnostic-code matcher identity (#3704) | PR3706 merge770f1ab; recorda53b5d3 retained in12K ancestry; full historical receipt preserved. |
+| 12K-B3 | merged | Diagnostics schema synchronization (#3705) | PR3709 mergef11e1cd; recordc508c143 retained in12K ancestry; full historical receipt preserved. |
+| 12K-B4 | later owner; not started | Taxonomy fixture path isolation (#3712) | `compiler-verification` owns the self-test failure caused by caller TMPDIR ancestors. No fix or retry in12K. |
 
 <!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
 | 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
