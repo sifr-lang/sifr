@@ -217,7 +217,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 })?;
                 Some(RustExpr::UnaryOp {
                     op: "!".to_string(),
-                    operand: Box::new(lowered_operand),
+                    operand: Box::new(RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(lowered_operand),
+                    }),
                 })
             }
             "not" if is_bool_like_simple(operand.ty()) => {

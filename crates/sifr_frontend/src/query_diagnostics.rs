@@ -321,11 +321,15 @@ pub fn collect_module_exports(
                         name: class.name.clone(),
                         fields: exported_class_fields(class),
                         methods,
-                        parent_class: exported_parent_chain(
-                            class.parent_class.as_deref(),
-                            module,
-                            &imported_ancestry,
-                        ),
+                        parent_class: if class.is_error_type {
+                            class.semantic_parent_chain()
+                        } else {
+                            exported_parent_chain(
+                                class.parent_class.as_deref(),
+                                module,
+                                &imported_ancestry,
+                            )
+                        },
                     },
                 }
             };

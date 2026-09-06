@@ -232,9 +232,11 @@ fn portable_dependency_line(
     cargo_version: &str,
     cargo_source: Option<&str>,
 ) -> Result<String, String> {
-    let package = (dependency_name != cargo_package_name)
-        .then(|| format!("package = {}, ", toml_quote_string(cargo_package_name)))
-        .unwrap_or_default();
+    let package = if dependency_name == cargo_package_name {
+        String::new()
+    } else {
+        format!("package = {}, ", toml_quote_string(cargo_package_name))
+    };
     let Some(source) = cargo_source else {
         return Err(format!(
             "local Rust dependency `{dependency_name}` cannot be included in a portable generated project; publish it through an exact registry or Git source"

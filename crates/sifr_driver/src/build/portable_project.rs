@@ -334,9 +334,12 @@ fn portable_lock_source(
     Ok(format!("git+{url}?rev={revision}#{revision}"))
 }
 
+// Checksums keyed by the exact package name, version, and Cargo source identity.
+type AuthorityPackageChecksums = BTreeMap<(String, String, String), String>;
+
 fn authority_packages(
     paths: &[PathBuf],
-) -> Result<BTreeMap<(String, String, String), String>, Vec<RenderedDiagnostic>> {
+) -> Result<AuthorityPackageChecksums, Vec<RenderedDiagnostic>> {
     let mut packages = BTreeMap::new();
     for path in paths {
         let source = std::fs::read_to_string(path).map_err(|error| {

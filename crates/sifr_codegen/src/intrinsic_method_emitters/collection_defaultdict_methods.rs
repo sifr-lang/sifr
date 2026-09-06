@@ -111,7 +111,7 @@ impl RustEmitter {
         match (alias_name, method, args, lowered_args.as_mut_slice()) {
             ("__sifr_defaultdict_list", "append", [value], [lowered_value]) => {
                 let owned_value =
-                    self.clone_owned_append_arg_expr_for_ir(value, lowered_value.clone());
+                    self.materialize_reusable_value_for_ir(value, lowered_value.clone());
                 Some(crate::RustExpr::Block {
                     stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                         receiver: Box::new(entry_expr),
@@ -123,7 +123,7 @@ impl RustEmitter {
             }
             ("__sifr_defaultdict_set", "add", [value], [lowered_value]) => {
                 let owned_value =
-                    self.clone_owned_append_arg_expr_for_ir(value, lowered_value.clone());
+                    self.materialize_reusable_value_for_ir(value, lowered_value.clone());
                 Some(crate::RustExpr::Block {
                     stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                         receiver: Box::new(entry_expr),
@@ -135,7 +135,7 @@ impl RustEmitter {
             }
             ("__sifr_defaultdict_list", "insert", [_, value], [_, lowered_value]) => {
                 *lowered_value =
-                    self.clone_owned_append_arg_expr_for_ir(value, lowered_value.clone());
+                    self.materialize_reusable_value_for_ir(value, lowered_value.clone());
                 methods::lower_method(value_ty, method, &entry_expr, &lowered_args)
                     .map(|lowered| lowered.expr)
             }
@@ -146,7 +146,7 @@ impl RustEmitter {
                 [lowered_value],
             ) => {
                 *lowered_value =
-                    self.clone_owned_append_arg_expr_for_ir(value, lowered_value.clone());
+                    self.materialize_reusable_value_for_ir(value, lowered_value.clone());
                 methods::lower_method(value_ty, method, &entry_expr, &lowered_args)
                     .map(|lowered| lowered.expr)
             }

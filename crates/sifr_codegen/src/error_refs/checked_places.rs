@@ -1,9 +1,9 @@
+use super::ErrorReferences;
 use sifr_ir::HirStmt;
-use std::collections::HashSet;
 
 pub(super) fn collect_checked_place_stmt_error_refs(
     stmt: &HirStmt,
-    referenced: &mut HashSet<String>,
+    referenced: &mut ErrorReferences,
     builtin_error_classes: &[&str],
 ) -> bool {
     match stmt {
@@ -71,7 +71,7 @@ pub(super) fn collect_checked_place_stmt_error_refs(
 
 fn collect_expr(
     expr: &sifr_ir::HirExpr,
-    referenced: &mut HashSet<String>,
+    referenced: &mut ErrorReferences,
     builtin_error_classes: &[&str],
 ) {
     super::collect_expr_error_refs(expr, referenced, builtin_error_classes);
@@ -79,7 +79,7 @@ fn collect_expr(
 
 fn collect_failure(
     failure: Option<&sifr_type_system::Type>,
-    referenced: &mut HashSet<String>,
+    referenced: &mut ErrorReferences,
     builtin_error_classes: &[&str],
 ) {
     if let Some(failure) = failure {

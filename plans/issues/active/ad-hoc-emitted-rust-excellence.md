@@ -2,6 +2,23 @@
 
 Status: active
 
+## Original12K replacement continuation ownership (2026-09-06)
+
+Sole current implementer owns `/private/tmp/sifr-item12k-replacement.1xatjh/sifr`,
+branch `codex/item12k-replacement-delivery`, its independent Git database/index,
+and sibling `tmp`, `uv-cache`, `pycache`, and `evidence` directories. Starting
+record is `057dd2e2caf1f84306b370cee2c3be39918cbec3`. Parent and predecessor
+checkouts remain read-only. Canonical JSON outputs are in owned
+`target/verification/areas/item12k-replacement-*`. `CARGO_TARGET_DIR` is unset;
+`TMPDIR`, `UV_CACHE_DIR`, and `PYTHONPYCACHEPREFIX` use those owned sibling
+directories, with `CARGO_BUILD_JOBS=6` and `RUST_TEST_THREADS=1`.
+
+The following current parent authorization and dependency receipts are carried
+verbatim before integration. They supersede historical pending authorization
+and zero-count statements below. One initial review and one failed integration
+gate are already consumed; at most one remediation review and exactly one
+authorized replacement gate remain. No third gate or next item is authorized.
+
 ## Current orchestration: 12K blocked; bounded tooling owners (2026-09-06)
 
 This section supersedes older pending original12K review/gate statements, not
@@ -66,7 +83,7 @@ orchestrates; each new worker owns one fresh checkout/branch/index/temp root.
   and its `--self-test`, plus focused SQL-spelling versus removed-language-type
   regressions registered before execution, diff and file-size checks. Narrow
   guard owner; no unrelated SQL/compiler behavior changes.
-- **12K-B9 / [#3724](https://github.com/sifr-lang/sifr/issues/3724)**: in progress;
+- **12K-B9 / [#3724](https://github.com/sifr-lang/sifr/issues/3724)**: merged;
   execution dependency B8 terminal/merged. Reconcile formatter preview reference
   with actual supported behavior and existing capability/CLI manifests, including
   all eight failed checks. Do not infer or introduce a formatter mechanism fix.
@@ -110,6 +127,842 @@ No live B8 handles remain; original12K gate/stack untouched. Optional later
 guard-design observations are [#3728](https://github.com/sifr-lang/sifr/issues/3728),
 no established current defect or delivery dependency; no speculative extension.
 
+12K-B9 Carson (`01a0787e-03d4-78e2-9e13-56c9b53be27a`) closed after
+verified [PR3729 merge](https://github.com/sifr-lang/sifr/pull/3729), candidate
+`36a3f111276eeade52628f2a5e3778d146d31695`, basea216019, normal merge
+`fc9dbf04727577e93dec397b3570d7cfe4af33d0`. All four named checks pass,
+file-size3757; one SATISFIED initial review, zero remediation/retries/gates,
+one provider request and one normal merge. Owner3724 closed. Only
+formatter_rules.md and phase Markdown changed; four row corrections address
+all eight reference checks. No source/manifests/checker/gitlink change.
+[Review/evidence](https://github.com/sifr-lang/sifr/pull/3729#issuecomment-5562147601),
+[terminal receipt](https://github.com/sifr-lang/sifr/pull/3729#issuecomment-5562162083).
+Preserved clean clone `/private/tmp/sifr-item12k-b9.YGbRNk/sifr`;
+post-merge phase record `4a4ba794de222569a108febf795224c19cd37309` on
+`codex/item12k-b9-formatter-reference` is pushed but not merged to main.
+It carries B8 closure; the next delivery owner must carry B9 closure. Sibling
+`evidence/terminal.json` SHA256
+`6f2b92857d693d198c8918c456115024df114f7751a29f36105ce4dfc2321f04`.
+No live B9 handles remain. All implementation workers are closed. Unrelated
+network HTTP body-preview spelling is later docs owner [#3730](https://github.com/sifr-lang/sifr/issues/3730),
+nonblocking with no established runtime defect or delivery dependency.
+
+### Original12K delivery authorization checkpoint
+
+All three developer-tooling owners B7/B8/B9 are now merged independently to main.
+Original12K itself remains approved but unmerged, with one failed gate consumed;
+no worker may infer another allowance from the dependency merges. Parent asked:
+"Once B9 merges, do you authorize one replacement 12K integration gate on the
+corrected candidate, preserving the failed attempt and reusing valid evidence?"
+The user explicitly answered **"Aithorize"** to the request for one replacement
+integration gate. This resolves the authorization blocker on 2026-09-06 and
+supersedes earlier no-replacement instructions for this single attempt only.
+The goal is active again with its unchanged full objective. Do not fabricate
+a new item or erase the consumed failed gate. Retained original12K
+source/corpus/evidence remain in the delivery clone above; actual remote main
+was rechecked as `fc9dbf04727577e93dec397b3570d7cfe4af33d0`.
+
+### Authorized original12K replacement qualification and delivery
+
+Dispatch one fresh no-history gpt-6-astra high worker for original **12K**.
+All previous workers are closed. Scope remains the original integration and
+normal delivery, not a new compiler mechanism or whole-phase closure. Read the
+complete retained original12K scope, dependencies, acceptance and command
+registrations in `/private/tmp/sifr-item12k-delivery.4J6JeK/sifr/plans/issues/active/ad-hoc-emitted-rust-excellence.md`
+and its top terminal receipt; this current authorization supersedes stale
+zero-count and no-replacement statements there.
+
+Start an owned clone/branch/index/temp root from full integration record
+`057dd2e2caf1f84306b370cee2c3be39918cbec3`, incorporate current main containing
+the approved B7/B8/B9 normal merges, and carry their post-merge closure records
+including B9 `4a4ba794de222569a108febf795224c19cd37309`. Preserve all normal
+12B/H/I/correctingM1/B1/B2/B3/B4/B5/B6 ancestry and exact corpus gitlink
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`; retain all 16 exact submodules.
+Do not rebuild the stack from main alone or incorporate retained Item12
+`8ad089a9458f35fcfa228e93fe44f4d69731828b`. Parent/predecessor checkouts, indexes,
+targets and dirty records remain read-only. Existing qualified code should not
+be rewritten merely because this worker is fresh. Resolve only actual in-scope
+integration conflicts; no unrelated follow-up repairs.
+
+Before qualification, materialize actual `refs/remotes/origin/main` with a fetch
+refspec and verify its retained manifest. Keep `CARGO_TARGET_DIR` unset: owned
+default outer target and nested probes' separate caches under owned TMPDIR;
+own UV/Python caches, CARGO_BUILD_JOBS=6 and RUST_TEST_THREADS=1 as registered.
+Canonical JSON reports belong inside the owned repository. Inspect free disk
+and own target before long Cargo; no cleanup of predecessor targets.
+
+Authenticate complete relevant-input maps and prior SHA-keyed receipts before
+reusing validation or review. Original12K already consumed **one initial
+SATISFIED review, zero remediation reviews, one provider request, zero retries,
+one FAILED merge-profile gate**, with no integration/corpus merge. Preserve
+those counts. Assess the dependency delta against that exact approval; if a
+review is required for changed relevant inputs, use at most the single
+remaining remediation review on the final exact SHA, not another initial
+review or a third round. Give the reviewer original approval and qualified
+B7/B8/B9 receipts; keep unchanged approval/evidence attributable to their real
+SHAs. New second-review mechanism defects become later items, not another round.
+
+Named checks remain the original12K registration. Reuse unchanged native90,
+full algorithmic411, diagnostics184, readiness4, Python30/allfive, demos264,
+codegen1452, lowering1119/1ignored, frontend139, IR4, types147, required-message/
+async filters, focused18+8, driver595/77normallyignored/doctests and strictClippy
+only after authenticating relevant inputs. Reuse B7/B8/B9 focused evidence for
+unchanged inputs, not as a replacement for the broad gate. Before the gate,
+run registered `python3 scripts/check_stdlib_manifest_schema.py`,
+`python3 scripts/check_file_size_guardrails.py`, `git diff --check origin/main HEAD`,
+and any actually affected named focused validation; register any necessary
+new focused command before execution. Complete in-scope corrections before
+testing. Historical failed/unreached executions never become passes by inference.
+
+Then run **one newly authorized replacement**
+`scripts/run_all_tests.sh --profile merge` on the final approved exact SHA;
+skip create-pr for in-session merge. This is cumulative integration gate
+attempt two, with attempt one permanently FAILED. No third gate authorized.
+Full E2E, migrated stdlib and normally ignored driver build lanes still require
+actual pass, including the registered ignored driver command
+`cargo test -p sifr_driver --lib -- --ignored --test-threads=1` in the gate.
+No partial certification, disabled guard, narrower fixture manifest or positive
+prefix may replace complete qualification. No repeat broad standalone matrices
+merely to warm a cache; cold builds are not host-sensitive performance evidence.
+
+On complete pass, normal corpus PR48 and Sifr integration PR3717 delivery and
+related PR/owner/phase reconciliation are authorized. Freeze source/corpus/
+gitlinks before review and gate so delivery preserves approved inputs and
+normal ancestry. Record actual merge SHAs; preserve failed12J/R1 history versus
+separately approved correctingM1. Follow-up records need no repeat gate/review.
+On a true external blocker or new second-review mechanism, record its later
+owner and stop. Do not absorb optional3726/3728/3730 or later12D/E/F/Item12/12A.
+Return terminal item, PRs, exact SHAs, evidence/counts, changed paths, owned
+checkout, blocker or none, and completed/live handle disposition; then stop.
+
+Sole live implementer: Hooke (`01a0788c-f8c0-7763-ab1e-270c3f0c040e`).
+The authorized replacement gate is unrun at this registration.
+
+### Replacement candidate validation registration
+
+Main integrated normally with only a phase-record conflict; all five non-record
+B7/B8/B9 paths retain their approved main blobs. Compiler, corpus, lockfile,
+fixture, workflow and runner inputs match the original reviewed integration.
+Carry B9 closure from `4a4ba794de222569a108febf795224c19cd37309` below.
+Complete-tree and receipt authentication is recorded in owned
+`target/verification/areas/item12k-replacement-provenance.json`.
+
+Run these existing named commands after freezing the candidate:
+
+```bash
+python3 scripts/check_stdlib_manifest_schema.py
+python3 scripts/check_file_size_guardrails.py
+git diff --check origin/main HEAD
+python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py
+python3 verification/areas/developer_tooling/check_no_pre_v1_compatibility.py
+python3 verification/areas/developer_tooling/check_formatter_rules_manifests.py
+```
+
+The three tooling scans cover the combined integration inputs. Reuse unchanged
+B7/B8/B9 self-tests and B8's 14 focused regressions after input authentication.
+Reuse original semantic matrices under the same complete-input rule; do not
+label them fresh candidate runs. Changed compatibility-checker inputs require
+the one remaining exact-SHA remediation review. Original approval and bounded
+dependency approvals remain attributable to their actual SHAs. No initial
+review reset. On SATISFIED, run the single authorized replacement command
+`scripts/run_all_tests.sh --profile merge`; this is cumulative gate attempt two.
+The unchanged merge profile includes all full E2E fixtures, migrated stdlib
+lanes, and `cargo test -p sifr_driver --lib -- --ignored --test-threads=1`.
+Their full outcomes must pass before delivery. No third gate or next item.
+
+## Original 12K terminal receipt: approved, externally blocked (2026-09-06)
+
+This is the current original 12K handoff. Earlier checkpoint statements below
+remain historical evidence. State: **integration reviewed and approved; sole
+merge gate failed on three pre-existing developer-tooling owners; not merged,
+not closed**. No next-item implementation or whole-phase review occurred.
+
+- PR: [#3717](https://github.com/sifr-lang/sifr/pull/3717), still draft.
+- Exact reviewed/gated candidate: `56907f59cc7d9f9fedb89434970c074c0247dee9`.
+- Exact assessed main: `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+- Exact corpus: `8bcbe7ab7939e5c8362c10f61a80e368022cc372`,
+  [leetcode #48](https://github.com/sifr-lang/leetcode/pull/48), unmerged.
+- Starting complete record: `e9cce681e039f918aaf64daebe0d415195bb6f96`.
+- Owned checkout: `/private/tmp/sifr-item12k-delivery.4J6JeK/sifr`;
+  local branch `codex/item12k-final-delivery`, PR branch
+  `codex/item12k-final-integration`. Parent dirty Markdown, all predecessor
+  checkouts, indexes, targets and retained evidence remained read-only.
+- All 202 integration changed paths, 32,088 tracked tree entries and 16 exact
+  clean submodule checkouts authenticated. The provenance JSON enumerates all
+  paths and retained ancestry. This continuation changed only this phase
+  Markdown before review; no integration source correction was necessary.
+- Normal 12B/H/I/correcting M1/B1/B2/B3/B4/B5/B6 ancestry is preserved.
+  Separate Item12 source `8ad089a` remains excluded. Historical 12J/R1 reviews
+  remain NOT SATISFIED; only the correcting M1 lineage is approved.
+- Final record SHA is published in the external terminal receipt following this
+  documentation-only commit. Sifr/corpus merge SHAs: **none**.
+
+### Completed review and exact-candidate evidence
+
+The original single Opus integration review completed **SATISFIED**, no blockers,
+on all 202 paths against assessed main. [Published review](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5561494295).
+The interrupted turn's original process was resumed and consumed, not restarted.
+Response SHA256: `ef02a6509f907dd87e6cf0a6869ed0f024f11688b8b4f8a20f62758b79850fa3`.
+
+The newly named retained-manifest check, file-size guard (3780 files / 900 lines)
+and exact-base diff check passed. Setup fetched actual main into local
+`refs/remotes/origin/main` and verified its retained manifest; no baseline
+override. This resolves the local setup omission #3721 without changing a guard.
+`CARGO_TARGET_DIR` remained unset, with the owned default outer target and
+nested probes' separate caches under owned TMPDIR. New Python/UV caches and
+all canonical JSON reports were inside the owned paths. No prior target was reused.
+
+The sole `scripts/run_all_tests.sh --profile merge` on the approved candidate
+completed **FAILED exit 1 after 3736.19 seconds**. No retry or second gate.
+It passed Cargo setup and all 13 guardrails, including fresh demo companions
+and the formerly blocked retained-manifest stage. Actual area outcomes:
+
+| Area | Actual result in this gate |
+| --- | --- |
+| Rust interop | PASS, 10 variants |
+| Coverage readiness | PASS, 4 variants |
+| Core language | PASS, 5 variants |
+| CPython differential | PASS, 2 variants |
+| Complete Python interop | PASS, 30 variants, all five named dependency suites included |
+| Diagnostics | PASS, 184 variants |
+| Runtime platform | PASS under its policy, 30 variants, 3 explicit skips |
+| Algorithmic representative subset | PASS, 12 variants |
+| Developer tooling | FAIL, 42 variants, 3 blocking failures |
+
+Runtime-platform skips were the existing capability-gated HTTP body fixture and
+two sanitizer smokes requiring unavailable llvm-symbolizer. These are explicit
+profile-policy skips, not newly certified runtime coverage.
+All subsequent areas and toolchain stages were **unreached**, including full
+E2E, migrated stdlib and normally ignored driver generated builds. Passing
+prefixes do not certify them. The cold build and exceeded advisory wall budget
+are not host-sensitive performance evidence.
+
+Before review and again at handoff, complete relevant-input authentication
+preserved 78 historical receipts plus 25 B5 artifacts (104 distinct authenticated
+artifacts including anchors). Retained executions remain correctly attributed:
+native90, full algorithmic411, Python30/all five suites, diagnostics184,
+readiness4, demos264, codegen1452, lowering1119/1 existing ignored, frontend139,
+IR4, types147, required-message/async filters, B2/B3 focused18, B4 focused8,
+B5 driver595/77 normally ignored/successful doctests and strict Clippy.
+They are inherited evidence, not freshly rerun standalone matrices on this SHA.
+The new gate's actual area executions are recorded separately above.
+
+### External failure owners; no repairs here
+
+1. **12K-B7 / [#3722](https://github.com/sifr-lang/sifr/issues/3722)**,
+   compiler/tooling filesystem inventory: 22 direct read/probe sites in six
+   paths are absent from the transfer inventory. Every exact source line
+   already exists on main; checker and inventory blobs are unchanged.
+   Inline tests in materialize.rs are among the scanner's current observations.
+2. **12K-B8 / [#3723](https://github.com/sifr-lang/sifr/issues/3723)**,
+   compiler/tooling compatibility with SQL owners: three PostgreSQL/MySQL
+   database `bigint` spellings trigger the removed-Sifr-type token rule.
+   Source, checker and retained-contract registry are identical to main.
+3. **12K-B9 / [#3724](https://github.com/sifr-lang/sifr/issues/3724)**,
+   formatter reference/manifests: eight missing/drifted checks for
+   `--preview`, `--no-preview`, preview capability requirements and
+   `fmt_cli_preview_flags`. Reference, all manifests, checker and Ruff
+   gitlink are unchanged from main. Formatter behavior/AST checks passed.
+
+These are read-only provenance diagnoses, not rerun test commands or
+integration fixes. Owning issues contain exact locations, unchanged blobs,
+originating commits and focused validation recommendations. No later-item code,
+guard weakening or new language behavior was implemented.
+
+Nonblocking review suggestions remain separate: pre-canonicalization raw tuple
+grouping is erased before artifacts are written (later emitted-quality owner);
+compiler-internal conversion assertions depend on the required-message lowering
+invariant (existing M1-F1 hardening owner). The review's pending-gate observation
+is now the explicit failed qualification above, not an additional code defect.
+
+### Preserved artifacts and terminal counts
+
+Evidence root: `/private/tmp/sifr-item12k-delivery.4J6JeK/`.
+Canonical reports: owned `sifr/target/verification/areas/`.
+
+| Artifact | SHA256 |
+| --- | --- |
+| `item12k-delivery-provenance.json` | `66dbbc9494ba679242c010fecc45d8906c382c9b5f8148eb42438d031bd6021a` |
+| `item12k-delivery-final-evidence.json` (54 current artifacts) | `edf9ce8c890b80af771ce8cd56ccedc143cb9e69d93d25e853d13d73bdb51d0a` |
+| `evidence/merge.log` | `336f5b1345f2495c7a197d81658f36ddfbcebf9c57b110675c5dc4b5c8f219b3` |
+| `item12k-delivery-merge.json` | `26397bc590f84b7f333bd0dee2a510ae74a59d0df4a9d90804b2a90cb1ff76ec` |
+| `target/validation_lane_reports/merge.latest.json` | `5ddb8f75654d3d871121819a1e0a7383e9be197a2ec65aaf47ede2b8377323ac` |
+| `developer-tooling-merge-results.json` | `250c53ce5883451f3ef6927e0e46e829e4c2c72cbae224fd8b81ae8a78f0d031` |
+| `item12k-delivery-inventory-blocker.json` | `193156c72c92e9949c456bf5491bae8b86efcf70c9d25ab0d4f3827c71b7e42d` |
+| `item12k-delivery-other-blockers.json` | `ba655e2869464524d2d831cb6c3311fb933b4683dea33fa3ba24ee4ec504bf80` |
+
+Counts: **1 initial integration review, 0 remediation reviews, 1 provider request,
+0 retries, 0 create-pr gates, 1 failed merge-profile gate, 0 passing gates,
+0 Sifr merges, 0 corpus merges**. Three fresh standalone named checks passed;
+other fresh validation occurred only within this one gate. No count is reset.
+
+Review handle44502 and gate handle89382 both completed and were consumed.
+No live command/review/gate remains at handoff. Pre-gate free disk96GiB / target
+3.7MiB; terminal free disk67GiB / target23GiB. No cleanup occurred; retained
+target evidence stays intact, and no further long Cargo command is planned.
+
+Dependent PRs #3694/#3697/#3698/#3700/#3701/#3702/#3713/#3715/#3717/#3719 and
+corpus#48 remain preserved, without a qualified main delivery or superseding
+closure. GitHub reports #3720 merged into its stacked B5 base; this is not a
+main integration merge. B5's old failed gate remains failed and consumed.
+
+Exact next action belongs to the orchestrator: assign the three recorded
+external owners sequentially, preserve this exact integration approval and
+failed gate, and determine the remaining delivery authorization after their
+qualified handoffs. This receipt authorizes no second original12K gate and
+claims no completed delivery. The worker stops here, without 12D/E/F, retained
+Item12, 12A or whole-phase work.
+
+<!-- Historical prerequisite checkpoints follow; the terminal receipt above is current. -->
+
+## Item12K-B5 terminal checkpoint: external driver doctest blocker (2026-09-06)
+
+State: **implemented, unreviewed, not merged; external-validation-blocked**.
+[Draft stacked PR #3719](https://github.com/sifr-lang/sifr/pull/3719) preserves
+the narrow B5 implementation for [owner #3716](https://github.com/sifr-lang/sifr/issues/3716).
+This is the current B5 receipt; all original12K/predecessor records below remain
+historical evidence with unchanged consumed budgets. The inherited integration
+stack in PR3717 remains unreviewed; B5 has not approved or delivered it.
+
+- Exact retained integration/review base:
+  `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`.
+- Main: `f11e1cd7eef16a02063555bccc9fd8e19287833b`, fetched and retained as
+  an ancestor; no rebase or history rewrite was needed.
+- Owned registration: `6b07cf476` copied the new parent B5 dispatch before code.
+- Implementation candidate: `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`.
+  Reviewed/approved SHA: **none**. Merge SHA: **none**.
+- Exact corpus: `8bcbe7ab7939e5c8362c10f61a80e368022cc372`, unmerged PR48;
+  all normal integration ancestry and all16 exact clean submodules retained.
+- Owned clone `/private/tmp/sifr-item12k-b5.5WJpGX/sifr`, branch
+  `codex/item12k-b5-portable-clippy`. Parent and predecessor checkouts,
+  targets, indexes and dirty records remained read-only. No test remains live.
+
+The complete code batch changed only
+`crates/sifr_driver/src/build/cargo_manifest.rs` (equivalent explicit package
+alias `if/else`) and `crates/sifr_driver/src/build/portable_project.rs` (private
+transparent `AuthorityPackageChecksums` alias for the identical BTreeMap type).
+Generated manifest bytes, authoritative lock parsing/source/checksum selection,
+errors and ordering are unchanged. No lint allowance, fallback, fixture,
+lockfile, workflow, metadata-assertion duplication or unrelated repair was added.
+The only other changed path is this phase Markdown. No architecture/roadmap
+status changed and no next-item code was started.
+
+Registered validation ran after the complete code batch. Format, HIR
+maintainability, file-size (3780 files/900-line limit) and diff checks passed.
+The one fresh `cargo test -p sifr_driver` ran 16:00:03–16:13:24 UTC and exited
+**1**: **595 unit tests passed,0 failed,77 normally ignored**, then
+`Doc-tests sifr_driver` aborted with twelve `E0463` crate-resolution errors.
+This complete invocation is **FAILED**. The old original12K594/1/77ignored
+invocation also remains failed. Strict workspace Clippy was queued after the
+driver command and was **not reached**. Full E2E, migrated stdlib and normally
+ignored driver generated-build lanes remain **unrun**, not inferred passes.
+
+External owner/receipt: [#3718](https://github.com/sifr-lang/sifr/issues/3718),
+compiler validation / driver Cargo-rustdoc integration. Read-only checks found
+the sampled frontend/lowering/Ruff AST `.rlib` files present at rustdoc's exact
+paths and matching Rust/rustdoc1.98.0(88d9e12ae). The root cause remains
+unestablished; no portable-project regression is asserted. Own target5.1GiB,
+116GiB free, no cleanup or cache reset. No focused/doctest retry, unrelated
+implementation or gate was used to work around the failure.
+
+Evidence root: `/private/tmp/sifr-item12k-b5.5WJpGX/evidence/`.
+
+- `driver.log`: SHA256
+  `f1290b1c1599c1494dee1cddcb72dec5e5dd21dc14dfc66000edf7c77c7ec7ab`.
+- `static-checks.md`: SHA256
+  `24f6581cf189dacdb79f951ebb664b0e7b897d4bb090b14f19a0f25607d5d0d5`.
+- Canonical own-repo `target/verification/areas/item12k-b5-validation.json`:
+  SHA256 `7b4dcb4ce93423dba0b0b005178ebf399af0e527e2c5a86d70118c8c09fea924`.
+- Canonical own-repo `target/verification/areas/item12k-b5-provenance.json`:
+  SHA256 `8910059cfd009db3c0fe39f7be5bf8373c168068889d07608d98577270663389`.
+
+Authentication covers all32088 tracked paths,16 submodules,39 receipts and the
+exact two source transformations. Retained native90, algorithmic411,
+diagnostics184, readiness4, codegen1452, lowering1119, Python30/all five suites,
+demo264 and focused18+8 remain historical authenticated evidence. They are not
+fresh B5 executions, broad integration approval, a replacement for pending
+lanes, or a performance claim for this cold owned target.
+
+Actual B5 counts: **0initial reviews,0remediation reviews,0provider requests,
+0provider retries,0create-pr gates,0merge-profile gates,0merges**. The prepared
+Opus prompt and atomic wrapper were never executed. Original12K counts remain
+zero and all predecessor consumed budgets remain unchanged. This is an external
+validation stop, not an approved `integration-delivery-pending` handoff.
+
+Exact next action: separately scope diagnosis/resolution or adjudication of
+#3718, then resume this preserved B5 candidate with an actual passing full-driver
+invocation and strict Clippy. Its narrow exact-SHA review (max one remediation)
+and sole governed merge-profile gate remain unused. A fresh original12K owner
+still owns broad integration review and safe delivery of the inherited stack.
+No full-phase review or12D/E/F/retainedItem12/12A work is authorized by this record.
+
+## Original12K terminal checkpoint: external portable-project Clippy blocker (2026-09-06)
+
+Current state: **preserved, unreviewed integration; blocked before review/gate**.
+[Draft PR #3717](https://github.com/sifr-lang/sifr/pull/3717) preserves candidate
+`286067170ee7c4edfb61cd37afece30519b4c1c5`, based on latest fetched main
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`, full approved B4 record
+`b73e5e5991eb11e2911fc413e7956e4f9d4d2eae`, and own registration
+`6d205298e18761077a945a0301c0025c9810b174`. This checkpoint supersedes earlier
+current-state/remaining-work statements, without rewriting historical receipts.
+Owned clone `/private/tmp/sifr-item12k-final.7sgsI9/sifr`, branch
+`codex/item12k-final-integration`, private database/index/target/temp/evidence;
+parent and all predecessor clones/targets remain read-only. No live check remains.
+
+The bounded integration correction changes only the existing metadata-helper
+test to inspect parsed Rust syntax rather than redundant-parenthesis-sensitive
+text. Both affected paths since B4 are
+`crates/sifr_driver/src/stdlib/stateless_python_codegen_tests.rs` and this phase
+record. The full inherited integration changes200paths against main; all approved
+12B/H/I/correctingM1/B1/B2/B3/B4 and original12K ancestry remains intact. Unfinished
+Item12 source8ad089a remains excluded. Corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`, [leetcode PR48](https://github.com/sifr-lang/leetcode/pull/48),
+remains exact and unmerged; no delivery or gitlink change occurred.
+
+Fresh qualification completed: locked compiler build; corrected metadata test1;
+frontend139,IR4,type-system147; required-message driver5; async error-channel9;
+native90/90 with all checks/native assertions; canonical algorithmic411/411;
+diagnostics184/184; full readiness4/4 (13guarantees,34surfaces,0temporaryrows,
+19profilerows,27negatives/fulltaxonomy). Formatting passed before candidate
+commit; file-size3780/900 and diff checks passed at the terminal boundary.
+The earlier full-driver invocation remains **FAILED594pass/1fail/77ignored**;
+its sole assertion was corrected and passed freshly, not relabeled as a whole
+passing invocation. The focused diagnosis also failed before correction and is
+retained honestly. HIR and the queued final format repeat were unreached after
+Clippy. Full E2E/migrated stdlib/ignored generated-build gate lanes remain unrun.
+
+Authenticated retained evidence: codegen1452,lowering1119/required-message3,
+Python30 including all five named suites,demo264,B2/B3focused18,B4focused8.
+Complete32088 candidate paths, prior32087/32088 maps, all16 exact clean submodules
+and29 evidence receipts were compared. The changed test invalidated readiness,
+so its complete4checks were rerun successfully. Reuse is not a fresh execution,
+performance claim, or conversion of any historical failed gate into a pass.
+
+**New external blocker: [12K-B5/#3716](https://github.com/sifr-lang/sifr/issues/3716),
+owner compiler-driver/portable generated-project materialization.** Registered
+`cargo clippy --workspace -- -D warnings` exits101 on
+`build/cargo_manifest.rs:235` (`obfuscated_if_else`) and
+`build/portable_project.rs:339` (`type_complexity`). Both files are byte-identical
+to current main (blobs91704d2dedce803567b9e00e1833c47914f13898 and
+4fc2f17015849bf128a85b257c8023941d4be89b); blame identifies Item11 commit
+`4e24b61bb74ee768a09e168b91bb058bbafb7260`, integrated in PR3689. Neither file
+was changed here. This is not the resolved main-only SQL classification issue.
+No separate main Clippy execution is claimed. No B5 implementation is started.
+
+Published detailed qualification/hashes: [PR3717 receipt](https://github.com/sifr-lang/sifr/pull/3717).
+Local external evidence directory: `/private/tmp/sifr-item12k-final.7sgsI9/evidence/`.
+`validation-286067170.md` contains all commands, results and content hashes.
+Complete provenance `provenance-286067170ee7c4edfb61cd37afece30519b4c1c5.json`
+SHA-256 `91897c348f1934bb268cad1a005c02b83ef3ff1e734bf8a808dc212721d0b5ac`.
+Clippy log hash `2200901115e7349d14384d8434b0057d675764df7785db0499af903e76f5c72b`;
+native matrix `660f4ee9822bd95c050423a6925d2ccd348c4db6c36de244bfc7ca9172678eb4`;
+algorithmic JSON `f6d78a4a2a09f8db6ea404843997d48338a0928cb478403ab7fbc4cc507c3066`;
+diagnostics JSON `7e1579b9d5f1e0f316f842e9d0e737cd41bce7b0a26a28e094613a3f820a4e0d`;
+readiness JSON `8bd10b14b64955f1572ea5e76e695d4def951e0b48e91d6b016e7c4917088dac`.
+
+Original12K counts remain **0initial reviews,0remediation,0provider requests/retries,
+0create-pr gates,0merge-profile gates,0Sifr/corpus merges**. The prepared Opus
+request was never launched. No reviewed/approved12K or merge SHA exists.
+This terminal record is documentation-only; no review/gate is consumed for it.
+Predecessor budgets and historical nonblocking owners remain unchanged; existing
+PR3701/3713/3715 and #3667/#3712 remain preserved, pending qualified delivery.
+
+Per the phase-closure-loop skill and explicit dispatch, stop after preserving
+this receipt. Parent's next action is a bounded #3716 owner dispatch; a later
+original12K worker preserves this candidate/record, authenticates complete inputs,
+runs affected/pending named qualification, then uses the still-unused integration
+review (max one remediation) and one final-approved-SHA merge gate. Actual full
+E2E/migrated stdlib must pass before normal corpus/Sifr delivery and owner closure.
+No12D/E/F,retainedItem12,12A or whole-phase work starts in this worker.
+
+## Original12K final continuation registration (2026-09-06)
+
+Current owner: sole live worker in independent clone
+`/private/tmp/sifr-item12k-final.7sgsI9/sifr`, branch
+`codex/item12k-final-integration`, private Git database/index/target and sibling
+evidence/temp paths. All old checkouts and targets and the parent's two
+intentional Markdown edits are read-only. Start at full approved B4 record
+`b73e5e5991eb11e2911fc413e7956e4f9d4d2eae`; preserve normal ancestry.
+This registration supersedes historical terminal/ownership statements below.
+Original12K has consumed zero initial/remediation reviews, provider requests,
+create-pr/merge gates, or merges. No predecessor budget is reset.
+
+The user's latest authorization includes Claude, push, replacement integration
+PR, normal corpus/Sifr integration merges and owner/phase records. Review covers
+the whole bounded integration and its interactions, not whole-phase closure.
+One initial exact-SHA Opus review plus at most one remediation, then one
+merge-profile gate on the final approved SHA; no create-pr or second gate.
+Stop on a new external blocker or second-review mechanism defect, recording its
+later owner. No12D/E/F, retained Item12,12A or whole-phase work.
+
+### Carried parent dispatch
+
+### Approved B4 handoff and original12K continuation (2026-09-06)
+
+Ampere is closed. [PR #3715](https://github.com/sifr-lang/sifr/pull/3715)
+preserves approved B4 candidate `5c711f2d6cb90265b32e04e8b9f6b6e3570855c1`
+and documentation record `b73e5e5991eb11e2911fc413e7956e4f9d4d2eae`, based
+on12K record `5de50ecafc84ed1fa724e7384ad85689a6925dfb`, in
+`/private/tmp/sifr-item12k-b4-qualified.X1Lz43/sifr`.
+[Receipt](https://github.com/sifr-lang/sifr/issues/3712#issuecomment-5559892381)
+and [review](https://github.com/sifr-lang/sifr/pull/3715#issuecomment-5559872361)
+establish one SATISFIED initial review, zero remediation/retries/gates/merges.
+Readiness4/4 passes (13 guarantees,34 surfaces,zero temporary rows,19 profile
+rows,27 negative cases,full taxonomy); eight focused tests/direct taxonomy and
+static checks pass under the formerly failing caller ancestor. BothB4 and12K
+histories remain ancestral; no compiler/SQL implementation was redone.
+Two nonblocking B4-F1/F2 clarity/coverage suggestions remain in its record.
+
+The only B4 delivery dependency is the already authorized integration itself.
+Do not create a new blocker or prerequisite merely because the approved stack
+is unmerged. Dispatch a fresh original12K worker from this complete record,
+assess latest main and preserve the original12B/H/I/correctingM1/B1/B2/B3/B4
+and corpus histories. The prior12K scope, named commands, remaining work and
+one initial integration review/at most one remediation/one final merge gate
+remain unchanged and unused. B4's narrow review is not integration approval.
+
+Reuse authenticated B4 readiness/focused and prior12K codegen1452, B1 lowering1119,
+Python30 and demo264 evidence only after unchanged complete-input verification;
+do not spend time rebuilding completed code or reflexively repeating those runs.
+Continue pending driver/other crate/filter checks, native90, algorithmic411,
+full diagnostics, strict Clippy, and all remaining registered qualification.
+Copy/adapt owned native-script roots without altering case selection or assertions.
+All canonical result-json outputs stay inside the fresh owned repository.
+Finish any actual integration corrections before tests; register concrete new
+focused commands before running them. The actual full E2E/migrated stdlib lanes
+must pass in the one exact-approved-SHA merge-profile gate before integration
+merge. Skip create-pr for in-session merge; no second gate or allowance reset.
+
+Ordinary safe corpus and Sifr integration merges, dependent PR/issue disposition,
+and phase-record updates are authorized after valid prerequisite qualification,
+integration review and gate. Freeze exact source/corpus/gitlink provenance
+before review so no unreviewed input enters afterward. Preserve historical
+failed/unreviewed checkpoints honestly, including originalJ/R1's superseded
+NOT SATISFIED reviews. Publish exact approved and merged SHAs and evidence.
+A genuinely new external mechanism follows the existing later-owner stop rule;
+do not redo the resolved main-only SQL failure or absorb unrelated fixes.
+After12K merge/record or genuine terminal blocker, stop for next fresh worker.
+No12D/E/F,retainedItem12,12A implementation or whole-phase review here.
+
+### Owned commands and delivery plan
+
+Focused diagnosis registered after the first complete driver invocation:
+`cargo test -p sifr_driver python_zero_copy_helpers_codegen_through_sifr_stdlib -- --nocapture`.
+The full run has594passes,1failure,77existingignored. Its only failure expects
+`py_buffer_shape(&raw.0)?` at stateless_python_codegen_tests.rs:262. Extend the
+assertion diagnostic to include actual public emission before this focused run;
+do not change its acceptance condition before establishing cause. All later
+qualification commands remain unreached, and review/gate budgets remain unused.
+
+Diagnosis completed: all six helpers emit `accessor(&(raw).0)?`; borrowing and
+typed propagation are unchanged. The integration omission is the exact-text
+assertion's sensitivity to redundant expression parentheses, not a runtime
+mechanism defect. Correct the existing test using parsed Rust syntax: require
+each of the same six named calls to have exactly one immutable borrow of raw's
+tuple field0 directly under `?`, ignoring only grouping/parentheses. The private
+interop-call assertions remain intact. No compiler/stdlib behavior changes.
+Run the registered focused test after this complete correction; reuse the594
+other full-driver passes only for unchanged implementation and test inputs,
+with the failed full invocation preserved. Then resume pending commands from
+frontend onwards. Existing whole-driver evidence is not called a passing run.
+
+The original and continuation execution registrations remain authoritative.
+All registered commands use this owned repository and these environment paths:
+`TMPDIR=/private/tmp/sifr-item12k-final.7sgsI9/tmp`,
+`CARGO_TARGET_DIR=/private/tmp/sifr-item12k-final.7sgsI9/sifr/target`,
+`UV_CACHE_DIR=/private/tmp/sifr-item12k-final.7sgsI9/uv-cache`,
+`PYTHONPYCACHEPREFIX=/private/tmp/sifr-item12k-final.7sgsI9/pycache`,
+`CARGO_BUILD_JOBS=6`, `RUST_TEST_THREADS=1`.
+Every canonical area output is `target/verification/areas/item12k-*.json`
+inside this repository. The external native script is
+`/private/tmp/sifr-item12k-final.7sgsI9/native_qualification.py`; output is
+`/private/tmp/sifr-item12k-final.7sgsI9/native-qualified`, with roots-only
+adaptation, unchanged90cases/check/run/assertions and native-temp ownership.
+Set `SIFR_QUAL_COMPILER_SOURCE_SHA` to the frozen source candidate.
+
+Exact still-pending commands:
+```bash
+cargo build --locked -p sifr
+cargo test -p sifr_driver
+cargo test -p sifr_frontend
+cargo test -p sifr_ir
+cargo test -p sifr_type_system
+cargo test -p sifr_driver required_error_message
+cargo test -p sifr_driver async_python_error_channel
+python3 /private/tmp/sifr-item12k-final.7sgsI9/native_qualification.py /private/tmp/sifr-item12k-final.7sgsI9/native-qualified
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full --result-json target/verification/areas/item12k-leetcode-full.json
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --result-json target/verification/areas/item12k-diagnostics.json
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+python3 scripts/check_hir_maintainability_guardrails.py
+python3 scripts/check_file_size_guardrails.py
+git diff --check
+scripts/run_all_tests.sh --profile merge
+```
+
+Authenticate complete tracked input maps and retained report hashes before reusing
+codegen1452, B1 lowering1119 including required-message3, Python30 including all
+five named suites, demo264, B2/B3 focused18 and B4 readiness4/focused8 evidence.
+The build command supplies a fresh owned binary for pending native commands;
+retained build evidence is not permission to write old targets. Any invalidated
+named check uses the earlier exact command with owned paths. No extra suites,
+partial certification bypass, altered corpus selection, or inferred gate pass.
+
+Freeze corpus gitlink `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+After qualification/review/gate, normal merge of corpus PR48 preserves that
+qualified source as an ancestor; never repin to its later merge commit. Normal
+integration merge must preserve the approved tree. Verify both expected PR
+heads/bases first. Reconcile superseded/dependent PRs accurately with provenance,
+and publish separate record-only closure commits without review/gate repetition.
+
+
+Current B4 state: **qualified and Opus-approved stacked checkpoint; integration
+merge pending**, [draft #3715](https://github.com/sifr-lang/sifr/pull/3715).
+See the terminal receipt and "B4 qualified-context continuation registration"
+below. Earlier B4 dispatch and terminal entries are historical records; their
+independent-main stop and ownership paths do not describe this worker.
+
+## B4 reviewed stacked handoff (2026-09-06)
+
+Item: **12K-B4**, owner compiler-verification, issue [#3712](https://github.com/sifr-lang/sifr/issues/3712).
+The bounded checker implementation is complete, qualified and approved.
+This worker stops at the explicitly authorized reviewed handoff; it has not
+merged B4 or the inherited compiler stack and does not claim integration closure.
+
+- Stacked draft: [#3715](https://github.com/sifr-lang/sifr/pull/3715), branch
+  `codex/item12k-b4-qualified`, based on preserved #3713's branch.
+- Exact integrated base: `5de50ecafc84ed1fa724e7384ad85689a6925dfb`.
+- Candidate and reviewed implementation: `5c711f2d6cb90265b32e04e8b9f6b6e3570855c1`.
+- Reviewed tree: `33768107c3ab765533a66b2a98bdfc43d9a30b13`.
+- Record SHA: the separate documentation-only commit containing this receipt;
+  its full SHA is published in the terminal receipt on #3712/#3715 after push.
+- Merge SHA: **none**.
+- Owned clone: `/private/tmp/sifr-item12k-b4-qualified.X1Lz43/sifr`.
+  Parent's intentional two dirty Markdown files and every old worker checkout,
+  branch/index/target remain untouched and read-only.
+
+Both source lineages remain ancestral: 12K candidate
+`fbe5ca93e61c5286268f2b42a768901a907544f4`, record/base `5de50ecafc84ed1fa724e7384ad85689a6925dfb`;
+B4 source implementation `eaa4a063b69ee2132bef55514361062e85db3548`, record
+`a3cf7620088a3fda9c0935fbf29f511ac862f1f3`. The normal merge follows prior
+adjudication registration `90b992a05b16e14a56d97eea42783828d8b6757b`.
+Only the SQL Markdown record conflicted; both histories were preserved.
+GitHub main remains `f11e1cd7eef16a02063555bccc9fd8e19287833b` with no newer
+changes. All inherited non-B4 paths are identical to integrated base; both
+checker/test blobs are identical to preserved B4 implementation. Approved
+12B/H/I/correctingM1/B1/B2/B3 ancestry remains; unfinished Item12 source
+`8ad089a9458f35fcfa228e93fe44f4d69731828b` is excluded. Corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372` and its PR48 remain unchanged/open.
+
+Fresh named qualification on the exact candidate, using the previously
+registered owned paths and intentionally matching `-item12k` TMPDIR ancestor:
+
+| Named check | Actual result |
+| --- | --- |
+| Direct taxonomy | PASS: original self-tests and full repository audit |
+| Focused path-boundary tests | 8/8 PASS, one invocation |
+| Readiness strict registry | PASS: 13 guarantees, 34 surfaces, zero temporary rows |
+| Readiness profile assignment | PASS: 19 rows |
+| Readiness negative self-tests | PASS: actual integrated 27 cases |
+| Readiness taxonomy | PASS: original self-tests and full repository audit |
+| Complete readiness suite | 4/4 PASS, zero failures, one invocation |
+| File-size guardrail | PASS: 3,780 files, limit900; checker761/test139 lines |
+| Python syntax, record consistency, Git diff | PASS; clean before/after qualification |
+
+The eight focused tests were rerun in the qualified context; none of the old
+failed-main readiness result was reused. The historical main24 negatives and
+23 SQL classification failures remain historical facts. The integrated
+classification registry `6823a657db7d8660cafe86fcfd2b71b21a529cd3` and negative
+self-test `7609e981d368b9e116e3e82dfb79c66d9422fc9f` are inherited unchanged,
+not B4 SQL implementation. Retained codegen1452/B1 lowering1119/Python30/demo264
+evidence remains with12K; no compiler/native/Python-interop/diagnostics test ran
+here and no inherited result is represented as new B4 validation.
+
+[Published qualification and complete-input provenance summary](https://github.com/sifr-lang/sifr/pull/3715#issuecomment-5559859380)
+binds all source SHAs, key input blobs and evidence hashes. External evidence root:
+`/private/tmp/sifr-item12k-b4-qualified.X1Lz43/evidence/`.
+
+- `provenance-5c711f2d6cb90265b32e04e8b9f6b6e3570855c1.json` records all
+  32,087 base and 32,088 candidate path/blob identities, exact environment,
+  inherited ancestry/exclusion and actual readiness result. SHA256:
+  `a050f5ae4708b827ec0468d4b81defbb2c57074443d4317cecb152bb1c563003`.
+- Canonical owned report `sifr/target/verification/areas/b4-qualified-readiness.json`:
+  SHA256 `4f958f9218f29ab0a09d304c5fd34379b60e55ddcec9868c6cb4bc8a1101af82`.
+- `readiness.log`: SHA256 `5125a3df8accea132cab7e4ec87e60b6ddb86bd1db623af8d5de70f4e7c22ee9`.
+- `focused.log`: SHA256 `a9ed664303dcfde09a9bcbb802718781a9013aa6accd247d9e16addaf7b04197`.
+- `taxonomy.log`, `file-size.log`, `syntax.log`, `diff-check.log`, and clean
+  before/after status receipts are retained alongside them.
+
+[Initial exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3715#issuecomment-5559872361):
+**SATISFIED, no blocking findings**, covering only B4 and its checker interaction
+with the integrated context. Claude independently checked exact SHAs/tree,
+four-path delta, preserved policy/call sites, source blob identity and evidence
+hashes without modifying files or rerunning validation. Raw atomic completed
+response `/private/tmp/sifr-item12k-b4-qualified.X1Lz43/caller-tmp/sifr-claude.ESluOa/response.md`
+has SHA256 `631e0c2fd6fff7f18f2843091dea8c9f4aec0629dbb77021ee2569ef397f19dd`.
+The published `review-5c711f2d6cb90265b32e04e8b9f6b6e3570855c1.md` lives
+outside the reviewed Git tree. This later record is not part of the approved
+candidate and does not cause another review or test/gate cycle.
+
+Deferred review observations, recorded as separate later work only:
+
+| Later record | Owner | Observation and disposition |
+| --- | --- | --- |
+| 12K-B4-F1 | compiler-verification | Reviewer labels the discarded `root.relative_to(audit_root)` result at checker339 an infrastructure/maintenance observation: a named boundary assertion helper could make the intentional raising call clearer. It is correct and covered now; no failure reproduced, no change required for B4. Not started. |
+| 12K-B4-F2 | compiler-verification | Reviewer suggests an existing-file extension-filter case for the default repository root; current temporary-root cases already cover that branch. Optional test enhancement, not a missing B4 acceptance criterion. Not started. |
+| Existing12K integration | original12K owner | Main lacks the already-reviewed SQL prerequisites. Preserve this approved checkpoint and finish original integration qualification/review/merge; do not create a duplicate SQL repair. |
+
+Counts for B4: **1 initial review, 0 remediation reviews, 1 provider request,
+0 failed requests/retries, 0 create-PR gates, 0 merge-profile gates, 0 merges**.
+This continuation ran one direct taxonomy, one eight-test focused invocation,
+one complete readiness invocation, one file-size and one syntax check. Earlier
+B4 qualification attempts remain recorded separately. Original12K remains
+**0 reviews,0 gates,0 merges**; all other historical caps remain unchanged.
+
+B4 changed paths relative to integrated base are exactly:
+`verification/areas/coverage_matrix/checks/verification_taxonomy.py`,
+`verification/areas/coverage_matrix/checks/test_verification_taxonomy_paths.py`,
+this phase record, and `ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+Only the two Markdown records change in the post-review record commit.
+
+**Explicit integration dependency:** an independent main merge cannot retain the
+exact qualification inputs while main lacks the inherited prerequisite stack.
+The user expressly chose a reviewed stacked checkpoint in that case. #3712
+remains open for integration delivery; #3715 stays draft and unmerged.
+No new external blocker or B4 mechanism defect exists. Exact next action belongs
+to a fresh12K worker: preserve this candidate and record lineage alongside
+#3713, reuse applicable B4 evidence, then complete original12K's remaining
+qualification and its unused review/gate/merge allowances. This worker stops
+now; no12K implementation,12D/E/F,Item12,12A or full-phase work is started.
+
+## Item 12K-B4: owned authorization and test registration (2026-09-06)
+
+Owner: compiler-verification; issue [#3712](https://github.com/sifr-lang/sifr/issues/3712).
+The parent supplied “Item12K continuation receipt and B4 dispatch (2026-09-06)”
+and explicitly authorized this independent checker repair, Claude review, PR,
+push, merge, and owner-record updates. All predecessors are closed. This sole
+worker owns `/private/tmp/sifr-item12k-b4.3wWQdN/sifr`, its independent index and
+target, and branch `codex/item12k-b4-path-boundary`, cloned from latest main
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`. The parent checkout's two dirty
+Markdown records and every retained worker checkout/index/target remain read-only.
+No unreviewed compiler stack is imported.
+
+Scope: establish the fixture/audit root boundary in `verification_taxonomy.py`.
+Caller ancestors must neither reject valid names nor suppress audited content.
+Forbidden filenames and governed descendant directory names, content checks,
+demo variable checks, and all existing negative self-tests remain enforced.
+No caller-directory rename, TMPDIR evasion, basename-only check, allowlist,
+ignored assertion, or taxonomy-policy relaxation is permitted. Unrelated
+taxonomy and diagnostics findings remain with their existing owners.
+
+Complete the bounded implementation and regressions before executing tests.
+Registered commands, all from the owned clone:
+
+```bash
+TMPDIR=/private/tmp/sifr-item12k-b4.3wWQdN/tmp python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py
+TAXONOMY_TEST_TMPDIR=/private/tmp TMPDIR=/private/tmp/sifr-item12k-b4.3wWQdN/tmp python3 -m unittest discover -s verification/areas/coverage_matrix/checks -p test_verification_taxonomy_paths.py -v
+TMPDIR=/private/tmp/sifr-item12k-b4.3wWQdN/tmp UV_CACHE_DIR=/private/tmp/sifr-item12k-b4.3wWQdN/uv-cache uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json target/verification/areas/b4-readiness.json
+python3 scripts/check_file_size_guardrails.py
+PYTHONPYCACHEPREFIX=/private/tmp/sifr-item12k-b4.3wWQdN/pycache python3 -m py_compile verification/areas/coverage_matrix/checks/verification_taxonomy.py verification/areas/coverage_matrix/checks/test_verification_taxonomy_paths.py
+git diff --check
+```
+
+The focused regressions create and remove only invocation-owned
+`/private/tmp/sifr-taxonomy-*` trees (neutral absolute ancestors), then create
+deliberately matching caller ancestors and skip-directory labels within them.
+The original self-tests also run under both environments. The clone and TMPDIR
+already have the formerly failing `-item12k` ancestor pattern. Evidence logs
+live outside Git at `/private/tmp/sifr-item12k-b4.3wWQdN/`; readiness JSON stays
+inside the owned repo as required. Documentation checks inspect this record's
+scope, command registration, paths and final receipt; no compiler tests belong here.
+
+One initial exact-SHA read-only Opus review and at most one remediation review;
+at most three failed provider requests, atomic completed response only. No broad
+repeat validation or invented requirements. A new second-review mechanism or
+external blocker receives an owning later record and terminal handoff.
+Checker/tests/docs-only changes receive zero Sifr create-PR or merge gates.
+If compiler/lockfile/fixture/workflow inputs necessarily change, run one
+merge-profile gate on the approved SHA, no create-PR gate and no retry.
+
+Retained 12K draft #3713 candidate `fbe5ca93e61c5286268f2b42a768901a907544f4`
+and record `5de50ecafc84ed1fa724e7384ad85689a6925dfb` remain unapproved:
+zero reviews, gates, and merges. B4 resets no historical cap and does not
+approve that stack. After B4 merge and phase/owner closure records, stop.
+Do not resume 12K or start 12D/E/F, Item 12, 12A, or whole-phase review.
+
+### B4 terminal receipt: SQL readiness dependency blocks independent main
+
+State: implemented and preserved in [draft #3714](https://github.com/sifr-lang/sifr/pull/3714),
+not reviewed, not merged, not closed. Issue #3712 remains open.
+Base: `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+Implementation: `eaa4a063b69ee2132bef55514361062e85db3548`, preserving initial
+commit `a8f7c86d864de13d97375d5e0daabc4f4621db29` and its test correction.
+Reviewed implementation SHA: none. Merge SHA: none.
+The final record commit is the docs-only commit containing this receipt;
+its exact SHA is published on #3712 and #3714 after pushing.
+
+The checker now carries an explicit owning audit root through filename checks,
+skip filtering, collection, and demo-content routing. Production defaults to
+the repository root; temporary self-tests explicitly own their fixture root.
+No naming/text pattern, skip policy, allowance, or existing negative assertion
+changed. Eight new tests exercise neutral, matching, and all eight skip-label
+caller ancestors, valid paths, forbidden filenames and nested directories,
+directory/file selections, content, demo variables, out-of-root rejection, and
+the complete original self-tests.
+
+Exact implementation evidence:
+
+| Named check | Actual result |
+| --- | --- |
+| Direct taxonomy | PASS under the formerly failing `-item12k` ancestor |
+| Focused path regressions | PASS: 8 tests |
+| Readiness: coverage_matrix_readiness | FAIL: 23 existing SQL package/target classification diagnostics |
+| Readiness: profile_assignment_matrix | PASS: 19 rows |
+| Readiness: coverage_matrix_negative_self_tests | PASS: 24 cases on this main baseline |
+| Readiness: verification_taxonomy | PASS: original self-tests plus full repository audit |
+| File-size guardrail | PASS: 3,757 files, 900-line limit; checker 761 and tests 139 lines |
+| Python syntax; documentation and Git diffs | PASS |
+
+The readiness command completed once after a sandbox-network setup failure
+was resolved through approved network access. The earlier setup failure ran
+no area checks and is not qualification evidence. The first focused run found
+an incorrect new test expectation for an existing filename-policy form;
+the test was corrected to the already-rejected `work-item-helper` form without
+changing policy. The complete final focused run passes. No test result from
+the initial implementation is relabeled as final-candidate execution.
+
+Evidence root: `/private/tmp/sifr-item12k-b4.3wWQdN/`.
+
+- `sifr/target/verification/areas/b4-readiness.json`: SHA256
+  `b515bd1058d1464d374dee98152a6daa3188e09d8f2a703f3a4354e26117780a`.
+- `readiness-eaa4a063b.log`: SHA256
+  `976734d699050a4c54e45b35dc4f6d9f1e9201c0a25eadfcb948bc4c7066fda4`.
+- `paths-eaa4a063b.log`: SHA256
+  `22c485f3b163e564cf1983662b5bebb5bdf9c30d8f1cada11b6e853cbe9f845c`.
+- `taxonomy-eaa4a063b.log`: SHA256
+  `9c9c0c22f6f04233f7d2310dff79b63aabced7a8e627b4d629a06cee6505777e`.
+
+External owner: [SQL coverage registry blocker](ad-hoc-schema-first-sql-platform-review-follow-ups.md#b4-independent-main-readiness-receipt-2026-09-06),
+SQL compiler/schema tools/verification. The same 23 corrections were approved
+in Item 12B / #3694 but remain in the retained integration lineage of #3713.
+B4's base and candidate have identical classification registry blob
+`c835f5e32761a99db1b0d5aaeafb1053c997ad6e` and readiness self-test blob
+`71240aa421cb9cfe4d754e1c139ad05f5616e2f7`. All Cargo/compiler inputs and the
+coverage checker are unchanged. This explains why main runs 24 negatives,
+whereas the retained integrated stack runs 27. No coverage pass is claimed.
+
+Counts: zero initial/remediation Opus reviews, zero provider requests/retries,
+zero create-PR gates, zero merge-profile gates, zero merges. No compiler,
+lockfile, fixture, workflow, gitlink, or external corpus changed. Changed paths
+are the taxonomy checker, its new test file, this phase record, and the SQL
+owner's Markdown blocker record. Parent and retained clones remain read-only.
+
+Per the dispatch's external-blocker stop rule, no review or merge follows this
+failure. Exact next action belongs to the parent: adjudicate independent B4
+qualification against the known SQL dependency or arrange separately owned
+prerequisite delivery. A later authorized B4 continuation can then use the
+still-unused exact-SHA review allowance. Do not import the retained compiler
+stack, resume 12K, or start another item in this worker.
 Later nonblocking tooling owner [#3726](https://github.com/sifr-lang/sifr/issues/3726)
 records existing path-only inventory enforcement and multiple calls per source
 line. It is not a new B7 defect, no per-site contract is inferred from line
@@ -167,6 +1020,55 @@ evidence outside the reviewed tree. After the independent normal main merge,
 update the owner and this phase record, publish terminal evidence, and stop.
 Original12K's one failed gate stays consumed; its unreached suites remain
 unreached. No integration requalification, corpus merge or later item is started.
+
+### B9 terminal closure
+
+[PR #3729](https://github.com/sifr-lang/sifr/pull/3729) merged normally on
+2026-09-06 at 21:02:12 UTC. Exact reviewed and validated candidate:
+`36a3f111276eeade52628f2a5e3778d146d31695`; normal merge:
+`fc9dbf04727577e93dec397b3570d7cfe4af33d0`. Owner #3724 is closed.
+Immediately before merge, explicit actual `origin/main` remained the reviewed
+base `a216019057fbb05ccfdc8c846c20ee3ecc7a639d` and the candidate was clean.
+The verified merge has that base and candidate as its parents, and its tree
+equals the reviewed candidate tree.
+
+All four named checks passed on the exact candidate. Diff validation used
+`git diff --check a216019057fbb05ccfdc8c846c20ee3ecc7a639d HEAD` to cover the
+committed change. File-size guard: 3757 files, limit 900 lines. The reference
+correction covers all eight failures; checker, all four formatter manifests,
+`.gitmodules`, Ruff gitlink and compiler/lockfile/fixture/workflow inputs are
+unchanged. Changed paths are only this phase record and the formatter reference.
+
+Counts: one initial Opus SATISFIED review, zero blocking findings, zero
+remediation reviews, one provider request, zero retries, zero create-pr gates,
+zero merge-profile gates, one normal merge. The reviewer reused the existing
+validation and ran no further tests. No second gate or review is required for
+this post-merge record-only update.
+
+[Full review and validation evidence](https://github.com/sifr-lang/sifr/pull/3729#issuecomment-5562147601)
+is published outside the reviewed Git tree, keyed by candidate SHA. Raw completed
+review in the owned root at `claude.vhPlZC/response.md`, SHA256
+`0b834091f3c3c0467131d96d46f60a1062c77e792da73561e20254d137b8cd8a`.
+Validation manifest in that root at
+`evidence/36a3f111276eeade52628f2a5e3778d146d31695.validation.json`, SHA256
+`08572ce1f35d25fc62da6889e2d2e2e3f30a5e1e78e98edb7e10551d11daa5e1`,
+records command/log hashes and unchanged input blob identities.
+
+The review's unrelated pre-existing network HTTP documentation spelling is
+recorded as later owner [#3730](https://github.com/sifr-lang/sifr/issues/3730).
+No correction was started and no mechanism defect or delivery dependency was
+established. The cosmetic diff-command observation is clarified above. The
+reviewer could not resolve the B8 record in its own clone; this implementer
+verified that receipt read-only in the preserved B8 clone before carrying it.
+Neither observation needs new implementation or another review.
+
+This closure record is pushed on the owned B9 branch after merge, outside the
+approved candidate, with no second main merge. Parent must carry this terminal
+receipt into its own orchestration record; parent and predecessor trees remain
+untouched. All worker command/review handles completed. Blocker: none. B9 is
+closed; stop here. Original12K remains approved/unmerged with its sole failed
+gate consumed and unreached suites still unreached. No integration/corpus merge,
+requalification, later item or optional follow-up implementation was started.
 
 ## Item 12K-B8: SQL integer spelling guard boundary (2026-09-06)
 
@@ -332,7 +1234,513 @@ defect on second review or external blocker must be recorded under its later
 owner, then stop. Normal edits, Claude execution, PR/push/merge and owner-issue
 updates are authorized. After the narrow merge and record update, stop.
 
+### B2 terminal receipt
+
+Status: **merged and closed**. [PR #3706](https://github.com/sifr-lang/sifr/pull/3706)
+merged on 2026-09-06 at 10:47:22 UTC as
+`770f1ab86050bc95abf05573b39c8c6d5238902e`; owner #3704 is CLOSED.
+Exact reviewed and validated implementation:
+`8be5b9ece92703fda44149bb79ec6ed077e23c10`; exact base:
+`4ce05473f58716a611ac190581bf0737ba15331e`. The base and candidate were
+unchanged immediately before merge. This post-merge documentation-only receipt
+is retained on the owned branch; its commit SHA is published in the terminal
+PR/issue evidence, outside the implementation it records.
+
+Changed paths relative to base:
+
+- `verification/areas/diagnostics/checks/code_coverage.py`: one exact-owner,
+  complete-constant-token extractor shared by source and active-list scans.
+- `verification/areas/diagnostics/checks/code_coverage_test.py`: 11 focused
+  regressions, including real unknown/non-active and required-use rejection.
+- `plans/issues/active/ad-hoc-emitted-rust-excellence.md`: authorization and
+  terminal record only.
+
+[Named validation evidence](https://github.com/sifr-lang/sifr/pull/3706#issuecomment-5558694390)
+covers the exact implementation SHA: direct code coverage exits 0 without
+diagnostics; focused tests pass 11/11; file-size guardrail passes 3755 files;
+Python syntax, phase-record review and working-tree/base-to-candidate diff
+checks pass. No compiler, lockfile, fixture or workflow changed. Create-PR
+gates: **0**; merge gates: **0**, explicitly skipped under B2 authorization.
+No full diagnostics-area pass is claimed; schema_sync was neither run nor
+investigated. Documentation-only receipt checks do not rerun implementation
+validation or consume another review/gate.
+
+[Initial exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3706#issuecomment-5558708053):
+**SATISFIED**, no blocking findings. Reviews: **1 initial, 0 remediation**;
+provider requests: **1 successful, 0 failed**. Atomic completed response:
+`/private/tmp/sifr-item12kb2.Qb9aoe/opus-8be5b9ece92703fda44149bb79ec6ed077e23c10.RIKxmf/response.md`,
+SHA256 `36f9c0915e2fc2151feb11fc7dcbd2517cf3706cd00040a9d0dbfbf659a8b23b`.
+All logs remain outside the approved tree under
+`/private/tmp/sifr-item12kb2.Qb9aoe/`, keyed by implementation SHA; their hashes
+are published with the named evidence. The review's read-only corpus comparison
+found 25 files losing only spurious matches, zero real registry names lost,
+and zero newly gained names. Approval covers B2 alone.
+
+Nonblocking findings have concrete later owners:
+
+- [#3707](https://github.com/sifr-lang/sifr/issues/3707),
+  `compiler/package-management`: pre-existing identifier matcher in the
+  separate Rust-interop outcome checker. Recorded, no implementation started.
+- [#3708](https://github.com/sifr-lang/sifr/issues/3708),
+  `compiler/diagnostics`: pre-existing textual comment/string matching policy
+  and optional isolation of test filesystem paths. Recorded, no implementation
+  started; these are not B2 blockers or B3 requirements.
+
+Blocker: **none**. Parent and old worker checkouts/indexes/targets remain
+unmodified. B1's approved stacked checkpoint, review and failed-gate counts
+are preserved; original 12K still has zero reviews/gates consumed. No B3,
+12K integration, residual Item 12, or whole-phase closure work was started.
+Exact next action for this worker: stop after publishing this receipt. The
+separately dispatched B3 owner handles #3705 in another session.
+
 Baseline commit: `e9df29f7e4cada7b376b2d455790f9c80a5647a0`
+
+## B4 qualified-context continuation registration (2026-09-06)
+
+This sole live worker owns `/private/tmp/sifr-item12k-b4-qualified.X1Lz43/sifr`
+on branch `codex/item12k-b4-qualified`. All parent and prior-worker checkouts,
+indexes and targets remain read-only; the parent's two dirty Markdown files
+are intentional. The following dispatch and superseding adjudication are copied
+from the parent before integration work. No review/gate allowance is reset.
+
+### Item12K continuation receipt and B4 dispatch (2026-09-06)
+
+Chandrasekhar is closed. [Draft #3713](https://github.com/sifr-lang/sifr/pull/3713)
+preserves candidate `fbe5ca93e61c5286268f2b42a768901a907544f4`, final record
+`5de50ecafc84ed1fa724e7384ad85689a6925dfb`, base
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`, and unchanged corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`. All approved dependency ancestry
+and B1/B2/B3 records are retained in the independent clone
+`/private/tmp/sifr-item12k-cont.StPW7n/sifr`. Original #3701 is preserved.
+[Terminal receipt](https://github.com/sifr-lang/sifr/issues/3712#issuecomment-5559080613)
+records locked build, all1452 codegen tests,18 focused checker tests and static
+guards passing. Authenticated unchanged-input B1 lowering1119/Python30/demo264
+evidence was reused, not relabeled as new execution. Fresh readiness is3/4;
+driver was interrupted during compilation and is not a pass. Remaining crate
+checks/driver filters,90 native cases,411 algorithmic cases,full diagnostics,
+strict Clippy and E2E/stdlib qualification remain unreached. Original12K has
+zero reviews,zero gates,zero merges; no historical allowance changed.
+
+The user explicitly said Continue after this blocker/status report. Assign a
+fresh sole worker to **12K-B4 / [#3712](https://github.com/sifr-lang/sifr/issues/3712)**,
+owner compiler-verification. Use a fresh independent branch/clone on latest
+main for an independently mergeable checker repair, retaining all prior clones,
+indexes, targets and parent dirty documents read-only. Carry this authorization
+into the owned phase record before implementation.
+
+Scope: correct the fixture/audit path boundary in
+`verification/areas/coverage_matrix/checks/verification_taxonomy.py` so labels
+outside the governed root cannot invalidate a valid fixture. The reported
+self-test inherits TMPDIR; its out-of-repository path classification scans
+absolute ancestors and rejects `-item12k` in the worker's containing directory.
+Establish and correct the complete owning-boundary mechanism. Retain rejection
+of forbidden names in both filenames and governed descendant directories, and
+retain the full strict repository/content audit and negative self-tests. Do not
+fix this by renaming the worker directory, changing TMPDIR to evade the check,
+checking only basenames, broad allowlisting, ignoring assertions, or weakening
+the naming policy. Caller-root isolation is the bounded defect; unrelated
+taxonomy policy and diagnostics follow-ups stay outside B4.
+
+Finish the whole scoped change before tests. Named checks:
+`python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py`;
+focused valid/invalid path-boundary regressions under neutral and deliberately
+matching caller-ancestor labels (register exact command before running);
+`uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness`
+with owned repository-local result-json output, under the formerly failing
+ancestor pattern; `python3 scripts/check_file_size_guardrails.py`; relevant
+Python syntax, documentation and `git diff --check` checks. Register concrete
+owned test directories/output paths without touching the retained failing clone.
+No other broad qualification belongs to B4. Report actual four-check readiness
+coverage and preserve every prior negative rejection.
+
+One initial exact-SHA Opus review and at most one remediation review. If changes
+are checker/tests/docs only with no compiler/lockfile/fixture/workflow change,
+skip Sifr create-PR/merge gates. If governed inputs necessarily change within
+scope, one exact-approved-SHA merge-profile gate only, skip create-pr for
+in-session merge. No second gate or historical allowance reset. Normal narrow
+PR/push/merge and owner-record updates are authorized. A new second-review
+mechanism or external blocker receives a later owner record and terminal
+handoff. After merge/record or blocked handoff, stop; B4 must not start12K.
+The next fresh12K worker resumes record5de50ec with merged B4 and reusable
+evidence, finishes pending qualification, then uses its still-unused review/gate.
+No whole-phase review or12D/E/F/Item12/12A work belongs to B4.
+
+### B4 prerequisite-context adjudication (2026-09-06)
+
+Gauss is closed. [B4 receipt](https://github.com/sifr-lang/sifr/issues/3712#issuecomment-5559781114)
+preserves implementation `eaa4a063b69ee2132bef55514361062e85db3548`, record
+`a3cf7620088a3fda9c0935fbf29f511ac862f1f3`, draft#3714 in
+`/private/tmp/sifr-item12k-b4.3wWQdN/sifr`. Direct taxonomy under the formerly
+failing ancestor, eight focused tests, file-size/syntax/docs checks pass.
+The complete readiness invocation on independent main passes taxonomy,
+19-row profile assignment and the24 negative cases actually present there,
+but fails23 SQL classifications. This is the existing SQL prerequisite already
+approved in12B and present in preserved12K/#3713, not a new unimplemented SQL
+mechanism. The failed independent-main result remains a failure; do not relabel
+it as the integrated27-case evidence. B4 used zero reviews and zero gates.
+
+Adjudication: a fresh B4-only worker may qualify the existing B4 patch on the
+already assembled12K prerequisite context. Create an owned clone/branch retaining
+12K record `5de50ecafc84ed1fa724e7384ad85689a6925dfb` and merge/preserve B4's
+implementation/record lineage there. Compare current main for relevant changes.
+This supersedes the earlier B4 restriction against importing the retained stack
+for prerequisite qualification only. No new SQL implementation or duplicate
+classification repair is authorized or needed. B4 owns only its checker,
+regressions and records; inherited compiler/corpus implementation remains12K.
+Any genuine integration conflict in B4-owned files is in scope, not wider12K work.
+
+Finish any bounded corrections before running the same B4 named commands in
+the combined context, preserving intentionally matching caller-root labels.
+The full four-check readiness suite must pass with its actual integrated
+negative-case count. Use repository-local result-json paths. Reuse unchanged
+focused evidence with explicit complete-input comparison; never substitute a
+neutral directory workaround. Then use B4's still-unused initial exact-SHA Opus
+review, plus at most one remediation. Reviewer gets exact integrated base,
+candidate and B4 delta, explicitly excluding approval of inherited compiler
+changes. Publish both source lineage and qualification-input provenance.
+
+If the B4 delta remains checker/tests/docs only, no Sifr gate: inherited12K
+compiler files do not become a new B4 implementation change. Do not run12K's
+gate or review here. Preserve the qualified, reviewed B4 checkpoint as a linked
+stacked dependency when an independent merge cannot retain exact-input evidence;
+return that explicit integration dependency rather than merging the unreviewed
+compiler stack. The next fresh12K worker incorporates this approved B4 lineage
+and completes original integration qualification/review/merge under its unused
+allowances. No additional B4 review cycle, SQL item, standalone failed-main
+readiness retry or whole-phase review is created by this adjudication.
+Stop after B4 reviewed handoff/merge or a genuinely new external blocker.
+
+### Owned qualification paths and exact commands
+
+Integrated prerequisite base: `5de50ecafc84ed1fa724e7384ad85689a6925dfb`
+(candidate `fbe5ca93e61c5286268f2b42a768901a907544f4`, draft #3713).
+B4 source: `eaa4a063b69ee2132bef55514361062e85db3548`, record
+`a3cf7620088a3fda9c0935fbf29f511ac862f1f3`, draft #3714.
+GitHub main verified at `f11e1cd7eef16a02063555bccc9fd8e19287833b`;
+there are no newer main changes to integrate. Preserve both source ancestries
+with a normal merge in this clone, including any record-only conflict resolution.
+
+Every command below runs from this owned clone with
+`TMPDIR=/private/tmp/sifr-item12k-b4-qualified.X1Lz43/caller-tmp`.
+The `-item12k` ancestor intentionally retains the formerly failing condition.
+`TAXONOMY_TEST_TMPDIR` is unset. Cache and bytecode output are owned:
+`UV_CACHE_DIR=/private/tmp/sifr-item12k-b4-qualified.X1Lz43/uv-cache`,
+`PYTHONPYCACHEPREFIX=/private/tmp/sifr-item12k-b4-qualified.X1Lz43/pycache`.
+Logs go under `/private/tmp/sifr-item12k-b4-qualified.X1Lz43/evidence/`.
+The readiness JSON is
+`target/verification/areas/b4-qualified-readiness.json` inside this clone.
+
+```bash
+python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py
+python3 verification/areas/coverage_matrix/checks/test_verification_taxonomy_paths.py
+uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json target/verification/areas/b4-qualified-readiness.json
+python3 scripts/check_file_size_guardrails.py
+python3 -m py_compile verification/areas/coverage_matrix/checks/verification_taxonomy.py verification/areas/coverage_matrix/checks/test_verification_taxonomy_paths.py
+git diff --check 5de50ecafc84ed1fa724e7384ad85689a6925dfb HEAD
+```
+
+Read changed records for documentation consistency. Execute the eight focused
+tests in the integrated context; do not relabel the old 24-negative main result.
+Require all four readiness checks and confirm the actual 27 negative cases.
+No compiler/native/Python-interop/diagnostics validation or Sifr gate belongs
+to this checker/tests/docs-only B4 delta. Review only B4 and its interaction
+with this exact context; the inherited compiler stack stays outside approval.
+If independent merge cannot retain these exact inputs, preserve the reviewed
+stacked checkpoint and linked PR for a fresh 12K owner, then stop.
+
+## Item12K continuation execution registration (2026-09-06)
+
+### Continuation terminal checkpoint: external readiness blocker12K-B4
+
+**Blocked, not reviewed, not merged, not closed.** This checkpoint supersedes
+historical12K/B1/B2/B3 statuses below. Exact candidate
+`fbe5ca93e61c5286268f2b42a768901a907544f4` retains complete integrated/B1 lineage,
+latest main `f11e1cd7eef16a02063555bccc9fd8e19287833b`, and B2/B3 post-merge
+recordsa53b5d3/c508c143. Corpus remains `8bcbe7ab7939e5c8362c10f61a80e368022cc372`
+(unmerged leetcode48). No new compiler correction was needed. Original draft3701
+and all dependencies remain preserved. Linked replacement
+[draft #3713](https://github.com/sifr-lang/sifr/pull/3713) carries this checkpoint;
+the separate final record SHA is in the external receipt.
+
+Fresh candidate evidence: locked build PASS; codegen1452passed/0failed/0ignored/
+0filtered (doc-tests0/0); B2/B3 focused11+7pass; fmt/HIR/diff PASS; file-size
+PASS3779files/900limit. Compiler SHA256
+`e03c7b5d004c38370881e934cfb97e9a30b244cb9c7db4fc65b3b7130ab911cc`,
+lockfile SHA256 `e5f4734fc985e8b3fc041b7a03795829c766b2b96c4fa351932c89b14d255320`.
+Canonical readiness ran once:4variants,3pass,1blocking failure. Registry,
+profile assignment and27negative readiness tests pass; taxonomy self-test
+raises `AssertionError: technical terminology was rejected` at line705 before
+the repository scan. Driver was stopped during compilation after confirmation
+of the external blocker (owned runner exit143); no driver pass is claimed.
+Remaining crates/driver filters, native90, algorithmic411, full diagnostics,
+strict Clippy and all E2E/migrated-stdlib gate coverage are UNREACHED.
+
+Later [12K-B4/#3712](https://github.com/sifr-lang/sifr/issues/3712) belongs to
+`compiler-verification`, separately from diagnostics follow-up3708. The unchanged
+checker creates self-test fixtures under caller TMPDIR, then scans every
+absolute-path ancestor for out-of-repository files. The regex matches `-item12k`
+in this worker's registered `sifr-item12k-cont.StPW7n` ancestor, rejecting valid
+`semantic_terms.rs` independently of content. Main/B1/candidate share checker
+blob `0d67883ab670bf0e199fd4fe88602b4b7d62bf7b`. A read-only filename
+classification confirms the path cause. No checker fix, temporary-root
+workaround, allowlist, audit weakening or repeated readiness run followed.
+
+Complete32,087-path provenance and authenticated B1 report/subreport hashes:
+`/private/tmp/sifr-item12k-cont.StPW7n/provenance-fbe5ca93e61c5286268f2b42a768901a907544f4.json`,
+SHA256 `dbca8e7e5a80ea7ed209bfafca5b3b0c10a60d65992b4231993ef751da08049f`.
+Only phase Markdown and five diagnostics schema/checker files differ from B1.
+Compiler/runtime/Python sources, fixtures, locks, runners, demos, toolchain
+files and gitlinks match. B1 Python30/30 (all five named suites), lowering1119/
+1existing ignored including3required-message tests, and demo264 remain reusable
+historical executions, not new runs. Readiness4/4 was not reused because its
+scan includes changed diagnostics files; fresh execution exposed12K-B4.
+
+Evidence root `/private/tmp/sifr-item12k-cont.StPW7n/` retains build/codegen/
+interrupted-driver/readiness logs,197-path diff list, roots-only native script
+(not executed), full provenance and blocker body. Canonical repository-local
+report `target/verification/areas/item12k-coverage-readiness.json` has SHA256
+`2f33095b31f442a855535ad6956ebc8b2a91f1c9896d71d2e82c612acb43573d`;
+readiness log SHA256 `2a94f13bdf2e050723bccd589f689266d11c6447a976b567dd4b232c3a026d60`.
+
+12K counts remain0initial reviews,0remediation,0provider requests/retries,
+0create-pr gates,0merge gates,0merges. Reviewed/merge SHA:none. No old allowance
+was reset. This separate documentation receipt receives no review/gate.
+Parent and retained checkouts/indexes/targets/dirty records stayed read-only.
+Next action: parent dispatches bounded B4 owner, then fresh12K continuation
+preserves this lineage and completes pending qualification before the unused
+review/gate. This worker stops; no12D/E/F,Item12,12A or whole-phase work starts.
+
+Integration completed on main `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+Normal merge commits preserve both B2/B3 post-merge records. Only a Markdown
+insertion conflict required resolution; both records were retained. Relative
+to approvedB1, the exhaustive Git diff contains exactly the phase Markdown,
+diagnostics schema, code_coverage.py/code_coverage_test.py and
+schema_sync.py/test_schema_sync.py. No compiler, runtime, lockfile, Python
+source/fixture/manifest/runner, demo, toolchain configuration or gitlink changed.
+An external SHA-keyed provenance manifest will compare every tracked blob and
+submodule and authenticate retained B1 reports before reusing lowering1119,
+required-message3, Python30/30 (including the five named suites), demo264 and
+readiness4/4. No native90, algorithmic411 or unreached gate-lane pass is inferred.
+Direct B2/B3 focused checks and complete diagnostics are registered above because
+the integrated compiler sources differ from standalone B2/B3 qualification.
+
+Merge plan: create a linked replacement integration PR from this fresh branch;
+retain original3701 and all historical commits. After exact-candidate review
+and the single passing gate, use normal GitHub merge commits for corpus48 and
+the replacement Sifr PR, verifying expected heads and unchanged bases first.
+The qualified corpus source8bcbe7a remains the pinned gitlink and an ancestor
+of the corpus merge; do not repin it to the merge commit after qualification.
+Sifr's candidate contains latest main, so a normal merge preserves its tree.
+Post-merge phase/owner records are separate documentation-only evidence.
+
+This is the original 12K continuation, with zero initial reviews, zero
+remediation reviews and zero gates used; no predecessor allowance is reset.
+The sole live worker owns independent clone `/private/tmp/sifr-item12k-cont.StPW7n/sifr`,
+branch `codex/item12k-continuation`, private target and sibling evidence/temp.
+Parent's two intentional Markdown changes and every retained checkout, index,
+target and output are read-only. Starting record is
+`d7c41463ca88d5993e3bc3fa847806160799e147`, including approved B1
+`a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`, record23088af and integrated7e23785.
+Preserve approved12B/H/I/correctingM1 ancestry and all historical records.
+Do not import unfinished Item12 source8ad089a. Required constructor-supplied
+string message for every Error is already explicitly authorized; preserve
+PythonError's five fields/arguments and both prior integration corrections.
+
+Authority: parent section "Item12K continuation after B1/B2/B3 (2026-09-06)",
+original12K execution/terminal sections retained below, and user onboarding.
+Integrate latest main including B2 merge770f1ab and B3 mergef11e1cd; reconcile
+their recordsa53b5d3/c508c143 without losing history. B2 #3704 and B3 #3705
+are merged through PRs3706/3709; their exact approval and reports remain external
+dependency evidence. Ordinary Claude, PR, push, merge and issue updates are
+authorized. Use normal merges preserving ancestry; keep corpus gitlink
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372` (leetcode PR48) fixed through freeze
+and qualification. Preserve original draft3701 and reconcile via a linked
+replacement PR if needed. No unrelated repair, next-item code or whole-phase review.
+
+Finish all integration corrections before tests. Set owned environment:
+`TMPDIR=/private/tmp/sifr-item12k-cont.StPW7n/tmp`,
+`CARGO_TARGET_DIR=/private/tmp/sifr-item12k-cont.StPW7n/sifr/target`,
+`UV_CACHE_DIR=/private/tmp/sifr-item12k-cont.StPW7n/uv-cache`,
+`CARGO_BUILD_JOBS=6`, `RUST_TEST_THREADS=1`.
+All area result JSON paths are repository-local. Register these exact commands:
+
+```bash
+cargo build --locked -p sifr
+python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --update
+python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr
+cargo test -p sifr_lowering
+cargo test -p sifr_codegen
+cargo test -p sifr_driver
+cargo test -p sifr_frontend
+cargo test -p sifr_ir
+cargo test -p sifr_type_system
+cargo test -p sifr_lowering required_error_message
+cargo test -p sifr_driver required_error_message
+cargo test -p sifr_driver async_python_error_channel
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite dependency-versions --result-json target/verification/areas/item12k-python-dependency-versions.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite binding-authoring --result-json target/verification/areas/item12k-python-binding-authoring.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite callback-examples --result-json target/verification/areas/item12k-python-callback-examples.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite async-declaration-examples --suite async-context-examples --result-json target/verification/areas/item12k-python-async-examples.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --result-json target/verification/areas/item12k-python-complete.json
+python3 /private/tmp/sifr-item12k-cont.StPW7n/native_qualification.py /private/tmp/sifr-item12k-cont.StPW7n/native-qualified
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full --result-json target/verification/areas/item12k-leetcode-full.json
+uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json target/verification/areas/item12k-coverage-readiness.json
+python3 verification/areas/diagnostics/checks/code_coverage_test.py
+python3 verification/areas/diagnostics/checks/test_schema_sync.py
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --result-json target/verification/areas/item12k-diagnostics.json
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+python3 scripts/check_hir_maintainability_guardrails.py
+python3 scripts/check_file_size_guardrails.py
+git diff --check
+scripts/run_all_tests.sh --profile merge
+```
+
+Verify B2/B3 exact checker locations before invocation; correct registration
+before execution if needed. Reuse B1/B2/B3 passes only after complete-input
+provenance comparison, with explicit hashes. Full Python30/30 includes all five
+named suites; do not repeat unchanged expensive coverage. Demo update's full
+byte comparison can cover check. Readiness runs its four checks without duplicate
+standalone invocations. Adapt only native script roots outside Git, preserving
+90 cases, compiler/source/corpus hashes, native assertions and worker policy.
+Canonical algorithmic suite must qualify411 cases. No filtered certification,
+warm-cache performance claim, blind baseline regeneration or failure allowlist.
+
+After prerequisite qualification, one exact-base/candidate read-only Opus review,
+at most one remediation, then one merge-profile gate on the approved exact SHA;
+skip create-pr, no second gate. Publish SHA-keyed completed review outside Git.
+Inspect disk/private target before long Cargo gate. Full E2E and migrated stdlib
+runtime coverage count only if actual gate lanes pass. A confirmed external
+blocker or second-review new mechanism receives a later owner and terminal
+checkpoint; stop without repairing it. H/I/M1 followups and issues3703/3707/3708/
+3710/3711 remain outside this item. After successful merges and phase/owner
+receipt, stop. No12D/E/F, retainedItem12,12A or whole-phase work.
+
+## Item12K-B1 dispatch and ownership (2026-09-06)
+
+The user authorizes this fresh sole implementer to close only the separately
+owned [TypeVar assertion-fidelity issue #3667](https://github.com/sifr-lang/sifr/issues/3667).
+Parent orchestration and its two dirty documents are read-only. All former
+worker checkouts, indexes, and targets remain read-only. This session owns
+`/private/tmp/sifr-item12kb1.nnPBDD/sifr`, its independent Git index, private
+target and temporary evidence root, and `codex/item12k-b1-typevar-fidelity`.
+It starts at record `23088af50c8e25014c44262b8a7ec1f11dfbe09c`, preserving
+integrated candidate `7e23785ab07cba6f925eed2f934c0304750f1d74`, all original
+dependency commits and corpus `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+Fetched main remains `4ce05473f58716a611ac190581bf0737ba15331e`; no base change
+requires reintegration. The issue is open and confirms the intended wording
+change in producer `066300ff185f38b425a884a2225b72990a194e58`.
+
+Scope: update only the two stale exact message expectations in
+`crates/sifr_lowering/src/lower/expressions_tests/control_flow_and_strings.rs`.
+Preserve diagnostic codes, primary ranges, negative inputs, and exact equality;
+no generic/language semantics change, weakened matching, ignored tests, or
+producer-wording restoration. The producer accepts qualified type names after
+the cited change, explaining removal of "simple". No additional assertion
+correction has been identified. The unchanged keyword-constraints producer
+wording belongs to a different branch and is outside this repair.
+
+Implement the complete correction before running only these named checks:
+
+- `cargo test -p sifr_lowering test_typevar_invalid_bound_shape_has_primary_range`
+- `cargo test -p sifr_lowering test_pep695_typevar_constraint_shape_has_primary_range`
+- `cargo test -p sifr_lowering`
+- `cargo fmt --check`
+- `python3 scripts/check_hir_maintainability_guardrails.py`
+- `python3 scripts/check_file_size_guardrails.py`
+- relevant documentation/diff checks.
+
+One exact-SHA initial Opus review and at most one remediation review apply
+only to B1. After approval, one `scripts/run_all_tests.sh --profile merge`
+on that exact candidate is authorized because compiler-tree tests change;
+skip create-pr and never repeat the gate. Check free disk and the private target
+before the gate. Do not clean old/shared targets. A new mechanism defect on
+second review or an external gate failure receives a later owner record and
+terminal handoff, without unrelated repair.
+
+Ordinary push, a narrowly linked stacked draft PR, merge, and issue/phase
+updates are authorized. The B1 review cannot approve the unreviewed 12K stack
+or reset any historical dependency allowance. If an independent merge cannot
+retain valid exact-input evidence, preserve the approved bounded correction
+for fresh 12K continuation and return blocked. Do not start that continuation.
+The parent's authorization of fresh sequential workers through phase closure
+is orchestration authority; this worker stops after B1. Full-phase Opus belongs
+only to the future 12A closer.
+
+### Item12K-B1 terminal checkpoint: approved correction, external gate block
+
+State on 2026-09-06: **implemented and reviewed; not merged, not closed**.
+The parent's orchestration checkpoint explicitly required the running gate to
+finish without interruption or restart. It completed normally with exit 1;
+no review/gate allowance was added by that checkpoint.
+
+- Draft [PR #3702](https://github.com/sifr-lang/sifr/pull/3702), base
+  `23088af50c8e25014c44262b8a7ec1f11dfbe09c`, branch
+  `codex/item12k-b1-typevar-fidelity`.
+- Reviewed implementation: `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`.
+  Pre-implementation authorization record: `f418e3ab9`. The only implementation
+  change is the two full TypeVar message expectations at lines 493 and 519 of
+  `crates/sifr_lowering/src/lower/expressions_tests/control_flow_and_strings.rs`.
+  Exact equality, diagnostic code, primary ranges and negative inputs remain.
+- Both named focused tests pass (one each). `cargo test -p sifr_lowering`:
+  **1119 passed, 0 failed, 1 existing ignored, 0 filtered**; doc tests 0/0.
+  Fmt, HIR, file-size (**3777 files, 900-line limit**) and diff checks pass.
+  [Published named validation](https://github.com/sifr-lang/sifr/pull/3702#issuecomment-5558355579).
+- The one initial exact-SHA Opus review returned **SATISFIED**, no blockers;
+  no remediation review was used.
+  [Published review](https://github.com/sifr-lang/sifr/pull/3702#issuecomment-5558355686).
+  Raw review SHA256:
+  `983fe36c52e8bf29cae4def89c0198644368f4942dca79ff1feccfbb40dab2f0`.
+- The sole `scripts/run_all_tests.sh --profile merge` ran on that exact clean
+  implementation SHA and exited **1 after 3254.32 seconds**. Create-pr was
+  skipped. Pre-gate disk: 181 GiB free; private target: 1.7 GiB; no cleanup.
+  No old/shared target was used or cleaned, and no cache-certification bypass
+  or profile change was introduced.
+- Gate passes: all reached guardrails, 264-companion freshness, Rust interop
+  **10/10**, coverage readiness **4/4**, core language **5/5**, CPython
+  differential **2/2**, and Python interop **30/30** (including native callback,
+  dataframe, buffer, Arrow, DLPack, ML, library, async and runtime checks).
+  This is B1-candidate execution evidence, not retroactive approval of 12K.
+- Diagnostics reports **184 variants: 182 pass, 2 blocking failures**.
+  All **179 baseline variants pass**. The two `rules` failures are separately
+  owned later work: **12K-B2 / [#3704](https://github.com/sifr-lang/sifr/issues/3704)**
+  for the canonical diagnostic matcher misreading SQL provider enum suffixes
+  (314 reported unknown references), and **12K-B3 / [#3705](https://github.com/sifr-lang/sifr/issues/3705)**
+  for `docs/schemas/diagnostics.schema.json` synchronization drift. Relevant
+  checker/model/schema sources match fetched main; B1 did not change them.
+  The schema drift mechanism is not established by the retained report.
+  Neither failure was repaired or rerun. Later profile stages are unreached.
+  The elapsed warm budget was exceeded (advisory); no performance pass is claimed.
+- Opus's non-blocking wording/parity and additional positional-diagnostic
+  coverage suggestions are recorded in [#3703](https://github.com/sifr-lang/sifr/issues/3703).
+  The keyword-constraints branch still accepts only simple names, so its
+  existing wording is not treated as a proven stale-message defect.
+
+Evidence root: `/private/tmp/sifr-item12kb1.nnPBDD/`. Named logs are
+`{bound,constraint,lowering,fmt,hir,file-size}-a42545f75.log`; the immutable
+review response is in
+`opus-a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233.Kzvvph/response.md`.
+The full gate log is `merge-a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233.log`,
+SHA256 `d17efebc2ad9fb360710c69e0ce65c6a7a03c38caf979461e27c9ab33ce76b80`.
+SHA-keyed report copies are in
+`evidence-a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233/`: lane report SHA256
+`265d8bbf1843fdfc8a7ed43e19240eb89e29b56ce863d95c147e5a14f450bc69`,
+diagnostics report SHA256
+`f86782991a00cec5cdb3db8b3eaa0fa67a4c11da0d3064ceabb7260e30a59ff1`,
+Python interop report SHA256
+`ded05427d9a509307b290b5abb63b451ce0d13ed63e5ae805a6899fc5d1a6dca`.
+
+Merge SHA: **none**. B1 is stacked on the unreviewed integrated checkpoint;
+retargeting its two assertions to main would change validation inputs, while
+merging the entire stack would exceed its narrow review. Preserve the approved
+correction and all inherited history/corpus for fresh owned continuation.
+The original 12K allowance remains **zero reviews and zero gates used**;
+all earlier dependency caps remain unchanged. This B1 session used one review,
+zero remediation reviews and one failed gate, and stops after its record-only
+handoff. Next action belongs to a fresh owner: resolve the recorded diagnostics
+dependencies under their own scope, then resume the preserved 12K qualification.
+No later item, schema regeneration, matcher repair, integration redo, or
+whole-phase review was started here. Issue #3667 remains open pending merge.
 
 ## Objective
 
@@ -523,10 +1931,35 @@ It does not broaden the active item.
 | 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
 | 12D | recorded, not started | Native corpus emission dependencies | Adjudicate checked-read control flow and the complete native diagnostic inventory before Item 12B closure. |
 | 12G | merged | Dependency-checker demo path identity | Authoritative DLPack project path and computed-reference regressions merged in PR #3695; exact-SHA validation and Opus review passed. |
-| 12H | authorized: after 12G handoff | Project-wide generated-field identity | Repair declaration/consumer naming consistency across generated files. |
+| 12H | blocked: external qualification; reviewed candidate preserved | Project-wide generated-field identity | Opus remediation approved `9b52ac200`; the one merge gate fails existing SQL coverage classifications. Preserve draft PR #3697 for 12K with compiler/Python qualification blockers. |
 | 12I | authorized: after 12H handoff | Macro-defined project support visibility | Repair cancellation task-local visibility without blanket exports. |
+
+<!-- Preserved dependency history; latest 12K dispatch is authoritative. -->
+| 12H | blocked: external qualification | Project-wide generated-field identity | Reviewed `9b52ac20094608c8a31f252db99e49ef7c963384` preserved in draft PR #3697; final record `b6e6210a97598fb631b929b2d4daf4012b41bb16`. One gate failed existing SQL coverage; 12K owns integration. |
+| 12I | blocked: external qualification | Macro-defined project support visibility | Opus-approved `f6e8afd964bb214a44c50271dcb2014ee8e828b4` preserved in draft PR #3698; 8 focused tests and all 7 native callbacks pass. Outer certification and the sole merge gate remain blocked; 12K owns integration. |
 | 12J | authorized: after 12I handoff | Async Python error-channel contract | Resolve the authoritative error contracts and preserve async semantics. |
-| 12K | authorized: integration after dependency qualification | Item 12B and Python dependency integration | Qualify the integrated candidate and merge the preserved work; do not reset Item 12B review history. |
+
+<!-- Preserved dependency history; latest 12K dispatch is authoritative. -->
+| 12H | blocked: reviewed candidate preserved | Project-wide generated-field identity | Draft #3697, reviewed `9b52ac20094608c8a31f252db99e49ef7c963384`; sole gate failed SQL coverage. Retained record `b6e6210a97598fb631b929b2d4daf4012b41bb16` owns details and follow-ups. |
+| 12I | blocked: reviewed candidate preserved | Macro-defined project support visibility | Draft #3698, reviewed `f6e8afd964bb214a44c50271dcb2014ee8e828b4`; sole gate failed SQL coverage. Retained record `19ad69969a672d7b741122ded4dd879f2bdaf9ab` owns details and follow-ups. |
+| 12J | blocked: both reviews exhausted, unapproved | Async Python error-channel contract | Draft #3699 preserves final reviewed candidate `4bc432f3474134b1a1d43202d39fd147893bb014`; initial and remediation reviews are NOT SATISFIED. No gate or merge. Message-storage follow-up 12J-M1 requires adjudication; 12I remains external. |
+| 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
+| 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
+| 12K | integration approved; sole gate externally blocked | Item 12B and Python dependency integration | Draft #3717, approved/gated `56907f59cc7d9f9fedb89434970c074c0247dee9`. One SATISFIED review, one failed gate, no merge. Later owners #3722/#3723/#3724; local origin/main setup #3721 passed. See current terminal receipt. |
+| 12K-B7 | recorded, not started | Direct filesystem inventory (#3722) | All 22 sites in six absent inventory paths pre-exist on main. |
+| 12K-B8 | recorded, not started | SQL bigint spelling versus compatibility guard (#3723) | Three unchanged SQL type spellings trigger the removed-language-type scan. |
+| 12K-B9 | recorded, not started | Formatter preview reference drift (#3724) | Eight checks fail on unchanged reference/manifests; no formatter code defect established. |
+| 12K-B1 | approved correction; gate blocked | TypeVar diagnostic assertion fidelity (#3667) | Draft #3702, reviewed `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`; named checks pass, Opus SATISFIED; one failed gate exposes 12K-B2/B3. Unmerged; see B1 terminal checkpoint above. |
+| 12K-B2 | merged | Canonical diagnostic-code matcher identity (#3704) | PR3706 merge770f1ab; recorda53b5d3 retained in12K ancestry; full historical receipt preserved. |
+| 12K-B3 | merged | Diagnostics schema synchronization (#3705) | PR3709 mergef11e1cd; recordc508c143 retained in12K ancestry; full historical receipt preserved. |
+| 12K-B4 | qualified/approved; integration pending | Taxonomy fixture path isolation (#3712) | Stacked#3715 reviewed candidate `5c711f2d6cb90265b32e04e8b9f6b6e3570855c1`; readiness4/4 with27negatives, focused8/8, Opus SATISFIED.1review/0remediation/0gates/0merges. |
+| 12K-B5 | qualified and approved; sole gate failed on clone setup | Portable-project strict Clippy (#3716) | Draft #3719 candidate `e5ff95f5c4f4708542e6367671e751c7bcf82e98`: full driver 595/0/77 ignored plus successful docs, strict Clippy and four statics pass; initial Opus SATISFIED. One failed gate, no remediation/retry/merge. Local main-ref preparation omission is recorded separately in #3721; no B5 compiler defect established. |
+
+<!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
+| 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
+| 12B | in progress | Bounded algorithmic dependency repair | Continue the recorded native repair batch and qualification under the latest authority. |
+| 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
+| 12D | incorporated into 12B | Native corpus emission dependencies | The retained failure inventory bounds the authorized repair; no separate review or gate. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
 
 ## Item Acceptance Contracts
@@ -974,6 +2407,475 @@ artifact hashes, package ownership, and missing-input errors remain enforced.
 - Blocker: none. Item12G is complete. Stop this worker after the record update;
   the orchestrator may assign Item12H to a fresh worker. No next-item code was written.
 
+<!-- Preserved dependency history; latest 12K dispatch is authoritative. -->
+
+### Item 12H: Project-wide generated-field identity qualification
+
+Item12H's isolated candidate is under qualification in
+`/tmp/sifr-item12h.afJDbk/sifr`, branch
+`codex/emitted-rust-excellence-item-12h`, from fresh main
+`4ce05473f58716a611ac190581bf0737ba15331e`. It preserves Item12B and parent state.
+The [Python owner issue](ad-hoc-python-interop-qualification-dependencies.md#item12h-project-wide-generated-field-identity-implementation)
+records exact commands, mechanism regressions, the original native field failure
+resolved by the candidate, and incomplete qualification. Inherited list-repeat
+test failures and the Item12C builtin-registration Clippy failure require 12K
+integration with preserved Item12B. A newly reached clean-environment bytecode
+immutability failure belongs to Python build/verification and also blocks 12K.
+No assertion, dependency, bytecode rule, or Item12I/12J mechanism was changed.
+
+**Terminal handoff (2026-09-06): blocked, not merged.**
+
+- Preserve [draft PR #3697](https://github.com/sifr-lang/sifr/pull/3697), reviewed
+  implementation `9b52ac20094608c8a31f252db99e49ef7c963384`. Merge SHA: none.
+- The [initial review](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555203238)
+  found late bridge generation outside the shared registry. The one remediation
+  batch brings bridge declarations/consumers into the same pass, prevents module
+  identity overwrite, includes bridge sources in cache identity, and removes
+  independent per-file field canonicalization. The
+  [remediation review](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555345800)
+  is **SATISFIED**, no blocking findings. Two reviews used; no third review.
+- Evidence: exact-SHA focused driver tests 3/3; final-source driver tests
+  581 passed, 77 existing ignored; unchanged-codegen canonicalizer tests
+  115 passed; rebuilt native binding case prints `binding runtime ok`.
+  Formatting, HIR and file-size guardrails pass. All 264 demo companions pass
+  freshness in the exact-SHA gate; 21 compiler-regenerated companions differ
+  from base. No Sifr demo or reference Rust source changed.
+- The one `scripts/run_all_tests.sh --profile merge` invocation on that clean
+  SHA failed (exit 1, 362.20s) at coverage-matrix readiness: nine unclassified SQL
+  packages, 13 unclassified targets, one stale PostgreSQL `lib` classification.
+  Reached guardrails and Rust interop (10 variants, zero failures) passed.
+  Later Python-area, crate, and E2E qualification was not reached. This is not
+  a merge pass. No create-PR gate or second merge gate ran.
+- [Exact-SHA validation and gate receipt](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555393502).
+  Raw logs and copied JSON reports are preserved under `/tmp/sifr-item12h.afJDbk/`.
+  The existing [SQL coverage registry owner](ad-hoc-schema-first-sql-platform-review-follow-ups.md#coverage-registry-blocker-observed-during-naming-cleanup-2026-09-05)
+  records this reproduced failure. Its qualified repair is an additional 12K
+  input alongside the already recorded Item12B/12C and Python build/verification
+  dependencies. No SQL classification or gate requirement was weakened here.
+- Field-resolution suggestions and pre-existing bridge-layout/API maintenance
+  are recorded as unimplemented 12H-F1–F5 in the Python owner issue. The final
+  review found no new blocking mechanism defect. Only record files change after
+  the reviewed/gated SHA; no further tests, reviews or gates are required for
+  this record update. Parent state and preserved Item12B/corpus candidates remain
+  untouched. Stop this worker; no next item is started.
+
+<!-- Preserved dependency history; latest 12K dispatch is authoritative. -->
+### Item12J terminal handoff (2026-09-06)
+
+Draft [PR #3699](https://github.com/sifr-lang/sifr/pull/3699) preserves candidate
+`f720a342edd87004975355b478948f7eb5c8b406`, based on freshly fetched main
+`4ce05473f58716a611ac190581bf0737ba15331e`. **Not merged; not approved for
+integration.** Owned branch `codex/emitted-rust-excellence-item-12j`, worktree
+`/private/tmp/sifr-item12j.pT6Xkk/sifr`; parent records/index and retained
+12B/12H/12I worktrees were not mutated.
+
+- The ancestry repair preserves the original async fixtures and removes their
+  source-check failures. Six focused regressions, IR (4), frontend (132 unit +
+  7 integration), and driver (584 passed, 77 existing ignored) pass. All 264
+  generated companions remain byte-identical; fmt, HIR and file-size guards pass.
+- Both named native suites fail at 12I-owned cancellation task-local visibility
+  E0425 after source checking; runtime assertions did not execute. Lowering
+  retains two TypeVar assertion failures owned by #3667; codegen retains two
+  12B-owned list-repeat failures; strict Clippy fails on the preserved12B/12C
+  builtin-registration expect. None is a passing command or full certification.
+- The [initial exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5555927728)
+  is **NOT SATISFIED**: 12J-R1, the newly accepted non-builtin error ancestry lacks
+  generated `From<T> for Error` conversions. Opus reproduced E0277 for a local
+  DomainError and imported CSV Error. This is an unresolved in-scope omission,
+  not an external blocker to be waived. No remediation code was written.
+- [Validation/terminal receipt and changed paths](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5555929816)
+  are keyed to the candidate outside the Git tree. Raw logs, JSON reports and
+  review are retained in `/private/tmp/sifr-item12j.pT6Xkk/`.
+- The user's orchestration checkpoint required terminal handoff once an external
+  blocker was established. Stop after these records; remediation reviews used
+  **0**, merge-profile gates **0**, create-PR gates **0**. There is no final
+  reviewer-approved candidate to gate. No review/gate history is reset.
+- The [Python owner record](ad-hoc-python-interop-qualification-dependencies.md#item12j-terminal-evidence-and-unresolved-review)
+  owns12J-R1 and separate12J-F1–F3 follow-ups. A separately assigned continuation
+  must resolve12J-R1 and preserve the remaining one-remediation/one-gate caps.
+  12K integration and all next-item implementation remain unstarted by this worker.
+
+### 2026-09-06 dependency handoff and bounded remediation
+
+12G is merged (PRs #3695/#3696). 12H and 12I are approved but unmerged
+candidates in draft PRs #3697/#3698; their sole gates failed externally owned
+SQL coverage classifications. Their complete handoffs and deferred findings
+remain in record commits `b6e6210a97598fb631b929b2d4daf4012b41bb16` and
+`19ad69969a672d7b741122ded4dd879f2bdaf9ab`.
+
+12J is unapproved, not merged: draft PR #3699, implementation
+`f720a342edd87004975355b478948f7eb5c8b406`, record
+`60219b080eadb519a813d9a84568552824be0754`. Its initial review found missing
+non-builtin error conversions (12J-R1); native async validation also depends
+on 12I. The original worker is closed. Assign a fresh worker to 12J-R1 before
+12K. This is the remaining remediation of 12J, not a new initial-review cycle.
+
+12J-R1 scope: connect semantic error ancestry to conversion demand for local,
+project-imported and stdlib errors, preserving nominal identity and the original
+runtime/error contract. Dependencies are the preserved 12J candidate and its
+initial review; 12I remains a separate native qualification dependency.
+Use the exact named validation in the Python owner issue at record `60219b0`,
+including `cargo test -p sifr_driver async_python_error_channel` and the
+`async-declaration-examples`/`async-context-examples` suites. Register focused
+emission/compilation regressions before testing. Finish this in-scope correction
+without absorbing known external failures. At most one remediation review and
+one final-candidate merge gate remain for 12J; no third review or budget reset.
+If external qualification still blocks merge, preserve the corrected reviewed
+candidate for 12K. New second-review mechanism defects become later bounded
+items. Do not integrate the unapproved 12J candidate as-is.
+
+### Item12J-R1 terminal handoff (2026-09-06)
+
+State: **blocked, NOT APPROVED, NOT MERGED**. Draft
+[PR #3699](https://github.com/sifr-lang/sifr/pull/3699) retains reviewed
+implementation `4bc432f3474134b1a1d43202d39fd147893bb014`, following preserved
+`f720a342` / record `60219b0` and remediation implementation `3ba19e49a`.
+Owned worktree `/private/tmp/sifr-item12j-r1.9j9Uhf/sifr`, branch
+`codex/emitted-rust-excellence-item-12j-r1`. The PR was updated by normal
+fast-forward push; the original worker's rollback worktree and parent index/
+intentional dirty documents remain unchanged. Base is still main
+`4ce05473f58716a611ac190581bf0737ba15331e`.
+
+- Final-candidate focused regressions: **9 pass**, including emission, native
+  build and execution for local/transitive errors, project aliases/transitive
+  errors/same-basename identities/builtin-name shadows, and distinct CSV and
+  configparser Error classes. Full driver: **587 pass, 77 existing ignored**.
+- All **264 companions are fresh**; only `demos/error_safety/emitted.rs` and
+  `demos/stdlib/emitted.rs` were regenerated. Formatting, HIR and file-size
+  checks pass (3758 files, 900-line cap). No original Sifr fixture, lockfile,
+  workflow, runtime assertion, architecture or roadmap change was made.
+- Codegen remains **1407 pass / 2 pre-existing 12B list-repeat failures**.
+  Strict Clippy fails only at the unchanged 12B/12C-owned
+  `project_stdlib_nominals.rs:45` expect. Unchanged original IR/frontend passes
+  and #3667-owned lowering failures are reused with explicit input provenance.
+- Both original named async suites fail native build at the **12I-owned
+  cancellation task-local E0425** (HTTP one Rust error; context 58, with retained
+  E0425 stderr tail). Neither runtime marker was observed; cleanup/cancellation
+  runtime preservation remains unqualified. No external repair was absorbed.
+- The [sole remediation Opus review](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5556273003)
+  returned **NOT SATISFIED**. New mechanism: broad nominal demand emits
+  `Self::new(err.message)` even for errors without a string message, including
+  errors never converted to the root Error. The reviewer verified a previously
+  compiling `CodeError(Error)` with only `code: int` now fails E0609 merely when
+  an unrelated function mentions Error. Empty errors and `message: int` also
+  fail. Accepted message-less root upcasts remain uncompilable (E0277 before R1,
+  E0609 now), so the original conversion obligation also remains unresolved.
+- This is later bounded **Item12J-M1**, owned by nominal error representation
+  and conversion-demand/ancestry admissibility. The
+  [Python owner record](ad-hoc-python-interop-qualification-dependencies.md#later-item12j-m1-error-message-storage-and-root-upcast-admissibility)
+  records its scope and the required adjudication. No later-item code was
+  written. The review's mapping-cleanup suggestion is separate 12J-F5.
+- Cumulative Item12J budget: **one initial review + one remediation review used;
+  both NOT SATISFIED. Zero create-PR gates, zero merge-profile gates, no merge.**
+  The user's second-review stop rule prevents another fix/review cycle. The
+  unused gate was not run without an approved candidate. Do not integrate this
+  candidate as-is or reset any original review/gate history.
+
+Exact evidence is preserved outside the reviewed Git tree at
+`/private/tmp/sifr-item12j-r1.9j9Uhf/evidence-4bc432f3474134b1a1d43202d39fd147893bb014.md`,
+with SHA-keyed review and native JSON reports. The compiler hash is
+`12adc00c7d5111550f893a20b1b3c3936ece888a13e3bf14b22e67f2d4e7fe09`.
+The final handoff is documentation-only and receives no extra review or gate.
+Next action: adjudicate 12J-M1 and the unresolved conversion obligation before
+any 12J qualification/integration; this worker stops after publishing records.
+### Item12K receipt and B5 dispatch (2026-09-06)
+
+Kierkegaard is closed after the [terminal handoff](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5560373170).
+Preserved clone `/private/tmp/sifr-item12k-final.7sgsI9/sifr`, candidate
+`286067170ee7c4edfb61cd37afece30519b4c1c5`, record
+`9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`, base/main
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`, corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372` (PR48), no merge.
+Original12K still has zero reviews, remediation reviews, provider requests and gates.
+Fresh native90, algorithmic411, diagnostics184, readiness4, frontend139, IR4,
+types147, required-message5 and async9 pass. The full driver run failed594/1
+with77 existing ignored; the structural metadata assertion correction passes
+its focused test, but does not turn that failed full invocation into a pass.
+Authenticated codegen1452, lowering1119, Python30, demo264 and B2/B3/B4 focused
+evidence remains available. Full E2E, migrated stdlib and ignored-driver build
+lanes remain unrun. Strict Clippy found the two external failures below.
+
+Next item is **12K-B5 / [#3716](https://github.com/sifr-lang/sifr/issues/3716)**,
+owner compiler-driver portable generated projects. Dependencies are the complete
+retained12K context above; narrow B5 approval must not approve inherited12K code.
+Scope: correct `obfuscated_if_else` in `portable_dependency_line` and
+`type_complexity` in `authority_packages`, without suppression, fallback,
+manifest-output changes, lock-source changes or unrelated repair. These two
+files are unchanged from main; the owner issue contains exact blob provenance.
+
+Use a fresh owned clone/branch retaining the complete12K record and exact corpus;
+do not mutate any previous checkout, target, index or the parent's dirty records.
+Register this dispatch in the owned phase before implementation. Named tests:
+`cargo test -p sifr_driver`, `cargo clippy --workspace -- -D warnings`,
+`cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`,
+`python3 scripts/check_file_size_guardrails.py`, and `git diff --check`.
+The worker may register exact focused semantic-regression commands before testing
+if needed for these two changes. Complete the entire bounded correction before
+tests. Preserve/reuse authenticated unaffected evidence rather than rerunning the
+90/411/184/Python matrices reflexively. All canonical JSON reports belong inside
+the owned repository; preserve actual pass/fail/unrun distinctions.
+
+B5 receives the normal one exact-SHA initial Opus review and at most one
+remediation review, scoped to B5's exact delta. Compiler paths change, so one
+merge-profile gate on the final approved candidate is required; skip create-pr
+for intended in-session delivery. No second gate and no predecessor budget reset.
+Prefer the already-qualified integration context over deliberately reproducing
+known main-only SQL/Python prerequisite gaps. A passing exact-SHA gate receipt
+must be preserved for later integration evidence reuse under the user's rule;
+it does not itself provide the still-required broad12K integration review.
+Do not merge inherited unreviewed implementation under narrow B5 approval.
+If independent safe delivery is impossible, return the approved stacked candidate
+and gate evidence as integration-delivery-pending, not as a newly discovered
+mechanism blocker. A genuine new external failure or second-review mechanism
+gets a later owner and terminal handoff. Do not implement12K/12D/E/F/Item12/12A
+or run whole-phase review. Return exact base/candidate/record/merge SHAs, PR,
+changed paths, evidence, all consumed counts and the precise next action.
+
+#### B5 owned execution registration (2026-09-06)
+
+Owned clone: `/private/tmp/sifr-item12k-b5.5WJpGX/sifr`; branch
+`codex/item12k-b5-portable-clippy`. The sole implementer preserves exact review
+base/integration record `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`, including
+all normal ancestry and corpus `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+Fetched main remains `f11e1cd7eef16a02063555bccc9fd8e19287833b`, already an
+ancestor. Parent/predecessor checkouts, indexes, records and targets are read-only.
+
+Implementation is restricted to an explicit package-alias `if/else` in
+`portable_dependency_line` and a private named authoritative-checksum map type
+for `authority_packages`. Existing manifest-output and lock-source regression
+tests run through the registered full `cargo test -p sifr_driver`; no additional
+focused invocation is registered. All six named checks above run after the
+complete bounded code batch. The inherited metadata assertion fix is retained.
+
+B5 allowances: one initial exact-SHA read-only Opus review, at most one
+remediation review, one governed merge-profile gate on the approved candidate,
+zero create-pr gates. Initial provider-request failure permits at most two
+request retries with fresh atomic-output directories under the requested skill.
+The review is only the B5 delta from the exact integration record; inherited12K
+implementation is explicitly unreviewed. No inherited budget is reset; original12K
+counts remain zero. Safe independent delivery must not merge that unreviewed
+stack. If that delivery boundary remains, retain the narrow approved candidate
+and actual gate receipt as `integration-delivery-pending` for a fresh original12K
+worker; do not perform the broader review here.
+
+### Item12K-B5 receipt and B6 dispatch (2026-09-06)
+
+Jason is closed after the [B5 terminal receipt](https://github.com/sifr-lang/sifr/pull/3719#issuecomment-5560531600).
+Candidate `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`, record
+`9a42fe4239426cb53438b1d8f6a000f4c0a352d5` in
+`/private/tmp/sifr-item12k-b5.5WJpGX/sifr` preserve B5's two source corrections
+and records only. Review base is `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`.
+Main/corpus remain f11e1cd/8bcbe7a as above. Nothing merged. B5 and original12K
+both retain zero initial/remediation reviews, provider requests and gates.
+Full driver invocation failed during rustdoc after595 unit passes/77ignored;
+four static checks passed; Clippy was not reached. The E0463 cause is unproven,
+not an established portable-project regression. Preserve the failed invocation.
+
+Next bounded owner is **12K-B6 / [#3718](https://github.com/sifr-lang/sifr/issues/3718)**,
+compiler validation / driver Cargo-rustdoc integration. Depends on the retained
+B5 context above. Diagnose and resolve/adjudicate the12 dependency-resolution
+errors from `Doc-tests sifr_driver`; establish the actual toolchain/artifact/
+environment or repository cause with evidence. Missing `.rlib` paths and a
+simple rustc/rustdoc version mismatch were not established: sampled files exist
+and both tools report1.98.0(88d9e12ae). The failure log and wrapper are in the
+owner issue; no assumption that the narrow B5 transformations caused it.
+
+Use a fresh owned clone/branch/temp/target with retained ancestry, exact corpus,
+and latestmain assessment. Old checkouts/targets/indexes remain read-only.
+Read logs, wrappers, relevant configuration and dependency provenance before
+deciding whether a repository patch is warranted. Register specific diagnostic
+commands before execution; safe read-only artifact/toolchain checks are in scope.
+Named qualification: `cargo test -p sifr_driver --doc` for focused reproduction
+and correction, then `cargo test -p sifr_driver` for one actually passing full
+invocation on corrected final inputs; `cargo fmt --check`, HIR/file-size guards
+and `git diff --check` for touched material. Preserve595 unit successes without
+calling the preceding full command a pass. Do not disable doctests, ignore
+failures, weaken checks, add fallback resolution, blindly downgrade toolchains,
+or repeat broad matrices. A transient/environment conclusion requires concrete
+evidence and genuine passing qualification, not merely an assumed stale cache.
+
+Implement the complete bounded correction before final tests if a real patch is
+needed. If no repository correction is justified, record the evidence-backed
+environment adjudication as documentation only. One exact-SHA B6 Opus review,
+maxone remediation; no whole-phase review or B5/12K review. If B6 compiler,
+lockfile,fixture,workflow changes, use one approved-SHA merge gate, no second,
+skip create-pr for intended delivery. Otherwise do not run Sifr gates. Preserve
+exact passing evidence for later reuse. Narrow approval cannot authorize merging
+unreviewed inherited code; an approved stacked delivery may return to original
+B5 then12K. Do not create a new mechanism item solely for that delivery dependency.
+True unrelated blockers/new second-review mechanisms get their own later owner.
+Stop at terminal handoff, no B5 completion or other item implementation here.
+
+#### B6 owned execution and registered diagnostics
+
+Sole implementer owns `/private/tmp/sifr-item12k-b6.YxonRW/sifr`, branch
+`codex/item12k-b6-rustdoc`, its index, target and sibling temporary/evidence paths.
+Parent and all predecessor checkout/index/target paths remain read-only.
+The complete B5 record is the B6 base; its inherited implementation is outside
+the narrow B6 review and cannot merge under that approval.
+
+Registered before diagnostic execution:
+- Authenticate the supplied driver log and provenance SHA256 receipts; inspect
+  `qualify.sh`, error arguments and all 16 exact submodule identities.
+- Inspect `rust-toolchain.toml`, Cargo manifests/configs (repository and ancestor
+  `.cargo/config{,.toml}` and Cargo home config), selected non-secret Rust/Cargo/
+  build environment, `command -v`, `rustup which/show`, and verbose tool versions.
+- Inspect B5 target `.rustc_info.json`, `.fingerprint` JSON, dep-info and rlib
+  metadata/digests with `stat`, `file`, `ar`, `shasum`, and loader diagnostics.
+  Any direct compiler/rustdoc probe writes only to owned temporary outputs;
+  predecessor artifacts are read-only inputs. Register adaptive probes here.
+- Assess `origin/main` and retained ancestry; clone all 16 submodules locally
+  without hardlinks or shared indexes and verify exact gitlinks.
+- Reproduce with `cargo test -p sifr_driver --doc -vv` in the fresh owned target,
+  capture effective rustdoc arguments, then qualify corrected final inputs with
+  `cargo test -p sifr_driver`. Keep `CARGO_BUILD_JOBS=6`, `RUST_TEST_THREADS=1`,
+  and owned `TMPDIR`, `CARGO_TARGET_DIR`, UV/Python cache directories.
+- Run named fmt, HIR/file-size guards and `git diff --check`; no broad matrices,
+  Clippy/B5 qualification, or gate absent governed B6 changes.
+- Adaptive artifact probe: a minimal owned Rust file importing `ruff_text_size`
+  is loaded by the pinned `rustc --emit=metadata` and `rustdoc --test`, comparing
+  the identical retained `.rlib` and sibling `.rmeta`. Run with Cargo's package
+  environment restored for full rustdoc replay; no prior output is overwritten.
+- Adaptive provenance discrimination: resolve the retained minimal import and
+  full driver rustdoc against the freshly built owned dependency search path
+  as well as the retained read-only paths. Compare registry/vendor `rustversion`
+  dep-info, fingerprint source identities and crate hashes. This is a diagnostic
+  comparison only, not a product fallback or the final qualification command.
+- Correction under investigation: do not export the outer `CARGO_TARGET_DIR`
+  to driver tests. Cargo uses this owned clone's default `target`; nested Rust
+  probes then use their existing owned-TMPDIR probe cache. Qualify using the
+  unchanged named focused doc/full commands, with no source changes if proved.
+- Controlled mechanism experiment: in a separate owned scratch target, build a
+  tiny Rust library using the pinned `rustversion=1.0.22` proc macro from the
+  registry. Test its import with direct rustdoc before and after a second Cargo
+  project checks the same dependency using this clone's vendor source into that
+  scratch target. Record the exact commands, dylib hashes, dep-info, and loader
+  diagnostics. This isolates source-replacement target collision without running
+  another full driver invocation or mutating qualified/retained targets.
+
+#### B6 artifact/environment adjudication
+
+The observed E0463 is a transitive `rustversion` crate-hash mismatch caused by
+sharing the outer compiler target with nested Cargo builds that replace registry
+sources with the sysroot vendor source. B5's exported `CARGO_TARGET_DIR` applied
+to both graphs. The existing Rust-probe target contract explicitly honors that
+override (`rust_interop_probe_paths.rs`); without it, probes use their separate
+`rust_bridge_probe_target` below the generated artifact cache in `TMPDIR`.
+
+Concrete evidence in `/private/tmp/sifr-item12k-b6.YxonRW/evidence/`:
+- The supplied B5 driver log and complete provenance JSON match their dispatch
+  SHA256 values. Latest main is still `f11e1cd7eef16a02063555bccc9fd8e19287833b`,
+  in retained ancestry. All 16 submodules match the retained gitlinks.
+- B5's `castaway` metadata requests `rustversion` hash
+  `5b8d38d007006937f6b5c3db60cc9286`; the same-named
+  `librustversion-3c65caf96f152204.dylib` instead exposes
+  `d6dc5f697ffa42aabc7ce7174d88b1f7`. Its dep-info names the B5 vendor tree,
+  whereas the fresh matching Cargo artifact name names the Cargo registry.
+  Both `.rlib` and `.rmeta` imports fail for that missing transitive identity.
+  See `minimal-rustc-rlib.log` and the minimal rustdoc logs.
+- Restoring Cargo package environment preserves all 12 original errors
+  (`old-cargo-env.log`). Adding a fresh clone's dependency search path does not
+  repair the old artifacts: that build has its own crate identities. No mixed
+  artifact path is used for qualification.
+- A controlled scratch experiment builds a two-line library using exactly
+  `rustversion=1.0.22`. Its direct rustdoc import passes. A second Cargo project
+  checking the same dependency with vendor source replacement in the same
+  scratch target replaces the proc-macro artifact; the identical import then
+  fails E0463 for `rustversion`. See `collision-{before,after}.log`, build/check
+  logs and `target/verification/areas/item12k-b6-collision-{before,after}.json`.
+  The experiment does not mutate the qualification target or any retained target.
+- Fresh `cargo test -p sifr_driver --doc -vv` passes on the unchanged retained
+  source, before any driver test execution. It fully loads/types the driver
+  documentation target and reports zero doctest examples, not disabled coverage.
+
+The bounded correction is invocation-level target isolation: unset
+`CARGO_TARGET_DIR` in the B6 qualification environment and use Cargo's default
+`target` in this fresh owned clone. Keep `TMPDIR`, UV cache and Python cache
+owned; keep `CARGO_BUILD_JOBS=6` and `RUST_TEST_THREADS=1`. Nested probes select
+their existing separate TMPDIR cache. No source, lockfile, fixture, workflow,
+toolchain, coverage setting or fallback changes are warranted for this receipt.
+The canonical commands are `cargo test -p sifr_driver --doc`, followed by one
+`cargo test -p sifr_driver` on the corrected inputs, then the four named static
+checks. Their exact-SHA receipts must pass before B6 review/approval; logs are
+outside Git and canonical JSON reports are inside this owned repository's target.
+This cold build is not host-sensitive performance evidence.
+
+B5's original invocation remains failed after 595 unit successes/77 ignored;
+its Clippy, review and gate remain unreached. Broad retained matrices are not
+rerun by B6. B6's documentation-only adjudication consumes no Sifr profile gate.
+One narrow exact-SHA review can approve only this adjudication. Delivery remains
+stacked pending original B5/12K integration; no inherited code merges under it.
+
+#### B6 terminal receipt (2026-09-06)
+
+State: **environment adjudication qualified and approved; stacked integration
+delivery pending**. [PR #3720](https://github.com/sifr-lang/sifr/pull/3720)
+targets the retained B5 branch. This is the explicitly authorized B6 terminal
+delivery condition, not a new mechanism blocker. Merge SHA: **none**.
+
+- Exact reviewed/qualified B6 candidate:
+  `4d076ebe08f00ba7ff6ea6ae7f910397ba7b2356`.
+- Exact B6 base/B5 record: `9a42fe4239426cb53438b1d8f6a000f4c0a352d5`;
+  B5 source: `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`;
+  inherited B5 review base: `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`.
+- Main reverified unchanged: `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+  Corpus unchanged: `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+  The phase-only terminal record is a later commit identified in the PR receipt;
+  it does not replace the reviewed candidate or alter its validation inputs.
+- Complete corrected `cargo test -p sifr_driver` **PASS exit 0**,
+  2026-09-06 16:31:20–16:43:29 UTC, 728.46 seconds: **595 unit passes,
+  0 failures, 77 normally ignored**, then successful driver doctests (zero
+  examples, full library rustdoc loading/type checking). Corrected focused
+  `cargo test -p sifr_driver --doc` also passes on the exact candidate.
+- `cargo fmt --check`, HIR maintainability, file-size guard (3780 files/900
+  lines), and `git diff --check` all pass. The exact committed diff check passes.
+  No create-pr or merge-profile gate: B6 changes only this Markdown file.
+- The early-unit-run and post-full-run artifact captures are byte-identical,
+  including timestamps: the outer registry proc macro and retained B5 artifacts
+  were preserved. Registry/vendor `rustversion` Rust sources are identical across
+  all 24 files. Final own target: 4.2 GiB, 109 GiB free; no cleanup performed.
+- The [initial Opus review](https://github.com/sifr-lang/sifr/pull/3720#issuecomment-5560686820)
+  returned **SATISFIED**, no blockers. It independently authenticated the 34-entry
+  final evidence inventory and checked the mechanism and exact-SHA full pass.
+  Its approval applies only to B6; B5/original 12K reviews remain unperformed.
+- Consumed B6 counts: **1 initial review, 0 remediation reviews, 1 provider
+  request, 0 retries, 0 create-pr gates, 0 merge gates, 0 merges**. Diagnostic
+  work includes one initial fresh focused Cargo doc run, one corrected focused
+  doc run, and one corrected full-driver invocation; direct loader/scratch
+  experiments are separately recorded. B5 and original 12K still each retain
+  **0 reviews/0 provider requests/0 gates**, with all historical budgets intact.
+
+Content-addressed receipts (root `/private/tmp/sifr-item12k-b6.YxonRW/`):
+
+| Evidence | SHA256 |
+| --- | --- |
+| `evidence/driver.log` | `40fd5424b73d15032693fe21d987af909e60820a918ef721b24834558cb16567` |
+| `evidence/doc-final.log` | `655627d295e02c9d19da5850031630048d3e16511f01a180f35433f0fe28192e` |
+| `sifr/target/verification/areas/item12k-b6-final-evidence.json` | `93ea65d243e422cc513ff56d2f46289d5dd1230674eccf29ba5bab61b2e6842c` |
+| `sifr/target/verification/areas/item12k-b6-provenance.json` | `4ae2e11ae370c2c74a1906950d6366486cede00af396a66bcb88e666824e41db` |
+| `opus-4d076ebe08f00ba7ff6ea6ae7f910397ba7b2356.xPD0S8/response.md` | `739e5e89582dc41928fc1254d1f5abcdd8b348b6db6b11294629bf91dc94ec3b` |
+
+Deferred nonblocking review follow-ups, separate from B6 completion:
+- **B6-F1 / records owner:** normalize missing spaces in copied historical
+  dispatch text when that record is next maintained. The dispatch was copied
+  verbatim; its content is accurate. No typography sweep started here.
+- **B6-F2 / diagnostic evidence owner:** use distinct names for the before-state
+  command receipt and artifact map in future scratch experiments. The artifact
+  map occupied `item12k-b6-collision-before.json`; the passing before-state log
+  and its inventory hash remain available, but there is no separate command JSON
+  for that leg. Opus classified this as nonblocking infrastructure asymmetry.
+  No evidence was reconstructed as if it were an original invocation receipt.
+
+No technical blocker remains for B6. Exact next action: hand this approved
+stacked candidate and documentation record back to the original B5/12K owners.
+They must preserve the corrected invocation isolation and authenticate/reuse
+applicable evidence, then complete their own remaining qualification, review,
+gate and integration delivery. B5's previous full invocation stays failed and
+its Clippy remains unrun; B6's successful full invocation is a separate receipt.
+Full E2E, migrated stdlib and normally ignored driver lanes are not certified
+by this standalone item. No B5 completion, broad integration review, merge of
+inherited unreviewed code, next-item implementation or new gate was performed.
+
 ### Item 12B: Bounded algorithmic dependency repair
 
 On 2026-09-05, the user authorized the same worker to repair both repositories.
@@ -1000,6 +2902,91 @@ On 2026-09-05, the user authorized the same worker to repair both repositories.
   Skip create-PR. Do not repeat the merge gate.
 - Close Item 12B and update its records, then stop. Do not start Item 12 or 12A.
 
+
+<!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
+#### Item 12B qualified implementation (before review and merge)
+
+State: implementation qualification passed; Item 12B remains open until review and merge.
+
+- Compiler source: `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`.
+- Compiler SHA-256: `d47774bba160db3903b9143071352af3b3001d6ec16173731cad5811b4b7abad`.
+- External corpus candidate: `da4a0e8680c6b50c5544d77bfb92e9e4cddf1ab1`.
+- `native-qualified/matrix.json`: 90/90 repaired fixtures pass both check and native execution.
+  This includes median, zigzag, browser history, all original assertions, and the added ownership cases.
+- `borrow-final-codegen.log`: 1,435/1,435 codegen tests pass, including all 26 focused corpus-repair regressions.
+- `borrow-final-focused.log`: the exact borrowed-parameter regression command selects and passes one test.
+- `borrow-final-clippy.log`, `borrow-final-fmt.log`, `borrow-final-size.log`, and `borrow-final-hir.log`: pass.
+- `borrow-final-demo-regeneration.log`: all 264 generated companions are fresh.
+- Evidence files above are under `/tmp/sifr-item12b.akguMz/`.
+- No Opus review or merge-profile gate has run yet. The create-PR gate remains skipped.
+
+The canonical `leetcode-full` command passes 411/411 cases with zero failures.
+Its immutable evidence is `leetcode-full-7f393-results.json` and `leetcode-full-final.log`.
+That run used compiler source `7f3930ab4b05cd5ab50edb897be6a56329ab43f6`, digest
+`68fbec4c7d99c843f0f75135e7c41b06d1552a0a769676f6df39982c6dc257f8`, and the same external corpus candidate.
+
+This front-end evidence is reused by input identity, not relabeled as a later-SHA run.
+The only subsequent compiler change is the nested arithmetic emitter's borrowed-operand adapter.
+The CLI check path calls `check_project` or `check_single_file`, then returns front-end diagnostics without Rust emission.
+The CLI source, driver, frontend/lowering/type-system/IR sources, stdlib, Cargo inputs, corpus, and algorithmic runner are unchanged.
+Main's intervening changes rename demo variables and a regex test; they do not change those inputs.
+Native qualification was rerun in full with the corrected compiler.
+The retained Item 12 compiler candidate is not used as qualification evidence.
+
+#### Item 12B continuation amendment: naming and SQL coverage dependency
+
+On 2026-09-05 the user explicitly authorized both remaining repairs and **one
+replacement merge-profile gate**. This supersedes the prior stop below, not its
+failed evidence. The first gate on `6ce83824e0315e5f89383fc666344b99431e1e76`
+remains failed. No create-PR gate is permitted.
+
+- Replace all 428 corpus taxonomy occurrences with descriptive, collision-free
+  semantic local names. Preserve assertions, typed receiving contracts, scope,
+  call order, and evaluation count.
+- Reconcile authoritative Cargo coverage classifications with the actual SQL
+  packages, target kinds, and test targets (23 recorded diagnostics), coordinating
+  through `ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+  Do not alter package semantics, weaken checkers, exclude targets, suppress
+  diagnostics, or rebase accepted debt.
+- Keep the reviewed candidates and record checkpoints in history.
+- Use the one remaining exact-SHA Opus remediation review for both corrected
+  repository candidates and this SQL metadata dependency. No third review.
+- After satisfactory review run exactly one replacement merge gate on the final
+  candidate, then merge both PRs and update records. Do not start Item 12 or 12A.
+
+Additional/affected named validation, fixed before execution:
+
+```bash
+python3 /tmp/sifr-item12b.akguMz/verify_semantic_renames.py
+python3 verification/areas/coverage_matrix/checks/coverage_matrix_readiness.py
+python3 verification/areas/coverage_matrix/checks/coverage_matrix_readiness_self_test.py
+python3 verification/areas/coverage_matrix/checks/profile_assignment_matrix.py
+python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py
+uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness
+python3 /tmp/sifr-item12b.akguMz/native_qualification.py /tmp/sifr-item12b.akguMz/native-naming-qualified
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full
+cargo fmt --check
+python3 scripts/check_file_size_guardrails.py
+python3 scripts/check_hir_maintainability_guardrails.py
+scripts/run_all_tests.sh --profile merge
+```
+
+Coverage readiness includes new negative cases `wrong_component_target_kind`
+(both missing rlib and stale lib findings) and `missing_sql_test_target`.
+The canonical readiness suite executes all four listed coverage scripts, so those
+checks need not be repeated as standalone commands. Use its uv environment.
+MySQL and SQLite compiler crates now join the ordinary profile crate-test
+membership, matching PostgreSQL; this executes their existing tests rather than
+misclassifying compiler packages to evade required membership.
+
+The native helper will run check AND native execution for all 90 repaired fixtures
+with the identified compiler (exact helper invocation recorded before execution).
+The rename proof compares token streams against corpus `da4a0e8680c6b50c5544d77bfb92e9e4cddf1ab1`,
+allowing only an injective local identifier mapping; string literals, assertions,
+types, and all other tokens must remain identical.
+Compiler-source/binary, codegen regression, and crate Clippy evidence may be
+reused only if their inputs remain unchanged, with original SHA attribution.
+Fresh full-corpus evidence will use the corrected corpus pin.
 #### Item 12B terminal checkpoint: remediation approved; replacement gate blocked
 
 State on 2026-09-05: **not merged, not closed**. This supersedes earlier
@@ -1371,6 +3358,135 @@ Those mechanisms are not builtin registration or sentinel/repeat reuse.
 #### Later Item 12D: Native corpus emission dependencies
 
 State: recorded for scope adjudication, not started.
+
+<!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
+#### Item 12B continuation authority and regression commands
+
+The user authorized all necessary next actions after the complete failure inventory.
+The recorded execution dependencies now form part of the bounded Item 12B repair.
+The previous scope-adjudication stop is superseded.
+This includes checked-read control flow, exception capture and lowering, ownership,
+method retention, assertion typing, and the checked-shift source omission.
+It does not include unrelated Item 12 quality work or Item 12A.
+The original review and single-gate limits remain unchanged.
+
+Additional focused commands, recorded before test execution:
+
+```bash
+cargo test -p sifr_codegen item12b_
+cargo test -p sifr_codegen item12b_exception_capture
+cargo test -p sifr_codegen item12b_checked_read_control_flow
+cargo test -p sifr_codegen item12b_repeated_value_ownership
+cargo test -p sifr_codegen item12b_recursive_optional_mutability
+cargo test -p sifr_codegen item12b_structured_exception
+cargo test -p sifr_codegen item12b_method_retention
+cargo test -p sifr_codegen item12b_empty_collection_assertion
+```
+
+The complete native matrix is the repair checklist, not a new discovery run.
+Each regression must cover the relevant lexical, control-flow, or ownership negative case.
+The new compiler requires new affected-input evidence. Earlier passes retain their recorded provenance.
+
+The source batch also completes two missing checked-value contracts.
+Fixture 2002 receives each checked shift into an explicit integer binding.
+Fixture 0048 tests each optional matrix read before its corresponding write.
+The matrix changes preserve read/write order and raise `IndexError` on absent values.
+They do not substitute a default or remove an original case.
+
+#### Item 12B integrated-base provenance
+
+The complete `7f3930ab4b05cd5ab50edb897be6a56329ab43f6` native matrix passes 89/90 repaired fixtures.
+All three previous residuals pass. Fixture 1472 exposes a nested arithmetic double borrow of an existing borrowed parameter.
+The correction uses the existing binding-aware exact-integer operand adapter, not a new cloning rule.
+Its exact focused command is recorded before execution:
+
+```bash
+cargo test -p sifr_codegen corpus_repair_nested_arithmetic_preserves_borrowed_parameter
+```
+
+Main PR #3693 (`b475ebdcd37081aa2860d9c348ace4100b546eff`) was integrated at `8d5afcb0c12a6115c54aadccee0e3fa87f478db0`.
+Its naming-only changes leave compiler and algorithmic qualification inputs unchanged.
+Only its changed demo inputs required regeneration; the canonical merge freshness check remains required.
+
+The `d13954fd69a0dfb0e203a03cd5124d921d103539` residual native matrix passes 16/19 cases.
+The remaining repairs cover nested mapping-default ownership and proven reads at optional call boundaries.
+Fixture 1260 also requires explicit narrowing of optional position and cell reads before mutation.
+These complete the existing ownership/read and external source-contract scope; no new item is started.
+All existing corpus assertions remain unchanged.
+Focused commands for this batch, recorded before execution:
+
+```bash
+cargo test -p sifr_codegen corpus_repair_repeated_value_ownership_nested_arithmetic_and_defaults
+cargo test -p sifr_codegen corpus_repair_proven_read_at_optional_call_boundary
+cargo test -p sifr_codegen corpus_repair_explicit_optional_nested_mutation_contract
+cargo test -p sifr_codegen corpus_repair_
+```
+
+The final compiler must still pass all 90 repaired fixtures and the full canonical corpus.
+The 16/19 residual pass is not whole-item qualification.
+
+Main advanced to `c83dd7cde8daf54cdc4abd952903e9aa093c4183` through PR #3692.
+Merge `b3d836354` integrates that reviewed base, including its dependency-feature normalization.
+The test-module conflict keeps both new regression modules and main's renamed modules.
+No retained Item 12 implementation was imported.
+
+The merged naming policy forbids numbered planning labels in source names.
+The new tests therefore use mechanism-oriented module names and the `corpus_repair_` filter.
+This is a mechanical identity change; every case and assertion remains present.
+The exact replacement focused command is recorded before execution:
+
+```bash
+cargo test -p sifr_codegen corpus_repair_
+```
+
+Main records unresolved SQL coverage classifications in
+`ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+They remain externally owned and are not absorbed into this dependency repair.
+The single-gate limit is unchanged.
+
+#### Item 12B continuation implementation evidence
+
+The complete `7b50a83a91ce65dc17d91d73e54c14dcd1b67901` qualification has 411/411 canonical checks.
+Its repaired-fixture matrix has 90/90 checks and 71/90 native passes.
+The 19 native failures remain qualification failures, not a partial pass claim.
+Raw evidence: `leetcode-full-continuation.log` and `native-continuation/diagnostic_inventory.json` under the owned temporary root.
+The follow-up batch repairs those same mechanism paths: expression-local checked reads,
+child-scope last-use accounting, owned argument adaptation, imported mutable receivers,
+and empty assertions inside exception carriers. No unrelated Item 12 work is included.
+
+Additional exact regression commands, recorded before execution:
+
+```bash
+cargo test -p sifr_codegen item12b_checked_read_control_flow_short_circuit_assignment
+cargo test -p sifr_codegen item12b_structured_exception_root_error_and_dictionary_reads
+cargo test -p sifr_codegen item12b_structured_exception_nested_while_checked_comparison
+cargo test -p sifr_codegen item12b_repeated_value_ownership_condition_and_branch
+cargo test -p sifr_codegen item12b_repeated_value_ownership_nested_arithmetic_and_defaults
+cargo test -p sifr_codegen item12b_empty_collection_assertion_in_exception_carrier
+```
+
+Compiler implementation `580e3374c3aac2aa669ad06354fba02c618e0942` completes the recorded dependency batch.
+Commit `18ab9bd969e70876a99875d8c719ad8b8d4daeb3` updates the existing union-rendering test expectation.
+External candidate `0ef88e8b4f4906e410a3b2e9216248c11149b247` completes the two remaining source contracts.
+No retained Item 12 compiler changes were imported.
+
+Evidence under `/tmp/sifr-item12b.akguMz/`:
+
+- `continuation-focused-4.log`: all 17 Item 12B regressions pass.
+- `continuation-codegen-full-2.log`: all 1,425 codegen tests pass.
+- `continuation-clippy.log`: strict codegen Clippy passes.
+- `continuation-build.log`: the new compiler build passes.
+- Formatting and file-size/HIR guardrails pass; the size check covers 3,760 files.
+
+The compiler binary SHA-256 is
+`04e449044644533db98fad9289d89355078f12b3e3bbd9bdb77d7f42398dfbfa`.
+These are focused and crate-level results, not full-corpus qualification.
+The earlier complete failing matrices remain historical evidence.
+No Opus review or merge-profile gate has run.
+
+#### Incorporated Item 12D: Native corpus emission dependencies
+
+State: incorporated into Item 12B under the continuation authority.
 Owner: compiler emission, tracked in this issue and the algorithmic issue.
 This item does not reopen Item 12C or request authority for its completed repair.
 
@@ -1428,6 +3544,22 @@ This later item records the blocker from the Item 12 worker. On 2026-09-05, the 
   contains the compiler identity, evidence paths, isolation details, and next action.
   No PR, review, or merge gate was consumed. Full-corpus qualification remains
   incomplete. No committed Sifr corpus-pin update exists.
+
+<!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
+#### Item 12B implementation provenance
+
+The compiler changes start from the merged base, not the retained Item 12 candidate.
+The existing ownership materializer now serves integer local bindings and repeat counts.
+Its rename does not change the other callers.
+The repeat producer preserves operand order for both operand positions.
+Singleton repetition uses the existing exact-integer range without a host-sized cast.
+This correction also satisfies the two existing singleton-repeat codegen tests.
+
+The median fixture adds native loop, branch, sentinel-reuse, and large-integer assertions.
+The zigzag fixture adds native repeat-count, operand-order, and single-evaluation assertions.
+Both fixtures retain every original case.
+External repairs propagate checked errors through explicit receiving contexts.
+Reassignments retain their original binding identity and statement order.
 
 ### Item 12A: Phase closure and whole-phase review
 
@@ -1601,6 +3733,33 @@ New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
+
+- Item12I reached its terminal **blocked, not merged** handoff on 2026-09-06.
+  [Draft PR #3698](https://github.com/sifr-lang/sifr/pull/3698) preserves reviewed
+  implementation `f6e8afd964bb214a44c50271dcb2014ee8e828b4` on
+  `codex/emitted-rust-excellence-item-12i`, owned worktree
+  `/private/tmp/sifr-item12i.0l85Lu/sifr`, fresh-main base
+  `4ce05473f58716a611ac190581bf0737ba15331e`. Merge SHA: none.
+  [One exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3698#issuecomment-5555560780)
+  returned SATISFIED, no blockers; no remediation review was needed.
+  Exact-candidate focused tests pass 8/8; all 7 native callback examples pass
+  all 14 inner checks with original cancellation/cleanup markers and no skips.
+  The named outer callback command exits 1 because filtered-suite compiled
+  certification is non-promotable. Full codegen (1,415 pass, 2 unchanged
+  list-repeat failures) and strict Clippy (unchanged builtin-registration
+  `expect_used`) are not passing qualification receipts.
+  The sole exact-clean-SHA merge gate failed after 184.65s on existing SQL
+  coverage classifications: 9 packages, 13 targets, 1 stale PostgreSQL target.
+  Generated-companion freshness, reached guards, Rust interop (10/10), and the
+  other 3 coverage variants passed. Later Python-area/crate/E2E gate stages
+  were not reached. No create-PR gate, second merge gate, or bypass was used.
+  Evidence and deferred maintenance 12I-F1–F3 are recorded in the
+  [Python dependency owner](ad-hoc-python-interop-qualification-dependencies.md#item12i-terminal-handoff-2026-09-06)
+  and `/private/tmp/sifr-item12i.0l85Lu/evidence-f6e8afd964bb214a44c50271dcb2014ee8e828b4.md`.
+  Parent and preserved12B/12H workers remain untouched;12H remains unmerged
+  with exhausted review/gate allowances. This session stops after its record
+  update; no12J/12K code is written. 12K owns eventual integrated qualification
+  after remaining dependencies, not this worker.
 
 - Items 11 and 11A are merged through [PR #3689](https://github.com/sifr-lang/sifr/pull/3689)
   as `bbc85bcd3e538e201f7f82fa535c7cef43a5ac6e`; exact candidate
@@ -2009,6 +4168,80 @@ the other passing targeted evidence across this documentation-only correction;
 repeat the named complete area once to obtain its canonical successful report.
 No Sifr gate has run and no gate retry is involved. B3 reviews remain zero.
 
+### Item12K-B3 terminal receipt: merged (2026-09-06)
+
+**12K-B3 is closed.** [PR #3709](https://github.com/sifr-lang/sifr/pull/3709)
+is verified MERGED and [owner #3705](https://github.com/sifr-lang/sifr/issues/3705)
+is CLOSED. This supersedes B3's in-progress validation state above.
+
+- Exact base: `770f1ab86050bc95abf05573b39c8c6d5238902e` (merged B2).
+- Reviewed final candidate: `380f7d655e2e83c50f05f54512de13d0f4e47d6d`.
+  Schema/checker/test implementation first committed as
+  `226b489981d1adeed1691c1f2354d67ed608dd21`; final candidate adds only
+  the documented validation-result-path correction.
+- Merge SHA: `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+  Fetched merge and reviewed candidate have identical trees:
+  `b53ac2f7674eb2d49f2818894be1da16c6f244f9`; direct tree diff is empty.
+- Owned checkout `/private/tmp/sifr-item12kb3.bEfGLS/sifr`, branch
+  `codex/item12k-b3-schema-sync`. This post-merge commit is a documentation-only
+  terminal record; its SHA is published in the owner/PR terminal receipt.
+- [Validation receipt](https://github.com/sifr-lang/sifr/pull/3709#issuecomment-5558941208).
+  Locked generator/artifact bytes and direct schema-sync check pass;
+  32 diagnostics crate tests and seven focused checker regressions pass;
+  file-size guard (3756 files), JSON/Python syntax and diff checks pass.
+- Corrected complete diagnostics-area invocation exits 0: **184/184** variants,
+  **179/179** baselines across 151 cases and **5/5** rules; zero failures,
+  skipped or filtered variants. Full-area invocation count is **two**:
+  the first emitted all 184 passes but exited 1 without a report because of
+  this worker's invalid output path, then the corrected full run passed and
+  wrote its canonical report. The first invocation is not counted as a
+  successful area command. No report was synthesized and no partial
+  certification substituted for the full successful run.
+- [One initial Opus review](https://github.com/sifr-lang/sifr/pull/3709#issuecomment-5558960888):
+  **SATISFIED**, no blockers, exact final candidate. **Zero remediation**
+  reviews and **zero failed review requests**. Review stayed outside the
+  reviewed tree. No further review is required for this record-only update.
+- **Zero create-pr gates, zero merge gates**. No Rust/compiler, lockfile,
+  fixture or workflow files changed, so the explicit B3 dispatch excludes
+  Sifr gates and conditional Rust fmt/HIR checks. No whole-phase review.
+
+Changed paths relative to base are exactly:
+
+- `docs/schemas/diagnostics.schema.json` (eight proven stale object key orders;
+  all schema keys, values, and array order preserved).
+- `verification/areas/diagnostics/checks/schema_sync.py` (locked generator
+  invocation; full strict comparison retained).
+- `verification/areas/diagnostics/checks/test_schema_sync.py` (seven regressions).
+- `plans/issues/active/ad-hoc-emitted-rust-excellence.md` (B3 records only).
+
+Evidence root `/private/tmp/sifr-item12kb3.bEfGLS/`:
+
+- `sifr/target/verification/areas/diagnostics-b3-results.json`, SHA256
+  `c8b3992a8f8780d5cdb793dae3b8c6fdcffc49873f83b32b101065aeeb54af2b`.
+- `diagnostics-area-380f7d655.log`, SHA256
+  `e7c5e8972451db9d102c62fa755efef3c84c54d18a7f768a330933be36d8435c`.
+- First failed-invocation log `diagnostics-area-226b48998.log`, SHA256
+  `43e1b010e952ef0607ba9b7fa33b68db5ee104b7d7a2c753972d373f14dd63a4`.
+- `opus-380f7d655e2e83c50f05f54512de13d0f4e47d6d.gZt9UZ/response.md`,
+  SHA256 `60a84de27f592ba88aa5c63957ae997e9096c8f378cd0a85d73abf63b6129bd7`.
+- `validation-380f7d655e2e83c50f05f54512de13d0f4e47d6d.md` indexes the
+  exact commands, reused unchanged-input targeted logs, and diagnosis captures.
+
+Nonblocking Opus follow-ups are separately owned:
+[#3710](https://github.com/sifr-lang/sifr/issues/3710), automatic discovery of
+focused diagnostics checker regressions; and
+[#3711](https://github.com/sifr-lang/sifr/issues/3711), feature-independent
+schema ordering (including the associated canonicalization suggestion).
+No follow-up implementation was started. #3707/#3708 remain separate owners.
+
+Blocker: **none**. Parent's two intentional dirty Markdown documents and all
+predecessor checkouts/indexes/targets/histories remain preserved read-only.
+This narrow merge does not approve or import the inherited 12K stack. Original
+12K remains at zero reviews and zero gates used, with all dependency caps
+unchanged. Exact next action for this worker: stop after publishing this
+terminal record. Any 12K continuation, 12D/E/F, Item12 or closure work belongs
+to a fresh separately authorized worker; none is started here.
+
 ## Descriptive demo variables follow-up (2026-09-05)
 
 A second pass found no delivery-labelled `m12` path or content under `demos`,
@@ -2028,3 +4261,1004 @@ companion freshness checks and reached guardrails, then reproduced the
 existing SQL coverage-classification blocker. Logs are under
 `target/demo-name-followup/`. Existing Clippy baseline debt and its unresolved
 migration were not refreshed.
+
+### 2026-09-06 Item12J-M1 orchestration scope
+
+The 12J-R1 worker is closed. Draft PR #3699 preserves implementation
+`4bc432f3474134b1a1d43202d39fd147893bb014` and record
+`c430ed3331169f06eb148122f681e7d2a457d2ee` in
+`/private/tmp/sifr-item12j-r1.9j9Uhf/sifr`. Its terminal evidence and the
+separate Item12J-M1 mechanism are recorded in that commit's Python dependency
+issue. Nine focused and 587 driver tests pass, but the second review is
+NOT SATISFIED. Neither 12J nor R1 is qualified; no gate or merge occurred.
+
+Assign one fresh worker to 12J-M1, before integration. Its dependencies are the
+preserved candidate, both review findings, and the existing nominal error
+language/representation contract. First establish that contract from repository
+authorities. Then repair the distinct message-storage and conversion-demand
+mechanism: an unrelated root Error reference must not generate invalid unused
+conversions for specific errors; legitimate root upcasts must have sound native
+representations. Cover absent, integer, own-string and inherited message storage,
+with specific and root channels, local/imported identities and project modes.
+Preserve previously valid specific-error programs. Do not invent a message
+fallback, silently narrow accepted language, or weaken fixtures. If the existing
+contract cannot decide a necessary language behavior, return needs-new-scope
+with the precise user choice before implementing that policy.
+
+This is a separately bounded mechanism item under the user's instruction to
+record second-review defects as later work. It does not reopen 12J/R1 for a
+third review or waive the repeated, unresolved conversion obligation. M1 has
+one initial exact-SHA review and at most one remediation review, limited to
+this contract/mechanism and its interactions, and one final-candidate merge
+gate if approval and prerequisite qualification permit. Preserve every prior
+failed review/gate and do not present a changed scope as approval of old code.
+
+Named validation: `cargo test -p sifr_driver async_python_error_channel`,
+`cargo test -p sifr_codegen`, `cargo test -p sifr_driver`,
+`cargo build --locked -p sifr`, demo freshness update/check with that compiler,
+the original `async-declaration-examples` and `async-context-examples` Python
+interop command, `cargo clippy --workspace -- -D warnings`, `cargo fmt --check`,
+HIR and file-size guards, and the single `scripts/run_all_tests.sh --profile merge`.
+Register focused named regressions before testing; reuse unchanged evidence.
+If a frontend/lowering/IR change is necessary to this representation contract,
+register its affected original Item12J crate test command before implementation.
+Implement the complete bounded correction before testing. Keep 12I native
+qualification, 12B/12C, SQL coverage, TypeVar #3667, and other follow-ups outside
+this worker. Preserve an approved candidate for 12K if an external dependency
+prevents standalone merge; never integrate an unapproved candidate as-is.
+
+### Item12J-M1 contract adjudication handoff (2026-09-06)
+
+State: **needs-new-scope; not implemented, not reviewed, not merged**.
+The section above was copied verbatim from the parent's new orchestration
+scope, preserving all historical records in retained record `c430ed3331169f06eb148122f681e7d2a457d2ee`.
+This session owns the independent checkout `/private/tmp/sifr-item12j-m1.VO82Kk/sifr`
+and branch `codex/emitted-rust-excellence-item-12j-m1`. It retains all original
+12J/R1 commits. The parent and the two closed worker worktrees, indexes, targets,
+and evidence were read only. Fetched latest main remains
+`4ce05473f58716a611ac190581bf0737ba15331e`; there are no intervening base changes.
+Draft [PR #3699](https://github.com/sifr-lang/sifr/pull/3699) remains unapproved.
+
+Repository contract evidence at the retained candidate:
+
+- `internal_docs/architecture.md:762-769,829-864` says every error inherits
+  `message: str`, supplied by a user error's constructor. `AppError(Error): pass`
+  is documented as accepting a message. No absent-message initialization or
+  integer-message root projection is specified.
+- `docs/language/error-handling.mdx:31-46` describes custom errors as plain
+  structs with typed fields; examples declare their own string message. It
+  does not decide message-less upcasts.
+- `crates/sifr_type_system/src/types/error_contracts.rs:9-24` recognizes root
+  Error only with exactly one string `message`; codegen's
+  `preamble/types_and_errors.rs:367-410` stores that string and requires it in
+  `new`. Root storage cannot represent an absent message today.
+- `crates/sifr_lowering/src/lower/descriptor_declarations.rs:341-350,460-465` treats
+  Error as a special base, bypassing ordinary embedded-parent storage.
+  `classes/class_type_collection.rs:304-309` retains an unimplemented comment
+  promising message insertion; `:863-875` actually derives the default
+  constructor from collected fields. This explains accepted `CodeError(3)`,
+  `EmptyError()`, and integer `message` declarations without supplying a
+  hidden root string.
+- `crates/sifr_codegen/src/class_emitter.rs:460-475` can format a specific
+  error's own message (including integers), or use Debug when absent. That
+  existing Display rule does not say a root upcast must store this formatting
+  as its message. Treating it as conversion policy would be a new decision,
+  including for inherited/custom formatting.
+- `error_refs/conversions.rs:99-130` and `preamble/error_conversion.rs:17-23`
+  assume a field and string type that ancestry does not establish. Suppressing
+  invalid unused impls alone leaves the accepted explicit root upcast broken.
+
+The [R1 review](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5556273003)
+already supplies exact-binary evidence: the own-channel code-only example built
+before R1 and now fails E0609 when unrelated code mentions Error; explicit
+root upcasts check successfully but fail native E0277 before R1 / E0609 after.
+Absent and integer message cases fail too. No additional compiler probe was run.
+
+Required owner/user decision (none selected by this worker):
+
+| Contract direction | Concrete behavior and tradeoff |
+| --- | --- |
+| Enforce inherited required string storage | Require a message in every error constructor and reject incompatible field overrides. This follows the documented architecture, but changes accepted `CodeError(3)`, `EmptyError()`, and `message: int` programs; explicit authorization must relax M1's preservation requirement. |
+| Define root conversion from existing Display | Preserve specific constructors and define the root string for message-less/integer errors from their existing Display output, while retaining real string storage where present. Requires an explicit new conversion policy for own/inherited/custom formatting, allocation, and observable root messages; it is not authorized as a fallback. |
+| Allow root errors without a string message | Preserve message-less structured payloads through a new root representation and define absent-message access/formatting and field collisions. This changes the root language/API contract and has substantially wider compiler/runtime/interop scope. |
+
+Do not choose rejection, default text, blanket formatting, or a new root
+representation implicitly. Resume only after the contract direction and its
+scope adjustment are explicit. The complete correction, reaching regression
+registration, named compiler/native validation, review, and gate are **unreached**.
+M1 used zero Opus reviews and zero gates; old 12J's two NOT SATISFIED reviews
+remain exhausted. No approved implementation SHA exists for M1.
+
+### Item12J-M1 user adjudication and implementation registration (2026-09-06)
+
+The user answered **"Do your recommendation through workers"** and explicitly
+authorized enforcing the required constructor-supplied string message for every
+error. The prior decision blocker is resolved: this supersedes preservation of
+message-less constructor calls and integer message overrides, which must now be
+rejected. History above remains evidence of the earlier unresolved decision.
+No Display-derived fallback, absent-message root representation, test weakening,
+or next-item implementation is authorized.
+
+Implementation notes for this authorization: error storage is seeded and checked
+in lowering, and both explicit and inherited constructors must have a required
+string input and complete their storage initialization. Pure error children
+forward the actual parent constructor; mixed non-error data parents retain their
+physical layout. Canonical nominal identity drives consuming root conversions,
+including projections through owned embedded parents, without Display fallback.
+Imported `Error` shadows and constructor-only stdlib nominals are handled in
+both project and test-project import ownership. These are directly necessary
+collision/export paths, not general 12K integration.
+
+The runtime's channel errors and the sync/parallel-map first-party callers now
+supply explicit messages. The opaque-state negative fixture changes its payload
+from representable `str` to unrepresentable `int`, preserving its original
+diagnostic assertion and purpose under the new inherited message contract.
+PythonError's native five-field assertion uses the existing package fixture's
+probed interpreter/native-link trust; it is not skipped or weakened. File-size
+splits isolate declaration diagnostics and project import binding ownership.
+
+This sole implementer owns independent checkout
+`/private/tmp/sifr-item12j-m1-required.vL5lSI/sifr`, branch
+`codex/item12j-m1-required-string`, retaining record `054a823b9aaafd388ddf1d944f1b7e50fcb95c29`
+and all original12J/R1 lineage. Parent and former workers' checkouts, indexes,
+targets, and evidence are read-only. Parent orchestrates only.
+
+Scope: consistent typed string storage; default/custom/inherited constructors;
+declaration and call diagnostics; nominal identity and exports; consuming root
+conversions. Preserve explicit string layouts including PythonError's exact
+five fields with no duplicate message storage or extra parameter. Migrate
+necessary first-party fixtures/demos/docs while preserving their purpose and
+assertions. Mixed-marker ancestry or other deferred findings are included only
+if directly necessary to this required-string contract, with explicit provenance.
+
+Before testing, register focused `required_error_message` regressions in lowering
+and driver for absent/integer/missing constructor diagnostics and positive
+own/inherited/default/custom/local/imported/stdlib/collision/project/test-project
+emission and native execution, including unused root-conversion demand and
+explicit consuming upcasts. Commands: `cargo test -p sifr_lowering required_error_message`,
+`cargo test -p sifr_driver required_error_message`, plus all named M1 commands:
+`cargo test -p sifr_driver async_python_error_channel`, `cargo test -p sifr_codegen`,
+`cargo test -p sifr_driver`, `cargo test -p sifr_ir`, `cargo test -p sifr_lowering`,
+`cargo test -p sifr_frontend`, `cargo test -p sifr_type_system`,
+`cargo build --locked -p sifr`,
+`python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --update`
+then without `--update`,
+`uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite async-declaration-examples --suite async-context-examples`,
+`cargo clippy --workspace -- -D warnings`, `cargo fmt --check`,
+`python3 scripts/check_hir_maintainability_guardrails.py`, and
+`python3 scripts/check_file_size_guardrails.py`.
+Finish bounded implementation before running tests, then iterate on in-scope
+failures. Inspect disk/private target before long Cargo runs. One initial
+exact-SHA Opus review and at most one remediation review remain unused, as does
+one `scripts/run_all_tests.sh --profile merge` on the approved final candidate;
+skip create-pr. A new second-review mechanism defect is later work and stops M1.
+Prior12J/R1 reviews remain NOT SATISFIED and exhausted; no budget is reset.
+
+12I cancellation-task-local native qualification, 12B codegen failures, 12C
+Clippy, TypeVar #3667, and SQL coverage remain externally owned. Finish M1
+before evaluating those blockers; preserve the corrected approved candidate
+for12K if they prevent merge. No gate without approval and no second gate.
+After merge/record, or an evidenced external block after correction/review,
+return item, PR, reviewed SHA, record SHA, merge SHA or none, evidence/paths,
+blocker or none and stop.
+
+Directly necessary provenance: the earlier12J-F1 mixed data-parent/Error-marker
+ancestry and12J-F4 imported parent named Error are included only where needed
+to ensure an accepted error retains its required string storage and root
+ancestry. Native regressions exercise both. Runtime channel producers and two
+parallel-map callers now supply explicit messages; their behavior/assertions
+are retained. Custom constructors that already compute an initialized string
+(such as configparser's section errors) retain that source contract.
+Fetched main remains `4ce05473f58716a611ac190581bf0737ba15331e`, with no base delta.
+Disk before initial Cargo validation: 209 GiB free, no private target yet.
+
+#### Historical 054a823b9 documentation-only receipt
+
+Only the phase and Python dependency Markdown records change. Documentation
+diff checking and the named file-size guard are recorded in external evidence
+`/private/tmp/sifr-item12j-m1.VO82Kk/evidence.md`, which will identify the final
+record SHA. Prior unchanged-input evidence remains historical evidence for
+unapproved `4bc432f3474134b1a1d43202d39fd147893bb014`, not an M1 pass:
+focused 9 / driver 587 pass; codegen two 12B failures; strict Clippy 12B/12C
+failure; native async suites blocked by 12I E0425 with runtime assertions
+unreached; lowering two #3667 failures. SQL and other integration dependencies
+remain separately owned. No next item or integration work was started.
+
+### Item12J-M1 terminal handoff (2026-09-06): approved, externally blocked
+
+Status: **SATISFIED source review; not merged, not closed**. The user's required
+constructor-supplied string decision is implemented; the old decision blocker is
+resolved, not renewed. This terminal record supersedes the earlier needs-choice
+status without changing any historical12J/R1 verdict or review/gate count.
+
+- Implementation: `d726ffc11258c49f0185fd2d49697988cf90972c`.
+- M1 delta base: `054a823b9aaafd388ddf1d944f1b7e50fcb95c29`, retaining all original12J/R1 lineage.
+- Main remains `4ce05473f58716a611ac190581bf0737ba15331e`; no base integration occurred.
+- Linked bounded draft [PR #3700](https://github.com/sifr-lang/sifr/pull/3700),
+  branch `codex/item12j-m1-required-string`. Predecessor #3699 remains preserved.
+- Sole initial exact-SHA [Opus review](https://github.com/sifr-lang/sifr/pull/3700#issuecomment-5558127599):
+  **SATISFIED**, no blocking findings. One initial review used; zero remediation
+  reviews, provider retries, create-PR gates, or merge gates used. No merge SHA.
+- Owned independent checkout `/private/tmp/sifr-item12j-m1-required.vL5lSI/sifr`;
+  parent and every retained worker checkout/index/target remained unchanged.
+- SHA-keyed receipt and complete36-path inventory:
+  `/private/tmp/sifr-item12j-m1-required.vL5lSI/evidence-d726ffc11258c49f0185fd2d49697988cf90972c.md`
+  and sibling `changed-paths.txt`. The receipt identifies the final record SHA;
+  this record-only commit does not change reviewed implementation inputs.
+
+#### Exact-candidate evidence and external owner receipt
+
+Final full driver passes **592 active /77 existing ignored**, including all five
+M1 regressions. Focused lowering passes3, original async-error-channel tests pass9,
+frontend passes132unit+7integration, IR passes4 and type-system147 with documented
+unchanged complete-input reuse. The locked CLI build passes; compiler SHA256 is
+`166c1d23662db3c0da97b9c921e6f7fee22755b68c49e576906e07a569eec16e` before and after
+native verification. All264 demo companions are fresh after the named update
+regenerated exactly `config_json_csv`, `stdlib`, and
+`structured_parsing_serialization`. Formatting, HIR maintainability, and the
+canonical900-line file guard pass (3764files). No test assertion or ignore policy
+was weakened. All raw logs remain beside the SHA-keyed receipt.
+
+Standalone merge is blocked by these externally owned named checks:
+
+- **12B:** codegen1407pass/2known list-repeat assertion failures;
+  `codegen-complete.log`, retained dependency PR #3694. No12B input was integrated.
+- **12B/12C:** strict Clippy stops at the unchanged `expect_used` body in
+  `project_stdlib_nominals.rs:47` (formerly45); `clippy-candidate.log`.
+- **TypeVar [#3667](https://github.com/sifr-lang/sifr/issues/3667):**
+  lowering1117pass/2known stale diagnostic assertions/1existing ignored;
+  `lowering-candidate.log`. The prior owner notification remains valid and was
+  not duplicated or claimed resolved.
+- **12I / Python qualification owner:** both original async native suites fail
+  inaccessible cancellation-task-local E0425. Source policies pass; runtime
+  assertions are **UNREACHED**, not passes or skips. HTTP reports1Rust error;
+  context reports58 with the same retained diagnostic tail. `async-native.log`,
+  `async-declaration.json`, `async-context.json`, and `python-results.json`
+  preserve the reports. Retained12I PR #3698 was not integrated.
+- SQL coverage remains an external historical dependency, not a newly run gate
+  failure. No merge-profile gate was run over these failed prerequisites; its
+  allowance is unused, not reset. No create-PR gate was run.
+
+The new native local/project/test-project and canonical PythonError assertions
+pass. They do not replace the externally blocked original async cleanup/runtime
+qualification. Initial209GiBfree/no target and later187GiBfree/~20GiB private
+target checks were recorded; the latter target was in use by owned validation.
+No shared/former-worker target was cleaned or cold-cache performance claimed.
+
+#### Separately owned Opus follow-ups (not started)
+
+- **12J-M1-F1 — compiler invariant hardening:** replace the conversion storage
+  walk's programmer-invariant panic with a compiler diagnostic if desired.
+  Review found no source program violating lowering's invariant. This is a
+  hardening suggestion, not a blocker or runtime fallback authorization.
+- **12J-M1-F2 — reference-only inherited stdlib storage qualification:** determine
+  whether an inherited error such as `sifr.sql.EncodeError` can reach codegen
+  only as a type reference without its declaring HirClass. The pre-existing
+  reference-only path still uses `err.message`; the reviewer did not establish
+  reachability. Qualify in the SQL owner's scope; do not claim it fixed here.
+- **12J-M1-F3 — integration validation coverage:** execute the migrated E2E and
+  broader stdlib suites in the integration owner's authorized gate. M1 ran only
+  the named commands; Opus's read-only first-party source audit found no remaining
+  constructor migration, arity, required-string, or expected-output violation.
+  Source audit is not executable-suite qualification.
+- **12J-M1-F4 — architecture shadow clarification:** document explicitly that a
+  same-module `class Error(Error)` shadow can be the data parent for subsequent
+  classes. Native M1 coverage already exercises the necessary physical layout;
+  the extra prose is a later documentation suggestion, not implemented here.
+
+No remediation review, whole-phase review, second gate, third review, external
+fix, or next-item code was started. Preserve this approved implementation for
+the separately owned12K integration once dependency qualification clears. The
+worker stops after publishing this record and its evidence; it does not start12K.
+
+## Item12K owned integration authority (2026-09-06)
+
+The following dispatch is copied from the intentional read-only parent document.
+It controls this item; preceding status rows and dependency handoffs are historical.
+This session is the sole live implementer, on an independent clone and Git index.
+
+### 2026-09-05 orchestration amendment
+
+The user approved fresh sequential workers for the Python dependencies, followed
+by an integration worker, and authorized orchestration through phase closure.
+Helmholtz is closed. Its candidates, review verdicts, and failed gates remain evidence.
+
+- Execute 12G, 12H, 12I, and 12J in that order, with one live implementer.
+  Each worker owns one isolated worktree and stops after merge or a concrete blocker.
+- The [Python dependency issue](ad-hoc-python-interop-qualification-dependencies.md)
+  defines their scope, dependencies, and named validation.
+- Preserve Item 12B candidate `a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d`
+  and corpus candidate `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+  Do not merge an unqualified dependency to bypass the other known failures.
+- Item 12K receives one new integration review, at most one remediation review,
+  and one exact-candidate merge-profile gate after dependency qualification.
+  This is an explicit new integration allowance approved with the new work plan.
+  It does not reopen Item 12B for a third review or relabel either failed gate.
+- Integration review covers the new dependency changes and their interactions.
+  Reuse the prior approved item evidence where implementation inputs are unchanged.
+- If dependencies cannot merge independently because they share a failing gate,
+  preserve their qualified candidates and record the dependency. The integration
+  worker must establish passing evidence before any affected integration merge.
+- After 12K, reconcile the recorded 12D, 12E, and 12F findings against merged
+  evidence. Delegate unresolved work and remaining Item 12 scope sequentially.
+  Do not treat a historical status row as proof that a finding is resolved.
+- Assign the docs-only Item 12A closer only after every implementation item merges.
+  Only that closer performs the whole-phase Opus review.
+- Parent performs orchestration and record updates only, not implementation,
+  tests, code review, or Sifr gates. User authorization covers the next phase actions.
+
+### 2026-09-06 dependency handoff and bounded remediation
+
+12G is merged (PRs #3695/#3696). 12H and 12I are approved but unmerged
+candidates in draft PRs #3697/#3698; their sole gates failed externally owned
+SQL coverage classifications. Their complete handoffs and deferred findings
+remain in record commits `b6e6210a97598fb631b929b2d4daf4012b41bb16` and
+`19ad69969a672d7b741122ded4dd879f2bdaf9ab`.
+
+12J is unapproved, not merged: draft PR #3699, implementation
+`f720a342edd87004975355b478948f7eb5c8b406`, record
+`60219b080eadb519a813d9a84568552824be0754`. Its initial review found missing
+non-builtin error conversions (12J-R1); native async validation also depends
+on 12I. The original worker is closed. Assign a fresh worker to 12J-R1 before
+12K. This is the remaining remediation of 12J, not a new initial-review cycle.
+
+12J-R1 scope: connect semantic error ancestry to conversion demand for local,
+project-imported and stdlib errors, preserving nominal identity and the original
+runtime/error contract. Dependencies are the preserved 12J candidate and its
+initial review; 12I remains a separate native qualification dependency.
+Use the exact named validation in the Python owner issue at record `60219b0`,
+including `cargo test -p sifr_driver async_python_error_channel` and the
+`async-declaration-examples`/`async-context-examples` suites. Register focused
+emission/compilation regressions before testing. Finish this in-scope correction
+without absorbing known external failures. At most one remediation review and
+one final-candidate merge gate remain for 12J; no third review or budget reset.
+If external qualification still blocks merge, preserve the corrected reviewed
+candidate for 12K. New second-review mechanism defects become later bounded
+items. Do not integrate the unapproved 12J candidate as-is.
+
+### 2026-09-06 Item12J-M1 orchestration scope
+
+The 12J-R1 worker is closed. Draft PR #3699 preserves implementation
+`4bc432f3474134b1a1d43202d39fd147893bb014` and record
+`c430ed3331169f06eb148122f681e7d2a457d2ee` in
+`/private/tmp/sifr-item12j-r1.9j9Uhf/sifr`. Its terminal evidence and the
+separate Item12J-M1 mechanism are recorded in that commit's Python dependency
+issue. Nine focused and 587 driver tests pass, but the second review is
+NOT SATISFIED. Neither 12J nor R1 is qualified; no gate or merge occurred.
+
+Assign one fresh worker to 12J-M1, before integration. Its dependencies are the
+preserved candidate, both review findings, and the existing nominal error
+language/representation contract. First establish that contract from repository
+authorities. Then repair the distinct message-storage and conversion-demand
+mechanism: an unrelated root Error reference must not generate invalid unused
+conversions for specific errors; legitimate root upcasts must have sound native
+representations. Cover absent, integer, own-string and inherited message storage,
+with specific and root channels, local/imported identities and project modes.
+Preserve previously valid specific-error programs. Do not invent a message
+fallback, silently narrow accepted language, or weaken fixtures. If the existing
+contract cannot decide a necessary language behavior, return needs-new-scope
+with the precise user choice before implementing that policy.
+
+This is a separately bounded mechanism item under the user's instruction to
+record second-review defects as later work. It does not reopen 12J/R1 for a
+third review or waive the repeated, unresolved conversion obligation. M1 has
+one initial exact-SHA review and at most one remediation review, limited to
+this contract/mechanism and its interactions, and one final-candidate merge
+gate if approval and prerequisite qualification permit. Preserve every prior
+failed review/gate and do not present a changed scope as approval of old code.
+
+Named validation: `cargo test -p sifr_driver async_python_error_channel`,
+`cargo test -p sifr_codegen`, `cargo test -p sifr_driver`,
+`cargo build --locked -p sifr`, demo freshness update/check with that compiler,
+the original `async-declaration-examples` and `async-context-examples` Python
+interop command, `cargo clippy --workspace -- -D warnings`, `cargo fmt --check`,
+HIR and file-size guards, and the single `scripts/run_all_tests.sh --profile merge`.
+Register focused named regressions before testing; reuse unchanged evidence.
+If a frontend/lowering/IR change is necessary to this representation contract,
+register its affected original Item12J crate test command before implementation.
+Implement the complete bounded correction before testing. Keep 12I native
+qualification, 12B/12C, SQL coverage, TypeVar #3667, and other follow-ups outside
+this worker. Preserve an approved candidate for 12K if an external dependency
+prevents standalone merge; never integrate an unapproved candidate as-is.
+
+### Item12J-M1 decision blocker (2026-09-06)
+
+Popper is closed. Its independent checkout
+`/private/tmp/sifr-item12j-m1.VO82Kk/sifr` preserves documentation-only record
+`054a823b9aaafd388ddf1d944f1b7e50fcb95c29` and the complete prior lineage.
+[Contract handoff](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5556341900)
+establishes that architecture requires constructor-supplied inherited
+`message: str`, while accepted message-less/integer-message specific errors
+have no such storage. Existing Display behavior does not specify a root
+conversion policy. The worker made no language choice or compiler change;
+M1 reviews and gates remain unused. Prior 12J/R1 remains unapproved.
+
+Required user decision: enforce the documented required-string contract with
+intentional constructor/override changes; explicitly authorize Display-derived
+root messages; or widen the root representation to allow absent messages.
+The orchestrator recommends the documented required-string contract, but has
+not authorized this language behavior change on the user's behalf. Integration
+depends on resolving this choice; no next implementer is live.
+
+### Item12J-M1 user adjudication (2026-09-06)
+
+The user answered the contract recommendation: **"Do your recommendation
+through workers"**. The decision blocker above is resolved. Enforce the
+documented contract that every error has a constructor-supplied string message,
+including the required breaking changes to message-less constructor calls and
+incompatible integer `message` overrides. This expressly supersedes M1's prior
+preservation constraint for those inconsistent programs; it is not permission
+to weaken other language behavior or validation.
+
+One fresh worker owns the complete M1 implementation: consistent typed message
+storage, inherited/default/custom constructor handling, declaration and call
+diagnostics, nominal identity/export handling, and valid consuming root/error
+conversions. Keep already-valid string-message programs and PythonError's
+explicit five-field contract intact. Do not synthesize fallback text, derive
+root messages from Display, or add an absent-message root representation.
+Apply necessary first-party demo/fixture/documentation migrations for this
+approved contract, preserving their purpose and runtime assertions. Negative
+coverage must prove incompatible declarations and missing constructor arguments
+are rejected before Rust emission; positive emitted/native coverage must reach
+own/inherited/local/imported/project/test-project conversion paths. No partial
+unused-conversion suppression qualifies as completion.
+
+Dependencies and retained evidence are unchanged. Read Popper's contract
+adjudication in independent checkout `/private/tmp/sifr-item12j-m1.VO82Kk/sifr`,
+record `054a823b9aaafd388ddf1d944f1b7e50fcb95c29`, alongside the prior R1 review.
+Preserve all closed worker checkouts; use a fresh owned checkout/branch and
+carry this authorization into its phase record before implementation.
+
+In addition to the M1 commands above, register `cargo test -p sifr_ir`,
+`cargo test -p sifr_lowering`, `cargo test -p sifr_frontend`, and
+`cargo test -p sifr_type_system` for the affected contract crates. Reuse evidence
+only where complete inputs are unchanged. Register focused regressions before
+testing, finish the complete bounded code change first, then test and iterate.
+M1 still has one initial exact-SHA Opus review, at most one remediation review,
+and one final-candidate merge gate; none was consumed by contract adjudication.
+This does not reset 12J/R1's two exhausted reviews or any dependency's gate.
+Known external qualification failures retain their owners; preserve a qualified
+M1 candidate for 12K if they prevent standalone merge. No parent implementation,
+testing, review, gate, or next-item work is authorized.
+
+### Item12K integration dispatch (2026-09-06)
+
+Required-string M1 worker is closed. Its implementation is Opus SATISFIED in
+[PR #3700](https://github.com/sifr-lang/sifr/pull/3700), candidate
+`d726ffc11258c49f0185fd2d49697988cf90972c`, separate terminal record
+`a7e13eb45006eac925417491b89a932af5df2595`, independent checkout
+`/private/tmp/sifr-item12j-m1-required.vL5lSI/sifr`.
+[Evidence](https://github.com/sifr-lang/sifr/pull/3700#issuecomment-5558143641)
+records 592 active driver tests, local/project/test-project/PythonError native
+regressions, precise required-message negatives, and all 264 fresh companions.
+Original async runtime assertions remain unreached due to 12I. Existing 12B/12C
+and #3667 failures remain separate. M1 used one initial review, no remediation,
+no gate and no merge. Its non-blocking F1-F4 follow-ups remain in its record;
+F3's migrated E2E/stdlib executable qualification belongs to integration.
+
+Next ready item is the already authorized **12K integration**, not another
+standalone retry of a dependency's failed gate. One fresh worker combines the
+preserved 12B/corpus, 12H, 12I, and corrected 12J/M1 changes on latest main,
+including merged 12G. Preserve original commits and evidence, resolve overlapping
+changes semantically, regenerate affected companions, and qualify the combined
+candidate before merging any affected integration. The unapproved historical
+12J/R1 code is included only through the reviewed correcting M1 lineage, never
+treated as independently approved. No dependency review/gate budget is reset.
+
+Inputs: 12B Sifr `a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d` (PR #3694),
+corpus `8bcbe7ab7939e5c8362c10f61a80e368022cc372` (leetcode PR #48),
+12H `9b52ac20094608c8a31f252db99e49ef7c963384` (PR #3697),
+12I `f6e8afd964bb214a44c50271dcb2014ee8e828b4` (PR #3698),
+and M1 above. Carry associated documentation-only records without discarding
+historical findings. Do not mutate retained worker checkouts or shared targets.
+
+Named tests: all five Python dependency suites and the complete Python-interop
+area from the Python owner issue; the 12B 90-case native qualification and
+canonical algorithmic `leetcode-full`; coverage readiness and its four named
+checks from the 12B record; affected codegen/driver/lowering/frontend/IR/type-system
+crate tests; M1 `required_error_message` and `async_python_error_channel` filters;
+locked Sifr build, demo freshness update/check, strict workspace Clippy, fmt,
+HIR and file-size guards. Register exact commands and worker-owned output paths
+in the item before testing, especially the retained native qualification script
+whose input/output paths must not target the old worker. The single authorized
+merge-profile gate supplies migrated E2E/stdlib executable coverage; verify its
+actual lane coverage, and explicitly register any missing required targeted
+command before running it. No filtered certification bypass or warm-cache-only
+claim may replace the complete required Python area.
+
+Complete integration code/conflict corrections before testing. Reuse evidence
+only with unchanged implementation and complete validation inputs. Qualify
+dependencies before spending 12K's one initial exact-SHA integration review,
+at most one remediation, and one exact-final-candidate merge-profile gate.
+Skip create-PR gate when merging in-session. No whole-phase review here.
+If genuinely external TypeVar #3667, clean-environment Python bytecode integrity,
+or another mechanism blocks qualification, record the exact owning later item
+and preserve the integrated checkpoint; do not absorb external repairs, weaken
+checks, repeatedly gate, or declare a partial pass. Then return blocked for
+fresh sequential ownership. On successful qualification/review/gate, perform
+normal-safe corpus and Sifr integration merges with exact input provenance,
+reconcile the affected PRs/phase records, and stop. Remaining 12D/E/F, Item12
+and docs-only12A are subsequent workers, not part of 12K.
+## Item12K execution registration (2026-09-06)
+
+Owned clone `/private/tmp/sifr-item12k.IjjbS9/sifr`, branch
+`codex/item12k-integration`; evidence root `/private/tmp/sifr-item12k.IjjbS9`.
+Latest fetched main is `4ce05473f58716a611ac190581bf0737ba15331e`; no new base
+changes since dispatch. All submodules are independent copies at their gitlinks;
+leetcode remains `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+The merges retain approved12B/H/I/M1 and their terminal record commits as ancestors.
+The sole compiler conflict combines12B's registry export with M1's module-binding
+export in `project_stdlib_nominals.rs`; both ownership boundaries are retained.
+Generated companions will be refreshed by the combined compiler.
+
+Historical12B compiler source was verified in its retained record as
+`8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`. The malformed onboarding spelling
+is discarded. Separate unfinished Item12 source `8ad089a9458f35fcfa228e93fe44f4d69731828b`
+is preserved and explicitly excluded by12B's implementation-provenance record;
+it is not an ancestor of these qualified inputs or qualification evidence.
+No Item12/12D/E/F residual implementation is imported by12K.
+
+All commands below run from the owned clone with `TMPDIR=/private/tmp/sifr-item12k.IjjbS9/tmp`,
+`CARGO_TARGET_DIR=/private/tmp/sifr-item12k.IjjbS9/sifr/target`,
+`UV_CACHE_DIR=/private/tmp/sifr-item12k.IjjbS9/uv-cache`, `CARGO_BUILD_JOBS=6`,
+and `RUST_TEST_THREADS=1`. Native qualification alone retains its original
+four-worker/two-Cargo-job policy and owned `native-temp` directory. No prior
+binary, target, Python environment, output, or warm bytecode cache is reused.
+Logs use distinct descriptive names under the evidence root; JSON outputs below
+are absolute. No test is skipped or allowed partial certification. Stop on a
+confirmed external prerequisite blocker before consuming review/gate allowances.
+
+Exact named commands registered before execution:
+
+```bash
+cargo build --locked -p sifr
+python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --update
+python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr
+cargo test -p sifr_lowering
+cargo test -p sifr_codegen
+cargo test -p sifr_driver
+cargo test -p sifr_frontend
+cargo test -p sifr_ir
+cargo test -p sifr_type_system
+cargo test -p sifr_lowering required_error_message
+cargo test -p sifr_driver required_error_message
+cargo test -p sifr_driver async_python_error_channel
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite dependency-versions --result-json /private/tmp/sifr-item12k.IjjbS9/python-dependency-versions.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite binding-authoring --result-json /private/tmp/sifr-item12k.IjjbS9/python-binding-authoring.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite callback-examples --result-json /private/tmp/sifr-item12k.IjjbS9/python-callback-examples.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite async-declaration-examples --suite async-context-examples --result-json /private/tmp/sifr-item12k.IjjbS9/python-async-examples.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --result-json /private/tmp/sifr-item12k.IjjbS9/python-complete.json
+python3 /private/tmp/sifr-item12k.IjjbS9/native_qualification.py /private/tmp/sifr-item12k.IjjbS9/native-qualified
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full --result-json /private/tmp/sifr-item12k.IjjbS9/leetcode-full.json
+uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json /private/tmp/sifr-item12k.IjjbS9/coverage-readiness.json
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+python3 scripts/check_hir_maintainability_guardrails.py
+python3 scripts/check_file_size_guardrails.py
+git diff --check
+scripts/run_all_tests.sh --profile merge
+```
+
+The canonical readiness suite runs exactly `coverage_matrix_readiness.py`,
+`coverage_matrix_readiness_self_test.py`, `profile_assignment_matrix.py`, and
+`verification_taxonomy.py`; no redundant standalone invocation is planned.
+The retained90-case native script was read completely and copied outside Git
+with only the old absolute root mechanically replaced by the owned root. Its
+source hashes, compiler hash, corpus SHA, check/run assertions, and full case
+selection remain intact; set `SIFR_QUAL_COMPILER_SOURCE_SHA` to the committed
+combined source candidate. Canonical leetcode-full must pass all411 cases.
+
+Merge profile's `e2e-pass` step has an empty fixture manifest (full corpus), and
+selects stdlib_parity module-merge-check/audit-fixtures/complexity-resource/module-inventory
+plus sifr_stdlib default, feature-API and all-features crate tests. This supplies
+M1-F3's migrated executable coverage only if those actual lane results pass.
+No current coverage pass is claimed from reading profile configuration.
+One initial exact-SHA integration review, at most one remediation review, and
+one final exact-candidate merge gate remain; create-pr is skipped in-session.
+Old12B's two failed gates, H/I's one failed gate each, original12J/R1's exhausted
+NOT SATISFIED reviews, and corrected M1's one SATISFIED review/zero gates remain
+unchanged. H-F1–F5, I-F1–F3, M1-F1/F2/F4 and TypeVar#3667 retain their owners.
+## Item12K terminal receipt (2026-09-06): integrated, qualification blocked
+
+Status: **blocked, not reviewed, not merged, not closed**. The complete approved
+input set is combined; this stop is the explicitly separate TypeVar prerequisite,
+not any dependency's unmerged status. No next-item code was written.
+
+- Integration draft [PR #3701](https://github.com/sifr-lang/sifr/pull/3701).
+- Exact combined implementation candidate: `7e23785ab07cba6f925eed2f934c0304750f1d74`.
+- Base: `4ce05473f58716a611ac190581bf0737ba15331e`, fetched unchanged from main.
+- Exact corpus candidate/gitlink: `8bcbe7ab7939e5c8362c10f61a80e368022cc372`,
+  [leetcode PR #48](https://github.com/sifr-lang/leetcode/pull/48), unchanged.
+- Owned clone `/private/tmp/sifr-item12k.IjjbS9/sifr`, branch
+  `codex/item12k-integration`; all prior worktrees/indexes/targets and the two
+  intentional parent document edits were read-only.
+- SHA-keyed evidence `/private/tmp/sifr-item12k.IjjbS9/evidence-7e23785ab07cba6f925eed2f934c0304750f1d74.md`;
+  sibling `changed-paths.txt` lists all196 integration paths. The external receipt
+  records the final documentation-only SHA after this commit exists.
+- Reviewed integration Sifr SHA: **none**. No initial/remediation Opus request,
+  provider retry, create-PR gate, merge-profile gate, or merge ran. All12K review
+  and gate allowances remain unused; no historical allowance was reset.
+
+### Preserved input lineage and integration corrections
+
+Merge commits retain12B record `8e532f15895e7005fae8c658739ba3c3a6818c18`,
+12H record `b6e6210a97598fb631b929b2d4daf4012b41bb16`,12I record
+`19ad69969a672d7b741122ded4dd879f2bdaf9ab`, and corrected M1 record
+`a7e13eb45006eac925417491b89a932af5df2595` as ancestors, together with their
+approved source candidates and original histories. Unapproved12J/R1 is present
+only through the approved correcting M1 lineage; its exhausted NOT SATISFIED
+reviews remain unapproved historical evidence.12B's corrected historical compiler
+source is `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`.
+
+The explicit conflict in `project_stdlib_nominals.rs` retains both12B registry
+and M1 module-binding exports. The initial combined build exposed two automatically
+merged checked-read registrations still using M1's old collection interface;
+`error_refs.rs` now inserts IndexError/KeyError into `ErrorReferences.builtins`.
+This is a two-line integration correction, not a new mechanism or third review.
+The failed initial build remains in `build-integrated.log`; the corrected locked
+build passes in `build-corrected.log`. Cargo.lock only adds the already-pinned
+insta dev dependency from M1; no versions changed. No source assertion was weakened.
+
+All196 paths derive from the approved input merges and these integration
+corrections/records. Separate unfinished Item12 source `8ad089a9458f35fcfa228e93fe44f4d69731828b`
+is preserved, not absorbed or represented as merged.
+
+### Fresh candidate evidence and precise stop
+
+- `cargo build --locked -p sifr`: **PASS**, combined candidate7e23785.
+  Compiler SHA256 `e3f3655433274f9b1183b45adc14a1f1e899acf3b29e0fb49c35876dc531cae0`,
+  rechecked after qualification. Cargo.lock SHA256 remains
+  `e5f4734fc985e8b3fc041b7a03795829c766b2b96c4fa351932c89b14d255320`.
+- Canonical demo freshness `--update`: **PASS**, all264 already fresh and zero
+  files changed. Its complete byte comparisons also supply the unchanged-input
+  check evidence; a redundant second invocation without `--update` was unnecessary.
+- Full `cargo test -p sifr_lowering`: **FAIL**,1117passed/2failed/1existing ignored/
+  0filtered. The3 M1 required-message regressions pass inside this full run.
+- `cargo fmt --check`, HIR, diff hygiene, and canonical900-line guard: **PASS**;
+  size guard checked3777 files. Relevant source did not change after these runs.
+- No five-suite/full Python area,90-case native,411-case corpus, coverage readiness,
+  remaining crate, focused driver, strict Clippy, E2E/stdlib runtime, or merge-gate
+  pass is claimed for this new compiler. They were not run after the required
+  lowering prerequisite failed. Historical input evidence does not certify them.
+
+The sole qualification blocker is existing [TypeVar #3667](https://github.com/sifr-lang/sifr/issues/3667):
+`test_typevar_invalid_bound_shape_has_primary_range` at
+`control_flow_and_strings.rs:492` and
+`test_pep695_typevar_constraint_shape_has_primary_range` at line518 still require
+the old “simple type name(s)” wording. The producer emits “type name(s)”.
+The test blob `d842c2fd162e65dff74248c8f3d393b4274f1ca9` and producer blob
+`b0971e8911997383a88e2070cb711269ce4fb9cc` are identical to main. The producer's
+last change is the previously recorded `066300ff185f38b425a884a2225b72990a194e58`.
+The full failure log is `lowering-integrated.log`, SHA256
+`e88f93f5658254b979864e29961835a4d62e93a95d1bcaa34974f974feafb8a6`.
+This is registered as **12K-B1, owner#3667**, not repaired here. The exact
+[owner notification](https://github.com/sifr-lang/sifr/issues/3667#issuecomment-5558278734)
+publishes the candidate, both failure identities, unchanged blobs, and log digest.
+
+Initial free disk was190GiB with no private target; terminal free disk183GiB and
+private target6.6GiB. No cleanup or shared-target use occurred. This cold build
+is correctness evidence only, not a host-sensitive performance pass.
+
+### Handoff and remaining authority
+
+PRs#3694/#3697/#3698/#3700 and leetcode#48 remain preserved, unmerged dependencies;
+historical#3699 remains unapproved.12G remains merged through#3695/#3696.
+No dependency PR was closed or falsely marked merged. H-F1–F5, I-F1–F3,
+M1-F1/F2/F4 and all old failures retain their original owners. M1-F3's migrated
+runtime qualification remains pending in the authorized integration gate.
+
+Exact next action: a fresh bounded owner resolves#3667, then integration resumes
+from this preserved lineage, assesses changed inputs, completes the registered
+prerequisites, and only then uses the one initial exact-SHA review, at most one
+remediation review, and one final-candidate merge-profile gate. No whole-phase
+review, Item12 residual,12D/E/F, or12A work belongs to this session. The worker
+stops after publishing this documentation-only blocked receipt.
+
+### Approved B6 receipt and original B5 continuation (2026-09-06)
+
+Pasteur is closed after the [approved B6 handoff](https://github.com/sifr-lang/sifr/pull/3720#issuecomment-5560707777).
+Clone `/private/tmp/sifr-item12k-b6.YxonRW/sifr`, reviewed candidate
+`4d076ebe08f00ba7ff6ea6ae7f910397ba7b2356`, record
+`08b2302a8f5e6af910cef00d6932c1da57ac3719`, base
+`9a42fe4239426cb53438b1d8f6a000f4c0a352d5`. Only phase Markdown changed.
+One initial Opus SATISFIED, zero remediation/retries/gates/merges. No B6 technical
+blocker remains; narrow review does not approve merging inherited implementation.
+
+Reproduced cause: outer and nested Cargo invocations shared an explicit target
+across registry/vendor source replacement, replacing the transitive rustversion
+proc macro with an incompatible crate hash despite the expected filename existing.
+Corrected invocation **leaves CARGO_TARGET_DIR unset**, uses the owned clone's
+default outer target and the nested probes' existing separate cache under owned
+TMPDIR. Do not export one common target again. No toolchain/source/lock/fixture/
+workflow change or coverage exemption was needed.
+
+Focused doctests and actual full `cargo test -p sifr_driver` pass on the exact
+B6 candidate:595 unit passes,77 normally ignored, successful final doctests.
+All named static checks pass. Evidence/provenance cover32088paths,16submodules,
+41receipts; full-driver log hash
+`40fd5424b73d15032693fe21d987af909e60820a918ef721b24834558cb16567`.
+Canonical ledgers in the clone's `target/verification/areas/`:
+`item12k-b6-final-evidence.json` and `item12k-b6-provenance.json`.
+Historical failed invocations remain failed. Full E2E/migratedstdlib/ignored
+driver build lanes remain uncertified, not implied by the full-driver pass.
+
+Dispatch a fresh sole worker for **original12K-B5 continuation**, not a new item
+or allowance reset. Start from the complete B6 record; assess latestmain and
+preserve exact corpus/ancestry. Review B5 against its original exact base
+`9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`; retain its two original corrections
+without reimplementation. Read both prior B5/B6 dispatches and receipts. Reuse
+the now-passing B6 driver/static evidence after authenticating relevant unchanged
+inputs; do not repeat the expensive full driver merely for a fresh worker.
+Run pending registered strict workspace Clippy and any affected named checks,
+then B5's still-unused narrow initial review (maxone remediation), then its sole
+governed approved-SHA merge gate. Preserve target isolation throughout. No second
+gate; no full-phase review. Preserve exact gate evidence for later12K reuse.
+If only inherited unreviewed integration prevents safe standalone delivery,
+return the approved stacked candidate/receipts, do not invent another mechanism
+blocker or merge under narrow approval. A genuine new external failure follows
+the existing later-owner stop rule. Original12K remains0review/0gate and belongs
+to the next fresh worker; no12K/12D/E/F/Item12/12A implementation in B5.
+
+#### Original B5 continuation ownership
+
+This continuation owns `/private/tmp/sifr-item12k-b5-cont.KTpKoc/sifr`, branch
+`codex/item12k-b5-continuation`, its index, default target, and sibling temporary
+paths. Parent and predecessor checkouts, targets, indexes, and records are read-only.
+The copied dispatch above is authoritative. B5 source remains `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`;
+original review base remains `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`.
+Pending work is authenticated evidence reuse, the named strict workspace Clippy,
+affected static checks, one narrow exact-SHA initial review (at most one remediation),
+and one approved-SHA merge-profile gate. `CARGO_TARGET_DIR` stays unset.
+No predecessor review or gate allowance resets. An approved stacked handoff remains
+the authorized terminal state if broad original 12K approval prevents delivery.
+
+#### B5 same-mechanism Clippy completion
+
+Strict workspace Clippy on continuation `1321c2a75e4e146a310507c0ae2a326f5c2a5540`
+found `clippy::if_not_else` on B5's explicit `!=` conditional at
+`crates/sifr_driver/src/build/cargo_manifest.rs:235`. The correction tests equality
+first and swaps the same two branches. Generated strings, source selection, errors,
+and lock behavior remain identical; the private checksum-map alias is retained.
+The failed Clippy invocation remains failed. This is the same bounded lint mechanism,
+not a new item, review remediation, suppression, or gate attempt.
+
+Since a driver source input now changed, final qualification uses the already named
+`cargo test -p sifr_driver`, strict workspace Clippy, fmt, HIR, file-size, and diff
+checks on the final candidate. The authenticated B6 full-driver pass is retained as
+prior evidence, but will not stand in for this changed-source final invocation.
+No broad standalone corpus or Python matrix is repeated. B5 remains zero reviews,
+zero provider requests and zero gates before final qualification.
+
+### Original 12K final delivery registration (2026-09-06)
+
+This is the original integration continuation, with zero integration reviews,
+provider requests, retries, and gates consumed before this registration. The sole
+implementer owns `/private/tmp/sifr-item12k-delivery.4J6JeK/sifr`, branch
+`codex/item12k-final-delivery`, its index, and sibling temporary/evidence paths.
+The parent two dirty Markdown files and all predecessor checkouts, indexes,
+targets, and evidence are read-only. The complete starting record is
+`e9cce681e039f918aaf64daebe0d415195bb6f96`; no stack reconstruction is needed.
+Actual remote main is fetched with the explicit refspec
+`+refs/heads/main:refs/remotes/origin/main` and remains
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`. Its retained manifest is at
+`internal_docs/stdlib_retained_compiler_intrinsics.toml`. All 16 submodules
+must match their exact gitlinks, including corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372` (leetcode PR #48).
+
+The preceding original 12K named-command registration remains authoritative.
+For this continuation all commands use the owned repository as cwd,
+`CARGO_TARGET_DIR` unset, `TMPDIR=/private/tmp/sifr-item12k-delivery.4J6JeK/tmp`,
+`UV_CACHE_DIR=/private/tmp/sifr-item12k-delivery.4J6JeK/uv-cache`,
+`PYTHONPYCACHEPREFIX=/private/tmp/sifr-item12k-delivery.4J6JeK/pycache`,
+`CARGO_BUILD_JOBS=6`, and `RUST_TEST_THREADS=1`. Outer Cargo uses its default
+repository target; nested probes retain their separate TMPDIR caches. These
+settings supersede old shared-target and sibling-JSON prescriptions. Canonical
+JSON receipts are under owned `target/verification/areas/item12k-delivery-*`;
+raw logs and SHA-keyed review artifacts stay outside Git in the owned root.
+
+Before review, run the newly named focused command
+`python3 scripts/check_stdlib_manifest_schema.py`, plus the existing named
+`python3 scripts/check_file_size_guardrails.py` and
+`git diff --check origin/main HEAD`. Authenticate the complete B5 candidate tree,
+all exact clean submodules, 25 B5 current artifacts, and 78 historical receipts
+before reusing native 90, algorithmic 411, diagnostics 184, readiness 4, Python
+30/all five suites, demos 264, codegen 1452, lowering 1119/1 ignored, frontend
+139, IR 4, types 147, required-message/async filters, focused 18+8, and the final
+B5 driver 595/77 normally ignored/doctests and strict Clippy passes. These are
+inherited executions with authenticated relevant inputs, not fresh-SHA runs.
+Only phase Markdown changes are expected; any affected input requires targeted
+requalification. No unrelated test matrix or partial certification is authorized.
+
+Read-only profile/runner inspection confirms the sole
+`scripts/run_all_tests.sh --profile merge` invokes full E2E (empty fixture
+manifest), migrated stdlib parity module-merge-check/audit-fixtures/
+complexity-resource/module-inventory and default/feature-API/all-features
+stdlib crate tests. It also invokes the normally ignored driver build lane as
+`cargo test -p sifr_driver --lib -- --ignored --test-threads=1` and CLI generated
+build lane. These exact commands are registered as part of that gate; no
+duplicate standalone execution is planned. Their actual results remain pending.
+The gate's normal setup may build the owned compiler. No cold build is
+host-sensitive performance evidence, and no gate prefix constitutes a pass.
+
+Freeze source/corpus/gitlinks before one exact-SHA full integration Opus review
+against assessed main, with at most one remediation review and at most three
+failed provider attempts in distinct temporary directories. Then run the one
+original integration merge gate on that exact approved SHA, skipping create-pr.
+No B5 gate is repeated. After complete pass, merge corpus PR #48 normally while
+preserving its approved commit as Sifr's gitlink; merge the approved Sifr
+integration normally without squashing away retained ancestry. Reconcile
+dependent PRs and owning issues through delivery records, preserving failed
+12J/R1 history and separate correcting M1 approval. Record review and gate
+evidence outside the approved tree, update phase records after merge, and stop.
+No 12D/E/F, retained Item12 source 8ad089a, or 12A work is included.
+
+### Approved B5 receipt and original12K final qualification dispatch (2026-09-06)
+
+Kant is closed after the [B5 terminal receipt](https://github.com/sifr-lang/sifr/pull/3719#issuecomment-5560928823).
+Start from its clean preserved clone `/private/tmp/sifr-item12k-b5-cont.KTpKoc/sifr`,
+reviewed/gated candidate `e5ff95f5c4f4708542e6367671e751c7bcf82e98`, record
+`e9cce681e039f918aaf64daebe0d415195bb6f96`. B5's exact review base remains
+`9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`; main/corpus remain f11e1cd/8bcbe7a.
+Final B5 equality-first conditional and exact private type alias are approved;
+no manifest/lock-source semantics changed. Narrow review SATISFIED, no blockers.
+Counts:1 initial review,0remediation,1provider request,0retries,1failed merge gate,
+0create-pr gates,0merges. Do not repeat B5's gate or reopen its review.
+
+Actual final-source strict Clippy, full driver595/77normallyignored plus successful
+doctests, fmt/HIR/file-size/diff pass. Complete32088path/16submodule/78historical
+receipt authentication is retained. Driver rerun was required by B5's equality/
+branch swap; no new production change is now presumed necessary. Gate passed
+Cargo setup and eight guardrails, then failed because the new clone lacked a
+local `origin/main` ref. Its405.44s failed prefix is not a pass. The setup omission
+is [12K-B5-V1/#3721](https://github.com/sifr-lang/sifr/issues/3721), owned by12K
+validation setup, not a newly established compiler mechanism requiring B7 code.
+
+Dispatch a fresh sole worker for **original12K continuation** with its existing
+zero initial/remediation/provider/gate counts. This uses the already authorized
+original integration review and single gate, not a replacement B5 gate or new
+allowance. Full-stack approval remains required even though all bounded inputs
+are narrowly approved. Normal safe integration/corpus delivery is authorized
+after complete valid qualification; no user reauthorization is missing.
+
+Before expensive qualification, create an owned clone with normal retained
+ancestry and exact submodules. Fetch the actual main branch into the local
+`refs/remotes/origin/main` and verify it resolves to the assessed remote SHA
+and supplies the retained manifest; `ls-remote` alone is insufficient. Do not
+override the guard baseline to conceal missing setup. Add the focused named
+`python3 scripts/check_stdlib_manifest_schema.py` check before integration review/
+gate. Preserve B6 isolation: CARGO_TARGET_DIR unset, own default outertarget,
+nested probes' existing separate cache under owned TMPDIR. All canonical JSON
+outputs must be inside the owned repository, not a sibling evidence directory.
+Read newer handoffs as superseding historical target/output-path prescriptions.
+
+Read original12K scope, deps and named-command registrations; preserve all
+12B/H/I/correctingM1/B1/B2/B3/B4/B5/B6 and corpus ancestry. Retained Item12 source
+8ad089a remains separate and excluded. Authenticate full relevant inputs before
+reusing expensive native90,algorithmic411,diagnostics184,readiness4,Python30/allfive,
+demo264,codegen1452,lowering1119,frontend139,IR4,types147,required-message/async,
+B2/B3/B4focused and nowpassing B5driver/Clippy/statics. Do not reflexively repeat
+completed matrices or relabel them as fresh. Qualify only actually changed or
+pending named inputs. A local build for required execution is allowed. Complete
+any in-scope integration correction before final tests; register new focused
+commands before execution. Historical failed/unrun commands stay distinct.
+
+Then obtain one original exact-SHA **integration** Opus review against assessed
+main, maxone remediation, and run one merge-profile gate on that final approved
+SHA, skipcreate-pr for in-session merge. Full E2E, migrated stdlib and ignored
+driver build lanes require actual pass; verify coverage, register any missing
+required targeted command before execution. No partialcertification bypass,
+third review, second integration gate or whole-phase review. Freeze corpus/
+source/gitlink provenance before review and plan normal corpus/Sifr merge order
+so approved inputs are not changed afterward. Source changes invalidate affected
+evidence only, not unrelated work; docs-only receipt changes need no second gate.
+
+On pass, deliver approved integration/corpus, reconcile dependent PRs and owning
+issues/phase records, and stop. On true new external failure or second-review
+mechanism, record later owner and stop, no unrelated repair. Already known
+unmerged-stack delivery, B6 target isolation and main-ref preparation are not
+new mechanism blockers. No12D/E/F/retainedItem12/12A work in this worker.
+
+### Original 12K-B5 continuation terminal receipt (2026-09-06)
+
+State: **source qualified and approved; gate blocked by clone setup, not merged
+or closed**. [PR #3719](https://github.com/sifr-lang/sifr/pull/3719) remains a
+stacked draft. The original B5 allowance is consumed as recorded below; no new
+review/gate cycle was created. This receipt supersedes B5's earlier pending
+Clippy/review status without relabeling any historical failed invocation.
+
+Exact identities:
+
+- Original review base: `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`.
+- Original B5 source: `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`.
+- Retained approved B6 candidate: `4d076ebe08f00ba7ff6ea6ae7f910397ba7b2356`;
+  B6 record: `08b2302a8f5e6af910cef00d6932c1da57ac3719`.
+- Continuation registration: `1321c2a75e4e146a310507c0ae2a326f5c2a5540`.
+- Final reviewed and gated B5 candidate: `e5ff95f5c4f4708542e6367671e751c7bcf82e98`.
+- Latest remote main, still in normal ancestry: `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+- Exact corpus: `8bcbe7ab7939e5c8362c10f61a80e368022cc372`; all 16 submodules clean.
+- Merge SHA: none. This phase-only terminal record follows the approved candidate.
+- Owned clone: `/private/tmp/sifr-item12k-b5-cont.KTpKoc/sifr`; local branch
+  `codex/item12k-b5-continuation`, existing PR remote branch
+  `codex/item12k-b5-portable-clippy`. Parent/predecessor checkouts, targets and
+  indexes remained read-only. Retained Item 12 source `8ad089a` stays excluded.
+
+Source scope remains exactly `crates/sifr_driver/src/build/cargo_manifest.rs`
+and `crates/sifr_driver/src/build/portable_project.rs`, plus this phase record.
+The pending Clippy run found `if_not_else` on the original B5 `!=` conditional;
+the final candidate uses equality first with the same branches swapped. The
+private exact checksum-map alias is retained. No manifest-output, lock-source,
+fallback, suppression, fixture, workflow, or unrelated compiler change occurred.
+
+Actual final-candidate named evidence:
+
+- Strict workspace Clippy: PASS (16.79 seconds). Prior continuation Clippy on
+  `1321c2a75` remains FAILED exit 101, with its own immutable receipt.
+- Full `cargo test -p sifr_driver`: PASS exit 0 (814.02 seconds), 595 unit passes,
+  zero failures, 77 normally ignored, completed successful zero-example doctests.
+  This rerun was required by the changed driver source, not a fresh-worker reset.
+  The authenticated B6 pass is retained as historical evidence; prior B5 and
+  original 12K failed full-driver commands remain failed.
+- Fmt, HIR, file-size (3780 files, limit 900), and exact-base diff checks: PASS.
+- Frozen provenance authenticates 32088 tracked paths, 16 exact clean submodules,
+  78 historical receipts, and the exact equality/branch swap against B6. Retained
+  native 90, algorithmic 411, diagnostics 184, readiness 4, codegen 1452, lowering
+  1119, Python 30/all five suites, demo 264 and focused 18+8 remain authenticated
+  historical evidence, not fresh matrices on this candidate. None was rerun as
+  a standalone matrix and no partial certification bypass was used.
+
+[The sole initial Opus review](https://github.com/sifr-lang/sifr/pull/3719#issuecomment-5560851724)
+is **SATISFIED**, with no blocking findings. Its scope is only B5. Deferred
+follow-ups: existing B6-F1 copied-dispatch typography; B5-F1 later records-owner
+maintenance must distinguish inherited authenticated matrices from fresh checks.
+No follow-up code, remediation review, or original 12K review was started.
+
+The sole `scripts/run_all_tests.sh --profile merge` invocation on the exact
+approved candidate **FAILED exit 1 after 405.44 seconds**. Cargo setup and eight
+guardrails passed: HIR, file size, emitted-demo freshness, source dependency
+direction, submodule ownership, sysroot resource certification, retained intrinsic
+allowlist, and adapter reachability. `guardrail_stdlib_manifest_schema` then
+failed because `origin/main` was not a local ref. The worker verified the remote
+SHA with `git ls-remote` but omitted materializing the remote-tracking ref in
+the fresh clone. This is a worker setup omission, not an established source
+regression. The checker blob is unchanged from main:
+`59fb8bf6938d8a76eaf7daa083eda1d2a4dbd3da`. The missing ref is preserved for honest
+failure evidence; no override, weakened guard, second gate, or merge occurred.
+
+Later validation owner: **12K-B5-V1 / [#3721](https://github.com/sifr-lang/sifr/issues/3721)**.
+Full E2E, migrated stdlib, normally ignored driver generated builds, and all
+later area/toolchain stages remain uncertified. The passing gate prefix is not a
+passing merge gate or host-sensitive performance qualification.
+
+Evidence root `/private/tmp/sifr-item12k-b5-cont.KTpKoc/`:
+
+| Receipt | SHA256 |
+| --- | --- |
+| `evidence/driver.log` | `556273ebc699ef635f7fe1e3eeff9838fe6a45cf255db4353257a1bb1997df4c` |
+| `evidence/clippy-final.log` | `3890af5e65cd1c3e6b5b4048fe2b13b2130a3089af9b87ad28a27dec284a5fc8` |
+| `sifr/target/verification/areas/item12k-b5-cont-final-provenance.json` | `1bf08bbd266d20111de5a9b97cd798dc4a85ce87725ab249bf2ed4eb1143b4d1` |
+| `sifr/target/verification/areas/item12k-b5-cont-final-evidence.json` | `6f7ec81c18db88fc9fe1d49c41a392b79dc77320c930e16c2d3788f528dc9966` |
+| `opus-e5ff95f5c4f4708542e6367671e751c7bcf82e98.063cKL/response.md` | `9a2616a2107098e7d3d19d7597d4b67bfb3d1df3ccfb434ae365d0857b162f44` |
+| `evidence/merge.log` | `5fc87ba8a2882a7030a7a7b4cdcbae2053698ae459e5c798c8937058fa8f04b4` |
+| `sifr/target/verification/areas/item12k-b5-cont-merge.json` | `e17a1419a23f440f2d777b7dc823f5064a754395d92351b2213ef8bbaf3b62fd` |
+| `sifr/target/validation_lane_reports/merge.latest.json` | `30084b40eccab6eed84f086af3c8522ddb78699c1af73c99537a0470db8a6011` |
+
+Canonical terminal ledger: owned repo `target/verification/areas/item12k-b5-cont-terminal.json`.
+Owned gate compiler SHA256: `75d52504ff1c6546f84a7156ff97efe0ee47659ad36ab5b3c26cde65e9a959c9`.
+Pre-gate target 5.6 GiB/free disk 101 GiB; terminal target 10 GiB/free disk 97 GiB.
+No target cleanup occurred. `CARGO_TARGET_DIR` stayed unset throughout qualification
+and the gate, preserving B6's outer/nested target isolation.
+
+Counts: **1 initial review, 0 remediation reviews, 1 provider request, 0 retries,
+0 create-pr gates, 1 failed merge-profile gate, 0 merges**. This continuation ran
+two Clippy commands (one failed, one passed), one successful full driver command,
+and four successful final static checks. Earlier B5's failed driver invocation
+and original 12K's old failed commands remain separately retained. Original
+12K's own review/provider/gate counts remain zero; predecessor allowances are not reset.
+
+Exact next action belongs to the later integration validation owner: materialize
+and verify the required main ref in its owned clone before any newly authorized
+qualification, preserve these exact source/review/test receipts, and obtain
+explicit authority for any replacement gate. Original 12K still requires its
+separate integration review and valid delivery evidence. No B5 gate retry, next
+item implementation, inherited implementation merge, or whole-phase review is
+authorized or started by this receipt. This B5 worker stops here.

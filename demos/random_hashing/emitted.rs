@@ -381,9 +381,9 @@ mod sifr_generated_project_nominals {
     }
     #[derive(Debug, Clone, PartialEq)]
     pub struct SifrGeneratedStdlibSifrX2erandomX2eRandom {
-        pub state_words_field: Vec<SifrInt>,
-        pub index_field: SifrInt,
-        pub gauss_next_field: Option<f64>,
+        pub state_words: Vec<SifrInt>,
+        pub index: SifrInt,
+        pub gauss_next: Option<f64>,
     }
     impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
         #[must_use]
@@ -396,32 +396,29 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_88c1b3a412b57c41_5f67617573735f6e657874: Option<f64> =
                 None;
             Self {
-                state_words_field:
-                    sifr_generated_field_value_7e372b502c45daad_5f73746174655f776f726473,
-                index_field: sifr_generated_field_value_497043933c8a2d12_5f696e646578,
-                gauss_next_field:
-                    sifr_generated_field_value_88c1b3a412b57c41_5f67617573735f6e657874,
+                state_words: sifr_generated_field_value_7e372b502c45daad_5f73746174655f776f726473,
+                index: sifr_generated_field_value_497043933c8a2d12_5f696e646578,
+                gauss_next: sifr_generated_field_value_88c1b3a412b57c41_5f67617573735f6e657874,
             }
         }
     }
     impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
         pub fn sifr_generated_twist(&mut self) {
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &SifrInt::from_i64(0) <= &i && &i < &SifrInt::from(self.state_words_field.len()) {
-                let y: SifrInt =
-                    &(&sifr_generated_state_word_at(&self.state_words_field, i.clone())
-                        & &sifr_generated_const_5f4d545f55505045525f4d41534b())
-                        + &(&sifr_generated_state_word_at(
-                            &self.state_words_field,
-                            (&i + &SifrInt::from_i64(1))
-                                .floor_mod_known_nonzero(&sifr_generated_const_5f4d545f4e()),
-                        ) & &sifr_generated_const_5f4d545f4c4f5745525f4d41534b());
+            while &SifrInt::from_i64(0) <= &i && &i < &SifrInt::from(self.state_words.len()) {
+                let y: SifrInt = &(&sifr_generated_state_word_at(&self.state_words, i.clone())
+                    & &sifr_generated_const_5f4d545f55505045525f4d41534b())
+                    + &(&sifr_generated_state_word_at(
+                        &self.state_words,
+                        (&i + &SifrInt::from_i64(1))
+                            .floor_mod_known_nonzero(&sifr_generated_const_5f4d545f4e()),
+                    ) & &sifr_generated_const_5f4d545f4c4f5745525f4d41534b());
                 let mut x_a: SifrInt = y.floor_div_known_nonzero(&SifrInt::from_i64(2));
                 if &y.floor_mod_known_nonzero(&SifrInt::from_i64(2)) != &SifrInt::from_i64(0) {
                     x_a = &x_a ^ &sifr_generated_const_5f4d545f4d41545249585f41();
                 }
                 let new_word: SifrInt = &sifr_generated_state_word_at(
-                    &self.state_words_field,
+                    &self.state_words,
                     (&i + &sifr_generated_const_5f4d545f4d())
                         .floor_mod_known_nonzero(&sifr_generated_const_5f4d545f4e()),
                 ) ^ &x_a;
@@ -430,11 +427,10 @@ mod sifr_generated_project_nominals {
                         &new_word & &sifr_generated_const_5f4d545f574f52445f4d41534b();
                     {
                         let sifr_generated_index_raw = i.clone();
-                        let sifr_generated_index_normalized = sifr_generated_index_raw
-                            .normalize_index_or_len(self.state_words_field.len());
-                        if let Some(sifr_generated_elem) = self
-                            .state_words_field
-                            .get_mut(sifr_generated_index_normalized)
+                        let sifr_generated_index_normalized =
+                            sifr_generated_index_raw.normalize_index_or_len(self.state_words.len());
+                        if let Some(sifr_generated_elem) =
+                            self.state_words.get_mut(sifr_generated_index_normalized)
                         {
                             *sifr_generated_elem = sifr_generated_assign_value;
                         }
@@ -442,18 +438,18 @@ mod sifr_generated_project_nominals {
                 }
                 i = &i + &SifrInt::from_i64(1);
             }
-            self.index_field = SifrInt::from_i64(0);
+            self.index = SifrInt::from_i64(0);
         }
     }
     impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
         #[must_use]
         pub fn sifr_generated_next_u32(&mut self) -> SifrInt {
-            if &self.index_field.clone() >= &sifr_generated_const_5f4d545f4e() {
+            if &self.index.clone() >= &sifr_generated_const_5f4d545f4e() {
                 self.sifr_generated_twist();
             }
             let mut y: SifrInt =
-                sifr_generated_state_word_at(&self.state_words_field, self.index_field.clone());
-            self.index_field = &self.index_field.clone() + &SifrInt::from_i64(1);
+                sifr_generated_state_word_at(&self.state_words, self.index.clone());
+            self.index = &self.index.clone() + &SifrInt::from_i64(1);
             y = &y ^ &y.floor_div_known_nonzero(&SifrInt::from_i64(2048));
             y = &y ^ &(&(&y * &SifrInt::from_i64(128)) & &SifrInt::from_i64(2_636_928_640));
             y = &y ^ &(&(&y * &SifrInt::from_i64(32768)) & &SifrInt::from_i64(4_022_730_752));
@@ -540,9 +536,9 @@ mod sifr_generated_project_nominals {
         pub fn getstate(&self) -> SifrGeneratedStdlibSifrX2erandomX2eRandomState {
             SifrGeneratedStdlibSifrX2erandomX2eRandomState::new(
                 SifrInt::from_i64(3),
-                sifr_generated_clone_words(&self.state_words_field),
-                self.index_field.clone(),
-                self.gauss_next_field,
+                sifr_generated_clone_words(&self.state_words),
+                self.index.clone(),
+                self.gauss_next,
             )
         }
     }
@@ -577,9 +573,9 @@ mod sifr_generated_project_nominals {
                 }
                 normalized.push(&word & &sifr_generated_const_5f4d545f574f52445f4d41534b());
             }
-            self.state_words_field = normalized;
-            self.index_field = state.index.clone();
-            self.gauss_next_field = state.gauss_next;
+            self.state_words = normalized;
+            self.index = state.index.clone();
+            self.gauss_next = state.gauss_next;
             Ok(())
         }
     }

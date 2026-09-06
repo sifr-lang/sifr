@@ -131,11 +131,7 @@ pub fn generate_rust_test_project_with_metadata(
             module_name,
             &stdlib_nominal_plan,
             &crate_root_modules,
-            &module
-                .classes
-                .iter()
-                .map(|class| sifr_type_system::source_class_rust_name(&class.name))
-                .collect(),
+            &crate::project_stdlib_nominals::project_module_binding_names(module),
         );
         support_rust_files.insert(
             (*module_name).to_string(),
@@ -166,6 +162,7 @@ pub fn generate_rust_test_project_with_metadata(
         required_features.extend(generated.required_features);
     }
 
+    project_support_demand.set_error_conversion_paths(&nominal_type_paths);
     let rendered_support = render_support(&project_support_demand, stdlib_code);
     used_stdlib_modules.extend(rendered_support.used_stdlib_modules.iter().cloned());
     required_features.extend(rendered_support.required_features.iter().copied());
