@@ -110,7 +110,7 @@ impl ErrorConversionDemand {
                     type_params, items, ..
                 } = &mut item
                 {
-                    *type_params = error.type_params.clone();
+                    type_params.clone_from(&error.type_params);
                     // A transitive error owns its parent value. Consume that value via
                     // the existing inheritance impl, rather than moving through Deref
                     // or cloning the inherited message.
