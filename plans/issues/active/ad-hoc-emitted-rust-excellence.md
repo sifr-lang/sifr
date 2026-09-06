@@ -2,6 +2,127 @@
 
 Status: active
 
+## Original12K final continuation registration (2026-09-06)
+
+Current owner: sole live worker in independent clone
+`/private/tmp/sifr-item12k-final.7sgsI9/sifr`, branch
+`codex/item12k-final-integration`, private Git database/index/target and sibling
+evidence/temp paths. All old checkouts and targets and the parent's two
+intentional Markdown edits are read-only. Start at full approved B4 record
+`b73e5e5991eb11e2911fc413e7956e4f9d4d2eae`; preserve normal ancestry.
+This registration supersedes historical terminal/ownership statements below.
+Original12K has consumed zero initial/remediation reviews, provider requests,
+create-pr/merge gates, or merges. No predecessor budget is reset.
+
+The user's latest authorization includes Claude, push, replacement integration
+PR, normal corpus/Sifr integration merges and owner/phase records. Review covers
+the whole bounded integration and its interactions, not whole-phase closure.
+One initial exact-SHA Opus review plus at most one remediation, then one
+merge-profile gate on the final approved SHA; no create-pr or second gate.
+Stop on a new external blocker or second-review mechanism defect, recording its
+later owner. No12D/E/F, retained Item12,12A or whole-phase work.
+
+### Carried parent dispatch
+
+### Approved B4 handoff and original12K continuation (2026-09-06)
+
+Ampere is closed. [PR #3715](https://github.com/sifr-lang/sifr/pull/3715)
+preserves approved B4 candidate `5c711f2d6cb90265b32e04e8b9f6b6e3570855c1`
+and documentation record `b73e5e5991eb11e2911fc413e7956e4f9d4d2eae`, based
+on12K record `5de50ecafc84ed1fa724e7384ad85689a6925dfb`, in
+`/private/tmp/sifr-item12k-b4-qualified.X1Lz43/sifr`.
+[Receipt](https://github.com/sifr-lang/sifr/issues/3712#issuecomment-5559892381)
+and [review](https://github.com/sifr-lang/sifr/pull/3715#issuecomment-5559872361)
+establish one SATISFIED initial review, zero remediation/retries/gates/merges.
+Readiness4/4 passes (13 guarantees,34 surfaces,zero temporary rows,19 profile
+rows,27 negative cases,full taxonomy); eight focused tests/direct taxonomy and
+static checks pass under the formerly failing caller ancestor. BothB4 and12K
+histories remain ancestral; no compiler/SQL implementation was redone.
+Two nonblocking B4-F1/F2 clarity/coverage suggestions remain in its record.
+
+The only B4 delivery dependency is the already authorized integration itself.
+Do not create a new blocker or prerequisite merely because the approved stack
+is unmerged. Dispatch a fresh original12K worker from this complete record,
+assess latest main and preserve the original12B/H/I/correctingM1/B1/B2/B3/B4
+and corpus histories. The prior12K scope, named commands, remaining work and
+one initial integration review/at most one remediation/one final merge gate
+remain unchanged and unused. B4's narrow review is not integration approval.
+
+Reuse authenticated B4 readiness/focused and prior12K codegen1452, B1 lowering1119,
+Python30 and demo264 evidence only after unchanged complete-input verification;
+do not spend time rebuilding completed code or reflexively repeating those runs.
+Continue pending driver/other crate/filter checks, native90, algorithmic411,
+full diagnostics, strict Clippy, and all remaining registered qualification.
+Copy/adapt owned native-script roots without altering case selection or assertions.
+All canonical result-json outputs stay inside the fresh owned repository.
+Finish any actual integration corrections before tests; register concrete new
+focused commands before running them. The actual full E2E/migrated stdlib lanes
+must pass in the one exact-approved-SHA merge-profile gate before integration
+merge. Skip create-pr for in-session merge; no second gate or allowance reset.
+
+Ordinary safe corpus and Sifr integration merges, dependent PR/issue disposition,
+and phase-record updates are authorized after valid prerequisite qualification,
+integration review and gate. Freeze exact source/corpus/gitlink provenance
+before review so no unreviewed input enters afterward. Preserve historical
+failed/unreviewed checkpoints honestly, including originalJ/R1's superseded
+NOT SATISFIED reviews. Publish exact approved and merged SHAs and evidence.
+A genuinely new external mechanism follows the existing later-owner stop rule;
+do not redo the resolved main-only SQL failure or absorb unrelated fixes.
+After12K merge/record or genuine terminal blocker, stop for next fresh worker.
+No12D/E/F,retainedItem12,12A implementation or whole-phase review here.
+
+### Owned commands and delivery plan
+
+The original and continuation execution registrations remain authoritative.
+All registered commands use this owned repository and these environment paths:
+`TMPDIR=/private/tmp/sifr-item12k-final.7sgsI9/tmp`,
+`CARGO_TARGET_DIR=/private/tmp/sifr-item12k-final.7sgsI9/sifr/target`,
+`UV_CACHE_DIR=/private/tmp/sifr-item12k-final.7sgsI9/uv-cache`,
+`PYTHONPYCACHEPREFIX=/private/tmp/sifr-item12k-final.7sgsI9/pycache`,
+`CARGO_BUILD_JOBS=6`, `RUST_TEST_THREADS=1`.
+Every canonical area output is `target/verification/areas/item12k-*.json`
+inside this repository. The external native script is
+`/private/tmp/sifr-item12k-final.7sgsI9/native_qualification.py`; output is
+`/private/tmp/sifr-item12k-final.7sgsI9/native-qualified`, with roots-only
+adaptation, unchanged90cases/check/run/assertions and native-temp ownership.
+Set `SIFR_QUAL_COMPILER_SOURCE_SHA` to the frozen source candidate.
+
+Exact still-pending commands:
+```bash
+cargo build --locked -p sifr
+cargo test -p sifr_driver
+cargo test -p sifr_frontend
+cargo test -p sifr_ir
+cargo test -p sifr_type_system
+cargo test -p sifr_driver required_error_message
+cargo test -p sifr_driver async_python_error_channel
+python3 /private/tmp/sifr-item12k-final.7sgsI9/native_qualification.py /private/tmp/sifr-item12k-final.7sgsI9/native-qualified
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full --result-json target/verification/areas/item12k-leetcode-full.json
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --result-json target/verification/areas/item12k-diagnostics.json
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+python3 scripts/check_hir_maintainability_guardrails.py
+python3 scripts/check_file_size_guardrails.py
+git diff --check
+scripts/run_all_tests.sh --profile merge
+```
+
+Authenticate complete tracked input maps and retained report hashes before reusing
+codegen1452, B1 lowering1119 including required-message3, Python30 including all
+five named suites, demo264, B2/B3 focused18 and B4 readiness4/focused8 evidence.
+The build command supplies a fresh owned binary for pending native commands;
+retained build evidence is not permission to write old targets. Any invalidated
+named check uses the earlier exact command with owned paths. No extra suites,
+partial certification bypass, altered corpus selection, or inferred gate pass.
+
+Freeze corpus gitlink `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+After qualification/review/gate, normal merge of corpus PR48 preserves that
+qualified source as an ancestor; never repin to its later merge commit. Normal
+integration merge must preserve the approved tree. Verify both expected PR
+heads/bases first. Reconcile superseded/dependent PRs accurately with provenance,
+and publish separate record-only closure commits without review/gate repetition.
+
+
 Current B4 state: **qualified and Opus-approved stacked checkpoint; integration
 merge pending**, [draft #3715](https://github.com/sifr-lang/sifr/pull/3715).
 See the terminal receipt and "B4 qualified-context continuation registration"
