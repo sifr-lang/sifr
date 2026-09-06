@@ -4,6 +4,57 @@ Status: active
 
 Baseline commit: `e9df29f7e4cada7b376b2d455790f9c80a5647a0`
 
+## Item12K-B1 dispatch and ownership (2026-09-06)
+
+The user authorizes this fresh sole implementer to close only the separately
+owned [TypeVar assertion-fidelity issue #3667](https://github.com/sifr-lang/sifr/issues/3667).
+Parent orchestration and its two dirty documents are read-only. All former
+worker checkouts, indexes, and targets remain read-only. This session owns
+`/private/tmp/sifr-item12kb1.nnPBDD/sifr`, its independent Git index, private
+target and temporary evidence root, and `codex/item12k-b1-typevar-fidelity`.
+It starts at record `23088af50c8e25014c44262b8a7ec1f11dfbe09c`, preserving
+integrated candidate `7e23785ab07cba6f925eed2f934c0304750f1d74`, all original
+dependency commits and corpus `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+Fetched main remains `4ce05473f58716a611ac190581bf0737ba15331e`; no base change
+requires reintegration. The issue is open and confirms the intended wording
+change in producer `066300ff185f38b425a884a2225b72990a194e58`.
+
+Scope: update only the two stale exact message expectations in
+`crates/sifr_lowering/src/lower/expressions_tests/control_flow_and_strings.rs`.
+Preserve diagnostic codes, primary ranges, negative inputs, and exact equality;
+no generic/language semantics change, weakened matching, ignored tests, or
+producer-wording restoration. The producer accepts qualified type names after
+the cited change, explaining removal of "simple". No additional assertion
+correction has been identified. The unchanged keyword-constraints producer
+wording belongs to a different branch and is outside this repair.
+
+Implement the complete correction before running only these named checks:
+
+- `cargo test -p sifr_lowering test_typevar_invalid_bound_shape_has_primary_range`
+- `cargo test -p sifr_lowering test_pep695_typevar_constraint_shape_has_primary_range`
+- `cargo test -p sifr_lowering`
+- `cargo fmt --check`
+- `python3 scripts/check_hir_maintainability_guardrails.py`
+- `python3 scripts/check_file_size_guardrails.py`
+- relevant documentation/diff checks.
+
+One exact-SHA initial Opus review and at most one remediation review apply
+only to B1. After approval, one `scripts/run_all_tests.sh --profile merge`
+on that exact candidate is authorized because compiler-tree tests change;
+skip create-pr and never repeat the gate. Check free disk and the private target
+before the gate. Do not clean old/shared targets. A new mechanism defect on
+second review or an external gate failure receives a later owner record and
+terminal handoff, without unrelated repair.
+
+Ordinary push, a narrowly linked stacked draft PR, merge, and issue/phase
+updates are authorized. The B1 review cannot approve the unreviewed 12K stack
+or reset any historical dependency allowance. If an independent merge cannot
+retain valid exact-input evidence, preserve the approved bounded correction
+for fresh 12K continuation and return blocked. Do not start that continuation.
+The parent's authorization of fresh sequential workers through phase closure
+is orchestration authority; this worker stops after B1. Full-phase Opus belongs
+only to the future 12A closer.
+
 ## Objective
 
 Make every Rust program emitted by Sifr correct, panic-safe, idiomatic,
