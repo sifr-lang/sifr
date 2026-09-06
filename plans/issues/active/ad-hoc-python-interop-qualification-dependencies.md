@@ -489,3 +489,58 @@ was integrated. Only the two Markdown records change, with documentation diff
 and file-size results retained at `/private/tmp/sifr-item12j-m1.VO82Kk/evidence.md`.
 Draft PR #3699 remains the linked unapproved predecessor. Next action: explicit
 owner/user contract adjudication before resuming M1; this worker stops here.
+
+## Item12J-M1 required-string terminal receipt (2026-09-06)
+
+The user explicitly authorized the required constructor-supplied `message: str`
+contract, including breaking message-less calls and integer overrides. The prior
+decision blocker above is **resolved**, and the implementation is now source-review
+**SATISFIED**, but **not merged / not closed** because external qualification is
+still blocked. Historical12J/R1 NOT SATISFIED verdicts and exhausted reviews remain
+unchanged; no old allowance was reset.
+
+- Approved implementation: `d726ffc11258c49f0185fd2d49697988cf90972c`, retaining
+  record `054a823b9aaafd388ddf1d944f1b7e50fcb95c29` and all original12J/R1 lineage.
+- Draft bounded [PR #3700](https://github.com/sifr-lang/sifr/pull/3700), linked to
+  preserved predecessor #3699; branch `codex/item12j-m1-required-string`.
+- Initial exact-SHA [Opus review](https://github.com/sifr-lang/sifr/pull/3700#issuecomment-5558127599)
+  SATISFIED with no blockers. M1 used1initial review,0remediation reviews,0provider
+  retries,0create-PR gates,0merge gates; merge SHA none.
+- Owned checkout `/private/tmp/sifr-item12j-m1-required.vL5lSI/sifr`; parent and
+  previous worker checkouts/indexes/targets stayed read-only. Main remains
+  `4ce05473f58716a611ac190581bf0737ba15331e`.
+- Receipt, final record SHA,36changed paths, raw logs, and native JSON archives:
+  `/private/tmp/sifr-item12j-m1-required.vL5lSI/evidence-d726ffc11258c49f0185fd2d49697988cf90972c.md`.
+
+Typed string storage, required default/custom/inherited construction, declaration
+and call rejection, nominal exports, and consuming root projections now agree.
+PythonError keeps exactly five fields and five constructor inputs: its native
+package regression asserts all fields and root conversion using the existing
+probed interpreter/native-link trust, with no ignore or fallback. Local,
+inherited, mixed data-parent, imported/aliased, stdlib, collision, project and
+test-project native regressions pass. Full driver592active/77existing ignored,
+M1focused lowering3, original async-error-channel9, frontend132+7, IR4,
+type-system147, locked build,264fresh companions and all named static guards pass.
+
+**12I remains the Python qualification blocker:** both named original async
+declaration/context suites pass their source policy but fail native build with
+inaccessible `SIFR_GENERATED_SIFR_TASK_CANCELLATION` E0425. HTTP reports1Rust error;
+context reports58 with the same retained tail. Both runtime stdout markers and
+cleanup/cancellation assertions are **UNREACHED**, not native passes or skips.
+Fresh archives are `async-declaration.json`, `async-context.json`, and
+`python-results.json` beside `async-native.log`. Compiler SHA256 remained
+`166c1d23662db3c0da97b9c921e6f7fee22755b68c49e576906e07a569eec16e` across the run.
+
+Other known owners also block standalone merge:12B's2list-repeat codegen
+assertions,12B/12C's unchanged strict-Clippy `expect_used` (now line47), and
+TypeVar #3667's2stale lowering assertions. SQL coverage is retained external
+history, not newly rerun. None was absorbed or claimed fixed; no merge gate was
+spent over failed prerequisites.
+
+The phase terminal handoff records separate follow-ups12J-M1-F1 (compiler
+invariant hardening), F2 (unproven reference-only inherited SQL error reachability),
+F3 (integration E2E/stdlib executable coverage), and F4 (local Error-shadow
+storage documentation). They are not blocking source-review findings and no
+follow-up implementation started. Preserve the approved M1 candidate for the
+separately owned12K integration after dependency qualification. This worker
+stops after the record; it does not integrate12I or begin12K.

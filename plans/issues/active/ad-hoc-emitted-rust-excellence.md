@@ -1869,6 +1869,8 @@ are retained. Custom constructors that already compute an initialized string
 Fetched main remains `4ce05473f58716a611ac190581bf0737ba15331e`, with no base delta.
 Disk before initial Cargo validation: 209 GiB free, no private target yet.
 
+#### Historical 054a823b9 documentation-only receipt
+
 Only the phase and Python dependency Markdown records change. Documentation
 diff checking and the named file-size guard are recorded in external evidence
 `/private/tmp/sifr-item12j-m1.VO82Kk/evidence.md`, which will identify the final
@@ -1878,3 +1880,90 @@ focused 9 / driver 587 pass; codegen two 12B failures; strict Clippy 12B/12C
 failure; native async suites blocked by 12I E0425 with runtime assertions
 unreached; lowering two #3667 failures. SQL and other integration dependencies
 remain separately owned. No next item or integration work was started.
+
+### Item12J-M1 terminal handoff (2026-09-06): approved, externally blocked
+
+Status: **SATISFIED source review; not merged, not closed**. The user's required
+constructor-supplied string decision is implemented; the old decision blocker is
+resolved, not renewed. This terminal record supersedes the earlier needs-choice
+status without changing any historical12J/R1 verdict or review/gate count.
+
+- Implementation: `d726ffc11258c49f0185fd2d49697988cf90972c`.
+- M1 delta base: `054a823b9aaafd388ddf1d944f1b7e50fcb95c29`, retaining all original12J/R1 lineage.
+- Main remains `4ce05473f58716a611ac190581bf0737ba15331e`; no base integration occurred.
+- Linked bounded draft [PR #3700](https://github.com/sifr-lang/sifr/pull/3700),
+  branch `codex/item12j-m1-required-string`. Predecessor #3699 remains preserved.
+- Sole initial exact-SHA [Opus review](https://github.com/sifr-lang/sifr/pull/3700#issuecomment-5558127599):
+  **SATISFIED**, no blocking findings. One initial review used; zero remediation
+  reviews, provider retries, create-PR gates, or merge gates used. No merge SHA.
+- Owned independent checkout `/private/tmp/sifr-item12j-m1-required.vL5lSI/sifr`;
+  parent and every retained worker checkout/index/target remained unchanged.
+- SHA-keyed receipt and complete36-path inventory:
+  `/private/tmp/sifr-item12j-m1-required.vL5lSI/evidence-d726ffc11258c49f0185fd2d49697988cf90972c.md`
+  and sibling `changed-paths.txt`. The receipt identifies the final record SHA;
+  this record-only commit does not change reviewed implementation inputs.
+
+#### Exact-candidate evidence and external owner receipt
+
+Final full driver passes **592 active /77 existing ignored**, including all five
+M1 regressions. Focused lowering passes3, original async-error-channel tests pass9,
+frontend passes132unit+7integration, IR passes4 and type-system147 with documented
+unchanged complete-input reuse. The locked CLI build passes; compiler SHA256 is
+`166c1d23662db3c0da97b9c921e6f7fee22755b68c49e576906e07a569eec16e` before and after
+native verification. All264 demo companions are fresh after the named update
+regenerated exactly `config_json_csv`, `stdlib`, and
+`structured_parsing_serialization`. Formatting, HIR maintainability, and the
+canonical900-line file guard pass (3764files). No test assertion or ignore policy
+was weakened. All raw logs remain beside the SHA-keyed receipt.
+
+Standalone merge is blocked by these externally owned named checks:
+
+- **12B:** codegen1407pass/2known list-repeat assertion failures;
+  `codegen-complete.log`, retained dependency PR #3694. No12B input was integrated.
+- **12B/12C:** strict Clippy stops at the unchanged `expect_used` body in
+  `project_stdlib_nominals.rs:47` (formerly45); `clippy-candidate.log`.
+- **TypeVar [#3667](https://github.com/sifr-lang/sifr/issues/3667):**
+  lowering1117pass/2known stale diagnostic assertions/1existing ignored;
+  `lowering-candidate.log`. The prior owner notification remains valid and was
+  not duplicated or claimed resolved.
+- **12I / Python qualification owner:** both original async native suites fail
+  inaccessible cancellation-task-local E0425. Source policies pass; runtime
+  assertions are **UNREACHED**, not passes or skips. HTTP reports1Rust error;
+  context reports58 with the same retained diagnostic tail. `async-native.log`,
+  `async-declaration.json`, `async-context.json`, and `python-results.json`
+  preserve the reports. Retained12I PR #3698 was not integrated.
+- SQL coverage remains an external historical dependency, not a newly run gate
+  failure. No merge-profile gate was run over these failed prerequisites; its
+  allowance is unused, not reset. No create-PR gate was run.
+
+The new native local/project/test-project and canonical PythonError assertions
+pass. They do not replace the externally blocked original async cleanup/runtime
+qualification. Initial209GiBfree/no target and later187GiBfree/~20GiB private
+target checks were recorded; the latter target was in use by owned validation.
+No shared/former-worker target was cleaned or cold-cache performance claimed.
+
+#### Separately owned Opus follow-ups (not started)
+
+- **12J-M1-F1 — compiler invariant hardening:** replace the conversion storage
+  walk's programmer-invariant panic with a compiler diagnostic if desired.
+  Review found no source program violating lowering's invariant. This is a
+  hardening suggestion, not a blocker or runtime fallback authorization.
+- **12J-M1-F2 — reference-only inherited stdlib storage qualification:** determine
+  whether an inherited error such as `sifr.sql.EncodeError` can reach codegen
+  only as a type reference without its declaring HirClass. The pre-existing
+  reference-only path still uses `err.message`; the reviewer did not establish
+  reachability. Qualify in the SQL owner's scope; do not claim it fixed here.
+- **12J-M1-F3 — integration validation coverage:** execute the migrated E2E and
+  broader stdlib suites in the integration owner's authorized gate. M1 ran only
+  the named commands; Opus's read-only first-party source audit found no remaining
+  constructor migration, arity, required-string, or expected-output violation.
+  Source audit is not executable-suite qualification.
+- **12J-M1-F4 — architecture shadow clarification:** document explicitly that a
+  same-module `class Error(Error)` shadow can be the data parent for subsequent
+  classes. Native M1 coverage already exercises the necessary physical layout;
+  the extra prose is a later documentation suggestion, not implemented here.
+
+No remediation review, whole-phase review, second gate, third review, external
+fix, or next-item code was started. Preserve this approved implementation for
+the separately owned12K integration once dependency qualification clears. The
+worker stops after publishing this record and its evidence; it does not start12K.
