@@ -430,9 +430,7 @@ mod sifr_generated_generated_support {
             >| {
                 let mut i: SifrInt = SifrInt::from_i64(0);
                 while &i < &SifrInt::from(matches.len()) {
-                    let Some(
-                        sifr_generated_checked_value_0_user_736966725f67656e6572617465645f636865636b65645f76616c75655f30,
-                    ) = ({
+                    let Some(sifr_generated_checked_value_0) = ({
                         let sifr_generated_checked_read_collection = &matches;
                         let sifr_generated_checked_read_index = i.clone();
                         let sifr_generated_checked_read_normalized =
@@ -442,15 +440,11 @@ mod sifr_generated_generated_support {
                         sifr_generated_checked_read_collection
                             .get(sifr_generated_checked_read_normalized)
                             .cloned()
-                    })
-                    else {
+                    }) else {
                         break;
                     };
                     sifr_generated_yielder
-                        .suspend(
-                            sifr_generated_checked_value_0_user_736966725f67656e6572617465645f636865636b65645f76616c75655f30
-                                .clone(),
-                        )
+                        .suspend(sifr_generated_checked_value_0.clone())
                         .await;
                     i = &i + &SifrInt::from_i64(1);
                 }

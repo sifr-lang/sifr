@@ -99,7 +99,8 @@ pub use report::{
     MaterializedRustProjectReport, PythonDeclarationCheck, PythonEnvironmentCheck,
     PythonInteropCheckReport, PythonTargetCheck, PythonTargetCheckStatus,
 };
-pub(crate) use rust_formatter::format_generated_rust;
+pub(crate) use rust_formatter::canonicalize_project_fields;
+pub(crate) use rust_formatter::format_canonical_generated_rust;
 pub use sql_profiles::{PreparedSqlProfiles, load_sql_editor_profiles, prepare_sql_profiles};
 pub use sql_query_signatures::{QUERY_SIGNATURE_ARTIFACT_NAME, emit_query_signature_artifact};
 

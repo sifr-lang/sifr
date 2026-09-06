@@ -147,8 +147,8 @@ mod sifr_generated_project_nominals {
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2etempfileX2eNamedTemporaryFile {
-        pub path_field: String,
-        pub mode_field: String,
+        pub path: String,
+        pub mode: String,
         pub delete: bool,
         pub closed: bool,
         pub cleaned: bool,
@@ -177,8 +177,8 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_8bc7f577e5ffacda_5f636c6f736564: bool = false;
             let sifr_generated_field_value_12032f9cf5c44b7a_5f636c65616e6564: bool = false;
             Self {
-                path_field: sifr_generated_field_value_0e74a76ec4f48c05_5f70617468,
-                mode_field: sifr_generated_field_value_e0efc38c5ec2afd5_5f6d6f6465,
+                path: sifr_generated_field_value_0e74a76ec4f48c05_5f70617468,
+                mode: sifr_generated_field_value_e0efc38c5ec2afd5_5f6d6f6465,
                 delete: sifr_generated_field_value_516ea6609f22db39_5f64656c657465,
                 closed: sifr_generated_field_value_8bc7f577e5ffacda_5f636c6f736564,
                 cleaned: sifr_generated_field_value_12032f9cf5c44b7a_5f636c65616e6564,
@@ -190,7 +190,7 @@ mod sifr_generated_project_nominals {
         pub fn name(&self) -> String {
             {
                 let mut sifr_generated_concat: String = String::new();
-                sifr_generated_concat.push_str(self.path_field.clone().as_str());
+                sifr_generated_concat.push_str(self.path.clone().as_str());
                 sifr_generated_concat.push_str("");
                 sifr_generated_concat
             }
@@ -203,9 +203,9 @@ mod sifr_generated_project_nominals {
             if self.cleaned {
                 return Ok(());
             }
-            if exists(&self.path_field) {
+            if exists(&self.path) {
                 let sifr_generated_try_res: Result<(), IOError> = (|| {
-                    remove_file(&self.path_field)?;
+                    remove_file(&self.path)?;
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -241,7 +241,7 @@ mod sifr_generated_project_nominals {
             write!(
                 f,
                 "NamedTemporaryFile(_path={}, _mode={}, _delete={}, _closed={}, _cleaned={})",
-                self.path_field, self.mode_field, self.delete, self.closed, self.cleaned
+                self.path, self.mode, self.delete, self.closed, self.cleaned
             )
         }
     }
