@@ -8,9 +8,11 @@ use sifr_ir::HirFunction;
 use sifr_type_system::{FunctionType, Type, class_rust_name, is_crate_root_rust_nominal_identity};
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+mod module_bindings;
 mod project_union_relocation;
 mod registry;
 
+pub(crate) use module_bindings::project_module_binding_names;
 pub(crate) use registry::ProjectNominalRegistry;
 
 use project_union_relocation::{relocate_project_unions, shared_nominal_reexport_names};
@@ -342,6 +344,14 @@ fn collect_hir_function_nominals(
     for ty in crate::hir_analysis::queries::collect_let_declared_types(&function.body) {
         collect_shared_nominals(&ty, declarations, builtin_types);
     }
+    // Constructor-only references still need the same canonical project owner
+    // as annotations and bindings (notably consuming error upcasts).
+    crate::hir_analysis::traversal::walk_stmts(
+        &function.body,
+        crate::hir_analysis::traversal::TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+        &mut |_| {},
+        &mut |expr| collect_shared_nominals(expr.ty(), declarations, builtin_types),
+    );
 }
 
 fn collect_module_nominals(

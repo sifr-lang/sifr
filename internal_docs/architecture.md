@@ -843,6 +843,20 @@ except IOError as e:
 
 **User-defined error classes:** User-defined error classes inherit `message: str` from `Error`. The constructor accepts a message string, and `print(e)` formats it via `Display`. Users can add additional fields as needed.
 
+The inherited message is required constructor storage. An auto-generated
+constructor takes `message: str` before additional fields when the class does
+not declare its own message. Explicit string declarations retain their field
+order, including the five-field PythonError contract. A message field cannot
+have an incompatible type or a field default. Custom constructors must
+initialize the string (directly, from a matching required parameter, or through
+`super().__init__`); construction cannot finish with missing storage. A
+custom constructor requires a caller-supplied string parameter; a zero-argument
+constructor or a defaulted-only message input cannot satisfy this contract. A child
+without new fields or an explicit constructor forwards the parent's constructor
+signature and initialization. An inherited message is stored only in its data
+parent. Consuming root conversions move that parent or the owned message;
+they never derive a message from formatting or substitute missing text.
+
 ```python
 # Simple user-defined error — inherits message from Error
 class AppError(Error):

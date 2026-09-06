@@ -17,8 +17,14 @@ use ruff_text_size::Ranged;
 use sifr_python_ast::{Expr, Stmt, StmtClassDef};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 
+mod class_declaration_diagnostics;
 mod class_type_collection;
+use class_declaration_diagnostics::{
+    missing_method_param_annotation, unsupported_class_declaration,
+};
+mod error_message_contract;
 pub(in crate::lower) use class_type_collection::*;
+pub(in crate::lower) use error_message_contract::root_error_type;
 mod class_iteration_protocol;
 use class_iteration_protocol::validate_iteration_protocol_methods;
 mod class_semantics;

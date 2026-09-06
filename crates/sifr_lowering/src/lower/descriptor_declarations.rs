@@ -338,7 +338,17 @@ fn collect_class_bases(stmts: &[Stmt], ctx: &mut LowerCtx) {
                     continue;
                 }
             }
-            if special_base(name) {
+            let imported_error_parent = name == "Error"
+                && ctx.class_types.get(name).is_some_and(|ty| {
+                    matches!(
+                        ty.resolve_alias(),
+                        Type::Class {
+                            identity: Some(_),
+                            ..
+                        }
+                    ) && !ty.is_builtin_error_base()
+                });
+            if special_base(name) && !imported_error_parent {
                 continue;
             }
             data_parents.push((range, name.to_string()));
