@@ -2026,6 +2026,154 @@ stack. If that delivery boundary remains, retain the narrow approved candidate
 and actual gate receipt as `integration-delivery-pending` for a fresh original12K
 worker; do not perform the broader review here.
 
+### Item12K-B5 receipt and B6 dispatch (2026-09-06)
+
+Jason is closed after the [B5 terminal receipt](https://github.com/sifr-lang/sifr/pull/3719#issuecomment-5560531600).
+Candidate `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`, record
+`9a42fe4239426cb53438b1d8f6a000f4c0a352d5` in
+`/private/tmp/sifr-item12k-b5.5WJpGX/sifr` preserve B5's two source corrections
+and records only. Review base is `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`.
+Main/corpus remain f11e1cd/8bcbe7a as above. Nothing merged. B5 and original12K
+both retain zero initial/remediation reviews, provider requests and gates.
+Full driver invocation failed during rustdoc after595 unit passes/77ignored;
+four static checks passed; Clippy was not reached. The E0463 cause is unproven,
+not an established portable-project regression. Preserve the failed invocation.
+
+Next bounded owner is **12K-B6 / [#3718](https://github.com/sifr-lang/sifr/issues/3718)**,
+compiler validation / driver Cargo-rustdoc integration. Depends on the retained
+B5 context above. Diagnose and resolve/adjudicate the12 dependency-resolution
+errors from `Doc-tests sifr_driver`; establish the actual toolchain/artifact/
+environment or repository cause with evidence. Missing `.rlib` paths and a
+simple rustc/rustdoc version mismatch were not established: sampled files exist
+and both tools report1.98.0(88d9e12ae). The failure log and wrapper are in the
+owner issue; no assumption that the narrow B5 transformations caused it.
+
+Use a fresh owned clone/branch/temp/target with retained ancestry, exact corpus,
+and latestmain assessment. Old checkouts/targets/indexes remain read-only.
+Read logs, wrappers, relevant configuration and dependency provenance before
+deciding whether a repository patch is warranted. Register specific diagnostic
+commands before execution; safe read-only artifact/toolchain checks are in scope.
+Named qualification: `cargo test -p sifr_driver --doc` for focused reproduction
+and correction, then `cargo test -p sifr_driver` for one actually passing full
+invocation on corrected final inputs; `cargo fmt --check`, HIR/file-size guards
+and `git diff --check` for touched material. Preserve595 unit successes without
+calling the preceding full command a pass. Do not disable doctests, ignore
+failures, weaken checks, add fallback resolution, blindly downgrade toolchains,
+or repeat broad matrices. A transient/environment conclusion requires concrete
+evidence and genuine passing qualification, not merely an assumed stale cache.
+
+Implement the complete bounded correction before final tests if a real patch is
+needed. If no repository correction is justified, record the evidence-backed
+environment adjudication as documentation only. One exact-SHA B6 Opus review,
+maxone remediation; no whole-phase review or B5/12K review. If B6 compiler,
+lockfile,fixture,workflow changes, use one approved-SHA merge gate, no second,
+skip create-pr for intended delivery. Otherwise do not run Sifr gates. Preserve
+exact passing evidence for later reuse. Narrow approval cannot authorize merging
+unreviewed inherited code; an approved stacked delivery may return to original
+B5 then12K. Do not create a new mechanism item solely for that delivery dependency.
+True unrelated blockers/new second-review mechanisms get their own later owner.
+Stop at terminal handoff, no B5 completion or other item implementation here.
+
+#### B6 owned execution and registered diagnostics
+
+Sole implementer owns `/private/tmp/sifr-item12k-b6.YxonRW/sifr`, branch
+`codex/item12k-b6-rustdoc`, its index, target and sibling temporary/evidence paths.
+Parent and all predecessor checkout/index/target paths remain read-only.
+The complete B5 record is the B6 base; its inherited implementation is outside
+the narrow B6 review and cannot merge under that approval.
+
+Registered before diagnostic execution:
+- Authenticate the supplied driver log and provenance SHA256 receipts; inspect
+  `qualify.sh`, error arguments and all 16 exact submodule identities.
+- Inspect `rust-toolchain.toml`, Cargo manifests/configs (repository and ancestor
+  `.cargo/config{,.toml}` and Cargo home config), selected non-secret Rust/Cargo/
+  build environment, `command -v`, `rustup which/show`, and verbose tool versions.
+- Inspect B5 target `.rustc_info.json`, `.fingerprint` JSON, dep-info and rlib
+  metadata/digests with `stat`, `file`, `ar`, `shasum`, and loader diagnostics.
+  Any direct compiler/rustdoc probe writes only to owned temporary outputs;
+  predecessor artifacts are read-only inputs. Register adaptive probes here.
+- Assess `origin/main` and retained ancestry; clone all 16 submodules locally
+  without hardlinks or shared indexes and verify exact gitlinks.
+- Reproduce with `cargo test -p sifr_driver --doc -vv` in the fresh owned target,
+  capture effective rustdoc arguments, then qualify corrected final inputs with
+  `cargo test -p sifr_driver`. Keep `CARGO_BUILD_JOBS=6`, `RUST_TEST_THREADS=1`,
+  and owned `TMPDIR`, `CARGO_TARGET_DIR`, UV/Python cache directories.
+- Run named fmt, HIR/file-size guards and `git diff --check`; no broad matrices,
+  Clippy/B5 qualification, or gate absent governed B6 changes.
+- Adaptive artifact probe: a minimal owned Rust file importing `ruff_text_size`
+  is loaded by the pinned `rustc --emit=metadata` and `rustdoc --test`, comparing
+  the identical retained `.rlib` and sibling `.rmeta`. Run with Cargo's package
+  environment restored for full rustdoc replay; no prior output is overwritten.
+- Adaptive provenance discrimination: resolve the retained minimal import and
+  full driver rustdoc against the freshly built owned dependency search path
+  as well as the retained read-only paths. Compare registry/vendor `rustversion`
+  dep-info, fingerprint source identities and crate hashes. This is a diagnostic
+  comparison only, not a product fallback or the final qualification command.
+- Correction under investigation: do not export the outer `CARGO_TARGET_DIR`
+  to driver tests. Cargo uses this owned clone's default `target`; nested Rust
+  probes then use their existing owned-TMPDIR probe cache. Qualify using the
+  unchanged named focused doc/full commands, with no source changes if proved.
+- Controlled mechanism experiment: in a separate owned scratch target, build a
+  tiny Rust library using the pinned `rustversion=1.0.22` proc macro from the
+  registry. Test its import with direct rustdoc before and after a second Cargo
+  project checks the same dependency using this clone's vendor source into that
+  scratch target. Record the exact commands, dylib hashes, dep-info, and loader
+  diagnostics. This isolates source-replacement target collision without running
+  another full driver invocation or mutating qualified/retained targets.
+
+#### B6 artifact/environment adjudication
+
+The observed E0463 is a transitive `rustversion` crate-hash mismatch caused by
+sharing the outer compiler target with nested Cargo builds that replace registry
+sources with the sysroot vendor source. B5's exported `CARGO_TARGET_DIR` applied
+to both graphs. The existing Rust-probe target contract explicitly honors that
+override (`rust_interop_probe_paths.rs`); without it, probes use their separate
+`rust_bridge_probe_target` below the generated artifact cache in `TMPDIR`.
+
+Concrete evidence in `/private/tmp/sifr-item12k-b6.YxonRW/evidence/`:
+- The supplied B5 driver log and complete provenance JSON match their dispatch
+  SHA256 values. Latest main is still `f11e1cd7eef16a02063555bccc9fd8e19287833b`,
+  in retained ancestry. All 16 submodules match the retained gitlinks.
+- B5's `castaway` metadata requests `rustversion` hash
+  `5b8d38d007006937f6b5c3db60cc9286`; the same-named
+  `librustversion-3c65caf96f152204.dylib` instead exposes
+  `d6dc5f697ffa42aabc7ce7174d88b1f7`. Its dep-info names the B5 vendor tree,
+  whereas the fresh matching Cargo artifact name names the Cargo registry.
+  Both `.rlib` and `.rmeta` imports fail for that missing transitive identity.
+  See `minimal-rustc-rlib.log` and the minimal rustdoc logs.
+- Restoring Cargo package environment preserves all 12 original errors
+  (`old-cargo-env.log`). Adding a fresh clone's dependency search path does not
+  repair the old artifacts: that build has its own crate identities. No mixed
+  artifact path is used for qualification.
+- A controlled scratch experiment builds a two-line library using exactly
+  `rustversion=1.0.22`. Its direct rustdoc import passes. A second Cargo project
+  checking the same dependency with vendor source replacement in the same
+  scratch target replaces the proc-macro artifact; the identical import then
+  fails E0463 for `rustversion`. See `collision-{before,after}.log`, build/check
+  logs and `target/verification/areas/item12k-b6-collision-{before,after}.json`.
+  The experiment does not mutate the qualification target or any retained target.
+- Fresh `cargo test -p sifr_driver --doc -vv` passes on the unchanged retained
+  source, before any driver test execution. It fully loads/types the driver
+  documentation target and reports zero doctest examples, not disabled coverage.
+
+The bounded correction is invocation-level target isolation: unset
+`CARGO_TARGET_DIR` in the B6 qualification environment and use Cargo's default
+`target` in this fresh owned clone. Keep `TMPDIR`, UV cache and Python cache
+owned; keep `CARGO_BUILD_JOBS=6` and `RUST_TEST_THREADS=1`. Nested probes select
+their existing separate TMPDIR cache. No source, lockfile, fixture, workflow,
+toolchain, coverage setting or fallback changes are warranted for this receipt.
+The canonical commands are `cargo test -p sifr_driver --doc`, followed by one
+`cargo test -p sifr_driver` on the corrected inputs, then the four named static
+checks. Their exact-SHA receipts must pass before B6 review/approval; logs are
+outside Git and canonical JSON reports are inside this owned repository's target.
+This cold build is not host-sensitive performance evidence.
+
+B5's original invocation remains failed after 595 unit successes/77 ignored;
+its Clippy, review and gate remain unreached. Broad retained matrices are not
+rerun by B6. B6's documentation-only adjudication consumes no Sifr profile gate.
+One narrow exact-SHA review can approve only this adjudication. Delivery remains
+stacked pending original B5/12K integration; no inherited code merges under it.
+
 ### Item 12B: Bounded algorithmic dependency repair
 
 On 2026-09-05, the user authorized the same worker to repair both repositories.
