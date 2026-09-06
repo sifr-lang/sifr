@@ -2,6 +2,60 @@
 
 Status: active
 
+## Item 12K-B2: canonical diagnostic reference identity (2026-09-06)
+
+Owner: [#3704](https://github.com/sifr-lang/sifr/issues/3704), OPEN at dispatch.
+This section carries the parent's "Item12K-B1 receipt and B2/B3 dispatch
+(2026-09-06)" authorization into this independently owned checkout before
+implementation. Scope is the complete canonical reference matcher and focused
+positive/negative regressions, preserving unknown/non-active rejection and
+required registry coverage. SQL enum renaming, suppression, weaker assertions,
+schema synchronization (#3705 / B3), TypeVar follow-ups (#3703), inherited 12K
+integration, residual Item 12, and whole-phase closure are outside this item.
+
+The sole live implementer owns `/private/tmp/sifr-item12kb2.Qb9aoe/sifr`, its
+index and branch `codex/item12k-b2-diagnostic-reference-identity`, and sibling
+temporary evidence paths. Parent checkout/index/targets and all old worker
+checkouts remain read-only. Fresh main base is
+`4ce05473f58716a611ac190581bf0737ba15331e`. Its checker, MySQL analyzer, and
+SQLite lib blobs independently match the B1 receipt:
+`adea5eb1e4f7779b41a00fdba797d8ae9c044d18`,
+`5bb486b4a5f5086bfc0e420de3713f322dad38ff`, and
+`5c608cd22f031675273428e13f8e2f250513d8b5`, respectively.
+No inherited integration commits are included.
+
+[B1 terminal evidence](https://github.com/sifr-lang/sifr/pull/3702#issuecomment-5558641648)
+and [B1 review](https://github.com/sifr-lang/sifr/pull/3702#issuecomment-5558355686)
+were read along with the full B2 issue and terminal comment. B1 approved
+`a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`, record
+`d7c41463ca88d5993e3bc3fa847806160799e147`, remains preserved in
+`/private/tmp/sifr-item12kb1.nnPBDD/sifr`: one satisfied review, zero remediation,
+one failed gate, no merge. Its inherited integration/corpus lineage remains
+unchanged. Original 12K has zero reviews/gates consumed; previous exhausted
+allowances are not reset or reused as B2 evidence.
+
+Registered named checks, to run after the complete bounded implementation:
+
+- `python3 verification/areas/diagnostics/checks/code_coverage.py`
+- `python3 verification/areas/diagnostics/checks/code_coverage_test.py`
+  (canonical names, provider/prefixed identifiers, whole member tokens,
+  unknown/non-active canonical rejection, and required registry use)
+- `python3 scripts/check_file_size_guardrails.py`
+- `python3 -m py_compile verification/areas/diagnostics/checks/code_coverage.py verification/areas/diagnostics/checks/code_coverage_test.py`
+- Review the phase-record diff and run `git diff --check` (also check the
+  committed base-to-candidate diff).
+
+Only checker/tests/docs changes are planned: skip create-PR and merge gates.
+Do not run the known-failing full diagnostics area; schema_sync is B3-owned.
+If a compiler/lockfile/fixture/workflow change proves necessary in scope,
+record why and run at most one merge-profile gate on the approved final SHA.
+One initial exact-base/exact-candidate Opus review and at most one remediation
+are authorized, using atomic completed-response evidence outside the approved
+tree, keyed by candidate SHA. No review polling or third review. A new mechanism
+defect on second review or external blocker must be recorded under its later
+owner, then stop. Normal edits, Claude execution, PR/push/merge and owner-issue
+updates are authorized. After the narrow merge and record update, stop.
+
 Baseline commit: `e9df29f7e4cada7b376b2d455790f9c80a5647a0`
 
 ## Objective
