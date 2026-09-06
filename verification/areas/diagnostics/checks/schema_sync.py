@@ -10,11 +10,15 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[4]
 SCHEMA_PATH = ROOT / "docs" / "schemas" / "diagnostics.schema.json"
+GENERATOR_COMMAND = [
+    "cargo", "run", "--locked", "-q", "-p", "sifr_diagnostics",
+    "--bin", "gen-diagnostic-schema",
+]
 
 
 def main() -> int:
     generated = subprocess.run(
-        ["cargo", "run", "-q", "-p", "sifr_diagnostics", "--bin", "gen-diagnostic-schema"],
+        GENERATOR_COMMAND,
         cwd=ROOT,
         check=False,
         stdout=subprocess.PIPE,
@@ -24,7 +28,7 @@ def main() -> int:
     if generated.returncode != 0:
         sys.stderr.write(
             "schema sync: failed to invoke generator: "
-            "cargo run -q -p sifr_diagnostics --bin gen-diagnostic-schema\n"
+            "cargo run --locked -q -p sifr_diagnostics --bin gen-diagnostic-schema\n"
         )
         sys.stderr.write(generated.stderr)
         return generated.returncode
@@ -34,7 +38,7 @@ def main() -> int:
     if actual != expected:
         sys.stderr.write(
             "docs/schemas/diagnostics.schema.json is out of sync. "
-            "Run `cargo run -q -p sifr_diagnostics --bin gen-diagnostic-schema "
+            "Run `cargo run --locked -q -p sifr_diagnostics --bin gen-diagnostic-schema "
             "> docs/schemas/diagnostics.schema.json`.\n"
         )
         return 1

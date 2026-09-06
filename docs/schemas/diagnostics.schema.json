@@ -3,16 +3,16 @@
   "title": "DiagnosticEnvelope",
   "type": "object",
   "properties": {
-    "version": {
-      "type": "integer",
-      "format": "uint32",
-      "minimum": 0
-    },
     "diagnostics": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/RenderedDiagnostic"
       }
+    },
+    "version": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
     }
   },
   "additionalProperties": false,
@@ -21,72 +21,11 @@
     "diagnostics"
   ],
   "$defs": {
-    "RenderedDiagnostic": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "severity": {
-          "$ref": "#/$defs/Severity"
-        },
-        "message": {
-          "type": "string"
-        },
-        "message_template": {
-          "type": "string"
-        },
-        "args": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/DiagnosticArg"
-          }
-        },
-        "url": {
-          "type": "string"
-        },
-        "spans": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/DiagnosticSpan"
-          }
-        },
-        "children": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/RenderedDiagnosticChild"
-          }
-        },
-        "help": {
-          "type": "string"
-        },
-        "suggestions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/RenderedDiagnosticSuggestion"
-          }
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "code",
-        "severity",
-        "message",
-        "message_template",
-        "args",
-        "url",
-        "spans",
-        "children",
-        "help",
-        "suggestions"
-      ]
-    },
-    "Severity": {
+    "ChildSeverity": {
       "type": "string",
       "enum": [
-        "Error",
-        "Warning",
-        "Note"
+        "Note",
+        "Help"
       ]
     },
     "DiagnosticArg": {
@@ -180,20 +119,12 @@
     "DiagnosticSpan": {
       "type": "object",
       "properties": {
-        "file": {
-          "type": "string"
-        },
-        "byte_start": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
         "byte_end": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0
         },
-        "line": {
+        "byte_start": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0
@@ -203,21 +134,29 @@
           "format": "uint32",
           "minimum": 0
         },
+        "end_column": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
         "end_line": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0
         },
-        "end_column": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
+        "file": {
+          "type": "string"
         },
         "is_primary": {
           "type": "boolean"
         },
         "label": {
           "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
         },
         "lines": {
           "type": "array",
@@ -243,18 +182,18 @@
     "DiagnosticSpanLine": {
       "type": "object",
       "properties": {
-        "text": {
-          "type": "string"
+        "highlight_end": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
         },
         "highlight_start": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0
         },
-        "highlight_end": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
+        "text": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -264,14 +203,74 @@
         "highlight_end"
       ]
     },
-    "RenderedDiagnosticChild": {
+    "RenderedDiagnostic": {
       "type": "object",
       "properties": {
-        "severity": {
-          "$ref": "#/$defs/ChildSeverity"
+        "args": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/DiagnosticArg"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RenderedDiagnosticChild"
+          }
+        },
+        "code": {
+          "type": "string"
+        },
+        "help": {
+          "type": "string"
         },
         "message": {
           "type": "string"
+        },
+        "message_template": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "spans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DiagnosticSpan"
+          }
+        },
+        "suggestions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RenderedDiagnosticSuggestion"
+          }
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "message",
+        "message_template",
+        "args",
+        "url",
+        "spans",
+        "children",
+        "help",
+        "suggestions"
+      ]
+    },
+    "RenderedDiagnosticChild": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/ChildSeverity"
         }
       },
       "additionalProperties": false,
@@ -280,19 +279,9 @@
         "message"
       ]
     },
-    "ChildSeverity": {
-      "type": "string",
-      "enum": [
-        "Note",
-        "Help"
-      ]
-    },
     "RenderedDiagnosticSuggestion": {
       "type": "object",
       "properties": {
-        "message": {
-          "type": "string"
-        },
         "applicability": {
           "$ref": "#/$defs/SuggestionApplicability"
         },
@@ -301,6 +290,9 @@
           "items": {
             "$ref": "#/$defs/RenderedSuggestionEdit"
           }
+        },
+        "message": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -310,6 +302,30 @@
         "edits"
       ]
     },
+    "RenderedSuggestionEdit": {
+      "type": "object",
+      "properties": {
+        "replacement": {
+          "type": "string"
+        },
+        "span": {
+          "$ref": "#/$defs/DiagnosticSpan"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "span",
+        "replacement"
+      ]
+    },
+    "Severity": {
+      "type": "string",
+      "enum": [
+        "Error",
+        "Warning",
+        "Note"
+      ]
+    },
     "SuggestionApplicability": {
       "type": "string",
       "enum": [
@@ -317,22 +333,6 @@
         "MaybeIncorrect",
         "HasPlaceholders",
         "Unspecified"
-      ]
-    },
-    "RenderedSuggestionEdit": {
-      "type": "object",
-      "properties": {
-        "span": {
-          "$ref": "#/$defs/DiagnosticSpan"
-        },
-        "replacement": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "span",
-        "replacement"
       ]
     }
   }
