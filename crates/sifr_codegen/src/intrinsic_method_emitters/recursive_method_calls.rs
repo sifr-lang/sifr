@@ -40,7 +40,7 @@ impl RustEmitter {
         let key_arg = Self::build_dict_lookup_key_arg_for_ir(
             Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
         );
-        let pushed_arg = self.clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
+        let pushed_arg = self.materialize_reusable_value_for_ir(&args[0], lowered_arg);
         Some(crate::RustExpr::Block {
             stmts: vec![crate::RustStmt::IfLet {
                 pattern: "Some(__elem)".to_string(),

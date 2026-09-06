@@ -1102,8 +1102,8 @@ fn demo_counter() {
     println!("{}", c.get(&"missing".to_string(), &SifrInt::from_i64(0)));
     println!("total elements:");
     println!("{}", c.total());
-    c.increment(&"cherry".to_string());
-    c.increment(&"cherry".to_string());
+    (&mut c).increment(&"cherry".to_string());
+    (&mut c).increment(&"cherry".to_string());
     println!("cherry after 2 increments:");
     println!("{}", c.get(&"cherry".to_string(), &SifrInt::from_i64(0)));
     let top: Vec<(String, SifrInt)> = c.most_common(&Some(SifrInt::from_i64(1).clone()));

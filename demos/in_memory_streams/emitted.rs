@@ -265,7 +265,7 @@ mod sifr_generated_project_nominals {
                 if &maybe_size >= &SifrInt::from_i64(0) {
                     let requested: SifrInt = &start + &maybe_size;
                     if &requested < &end {
-                        end = requested;
+                        end = requested.clone();
                     }
                 }
             }
@@ -419,7 +419,7 @@ mod sifr_generated_project_nominals {
                 if &maybe_size >= &SifrInt::from_i64(0) {
                     let requested: SifrInt = &start + &maybe_size;
                     if &requested < &end {
-                        end = requested;
+                        end = requested.clone();
                     }
                 }
             }
@@ -578,13 +578,13 @@ fn main() {
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let mut sio: SifrGeneratedStdlibSifrX2eioX2eStringIO =
             SifrGeneratedStdlibSifrX2eioX2eStringIO::new("sample".to_string());
-        sio.write(&"1".to_string())?;
-        let _seek: SifrInt = sio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
-        let text_value: String = sio.read(&None)?;
+        (&mut sio).write(&"1".to_string())?;
+        let _seek: SifrInt = (&mut sio).seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
+        let text_value: String = (&mut sio).read(&None)?;
         stringio_ok = text_value == "1ample";
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             let sifr_generated_bad_seek: SifrInt =
-                sio.seek(&-SifrInt::from_i64(1), &SifrInt::from_i64(0))?;
+                (&mut sio).seek(&-SifrInt::from_i64(1), &SifrInt::from_i64(0))?;
             let _ = sifr_generated_bad_seek;
             Ok(())
         })();
@@ -596,14 +596,14 @@ fn main() {
         let mut bio: SifrGeneratedStdlibSifrX2eioX2eBytesIO =
             SifrGeneratedStdlibSifrX2eioX2eBytesIO::new(vec![97_u8, 98_u8, 99_u8]);
         let _seek_b_value_78f19d0c500eec0b: SifrInt =
-            bio.seek(&SifrInt::from_i64(3), &SifrInt::from_i64(0))?;
-        bio.write_bytes(&vec![100_u8])?;
-        let _seek_b0: SifrInt = bio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
-        let bytes_value: Vec<u8> = bio.read_bytes(&None)?;
+            (&mut bio).seek(&SifrInt::from_i64(3), &SifrInt::from_i64(0))?;
+        (&mut bio).write_bytes(&vec![100_u8])?;
+        let _seek_b0: SifrInt = (&mut bio).seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
+        let bytes_value: Vec<u8> = (&mut bio).read_bytes(&None)?;
         bytesio_ok = bytes_value == vec![97_u8, 98_u8, 99_u8, 100_u8];
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             let sifr_generated_bad_seek_b: SifrInt =
-                bio.seek(&-SifrInt::from_i64(1), &SifrInt::from_i64(0))?;
+                (&mut bio).seek(&-SifrInt::from_i64(1), &SifrInt::from_i64(0))?;
             let _ = sifr_generated_bad_seek_b;
             Ok(())
         })();
@@ -618,10 +618,10 @@ fn main() {
             109_u8, 101_u8, 109_u8, 111_u8, 114_u8, 121_u8, 95_u8, 115_u8, 116_u8, 114_u8, 101_u8,
             97_u8, 109_u8, 115_u8,
         ])?;
-        writer.close();
+        (&mut writer).close();
         let mut reader: SifrGeneratedIoBinaryFileHandle = open_binary(&path, &"rb".to_string())?;
         let loaded: Vec<u8> = reader.read_bytes(&None)?;
-        reader.close();
+        (&mut reader).close();
         binary_file_ok = loaded
             == vec![
                 114_u8, 117_u8, 110_u8, 116_u8, 105_u8, 109_u8, 101_u8, 45_u8, 105_u8, 110_u8,

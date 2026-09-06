@@ -699,6 +699,7 @@ class FileHandle:\n\
             required_features: HashSet::<StdlibFeature>::new(),
             interop: InteropBuildPlan::default(),
             cache_key_fragment: None,
+            bridge_modules: Default::default(),
             python_runtime: None,
         }
     }

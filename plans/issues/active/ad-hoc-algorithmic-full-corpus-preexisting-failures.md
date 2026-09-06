@@ -1,5 +1,657 @@
 # Ad Hoc Issue: Algorithmic Full-Corpus Pre-Existing Failures
 
+### Item 12B: Bounded algorithmic dependency repair
+
+On 2026-09-05, the user authorized the same worker to repair both repositories.
+
+- Scope: repair external conversion and index-error source contracts, plus the
+  compiler ownership mechanisms required to compile and execute those fixtures.
+- Compiler scope includes loop sentinel reuse, repeat-count reuse, directly
+  necessary same-mechanism corrections, and focused regression coverage.
+- External source changes preserve every original case and algorithm behavior.
+- The item includes the external PR/merge and the Sifr compiler/gitlink PR/merge.
+- Earlier restrictions against these compiler changes are superseded.
+  Unrelated Item 12 generated-quality work remains separate.
+- Implementation starts from Sifr base
+  `2dc4165fd9e7c34432a9b0d098188dc645aaca55` on the isolated Item 12B branch.
+  Any prerequisite from retained Item 12 work requires explicit path-level provenance.
+- External checkpoint `f6db5bd5d363b19a3040afd2a092f44ce32fd5bb`,
+  Sifr handoff `1efb8720fa827f3bf19de17c7f010e3009f0e484`, and retained
+  compiler candidate `8ad089a9458f35fcfa228e93fe44f4d69731828b` remain preserved.
+- Qualification uses a newly built compiler from the isolated candidate.
+  The retained frozen compiler is historical diagnostic evidence only.
+- Review: one exact-SHA Opus review identifies both repository candidates.
+  At most one remediation review is permitted. No whole-phase review is permitted.
+- Gate: one merge-profile gate covers the exact final Sifr candidate.
+  Skip create-PR. Do not repeat the merge gate.
+- Close Item 12B and update its records, then stop. Do not start Item 12 or 12A.
+
+#### Item 12B qualified implementation (before review and merge)
+
+State: implementation qualification passed; Item 12B remains open until review and merge.
+
+- Compiler source: `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`.
+- Compiler SHA-256: `d47774bba160db3903b9143071352af3b3001d6ec16173731cad5811b4b7abad`.
+- External corpus candidate: `da4a0e8680c6b50c5544d77bfb92e9e4cddf1ab1`.
+- `native-qualified/matrix.json`: 90/90 repaired fixtures pass both check and native execution.
+  This includes median, zigzag, browser history, all original assertions, and the added ownership cases.
+- `borrow-final-codegen.log`: 1,435/1,435 codegen tests pass, including all 26 focused corpus-repair regressions.
+- `borrow-final-focused.log`: the exact borrowed-parameter regression command selects and passes one test.
+- `borrow-final-clippy.log`, `borrow-final-fmt.log`, `borrow-final-size.log`, and `borrow-final-hir.log`: pass.
+- `borrow-final-demo-regeneration.log`: all 264 generated companions are fresh.
+- Evidence files above are under `/tmp/sifr-item12b.akguMz/`.
+- No Opus review or merge-profile gate has run yet. The create-PR gate remains skipped.
+
+The canonical `leetcode-full` command passes 411/411 cases with zero failures.
+Its immutable evidence is `leetcode-full-7f393-results.json` and `leetcode-full-final.log`.
+That run used compiler source `7f3930ab4b05cd5ab50edb897be6a56329ab43f6`, digest
+`68fbec4c7d99c843f0f75135e7c41b06d1552a0a769676f6df39982c6dc257f8`, and the same external corpus candidate.
+
+This front-end evidence is reused by input identity, not relabeled as a later-SHA run.
+The only subsequent compiler change is the nested arithmetic emitter's borrowed-operand adapter.
+The CLI check path calls `check_project` or `check_single_file`, then returns front-end diagnostics without Rust emission.
+The CLI source, driver, frontend/lowering/type-system/IR sources, stdlib, Cargo inputs, corpus, and algorithmic runner are unchanged.
+Main's intervening changes rename demo variables and a regex test; they do not change those inputs.
+Native qualification was rerun in full with the corrected compiler.
+The retained Item 12 compiler candidate is not used as qualification evidence.
+
+#### Item 12B continuation amendment: naming and SQL coverage dependency
+
+On 2026-09-05 the user explicitly authorized both remaining repairs and **one
+replacement merge-profile gate**. This supersedes the prior stop below, not its
+failed evidence. The first gate on `6ce83824e0315e5f89383fc666344b99431e1e76`
+remains failed. No create-PR gate is permitted.
+
+- Replace all 428 corpus taxonomy occurrences with descriptive, collision-free
+  semantic local names. Preserve assertions, typed receiving contracts, scope,
+  call order, and evaluation count.
+- Reconcile authoritative Cargo coverage classifications with the actual SQL
+  packages, target kinds, and test targets (23 recorded diagnostics), coordinating
+  through `ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+  Do not alter package semantics, weaken checkers, exclude targets, suppress
+  diagnostics, or rebase accepted debt.
+- Keep the reviewed candidates and record checkpoints in history.
+- Use the one remaining exact-SHA Opus remediation review for both corrected
+  repository candidates and this SQL metadata dependency. No third review.
+- After satisfactory review run exactly one replacement merge gate on the final
+  candidate, then merge both PRs and update records. Do not start Item 12 or 12A.
+
+Additional/affected named validation, fixed before execution:
+
+```bash
+python3 /tmp/sifr-item12b.akguMz/verify_semantic_renames.py
+python3 verification/areas/coverage_matrix/checks/coverage_matrix_readiness.py
+python3 verification/areas/coverage_matrix/checks/coverage_matrix_readiness_self_test.py
+python3 verification/areas/coverage_matrix/checks/profile_assignment_matrix.py
+python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py
+uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness
+python3 /tmp/sifr-item12b.akguMz/native_qualification.py /tmp/sifr-item12b.akguMz/native-naming-qualified
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full
+cargo fmt --check
+python3 scripts/check_file_size_guardrails.py
+python3 scripts/check_hir_maintainability_guardrails.py
+scripts/run_all_tests.sh --profile merge
+```
+
+Coverage readiness includes new negative cases `wrong_component_target_kind`
+(both missing rlib and stale lib findings) and `missing_sql_test_target`.
+The canonical readiness suite executes all four listed coverage scripts, so those
+checks need not be repeated as standalone commands. Use its uv environment.
+MySQL and SQLite compiler crates now join the ordinary profile crate-test
+membership, matching PostgreSQL; this executes their existing tests rather than
+misclassifying compiler packages to evade required membership.
+
+The native helper will run check AND native execution for all 90 repaired fixtures
+with the identified compiler (exact helper invocation recorded before execution).
+The rename proof compares token streams against corpus `da4a0e8680c6b50c5544d77bfb92e9e4cddf1ab1`,
+allowing only an injective local identifier mapping; string literals, assertions,
+types, and all other tokens must remain identical.
+Compiler-source/binary, codegen regression, and crate Clippy evidence may be
+reused only if their inputs remain unchanged, with original SHA attribution.
+Fresh full-corpus evidence will use the corrected corpus pin.
+
+#### Item 12B terminal checkpoint: remediation approved; replacement gate blocked
+
+State on 2026-09-05: **not merged, not closed**. This supersedes earlier
+authentication, corpus-naming, SQL-classification, and gate-authorization stops.
+
+The user authorized the 428 corpus naming corrections, the 23 SQL coverage
+classification corrections, and one replacement merge gate. Those repairs are
+implemented, pushed, and approved; neither checker requirements nor safety were weakened.
+
+- Reviewed/gated Sifr implementation candidate:
+  `a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d`,
+  [PR #3694](https://github.com/sifr-lang/sifr/pull/3694), base
+  `b475ebdcd37081aa2860d9c348ace4100b546eff`.
+- Corpus candidate and exact gitlink:
+  `8bcbe7ab7939e5c8362c10f61a80e368022cc372`,
+  [PR #48](https://github.com/sifr-lang/leetcode/pull/48), base
+  `7fcb9fd1eaf3e0cf9bf51e8858276b7927a83baf`.
+- Both initial and sole remediation Opus reviews returned **SATISFIED**, no blockers.
+  [Remediation review](https://github.com/sifr-lang/sifr/pull/3694#issuecomment-5554470254)
+  and [corpus review](https://github.com/sifr-lang/leetcode/pull/48#issuecomment-5554470481).
+  No third review is permitted under current limits.
+- Review artifact:
+  `/tmp/sifr-item12b.akguMz/opus-a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d.2yceHO/response.md`.
+- Fresh qualification on corrected inputs: **90/90** repaired fixtures pass check
+  AND native execution; **411/411** canonical leetcode-full checks pass; coverage
+  readiness **4/4** passes, including all **27** negative cases and whole taxonomy.
+  The rename proof verifies **257** injective local renames across **78** files
+  (428 changed declaration/reference lines), preserving every other token.
+  Fmt, file-size, and HIR checks pass.
+- Compiler source remains `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`;
+  SHA256 `d47774bba160db3903b9143071352af3b3001d6ec16173731cad5811b4b7abad`
+  was verified before/after qualification and after the replacement gate.
+  Reused source8c5 evidence: **1,435** codegen tests, all **26** focused regressions,
+  strict codegen Clippy, and **264** fresh companions. No retained Item12 compiler
+  was used, and no unchanged-input test was repeated solely for resumption.
+
+The authorized replacement `scripts/run_all_tests.sh --profile merge` ran once
+on exact Sifr `a3198ab9f` and exited **1** after **1,839.46s**.
+Reached HIR/file-size/demo freshness, Rust interop (10 variants), coverage
+readiness (4), core language (5), and CPython differential (2) passed.
+Python interop completed **30 variants: 25 pass, 5 blocking failures**:
+
+| Variant | Recorded cause |
+| --- | --- |
+| dependency-versions | Removed DLPack demo path remains in dependency checker (later Item12G). |
+| binding-authoring | Imported PythonError field initializer disagrees with its declaration, Rust E0560 (later Item12H). |
+| callback-examples | Three async examples cannot access the support-owned cancellation task-local, Rust E0425 (later Item12I). |
+| async-declaration-examples | PythonError propagation incompatible with Result[None, Error], SIFR-RESULT-0003 (later Item12J). |
+| async-context-examples | Same error-channel failure as Item12J. |
+
+The warm wall-time budget was also exceeded (advisory); no host-sensitive
+performance pass is claimed. Later profile stages were not reached.
+The first gate at `6ce83824e` remains failed; the replacement is also failed.
+No create-PR gate, third gate, third review, or merge occurred. Both PRs remain draft.
+These Python dependencies are recorded in
+`ad-hoc-python-interop-qualification-dependencies.md`; no repair was started.
+
+Evidence root: `/tmp/sifr-item12b.akguMz/`.
+Current qualification: `native-naming-qualified/matrix.json`,
+`leetcode-full-naming-results.json`, `leetcode-full-naming.log`,
+`coverage-remediation-results.json`, `coverage-remediation.log`,
+`semantic-renames-proof.json`, and `naming-final-*.log`.
+Replacement gate: `merge-replacement-a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d.log`,
+`replacement-a319-lane-report.json`, `replacement-a319-python-results.json`,
+`replacement-a319-coverage-results.json`, and
+`replacement-a319-{callback,async-declaration,async-context}-examples.json`.
+[Published qualification](https://github.com/sifr-lang/sifr/pull/3694#issuecomment-5554449846)
+preserves the complete/partial distinctions.
+
+Exact next action: resolve/adjudicate the four separately recorded Python
+dependencies and the exhausted review/gate limits before resuming closure.
+Current continuation authority does not permit a third review or another gate.
+Preserve these candidates and the record-only checkpoint commits; do not merge
+without required qualification. Retained Item12 implementation
+`8ad089a9458f35fcfa228e93fe44f4d69731828b` is unchanged. Do not start Item12/12A.
+
+#### Deferred remediation-review suggestions
+
+- Later Item12F (not started): rename the 16 pre-existing
+  `updated_contract_value_*` locals in corpus `0202_happy_number.sifr` and
+  `0212_word_search_ii.sifr`. Opus classified this as a non-blocking naming
+  follow-up outside the enumerated 428-occurrence remediation, not a new
+  mechanism defect. No checker weakening or third review was used.
+- The SQL issue retains the non-blocking suggestion to confirm whether
+  `sqlite-runtime-probe` should remain SQLite-only. Its current classification
+  is accurate; no missing MySQL/PostgreSQL implementation is claimed.
+- Earlier Item12 clone/receiver suggestions and unconfirmed Item12E integer
+  field augmented-assignment qualification remain deferred.
+
+#### Item 12B terminal checkpoint: review approved; merge gate blocked
+
+State on 2026-09-05: **not merged and not closed**. This checkpoint supersedes
+the historical authentication and scope-adjudication stops below.
+
+- Reviewed Sifr candidate: `6ce83824e0315e5f89383fc666344b99431e1e76`,
+  base `b475ebdcd37081aa2860d9c348ace4100b546eff`,
+  [PR #3694](https://github.com/sifr-lang/sifr/pull/3694).
+- Reviewed corpus candidate: `da4a0e8680c6b50c5544d77bfb92e9e4cddf1ab1`,
+  base `7fcb9fd1eaf3e0cf9bf51e8858276b7927a83baf`,
+  [PR #48](https://github.com/sifr-lang/leetcode/pull/48).
+- The resumed initial Opus review returned **SATISFIED**, with no blocking findings.
+  [Sifr review](https://github.com/sifr-lang/sifr/pull/3694#issuecomment-5554250479)
+  and [corpus review](https://github.com/sifr-lang/leetcode/pull/48#issuecomment-5554250666).
+  Earlier OAuth failures were not review verdicts. One successful initial review
+  is consumed; no remediation review has run.
+- Review artifact, outside Git:
+  `/tmp/sifr-item12b.akguMz/opus-6ce83824e0315e5f89383fc666344b99431e1e76.UxSZXC/response.md`.
+- Passing implementation evidence remains unchanged: 90/90 repaired fixtures pass
+  check and native execution with compiler source `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`,
+  digest `d47774bba160db3903b9143071352af3b3001d6ec16173731cad5811b4b7abad`;
+  1,435 codegen tests (all 26 focused regressions), strict codegen Clippy, fmt,
+  file-size/HIR checks, and 264-companion freshness pass.
+  The 411/411 canonical check result remains explicitly attributed to
+  `7f3930ab4b05cd5ab50edb897be6a56329ab43f6` and reused only by unchanged
+  frontend/corpus input identity. No tests were repeated merely for this resumption.
+
+The **one** merge-profile gate ran on exact Sifr candidate `6ce83824e0315e5f89383fc666344b99431e1e76`:
+
+```bash
+SIFR_SYSROOT=/tmp/sifr-item12b.akguMz/sifr scripts/run_all_tests.sh --profile merge
+```
+
+It exited 1 after 173.63 seconds. All preceding reached steps passed, including
+264-companion freshness and Rust interop. Coverage readiness had two failing variants:
+
+1. **Pre-existing external blocker:** 23 SQL package/target classification diagnostics
+   (nine missing package classifications, missing targets, and stale PostgreSQL
+   `lib` versus `rlib`). The candidate changes no SQL Cargo or coverage-registry
+   inputs. Owner: `ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+2. **In-scope omission:** 428 verification-taxonomy diagnostics on newly introduced
+   corpus `contract_result_*` locals. These are Item 12B fixture naming failures,
+   not SQL failures and not waived by the passing semantic tests or Opus review.
+   Example: `src/1396_design_underground_system.sifr:54`.
+   Repair requires descriptive semantic names, preserving every assertion,
+   typed receiving contract, and evaluation order; do not weaken the checker.
+
+Immutable gate evidence under `/tmp/sifr-item12b.akguMz/`:
+`merge-6ce83824e0315e5f89383fc666344b99431e1e76.log`,
+`merge-6ce83824e-coverage-results.json`, and
+`merge-6ce83824e-lane-report.json`.
+No create-PR gate, duplicate merge gate, or merge occurred. Both PRs remain draft.
+Later checkpoint commits update records only; they do not turn the failed gate
+into a pass or transfer review approval to changed implementation.
+
+Exact next action: resolve the separately owned SQL coverage blocker and adjudicate
+the conflict between the exhausted single-gate budget and exact-final-SHA qualification
+after the required corpus naming correction. Then correct the in-scope names,
+refresh the corpus pin and affected named evidence, and use at most the one remaining
+remediation review. A replacement gate needs an explicit exception to the no-second-gate
+rule; no such exception is inferred from routine continuation authority.
+The isolated worktree and both candidates remain preserved. Retained Item 12
+compiler `8ad089a9458f35fcfa228e93fe44f4d69731828b` remains separate.
+Do not start Item 12 or 12A.
+
+#### Deferred review findings (not Item 12B implementation)
+
+- Existing Item 12 owns the correctness-motivated clone residue and consistency of
+  explicit imported mutable receiver borrowing. The review identified these as suggestions,
+  not new Item 12B acceptance criteria.
+- **Later Item 12E: integer field augmented-assignment qualification.** Not started.
+  Confirm the frontend/lowering contract for integer field `/=` and `%=`, both
+  outside and inside try closures. Opus noted the pre-existing gap at
+  `crates/sifr_codegen/src/stmt_support_emitter/stmt_block_helpers.rs:495`:
+  the simple path admits these operators while `SifrInt` has no corresponding
+  assignment traits. This is an unconfirmed follow-up, not a reproduced Item 12B
+  failure. Any repair and tests require its own bounded item; no code was added here.
+
+#### Item 12B terminal checkpoint: external review authentication blocker
+
+State: blocked before review and merge; Item 12B is not closed.
+This checkpoint supersedes earlier scope-adjudication stops. Builtin registration and the recorded native-execution dependencies are authorized and implemented inside Item 12B.
+
+- Qualified Sifr candidate: `4096a2e93b5fec3725c56c0a940dde995069d1f5`.
+  Compiler implementation: `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`.
+  Later checkpoint commits change records only.
+- [Sifr PR #3694](https://github.com/sifr-lang/sifr/pull/3694), branch `codex/emitted-rust-excellence-item-12b`, remains draft.
+- [Corpus PR #48](https://github.com/sifr-lang/leetcode/pull/48), branch `codex/item12b-source-contracts`, remains draft at `da4a0e8680c6b50c5544d77bfb92e9e4cddf1ab1`.
+- Complete current qualification: 90/90 repaired fixtures pass check and native execution; all original cases remain.
+  Codegen tests pass 1,435/1,435, including all 26 focused regressions.
+  Strict codegen Clippy, fmt, file-size/HIR guardrails, and 264-companion freshness pass.
+- Canonical `leetcode-full` passes 411/411 checks at `7f3930ab4b05cd5ab50edb897be6a56329ab43f6`.
+  Its unchanged front-end/corpus inputs support explicit reuse; it is not relabeled as a later-SHA run.
+  Native qualification was repeated with the corrected compiler.
+- Corrected compiler SHA-256: `d47774bba160db3903b9143071352af3b3001d6ec16173731cad5811b4b7abad`.
+- Evidence root: `/tmp/sifr-item12b.akguMz/`.
+  Use `native-qualified/matrix.json`, `leetcode-full-7f393-results.json`, `leetcode-full-final.log`, and `borrow-final-*.log`.
+- The retained Item 12 candidate `8ad089a9458f35fcfa228e93fe44f4d69731828b` remains separate and unchanged.
+  No remaining Item 12 or Item 12A implementation was started.
+
+The initial Opus request and both permitted request retries failed without a verdict.
+Retained logs report: `Failed to authenticate: OAuth session expired and could not be refreshed`.
+The official subscription sign-in was attempted. Interactive authentication could not complete with the available browser access.
+The pending login process was cancelled; no account, billing mode, or security setting was changed.
+No review approval, remediation review, create-PR gate, merge-profile gate, or merge has occurred.
+The known SQL coverage issue remains separately owned; no new gate result is claimed.
+
+The request logs remain outside Git in:
+`opus-4096a2e93b5fec3725c56c0a940dde995069d1f5.zO2RVq/claude.log`,
+`opus-4096a2e93b5fec3725c56c0a940dde995069d1f5.pYOvQr/claude.log`, and
+`opus-4096a2e93b5fec3725c56c0a940dde995069d1f5.NtmhgZ/claude.log`, under the evidence root.
+The first log is empty; the later two retain the OAuth failure.
+The [Sifr blocker record](https://github.com/sifr-lang/sifr/pull/3694#issuecomment-5553738037)
+and [corpus blocker record](https://github.com/sifr-lang/leetcode/pull/48#issuecomment-5553738178) preserve the handoff publicly.
+
+Exact next action: the account owner completes `claude auth login --claudeai` for the already-configured subscription account.
+Then resume the initial exact-SHA review against the current record-only PR head, with both repository candidates identified.
+Reuse valid qualification evidence. At most one remediation review and one merge-profile gate remain.
+Do not run a create-PR gate, start another item, or merge without the required review and validation.
+
+#### Item 12B required tests
+
+These commands run from the isolated Sifr worktree after the bounded implementation.
+The focused regression names are fixed before test execution.
+
+```bash
+cargo build -p sifr
+cargo test -p sifr_codegen item12b_loop_sentinel_reuse
+cargo test -p sifr_codegen item12b_repeat_count_reuse
+cargo test -p sifr_codegen
+target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0004_median_of_two_sorted_arrays.sifr
+target/debug/sifr run verification/areas/algorithmic_compatibility/corpora/leetcode/src/0004_median_of_two_sorted_arrays.sifr
+target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0006_zigzag_conversion.sifr
+target/debug/sifr run verification/areas/algorithmic_compatibility/corpora/leetcode/src/0006_zigzag_conversion.sifr
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full
+cargo fmt --check
+cargo clippy -p sifr_codegen -- -D warnings
+python3 scripts/check_file_size_guardrails.py
+python3 scripts/check_hir_maintainability_guardrails.py
+scripts/run_all_tests.sh
+```
+
+Apply the same `check` and `run` commands to every repaired corpus fixture.
+Record the compiler SHA and binary digest for focused and full-corpus evidence.
+Include relevant additional changed crates in the Clippy command.
+Loop regressions cover repeated iterations, branch paths, and later sentinel uses.
+Repeat-count regressions cover later uses, nested scopes, and effectful counts.
+
+#### Item 12B checkpoint: qualification blocked on an unrelated Clippy defect
+
+State on 2026-09-05: implementation checkpoint preserved; Item 12B is not closed.
+
+- Sifr candidate: `673593f3ee234d58f03694e018abb145a843f787`,
+  branch `codex/emitted-rust-excellence-item-12b`.
+- External candidate: `330544ecf4f787c1a5fbed847469797ead92d24c`,
+  branch `codex/item12b-source-contracts` in `sifr-lang/leetcode`.
+- Both candidates are pushed. Neither repository has an Item 12B PR or merge.
+- No Opus review or merge-profile gate was consumed.
+- The isolated worktree remains `/tmp/sifr-item12b.akguMz/sifr`.
+  The retained Item 12 compiler candidate remains separate and unchanged.
+
+The newly built compiler has SHA-256
+`56ef1dac97c474d76341f77aebefa37e750002bdf82e6a6f6c5509a91d85847c`.
+The binary digest remained unchanged throughout this qualification attempt.
+
+Completed evidence under `/tmp/sifr-item12b.akguMz/`:
+
+- `codegen-singleton-full-2.log`: all 1,412 codegen tests pass.
+  This includes all four named Item 12B ownership regressions.
+- `compiler-singleton-build.log`: the compiler build passes.
+- `native-primary/0004_median_of_two_sorted_arrays.json`: check and native run pass.
+- `native-primary/0006_zigzag_conversion.json`: check and native run pass.
+  Each JSON record contains both candidate SHAs, input digests, commands, and logs.
+  These runs retain the original cases and execute the added ownership assertions.
+- `cargo fmt --check`: pass.
+- File-size guardrail: pass for 3,755 files, with the 900-line limit unchanged.
+- HIR maintainability guardrail: pass.
+
+Incomplete evidence is not a qualification pass:
+
+- `leetcode-full-candidate.log` contains 113 passing cases before interruption.
+  It is not a complete 411-case result.
+- The two helper checks pass, but their native runs were interrupted.
+  The remaining repaired fixtures still require their native runs.
+- The worker stopped all owned qualification processes after the scope blocker.
+  No background qualification process remains.
+- Earlier complete diagnostic matrices cover earlier inputs.
+  They do not qualify these candidates.
+
+`clippy.log` records the blocker from
+`cargo clippy -p sifr_codegen -- -D warnings`.
+The unchanged `project_stdlib_nominals.rs:45` uses `Option::expect` in
+`ProjectNominalRegistry::register_builtin`.
+This defect exists in base `2dc4165fd9e7c34432a9b0d098188dc645aaca55` and current
+main `2af89e75e5f97ec75e1b72c000fb3a6ebbbbb7cc`.
+It concerns builtin-error registration, not sentinel or repeat-count ownership.
+The worker did not suppress the diagnostic or import unrelated retained Item 12 code.
+
+Next action: authorize or merge the builtin-registration repair recorded as Item 12C.
+Then resume Item 12B qualification on the identified candidate inputs.
+Complete every required fixture run and the canonical full corpus before review.
+The exact-SHA review allowance and the single merge-profile gate remain unused.
+
+#### Incorporated Item 12C: Builtin-registration scope amendment
+
+- State: incorporated into Item 12B by explicit user authority on 2026-09-05.
+- The earlier exclusion of this mechanism is superseded.
+- This repair has no separate item, review, or gate.
+- The implementation preserves both repository checkpoints and unrelated Item 12 work.
+- Registration must consume validated builtin identity without a fallback,
+  diagnostic suppression, or replacement panic.
+- Focused command, recorded before execution:
+  `cargo test -p sifr_codegen item12b_builtin_registration`.
+- The regressions cover canonical identities, module shadows, and rejected non-builtin names.
+- After this repair, resume the remaining Item 12B validation and closure steps.
+- Owner: compiler builtin-error registration.
+- Defect: `crates/sifr_codegen/src/project_stdlib_nominals.rs:45` fails strict
+  Clippy with `clippy::expect_used`.
+- Dependency: this unchanged defect blocks Item 12B's required crate Clippy check.
+- The repair must preserve builtin-error identity and the registration invariant.
+  It must not add a fallback or diagnostic suppression.
+
+#### Item 12B checkpoint: builtin repair passes; native qualification fails
+
+This checkpoint supersedes the earlier builtin-registration blocker.
+Item 12C is implemented inside Item 12B. Item 12B is not closed.
+
+- Sifr implementation candidate: `3f422b01633d23c2bc8d8ce8ca59057c6e56adea`.
+- External candidate: `330544ecf4f787c1a5fbed847469797ead92d24c`.
+- Both candidates are pushed. Neither repository has a PR or merge.
+- No Opus review, remediation review, or merge-profile gate was consumed.
+- The retained Item 12 compiler work remains separate and unchanged.
+
+Registration now accepts a validated `BuiltinError` token.
+The registry no longer performs a partial name lookup or calls `expect`.
+Two regressions cover canonical identities, module shadows, and rejected non-builtin names.
+
+The newly built compiler has SHA-256
+`dbe640b31bdd181b93f82d967dd9e7c82092146482c554fb14e96fe42f28a3c3`.
+The compiler binary and both source trees stayed unchanged throughout qualification.
+Evidence is under `/tmp/sifr-item12b.akguMz/`:
+
+- `builtin-focused.log`: both named builtin-registration regressions pass.
+- `builtin-codegen-full.log`: all 1,414 codegen tests pass, including all four ownership regressions.
+- `builtin-build.log`: the compiler build passes.
+- `builtin-clippy.log`: strict codegen crate Clippy passes.
+- Formatting, file-size (3,756 files), and HIR guardrails pass.
+- `leetcode-full-3f422.log`: the complete canonical 411-case check finishes.
+  It reports 410 passes and one failure, fixture 2002.
+  This is a complete failing result, not a partial pass or native qualification.
+  The canonical result is
+  `target/verification/areas/algorithmic-compatibility-results.json`.
+  Per-case results and taxonomy remain under
+  `target/verification/areas/algorithmic_compatibility/`.
+- `native-3f422/matrix.json`: complete coverage of all 90 changed source files.
+  Checks pass for 89 files. Native builds and runs pass for 43 files.
+  Native builds fail for 46 files. The failed check prevents the remaining native run.
+  Median and zigzag both pass their checks and native assertions.
+- `native-3f422/diagnostic_inventory.json`: every failing file, command, log, and diagnostic group.
+  The following counts overlap where one file has several diagnostics.
+
+| Diagnostic group | Files | Representative fixture |
+|---|---:|---|
+| Handler binding captured outside its scope | 13 | 0017 |
+| Reused value moved | 12 | 0072 |
+| Missing structured `TryExcept` lowering | 10 | 0044 |
+| Narrowed value compared with `None` | 8 | 0102 |
+| Missing `UnionFind.union` method emission | 4 | helpers/dsu |
+| Recursive optional field mutability | 3 | 0025 |
+| Nested assignment receives `Option<SifrInt>` instead of `SifrInt` | 1 | 0048 |
+| Borrowed `str` clone emission | 1 | 1397 |
+| Empty collection assertion type inference | 1 | 1203 |
+| Unreceived checked shift result in source | 1 | 2002 |
+
+The checked-shift receiving omission and approved ownership corrections remain Item 12B work.
+They are not external authority blockers.
+Other failures require control-flow, type-representation, or declaration-demand changes.
+Those mechanisms are not builtin registration or sentinel/repeat reuse.
+
+#### Item 12B continuation authority and regression commands
+
+The user authorized all necessary next actions after the complete failure inventory.
+The recorded execution dependencies now form part of the bounded Item 12B repair.
+The previous scope-adjudication stop is superseded.
+This includes checked-read control flow, exception capture and lowering, ownership,
+method retention, assertion typing, and the checked-shift source omission.
+It does not include unrelated Item 12 quality work or Item 12A.
+The original review and single-gate limits remain unchanged.
+
+Additional focused commands, recorded before test execution:
+
+```bash
+cargo test -p sifr_codegen item12b_
+cargo test -p sifr_codegen item12b_exception_capture
+cargo test -p sifr_codegen item12b_checked_read_control_flow
+cargo test -p sifr_codegen item12b_repeated_value_ownership
+cargo test -p sifr_codegen item12b_recursive_optional_mutability
+cargo test -p sifr_codegen item12b_structured_exception
+cargo test -p sifr_codegen item12b_method_retention
+cargo test -p sifr_codegen item12b_empty_collection_assertion
+```
+
+The complete native matrix is the repair checklist, not a new discovery run.
+Each regression must cover the relevant lexical, control-flow, or ownership negative case.
+The new compiler requires new affected-input evidence. Earlier passes retain their recorded provenance.
+
+The source batch also completes two missing checked-value contracts.
+Fixture 2002 receives each checked shift into an explicit integer binding.
+Fixture 0048 tests each optional matrix read before its corresponding write.
+The matrix changes preserve read/write order and raise `IndexError` on absent values.
+They do not substitute a default or remove an original case.
+
+#### Item 12B integrated-base provenance
+
+The complete `7f3930ab4b05cd5ab50edb897be6a56329ab43f6` native matrix passes 89/90 repaired fixtures.
+All three previous residuals pass. Fixture 1472 exposes a nested arithmetic double borrow of an existing borrowed parameter.
+The correction uses the existing binding-aware exact-integer operand adapter, not a new cloning rule.
+Its exact focused command is recorded before execution:
+
+```bash
+cargo test -p sifr_codegen corpus_repair_nested_arithmetic_preserves_borrowed_parameter
+```
+
+Main PR #3693 (`b475ebdcd37081aa2860d9c348ace4100b546eff`) was integrated at `8d5afcb0c12a6115c54aadccee0e3fa87f478db0`.
+Its naming-only changes leave compiler and algorithmic qualification inputs unchanged.
+Only its changed demo inputs required regeneration; the canonical merge freshness check remains required.
+
+The `d13954fd69a0dfb0e203a03cd5124d921d103539` residual native matrix passes 16/19 cases.
+The remaining repairs cover nested mapping-default ownership and proven reads at optional call boundaries.
+Fixture 1260 also requires explicit narrowing of optional position and cell reads before mutation.
+These complete the existing ownership/read and external source-contract scope; no new item is started.
+All existing corpus assertions remain unchanged.
+Focused commands for this batch, recorded before execution:
+
+```bash
+cargo test -p sifr_codegen corpus_repair_repeated_value_ownership_nested_arithmetic_and_defaults
+cargo test -p sifr_codegen corpus_repair_proven_read_at_optional_call_boundary
+cargo test -p sifr_codegen corpus_repair_explicit_optional_nested_mutation_contract
+cargo test -p sifr_codegen corpus_repair_
+```
+
+The final compiler must still pass all 90 repaired fixtures and the full canonical corpus.
+The 16/19 residual pass is not whole-item qualification.
+
+Main advanced to `c83dd7cde8daf54cdc4abd952903e9aa093c4183` through PR #3692.
+Merge `b3d836354` integrates that reviewed base, including its dependency-feature normalization.
+The test-module conflict keeps both new regression modules and main's renamed modules.
+No retained Item 12 implementation was imported.
+
+The merged naming policy forbids numbered planning labels in source names.
+The new tests therefore use mechanism-oriented module names and the `corpus_repair_` filter.
+This is a mechanical identity change; every case and assertion remains present.
+The exact replacement focused command is recorded before execution:
+
+```bash
+cargo test -p sifr_codegen corpus_repair_
+```
+
+Main records unresolved SQL coverage classifications in
+`ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+They remain externally owned and are not absorbed into this dependency repair.
+The single-gate limit is unchanged.
+
+#### Item 12B continuation implementation evidence
+
+The complete `7b50a83a91ce65dc17d91d73e54c14dcd1b67901` qualification has 411/411 canonical checks.
+Its repaired-fixture matrix has 90/90 checks and 71/90 native passes.
+The 19 native failures remain qualification failures, not a partial pass claim.
+Raw evidence: `leetcode-full-continuation.log` and `native-continuation/diagnostic_inventory.json` under the owned temporary root.
+The follow-up batch repairs those same mechanism paths: expression-local checked reads,
+child-scope last-use accounting, owned argument adaptation, imported mutable receivers,
+and empty assertions inside exception carriers. No unrelated Item 12 work is included.
+
+Additional exact regression commands, recorded before execution:
+
+```bash
+cargo test -p sifr_codegen item12b_checked_read_control_flow_short_circuit_assignment
+cargo test -p sifr_codegen item12b_structured_exception_root_error_and_dictionary_reads
+cargo test -p sifr_codegen item12b_structured_exception_nested_while_checked_comparison
+cargo test -p sifr_codegen item12b_repeated_value_ownership_condition_and_branch
+cargo test -p sifr_codegen item12b_repeated_value_ownership_nested_arithmetic_and_defaults
+cargo test -p sifr_codegen item12b_empty_collection_assertion_in_exception_carrier
+```
+
+Compiler implementation `580e3374c3aac2aa669ad06354fba02c618e0942` completes the recorded dependency batch.
+Commit `18ab9bd969e70876a99875d8c719ad8b8d4daeb3` updates the existing union-rendering test expectation.
+External candidate `0ef88e8b4f4906e410a3b2e9216248c11149b247` completes the two remaining source contracts.
+No retained Item 12 compiler changes were imported.
+
+Evidence under `/tmp/sifr-item12b.akguMz/`:
+
+- `continuation-focused-4.log`: all 17 Item 12B regressions pass.
+- `continuation-codegen-full-2.log`: all 1,425 codegen tests pass.
+- `continuation-clippy.log`: strict codegen Clippy passes.
+- `continuation-build.log`: the new compiler build passes.
+- Formatting and file-size/HIR guardrails pass; the size check covers 3,760 files.
+
+The compiler binary SHA-256 is
+`04e449044644533db98fad9289d89355078f12b3e3bbd9bdb77d7f42398dfbfa`.
+These are focused and crate-level results, not full-corpus qualification.
+The earlier complete failing matrices remain historical evidence.
+No Opus review or merge-profile gate has run.
+
+#### Incorporated Item 12D: Native corpus emission dependencies
+
+State: incorporated into Item 12B under the continuation authority.
+Owner: compiler emission, tracked in this issue and the algorithmic issue.
+This item does not reopen Item 12C or request authority for its completed repair.
+
+The confirmed scope blocker is checked-read control-flow and optional representation.
+In fixture 0102, the source tests a left read only inside its left-length branch.
+Generated Rust inserts a left-read `let Some(...) else { break; }` before that branch.
+A second read narrows the value to `Vec<SifrInt>`, but its `None` comparison remains.
+The first transformation can terminate a valid right-only iteration.
+The second transformation fails Rust compilation with `E0277`.
+
+Evidence: `native-3f422/0102.emitted.rs:116` and
+`native-3f422/0102_binary_tree_level_order_traversal.run.log`.
+The relevant producer is `crates/sifr_codegen/src/checked_place.rs`.
+Its `checked_place_read_witness` path removes the optional representation.
+This producer is unchanged from the isolated base.
+A repair must preserve branch-local read demand, absence paths, and effect order.
+Removing source guards or adding a fallback would not correct that mechanism.
+
+The full diagnostic inventory also records structured exception lowering,
+handler capture scope, missing method emission, and assertion type inference.
+Their final producer-level decomposition remains unimplemented.
+The ownership groups stay in Item 12B rather than moving into this later item.
+
+Next action: adjudicate the newly recorded emission mechanisms as dependency scope.
+Then finish the approved source and ownership corrections on the preserved branch.
+Complete qualification on the final inputs before either repository merge.
+The exact-SHA Opus allowance and single merge-profile gate remain unused.
+
+All owned qualification commands completed. No background qualification run remains.
+No compiler, fixture, test, baseline, or safety policy changed after this evidence.
+Later commits update records only and do not claim a new implementation SHA pass.
+
+#### Item 12B implementation provenance
+
+The compiler changes start from the merged base, not the retained Item 12 candidate.
+The existing ownership materializer now serves integer local bindings and repeat counts.
+Its rename does not change the other callers.
+The repeat producer preserves operand order for both operand positions.
+Singleton repetition uses the existing exact-integer range without a host-sized cast.
+This correction also satisfies the two existing singleton-repeat codegen tests.
+
+The median fixture adds native loop, branch, sentinel-reuse, and large-integer assertions.
+The zigzag fixture adds native repeat-count, operand-order, and single-evaluation assertions.
+Both fixtures retain every original case.
+External repairs propagate checked errors through explicit receiving contexts.
+Reassignments retain their original binding identity and statement order.
+
 ## Status
 
 Closeout in progress for the non-blocking follow-up created from the Rust-interop

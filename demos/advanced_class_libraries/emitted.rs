@@ -398,26 +398,17 @@ mod sifr_generated_generated_support {
         rows.push(row);
     }
     pub(crate) fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
-        let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
-            char,
-        > = text.chars().collect::<Vec<char>>();
+        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         if &index < &SifrInt::from_i64(0)
-            || &index
-                >= &SifrInt::from(
-                    sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                        .len(),
-                )
+            || &index >= &SifrInt::from(sifr_generated_chars_text.len())
         {
             return String::new();
         }
         let ch: Option<String> = {
             let sifr_generated_string_index = index.clone();
-            let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(
-                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                    .len(),
-            );
-            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+            let sifr_generated_string_index_normalized =
+                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
+            sifr_generated_chars_text
                 .get(sifr_generated_string_index_normalized)
                 .copied()
         }
@@ -479,7 +470,7 @@ mod sifr_generated_generated_support {
         let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         sifr_generated_char_at(
             text,
-            SifrInt::from(text.chars().count()) - SifrInt::from_i64(1),
+            &SifrInt::from(text.chars().count()) - &SifrInt::from_i64(1),
         )
     }
     #[expect(
@@ -501,9 +492,7 @@ mod sifr_generated_generated_support {
         quoting: SifrInt,
     ) -> Vec<Vec<String>> {
         let quotechar = quotechar.to_owned();
-        let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
-            char,
-        > = text.chars().collect::<Vec<char>>();
+        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
             dialect,
             delimiter,
@@ -520,27 +509,17 @@ mod sifr_generated_generated_support {
         let mut in_quotes: bool = false;
         let mut field_started: bool = false;
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i
-            < &SifrInt::from(
-                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                    .len(),
-            )
-        {
+        while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
             let ch_value: String = sifr_generated_char_at(text, i.clone());
             if in_quotes {
                 if !resolved.escapechar.clone().is_empty()
                     && ch_value == resolved.escapechar.clone()
                 {
                     if &(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(
-                            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                                .len(),
-                        )
+                        < &SifrInt::from(sifr_generated_chars_text.len())
                     {
-                        let escaped_value: String = sifr_generated_char_at(
-                            text,
-                            &i + &SifrInt::from_i64(1),
-                        );
+                        let escaped_value: String =
+                            sifr_generated_char_at(text, &i + &SifrInt::from_i64(1));
                         field.push_str(escaped_value.as_str());
                         i = &i + &SifrInt::from_i64(2);
                         continue;
@@ -554,12 +533,8 @@ mod sifr_generated_generated_support {
                     let quotechar: String = sifr_generated_quotechar_value(&resolved);
                     if resolved.doublequote
                         && &(&i + &SifrInt::from_i64(1))
-                            < &SifrInt::from(
-                                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                                    .len(),
-                            )
-                        && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1))
-                            == quotechar
+                            < &SifrInt::from(sifr_generated_chars_text.len())
+                        && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == quotechar
                     {
                         field.push_str(quotechar.as_str());
                         i = &i + &SifrInt::from_i64(2);
@@ -578,16 +553,9 @@ mod sifr_generated_generated_support {
                 continue;
             }
             if !resolved.escapechar.clone().is_empty() && ch_value == resolved.escapechar.clone() {
-                if &(&i + &SifrInt::from_i64(1))
-                    < &SifrInt::from(
-                        sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                            .len(),
-                    )
-                {
-                    let escaped_plain_value: String = sifr_generated_char_at(
-                        text,
-                        &i + &SifrInt::from_i64(1),
-                    );
+                if &(&i + &SifrInt::from_i64(1)) < &SifrInt::from(sifr_generated_chars_text.len()) {
+                    let escaped_plain_value: String =
+                        sifr_generated_char_at(text, &i + &SifrInt::from_i64(1));
                     field.push_str(escaped_plain_value.as_str());
                     field_started = true;
                     i = &i + &SifrInt::from_i64(2);
@@ -620,10 +588,7 @@ mod sifr_generated_generated_support {
             if ch_value == "\n" || ch_value == "\r" {
                 if ch_value == "\r"
                     && &(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(
-                            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                                .len(),
-                        )
+                        < &SifrInt::from(sifr_generated_chars_text.len())
                     && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == "\n"
                 {
                     i = &i + &SifrInt::from_i64(1);
@@ -1189,7 +1154,7 @@ mod sifr_generated_project_nominals {
     use ::std::collections::VecDeque;
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
-        pub data_field: VecDeque<T>,
+        pub data: VecDeque<T>,
         pub maxlen: Option<SifrInt>,
     }
     impl<T: Clone> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
@@ -1204,7 +1169,7 @@ mod sifr_generated_project_nominals {
                 } else {
                     SifrInt::from_i64(0)
                 };
-                let mut i: SifrInt = start;
+                let mut i: SifrInt = start.clone();
                 while &i < &SifrInt::from(items.len()) {
                     let item_value_2841a0c596d6f426: Option<T> = {
                         let sifr_generated_checked_read_collection = &items;
@@ -1229,18 +1194,18 @@ mod sifr_generated_project_nominals {
                 VecDeque::from(data);
             Self {
                 maxlen: sifr_generated_field_value_169953f6befb0270_6d61786c656e,
-                data_field: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
+                data: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
             }
         }
     }
     impl<T: Clone> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         pub fn append(&mut self, val: &T) {
-            self.data_field.push_back(val.clone());
+            self.data.push_back(val.clone());
             let maxlen_opt: Option<SifrInt> = self.maxlen.clone();
             if let Some(maxlen_opt) = maxlen_opt.clone() {
                 let maxlen: SifrInt = maxlen_opt.clone();
-                if &SifrInt::from(self.data_field.len()) > &maxlen {
-                    self.data_field.pop_front();
+                if &SifrInt::from(self.data.len()) > &maxlen {
+                    self.data.pop_front();
                 }
             }
         }
@@ -1248,13 +1213,13 @@ mod sifr_generated_project_nominals {
     impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
         pub fn popleft(&mut self) -> Option<T> {
-            if &SifrInt::from(self.data_field.len()) == &SifrInt::from_i64(0) {
+            if &SifrInt::from(self.data.len()) == &SifrInt::from_i64(0) {
                 return None;
             }
             Some({
                 let sifr_generated_nonempty_pop_index = 0_usize;
                 let mut sifr_generated_nonempty_pop_values = self
-                    .data_field
+                    .data
                     .drain(sifr_generated_nonempty_pop_index..=sifr_generated_nonempty_pop_index)
                     .collect::<Vec<_>>();
                 sifr_generated_nonempty_pop_values.remove(0_usize)
@@ -1264,19 +1229,19 @@ mod sifr_generated_project_nominals {
     impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
         pub fn len(&self) -> SifrInt {
-            SifrInt::from(self.data_field.len())
+            SifrInt::from(self.data.len())
         }
     }
     impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         pub fn clear(&mut self) {
-            self.data_field.clear();
+            self.data.clear();
         }
     }
     impl<T: Clone + PartialEq> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
         pub fn count(&self, value: &T) -> SifrInt {
             let mut total: SifrInt = SifrInt::from_i64(0);
-            for item in self.data_field.iter().cloned() {
+            for item in self.data.iter().cloned() {
                 if item == *value {
                     total = &total + &SifrInt::from_i64(1);
                 }
@@ -1287,7 +1252,7 @@ mod sifr_generated_project_nominals {
     impl<T: Clone + PartialEq> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
         pub fn index(&self, value: &T, start: &SifrInt, stop: &Option<SifrInt>) -> Option<SifrInt> {
-            let size: SifrInt = SifrInt::from(self.data_field.len());
+            let size: SifrInt = SifrInt::from(self.data.len());
             let mut begin: SifrInt = start.clone();
             if &begin < &SifrInt::from_i64(0) {
                 begin = &size + &begin;
@@ -1305,13 +1270,13 @@ mod sifr_generated_project_nominals {
                     end = SifrInt::from_i64(0);
                 }
                 if &end > &size {
-                    end = size;
+                    end = size.clone();
                 }
             }
             let mut i: SifrInt = begin.clone();
             while &i < &end {
                 let current: Option<T> = {
-                    let sifr_generated_checked_read_collection = &self.data_field;
+                    let sifr_generated_checked_read_collection = &self.data;
                     let sifr_generated_checked_read_index = i.clone();
                     let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                         .normalize_index_or_len(sifr_generated_checked_read_collection.len());
@@ -1335,9 +1300,9 @@ mod sifr_generated_project_nominals {
             if let Some(idx) = idx.clone() {
                 let mut rebuilt: Vec<T> = Vec::new();
                 let mut i: SifrInt = SifrInt::from_i64(0);
-                while &i < &SifrInt::from(self.data_field.len()) {
+                while &i < &SifrInt::from(self.data.len()) {
                     let current: Option<T> = {
-                        let sifr_generated_checked_read_collection = &self.data_field;
+                        let sifr_generated_checked_read_collection = &self.data;
                         let sifr_generated_checked_read_index = i.clone();
                         let sifr_generated_checked_read_normalized =
                             sifr_generated_checked_read_index.normalize_index_or_len(
@@ -1354,9 +1319,9 @@ mod sifr_generated_project_nominals {
                     }
                     i = &i + &SifrInt::from_i64(1);
                 }
-                self.data_field.clear();
+                self.data.clear();
                 for item in rebuilt.iter().cloned() {
-                    self.data_field.push_back(item.clone());
+                    self.data.push_back(item.clone());
                 }
             }
         }
@@ -1834,7 +1799,7 @@ mod sifr_generated_project_nominals {
     }
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct SifrGeneratedStdlibSifrX2ecsvX2eDictReader {
-        pub fieldnames_field: Vec<String>,
+        pub fieldnames: Vec<String>,
         pub rows: Vec<Vec<String>>,
         pub pos: SifrInt,
         pub restkey: String,
@@ -1930,8 +1895,7 @@ mod sifr_generated_project_nominals {
                 restkey: sifr_generated_field_value_d10323292550fbae_726573746b6579,
                 restval: sifr_generated_field_value_e9b6e328a309fdee_7265737476616c,
                 pos: sifr_generated_field_value_e04b9443eebba9b4_5f706f73,
-                fieldnames_field:
-                    sifr_generated_field_value_efdb691f099ff036_5f6669656c646e616d6573,
+                fieldnames: sifr_generated_field_value_efdb691f099ff036_5f6669656c646e616d6573,
                 rows: sifr_generated_field_value_d742ae5cfb4259e3_5f726f7773,
             }
         }
@@ -1940,7 +1904,7 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn fieldnames(&self) -> Vec<String> {
             let mut copied: Vec<String> = Vec::new();
-            for field in self.fieldnames_field.iter().cloned() {
+            for field in self.fieldnames.iter().cloned() {
                 copied.push(field.to_string());
             }
             copied
@@ -1955,7 +1919,7 @@ mod sifr_generated_project_nominals {
                     continue;
                 }
                 result.push(sifr_generated_dict_reader_row(
-                    &self.fieldnames_field,
+                    &self.fieldnames,
                     &row,
                     &self.restkey,
                     &self.restval,
@@ -2348,7 +2312,7 @@ mod sifr_generated_project_nominals {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2eloggingX2eLogger {
-        pub name_field: String,
+        pub name: String,
         pub level: SifrInt,
         pub log_path: String,
         pub handler_kind: String,
@@ -2372,7 +2336,7 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_98e9bbb8fd5643d6_5f68616e646c65725f666d74: String =
                 "%(levelname)s:%(name)s:%(message)s".to_string();
             Self {
-                name_field: sifr_generated_field_value_2570757371473f6d_5f6e616d65,
+                name: sifr_generated_field_value_2570757371473f6d_5f6e616d65,
                 level: sifr_generated_field_value_70fb616fceb1e22c_5f6c6576656c,
                 log_path: sifr_generated_field_value_1fb1dcbc22de0cba_5f6c6f675f70617468,
                 handler_kind:
@@ -2404,7 +2368,7 @@ mod sifr_generated_project_nominals {
         pub fn sifr_generated_handler_line(&self, level: &str, msg: &str) -> String {
             let formatter: SifrGeneratedStdlibSifrX2eloggingX2eFormatter =
                 SifrGeneratedStdlibSifrX2eloggingX2eFormatter::new(self.handler_fmt.clone());
-            formatter.format(level, &self.name_field.clone(), msg)
+            formatter.format(level, &self.name.clone(), msg)
         }
     }
     impl SifrGeneratedStdlibSifrX2eloggingX2eLogger {
@@ -2448,7 +2412,7 @@ mod sifr_generated_project_nominals {
                             let e2 = sifr_generated_try_err.clone();
                             let _ = e2.message.clone();
                         }
-                        fh.close();
+                        (&mut fh).close();
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -2464,7 +2428,7 @@ mod sifr_generated_project_nominals {
                 sifr_generated_concat.push('[');
                 sifr_generated_concat.push_str(level);
                 sifr_generated_concat.push_str("] ");
-                sifr_generated_concat.push_str(self.name_field.clone().as_str());
+                sifr_generated_concat.push_str(self.name.clone().as_str());
                 sifr_generated_concat.push_str(": ");
                 sifr_generated_concat.push_str(msg);
                 sifr_generated_concat
@@ -2492,7 +2456,7 @@ mod sifr_generated_project_nominals {
                         let e2 = sifr_generated_try_err.clone();
                         let _ = e2.message.clone();
                     }
-                    fh.close();
+                    (&mut fh).close();
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -2530,7 +2494,7 @@ mod sifr_generated_project_nominals {
             write!(
                 f,
                 "Logger(_name={}, _level={}, _log_path={}, _handler_kind={}, _handler_path={}, _handler_level={}, _handler_fmt={})",
-                self.name_field,
+                self.name,
                 self.level,
                 self.log_path,
                 self.handler_kind,
@@ -2798,10 +2762,10 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eregexX2eCompi
 fn main() {
     let mut d: SifrGeneratedStdlibSifrX2ecollectionsX2edeque<SifrInt> =
         SifrGeneratedStdlibSifrX2ecollectionsX2edeque::new(None, Some(SifrInt::from_i64(3)));
-    d.append(&SifrInt::from_i64(1));
-    d.append(&SifrInt::from_i64(2));
-    d.append(&SifrInt::from_i64(3));
-    d.append(&SifrInt::from_i64(4));
+    (&mut d).append(&SifrInt::from_i64(1));
+    (&mut d).append(&SifrInt::from_i64(2));
+    (&mut d).append(&SifrInt::from_i64(3));
+    (&mut d).append(&SifrInt::from_i64(4));
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(23usize);
         sifr_generated_concat.push_str("deque len (maxlen=3) = ");
@@ -2812,7 +2776,8 @@ fn main() {
         let mut sifr_generated_concat: String = String::with_capacity(16usize);
         sifr_generated_concat.push_str("deque popleft = ");
         sifr_generated_concat.push_str(
-            d.popleft()
+            (&mut d)
+                .popleft()
                 .map_or_else(
                     || "None".to_string(),
                     |sifr_generated_v| sifr_generated_v.to_string(),
@@ -2960,7 +2925,7 @@ fn main() {
         });
     }
     let mut log: SifrGeneratedStdlibSifrX2eloggingX2eLogger = getLogger(&"demo".to_string());
-    log.set_level(&sifr_generated_const_4445425547());
+    (&mut log).set_level(&sifr_generated_const_4445425547());
     log.debug(&"debug message".to_string());
     log.info(&"info message".to_string());
     log.warning(&"warning message".to_string());
@@ -2994,8 +2959,8 @@ fn main() {
     );
     let row1: Vec<String> = vec!["x".to_string(), "y".to_string()];
     let row2_value_a3a6c71ff10a162b: Vec<String> = vec!["1".to_string(), "2".to_string()];
-    w.writerow(&row1);
-    w.writerow(&row2_value_a3a6c71ff10a162b);
+    (&mut w).writerow(&row1);
+    (&mut w).writerow(&row2_value_a3a6c71ff10a162b);
     let out: String = w.getvalue();
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(20usize + out.len());
@@ -3057,12 +3022,12 @@ fn main() {
             "\n".to_string(),
             SifrInt::from_i64(0),
         );
-    dw.writeheader();
+    (&mut dw).writeheader();
     let row_data: HashMap<String, String> = HashMap::from([
         ("name".to_string(), "charlie".to_string()),
         ("score".to_string(), "91".to_string()),
     ]);
-    dw.writerow(&row_data);
+    (&mut dw).writerow(&row_data);
     let dw_out: String = dw.getvalue();
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(20usize + dw_out.len());

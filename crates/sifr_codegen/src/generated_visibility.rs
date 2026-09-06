@@ -91,6 +91,15 @@ pub(crate) fn crate_visible_generated_support_source(source: &str) -> String {
                 }
             }
             syn::Item::Use(item) => item.vis = visibility,
+            syn::Item::Macro(item) => {
+                if let Some(mut declarations) = crate::task_local_support::declarations(&item.mac) {
+                    for declaration in &mut declarations.0 {
+                        declaration.visibility = visibility.clone();
+                    }
+                    let declarations = declarations.0;
+                    item.mac.tokens = quote::quote!(#(#declarations)*);
+                }
+            }
             _ => {}
         }
     }
