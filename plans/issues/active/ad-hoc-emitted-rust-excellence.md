@@ -4,6 +4,91 @@ Status: active
 
 Baseline commit: `e9df29f7e4cada7b376b2d455790f9c80a5647a0`
 
+## Item12K continuation execution registration (2026-09-06)
+
+This is the original 12K continuation, with zero initial reviews, zero
+remediation reviews and zero gates used; no predecessor allowance is reset.
+The sole live worker owns independent clone `/private/tmp/sifr-item12k-cont.StPW7n/sifr`,
+branch `codex/item12k-continuation`, private target and sibling evidence/temp.
+Parent's two intentional Markdown changes and every retained checkout, index,
+target and output are read-only. Starting record is
+`d7c41463ca88d5993e3bc3fa847806160799e147`, including approved B1
+`a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`, record23088af and integrated7e23785.
+Preserve approved12B/H/I/correctingM1 ancestry and all historical records.
+Do not import unfinished Item12 source8ad089a. Required constructor-supplied
+string message for every Error is already explicitly authorized; preserve
+PythonError's five fields/arguments and both prior integration corrections.
+
+Authority: parent section "Item12K continuation after B1/B2/B3 (2026-09-06)",
+original12K execution/terminal sections retained below, and user onboarding.
+Integrate latest main including B2 merge770f1ab and B3 mergef11e1cd; reconcile
+their recordsa53b5d3/c508c143 without losing history. B2 #3704 and B3 #3705
+are merged through PRs3706/3709; their exact approval and reports remain external
+dependency evidence. Ordinary Claude, PR, push, merge and issue updates are
+authorized. Use normal merges preserving ancestry; keep corpus gitlink
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372` (leetcode PR48) fixed through freeze
+and qualification. Preserve original draft3701 and reconcile via a linked
+replacement PR if needed. No unrelated repair, next-item code or whole-phase review.
+
+Finish all integration corrections before tests. Set owned environment:
+`TMPDIR=/private/tmp/sifr-item12k-cont.StPW7n/tmp`,
+`CARGO_TARGET_DIR=/private/tmp/sifr-item12k-cont.StPW7n/sifr/target`,
+`UV_CACHE_DIR=/private/tmp/sifr-item12k-cont.StPW7n/uv-cache`,
+`CARGO_BUILD_JOBS=6`, `RUST_TEST_THREADS=1`.
+All area result JSON paths are repository-local. Register these exact commands:
+
+```bash
+cargo build --locked -p sifr
+python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --update
+python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr
+cargo test -p sifr_lowering
+cargo test -p sifr_codegen
+cargo test -p sifr_driver
+cargo test -p sifr_frontend
+cargo test -p sifr_ir
+cargo test -p sifr_type_system
+cargo test -p sifr_lowering required_error_message
+cargo test -p sifr_driver required_error_message
+cargo test -p sifr_driver async_python_error_channel
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite dependency-versions --result-json target/verification/areas/item12k-python-dependency-versions.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite binding-authoring --result-json target/verification/areas/item12k-python-binding-authoring.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite callback-examples --result-json target/verification/areas/item12k-python-callback-examples.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite async-declaration-examples --suite async-context-examples --result-json target/verification/areas/item12k-python-async-examples.json
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --result-json target/verification/areas/item12k-python-complete.json
+python3 /private/tmp/sifr-item12k-cont.StPW7n/native_qualification.py /private/tmp/sifr-item12k-cont.StPW7n/native-qualified
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full --result-json target/verification/areas/item12k-leetcode-full.json
+uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json target/verification/areas/item12k-coverage-readiness.json
+python3 verification/areas/diagnostics/checks/coverage_test.py
+python3 verification/areas/diagnostics/checks/test_schema_sync.py
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --result-json target/verification/areas/item12k-diagnostics.json
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+python3 scripts/check_hir_maintainability_guardrails.py
+python3 scripts/check_file_size_guardrails.py
+git diff --check
+scripts/run_all_tests.sh --profile merge
+```
+
+Verify B2/B3 exact checker locations before invocation; correct registration
+before execution if needed. Reuse B1/B2/B3 passes only after complete-input
+provenance comparison, with explicit hashes. Full Python30/30 includes all five
+named suites; do not repeat unchanged expensive coverage. Demo update's full
+byte comparison can cover check. Readiness runs its four checks without duplicate
+standalone invocations. Adapt only native script roots outside Git, preserving
+90 cases, compiler/source/corpus hashes, native assertions and worker policy.
+Canonical algorithmic suite must qualify411 cases. No filtered certification,
+warm-cache performance claim, blind baseline regeneration or failure allowlist.
+
+After prerequisite qualification, one exact-base/candidate read-only Opus review,
+at most one remediation, then one merge-profile gate on the approved exact SHA;
+skip create-pr, no second gate. Publish SHA-keyed completed review outside Git.
+Inspect disk/private target before long Cargo gate. Full E2E and migrated stdlib
+runtime coverage count only if actual gate lanes pass. A confirmed external
+blocker or second-review new mechanism receives a later owner and terminal
+checkpoint; stop without repairing it. H/I/M1 followups and issues3703/3707/3708/
+3710/3711 remain outside this item. After successful merges and phase/owner
+receipt, stop. No12D/E/F, retainedItem12,12A or whole-phase work.
+
 ## Item12K-B1 dispatch and ownership (2026-09-06)
 
 The user authorizes this fresh sole implementer to close only the separately
