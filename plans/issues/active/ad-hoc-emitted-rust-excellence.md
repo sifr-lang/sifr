@@ -2,6 +2,151 @@
 
 Status: active
 
+## Original 12K terminal receipt: approved, externally blocked (2026-09-06)
+
+This is the current original 12K handoff. Earlier checkpoint statements below
+remain historical evidence. State: **integration reviewed and approved; sole
+merge gate failed on three pre-existing developer-tooling owners; not merged,
+not closed**. No next-item implementation or whole-phase review occurred.
+
+- PR: [#3717](https://github.com/sifr-lang/sifr/pull/3717), still draft.
+- Exact reviewed/gated candidate: `56907f59cc7d9f9fedb89434970c074c0247dee9`.
+- Exact assessed main: `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+- Exact corpus: `8bcbe7ab7939e5c8362c10f61a80e368022cc372`,
+  [leetcode #48](https://github.com/sifr-lang/leetcode/pull/48), unmerged.
+- Starting complete record: `e9cce681e039f918aaf64daebe0d415195bb6f96`.
+- Owned checkout: `/private/tmp/sifr-item12k-delivery.4J6JeK/sifr`;
+  local branch `codex/item12k-final-delivery`, PR branch
+  `codex/item12k-final-integration`. Parent dirty Markdown, all predecessor
+  checkouts, indexes, targets and retained evidence remained read-only.
+- All 202 integration changed paths, 32,088 tracked tree entries and 16 exact
+  clean submodule checkouts authenticated. The provenance JSON enumerates all
+  paths and retained ancestry. This continuation changed only this phase
+  Markdown before review; no integration source correction was necessary.
+- Normal 12B/H/I/correcting M1/B1/B2/B3/B4/B5/B6 ancestry is preserved.
+  Separate Item12 source `8ad089a` remains excluded. Historical 12J/R1 reviews
+  remain NOT SATISFIED; only the correcting M1 lineage is approved.
+- Final record SHA is published in the external terminal receipt following this
+  documentation-only commit. Sifr/corpus merge SHAs: **none**.
+
+### Completed review and exact-candidate evidence
+
+The original single Opus integration review completed **SATISFIED**, no blockers,
+on all 202 paths against assessed main. [Published review](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5561494295).
+The interrupted turn's original process was resumed and consumed, not restarted.
+Response SHA256: `ef02a6509f907dd87e6cf0a6869ed0f024f11688b8b4f8a20f62758b79850fa3`.
+
+The newly named retained-manifest check, file-size guard (3780 files / 900 lines)
+and exact-base diff check passed. Setup fetched actual main into local
+`refs/remotes/origin/main` and verified its retained manifest; no baseline
+override. This resolves the local setup omission #3721 without changing a guard.
+`CARGO_TARGET_DIR` remained unset, with the owned default outer target and
+nested probes' separate caches under owned TMPDIR. New Python/UV caches and
+all canonical JSON reports were inside the owned paths. No prior target was reused.
+
+The sole `scripts/run_all_tests.sh --profile merge` on the approved candidate
+completed **FAILED exit 1 after 3736.19 seconds**. No retry or second gate.
+It passed Cargo setup and all 13 guardrails, including fresh demo companions
+and the formerly blocked retained-manifest stage. Actual area outcomes:
+
+| Area | Actual result in this gate |
+| --- | --- |
+| Rust interop | PASS, 10 variants |
+| Coverage readiness | PASS, 4 variants |
+| Core language | PASS, 5 variants |
+| CPython differential | PASS, 2 variants |
+| Complete Python interop | PASS, 30 variants, all five named dependency suites included |
+| Diagnostics | PASS, 184 variants |
+| Runtime platform | PASS under its policy, 30 variants, 3 explicit skips |
+| Algorithmic representative subset | PASS, 12 variants |
+| Developer tooling | FAIL, 42 variants, 3 blocking failures |
+
+Runtime-platform skips were the existing capability-gated HTTP body fixture and
+two sanitizer smokes requiring unavailable llvm-symbolizer. These are explicit
+profile-policy skips, not newly certified runtime coverage.
+All subsequent areas and toolchain stages were **unreached**, including full
+E2E, migrated stdlib and normally ignored driver generated builds. Passing
+prefixes do not certify them. The cold build and exceeded advisory wall budget
+are not host-sensitive performance evidence.
+
+Before review and again at handoff, complete relevant-input authentication
+preserved 78 historical receipts plus 25 B5 artifacts (104 distinct authenticated
+artifacts including anchors). Retained executions remain correctly attributed:
+native90, full algorithmic411, Python30/all five suites, diagnostics184,
+readiness4, demos264, codegen1452, lowering1119/1 existing ignored, frontend139,
+IR4, types147, required-message/async filters, B2/B3 focused18, B4 focused8,
+B5 driver595/77 normally ignored/successful doctests and strict Clippy.
+They are inherited evidence, not freshly rerun standalone matrices on this SHA.
+The new gate's actual area executions are recorded separately above.
+
+### External failure owners; no repairs here
+
+1. **12K-B7 / [#3722](https://github.com/sifr-lang/sifr/issues/3722)**,
+   compiler/tooling filesystem inventory: 22 direct read/probe sites in six
+   paths are absent from the transfer inventory. Every exact source line
+   already exists on main; checker and inventory blobs are unchanged.
+   Inline tests in materialize.rs are among the scanner's current observations.
+2. **12K-B8 / [#3723](https://github.com/sifr-lang/sifr/issues/3723)**,
+   compiler/tooling compatibility with SQL owners: three PostgreSQL/MySQL
+   database `bigint` spellings trigger the removed-Sifr-type token rule.
+   Source, checker and retained-contract registry are identical to main.
+3. **12K-B9 / [#3724](https://github.com/sifr-lang/sifr/issues/3724)**,
+   formatter reference/manifests: eight missing/drifted checks for
+   `--preview`, `--no-preview`, preview capability requirements and
+   `fmt_cli_preview_flags`. Reference, all manifests, checker and Ruff
+   gitlink are unchanged from main. Formatter behavior/AST checks passed.
+
+These are read-only provenance diagnoses, not rerun test commands or
+integration fixes. Owning issues contain exact locations, unchanged blobs,
+originating commits and focused validation recommendations. No later-item code,
+guard weakening or new language behavior was implemented.
+
+Nonblocking review suggestions remain separate: pre-canonicalization raw tuple
+grouping is erased before artifacts are written (later emitted-quality owner);
+compiler-internal conversion assertions depend on the required-message lowering
+invariant (existing M1-F1 hardening owner). The review's pending-gate observation
+is now the explicit failed qualification above, not an additional code defect.
+
+### Preserved artifacts and terminal counts
+
+Evidence root: `/private/tmp/sifr-item12k-delivery.4J6JeK/`.
+Canonical reports: owned `sifr/target/verification/areas/`.
+
+| Artifact | SHA256 |
+| --- | --- |
+| `item12k-delivery-provenance.json` | `66dbbc9494ba679242c010fecc45d8906c382c9b5f8148eb42438d031bd6021a` |
+| `item12k-delivery-final-evidence.json` (54 current artifacts) | `edf9ce8c890b80af771ce8cd56ccedc143cb9e69d93d25e853d13d73bdb51d0a` |
+| `evidence/merge.log` | `336f5b1345f2495c7a197d81658f36ddfbcebf9c57b110675c5dc4b5c8f219b3` |
+| `item12k-delivery-merge.json` | `26397bc590f84b7f333bd0dee2a510ae74a59d0df4a9d90804b2a90cb1ff76ec` |
+| `target/validation_lane_reports/merge.latest.json` | `5ddb8f75654d3d871121819a1e0a7383e9be197a2ec65aaf47ede2b8377323ac` |
+| `developer-tooling-merge-results.json` | `250c53ce5883451f3ef6927e0e46e829e4c2c72cbae224fd8b81ae8a78f0d031` |
+| `item12k-delivery-inventory-blocker.json` | `193156c72c92e9949c456bf5491bae8b86efcf70c9d25ab0d4f3827c71b7e42d` |
+| `item12k-delivery-other-blockers.json` | `ba655e2869464524d2d831cb6c3311fb933b4683dea33fa3ba24ee4ec504bf80` |
+
+Counts: **1 initial integration review, 0 remediation reviews, 1 provider request,
+0 retries, 0 create-pr gates, 1 failed merge-profile gate, 0 passing gates,
+0 Sifr merges, 0 corpus merges**. Three fresh standalone named checks passed;
+other fresh validation occurred only within this one gate. No count is reset.
+
+Review handle44502 and gate handle89382 both completed and were consumed.
+No live command/review/gate remains at handoff. Pre-gate free disk96GiB / target
+3.7MiB; terminal free disk67GiB / target23GiB. No cleanup occurred; retained
+target evidence stays intact, and no further long Cargo command is planned.
+
+Dependent PRs #3694/#3697/#3698/#3700/#3701/#3702/#3713/#3715/#3717/#3719 and
+corpus#48 remain preserved, without a qualified main delivery or superseding
+closure. GitHub reports #3720 merged into its stacked B5 base; this is not a
+main integration merge. B5's old failed gate remains failed and consumed.
+
+Exact next action belongs to the orchestrator: assign the three recorded
+external owners sequentially, preserve this exact integration approval and
+failed gate, and determine the remaining delivery authorization after their
+qualified handoffs. This receipt authorizes no second original12K gate and
+claims no completed delivery. The worker stops here, without 12D/E/F, retained
+Item12, 12A or whole-phase work.
+
+<!-- Historical prerequisite checkpoints follow; the terminal receipt above is current. -->
+
 ## Item12K-B5 terminal checkpoint: external driver doctest blocker (2026-09-06)
 
 State: **implemented, unreviewed, not merged; external-validation-blocked**.
@@ -1316,7 +1461,10 @@ It does not broaden the active item.
 | 12J | blocked: both reviews exhausted, unapproved | Async Python error-channel contract | Draft #3699 preserves final reviewed candidate `4bc432f3474134b1a1d43202d39fd147893bb014`; initial and remediation reviews are NOT SATISFIED. No gate or merge. Message-storage follow-up 12J-M1 requires adjudication; 12I remains external. |
 | 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
 | 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
-| 12K | awaiting integration; B5 validation setup blocked | Item 12B and Python dependency integration | Draft #3717 and complete retained ancestry preserved. B5 source is qualified and approved at `e5ff95f5c4f4708542e6367671e751c7bcf82e98`, but its sole gate failed on missing local `origin/main` (#3721). Original 12K remains zero reviews/gates/merges; no inherited implementation approval is implied. |
+| 12K | integration approved; sole gate externally blocked | Item 12B and Python dependency integration | Draft #3717, approved/gated `56907f59cc7d9f9fedb89434970c074c0247dee9`. One SATISFIED review, one failed gate, no merge. Later owners #3722/#3723/#3724; local origin/main setup #3721 passed. See current terminal receipt. |
+| 12K-B7 | recorded, not started | Direct filesystem inventory (#3722) | All 22 sites in six absent inventory paths pre-exist on main. |
+| 12K-B8 | recorded, not started | SQL bigint spelling versus compatibility guard (#3723) | Three unchanged SQL type spellings trigger the removed-language-type scan. |
+| 12K-B9 | recorded, not started | Formatter preview reference drift (#3724) | Eight checks fail on unchanged reference/manifests; no formatter code defect established. |
 | 12K-B1 | approved correction; gate blocked | TypeVar diagnostic assertion fidelity (#3667) | Draft #3702, reviewed `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`; named checks pass, Opus SATISFIED; one failed gate exposes 12K-B2/B3. Unmerged; see B1 terminal checkpoint above. |
 | 12K-B2 | merged | Canonical diagnostic-code matcher identity (#3704) | PR3706 merge770f1ab; recorda53b5d3 retained in12K ancestry; full historical receipt preserved. |
 | 12K-B3 | merged | Diagnostics schema synchronization (#3705) | PR3709 mergef11e1cd; recordc508c143 retained in12K ancestry; full historical receipt preserved. |

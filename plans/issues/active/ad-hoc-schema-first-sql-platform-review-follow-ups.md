@@ -4,6 +4,29 @@ Status: active, non-blocking
 
 Owner: SQL compiler, schema tools, and verification
 
+## Later 12K-B8: SQL spelling compatibility guard (2026-09-06)
+
+[Owner #3723](https://github.com/sifr-lang/sifr/issues/3723) records a new
+external qualification blocker, not a repeated coverage-classification failure.
+Original12K candidate `56907f59cc7d9f9fedb89434970c074c0247dee9` passed its full
+integration review and readiness4, then its sole gate reported PostgreSQL
+`types.rs:479`, PostgreSQL `postgresql_regressions.rs:380`, and MySQL
+`types.rs:73` as removed public bigint support. These are SQL database type
+spellings. All three files, the compatibility checker and retained-contract
+registry are byte-identical to assessed main f11e1cd. No SQL semantics or guard
+policy was changed or repaired by 12K. The tooling/SQL owners must preserve
+real SQL type names and rejection of removed Sifr bigint support when resolving
+the boundary; this record does not authorize a broad scan suppression.
+
+Exact unchanged blobs and originating commits are in owned
+`target/verification/areas/item12k-delivery-other-blockers.json`, SHA256
+`ba655e2869464524d2d831cb6c3311fb933b4683dea33fa3ba24ee4ec504bf80` under
+`/private/tmp/sifr-item12k-delivery.4J6JeK/sifr`.
+Gate log SHA256 `336f5b1345f2495c7a197d81658f36ddfbcebf9c57b110675c5dc4b5c8f219b3`.
+Two other developer-tooling owners are #3722 inventory and #3724 formatter
+reference drift. Gate failed after3736.19s; later SQL/full E2E/stdlib/ignored
+driver lanes were unreached. No merge, repair, second gate or next-item code.
+
 ## Approved Item 12B qualification dependency (2026-09-05)
 
 The user explicitly authorized the Item 12B owner to repair the 23 recorded

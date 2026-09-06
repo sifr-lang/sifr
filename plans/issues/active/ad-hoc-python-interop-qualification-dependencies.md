@@ -2,6 +2,28 @@
 
 Status: active; fresh sequential dependency workers authorized on 2026-09-05.
 
+## Original 12K approved integration, failed external gate (2026-09-06)
+
+Current receipt supersedes earlier pending Python qualification statements.
+PR #3717 candidate `56907f59cc7d9f9fedb89434970c074c0247dee9` received its one
+full integration Opus SATISFIED review, then its sole merge-profile gate failed
+on three unchanged developer-tooling guards (#3722/#3723/#3724). The complete
+Python interop area actually passed all 30 variants, including all five named
+dependency suites, on this reviewed SHA; no partial certification bypass.
+Canonical report in `/private/tmp/sifr-item12k-delivery.4J6JeK/sifr/target/verification/areas/python-interop-merge-results.json`,
+SHA256 `0b7fb51b9f9b7a5e88ef8c286f6415292d0e33890f4f3bb5ed0cd1fb8e36b82f`.
+
+The gate failed exit 1 after 3736.19 seconds. Full E2E/migrated stdlib/ignored
+driver build lanes remain unreached; M1-F3 is not closed. No Sifr/corpus merge
+or dependency PR supersession occurred. Exact main f11e1cd and corpus8bcbe7a,
+all 202 integration paths and 16 exact submodules are preserved. Historical
+12J/R1 failed reviews remain distinct from correcting M1 approval. H/I/M1
+nonblocking follow-ups remain separate owners. See the phase's current terminal
+receipt and SHA-keyed external review at PR #3717 comment5561494295.
+Original12K counts: 1 initial review, 0 remediation, 1 provider request,
+0 retries, 1 failed merge gate, 0 create-pr gates, 0 merges; no live handles.
+This worker stops with the external owners recorded, without further repairs.
+
 ## Original12K continuation checkpoint (2026-09-06)
 
 Integration candidate `fbe5ca93e61c5286268f2b42a768901a907544f4` preserves original
