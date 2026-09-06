@@ -4321,3 +4321,61 @@ prerequisites, and only then uses the one initial exact-SHA review, at most one
 remediation review, and one final-candidate merge-profile gate. No whole-phase
 review, Item12 residual,12D/E/F, or12A work belongs to this session. The worker
 stops after publishing this documentation-only blocked receipt.
+
+### Approved B6 receipt and original B5 continuation (2026-09-06)
+
+Pasteur is closed after the [approved B6 handoff](https://github.com/sifr-lang/sifr/pull/3720#issuecomment-5560707777).
+Clone `/private/tmp/sifr-item12k-b6.YxonRW/sifr`, reviewed candidate
+`4d076ebe08f00ba7ff6ea6ae7f910397ba7b2356`, record
+`08b2302a8f5e6af910cef00d6932c1da57ac3719`, base
+`9a42fe4239426cb53438b1d8f6a000f4c0a352d5`. Only phase Markdown changed.
+One initial Opus SATISFIED, zero remediation/retries/gates/merges. No B6 technical
+blocker remains; narrow review does not approve merging inherited implementation.
+
+Reproduced cause: outer and nested Cargo invocations shared an explicit target
+across registry/vendor source replacement, replacing the transitive rustversion
+proc macro with an incompatible crate hash despite the expected filename existing.
+Corrected invocation **leaves CARGO_TARGET_DIR unset**, uses the owned clone's
+default outer target and the nested probes' existing separate cache under owned
+TMPDIR. Do not export one common target again. No toolchain/source/lock/fixture/
+workflow change or coverage exemption was needed.
+
+Focused doctests and actual full `cargo test -p sifr_driver` pass on the exact
+B6 candidate:595 unit passes,77 normally ignored, successful final doctests.
+All named static checks pass. Evidence/provenance cover32088paths,16submodules,
+41receipts; full-driver log hash
+`40fd5424b73d15032693fe21d987af909e60820a918ef721b24834558cb16567`.
+Canonical ledgers in the clone's `target/verification/areas/`:
+`item12k-b6-final-evidence.json` and `item12k-b6-provenance.json`.
+Historical failed invocations remain failed. Full E2E/migratedstdlib/ignored
+driver build lanes remain uncertified, not implied by the full-driver pass.
+
+Dispatch a fresh sole worker for **original12K-B5 continuation**, not a new item
+or allowance reset. Start from the complete B6 record; assess latestmain and
+preserve exact corpus/ancestry. Review B5 against its original exact base
+`9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`; retain its two original corrections
+without reimplementation. Read both prior B5/B6 dispatches and receipts. Reuse
+the now-passing B6 driver/static evidence after authenticating relevant unchanged
+inputs; do not repeat the expensive full driver merely for a fresh worker.
+Run pending registered strict workspace Clippy and any affected named checks,
+then B5's still-unused narrow initial review (maxone remediation), then its sole
+governed approved-SHA merge gate. Preserve target isolation throughout. No second
+gate; no full-phase review. Preserve exact gate evidence for later12K reuse.
+If only inherited unreviewed integration prevents safe standalone delivery,
+return the approved stacked candidate/receipts, do not invent another mechanism
+blocker or merge under narrow approval. A genuine new external failure follows
+the existing later-owner stop rule. Original12K remains0review/0gate and belongs
+to the next fresh worker; no12K/12D/E/F/Item12/12A implementation in B5.
+
+#### Original B5 continuation ownership
+
+This continuation owns `/private/tmp/sifr-item12k-b5-cont.KTpKoc/sifr`, branch
+`codex/item12k-b5-continuation`, its index, default target, and sibling temporary
+paths. Parent and predecessor checkouts, targets, indexes, and records are read-only.
+The copied dispatch above is authoritative. B5 source remains `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`;
+original review base remains `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`.
+Pending work is authenticated evidence reuse, the named strict workspace Clippy,
+affected static checks, one narrow exact-SHA initial review (at most one remediation),
+and one approved-SHA merge-profile gate. `CARGO_TARGET_DIR` stays unset.
+No predecessor review or gate allowance resets. An approved stacked handoff remains
+the authorized terminal state if broad original 12K approval prevents delivery.
