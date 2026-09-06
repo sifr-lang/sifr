@@ -4379,3 +4379,20 @@ affected static checks, one narrow exact-SHA initial review (at most one remedia
 and one approved-SHA merge-profile gate. `CARGO_TARGET_DIR` stays unset.
 No predecessor review or gate allowance resets. An approved stacked handoff remains
 the authorized terminal state if broad original 12K approval prevents delivery.
+
+#### B5 same-mechanism Clippy completion
+
+Strict workspace Clippy on continuation `1321c2a75e4e146a310507c0ae2a326f5c2a5540`
+found `clippy::if_not_else` on B5's explicit `!=` conditional at
+`crates/sifr_driver/src/build/cargo_manifest.rs:235`. The correction tests equality
+first and swaps the same two branches. Generated strings, source selection, errors,
+and lock behavior remain identical; the private checksum-map alias is retained.
+The failed Clippy invocation remains failed. This is the same bounded lint mechanism,
+not a new item, review remediation, suppression, or gate attempt.
+
+Since a driver source input now changed, final qualification uses the already named
+`cargo test -p sifr_driver`, strict workspace Clippy, fmt, HIR, file-size, and diff
+checks on the final candidate. The authenticated B6 full-driver pass is retained as
+prior evidence, but will not stand in for this changed-source final invocation.
+No broad standalone corpus or Python matrix is repeated. B5 remains zero reviews,
+zero provider requests and zero gates before final qualification.

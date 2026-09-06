@@ -232,10 +232,10 @@ fn portable_dependency_line(
     cargo_version: &str,
     cargo_source: Option<&str>,
 ) -> Result<String, String> {
-    let package = if dependency_name != cargo_package_name {
-        format!("package = {}, ", toml_quote_string(cargo_package_name))
-    } else {
+    let package = if dependency_name == cargo_package_name {
         String::new()
+    } else {
+        format!("package = {}, ", toml_quote_string(cargo_package_name))
     };
     let Some(source) = cargo_source else {
         return Err(format!(
