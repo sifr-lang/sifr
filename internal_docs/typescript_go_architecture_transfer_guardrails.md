@@ -35,12 +35,30 @@ The source-provider implementation locks the following terms before behavior mig
 
 ## Current Direct-Read, Probe, And Documented Effect Inventory
 
-These production filesystem reads and path probes are semantic inputs, tooling
+The production filesystem reads and path probes below are semantic inputs, tooling
 inputs, package identity inputs, or command-surface inputs. The source-provider implementation must route
 semantic entries through a typed source provider or explicitly reclassify a row
 as a non-semantic exception. Path probes are listed alongside content and
 directory reads so the source provider can track successful and failed lookup dependencies
 without treating probes as source content reads.
+
+Inventory coverage is deliberately broader than semantic source ownership. The
+checker scans complete Rust files under its six declared crate `src` roots,
+including inline `#[cfg(test)]` modules and platform-specific code on every host.
+Its existing path filter excludes `source_provider.rs`, `tests` and `bin`
+directories, `tests.rs`, and `*_tests.rs`; it does not parse conditional blocks.
+Inline-test reads and probes therefore remain listed as test effects, as with
+the self-update runner fixtures below. Their non-semantic classification is not
+an exclusion for production code in the same file. A future production read in
+such a file still needs its own ownership adjudication.
+
+The checker enforces path membership, not exact line numbers or ownership
+classifications. The row descriptions remain the ownership record; adding a
+path does not grant a blanket exception to every read in that file. Line
+references for the 12K-B7 additions below use main
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`: 22 matching lines across six paths,
+17 production and five inline-test lines. The SQL manifest line contains two
+file probes, so these are scanner-line counts, not counts of individual calls.
 
 | Area | Current site | Current behavior | Source-provider expectation |
 | --- | --- | --- | --- |
@@ -74,6 +92,14 @@ without treating probes as source content reads.
 | CLI self-update dry-run metadata fixture | `crates/sifr/src/self_update_metadata_source.rs:37`, `crates/sifr/src/self_update_metadata_source.rs:42` | Installed-release qualification may read an explicitly selected, absolute, regular-file schema-v2 metadata fixture only for `self update --dry-run`; ordinary and mutating updates continue to fetch the protected public governance asset. | Non-semantic release-qualification command surface; not compiler source identity. Keep inventoried unless release certification gains a dedicated fixture provider boundary. |
 | CLI self-update receipt state | `crates/sifr/src/self_update_receipt.rs:71`, `crates/sifr/src/self_update_receipt.rs:90`, `crates/sifr/src/self_update_receipt.rs:103`, `crates/sifr/src/self_update_receipt.rs:114`, `crates/sifr/src/self_update_receipt.rs:177`, `crates/sifr/src/self_update_receipt.rs:206` | Self-update reads and probes the standalone installer receipt and installed sysroot marker to decide whether the current executable is managed by the official installer. | Non-semantic install-state command surface; not compiler source identity. Keep inventoried unless a later install-state provider boundary is introduced. |
 | CLI self-update runner fixture reads | `crates/sifr/src/self_update_runner.rs:532`, `crates/sifr/src/self_update_runner.rs:565`, `crates/sifr/src/self_update_runner.rs:662` | Self-update runner tests read fixture files written by fake installer scripts to assert delegated environment, manifest, sysroot, and lock behavior. | Non-semantic test-fixture reads; not compiler source identity. Keep inventoried unless runner tests move to a dedicated fixture helper boundary. |
+| CLI host-tool program resolution | `crates/sifr/src/host_tool_cli.rs:196` | `resolve_program` probes PATH candidates for Cargo and rustc before building a host tool. | Non-semantic host-tool execution environment probe, owned by the CLI command; not Sifr source discovery. Keep inventoried as a command-surface exception. |
+| CLI host-tool sandbox setup | `crates/sifr/src/host_tool_sandbox.rs:238`, `crates/sifr/src/host_tool_sandbox.rs:334`, `crates/sifr/src/host_tool_sandbox.rs:358`, `crates/sifr/src/host_tool_sandbox.rs:389`, `crates/sifr/src/host_tool_sandbox.rs:395`, `crates/sifr/src/host_tool_sandbox.rs:429` | Sandbox setup probes macOS sandbox-exec, Linux bubblewrap/prlimit, system and subprocess directories, and mount-parent path shape. | Non-semantic host confinement and mount-layout probes, owned by the CLI sandbox. Preserve fail-closed capability enforcement; these are not compiler source lookup dependencies. |
+| Driver materialization inline-test effects | `crates/sifr_driver/src/build/materialize.rs:625`, `crates/sifr_driver/src/build/materialize.rs:626`, `crates/sifr_driver/src/build/materialize.rs:664`, `crates/sifr_driver/src/build/materialize.rs:665` | Inline tests read generated `src/main.rs` and probe the generated manifest, retained target marker, and rematerialized source. | Non-semantic temporary test-output observations, owned by materialization tests. Keep inventoried; this classification does not exempt production materialization inputs. |
+| Driver portable generated-source publication | `crates/sifr_driver/src/build/portable_project.rs:64`, `crates/sifr_driver/src/build/portable_project.rs:79` | `copy_tree` enumerates the generated Rust source directory and checks entry directory types while publishing the portable project. | Non-semantic generated-output materialization, owned by the driver build layer; not semantic Sifr source access. |
+| Driver portable project build identity | `crates/sifr_driver/src/build/portable_project.rs:130`, `crates/sifr_driver/src/build/portable_project.rs:177`, `crates/sifr_driver/src/build/portable_project.rs:342` | Portable metadata preparation reads `sysroot.toml`, the resolved generated Cargo lockfile, and authoritative Cargo locks to pin revisions and rewrite portable dependency sources. | Sysroot and package/build identity inputs, owned by driver build planning. Keep inventoried until a package-aware build snapshot owns these authorities; not a blanket generated-output exception. |
+| Driver portable lock inline-test effect | `crates/sifr_driver/src/build/portable_project.rs:443` | The inline lock-rewrite test reads its generated Cargo lockfile to check portable dependency sources and removal of private host paths. | Non-semantic temporary test-output read; does not reclassify the production identity reads in the same file. |
+| Driver SQL editor package readiness | `crates/sifr_driver/src/build/sql_profiles.rs:248`, `crates/sifr_driver/src/build/sql_profiles.rs:253` | `load_sql_editor_profiles` probes `sifr.toml`, `Cargo.toml`, and `Cargo.lock` before loading frozen package state; absent files defer SQL editor profiles. | Package/config availability inputs that affect editor analysis, owned by driver SQL profile loading and package snapshots. Successful and failed probes require provider/snapshot tracking; retain as an unresolved inventory obligation, not a non-semantic exception or a claim of completed migration. |
+| Package host-tool path identity | `crates/sifr_package/src/host_tools.rs:719`, `crates/sifr_package/src/host_tools.rs:745`, `crates/sifr_package/src/host_tools.rs:747` | `hash_path_package` enumerates package directories and classifies metadata as directories/files to build the bounded, symlink-rejecting content checksum for host-tool lock verification. | Host-tool package identity and trust inputs, owned by `sifr_package`. Keep inventoried until a package-aware snapshot owns directory membership, file kinds, and content identity; not a general tooling exception. |
 
 The SQLx offline preflight's current package-source, query-file, and metadata
 probes are inventoried in the driver row above. These are package
@@ -87,6 +113,8 @@ Permitted exceptions for the source-provider implementation:
 - CLI stdin reads are not workspace identity until later explicitly modeled.
 - Generated-output and test-harness reads under tests, verification, and
   generated artifact checks are outside the source-provider semantic scope.
+  This includes the specifically classified inline-test observations above,
+  which remain in the inventory scan; it does not exempt their containing files.
 - Codegen intrinsics that emit `std::fs::*` for user programs are not compiler
   service reads.
 - Build artifact cache metadata in `crates/sifr_driver/src/build/workspace.rs:223`,
