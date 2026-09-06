@@ -171,7 +171,7 @@ uv run --project verification --locked python -m sifr_verify areas run --area py
 python3 /private/tmp/sifr-item12k-cont.StPW7n/native_qualification.py /private/tmp/sifr-item12k-cont.StPW7n/native-qualified
 uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full --result-json target/verification/areas/item12k-leetcode-full.json
 uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json target/verification/areas/item12k-coverage-readiness.json
-python3 verification/areas/diagnostics/checks/coverage_test.py
+python3 verification/areas/diagnostics/checks/code_coverage_test.py
 python3 verification/areas/diagnostics/checks/test_schema_sync.py
 uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --result-json target/verification/areas/item12k-diagnostics.json
 cargo clippy --workspace -- -D warnings
@@ -2450,6 +2450,80 @@ checker, schema, test, dependency, fixture or workflow inputs changed. Reuse
 the other passing targeted evidence across this documentation-only correction;
 repeat the named complete area once to obtain its canonical successful report.
 No Sifr gate has run and no gate retry is involved. B3 reviews remain zero.
+
+### Item12K-B3 terminal receipt: merged (2026-09-06)
+
+**12K-B3 is closed.** [PR #3709](https://github.com/sifr-lang/sifr/pull/3709)
+is verified MERGED and [owner #3705](https://github.com/sifr-lang/sifr/issues/3705)
+is CLOSED. This supersedes B3's in-progress validation state above.
+
+- Exact base: `770f1ab86050bc95abf05573b39c8c6d5238902e` (merged B2).
+- Reviewed final candidate: `380f7d655e2e83c50f05f54512de13d0f4e47d6d`.
+  Schema/checker/test implementation first committed as
+  `226b489981d1adeed1691c1f2354d67ed608dd21`; final candidate adds only
+  the documented validation-result-path correction.
+- Merge SHA: `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+  Fetched merge and reviewed candidate have identical trees:
+  `b53ac2f7674eb2d49f2818894be1da16c6f244f9`; direct tree diff is empty.
+- Owned checkout `/private/tmp/sifr-item12kb3.bEfGLS/sifr`, branch
+  `codex/item12k-b3-schema-sync`. This post-merge commit is a documentation-only
+  terminal record; its SHA is published in the owner/PR terminal receipt.
+- [Validation receipt](https://github.com/sifr-lang/sifr/pull/3709#issuecomment-5558941208).
+  Locked generator/artifact bytes and direct schema-sync check pass;
+  32 diagnostics crate tests and seven focused checker regressions pass;
+  file-size guard (3756 files), JSON/Python syntax and diff checks pass.
+- Corrected complete diagnostics-area invocation exits 0: **184/184** variants,
+  **179/179** baselines across 151 cases and **5/5** rules; zero failures,
+  skipped or filtered variants. Full-area invocation count is **two**:
+  the first emitted all 184 passes but exited 1 without a report because of
+  this worker's invalid output path, then the corrected full run passed and
+  wrote its canonical report. The first invocation is not counted as a
+  successful area command. No report was synthesized and no partial
+  certification substituted for the full successful run.
+- [One initial Opus review](https://github.com/sifr-lang/sifr/pull/3709#issuecomment-5558960888):
+  **SATISFIED**, no blockers, exact final candidate. **Zero remediation**
+  reviews and **zero failed review requests**. Review stayed outside the
+  reviewed tree. No further review is required for this record-only update.
+- **Zero create-pr gates, zero merge gates**. No Rust/compiler, lockfile,
+  fixture or workflow files changed, so the explicit B3 dispatch excludes
+  Sifr gates and conditional Rust fmt/HIR checks. No whole-phase review.
+
+Changed paths relative to base are exactly:
+
+- `docs/schemas/diagnostics.schema.json` (eight proven stale object key orders;
+  all schema keys, values, and array order preserved).
+- `verification/areas/diagnostics/checks/schema_sync.py` (locked generator
+  invocation; full strict comparison retained).
+- `verification/areas/diagnostics/checks/test_schema_sync.py` (seven regressions).
+- `plans/issues/active/ad-hoc-emitted-rust-excellence.md` (B3 records only).
+
+Evidence root `/private/tmp/sifr-item12kb3.bEfGLS/`:
+
+- `sifr/target/verification/areas/diagnostics-b3-results.json`, SHA256
+  `c8b3992a8f8780d5cdb793dae3b8c6fdcffc49873f83b32b101065aeeb54af2b`.
+- `diagnostics-area-380f7d655.log`, SHA256
+  `e7c5e8972451db9d102c62fa755efef3c84c54d18a7f768a330933be36d8435c`.
+- First failed-invocation log `diagnostics-area-226b48998.log`, SHA256
+  `43e1b010e952ef0607ba9b7fa33b68db5ee104b7d7a2c753972d373f14dd63a4`.
+- `opus-380f7d655e2e83c50f05f54512de13d0f4e47d6d.gZt9UZ/response.md`,
+  SHA256 `60a84de27f592ba88aa5c63957ae997e9096c8f378cd0a85d73abf63b6129bd7`.
+- `validation-380f7d655e2e83c50f05f54512de13d0f4e47d6d.md` indexes the
+  exact commands, reused unchanged-input targeted logs, and diagnosis captures.
+
+Nonblocking Opus follow-ups are separately owned:
+[#3710](https://github.com/sifr-lang/sifr/issues/3710), automatic discovery of
+focused diagnostics checker regressions; and
+[#3711](https://github.com/sifr-lang/sifr/issues/3711), feature-independent
+schema ordering (including the associated canonicalization suggestion).
+No follow-up implementation was started. #3707/#3708 remain separate owners.
+
+Blocker: **none**. Parent's two intentional dirty Markdown documents and all
+predecessor checkouts/indexes/targets/histories remain preserved read-only.
+This narrow merge does not approve or import the inherited 12K stack. Original
+12K remains at zero reviews and zero gates used, with all dependency caps
+unchanged. Exact next action for this worker: stop after publishing this
+terminal record. Any 12K continuation, 12D/E/F, Item12 or closure work belongs
+to a fresh separately authorized worker; none is started here.
 
 ## Descriptive demo variables follow-up (2026-09-05)
 
