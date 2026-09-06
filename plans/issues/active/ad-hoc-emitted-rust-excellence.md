@@ -4397,6 +4397,135 @@ prior evidence, but will not stand in for this changed-source final invocation.
 No broad standalone corpus or Python matrix is repeated. B5 remains zero reviews,
 zero provider requests and zero gates before final qualification.
 
+### Original 12K final delivery registration (2026-09-06)
+
+This is the original integration continuation, with zero integration reviews,
+provider requests, retries, and gates consumed before this registration. The sole
+implementer owns `/private/tmp/sifr-item12k-delivery.4J6JeK/sifr`, branch
+`codex/item12k-final-delivery`, its index, and sibling temporary/evidence paths.
+The parent two dirty Markdown files and all predecessor checkouts, indexes,
+targets, and evidence are read-only. The complete starting record is
+`e9cce681e039f918aaf64daebe0d415195bb6f96`; no stack reconstruction is needed.
+Actual remote main is fetched with the explicit refspec
+`+refs/heads/main:refs/remotes/origin/main` and remains
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`. Its retained manifest is at
+`internal_docs/stdlib_retained_compiler_intrinsics.toml`. All 16 submodules
+must match their exact gitlinks, including corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372` (leetcode PR #48).
+
+The preceding original 12K named-command registration remains authoritative.
+For this continuation all commands use the owned repository as cwd,
+`CARGO_TARGET_DIR` unset, `TMPDIR=/private/tmp/sifr-item12k-delivery.4J6JeK/tmp`,
+`UV_CACHE_DIR=/private/tmp/sifr-item12k-delivery.4J6JeK/uv-cache`,
+`PYTHONPYCACHEPREFIX=/private/tmp/sifr-item12k-delivery.4J6JeK/pycache`,
+`CARGO_BUILD_JOBS=6`, and `RUST_TEST_THREADS=1`. Outer Cargo uses its default
+repository target; nested probes retain their separate TMPDIR caches. These
+settings supersede old shared-target and sibling-JSON prescriptions. Canonical
+JSON receipts are under owned `target/verification/areas/item12k-delivery-*`;
+raw logs and SHA-keyed review artifacts stay outside Git in the owned root.
+
+Before review, run the newly named focused command
+`python3 scripts/check_stdlib_manifest_schema.py`, plus the existing named
+`python3 scripts/check_file_size_guardrails.py` and
+`git diff --check origin/main HEAD`. Authenticate the complete B5 candidate tree,
+all exact clean submodules, 25 B5 current artifacts, and 78 historical receipts
+before reusing native 90, algorithmic 411, diagnostics 184, readiness 4, Python
+30/all five suites, demos 264, codegen 1452, lowering 1119/1 ignored, frontend
+139, IR 4, types 147, required-message/async filters, focused 18+8, and the final
+B5 driver 595/77 normally ignored/doctests and strict Clippy passes. These are
+inherited executions with authenticated relevant inputs, not fresh-SHA runs.
+Only phase Markdown changes are expected; any affected input requires targeted
+requalification. No unrelated test matrix or partial certification is authorized.
+
+Read-only profile/runner inspection confirms the sole
+`scripts/run_all_tests.sh --profile merge` invokes full E2E (empty fixture
+manifest), migrated stdlib parity module-merge-check/audit-fixtures/
+complexity-resource/module-inventory and default/feature-API/all-features
+stdlib crate tests. It also invokes the normally ignored driver build lane as
+`cargo test -p sifr_driver --lib -- --ignored --test-threads=1` and CLI generated
+build lane. These exact commands are registered as part of that gate; no
+duplicate standalone execution is planned. Their actual results remain pending.
+The gate's normal setup may build the owned compiler. No cold build is
+host-sensitive performance evidence, and no gate prefix constitutes a pass.
+
+Freeze source/corpus/gitlinks before one exact-SHA full integration Opus review
+against assessed main, with at most one remediation review and at most three
+failed provider attempts in distinct temporary directories. Then run the one
+original integration merge gate on that exact approved SHA, skipping create-pr.
+No B5 gate is repeated. After complete pass, merge corpus PR #48 normally while
+preserving its approved commit as Sifr's gitlink; merge the approved Sifr
+integration normally without squashing away retained ancestry. Reconcile
+dependent PRs and owning issues through delivery records, preserving failed
+12J/R1 history and separate correcting M1 approval. Record review and gate
+evidence outside the approved tree, update phase records after merge, and stop.
+No 12D/E/F, retained Item12 source 8ad089a, or 12A work is included.
+
+### Approved B5 receipt and original12K final qualification dispatch (2026-09-06)
+
+Kant is closed after the [B5 terminal receipt](https://github.com/sifr-lang/sifr/pull/3719#issuecomment-5560928823).
+Start from its clean preserved clone `/private/tmp/sifr-item12k-b5-cont.KTpKoc/sifr`,
+reviewed/gated candidate `e5ff95f5c4f4708542e6367671e751c7bcf82e98`, record
+`e9cce681e039f918aaf64daebe0d415195bb6f96`. B5's exact review base remains
+`9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`; main/corpus remain f11e1cd/8bcbe7a.
+Final B5 equality-first conditional and exact private type alias are approved;
+no manifest/lock-source semantics changed. Narrow review SATISFIED, no blockers.
+Counts:1 initial review,0remediation,1provider request,0retries,1failed merge gate,
+0create-pr gates,0merges. Do not repeat B5's gate or reopen its review.
+
+Actual final-source strict Clippy, full driver595/77normallyignored plus successful
+doctests, fmt/HIR/file-size/diff pass. Complete32088path/16submodule/78historical
+receipt authentication is retained. Driver rerun was required by B5's equality/
+branch swap; no new production change is now presumed necessary. Gate passed
+Cargo setup and eight guardrails, then failed because the new clone lacked a
+local `origin/main` ref. Its405.44s failed prefix is not a pass. The setup omission
+is [12K-B5-V1/#3721](https://github.com/sifr-lang/sifr/issues/3721), owned by12K
+validation setup, not a newly established compiler mechanism requiring B7 code.
+
+Dispatch a fresh sole worker for **original12K continuation** with its existing
+zero initial/remediation/provider/gate counts. This uses the already authorized
+original integration review and single gate, not a replacement B5 gate or new
+allowance. Full-stack approval remains required even though all bounded inputs
+are narrowly approved. Normal safe integration/corpus delivery is authorized
+after complete valid qualification; no user reauthorization is missing.
+
+Before expensive qualification, create an owned clone with normal retained
+ancestry and exact submodules. Fetch the actual main branch into the local
+`refs/remotes/origin/main` and verify it resolves to the assessed remote SHA
+and supplies the retained manifest; `ls-remote` alone is insufficient. Do not
+override the guard baseline to conceal missing setup. Add the focused named
+`python3 scripts/check_stdlib_manifest_schema.py` check before integration review/
+gate. Preserve B6 isolation: CARGO_TARGET_DIR unset, own default outertarget,
+nested probes' existing separate cache under owned TMPDIR. All canonical JSON
+outputs must be inside the owned repository, not a sibling evidence directory.
+Read newer handoffs as superseding historical target/output-path prescriptions.
+
+Read original12K scope, deps and named-command registrations; preserve all
+12B/H/I/correctingM1/B1/B2/B3/B4/B5/B6 and corpus ancestry. Retained Item12 source
+8ad089a remains separate and excluded. Authenticate full relevant inputs before
+reusing expensive native90,algorithmic411,diagnostics184,readiness4,Python30/allfive,
+demo264,codegen1452,lowering1119,frontend139,IR4,types147,required-message/async,
+B2/B3/B4focused and nowpassing B5driver/Clippy/statics. Do not reflexively repeat
+completed matrices or relabel them as fresh. Qualify only actually changed or
+pending named inputs. A local build for required execution is allowed. Complete
+any in-scope integration correction before final tests; register new focused
+commands before execution. Historical failed/unrun commands stay distinct.
+
+Then obtain one original exact-SHA **integration** Opus review against assessed
+main, maxone remediation, and run one merge-profile gate on that final approved
+SHA, skipcreate-pr for in-session merge. Full E2E, migrated stdlib and ignored
+driver build lanes require actual pass; verify coverage, register any missing
+required targeted command before execution. No partialcertification bypass,
+third review, second integration gate or whole-phase review. Freeze corpus/
+source/gitlink provenance before review and plan normal corpus/Sifr merge order
+so approved inputs are not changed afterward. Source changes invalidate affected
+evidence only, not unrelated work; docs-only receipt changes need no second gate.
+
+On pass, deliver approved integration/corpus, reconcile dependent PRs and owning
+issues/phase records, and stop. On true new external failure or second-review
+mechanism, record later owner and stop, no unrelated repair. Already known
+unmerged-stack delivery, B6 target isolation and main-ref preparation are not
+new mechanism blockers. No12D/E/F/retainedItem12/12A work in this worker.
+
 ### Original 12K-B5 continuation terminal receipt (2026-09-06)
 
 State: **source qualified and approved; gate blocked by clone setup, not merged
