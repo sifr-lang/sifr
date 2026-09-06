@@ -171,3 +171,16 @@ The descriptive-demo-variable follow-up ran its final merge gate on
 2026-09-05. It reproduced the same SQL coverage-classification failures
 after all 264 demo companions passed freshness. No SQL source or coverage
 classification changed. Evidence: `target/demo-name-followup/merge-gate.log`.
+
+Item12I's sole merge-profile gate reproduced this blocker on 2026-09-06 at
+Opus-approved exact candidate `f6e8afd964bb214a44c50271dcb2014ee8e828b4`,
+[draft PR #3698](https://github.com/sifr-lang/sifr/pull/3698). It failed after
+184.65s with nine unclassified SQL packages, 13 unclassified targets, and one
+stale PostgreSQL library classification. Generated-companion freshness and
+all preceding guards passed; Rust interop passed 10/10 variants, and the other
+three coverage variants passed. No SQL implementation/classification changed,
+no gate was repeated, and the PR remains unmerged. This owner repair must be
+reconciled with the preserved12B changes in12K integrated qualification.
+Exact evidence is outside the worker tree under `/private/tmp/sifr-item12i.0l85Lu/`:
+`merge-f6e8afd964bb214a44c50271dcb2014ee8e828b4.log` and `.json`, and
+`coverage-matrix-f6e8afd964bb214a44c50271dcb2014ee8e828b4.json`.

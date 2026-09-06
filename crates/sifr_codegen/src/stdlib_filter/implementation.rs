@@ -450,7 +450,14 @@ pub(crate) fn rust_source_defines_item_name(rust_code: &str, name: &str) -> bool
 pub(crate) fn rust_source_defined_item_names(rust_code: &str) -> HashSet<String> {
     syn::parse_file(rust_code).map_or_else(
         |_| HashSet::new(),
-        |parsed| parsed.items.iter().filter_map(parse_item_name).collect(),
+        |parsed| {
+            parsed
+                .items
+                .into_iter()
+                .flat_map(crate::task_local_support::split_declarations)
+                .filter_map(|item| parse_item_name(&item))
+                .collect()
+        },
     )
 }
 
@@ -482,9 +489,14 @@ impl<'ast> Visit<'ast> for RustIdentifierCollector {
 }
 
 fn parse_stdlib_ir_file(rust_code: &str) -> Option<StdlibIrFile> {
-    let Ok(parsed) = syn::parse_file(rust_code) else {
+    let Ok(mut parsed) = syn::parse_file(rust_code) else {
         return None;
     };
+    parsed.items = parsed
+        .items
+        .into_iter()
+        .flat_map(crate::task_local_support::split_declarations)
+        .collect();
 
     let item_names: HashSet<String> = parsed.items.iter().filter_map(parse_item_name).collect();
     let global_types: HashSet<String> = GLOBAL_INFRA_TYPES
@@ -806,6 +818,15 @@ pub(super) fn parse_item_name(item: &Item) -> Option<String> {
         Item::Enum(item_enum) => Some(item_enum.ident.to_string()),
         Item::Trait(item_trait) => Some(item_trait.ident.to_string()),
         Item::Impl(item_impl) => impl_self_type_ident(item_impl.self_ty.as_ref()),
+        Item::Macro(item) => {
+            crate::task_local_support::declarations(&item.mac).and_then(|declarations| {
+                if let [declaration] = declarations.0.as_slice() {
+                    Some(declaration.name.to_string())
+                } else {
+                    None
+                }
+            })
+        }
         _ => None,
     }
 }

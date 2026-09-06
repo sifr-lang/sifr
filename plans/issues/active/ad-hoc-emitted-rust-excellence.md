@@ -195,6 +195,10 @@ It does not broaden the active item.
 | 12G | merged | Dependency-checker demo path identity | Authoritative DLPack project path and computed-reference regressions merged in PR #3695; exact-SHA validation and Opus review passed. |
 | 12H | blocked: external qualification; reviewed candidate preserved | Project-wide generated-field identity | Opus remediation approved `9b52ac200`; the one merge gate fails existing SQL coverage classifications. Preserve draft PR #3697 for 12K with compiler/Python qualification blockers. |
 | 12I | authorized: after 12H handoff | Macro-defined project support visibility | Repair cancellation task-local visibility without blanket exports. |
+
+<!-- Preserved dependency history; latest 12K dispatch is authoritative. -->
+| 12H | blocked: external qualification | Project-wide generated-field identity | Reviewed `9b52ac20094608c8a31f252db99e49ef7c963384` preserved in draft PR #3697; final record `b6e6210a97598fb631b929b2d4daf4012b41bb16`. One gate failed existing SQL coverage; 12K owns integration. |
+| 12I | blocked: external qualification | Macro-defined project support visibility | Opus-approved `f6e8afd964bb214a44c50271dcb2014ee8e828b4` preserved in draft PR #3698; 8 focused tests and all 7 native callbacks pass. Outer certification and the sole merge gate remain blocked; 12K owns integration. |
 | 12J | authorized: after 12I handoff | Async Python error-channel contract | Resolve the authoritative error contracts and preserve async semantics. |
 | 12K | authorized: integration after dependency qualification | Item 12B and Python dependency integration | Qualify the integrated candidate and merge the preserved work; do not reset Item 12B review history. |
 
@@ -1558,6 +1562,33 @@ New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
+
+- Item12I reached its terminal **blocked, not merged** handoff on 2026-09-06.
+  [Draft PR #3698](https://github.com/sifr-lang/sifr/pull/3698) preserves reviewed
+  implementation `f6e8afd964bb214a44c50271dcb2014ee8e828b4` on
+  `codex/emitted-rust-excellence-item-12i`, owned worktree
+  `/private/tmp/sifr-item12i.0l85Lu/sifr`, fresh-main base
+  `4ce05473f58716a611ac190581bf0737ba15331e`. Merge SHA: none.
+  [One exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3698#issuecomment-5555560780)
+  returned SATISFIED, no blockers; no remediation review was needed.
+  Exact-candidate focused tests pass 8/8; all 7 native callback examples pass
+  all 14 inner checks with original cancellation/cleanup markers and no skips.
+  The named outer callback command exits 1 because filtered-suite compiled
+  certification is non-promotable. Full codegen (1,415 pass, 2 unchanged
+  list-repeat failures) and strict Clippy (unchanged builtin-registration
+  `expect_used`) are not passing qualification receipts.
+  The sole exact-clean-SHA merge gate failed after 184.65s on existing SQL
+  coverage classifications: 9 packages, 13 targets, 1 stale PostgreSQL target.
+  Generated-companion freshness, reached guards, Rust interop (10/10), and the
+  other 3 coverage variants passed. Later Python-area/crate/E2E gate stages
+  were not reached. No create-PR gate, second merge gate, or bypass was used.
+  Evidence and deferred maintenance 12I-F1–F3 are recorded in the
+  [Python dependency owner](ad-hoc-python-interop-qualification-dependencies.md#item12i-terminal-handoff-2026-09-06)
+  and `/private/tmp/sifr-item12i.0l85Lu/evidence-f6e8afd964bb214a44c50271dcb2014ee8e828b4.md`.
+  Parent and preserved12B/12H workers remain untouched;12H remains unmerged
+  with exhausted review/gate allowances. This session stops after its record
+  update; no12J/12K code is written. 12K owns eventual integrated qualification
+  after remaining dependencies, not this worker.
 
 - Items 11 and 11A are merged through [PR #3689](https://github.com/sifr-lang/sifr/pull/3689)
   as `bbc85bcd3e538e201f7f82fa535c7cef43a5ac6e`; exact candidate
