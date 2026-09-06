@@ -2,6 +2,87 @@
 
 Status: active
 
+## Item12K-B5 terminal checkpoint: external driver doctest blocker (2026-09-06)
+
+State: **implemented, unreviewed, not merged; external-validation-blocked**.
+[Draft stacked PR #3719](https://github.com/sifr-lang/sifr/pull/3719) preserves
+the narrow B5 implementation for [owner #3716](https://github.com/sifr-lang/sifr/issues/3716).
+This is the current B5 receipt; all original12K/predecessor records below remain
+historical evidence with unchanged consumed budgets. The inherited integration
+stack in PR3717 remains unreviewed; B5 has not approved or delivered it.
+
+- Exact retained integration/review base:
+  `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`.
+- Main: `f11e1cd7eef16a02063555bccc9fd8e19287833b`, fetched and retained as
+  an ancestor; no rebase or history rewrite was needed.
+- Owned registration: `6b07cf476` copied the new parent B5 dispatch before code.
+- Implementation candidate: `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`.
+  Reviewed/approved SHA: **none**. Merge SHA: **none**.
+- Exact corpus: `8bcbe7ab7939e5c8362c10f61a80e368022cc372`, unmerged PR48;
+  all normal integration ancestry and all16 exact clean submodules retained.
+- Owned clone `/private/tmp/sifr-item12k-b5.5WJpGX/sifr`, branch
+  `codex/item12k-b5-portable-clippy`. Parent and predecessor checkouts,
+  targets, indexes and dirty records remained read-only. No test remains live.
+
+The complete code batch changed only
+`crates/sifr_driver/src/build/cargo_manifest.rs` (equivalent explicit package
+alias `if/else`) and `crates/sifr_driver/src/build/portable_project.rs` (private
+transparent `AuthorityPackageChecksums` alias for the identical BTreeMap type).
+Generated manifest bytes, authoritative lock parsing/source/checksum selection,
+errors and ordering are unchanged. No lint allowance, fallback, fixture,
+lockfile, workflow, metadata-assertion duplication or unrelated repair was added.
+The only other changed path is this phase Markdown. No architecture/roadmap
+status changed and no next-item code was started.
+
+Registered validation ran after the complete code batch. Format, HIR
+maintainability, file-size (3780 files/900-line limit) and diff checks passed.
+The one fresh `cargo test -p sifr_driver` ran 16:00:03–16:13:24 UTC and exited
+**1**: **595 unit tests passed,0 failed,77 normally ignored**, then
+`Doc-tests sifr_driver` aborted with twelve `E0463` crate-resolution errors.
+This complete invocation is **FAILED**. The old original12K594/1/77ignored
+invocation also remains failed. Strict workspace Clippy was queued after the
+driver command and was **not reached**. Full E2E, migrated stdlib and normally
+ignored driver generated-build lanes remain **unrun**, not inferred passes.
+
+External owner/receipt: [#3718](https://github.com/sifr-lang/sifr/issues/3718),
+compiler validation / driver Cargo-rustdoc integration. Read-only checks found
+the sampled frontend/lowering/Ruff AST `.rlib` files present at rustdoc's exact
+paths and matching Rust/rustdoc1.98.0(88d9e12ae). The root cause remains
+unestablished; no portable-project regression is asserted. Own target5.1GiB,
+116GiB free, no cleanup or cache reset. No focused/doctest retry, unrelated
+implementation or gate was used to work around the failure.
+
+Evidence root: `/private/tmp/sifr-item12k-b5.5WJpGX/evidence/`.
+
+- `driver.log`: SHA256
+  `f1290b1c1599c1494dee1cddcb72dec5e5dd21dc14dfc66000edf7c77c7ec7ab`.
+- `static-checks.md`: SHA256
+  `24f6581cf189dacdb79f951ebb664b0e7b897d4bb090b14f19a0f25607d5d0d5`.
+- Canonical own-repo `target/verification/areas/item12k-b5-validation.json`:
+  SHA256 `7b4dcb4ce93423dba0b0b005178ebf399af0e527e2c5a86d70118c8c09fea924`.
+- Canonical own-repo `target/verification/areas/item12k-b5-provenance.json`:
+  SHA256 `8910059cfd009db3c0fe39f7be5bf8373c168068889d07608d98577270663389`.
+
+Authentication covers all32088 tracked paths,16 submodules,39 receipts and the
+exact two source transformations. Retained native90, algorithmic411,
+diagnostics184, readiness4, codegen1452, lowering1119, Python30/all five suites,
+demo264 and focused18+8 remain historical authenticated evidence. They are not
+fresh B5 executions, broad integration approval, a replacement for pending
+lanes, or a performance claim for this cold owned target.
+
+Actual B5 counts: **0initial reviews,0remediation reviews,0provider requests,
+0provider retries,0create-pr gates,0merge-profile gates,0merges**. The prepared
+Opus prompt and atomic wrapper were never executed. Original12K counts remain
+zero and all predecessor consumed budgets remain unchanged. This is an external
+validation stop, not an approved `integration-delivery-pending` handoff.
+
+Exact next action: separately scope diagnosis/resolution or adjudication of
+#3718, then resume this preserved B5 candidate with an actual passing full-driver
+invocation and strict Clippy. Its narrow exact-SHA review (max one remediation)
+and sole governed merge-profile gate remain unused. A fresh original12K owner
+still owns broad integration review and safe delivery of the inherited stack.
+No full-phase review or12D/E/F/retainedItem12/12A work is authorized by this record.
+
 ## Original12K terminal checkpoint: external portable-project Clippy blocker (2026-09-06)
 
 Current state: **preserved, unreviewed integration; blocked before review/gate**.
@@ -1240,7 +1321,7 @@ It does not broaden the active item.
 | 12K-B2 | merged | Canonical diagnostic-code matcher identity (#3704) | PR3706 merge770f1ab; recorda53b5d3 retained in12K ancestry; full historical receipt preserved. |
 | 12K-B3 | merged | Diagnostics schema synchronization (#3705) | PR3709 mergef11e1cd; recordc508c143 retained in12K ancestry; full historical receipt preserved. |
 | 12K-B4 | qualified/approved; integration pending | Taxonomy fixture path isolation (#3712) | Stacked#3715 reviewed candidate `5c711f2d6cb90265b32e04e8b9f6b6e3570855c1`; readiness4/4 with27negatives, focused8/8, Opus SATISFIED.1review/0remediation/0gates/0merges. |
-| 12K-B5 | later owner recorded; not started | Portable-project strict Clippy (#3716) | Compiler-driver/Item11 materialization owns two inherited unchanged-main lint findings at cargo_manifest235 and portable_project339. No implementation, review, or gate in the12K worker. |
+| 12K-B5 | implemented; external validation blocked | Portable-project strict Clippy (#3716) | Stacked draft#3719 preserves candidate `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`; four static checks pass. Full driver FAILED after595unit passes/77ignored at rustdoc E0463; external owner#3718. Clippy unreached;0reviews/0gates/0merges. |
 
 <!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
 | 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
