@@ -430,6 +430,7 @@ fn generated_from_source(
         required_features: result.required_features,
         interop: result.interop,
         cache_key_fragment: None,
+        bridge_modules: Default::default(),
         python_runtime: None,
     }
 }

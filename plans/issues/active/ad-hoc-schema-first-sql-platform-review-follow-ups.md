@@ -132,6 +132,25 @@ All 264 demo emitted companions passed freshness, along with the file-size,
 HIR, Rust interop, and naming checks. No SQL classifications changed.
 Evidence: `target/demo-layout/merge-gate.log`.
 
+Item12H's one exact-SHA merge-profile gate reproduced this existing blocker on
+2026-09-06, after its bounded field-identity remediation was approved by Opus.
+Candidate: `9b52ac20094608c8a31f252db99e49ef7c963384`,
+[draft PR #3697](https://github.com/sifr-lang/sifr/pull/3697). The gate failed at
+`coverage_matrix:readiness/coverage_matrix_readiness` with nine unclassified SQL
+packages, 13 unclassified targets, and one stale PostgreSQL `lib` classification.
+The other three coverage variants passed. All 264 demo companions, reached
+guardrails and Rust interop checks passed before the failure; later gate stages
+were not reached. No SQL source, Cargo target, coverage classification, or skip
+policy was changed by12H, and no second gate was run.
+
+[Exact-SHA evidence and disposition](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555393502).
+Logs and copied reports: `/tmp/sifr-item12h.afJDbk/merge-9b52ac20094608c8a31f252db99e49ef7c963384.log`
+and `.json`, plus `coverage-matrix-9b52ac20094608c8a31f252db99e49ef7c963384.json`
+in that directory. The candidate remains unmerged. Reconciling and qualifying
+these existing SQL coverage classifications is a concrete dependency for
+Item12K integration; this receipt does not authorize12H to implement the repair
+or merge an unqualified candidate.
+
 The abbreviated-label cleanup also ran its final merge gate once on 2026-09-05.
 It reproduced the SQL package/target classification failures above. Demo
 freshness, Rust interop matrix checks, naming checks, HIR, and file-size checks

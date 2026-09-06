@@ -159,26 +159,17 @@ mod sifr_generated_generated_support {
         Ok((key, stripped_value))
     }
     pub(crate) fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
-        let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
-            char,
-        > = text.chars().collect::<Vec<char>>();
+        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         if &index < &SifrInt::from_i64(0)
-            || &index
-                >= &SifrInt::from(
-                    sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                        .len(),
-                )
+            || &index >= &SifrInt::from(sifr_generated_chars_text.len())
         {
             return String::new();
         }
         let ch: Option<String> = {
             let sifr_generated_string_index = index.clone();
-            let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(
-                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                    .len(),
-            );
-            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+            let sifr_generated_string_index_normalized =
+                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
+            sifr_generated_chars_text
                 .get(sifr_generated_string_index_normalized)
                 .copied()
         }
@@ -414,9 +405,7 @@ mod sifr_generated_generated_support {
         quoting: SifrInt,
     ) -> Vec<Vec<String>> {
         let quotechar = quotechar.to_owned();
-        let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
-            char,
-        > = text.chars().collect::<Vec<char>>();
+        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
             dialect,
             delimiter,
@@ -433,27 +422,17 @@ mod sifr_generated_generated_support {
         let mut in_quotes: bool = false;
         let mut field_started: bool = false;
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i
-            < &SifrInt::from(
-                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                    .len(),
-            )
-        {
+        while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
             let ch_value: String = sifr_generated_char_at(text, i.clone());
             if in_quotes {
                 if !resolved.escapechar.clone().is_empty()
                     && ch_value == resolved.escapechar.clone()
                 {
                     if &(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(
-                            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                                .len(),
-                        )
+                        < &SifrInt::from(sifr_generated_chars_text.len())
                     {
-                        let escaped_value: String = sifr_generated_char_at(
-                            text,
-                            &i + &SifrInt::from_i64(1),
-                        );
+                        let escaped_value: String =
+                            sifr_generated_char_at(text, &i + &SifrInt::from_i64(1));
                         field.push_str(escaped_value.as_str());
                         i = &i + &SifrInt::from_i64(2);
                         continue;
@@ -467,12 +446,8 @@ mod sifr_generated_generated_support {
                     let quotechar: String = sifr_generated_quotechar_value(&resolved);
                     if resolved.doublequote
                         && &(&i + &SifrInt::from_i64(1))
-                            < &SifrInt::from(
-                                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                                    .len(),
-                            )
-                        && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1))
-                            == quotechar
+                            < &SifrInt::from(sifr_generated_chars_text.len())
+                        && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == quotechar
                     {
                         field.push_str(quotechar.as_str());
                         i = &i + &SifrInt::from_i64(2);
@@ -491,16 +466,9 @@ mod sifr_generated_generated_support {
                 continue;
             }
             if !resolved.escapechar.clone().is_empty() && ch_value == resolved.escapechar.clone() {
-                if &(&i + &SifrInt::from_i64(1))
-                    < &SifrInt::from(
-                        sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                            .len(),
-                    )
-                {
-                    let escaped_plain_value: String = sifr_generated_char_at(
-                        text,
-                        &i + &SifrInt::from_i64(1),
-                    );
+                if &(&i + &SifrInt::from_i64(1)) < &SifrInt::from(sifr_generated_chars_text.len()) {
+                    let escaped_plain_value: String =
+                        sifr_generated_char_at(text, &i + &SifrInt::from_i64(1));
                     field.push_str(escaped_plain_value.as_str());
                     field_started = true;
                     i = &i + &SifrInt::from_i64(2);
@@ -533,10 +501,7 @@ mod sifr_generated_generated_support {
             if ch_value == "\n" || ch_value == "\r" {
                 if ch_value == "\r"
                     && &(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(
-                            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                                .len(),
-                        )
+                        < &SifrInt::from(sifr_generated_chars_text.len())
                     && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == "\n"
                 {
                     i = &i + &SifrInt::from_i64(1);
@@ -2366,7 +2331,7 @@ mod sifr_generated_project_nominals {
     }
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct SifrGeneratedStdlibSifrX2ecsvX2eDictReader {
-        pub fieldnames_field: Vec<String>,
+        pub fieldnames: Vec<String>,
         pub rows: Vec<Vec<String>>,
         pub pos: SifrInt,
         pub restkey: String,
@@ -2462,8 +2427,7 @@ mod sifr_generated_project_nominals {
                 restkey: sifr_generated_field_value_d10323292550fbae_726573746b6579,
                 restval: sifr_generated_field_value_e9b6e328a309fdee_7265737476616c,
                 pos: sifr_generated_field_value_e04b9443eebba9b4_5f706f73,
-                fieldnames_field:
-                    sifr_generated_field_value_efdb691f099ff036_5f6669656c646e616d6573,
+                fieldnames: sifr_generated_field_value_efdb691f099ff036_5f6669656c646e616d6573,
                 rows: sifr_generated_field_value_d742ae5cfb4259e3_5f726f7773,
             }
         }
@@ -2477,7 +2441,7 @@ mod sifr_generated_project_nominals {
                     continue;
                 }
                 result.push(sifr_generated_dict_reader_row(
-                    &self.fieldnames_field,
+                    &self.fieldnames,
                     &row,
                     &self.restkey,
                     &self.restval,
