@@ -73,6 +73,26 @@ No12D/E/F,retainedItem12,12A implementation or whole-phase review here.
 
 ### Owned commands and delivery plan
 
+Focused diagnosis registered after the first complete driver invocation:
+`cargo test -p sifr_driver python_zero_copy_helpers_codegen_through_sifr_stdlib -- --nocapture`.
+The full run has594passes,1failure,77existingignored. Its only failure expects
+`py_buffer_shape(&raw.0)?` at stateless_python_codegen_tests.rs:262. Extend the
+assertion diagnostic to include actual public emission before this focused run;
+do not change its acceptance condition before establishing cause. All later
+qualification commands remain unreached, and review/gate budgets remain unused.
+
+Diagnosis completed: all six helpers emit `accessor(&(raw).0)?`; borrowing and
+typed propagation are unchanged. The integration omission is the exact-text
+assertion's sensitivity to redundant expression parentheses, not a runtime
+mechanism defect. Correct the existing test using parsed Rust syntax: require
+each of the same six named calls to have exactly one immutable borrow of raw's
+tuple field0 directly under `?`, ignoring only grouping/parentheses. The private
+interop-call assertions remain intact. No compiler/stdlib behavior changes.
+Run the registered focused test after this complete correction; reuse the594
+other full-driver passes only for unchanged implementation and test inputs,
+with the failed full invocation preserved. Then resume pending commands from
+frontend onwards. Existing whole-driver evidence is not called a passing run.
+
 The original and continuation execution registrations remain authoritative.
 All registered commands use this owned repository and these environment paths:
 `TMPDIR=/private/tmp/sifr-item12k-final.7sgsI9/tmp`,
