@@ -58,7 +58,7 @@ orchestrates; each new worker owns one fresh checkout/branch/index/temp root.
   independently deliverable PR; retain the integration checkout as read-only
   provenance. One exact-SHA review plus at most one remediation. No Sifr gates
   absent compiler/lockfile/fixture/workflow changes. Merge/update owner and stop.
-- **12K-B8 / [#3723](https://github.com/sifr-lang/sifr/issues/3723)**: ready;
+- **12K-B8 / [#3723](https://github.com/sifr-lang/sifr/issues/3723)**: merged;
   execution dependency B7 terminal/merged. Distinguish three legitimate SQL
   dialect `bigint` spellings from removed Sifr scalar support. Preserve SQL names
   and real compatibility rejection; no broad suppression. Named tests:
@@ -144,6 +144,43 @@ One exact-candidate Opus review is allowed, plus at most one remediation.
 Review evidence stays outside the reviewed tree and is published keyed by SHA.
 After the independent main merge, update this record and owner, publish the
 terminal receipt, and stop. B9 and original12K requalification are not started.
+
+### B8 terminal closure
+
+[PR #3727](https://github.com/sifr-lang/sifr/pull/3727) merged normally on
+2026-09-06 at 20:48:48 UTC. Exact reviewed and validated candidate:
+`4eb6426f81db75a8b562cfc0572f26027c37159c`; merge:
+`a216019057fbb05ccfdc8c846c20ee3ecc7a639d`. Owner #3723 is closed. Immediately
+before merge, actual main remained the reviewed base
+`4faa76803da67d22a2dfffdb81cc63bf16304fe0` and the candidate tree was clean.
+
+All five named commands above passed on that candidate. Focused suite: 14 tests;
+file-size guard: 3757 files, limit 900 lines. SQL source blobs equal the base.
+Counts: one initial Opus SATISFIED review, zero blocking findings, zero remediation,
+one provider request, zero retries, zero create-pr gates, zero merge-profile gates,
+one normal merge. The reviewer reused existing validation without rerunning it.
+
+[Complete review and evidence](https://github.com/sifr-lang/sifr/pull/3727#issuecomment-5562074224)
+is published outside the reviewed Git tree. Raw review at sibling
+`claude.qhVwE9/response.md`, SHA256
+`11c613866c433c2d167684835e264ef425bd6a4cacb022208e9d2a2ef0134773`.
+Validation manifest at sibling
+`evidence/4eb6426f81db75a8b562cfc0572f26027c37159c.validation.json`, SHA256
+`36e70faadcd1a343aea2b64f00505ac4cab612784cc6d7b1d5d02f27300243cc`,
+records all command/log hashes and the three unchanged SQL source blobs.
+
+Optional reviewer observations are separate later work in
+[#3728](https://github.com/sifr-lang/sifr/issues/3728): assess rule-local span
+metadata only if a second rule needs it, and document the existing root-relative
+scan identity if that contract changes. Neither observation establishes a current
+defect or a B8/original12K delivery dependency. No follow-up implementation started.
+
+This post-merge update is record-only, pushed on the owned branch; it is not
+part of the candidate approved above or a second main merge. Parent/next owner
+must carry the B8 closure receipt forward, as this item carried B7's receipt.
+No additional review or gate is required. Blocker: none. All worker command and
+review handles completed. B8 is closed; stop here. B9 and original12K delivery
+remain separate, unstarted work for this session.
 
 ## Item 12K-B7: direct filesystem inventory restoration (2026-09-06)
 
