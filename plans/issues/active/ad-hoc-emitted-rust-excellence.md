@@ -1642,7 +1642,7 @@ Named validation, executed from the owned checkout after implementation:
   before implementation solely for diagnosis).
 - `python3 verification/areas/diagnostics/checks/schema_sync.py`.
 - `cargo test -p sifr_diagnostics`.
-- `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --result-json /private/tmp/sifr-item12kb3.bEfGLS/diagnostics-results.json`.
+- `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --result-json /private/tmp/sifr-item12kb3.bEfGLS/sifr/target/verification/areas/diagnostics-b3-results.json`.
   Require the full 179 baseline variants and five rules; no partial
   certification or coverage bypass. Report actual coverage.
 - `python3 scripts/check_file_size_guardrails.py`.
@@ -1712,6 +1712,26 @@ JSON/Python syntax check registration:
 `python3 -m py_compile verification/areas/diagnostics/checks/schema_sync.py verification/areas/diagnostics/checks/test_schema_sync.py`.
 No Rust/compiler, lockfile, fixture or workflow changes are necessary, so
 Sifr gate count is zero under the explicit dispatch rule.
+
+### B3 validation invocation correction
+
+Implementation commit `226b489981d1adeed1691c1f2354d67ed608dd21` passed
+locked generator comparison, direct schema synchronization, all seven focused
+regressions, all 32 diagnostics crate tests, file-size (3756 files), JSON/Python
+syntax and diff checks. The first full-area invocation emitted pass for all
+179 baseline variants and all five rules, then exited 1 because this worker
+had registered `/private/tmp/sifr-item12kb3.bEfGLS/diagnostics-results.json`,
+outside the runner's permitted repository root. No result JSON was written.
+This is an owned invocation mistake, not a compiler/schema failure or a
+successful full-area command. Preserve `diagnostics-area-226b48998.log` as
+the exact failed-invocation evidence; do not synthesize a passing report.
+
+Before the corrected invocation, the registered command above now places its
+result under this owned checkout's `target/verification/areas/`. No compiler,
+checker, schema, test, dependency, fixture or workflow inputs changed. Reuse
+the other passing targeted evidence across this documentation-only correction;
+repeat the named complete area once to obtain its canonical successful report.
+No Sifr gate has run and no gate retry is involved. B3 reviews remain zero.
 
 ## Descriptive demo variables follow-up (2026-09-05)
 
