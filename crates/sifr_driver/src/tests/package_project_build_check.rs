@@ -4,6 +4,9 @@ use sifr_diagnostics::DiagnosticCode;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
+#[path = "required_error_message_python.rs"]
+mod required_error_message_python;
+
 #[derive(Clone)]
 struct TestPackage {
     root: PathBuf,
