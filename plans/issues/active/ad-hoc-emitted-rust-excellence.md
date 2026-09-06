@@ -1592,6 +1592,127 @@ Final qualification owns the workflow repair. The diagnostic-baseline
 identity migration and pre-existing quality failures described above remain
 unresolved; these passing CLI results do not qualify the Clippy baseline.
 
+## Item12K-B3 owned authorization and test registration (2026-09-06)
+
+This worker owns only diagnostics schema synchronization, issue
+[#3705](https://github.com/sifr-lang/sifr/issues/3705), OPEN at dispatch.
+The parent supplied the newer “Item12K-B2 receipt and B3 dispatch” and
+preceding B1/B2 receipt; this registration carries that authorization into
+this independent phase record before implementation. Owned checkout:
+`/private/tmp/sifr-item12kb3.bEfGLS/sifr`, branch
+`codex/item12k-b3-schema-sync`, fetched main/base
+`770f1ab86050bc95abf05573b39c8c6d5238902e` (merged B2 PR #3706).
+Parent's two intentional dirty Markdown files and all predecessor checkouts,
+Git indexes, targets, and histories remain read-only. No inherited 12K stack
+is imported or approved by B3.
+
+Predecessor receipts:
+
+- B1 reviewed two assertions only at
+  `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`; record
+  `d7c41463ca88d5993e3bc3fa847806160799e147`, PR #3702 unmerged.
+  Its [exact gate receipt](https://github.com/sifr-lang/sifr/pull/3702#issuecomment-5558641648)
+  records one failed 3254.32-second gate, Python 30/30, diagnostic baselines
+  179/179, diagnostics overall 182/184. Matcher B2 and schema B3 failed;
+  subsequent stages were unreached. No B1 retry is authorized.
+- B2 PR #3706 reviewed `8be5b9ece92703fda44149bb79ec6ed077e23c10`,
+  merged at this base; record `a53b5d34f6a7a659e39d66c0c0d6d9397c8b2216`.
+  [Receipt](https://github.com/sifr-lang/sifr/issues/3704#issuecomment-5558722496):
+  11 focused passes, canonical coverage, syntax/file-size checks, one
+  SATISFIED review, zero remediation/gates. #3707/#3708 are separate owners.
+- Original 12K candidate `7e23785ab07cba6f925eed2f934c0304750f1d74`
+  and corpus `8bcbe7ab7939e5c8362c10f61a80e368022cc372` stay preserved;
+  original 12K has zero reviews/gates used, with dependency caps unchanged.
+
+First capture the locked generator stdout and establish the exact source,
+artifact, and dependency mechanism; this is diagnosis, not a test pass.
+Complete the bounded root-cause correction before testing, preserving the
+intended public schema and strict comparison. No blind blessing, ignored
+field-order/value differences, fallback, or unrelated dependency upgrades.
+Necessary focused regressions are in scope; register their exact command
+before running them. Use apply_patch for edits or the normal generator when
+supported by the diagnosis. Do not overwrite the artifact through a shell
+redirect. Normal scoped push/draft PR/merge, owner updates, and read-only
+Claude execution are authorized.
+
+Named validation, executed from the owned checkout after implementation:
+
+- `cargo run --locked -q -p sifr_diagnostics --bin gen-diagnostic-schema`
+  (stdout capture under `/private/tmp/sifr-item12kb3.bEfGLS/`, also authorized
+  before implementation solely for diagnosis).
+- `python3 verification/areas/diagnostics/checks/schema_sync.py`.
+- `cargo test -p sifr_diagnostics`.
+- `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --result-json /private/tmp/sifr-item12kb3.bEfGLS/diagnostics-results.json`.
+  Require the full 179 baseline variants and five rules; no partial
+  certification or coverage bypass. Report actual coverage.
+- `python3 scripts/check_file_size_guardrails.py`.
+- Relevant JSON parsing, Python syntax, Markdown/diff checks, and
+  `git diff --check`. If Rust source changes also `cargo fmt --check` and
+  `python3 scripts/check_hir_maintainability_guardrails.py`.
+
+One initial exact-SHA Opus review and at most one remediation; prompt includes
+base/candidate/paths/scope/evidence, read-only, no invented requirements or
+repeated broad validation. Atomic completed response outside reviewed tree;
+at most three failed transport attempts, never three review rounds. A second
+review's new mechanism defect gets a later owner and terminal stop. Compiler,
+lockfile, fixture, and workflow unchanged means zero Sifr gates even if the
+schema artifact changes. If governed inputs necessarily change, run exactly
+one merge-profile gate on the approved final SHA, skip create-pr, no second
+gate. Reuse exact-input evidence. Check free space before long Cargo work;
+only clean this worker's unused private target if over 20 GiB. External
+failures receive owner records and terminal stop, not unrelated repairs.
+
+After B3 merge and documentation-only phase receipt, stop without further
+review/gates. Do not resume 12K or start 12D/E/F, Item12, or phase closure.
+Return item ID, PR, reviewed implementation/record/merge SHAs, exact test,
+review and gate counts, evidence links, changed paths, and blocker or none.
+
+### B3 diagnosis and focused-test registration
+
+Read-only diagnosis established that commit
+`066300ff185f38b425a884a2225b72990a194e58` removed workspace
+`serde_json/preserve_order` without updating the schema last written in
+`5f6019eeb9`. Locked package generation uses schemars 1.2.2 and serde_json
+1.0.151 without preserve_order. Schemars orders schema keywords explicitly,
+while the eight properties/definitions maps follow serde_json map order.
+The old artifact uses insertion order, the current generator lexical order.
+Recursive comparison found identical keys, values, and array order everywhere;
+only eight object key orders differ. This comparison classifies the defect;
+it does not replace strict synchronization validation.
+
+Diagnostic captures under the owned root (not counted as test passes):
+
+- `schema-before.json`, current locked generator, SHA256
+  `ebc73fd29b44df16e14ac636437d9f93b67088925a8a381b90b2fde7e72b83a3`.
+- `schema-preserve-order.json`, the same command with
+  `--features serde_json/preserve_order`, SHA256
+  `0af2f7f3e6c438bff56767af14dde31b18f2d1fd2b9b6e833a1300463d4f976a`,
+  byte-identical to the old tracked artifact. This controlled feature change
+  establishes cause without upgrading dependencies or changing source.
+- The first capture attempt could not build before this fresh checkout's
+  Ruff submodule was initialized; no generator executed on that attempt.
+  Owned Ruff is pinned at `f19957111640fdee8055bfe5b6aa854259344473`.
+
+B3 base and historical main `4ce05473f58716a611ac190581bf0737ba15331e`
+have identical Cargo.toml/lock, diagnostics/source crates, Ruff pin and Cargo
+config. Diagnostics tree `47f22e0bd83633bd650a9826fdc3a69d3078ded7`,
+schema blob `6c2e5a625970d4f0e23c02317375ac09c3b3639e`, checker blob
+`cbf87fa8f7b3fa916504820b2a6622868054aae3` match B1. B1's Cargo.lock
+diff adds only the lowering insta edge; no inherited integration evidence is
+used to certify this independently built candidate.
+
+Correction: update only the artifact's proven stale ordering with the captured
+normal generator output through apply_patch; retain the current dependency
+policy and model. Add `--locked` to the strict checker's generator command.
+Register `python3 -m unittest discover -s verification/areas/diagnostics/checks -p 'test_schema_sync.py' -v`
+before adding/running focused regressions for exact agreement, changed object
+order, values, array order, formatting, missing artifact and generator failure.
+JSON/Python syntax check registration:
+`python3 -m json.tool docs/schemas/diagnostics.schema.json` and
+`python3 -m py_compile verification/areas/diagnostics/checks/schema_sync.py verification/areas/diagnostics/checks/test_schema_sync.py`.
+No Rust/compiler, lockfile, fixture or workflow changes are necessary, so
+Sifr gate count is zero under the explicit dispatch rule.
+
 ## Descriptive demo variables follow-up (2026-09-05)
 
 A second pass found no delivery-labelled `m12` path or content under `demos`,
