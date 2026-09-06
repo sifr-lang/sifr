@@ -195,7 +195,7 @@ It does not broaden the active item.
 | 12G | merged | Dependency-checker demo path identity | Authoritative DLPack project path and computed-reference regressions merged in PR #3695; exact-SHA validation and Opus review passed. |
 | 12H | blocked: reviewed candidate preserved | Project-wide generated-field identity | Draft #3697, reviewed `9b52ac20094608c8a31f252db99e49ef7c963384`; sole gate failed SQL coverage. Retained record `b6e6210a97598fb631b929b2d4daf4012b41bb16` owns details and follow-ups. |
 | 12I | blocked: reviewed candidate preserved | Macro-defined project support visibility | Draft #3698, reviewed `f6e8afd964bb214a44c50271dcb2014ee8e828b4`; sole gate failed SQL coverage. Retained record `19ad69969a672d7b741122ded4dd879f2bdaf9ab` owns details and follow-ups. |
-| 12J | implementing | Async Python error-channel contract | Preserve declared error ancestry separately from descriptor data parents; retain original async fixtures and error contracts. |
+| 12J | blocked: unapproved candidate preserved | Async Python error-channel contract | Draft #3699, reviewed `f720a342edd87004975355b478948f7eb5c8b406` NOT SATISFIED (12J-R1); native suites blocked by 12I. Terminal handoff at user checkpoint, zero remediation reviews and zero gates used. |
 | 12K | authorized: integration after dependency qualification | Item 12B and Python dependency integration | Qualify the integrated candidate and merge the preserved work; do not reset Item 12B review history. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
 
@@ -643,6 +643,41 @@ artifact hashes, package ownership, and missing-input errors remain enforced.
   Helmholtz's retained candidate/index were not modified.
 - Blocker: none. Item12G is complete. Stop this worker after the record update;
   the orchestrator may assign Item12H to a fresh worker. No next-item code was written.
+
+### Item12J terminal handoff (2026-09-06)
+
+Draft [PR #3699](https://github.com/sifr-lang/sifr/pull/3699) preserves candidate
+`f720a342edd87004975355b478948f7eb5c8b406`, based on freshly fetched main
+`4ce05473f58716a611ac190581bf0737ba15331e`. **Not merged; not approved for
+integration.** Owned branch `codex/emitted-rust-excellence-item-12j`, worktree
+`/private/tmp/sifr-item12j.pT6Xkk/sifr`; parent records/index and retained
+12B/12H/12I worktrees were not mutated.
+
+- The ancestry repair preserves the original async fixtures and removes their
+  source-check failures. Six focused regressions, IR (4), frontend (132 unit +
+  7 integration), and driver (584 passed, 77 existing ignored) pass. All 264
+  generated companions remain byte-identical; fmt, HIR and file-size guards pass.
+- Both named native suites fail at 12I-owned cancellation task-local visibility
+  E0425 after source checking; runtime assertions did not execute. Lowering
+  retains two TypeVar assertion failures owned by #3667; codegen retains two
+  12B-owned list-repeat failures; strict Clippy fails on the preserved12B/12C
+  builtin-registration expect. None is a passing command or full certification.
+- The [initial exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5555927728)
+  is **NOT SATISFIED**: 12J-R1, the newly accepted non-builtin error ancestry lacks
+  generated `From<T> for Error` conversions. Opus reproduced E0277 for a local
+  DomainError and imported CSV Error. This is an unresolved in-scope omission,
+  not an external blocker to be waived. No remediation code was written.
+- [Validation/terminal receipt and changed paths](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5555929816)
+  are keyed to the candidate outside the Git tree. Raw logs, JSON reports and
+  review are retained in `/private/tmp/sifr-item12j.pT6Xkk/`.
+- The user's orchestration checkpoint required terminal handoff once an external
+  blocker was established. Stop after these records; remediation reviews used
+  **0**, merge-profile gates **0**, create-PR gates **0**. There is no final
+  reviewer-approved candidate to gate. No review/gate history is reset.
+- The [Python owner record](ad-hoc-python-interop-qualification-dependencies.md#item12j-terminal-evidence-and-unresolved-review)
+  owns12J-R1 and separate12J-F1–F3 follow-ups. A separately assigned continuation
+  must resolve12J-R1 and preserve the remaining one-remediation/one-gate caps.
+  12K integration and all next-item implementation remain unstarted by this worker.
 
 ### Item 12B: Bounded algorithmic dependency repair
 

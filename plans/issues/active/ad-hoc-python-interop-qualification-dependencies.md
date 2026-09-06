@@ -226,24 +226,100 @@ The merge-profile gate is reserved for the final reviewed SHA, once only;
 create-PR is omitted. Outer filtered-suite certification failures are not passes.
 No 12K implementation, runner bypass, external repair, or history rewrite is allowed.
 
-Both fixtures fail SIFR-RESULT-0003 during checking:
+Historical pre-12J observation: both fixtures failed SIFR-RESULT-0003 during checking:
 `verification/areas/python_interop/fixtures/async_declaration/httpx2_client.sifr`
 and `verification/areas/python_interop/fixtures/async_context/aiosqlite_session.sifr`.
 Their raised PythonError is incompatible with the declared Result[None, Error]
 channel; the latter fixture produces three diagnostics.
 
-Frontend/lowering/type-system, stdlib, and all Python-interop fixtures/runners
-are unchanged from exact base. This is input-identity evidence, not a repeated
-base qualification run. Determine the authoritative source/error-identity
+At that historical observation, frontend/lowering/type-system, stdlib, and all
+Python-interop fixtures/runners were unchanged from the observing candidate's
+base. This is input-identity evidence, not a repeated base qualification run.
+It does not describe the present12J compiler diff. Determine the authoritative source/error-identity
 contract before repairing all affected fixtures or the appropriate compiler
 mechanism. Preserve original assertions, async cleanup/cancellation, and
 error propagation. Do not broaden accepted errors or suppress diagnostics.
 
 ## Required next action
 
-Item12G is merged and complete. Stop its worker after publishing the closure
-record. The orchestrator may next assign bounded Item12H to a fresh isolated
-worker, then Item12I and Item12J in order. Use the named validation mapping
-above and preserve each item's review/gate limits. Item12K's expressly approved
-integration allowance follows dependency qualification; it does not reset
-Item12B's exhausted history. No Item12H–12K code was written by Item12G.
+Item12G is merged. Items12H/12I have terminal blocked, approved-candidate handoffs;
+Item12J now has the terminal blocked, **unapproved** candidate below. Stop12J's
+worker after publishing records. The orchestrator must assign the unresolved
+12J-R1 correction explicitly and preserve its remaining at-most-one remediation
+review and one final-candidate gate, with no reset of12B/H/I history. Item12K's
+separate integration allowance follows dependency qualification; this12J
+candidate must not be treated as approved or integrated as-is. No next-item
+code, integration, external repair, or gate bypass was written by12J.
+
+### Item12J terminal evidence and unresolved review
+
+State: **blocked**, draft [PR #3699](https://github.com/sifr-lang/sifr/pull/3699).
+Reviewed implementation `f720a342edd87004975355b478948f7eb5c8b406`; merge SHA:
+none. The final record is a separate documentation-only commit after that SHA.
+The initial [Opus review](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5555927728)
+returned **NOT SATISFIED**. The user's orchestration checkpoint then requested
+terminal handoff because external failure was already established. No remediation
+code or review was started; no final-approved candidate exists to gate.
+Allowances consumed: one initial review, zero remediation reviews, zero merge
+gates, zero create-PR gates. Do not relabel this as a qualified candidate.
+
+[Exact-candidate evidence and changed paths](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5555929816)
+are published outside the reviewed Git tree. Evidence root:
+`/private/tmp/sifr-item12j.pT6Xkk/`, receipt
+`evidence-f720a342edd87004975355b478948f7eb5c8b406.md`, review
+`review-f720a342edd87004975355b478948f7eb5c8b406.md`. Compiler SHA256:
+`36640bfbb7c29f7d0019d86ed9539c20311db434c326bf31bada4319b9d61940`.
+
+- Six focused lowering/export regressions pass; IR4, frontend132 unit +7
+  integration, driver584 active (77 existing ignored) pass. These focused tests
+  do not prove generated conversions for local/imported error classes.
+- Lowering1114 pass /2 fail /1 ignored, existing TypeVar message assertions
+  [owner #3667 notified](https://github.com/sifr-lang/sifr/issues/3667#issuecomment-5555882691).
+  Codegen1407 pass /2 existing12B-owned list-repeat failures. Strict Clippy
+  fails at unchanged `project_stdlib_nominals.rs:45` (`expect_used`), owner12B/12C.
+- All264 generated companions remain byte-identical. Formatting, HIR and
+  canonical file-size guard (3756 files) pass. No fixture/assertion changes.
+- The exact two-suite command exits1: both examples pass source checking and
+  fail native build at12I-owned inaccessible cancellation task-local E0425.
+  HTTP has one reported Rust error; context reports58 errors with retained tail
+  naming that task-local and E0425. No runtime output markers were observed;
+  original cleanup/cancellation/assertions did not execute. This is neither
+  a native pass nor complete-area certification; no bypass flag was used.
+- Native report files are `async-declaration-<candidate>.json`,
+  `async-context-<candidate>.json`, and `python-results-<candidate>.json` under
+  the evidence root; receipt records their SHA256s and log names. Final native
+  TMPDIR is private; driver used `RUST_TEST_THREADS=1` without changing selection
+  or internal concurrency. Interrupted earlier cache/scheduling attempts are
+  explicitly incomplete in the receipt, never passing evidence.
+
+**Unresolved in-scope finding12J-R1 (not implemented):** `support_plan.rs:184–200`
+generates conversions only for builtin errors and async PythonError, while the
+new ancestry also accepts non-builtin local/imported errors into builtinError.
+Opus emitted local DomainError and imported `sifr.csv.Error` examples and
+verified E0277, missing `From<T> for Error`. The bounded correction must connect
+semantic ancestry to conversion demand and add emission/compilation regressions
+for local, project-imported and stdlib errors, preserving nominal identity and
+the original runtime contract. The first review remains NOT SATISFIED until
+the sole permitted remediation review approves a corrected exact SHA. A new
+mechanism defect on that second review must be deferred and stopped, not trigger
+a third review. This terminal worker does not implement that continuation.
+
+Separate review follow-ups, not implementation or new blockers:
+
+- **12J-F1**, owner nominal error inheritance: pre-existing mixed data-base plus
+  Error-marker ancestry (`MixedError(Payload, Error)`) overwrites the marker and
+  still rejects propagation. Review classifies this as unchanged from base;
+  no independent base-runtime result is claimed here.
+- **12J-F2**, owner nominal export diagnostics: already-diagnosed unresolved
+  parent paths can fall back to a noncanonical/nontransitive parent string.
+  Evaluate separately; do not add a compatibility fallback in12J.
+- **12J-F3**, owner codegen maintainability: the class-field PythonError-contract
+  reconstruction does not currently consult ancestry, making that converted
+  field a harmless consistency-only change. Cleanup is optional later work.
+
+The review's infrastructure observation remains owned by12I: runtime async
+cleanup/cancellation cannot be certified before its visibility repair is
+integrated and qualified. Detailed12H-F1–F5 and12I-F1–F3 remain in their retained
+record commits/PRs above; none was copied over with stale statuses or discarded.
+The known SQL coverage failure remains an external owner and was not rerun
+or newly claimed as a12J gate result. This item stops without merging or starting12K.
