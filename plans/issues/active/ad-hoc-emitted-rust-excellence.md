@@ -119,6 +119,29 @@ Baseline commit: `e9df29f7e4cada7b376b2d455790f9c80a5647a0`
 
 ## Item12K continuation execution registration (2026-09-06)
 
+Integration completed on main `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+Normal merge commits preserve both B2/B3 post-merge records. Only a Markdown
+insertion conflict required resolution; both records were retained. Relative
+to approvedB1, the exhaustive Git diff contains exactly the phase Markdown,
+diagnostics schema, code_coverage.py/code_coverage_test.py and
+schema_sync.py/test_schema_sync.py. No compiler, runtime, lockfile, Python
+source/fixture/manifest/runner, demo, toolchain configuration or gitlink changed.
+An external SHA-keyed provenance manifest will compare every tracked blob and
+submodule and authenticate retained B1 reports before reusing lowering1119,
+required-message3, Python30/30 (including the five named suites), demo264 and
+readiness4/4. No native90, algorithmic411 or unreached gate-lane pass is inferred.
+Direct B2/B3 focused checks and complete diagnostics are registered above because
+the integrated compiler sources differ from standalone B2/B3 qualification.
+
+Merge plan: create a linked replacement integration PR from this fresh branch;
+retain original3701 and all historical commits. After exact-candidate review
+and the single passing gate, use normal GitHub merge commits for corpus48 and
+the replacement Sifr PR, verifying expected heads and unchanged bases first.
+The qualified corpus source8bcbe7a remains the pinned gitlink and an ancestor
+of the corpus merge; do not repin it to the merge commit after qualification.
+Sifr's candidate contains latest main, so a normal merge preserves its tree.
+Post-merge phase/owner records are separate documentation-only evidence.
+
 This is the original 12K continuation, with zero initial reviews, zero
 remediation reviews and zero gates used; no predecessor allowance is reset.
 The sole live worker owns independent clone `/private/tmp/sifr-item12k-cont.StPW7n/sifr`,
