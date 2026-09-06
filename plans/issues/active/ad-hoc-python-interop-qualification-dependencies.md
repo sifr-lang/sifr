@@ -989,3 +989,38 @@ storage documentation). They are not blocking source-review findings and no
 follow-up implementation started. Preserve the approved M1 candidate for the
 separately owned12K integration after dependency qualification. This worker
 stops after the record; it does not integrate12I or begin12K.
+## Item12K integration checkpoint (2026-09-06): blocked by TypeVar owner
+
+The approved12B/H/I/corrected M1 inputs are now combined on main
+`4ce05473f58716a611ac190581bf0737ba15331e`, including merged12G, in
+[integration draft #3701](https://github.com/sifr-lang/sifr/pull/3701).
+Exact candidate `7e23785ab07cba6f925eed2f934c0304750f1d74`, exact corpus gitlink
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`. Original source/record commits and
+all historical review/gate limits remain preserved; corrected M1 is the only
+authority for including historically unapproved12J/R1.
+
+The combined locked CLI builds; all264 companions are already fresh; fmt/HIR/
+diff and900-line guard pass (3777files). Full lowering fails1117pass/2fail/
+1existing ignored/0filtered; all3 M1 required-message tests pass. Both failures
+are the unchanged TypeVar diagnostic assertions owned by
+[#3667](https://github.com/sifr-lang/sifr/issues/3667), not an unmerged12I/12B
+dependency. This is **12K-B1**, a separately owned prerequisite.
+
+Per the explicit12K dispatch, stop before spending review/gate allowances.
+No new Python five-suite/full-area qualification, native90/corpus411, coverage,
+driver/codegen, strict Clippy, or migrated E2E/stdlib runtime pass is claimed.
+The clean-environment bytecode concern remains unqualified; no warm cache,
+filtered certification bypass, skip, or claimed PyO3 cause was introduced.
+
+Owned evidence `/private/tmp/sifr-item12k.IjjbS9/`, compiler SHA256
+`e3f3655433274f9b1183b45adc14a1f1e899acf3b29e0fb49c35876dc531cae0`.
+`lowering-integrated.log` SHA256
+`e88f93f5658254b979864e29961835a4d62e93a95d1bcaa34974f974feafb8a6`.
+The phase's12K terminal receipt contains full provenance,196changed paths,
+commands, pending checks, and precise next action. Integration consumed0initial
+reviews,0remediation reviews,0gates and0merges. No dependency PR was declared
+merged. Preserve this checkpoint for a fresh bounded#3667 owner, then complete
+integration prerequisite qualification before review/gate. This worker stops;
+it does not implement the TypeVar fix or begin any next item.
+The [12K-B1 owner notification](https://github.com/sifr-lang/sifr/issues/3667#issuecomment-5558278734)
+records exact-candidate reproduction and unchanged TypeVar producer/test blobs.

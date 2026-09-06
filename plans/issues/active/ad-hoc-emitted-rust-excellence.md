@@ -207,7 +207,7 @@ It does not broaden the active item.
 | 12J | blocked: both reviews exhausted, unapproved | Async Python error-channel contract | Draft #3699 preserves final reviewed candidate `4bc432f3474134b1a1d43202d39fd147893bb014`; initial and remediation reviews are NOT SATISFIED. No gate or merge. Message-storage follow-up 12J-M1 requires adjudication; 12I remains external. |
 | 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
 | 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
-| 12K | authorized: integration after dependency qualification | Item 12B and Python dependency integration | Qualify the integrated candidate and merge the preserved work; do not reset Item 12B review history. |
+| 12K | blocked: TypeVar prerequisite #3667 | Item 12B and Python dependency integration | Combined candidate `7e23785ab07cba6f925eed2f934c0304750f1d74` is preserved in draft PR #3701. Full lowering reproduces the two unchanged TypeVar assertions. No integration review, gate, or merge; see the terminal receipt below. |
 
 <!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
 | 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
@@ -2599,3 +2599,98 @@ one final exact-candidate merge gate remain; create-pr is skipped in-session.
 Old12B's two failed gates, H/I's one failed gate each, original12J/R1's exhausted
 NOT SATISFIED reviews, and corrected M1's one SATISFIED review/zero gates remain
 unchanged. H-F1–F5, I-F1–F3, M1-F1/F2/F4 and TypeVar#3667 retain their owners.
+## Item12K terminal receipt (2026-09-06): integrated, qualification blocked
+
+Status: **blocked, not reviewed, not merged, not closed**. The complete approved
+input set is combined; this stop is the explicitly separate TypeVar prerequisite,
+not any dependency's unmerged status. No next-item code was written.
+
+- Integration draft [PR #3701](https://github.com/sifr-lang/sifr/pull/3701).
+- Exact combined implementation candidate: `7e23785ab07cba6f925eed2f934c0304750f1d74`.
+- Base: `4ce05473f58716a611ac190581bf0737ba15331e`, fetched unchanged from main.
+- Exact corpus candidate/gitlink: `8bcbe7ab7939e5c8362c10f61a80e368022cc372`,
+  [leetcode PR #48](https://github.com/sifr-lang/leetcode/pull/48), unchanged.
+- Owned clone `/private/tmp/sifr-item12k.IjjbS9/sifr`, branch
+  `codex/item12k-integration`; all prior worktrees/indexes/targets and the two
+  intentional parent document edits were read-only.
+- SHA-keyed evidence `/private/tmp/sifr-item12k.IjjbS9/evidence-7e23785ab07cba6f925eed2f934c0304750f1d74.md`;
+  sibling `changed-paths.txt` lists all196 integration paths. The external receipt
+  records the final documentation-only SHA after this commit exists.
+- Reviewed integration Sifr SHA: **none**. No initial/remediation Opus request,
+  provider retry, create-PR gate, merge-profile gate, or merge ran. All12K review
+  and gate allowances remain unused; no historical allowance was reset.
+
+### Preserved input lineage and integration corrections
+
+Merge commits retain12B record `8e532f15895e7005fae8c658739ba3c3a6818c18`,
+12H record `b6e6210a97598fb631b929b2d4daf4012b41bb16`,12I record
+`19ad69969a672d7b741122ded4dd879f2bdaf9ab`, and corrected M1 record
+`a7e13eb45006eac925417491b89a932af5df2595` as ancestors, together with their
+approved source candidates and original histories. Unapproved12J/R1 is present
+only through the approved correcting M1 lineage; its exhausted NOT SATISFIED
+reviews remain unapproved historical evidence.12B's corrected historical compiler
+source is `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`.
+
+The explicit conflict in `project_stdlib_nominals.rs` retains both12B registry
+and M1 module-binding exports. The initial combined build exposed two automatically
+merged checked-read registrations still using M1's old collection interface;
+`error_refs.rs` now inserts IndexError/KeyError into `ErrorReferences.builtins`.
+This is a two-line integration correction, not a new mechanism or third review.
+The failed initial build remains in `build-integrated.log`; the corrected locked
+build passes in `build-corrected.log`. Cargo.lock only adds the already-pinned
+insta dev dependency from M1; no versions changed. No source assertion was weakened.
+
+All196 paths derive from the approved input merges and these integration
+corrections/records. Separate unfinished Item12 source `8ad089a9458f35fcfa228e93fe44f4d69731828b`
+is preserved, not absorbed or represented as merged.
+
+### Fresh candidate evidence and precise stop
+
+- `cargo build --locked -p sifr`: **PASS**, combined candidate7e23785.
+  Compiler SHA256 `e3f3655433274f9b1183b45adc14a1f1e899acf3b29e0fb49c35876dc531cae0`,
+  rechecked after qualification. Cargo.lock SHA256 remains
+  `e5f4734fc985e8b3fc041b7a03795829c766b2b96c4fa351932c89b14d255320`.
+- Canonical demo freshness `--update`: **PASS**, all264 already fresh and zero
+  files changed. Its complete byte comparisons also supply the unchanged-input
+  check evidence; a redundant second invocation without `--update` was unnecessary.
+- Full `cargo test -p sifr_lowering`: **FAIL**,1117passed/2failed/1existing ignored/
+  0filtered. The3 M1 required-message regressions pass inside this full run.
+- `cargo fmt --check`, HIR, diff hygiene, and canonical900-line guard: **PASS**;
+  size guard checked3777 files. Relevant source did not change after these runs.
+- No five-suite/full Python area,90-case native,411-case corpus, coverage readiness,
+  remaining crate, focused driver, strict Clippy, E2E/stdlib runtime, or merge-gate
+  pass is claimed for this new compiler. They were not run after the required
+  lowering prerequisite failed. Historical input evidence does not certify them.
+
+The sole qualification blocker is existing [TypeVar #3667](https://github.com/sifr-lang/sifr/issues/3667):
+`test_typevar_invalid_bound_shape_has_primary_range` at
+`control_flow_and_strings.rs:492` and
+`test_pep695_typevar_constraint_shape_has_primary_range` at line518 still require
+the old “simple type name(s)” wording. The producer emits “type name(s)”.
+The test blob `d842c2fd162e65dff74248c8f3d393b4274f1ca9` and producer blob
+`b0971e8911997383a88e2070cb711269ce4fb9cc` are identical to main. The producer's
+last change is the previously recorded `066300ff185f38b425a884a2225b72990a194e58`.
+The full failure log is `lowering-integrated.log`, SHA256
+`e88f93f5658254b979864e29961835a4d62e93a95d1bcaa34974f974feafb8a6`.
+This is registered as **12K-B1, owner#3667**, not repaired here. The exact
+[owner notification](https://github.com/sifr-lang/sifr/issues/3667#issuecomment-5558278734)
+publishes the candidate, both failure identities, unchanged blobs, and log digest.
+
+Initial free disk was190GiB with no private target; terminal free disk183GiB and
+private target6.6GiB. No cleanup or shared-target use occurred. This cold build
+is correctness evidence only, not a host-sensitive performance pass.
+
+### Handoff and remaining authority
+
+PRs#3694/#3697/#3698/#3700 and leetcode#48 remain preserved, unmerged dependencies;
+historical#3699 remains unapproved.12G remains merged through#3695/#3696.
+No dependency PR was closed or falsely marked merged. H-F1–F5, I-F1–F3,
+M1-F1/F2/F4 and all old failures retain their original owners. M1-F3's migrated
+runtime qualification remains pending in the authorized integration gate.
+
+Exact next action: a fresh bounded owner resolves#3667, then integration resumes
+from this preserved lineage, assesses changed inputs, completes the registered
+prerequisites, and only then uses the one initial exact-SHA review, at most one
+remediation review, and one final-candidate merge-profile gate. No whole-phase
+review, Item12 residual,12D/E/F, or12A work belongs to this session. The worker
+stops after publishing this documentation-only blocked receipt.
