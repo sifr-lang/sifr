@@ -52,7 +52,7 @@ class AuditPathTests(unittest.TestCase):
             taxonomy.DELIVERY_BATCH + "_2", "sprint" + "3", "workstream" + "4",
             "m" + "1", "p" + "1", "ms" + "2", "pt" + "3", "ph" + "4",
             "w" + "5", "M" + "8", "P" + "2", "m" + "1_2",
-            taxonomy.DELIVERY_STEP + "_99", taxonomy.DELIVERY_WORK_ITEM,
+            taxonomy.DELIVERY_STEP + "_99", taxonomy.DELIVERY_WORK_ITEM + "-helper",
         )
         for root in self.audit_roots():
             expected: set[Path] = set()
