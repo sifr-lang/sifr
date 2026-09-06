@@ -19,7 +19,7 @@ that each checked-in manifest row remains represented here.
 | `--force-exclude` / `--no-force-exclude` | Match Ruff's distinction between explicit roots and forced exclusions. |
 | CLI `--exclude` | Match Ruff comma-delimited file-pattern override semantics for format file selection. |
 | CLI `--line-length` | Match Ruff formatter override semantics and precedence. |
-| CLI `--pvalidation` / `--no-pvalidation` | Match Ruff pvalidation toggle behavior while keeping stable style default. |
+| CLI `--preview` / `--no-preview` | Match Ruff preview toggle behavior while keeping stable style default. |
 | CLI `--target-version` | Do not expose Python target-version semantics. Sifr has no formatter syntax-version flag in the current rules; a future language-edition rules may add one explicitly. |
 | CLI `--extension` | Sifr formatter source kind is `.sifr` only in the current rules; multiple source-kind mapping requires a later product decision. |
 | Config discovery | Sifr canonical config is `sifr.toml`; Ruff config files are migration inputs only under the precedence rules below. |
@@ -32,7 +32,7 @@ that each checked-in manifest row remains represented here.
 | Magic trailing comma behavior | Map directly for Sifr calls, collections, signatures, and type constructs that use Ruff AST layouts. |
 | Docstring code formatting | Support Ruff-recognized docstring code forms by formatting Sifr snippets with the Sifr parser/formatter. The option remains disabled by default. |
 | Docstring code line length | Same disposition as docstring code formatting. |
-| Formatter pvalidation mode | Expose explicit Sifr pvalidation flag/config that maps to Ruff pvalidation mode. Stable mode remains default. |
+| Formatter preview mode | Expose explicit Sifr preview flag/config that maps to Ruff preview mode. Stable mode remains default. |
 | `# fmt: off` and `# fmt: on` | Apply at statement level, matching Ruff/Black semantics. |
 | `# fmt: skip` | Apply to preceding statement, case header, decorator, or other Ruff-supported syntactic boundary adapted to Sifr AST. |
 | `# yapf: disable` and `# yapf: enable` | Treat as aliases for `fmt: off/on` at the same statement-level boundaries Ruff documents. |
@@ -64,8 +64,8 @@ that each checked-in manifest row remains represented here.
 | stdin without files | stdin without files | fmt_cli_stdin_default_context |
 | `--extension <ext:language>` | none | fmt_cli_extension_rejected_or_absent |
 | `--target-version <version>` | none | fmt_cli_target_version_absent |
-| `--pvalidation` | `--pvalidation` | fmt_cli_pvalidation_flags |
-| `--no-pvalidation` | `--no-pvalidation` | fmt_cli_pvalidation_flags |
+| `--preview` | `--preview` | fmt_cli_preview_flags |
+| `--no-preview` | `--no-preview` | fmt_cli_preview_flags |
 | `--range <range>` | `--range <range>` | fmt_cli_single_file_range |
 | global `--config <file-or-override>` | `--config <file-or-override>` or supported Sifr equivalent | fmt_cli_config_override_precedence |
 | global `--isolated` | `--isolated` or supported Sifr equivalent | fmt_cli_isolated_ignores_config |

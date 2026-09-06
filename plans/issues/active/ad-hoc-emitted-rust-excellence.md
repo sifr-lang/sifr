@@ -58,7 +58,7 @@ orchestrates; each new worker owns one fresh checkout/branch/index/temp root.
   independently deliverable PR; retain the integration checkout as read-only
   provenance. One exact-SHA review plus at most one remediation. No Sifr gates
   absent compiler/lockfile/fixture/workflow changes. Merge/update owner and stop.
-- **12K-B8 / [#3723](https://github.com/sifr-lang/sifr/issues/3723)**: ready;
+- **12K-B8 / [#3723](https://github.com/sifr-lang/sifr/issues/3723)**: merged;
   execution dependency B7 terminal/merged. Distinguish three legitimate SQL
   dialect `bigint` spellings from removed Sifr scalar support. Preserve SQL names
   and real compatibility rejection; no broad suppression. Named tests:
@@ -66,7 +66,7 @@ orchestrates; each new worker owns one fresh checkout/branch/index/temp root.
   and its `--self-test`, plus focused SQL-spelling versus removed-language-type
   regressions registered before execution, diff and file-size checks. Narrow
   guard owner; no unrelated SQL/compiler behavior changes.
-- **12K-B9 / [#3724](https://github.com/sifr-lang/sifr/issues/3724)**: recorded;
+- **12K-B9 / [#3724](https://github.com/sifr-lang/sifr/issues/3724)**: in progress;
   execution dependency B8 terminal/merged. Reconcile formatter preview reference
   with actual supported behavior and existing capability/CLI manifests, including
   all eight failed checks. Do not infer or introduce a formatter mechanism fix.
@@ -90,10 +90,25 @@ Terminal manifest at sibling `evidence/terminal.json`, SHA256
 `f42226a2db1767794d9c68ca253235e88f92c732b95f6fd03e3245373ab80e09`.
 No live worker handles remain from B7. Original12K stack remains unmerged.
 
-12K-B8 dispatched to Copernicus (`01a07871-4fd6-7b02-a3be-b6f9cde8d518`),
-fresh no-history gpt-6-astra high, exact base prompt plus independent main-based
-onboarding. All predecessors closed; one live implementer. B8 starts with no
-review/provider/gate allowance consumed. B9 remains next.
+12K-B8 Copernicus (`01a07871-4fd6-7b02-a3be-b6f9cde8d518`) closed after
+verified [PR3727 merge](https://github.com/sifr-lang/sifr/pull/3727), candidate
+`4eb6426f81db75a8b562cfc0572f26027c37159c`, base4faa768, normal merge
+`a216019057fbb05ccfdc8c846c20ee3ecc7a639d`. All five named checks pass,
+14 focused regressions, file-size3757. One initial SATISFIED review, zero
+remediation/retries/gates, one provider request, one normal merge. Owner3723
+closed. Four paths: guard, Python regressions, retained-contract registry,
+phase record. All three SQL source blobs unchanged; only recognized SQL literal
+spans are retained. [Review/evidence](https://github.com/sifr-lang/sifr/pull/3727#issuecomment-5562074224),
+[terminal receipt](https://github.com/sifr-lang/sifr/pull/3727#issuecomment-5562086960).
+Preserved clean clone `/private/tmp/sifr-item12k-b8.TS6YQA/sifr`;
+post-merge record `af487bd1547b7b6c555505d8ff32a5e0047726b5` on
+`codex/item12k-b8-sql-compatibility` is pushed but not merged to main. Next
+worker must carry its closure receipt into its own phase record. Terminal
+manifest at sibling `evidence/terminal.json`, SHA256
+`1c727f2789e9a6e376f137b95920c8f19a7d37832738af9eb74065a93783f214`.
+No live B8 handles remain; original12K gate/stack untouched. Optional later
+guard-design observations are [#3728](https://github.com/sifr-lang/sifr/issues/3728),
+no established current defect or delivery dependency; no speculative extension.
 
 Later nonblocking tooling owner [#3726](https://github.com/sifr-lang/sifr/issues/3726)
 records existing path-only inventory enforcement and multiple calls per source
@@ -103,6 +118,55 @@ counts, and it does not change B8/B9 order or authorize integration requalificat
 These owners are authorized bounded dependency work. They must not repair the
 next owner, restart original12K qualification, merge its inherited stack, or
 conduct whole-phase review. Preserve completed and failed evidence accurately.
+
+## Item 12K-B9: formatter preview reference reconciliation (2026-09-06)
+
+Owner: [#3724](https://github.com/sifr-lang/sifr/issues/3724). B7 and B8 are
+merged and owners #3722/#3723 are closed. The current parent orchestration
+summary above and B8 post-merge closure below are carried forward without
+importing the original12K integration stack or changing prior history.
+
+The sole implementer owns fresh clone `/private/tmp/sifr-item12k-b9.YGbRNk/sifr`,
+branch `codex/item12k-b9-formatter-reference`, independent Git index and sibling
+`evidence/`. An explicit actual `origin/main` fetch established base
+`a216019057fbb05ccfdc8c846c20ee3ecc7a639d`. Parent's two intentional Markdown
+edits and every predecessor checkout/target remain read-only. Only the owned
+Ruff submodule is initialized at the unchanged gitlink
+`f19957111640fdee8055bfe5b6aa854259344473` for the named manifest check.
+
+Implementation: correct erroneous `pvalidation` spellings to `preview` in two
+capability rows and two CLI rows of the formatter rules reference. This restores
+both capability names and requirements, both CLI surfaces, and both
+`fmt_cli_preview_flags` references: all eight reported failures. The existing
+capability/CLI manifests are authoritative and agree with the implementation:
+
+- `crates/sifr/src/formatter_cli.rs` declares mutually exclusive `--preview`
+  and `--no-preview` flags.
+- `crates/sifr/src/check_and_package_commands.rs` maps explicit flags to an
+  optional boolean override; absent flags preserve config selection.
+- `crates/sifr_format/src/config.rs` accepts the `preview` config key and
+  applies explicit CLI overrides after configuration.
+- `crates/sifr_format/src/lib.rs` defaults preview to false and passes the
+  selected value to Ruff's `PreviewMode::Enabled` or `PreviewMode::Disabled`.
+
+Only this phase record and `verification/areas/developer_tooling/formatter_rules.md`
+change. No formatter mechanism, manifest, checker, fixture, compiler, lockfile,
+workflow or gitlink changes are needed. No architecture or roadmap change.
+
+Named validation, run after the complete implementation batch:
+
+- `python3 verification/areas/developer_tooling/check_formatter_rules_manifests.py`
+- `python3 verification/areas/developer_tooling/check_formatter_rules_manifests.py --self-test`
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+
+No additional test command is needed. Zero create-pr or merge-profile gates
+under the user's documentation-only rule. One exact-SHA narrow Opus review,
+at most one remediation review, with completed atomic response and SHA-keyed
+evidence outside the reviewed tree. After the independent normal main merge,
+update the owner and this phase record, publish terminal evidence, and stop.
+Original12K's one failed gate stays consumed; its unreached suites remain
+unreached. No integration requalification, corpus merge or later item is started.
 
 ## Item 12K-B8: SQL integer spelling guard boundary (2026-09-06)
 
@@ -144,6 +208,40 @@ One exact-candidate Opus review is allowed, plus at most one remediation.
 Review evidence stays outside the reviewed tree and is published keyed by SHA.
 After the independent main merge, update this record and owner, publish the
 terminal receipt, and stop. B9 and original12K requalification are not started.
+
+### B8 terminal closure (carried from record af487bd1547b7b6c555505d8ff32a5e0047726b5)
+
+[PR #3727](https://github.com/sifr-lang/sifr/pull/3727) merged normally on
+2026-09-06 at 20:48:48 UTC. Exact reviewed and validated candidate:
+`4eb6426f81db75a8b562cfc0572f26027c37159c`; merge:
+`a216019057fbb05ccfdc8c846c20ee3ecc7a639d`. Owner #3723 is closed. Immediately
+before merge, actual main remained the reviewed base
+`4faa76803da67d22a2dfffdb81cc63bf16304fe0` and the candidate tree was clean.
+
+All five named B8 commands passed on that candidate. Focused suite: 14 tests;
+file-size guard: 3757 files, limit 900 lines. SQL source blobs equal the base.
+Counts: one initial Opus SATISFIED review, zero blocking findings, zero remediation,
+one provider request, zero retries, zero create-pr gates, zero merge-profile gates,
+one normal merge. The reviewer reused existing validation without rerunning it.
+
+[Complete review and evidence](https://github.com/sifr-lang/sifr/pull/3727#issuecomment-5562074224)
+is published outside the reviewed Git tree. Raw review in the B8 root at
+`claude.qhVwE9/response.md`, SHA256
+`11c613866c433c2d167684835e264ef425bd6a4cacb022208e9d2a2ef0134773`.
+Validation manifest in that root at
+`evidence/4eb6426f81db75a8b562cfc0572f26027c37159c.validation.json`, SHA256
+`36e70faadcd1a343aea2b64f00505ac4cab612784cc6d7b1d5d02f27300243cc`,
+records all command/log hashes and the three unchanged SQL source blobs.
+
+Optional reviewer observations are separate later work in
+[#3728](https://github.com/sifr-lang/sifr/issues/3728): assess rule-local span
+metadata only if a second rule needs it, and document the existing root-relative
+scan identity if that contract changes. Neither observation establishes a current
+defect or a B8/original12K delivery dependency. No follow-up implementation started.
+
+B8's record-only closure was pushed on its owned branch, outside the approved
+candidate, with no second main merge, review or gate. It is carried here as
+required by that handoff. B8 blocker: none; all command/review handles completed.
 
 ## Item 12K-B7: direct filesystem inventory restoration (2026-09-06)
 
