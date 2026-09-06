@@ -86,7 +86,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
     emitter.emit_named_module(module, false, true, Some(module_name));
     // Expression lowering can introduce canonical intermediate error unions.
     emitter.generate_enum_definitions();
-    let support_demand = ModuleSupportDemand::from_emitter(module, &emitter);
+    let support_demand = ModuleSupportDemand::from_emitter(module, &emitter, Some(module_name));
 
     let mut module_import_items: Vec<RustItem> = Vec::new();
     for import in &module.imports {

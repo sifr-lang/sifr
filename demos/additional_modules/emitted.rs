@@ -1125,7 +1125,8 @@ fn demo_configparser() {
         SifrGeneratedStdlibSifrX2econfigparserX2eConfigParser::new(None, false, false);
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2econfigparserX2eParsingError> =
         (|| {
-            config.read_string(&"[database]\nhost = db.example.com\nport = 5432\n".to_string())?;
+            (&mut config)
+                .read_string(&"[database]\nhost = db.example.com\nport = 5432\n".to_string())?;
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

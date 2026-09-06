@@ -27,6 +27,11 @@ impl RustEmitter {
                 let Some(mut lowered_expr) = self.lower_stmt_expr_for_ir(expr)? else {
                     return Ok(None);
                 };
+                lowered_expr = crate::ownership_plan::materialize_comprehension_value(
+                    expr,
+                    lowered_expr,
+                    generators,
+                );
                 if let Type::List(element_ty) = Self::resolve_alias_type_for_loop_iter(ty) {
                     lowered_expr = crate::helpers::adapt_collection_value_for_target(
                         element_ty.as_ref(),

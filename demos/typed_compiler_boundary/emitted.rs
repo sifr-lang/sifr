@@ -144,7 +144,7 @@ mod sifr_generated_generated_support {
         sifr_generated_build_hash(&"sha224".to_string(), data)
     }
     ::tokio::task_local! {
-        static SIFR_GENERATED_SIFR_TASK_CONTEXT_LABEL : String;
+        pub (crate) static SIFR_GENERATED_SIFR_TASK_CONTEXT_LABEL : String;
     }
     pub(crate) fn sifr_generated_task_current_context() -> SifrGeneratedStdlibSifrX2etaskX2eContext
     {

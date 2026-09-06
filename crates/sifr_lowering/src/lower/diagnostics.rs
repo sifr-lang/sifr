@@ -6,14 +6,27 @@ use sifr_type_system::Type;
 
 use super::LowerCtx;
 
-pub(in crate::lower) fn is_error_class_with_ctx(
-    class_def: &StmtClassDef,
-    error_types: &std::collections::HashSet<String>,
-) -> bool {
+pub(in crate::lower) fn is_error_class_with_ctx(class_def: &StmtClassDef, ctx: &LowerCtx) -> bool {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
             let base_name = n.id.as_str();
-            if base_name == "Error" || error_types.contains(base_name) {
+            // The declaration-base pass distinguishes the builtin Error marker
+            // from an imported data parent whose local spelling is Error. Local
+            // declarations are provisional here, including class Error(Error).
+            if base_name == "Error"
+                && super::descriptor_declarations::data_parent_name(class_def.name.as_str(), ctx)
+                    .as_deref()
+                    != Some("Error")
+            {
+                return true;
+            }
+            let is_error = ctx.class_types.get(base_name).map_or_else(
+                || ctx.error_types.contains(base_name),
+                |ty| ty.is_builtin_error_base() || matches!(ty.resolve_alias(), Type::Class {
+                    parent_class: Some(chain), ..
+                } if chain.split('|').any(|parent| matches!(parent, "Error" | "sifr.builtin.Error"))),
+            );
+            if is_error {
                 return true;
             }
         }

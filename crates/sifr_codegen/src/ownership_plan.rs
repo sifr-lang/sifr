@@ -1,6 +1,9 @@
 use crate::{RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
 use sifr_type_system::Type;
 
+mod comprehension;
+pub(crate) use comprehension::materialize_comprehension_value;
+
 impl crate::RustEmitter {
     /// Produces a `&str` view without calling the unstable `str::as_str` on a
     /// shared string parameter, whose Rust ABI is already `&str`.

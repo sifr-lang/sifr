@@ -7,7 +7,7 @@ fn main() {
     ];
     let mut totals: Vec<SifrInt> = Vec::new();
     for pair in pairs.iter().cloned() {
-        totals.push(pair.0 + pair.1);
+        totals.push(&pair.0.clone() + &pair.1.clone());
     }
     println!("{totals:?}");
     let mixed: Vec<Box<dyn ::std::any::Any>> = Vec::new();

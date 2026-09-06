@@ -28,12 +28,6 @@ pub(crate) fn rust_source_uses_python_runtime(source: &str) -> bool {
     source.contains("::sifr_stdlib::python::") || source.contains("::sifr_runtime::python::")
 }
 
-pub(crate) fn python_error_contract_rust_types(
-    module: &HirModule,
-) -> std::collections::BTreeSet<String> {
-    python_error_contract_types(module).into_keys().collect()
-}
-
 pub(crate) fn python_error_contract_types(
     module: &HirModule,
 ) -> std::collections::BTreeMap<String, Type> {

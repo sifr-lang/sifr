@@ -317,6 +317,7 @@ impl<'facts> MutatingUseCollector<'facts> {
                     | "split_at_mut"
                     | "swap"
                     | "swap_remove"
+                    | "take"
                     | "truncate"
                     | "try_recv"
                     | "values_mut"

@@ -614,12 +614,26 @@ pub(in crate::lower) fn lower_class(
             let previous_must_use_bindings = std::mem::take(&mut ctx.live_must_use_bindings);
             let previous_borrowed_params = std::mem::take(&mut ctx.borrowed_params);
             prepare_method_param_ownership(&params, &method_name, skips_normal_body_lowering, ctx);
-            let body = if skips_normal_body_lowering {
+            let mut body = if skips_normal_body_lowering {
                 Vec::new()
             } else {
                 lower_function_stmts(&func.body, &method_ft, ctx)
             };
             if method_name == "__init__" {
+                if ctx.error_types.contains(&class_name) && !skips_normal_body_lowering {
+                    super::error_message_contract::lower_root_initialization(&mut body);
+                    super::error_message_contract::validate_constructor(
+                        class_def,
+                        func,
+                        &body,
+                        &own_fields,
+                        &params,
+                        parent_class_name
+                            .as_deref()
+                            .is_some_and(|parent| parent != "NonSend"),
+                        ctx,
+                    );
+                }
                 if let Some(gap) = constructor_uninitialized_storage_at_first_self_use(
                     &body,
                     &own_fields,
@@ -738,6 +752,15 @@ pub(in crate::lower) fn lower_class(
     super::python_cleanup_validation::validate(class_def, &hir_methods, ctx);
 
     let is_error = ctx.error_types.contains(&class_name);
+    if is_error && own_fields.is_empty() && !hir_methods.iter().any(|method| method.name == "new") {
+        if let (Some(parent), Some(parent_ty)) = (&parent_class_name, &parent_type) {
+            if let Some(constructor) = super::error_message_contract::inherited_constructor(
+                class_def, parent, parent_ty, ctx,
+            ) {
+                hir_methods.push(constructor);
+            }
+        }
+    }
     if is_error
         && !all_fields
             .iter()

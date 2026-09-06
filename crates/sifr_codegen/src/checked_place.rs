@@ -2,6 +2,7 @@ use crate::{RustEmitter, RustExpr, RustLiteral, RustStmt, Type};
 
 mod condition_reads;
 mod control_flow;
+mod fallible_reads;
 mod nonempty_lists;
 mod option_reads;
 mod witnesses;
@@ -14,6 +15,20 @@ fn condition_supports_checked_sequence_read(
     object: &crate::HirExpr,
     index: &crate::HirExpr,
 ) -> bool {
+    if let crate::HirExpr::BoolOp { op, values, .. } = condition {
+        return match op.as_str() {
+            "or" => {
+                !values.is_empty()
+                    && values
+                        .iter()
+                        .all(|value| condition_supports_checked_sequence_read(value, object, index))
+            }
+            "and" => values
+                .iter()
+                .any(|value| condition_supports_checked_sequence_read(value, object, index)),
+            _ => false,
+        };
+    }
     let Some(object_token) = checked_place_expr_token(object) else {
         return false;
     };
@@ -428,6 +443,12 @@ impl RustEmitter {
         stmt: &crate::HirStmt,
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         if self.checked_place_atomic_guard_suppressed
+            || self
+                .checked_read_failure_type(CheckedPlaceFailureKind::Index)
+                .is_some()
+            || self
+                .checked_read_failure_type(CheckedPlaceFailureKind::Key)
+                .is_some()
             || self.loop_else_stack.is_empty()
             || self.stmt_uses_checked_option_target(stmt)
             || matches!(
