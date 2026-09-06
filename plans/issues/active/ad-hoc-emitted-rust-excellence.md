@@ -1865,6 +1865,86 @@ with SHA-keyed review and native JSON reports. The compiler hash is
 The final handoff is documentation-only and receives no extra review or gate.
 Next action: adjudicate 12J-M1 and the unresolved conversion obligation before
 any 12J qualification/integration; this worker stops after publishing records.
+### Item12K receipt and B5 dispatch (2026-09-06)
+
+Kierkegaard is closed after the [terminal handoff](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5560373170).
+Preserved clone `/private/tmp/sifr-item12k-final.7sgsI9/sifr`, candidate
+`286067170ee7c4edfb61cd37afece30519b4c1c5`, record
+`9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`, base/main
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`, corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372` (PR48), no merge.
+Original12K still has zero reviews, remediation reviews, provider requests and gates.
+Fresh native90, algorithmic411, diagnostics184, readiness4, frontend139, IR4,
+types147, required-message5 and async9 pass. The full driver run failed594/1
+with77 existing ignored; the structural metadata assertion correction passes
+its focused test, but does not turn that failed full invocation into a pass.
+Authenticated codegen1452, lowering1119, Python30, demo264 and B2/B3/B4 focused
+evidence remains available. Full E2E, migrated stdlib and ignored-driver build
+lanes remain unrun. Strict Clippy found the two external failures below.
+
+Next item is **12K-B5 / [#3716](https://github.com/sifr-lang/sifr/issues/3716)**,
+owner compiler-driver portable generated projects. Dependencies are the complete
+retained12K context above; narrow B5 approval must not approve inherited12K code.
+Scope: correct `obfuscated_if_else` in `portable_dependency_line` and
+`type_complexity` in `authority_packages`, without suppression, fallback,
+manifest-output changes, lock-source changes or unrelated repair. These two
+files are unchanged from main; the owner issue contains exact blob provenance.
+
+Use a fresh owned clone/branch retaining the complete12K record and exact corpus;
+do not mutate any previous checkout, target, index or the parent's dirty records.
+Register this dispatch in the owned phase before implementation. Named tests:
+`cargo test -p sifr_driver`, `cargo clippy --workspace -- -D warnings`,
+`cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`,
+`python3 scripts/check_file_size_guardrails.py`, and `git diff --check`.
+The worker may register exact focused semantic-regression commands before testing
+if needed for these two changes. Complete the entire bounded correction before
+tests. Preserve/reuse authenticated unaffected evidence rather than rerunning the
+90/411/184/Python matrices reflexively. All canonical JSON reports belong inside
+the owned repository; preserve actual pass/fail/unrun distinctions.
+
+B5 receives the normal one exact-SHA initial Opus review and at most one
+remediation review, scoped to B5's exact delta. Compiler paths change, so one
+merge-profile gate on the final approved candidate is required; skip create-pr
+for intended in-session delivery. No second gate and no predecessor budget reset.
+Prefer the already-qualified integration context over deliberately reproducing
+known main-only SQL/Python prerequisite gaps. A passing exact-SHA gate receipt
+must be preserved for later integration evidence reuse under the user's rule;
+it does not itself provide the still-required broad12K integration review.
+Do not merge inherited unreviewed implementation under narrow B5 approval.
+If independent safe delivery is impossible, return the approved stacked candidate
+and gate evidence as integration-delivery-pending, not as a newly discovered
+mechanism blocker. A genuine new external failure or second-review mechanism
+gets a later owner and terminal handoff. Do not implement12K/12D/E/F/Item12/12A
+or run whole-phase review. Return exact base/candidate/record/merge SHAs, PR,
+changed paths, evidence, all consumed counts and the precise next action.
+
+#### B5 owned execution registration (2026-09-06)
+
+Owned clone: `/private/tmp/sifr-item12k-b5.5WJpGX/sifr`; branch
+`codex/item12k-b5-portable-clippy`. The sole implementer preserves exact review
+base/integration record `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`, including
+all normal ancestry and corpus `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+Fetched main remains `f11e1cd7eef16a02063555bccc9fd8e19287833b`, already an
+ancestor. Parent/predecessor checkouts, indexes, records and targets are read-only.
+
+Implementation is restricted to an explicit package-alias `if/else` in
+`portable_dependency_line` and a private named authoritative-checksum map type
+for `authority_packages`. Existing manifest-output and lock-source regression
+tests run through the registered full `cargo test -p sifr_driver`; no additional
+focused invocation is registered. All six named checks above run after the
+complete bounded code batch. The inherited metadata assertion fix is retained.
+
+B5 allowances: one initial exact-SHA read-only Opus review, at most one
+remediation review, one governed merge-profile gate on the approved candidate,
+zero create-pr gates. Initial provider-request failure permits at most two
+request retries with fresh atomic-output directories under the requested skill.
+The review is only the B5 delta from the exact integration record; inherited12K
+implementation is explicitly unreviewed. No inherited budget is reset; original12K
+counts remain zero. Safe independent delivery must not merge that unreviewed
+stack. If that delivery boundary remains, retain the narrow approved candidate
+and actual gate receipt as `integration-delivery-pending` for a fresh original12K
+worker; do not perform the broader review here.
+
 ### Item 12B: Bounded algorithmic dependency repair
 
 On 2026-09-05, the user authorized the same worker to repair both repositories.
