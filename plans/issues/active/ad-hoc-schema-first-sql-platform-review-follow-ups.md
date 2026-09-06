@@ -184,3 +184,47 @@ reconciled with the preserved12B changes in12K integrated qualification.
 Exact evidence is outside the worker tree under `/private/tmp/sifr-item12i.0l85Lu/`:
 `merge-f6e8afd964bb214a44c50271dcb2014ee8e828b4.log` and `.json`, and
 `coverage-matrix-f6e8afd964bb214a44c50271dcb2014ee8e828b4.json`.
+
+## B4 independent main readiness receipt (2026-09-06)
+
+Item 12K-B4 / [#3712](https://github.com/sifr-lang/sifr/issues/3712), preserved
+in [draft #3714](https://github.com/sifr-lang/sifr/pull/3714), independently
+repairs taxonomy fixture path isolation on main
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`. Candidate
+`eaa4a063b69ee2132bef55514361062e85db3548` passes direct taxonomy and eight
+focused path regressions. Its named four-check coverage readiness suite passes
+taxonomy, profile assignment (19 rows), and all 24 negative self-tests present
+on main, but fails coverage readiness with the same 23 SQL classifications
+already owned here. These are nine missing packages, 13 missing targets, and
+the stale PostgreSQL `lib` classification replacing the current `rlib` target.
+
+The candidate changes no Cargo/compiler input, coverage checker, classification
+registry, or readiness self-test. The base/candidate classification blob is
+`c835f5e32761a99db1b0d5aaeafb1053c997ad6e`; the readiness self-test blob is
+`71240aa421cb9cfe4d754e1c139ad05f5616e2f7` on both. The previously approved
+23-classification repair and 27-case self-test belong to retained Item 12B
+[#3694](https://github.com/sifr-lang/sifr/pull/3694) and pending integration
+[#3713](https://github.com/sifr-lang/sifr/pull/3713), not this independent main
+baseline. B4 does not import that stack or modify this owner's implementation.
+
+Evidence root: `/private/tmp/sifr-item12k-b4.3wWQdN/`.
+Canonical `sifr/target/verification/areas/b4-readiness.json` SHA256:
+`b515bd1058d1464d374dee98152a6daa3188e09d8f2a703f3a4354e26117780a`.
+Full 23-diagnostic log `readiness-eaa4a063b.log` SHA256:
+`976734d699050a4c54e45b35dc4f6d9f1e9201c0a25eadfcb948bc4c7066fda4`.
+One completed suite invocation followed approved resolution of an initial
+network-only runner setup failure. No Sifr gate or Opus review ran.
+
+B4 stops under its explicit external-blocker rule with #3712 open. The parent
+must adjudicate the independent B4 dependency boundary or arrange separately
+owned SQL prerequisite delivery before B4 proceeds to review/merge. This is
+an owner receipt only, not authorization to implement SQL or continue 12K.
+
+### B4 integrated qualification authority (2026-09-06)
+
+The parent has now adjudicated the prerequisite context: the existing reviewed
+12B SQL corrections and 27-case negative suite are already ancestral to 12K
+record `5de50ecafc84ed1fa724e7384ad85689a6925dfb`. B4 may qualify its unchanged
+checker/regressions on that preserved stack. This supersedes only the earlier
+dependency stop, not the recorded failed-main result. No new SQL correction is
+implemented. The owned B4 phase registration records exact inputs and paths.
