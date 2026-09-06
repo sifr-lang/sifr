@@ -12,11 +12,26 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[4]
 CODES_RS = ROOT / "crates" / "sifr_diagnostics" / "src" / "codes.rs"
 CODE_RE = r"SIFR-(?:[A-Z]+|RUST-[A-Z]+)-\d{4}"
+CONSTANT_REFERENCE_RE = re.compile(
+    r"(?<!\w)(?:r#)?DiagnosticCode\s*::\s*(?:r#)?([A-Z_]\w*)\b"
+)
 INCLUDE_RE = re.compile(r'^\s*include!\("([^"]+)"\);\s*$', re.MULTILINE)
 LOCAL_MOD_RE = re.compile(
     r"^\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z0-9_]+);\s*$",
     re.MULTILINE,
 )
+
+
+def diagnostic_constant_references(text: str) -> list[str]:
+    """Read complete constant names under the exact DiagnosticCode identifier.
+
+    Like the registry, this textual audit uses uppercase/underscore-leading
+    constant names, not lowercase associated functions. Consume the entire
+    member token, including mixed-case suffixes, so malformed/unknown names
+    cannot masquerade as a registered constant. The type boundary excludes
+    provider identifiers, including underscore and Unicode prefixes.
+    """
+    return CONSTANT_REFERENCE_RE.findall(text)
 
 
 def git_ls_files(*patterns: str) -> list[pathlib.Path]:
@@ -132,10 +147,7 @@ def parse_registry() -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
     )
     if active_block is None:
         raise ValueError("could not find ACTIVE_DIAGNOSTIC_CODES")
-    active_constants = {
-        name
-        for name in re.findall(r"DiagnosticCode::([A-Z0-9_]+)", active_block.group("body"))
-    }
+    active_constants = set(diagnostic_constant_references(active_block.group("body")))
 
     active_code_to_constant = {
         code: name for name, code in constants.items() if name in active_constants
@@ -181,7 +193,7 @@ def main() -> int:
             continue
         rel = path.relative_to(ROOT)
         text = strip_cfg_test_blocks(read_rust_with_local_sources(path))
-        for name in re.findall(r"DiagnosticCode::([A-Z0-9_]+)", text):
+        for name in diagnostic_constant_references(text):
             if name not in all_constants:
                 errors.append(f"{rel}: references unknown DiagnosticCode::{name}")
                 continue
