@@ -2,6 +2,61 @@
 
 Status: active
 
+## Item 12K-B4: owned authorization and test registration (2026-09-06)
+
+Owner: compiler-verification; issue [#3712](https://github.com/sifr-lang/sifr/issues/3712).
+The parent supplied “Item12K continuation receipt and B4 dispatch (2026-09-06)”
+and explicitly authorized this independent checker repair, Claude review, PR,
+push, merge, and owner-record updates. All predecessors are closed. This sole
+worker owns `/private/tmp/sifr-item12k-b4.3wWQdN/sifr`, its independent index and
+target, and branch `codex/item12k-b4-path-boundary`, cloned from latest main
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`. The parent checkout's two dirty
+Markdown records and every retained worker checkout/index/target remain read-only.
+No unreviewed compiler stack is imported.
+
+Scope: establish the fixture/audit root boundary in `verification_taxonomy.py`.
+Caller ancestors must neither reject valid names nor suppress audited content.
+Forbidden filenames and governed descendant directory names, content checks,
+demo variable checks, and all existing negative self-tests remain enforced.
+No caller-directory rename, TMPDIR evasion, basename-only check, allowlist,
+ignored assertion, or taxonomy-policy relaxation is permitted. Unrelated
+taxonomy and diagnostics findings remain with their existing owners.
+
+Complete the bounded implementation and regressions before executing tests.
+Registered commands, all from the owned clone:
+
+```bash
+TMPDIR=/private/tmp/sifr-item12k-b4.3wWQdN/tmp python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py
+TAXONOMY_TEST_TMPDIR=/private/tmp TMPDIR=/private/tmp/sifr-item12k-b4.3wWQdN/tmp python3 -m unittest discover -s verification/areas/coverage_matrix/checks -p test_verification_taxonomy_paths.py -v
+TMPDIR=/private/tmp/sifr-item12k-b4.3wWQdN/tmp UV_CACHE_DIR=/private/tmp/sifr-item12k-b4.3wWQdN/uv-cache uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json target/verification/areas/b4-readiness.json
+python3 scripts/check_file_size_guardrails.py
+PYTHONPYCACHEPREFIX=/private/tmp/sifr-item12k-b4.3wWQdN/pycache python3 -m py_compile verification/areas/coverage_matrix/checks/verification_taxonomy.py verification/areas/coverage_matrix/checks/test_verification_taxonomy_paths.py
+git diff --check
+```
+
+The focused regressions create and remove only invocation-owned
+`/private/tmp/sifr-taxonomy-*` trees (neutral absolute ancestors), then create
+deliberately matching caller ancestors and skip-directory labels within them.
+The original self-tests also run under both environments. The clone and TMPDIR
+already have the formerly failing `-item12k` ancestor pattern. Evidence logs
+live outside Git at `/private/tmp/sifr-item12k-b4.3wWQdN/`; readiness JSON stays
+inside the owned repo as required. Documentation checks inspect this record's
+scope, command registration, paths and final receipt; no compiler tests belong here.
+
+One initial exact-SHA read-only Opus review and at most one remediation review;
+at most three failed provider requests, atomic completed response only. No broad
+repeat validation or invented requirements. A new second-review mechanism or
+external blocker receives an owning later record and terminal handoff.
+Checker/tests/docs-only changes receive zero Sifr create-PR or merge gates.
+If compiler/lockfile/fixture/workflow inputs necessarily change, run one
+merge-profile gate on the approved SHA, no create-PR gate and no retry.
+
+Retained 12K draft #3713 candidate `fbe5ca93e61c5286268f2b42a768901a907544f4`
+and record `5de50ecafc84ed1fa724e7384ad85689a6925dfb` remain unapproved:
+zero reviews, gates, and merges. B4 resets no historical cap and does not
+approve that stack. After B4 merge and phase/owner closure records, stop.
+Do not resume 12K or start 12D/E/F, Item 12, 12A, or whole-phase review.
+
 ## Item 12K-B2: canonical diagnostic reference identity (2026-09-06)
 
 Owner: [#3704](https://github.com/sifr-lang/sifr/issues/3704), OPEN at dispatch.
