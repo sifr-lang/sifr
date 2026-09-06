@@ -44,7 +44,8 @@ item becomes ready merely because these narrow checks pass. After valid 12K
 delivery, retain 12D,12E,12F,retained Item12,docs-only12A order. Parent only
 orchestrates; each new worker owns one fresh checkout/branch/index/temp root.
 
-- **12K-B7 / [#3722](https://github.com/sifr-lang/sifr/issues/3722)**: ready;
+- **12K-B7 / [#3722](https://github.com/sifr-lang/sifr/issues/3722)**: merged in
+  [PR #3725](https://github.com/sifr-lang/sifr/pull/3725); receipt below. At dispatch,
   depends on the terminal12K diagnosis, not on unmerged integration delivery.
   Restore the TypeScript-Go direct filesystem inventory for all 22 pre-existing
   sites in six missing paths. Explicitly adjudicate inline-test inventory
@@ -108,10 +109,52 @@ Named validation, after the implementation batch:
 - `python3 scripts/check_file_size_guardrails.py`
 
 Only inventory and phase Markdown change. Per the item and user rules, no
-create-pr or merge-profile gate is required. One initial exact-SHA Opus review
-and at most one remediation remain available before review; results will be
-published outside the reviewed tree, followed by the merged receipt here.
+create-pr or merge-profile gate is required. At dispatch, one initial exact-SHA
+Opus review and at most one remediation were available; the completed receipt
+below records their actual consumption.
 B8, B9, original12K qualification, and later emitted-code work are not started.
+
+### B7 terminal receipt: merged, no blocker
+
+[PR #3725](https://github.com/sifr-lang/sifr/pull/3725) merged at
+2026-09-06T20:34:51Z. Candidate
+`186365fb11abf7391db02d17c30a3c6d612d6658`, base
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`, merge
+`4faa76803da67d22a2dfffdb81cc63bf16304fe0`. Owner #3722 is closed.
+The candidate changes only the inventory Markdown and this phase Markdown;
+this post-merge receipt changes only this phase record and is not part of the
+reviewed candidate. It is retained on the owned branch for the parent handoff.
+
+All four named checks above passed on the exact candidate. The file-size guard
+checked 3,756 files at the 900-line limit. Base-to-candidate whitespace inspection
+also passed. Validation JSON in sibling `evidence/`, named
+`186365fb11abf7391db02d17c30a3c6d612d6658-validation.json`, SHA256
+`08a25c3e822e46308215db665cb68fd841c0c3f756db652ca541b43ce714859f`.
+
+The [exact-SHA Opus review and validation](https://github.com/sifr-lang/sifr/pull/3725#issuecomment-5561995836)
+are published outside the reviewed tree. Verdict SATISFIED; no blocking findings.
+Read-only review independently confirmed 108 matching lines across 38 paths,
+zero missing paths, and all 22 B7 references including the five inline-test lines.
+Completed atomic response at sibling `claude.93lXkc/response.md`, SHA256
+`605c0ae374bc7f59cc291a038cbdd78bf884c9f36433b5588e3222586a2fefec`.
+Published evidence body in `evidence/`, named
+`186365fb11abf7391db02d17c30a3c6d612d6658-review.md`, SHA256
+`02ede823fda75a360cf80c7764589035e5c2afa450221257ae1e7a572957281a`.
+
+Counts: one initial review, zero remediation reviews, one provider request,
+zero retries, zero create-pr gates, zero merge gates, one normal merge.
+No code, checker, lockfile, fixture, or workflow changed. No second validation
+gate or external record-only review is needed. Nonblocking pre-existing
+path-only enforcement and the multiple-probes-per-line suggestion are recorded
+as later tooling [#3726](https://github.com/sifr-lang/sifr/issues/3726), not started.
+SQL editor provider/snapshot obligations remain explicitly inventoried.
+
+Parent/predecessor trees and targets are untouched. Review and merge command
+handles completed, and their processes/watchdog are gone. No live work remains.
+Blocker: none. Exact next action: parent consumes this B7 receipt; this session
+stops. B8/B9 and original12K delivery require their separate owners/adjudication;
+this receipt does not reset original12K's consumed failed gate or certify its
+unreached full E2E, stdlib, or ignored-driver suites.
 
 ## Item 12K-B2: canonical diagnostic reference identity (2026-09-06)
 
