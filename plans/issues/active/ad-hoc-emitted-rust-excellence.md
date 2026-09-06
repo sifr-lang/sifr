@@ -55,6 +55,81 @@ The parent's authorization of fresh sequential workers through phase closure
 is orchestration authority; this worker stops after B1. Full-phase Opus belongs
 only to the future 12A closer.
 
+### Item12K-B1 terminal checkpoint: approved correction, external gate block
+
+State on 2026-09-06: **implemented and reviewed; not merged, not closed**.
+The parent's orchestration checkpoint explicitly required the running gate to
+finish without interruption or restart. It completed normally with exit 1;
+no review/gate allowance was added by that checkpoint.
+
+- Draft [PR #3702](https://github.com/sifr-lang/sifr/pull/3702), base
+  `23088af50c8e25014c44262b8a7ec1f11dfbe09c`, branch
+  `codex/item12k-b1-typevar-fidelity`.
+- Reviewed implementation: `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`.
+  Pre-implementation authorization record: `f418e3ab9`. The only implementation
+  change is the two full TypeVar message expectations at lines 493 and 519 of
+  `crates/sifr_lowering/src/lower/expressions_tests/control_flow_and_strings.rs`.
+  Exact equality, diagnostic code, primary ranges and negative inputs remain.
+- Both named focused tests pass (one each). `cargo test -p sifr_lowering`:
+  **1119 passed, 0 failed, 1 existing ignored, 0 filtered**; doc tests 0/0.
+  Fmt, HIR, file-size (**3777 files, 900-line limit**) and diff checks pass.
+  [Published named validation](https://github.com/sifr-lang/sifr/pull/3702#issuecomment-5558355579).
+- The one initial exact-SHA Opus review returned **SATISFIED**, no blockers;
+  no remediation review was used.
+  [Published review](https://github.com/sifr-lang/sifr/pull/3702#issuecomment-5558355686).
+  Raw review SHA256:
+  `983fe36c52e8bf29cae4def89c0198644368f4942dca79ff1feccfbb40dab2f0`.
+- The sole `scripts/run_all_tests.sh --profile merge` ran on that exact clean
+  implementation SHA and exited **1 after 3254.32 seconds**. Create-pr was
+  skipped. Pre-gate disk: 181 GiB free; private target: 1.7 GiB; no cleanup.
+  No old/shared target was used or cleaned, and no cache-certification bypass
+  or profile change was introduced.
+- Gate passes: all reached guardrails, 264-companion freshness, Rust interop
+  **10/10**, coverage readiness **4/4**, core language **5/5**, CPython
+  differential **2/2**, and Python interop **30/30** (including native callback,
+  dataframe, buffer, Arrow, DLPack, ML, library, async and runtime checks).
+  This is B1-candidate execution evidence, not retroactive approval of 12K.
+- Diagnostics reports **184 variants: 182 pass, 2 blocking failures**.
+  All **179 baseline variants pass**. The two `rules` failures are separately
+  owned later work: **12K-B2 / [#3704](https://github.com/sifr-lang/sifr/issues/3704)**
+  for the canonical diagnostic matcher misreading SQL provider enum suffixes
+  (314 reported unknown references), and **12K-B3 / [#3705](https://github.com/sifr-lang/sifr/issues/3705)**
+  for `docs/schemas/diagnostics.schema.json` synchronization drift. Relevant
+  checker/model/schema sources match fetched main; B1 did not change them.
+  The schema drift mechanism is not established by the retained report.
+  Neither failure was repaired or rerun. Later profile stages are unreached.
+  The elapsed warm budget was exceeded (advisory); no performance pass is claimed.
+- Opus's non-blocking wording/parity and additional positional-diagnostic
+  coverage suggestions are recorded in [#3703](https://github.com/sifr-lang/sifr/issues/3703).
+  The keyword-constraints branch still accepts only simple names, so its
+  existing wording is not treated as a proven stale-message defect.
+
+Evidence root: `/private/tmp/sifr-item12kb1.nnPBDD/`. Named logs are
+`{bound,constraint,lowering,fmt,hir,file-size}-a42545f75.log`; the immutable
+review response is in
+`opus-a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233.Kzvvph/response.md`.
+The full gate log is `merge-a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233.log`,
+SHA256 `d17efebc2ad9fb360710c69e0ce65c6a7a03c38caf979461e27c9ab33ce76b80`.
+SHA-keyed report copies are in
+`evidence-a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233/`: lane report SHA256
+`265d8bbf1843fdfc8a7ed43e19240eb89e29b56ce863d95c147e5a14f450bc69`,
+diagnostics report SHA256
+`f86782991a00cec5cdb3db8b3eaa0fa67a4c11da0d3064ceabb7260e30a59ff1`,
+Python interop report SHA256
+`ded05427d9a509307b290b5abb63b451ce0d13ed63e5ae805a6899fc5d1a6dca`.
+
+Merge SHA: **none**. B1 is stacked on the unreviewed integrated checkpoint;
+retargeting its two assertions to main would change validation inputs, while
+merging the entire stack would exceed its narrow review. Preserve the approved
+correction and all inherited history/corpus for fresh owned continuation.
+The original 12K allowance remains **zero reviews and zero gates used**;
+all earlier dependency caps remain unchanged. This B1 session used one review,
+zero remediation reviews and one failed gate, and stops after its record-only
+handoff. Next action belongs to a fresh owner: resolve the recorded diagnostics
+dependencies under their own scope, then resume the preserved 12K qualification.
+No later item, schema regeneration, matcher repair, integration redo, or
+whole-phase review was started here. Issue #3667 remains open pending merge.
+
 ## Objective
 
 Make every Rust program emitted by Sifr correct, panic-safe, idiomatic,
@@ -259,6 +334,9 @@ It does not broaden the active item.
 | 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
 | 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
 | 12K | blocked: TypeVar prerequisite #3667 | Item 12B and Python dependency integration | Combined candidate `7e23785ab07cba6f925eed2f934c0304750f1d74` is preserved in draft PR #3701. Full lowering reproduces the two unchanged TypeVar assertions. No integration review, gate, or merge; see the terminal receipt below. |
+| 12K-B1 | approved correction; gate blocked | TypeVar diagnostic assertion fidelity (#3667) | Draft #3702, reviewed `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`; named checks pass, Opus SATISFIED; one failed gate exposes 12K-B2/B3. Unmerged; see B1 terminal checkpoint above. |
+| 12K-B2 | later owner; not started | Canonical diagnostic-code matcher identity (#3704) | `compiler/diagnostics` owns SQL provider enum suffixes misidentified as canonical code references. No repair or qualification started. |
+| 12K-B3 | later owner; not started | Diagnostics schema synchronization (#3705) | `compiler/diagnostics` owns checked-in schema versus generator drift; mechanism still to establish. No regeneration or repair started. |
 
 <!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
 | 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
