@@ -300,7 +300,7 @@ fn compile_stdlib_sources_with_sysroot(
                         name: class.name.clone(),
                         fields: class.fields.clone(),
                         methods,
-                        parent_class: class.parent_class.clone(),
+                        parent_class: class.semantic_parent_chain(),
                     },
                     &local_classes,
                 );
@@ -419,7 +419,7 @@ fn compile_stdlib_sources_with_sysroot(
                                 name: class.name.clone(),
                                 fields: class.fields.clone(),
                                 methods: Vec::new(),
-                                parent_class: class.parent_class.clone(),
+                                parent_class: class.semantic_parent_chain(),
                             },
                         ),
                     );

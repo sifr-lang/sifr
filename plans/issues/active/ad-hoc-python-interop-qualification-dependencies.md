@@ -161,6 +161,71 @@ Do not add blanket exports, suppressions, or substitute cancellation behavior.
 
 ## Later Item12J: async Python error-channel contract
 
+### Item12J implementation (2026-09-06)
+
+Owned worktree `/private/tmp/sifr-item12j.pT6Xkk/sifr`, branch
+`codex/emitted-rust-excellence-item-12j`, freshly fetched base
+`4ce05473f58716a611ac190581bf0737ba15331e`. Parent's two intentional dirty
+records and retained 12B/12H/12I worktrees are read-only to this worker.
+
+12H and 12I have terminal blocked handoffs, satisfying the execution order.
+They are not merged: 12H draft [#3697](https://github.com/sifr-lang/sifr/pull/3697)
+retains reviewed `9b52ac20094608c8a31f252db99e49ef7c963384`, record
+`b6e6210a97598fb631b929b2d4daf4012b41bb16`; 12I draft
+[#3698](https://github.com/sifr-lang/sifr/pull/3698) retains reviewed
+`f6e8afd964bb214a44c50271dcb2014ee8e828b4`, record
+`19ad69969a672d7b741122ded4dd879f2bdaf9ab`. Both sole gates failed SQL
+coverage. Their detailed evidence and deferred 12H-F1–F5 / 12I-F1–F3 remain in
+those commits and PRs; integration belongs to 12K, with no budget reset.
+
+Authoritative contracts: `stdlib/_sifr/python.sifr` declares
+`PythonError(Error)` with five string fields; architecture error semantics
+retain ordinary error inheritance and Result covariance. Python protocol
+architecture preserves same-loop async execution, original error replay, and
+ordered cleanup/cancellation. The existing examples' `Result[None, Error]`
+channels are valid under that inheritance contract and remain unchanged.
+
+Root cause: descriptor data-parent selection intentionally excludes the builtin
+Error marker, but class type collection and HIR-to-Type exports reused the
+data-parent metadata as complete nominal ancestry. The implementation preserves
+semantic error ancestry separately from data storage and uses that ancestry
+at each HIR-to-Type reconstruction. It does not add an embedded Error field,
+change the five-field Python boundary, or make unrelated nominal errors assignable.
+
+Exact commands registered before test execution:
+
+```bash
+cargo test -p sifr_driver async_python_error_channel
+cargo build --locked -p sifr
+python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --update
+python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr
+uv run --project verification --locked python -m sifr_verify areas run --area python_interop --suite async-declaration-examples --suite async-context-examples
+cargo test -p sifr_ir
+cargo test -p sifr_lowering
+cargo test -p sifr_frontend
+cargo test -p sifr_codegen
+cargo test -p sifr_driver
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+python3 scripts/check_hir_maintainability_guardrails.py
+python3 scripts/check_file_size_guardrails.py
+scripts/run_all_tests.sh --profile merge
+```
+
+Focused regressions cover both unchanged original examples, rejection of
+unrelated return channels (one/three diagnostics), imported PythonError's exact
+identity/shape/ancestry, local and imported transitive error ancestry without
+data-parent storage, and rejection of a same-named nominal Error target.
+The sixth regression covers imported CSV/configparser classes named Error:
+canonical export must not rewrite their builtin ancestor to their own identity.
+All six focused regressions pass before the candidate is frozen. The first
+attempt lacked fresh-worktree submodules; early regression failures identified
+test bridge/constructor setup and the repaired project-export ancestry path.
+Those attempts are historical failures, not final candidate evidence.
+The merge-profile gate is reserved for the final reviewed SHA, once only;
+create-PR is omitted. Outer filtered-suite certification failures are not passes.
+No 12K implementation, runner bypass, external repair, or history rewrite is allowed.
+
 Both fixtures fail SIFR-RESULT-0003 during checking:
 `verification/areas/python_interop/fixtures/async_declaration/httpx2_client.sifr`
 and `verification/areas/python_interop/fixtures/async_context/aiosqlite_session.sifr`.
