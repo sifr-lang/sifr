@@ -25,8 +25,9 @@ remain unreached. See the phase continuation checkpoint for exact logs/hashes.
 Owned checkout/evidence `/private/tmp/sifr-item12k-cont.StPW7n/`, branch
 `codex/item12k-continuation`; all parent/old checkouts stayed read-only.
 0initial/0remediation reviews,0provider requests,0gates,0merges; all original
-allowances remain unused. The linked replacement draft and separate record SHA
-are published externally. Parent dispatches the bounded B4 owner before another
+allowances remain unused. Linked replacement [draft #3713](https://github.com/sifr-lang/sifr/pull/3713)
+preserves this checkpoint; its final record SHA is published externally.
+Parent dispatches the bounded B4 owner before another
 fresh12K continuation. This worker stops without next-item or whole-phase work.
 
 <!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->

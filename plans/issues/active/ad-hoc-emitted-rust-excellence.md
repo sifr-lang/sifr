@@ -127,8 +127,9 @@ historical12K/B1/B2/B3 statuses below. Exact candidate
 latest main `f11e1cd7eef16a02063555bccc9fd8e19287833b`, and B2/B3 post-merge
 recordsa53b5d3/c508c143. Corpus remains `8bcbe7ab7939e5c8362c10f61a80e368022cc372`
 (unmerged leetcode48). No new compiler correction was needed. Original draft3701
-and all dependencies remain preserved. A linked replacement draft carries this
-checkpoint; its URL and the separate record SHA are in the external receipt.
+and all dependencies remain preserved. Linked replacement
+[draft #3713](https://github.com/sifr-lang/sifr/pull/3713) carries this checkpoint;
+the separate final record SHA is in the external receipt.
 
 Fresh candidate evidence: locked build PASS; codegen1452passed/0failed/0ignored/
 0filtered (doc-tests0/0); B2/B3 focused11+7pass; fmt/HIR/diff PASS; file-size
