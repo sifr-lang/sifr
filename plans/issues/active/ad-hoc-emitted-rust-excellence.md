@@ -1316,12 +1316,12 @@ It does not broaden the active item.
 | 12J | blocked: both reviews exhausted, unapproved | Async Python error-channel contract | Draft #3699 preserves final reviewed candidate `4bc432f3474134b1a1d43202d39fd147893bb014`; initial and remediation reviews are NOT SATISFIED. No gate or merge. Message-storage follow-up 12J-M1 requires adjudication; 12I remains external. |
 | 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
 | 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
-| 12K | blocked: external portable-project Clippy | Item 12B and Python dependency integration | Candidate `286067170ee7c4edfb61cd37afece30519b4c1c5` preserved in draft#3717 with full approved B4 stack; native90/algorithmic411/diagnostics184/readiness4 pass. New owner12K-B5/#3716; original12K remains0reviews/0gates/0merges. |
+| 12K | awaiting integration; B5 validation setup blocked | Item 12B and Python dependency integration | Draft #3717 and complete retained ancestry preserved. B5 source is qualified and approved at `e5ff95f5c4f4708542e6367671e751c7bcf82e98`, but its sole gate failed on missing local `origin/main` (#3721). Original 12K remains zero reviews/gates/merges; no inherited implementation approval is implied. |
 | 12K-B1 | approved correction; gate blocked | TypeVar diagnostic assertion fidelity (#3667) | Draft #3702, reviewed `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`; named checks pass, Opus SATISFIED; one failed gate exposes 12K-B2/B3. Unmerged; see B1 terminal checkpoint above. |
 | 12K-B2 | merged | Canonical diagnostic-code matcher identity (#3704) | PR3706 merge770f1ab; recorda53b5d3 retained in12K ancestry; full historical receipt preserved. |
 | 12K-B3 | merged | Diagnostics schema synchronization (#3705) | PR3709 mergef11e1cd; recordc508c143 retained in12K ancestry; full historical receipt preserved. |
 | 12K-B4 | qualified/approved; integration pending | Taxonomy fixture path isolation (#3712) | Stacked#3715 reviewed candidate `5c711f2d6cb90265b32e04e8b9f6b6e3570855c1`; readiness4/4 with27negatives, focused8/8, Opus SATISFIED.1review/0remediation/0gates/0merges. |
-| 12K-B5 | implemented; external validation blocked | Portable-project strict Clippy (#3716) | Stacked draft#3719 preserves candidate `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`; four static checks pass. Full driver FAILED after595unit passes/77ignored at rustdoc E0463; external owner#3718. Clippy unreached;0reviews/0gates/0merges. |
+| 12K-B5 | qualified and approved; sole gate failed on clone setup | Portable-project strict Clippy (#3716) | Draft #3719 candidate `e5ff95f5c4f4708542e6367671e751c7bcf82e98`: full driver 595/0/77 ignored plus successful docs, strict Clippy and four statics pass; initial Opus SATISFIED. One failed gate, no remediation/retry/merge. Local main-ref preparation omission is recorded separately in #3721; no B5 compiler defect established. |
 
 <!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
 | 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
@@ -4396,3 +4396,108 @@ checks on the final candidate. The authenticated B6 full-driver pass is retained
 prior evidence, but will not stand in for this changed-source final invocation.
 No broad standalone corpus or Python matrix is repeated. B5 remains zero reviews,
 zero provider requests and zero gates before final qualification.
+
+### Original 12K-B5 continuation terminal receipt (2026-09-06)
+
+State: **source qualified and approved; gate blocked by clone setup, not merged
+or closed**. [PR #3719](https://github.com/sifr-lang/sifr/pull/3719) remains a
+stacked draft. The original B5 allowance is consumed as recorded below; no new
+review/gate cycle was created. This receipt supersedes B5's earlier pending
+Clippy/review status without relabeling any historical failed invocation.
+
+Exact identities:
+
+- Original review base: `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`.
+- Original B5 source: `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`.
+- Retained approved B6 candidate: `4d076ebe08f00ba7ff6ea6ae7f910397ba7b2356`;
+  B6 record: `08b2302a8f5e6af910cef00d6932c1da57ac3719`.
+- Continuation registration: `1321c2a75e4e146a310507c0ae2a326f5c2a5540`.
+- Final reviewed and gated B5 candidate: `e5ff95f5c4f4708542e6367671e751c7bcf82e98`.
+- Latest remote main, still in normal ancestry: `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+- Exact corpus: `8bcbe7ab7939e5c8362c10f61a80e368022cc372`; all 16 submodules clean.
+- Merge SHA: none. This phase-only terminal record follows the approved candidate.
+- Owned clone: `/private/tmp/sifr-item12k-b5-cont.KTpKoc/sifr`; local branch
+  `codex/item12k-b5-continuation`, existing PR remote branch
+  `codex/item12k-b5-portable-clippy`. Parent/predecessor checkouts, targets and
+  indexes remained read-only. Retained Item 12 source `8ad089a` stays excluded.
+
+Source scope remains exactly `crates/sifr_driver/src/build/cargo_manifest.rs`
+and `crates/sifr_driver/src/build/portable_project.rs`, plus this phase record.
+The pending Clippy run found `if_not_else` on the original B5 `!=` conditional;
+the final candidate uses equality first with the same branches swapped. The
+private exact checksum-map alias is retained. No manifest-output, lock-source,
+fallback, suppression, fixture, workflow, or unrelated compiler change occurred.
+
+Actual final-candidate named evidence:
+
+- Strict workspace Clippy: PASS (16.79 seconds). Prior continuation Clippy on
+  `1321c2a75` remains FAILED exit 101, with its own immutable receipt.
+- Full `cargo test -p sifr_driver`: PASS exit 0 (814.02 seconds), 595 unit passes,
+  zero failures, 77 normally ignored, completed successful zero-example doctests.
+  This rerun was required by the changed driver source, not a fresh-worker reset.
+  The authenticated B6 pass is retained as historical evidence; prior B5 and
+  original 12K failed full-driver commands remain failed.
+- Fmt, HIR, file-size (3780 files, limit 900), and exact-base diff checks: PASS.
+- Frozen provenance authenticates 32088 tracked paths, 16 exact clean submodules,
+  78 historical receipts, and the exact equality/branch swap against B6. Retained
+  native 90, algorithmic 411, diagnostics 184, readiness 4, codegen 1452, lowering
+  1119, Python 30/all five suites, demo 264 and focused 18+8 remain authenticated
+  historical evidence, not fresh matrices on this candidate. None was rerun as
+  a standalone matrix and no partial certification bypass was used.
+
+[The sole initial Opus review](https://github.com/sifr-lang/sifr/pull/3719#issuecomment-5560851724)
+is **SATISFIED**, with no blocking findings. Its scope is only B5. Deferred
+follow-ups: existing B6-F1 copied-dispatch typography; B5-F1 later records-owner
+maintenance must distinguish inherited authenticated matrices from fresh checks.
+No follow-up code, remediation review, or original 12K review was started.
+
+The sole `scripts/run_all_tests.sh --profile merge` invocation on the exact
+approved candidate **FAILED exit 1 after 405.44 seconds**. Cargo setup and eight
+guardrails passed: HIR, file size, emitted-demo freshness, source dependency
+direction, submodule ownership, sysroot resource certification, retained intrinsic
+allowlist, and adapter reachability. `guardrail_stdlib_manifest_schema` then
+failed because `origin/main` was not a local ref. The worker verified the remote
+SHA with `git ls-remote` but omitted materializing the remote-tracking ref in
+the fresh clone. This is a worker setup omission, not an established source
+regression. The checker blob is unchanged from main:
+`59fb8bf6938d8a76eaf7daa083eda1d2a4dbd3da`. The missing ref is preserved for honest
+failure evidence; no override, weakened guard, second gate, or merge occurred.
+
+Later validation owner: **12K-B5-V1 / [#3721](https://github.com/sifr-lang/sifr/issues/3721)**.
+Full E2E, migrated stdlib, normally ignored driver generated builds, and all
+later area/toolchain stages remain uncertified. The passing gate prefix is not a
+passing merge gate or host-sensitive performance qualification.
+
+Evidence root `/private/tmp/sifr-item12k-b5-cont.KTpKoc/`:
+
+| Receipt | SHA256 |
+| --- | --- |
+| `evidence/driver.log` | `556273ebc699ef635f7fe1e3eeff9838fe6a45cf255db4353257a1bb1997df4c` |
+| `evidence/clippy-final.log` | `3890af5e65cd1c3e6b5b4048fe2b13b2130a3089af9b87ad28a27dec284a5fc8` |
+| `sifr/target/verification/areas/item12k-b5-cont-final-provenance.json` | `1bf08bbd266d20111de5a9b97cd798dc4a85ce87725ab249bf2ed4eb1143b4d1` |
+| `sifr/target/verification/areas/item12k-b5-cont-final-evidence.json` | `6f7ec81c18db88fc9fe1d49c41a392b79dc77320c930e16c2d3788f528dc9966` |
+| `opus-e5ff95f5c4f4708542e6367671e751c7bcf82e98.063cKL/response.md` | `9a2616a2107098e7d3d19d7597d4b67bfb3d1df3ccfb434ae365d0857b162f44` |
+| `evidence/merge.log` | `5fc87ba8a2882a7030a7a7b4cdcbae2053698ae459e5c798c8937058fa8f04b4` |
+| `sifr/target/verification/areas/item12k-b5-cont-merge.json` | `e17a1419a23f440f2d777b7dc823f5064a754395d92351b2213ef8bbaf3b62fd` |
+| `sifr/target/validation_lane_reports/merge.latest.json` | `30084b40eccab6eed84f086af3c8522ddb78699c1af73c99537a0470db8a6011` |
+
+Canonical terminal ledger: owned repo `target/verification/areas/item12k-b5-cont-terminal.json`.
+Owned gate compiler SHA256: `75d52504ff1c6546f84a7156ff97efe0ee47659ad36ab5b3c26cde65e9a959c9`.
+Pre-gate target 5.6 GiB/free disk 101 GiB; terminal target 10 GiB/free disk 97 GiB.
+No target cleanup occurred. `CARGO_TARGET_DIR` stayed unset throughout qualification
+and the gate, preserving B6's outer/nested target isolation.
+
+Counts: **1 initial review, 0 remediation reviews, 1 provider request, 0 retries,
+0 create-pr gates, 1 failed merge-profile gate, 0 merges**. This continuation ran
+two Clippy commands (one failed, one passed), one successful full driver command,
+and four successful final static checks. Earlier B5's failed driver invocation
+and original 12K's old failed commands remain separately retained. Original
+12K's own review/provider/gate counts remain zero; predecessor allowances are not reset.
+
+Exact next action belongs to the later integration validation owner: materialize
+and verify the required main ref in its owned clone before any newly authorized
+qualification, preserve these exact source/review/test receipts, and obtain
+explicit authority for any replacement gate. Original 12K still requires its
+separate integration review and valid delivery evidence. No B5 gate retry, next
+item implementation, inherited implementation merge, or whole-phase review is
+authorized or started by this receipt. This B5 worker stops here.
