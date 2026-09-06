@@ -490,7 +490,7 @@ pub(super) fn test_typevar_invalid_bound_shape_has_primary_range() {
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
-        error.message == "TypeVar bound must be a simple type name"
+        error.message == "TypeVar bound must be a type name"
             && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
             && error.primary_range == Some(range_for_after_anchor(source, "bound=", "1"))
     }));
@@ -516,7 +516,7 @@ pub(super) fn test_pep695_typevar_constraint_shape_has_primary_range() {
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|error| {
-        error.message == "TypeVar constraints must be simple type names"
+        error.message == "TypeVar constraints must be type names"
             && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
             && error.primary_range == Some(range_for_after_anchor(source, "(int, ", "1"))
     }));
