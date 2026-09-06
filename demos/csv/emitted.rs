@@ -126,7 +126,7 @@ mod sifr_generated_generated_support {
         let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         sifr_generated_char_at(
             text,
-            SifrInt::from(text.chars().count()) - SifrInt::from_i64(1),
+            &SifrInt::from(text.chars().count()) - &SifrInt::from_i64(1),
         )
     }
     #[expect(
@@ -959,7 +959,7 @@ fn collect_object_and_file_actual() -> Vec<bool> {
         "\n".to_string(),
         SifrInt::from_i64(0),
     );
-    w.writerow(&vec!["alice".to_string(), "30".to_string()]);
+    (&mut w).writerow(&vec!["alice".to_string(), "30".to_string()]);
     actual.push(w.getvalue().as_str() == "alice,30".to_string().as_str());
     let path: String = "/tmp/sifr_csv_csv_demo.csv".to_string();
     let mut csv_file_ok: bool = false;

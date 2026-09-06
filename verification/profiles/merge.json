@@ -76,6 +76,38 @@
       },
 
       {
+        "id": "sifr_sql_mysql",
+        "package": "sifr_sql_mysql",
+        "command": [
+          "test",
+          "-p",
+          "sifr_sql_mysql"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+
+      {
+        "id": "sifr_sql_sqlite",
+        "package": "sifr_sql_sqlite",
+        "command": [
+          "test",
+          "-p",
+          "sifr_sql_sqlite"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+
+      {
         "id": "sifr_sql_postgresql",
         "package": "sifr_sql_postgresql",
         "command": [

@@ -693,7 +693,7 @@ fn main() {
         let sliced_entries: Box<dyn Iterator<Item = String>> = islice(
                 Box::new(entries_it),
                 SifrInt::from_i64(2),
-                &Vec::new(),
+                &Vec::<Option<SifrInt>>::new(),
             )
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0,

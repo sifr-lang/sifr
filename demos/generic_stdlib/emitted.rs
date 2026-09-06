@@ -1184,7 +1184,7 @@ mod sifr_generated_project_nominals {
                 } else {
                     SifrInt::from_i64(0)
                 };
-                let mut i: SifrInt = start;
+                let mut i: SifrInt = start.clone();
                 while &i < &SifrInt::from(items.len()) {
                     let item_value_2841a0c596d6f426: Option<T> = {
                         let sifr_generated_checked_read_collection = &items;
@@ -1279,7 +1279,7 @@ mod sifr_generated_project_nominals {
                     end = SifrInt::from_i64(0);
                 }
                 if &end > &size {
-                    end = size;
+                    end = size.clone();
                 }
             }
             let mut i: SifrInt = begin.clone();
@@ -1701,9 +1701,9 @@ fn main() {
     println!("=== Generic deque[T] ===");
     let mut d: SifrGeneratedStdlibSifrX2ecollectionsX2edeque<String> =
         SifrGeneratedStdlibSifrX2ecollectionsX2edeque::new(None, None);
-    d.append(&"first".to_string());
-    d.append(&"second".to_string());
-    d.appendleft(&"zero".to_string());
+    (&mut d).append(&"first".to_string());
+    (&mut d).append(&"second".to_string());
+    (&mut d).appendleft(&"zero".to_string());
     let items_d_value_64ad086cd3ff4d9c: Vec<String> = d.to_list();
     println!("{items_d_value_64ad086cd3ff4d9c:?}");
     println!("{}", d.len());

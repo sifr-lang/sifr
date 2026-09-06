@@ -1,6 +1,9 @@
 # Python-interop qualification dependencies exposed by Item12B
 
 Status: active; fresh sequential dependency workers authorized on 2026-09-05.
+
+<!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
+Status: active, blocking Item12B merge; recorded only, not implemented.
 Owners: Python interop verification, codegen naming, project support assembly.
 
 ## Evidence and scope boundary
@@ -38,7 +41,6 @@ Item12K requires all five suites above, the complete Python-interop area, and
 affected Item12B corpus/native qualification with compiler/input provenance before
 its integration review and exact-final-candidate merge-profile gate. Preserve every
 original acceptance rule. Reuse unchanged-input evidence with explicit attribution.
-
 The one authorized replacement Item12B merge gate ran on
 `a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d`, paired with corpus
 `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
@@ -55,6 +57,9 @@ No new compiler/fixture repair, further review, or gate is authorized by that
 consumed allowance. These are later items, not an assertion that Item12B is closed.
 
 ## Item12G: dependency-checker demo path identity (merged)
+
+<!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
+## Later Item12G: dependency-checker demo path identity
 
 Confirmed pre-existing at exact base `b475ebdcd37081aa2860d9c348ace4100b546eff`.
 `verification/areas/python_interop/runner/dependency_versions.py:46` constructs
@@ -123,7 +128,6 @@ separate from Items12H–12K and not implemented by Item12G:
 - The focused test imports its sibling using the registered unittest discovery
   start directory. If broader discovery is adopted, make sibling imports work
   under that selected runner as well. The recorded invocation already passes.
-
 ## Later Item12H: project-wide generated-field identity
 
 Binding-authoring fails with eight Rust E0560 diagnostics in generated
@@ -182,3 +186,12 @@ worker, then Item12I and Item12J in order. Use the named validation mapping
 above and preserve each item's review/gate limits. Item12K's expressly approved
 integration allowance follows dependency qualification; it does not reset
 Item12B's exhausted history. No Item12H–12K code was written by Item12G.
+
+<!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
+Assign bounded dependency work with explicit review/validation limits. Relevant
+canonical suites are dependency-versions, binding-authoring, callback-examples,
+async-declaration-examples, and async-context-examples in the Python interop area.
+Qualify all cases affected by each shared mechanism, not only the first example.
+Then adjudicate how Item12B's already-approved candidate can obtain required
+merge evidence without silently resetting its exhausted review/gate budgets.
+No work on these later items was started in this recording change.

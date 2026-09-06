@@ -862,7 +862,7 @@ mod sifr_generated_project_nominals {
                             let e2 = sifr_generated_try_err.clone();
                             let _ = e2.message.clone();
                         }
-                        fh.close();
+                        (&mut fh).close();
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -906,7 +906,7 @@ mod sifr_generated_project_nominals {
                         let e2 = sifr_generated_try_err.clone();
                         let _ = e2.message.clone();
                     }
-                    fh.close();
+                    (&mut fh).close();
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1055,7 +1055,7 @@ fn main() {
     });
     let mut logger: SifrGeneratedStdlibSifrX2eloggingX2eLogger =
         getLogger(&"system-tools-sample_demo".to_string());
-    logger.set_level(&sifr_generated_const_494e464f());
+    (&mut logger).set_level(&sifr_generated_const_494e464f());
     logger.info(&"logging demo line".to_string());
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(18usize);

@@ -4,6 +4,61 @@ Status: active, non-blocking
 
 Owner: SQL compiler, schema tools, and verification
 
+## Approved Item 12B qualification dependency (2026-09-05)
+
+The user explicitly authorized the Item 12B owner to repair the 23 recorded
+SQL package/target classification diagnostics in authoritative coverage metadata.
+This is a bounded dependency of PR #3694, not permission to change SQL runtime
+or compiler semantics. Preserve actual Cargo target kinds and package roles;
+do not weaken readiness, exclude tests, or add accepted debt. The earlier failed
+gate remains failed. One replacement exact-SHA merge gate is authorized after
+the sole remaining Opus remediation review of both repository candidates.
+Required checks: coverage_matrix_readiness.py, its existing negative self-tests,
+profile_assignment_matrix.py, verification_taxonomy.py, and the complete canonical
+coverage_matrix readiness suite. Item 12B records the full qualification commands.
+
+## Item12B SQL coverage repair qualified (2026-09-05)
+
+The user authorized this bounded classification dependency and one replacement
+merge gate. Candidate `a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d` classifies
+the nine missing SQL packages and their real targets, fills omitted integration
+tests, corrects PostgreSQL's primary target kind, and gives MySQL/SQLite compiler
+crates real ordinary-profile test membership. No SQL/Cargo behavior or checker
+requirement changed. The three added negative cases bring self-test coverage to 27.
+
+Standalone and replacement-gate coverage readiness both pass all four variants,
+including taxonomy. Both Item12B reviews are SATISFIED. The replacement gate
+still failed later on five Python-interop variants; see
+`ad-hoc-python-interop-qualification-dependencies.md`. No overall gate pass or
+merge is claimed, and later crate-test stages were not reached.
+Evidence: `/tmp/sifr-item12b.akguMz/coverage-remediation-results.json` and
+`/tmp/sifr-item12b.akguMz/replacement-a319-coverage-results.json`.
+
+Non-blocking reviewer suggestion: confirm whether `sqlite-runtime-probe` is
+intended to remain SQLite-only. Its test-fixture classification is accurate;
+no other provider defect or implementation requirement is asserted.
+
+## Item 12B merge-gate reproduction (2026-09-05)
+
+Sifr PR [#3694](https://github.com/sifr-lang/sifr/pull/3694) ran its one
+merge-profile gate on `6ce83824e0315e5f89383fc666344b99431e1e76`.
+The gate exited 1 after 173.63 seconds and reproduced 23 pre-existing SQL
+package/target classification diagnostics: nine missing package classifications,
+missing SQL/host-tool targets, and stale PostgreSQL `lib` versus `rlib`.
+The candidate changes no SQL Cargo packages, target declarations, or coverage
+registry inputs. This issue retains ownership of that blocker; no SQL code,
+classification, or safety requirement was changed by Item 12B.
+
+The same run also found 428 corpus naming diagnostics in a separate taxonomy
+variant. Those newly introduced `contract_result_*` names belong to Item 12B,
+not this SQL issue. Neither failing variant was waived. Both implementation
+PRs remain unmerged, and the gate was not repeated.
+
+Evidence:
+`/tmp/sifr-item12b.akguMz/merge-6ce83824e0315e5f89383fc666344b99431e1e76.log`,
+`/tmp/sifr-item12b.akguMz/merge-6ce83824e-coverage-results.json`, and
+`/tmp/sifr-item12b.akguMz/merge-6ce83824e-lane-report.json`.
+
 ## Objective
 
 Resolve the new mechanism findings from the final schema-first SQL platform

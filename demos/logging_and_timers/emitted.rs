@@ -1328,7 +1328,7 @@ mod sifr_generated_project_nominals {
                             let e2 = sifr_generated_try_err.clone();
                             let _ = e2.message.clone();
                         }
-                        fh.close();
+                        (&mut fh).close();
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1372,7 +1372,7 @@ mod sifr_generated_project_nominals {
                         let e2 = sifr_generated_try_err.clone();
                         let _ = e2.message.clone();
                     }
-                    fh.close();
+                    (&mut fh).close();
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1886,14 +1886,14 @@ fn main() {
         let mut logger: SifrGeneratedStdlibSifrX2eloggingX2eLogger = getLogger(
             &"logging_and_timers-demo".to_string(),
         );
-        logger.set_file(&log_path);
+        (&mut logger).set_file(&log_path);
         let fh: SifrGeneratedStdlibSifrX2eloggingX2eFileHandler = SifrGeneratedStdlibSifrX2eloggingX2eFileHandler::new(
             log_path.to_string(),
             sifr_generated_const_494e464f(),
         );
-        logger.add_handler(&fh);
+        (&mut logger).add_handler(&fh);
         logger.info(&"hello".to_string());
-        logger.clear_handler();
+        (&mut logger).clear_handler();
         let gmt: SifrGeneratedStdlibSifrX2etimeX2estructTime = gmtime_struct(0.0_f64);
         let epoch_tm: SifrGeneratedStdlibSifrX2etimeX2estructTime = SifrGeneratedStdlibSifrX2etimeX2estructTime::new(
             SifrInt::from_i64(1970),

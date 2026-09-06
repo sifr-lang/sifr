@@ -452,11 +452,13 @@ fn main() {
         SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(SifrInt::from_i64(77)));
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let state_before: SifrGeneratedStdlibSifrX2erandomX2eRandomState = rng.getstate();
-        let next_one: SifrInt = rng.randint(&SifrInt::from_i64(0), &SifrInt::from_i64(100_000))?;
-        let sifr_generated_rng_set_result: Result<(), ValueError> = rng.setstate(&state_before);
+        let next_one: SifrInt =
+            (&mut rng).randint(&SifrInt::from_i64(0), &SifrInt::from_i64(100_000))?;
+        let sifr_generated_rng_set_result: Result<(), ValueError> =
+            (&mut rng).setstate(&state_before);
         let _ = sifr_generated_rng_set_result;
         let replay_one: SifrInt =
-            rng.randint(&SifrInt::from_i64(0), &SifrInt::from_i64(100_000))?;
+            (&mut rng).randint(&SifrInt::from_i64(0), &SifrInt::from_i64(100_000))?;
         assert_eq!(&next_one, &replay_one);
         seed(Some(SifrInt::from_i64(1234)));
         let first_module_random: f64 = random();

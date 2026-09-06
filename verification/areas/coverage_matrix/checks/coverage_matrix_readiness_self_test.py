@@ -61,6 +61,9 @@ def main() -> int:
         ("equal release surface suite", equal_release_surface_suite, "must differ from nightly_release_suite"),
         ("orphaned release divergence metadata", orphaned_release_divergence_metadata, "metadata requires release_suite"),
         ("first-party crate without membership", missing_crate_membership, "missing merge crate-test membership"),
+        ("SQL component primary target kind", wrong_component_target_kind, "target lacks classification: rlib:sql_component"),
+        ("stale SQL component target kind", wrong_component_target_kind, "stale target classification: lib:sql_component"),
+        ("SQL integration target omitted", missing_sql_test_target, "target lacks classification: test:runtime_types"),
     ]
     failed: list[str] = []
     for name, func, expected in tests:
@@ -426,6 +429,28 @@ def orphaned_release_divergence_metadata() -> list[str]:
         [{"guarantee_id": "stable-guarantee", "support_status": "stable"}],
         OWNERS,
         True,
+        errors,
+    )
+    return errors
+
+
+def wrong_component_target_kind() -> list[str]:
+    errors: list[str] = []
+    coverage_matrix.validate_targets(
+        "sql_component",
+        {"targets": [{"name": "sql_component", "kind": ["rlib", "cdylib"]}]},
+        {"targets": [{"name": "sql_component", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}]},
+        errors,
+    )
+    return errors
+
+
+def missing_sql_test_target() -> list[str]:
+    errors: list[str] = []
+    coverage_matrix.validate_targets(
+        "sql_runtime",
+        {"targets": [{"name": "runtime_types", "kind": ["test"]}]},
+        {"targets": []},
         errors,
     )
     return errors

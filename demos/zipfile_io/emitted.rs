@@ -34,7 +34,7 @@ mod sifr_generated_generated_support {
         } else {
             let last: Option<String> = {
                 let sifr_generated_string_index =
-                    SifrInt::from(root.chars().count()) - SifrInt::from_i64(1);
+                    &SifrInt::from(root.chars().count()) - &SifrInt::from_i64(1);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_root.len());
                 sifr_generated_chars_root
@@ -280,7 +280,7 @@ mod sifr_generated_project_nominals {
                 } else {
                     let requested_end: SifrInt = &self.cursor.clone() + &requested_size;
                     if &requested_end < &end {
-                        end = requested_end;
+                        end = requested_end.clone();
                     }
                 }
             }
@@ -441,8 +441,8 @@ fn main() {
                 "sifr_runtime_zipfile_io_".to_string(),
             );
         let tmp_path: String = temp_file.name();
-        temp_file.close()?;
-        temp_file.cleanup()?;
+        (&mut temp_file).close()?;
+        (&mut temp_file).cleanup()?;
         let tempfile_ok: bool = !exists(&tmp_path);
         if exists(&zip_path) {
             remove_file(&zip_path)?;
@@ -466,7 +466,7 @@ fn main() {
         let mut handle: SifrGeneratedStdlibSifrX2ezipfileX2eZipReadHandle =
             SifrGeneratedStdlibSifrX2ezipfileX2eZipReadHandle::new(vec![97_u8, 98_u8, 99_u8]);
         let read_all_value_a00acea05f629b7d: Vec<u8> =
-            handle.read_bytes(&Some((-SifrInt::from_i64(1)).clone()))?;
+            (&mut handle).read_bytes(&Some((-SifrInt::from_i64(1)).clone()))?;
         let handle_negative_ok: bool = read_all_value_a00acea05f629b7d == vec![97_u8, 98_u8, 99_u8];
         let sifr_generated_open_handle_result: Result<
             SifrGeneratedStdlibSifrX2ezipfileX2eZipReadHandle,

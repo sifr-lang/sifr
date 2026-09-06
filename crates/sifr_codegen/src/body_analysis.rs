@@ -336,6 +336,7 @@ impl BodyAnalysis {
                     continue;
                 };
                 if defined.contains(&name)
+                    && stmt_referenced.get(&name).copied() == Some(expressions.len())
                     && !borrowed.contains(&name)
                     && remaining.get(&name).copied().unwrap_or(0) == 0
                     && !outer_live.contains(&name)

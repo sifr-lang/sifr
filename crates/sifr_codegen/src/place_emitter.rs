@@ -103,9 +103,9 @@ impl RustEmitter {
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
         match convention {
             Some(ReceiverConvention::MutableBorrow) => match target {
-                Some(MutableReceiverTarget::Place(place)) => {
-                    Ok(self.emit_checked_place(object, place))
-                }
+                Some(MutableReceiverTarget::Place(place)) => Ok(self
+                    .emit_checked_place(object, place)
+                    .map(|lowered| self.explicit_class_receiver_borrow(object, lowered))),
                 Some(MutableReceiverTarget::OwnedTemporary) => self.lower_stmt_expr_for_ir(object),
                 Some(MutableReceiverTarget::SpecializedIndexedStorage(_)) => Ok(None),
                 None => Ok(None),
@@ -178,7 +178,9 @@ impl RustEmitter {
     ) -> Option<RustExpr> {
         match convention {
             Some(ReceiverConvention::MutableBorrow) => match target {
-                Some(MutableReceiverTarget::Place(place)) => self.emit_checked_place(object, place),
+                Some(MutableReceiverTarget::Place(place)) => self
+                    .emit_checked_place(object, place)
+                    .map(|lowered| self.explicit_class_receiver_borrow(object, lowered)),
                 Some(MutableReceiverTarget::OwnedTemporary) => {
                     self.try_lower_registry_expr_strict(object)
                 }
@@ -240,6 +242,38 @@ impl RustEmitter {
             crate::ownership_plan::materialize_owned_value(argument.ty(), lowered)
         } else {
             lowered
+        }
+    }
+
+    // Imported methods have no declaration in the consumer's Rust file. Keep
+    // the resolved mutable receiver contract explicit across that boundary.
+    fn explicit_class_receiver_borrow(&self, source: &HirExpr, lowered: RustExpr) -> RustExpr {
+        let Type::Class {
+            identity: Some(identity),
+            ..
+        } = source.ty().resolve_alias()
+        else {
+            return lowered;
+        };
+        let Some((owner, _)) = identity.rsplit_once('.') else {
+            return lowered;
+        };
+        if self
+            .current_module_name
+            .as_deref()
+            .is_none_or(|module| module == owner)
+        {
+            return lowered;
+        }
+        let borrowed = matches!(source, HirExpr::Name { name, .. }
+            if name == "self" || self.mut_borrowed_params.contains(name));
+        RustExpr::Ref {
+            mutable: true,
+            expr: Box::new(if borrowed {
+                RustExpr::Deref(Box::new(lowered))
+            } else {
+                lowered
+            }),
         }
     }
 
