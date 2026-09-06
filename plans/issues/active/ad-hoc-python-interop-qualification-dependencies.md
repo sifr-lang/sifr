@@ -453,3 +453,39 @@ integrated and qualified. Detailed12H-F1–F5 and12I-F1–F3 remain in their ret
 record commits/PRs above; none was copied over with stale statuses or discarded.
 The known SQL coverage failure remains an external owner and was not rerun
 or newly claimed as a12J gate result. This item stops without merging or starting12K.
+
+## Item12J-M1 contract adjudication (2026-09-06)
+
+Status: **needs-new-scope; no implementation, approval, or merge**. The new
+bounded M1 scope and full authority audit are preserved in the
+[phase handoff](ad-hoc-emitted-rust-excellence.md#item12j-m1-contract-adjudication-handoff-2026-09-06).
+Owned checkout `/private/tmp/sifr-item12j-m1.VO82Kk/sifr`, branch
+`codex/emitted-rust-excellence-item-12j-m1`, retains `c430ed3331169f06eb148122f681e7d2a457d2ee`
+and all reviewed 12J/R1 lineage. Fetched main remains `4ce05473f58716a611ac190581bf0737ba15331e`.
+The parent and all prior worker workspaces/evidence remain unchanged.
+
+Architecture requires inherited `message: str` supplied at construction, while
+the implementation treats root Error as a special base without embedded
+storage and constructs custom errors from only their declared fields. Root
+Error itself requires a string. The source/representation authorities do not
+define a root message for accepted `CodeError(3)`, `EmptyError()`, or
+`message: int` values. Existing specific-error Display behavior is not an
+authorized root-conversion policy. The prior native regression and unresolved
+root-upcast failures are reused from the sole R1 remediation review; no new
+compiler probe or test was run before resolving this contract conflict.
+
+The required explicit choice is between enforcing inherited required string
+storage (breaking existing constructors/overrides), defining how existing
+Display output supplies a root string (new observable conversion semantics),
+or allowing absent-message payloads in a wider root representation (larger
+language/runtime scope). No option was implemented. Suppressing only invalid
+unused conversions would leave the repeated root-upcast obligation unresolved.
+
+M1 used **zero reviews, zero gates**. Complete implementation, registered
+regressions, compiler/native tests, and merge are unreached. Old 12J/R1 remains
+NOT SATISFIED, not qualified, with both reviews consumed and no gate. Named
+historical external failures retain their owners and statuses; no 12K input
+was integrated. Only the two Markdown records change, with documentation diff
+and file-size results retained at `/private/tmp/sifr-item12j-m1.VO82Kk/evidence.md`.
+Draft PR #3699 remains the linked unapproved predecessor. Next action: explicit
+owner/user contract adjudication before resuming M1; this worker stops here.
