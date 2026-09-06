@@ -2,6 +2,117 @@
 
 Status: active
 
+## Current orchestration: 12K blocked; bounded tooling owners (2026-09-06)
+
+This section supersedes older pending original12K review/gate statements, not
+their historical evidence. Arendt is closed after its [terminal receipt](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5561937700).
+Original12K is **approved, externally blocked, not merged**. Exact reviewed and
+gated candidate `56907f59cc7d9f9fedb89434970c074c0247dee9`, record
+`057dd2e2caf1f84306b370cee2c3be39918cbec3`, assessed main
+`f11e1cd7eef16a02063555bccc9fd8e19287833b`, corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`. PR #3717 remains draft;
+corpus #48 remains unmerged. Preserved checkout:
+`/private/tmp/sifr-item12k-delivery.4J6JeK/sifr`, local branch
+`codex/item12k-final-delivery`; remote PR branch `codex/item12k-final-integration`.
+
+Its [integration review](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5561494295)
+is SATISFIED/no blockers across 202 changed paths. Counts consumed: one initial
+review, zero remediation, one provider request, zero retries, zero create-pr
+gates, **one failed merge gate**, zero Sifr/corpus merges. All handles completed.
+The 3736.19s gate passed all 13 guardrails and Rust10/readiness4/core5/CPython2/
+Python30 (all five suites)/diagnostics184/runtime30 (three explicit policy skips)/
+algorithmic12. Developer tooling failed three of 42 variants. Full E2E, migrated
+stdlib and normally ignored driver builds remain unreached, not certified.
+Actual main-ref materialization and manifest checks resolved #3721; its historical
+B5 gate stays failed. No allowance resets and no second original12K gate.
+
+Terminal ledger under that checkout:
+`target/verification/areas/item12k-delivery-terminal.json`, SHA256
+`bc8051b763ed7f43a54f524dad97686420681e3d8593f090659821f0c93a244b`.
+Final-evidence JSON SHA256 `edf9ce8c890b80af771ce8cd56ccedc143cb9e69d93d25e853d13d73bdb51d0a`
+authenticates 54 current and 104 retained artifacts; full provenance enumerates
+32088 tracked entries and 16 exact clean submodules. Gate log at sibling
+`evidence/merge.log`, SHA256 `336f5b1345f2495c7a197d81658f36ddfbcebf9c57b110675c5dc4b5c8f219b3`.
+Preserve all
+predecessor checkouts/targets; terminal own target23GiB/free67GiB.
+
+### Sequential later items and named validation
+
+Execution order: **12K-B7, 12K-B8, 12K-B9**, then adjudicate original12K delivery
+using their qualified receipts and the consumed-gate rule. No later emitted-code
+item becomes ready merely because these narrow checks pass. After valid 12K
+delivery, retain 12D,12E,12F,retained Item12,docs-only12A order. Parent only
+orchestrates; each new worker owns one fresh checkout/branch/index/temp root.
+
+- **12K-B7 / [#3722](https://github.com/sifr-lang/sifr/issues/3722)**: ready;
+  depends on the terminal12K diagnosis, not on unmerged integration delivery.
+  Restore the TypeScript-Go direct filesystem inventory for all 22 pre-existing
+  sites in six missing paths. Explicitly adjudicate inline-test inventory
+  boundaries; preserve meaningful source-provider ownership and enforcement.
+  Do not change compiler behavior or broadly suppress observations. Named tests:
+  `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
+  and the same command with `--self-test`; `git diff --check`;
+  `python3 scripts/check_file_size_guardrails.py`. Register any necessary focused
+  new regression command before execution. Expected scope is inventory Markdown
+  and, only if necessary, its owning checker/tests. Use current main for a narrow
+  independently deliverable PR; retain the integration checkout as read-only
+  provenance. One exact-SHA review plus at most one remediation. No Sifr gates
+  absent compiler/lockfile/fixture/workflow changes. Merge/update owner and stop.
+- **12K-B8 / [#3723](https://github.com/sifr-lang/sifr/issues/3723)**: recorded;
+  execution dependency B7 terminal/merged. Distinguish three legitimate SQL
+  dialect `bigint` spellings from removed Sifr scalar support. Preserve SQL names
+  and real compatibility rejection; no broad suppression. Named tests:
+  `python3 verification/areas/developer_tooling/check_no_pre_v1_compatibility.py`
+  and its `--self-test`, plus focused SQL-spelling versus removed-language-type
+  regressions registered before execution, diff and file-size checks. Narrow
+  guard owner; no unrelated SQL/compiler behavior changes.
+- **12K-B9 / [#3724](https://github.com/sifr-lang/sifr/issues/3724)**: recorded;
+  execution dependency B8 terminal/merged. Reconcile formatter preview reference
+  with actual supported behavior and existing capability/CLI manifests, including
+  all eight failed checks. Do not infer or introduce a formatter mechanism fix.
+  Named tests: `python3 verification/areas/developer_tooling/check_formatter_rules_manifests.py`
+  and its `--self-test`, diff and file-size checks. Expected documentation-only.
+
+12K-B7 dispatched to Aristotle (`01a07867-1267-7321-aecc-7afdf3864dc4`),
+fresh no-history gpt-6-astra high worker. Arendt is closed; one live implementer.
+Exact base prompt and separate onboarding supplied. No B7 review/gate consumed
+at dispatch; its narrow main-based delivery must not absorb original12K's stack.
+
+## Item 12K-B7: direct filesystem inventory restoration (2026-09-06)
+
+Owner: [#3722](https://github.com/sifr-lang/sifr/issues/3722). This section
+executes only B7 from the copied orchestration registration above; historic
+main records below are preserved. Latest remote main was fetched and verified
+as `f11e1cd7eef16a02063555bccc9fd8e19287833b` before implementation.
+
+Sole implementer owns clone `/private/tmp/sifr-item12k-b7.afEJYk/sifr`, branch
+`codex/item12k-b7-inventory`, its independent Git index, and sibling `evidence/`.
+Parent and predecessor checkouts remain read-only. No integration ancestry is
+required for this independent documentation correction.
+
+Implementation: restore all six missing paths and 22 matching source lines in
+`internal_docs/typescript_go_architecture_transfer_guardrails.md`, using exact
+main line references. Classify five inline-test lines separately from 17
+production lines, retain inline-test scanning and every existing exclusion,
+and distinguish CLI execution/sandbox effects, generated outputs, package/build
+identity inputs, and unresolved SQL editor provider/snapshot obligations.
+Path membership is the existing automated enforcement boundary; row ownership
+is not a blanket exemption. No checker mechanism change or new regression
+command is necessary.
+
+Named validation, after the implementation batch:
+
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
+- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+
+Only inventory and phase Markdown change. Per the item and user rules, no
+create-pr or merge-profile gate is required. One initial exact-SHA Opus review
+and at most one remediation remain available before review; results will be
+published outside the reviewed tree, followed by the merged receipt here.
+B8, B9, original12K qualification, and later emitted-code work are not started.
+
 ## Item 12K-B2: canonical diagnostic reference identity (2026-09-06)
 
 Owner: [#3704](https://github.com/sifr-lang/sifr/issues/3704), OPEN at dispatch.
