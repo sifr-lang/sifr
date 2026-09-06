@@ -542,10 +542,10 @@ fn collect_expr_error_refs(
             {
                 match object.ty().resolve_alias() {
                     Type::List(_) | Type::Bytes | Type::Str => {
-                        referenced.insert("IndexError".to_string());
+                        referenced.builtins.insert("IndexError".to_string());
                     }
                     Type::Dict(_, _) => {
-                        referenced.insert("KeyError".to_string());
+                        referenced.builtins.insert("KeyError".to_string());
                     }
                     _ => {}
                 }
