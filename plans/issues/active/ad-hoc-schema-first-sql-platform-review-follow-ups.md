@@ -228,3 +228,16 @@ record `5de50ecafc84ed1fa724e7384ad85689a6925dfb`. B4 may qualify its unchanged
 checker/regressions on that preserved stack. This supersedes only the earlier
 dependency stop, not the recorded failed-main result. No new SQL correction is
 implemented. The owned B4 phase registration records exact inputs and paths.
+
+B4 qualified and received one SATISFIED exact-SHA Opus review on integrated
+candidate `5c711f2d6cb90265b32e04e8b9f6b6e3570855c1`,
+[stacked draft #3715](https://github.com/sifr-lang/sifr/pull/3715).
+The full readiness suite passed4/4, including all27 actual negative cases and
+strict SQL package/target classifications. Registry and negative-self-test
+blobs are unchanged from retained12K base. No SQL mechanism was implemented.
+[Evidence](https://github.com/sifr-lang/sifr/pull/3715#issuecomment-5559859380)
+and [review](https://github.com/sifr-lang/sifr/pull/3715#issuecomment-5559872361)
+remain outside the reviewed tree. The prior standalone-main failure is not
+reclassified. Independent merge cannot retain exact qualification inputs;
+integration delivery stays with the fresh12K owner, with no new SQL item,
+no B4 gate, and no whole-stack merge in this worker.

@@ -2,10 +2,124 @@
 
 Status: active
 
-Current B4 authority: see "B4 qualified-context continuation registration" and
-its copied "B4 prerequisite-context adjudication (2026-09-06)" below. Earlier
-B4 dispatch and terminal entries are preserved historical records; their
-independent-main stop and ownership paths do not describe this live worker.
+Current B4 state: **qualified and Opus-approved stacked checkpoint; integration
+merge pending**, [draft #3715](https://github.com/sifr-lang/sifr/pull/3715).
+See the terminal receipt and "B4 qualified-context continuation registration"
+below. Earlier B4 dispatch and terminal entries are historical records; their
+independent-main stop and ownership paths do not describe this worker.
+
+## B4 reviewed stacked handoff (2026-09-06)
+
+Item: **12K-B4**, owner compiler-verification, issue [#3712](https://github.com/sifr-lang/sifr/issues/3712).
+The bounded checker implementation is complete, qualified and approved.
+This worker stops at the explicitly authorized reviewed handoff; it has not
+merged B4 or the inherited compiler stack and does not claim integration closure.
+
+- Stacked draft: [#3715](https://github.com/sifr-lang/sifr/pull/3715), branch
+  `codex/item12k-b4-qualified`, based on preserved #3713's branch.
+- Exact integrated base: `5de50ecafc84ed1fa724e7384ad85689a6925dfb`.
+- Candidate and reviewed implementation: `5c711f2d6cb90265b32e04e8b9f6b6e3570855c1`.
+- Reviewed tree: `33768107c3ab765533a66b2a98bdfc43d9a30b13`.
+- Record SHA: the separate documentation-only commit containing this receipt;
+  its full SHA is published in the terminal receipt on #3712/#3715 after push.
+- Merge SHA: **none**.
+- Owned clone: `/private/tmp/sifr-item12k-b4-qualified.X1Lz43/sifr`.
+  Parent's intentional two dirty Markdown files and every old worker checkout,
+  branch/index/target remain untouched and read-only.
+
+Both source lineages remain ancestral: 12K candidate
+`fbe5ca93e61c5286268f2b42a768901a907544f4`, record/base `5de50ecafc84ed1fa724e7384ad85689a6925dfb`;
+B4 source implementation `eaa4a063b69ee2132bef55514361062e85db3548`, record
+`a3cf7620088a3fda9c0935fbf29f511ac862f1f3`. The normal merge follows prior
+adjudication registration `90b992a05b16e14a56d97eea42783828d8b6757b`.
+Only the SQL Markdown record conflicted; both histories were preserved.
+GitHub main remains `f11e1cd7eef16a02063555bccc9fd8e19287833b` with no newer
+changes. All inherited non-B4 paths are identical to integrated base; both
+checker/test blobs are identical to preserved B4 implementation. Approved
+12B/H/I/correctingM1/B1/B2/B3 ancestry remains; unfinished Item12 source
+`8ad089a9458f35fcfa228e93fe44f4d69731828b` is excluded. Corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372` and its PR48 remain unchanged/open.
+
+Fresh named qualification on the exact candidate, using the previously
+registered owned paths and intentionally matching `-item12k` TMPDIR ancestor:
+
+| Named check | Actual result |
+| --- | --- |
+| Direct taxonomy | PASS: original self-tests and full repository audit |
+| Focused path-boundary tests | 8/8 PASS, one invocation |
+| Readiness strict registry | PASS: 13 guarantees, 34 surfaces, zero temporary rows |
+| Readiness profile assignment | PASS: 19 rows |
+| Readiness negative self-tests | PASS: actual integrated 27 cases |
+| Readiness taxonomy | PASS: original self-tests and full repository audit |
+| Complete readiness suite | 4/4 PASS, zero failures, one invocation |
+| File-size guardrail | PASS: 3,780 files, limit900; checker761/test139 lines |
+| Python syntax, record consistency, Git diff | PASS; clean before/after qualification |
+
+The eight focused tests were rerun in the qualified context; none of the old
+failed-main readiness result was reused. The historical main24 negatives and
+23 SQL classification failures remain historical facts. The integrated
+classification registry `6823a657db7d8660cafe86fcfd2b71b21a529cd3` and negative
+self-test `7609e981d368b9e116e3e82dfb79c66d9422fc9f` are inherited unchanged,
+not B4 SQL implementation. Retained codegen1452/B1 lowering1119/Python30/demo264
+evidence remains with12K; no compiler/native/Python-interop/diagnostics test ran
+here and no inherited result is represented as new B4 validation.
+
+[Published qualification and complete-input provenance summary](https://github.com/sifr-lang/sifr/pull/3715#issuecomment-5559859380)
+binds all source SHAs, key input blobs and evidence hashes. External evidence root:
+`/private/tmp/sifr-item12k-b4-qualified.X1Lz43/evidence/`.
+
+- `provenance-5c711f2d6cb90265b32e04e8b9f6b6e3570855c1.json` records all
+  32,087 base and 32,088 candidate path/blob identities, exact environment,
+  inherited ancestry/exclusion and actual readiness result. SHA256:
+  `a050f5ae4708b827ec0468d4b81defbb2c57074443d4317cecb152bb1c563003`.
+- Canonical owned report `sifr/target/verification/areas/b4-qualified-readiness.json`:
+  SHA256 `4f958f9218f29ab0a09d304c5fd34379b60e55ddcec9868c6cb4bc8a1101af82`.
+- `readiness.log`: SHA256 `5125a3df8accea132cab7e4ec87e60b6ddb86bd1db623af8d5de70f4e7c22ee9`.
+- `focused.log`: SHA256 `a9ed664303dcfde09a9bcbb802718781a9013aa6accd247d9e16addaf7b04197`.
+- `taxonomy.log`, `file-size.log`, `syntax.log`, `diff-check.log`, and clean
+  before/after status receipts are retained alongside them.
+
+[Initial exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3715#issuecomment-5559872361):
+**SATISFIED, no blocking findings**, covering only B4 and its checker interaction
+with the integrated context. Claude independently checked exact SHAs/tree,
+four-path delta, preserved policy/call sites, source blob identity and evidence
+hashes without modifying files or rerunning validation. Raw atomic completed
+response `/private/tmp/sifr-item12k-b4-qualified.X1Lz43/caller-tmp/sifr-claude.ESluOa/response.md`
+has SHA256 `631e0c2fd6fff7f18f2843091dea8c9f4aec0629dbb77021ee2569ef397f19dd`.
+The published `review-5c711f2d6cb90265b32e04e8b9f6b6e3570855c1.md` lives
+outside the reviewed Git tree. This later record is not part of the approved
+candidate and does not cause another review or test/gate cycle.
+
+Deferred review observations, recorded as separate later work only:
+
+| Later record | Owner | Observation and disposition |
+| --- | --- | --- |
+| 12K-B4-F1 | compiler-verification | Reviewer labels the discarded `root.relative_to(audit_root)` result at checker339 an infrastructure/maintenance observation: a named boundary assertion helper could make the intentional raising call clearer. It is correct and covered now; no failure reproduced, no change required for B4. Not started. |
+| 12K-B4-F2 | compiler-verification | Reviewer suggests an existing-file extension-filter case for the default repository root; current temporary-root cases already cover that branch. Optional test enhancement, not a missing B4 acceptance criterion. Not started. |
+| Existing12K integration | original12K owner | Main lacks the already-reviewed SQL prerequisites. Preserve this approved checkpoint and finish original integration qualification/review/merge; do not create a duplicate SQL repair. |
+
+Counts for B4: **1 initial review, 0 remediation reviews, 1 provider request,
+0 failed requests/retries, 0 create-PR gates, 0 merge-profile gates, 0 merges**.
+This continuation ran one direct taxonomy, one eight-test focused invocation,
+one complete readiness invocation, one file-size and one syntax check. Earlier
+B4 qualification attempts remain recorded separately. Original12K remains
+**0 reviews,0 gates,0 merges**; all other historical caps remain unchanged.
+
+B4 changed paths relative to integrated base are exactly:
+`verification/areas/coverage_matrix/checks/verification_taxonomy.py`,
+`verification/areas/coverage_matrix/checks/test_verification_taxonomy_paths.py`,
+this phase record, and `ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+Only the two Markdown records change in the post-review record commit.
+
+**Explicit integration dependency:** an independent main merge cannot retain the
+exact qualification inputs while main lacks the inherited prerequisite stack.
+The user expressly chose a reviewed stacked checkpoint in that case. #3712
+remains open for integration delivery; #3715 stays draft and unmerged.
+No new external blocker or B4 mechanism defect exists. Exact next action belongs
+to a fresh12K worker: preserve this candidate and record lineage alongside
+#3713, reuse applicable B4 evidence, then complete original12K's remaining
+qualification and its unused review/gate/merge allowances. This worker stops
+now; no12K implementation,12D/E/F,Item12,12A or full-phase work is started.
 
 ## Item 12K-B4: owned authorization and test registration (2026-09-06)
 
@@ -901,11 +1015,11 @@ It does not broaden the active item.
 | 12J | blocked: both reviews exhausted, unapproved | Async Python error-channel contract | Draft #3699 preserves final reviewed candidate `4bc432f3474134b1a1d43202d39fd147893bb014`; initial and remediation reviews are NOT SATISFIED. No gate or merge. Message-storage follow-up 12J-M1 requires adjudication; 12I remains external. |
 | 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
 | 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
-| 12K | blocked: taxonomy prerequisite #3712 | Item 12B and Python dependency integration | Candidate `fbe5ca93e61c5286268f2b42a768901a907544f4` preserves original lineage plus approvedB1 and mergedB2/B3. Fresh readiness3/4;0reviews/0gates/0merges. |
+| 12K | preserved; fresh integration owner required | Item 12B and Python dependency integration | Original candidate `fbe5ca93e61c5286268f2b42a768901a907544f4` and #3713 preserved; B4 now qualified/approved in stacked#3715. Original12K remains0reviews/0gates/0merges. |
 | 12K-B1 | approved correction; gate blocked | TypeVar diagnostic assertion fidelity (#3667) | Draft #3702, reviewed `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`; named checks pass, Opus SATISFIED; one failed gate exposes 12K-B2/B3. Unmerged; see B1 terminal checkpoint above. |
 | 12K-B2 | merged | Canonical diagnostic-code matcher identity (#3704) | PR3706 merge770f1ab; recorda53b5d3 retained in12K ancestry; full historical receipt preserved. |
 | 12K-B3 | merged | Diagnostics schema synchronization (#3705) | PR3709 mergef11e1cd; recordc508c143 retained in12K ancestry; full historical receipt preserved. |
-| 12K-B4 | integrated qualification authorized | Taxonomy fixture path isolation (#3712) | Preserved B4 checker/tests merge onto retained12K prerequisites; exact-context qualification and bounded B4 review only. |
+| 12K-B4 | qualified/approved; integration pending | Taxonomy fixture path isolation (#3712) | Stacked#3715 reviewed candidate `5c711f2d6cb90265b32e04e8b9f6b6e3570855c1`; readiness4/4 with27negatives, focused8/8, Opus SATISFIED.1review/0remediation/0gates/0merges. |
 
 <!-- Historical incoming Item12B record; later 12K dispatch is authoritative. -->
 | 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
