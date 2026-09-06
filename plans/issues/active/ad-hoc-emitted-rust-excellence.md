@@ -195,8 +195,9 @@ It does not broaden the active item.
 | 12G | merged | Dependency-checker demo path identity | Authoritative DLPack project path and computed-reference regressions merged in PR #3695; exact-SHA validation and Opus review passed. |
 | 12H | blocked: reviewed candidate preserved | Project-wide generated-field identity | Draft #3697, reviewed `9b52ac20094608c8a31f252db99e49ef7c963384`; sole gate failed SQL coverage. Retained record `b6e6210a97598fb631b929b2d4daf4012b41bb16` owns details and follow-ups. |
 | 12I | blocked: reviewed candidate preserved | Macro-defined project support visibility | Draft #3698, reviewed `f6e8afd964bb214a44c50271dcb2014ee8e828b4`; sole gate failed SQL coverage. Retained record `19ad69969a672d7b741122ded4dd879f2bdaf9ab` owns details and follow-ups. |
-| 12J | blocked: unapproved candidate preserved | Async Python error-channel contract | Draft #3699, reviewed `f720a342edd87004975355b478948f7eb5c8b406` NOT SATISFIED (12J-R1); native suites blocked by 12I. Terminal handoff at user checkpoint, zero remediation reviews and zero gates used. |
-| 12J-R1 | in progress: remaining remediation | Complete Item 12J non-builtin error conversions | Connect semantic error ancestry to conversion demand without resetting Item 12J's review or gate budget. |
+| 12J | blocked: both reviews exhausted, unapproved | Async Python error-channel contract | Draft #3699 preserves final reviewed candidate `4bc432f3474134b1a1d43202d39fd147893bb014`; initial and remediation reviews are NOT SATISFIED. No gate or merge. Message-storage follow-up 12J-M1 requires adjudication; 12I remains external. |
+| 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
+| 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
 | 12K | authorized: integration after dependency qualification | Item 12B and Python dependency integration | Qualify the integrated candidate and merge the preserved work; do not reset Item 12B review history. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
 
@@ -708,6 +709,61 @@ one final-candidate merge gate remain for 12J; no third review or budget reset.
 If external qualification still blocks merge, preserve the corrected reviewed
 candidate for 12K. New second-review mechanism defects become later bounded
 items. Do not integrate the unapproved 12J candidate as-is.
+
+### Item12J-R1 terminal handoff (2026-09-06)
+
+State: **blocked, NOT APPROVED, NOT MERGED**. Draft
+[PR #3699](https://github.com/sifr-lang/sifr/pull/3699) retains reviewed
+implementation `4bc432f3474134b1a1d43202d39fd147893bb014`, following preserved
+`f720a342` / record `60219b0` and remediation implementation `3ba19e49a`.
+Owned worktree `/private/tmp/sifr-item12j-r1.9j9Uhf/sifr`, branch
+`codex/emitted-rust-excellence-item-12j-r1`. The PR was updated by normal
+fast-forward push; the original worker's rollback worktree and parent index/
+intentional dirty documents remain unchanged. Base is still main
+`4ce05473f58716a611ac190581bf0737ba15331e`.
+
+- Final-candidate focused regressions: **9 pass**, including emission, native
+  build and execution for local/transitive errors, project aliases/transitive
+  errors/same-basename identities/builtin-name shadows, and distinct CSV and
+  configparser Error classes. Full driver: **587 pass, 77 existing ignored**.
+- All **264 companions are fresh**; only `demos/error_safety/emitted.rs` and
+  `demos/stdlib/emitted.rs` were regenerated. Formatting, HIR and file-size
+  checks pass (3758 files, 900-line cap). No original Sifr fixture, lockfile,
+  workflow, runtime assertion, architecture or roadmap change was made.
+- Codegen remains **1407 pass / 2 pre-existing 12B list-repeat failures**.
+  Strict Clippy fails only at the unchanged 12B/12C-owned
+  `project_stdlib_nominals.rs:45` expect. Unchanged original IR/frontend passes
+  and #3667-owned lowering failures are reused with explicit input provenance.
+- Both original named async suites fail native build at the **12I-owned
+  cancellation task-local E0425** (HTTP one Rust error; context 58, with retained
+  E0425 stderr tail). Neither runtime marker was observed; cleanup/cancellation
+  runtime preservation remains unqualified. No external repair was absorbed.
+- The [sole remediation Opus review](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5556273003)
+  returned **NOT SATISFIED**. New mechanism: broad nominal demand emits
+  `Self::new(err.message)` even for errors without a string message, including
+  errors never converted to the root Error. The reviewer verified a previously
+  compiling `CodeError(Error)` with only `code: int` now fails E0609 merely when
+  an unrelated function mentions Error. Empty errors and `message: int` also
+  fail. Accepted message-less root upcasts remain uncompilable (E0277 before R1,
+  E0609 now), so the original conversion obligation also remains unresolved.
+- This is later bounded **Item12J-M1**, owned by nominal error representation
+  and conversion-demand/ancestry admissibility. The
+  [Python owner record](ad-hoc-python-interop-qualification-dependencies.md#later-item12j-m1-error-message-storage-and-root-upcast-admissibility)
+  records its scope and the required adjudication. No later-item code was
+  written. The review's mapping-cleanup suggestion is separate 12J-F5.
+- Cumulative Item12J budget: **one initial review + one remediation review used;
+  both NOT SATISFIED. Zero create-PR gates, zero merge-profile gates, no merge.**
+  The user's second-review stop rule prevents another fix/review cycle. The
+  unused gate was not run without an approved candidate. Do not integrate this
+  candidate as-is or reset any original review/gate history.
+
+Exact evidence is preserved outside the reviewed Git tree at
+`/private/tmp/sifr-item12j-r1.9j9Uhf/evidence-4bc432f3474134b1a1d43202d39fd147893bb014.md`,
+with SHA-keyed review and native JSON reports. The compiler hash is
+`12adc00c7d5111550f893a20b1b3c3936ece888a13e3bf14b22e67f2d4e7fe09`.
+The final handoff is documentation-only and receives no extra review or gate.
+Next action: adjudicate 12J-M1 and the unresolved conversion obligation before
+any 12J qualification/integration; this worker stops after publishing records.
 
 ### Item 12B: Bounded algorithmic dependency repair
 

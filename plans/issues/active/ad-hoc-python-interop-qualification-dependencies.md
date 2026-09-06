@@ -287,16 +287,99 @@ under the R1 evidence root contain the diagnostics. The final native collision
 case uses `ValueError(Error)` and retains the original negative Error-target
 test. This source ancestry issue is not repaired by the conversion item.
 
+## Item12J-R1 terminal evidence (2026-09-06)
+
+State: **blocked, unapproved, not merged**. Draft
+[PR #3699](https://github.com/sifr-lang/sifr/pull/3699) preserves reviewed
+implementation `4bc432f3474134b1a1d43202d39fd147893bb014` on the original base
+`4ce05473f58716a611ac190581bf0737ba15331e`. History retains original `f720a342`,
+record `60219b0`, R1 implementation `3ba19e49a`, then its one-line Clippy fix.
+The final record is a separate documentation-only commit. Original/parent
+worktrees and indexes remain untouched; only the existing PR branch was
+fast-forwarded from this isolated worker's branch.
+
+Final candidate evidence, outside the reviewed tree:
+`/private/tmp/sifr-item12j-r1.9j9Uhf/evidence-4bc432f3474134b1a1d43202d39fd147893bb014.md`.
+Compiler SHA256:
+`12adc00c7d5111550f893a20b1b3c3936ece888a13e3bf14b22e67f2d4e7fe09`.
+
+- Focused command: 9 pass, including all three emission/native build/run groups
+  and the transitive imported case. Full driver: 587 pass, 77 existing ignored.
+- Build, formatting, HIR, canonical file-size guard (3758 files) and freshness
+  of all 264 companions pass. Two companions were producer-regenerated; no
+  original fixture, lockfile, workflow, assertion or runtime contract was edited.
+- Codegen: 1407 pass / 2 existing 12B list-repeat failures. Strict Clippy retains
+  only the 12B/12C `project_stdlib_nominals.rs:45` expect failure. Original
+  unchanged-input IR4 and frontend132+7 passes, and lowering1114 pass /2 stale
+  TypeVar assertions /1 ignored (#3667), are explicitly reused, not rerun passes.
+- Both exact named async suites exit 1 at 12I-owned native task-local E0425.
+  HTTP reports one Rust error; context 58, with a retained E0425 tail. Runtime
+  output markers are false for both. No native async runtime pass or complete
+  area certification is claimed. SHA-keyed JSON archives and logs are retained.
+- The [only remaining remediation review](https://github.com/sifr-lang/sifr/pull/3699#issuecomment-5556273003)
+  returned **NOT SATISFIED**. Its full response is
+  `review-4bc432f3474134b1a1d43202d39fd147893bb014.md` under the evidence root,
+  SHA256 `ab616b0a0917bac3c269ece9f24ea9d82f0bb7124f685241ac860af6a34e8b42`.
+  It verified the new message-storage mechanism defect and remaining conversion
+  omission described in Item12J-M1 below. No third review or post-review code
+  repair was attempted.
+- Cumulative 12J allowance consumed: one initial review and one remediation
+  review, both NOT SATISFIED; zero create-PR gates and zero merge-profile gates.
+  There is no approved final candidate to gate or merge. The unused gate is not
+  a new review allowance. All 12B/12H/12I histories remain unchanged.
+
+## Later Item12J-M1: error message storage and root-upcast admissibility
+
+Status: recorded only; requires adjudication, not started by R1.
+Owners: nominal error representation, error conversion demand, ancestry
+admissibility. This is a new second-review mechanism, not a third R1 review.
+
+The sole remediation review found two related blocking consequences at
+`crates/sifr_codegen/src/error_refs/conversions.rs:99-130`, using
+`preamble/error_conversion.rs:17-23` and the broadened render guard in
+`support_plan.rs:204`:
+
+1. **New regression:** `class CodeError(Error): code: int`, raised only into its
+   own `Result[None, CodeError]` channel, compiled before R1. Adding an unrelated
+   function returning `Result[None, Error]` now demands an invalid
+   `From<CodeError> for Error` whose body reads absent `err.message`, producing
+   E0609. The reviewer verified native success with preserved compiler
+   `36640bf...9b61940` and failure with the exact candidate compiler above.
+   `class EmptyError(Error): pass` and `message: int` similarly expose absent or
+   non-string storage (E0609/E0308). These classes need not be upcast themselves
+   for the regression to occur.
+2. **Remaining in-scope omission:** explicitly raising that CodeError into
+   `Result[None, Error]` source-checks on both original 12J and R1. Native build
+   changes from E0277 to E0609, not to success. The original obligation remains
+   unresolved for this representation, so repeated-finding adjudication is
+   required in addition to recording the new mechanism.
+
+Later bounded work must establish a shared, typed message-storage/conversion
+contract: own string message versus consuming a valid ancestor conversion,
+without assuming a `message` field from ancestry alone. Preserve previously
+compiling specific-error channels; do not emit invalid unused conversions when
+an unrelated Error reference appears. Reconcile root-Error source admissibility
+with actual conversion ability instead of accepting backend-invalid programs.
+Register emission and native compilation regressions for absent, non-string,
+and inherited message storage, inside and outside root-Error channels. No
+invented message fallback, fixture weakening or unrelated dependency repair is
+authorized by this record. Resolve the contract/adjudication before defining
+any later item's review/gate allowance; do not reset 12J's two consumed reviews.
+
+Separate non-blocking **12J-F5**, owner codegen nominal-path mapping: the review
+suggests consolidating `render()`'s ancestor-name derivation with the project
+nominal-path authority to remove duplicate mapping logic. This is not another
+R1 implementation step. Prior 12J-F1–F4 and retained H/I findings remain owned.
+
 ## Required next action
 
-Item12G is merged. Items12H/12I have terminal blocked, approved-candidate handoffs;
-Item12J now has the terminal blocked, **unapproved** candidate below. Stop12J's
-worker after publishing records. The orchestrator must assign the unresolved
-12J-R1 correction explicitly and preserve its remaining at-most-one remediation
-review and one final-candidate gate, with no reset of12B/H/I history. Item12K's
-separate integration allowance follows dependency qualification; this12J
-candidate must not be treated as approved or integrated as-is. No next-item
-code, integration, external repair, or gate bypass was written by12J.
+Stop the R1 worker after publishing this terminal record. Adjudicate Item12J-M1
+and the unresolved conversion obligation before treating Item12J as qualified.
+Candidate `4bc432f3474134b1a1d43202d39fd147893bb014` is unapproved and must not be
+integrated as-is. No third review, gate, merge, 12K integration, external repair,
+or next-item code is performed by this worker. 12K's separately approved
+integration allowance follows dependency qualification and does not reset any
+12B/H/I/J history.
 
 ### Item12J terminal evidence and unresolved review
 
