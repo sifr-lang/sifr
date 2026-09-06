@@ -2174,6 +2174,76 @@ rerun by B6. B6's documentation-only adjudication consumes no Sifr profile gate.
 One narrow exact-SHA review can approve only this adjudication. Delivery remains
 stacked pending original B5/12K integration; no inherited code merges under it.
 
+#### B6 terminal receipt (2026-09-06)
+
+State: **environment adjudication qualified and approved; stacked integration
+delivery pending**. [PR #3720](https://github.com/sifr-lang/sifr/pull/3720)
+targets the retained B5 branch. This is the explicitly authorized B6 terminal
+delivery condition, not a new mechanism blocker. Merge SHA: **none**.
+
+- Exact reviewed/qualified B6 candidate:
+  `4d076ebe08f00ba7ff6ea6ae7f910397ba7b2356`.
+- Exact B6 base/B5 record: `9a42fe4239426cb53438b1d8f6a000f4c0a352d5`;
+  B5 source: `d4d7eb5cc80e6e4e623e3b5d343702e5055f8946`;
+  inherited B5 review base: `9f8dbec61c4416d5d002a1a9c90913c00a06fe9a`.
+- Main reverified unchanged: `f11e1cd7eef16a02063555bccc9fd8e19287833b`.
+  Corpus unchanged: `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+  The phase-only terminal record is a later commit identified in the PR receipt;
+  it does not replace the reviewed candidate or alter its validation inputs.
+- Complete corrected `cargo test -p sifr_driver` **PASS exit 0**,
+  2026-09-06 16:31:20–16:43:29 UTC, 728.46 seconds: **595 unit passes,
+  0 failures, 77 normally ignored**, then successful driver doctests (zero
+  examples, full library rustdoc loading/type checking). Corrected focused
+  `cargo test -p sifr_driver --doc` also passes on the exact candidate.
+- `cargo fmt --check`, HIR maintainability, file-size guard (3780 files/900
+  lines), and `git diff --check` all pass. The exact committed diff check passes.
+  No create-pr or merge-profile gate: B6 changes only this Markdown file.
+- The early-unit-run and post-full-run artifact captures are byte-identical,
+  including timestamps: the outer registry proc macro and retained B5 artifacts
+  were preserved. Registry/vendor `rustversion` Rust sources are identical across
+  all 24 files. Final own target: 4.2 GiB, 109 GiB free; no cleanup performed.
+- The [initial Opus review](https://github.com/sifr-lang/sifr/pull/3720#issuecomment-5560686820)
+  returned **SATISFIED**, no blockers. It independently authenticated the 34-entry
+  final evidence inventory and checked the mechanism and exact-SHA full pass.
+  Its approval applies only to B6; B5/original 12K reviews remain unperformed.
+- Consumed B6 counts: **1 initial review, 0 remediation reviews, 1 provider
+  request, 0 retries, 0 create-pr gates, 0 merge gates, 0 merges**. Diagnostic
+  work includes one initial fresh focused Cargo doc run, one corrected focused
+  doc run, and one corrected full-driver invocation; direct loader/scratch
+  experiments are separately recorded. B5 and original 12K still each retain
+  **0 reviews/0 provider requests/0 gates**, with all historical budgets intact.
+
+Content-addressed receipts (root `/private/tmp/sifr-item12k-b6.YxonRW/`):
+
+| Evidence | SHA256 |
+| --- | --- |
+| `evidence/driver.log` | `40fd5424b73d15032693fe21d987af909e60820a918ef721b24834558cb16567` |
+| `evidence/doc-final.log` | `655627d295e02c9d19da5850031630048d3e16511f01a180f35433f0fe28192e` |
+| `sifr/target/verification/areas/item12k-b6-final-evidence.json` | `93ea65d243e422cc513ff56d2f46289d5dd1230674eccf29ba5bab61b2e6842c` |
+| `sifr/target/verification/areas/item12k-b6-provenance.json` | `4ae2e11ae370c2c74a1906950d6366486cede00af396a66bcb88e666824e41db` |
+| `opus-4d076ebe08f00ba7ff6ea6ae7f910397ba7b2356.xPD0S8/response.md` | `739e5e89582dc41928fc1254d1f5abcdd8b348b6db6b11294629bf91dc94ec3b` |
+
+Deferred nonblocking review follow-ups, separate from B6 completion:
+- **B6-F1 / records owner:** normalize missing spaces in copied historical
+  dispatch text when that record is next maintained. The dispatch was copied
+  verbatim; its content is accurate. No typography sweep started here.
+- **B6-F2 / diagnostic evidence owner:** use distinct names for the before-state
+  command receipt and artifact map in future scratch experiments. The artifact
+  map occupied `item12k-b6-collision-before.json`; the passing before-state log
+  and its inventory hash remain available, but there is no separate command JSON
+  for that leg. Opus classified this as nonblocking infrastructure asymmetry.
+  No evidence was reconstructed as if it were an original invocation receipt.
+
+No technical blocker remains for B6. Exact next action: hand this approved
+stacked candidate and documentation record back to the original B5/12K owners.
+They must preserve the corrected invocation isolation and authenticate/reuse
+applicable evidence, then complete their own remaining qualification, review,
+gate and integration delivery. B5's previous full invocation stays failed and
+its Clippy remains unrun; B6's successful full invocation is a separate receipt.
+Full E2E, migrated stdlib and normally ignored driver lanes are not certified
+by this standalone item. No B5 completion, broad integration review, merge of
+inherited unreviewed code, next-item implementation or new gate was performed.
+
 ### Item 12B: Bounded algorithmic dependency repair
 
 On 2026-09-05, the user authorized the same worker to repair both repositories.
