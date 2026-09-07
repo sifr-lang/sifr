@@ -56,7 +56,7 @@ PROJECT_PATHS = {
 }
 NORMALIZED_NAME = re.compile(r"[-_.]+")
 REQUIREMENT_NAME = re.compile(r"^[A-Za-z0-9._-]+")
-RETIRED_PYTHON_INTEROP_PACKAGES = frozenset({"httpcore", "httpx"})
+RETIRED_DISTRIBUTIONS = frozenset({"httpcore", "httpx"})
 EXPECTED_SERVICE_IMAGES = frozenset({"localstack", "redis"})
 
 
@@ -170,6 +170,8 @@ def validate_project(
 ) -> list[str]:
     errors: list[str] = []
     direct = direct_dependency_names(project)
+    for name in sorted(RETIRED_DISTRIBUTIONS.intersection(direct)):
+        errors.append(f"{label}: retired direct dependency: {name}")
     for name in sorted(expected.difference(direct)):
         errors.append(f"{label}: missing direct dependency {name}")
 
@@ -181,9 +183,8 @@ def validate_project(
         for package in locked_packages
         if isinstance(package, dict)
     }
-    if label == "python-interop":
-        for name in sorted(RETIRED_PYTHON_INTEROP_PACKAGES.intersection(locked_names)):
-            errors.append(f"{label}: retired package remains locked: {name}")
+    for name in sorted(RETIRED_DISTRIBUTIONS.intersection(locked_names)):
+        errors.append(f"{label}: retired package remains locked: {name}")
     for name in sorted(expected):
         matching = [
             package
@@ -354,18 +355,32 @@ def run_self_tests(audit: dict[str, object]) -> int:
     if not validate_project(project_name, expected, releases, missing_direct, lock):
         raise AssertionError("direct-dependency mutation was not rejected")
 
-    retired_dependency = copy.deepcopy(lock)
-    retired_dependency["package"].append({"name": "httpx", "version": "0.28.1"})
-    if not validate_project(
-        project_name, expected, releases, project, retired_dependency
-    ):
-        raise AssertionError("retired HTTP client mutation was not rejected")
+    retired_mutations = 0
+    for label in (*projects, "renamed-owner"):
+        for retired in sorted(RETIRED_DISTRIBUTIONS):
+            retired_dependency = copy.deepcopy(lock)
+            retired_dependency["package"].append(
+                {"name": retired.upper(), "version": "0.0.0"}
+            )
+            errors = validate_project(
+                label, expected, releases, project, retired_dependency
+            )
+            if errors != [f"{label}: retired package remains locked: {retired}"]:
+                raise AssertionError(f"retired lock mutation failed: {label}/{retired}")
+            retired_direct = copy.deepcopy(project)
+            retired_direct["project"]["dependencies"].append(
+                f"{retired.upper()}[extra]>=0; python_version >= '3.14'"
+            )
+            errors = validate_project(label, expected, releases, retired_direct, lock)
+            if errors != [f"{label}: retired direct dependency: {retired}"]:
+                raise AssertionError(f"retired direct mutation failed: {label}/{retired}")
+            retired_mutations += 2
 
     stale_image = copy.deepcopy(audit)
     stale_image["service_images"][0]["latest_stable"] = "4.13.1"
     if not validate_service_images(stale_image):
         raise AssertionError("stale service-image mutation was not rejected")
-    return 7
+    return 6 + retired_mutations
 
 
 def main() -> int:
