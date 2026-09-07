@@ -55,6 +55,54 @@ remediation review. These findings do not reopen the completed platform phase.
 
 ## Coverage registry blocker observed during naming cleanup (2026-09-05)
 
+### SQL registry delivery registration (2026-09-07)
+
+Current delivery owner: **12K-B17 / #3750** continues the complete B16 record
+in the existing PR #3751. Its bounded registration and seven named commands
+are at the top of `ad-hoc-emitted-rust-excellence.md`. The two new full-mode,
+blocking merge suite memberships retain compiler classification and execute
+through the existing runner. Combined registry/membership approval is required.
+This supersedes the historical blocked handoff below only after qualified merge;
+all B16 failed evidence and other SQL follow-up acceptance remain preserved.
+
+Terminal: B16 #3749 is **blocked, not merged**, preserved in draft
+[#3751](https://github.com/sifr-lang/sifr/pull/3751), candidate
+`a7ea5b8106068ee9394d82dd46e8e95bc1263a36`, main base
+`06ea86334b72f49f5aab250a64498ee955ec9331`. All original23 registry diagnostics
+are resolved against all37 packages/117 targets, but one exact-SHA readiness
+run is3/4PASS: strict registry now identifies missing merge crate-test membership
+for `sifr_sql_mysql` and `sifr_sql_sqlite`. Profile19/negative26/taxonomy PASS;
+file-size3759 and diff PASS. No review, gate or merge was attempted.
+
+Later owner **12K-B17 / [#3750](https://github.com/sifr-lang/sifr/issues/3750)**,
+SQL verification / compiler-verification, owns the two entries in
+`verification/profiles/merge.json:44`. Preserve compiler classifications and
+require blocking full-mode executed memberships with exact package commands.
+The later issue records concrete acceptance commands and distinguishes profile
+metadata/verification helpers from workflow files under the zero-gate rule.
+No later implementation started. Full terminal/evidence hashes are at the top
+of `ad-hoc-emitted-rust-excellence.md`; raw evidence remains under
+`/private/tmp/sifr-sql-registry.xaAOLM/evidence/`. B14/B15/original12K counters
+and draft #3746 remain unchanged. This worker stops at the preserved handoff.
+
+Item **12K-B16**, issue [#3749](https://github.com/sifr-lang/sifr/issues/3749),
+owns the bounded nine-package/thirteen-target registry reconciliation and stale
+PostgreSQL `lib` to `rlib` replacement. Its canonical scope, isolated main-based
+clone, exact base and three named checks are registered at the top of
+`ad-hoc-emitted-rust-excellence.md`. Complete metadata inventory is prepared
+from actual main; previous stack-only qualification is not reused as a pass.
+Two SQL negative regressions join the existing readiness self-tests. All prior
+coverage policy and checks remain intact; no compiler, lockfile or gate changes.
+Live-server targets are explicit `test-fixture` inputs to the existing live SQL
+adapters, rather than claims of execution in the offline nightly profile.
+
+The B15 recurrence on `4a0a03f430f1ad87b080a6172bc46209082e955a` failed its one
+merge gate with the same 23 registry diagnostics (readiness 3/4). Its raw
+terminal remains at `/private/tmp/sifr-companion.KIogHV/evidence/terminal.json`,
+SHA256 `657424e6ab98d7adaf150062f34f91abbba350d806cad23e3eacb73c9f6ffae7`.
+B14/B15 PR #3746 remains unmerged. Their historical review/gate counts are
+unchanged by this separate registry delivery. No successor work starts here.
+
 The repository naming cleanup ran `scripts/run_all_tests.sh` once. The gate
 failed in coverage-matrix readiness with nine unclassified SQL packages,
 unclassified SQL/host-tool test targets, an unclassified PostgreSQL `rlib`,
