@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-09-07. Items 0–30 and 36–39 are complete. Item 39 closed
+Status: active on 2026-09-07. Items 0–30, 36–39 and 54–55 are complete. Item 39 closed
 the runner dependency/API invariants; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
@@ -462,8 +462,8 @@ the named tests and never runs for docs/runner-only scopes.
 | 39 | none | **Complete, PR #3766.** `verification/areas/python_interop/runner/dependency_versions.py` and runner self-tests: make retired-distribution rejection independent of owner labels; scan every runner module for retired Testcontainers imports/wait helpers, mutate each forbidden form, examine E402 bootstrap suppressions. Preserve current locks, fixtures and audit selections. The discovered fixture-owned Redis numkeys change is explicitly transferred to Item 63; do not claim that mechanism changed in Item 39. | `area python_interop: self-test, dependency-versions, redis-service-features, live-policy` |
 | 53 | E2 delivery to main for named readiness check | **Blocked pending E2 merge; not independently blocked by E1.** `verification/runner/sifr_verify`, `verification/areas/coverage_matrix/checks`: require every non-live Python manifest suite in at least one delivery profile; reject a removed assignment; derive Schwifty/mutation counts. Credit present coverage. Do not rewrite profiles or custody evidence here. | `area coverage_matrix: readiness`; `area python_interop: self-test, minor-train-features` |
 | 54 | none | **Complete, PR #3769.** `verification/areas/python_interop/runner/crypto_abi_features.py`: compile, load and invoke actual CFFI-generated source; test error path and cleanup. Keep CFFI/Cryptography releases unchanged. | `area python_interop: crypto-abi-features, callbacks` |
-| 55 | none | Python feature runners: derive exact-version markers from audit, directly assert public Pandas module identity, inspect warning-filter scope and duplicated Arrow version assertion; distinguish Arrow 25 API additions from 25.0.1 fixes in maintained descriptions. No new package upgrade. | `area python_interop: minor-train-features, numeric-dataframe-features, dependency-versions` |
-| 58 | none | Current protocol docs and taxonomy under `internal_docs/python_interop_architecture.md`, `verification/areas/python_interop`, and `verification/areas/coverage_matrix`: replace current HTTPX guidance with HTTPX2, classify tier-two pytest-httpx and historical mentions, align topology path ownership. Record real old performance environments unchanged. Docs/metadata only; code findings become later items. | `area documentation: structure`; `area coverage_matrix: readiness`; local link/path checks |
+| 55 | none | **Complete, PR #3772.** Python feature runners: derive exact-version markers from audit, directly assert public Pandas module identity, inspect warning-filter scope and duplicated Arrow version assertion; distinguish Arrow 25 API additions from 25.0.1 fixes in maintained descriptions. No new package upgrade. | `area python_interop: minor-train-features, numeric-dataframe-features, dependency-versions` |
+| 58 | E2 delivery to main for named readiness check | **Blocked pending E2 merge; not independently blocked by E1.** Current protocol docs and taxonomy under `internal_docs/python_interop_architecture.md`, `verification/areas/python_interop`, and `verification/areas/coverage_matrix`: replace current HTTPX guidance with HTTPX2, classify tier-two pytest-httpx and historical mentions, align topology path ownership. Record real old performance environments unchanged. Docs/metadata only; code findings become later items. | `area documentation: structure`; `area coverage_matrix: readiness`; local link/path checks |
 | 59 | none | `verification/areas/distribution_release/governance/evidence_custody.py` and owned release-profile custody records: reconcile digests with actual immutable evidence; preserve historical waiver identity and prohibit invented/rebound receipts. Any missing external artifact is a blocker, not permission to fabricate it. | `area distribution_release: evidence-custody` |
 | 60 | none | Current trust/native-provider documentation and checks in Reqwest/Rusqlite tests and Rust interop catalog: audit native trust examples, AWS-LC autodetection, standalone Reqwest vendor anchor, and savepoint overview accuracy. Update documentation only where current architecture is misdescribed; mechanism changes require an explicitly scoped follow-up. | `manifest reqwest_dependency_version`; `manifest rusqlite_dependency_version`; `area documentation: structure` |
 
@@ -810,6 +810,76 @@ documentation checks, no external review and no Sifr gate. Exact next action:
 stop after this record merges and return Item 54's evidence. The parent may
 recheck Item 53's prerequisite and otherwise dispatch Item 55 in a fresh owned
 worktree. This worker has implemented and tested no later item.
+
+### Item 55 closure evidence
+
+State: complete. Implementation [PR #3772](https://github.com/sifr-lang/sifr/pull/3772)
+merged on 2026-09-07 UTC (2026-09-08 Europe/Stockholm).
+Base: `2a96b938241a146974f3911220f23193d4280504`.
+Exact reviewed candidate: `0705776ec206da3cc7aa5ffa1450f025be27d414`.
+Merge: `94404de11d4c83ef9186a5cb6083acb09f80ab61`.
+
+Five implementation paths changed: the Python interop README and
+`runner/dependency_versions.py`, `runner/minor_train_features.py`,
+`runner/numeric_dataframe_features.py`, and `runner/redis_service_features.py`
+under `verification/areas/python_interop`. Feature runners now share exact
+installed-version checks and markers derived from the canonical audit.
+Schwifty result counts are computed from generated values; the numeric suite
+directly requires `type(frame).__module__ == "pandas"`.
+
+Warning inspection found no filter in the numeric/dataframe runner. The existing
+Redis runner's narrow Testcontainers `catch_warnings` block promotes deprecations
+to errors and restores caller policy; comments and descriptions record that
+scope. The hermetic Arrow bridge's existing exact module-version assertion is
+retained because it checks the loaded module, while the dependency audit checks
+declarations and locks. Maintained documentation records coordinated ownership
+for a future Arrow upgrade and distinguishes Arrow 25 API coverage from fixes
+specific to 25.0.1. No fixture, package selection, compiler, lockfile, workflow,
+governance mechanism, or gitlink changed.
+
+[Validation evidence](https://github.com/sifr-lang/sifr/pull/3772#issuecomment-5576066343)
+covers the unchanged implementation bytes committed at the candidate. All three
+named suites passed: `area python_interop: minor-train-features,
+numeric-dataframe-features, dependency-versions` (three variants, zero failures).
+The dependency audit passed 26 mutations: the existing 18 plus seven installed
+package mismatch cases and one changed-audit marker case. Redis companion
+version handling is covered through that shared helper's mutations; the Redis
+service suite was not added to the authorized selection. `git diff --check`
+and `python3 scripts/check_file_size_guardrails.py` passed (3,761 files,
+900-line limit; largest touched source 469 lines). The README's referenced audit
+and inspected bridge paths exist. Neither Sifr gate ran; no Cargo or Docker
+validation ran under this runner-only item's policy.
+
+The [one exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3772#issuecomment-5576086566)
+returned `SATISFIED`, with no blocking findings. No remediation review ran.
+[Review provenance](https://github.com/sifr-lang/sifr/pull/3772#issuecomment-5576086775)
+records raw response SHA-256
+`2921a972f31ef45aadf7fa0ad52e786551bb6c4eb72bd6a61bc608224e4fa0e2`.
+External review: `/private/tmp/sifr-item55-opus.GymbYF/response.md`.
+External validation record:
+`/private/tmp/sifr-item55.fbqtom/validation-0705776ec206da3cc7aa5ffa1450f025be27d414.md`.
+Result JSON SHA-256:
+`99e4b447b6361ff5928894866c2c4efcfa99c0ed3f6a5371a1d8dbe759b9b387`.
+
+Nonblocking observations are assigned to separate [issue #3773](https://github.com/sifr-lang/sifr/issues/3773):
+future noncanonical caller-name diagnostics, cosmetic self-test tuple layout,
+and the existing hermetic Arrow assertion's coordinated upgrade ownership.
+No follow-up implementation ran; these are not new Item 55 requirements.
+
+Item 55 blocker: **none**. Owned worktree:
+`/private/tmp/sifr-item55.fbqtom/codebase`; implementation branch:
+`codex/latest-stable-item55`; record branch: `codex/latest-stable-item55-record`.
+The original Kafka worktree was preserved. E1/E2 and consumed gate histories
+remain externally owned. At this handoff, the coordinator reports E2 PR #3717
+still open at `98480c78587d6cbd99a7079d10c71825360bd468`; this is external-owner
+status, not validation performed by Item 55. Both 53 and 58 require its delivered
+readiness fix; 58 has no independent E1 prerequisite. 62D remains E1/E2 blocked.
+The coordinator has cleared Item 59's custody-only path ownership, with no
+waiver/workflow changes. The parent must recheck E2 delivery before dispatching
+the next ready item; if it remains unmerged, the next presently ready row is 59.
+This worker starts no later item. Exact next action: stop after this record-only
+update merges and return Item 55's PR, SHA, evidence and blocker status.
+No additional external review or Sifr gate applies to this record update.
 
 ### Item 0 record
 
