@@ -2,6 +2,92 @@
 
 Status: active
 
+## Current bounded owner: 12K-R1 storage recovery (2026-09-07)
+
+12K-R1 / [owner #3740](https://github.com/sifr-lang/sifr/issues/3740): bounded
+recovery completed; docs delivery and exact-SHA review pending. This section
+supersedes older current-state headings while preserving their historical records.
+The original owner Leibniz is closed; the parent explicitly transferred exclusive
+cleanup ownership of the two paths in the
+[exact-target registration](https://github.com/sifr-lang/sifr/issues/3740#issuecomment-5568126209).
+Only these two inactive, real, non-symlink compiled-output directories were removed:
+
+- `/private/tmp/sifr-integration.uvTy0z/sifr/target/debug`
+- `/private/tmp/sifr-integration.uvTy0z/sifr/target/sifr_generated_code_quality/merge.3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c.shared/cargo-target`
+
+Deletion ran from 09:12:59 to 09:13:47 UTC. Both targets are absent; their contents
+are rebuildable build outputs. No whole-target clean or other cache cleanup ran.
+Immediate process/open-file checks found no users of either target and no process
+in retained group61162. The same checks passed after recovery without lsof warnings.
+All source, indexes, branches, submodules, other caches and parent/predecessor
+worktrees remained read-only. The parent's two intentional phase edits were preserved.
+
+The authoritative protected manifest SHA256 is
+`fcb9c653fdba85c21aa4bde051ee98991777179dba976778bb7b6a89d03039e2`.
+Its 2506 file digests passed before and after removal, with identical check output.
+Coverage was checked across the complete evidence, canonical area reports, profile
+logs and generated `entries/` and `preparation/` directories. An additional66
+file symlinks and their target digests were compared unchanged; no protected link
+points into a removed directory. All92 prepared graph sources/manifests/locks survive.
+Original clean HEAD remains `6ce7ce09978e3544f5d8f43608254578e97e363d`; all16
+gitlinks match the preserved provenance map. Their pre-existing uninitialized
+submodule status remains identical; no submodule was initialized or altered.
+
+Measured directory allocation removed: **24,777,994,240 bytes** (23.08GiB).
+Measured filesystem free space: **402,685,952 -> 24,842,821,632 bytes**,
+an observed gain of **24,440,135,680 bytes**. These separate measurements need not
+match on the shared filesystem. Free space was measured immediately after recovery,
+before creating the independent docs checkout; it is not a future reservation.
+External raw checks and receipts live at `/private/tmp/sifr-storage-recovery.RFXopr`:
+`before/result.json` SHA256
+`2ba2ae2874686e6da2954e8ce33991ab0831003e58c2b3897efbdac5873b9b6d`;
+`after/result.json` SHA256
+`199a9503924777335c0be3e2db42d5a936bf0ff70f1433949209b748d96ffc7a`.
+All registered `df`, pre-removal `du`/post-removal absence, `ps`, `lsof`, manifest
+`shasum` and original-clone Git checks passed. The local audit parser initially
+rejected uninitialized gitlinks and manifest-excluded symlinks; inspection resolved
+both before deletion, without changing predecessor data or weakening preservation.
+
+Docs delivery owns `/private/tmp/sifr-storage-recovery.RFXopr/sifr`, branch
+`codex/storage-recovery-12k-r1`, based on actual main
+`e97bf89621146b9ab29887fe4774cc87151c74cd`. Only this phase Markdown changes.
+Registered post-implementation checks, before execution:
+`git diff --check e97bf89621146b9ab29887fe4774cc87151c74cd HEAD` and
+`python3 scripts/check_file_size_guardrails.py` (the AGENTS.md guardrail).
+Use one exact-SHA Opus review plus at most one remediation, then normal docs merge
+and owner/phase update. Final review evidence stays outside its approved Git tree.
+No Sifr test, create-pr gate or merge-profile gate applies to this docs-only item.
+
+### Remaining resource scope, deferred and not started
+
+Future full-gate capacity is **not established**. Recovery restores approximately
+the23GiB available before gate4, which exhausted headroom with developer tooling
+still incomplete. Additional high-water storage for all later lanes is unmeasured.
+A later resource owner must provision separately owned validation storage and
+record a capacity budget for compiler/test outputs, generated targets, temporary
+projects and dependency caches together, including remaining lanes and headroom.
+Use an isolated volume or host with additional capacity; no other owner's cache
+is eligible for cleanup under this item. No numeric sufficient-capacity claim or
+new gate authorization follows from this recovery. Record the resource gap in
+owner3740 and route the later resource scope separately before any continuation.
+
+Original12K remains NOT SATISFIED, draft and unmerged at candidate
+`3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c`, basee97bf896 and complete record6ce7ce099,
+as established by the [gate4 terminal receipt](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5568197318).
+PR3717/corpusPR48 remain draft, exact corpus8bcbe7ab, full202 integration paths and
+16gitlinks retained; retainedItem12 source8ad089a remains excluded. B12/PR3738 is
+merged at e97bf896; its [terminal receipt](https://github.com/sifr-lang/sifr/pull/3738#issuecomment-5566738258)
+supersedes the older B12 in-progress heading below.
+Original counters remain1initial+1remediation review,2provider requests,0retries;
+4gate attempts =3FAILED+1RESOURCE_TERMINATED(exit143),0passing/create-pr gates
+and0integration/corpus merges. Nine focused checks, preparation92, guards13,
+demos264, Rust10/readiness4/core5/CPython2/Python30/diagnostics184/algorithmic12
+passed; runtime30 has3declared skips. Developer tooling has23passing cases but is
+incomplete. GCQ/performance/fullE2E/stdlib/ignored-driver/CLI and later lanes remain
+UNREACHED. No recovery result certifies these lanes. No original third Opus,
+gate restart,12D/E/F/retained12/docs-only12A implementation or audit was started.
+Stop after this bounded recovery's docs merge and terminal phase/owner update.
+
 ## Current bounded owner: 12K-B12 report filename (2026-09-07)
 
 12K-B12 / [owner #3737](https://github.com/sifr-lang/sifr/issues/3737) is in
