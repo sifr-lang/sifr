@@ -478,7 +478,8 @@ fn prune_item_scope(
     used_names.extend(parent_demands);
     for item in items.iter() {
         if !matches!(item, syn::Item::Use(_) | syn::Item::Mod(_)) {
-            used_names.extend(all_item_identifier_names(item));
+            let candidates = all_item_identifier_names(item);
+            used_names.extend(item_dependency_names(item, &candidates));
         }
     }
 
@@ -650,7 +651,8 @@ fn module_roots_from_parent_scope(
         }
         if let syn::Item::Mod(module) = item {
             if let Some((_, nested)) = &module.content {
-                let referenced_names = item_dependency_names(item, definitions);
+                let candidates = all_item_identifier_names(item);
+                let referenced_names = item_dependency_names(item, &candidates);
                 collect_nested_module_use_roots(
                     nested,
                     module_name,
@@ -816,3 +818,7 @@ mod semantics_tests;
 #[cfg(test)]
 #[path = "generated_rust_canonicalizer_support_demand_tests.rs"]
 mod support_demand_tests;
+
+#[cfg(test)]
+#[path = "generated_rust_canonicalizer_capture_tests.rs"]
+mod capture_tests;

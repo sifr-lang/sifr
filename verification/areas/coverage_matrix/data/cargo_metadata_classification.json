@@ -178,7 +178,7 @@
       "classification": "first_party_compiler",
       "targets": [
         {"name": "sifr_sql_mysql", "kind": "rlib", "classification": "first_party_compiler", "profile_assignment": "merge"},
-        {"name": "live_differential", "kind": "test", "classification": "test_fixture", "profile_assignment": "nightly"},
+        {"name": "live_differential", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
         {"name": "mysql_compiler", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "mysql_properties", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "merge"}
@@ -200,7 +200,7 @@
       "classification": "first_party_runtime",
       "targets": [
         {"name": "sifr_sql_mysql_runtime", "kind": "lib", "classification": "first_party_runtime", "profile_assignment": "merge"},
-        {"name": "live_runtime", "kind": "test", "classification": "test_fixture", "profile_assignment": "nightly"},
+        {"name": "live_runtime", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
         {"name": "runtime_types", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
       ],
       "features": []
@@ -210,7 +210,7 @@
       "classification": "first_party_runtime",
       "targets": [
         {"name": "sifr_sql_postgresql_runtime", "kind": "lib", "classification": "first_party_runtime", "profile_assignment": "merge"},
-        {"name": "live_runtime", "kind": "test", "classification": "test_fixture", "profile_assignment": "nightly"},
+        {"name": "live_runtime", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
         {"name": "runtime_types", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
       ],
       "features": []
@@ -230,8 +230,8 @@
       "targets": [
         {"name": "sifr_sql_mysql_tools", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "sifr-sql-mysql", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "live_catalog", "kind": "test", "classification": "test_fixture", "profile_assignment": "nightly"},
-        {"name": "live_migrations", "kind": "test", "classification": "test_fixture", "profile_assignment": "nightly"},
+        {"name": "live_catalog", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
+        {"name": "live_migrations", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
         {"name": "migration_qualification", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
       ],
       "features": []
@@ -242,8 +242,8 @@
       "targets": [
         {"name": "sifr_sql_postgresql_tools", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "sifr-sql-postgresql", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
-        {"name": "live_catalog", "kind": "test", "classification": "test_fixture", "profile_assignment": "nightly"},
-        {"name": "live_migrations", "kind": "test", "classification": "test_fixture", "profile_assignment": "nightly"},
+        {"name": "live_catalog", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
+        {"name": "live_migrations", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
         {"name": "migration_qualification", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
       ],
       "features": []
