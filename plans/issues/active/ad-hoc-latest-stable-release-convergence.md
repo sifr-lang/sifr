@@ -1,19 +1,17 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-09-07. Items 0–30, 36–39 and 54–55 are complete. Item 39 closed
+Status: active on 2026-09-08. Items 0–30, 36–39, 54–55 and 66 are complete. Item 39 closed
 the runner dependency/API invariants; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
-#### Item 66 — feature-sensitive Rusqlite lock assertion prerequisite
+### Item 66 — feature-sensitive Rusqlite lock assertion prerequisite
 
-State: implementation prepared; the shared coordinator released its focused
-Cargo validation window. No package-upgrade or E1 technical prerequisite.
-Schedule before Items 65 and 60 resume. Coordinator adjudication splits this
-exact pre-existing test defect from Item 49 without moving its remaining
-inventory, package or lock work. Item 49's assertion clause is discharged only
-by Item 66's qualified merge.
+State: complete on 2026-09-08. No package-upgrade or E1 technical prerequisite.
+This qualified merge discharges the feature-sensitive cache/hashlink assertion
+defect carved from Item 49 and the same concrete prerequisite for Items 60/65.
+Item 49's remaining inventory, package and lock scope is unchanged.
 
 Scope: `crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs`
 and directly owned test helpers/regression cases only. Correct the lock-edge
@@ -38,8 +36,52 @@ changed. If changes cross the prohibited file categories or another applicable
 instruction requires a gate, stop and report the precise conflict first.
 No test exclusion, gate counter reset, or new policy exception is authorized.
 
-Items 62/35 also require Item 66 to merge. Item 65 retains its original scope
+Items 62/35's Item 66 prerequisite is satisfied. Item 65 retains its original scope
 and its initial/optional-remediation review and single-gate allowances.
+
+Implementation [PR #3779](https://github.com/sifr-lang/sifr/pull/3779) started
+from `8c2d03f4bc21556967df4f6b0fba1ea4b3d2bf24`, qualified exact candidate
+`d34fd0a321f0418b486ed24c72c7f1a9fd58a807`, and merged as
+`b91cb8a8bd6e98ec087b8f9498bf4c3b2bcfd472`.
+
+The assertion now requires the complete dependency edge set for each lock
+context. The workspace requires `hashlink 0.12.1` because both SQL runtime and
+SQL dependency-lock manifests explicitly request Rusqlite `cache`. The standalone
+resource fixture still requests only `bundled` and rejects `hashlink`. Original
+Rusqlite/libsqlite3-sys version and checksum checks remain unchanged. Regression
+coverage accepts both actual contexts and rejects the wrong context, each
+missing required edge, extra/duplicate edges and malformed dependency values.
+
+After explicit coordinator capacity release, the named Cargo test passed all
+six tests, with zero failures, ignored tests or filters. It used one build job
+and the item's private target; cold compilation took 18.52 seconds and tests
+took 0.05 seconds. The pinned Ruff source was initialized at
+`f19957111640fdee8055bfe5b6aa854259344473`; no gitlink changed. The log SHA-256 is
+`1da4f3228a7b852507c3239b0f4b362a3b633b981e0f3c639c7f3a5e9efc10e1`.
+Diff, file-size (3,761 files, 900-line limit) and local referenced-path checks
+passed. All owned Cargo/rustc/test processes ended and capacity was released
+before review. No compiler, declaration, lockfile, runtime fixture input, vendor
+or workflow changed, so no Sifr gate ran under the explicit file-category rule.
+
+The one exact-SHA Opus review returned `SATISFIED` with no blocking findings.
+No remediation review ran. The external
+[review and validation evidence](https://github.com/sifr-lang/sifr/pull/3779#issuecomment-5576884958)
+is keyed by the approved candidate. The full response remains outside Git at
+`/private/tmp/sifr-item66-opus.3enjL9/response.md`.
+
+Deferred follow-up: Item 35's test-maintenance audit owns two nonblocking
+readability suggestions: distinguish duplicate `hashlink` mutation wording
+from unexpected-edge mutation, and consider a clear assertion that expected
+edge lists remain sorted. The heading-level suggestion is corrected by this
+record-only update. None identified a mechanism defect.
+
+Terminal state: merged; blocker: none. The owned worktree is
+`/private/tmp/sifr-item66.C3hDRa/codebase`; implementation branch is
+`codex/latest-stable-item66`, record branch is `codex/latest-stable-item66-record`.
+Named test evidence is `/private/tmp/sifr-item66.C3hDRa/focused-test.log`.
+Next action: return to the coordinator for dependency scheduling. No next item
+was started. This documentation-only record reuses the exact implementation
+evidence; no additional Opus review or Sifr gate is required.
 
 ### Orchestrated continuation — 2026-09-07
 
