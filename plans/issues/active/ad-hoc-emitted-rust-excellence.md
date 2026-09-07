@@ -2,6 +2,80 @@
 
 Status: active
 
+## Current orchestration: B16/B17 delivered; resume12K-B15 (2026-09-07)
+
+Darwin is CLOSED. PR3751 MERGED2026-09-07T16:05:33Z, issues3750/3749 CLOSED.
+Tested/reviewed candidate `e3862e5895fb2ace34571295e267f4951917752f`, base
+`06ea86334b72f49f5aab250a64498ee955ec9331`, actual-main merge
+`0b97b3a3f1dd3f93bc724f75e1e40240f15ff942`; merge tree equals candidate,
+candidate ancestry verified by worker. Separate post-merge two-owner MD record
+`3cfb7f865fdb99023aa22decff999d53af05a839` normally pushed on
+`codex/sql-coverage-registry-3749`, not the main merge. Preserve both lineages.
+Read-only clone `/private/tmp/sifr-sql-membership.4llFae/sifr`; authenticated
+terminal `/private/tmp/sifr-sql-membership.4llFae/evidence/terminal.json` SHA256
+`9450573c3a99e91a747f34fec59ddcbc7a8348c6d89958606905c82036b0074f`.
+All7 named checks PASS once: profiles5/plan2memberships,MySQL11+1liveignored,
+SQLite12,readiness4/4 (13guarantees/34surfaces/0temporary,19profiles,26negatives,
+taxonomy),file-size3759/diff. Combined B16+B17 Opus SATISFIED,1provider/0retry/
+0remediation,0gates. Review3751#issuecomment-5573188882 SHA256
+`ba6cd5ad3cbabb8bdebb0a22473bb23378375b247f8b37e7a92a46a4d138f56f`;
+checks receipt SHA256 `a134a24d91e9bf1b4cb8c84550aa9b7fe4b509ff5a06868bb1fb87bc81f0b459`.
+Optional follow-up3752 is recorded, not an automatic delivery prerequisite.
+
+Next ready **12K-B15 continuation / #3748**, delivery of existing PR3746 and
+B14/#3745. Dependencies: both compiler/companion workers closed, fullcdc835
+preserved, SQL registry/membership now actually delivered; all satisfied.
+Latest observed PR3746 remains OPEN DRAFT on `codex/implicit-format-capture-demand`,
+head `cdc8354aec03d505d89cef09dacd71e4f43723c9`. User's standing authorization
+covers normal integration of this changed prerequisite and one final changed-SHA
+qualification/delivery attempt, not a blind retry of failed4a0a03.
+
+Fresh independent owned clone from fullcdc835. Fetch actual main, normally
+merge delivered0b97b3 and preserve separate3cfb7 docs record, original complete
+B14/companion lineage, all evidence and both owner histories. Resolve only
+bounded integration/record conflicts. No new compiler/lockfile/demo-input/
+quality-policy/baseline/selection changes, no B13/original12K/retained12 import.
+New mechanism => precise later owner and terminal handoff, not implementation
+here. Do not bless an unqualified different producer or companion behavior.
+
+Named B15 checks remain: demo freshness264 via
+`python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --jobs 6`;
+`cargo run -q -p sifr -- run demos/core_stdlib/main.sifr`;
+`cargo run -q -p sifr -- run demos/stdlib_loading/main.sifr`;
+`cargo fmt --check`; `python3 scripts/check_file_size_guardrails.py`;
+`git diff --check`. Authenticate exact B14 115/9 evidence, B15 six-check evidence,
+B17 seven-check/registry metadata and full source/toolchain/submodule inputs.
+Reuse unchanged evidence rather than blindly rerunning; register bounded command
+adaptations and input-based reuse rationale before executing any necessary test.
+The complete required merge profile supplies fresh full integrated qualification.
+
+B14 initial+remediation are exhausted SATISFIED: no third compiler review.
+B15 initial companion/delivery approval SATISFIED remains; its sole remaining
+remediation allowance may be used ONCE for exact final integration/delivery SHA,
+limited to changed inputs and approval/evidence reuse, not new full compiler
+review. No new initial or third review; second-review new mechanism is later work.
+Preserve B17 independent approval. No whole-phase review.
+
+Freeze and normally push final changed candidate, then ONE complete
+`scripts/run_all_tests.sh --profile merge` on that SHA; skip create-pr, no second
+gate in this continuation. Complete profile coverage cannot be inferred from
+prefixes or configuration: require all actual blocking areas/toolchain/crate/
+E2E/stdlib steps to PASS. Production prelude owns92 exact generated graph setup;
+no duplicate preparation, manual warming, pathdeps or weakened offline checks.
+Inspect owned disk/target, bounded capacity monitor and no predecessor cleanup.
+Historical96GiB estimate is not a universal threshold. Observe real headroom
+from this already-required run; cold B17 crate durations are not controlled
+performance evidence and must not be added mechanically or used to waive budgets.
+
+If review/provenance and full gate PASS, normal merge of existing PR3746 is
+authorized; verify actual main ancestry/mergeSHA, close3748/reconcile3745,
+update phase and STOP. Reuse same-SHA PASS, no docs-only second review/gate.
+Report B15 cumulative historical1FAILED plus this new outcome explicitly;
+B14historical1FAILED and original12K4FAILED+1RESOURCE143/0PASS unchanged.
+Do not call B13 or original12K complete through this delivery.
+Next fresh worker resumes B13 full4eef stack and its owned singleton assertion;
+original12K,12D/12E/12F,retained12,docs-only12A remain in execution order.
+
 ## Terminal: 12K-B15 blocked on SQL coverage registry (2026-09-07)
 
 12K-B15 / [#3748](https://github.com/sifr-lang/sifr/issues/3748) is **blocked,
@@ -302,6 +376,68 @@ and its singleton-import assertion belongs to its later continuation. No B13 or
 unqualified integration implementation was imported. Original12K remains four
 FAILED plus one resource termination143, zero PASS; its two reviews stay exhausted.
 PR3717/corpus48 and all successor items remain outside this delivery.
+## B17 terminal: combined registry and membership merged (2026-09-07)
+
+**12K-B17 / #3750 is complete**, and preserved B16 / #3749 is delivered in
+[PR #3751](https://github.com/sifr-lang/sifr/pull/3751). Both issues are CLOSED.
+Actual-main base `06ea86334b72f49f5aab250a64498ee955ec9331`; candidate and
+review SHA `e3862e5895fb2ace34571295e267f4951917752f`; normal merge commit
+`0b97b3a3f1dd3f93bc724f75e1e40240f15ff942` (2026-09-07T16:05:33Z).
+Fetched actual main contains the exact candidate and complete B16 record
+`e7886c9b5f6fb26805468f2283f5a41a207cdbd7`. This is actual-main delivery.
+
+All seven named checks ran once on the candidate and PASS: profiles check
+(five profiles), merge plan (both exact full-mode blocking executed entries),
+MySQL (11 passed, 1 explicitly ignored live-server test, 0 failures/filtered),
+SQLite (12 passed, 0 ignored/failures/filtered), readiness (4/4: strict registry
+13 guarantees/34 surfaces/0 temporary; profile19; negative26; taxonomy),
+file-size3759/limit900 and diff. The ignored MySQL test requires
+`SIFR_MYSQL_TEST_URL`; no live-server execution is claimed.
+Complete registry concordance is 37 packages/117 targets. The historical
+13 missing target-key repairs include twelve added existing-package test
+targets and the PostgreSQL lib-to-rlib replacement; its stale lib key is removed.
+All nine missing packages are restored. Prior artifact hashes and unchanged
+Cargo manifest/lock/gitlink identities authenticate B16 inventory reuse;
+current strict readiness independently checked current locked metadata.
+
+One initial Opus review of the entire combined B16/B17 delta is
+[SATISFIED, no blockers](https://github.com/sifr-lang/sifr/pull/3751#issuecomment-5573188882).
+Providers1/retries0/remediation0; create-PR gates0/merge gates0; normal merges1.
+The combined changes are registry/profile metadata, a verification helper and
+two owner documents. No compiler, lockfile, fixture or workflow changes occurred.
+
+Evidence root: `/private/tmp/sifr-sql-membership.4llFae/evidence/`.
+
+- Candidate receipt `checks.e3862e5895fb2ace34571295e267f4951917752f.json`,
+  SHA256 `a134a24d91e9bf1b4cb8c84550aa9b7fe4b509ff5a06868bb1fb87bc81f0b459`,
+  indexes all seven command logs/hashes, source inputs and toolchain identities.
+- Readiness log SHA256
+  `fe5dda551b6c2d8531d317b84400533bfa3bedfac5a2fbe41acc23273e145422`.
+- Structured result `sifr/target/verification/areas/sql-membership-readiness.json`
+  SHA256 `23307cb2becf41415265fe04e527a353dfda31efeab06f4fab9d85d7c038bd8d`.
+- Raw Opus response `/private/tmp/sifr-sql-membership.4llFae/tmp/sifr-claude.S2C2ER/response.md`,
+  SHA256 `ba6cd5ad3cbabb8bdebb0a22473bb23378375b247f8b37e7a92a46a4d138f56f`.
+- `terminal.json` in the evidence root records the separate post-merge record
+  SHA, changed paths, evidence hashes, counts and final handoff. This record
+  is normally pushed on `codex/sql-coverage-registry-3749`; it is documentation
+  after the reviewed/merged candidate, not a second implementation delivery.
+
+Nonblocking follow-up [#3752](https://github.com/sifr-lang/sifr/issues/3752)
+records an audit of actual runtime/tooling SQL merge execution. The reviewer
+enumerated seven packages while calling them six; no missing execution is
+claimed as an observed baseline result. Profile budget headroom is recorded
+for the existing B15 / #3748 qualification owner: these cold named crate
+invocations took117.765s and64.229s, which is not an additive controlled-host
+merge-budget measurement. No additional gate is requested by B17.
+Use `crate_test_membership.suites` as the stable membership reference;
+historical line citations remain preserved.
+
+Blocker: **none**. Parent/predecessor worktrees, indices, caches and dirty
+documents remain untouched. B16's historical3/4 failure, B14/B15 failed gates,
+and original12K four FAILED plus one RESOURCE/zero PASS and exhausted reviews
+are preserved. No later implementation, validation or review starts here.
+This session stops after these records; parent owns future B15 continuation.
+
 ## Current orchestration: B16 terminal; bounded12K-B17 membership delivery (2026-09-07)
 
 Kuhn is CLOSED. B16/#3749 is blocked/unreviewed/unmerged in draft PR3751,

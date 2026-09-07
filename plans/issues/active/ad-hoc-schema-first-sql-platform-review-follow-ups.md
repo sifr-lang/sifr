@@ -87,13 +87,27 @@ termination occurred; minimum free capacity39,878,000,640bytes.
 
 ### SQL registry delivery registration (2026-09-07)
 
-Current delivery owner: **12K-B17 / #3750** continues the complete B16 record
-in the existing PR #3751. Its bounded registration and seven named commands
-are at the top of `ad-hoc-emitted-rust-excellence.md`. The two new full-mode,
-blocking merge suite memberships retain compiler classification and execute
-through the existing runner. Combined registry/membership approval is required.
-This supersedes the historical blocked handoff below only after qualified merge;
-all B16 failed evidence and other SQL follow-up acceptance remain preserved.
+**12K-B17 / #3750 and B16 / #3749 are delivered** by
+[PR #3751](https://github.com/sifr-lang/sifr/pull/3751), both issues CLOSED.
+Actual-main base `06ea86334b72f49f5aab250a64498ee955ec9331`, candidate/review
+`e3862e5895fb2ace34571295e267f4951917752f`, verified normal-main merge
+`0b97b3a3f1dd3f93bc724f75e1e40240f15ff942`.
+The complete registry covers37 packages/117 targets; both compiler packages
+now have full-mode blocking executed `crate_test_membership.suites` entries.
+All seven named checks passed once: profiles/plan, MySQL11+1ignored,
+SQLite12+0ignored, readiness4/4 (profile19/negative26/taxonomy), file-size3759,
+diff. No ignored live test is counted as executed. Initial combined Opus
+SATISFIED/no blockers, providers1/retries0/remediation0; zero broad gates.
+The phase document's top terminal indexes all raw paths/hashes and the
+separate normally pushed post-merge record. No further review/gate is required.
+
+Later nonblocking SQL verification audit [#3752](https://github.com/sifr-lang/sifr/issues/3752)
+owns establishing actual runtime/tooling merge execution before deciding
+whether the existing compiler-only membership policy should change.
+Budget headroom belongs to the existing B15/#3748 qualification owner;
+the cold crate timings are not controlled-host merge performance evidence.
+Neither follow-up is started here. Other SQL acceptance criteria above remain
+open and all historical blocked handoffs below retain their original evidence.
 
 Terminal: B16 #3749 is **blocked, not merged**, preserved in draft
 [#3751](https://github.com/sifr-lang/sifr/pull/3751), candidate
