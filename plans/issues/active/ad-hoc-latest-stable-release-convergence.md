@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-09-07. Items 0–30 and 36–37 are complete. Item 37 closed
-the YAML checkout-discovery bypass; independent work can proceed under the continuation
+Status: active on 2026-09-07. Items 0–30 and 36–38 are complete. Item 38 added
+the uv pin/checksum invariant; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
@@ -407,9 +407,9 @@ blocked. The dispatch order is:
 
 Skip a row whose dependencies or merge-readiness prerequisites remain blocked;
 do not execute its tests to rediscover a recorded external failure. The first
-ready implementation item after Item 37's closure record merges is **38**.
-Items 38 and 39 remain independent runner-only scopes. No dependent
-implementation or tests ran in Items 36–37.
+ready implementation item after Item 38's closure record merges is **39**.
+Item 39 remains an independent runner-only scope. No dependent
+implementation or tests ran in Items 36–38.
 
 Two existing external prerequisites are explicit, with no implementation
 transferred into this phase:
@@ -453,7 +453,7 @@ the named tests and never runs for docs/runner-only scopes.
 | ID | Technical dependencies | Owned scope and acceptance | Exact named focused tests |
 | --- | --- | --- | --- |
 | 37 | none | **Complete, PR #3760.** `scripts/check_submodule_ownership.py`: replace regex step splitting with YAML step parsing; explicitly classify evidence-only checkouts; reject named/unnamed/commented checkout bypasses without changing workflows or gitlinks. Existing workflow verification already uses Ruby's YAML parser; select an available maintained parser without adding a Python lock dependency in this runner-only item. | `python3 scripts/check_submodule_ownership.py --self-test`; `python3 scripts/check_submodule_ownership.py` |
-| 38 | none | uv pin invariant only: new `scripts/check_uv_toolchain.py` and its local self-tests; discover all maintained exact pins, setup-uv version-file references and platform checksums, reject disagreement/missing platform checksum. Qualify current pins; Item 41 changes versions and installs the check into CI. No toolchain/lock/workflow edits here. | **new** `python3 scripts/check_uv_toolchain.py --self-test`; **new** `python3 scripts/check_uv_toolchain.py` |
+| 38 | none | **Complete, PR #3763.** uv pin invariant only: new `scripts/check_uv_toolchain.py` and its local self-tests; discover all maintained exact pins, setup-uv version-file references and platform checksums, reject disagreement/missing platform checksum. Qualify current pins; Item 41 changes versions and installs the check into CI. No toolchain/lock/workflow edits here. | `python3 scripts/check_uv_toolchain.py --self-test`; `python3 scripts/check_uv_toolchain.py` |
 | 39 | none | `verification/areas/python_interop/runner/dependency_versions.py` and runner self-tests: make retired-distribution rejection independent of owner labels; scan every runner module for retired Testcontainers imports/wait helpers, mutate each forbidden form, derive Redis numkeys from keys, examine E402 bootstrap suppressions. Preserve current locks, fixtures and audit selections. | `area python_interop: self-test, dependency-versions, redis-service-features, live-policy` |
 | 53 | none | `verification/runner/sifr_verify`, `verification/areas/coverage_matrix/checks`: require every non-live Python manifest suite in at least one delivery profile; reject a removed assignment; derive Schwifty/mutation counts. Credit present coverage. Do not rewrite profiles or custody evidence here. | `area coverage_matrix: readiness`; `area python_interop: self-test, minor-train-features` |
 | 54 | none | `verification/areas/python_interop/runner/crypto_abi_features.py`: compile, load and invoke actual CFFI-generated source; test error path and cleanup. Keep CFFI/Cryptography releases unchanged. | `area python_interop: crypto-abi-features, callbacks` |
@@ -630,6 +630,54 @@ The original Kafka worktree was preserved. This record-only update needs no
 additional external review or Sifr gate. Exact next action: stop after this
 record merges and return Item 37's evidence; the parent may separately dispatch
 **Item 38 only** in a fresh owned worktree.
+
+### Item 38 closure evidence
+
+State: complete. Implementation [PR #3763](https://github.com/sifr-lang/sifr/pull/3763)
+merged on 2026-09-07. Base: `74480c77015881fe48c7f1f3c76b4d8ea5876511`.
+Exact reviewed candidate: `293d62528005032aa4d67f8d43dbe037899a2457`.
+Merge: `619422a7a385ce9b124c9a78d0229e3213237933`.
+
+The only implementation path was `scripts/check_uv_toolchain.py` (317 lines).
+Git-based discovery covers maintained root project pins and workflow YAML,
+including newly added owners. All six current exact pins remain uv 0.12.5.
+The three setup-uv steps must reference the canonical verification manifest,
+without version or working-directory overrides, and supply the qualified
+version/platform archive digest. Missing checksums, unsupported runner
+selections, pin drift, malformed inputs and deleted tracked inputs fail
+explicitly. The checker reuses the existing Ruby/Psych YAML parser.
+Fork-owned adoption and CI installation remain Items 41/42. No toolchain,
+lockfile, workflow, fixture, compiler or gitlink changed.
+
+[Validation evidence](https://github.com/sifr-lang/sifr/pull/3763#issuecomment-5575803633)
+covers the unchanged bytes committed at the exact candidate: both named checks
+passed (`--self-test`: 46 checks; repository invariant: six pins / three setup
+steps), as did `git diff --check` and
+`python3 scripts/check_file_size_guardrails.py` (3,760 files, 900-line limit).
+Neither Sifr gate ran under this runner-only item's authorized policy.
+
+The [one exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3763#issuecomment-5575822856)
+returned `SATISFIED`, with no blocking findings. The reviewer independently
+confirmed the named checks and current input inventory. No remediation review
+ran. Raw review SHA-256:
+`12395714ca627345f14ea322c20dcd37bf1bdcf3e7829c83af8ecf8b44758d4a`.
+External review: `/tmp/sifr-item38-opus.aCs9zg/response.md`.
+External validation record:
+`/private/tmp/sifr-item38.AHxKCb/validation-293d62528005032aa4d67f8d43dbe037899a2457.md`.
+
+Nonblocking observations are assigned to separate [issue #3764](https://github.com/sifr-lang/sifr/issues/3764):
+future composite/direct installer discovery, connecting per-job uv usage to
+its setup step, and documenting strict pin requirements for newly discovered
+maintained Python projects. The existing Ruff adoption remains Items 41/42.
+No follow-up implementation ran in this session.
+
+Item 38 blocker: **none**. E1/E2 ownership and consumed histories remain intact.
+Owned worktree: `/private/tmp/sifr-item38.AHxKCb/codebase`; implementation branch:
+`codex/latest-stable-item38`; record branch: `codex/latest-stable-item38-record`.
+The original Kafka worktree was preserved. This record-only update requires
+documentation checks, no external review and no Sifr gate. Exact next action:
+stop after this record merges and return Item 38's evidence; the parent may
+separately dispatch **Item 39 only** in a fresh owned worktree.
 
 ### Item 0 record
 
@@ -2865,13 +2913,14 @@ The phase closes only when:
 
 ## Current Handoff
 
-Item 36 is complete via PR #3758, candidate
-`40fdb2f42907e7f152de4dd2def97e1732cc39f7`, merge
-`0c1f1cf11be13039f4ca9cf4ae4f5f6096a5b0d2`. Documentation checks passed and
-one exact-SHA Opus review returned `SATISFIED`; closure evidence is above.
-The post-merge record branch is `codex/latest-stable-item36-record` in isolated
-worktree `/tmp/sifr-item36.IZj90p/codebase`. Item 36 has no blocker and requires
-no Sifr gate. Next dispatch is Item 37 only; this worker stops after delivery.
+Item 38 is complete via PR #3763, candidate
+`293d62528005032aa4d67f8d43dbe037899a2457`, merge
+`619422a7a385ce9b124c9a78d0229e3213237933`. Both named checks and common diff /
+file-size checks passed; one exact-SHA Opus review returned `SATISFIED` with
+no blocking findings. Closure evidence is above. The post-merge record branch
+is `codex/latest-stable-item38-record` in isolated worktree
+`/private/tmp/sifr-item38.AHxKCb/codebase`. Item 38 has no blocker and requires
+no Sifr gate. Next dispatch is Item 39 only; this worker stops after delivery.
 
 Items 0–30 are complete. Item 31 implementation
 [PR #3551](https://github.com/sifr-lang/sifr/pull/3551) remains draft. Its exact
