@@ -5,6 +5,7 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 pub mod cfg;
+mod class_ancestry;
 pub mod diagnostic_types;
 pub mod flow_graph;
 mod hir_expr;

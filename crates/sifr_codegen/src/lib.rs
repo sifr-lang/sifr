@@ -10,10 +10,12 @@ mod discardability;
 mod generated_dependency_metadata;
 mod generated_rust_canonicalizer;
 mod generated_visibility;
+mod task_local_support;
 pub(crate) use generated_dependency_metadata::retain_generated_dependency_metadata;
 pub use generated_rust_canonicalizer::{
-    canonicalize_generated_rust_identifier, canonicalize_generated_rust_source,
-    discover_project_const_function_names, finalize_formatted_generated_rust_source,
+    canonicalize_generated_rust_identifier, canonicalize_generated_rust_project,
+    canonicalize_generated_rust_source, discover_project_const_function_names,
+    finalize_formatted_generated_rust_source,
     finalize_formatted_generated_rust_source_with_project_consts,
 };
 pub(crate) use generated_rust_canonicalizer::{

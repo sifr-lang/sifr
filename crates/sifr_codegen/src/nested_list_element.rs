@@ -33,7 +33,11 @@ impl RustEmitter {
 
         let lowered_outer_object = self.try_lower_registry_expr_strict(outer_object)?;
         let lowered_outer_index = self.try_lower_registry_expr_strict(outer_index)?;
+        let lowered_outer_index =
+            self.materialize_reusable_value_for_ir(outer_index, lowered_outer_index);
         let lowered_inner_index = self.try_lower_registry_expr_strict(inner_index)?;
+        let lowered_inner_index =
+            self.materialize_reusable_value_for_ir(inner_index, lowered_inner_index);
         if crate::helpers::is_option_type(ty) {
             Some(option_nested_list_element(
                 lowered_outer_object,

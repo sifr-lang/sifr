@@ -66,10 +66,7 @@ pub(super) fn lowers_concrete_empty_list_with_explicit_rust_type() {
     })
     .expect("union unresolved empty list lowered");
 
-    assert_eq!(
-        crate::render_expr(&concrete),
-        "{\n    let __sifr_empty_list_literal: Vec<Vec<SifrInt>> = vec![];\n    __sifr_empty_list_literal\n}"
-    );
+    assert_eq!(crate::render_expr(&concrete), "Vec::<Vec<SifrInt>>::new()");
     assert_eq!(unresolved, RustExpr::Vec(Vec::new()));
     assert_eq!(nested_unresolved, RustExpr::Vec(Vec::new()));
     assert_eq!(union_unresolved, RustExpr::Vec(Vec::new()));
@@ -753,8 +750,9 @@ pub(super) fn lowers_unary_bitwise_invert_with_int_operand() {
         RustExpr::UnaryOp {
             op: ref operator,
             operand: ref inner,
-        } if operator == "!" && matches!(inner.as_ref(), RustExpr::FnCall { func, .. }
-            if matches!(func.as_ref(), RustExpr::Path(path) if path == &["SifrInt", "from_i64"]))
+        } if operator == "!" && matches!(inner.as_ref(), RustExpr::Ref { mutable: false, expr }
+            if matches!(expr.as_ref(), RustExpr::FnCall { func, .. }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path == &["SifrInt", "from_i64"])))
     ));
 }
 
@@ -777,7 +775,8 @@ pub(super) fn lowers_unary_bitwise_invert_with_alias_int_name_operand() {
         RustExpr::UnaryOp {
             op: ref operator,
             operand: ref inner,
-        } if operator == "!" && matches!(inner.as_ref(), RustExpr::Ident(name) if name == "mask")
+        } if operator == "!" && matches!(inner.as_ref(), RustExpr::Ref { mutable: false, expr }
+            if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "mask"))
     ));
 }
 

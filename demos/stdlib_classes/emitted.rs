@@ -401,11 +401,11 @@ fn main() {
     println!("{}", c.get(&"missing".to_string(), &SifrInt::from_i64(0)));
     println!("{}", c.total());
     println!("{:?}", c.most_common(&Some(SifrInt::from_i64(2).clone())));
-    c.increment(&"banana".to_string());
-    c.increment(&"banana".to_string());
+    (&mut c).increment(&"banana".to_string());
+    (&mut c).increment(&"banana".to_string());
     println!("{}", c.get(&"banana".to_string(), &SifrInt::from_i64(0)));
     println!("{}", c.total());
-    c.increment(&"date".to_string());
+    (&mut c).increment(&"date".to_string());
     println!("{}", c.get(&"date".to_string(), &SifrInt::from_i64(0)));
     println!("{}", c.total());
     let c2: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =

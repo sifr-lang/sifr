@@ -213,11 +213,11 @@ fn main() {
                 sifr_generated_mode.to_string(),
             ))
         })()?;
-        writer.write_bytes(&vec![
+        (&mut writer).write_bytes(&vec![
             98_u8, 121_u8, 116_u8, 101_u8, 115_u8, 95_u8, 102_u8, 105_u8, 108_u8, 101_u8, 95_u8,
             105_u8, 111_u8,
         ])?;
-        writer.close();
+        (&mut writer).close();
         let mut reader: SifrGeneratedIoFileHandle = (|| {
             let sifr_generated_path = path.to_string();
             let sifr_generated_mode = "rb".to_string();
@@ -232,7 +232,7 @@ fn main() {
             ))
         })()?;
         let loaded: Vec<u8> = reader.read_bytes(&None)?;
-        reader.close();
+        (&mut reader).close();
         loaded_ok = loaded
             == vec![
                 98_u8, 121_u8, 116_u8, 101_u8, 115_u8, 95_u8, 102_u8, 105_u8, 108_u8, 101_u8,

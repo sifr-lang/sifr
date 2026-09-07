@@ -393,7 +393,7 @@ mod sifr_generated_project_nominals {
                 } else {
                     SifrInt::from_i64(0)
                 };
-                let mut i: SifrInt = start;
+                let mut i: SifrInt = start.clone();
                 while &i < &SifrInt::from(items.len()) {
                     let item_value_2841a0c596d6f426: Option<T> = {
                         let sifr_generated_checked_read_collection = &items;
@@ -498,7 +498,7 @@ mod sifr_generated_project_nominals {
                     end = SifrInt::from_i64(0);
                 }
                 if &end > &size {
-                    end = size;
+                    end = size.clone();
                 }
             }
             let mut i: SifrInt = begin.clone();
@@ -578,7 +578,7 @@ fn collect_set_and_counter_actual() -> Vec<bool> {
     .collect::<std::collections::HashSet<_>>();
     actual.push(
         &SifrInt::from(
-            left.union(&right)
+            left.r#union(&right)
                 .cloned()
                 .collect::<std::collections::HashSet<_>>()
                 .len(),
@@ -615,12 +615,14 @@ fn collect_deque_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut d: SifrGeneratedStdlibSifrX2ecollectionsX2edeque<SifrInt> =
         SifrGeneratedStdlibSifrX2ecollectionsX2edeque::new(None, Some(SifrInt::from_i64(2)));
-    d.append(&SifrInt::from_i64(10));
-    d.append(&SifrInt::from_i64(20));
-    d.append(&SifrInt::from_i64(30));
-    actual.push(&d.len() == &SifrInt::from_i64(2) && d.popleft() == Some(SifrInt::from_i64(20)));
-    let _: Option<SifrInt> = d.pop();
-    actual.push(d.pop().is_none());
+    (&mut d).append(&SifrInt::from_i64(10));
+    (&mut d).append(&SifrInt::from_i64(20));
+    (&mut d).append(&SifrInt::from_i64(30));
+    actual.push(
+        &d.len() == &SifrInt::from_i64(2) && (&mut d).popleft() == Some(SifrInt::from_i64(20)),
+    );
+    let _: Option<SifrInt> = (&mut d).pop();
+    actual.push((&mut d).pop().is_none());
     actual
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {

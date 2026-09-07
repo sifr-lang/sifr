@@ -834,7 +834,7 @@ mod sifr_generated_generated_support {
             .map(|character| character.to_string());
             let last: Option<String> = {
                 let sifr_generated_string_index =
-                    SifrInt::from(normalized_input.chars().count()) - SifrInt::from_i64(1);
+                    &SifrInt::from(normalized_input.chars().count()) - &SifrInt::from_i64(1);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_normalized_input.len());
                 sifr_generated_chars_normalized_input
@@ -846,7 +846,7 @@ mod sifr_generated_generated_support {
                 normalized_input = sifr_generated_substring(
                     &normalized_input,
                     SifrInt::from_i64(1),
-                    SifrInt::from(normalized_input.chars().count()) - SifrInt::from_i64(1),
+                    &SifrInt::from(normalized_input.chars().count()) - &SifrInt::from_i64(1),
                 );
                 sifr_generated_chars_normalized_input =
                     normalized_input.chars().collect::<Vec<char>>();
@@ -1474,7 +1474,7 @@ mod sifr_generated_project_nominals {
                         message: e.to_string(),
                     })?;
                     if &parsed_count > &SifrInt::from_i64(0) {
-                        exact = parsed_count;
+                        exact = parsed_count.clone();
                     }
                     Ok(())
                 })();
@@ -1594,7 +1594,7 @@ mod sifr_generated_project_nominals {
                         message: e.to_string(),
                     })?;
                     if &parsed_count > &SifrInt::from_i64(0) {
-                        exact = parsed_count;
+                        exact = parsed_count.clone();
                     }
                     Ok(())
                 })();
@@ -1915,7 +1915,7 @@ mod sifr_generated_project_nominals {
                                 }
                             }
                         }
-                        i = next_i2;
+                        i = next_i2.clone();
                         positional_index = &positional_index + &SifrInt::from_i64(1);
                         continue;
                     }
@@ -2050,7 +2050,7 @@ mod sifr_generated_project_nominals {
                 SifrGeneratedStdlibSifrX2egraphlibX2eCycleError,
             > = (|| {
                 let full_order: Vec<SifrInt> = topological_sort(
-                    self.max_node.clone() + SifrInt::from_i64(1),
+                    &self.max_node.clone() + &SifrInt::from_i64(1),
                     &self.from_nodes,
                     &self.to_nodes,
                 )?;
@@ -2255,19 +2255,19 @@ pub use sifr_generated_project_nominals::ValueError;
 fn main() {
     let mut parser: SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser =
         SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("e2-demo".to_string());
-    parser.add_argument(
+    (&mut parser).add_argument(
         &"--strict".to_string(),
         &"strict".to_string(),
         &"store_true".to_string(),
         &String::new(),
     );
-    parser.add_argument(
+    (&mut parser).add_argument(
         &"--mode".to_string(),
         &"mode".to_string(),
         &"store".to_string(),
         &"safe".to_string(),
     );
-    parser.add_argument(
+    (&mut parser).add_argument(
         &"entry".to_string(),
         &"entry".to_string(),
         &"store".to_string(),
@@ -2436,13 +2436,13 @@ fn main() {
     }
     let mut sorter: SifrGeneratedStdlibSifrX2egraphlibX2eTopologicalSorter =
         SifrGeneratedStdlibSifrX2egraphlibX2eTopologicalSorter::new();
-    sorter.add_many(
+    (&mut sorter).add_many(
         &SifrInt::from_i64(50),
         &vec![SifrInt::from_i64(30), SifrInt::from_i64(40)],
     );
-    sorter.add(&SifrInt::from_i64(30), &SifrInt::from_i64(10));
-    sorter.add(&SifrInt::from_i64(40), &SifrInt::from_i64(10));
-    sorter.add_many(&SifrInt::from_i64(10), &Vec::new());
+    (&mut sorter).add(&SifrInt::from_i64(30), &SifrInt::from_i64(10));
+    (&mut sorter).add(&SifrInt::from_i64(40), &SifrInt::from_i64(10));
+    (&mut sorter).add_many(&SifrInt::from_i64(10), &Vec::new());
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2egraphlibX2eCycleError> =
         (|| {
             let order: Vec<SifrInt> = sorter.static_order()?;

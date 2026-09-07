@@ -8,7 +8,6 @@ use super::cargo_resolution::{
 };
 use super::project_codegen::GeneratedBinaryProject;
 use super::report::BuildSysrootReport;
-use super::rust_interop_bridge_sources::generated_bridge_sources;
 use super::rust_interop_sqlx_offline::configure_hermetic_build_environment;
 use super::{CachedArtifactEntry, PreparedArtifactCache, prepare_cached_artifact};
 use crate::diagnostics::RenderedDiagnostic;
@@ -229,14 +228,6 @@ fn materialize_binary_project_files(
     generated_project: GeneratedBinaryProject,
     dependency_plan: &SysrootDependencyPlan,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
-    let bridge_sources = generated_bridge_sources(
-        &generated_project
-            .interop
-            .rust
-            .bridge_contracts
-            .generated_types,
-    )
-    .map_err(|message| vec![build_error(message)])?;
     let src_dir = project_path.join("src");
     if src_dir.exists() {
         std::fs::remove_dir_all(&src_dir).map_err(|error| {
@@ -259,14 +250,25 @@ fn materialize_binary_project_files(
 
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
-    let main_rs = if bridge_sources.is_empty() {
+    // Module declarations contain no fields. Keep the source-listing boundary,
+    // but declare the already-canonicalized bridge family in the native crate.
+    let main_rs = if generated_project.bridge_modules.is_empty() {
         generated_project.main_rs
     } else {
-        format!("pub mod __sifr_bridge;\n{}", generated_project.main_rs)
+        format!(
+            "pub mod {};\n{}",
+            sifr_codegen::canonicalize_generated_rust_identifier("__sifr_bridge"),
+            generated_project.main_rs
+        )
     };
     write_project_file(&src_dir.join("main.rs"), main_rs, "main.rs")?;
 
-    for (path, source) in bridge_sources {
+    for (module, source) in generated_project.bridge_modules {
+        let path = if module == "__sifr_bridge" {
+            PathBuf::from("__sifr_bridge/mod.rs")
+        } else {
+            rust_module_file_path(&module.replace("::", "."))
+        };
         let canonical_path = canonical_rust_module_path(&path)?;
         write_project_file(
             &src_dir.join(&canonical_path),
@@ -282,7 +284,9 @@ fn materialize_binary_project_files(
         let mut contents = String::new();
         for module_name in &namespace_file.declarations {
             contents.push_str("pub mod ");
-            contents.push_str(module_name);
+            contents.push_str(&sifr_codegen::canonicalize_generated_rust_identifier(
+                module_name,
+            ));
             contents.push_str(";\n");
         }
         namespace_contents.insert(namespace_file.path, contents);
@@ -519,7 +523,7 @@ fn write_project_file(
                 "generated {label} is not valid UTF-8 before Rust formatting: {error}"
             ))]
         })?;
-        formatted = super::rust_formatter::format_generated_rust(source, label)?;
+        formatted = super::rust_formatter::format_canonical_generated_rust(source, label)?;
         formatted.as_bytes()
     } else {
         contents
@@ -544,6 +548,7 @@ fn binary_project_cache_key(
     let support_modules = generated_project
         .support_modules
         .iter()
+        .chain(generated_project.bridge_modules.iter())
         .map(|(name, code)| format!("{name}\n{code}"))
         .collect::<Vec<_>>()
         .join("\n===\n");
@@ -851,7 +856,7 @@ mod tests {
         );
     }
 
-    fn base_project() -> GeneratedBinaryProject {
+    pub(super) fn base_project() -> GeneratedBinaryProject {
         GeneratedBinaryProject {
             main_rs: "fn main() {}\n".to_string(),
             support_modules: BTreeMap::new(),
@@ -859,11 +864,12 @@ mod tests {
             required_features: HashSet::new(),
             interop: InteropBuildPlan::default(),
             cache_key_fragment: None,
+            bridge_modules: BTreeMap::new(),
             python_runtime: None,
         }
     }
 
-    fn test_dependency_plan(cache_fingerprint: &str) -> SysrootDependencyPlan {
+    pub(super) fn test_dependency_plan(cache_fingerprint: &str) -> SysrootDependencyPlan {
         SysrootDependencyPlan {
             stdlib_modules: BTreeSet::new(),
             required_features: BTreeSet::new(),
@@ -879,3 +885,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "materialize_field_identity_tests.rs"]
+mod field_identity_tests;
