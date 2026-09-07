@@ -1,8 +1,8 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::{SifrGeneratedStdlibSifrX2euuidX2eUUID, ValueError};
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    use ::sifr_runtime::SifrInt;
+    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -29,16 +29,16 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(crate) fn uuid4() -> String {
+    pub(super) fn uuid4() -> String {
         ::sifr_stdlib::uuid::uuid4()
     }
-    pub(crate) fn uuid3_text(namespace: &str, name: &str) -> String {
+    fn uuid3_text(namespace: &str, name: &str) -> String {
         ::sifr_stdlib::uuid::uuid3_text(namespace, name)
     }
-    pub(crate) fn uuid5_text(namespace: &str, name: &str) -> String {
+    fn uuid5_text(namespace: &str, name: &str) -> String {
         ::sifr_stdlib::uuid::uuid5_text(namespace, name)
     }
-    pub(crate) fn sifr_generated_to_lower_hex_char(ch: &str) -> String {
+    fn sifr_generated_to_lower_hex_char(ch: &str) -> String {
         if ch == "A" {
             return "a".to_string();
         }
@@ -64,7 +64,7 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn sifr_generated_is_hex_char(ch: &str) -> bool {
+    fn sifr_generated_is_hex_char(ch: &str) -> bool {
         if ch == "0" {
             return true;
         }
@@ -133,7 +133,7 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(crate) fn sifr_generated_hex_digit_value(ch: &str) -> SifrInt {
+    pub(super) fn sifr_generated_hex_digit_value(ch: &str) -> SifrInt {
         if ch == "0" {
             return SifrInt::from_i64(0);
         }
@@ -184,7 +184,7 @@ mod sifr_generated_generated_support {
         }
         -&SifrInt::from_i64(1)
     }
-    pub(crate) fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
+    fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
         let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let mut result: String = String::new();
         let mut i: SifrInt = start.clone();
@@ -205,7 +205,7 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(crate) fn sifr_generated_starts_with(value: &str, prefix: &str) -> bool {
+    fn sifr_generated_starts_with(value: &str, prefix: &str) -> bool {
         let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let sifr_generated_chars_prefix: Vec<char> = prefix.chars().collect::<Vec<char>>();
         if &SifrInt::from(sifr_generated_chars_value.len())
@@ -244,9 +244,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn sifr_generated_canonical_uuid_text(
-        input_text: &str,
-    ) -> Result<String, ValueError> {
+    fn sifr_generated_canonical_uuid_text(input_text: &str) -> Result<String, ValueError> {
         let mut normalized_input: String = {
             let mut sifr_generated_concat: String = String::with_capacity(input_text.len());
             sifr_generated_concat.push_str(input_text);
@@ -404,10 +402,10 @@ mod sifr_generated_generated_support {
         }
         Ok(canonical)
     }
-    pub(crate) fn uuid4_obj() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
+    pub(super) fn uuid4_obj() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid4())
     }
-    pub(crate) fn uuid_from_hex(
+    pub(super) fn uuid_from_hex(
         hex_str: &str,
     ) -> Result<SifrGeneratedStdlibSifrX2euuidX2eUUID, ValueError> {
         let sifr_generated_try_res: Result<
@@ -422,13 +420,13 @@ mod sifr_generated_generated_support {
             Err(ValueError::new(e.message.clone()))
         })
     }
-    pub(crate) fn uuid3(
+    pub(super) fn uuid3(
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid3_text(&namespace.to_str(), name))
     }
-    pub(crate) fn uuid5(
+    pub(super) fn uuid5(
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
@@ -438,14 +436,14 @@ mod sifr_generated_generated_support {
         non_snake_case,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) fn NAMESPACE_DNS() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
+    pub(super) fn NAMESPACE_DNS() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
             "6ba7b810-9dad-11d1-80b4-00c04fd430c8".to_string(),
         )
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::sifr_generated_hex_digit_value;
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2euuidX2eUUID {
@@ -543,7 +541,9 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    NAMESPACE_DNS, assert_bool_vector_eq, uuid_from_hex, uuid3, uuid4, uuid4_obj, uuid5,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2euuidX2eUUID;
 pub use sifr_generated_project_nominals::ValueError;

@@ -1,13 +1,13 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn base64_encode(s: &str) -> String {
+    use ::sifr_runtime::SifrInt;
+    fn base64_encode(s: &str) -> String {
         ::sifr_stdlib::base64::base64_encode(s)
     }
-    pub(crate) fn b64encode(s: &str) -> String {
+    pub(super) fn b64encode(s: &str) -> String {
         base64_encode(s)
     }
-    pub(crate) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+    pub(super) fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -47,7 +47,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ParseError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{assert_vector_eq, b64encode};
 pub use sifr_generated_project_nominals::ParseError;
 fn main() {
     let sifr_generated_try_res: Result<(), ParseError> = (|| {

@@ -4,46 +4,46 @@ mod sifr_generated_generated_support {
         ParseError, SifrGeneratedStdlibSifrX2ehashlibX2eHashObject,
         SifrGeneratedStdlibSifrX2etimeX2estructTime, ValueError,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn b32encode(s: &str) -> String {
+    use ::sifr_runtime::SifrInt;
+    pub(super) fn b32encode(s: &str) -> String {
         ::sifr_stdlib::base64::b32encode(s)
     }
-    pub(crate) fn b32decode(s: &str) -> Result<String, ParseError> {
+    pub(super) fn b32decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::b32decode(s).map_err(|sifr_generated_bridge_error| ParseError {
             message: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(crate) fn sha256_bytes(data: &[u8]) -> Vec<u8> {
+    fn sha256_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha256_bytes(data)
     }
-    pub(crate) fn md5_bytes(data: &[u8]) -> Vec<u8> {
+    fn md5_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::md5_bytes(data)
     }
-    pub(crate) fn sha1_bytes(data: &[u8]) -> Vec<u8> {
+    fn sha1_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha1_bytes(data)
     }
-    pub(crate) fn sha224_bytes(data: &[u8]) -> Vec<u8> {
+    fn sha224_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha224_bytes(data)
     }
-    pub(crate) fn sha384_bytes(data: &[u8]) -> Vec<u8> {
+    fn sha384_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha384_bytes(data)
     }
-    pub(crate) fn sha512_bytes(data: &[u8]) -> Vec<u8> {
+    fn sha512_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha512_bytes(data)
     }
-    pub(crate) fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
+    fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2b_bytes(data)
     }
-    pub(crate) fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
+    fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2s_bytes(data)
     }
-    pub(crate) fn disk_usage(path: &str) -> Vec<SifrInt> {
+    pub(super) fn disk_usage(path: &str) -> Vec<SifrInt> {
         ::sifr_stdlib::fs::disk_usage(path)
             .into_iter()
             .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
             .collect()
     }
-    pub(crate) fn sifr_generated_build_hash(
+    fn sifr_generated_build_hash(
         algorithm: &str,
         data: &[u8],
     ) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
@@ -121,7 +121,7 @@ mod sifr_generated_generated_support {
             SifrInt::from_i64(0),
         )
     }
-    pub(crate) fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
+    fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
         if algorithm == "md5" {
             return md5_bytes(data);
         } else if algorithm == "sha1" {
@@ -141,7 +141,7 @@ mod sifr_generated_generated_support {
         }
         Vec::new()
     }
-    pub(crate) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
+    pub(super) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
             let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
@@ -155,92 +155,92 @@ mod sifr_generated_generated_support {
             sifr_generated_hex
         }
     }
-    pub(crate) fn sha224(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    pub(super) fn sha224(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"sha224".to_string(), data)
     }
-    pub(crate) fn sha384(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    pub(super) fn sha384(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"sha384".to_string(), data)
     }
-    pub(crate) fn blake2b(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    pub(super) fn blake2b(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"blake2b".to_string(), data)
     }
-    pub(crate) fn blake2s(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    pub(super) fn blake2s(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"blake2s".to_string(), data)
     }
-    pub(crate) fn erf(x: f64) -> f64 {
+    pub(super) fn erf(x: f64) -> f64 {
         ::sifr_stdlib::math::erf(x)
     }
-    pub(crate) fn erfc(x: f64) -> f64 {
+    pub(super) fn erfc(x: f64) -> f64 {
         ::sifr_stdlib::math::erfc(x)
     }
-    pub(crate) fn gamma(x: f64) -> f64 {
+    pub(super) fn gamma(x: f64) -> f64 {
         ::sifr_stdlib::math::gamma(x)
     }
-    pub(crate) fn lgamma(x: f64) -> f64 {
+    pub(super) fn lgamma(x: f64) -> f64 {
         ::sifr_stdlib::math::lgamma(x)
     }
-    pub(crate) fn frexp(x: f64) -> Vec<f64> {
+    pub(super) fn frexp(x: f64) -> Vec<f64> {
         ::sifr_stdlib::math::frexp(x)
     }
-    pub(crate) fn ldexp(m: f64, e: SifrInt) -> f64 {
+    pub(super) fn ldexp(m: f64, e: SifrInt) -> f64 {
         ::sifr_stdlib::math::ldexp(m, ::sifr_runtime::interop::SifrIntBridge::from(e))
     }
-    pub(crate) fn modf(x: f64) -> Vec<f64> {
+    pub(super) fn modf(x: f64) -> Vec<f64> {
         ::sifr_stdlib::math::modf(x)
     }
-    pub(crate) fn nextafter(x: f64, y: f64) -> f64 {
+    pub(super) fn nextafter(x: f64, y: f64) -> f64 {
         ::sifr_stdlib::math::nextafter(x, y)
     }
-    pub(crate) fn ulp(x: f64) -> f64 {
+    pub(super) fn ulp(x: f64) -> f64 {
         ::sifr_stdlib::math::ulp(x)
     }
-    pub(crate) fn getpid() -> SifrInt {
+    pub(super) fn getpid() -> SifrInt {
         ::sifr_stdlib::sys::getpid().into_sifr_int()
     }
-    pub(crate) fn cpu_count() -> SifrInt {
+    pub(super) fn cpu_count() -> SifrInt {
         ::sifr_stdlib::sys::cpu_count().into_sifr_int()
     }
-    pub(crate) fn platform_system() -> String {
+    fn platform_system() -> String {
         ::sifr_stdlib::platform::platform_system()
     }
-    pub(crate) fn platform_arch() -> String {
+    fn platform_arch() -> String {
         ::sifr_stdlib::platform::platform_arch()
     }
-    pub(crate) fn platform_processor() -> String {
+    fn platform_processor() -> String {
         ::sifr_stdlib::platform::platform_processor()
     }
-    pub(crate) fn system() -> String {
+    pub(super) fn system() -> String {
         platform_system()
     }
-    pub(crate) fn machine() -> String {
+    pub(super) fn machine() -> String {
         platform_arch()
     }
-    pub(crate) fn processor() -> String {
+    pub(super) fn processor() -> String {
         platform_processor()
     }
-    pub(crate) fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
+    pub(super) fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
         ::sifr_stdlib::time::strptime(s, fmt).map_err(|sifr_generated_bridge_error| ValueError {
             message: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(crate) fn sifr_generated_gmtime_intrinsic(epoch: f64) -> String {
+    fn sifr_generated_gmtime_intrinsic(epoch: f64) -> String {
         ::sifr_stdlib::time::gmtime(epoch)
     }
-    pub(crate) fn sifr_generated_localtime_intrinsic(epoch: f64) -> String {
+    fn sifr_generated_localtime_intrinsic(epoch: f64) -> String {
         ::sifr_stdlib::time::localtime(epoch)
     }
-    pub(crate) fn sifr_generated_is_leap_year(year: SifrInt) -> bool {
+    fn sifr_generated_is_leap_year(year: SifrInt) -> bool {
         &year.floor_mod_known_nonzero(&SifrInt::from_i64(4)) == &SifrInt::from_i64(0)
             && &year.floor_mod_known_nonzero(&SifrInt::from_i64(100)) != &SifrInt::from_i64(0)
             || &year.floor_mod_known_nonzero(&SifrInt::from_i64(400)) == &SifrInt::from_i64(0)
     }
-    pub(crate) fn sifr_generated_days_in_year(year: SifrInt) -> SifrInt {
+    fn sifr_generated_days_in_year(year: SifrInt) -> SifrInt {
         if sifr_generated_is_leap_year(year.clone()) {
             return SifrInt::from_i64(366);
         }
         SifrInt::from_i64(365)
     }
-    pub(crate) fn sifr_generated_days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
+    fn sifr_generated_days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
         let month_days: Vec<SifrInt> = vec![
             SifrInt::from_i64(31),
             SifrInt::from_i64(28),
@@ -273,7 +273,7 @@ mod sifr_generated_generated_support {
         };
         d
     }
-    pub(crate) fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
+    fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
         let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let mut result: String = String::new();
         let mut i: SifrInt = start.clone();
@@ -294,7 +294,7 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(crate) fn sifr_generated_digit_value(ch: &str) -> Option<SifrInt> {
+    fn sifr_generated_digit_value(ch: &str) -> Option<SifrInt> {
         if ch == "0" {
             return Some(SifrInt::from_i64(0));
         }
@@ -327,7 +327,7 @@ mod sifr_generated_generated_support {
         }
         None
     }
-    pub(crate) fn sifr_generated_parse_decimal(text: &str) -> Option<SifrInt> {
+    fn sifr_generated_parse_decimal(text: &str) -> Option<SifrInt> {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         if &SifrInt::from(sifr_generated_chars_text.len()) == &SifrInt::from_i64(0) {
             return None;
@@ -354,17 +354,13 @@ mod sifr_generated_generated_support {
         }
         Some(out)
     }
-    pub(crate) fn sifr_generated_int_or_negative_one(value: Option<SifrInt>) -> SifrInt {
+    fn sifr_generated_int_or_negative_one(value: Option<SifrInt>) -> SifrInt {
         let Some(value) = value.clone() else {
             return -&SifrInt::from_i64(1);
         };
         value.clone()
     }
-    pub(crate) fn sifr_generated_day_of_year(
-        year: SifrInt,
-        month: SifrInt,
-        day: SifrInt,
-    ) -> SifrInt {
+    fn sifr_generated_day_of_year(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
         let mut yday: SifrInt = SifrInt::from_i64(0);
         let mut m: SifrInt = SifrInt::from_i64(1);
         while &m < &month {
@@ -373,7 +369,7 @@ mod sifr_generated_generated_support {
         }
         &yday + &day
     }
-    pub(crate) fn sifr_generated_weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
+    fn sifr_generated_weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
         let mut days_since_epoch: SifrInt = SifrInt::from_i64(0);
         if &year >= &SifrInt::from_i64(1970) {
             let mut y: SifrInt = SifrInt::from_i64(1970);
@@ -402,7 +398,7 @@ mod sifr_generated_generated_support {
         }
         wd.clone()
     }
-    pub(crate) fn sifr_generated_valid_date(year: SifrInt, month: SifrInt, day: SifrInt) -> bool {
+    fn sifr_generated_valid_date(year: SifrInt, month: SifrInt, day: SifrInt) -> bool {
         if &year <= &SifrInt::from_i64(0) {
             return false;
         }
@@ -412,8 +408,7 @@ mod sifr_generated_generated_support {
         let max_day: SifrInt = sifr_generated_days_in_month(year.clone(), month.clone());
         &day >= &SifrInt::from_i64(1) && &day <= &max_day
     }
-    pub(crate) fn sifr_generated_invalid_struct_time() -> SifrGeneratedStdlibSifrX2etimeX2estructTime
-    {
+    fn sifr_generated_invalid_struct_time() -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         SifrGeneratedStdlibSifrX2etimeX2estructTime::new(
             SifrInt::from_i64(0),
             SifrInt::from_i64(0),
@@ -430,7 +425,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn sifr_generated_to_struct_time(
+    fn sifr_generated_to_struct_time(
         rendered: &str,
     ) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let sifr_generated_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
@@ -587,17 +582,17 @@ mod sifr_generated_generated_support {
             SifrInt::from_i64(0),
         )
     }
-    pub(crate) fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+    pub(super) fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_gmtime_intrinsic(epoch);
         sifr_generated_to_struct_time(&rendered)
     }
-    pub(crate) fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+    pub(super) fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_localtime_intrinsic(epoch);
         sifr_generated_to_struct_time(&rendered)
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::sifr_generated_hash_hex;
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
@@ -836,7 +831,11 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    b32decode, b32encode, blake2b, blake2s, cpu_count, disk_usage, erf, erfc, frexp, gamma, getpid,
+    gmtime_struct, ldexp, lgamma, localtime_struct, machine, modf, nextafter, processor, sha224,
+    sha384, strptime, system, ulp,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ParseError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ehashlibX2eHashObject;

@@ -1,9 +1,9 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) use ::std::collections::HashMap;
-    pub(crate) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    use ::sifr_runtime::SifrInt;
+    use ::std::collections::HashMap;
+    pub(super) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
         items: &[T],
     ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
@@ -253,7 +253,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ParseError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::from_list;
 use ::sifr_runtime::SifrInt;
 use ::std::collections::HashSet;
 pub use sifr_generated_project_nominals::ParseError;

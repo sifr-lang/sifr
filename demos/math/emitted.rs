@@ -1,53 +1,53 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) const INF: f64 = f64::INFINITY;
-    pub(crate) fn log(x: f64) -> f64 {
+    use ::sifr_runtime::SifrInt;
+    pub(super) const INF: f64 = f64::INFINITY;
+    fn log(x: f64) -> f64 {
         ::sifr_stdlib::math::log(x)
     }
-    pub(crate) fn cbrt(x: f64) -> f64 {
+    pub(super) fn cbrt(x: f64) -> f64 {
         ::sifr_stdlib::math::cbrt(x)
     }
-    pub(crate) fn exp2(x: f64) -> f64 {
+    pub(super) fn exp2(x: f64) -> f64 {
         ::sifr_stdlib::math::exp2(x)
     }
-    pub(crate) const fn isnan(x: f64) -> bool {
+    pub(super) const fn isnan(x: f64) -> bool {
         ::sifr_stdlib::math::isnan(x)
     }
-    pub(crate) const fn isinf(x: f64) -> bool {
+    const fn isinf(x: f64) -> bool {
         ::sifr_stdlib::math::isinf(x)
     }
-    pub(crate) fn remainder(x: f64, y: f64) -> f64 {
+    pub(super) fn remainder(x: f64, y: f64) -> f64 {
         ::sifr_stdlib::math::remainder(x, y)
     }
-    pub(crate) fn fma(x: f64, y: f64, z: f64) -> f64 {
+    pub(super) fn fma(x: f64, y: f64, z: f64) -> f64 {
         ::sifr_stdlib::math::fma(x, y, z)
     }
-    pub(crate) const fn isnormal(x: f64) -> bool {
+    pub(super) const fn isnormal(x: f64) -> bool {
         ::sifr_stdlib::math::isnormal(x)
     }
-    pub(crate) fn issubnormal(x: f64) -> bool {
+    pub(super) fn issubnormal(x: f64) -> bool {
         ::sifr_stdlib::math::issubnormal(x)
     }
-    pub(crate) fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
+    fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
         ::sifr_stdlib::math::dist(p, q)
     }
-    pub(crate) fn fsum_impl(data: Vec<f64>) -> f64 {
+    fn fsum_impl(data: Vec<f64>) -> f64 {
         ::sifr_stdlib::math::fsum(data)
     }
-    pub(crate) fn sumprod_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
+    fn sumprod_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
         ::sifr_stdlib::math::sumprod(p, q)
     }
-    pub(crate) fn nextafter(x: f64, y: f64) -> f64 {
+    pub(super) fn nextafter(x: f64, y: f64) -> f64 {
         ::sifr_stdlib::math::nextafter(x, y)
     }
-    pub(crate) fn ulp(x: f64) -> f64 {
+    pub(super) fn ulp(x: f64) -> f64 {
         ::sifr_stdlib::math::ulp(x)
     }
-    pub(crate) fn log_base(x: f64, base: f64) -> f64 {
+    pub(super) fn log_base(x: f64, base: f64) -> f64 {
         log(x) / log(base)
     }
-    pub(crate) fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
+    pub(super) fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
         if rel_tol < 0.0_f64 {
             return false;
         }
@@ -85,29 +85,29 @@ mod sifr_generated_generated_support {
         }
         diff <= rel_bound
     }
-    pub(crate) fn sifr_generated_copy_float_list(data: &[f64]) -> Vec<f64> {
+    fn sifr_generated_copy_float_list(data: &[f64]) -> Vec<f64> {
         let mut out: Vec<f64> = Vec::new();
         for value in data.iter().copied() {
             out.push(value);
         }
         out
     }
-    pub(crate) fn dist(p: &[f64], q: &[f64]) -> f64 {
+    pub(super) fn dist(p: &[f64], q: &[f64]) -> f64 {
         dist_impl(
             sifr_generated_copy_float_list(p),
             sifr_generated_copy_float_list(q),
         )
     }
-    pub(crate) fn fsum(data: &[f64]) -> f64 {
+    pub(super) fn fsum(data: &[f64]) -> f64 {
         fsum_impl(sifr_generated_copy_float_list(data))
     }
-    pub(crate) fn sumprod(p: &[f64], q: &[f64]) -> f64 {
+    pub(super) fn sumprod(p: &[f64], q: &[f64]) -> f64 {
         sumprod_impl(
             sifr_generated_copy_float_list(p),
             sifr_generated_copy_float_list(q),
         )
     }
-    pub(crate) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+    pub(super) fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -134,7 +134,7 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -162,7 +162,10 @@ mod sifr_generated_generated_support {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    INF, assert_bool_vector_eq, assert_vector_eq, cbrt, dist, exp2, fma, fsum, isclose, isnan,
+    isnormal, issubnormal, log_base, nextafter, remainder, sumprod, ulp,
+};
 fn collect_positive_actual() -> Vec<String> {
     let mut actual: Vec<String> = vec![
         (cbrt(27.0_f64) == 3.0_f64).to_string(),

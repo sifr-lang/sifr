@@ -4,12 +4,12 @@ mod sifr_generated_generated_support {
         FloatOverflowError, FloatPrecisionLossError,
         SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn sqrt(x: f64) -> f64 {
+    use ::sifr_runtime::SifrInt;
+    fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -45,14 +45,14 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn sifr_generated_sum(data: &[f64]) -> f64 {
+    fn sifr_generated_sum(data: &[f64]) -> f64 {
         let mut total: f64 = 0.0_f64;
         for val in data.iter().copied() {
             total += val;
         }
         total
     }
-    pub(crate) fn sifr_generated_float_int(
+    fn sifr_generated_float_int(
         value: SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let sifr_generated_try_res: Result<
@@ -106,7 +106,7 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(crate) fn sifr_generated_divide_by_int(
+    fn sifr_generated_divide_by_int(
         numerator: f64,
         denominator: SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -124,7 +124,7 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(crate) fn mean(
+    pub(super) fn mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let count: SifrInt = SifrInt::from(data.len());
@@ -136,7 +136,7 @@ mod sifr_generated_generated_support {
         let total: f64 = sifr_generated_sum(data);
         sifr_generated_divide_by_int(total, count.clone())
     }
-    pub(crate) fn variance(
+    pub(super) fn variance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -168,7 +168,7 @@ mod sifr_generated_generated_support {
         }
         sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))
     }
-    pub(crate) fn pvariance(
+    pub(super) fn pvariance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -200,7 +200,7 @@ mod sifr_generated_generated_support {
         }
         sifr_generated_divide_by_int(total, n.clone())
     }
-    pub(crate) fn stdev(
+    pub(super) fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -248,7 +248,7 @@ mod sifr_generated_generated_support {
         };
         Ok(sqrt(v))
     }
-    pub(crate) fn pstdev(
+    pub(super) fn pstdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -354,7 +354,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for FloatPrecisionLossError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{mean, pstdev, pvariance, stdev, variance};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::FloatOverflowError;
 pub use sifr_generated_project_nominals::FloatPrecisionLossError;

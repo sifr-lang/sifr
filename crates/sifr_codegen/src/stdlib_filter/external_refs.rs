@@ -14,18 +14,44 @@ pub(crate) fn rust_source_referenced_item_names(
     let mut collector = ExternalItemRefCollector {
         candidate_names,
         refs: HashSet::new(),
+        unqualified_only: false,
     };
     collector.visit_file(&parsed);
     collector.refs
 }
 
+pub(crate) fn rust_source_unqualified_item_names(
+    rust_code: &str,
+    candidate_names: &HashSet<String>,
+) -> Result<HashSet<String>, String> {
+    let parsed = syn::parse_file(rust_code)
+        .map_err(|error| format!("failed to parse generated import consumer: {error}"))?;
+    let mut collector = ExternalItemRefCollector {
+        candidate_names,
+        refs: HashSet::new(),
+        unqualified_only: true,
+    };
+    collector.visit_file(&parsed);
+    Ok(collector.refs)
+}
+
 struct ExternalItemRefCollector<'a> {
     candidate_names: &'a HashSet<String>,
     refs: HashSet<String>,
+    unqualified_only: bool,
 }
 
 impl ExternalItemRefCollector<'_> {
     fn collect_path(&mut self, path: &syn::Path) {
+        if self.unqualified_only {
+            if path.leading_colon.is_none()
+                && let Some(first) = path.segments.first()
+                && self.candidate_names.contains(&first.ident.to_string())
+            {
+                self.refs.insert(first.ident.to_string());
+            }
+            return;
+        }
         self.refs.extend(
             path.segments
                 .iter()
@@ -37,6 +63,9 @@ impl ExternalItemRefCollector<'_> {
 
 impl<'ast> Visit<'ast> for ExternalItemRefCollector<'_> {
     fn visit_item_use(&mut self, item_use: &'ast syn::ItemUse) {
+        if self.unqualified_only {
+            return;
+        }
         let mut paths = Vec::new();
         collect_use_paths(&item_use.tree, &mut Vec::new(), &mut paths);
         for path in paths {

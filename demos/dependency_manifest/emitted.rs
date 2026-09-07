@@ -1,8 +1,8 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::{ParseError, SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, TOMLDecodeError};
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn toml_parse_tokens(text: &str) -> Result<Vec<String>, ParseError> {
+    use ::sifr_runtime::SifrInt;
+    fn toml_parse_tokens(text: &str) -> Result<Vec<String>, ParseError> {
         ::sifr_stdlib::toml::toml_parse_tokens(text).map_err(|sifr_generated_bridge_error| {
             ParseError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -10,7 +10,7 @@ mod sifr_generated_generated_support {
         })
     }
     #[derive(Debug, Clone)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0
+    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(ParseError),
         SifrGeneratedUnionVariant5X3aclass15X3aTOMLDecodeError1X3a0(TOMLDecodeError),
@@ -44,7 +44,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn sifr_generated_token_at(
+    fn sifr_generated_token_at(
         tokens: &[String],
         index: SifrInt,
     ) -> Result<String, TOMLDecodeError> {
@@ -70,7 +70,7 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         })
     }
-    pub(crate) fn sifr_generated_token_int(
+    fn sifr_generated_token_int(
         tokens: &[String],
         index: SifrInt,
     ) -> Result<SifrInt, TOMLDecodeError> {
@@ -118,7 +118,7 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(crate) fn sifr_generated_token_float(
+    fn sifr_generated_token_float(
         tokens: &[String],
         index: SifrInt,
     ) -> Result<f64, TOMLDecodeError> {
@@ -163,7 +163,7 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(crate) fn sifr_generated_decode_bool_token(value: &str) -> Result<bool, TOMLDecodeError> {
+    fn sifr_generated_decode_bool_token(value: &str) -> Result<bool, TOMLDecodeError> {
         if value == "true" {
             return Ok(true);
         }
@@ -178,7 +178,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn sifr_generated_decode_toml_value_at(
+    fn sifr_generated_decode_toml_value_at(
         tokens: &[String],
         index: SifrInt,
     ) -> Result<(SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, SifrInt), TOMLDecodeError> {
@@ -330,7 +330,7 @@ mod sifr_generated_generated_support {
             Err(TOMLDecodeError::new(e.message.clone()))
         })
     }
-    pub(crate) fn sifr_generated_decode_toml_tokens(
+    fn sifr_generated_decode_toml_tokens(
         tokens: &[String],
     ) -> Result<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, TOMLDecodeError> {
         let sifr_generated_try_res: Result<
@@ -351,7 +351,7 @@ mod sifr_generated_generated_support {
             Err(TOMLDecodeError::new(e.message.clone()))
         })
     }
-    pub(crate) fn loads(
+    pub(super) fn loads(
         text: &str,
     ) -> Result<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, TOMLDecodeError> {
         let sifr_generated_try_res: Result<
@@ -492,7 +492,7 @@ fn main() {
 // src/helper.rs
 pub use crate::SifrGeneratedStdlibSifrX2etomllibX2eTomlValue;
 pub use crate::TOMLDecodeError;
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::loads;
 #[must_use]
 pub fn render() -> String {
     let sifr_generated_try_res: Result<String, TOMLDecodeError> = (|| {

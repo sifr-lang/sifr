@@ -205,7 +205,10 @@ pub fn generate_rust_test_project_with_metadata(
     )
     .unwrap_or_else(|error| panic!("failed to prune generated test-project owners: {error}"));
     if !support_source.trim().is_empty() {
-        let visible_support = crate_visible_generated_support_source(&support_source);
+        let consumers = std::iter::once(project_union_prelude.as_str())
+            .chain(body_consumers.iter().copied())
+            .collect::<Vec<_>>();
+        let visible_support = crate_visible_generated_support_source(&support_source, &consumers);
         let visible_support = crate::import_project_prelude_bindings_in_generated_support(
             &project_union_prelude,
             &visible_support,
@@ -226,13 +229,13 @@ pub fn generate_rust_test_project_with_metadata(
             panic!("invalid generated test-project support trait layout: {error}")
         });
         if !prelude_support_refs.is_empty() || !prelude_support_traits.is_empty() {
-            project_union_prelude =
-                crate::import_generated_support_in_project_nominals(&project_union_prelude)
-                    .unwrap_or_else(|error| {
-                        panic!(
-                            "failed to import generated test-project support into nominals: {error}"
-                        )
-                    });
+            project_union_prelude = crate::import_generated_support_in_project_nominals(
+                &project_union_prelude,
+                &visible_support,
+            )
+            .unwrap_or_else(|error| {
+                panic!("failed to import generated test-project support into nominals: {error}")
+            });
         }
         for (module_name, source) in &mut support_rust_files {
             let body_support_refs =
@@ -248,32 +251,35 @@ pub fn generate_rust_test_project_with_metadata(
                 && (!body_support_refs.is_empty() || !body_support_traits.is_empty())
             {
                 *source = format!(
-                    "use crate::__sifr_generated_support::*;\n\n{}",
+                    "{}\n\n{}",
+                    crate::generated_visibility::generated_support_import(source, &visible_support),
                     source.trim_start()
                 );
             }
         }
-        let tests_need_support = test_rust_files.iter().any(|(module_name, source)| {
-            let body_support_refs =
-                crate::stdlib_filter::rust_source_referenced_item_names(source, &support_names);
-            let body_support_traits =
-                crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support)
-                    .unwrap_or_else(|error| {
-                        panic!("invalid generated test-project support trait layout: {error}")
-                    });
-            test_module_demands
-                .get(module_name)
-                .is_some_and(ModuleSupportDemand::needs_support)
-                && (!body_support_refs.is_empty() || !body_support_traits.is_empty())
-        });
+        let test_consumers = test_rust_files
+            .iter()
+            .filter(|(name, _)| {
+                test_module_demands
+                    .get(*name)
+                    .is_some_and(ModuleSupportDemand::needs_support)
+            })
+            .map(|(_, source)| source.as_str())
+            .collect::<Vec<_>>()
+            .join("\n");
+        let test_import = crate::generated_visibility::generated_support_import(
+            &test_consumers,
+            &visible_support,
+        );
         let support_module = format!(
             "mod __sifr_generated_support {{\n{}}}\n",
             visible_support.trim_end()
         );
-        project_union_prelude = if tests_need_support {
+        project_union_prelude = if !test_import.is_empty() {
             format!(
-                "{}\n\nuse crate::__sifr_generated_support::*;\n\n{}",
+                "{}\n\n{}\n\n{}",
                 support_module.trim_end(),
+                test_import,
                 project_union_prelude.trim()
             )
         } else {

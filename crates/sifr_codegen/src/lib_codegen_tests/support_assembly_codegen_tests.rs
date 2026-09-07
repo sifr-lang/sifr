@@ -22,7 +22,7 @@ fn multi_module_support_has_one_private_owner_and_a_strict_size_budget() {
     assert!(
         generated
             .project_union_prelude
-            .contains("pub(crate) fn shared_operation")
+            .contains("pub(super) fn shared_operation")
     );
     assert!(
         !generated
@@ -40,11 +40,34 @@ fn multi_module_support_has_one_private_owner_and_a_strict_size_budget() {
         assert!(!source.contains("fn shared_operation"));
         assert_eq!(
             source
-                .matches("use crate::__sifr_generated_support::*;")
+                .matches("use crate::__sifr_generated_support::{shared_operation};")
                 .count(),
             1
         );
     }
+}
+
+#[test]
+fn support_visibility_keeps_helper_functions_and_imports_private() {
+    let source = "use std::fmt::Debug; fn helper() {} fn shared() { helper(); }";
+    let visible =
+        crate::crate_visible_generated_support_source(source, &["fn call() { shared(); }"]);
+    assert!(visible.contains("pub(super) fn shared()"), "{visible}");
+    assert!(visible.contains("\nfn helper()"), "{visible}");
+    assert!(visible.starts_with("use std::fmt::Debug;"), "{visible}");
+    assert!(!visible.contains("pub(crate)"));
+}
+
+#[test]
+fn support_imports_include_trait_methods_and_macro_statics_without_qualified_names() {
+    let support = "struct Qualified; trait Action { fn act(&self); }\n\
+        tokio::task_local! { static ACTIVE: String; } fn helper() {}";
+    let consumer = "fn call(x: crate::__sifr_generated_support::Qualified) {\n\
+        x.act(); ACTIVE.try_with(|_| ()); }";
+    assert_eq!(
+        crate::generated_visibility::generated_support_import(consumer, support),
+        "use crate::__sifr_generated_support::{ACTIVE, Action};"
+    );
 }
 
 #[test]

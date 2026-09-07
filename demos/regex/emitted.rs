@@ -1,8 +1,8 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::RegexError;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+    use ::sifr_runtime::SifrInt;
+    fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
         ::sifr_stdlib::regex::re_find(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -10,11 +10,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_replace(
-        pattern: &str,
-        replacement: &str,
-        text: &str,
-    ) -> Result<String, RegexError> {
+    fn re_replace(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
         ::sifr_stdlib::regex::re_replace(pattern, replacement, text).map_err(
             |sifr_generated_bridge_error| RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -22,7 +18,7 @@ mod sifr_generated_generated_support {
             },
         )
     }
-    pub(crate) fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::re_findall(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -30,7 +26,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::re_split(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -38,7 +34,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_find_flags(
+    fn re_find_flags(
         pattern: &str,
         text: &str,
         flags: SifrInt,
@@ -53,29 +49,29 @@ mod sifr_generated_generated_support {
             detail: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(crate) const fn sifr_generated_const_49474e4f524543415345() -> SifrInt {
+    pub(super) const fn sifr_generated_const_49474e4f524543415345() -> SifrInt {
         SifrInt::from_i64(2)
     }
-    pub(crate) fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+    pub(super) fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
         re_find(pattern, text)
     }
-    pub(crate) fn search_flags(
+    pub(super) fn search_flags(
         pattern: &str,
         text: &str,
         flags: SifrInt,
     ) -> Result<Option<String>, RegexError> {
         re_find_flags(pattern, text, flags.clone())
     }
-    pub(crate) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
+    pub(super) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
         re_replace(pattern, replacement, text)
     }
-    pub(crate) fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    pub(super) fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         re_findall(pattern, text)
     }
-    pub(crate) fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    pub(super) fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         re_split(pattern, text)
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -125,7 +121,10 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for RegexError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, findall, search, search_flags,
+    sifr_generated_const_49474e4f524543415345, split, sub,
+};
 pub use sifr_generated_project_nominals::RegexError;
 fn has_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
     let sifr_generated_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {

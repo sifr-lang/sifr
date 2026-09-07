@@ -5,25 +5,25 @@ mod sifr_generated_generated_support {
         SifrGeneratedStdlibSifrX2edatetimeX2edatetime,
         SifrGeneratedStdlibSifrX2edatetimeX2etimezone, ValueError,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn datetime_now_struct() -> Vec<SifrInt> {
+    use ::sifr_runtime::SifrInt;
+    fn datetime_now_struct() -> Vec<SifrInt> {
         ::sifr_stdlib::time::datetime_now_struct()
             .into_iter()
             .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
             .collect()
     }
-    pub(crate) fn datetime_from_timestamp(ts: f64) -> Result<String, ValueError> {
+    fn datetime_from_timestamp(ts: f64) -> Result<String, ValueError> {
         ::sifr_stdlib::time::datetime_from_timestamp(ts).map_err(|sifr_generated_bridge_error| {
             ValueError {
                 message: sifr_generated_bridge_error.to_string(),
             }
         })
     }
-    pub(crate) fn time_now() -> f64 {
+    fn time_now() -> f64 {
         ::sifr_stdlib::time::time_now()
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -60,7 +60,7 @@ mod sifr_generated_generated_support {
         }
     }
     #[derive(Debug, Clone)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -108,7 +108,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
+    fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
         let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let mut result: String = String::new();
         let mut i: SifrInt = start.clone();
@@ -129,7 +129,7 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(crate) fn sifr_generated_six_digits(value: SifrInt) -> String {
+    pub(super) fn sifr_generated_six_digits(value: SifrInt) -> String {
         let mut rendered: String = value.to_string();
         let mut sifr_generated_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
         while &SifrInt::from(sifr_generated_chars_rendered.len()) < &SifrInt::from_i64(6) {
@@ -148,7 +148,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn sifr_generated_parse_datetime_iso(
+    fn sifr_generated_parse_datetime_iso(
         value: &str,
     ) -> Result<(SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt), ValueError> {
         let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
@@ -313,9 +313,7 @@ mod sifr_generated_generated_support {
             Err(ValueError::new("invalid datetime string".to_string()))
         })
     }
-    pub(crate) fn sifr_generated_timezone_offset_from_text(
-        text: &str,
-    ) -> Result<SifrInt, ValueError> {
+    fn sifr_generated_timezone_offset_from_text(text: &str) -> Result<SifrInt, ValueError> {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         if text == "UTC" {
             return Ok(SifrInt::from_i64(0));
@@ -375,7 +373,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn sifr_generated_from_timestamp_with_tz(
+    fn sifr_generated_from_timestamp_with_tz(
         ts: f64,
         tz: &Option<SifrGeneratedStdlibSifrX2edatetimeX2etimezone>,
     ) -> Result<SifrGeneratedStdlibSifrX2edatetimeX2edatetime, ValueError> {
@@ -588,7 +586,7 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(crate) fn now(
+    pub(super) fn now(
         tz: &Option<SifrGeneratedStdlibSifrX2edatetimeX2etimezone>,
     ) -> SifrGeneratedStdlibSifrX2edatetimeX2edatetime {
         let current_epoch: f64 = time_now();
@@ -688,13 +686,13 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn from_timestamp(
+    pub(super) fn from_timestamp(
         ts: f64,
         tz: &Option<SifrGeneratedStdlibSifrX2edatetimeX2etimezone>,
     ) -> Result<SifrGeneratedStdlibSifrX2edatetimeX2edatetime, ValueError> {
         sifr_generated_from_timestamp_with_tz(ts, tz)
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -723,7 +721,7 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::sifr_generated_six_digits;
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone)]
     pub struct SifrGeneratedStdlibSifrX2edatetimeX2etimedelta {
@@ -1149,7 +1147,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for FloatPrecisionLossError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{assert_bool_vector_eq, from_timestamp, now};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::FloatOverflowError;
 pub use sifr_generated_project_nominals::FloatPrecisionLossError;

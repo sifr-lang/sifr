@@ -6,9 +6,9 @@ mod sifr_generated_generated_support {
         SifrGeneratedStdlibSifrX2erandomX2eRandomState,
         SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError, ValueError,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) use ::std::collections::HashMap;
-    pub(crate) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    use ::sifr_runtime::SifrInt;
+    use ::std::collections::HashMap;
+    pub(super) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
         items: &[T],
     ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
@@ -32,7 +32,7 @@ mod sifr_generated_generated_support {
         }
         SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
     }
-    pub(crate) fn reduce<T: Clone + 'static, U: Clone + 'static>(
+    pub(super) fn reduce<T: Clone + 'static, U: Clone + 'static>(
         func: impl Fn(&U, &T) -> U,
         data: &[T],
         initial: &U,
@@ -43,12 +43,12 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(crate) struct SifrGeneratedYielder<T> {
-        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    pub(super) struct SifrGeneratedYielder<T> {
+        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     }
-    pub(crate) struct SifrGeneratedYieldFuture<T> {
-        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(crate) value: Option<T>,
+    pub(super) struct SifrGeneratedYieldFuture<T> {
+        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub(super) value: Option<T>,
     }
     impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
     impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
@@ -66,14 +66,14 @@ mod sifr_generated_generated_support {
         }
     }
     impl<T> SifrGeneratedYielder<T> {
-        pub(crate) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        pub(super) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
             SifrGeneratedYieldFuture {
                 slot: ::std::sync::Arc::clone(&self.slot),
                 value: Some(value),
             }
         }
     }
-    pub(crate) fn sifr_generated_store_suspended<T>(
+    fn sifr_generated_store_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
         value: T,
     ) {
@@ -82,7 +82,7 @@ mod sifr_generated_generated_support {
             Err(poisoned) => *poisoned.into_inner() = Some(value),
         }
     }
-    pub(crate) fn sifr_generated_take_suspended<T>(
+    fn sifr_generated_take_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     ) -> Option<T> {
         match slot.lock() {
@@ -90,14 +90,14 @@ mod sifr_generated_generated_support {
             Err(poisoned) => poisoned.into_inner().take(),
         }
     }
-    pub(crate) struct SifrGeneratedGenerator<T> {
-        pub(crate) producer:
+    pub(super) struct SifrGeneratedGenerator<T> {
+        pub(super) producer:
             Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
-        pub(crate) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(crate) complete: bool,
+        pub(super) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub(super) complete: bool,
     }
     impl<T> SifrGeneratedGenerator<T> {
-        pub(crate) fn new<
+        pub(super) fn new<
             F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
             Fut: ::std::future::Future<Output = ()> + 'static,
         >(
@@ -136,7 +136,7 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(crate) trait SifrGeneratedAdd: Sized {
+    pub(super) trait SifrGeneratedAdd: Sized {
         #[must_use]
         fn sifr_generated_add(self, rhs: Self) -> Self;
     }
@@ -156,7 +156,7 @@ mod sifr_generated_generated_support {
             self
         }
     }
-    pub(crate) fn count(start: SifrInt, step: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
+    pub(super) fn count(start: SifrInt, step: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
                 let mut current: SifrInt = start.clone();
@@ -167,7 +167,7 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(crate) fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
+    pub(super) fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
         data: Box<dyn Iterator<Item = T>>,
         initial: Option<T>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -254,7 +254,7 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(crate) fn compress<T: Clone + 'static>(
+    pub(super) fn compress<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
         selectors: Box<dyn Iterator<Item = bool>>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -272,7 +272,7 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(crate) fn dropwhile<T: Clone + 'static>(
+    pub(super) fn dropwhile<T: Clone + 'static>(
         pred: impl Fn(&T) -> bool + Send + Sync + 'static,
         data: Box<dyn Iterator<Item = T>>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -292,7 +292,7 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(crate) fn takewhile<T: Clone + 'static>(
+    pub(super) fn takewhile<T: Clone + 'static>(
         pred: impl Fn(&T) -> bool + Send + Sync + 'static,
         data: Box<dyn Iterator<Item = T>>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -307,7 +307,7 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(crate) fn filterfalse<T: Clone + 'static>(
+    pub(super) fn filterfalse<T: Clone + 'static>(
         pred: impl Fn(&T) -> bool + Send + Sync + 'static,
         data: Box<dyn Iterator<Item = T>>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -321,7 +321,7 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(crate) fn zip_longest<T: Clone + 'static>(
+    pub(super) fn zip_longest<T: Clone + 'static>(
         a: Box<dyn Iterator<Item = T>>,
         b: Box<dyn Iterator<Item = T>>,
         fill: &T,
@@ -353,7 +353,7 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(crate) fn count_from(
+    pub(super) fn count_from(
         start: SifrInt,
         step: SifrInt,
         n: SifrInt,
@@ -370,7 +370,7 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(crate) fn cycle<T: Clone + 'static>(
+    pub(super) fn cycle<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
         n: SifrInt,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -405,74 +405,74 @@ mod sifr_generated_generated_support {
         clippy::approx_constant,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) const PI: f64 = 3.141_592_653_589_793_f64;
-    pub(crate) fn sqrt(x: f64) -> f64 {
+    pub(super) const PI: f64 = 3.141_592_653_589_793_f64;
+    pub(super) fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
-    pub(crate) fn log(x: f64) -> f64 {
+    pub(super) fn log(x: f64) -> f64 {
         ::sifr_stdlib::math::log(x)
     }
-    pub(crate) fn sin(x: f64) -> f64 {
+    pub(super) fn sin(x: f64) -> f64 {
         ::sifr_stdlib::math::sin(x)
     }
-    pub(crate) fn cos(x: f64) -> f64 {
+    pub(super) fn cos(x: f64) -> f64 {
         ::sifr_stdlib::math::cos(x)
     }
-    pub(crate) fn acosh(x: f64) -> f64 {
+    pub(super) fn acosh(x: f64) -> f64 {
         ::sifr_stdlib::math::acosh(x)
     }
-    pub(crate) fn asinh(x: f64) -> f64 {
+    pub(super) fn asinh(x: f64) -> f64 {
         ::sifr_stdlib::math::asinh(x)
     }
-    pub(crate) fn atanh(x: f64) -> f64 {
+    pub(super) fn atanh(x: f64) -> f64 {
         ::sifr_stdlib::math::atanh(x)
     }
-    pub(crate) fn isqrt(n: SifrInt) -> SifrInt {
+    pub(super) fn isqrt(n: SifrInt) -> SifrInt {
         ::sifr_stdlib::math::isqrt(::sifr_runtime::interop::SifrIntBridge::from(n)).into_sifr_int()
     }
-    pub(crate) fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
+    fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
         ::sifr_stdlib::math::dist(p, q)
     }
-    pub(crate) fn fsum_impl(data: Vec<f64>) -> f64 {
+    fn fsum_impl(data: Vec<f64>) -> f64 {
         ::sifr_stdlib::math::fsum(data)
     }
-    pub(crate) fn sifr_generated_copy_float_list(data: &[f64]) -> Vec<f64> {
+    fn sifr_generated_copy_float_list(data: &[f64]) -> Vec<f64> {
         let mut out: Vec<f64> = Vec::new();
         for value in data.iter().copied() {
             out.push(value);
         }
         out
     }
-    pub(crate) fn dist(p: &[f64], q: &[f64]) -> f64 {
+    pub(super) fn dist(p: &[f64], q: &[f64]) -> f64 {
         dist_impl(
             sifr_generated_copy_float_list(p),
             sifr_generated_copy_float_list(q),
         )
     }
-    pub(crate) fn fsum(data: &[f64]) -> f64 {
+    pub(super) fn fsum(data: &[f64]) -> f64 {
         fsum_impl(sifr_generated_copy_float_list(data))
     }
-    pub(crate) fn random_word_to_unit_float(value: SifrInt) -> f64 {
+    pub(super) fn random_word_to_unit_float(value: SifrInt) -> f64 {
         ::sifr_stdlib::random::random_word_to_unit_float(
             ::sifr_runtime::interop::SifrIntBridge::from(value),
         )
     }
-    pub(crate) fn random_seed() -> SifrInt {
+    fn random_seed() -> SifrInt {
         ::sifr_stdlib::random::random_seed().into_sifr_int()
     }
-    pub(crate) fn random_module_state_words() -> Vec<SifrInt> {
+    fn random_module_state_words() -> Vec<SifrInt> {
         ::sifr_stdlib::random::random_module_state_words()
             .into_iter()
             .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
             .collect()
     }
-    pub(crate) fn random_module_state_index() -> SifrInt {
+    fn random_module_state_index() -> SifrInt {
         ::sifr_stdlib::random::random_module_state_index().into_sifr_int()
     }
-    pub(crate) fn random_module_state_gauss_next() -> Option<f64> {
+    fn random_module_state_gauss_next() -> Option<f64> {
         ::sifr_stdlib::random::random_module_state_gauss_next()
     }
-    pub(crate) fn random_module_set_state(
+    fn random_module_set_state(
         words: &[SifrInt],
         index: SifrInt,
         gauss_next: Option<f64>,
@@ -490,28 +490,28 @@ mod sifr_generated_generated_support {
             message: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(crate) const fn sifr_generated_const_5f4d545f4e() -> SifrInt {
+    pub(super) const fn sifr_generated_const_5f4d545f4e() -> SifrInt {
         SifrInt::from_i64(624)
     }
-    pub(crate) const fn sifr_generated_const_5f4d545f4d() -> SifrInt {
+    pub(super) const fn sifr_generated_const_5f4d545f4d() -> SifrInt {
         SifrInt::from_i64(397)
     }
-    pub(crate) const fn sifr_generated_const_5f4d545f4d41545249585f41() -> SifrInt {
+    pub(super) const fn sifr_generated_const_5f4d545f4d41545249585f41() -> SifrInt {
         SifrInt::from_i64(2_567_483_615)
     }
-    pub(crate) const fn sifr_generated_const_5f4d545f55505045525f4d41534b() -> SifrInt {
+    pub(super) const fn sifr_generated_const_5f4d545f55505045525f4d41534b() -> SifrInt {
         SifrInt::from_i64(2_147_483_648)
     }
-    pub(crate) const fn sifr_generated_const_5f4d545f4c4f5745525f4d41534b() -> SifrInt {
+    pub(super) const fn sifr_generated_const_5f4d545f4c4f5745525f4d41534b() -> SifrInt {
         SifrInt::from_i64(2_147_483_647)
     }
-    pub(crate) const fn sifr_generated_const_5f4d545f46() -> SifrInt {
+    const fn sifr_generated_const_5f4d545f46() -> SifrInt {
         SifrInt::from_i64(1_812_433_253)
     }
-    pub(crate) const fn sifr_generated_const_5f4d545f574f52445f4d41534b() -> SifrInt {
+    pub(super) const fn sifr_generated_const_5f4d545f574f52445f4d41534b() -> SifrInt {
         SifrInt::from_i64(4_294_967_295)
     }
-    pub(crate) fn sifr_generated_state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
+    pub(super) fn sifr_generated_state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
         let value: Option<SifrInt> = {
             let sifr_generated_checked_read_collection = &words;
             let sifr_generated_checked_read_index = index.clone();
@@ -526,20 +526,20 @@ mod sifr_generated_generated_support {
         };
         value_value_7ce4fd9430e80cea
     }
-    pub(crate) fn sifr_generated_clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
+    pub(super) fn sifr_generated_clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
         let mut copied: Vec<SifrInt> = Vec::new();
         for word in words.iter().cloned() {
             copied.push(word);
         }
         copied
     }
-    pub(crate) fn sifr_generated_normalize_seed_input(seed_value: Option<SifrInt>) -> SifrInt {
+    pub(super) fn sifr_generated_normalize_seed_input(seed_value: Option<SifrInt>) -> SifrInt {
         let Some(seed_value) = seed_value.clone() else {
             return random_seed();
         };
         seed_value.clone()
     }
-    pub(crate) fn sifr_generated_seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
+    pub(super) fn sifr_generated_seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
         let mut words: Vec<SifrInt> =
             vec![&seed_value & &sifr_generated_const_5f4d545f574f52445f4d41534b()];
         let mut i: SifrInt = SifrInt::from_i64(1);
@@ -554,7 +554,7 @@ mod sifr_generated_generated_support {
         }
         words
     }
-    pub(crate) fn sifr_generated_build_state_from_module_storage()
+    fn sifr_generated_build_state_from_module_storage()
     -> SifrGeneratedStdlibSifrX2erandomX2eRandomState {
         SifrGeneratedStdlibSifrX2erandomX2eRandomState::new(
             SifrInt::from_i64(3),
@@ -563,7 +563,7 @@ mod sifr_generated_generated_support {
             random_module_state_gauss_next(),
         )
     }
-    pub(crate) fn sifr_generated_store_state_into_module_storage(
+    fn sifr_generated_store_state_into_module_storage(
         state: &SifrGeneratedStdlibSifrX2erandomX2eRandomState,
     ) {
         let sifr_generated_set_result: Result<(), ValueError> = random_module_set_state(
@@ -573,7 +573,7 @@ mod sifr_generated_generated_support {
         );
         let _ = sifr_generated_set_result;
     }
-    pub(crate) fn sifr_generated_ensure_module_state_initialized() {
+    fn sifr_generated_ensure_module_state_initialized() {
         let words: Vec<SifrInt> = random_module_state_words();
         if &SifrInt::from(words.len()) == &sifr_generated_const_5f4d545f4e() {
             return;
@@ -582,7 +582,7 @@ mod sifr_generated_generated_support {
             SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(SifrInt::from_i64(5489)));
         sifr_generated_store_state_into_module_storage(&bootstrap.getstate());
     }
-    pub(crate) fn sifr_generated_module_random() -> SifrGeneratedStdlibSifrX2erandomX2eRandom {
+    fn sifr_generated_module_random() -> SifrGeneratedStdlibSifrX2erandomX2eRandom {
         sifr_generated_ensure_module_state_initialized();
         let mut r: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(SifrInt::from_i64(0)));
@@ -591,12 +591,12 @@ mod sifr_generated_generated_support {
         let _ = sifr_generated_set_result;
         r
     }
-    pub(crate) fn sifr_generated_sync_module_random(
+    fn sifr_generated_sync_module_random(
         generator: &mut SifrGeneratedStdlibSifrX2erandomX2eRandom,
     ) {
         sifr_generated_store_state_into_module_storage(&generator.getstate());
     }
-    pub(crate) fn randrange(
+    pub(super) fn randrange(
         start: SifrInt,
         stop: Option<SifrInt>,
         step_argument_af0b4e191da20cef: SifrInt,
@@ -608,14 +608,14 @@ mod sifr_generated_generated_support {
         sifr_generated_sync_module_random(&mut generator);
         value
     }
-    pub(crate) fn gauss(mu: f64, sigma: f64) -> f64 {
+    pub(super) fn gauss(mu: f64, sigma: f64) -> f64 {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let value: f64 = generator.gauss(mu, sigma);
         sifr_generated_sync_module_random(&mut generator);
         value
     }
-    pub(crate) fn sample<T: Clone + 'static>(
+    pub(super) fn sample<T: Clone + 'static>(
         items: &[T],
         k: SifrInt,
     ) -> Result<Vec<T>, ValueError> {
@@ -686,7 +686,7 @@ mod sifr_generated_generated_support {
         sifr_generated_sync_module_random(&mut generator);
         Ok(result)
     }
-    pub(crate) fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
+    pub(super) fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let n: SifrInt = SifrInt::from(items.len());
@@ -758,7 +758,7 @@ mod sifr_generated_generated_support {
         sifr_generated_sync_module_random(&mut generator);
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -794,14 +794,14 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn sifr_generated_sum(data: &[f64]) -> f64 {
+    fn sifr_generated_sum(data: &[f64]) -> f64 {
         let mut total: f64 = 0.0_f64;
         for val in data.iter().copied() {
             total += val;
         }
         total
     }
-    pub(crate) fn sifr_generated_float_int(
+    fn sifr_generated_float_int(
         value: SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let sifr_generated_try_res: Result<
@@ -855,7 +855,7 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(crate) fn sifr_generated_divide_by_int(
+    fn sifr_generated_divide_by_int(
         numerator: f64,
         denominator: SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -873,7 +873,7 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(crate) fn mean(
+    pub(super) fn mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let count: SifrInt = SifrInt::from(data.len());
@@ -885,7 +885,7 @@ mod sifr_generated_generated_support {
         let total: f64 = sifr_generated_sum(data);
         sifr_generated_divide_by_int(total, count.clone())
     }
-    pub(crate) fn median(
+    pub(super) fn median(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -951,7 +951,7 @@ mod sifr_generated_generated_support {
             Ok(val)
         }
     }
-    pub(crate) fn variance(
+    pub(super) fn variance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -983,7 +983,7 @@ mod sifr_generated_generated_support {
         }
         sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))
     }
-    pub(crate) fn stdev(
+    pub(super) fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -1031,7 +1031,7 @@ mod sifr_generated_generated_support {
         };
         Ok(sqrt(v))
     }
-    pub(crate) fn mode(
+    pub(super) fn mode(
         data: &[SifrInt],
     ) -> Result<SifrInt, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         if &SifrInt::from(data.len()) == &SifrInt::from_i64(0) {
@@ -1079,7 +1079,7 @@ mod sifr_generated_generated_support {
             "mode: no mode found".to_string(),
         ))
     }
-    pub(crate) fn multimode(
+    pub(super) fn multimode(
         data: &[SifrInt],
     ) -> Result<Vec<SifrInt>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         if &SifrInt::from(data.len()) == &SifrInt::from_i64(0) {
@@ -1144,7 +1144,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn quantiles(
+    pub(super) fn quantiles(
         data: &[f64],
         n: SifrInt,
     ) -> Result<Vec<f64>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -1270,7 +1270,7 @@ mod sifr_generated_generated_support {
         }
         Ok(result)
     }
-    pub(crate) fn covariance(
+    pub(super) fn covariance(
         x: &[f64],
         y: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -1336,7 +1336,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn correlation(
+    pub(super) fn correlation(
         x: &[f64],
         y: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -1448,7 +1448,7 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(crate) fn linear_regression(
+    pub(super) fn linear_regression(
         x: &[f64],
         y: &[f64],
     ) -> Result<Vec<f64>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -1522,7 +1522,14 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        PI, SifrInt, String, cos, count, f64, log, random_word_to_unit_float,
+        sifr_generated_clone_words, sifr_generated_const_5f4d545f4c4f5745525f4d41534b,
+        sifr_generated_const_5f4d545f4d, sifr_generated_const_5f4d545f4d41545249585f41,
+        sifr_generated_const_5f4d545f4e, sifr_generated_const_5f4d545f574f52445f4d41534b,
+        sifr_generated_const_5f4d545f55505045525f4d41534b, sifr_generated_normalize_seed_input,
+        sifr_generated_seed_words_from_seed, sifr_generated_state_word_at, sin, sqrt,
+    };
     use ::sifr_runtime::SifrInt;
     use ::std::collections::HashMap;
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -2162,7 +2169,12 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for IndexError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    SifrInt, String, accumulate, acosh, asinh, atanh, compress, correlation, count, count_from,
+    covariance, cycle, dist, dropwhile, f64, filterfalse, from_list, fsum, gauss, isqrt,
+    linear_regression, mean, median, mode, multimode, quantiles, randrange, reduce, sample,
+    shuffle, stdev, takewhile, variance, zip_longest,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::FloatOverflowError;
 pub use sifr_generated_project_nominals::FloatPrecisionLossError;

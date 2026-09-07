@@ -30,7 +30,7 @@ fn task_local_support_visibility_preserves_names_types_attributes_and_boundaries
         task_local! { static UNQUALIFIED: String; }
         mod nested { tokio::task_local! { static NESTED: String; } }
     "#;
-    let visible = crate::crate_visible_generated_support_source(source);
+    let visible = crate::crate_visible_generated_support_source(source, &[]);
     let declared = locals(&visible);
     assert_eq!(declared.len(), 2);
     assert_eq!(declared[0].name, "__SIFR_TASK_CANCELLATION");
@@ -38,7 +38,7 @@ fn task_local_support_visibility_preserves_names_types_attributes_and_boundaries
     for declaration in &declared {
         assert_eq!(
             declaration.visibility.to_token_stream().to_string(),
-            "pub (crate)"
+            "pub (super)"
         );
     }
     assert_eq!(declared[0].ty.to_token_stream().to_string(), "Carrier");
@@ -53,7 +53,7 @@ fn task_local_support_visibility_preserves_names_types_attributes_and_boundaries
         );
     }
     assert_eq!(
-        crate::crate_visible_generated_support_source(&visible),
+        crate::crate_visible_generated_support_source(&visible, &[]),
         visible
     );
     // Public module rewriting must not turn support macro statics into a public API.
@@ -155,7 +155,7 @@ fn assert_cancellation_owner(prelude: &str) {
     assert_eq!(cancellation.len(), 1, "{prelude}");
     assert_eq!(
         cancellation[0].visibility.to_token_stream().to_string(),
-        "pub (crate)"
+        "pub (super)"
     );
     assert_eq!(prelude.matches("mod __sifr_generated_support").count(), 1);
 }
@@ -233,5 +233,8 @@ fn task_local_support_sync_projects_emit_no_cancellation_owner() {
 #[test]
 #[should_panic(expected = "invalid compiler-owned tokio::task_local declaration")]
 fn task_local_support_rejects_invalid_owned_macro_syntax() {
-    crate::crate_visible_generated_support_source("tokio::task_local! { static BAD: u64 = 1; }");
+    crate::crate_visible_generated_support_source(
+        "tokio::task_local! { static BAD: u64 = 1; }",
+        &[],
+    );
 }

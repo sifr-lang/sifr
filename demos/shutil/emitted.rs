@@ -1,64 +1,64 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::IOError;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn read_text(path: &str) -> Result<String, IOError> {
+    use ::sifr_runtime::SifrInt;
+    pub(super) fn read_text(path: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::read_text(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    pub(super) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn exists(path: &str) -> bool {
+    pub(super) fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
-    pub(crate) fn mkdir(path: &str) -> Result<(), IOError> {
+    pub(super) fn mkdir(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn rename(src: &str, dst: &str) -> Result<(), IOError> {
+    fn rename(src: &str, dst: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::rename(src, dst).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn disk_usage(path: &str) -> Vec<SifrInt> {
+    pub(super) fn disk_usage(path: &str) -> Vec<SifrInt> {
         ::sifr_stdlib::fs::disk_usage(path)
             .into_iter()
             .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
             .collect()
     }
-    pub(crate) fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
+    fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::copy_file(src, dst).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn rmdir_all(path: &str) -> Result<(), IOError> {
+    fn rmdir_all(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::rmdir_all(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn gettempdir() -> String {
+    fn gettempdir() -> String {
         ::sifr_stdlib::fs::gettempdir()
     }
-    pub(crate) fn run_command(cmd: &str) -> Result<String, IOError> {
+    pub(super) fn run_command(cmd: &str) -> Result<String, IOError> {
         ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn which(name: &str) -> Option<String> {
+    pub(super) fn which(name: &str) -> Option<String> {
         ::sifr_stdlib::sys::which(name)
     }
-    pub(crate) fn copy(src: &str, dst: &str) -> Result<(), IOError> {
+    pub(super) fn copy(src: &str, dst: &str) -> Result<(), IOError> {
         copy_file(src, dst)
     }
-    pub(crate) fn move_file(src: &str, dst: &str) -> Result<(), IOError> {
+    pub(super) fn move_file(src: &str, dst: &str) -> Result<(), IOError> {
         rename(src, dst)
     }
-    pub(crate) fn rmtree(path: &str) -> Result<(), IOError> {
+    pub(super) fn rmtree(path: &str) -> Result<(), IOError> {
         rmdir_all(path)
     }
-    pub(crate) fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
+    fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
         ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
             ::sifr_runtime::interop::SifrIntBridge::from(max),
         )
         .into_sifr_int()
     }
-    pub(crate) fn sifr_generated_random_suffix() -> String {
+    fn sifr_generated_random_suffix() -> String {
         let n: SifrInt = random_int(SifrInt::from_i64(100_000), SifrInt::from_i64(999_999));
         n.to_string()
     }
-    pub(crate) fn mktemp_path(prefix: &str) -> String {
+    pub(super) fn mktemp_path(prefix: &str) -> String {
         let suffix: String = sifr_generated_random_suffix();
         let mut root: String = gettempdir();
         let sifr_generated_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
@@ -98,7 +98,7 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -125,7 +125,7 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+    fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
         let kind = {
             let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
@@ -157,7 +157,10 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for IOError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, copy, disk_usage, exists, mkdir, mktemp_path, move_file, read_text,
+    rmtree, run_command, which, write_text,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 fn collect_copy_move_tree_actual() -> Vec<bool> {

@@ -5,7 +5,7 @@ mod sifr_generated_generated_support {
         clippy::assertions_on_constants,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
+    pub(super) fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
             let _out: T = value?;
             Ok(())
@@ -18,7 +18,7 @@ mod sifr_generated_generated_support {
         clippy::assertions_on_constants,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
+    pub(super) fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
             let _out: T = value?;
             assert!(false);
@@ -60,7 +60,7 @@ mod sifr_generated_project_nominals {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{assert_err, assert_ok};
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
 pub use sifr_generated_project_nominals::Error;

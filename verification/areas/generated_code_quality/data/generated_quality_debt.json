@@ -403,6 +403,88 @@
           "count": 7,
           "signature_sha256": "310a0b88fd88aa85839b8cb0e006e4c8f285676d37e30a68aa8753f718a4b3fd"
         }
+      },
+      "selection-7cddd09acf851f35": {
+        "clippy::arithmetic_side_effects": {
+          "count": 69,
+          "signature_sha256": "cc181f32045e8e44577823937d265cc65390f589979bfbc345a61f1600675bb4"
+        },
+        "clippy::assigning_clones": {
+          "count": 2,
+          "signature_sha256": "b5386660e86d8889069826fbee6409fbb22877487395114d9c613a3b95a26756"
+        },
+        "clippy::implicit_clone": {
+          "count": 18,
+          "signature_sha256": "99424883eb06f27e6954c132365ca35f6b9ed7332d9bb840a07dc0bc5d13c08c"
+        },
+        "clippy::iter_overeager_cloned": {
+          "count": 1,
+          "signature_sha256": "300eaeb5a8f3f9827f83a9aa0ad951a50b73873b916c6294c4cccda1c03def9b"
+        },
+        "clippy::needless_borrow": {
+          "count": 23,
+          "signature_sha256": "0c8d3b7110da57c7800ecb09b931237e9e747296147bebdae496910636bacabc"
+        },
+        "clippy::needless_collect": {
+          "count": 7,
+          "signature_sha256": "4ce27fd9eff858067038b060e8797edab3d90ab6034e34e06ac746ce0c26e18e"
+        },
+        "clippy::needless_pass_by_value": {
+          "count": 67,
+          "signature_sha256": "f9acbf4e8653d6a42b399787015bf3ddca7a5882c5f0ab03c01c422127815e56"
+        },
+        "clippy::op_ref": {
+          "count": 58,
+          "signature_sha256": "ac80e8c6196615cf23c627e8e0b581ec035d73188e378f52d711d534d38d7b88"
+        },
+        "clippy::redundant_clone": {
+          "count": 200,
+          "signature_sha256": "a453f1f241f5f9a8459eed310ff464a3d9f172d077905cc3e94872badf5b06e0"
+        },
+        "clippy::ref_option": {
+          "count": 4,
+          "signature_sha256": "fecd0197a8c95fb886ed2e2d1c7cf0535dd1b904fc3cee42983518467ce24b67"
+        },
+        "clippy::single_char_pattern": {
+          "count": 4,
+          "signature_sha256": "4e0a49857b12f1a91c09c1e4b258b46997cf2dcab3ab5ef0c5bceacef43de497"
+        },
+        "clippy::type_complexity": {
+          "count": 1,
+          "signature_sha256": "a03f47cfe6b806423abcfb07a900f88378dea11d94d1696cc43d870ca49296d1"
+        },
+        "clippy::unnecessary_cast": {
+          "count": 9,
+          "signature_sha256": "1a4bc4bf96a0b9447bdf246d1c303f8797d85fdba8db49918452da29fe579a84"
+        },
+        "clippy::unnecessary_to_owned": {
+          "count": 24,
+          "signature_sha256": "6f5e3b521cef19f24e24f87363e87395fac26c017c8dfeab8bb47ab65ef0bd47"
+        },
+        "clippy::unused_async": {
+          "count": 2,
+          "signature_sha256": "e874165115b93c60a4971c9aba66b063b515d1fec0e87b0d168952019208366c"
+        },
+        "clippy::unused_async_trait_impl": {
+          "count": 1,
+          "signature_sha256": "4ec5b92a5a234feee46f967d390fb218807cf9bfff17d4fe13c0fd0f0e06a853"
+        },
+        "clippy::unused_self": {
+          "count": 1,
+          "signature_sha256": "c684a74cf162de3fb551a142b122c2960d79784c93b1c4e475fdc862973488b0"
+        },
+        "clippy::use_self": {
+          "count": 28,
+          "signature_sha256": "292c96c5fc63e5c4c93e295042b9489e02de302eeb430b697e2e9c18af10e869"
+        },
+        "clippy::useless_vec": {
+          "count": 3,
+          "signature_sha256": "80c9ea90e0f1b0a90eab43c1a1f4dba2075d0974013562d7a19cec072ce091f8"
+        },
+        "private_interfaces": {
+          "count": 6,
+          "signature_sha256": "aa115d9c0beec2a83eaf4ff5760f3817f686ed875a78ea2b2564f4bcec5b771c"
+        }
       }
     }
   },

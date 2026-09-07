@@ -1,37 +1,37 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::IOError;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    use ::sifr_runtime::SifrInt;
+    pub(super) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn exists(path: &str) -> bool {
+    pub(super) fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
-    pub(crate) fn mkdir(path: &str) -> Result<(), IOError> {
+    fn mkdir(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn rmdir(path: &str) -> Result<(), IOError> {
+    pub(super) fn rmdir(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::rmdir(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn remove_file(path: &str) -> Result<(), IOError> {
+    pub(super) fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn gettempdir() -> String {
+    fn gettempdir() -> String {
         ::sifr_stdlib::fs::gettempdir()
     }
-    pub(crate) fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
+    fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
         ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
             ::sifr_runtime::interop::SifrIntBridge::from(max),
         )
         .into_sifr_int()
     }
-    pub(crate) fn sifr_generated_random_suffix() -> String {
+    fn sifr_generated_random_suffix() -> String {
         let n: SifrInt = random_int(SifrInt::from_i64(100_000), SifrInt::from_i64(999_999));
         n.to_string()
     }
-    pub(crate) fn mktemp_path(prefix: &str) -> String {
+    fn mktemp_path(prefix: &str) -> String {
         let suffix: String = sifr_generated_random_suffix();
         let mut root: String = gettempdir();
         let sifr_generated_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
@@ -71,10 +71,10 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn sifr_generated_next_candidate(prefix: &str) -> String {
+    fn sifr_generated_next_candidate(prefix: &str) -> String {
         mktemp_path(prefix)
     }
-    pub(crate) fn sifr_generated_collision_message(kind: &str, attempts: SifrInt) -> String {
+    fn sifr_generated_collision_message(kind: &str, attempts: SifrInt) -> String {
         {
             let mut sifr_generated_concat: String =
                 String::with_capacity(9usize + kind.len() + 37usize + 9usize);
@@ -86,7 +86,7 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn mkstemp(prefix: &str) -> Result<String, IOError> {
+    pub(super) fn mkstemp(prefix: &str) -> Result<String, IOError> {
         let mut attempts: SifrInt = SifrInt::from_i64(0);
         let max_attempts: SifrInt = SifrInt::from_i64(64);
         while &attempts < &max_attempts {
@@ -124,7 +124,7 @@ mod sifr_generated_generated_support {
             max_attempts.clone(),
         )))
     }
-    pub(crate) fn mkdtemp(prefix: &str) -> Result<String, IOError> {
+    pub(super) fn mkdtemp(prefix: &str) -> Result<String, IOError> {
         let mut attempts: SifrInt = SifrInt::from_i64(0);
         let max_attempts: SifrInt = SifrInt::from_i64(64);
         while &attempts < &max_attempts {
@@ -162,22 +162,22 @@ mod sifr_generated_generated_support {
             max_attempts.clone(),
         )))
     }
-    pub(crate) fn zip_create(path: &str) -> Result<(), IOError> {
+    pub(super) fn zip_create(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::zipfile::zip_create(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn zip_add_file(zip_path: &str, name: &str, content: &str) -> Result<(), IOError> {
+    pub(super) fn zip_add_file(zip_path: &str, name: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::zipfile::zip_add_file(zip_path, name, content).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn zip_read_file(zip_path: &str, name: &str) -> Result<String, IOError> {
+    pub(super) fn zip_read_file(zip_path: &str, name: &str) -> Result<String, IOError> {
         ::sifr_stdlib::zipfile::zip_read_file(zip_path, name).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn zip_namelist(zip_path: &str) -> Result<Vec<String>, IOError> {
+    pub(super) fn zip_namelist(zip_path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::zipfile::zip_namelist(zip_path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn sifr_generated_zip_read_only_error() -> String {
+    pub(super) fn sifr_generated_zip_read_only_error() -> String {
         "zipfile operation requires write or append mode".to_string()
     }
-    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+    fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
         let kind = {
             let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
@@ -197,7 +197,9 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        sifr_generated_zip_read_only_error, zip_add_file, zip_create, zip_namelist, zip_read_file,
+    };
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2ezipfileX2eZipFile {
@@ -299,7 +301,9 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for IOError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    exists, mkdtemp, mkstemp, remove_file, rmdir, write_text,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ezipfileX2eZipFile;

@@ -1,9 +1,9 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) use ::std::collections::HashMap;
-    pub(crate) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    use ::sifr_runtime::SifrInt;
+    use ::std::collections::HashMap;
+    pub(super) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
         items: &[T],
     ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
@@ -27,7 +27,7 @@ mod sifr_generated_generated_support {
         }
         SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -555,7 +555,7 @@ mod sifr_generated_project_nominals {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{assert_bool_vector_eq, from_list};
 use ::sifr_runtime::SifrInt;
 use ::std::collections::HashSet;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;

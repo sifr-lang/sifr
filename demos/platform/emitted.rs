@@ -1,43 +1,43 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn platform_system() -> String {
+    use ::sifr_runtime::SifrInt;
+    fn platform_system() -> String {
         ::sifr_stdlib::platform::platform_system()
     }
-    pub(crate) fn platform_arch() -> String {
+    fn platform_arch() -> String {
         ::sifr_stdlib::platform::platform_arch()
     }
-    pub(crate) fn platform_node() -> String {
+    fn platform_node() -> String {
         ::sifr_stdlib::platform::platform_node()
     }
-    pub(crate) fn platform_release() -> String {
+    fn platform_release() -> String {
         ::sifr_stdlib::platform::platform_release()
     }
-    pub(crate) fn platform_version() -> String {
+    fn platform_version() -> String {
         ::sifr_stdlib::platform::platform_version()
     }
-    pub(crate) fn platform_processor() -> String {
+    fn platform_processor() -> String {
         ::sifr_stdlib::platform::platform_processor()
     }
-    pub(crate) fn system() -> String {
+    pub(super) fn system() -> String {
         platform_system()
     }
-    pub(crate) fn machine() -> String {
+    pub(super) fn machine() -> String {
         platform_arch()
     }
-    pub(crate) fn node() -> String {
+    pub(super) fn node() -> String {
         platform_node()
     }
-    pub(crate) fn release() -> String {
+    pub(super) fn release() -> String {
         platform_release()
     }
-    pub(crate) fn version() -> String {
+    pub(super) fn version() -> String {
         platform_version()
     }
-    pub(crate) fn processor() -> String {
+    pub(super) fn processor() -> String {
         platform_processor()
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -65,7 +65,9 @@ mod sifr_generated_generated_support {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, machine, node, processor, release, system, version,
+};
 use ::sifr_runtime::SifrInt;
 fn collect_core_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();

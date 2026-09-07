@@ -2,6 +2,63 @@
 
 Status: active
 
+## Item 12K-B13: support visibility and imports (2026-09-07)
+
+Owner [#3744](https://github.com/sifr-lang/sifr/issues/3744). Sole implementation
+checkout `/private/tmp/sifr-support.kmdI25/sifr`, branch
+`codex/support-visibility-imports`, starts from full terminal record
+`b00f66e81fba59d5e3415fd068f7c9724704ab4d`. Fetched actual main
+`06ea86334b72f49f5aab250a64498ee955ec9331` is an ancestor. All sixteen exact
+gitlinks, including corpus `8bcbe7ab7939e5c8362c10f61a80e368022cc372`, are retained.
+Parent worktree and predecessor source, indexes, targets and evidence are read-only.
+
+Scope is the two support assembly lint mechanisms plus authenticated exact debt
+for the unchanged twelve-surface representative selection. Private helper
+functions/imports stay private; sibling support access uses parent visibility;
+consumers receive explicit names including required traits and macro task locals.
+Retained Item12 and all successor implementation remain outside this item.
+
+Registered checks, after implementation:
+
+- `cargo test -p sifr_codegen support_assembly_codegen_tests`
+- `cargo test -p sifr_codegen test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility`
+- `cargo test -p sifr_codegen task_local_support` (additional affected mechanism regression)
+- `uv run --project verification python -m sifr_verify areas run --area generated_code_quality --suite representative --result-json target/verification/areas/generated-quality-representative.json`
+- `cargo fmt --check`
+- `python3 scripts/check_file_size_guardrails.py`
+- `git diff --check`
+
+Compiler building/emission needed to derive source-attributed debt is preparation,
+not a passing qualification. Freeze and push the complete candidate before the
+production 92-graph setup with `sifr_verify.generated_cargo_setup --profile merge
+--revision <candidate>`, then execute all nine representative variants.
+One B13 exact-SHA initial Opus review and at most one remediation; one merge-profile
+gate on the final candidate, no create-pr gate or second merge gate. Original12K
+historical counters remain four FAILED plus one RESOURCE_TERMINATED, zero PASS,
+and one initial plus one remediation review; none are reset by B13.
+
+Capacity admission is assessed from current owned allocations and remaining work.
+Initial post-clone free space is 68,400,352 KiB; no owned target exists yet.
+The earlier R2 96 GiB cold whole-run estimate is historical planning evidence,
+not a universal per-item minimum. No predecessor cleanup is authorized.
+
+Implementation also mechanically regenerates 118 affected demo companions using
+`scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --update --jobs 6`.
+No demo inputs, fixture expectations, lint policies, selection rules, lockfiles
+or profile coverage are weakened. The same representative selection receives
+a baseline predicted from 528 authenticated existing diagnostics before any new
+Clippy execution; full derivation and source/toolchain attribution live in
+`verification/areas/generated_code_quality/representative_support_baseline.md`
+and its linked JSON receipt. Both rejected categories must disappear.
+
+Final gate coverage is explicitly registered as all twenty merge-profile areas,
+all thirteen guardrails, all nine representative GCQ variants and all 31
+full-mode crate commands. The normal empty E2E fixture manifest remains in use.
+This includes the migrated stdlib module checks, default stdlib API tests,
+`--no-default-features --features json,unicode,i18n,http`, `--all-features`,
+and both normally ignored driver and CLI build commands. These commands are
+already in the profile; no separate broad rerun is added.
+
 ## Original12K gate5 terminal: representative GCQ blocked; worker stopped (2026-09-07)
 
 Delivery remains **blocked**, not merged. PR3717 exact candidate

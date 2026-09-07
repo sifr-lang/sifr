@@ -4,12 +4,12 @@ mod sifr_generated_generated_support {
         clippy::approx_constant,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) const PI: f64 = 3.141_592_653_589_793_f64;
-    pub(crate) fn sqrt(x: f64) -> f64 {
+    pub(super) const PI: f64 = 3.141_592_653_589_793_f64;
+    pub(super) fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{PI, sqrt};
 use ::sifr_runtime::SifrInt;
 #[expect(
     clippy::assertions_on_constants,

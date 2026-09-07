@@ -1,8 +1,8 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::{ParseError, SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec};
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn sifr_generated_split_inline_option(token: &str) -> (bool, String, String) {
+    use ::sifr_runtime::SifrInt;
+    pub(super) fn sifr_generated_split_inline_option(token: &str) -> (bool, String, String) {
         let sifr_generated_chars_token: Vec<char> = token.chars().collect::<Vec<char>>();
         let mut key: String = String::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
@@ -52,7 +52,7 @@ mod sifr_generated_generated_support {
             String::new(),
         )
     }
-    pub(crate) fn sifr_generated_is_digit_string(value: &str) -> bool {
+    pub(super) fn sifr_generated_is_digit_string(value: &str) -> bool {
         if value.is_empty() {
             return false;
         }
@@ -63,7 +63,7 @@ mod sifr_generated_generated_support {
         }
         true
     }
-    pub(crate) fn sifr_generated_normalize_nargs(nargs: &str) -> String {
+    pub(super) fn sifr_generated_normalize_nargs(nargs: &str) -> String {
         if nargs.is_empty() {
             return "1".to_string();
         }
@@ -100,7 +100,7 @@ mod sifr_generated_generated_support {
         }
         "1".to_string()
     }
-    pub(crate) fn sifr_generated_nargs_is_multi(nargs: &str) -> bool {
+    pub(super) fn sifr_generated_nargs_is_multi(nargs: &str) -> bool {
         let normalized: String = sifr_generated_normalize_nargs(nargs);
         if normalized == "*" || normalized == "+" {
             return true;
@@ -126,7 +126,7 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(crate) fn sifr_generated_coerce_bool(raw: &str) -> Option<String> {
+    pub(super) fn sifr_generated_coerce_bool(raw: &str) -> Option<String> {
         let normalized: String = raw.to_lowercase();
         if normalized == "1" || normalized == "true" || normalized == "yes" || normalized == "on" {
             return Some("true".to_string());
@@ -136,7 +136,7 @@ mod sifr_generated_generated_support {
         }
         None
     }
-    pub(crate) fn sifr_generated_copy_token(value: &Option<String>) -> String {
+    pub(super) fn sifr_generated_copy_token(value: &Option<String>) -> String {
         let Some(value) = value.as_ref() else {
             return String::new();
         };
@@ -147,7 +147,7 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn sifr_generated_derive_dest(name: &str) -> String {
+    pub(super) fn sifr_generated_derive_dest(name: &str) -> String {
         let sifr_generated_chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
         if name.starts_with("--") {
             return {
@@ -190,7 +190,7 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn sifr_generated_is_option_like_token(
+    pub(super) fn sifr_generated_is_option_like_token(
         specs: &[SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec],
         token: &str,
     ) -> bool {
@@ -230,7 +230,12 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        sifr_generated_coerce_bool, sifr_generated_copy_token, sifr_generated_derive_dest,
+        sifr_generated_is_digit_string, sifr_generated_is_option_like_token,
+        sifr_generated_nargs_is_multi, sifr_generated_normalize_nargs,
+        sifr_generated_split_inline_option,
+    };
     use ::sifr_runtime::SifrInt;
     use ::std::collections::HashMap;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]

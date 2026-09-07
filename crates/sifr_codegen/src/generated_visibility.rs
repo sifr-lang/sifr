@@ -3,7 +3,7 @@ fn public_visibility() -> syn::Visibility {
 }
 
 fn crate_visibility() -> syn::Visibility {
-    syn::parse_quote!(pub(crate))
+    syn::parse_quote!(pub(super))
 }
 
 fn set_impl_function_visibility(items: &mut [syn::ImplItem], visibility: &syn::Visibility) {
@@ -64,7 +64,14 @@ pub(crate) fn publicize_generated_module_source(source: &str) -> String {
     prettyplease::unparse(&file)
 }
 
-pub(crate) fn crate_visible_generated_support_source(source: &str) -> String {
+pub(crate) fn crate_visible_generated_support_source(source: &str, consumers: &[&str]) -> String {
+    let names = crate::stdlib_filter::rust_source_defined_item_names(source);
+    let external_names = consumers
+        .iter()
+        .flat_map(|consumer| {
+            crate::stdlib_filter::rust_source_referenced_item_names(consumer, &names)
+        })
+        .collect::<std::collections::HashSet<_>>();
     let mut file = syn::parse_file(source).unwrap_or_else(|error| {
         panic!("failed to parse generated support for crate visibility: {error}")
     });
@@ -73,7 +80,13 @@ pub(crate) fn crate_visible_generated_support_source(source: &str) -> String {
         match item {
             syn::Item::Const(item) => item.vis = visibility,
             syn::Item::Enum(item) => item.vis = visibility,
-            syn::Item::Fn(item) => item.vis = visibility,
+            syn::Item::Fn(item) => {
+                item.vis = if external_names.contains(&item.sig.ident.to_string()) {
+                    visibility
+                } else {
+                    syn::Visibility::Inherited
+                };
+            }
             syn::Item::Impl(item) if item.trait_.is_none() => {
                 set_impl_function_visibility(&mut item.items, &visibility);
             }
@@ -90,7 +103,7 @@ pub(crate) fn crate_visible_generated_support_source(source: &str) -> String {
                     field.vis = visibility.clone();
                 }
             }
-            syn::Item::Use(item) => item.vis = visibility,
+            syn::Item::Use(item) => item.vis = syn::Visibility::Inherited,
             syn::Item::Macro(item) => {
                 if let Some(mut declarations) = crate::task_local_support::declarations(&item.mac) {
                     for declaration in &mut declarations.0 {
@@ -104,4 +117,24 @@ pub(crate) fn crate_visible_generated_support_source(source: &str) -> String {
         }
     }
     prettyplease::unparse(&file)
+}
+
+pub(crate) fn generated_support_import(source: &str, support: &str) -> String {
+    let names = crate::stdlib_filter::rust_source_defined_item_names(support);
+    let mut required = crate::stdlib_filter::rust_source_unqualified_item_names(source, &names)
+        .unwrap_or_else(|error| panic!("invalid generated support import: {error}"));
+    required.extend(
+        crate::stdlib_filter::rust_source_required_trait_names(source, support)
+            .unwrap_or_else(|error| panic!("invalid generated support trait import: {error}")),
+    );
+    let mut required = required.into_iter().collect::<Vec<_>>();
+    required.sort();
+    if required.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "use crate::__sifr_generated_support::{{{}}};",
+            required.join(", ")
+        )
+    }
 }
