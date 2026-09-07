@@ -6,7 +6,7 @@
   "source_inventory_sha256": "461405023c6b02a1c5027cf64bf88766af1c228e36fe35f0a2298ca8a969be85",
   "toolchain": "rustc 1.98.0 (88d9e12ae 2026-08-18)\nbinary: rustc\ncommit-hash: 88d9e12ae178fab0fb5cc050a94da85685d449ea\ncommit-date: 2026-08-18\nhost: aarch64-apple-darwin\nrelease: 1.98.0\nLLVM version: 22.1.8\n",
   "clippy": "clippy 0.1.98 (88d9e12ae1 2026-08-18)\n",
-  "method": "Authenticate 528 retained diagnostics against the original aggregate; relocate existing signature coordinates only through equal source text. Removed categories are omitted. No fresh Clippy output is used to set expected debt.",
+  "method": "Authenticate 528 retained diagnostics against the original aggregate; relocate existing signature coordinates only through equal source text. Removed categories are omitted. No fresh Clippy output is used to set expected debt. B13 visibility also resolves six private_interfaces diagnostics: independently authenticate each old/new declaration and remove only that fixed category; all nineteen remaining count/signature entries stay byte-identical.",
   "existing_summary": {
     "clippy::arithmetic_side_effects": {
       "count": 69,
@@ -165,10 +165,6 @@
     "clippy::useless_vec": {
       "count": 3,
       "signature_sha256": "a4f6a67dd5b87dfd2a1328d2e595308dbde2fa396f44579d33ba1521fdd03948"
-    },
-    "private_interfaces": {
-      "count": 6,
-      "signature_sha256": "317a26da228980ddc1f417b1c923f02141adf71b5748d1545d4674e2f20831fe"
     }
   },
   "surfaces": [
@@ -7747,5 +7743,194 @@
       ]
     }
   ],
-  "derivation_script_sha256": "d67085e4fce7fdfe861c0be097bdc3b3df20b2133ec51a2b64bf54af50dfffcc"
+  "derivation_script_sha256": "d67085e4fce7fdfe861c0be097bdc3b3df20b2133ec51a2b64bf54af50dfffcc",
+  "resolved_private_interfaces": [
+    {
+      "entry": "concurrency-002-blocking-offload-demo",
+      "diagnostic": {
+        "code": "private_interfaces",
+        "message": "type `sifr_generated_generated_support::SifrGeneratedSecondaryErrorKind` is more private than the item `sifr_generated_project_nominals::SecondaryError::kind`",
+        "file": "src/main.rs",
+        "before": [
+          100,
+          9
+        ],
+        "after": [
+          106,
+          9
+        ],
+        "relocation": "equal source text"
+      },
+      "type": "SifrGeneratedSecondaryErrorKind",
+      "before_declaration": [
+        5,
+        "    pub(crate) enum SifrGeneratedSecondaryErrorKind {}"
+      ],
+      "after_declaration": [
+        5,
+        "    pub enum SifrGeneratedSecondaryErrorKind {}"
+      ],
+      "before_source": "/private/tmp/sifr-validation.wuRhoh/sifr/target/sifr_generated_code_quality/merge.ef595b6da060c1bf3f6c2367361b0e774a0654a7.shared/entries/concurrency-002-blocking-offload-demo-afde5eb381f522b2/sifr_output/src/main.rs",
+      "after_source": "/private/tmp/sifr-b13-continuation.kr53D8/sifr/target/sifr_generated_code_quality/merge.bc55a0d120811247ab5bdf522c7223a3965259e7.shared/entries/concurrency-002-blocking-offload-demo-458488baf3b9d98e/sifr_output/src/main.rs",
+      "before_sha256": "0237a554c8234bc94f357e261af6ee2a82ba24ad4af81641ffde5b3170e720bc",
+      "after_sha256": "507b9aa4222609061ed1e1574fea852046528680d564d0dbb1c3f9a198bca982",
+      "reason": "Required support signature type now has public visibility inside the private support owner, matching the sibling public field/method interface."
+    },
+    {
+      "entry": "concurrency-005-structured-concurrency-demo",
+      "diagnostic": {
+        "code": "private_interfaces",
+        "message": "type `sifr_generated_generated_support::SifrGeneratedSecondaryErrorKind` is more private than the item `sifr_generated_project_nominals::SecondaryError::kind`",
+        "file": "src/main.rs",
+        "before": [
+          734,
+          9
+        ],
+        "after": [
+          758,
+          9
+        ],
+        "relocation": "equal source text"
+      },
+      "type": "SifrGeneratedSecondaryErrorKind",
+      "before_declaration": [
+        36,
+        "    pub(crate) enum SifrGeneratedSecondaryErrorKind {"
+      ],
+      "after_declaration": [
+        42,
+        "    pub enum SifrGeneratedSecondaryErrorKind {"
+      ],
+      "before_source": "/private/tmp/sifr-validation.wuRhoh/sifr/target/sifr_generated_code_quality/merge.ef595b6da060c1bf3f6c2367361b0e774a0654a7.shared/entries/concurrency-005-structured-concurrency-demo-d5f9ac72b9dc7514/sifr_output/src/main.rs",
+      "after_source": "/private/tmp/sifr-b13-continuation.kr53D8/sifr/target/sifr_generated_code_quality/merge.bc55a0d120811247ab5bdf522c7223a3965259e7.shared/entries/concurrency-005-structured-concurrency-demo-da3cf3ea891d4dd9/sifr_output/src/main.rs",
+      "before_sha256": "aaa713071c22c25c0f5a2ecee8e96757f713dcfcd8596718582be6cf4a51b137",
+      "after_sha256": "3371d29164c8d2604c49afb72b086a0625a2d1c3e2150036615c71f7141a4898",
+      "reason": "Required support signature type now has public visibility inside the private support owner, matching the sibling public field/method interface."
+    },
+    {
+      "entry": "concurrency-007-sync-channel-demo",
+      "diagnostic": {
+        "code": "private_interfaces",
+        "message": "type `sifr_generated_generated_support::SifrGeneratedChannelState<T>` is more private than the item `sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2esyncX2eChannel::state`",
+        "file": "src/main.rs",
+        "before": [
+          670,
+          9
+        ],
+        "after": [
+          687,
+          9
+        ],
+        "relocation": "equal source text"
+      },
+      "type": "SifrGeneratedChannelState",
+      "before_declaration": [
+        10,
+        "    pub(crate) struct SifrGeneratedChannelState<T> {"
+      ],
+      "after_declaration": [
+        10,
+        "    pub struct SifrGeneratedChannelState<T> {"
+      ],
+      "before_source": "/private/tmp/sifr-validation.wuRhoh/sifr/target/sifr_generated_code_quality/merge.ef595b6da060c1bf3f6c2367361b0e774a0654a7.shared/entries/concurrency-007-sync-channel-demo-fa3c8bcb1d95cdce/sifr_output/src/main.rs",
+      "after_source": "/private/tmp/sifr-b13-continuation.kr53D8/sifr/target/sifr_generated_code_quality/merge.bc55a0d120811247ab5bdf522c7223a3965259e7.shared/entries/concurrency-007-sync-channel-demo-048357c6234cc2a5/sifr_output/src/main.rs",
+      "before_sha256": "37de9edaa4d5f400f153b370484ff8d2854f665ee4780b2486bfb9a657fb08d2",
+      "after_sha256": "86a02939c63fff8a371b00dcc56398a2ea62575c5668f1ec7d43040266cf3fe3",
+      "reason": "Required support signature type now has public visibility inside the private support owner, matching the sibling public field/method interface."
+    },
+    {
+      "entry": "concurrency-007-sync-channel-demo",
+      "diagnostic": {
+        "code": "private_interfaces",
+        "message": "type `sifr_generated_generated_support::SifrGeneratedChannelPushState<T>` is more private than the item `sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2esyncX2eChannel::<T>::try_push`",
+        "file": "src/main.rs",
+        "before": [
+          742,
+          9
+        ],
+        "after": [
+          759,
+          9
+        ],
+        "relocation": "equal source text"
+      },
+      "type": "SifrGeneratedChannelPushState",
+      "before_declaration": [
+        17,
+        "    pub(crate) enum SifrGeneratedChannelPushState<T> {"
+      ],
+      "after_declaration": [
+        17,
+        "    pub enum SifrGeneratedChannelPushState<T> {"
+      ],
+      "before_source": "/private/tmp/sifr-validation.wuRhoh/sifr/target/sifr_generated_code_quality/merge.ef595b6da060c1bf3f6c2367361b0e774a0654a7.shared/entries/concurrency-007-sync-channel-demo-fa3c8bcb1d95cdce/sifr_output/src/main.rs",
+      "after_source": "/private/tmp/sifr-b13-continuation.kr53D8/sifr/target/sifr_generated_code_quality/merge.bc55a0d120811247ab5bdf522c7223a3965259e7.shared/entries/concurrency-007-sync-channel-demo-048357c6234cc2a5/sifr_output/src/main.rs",
+      "before_sha256": "37de9edaa4d5f400f153b370484ff8d2854f665ee4780b2486bfb9a657fb08d2",
+      "after_sha256": "86a02939c63fff8a371b00dcc56398a2ea62575c5668f1ec7d43040266cf3fe3",
+      "reason": "Required support signature type now has public visibility inside the private support owner, matching the sibling public field/method interface."
+    },
+    {
+      "entry": "concurrency-007-sync-channel-demo",
+      "diagnostic": {
+        "code": "private_interfaces",
+        "message": "type `sifr_generated_generated_support::SifrGeneratedChannelPopState<T>` is more private than the item `sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2esyncX2eChannel::<T>::try_pop`",
+        "file": "src/main.rs",
+        "before": [
+          775,
+          9
+        ],
+        "after": [
+          792,
+          9
+        ],
+        "relocation": "equal source text"
+      },
+      "type": "SifrGeneratedChannelPopState",
+      "before_declaration": [
+        22,
+        "    pub(crate) enum SifrGeneratedChannelPopState<T> {"
+      ],
+      "after_declaration": [
+        22,
+        "    pub enum SifrGeneratedChannelPopState<T> {"
+      ],
+      "before_source": "/private/tmp/sifr-validation.wuRhoh/sifr/target/sifr_generated_code_quality/merge.ef595b6da060c1bf3f6c2367361b0e774a0654a7.shared/entries/concurrency-007-sync-channel-demo-fa3c8bcb1d95cdce/sifr_output/src/main.rs",
+      "after_source": "/private/tmp/sifr-b13-continuation.kr53D8/sifr/target/sifr_generated_code_quality/merge.bc55a0d120811247ab5bdf522c7223a3965259e7.shared/entries/concurrency-007-sync-channel-demo-048357c6234cc2a5/sifr_output/src/main.rs",
+      "before_sha256": "37de9edaa4d5f400f153b370484ff8d2854f665ee4780b2486bfb9a657fb08d2",
+      "after_sha256": "86a02939c63fff8a371b00dcc56398a2ea62575c5668f1ec7d43040266cf3fe3",
+      "reason": "Required support signature type now has public visibility inside the private support owner, matching the sibling public field/method interface."
+    },
+    {
+      "entry": "concurrency-007-sync-channel-demo",
+      "diagnostic": {
+        "code": "private_interfaces",
+        "message": "type `sifr_generated_generated_support::SifrGeneratedSecondaryErrorKind` is more private than the item `sifr_generated_project_nominals::SecondaryError::kind`",
+        "file": "src/main.rs",
+        "before": [
+          949,
+          9
+        ],
+        "after": [
+          966,
+          9
+        ],
+        "relocation": "equal source text"
+      },
+      "type": "SifrGeneratedSecondaryErrorKind",
+      "before_declaration": [
+        51,
+        "    pub(crate) enum SifrGeneratedSecondaryErrorKind {"
+      ],
+      "after_declaration": [
+        53,
+        "    pub enum SifrGeneratedSecondaryErrorKind {"
+      ],
+      "before_source": "/private/tmp/sifr-validation.wuRhoh/sifr/target/sifr_generated_code_quality/merge.ef595b6da060c1bf3f6c2367361b0e774a0654a7.shared/entries/concurrency-007-sync-channel-demo-fa3c8bcb1d95cdce/sifr_output/src/main.rs",
+      "after_source": "/private/tmp/sifr-b13-continuation.kr53D8/sifr/target/sifr_generated_code_quality/merge.bc55a0d120811247ab5bdf522c7223a3965259e7.shared/entries/concurrency-007-sync-channel-demo-048357c6234cc2a5/sifr_output/src/main.rs",
+      "before_sha256": "37de9edaa4d5f400f153b370484ff8d2854f665ee4780b2486bfb9a657fb08d2",
+      "after_sha256": "86a02939c63fff8a371b00dcc56398a2ea62575c5668f1ec7d43040266cf3fe3",
+      "reason": "Required support signature type now has public visibility inside the private support owner, matching the sibling public field/method interface."
+    }
+  ],
+  "fixed_debt_reconciliation_script_sha256": "7262fc6c0aa5a1225705c2661ec0dbcde8947f40829736893bdf117510b74bfe"
 }

@@ -2,6 +2,33 @@
 
 Status: active
 
+## Item12K-B13 fixed-debt reconciliation checkpoint (2026-09-07)
+
+Candidate `bc55a0d120811247ab5bdf522c7223a3965259e7` was frozen/pushed and
+passed support11/trait1/tasklocal8,fmt,size3787,diff, production92 (1275.1s)
+and pre-Clippy source concordance (14Rust files across12surfaces).
+Its full nine-variant representative run finished8PASS/1FAIL (631.8s).
+Both targeted categories are absent:166redundant_pub_crate and18wildcard imports
+resolved through the B13 producer changes. The sole failure is stale fixed debt:
+six `private_interfaces` warnings also disappeared. All other nineteen code
+counts AND exact signature hashes match the prediction, with522remaining known
+diagnostics. Original failed logs/results remain under the owned evidence root.
+
+The user explicitly authorizes source-proven fixed-debt reconciliation. Six
+before/after declaration proofs authenticate the support types exposed through
+the blocking-offload, structured-concurrency and sync-channel sibling interfaces.
+Only that resolved category is removed from this representative expectation;
+the other522 entries/signatures, lint owners, selection policy and all other
+baselines stay intact. This checkpoint changes baseline/provenance records only,
+not compiler, fixtures, lockfile or workflow implementation. It is not retained
+Item12 completion or a zero-debt claim. B13 review/gate counters remain0.
+
+Next: freeze/push corrected candidate; align exact-revision production graphs,
+pre-Clippy concordance and all9 representative variants. Preserve focused
+compiler/fmt/guard evidence with exact unchanged-input attribution. Then the
+registered original native90/corpus411, bounded review and one final merge gate.
+No original/B14/B15 review or gate counter is reset.
+
 ## Item 12K-B13 continuation registration (2026-09-07)
 
 Sole owner clone `/private/tmp/sifr-b13-continuation.kr53D8/sifr`, branch

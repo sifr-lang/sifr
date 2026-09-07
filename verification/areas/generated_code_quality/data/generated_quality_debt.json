@@ -480,10 +480,6 @@
         "clippy::useless_vec": {
           "count": 3,
           "signature_sha256": "a4f6a67dd5b87dfd2a1328d2e595308dbde2fa396f44579d33ba1521fdd03948"
-        },
-        "private_interfaces": {
-          "count": 6,
-          "signature_sha256": "317a26da228980ddc1f417b1c923f02141adf71b5748d1545d4674e2f20831fe"
         }
       }
     }

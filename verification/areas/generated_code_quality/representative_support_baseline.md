@@ -12,7 +12,9 @@ The original delivery candidate is
 contains 712 diagnostics across 22 codes. B13 removes the producer mechanisms
 for 166 `redundant_pub_crate` and 18 `wildcard_imports` diagnostics. Neither
 category receives a lint allowance or a newly accepted debt owner. The remaining
-528 diagnostics retain their existing twenty exact lint owners.
+528 diagnostics initially retained their existing twenty exact lint owners.
+The completed visibility repair also resolves six `private_interfaces` warnings;
+the final expectation contains522 diagnostics across the other nineteen owners.
 
 Expected signatures for each candidate are derived **before its Clippy validation**,
 using only the original authenticated evidence, never a failed candidate's output:
@@ -44,6 +46,12 @@ using only the original authenticated evidence, never a failed candidate's outpu
 6. Derive the new exact signatures with the unchanged quality-policy functions.
    Counts must equal the authenticated original counts for all twenty retained
    codes. New Clippy execution must subsequently match these predictions exactly.
+7. Reconcile the six resolved interface diagnostics using their authenticated
+   original messages and source files. Each exposed channel/secondary-error type
+   changes from `pub(crate)` to `pub` within the private support owner, matching
+   the sibling field or method visibility. Remove only `private_interfaces` from
+   this selection; preserve all nineteen other entries exactly. The JSON receipt
+   keeps the original528 aggregate and all six before/after declaration proofs.
 
 The B13 continuation re-derives the same twenty-code,528-diagnostic aggregate
 after combining B14's approved capture semantics. The owned derivation is
@@ -53,6 +61,16 @@ It retains the original derivation algorithm and authenticates the same original
 evidence; adaptations are the owned compiler path and compact patch rendering.
 The source and signature changes are recorded before new Clippy execution, with
 production-materialized source concordance required before that execution.
+
+The initial comparison on `bc55a0d120811247ab5bdf522c7223a3965259e7` is retained
+as failed evidence: all remaining nineteen count/signature entries matched,
+but the predicted six interface warnings were absent. The independent removal
+proof is `/private/tmp/sifr-b13-continuation.kr53D8/evidence/reconcile_private_interfaces.py`,
+SHA-256 `7262fc6c0aa5a1225705c2661ec0dbcde8947f40829736893bdf117510b74bfe`.
+It derives the corrected expectation from the prior baseline and exact source
+declarations, without importing any new Clippy diagnostics into expected debt.
+The522 remaining known diagnostics do not satisfy retained Item12 or whole-phase
+zero-debt completion.
 
 Rust 1.98.0, Clippy's full version, each surface, each original diagnostic origin,
 the source hashes, old/new signature aggregates and per-diagnostic relocations
