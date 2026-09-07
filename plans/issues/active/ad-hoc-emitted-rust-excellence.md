@@ -2,6 +2,88 @@
 
 Status: active
 
+## Item12K-B13 delivery continuation terminal: performance sampling blocker (2026-09-08)
+
+Status: BLOCKED / NOT MERGED. The complete B18 documentation repair and record
+were normally fast-forwarded into the explicitly transferred, clean, closed
+Boole clone `/private/tmp/sifr-b13-continuation.kr53D8/sifr`. Frozen candidate
+`98480c78587d6cbd99a7079d10c71825360bd468` is normally pushed to original
+[PR3717](https://github.com/sifr-lang/sifr/pull/3717), still OPEN DRAFT. Actual-main
+base remains `156157242b0995c01c4fff03575624b5c471c0d8`. No main or corpus merge
+occurred; no dependent owner was closed as delivered.
+
+All26,582 non-Markdown entries and16gitlinks match approved B13
+`be0849a905f105d1733d24aafe880c93b7643438`; all277 actual-main delta paths remain.
+Only B18's approved verification Markdown and phase records differ from be0849.
+Full db29/348bd/98480 ancestry is retained. Corpus remains
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`; excluded retained12 source
+`8ad089a9458f35fcfa228e93fe44f4d69731828b` stays excluded. No compiler, fixture,
+lockfile, baseline, workflow, policy or next-item implementation was changed.
+
+Fresh whitespace check PASS. Support11/trait1/tasklocal8/fmt/file-size3787,
+native90 check+run/corpus411/source-concordance14 Rust hashes over12surfaces and
+B18 readiness4/4 with27negative cases were reused by verified input identity.
+[Published scoped review mapping](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5575434383)
+reuses B13 initial SATISFIED and B18 docs SATISFIED; no new provider request or
+review-counter reset. B13 initial1/provider1/retry0/remediation0 remains.
+
+The ONE registered changed-prerequisite `scripts/run_all_tests.sh --profile merge`
+naturally FAILED exit1 after6781.973s. No create-pr, second gate, restart, resume,
+standalone repeated qualification, policy relaxation or resource termination.
+Production92 exact-revision setup and all13guards PASS, including264fresh
+companions. Ten selected areas PASS: Rustinterop10, readiness4/27negative,
+core5, CPython differential2, Pythoninterop30, diagnostics184, runtime-platform30
+(3 explicit capability skips), algorithmic representative12, developer-tooling42,
+and generated-quality representative9. The old taxonomy failure is repaired.
+Clippy retains522 governed diagnostics/19codes with the three targeted categories
+absent; this does not complete retainedItem12's broader all-surface work.
+
+New later owner [12K-B19 / #3776](https://github.com/sifr-lang/sifr/issues/3776),
+compiler/performance, is RECORDED ONLY, NOT STARTED. The actual failure is
+`formatter-corpus-001-project-check`: controlled work-mode sampling rejected
+three internal attempts as `unstable-samples`. Retired-instruction coefficient
+of variation was0.064257,0.026115,0.048016 against0.02. Host snapshots detected
+no competing build processes and reported nominal thermal/AC power. This does
+not establish the cause, a throughput regression, external-worker causation or
+a B13 mechanism defect. Performance and formatter source inputs are identical
+to actual main. No baseline replay or further diagnosis/test was performed.
+
+Performance has10PASS and2failed status variants: executed benchmark-subsetFAIL
+and dependent budget-subset NOT EXECUTED (`blocked-by-benchmark-subset`). Five
+benchmark cases passed before the formatter rejection; four later cases were
+not run. Warm wall-time and setup-budget advisories were not the blocker.
+UNREACHED: distribution_release, sysroot_release, project_workspace,
+package_management, stdlib_parity, regression, fuzz_property,
+ecosystem_compatibility, sql_platform; BOTH toolchain steps; all31unique
+full-mode crate commands/full empty-manifest E2E/migrated stdlib default, API
+and allfeatures/ignored CLI and driver. No partial-profile PASS is claimed.
+
+Immutable current evidence root `/private/tmp/sifr-b13-integration.oBoJJW`:
+
+| Artifact | SHA256 |
+| --- | --- |
+| `merge.98480c78587d6cbd99a7079d10c71825360bd468.json` | `d9a35097fa8a5a7b0b76feccd575edb90b653808f0aa930e6d45a04773009ca6` |
+| Same basename `.log` | `8b4300207b4c34a9272b1d06f1664cc2c6136fd99bfd2615ec5a3deb5294c89b` |
+| `gate-outcome.98480c78587d6cbd99a7079d10c71825360bd468.json` | `57415124d13a0c6429e4e4020d7544235bf5b7fbb1bd3830364b57527b2d2235` |
+| `blocker.98480c78587d6cbd99a7079d10c71825360bd468.json` | `9b472476cac83bf197c8504bd34d7cf4ee2e1c4fe375249139f4b7c3b1dc7563` |
+| Preserved formatter controlled-sample failure JSON | `acc7073f422a40583ce2ce7dec4198088d7d4a5db8f64530d9e000d673e70a97` |
+| `input-review-mapping.98480c78587d6cbd99a7079d10c71825360bd468.json` | `b1dcfa5f7349a3ba261149e984616deaadf7167d973943c2804bdb2b2d41e279` |
+
+2422 gate artifacts plus125 benchmark/input/compiler artifacts were copied
+byte-identically outside the mutable clone. Prior2641 B13/B18 artifacts were
+authenticated intact. All previous proof/cache is preserved; no cleanup was
+performed. Parent's two dirty phase documents/HEAD/index were read-only and
+verified unchanged. Gate session91981 ended; no live B13 validation processes
+remain. Parent was notified that SQL may take the next broad validation window.
+
+Cumulative B13 gates:2FAILED/0PASS (one prior be0849 taxonomy failure plus this
+changed-prerequisite attempt). Original12K4FAILED+1RESOURCE143/0PASS, B14oneFAILED,
+B15twoFAILED and all predecessor review histories are unchanged. Existing3744,
+3745,3748 and PR3746 remain open/undelivered; optional3755/3756 remain unstarted.
+This record-only handoff receives no additional review or gate. Exact next
+action: STOP and return native blocked terminal; parent separately scopes the
+later performance owner. No B19/12D/12E/12F/retained12 implementation begins here.
+
 ## Item12K-B18 terminal: documentation repair merged to stack, NOT main (2026-09-07)
 
 Status: COMPLETE for this bounded documentation item. [PR3757](https://github.com/sifr-lang/sifr/pull/3757)
