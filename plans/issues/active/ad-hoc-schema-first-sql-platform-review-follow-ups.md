@@ -57,6 +57,14 @@ remediation review. These findings do not reopen the completed platform phase.
 
 ### SQL registry delivery registration (2026-09-07)
 
+Current delivery owner: **12K-B17 / #3750** continues the complete B16 record
+in the existing PR #3751. Its bounded registration and seven named commands
+are at the top of `ad-hoc-emitted-rust-excellence.md`. The two new full-mode,
+blocking merge suite memberships retain compiler classification and execute
+through the existing runner. Combined registry/membership approval is required.
+This supersedes the historical blocked handoff below only after qualified merge;
+all B16 failed evidence and other SQL follow-up acceptance remain preserved.
+
 Terminal: B16 #3749 is **blocked, not merged**, preserved in draft
 [#3751](https://github.com/sifr-lang/sifr/pull/3751), candidate
 `a7ea5b8106068ee9394d82dd46e8e95bc1263a36`, main base

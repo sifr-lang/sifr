@@ -2,6 +2,90 @@
 
 Status: active
 
+## Current orchestration: B16 terminal; bounded12K-B17 membership delivery (2026-09-07)
+
+Kuhn is CLOSED. B16/#3749 is blocked/unreviewed/unmerged in draft PR3751,
+branch `codex/sql-coverage-registry-3749`, base
+`06ea86334b72f49f5aab250a64498ee955ec9331`, candidate
+`a7ea5b8106068ee9394d82dd46e8e95bc1263a36`, normally pushed record
+`e7886c9b5f6fb26805468f2283f5a41a207cdbd7`. Preserved independent clone
+`/private/tmp/sifr-sql-registry.xaAOLM/sifr` is read-only. Authenticated terminal
+`/private/tmp/sifr-sql-registry.xaAOLM/evidence/terminal.json` SHA256
+`3423f80e48b99fe1023130f04ea2c0436a4d0f7eb315f9d4fb46a2f1e0d1f365`.
+Four changed paths, exact metadata37packages117targets; original9package,
+13target and stale-kind omissions repaired. Readiness ran once3/4PASS, only
+two compiler merge-membership errors remain. Profile19/negatives26/taxonomy,
+file-size3759/diff PASS. Reviews/providers/retries/remediation/gates/merges0;
+no live handles. No actual main merge or full readiness PASS claimed.
+
+Next ready **12K-B17 / [#3750](https://github.com/sifr-lang/sifr/issues/3750)**,
+owner SQL verification/compiler-verification. Dependencies: closed B16 worker,
+preserved completee7886 record, and exact two membership diagnostics, satisfied.
+User's standing authorization covers this profile-metadata prerequisite and
+normal delivery of the combined registry/membership change in existing3751.
+This avoids a circular main-only qualification that lacks B16's registry.
+No additional blanket approval is needed; B17 owns no subsequent compiler work.
+
+Fresh independent owned clone from fulle7886; fetch actual main and retain normal
+ancestry, all B16 registry classifications/regressions and both owner records.
+Do not import B13/original12K/retained12/compiler stack. Add unique truthful
+`crate_test_membership.suites` entries in `verification/profiles/merge.json`
+for `sifr_sql_mysql` and `sifr_sql_sqlite`: exact test/-p/package commands,
+full mode, blocking status and executed_in_merge true. Preserve existing suites,
+full-mode runner execution and coverage policy. Registry data and metadata may
+be adjusted only for complete concordance; no relabeling compiler crates,
+omitted targets, waiver/ignored-coverage inflation or assertion weakening.
+Necessary bounded profile/runner regressions belong to this mechanism; register
+their exact commands before execution. Compiler/lockfile/fixture/workflow
+changes or unrelated mechanisms require separate owner disposition, not absorption.
+
+Finish all scoped implementation before named tests:
+`uv run --project verification --locked python -m sifr_verify profiles check`;
+`uv run --project verification --locked python -m sifr_verify profiles plan --profile merge`;
+`cargo test --locked -p sifr_sql_mysql`;
+`cargo test --locked -p sifr_sql_sqlite`;
+`uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json target/verification/areas/sql-membership-readiness.json`;
+`python3 scripts/check_file_size_guardrails.py`; `git diff --check`.
+Require both entries in actual full-mode plan, both complete crate tests and
+all four readiness variants. Preserve legitimate live-server ignored policy
+and report counts accurately. Record source/toolchain/input identities and
+actual complete registry concordance; reuse unchanged B16 metadata inventory,
+not its failed readiness as a PASS. Own submodules/temporary paths/caches only;
+inspect disk before Cargo work, no predecessor cleanup or cache mutation.
+
+One B17 initial exact-SHA Opus plus at most one remediation, covering the ENTIRE
+combined B16 registry plus B17 metadata/helper delta relative to actual main,
+because B16 has no approval. This is not whole-phase or compiler review.
+Profile JSON/Python helpers/registry/docs are verification metadata/helpers,
+not .github/workflows: zero Sifr create-PR/merge gates under the user rule.
+Named crate tests are not gates. Do not spend broad gates on this metadata fix.
+
+Once all named checks and combined review pass, normal push/update existing
+PR3751 and merge its complete qualified SHA is authorized. Verify actual main
+ancestry and merge SHA; reconcile3750/3749 and both owner records, then STOP.
+If preserving3751 requires a different branch/PR, document exact lineage and
+avoid duplicate delivery. Never label a stack-only merge actual-main delivery.
+Record-only updates do not cause another review/test/gate. New second-review
+mechanism/external blocker gets later owner and terminal evidence, no next code.
+
+After this delivery a fresh B15 continuation preserves fullcdc835 and integrates
+actual merged prerequisites before changed-SHA delivery qualification. B13,
+original12K,12D/12E/12F/retained12/docs-only12A remain. All historical review and
+failed/resource gate counters stand unchanged; no phase completion claimed.
+
+### B17 owned implementation registration
+
+Owned independent clone: `/private/tmp/sifr-sql-membership.4llFae/sifr`,
+continuing `codex/sql-coverage-registry-3749` from full `e7886c9b` for PR #3751.
+Actual main remains `06ea86334b72f49f5aab250a64498ee955ec9331`.
+The only B17 implementation change adds the two full-mode suite entries;
+the existing validator, selector, runner and readiness negatives enforce the
+contract without helper changes or additional test commands. Execute the seven
+commands above once on the frozen candidate. `TMPDIR`, `UV_CACHE_DIR` and
+`PYTHONPYCACHEPREFIX` point inside this session's root; `CARGO_TARGET_DIR` is
+unset. Initialize required exact Ruff submodule in this clone only. Preserve
+all predecessor records, failed checks and counters. No later item starts.
+
 ## B16 terminal: registry preserved; profile prerequisite (2026-09-07)
 
 **12K-B16 / #3749 is blocked, not merged.** Draft
