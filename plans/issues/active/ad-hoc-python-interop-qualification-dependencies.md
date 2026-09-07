@@ -2,6 +2,32 @@
 
 Status: active; fresh sequential dependency workers authorized on 2026-09-05.
 
+## Original12K combined terminal: taxonomy blocks delivery (2026-09-07)
+
+Combined candidate `bd2371a1f8f1abc5227b0ff8a00829277675af5d` incorporates
+mergedB10/B11 main `e0806799c2b36c47069d6c435353f590f64b9559` through normal
+retained ancestry, with unchanged corpus `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+The authorized additional gate completed FAILED1832.14s at verification taxonomy:
+the B11 helper embeds the delivery label `item12k-b11-clean-cache.json` in its
+report destination. Later owner **12K-B12/[#3737](https://github.com/sifr-lang/sifr/issues/3737)**
+is recorded only. No source repair, restart, third review or merge occurred.
+
+Current production preparation92/92,13guards,Rustinterop10 pass; readiness3pass/
+1fail. Python and all later areas were UNREACHED on this attempt. Prior Python30
+including allfive suites remains authenticated historical evidence, not a fresh
+combined-SHA pass. FullE2E/migratedstdlib/ignored-driver/CLI remain unqualified;
+M1-F3 stays open. The required string-message and PythonError layout contracts
+are unchanged; historical12J/R1 failed reviews remain distinct from correctingM1.
+
+The [combined reuse receipt](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5566078617)
+authenticates the approved inputs without a new Opus verdict. Final evidence
+`/private/tmp/sifr-item12k-combined.AwJ9f8/sifr/target/verification/areas/item12k-combined-final-evidence.json`,
+SHA256 `077d7249cc8b5027bfdbec9bed8fc81fedd18a654fb78b9d5043d7d9867655d1`,
+preserves28current+258retained artifacts. Counters1initial+1remediation,
+2provider/0retry,3FAILEDgates/0passing/0create-pr/0merges. PR3717/corpus48 remain
+draft/unmerged; no dependency is falsely marked delivered. All handles completed,
+parent/predecessor checkouts remain read-only, and this worker stops for3737.
+
 ## Original12K replacement terminal: Python passed, integration blocked (2026-09-07)
 
 Current receipt supersedes the pending/original-only counts below while retaining

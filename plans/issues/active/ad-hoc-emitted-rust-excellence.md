@@ -2,6 +2,86 @@
 
 Status: active
 
+## Original12K combined terminal: approved inputs, failed gate, unmerged (2026-09-07)
+
+This receipt supersedes the pending gate3 authorization and historical statuses
+below. The additional gate expressly authorized after B10/B11 merged ran once
+and finished naturally **FAILED**, exit1 after1832.14s (profile1831.41s).
+No source changed during qualification, no gate restarted, and no third Opus
+review or later-item implementation occurred. **12K is not closed or merged.**
+
+Exact candidate `bd2371a1f8f1abc5227b0ff8a00829277675af5d`, assessed main
+`e0806799c2b36c47069d6c435353f590f64b9559`, exact corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`. Normal merge ancestry preserves
+the full retained record `ed478dbcbc469d29aa56c8409ea4d35e6320824e`, all202
+integration paths and16exact independent submodules; retained Item12 source
+`8ad089a9458f35fcfa228e93fe44f4d69731828b` remains excluded. The eight non-record
+B10/B11 delta paths match their independently approved source and current main.
+Only phase Markdown conflicted; both histories and B10/B11 closure receipts
+were carried. Parent/predecessor worktrees, indexes, branches and caches stayed
+read-only. Owned clone `/private/tmp/sifr-item12k-combined.AwJ9f8/sifr`, branch
+`codex/item12k-combined-delivery`; PR remote `codex/item12k-final-integration`.
+
+All seven named focused checks passed on the candidate: stdlib-manifest schema,
+file-size3783, exact-base diff, audit inventory33/29actionable/4rejected and its
+self-test, B11policy12, and runner self-test. The
+[published review-reuse receipt](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5566078617)
+authenticates32091tree entries/16gitlinks/258retained artifacts and the unchanged
+integration plus B10/B11 approvals. It is **not a new Opus verdict**. Prior
+semantic evidence remains labeled at its actual SHA; readiness was explicitly
+not reused because the new B11 helper enters the taxonomy scan.
+
+Gate3 actual results: production workspace/generated Cargo preparation92/92PASS;
+all13guardrailsPASS including264demo freshness and file-size3783;
+Rustinterop10PASS; readiness3PASS/1FAIL. Preparation1473.557s exceeded its300s
+advisory budget only. No cold-cache performance certification is claimed.
+All later areas, generated-quality execution, fullE2E, migrated stdlib parity
+and feature lanes, normally ignored driver builds and CLI builds were UNREACHED.
+
+The sole failure is **12K-B12 / [#3737](https://github.com/sifr-lang/sifr/issues/3737)**:
+`verification/runner/sifr_verify/generated_cargo_setup_checks.py:228` embeds
+`target/verification/areas/item12k-b11-clean-cache.json` in maintained source,
+which verification taxonomy rejects as a delivery label. The helper blob
+`df812432b0def286c1c5550b1b82412fbc256cd9` is identical in candidate, reviewedB11,
+and main. This is an externally owned artifact-naming defect; no compiler or
+dependency-resolution failure is established. B12 is recorded only. Its future
+owner must use a semantic report filename, preserve exact provenance/graph/
+locked/offline behavior, and run the six focused commands registered in3737.
+No taxonomy exemption, compatibility path, original12K gate rerun or next-item
+code is authorized by that registration.
+
+Canonical evidence under the owned checkout's `target/verification/areas`:
+
+- `item12k-combined-final-evidence.json`: SHA256
+  `077d7249cc8b5027bfdbec9bed8fc81fedd18a654fb78b9d5043d7d9867655d1`
+  authenticates28current plus258retained artifacts and all complete input maps.
+- `item12k-combined-provenance.json`:
+  `ce4ff4ef1d625eb5850857e060547dd004ea1ba9c5f1c3aacd4dbdb93937c95d`.
+- `item12k-combined-review-reuse.json`:
+  `adc28aab5a3393536b6882018f7d73ef6acb46478a8369e7f8cab6fef2ff9c12`.
+- `item12k-combined-merge.json`:
+  `b203ab5989b9a7b554bab3e16a213c5d36e1dbf1dd54c35c66d2c582e4c893c0`.
+- `coverage-matrix-merge-results.json`:
+  `bd6533e5e24566bf9876d03d7356678f95db2e6da9365623ac1e53bb4ecf6df9`.
+- `generated-cargo-setup-merge.json`:
+  `bb3f3609d213f79724038e0065d77aefabff41fb28add6c67cc82d456edbe03f`.
+- Sibling `evidence/merge.log`:
+  `2f0b77550b28d4dd1f6f1dd07b9c722e8505c1644f03f8cb13f28fdc474b3cfc`.
+
+Cumulative counts:1initial+1remediation review,2provider requests,0retries,
+**3FAILED merge gates**,0passing/create-pr gates,0integration/corpus merges.
+Historical gate1FAILED3736.19s and gate2FAILED4376.64s remain unchanged.
+[PR3717](https://github.com/sifr-lang/sifr/pull/3717) and
+[corpus48](https://github.com/sifr-lang/leetcode/pull/48) remain draft/unmerged;
+no dependent PR/owner is reconciled as delivered. B10/B11 stay independently
+merged/closed. Historical12J/R1 NOT SATISFIED stays distinct from correctingM1
+approval; M1-F3 is not closed. 12D/E/F, retained12,12A and optional follow-ups
+remain untouched. Gate65235 and qualifier52754/profile52941/setup52973/
+freshness57019 completed; no live validation/review handles. Own target5.6GiB,
+free25GiB at terminal observation. Post-gate edits are records only, checked by
+`git diff --check`, with no new review/gate. Stop with blocker3737; parent may
+dispatch its separately bounded owner and adjudicate later integration delivery.
+
 ## Resumed authorization: original12K combined qualification (2026-09-07)
 
 The user answered the pending additional-gate request: **"Nothing should be
@@ -2445,10 +2525,13 @@ It does not broaden the active item.
 | 12J | blocked: both reviews exhausted, unapproved | Async Python error-channel contract | Draft #3699 preserves final reviewed candidate `4bc432f3474134b1a1d43202d39fd147893bb014`; initial and remediation reviews are NOT SATISFIED. No gate or merge. Message-storage follow-up 12J-M1 requires adjudication; 12I remains external. |
 | 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
 | 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
-| 12K | integration approved; sole gate externally blocked | Item 12B and Python dependency integration | Draft #3717, approved/gated `56907f59cc7d9f9fedb89434970c074c0247dee9`. One SATISFIED review, one failed gate, no merge. Later owners #3722/#3723/#3724; local origin/main setup #3721 passed. See current terminal receipt. |
-| 12K-B7 | recorded, not started | Direct filesystem inventory (#3722) | All 22 sites in six absent inventory paths pre-exist on main. |
-| 12K-B8 | recorded, not started | SQL bigint spelling versus compatibility guard (#3723) | Three unchanged SQL type spellings trigger the removed-language-type scan. |
-| 12K-B9 | recorded, not started | Formatter preview reference drift (#3724) | Eight checks fail on unchanged reference/manifests; no formatter code defect established. |
+| 12K | approved inputs; gate3 externally blocked | Item 12B and Python dependency integration | Draft #3717 candidate `bd2371a1f8f1abc5227b0ff8a00829277675af5d`; authenticated review reuse, seven checks pass, gate3 failed taxonomy #3737. Three failed gates, no merge. See top terminal receipt. |
+| 12K-B7 | merged | Direct filesystem inventory (#3722) | PR3725 merged; replacement gate verified the corrected inventory. |
+| 12K-B8 | merged | SQL bigint spelling versus compatibility guard (#3723) | PR3727 merged; replacement gate verified the SQL spelling boundary. |
+| 12K-B9 | merged | Formatter preview reference drift (#3724) | PR3729 merged; replacement gate verified all reference corrections. |
+| 12K-B10 | merged | Current-source audit anchor (#3731) | PR3733, approved `4147d9235462178e870342abf2a390ac5ab3f890`; combined inventory/self-test pass. |
+| 12K-B11 | merged | Generated Cargo graph preparation (#3732) | PR3735, approved `2f3ec54226b2e722b3fe44ea59177f780865c921`; combined production preparation92/92 passes. |
+| 12K-B12 | recorded, not started | Delivery-neutral qualification report filename (#3737) | The B11 helper's report destination at line228 fails taxonomy. Preserve graph/provenance behavior and correct only its semantic artifact naming. |
 | 12K-B1 | approved correction; gate blocked | TypeVar diagnostic assertion fidelity (#3667) | Draft #3702, reviewed `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`; named checks pass, Opus SATISFIED; one failed gate exposes 12K-B2/B3. Unmerged; see B1 terminal checkpoint above. |
 | 12K-B2 | merged | Canonical diagnostic-code matcher identity (#3704) | PR3706 merge770f1ab; recorda53b5d3 retained in12K ancestry; full historical receipt preserved. |
 | 12K-B3 | merged | Diagnostics schema synchronization (#3705) | PR3709 mergef11e1cd; recordc508c143 retained in12K ancestry; full historical receipt preserved. |
