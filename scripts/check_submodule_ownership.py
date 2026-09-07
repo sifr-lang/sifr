@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import argparse
 import configparser
-import re
-import tempfile
+import json
+import subprocess
+import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -93,11 +94,95 @@ STALE_SUBMODULE_PATHS = {
     "verification/package_management/demo_repositories/sifr-demo-workspace",
 }
 
-WORKFLOW_STEP_RE = re.compile(r"(?ms)^(\s*)-\s+(?P<body>.*?)(?=^\1-\s+|\Z)")
-CHECKOUT_USES_RE = re.compile(
-    r"(?m)^\s*uses:\s+actions/checkout@[^\s#]+(?:\s+#.*)?\s*$"
+# Use the same Ruby/Psych parser as the release workflow contracts, without
+# introducing a Python environment/lock dependency. Never execute YAML tags.
+WORKFLOW_YAML_PARSER = r"""
+require "yaml"
+require "json"
+
+def validate_keys(node)
+  if node.is_a?(Psych::Nodes::Mapping)
+    keys = node.children.each_slice(2).map do |key, _|
+      abort "workflow mapping keys must be scalars" unless key.is_a?(Psych::Nodes::Scalar)
+      key.value
+    end
+    abort "duplicate workflow mapping key" unless keys.uniq.length == keys.length
+  end
+  (node.children || []).each { |child| validate_keys(child) }
+end
+
+begin
+  text = STDIN.read
+  tree = YAML.parse_stream(text)
+  abort "expected one workflow document" unless tree.children.length == 1
+  validate_keys(tree)
+  workflow = YAML.safe_load(text, permitted_classes: [], permitted_symbols: [], aliases: true)
+  puts JSON.generate(workflow)
+rescue Psych::Exception, JSON::JSONError, SystemStackError => error
+  abort "invalid workflow YAML: #{error.message}"
+end
+"""
+
+
+@dataclass(frozen=True)
+class NonSourceCheckout:
+    workflow: str
+    job: str
+    condition: str
+    inputs: dict[str, object]
+    purpose: str
+
+
+# The publication root executes first-party governance scripts and consumes
+# already-built release artifacts. Only stable-source builds/publishes the
+# editor and needs the submodule graph. Evidence trees provide JSON records.
+# Match the full input identity, job, and condition, never a step name or ordinal.
+NON_SOURCE_CHECKOUTS = (
+    NonSourceCheckout(
+        "release-publication.yml", "publish",
+        "env.STABLE_MUTATION_OPERATION != 'true'",
+        {"ref": "${{ inputs.source_commit }}", "fetch-depth": 0,
+         "persist-credentials": False},
+        "preview/bootstrap governance and prebuilt release artifacts",
+    ),
+    NonSourceCheckout(
+        "release-publication.yml", "publish",
+        "env.STABLE_MUTATION_OPERATION == 'true'",
+        {"fetch-depth": 0, "persist-credentials": False},
+        "stable publication governance scripts at the workflow revision",
+    ),
+    NonSourceCheckout(
+        "release-publication.yml", "publish",
+        "env.STABLE_CANDIDATE_OPERATION == 'true'",
+        {"ref": "${{ inputs.evidence_commit }}", "fetch-depth": 0,
+         "path": "stable-evidence", "persist-credentials": False},
+        "stable candidate evidence records",
+    ),
+    NonSourceCheckout(
+        "release-publication.yml", "publish",
+        "env.INCIDENT_OPERATION == 'true'",
+        {"ref": "${{ inputs.incident_commit }}", "fetch-depth": 0,
+         "path": "incident-evidence", "persist-credentials": False},
+        "incident evidence records",
+    ),
+    NonSourceCheckout(
+        "release-publication-prepare.yml", "prepare",
+        "${{ inputs.governance_mode == 'ga-activation' || "
+        "inputs.governance_mode == 'normal' || "
+        "inputs.governance_mode == 'incident-roll-forward' }}",
+        {"ref": "${{ inputs.evidence_commit }}", "fetch-depth": 0,
+         "path": "stable-evidence", "persist-credentials": False},
+        "stable candidate evidence records for preparation",
+    ),
+    NonSourceCheckout(
+        "release-publication-prepare.yml", "prepare",
+        "${{ inputs.governance_mode == 'rollback' || "
+        "inputs.governance_mode == 'incident-roll-forward' }}",
+        {"ref": "${{ inputs.incident_commit }}", "fetch-depth": 0,
+         "path": "incident-evidence", "persist-credentials": False},
+        "incident evidence records for preparation",
+    ),
 )
-SUBMODULES_RECURSIVE_RE = re.compile(r"(?m)^\s+submodules:\s+[\"']?recursive[\"']?\s*$")
 
 
 def parse_gitmodules(text: str) -> dict[str, dict[str, str]]:
@@ -162,24 +247,68 @@ def validate_clone_script(text: str) -> list[str]:
     return failures
 
 
-def validate_workflow(path: Path, text: str) -> list[str]:
-    failures: list[str] = []
-    checkout_blocks = [
-        match
-        for match in WORKFLOW_STEP_RE.finditer(text)
-        if CHECKOUT_USES_RE.search(match.group("body"))
-    ]
-    if not checkout_blocks:
-        return failures
+def validate_workflow(path: Path, text: str, root: Path = REPO_ROOT) -> list[str]:
     display_path = path
     try:
-        display_path = path.relative_to(REPO_ROOT)
+        display_path = path.relative_to(root)
     except ValueError:
         pass
-    for index, match in enumerate(checkout_blocks, start=1):
-        if not SUBMODULES_RECURSIVE_RE.search(match.group("body")):
+    try:
+        parsed = subprocess.run(
+            ["ruby", "-e", WORKFLOW_YAML_PARSER], input=text,
+            text=True, capture_output=True, timeout=30, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        return [f"{display_path} cannot parse workflow YAML with Ruby: {error}"]
+    if parsed.returncode:
+        return [f"{display_path} cannot parse workflow YAML: {parsed.stderr.strip()}"]
+    try:
+        workflow = json.loads(parsed.stdout)
+    except ValueError as error:
+        return [f"{display_path} invalid YAML parser response: {error}"]
+    if not isinstance(workflow, dict) or not isinstance(workflow.get("jobs"), dict):
+        return [f"{display_path} workflow must contain a jobs mapping"]
+
+    failures: list[str] = []
+    for job_id, job in workflow["jobs"].items():
+        location = f"{display_path} job {job_id}"
+        if not isinstance(job, dict):
+            failures.append(f"{location} must be a mapping")
+            continue
+        if "steps" not in job and isinstance(job.get("uses"), str):
+            continue  # Reusable workflow call; no local steps to inspect.
+        steps = job.get("steps")
+        if not isinstance(steps, list):
+            failures.append(f"{location} must contain a steps sequence")
+            continue
+        for index, step in enumerate(steps, start=1):
+            step_location = f"{location} step #{index}"
+            if not isinstance(step, dict):
+                failures.append(f"{step_location} must be a mapping")
+                continue
+            uses = step.get("uses", "")
+            if not isinstance(uses, str):
+                failures.append(f"{step_location} uses must be a string")
+                continue
+            if not uses.strip().lower().startswith("actions/checkout@"):
+                continue
+            inputs = step.get("with", {})
+            if not isinstance(inputs, dict):
+                failures.append(f"{step_location} checkout with must be a mapping")
+                continue
+            if inputs.get("submodules") == "recursive":
+                continue
+            identity = {key: value for key, value in inputs.items() if key != "submodules"}
+            if any(
+                display_path == Path(".github/workflows") / owner.workflow
+                and job_id == owner.job and step.get("if") == owner.condition
+                and identity == owner.inputs
+                for owner in NON_SOURCE_CHECKOUTS
+            ):
+                continue
             failures.append(
-                f"{display_path} checkout #{index} does not initialize submodules recursively"
+                f"{step_location} checkout does not initialize submodules recursively "
+                "and is not a classified governance/evidence checkout"
             )
     return failures
 
@@ -197,8 +326,120 @@ def validate_repo(root: Path) -> list[str]:
     workflow_paths = sorted((root / ".github" / "workflows").glob("*.yml"))
     workflow_paths.extend(sorted((root / ".github" / "workflows").glob("*.yaml")))
     for path in workflow_paths:
-        failures.extend(validate_workflow(path, path.read_text(encoding="utf-8")))
+        failures.extend(validate_workflow(path, path.read_text(encoding="utf-8"), root))
     return failures
+
+
+def run_workflow_self_tests() -> None:
+    path = REPO_ROOT / ".github/workflows/test.yml"
+
+    def workflow(steps: str) -> str:
+        return "jobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n" + textwrap.indent(
+            steps, "      "
+        )
+
+    def check(label: str, text: str, *, accepted: bool = False, at: Path = path) -> None:
+        failures = validate_workflow(at, text)
+        if bool(failures) == accepted:
+            raise SystemExit(f"submodule ownership self-test failed: {label}: {failures}")
+
+    for label, step in (
+        ("unnamed checkout", "- uses: actions/checkout@v7\n"),
+        ("named checkout", "- name: Checkout\n  uses: actions/checkout@v7\n"),
+        ("commented pin", "- uses: actions/checkout@0123456789abcdef # v7\n"),
+        ("named commented pin", "- name: Checkout\n  uses: actions/checkout@abc # v7\n"),
+        ("quoted action", '- uses: "actions/checkout@v7"\n'),
+        ("flow style", "- {uses: actions/checkout@v7}\n"),
+        ("folded action", "- uses: >-\n    actions/checkout@v7\n"),
+        ("case insensitive action", "- uses: Actions/Checkout@v7\n"),
+    ):
+        check(label, workflow(step))
+        if "flow" not in label:
+            check(label + " recursive", workflow(step + "  with:\n    submodules: recursive\n"),
+                  accepted=True)
+    check("recursive flow style", workflow(
+        "- {uses: 'actions/checkout@v7', with: {submodules: recursive}}\n"
+    ), accepted=True)
+    check("inline comment on recursive", workflow(
+        "- uses: actions/checkout@v7\n  with:\n    submodules: 'recursive' # restore all\n"
+    ), accepted=True)
+    for value in ("true", "false", "null", "[recursive]", "'${{ inputs.submodules }}'"):
+        check("nonliteral recursive " + value, workflow(
+            f"- uses: actions/checkout@v7\n  with:\n    submodules: {value}\n"
+        ))
+    check("neighbor step cannot supply recursive", workflow(
+        "- uses: actions/checkout@v7\n"
+        "- uses: unrelated/action@v1\n  with:\n    submodules: recursive\n"
+    ))
+    check("run block cannot supply recursive", workflow(
+        "- uses: actions/checkout@v7\n- run: |\n    submodules: recursive\n"
+    ))
+    check("job env cannot supply recursive", workflow(
+        "- uses: actions/checkout@v7\n"
+    ).replace("    steps:", "    env:\n      submodules: recursive\n    steps:"))
+    check("step env cannot supply recursive", workflow(
+        "- uses: actions/checkout@v7\n  env:\n    submodules: recursive\n"
+    ))
+    check("commented recursive cannot supply input", workflow(
+        "- uses: actions/checkout@v7\n  # with: {submodules: recursive}\n"
+    ))
+    check("all jobs inspected", workflow(
+        "- uses: actions/checkout@v7\n  with: {submodules: recursive}\n"
+    ) + "  other:\n    steps:\n      - uses: actions/checkout@v7\n")
+    check("literal checkout text is not a step", workflow(
+        "- run: |\n    uses: actions/checkout@v7\n"
+        "    - uses: actions/checkout@v7\n"
+        "# - uses: actions/checkout@v7\n"
+    ), accepted=True)
+    check("reusable workflow", "jobs:\n  test:\n    uses: ./.github/workflows/build.yml\n",
+          accepted=True)
+    check("anchored checkout", workflow(
+        "- &source\n  uses: actions/checkout@v7\n  with: {submodules: recursive}\n"
+        "- *source\n"
+    ), accepted=True)
+    check("anchored missing recursive", workflow(
+        "- &source\n  uses: actions/checkout@v7\n- *source\n"
+    ))
+    for label, invalid in (
+        ("malformed YAML", "jobs: ["),
+        ("multiple documents", "jobs: {}\n---\njobs: {}\n"),
+        ("nonmapping workflow", "- uses: actions/checkout@v7\n"),
+        ("missing jobs", "name: workflow\n"),
+        ("nonmapping jobs", "jobs: []\n"),
+        ("nonmapping job", "jobs: {test: false}\n"),
+        ("missing steps", "jobs: {test: {runs-on: ubuntu-latest}}\n"),
+        ("nonsequence steps", "jobs: {test: {steps: {uses: actions/checkout@v7}}}\n"),
+        ("nonmapping step", workflow("- invalid\n")),
+        ("nonstring uses", workflow("- uses: [actions/checkout@v7]\n")),
+        ("nonmapping with", workflow("- uses: actions/checkout@v7\n  with: recursive\n")),
+        ("duplicate uses", workflow("- uses: actions/checkout@v7\n  uses: unrelated/action@v1\n")),
+        ("unsafe YAML tag", "jobs: !ruby/object:Object {}\n"),
+    ):
+        check(label, invalid)
+
+    for owner in NON_SOURCE_CHECKOUTS:
+        at = REPO_ROOT / ".github/workflows" / owner.workflow
+        step = {"uses": "actions/checkout@v7", "if": owner.condition, "with": owner.inputs}
+
+        def document(candidate: dict[str, object], job: str = owner.job) -> str:
+            # JSON is a YAML subset and keeps exact expressions quoted.
+            return json.dumps({"jobs": {job: {"steps": [candidate]}}})
+
+        check(owner.purpose, document(step), accepted=True, at=at)
+        check("wrong workflow: " + owner.purpose, document(step))
+        check("wrong job: " + owner.purpose, document(step, "other"), at=at)
+        check("wrong condition: " + owner.purpose, document({**step, "if": "true"}), at=at)
+        for key, value in (
+            ("ref", "${{ inputs.source_commit }}" if "evidence" in owner.purpose else "other"),
+            ("path", "stable-source"),
+            ("repository", "other/source"),
+        ):
+            check("changed " + key + ": " + owner.purpose, document({
+                **step, "with": {**owner.inputs, key: value},
+            }), at=at)
+        check("name cannot grant classification: " + owner.purpose, document({
+            "uses": "actions/checkout@v7", "name": owner.purpose,
+        }), at=at)
 
 
 def run_self_test() -> None:
@@ -292,36 +533,7 @@ def run_self_test() -> None:
         raise SystemExit(
             "submodule ownership self-test failed: incomplete clone script accepted"
         )
-    workflow = "- uses: actions/checkout@v5\n"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        path = Path(tmpdir) / "workflow.yml"
-        if not validate_workflow(path, workflow):
-            raise SystemExit(
-                "submodule ownership self-test failed: checkout without submodules accepted"
-            )
-        pinned_checkout = (
-            "- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 "
-            "# v7.0.1\n"
-        )
-        if not validate_workflow(path, pinned_checkout):
-            raise SystemExit(
-                "submodule ownership self-test failed: commented pin bypassed validation"
-            )
-        named_checkout = "- name: Checkout\n  uses: actions/checkout@0123456789abcdef\n"
-        if not validate_workflow(path, named_checkout):
-            raise SystemExit(
-                "submodule ownership self-test failed: named checkout without submodules accepted"
-            )
-        valid_workflow = (
-            "- name: Checkout\n"
-            "  uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1\n"
-            "  with:\n"
-            "    submodules: 'recursive'\n"
-        )
-        if validate_workflow(path, valid_workflow):
-            raise SystemExit(
-                "submodule ownership self-test failed: valid workflow rejected"
-            )
+    run_workflow_self_tests()
     print("submodule ownership self-test: PASS")
 
 
