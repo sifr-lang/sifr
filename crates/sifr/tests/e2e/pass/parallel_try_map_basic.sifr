@@ -7,7 +7,7 @@ class MapError(Error):
 
 def stringify(value: int) -> Result[str, MapError]:
     if value < 0:
-        raise MapError()
+        raise MapError("negative item")
     return str(value)
 
 

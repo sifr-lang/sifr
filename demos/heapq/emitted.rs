@@ -1,11 +1,11 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
+    use ::sifr_runtime::SifrInt;
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn sifr_generated_sift_down<T: Clone + 'static + PartialOrd>(
+    fn sifr_generated_sift_down<T: Clone + 'static + PartialOrd>(
         data: &mut Vec<T>,
         mut pos: SifrInt,
         n: SifrInt,
@@ -127,7 +127,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn sifr_generated_sift_up<T: Clone + 'static + PartialOrd>(
+    fn sifr_generated_sift_up<T: Clone + 'static + PartialOrd>(
         heap: &mut Vec<T>,
         mut pos: SifrInt,
     ) {
@@ -206,7 +206,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
+    pub fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
         "Convert list to a min-heap in-place. O(n) time.".to_string();
         let n: SifrInt = SifrInt::from(data.len());
         let mut i: SifrInt =
@@ -216,13 +216,14 @@ mod sifr_generated_generated_support {
             i = &i - &SifrInt::from_i64(1);
         }
     }
-    pub(crate) fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
+    pub fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
         "Push item onto the heap in-place. O(log n) time.".to_string();
         heap.push(item.clone());
         let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
         sifr_generated_sift_up(heap, pos.clone());
     }
-    pub(crate) fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
+    #[must_use]
+    pub fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
         "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
             .to_string();
         let n: SifrInt = SifrInt::from(heap.len());
@@ -269,7 +270,8 @@ mod sifr_generated_generated_support {
         }
         top
     }
-    pub(crate) fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+    #[must_use]
+    pub fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
         let mut heap: Vec<T> = data.to_vec();
         heapify(&mut heap);
         let mut result: Vec<T> = Vec::new();
@@ -286,7 +288,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(crate) fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+    #[must_use]
+    pub fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
         if &n <= &SifrInt::from_i64(0) {
             return Vec::new();
         }
@@ -330,7 +333,7 @@ mod sifr_generated_generated_support {
         }
         result2
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -358,7 +361,9 @@ mod sifr_generated_generated_support {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, heapify, heappop, heappush, nlargest, nsmallest,
+};
 use ::sifr_runtime::SifrInt;
 fn collect_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
@@ -368,8 +373,8 @@ fn collect_actual() -> Vec<bool> {
     heappush(&mut heap, &SifrInt::from_i64(3));
     let first: Option<SifrInt> = heappop(&mut heap);
     let second: Option<SifrInt> = heappop(&mut heap);
-    actual.push(first.is_some() && first == Some(SifrInt::from_i64(1).clone()));
-    actual.push(second.is_some() && second == Some(SifrInt::from_i64(3).clone()));
+    actual.push(first.is_some() && first == Some(SifrInt::from_i64(1)));
+    actual.push(second.is_some() && second == Some(SifrInt::from_i64(3)));
     let mut data: Vec<SifrInt> = vec![
         SifrInt::from_i64(4),
         SifrInt::from_i64(2),
@@ -379,7 +384,7 @@ fn collect_actual() -> Vec<bool> {
     ];
     heapify(&mut data);
     let top: Option<SifrInt> = heappop(&mut data);
-    actual.push(top.is_some() && top == Some(SifrInt::from_i64(1).clone()));
+    actual.push(top.is_some() && top == Some(SifrInt::from_i64(1)));
     let items: Vec<SifrInt> = vec![
         SifrInt::from_i64(9),
         SifrInt::from_i64(3),

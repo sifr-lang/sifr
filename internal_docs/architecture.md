@@ -399,6 +399,17 @@ New crates added as compiler and runtime needs grow:
 
 ## Formatter Architecture
 
+Generated Rust field cleanup runs before identifier and layout cleanup. One
+registry resolves module-qualified nominal declarations, imports and re-exports,
+and typed field receivers across the complete generated project. Field spelling
+and collisions belong to that nominal owner; shorthand pattern/value bindings
+retain their separate local identities. Binary bridge sources are generated and
+registered alongside main and support modules before this pass; their finalized
+sources also participate in the artifact cache identity. Binary and test-project
+materialization use the same registry and do not repeat field canonicalization
+while formatting individual files. External fields are not renamed, and an unresolved
+generated-field receiver is a code-generation diagnostic.
+
 The production Sifr formatter is Ruff-backed and in-process. `.sifr` source
 flows through `sifr_syntax` into the Sifr Ruff fork parser, AST, comments,
 trivia, and formatter rules, then through the Sifr-owned `sifr_format` wrapper.
@@ -442,6 +453,10 @@ large-file check and a representative project check.
   only inside the generated crate. Canonical item fingerprints reject conflicting
   support bodies instead of silently selecting one, and Rust interop bridge types
   use the same exact-deduplication/fail-closed ownership rule.
+  Compiler-owned `tokio::task_local!` statics share one declaration parser for
+  visibility, symbol discovery, and dependency pruning. Each declaration is a
+  separate demand owner; project relocation grants crate visibility while
+  preserving its name, type, attributes, and Tokio cancellation behavior.
 - Generated-code simplification is structural at both boundaries. Typed
   `RustItem`/`RustStmt`/`RustExpr` optimization runs before rendering. After
   project metadata, inline stdlib, and bridge fragments have been assembled,
@@ -827,6 +842,20 @@ except IOError as e:
 - `except IOError` catches all variants (no guard)
 
 **User-defined error classes:** User-defined error classes inherit `message: str` from `Error`. The constructor accepts a message string, and `print(e)` formats it via `Display`. Users can add additional fields as needed.
+
+The inherited message is required constructor storage. An auto-generated
+constructor takes `message: str` before additional fields when the class does
+not declare its own message. Explicit string declarations retain their field
+order, including the five-field PythonError contract. A message field cannot
+have an incompatible type or a field default. Custom constructors must
+initialize the string (directly, from a matching required parameter, or through
+`super().__init__`); construction cannot finish with missing storage. A
+custom constructor requires a caller-supplied string parameter; a zero-argument
+constructor or a defaulted-only message input cannot satisfy this contract. A child
+without new fields or an explicit constructor forwards the parent's constructor
+signature and initialization. An inherited message is stored only in its data
+parent. Consuming root conversions move that parent or the owned message;
+they never derive a message from formatting or substitute missing text.
 
 ```python
 # Simple user-defined error — inherits message from Error

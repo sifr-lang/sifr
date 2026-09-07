@@ -6,8 +6,8 @@ use super::{
 };
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
 use crate::project_stdlib_nominals::{
-    extract_project_stdlib_nominal_prelude, project_stdlib_nominal_plan,
-    relocate_project_stdlib_nominals,
+    extract_project_stdlib_nominal_prelude, project_module_binding_names,
+    project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
 };
 use crate::project_union_prelude::render_project_union_prelude;
 use crate::render_project_structural_record_prelude;
@@ -379,11 +379,7 @@ pub fn generate_rust_multi_with_metadata(
             module_name,
             &stdlib_nominal_plan,
             &crate_root_modules,
-            &module
-                .classes
-                .iter()
-                .map(|class| source_class_rust_name(&class.name))
-                .collect(),
+            &project_module_binding_names(module),
         );
         let imports = [local_imports, union_imports]
             .into_iter()
@@ -406,6 +402,7 @@ pub fn generate_rust_multi_with_metadata(
         required_features.extend(codegen_result.required_features);
     }
 
+    project_support_demand.set_error_conversion_paths(&nominal_type_paths);
     let rendered_support = render_support(&project_support_demand, stdlib_code);
     used_stdlib_modules.extend(rendered_support.used_stdlib_modules.iter().cloned());
     required_features.extend(rendered_support.required_features.iter().copied());
@@ -444,7 +441,10 @@ pub fn generate_rust_multi_with_metadata(
     )
     .unwrap_or_else(|error| panic!("failed to prune generated project owners: {error}"));
     if !support_source.trim().is_empty() {
-        let visible_support = crate_visible_generated_support_source(&support_source);
+        let consumers = std::iter::once(project_union_prelude.as_str())
+            .chain(body_consumers.iter().copied())
+            .collect::<Vec<_>>();
+        let visible_support = crate_visible_generated_support_source(&support_source, &consumers);
         let visible_support = crate::import_project_prelude_bindings_in_generated_support(
             &project_union_prelude,
             &visible_support,
@@ -463,11 +463,13 @@ pub fn generate_rust_multi_with_metadata(
         )
         .unwrap_or_else(|error| panic!("invalid generated project support trait layout: {error}"));
         if !prelude_support_refs.is_empty() || !prelude_support_traits.is_empty() {
-            project_union_prelude =
-                crate::import_generated_support_in_project_nominals(&project_union_prelude)
-                    .unwrap_or_else(|error| {
-                        panic!("failed to import generated project support into nominals: {error}")
-                    });
+            project_union_prelude = crate::import_generated_support_in_project_nominals(
+                &project_union_prelude,
+                &visible_support,
+            )
+            .unwrap_or_else(|error| {
+                panic!("failed to import generated project support into nominals: {error}")
+            });
         }
         for (module_name, source) in &mut files {
             let module_needs_support = module_support_demands
@@ -484,7 +486,8 @@ pub fn generate_rust_multi_with_metadata(
                 && (!body_support_refs.is_empty() || !body_support_traits.is_empty())
             {
                 *source = format!(
-                    "use crate::__sifr_generated_support::*;\n\n{}",
+                    "{}\n\n{}",
+                    crate::generated_visibility::generated_support_import(source, &visible_support),
                     source.trim_start()
                 );
             }

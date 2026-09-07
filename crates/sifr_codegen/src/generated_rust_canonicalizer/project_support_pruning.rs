@@ -204,18 +204,27 @@ fn nominal_reexport_name(item: &syn::Item) -> Option<String> {
 
 pub(crate) fn import_generated_support_in_project_nominals(
     prelude_source: &str,
+    support_source: &str,
 ) -> Result<String, String> {
     let mut prelude = syn::parse_file(prelude_source)
         .map_err(|error| format!("failed to parse generated project prelude: {error}"))?;
-    let support_import: syn::Item = syn::parse_quote! {
-        use crate::__sifr_generated_support::*;
-    };
     for item in &mut prelude.items {
         if let syn::Item::Mod(module) = item
             && module.ident == "__sifr_project_nominals"
             && let Some((_, items)) = &mut module.content
         {
-            items.insert(0, support_import);
+            let mut file = syn::parse_file("").map_err(|error| error.to_string())?;
+            file.items = items.clone();
+            let import = crate::generated_visibility::generated_support_import(
+                &prettyplease::unparse(&file),
+                support_source,
+            );
+            if !import.is_empty() {
+                items.insert(
+                    0,
+                    syn::parse_str(&import).map_err(|error| error.to_string())?,
+                );
+            }
             break;
         }
     }

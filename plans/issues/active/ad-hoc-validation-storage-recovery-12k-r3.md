@@ -1,6 +1,6 @@
 # 12K-R3: closed-owner validation storage recovery
 
-Status: implementation and named acceptance complete; exact-SHA review pending
+Status: closed; merged in PR #3754
 
 Owner: [#3753](https://github.com/sifr-lang/sifr/issues/3753), phase validation
 storage. This is the single resource prerequisite from
@@ -169,3 +169,31 @@ the 900-line limit; git diff whitespace checking passed. Guarded source inputs
 are unchanged from main, so no repeat guardrail is needed for result-record
 edits. Frozen base/candidate whitespace checking includes the new resource file.
 Compiler/Cargo tests and Sifr gates: zero.
+
+## Final delivery
+
+[PR #3754](https://github.com/sifr-lang/sifr/pull/3754) merged normally at
+2026-09-07T17:54:33Z, actual-main merge
+`156157242b0995c01c4fff03575624b5c471c0d8`. Resource issue #3753 is closed.
+Exact reviewed candidate `ee2cb8ec7455f008e94d962a88d502e07d2d120a` is an
+ancestor of fetched main; the merge tree equals its reviewed tree. This final
+two-document record is separately committed and normally pushed on the same
+owned branch; its SHA is bound in the external terminal receipt.
+
+[Opus review](https://github.com/sifr-lang/sifr/pull/3754#issuecomment-5574154649)
+was SATISFIED with no blockers: initial1, provider1, retries0, remediation0.
+Raw response `/private/tmp/sifr-storage-r3.TigHgT/claude.Bidnye/response.md`,
+SHA256 `542113b4a4533d3451b608755ab9439595dc498179db95fabe96820204c60dd4`.
+The reviewer independently checked all new copies, source/head identities,
+digest pins and pre-delete publication ordering, and sampled protected files;
+the full registered acceptance already authenticated every protected artifact.
+The editorial dispatch fragment is completed in this post-merge phase record.
+The two remaining review observations (host free-space variation and estimated
+late-lane growth) stay assigned to existing later owner B13/#3744; they neither
+block R3 nor start B13 work. No follow-up compiler mechanism was found.
+
+No new review or Sifr gate is run for this record-only update. Whitespace is
+checked on these final records. Terminal `/private/tmp/sifr-storage-r3.TigHgT/terminal.json`
+binds all SHAs, paths, capacity measurements, review evidence and source
+preservation. Blocker: NONE. Next action: STOP. The parent two dirty Markdown
+files and every predecessor source/index/gitlink remain unchanged.

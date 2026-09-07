@@ -492,7 +492,7 @@ impl RustEmitter {
         &self,
         stmt: &HirStmt,
     ) -> Result<Option<Vec<crate::RustStmt>>, crate::CodegenError> {
-        if self.try_closure_depth > 0
+        if (self.try_closure_depth > 0 && !matches!(stmt, HirStmt::AttributeAugAssign { .. }))
             || !self.active_timeout_durations.is_empty()
             || self.stmt_uses_checked_place_read_witness(stmt)
             || Self::stmt_defines_nonempty_list(stmt)

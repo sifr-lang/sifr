@@ -62,6 +62,7 @@ def main() -> int:
         ("orphaned release divergence metadata", orphaned_release_divergence_metadata, "metadata requires release_suite"),
         ("first-party crate without membership", missing_crate_membership, "missing merge crate-test membership"),
         ("wrong SQL component target kind", wrong_component_target_kind, "target lacks classification: rlib:sifr_sql_postgresql"),
+        ("stale SQL component target kind", wrong_component_target_kind, "stale target classification: lib:sifr_sql_postgresql"),
         ("missing SQL test target", missing_sql_test_target, "target lacks classification: test:runtime_types"),
     ]
     failed: list[str] = []

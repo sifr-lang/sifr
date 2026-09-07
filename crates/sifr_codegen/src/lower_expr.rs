@@ -62,17 +62,15 @@ pub(crate) fn typed_empty_list_expr(ty: &Type) -> Option<RustExpr> {
         return None;
     }
 
-    let binding = "__sifr_empty_list_literal".to_string();
-    Some(RustExpr::Block {
-        stmts: vec![RustStmt::Let {
-            mutable: false,
-            name: binding.clone(),
-            ty: Some(RustType::Vec(Box::new(crate::sifr_type_to_rust_type(
-                element,
-            )))),
-            value: RustExpr::Vec(Vec::new()),
-        }],
-        expr: Some(Box::new(RustExpr::Ident(binding))),
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            format!(
+                "Vec::<{}>",
+                crate::render_type(&crate::sifr_type_to_rust_type(element))
+            ),
+            "new".to_string(),
+        ])),
+        args: Vec::new(),
     })
 }
 

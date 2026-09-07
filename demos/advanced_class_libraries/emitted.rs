@@ -11,9 +11,9 @@ mod sifr_generated_generated_support {
         SifrGeneratedStdlibSifrX2eencodingX2eEncoding, SifrGeneratedStdlibSifrX2eloggingX2eLogger,
         SifrGeneratedStdlibSifrX2ereX2ePattern, SifrGeneratedStdlibSifrX2eregexX2eCompiledPattern,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) use ::std::collections::HashMap;
-    pub(crate) fn sifr_generated_encoding_encode_bytes_impl(
+    use ::sifr_runtime::SifrInt;
+    use ::std::collections::HashMap;
+    fn sifr_generated_encoding_encode_bytes_impl(
         text: &str,
         encoding: &str,
         errors: &str,
@@ -24,7 +24,7 @@ mod sifr_generated_generated_support {
             },
         )
     }
-    pub(crate) fn sifr_generated_encoding_encode_recoveries_impl(
+    fn sifr_generated_encoding_encode_recoveries_impl(
         text: &str,
         encoding: &str,
         errors: &str,
@@ -35,25 +35,20 @@ mod sifr_generated_generated_support {
             },
         )
     }
-    pub(crate) fn exists(path: &str) -> bool {
+    #[must_use]
+    pub fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
-    pub(crate) fn sifr_generated_open_file(path: &str, mode: &str) -> Result<String, IOError> {
+    fn sifr_generated_open_file(path: &str, mode: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::open_file(path, mode).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn sifr_generated_file_close(handle: &str) {
+    fn sifr_generated_file_close(handle: &str) {
         ::sifr_stdlib::fs::file_close(handle);
     }
-    pub(crate) fn sifr_generated_file_write_bytes(
-        handle: &str,
-        data: &[u8],
-    ) -> Result<(), IOError> {
+    fn sifr_generated_file_write_bytes(handle: &str, data: &[u8]) -> Result<(), IOError> {
         ::sifr_stdlib::fs::file_write_bytes(handle, data).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn open_file(
-        path: &str,
-        mode: &str,
-    ) -> Result<SifrGeneratedIoNativeFileHandle, IOError> {
+    fn open_file(path: &str, mode: &str) -> Result<SifrGeneratedIoNativeFileHandle, IOError> {
         let sifr_generated_try_res: Result<
             Result<SifrGeneratedIoNativeFileHandle, IOError>,
             IOError,
@@ -66,31 +61,37 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(crate) fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
+    pub fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
         sifr_generated_file_close(&handle.id.clone());
     }
-    pub(crate) fn file_write_bytes(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn file_write_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
         data: &[u8],
     ) -> Result<(), IOError> {
         sifr_generated_file_write_bytes(&handle.id.clone(), data)
     }
-    pub(crate) fn remove_file(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn touch(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn touch(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::touch(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn sifr_generated_const_454e434f44494e475f55544638() -> String {
+    fn sifr_generated_const_454e434f44494e475f55544638() -> String {
         "utf-8".to_string()
     }
-    pub(crate) fn sifr_generated_const_4445434f44455f4552524f52535f535452494354() -> String {
+    fn sifr_generated_const_4445434f44455f4552524f52535f535452494354() -> String {
         "strict".to_string()
     }
-    pub(crate) fn sifr_generated_const_454e434f44455f4552524f52535f535452494354() -> String {
+    fn sifr_generated_const_454e434f44455f4552524f52535f535452494354() -> String {
         "strict".to_string()
     }
-    pub(crate) fn sifr_generated_encoding_encode_outcome(
+    fn sifr_generated_encoding_encode_outcome(
         text: &str,
         encoding: &str,
         errors: &str,
@@ -119,18 +120,18 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(crate) fn utf8() -> SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
+    #[must_use]
+    pub fn utf8() -> SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(
             sifr_generated_const_454e434f44494e475f55544638(),
         )
     }
-    pub(crate) fn strict_decode_handler() -> SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler
-    {
+    fn strict_decode_handler() -> SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler {
         SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler::new(
             sifr_generated_const_4445434f44455f4552524f52535f535452494354(),
         )
     }
-    pub(crate) fn sifr_generated_encode_handler_name(
+    fn sifr_generated_encode_handler_name(
         errors: &Option<SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler>,
     ) -> String {
         let Some(errors) = errors.as_ref() else {
@@ -143,7 +144,7 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn encode_outcome(
+    fn encode_outcome(
         text: &str,
         enc: &SifrGeneratedStdlibSifrX2eencodingX2eEncoding,
         errors: &Option<SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler>,
@@ -154,7 +155,9 @@ mod sifr_generated_generated_support {
         let handler_name: String = sifr_generated_encode_handler_name(errors);
         sifr_generated_encoding_encode_outcome(text, &enc.label.clone(), &handler_name)
     }
-    pub(crate) fn encode(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn encode(
         text: &str,
         enc: &SifrGeneratedStdlibSifrX2eencodingX2eEncoding,
         errors: &Option<SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler>,
@@ -175,7 +178,7 @@ mod sifr_generated_generated_support {
         })
     }
     #[derive(Debug, Clone)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a238X3a5X3aclass25X3asifrX2eencodingX2eEncodeError1X3a019X3a5X3aclass7X3aIOError1X3a0
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a238X3a5X3aclass25X3asifrX2eencodingX2eEncodeError1X3a019X3a5X3aclass7X3aIOError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0(IOError),
         SifrGeneratedUnionVariant5X3aclass25X3asifrX2eencodingX2eEncodeError1X3a0(
@@ -211,15 +214,17 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn sifr_generated_closed_stream_error() -> String {
+    #[must_use]
+    pub fn sifr_generated_closed_stream_error() -> String {
         "I/O operation on closed stream".to_string()
     }
-    pub(crate) fn sifr_generated_mode_is_writable(mode: &str) -> bool {
+    #[must_use]
+    pub fn sifr_generated_mode_is_writable(mode: &str) -> bool {
         mode.contains(&"w".to_string())
             || mode.contains(&"a".to_string())
             || mode.contains(&"+".to_string())
     }
-    pub(crate) fn sifr_generated_text_binary_mode(mode: &str) -> Result<String, IOError> {
+    fn sifr_generated_text_binary_mode(mode: &str) -> Result<String, IOError> {
         if mode.contains(&"b".to_string()) {
             return Err(IOError::new(
                 "open_text requires a text mode without \'b\'".to_string(),
@@ -241,7 +246,7 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }))
     }
-    pub(crate) fn sifr_generated_text_encoding_or_default(
+    fn sifr_generated_text_encoding_or_default(
         enc: &Option<SifrGeneratedStdlibSifrX2eencodingX2eEncoding>,
     ) -> SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         let Some(enc) = enc.as_ref() else {
@@ -249,7 +254,7 @@ mod sifr_generated_generated_support {
         };
         SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(enc.label.clone().to_string())
     }
-    pub(crate) fn sifr_generated_decode_errors_or_default(
+    fn sifr_generated_decode_errors_or_default(
         errors: &Option<SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler>,
     ) -> SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler {
         let Some(errors) = errors.as_ref() else {
@@ -259,17 +264,14 @@ mod sifr_generated_generated_support {
             errors.name.clone().to_string(),
         )
     }
-    pub(crate) fn sifr_generated_encode_errors_from_decode_errors(
+    fn sifr_generated_encode_errors_from_decode_errors(
         errors: &SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler,
     ) -> SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler {
         SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler::new(
             errors.name.clone().to_string(),
         )
     }
-    pub(crate) fn open_binary(
-        path: &str,
-        mode: &str,
-    ) -> Result<SifrGeneratedIoBinaryFileHandle, IOError> {
+    fn open_binary(path: &str, mode: &str) -> Result<SifrGeneratedIoBinaryFileHandle, IOError> {
         if !mode.contains(&"b".to_string()) {
             return Err(IOError::new("open_binary requires binary mode".to_string()));
         }
@@ -288,7 +290,9 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(crate) fn open_text(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn open_text(
         path: &str,
         mode: &str,
         encoding: &Option<SifrGeneratedStdlibSifrX2eencodingX2eEncoding>,
@@ -318,22 +322,23 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(crate) const fn sifr_generated_const_51554f54455f414c4c() -> SifrInt {
+    const fn sifr_generated_const_51554f54455f414c4c() -> SifrInt {
         SifrInt::from_i64(1)
     }
-    pub(crate) const fn sifr_generated_const_51554f54455f4e4f4e4e554d45524943() -> SifrInt {
+    const fn sifr_generated_const_51554f54455f4e4f4e4e554d45524943() -> SifrInt {
         SifrInt::from_i64(2)
     }
-    pub(crate) const fn sifr_generated_const_51554f54455f4e4f4e45() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_51554f54455f4e4f4e45() -> SifrInt {
         SifrInt::from_i64(3)
     }
-    pub(crate) const fn sifr_generated_const_51554f54455f535452494e4753() -> SifrInt {
+    const fn sifr_generated_const_51554f54455f535452494e4753() -> SifrInt {
         SifrInt::from_i64(4)
     }
-    pub(crate) const fn sifr_generated_const_51554f54455f4e4f544e554c4c() -> SifrInt {
+    const fn sifr_generated_const_51554f54455f4e4f544e554c4c() -> SifrInt {
         SifrInt::from_i64(5)
     }
-    pub(crate) fn sifr_generated_copy_dialect(
+    fn sifr_generated_copy_dialect(
         dialect: &SifrGeneratedStdlibSifrX2ecsvX2eDialect,
     ) -> SifrGeneratedStdlibSifrX2ecsvX2eDialect {
         SifrGeneratedStdlibSifrX2ecsvX2eDialect::new(
@@ -346,15 +351,16 @@ mod sifr_generated_generated_support {
             dialect.quoting.clone(),
         )
     }
-    pub(crate) fn sifr_generated_validate_char(name: &str, value: &str) {
+    pub fn sifr_generated_validate_char(name: &str, value: &str) {
         let _ = name.to_owned();
         let _ = value.to_owned();
     }
+    #[must_use]
     #[expect(
         clippy::too_many_arguments,
         reason = "generated signature preserves the typed Sifr callable contract"
     )]
-    pub(crate) fn sifr_generated_resolve_dialect(
+    pub fn sifr_generated_resolve_dialect(
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
         delimiter: &str,
         quotechar: &str,
@@ -377,9 +383,7 @@ mod sifr_generated_generated_support {
         };
         sifr_generated_copy_dialect(dialect)
     }
-    pub(crate) fn sifr_generated_quotechar_value(
-        dialect: &SifrGeneratedStdlibSifrX2ecsvX2eDialect,
-    ) -> String {
+    fn sifr_generated_quotechar_value(dialect: &SifrGeneratedStdlibSifrX2ecsvX2eDialect) -> String {
         let quotechar: String = {
             let mut sifr_generated_concat: String = String::new();
             sifr_generated_concat.push_str(dialect.quotechar.clone().as_str());
@@ -391,33 +395,24 @@ mod sifr_generated_generated_support {
         }
         quotechar
     }
-    pub(crate) fn sifr_generated_append_field(row: &mut Vec<String>, field: String) {
+    fn sifr_generated_append_field(row: &mut Vec<String>, field: String) {
         row.push(field.to_string());
     }
-    pub(crate) fn sifr_generated_append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
+    fn sifr_generated_append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
         rows.push(row);
     }
-    pub(crate) fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
-        let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
-            char,
-        > = text.chars().collect::<Vec<char>>();
+    fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
+        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         if &index < &SifrInt::from_i64(0)
-            || &index
-                >= &SifrInt::from(
-                    sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                        .len(),
-                )
+            || &index >= &SifrInt::from(sifr_generated_chars_text.len())
         {
             return String::new();
         }
         let ch: Option<String> = {
             let sifr_generated_string_index = index.clone();
-            let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(
-                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                    .len(),
-            );
-            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+            let sifr_generated_string_index_normalized =
+                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
+            sifr_generated_chars_text
                 .get(sifr_generated_string_index_normalized)
                 .copied()
         }
@@ -427,7 +422,7 @@ mod sifr_generated_generated_support {
         };
         ch
     }
-    pub(crate) fn sifr_generated_list_value_at(values: &[String], index: SifrInt) -> String {
+    fn sifr_generated_list_value_at(values: &[String], index: SifrInt) -> String {
         if &index < &SifrInt::from_i64(0) || &index >= &SifrInt::from(values.len()) {
             return String::new();
         }
@@ -450,10 +445,8 @@ mod sifr_generated_generated_support {
         }
         String::new()
     }
-    pub(crate) fn sifr_generated_dict_value_at(
-        values: &HashMap<String, String>,
-        key: &str,
-    ) -> String {
+    #[must_use]
+    pub fn sifr_generated_dict_value_at(values: &HashMap<String, String>, key: &str) -> String {
         for item_key in values.keys().cloned() {
             if item_key != *key {
                 continue;
@@ -472,16 +465,17 @@ mod sifr_generated_generated_support {
         }
         String::new()
     }
-    pub(crate) fn sifr_generated_first_char(text: &str) -> String {
+    fn sifr_generated_first_char(text: &str) -> String {
         sifr_generated_char_at(text, SifrInt::from_i64(0))
     }
-    pub(crate) fn sifr_generated_last_char(text: &str) -> String {
+    fn sifr_generated_last_char(text: &str) -> String {
         let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         sifr_generated_char_at(
             text,
-            SifrInt::from(text.chars().count()) - SifrInt::from_i64(1),
+            &SifrInt::from(text.chars().count()) - &SifrInt::from_i64(1),
         )
     }
+    #[must_use]
     #[expect(
         clippy::too_many_arguments,
         reason = "generated signature preserves the typed Sifr callable contract"
@@ -490,7 +484,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn parse_csv(
+    pub fn parse_csv(
         text: &str,
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
         delimiter: &str,
@@ -501,9 +495,7 @@ mod sifr_generated_generated_support {
         quoting: SifrInt,
     ) -> Vec<Vec<String>> {
         let quotechar = quotechar.to_owned();
-        let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
-            char,
-        > = text.chars().collect::<Vec<char>>();
+        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
             dialect,
             delimiter,
@@ -520,27 +512,17 @@ mod sifr_generated_generated_support {
         let mut in_quotes: bool = false;
         let mut field_started: bool = false;
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i
-            < &SifrInt::from(
-                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                    .len(),
-            )
-        {
+        while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
             let ch_value: String = sifr_generated_char_at(text, i.clone());
             if in_quotes {
                 if !resolved.escapechar.clone().is_empty()
                     && ch_value == resolved.escapechar.clone()
                 {
                     if &(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(
-                            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                                .len(),
-                        )
+                        < &SifrInt::from(sifr_generated_chars_text.len())
                     {
-                        let escaped_value: String = sifr_generated_char_at(
-                            text,
-                            &i + &SifrInt::from_i64(1),
-                        );
+                        let escaped_value: String =
+                            sifr_generated_char_at(text, &i + &SifrInt::from_i64(1));
                         field.push_str(escaped_value.as_str());
                         i = &i + &SifrInt::from_i64(2);
                         continue;
@@ -554,12 +536,8 @@ mod sifr_generated_generated_support {
                     let quotechar: String = sifr_generated_quotechar_value(&resolved);
                     if resolved.doublequote
                         && &(&i + &SifrInt::from_i64(1))
-                            < &SifrInt::from(
-                                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                                    .len(),
-                            )
-                        && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1))
-                            == quotechar
+                            < &SifrInt::from(sifr_generated_chars_text.len())
+                        && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == quotechar
                     {
                         field.push_str(quotechar.as_str());
                         i = &i + &SifrInt::from_i64(2);
@@ -578,16 +556,9 @@ mod sifr_generated_generated_support {
                 continue;
             }
             if !resolved.escapechar.clone().is_empty() && ch_value == resolved.escapechar.clone() {
-                if &(&i + &SifrInt::from_i64(1))
-                    < &SifrInt::from(
-                        sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                            .len(),
-                    )
-                {
-                    let escaped_plain_value: String = sifr_generated_char_at(
-                        text,
-                        &i + &SifrInt::from_i64(1),
-                    );
+                if &(&i + &SifrInt::from_i64(1)) < &SifrInt::from(sifr_generated_chars_text.len()) {
+                    let escaped_plain_value: String =
+                        sifr_generated_char_at(text, &i + &SifrInt::from_i64(1));
                     field.push_str(escaped_plain_value.as_str());
                     field_started = true;
                     i = &i + &SifrInt::from_i64(2);
@@ -620,10 +591,7 @@ mod sifr_generated_generated_support {
             if ch_value == "\n" || ch_value == "\r" {
                 if ch_value == "\r"
                     && &(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(
-                            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
-                                .len(),
-                        )
+                        < &SifrInt::from(sifr_generated_chars_text.len())
                     && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == "\n"
                 {
                     i = &i + &SifrInt::from_i64(1);
@@ -651,7 +619,7 @@ mod sifr_generated_generated_support {
         }
         rows
     }
-    pub(crate) fn sifr_generated_needs_quote(
+    fn sifr_generated_needs_quote(
         field: &str,
         dialect: &SifrGeneratedStdlibSifrX2ecsvX2eDialect,
     ) -> bool {
@@ -695,7 +663,7 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(crate) fn sifr_generated_quote_field(
+    fn sifr_generated_quote_field(
         field: &str,
         dialect: &SifrGeneratedStdlibSifrX2ecsvX2eDialect,
     ) -> String {
@@ -728,7 +696,7 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn sifr_generated_escape_unquoted_field(
+    fn sifr_generated_escape_unquoted_field(
         field: &str,
         dialect: &SifrGeneratedStdlibSifrX2ecsvX2eDialect,
     ) -> String {
@@ -775,7 +743,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_arguments,
         reason = "generated signature preserves the typed Sifr callable contract"
     )]
-    pub(crate) fn format_row(
+    fn format_row(
         fields: &[String],
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
         delimiter: &str,
@@ -805,11 +773,12 @@ mod sifr_generated_generated_support {
         }
         parts.join(&resolved.delimiter)
     }
+    #[must_use]
     #[expect(
         clippy::too_many_arguments,
         reason = "generated signature preserves the typed Sifr callable contract"
     )]
-    pub(crate) fn format_csv(
+    pub fn format_csv(
         rows: &[Vec<String>],
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
         delimiter: &str,
@@ -869,7 +838,8 @@ mod sifr_generated_generated_support {
         }
         rendered.join(&resolved_lineterminator)
     }
-    pub(crate) fn sifr_generated_dict_reader_row(
+    #[must_use]
+    pub fn sifr_generated_dict_reader_row(
         fieldnames: &[String],
         row: &[String],
         restkey: &str,
@@ -922,7 +892,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(crate) fn sifr_generated_six_digits(value: SifrInt) -> String {
+    #[must_use]
+    pub fn sifr_generated_six_digits(value: SifrInt) -> String {
         let mut rendered: String = value.to_string();
         let mut sifr_generated_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
         while &SifrInt::from(sifr_generated_chars_rendered.len()) < &SifrInt::from_i64(6) {
@@ -937,30 +908,35 @@ mod sifr_generated_generated_support {
         }
         rendered
     }
-    pub(crate) fn get_global_level() -> SifrInt {
+    fn get_global_level() -> SifrInt {
         ::sifr_stdlib::logging::get_global_level().into_sifr_int()
     }
-    pub(crate) const fn sifr_generated_const_4445425547() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_4445425547() -> SifrInt {
         SifrInt::from_i64(10)
     }
-    pub(crate) const fn sifr_generated_const_494e464f() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_494e464f() -> SifrInt {
         SifrInt::from_i64(20)
     }
-    pub(crate) const fn sifr_generated_const_5741524e494e47() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5741524e494e47() -> SifrInt {
         SifrInt::from_i64(30)
     }
-    pub(crate) const fn sifr_generated_const_4e4f54534554() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_4e4f54534554() -> SifrInt {
         SifrInt::from_i64(0)
     }
+    #[must_use]
     #[expect(
         non_snake_case,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) fn getLogger(name: &str) -> SifrGeneratedStdlibSifrX2eloggingX2eLogger {
+    pub fn getLogger(name: &str) -> SifrGeneratedStdlibSifrX2eloggingX2eLogger {
         let level: SifrInt = get_global_level();
         SifrGeneratedStdlibSifrX2eloggingX2eLogger::new(name.to_owned(), level.clone())
     }
-    pub(crate) fn basename(path: &str) -> String {
+    fn basename(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
             &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
@@ -1004,7 +980,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn dirname(path: &str) -> String {
+    #[must_use]
+    pub fn dirname(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
             &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
@@ -1042,7 +1019,8 @@ mod sifr_generated_generated_support {
         }
         String::new()
     }
-    pub(crate) fn stem(path: &str) -> String {
+    #[must_use]
+    pub fn stem(path: &str) -> String {
         let base: String = basename(path);
         let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
@@ -1086,7 +1064,7 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) trait SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods {
+    pub trait SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods {
         fn search(&self, text: &str) -> Result<Option<String>, RegexError>;
         fn is_match(&self, text: &str) -> Result<bool, RegexError>;
         fn sub(&self, replacement: &str, text: &str) -> Result<String, RegexError>;
@@ -1095,7 +1073,7 @@ mod sifr_generated_generated_support {
         fn pattern(&self) -> Result<String, RegexError>;
         fn flags(&self) -> Result<SifrInt, RegexError>;
     }
-    pub(crate) fn compile_pattern(
+    fn compile_pattern(
         pattern: &str,
     ) -> Result<SifrGeneratedStdlibSifrX2eregexX2eCompiledPattern, RegexError> {
         ::sifr_stdlib::regex::compile_pattern(pattern).map_err(|sifr_generated_bridge_error| {
@@ -1105,7 +1083,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
+    fn re_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
         ::sifr_stdlib::regex::re_match(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -1113,9 +1091,9 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn compile(
-        pattern: &str,
-    ) -> Result<SifrGeneratedStdlibSifrX2ereX2ePattern, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn compile(pattern: &str) -> Result<SifrGeneratedStdlibSifrX2ereX2ePattern, RegexError> {
         let sifr_generated_try_res: Result<
             Result<SifrGeneratedStdlibSifrX2ereX2ePattern, RegexError>,
             RegexError,
@@ -1133,7 +1111,9 @@ mod sifr_generated_generated_support {
             Err(RegexError::new(error.message.clone()))
         })
     }
-    pub(crate) fn fullmatch(pattern: &str, text: &str) -> Result<bool, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn fullmatch(pattern: &str, text: &str) -> Result<bool, RegexError> {
         let anchored: String = {
             let mut sifr_generated_concat: String =
                 String::with_capacity(1usize + pattern.len() + 1usize);
@@ -1144,7 +1124,7 @@ mod sifr_generated_generated_support {
         };
         re_match(&anchored, text)
     }
-    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+    fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
         let kind = {
             let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
@@ -1183,13 +1163,23 @@ impl ::std::fmt::Display for SifrGeneratedIoNativeFileHandle {
 }
 mod sifr_generated_project_nominals {
     use crate::SifrGeneratedIoNativeFileHandle;
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods,
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a238X3a5X3aclass25X3asifrX2eencodingX2eEncodeError1X3a019X3a5X3aclass7X3aIOError1X3a0,
+        dirname, encode, exists, file_close, file_write_bytes, format_csv, open_text, parse_csv,
+        remove_file, sifr_generated_closed_stream_error, sifr_generated_const_4e4f54534554,
+        sifr_generated_const_494e464f, sifr_generated_const_51554f54455f4e4f4e45,
+        sifr_generated_const_5741524e494e47, sifr_generated_const_4445425547,
+        sifr_generated_dict_reader_row, sifr_generated_dict_value_at,
+        sifr_generated_mode_is_writable, sifr_generated_resolve_dialect, sifr_generated_six_digits,
+        sifr_generated_validate_char, stem, touch, utf8,
+    };
     use ::sifr_runtime::SifrInt;
     use ::std::collections::HashMap;
     use ::std::collections::VecDeque;
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
-        pub data_field: VecDeque<T>,
+        pub data: VecDeque<T>,
         pub maxlen: Option<SifrInt>,
     }
     impl<T: Clone> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
@@ -1204,7 +1194,7 @@ mod sifr_generated_project_nominals {
                 } else {
                     SifrInt::from_i64(0)
                 };
-                let mut i: SifrInt = start;
+                let mut i: SifrInt = start.clone();
                 while &i < &SifrInt::from(items.len()) {
                     let item_value_2841a0c596d6f426: Option<T> = {
                         let sifr_generated_checked_read_collection = &items;
@@ -1229,18 +1219,18 @@ mod sifr_generated_project_nominals {
                 VecDeque::from(data);
             Self {
                 maxlen: sifr_generated_field_value_169953f6befb0270_6d61786c656e,
-                data_field: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
+                data: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
             }
         }
     }
     impl<T: Clone> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         pub fn append(&mut self, val: &T) {
-            self.data_field.push_back(val.clone());
+            self.data.push_back(val.clone());
             let maxlen_opt: Option<SifrInt> = self.maxlen.clone();
             if let Some(maxlen_opt) = maxlen_opt.clone() {
                 let maxlen: SifrInt = maxlen_opt.clone();
-                if &SifrInt::from(self.data_field.len()) > &maxlen {
-                    self.data_field.pop_front();
+                if &SifrInt::from(self.data.len()) > &maxlen {
+                    self.data.pop_front();
                 }
             }
         }
@@ -1248,13 +1238,13 @@ mod sifr_generated_project_nominals {
     impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
         pub fn popleft(&mut self) -> Option<T> {
-            if &SifrInt::from(self.data_field.len()) == &SifrInt::from_i64(0) {
+            if &SifrInt::from(self.data.len()) == &SifrInt::from_i64(0) {
                 return None;
             }
             Some({
                 let sifr_generated_nonempty_pop_index = 0_usize;
                 let mut sifr_generated_nonempty_pop_values = self
-                    .data_field
+                    .data
                     .drain(sifr_generated_nonempty_pop_index..=sifr_generated_nonempty_pop_index)
                     .collect::<Vec<_>>();
                 sifr_generated_nonempty_pop_values.remove(0_usize)
@@ -1264,19 +1254,19 @@ mod sifr_generated_project_nominals {
     impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
         pub fn len(&self) -> SifrInt {
-            SifrInt::from(self.data_field.len())
+            SifrInt::from(self.data.len())
         }
     }
     impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         pub fn clear(&mut self) {
-            self.data_field.clear();
+            self.data.clear();
         }
     }
     impl<T: Clone + PartialEq> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
         pub fn count(&self, value: &T) -> SifrInt {
             let mut total: SifrInt = SifrInt::from_i64(0);
-            for item in self.data_field.iter().cloned() {
+            for item in self.data.iter().cloned() {
                 if item == *value {
                     total = &total + &SifrInt::from_i64(1);
                 }
@@ -1287,7 +1277,7 @@ mod sifr_generated_project_nominals {
     impl<T: Clone + PartialEq> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         #[must_use]
         pub fn index(&self, value: &T, start: &SifrInt, stop: &Option<SifrInt>) -> Option<SifrInt> {
-            let size: SifrInt = SifrInt::from(self.data_field.len());
+            let size: SifrInt = SifrInt::from(self.data.len());
             let mut begin: SifrInt = start.clone();
             if &begin < &SifrInt::from_i64(0) {
                 begin = &size + &begin;
@@ -1305,13 +1295,13 @@ mod sifr_generated_project_nominals {
                     end = SifrInt::from_i64(0);
                 }
                 if &end > &size {
-                    end = size;
+                    end = size.clone();
                 }
             }
             let mut i: SifrInt = begin.clone();
             while &i < &end {
                 let current: Option<T> = {
-                    let sifr_generated_checked_read_collection = &self.data_field;
+                    let sifr_generated_checked_read_collection = &self.data;
                     let sifr_generated_checked_read_index = i.clone();
                     let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                         .normalize_index_or_len(sifr_generated_checked_read_collection.len());
@@ -1335,9 +1325,9 @@ mod sifr_generated_project_nominals {
             if let Some(idx) = idx.clone() {
                 let mut rebuilt: Vec<T> = Vec::new();
                 let mut i: SifrInt = SifrInt::from_i64(0);
-                while &i < &SifrInt::from(self.data_field.len()) {
+                while &i < &SifrInt::from(self.data.len()) {
                     let current: Option<T> = {
-                        let sifr_generated_checked_read_collection = &self.data_field;
+                        let sifr_generated_checked_read_collection = &self.data;
                         let sifr_generated_checked_read_index = i.clone();
                         let sifr_generated_checked_read_normalized =
                             sifr_generated_checked_read_index.normalize_index_or_len(
@@ -1354,9 +1344,9 @@ mod sifr_generated_project_nominals {
                     }
                     i = &i + &SifrInt::from_i64(1);
                 }
-                self.data_field.clear();
+                self.data.clear();
                 for item in rebuilt.iter().cloned() {
-                    self.data_field.push_back(item.clone());
+                    self.data.push_back(item.clone());
                 }
             }
         }
@@ -1834,7 +1824,7 @@ mod sifr_generated_project_nominals {
     }
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct SifrGeneratedStdlibSifrX2ecsvX2eDictReader {
-        pub fieldnames_field: Vec<String>,
+        pub fieldnames: Vec<String>,
         pub rows: Vec<Vec<String>>,
         pub pos: SifrInt,
         pub restkey: String,
@@ -1930,8 +1920,7 @@ mod sifr_generated_project_nominals {
                 restkey: sifr_generated_field_value_d10323292550fbae_726573746b6579,
                 restval: sifr_generated_field_value_e9b6e328a309fdee_7265737476616c,
                 pos: sifr_generated_field_value_e04b9443eebba9b4_5f706f73,
-                fieldnames_field:
-                    sifr_generated_field_value_efdb691f099ff036_5f6669656c646e616d6573,
+                fieldnames: sifr_generated_field_value_efdb691f099ff036_5f6669656c646e616d6573,
                 rows: sifr_generated_field_value_d742ae5cfb4259e3_5f726f7773,
             }
         }
@@ -1940,7 +1929,7 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn fieldnames(&self) -> Vec<String> {
             let mut copied: Vec<String> = Vec::new();
-            for field in self.fieldnames_field.iter().cloned() {
+            for field in self.fieldnames.iter().cloned() {
                 copied.push(field.to_string());
             }
             copied
@@ -1955,7 +1944,7 @@ mod sifr_generated_project_nominals {
                     continue;
                 }
                 result.push(sifr_generated_dict_reader_row(
-                    &self.fieldnames_field,
+                    &self.fieldnames,
                     &row,
                     &self.restkey,
                     &self.restval,
@@ -2348,7 +2337,7 @@ mod sifr_generated_project_nominals {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2eloggingX2eLogger {
-        pub name_field: String,
+        pub name: String,
         pub level: SifrInt,
         pub log_path: String,
         pub handler_kind: String,
@@ -2372,7 +2361,7 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_98e9bbb8fd5643d6_5f68616e646c65725f666d74: String =
                 "%(levelname)s:%(name)s:%(message)s".to_string();
             Self {
-                name_field: sifr_generated_field_value_2570757371473f6d_5f6e616d65,
+                name: sifr_generated_field_value_2570757371473f6d_5f6e616d65,
                 level: sifr_generated_field_value_70fb616fceb1e22c_5f6c6576656c,
                 log_path: sifr_generated_field_value_1fb1dcbc22de0cba_5f6c6f675f70617468,
                 handler_kind:
@@ -2404,7 +2393,7 @@ mod sifr_generated_project_nominals {
         pub fn sifr_generated_handler_line(&self, level: &str, msg: &str) -> String {
             let formatter: SifrGeneratedStdlibSifrX2eloggingX2eFormatter =
                 SifrGeneratedStdlibSifrX2eloggingX2eFormatter::new(self.handler_fmt.clone());
-            formatter.format(level, &self.name_field.clone(), msg)
+            formatter.format(level, &self.name.clone(), msg)
         }
     }
     impl SifrGeneratedStdlibSifrX2eloggingX2eLogger {
@@ -2448,7 +2437,7 @@ mod sifr_generated_project_nominals {
                             let e2 = sifr_generated_try_err.clone();
                             let _ = e2.message.clone();
                         }
-                        fh.close();
+                        (&mut fh).close();
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -2464,7 +2453,7 @@ mod sifr_generated_project_nominals {
                 sifr_generated_concat.push('[');
                 sifr_generated_concat.push_str(level);
                 sifr_generated_concat.push_str("] ");
-                sifr_generated_concat.push_str(self.name_field.clone().as_str());
+                sifr_generated_concat.push_str(self.name.clone().as_str());
                 sifr_generated_concat.push_str(": ");
                 sifr_generated_concat.push_str(msg);
                 sifr_generated_concat
@@ -2492,7 +2481,7 @@ mod sifr_generated_project_nominals {
                         let e2 = sifr_generated_try_err.clone();
                         let _ = e2.message.clone();
                     }
-                    fh.close();
+                    (&mut fh).close();
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -2530,7 +2519,7 @@ mod sifr_generated_project_nominals {
             write!(
                 f,
                 "Logger(_name={}, _level={}, _log_path={}, _handler_kind={}, _handler_path={}, _handler_level={}, _handler_fmt={})",
-                self.name_field,
+                self.name,
                 self.level,
                 self.log_path,
                 self.handler_kind,
@@ -2766,7 +2755,10 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for RegexError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods, compile, fullmatch,
+    getLogger, sifr_generated_const_4445425547,
+};
 use ::sifr_runtime::SifrInt;
 use ::std::collections::HashMap;
 pub use sifr_generated_project_nominals::IOError;
@@ -2798,10 +2790,10 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eregexX2eCompi
 fn main() {
     let mut d: SifrGeneratedStdlibSifrX2ecollectionsX2edeque<SifrInt> =
         SifrGeneratedStdlibSifrX2ecollectionsX2edeque::new(None, Some(SifrInt::from_i64(3)));
-    d.append(&SifrInt::from_i64(1));
-    d.append(&SifrInt::from_i64(2));
-    d.append(&SifrInt::from_i64(3));
-    d.append(&SifrInt::from_i64(4));
+    (&mut d).append(&SifrInt::from_i64(1));
+    (&mut d).append(&SifrInt::from_i64(2));
+    (&mut d).append(&SifrInt::from_i64(3));
+    (&mut d).append(&SifrInt::from_i64(4));
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(23usize);
         sifr_generated_concat.push_str("deque len (maxlen=3) = ");
@@ -2812,7 +2804,8 @@ fn main() {
         let mut sifr_generated_concat: String = String::with_capacity(16usize);
         sifr_generated_concat.push_str("deque popleft = ");
         sifr_generated_concat.push_str(
-            d.popleft()
+            (&mut d)
+                .popleft()
                 .map_or_else(
                     || "None".to_string(),
                     |sifr_generated_v| sifr_generated_v.to_string(),
@@ -2960,7 +2953,7 @@ fn main() {
         });
     }
     let mut log: SifrGeneratedStdlibSifrX2eloggingX2eLogger = getLogger(&"demo".to_string());
-    log.set_level(&sifr_generated_const_4445425547());
+    (&mut log).set_level(&sifr_generated_const_4445425547());
     log.debug(&"debug message".to_string());
     log.info(&"info message".to_string());
     log.warning(&"warning message".to_string());
@@ -2994,8 +2987,8 @@ fn main() {
     );
     let row1: Vec<String> = vec!["x".to_string(), "y".to_string()];
     let row2_value_a3a6c71ff10a162b: Vec<String> = vec!["1".to_string(), "2".to_string()];
-    w.writerow(&row1);
-    w.writerow(&row2_value_a3a6c71ff10a162b);
+    (&mut w).writerow(&row1);
+    (&mut w).writerow(&row2_value_a3a6c71ff10a162b);
     let out: String = w.getvalue();
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(20usize + out.len());
@@ -3057,12 +3050,12 @@ fn main() {
             "\n".to_string(),
             SifrInt::from_i64(0),
         );
-    dw.writeheader();
+    (&mut dw).writeheader();
     let row_data: HashMap<String, String> = HashMap::from([
         ("name".to_string(), "charlie".to_string()),
         ("score".to_string(), "91".to_string()),
     ]);
-    dw.writerow(&row_data);
+    (&mut dw).writerow(&row_data);
     let dw_out: String = dw.getvalue();
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(20usize + dw_out.len());

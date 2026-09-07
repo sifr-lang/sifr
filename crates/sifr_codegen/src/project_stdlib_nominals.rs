@@ -1,3 +1,4 @@
+use crate::builtin_errors::BuiltinError;
 use crate::stdlib_filter::{
     partition_rust_items_by_name, rust_source_defined_item_names, rust_source_references_item_name,
     strip_relocated_rust_items_by_name,
@@ -7,7 +8,12 @@ use sifr_ir::HirFunction;
 use sifr_type_system::{FunctionType, Type, class_rust_name, is_crate_root_rust_nominal_identity};
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+mod module_bindings;
 mod project_union_relocation;
+mod registry;
+
+pub(crate) use module_bindings::project_module_binding_names;
+pub(crate) use registry::ProjectNominalRegistry;
 
 use project_union_relocation::{relocate_project_unions, shared_nominal_reexport_names};
 
@@ -16,36 +22,6 @@ const SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES: &[&str] = &["_sifr.fs.NativeF
 
 pub(crate) struct ProjectStdlibNominalPlan {
     pub(crate) registry: ProjectNominalRegistry,
-}
-
-#[derive(Default)]
-pub(crate) struct ProjectNominalRegistry {
-    pub(crate) shared_rust_names: HashSet<String>,
-    pub(crate) crate_root_rust_names: HashSet<String>,
-    pub(crate) rust_paths: HashMap<String, String>,
-}
-
-impl ProjectNominalRegistry {
-    fn register_shared(&mut self, identity: String, rust_name: String) {
-        self.rust_paths.insert(
-            identity,
-            format!("crate::{SHARED_STDLIB_NOMINAL_MODULE}::{rust_name}"),
-        );
-        self.shared_rust_names.insert(rust_name);
-    }
-
-    fn register_crate_root(&mut self, identity: String, rust_name: String) {
-        self.rust_paths
-            .insert(identity, format!("crate::{rust_name}"));
-        self.shared_rust_names.remove(&rust_name);
-        self.crate_root_rust_names.insert(rust_name);
-    }
-
-    fn register_builtin(&mut self, name: &str, rust_name: String) {
-        let identity = crate::builtin_error_identity(name)
-            .expect("project builtin registration requires a builtin error name");
-        self.register_shared(identity, rust_name);
-    }
 }
 
 impl ProjectStdlibNominalPlan {
@@ -120,7 +96,7 @@ pub(crate) fn project_stdlib_nominal_plan(
     modules: &[(&str, &HirModule)],
 ) -> ProjectStdlibNominalPlan {
     let mut declarations = BTreeMap::<String, HashSet<String>>::new();
-    let mut builtin_types = BTreeMap::<String, Type>::new();
+    let mut builtin_types = BTreeMap::<BuiltinError, Type>::new();
     for members in unions.values() {
         for member in members {
             collect_shared_nominals(member, &mut declarations, &mut builtin_types);
@@ -136,24 +112,30 @@ pub(crate) fn project_stdlib_nominal_plan(
             .collect::<HashSet<_>>();
         let intrinsic_functions =
             crate::error_refs::collect_module_intrinsic_function_names(module);
-        for name in crate::error_refs::collect_referenced_builtin_error_classes(
+        let referenced = crate::error_refs::collect_referenced_builtin_error_classes(
             module,
             "",
             &intrinsic_functions,
             false,
             crate::BUILTIN_ERROR_CLASSES,
-        ) {
-            if local_error_names.contains(name.as_str())
-                || sifr_type_system::io_error_kind(&name).is_some()
+        );
+        for builtin in BuiltinError::all() {
+            let name = builtin.name();
+            if !referenced.contains(name)
+                || local_error_names.contains(name)
+                || sifr_type_system::io_error_kind(name).is_some()
             {
                 continue;
             }
             builtin_types
-                .entry(name.clone())
-                .or_insert_with(|| builtin_error_type(&name));
+                .entry(builtin)
+                .or_insert_with(|| builtin_error_type(name));
         }
     }
-    if builtin_types.contains_key("Error") {
+    if builtin_types
+        .keys()
+        .any(|builtin| builtin.name() == "Error")
+    {
         for (_, module) in modules {
             if !crate::python_interop_common::module_uses_async_python_declaration(module) {
                 continue;
@@ -173,10 +155,11 @@ pub(crate) fn project_stdlib_nominal_plan(
             registry.register_shared(identity, rust_name);
         }
     }
-    for (name, ty) in builtin_types {
-        let rust_name = class_rust_name(None, &name);
+    for (builtin, ty) in builtin_types {
+        let name = builtin.name();
+        let rust_name = class_rust_name(None, name);
         debug_assert!(
-            matches!(&ty, Type::Class { identity, .. } if is_compiler_builtin_error(identity.as_deref(), &name)),
+            matches!(&ty, Type::Class { identity, .. } if is_compiler_builtin_error(identity.as_deref(), name)),
             "project builtin registry accepted a non-builtin nominal identity"
         );
         if let Type::Class {
@@ -186,7 +169,7 @@ pub(crate) fn project_stdlib_nominal_plan(
         {
             registry.register_shared(identity.clone(), rust_name.clone());
         }
-        registry.register_builtin(&name, rust_name);
+        registry.register_builtin(builtin, rust_name);
     }
     for identity in SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES {
         if let Some((_, name)) = identity.rsplit_once('.') {
@@ -329,18 +312,19 @@ fn register_transitive_stdlib_nominals(
 
 fn register_emitted_builtin_nominals(shared_source: &str, registry: &mut ProjectNominalRegistry) {
     let defined_names = rust_source_defined_item_names(shared_source);
-    for name in crate::BUILTIN_ERROR_CLASSES {
-        if sifr_type_system::io_error_kind(name).is_some() || !defined_names.contains(*name) {
+    for builtin in BuiltinError::all() {
+        let name = builtin.name();
+        if sifr_type_system::io_error_kind(name).is_some() || !defined_names.contains(name) {
             continue;
         }
-        registry.register_builtin(name, class_rust_name(None, name));
+        registry.register_builtin(builtin, class_rust_name(None, name));
     }
 }
 
 fn collect_function_nominals(
     function: &FunctionType,
     declarations: &mut BTreeMap<String, HashSet<String>>,
-    builtin_types: &mut BTreeMap<String, Type>,
+    builtin_types: &mut BTreeMap<BuiltinError, Type>,
 ) {
     for (_, parameter, _) in &function.params {
         collect_shared_nominals(parameter, declarations, builtin_types);
@@ -351,7 +335,7 @@ fn collect_function_nominals(
 fn collect_hir_function_nominals(
     function: &HirFunction,
     declarations: &mut BTreeMap<String, HashSet<String>>,
-    builtin_types: &mut BTreeMap<String, Type>,
+    builtin_types: &mut BTreeMap<BuiltinError, Type>,
 ) {
     for parameter in &function.params {
         collect_shared_nominals(&parameter.ty, declarations, builtin_types);
@@ -360,12 +344,20 @@ fn collect_hir_function_nominals(
     for ty in crate::hir_analysis::queries::collect_let_declared_types(&function.body) {
         collect_shared_nominals(&ty, declarations, builtin_types);
     }
+    // Constructor-only references still need the same canonical project owner
+    // as annotations and bindings (notably consuming error upcasts).
+    crate::hir_analysis::traversal::walk_stmts(
+        &function.body,
+        crate::hir_analysis::traversal::TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+        &mut |_| {},
+        &mut |expr| collect_shared_nominals(expr.ty(), declarations, builtin_types),
+    );
 }
 
 fn collect_module_nominals(
     module: &HirModule,
     declarations: &mut BTreeMap<String, HashSet<String>>,
-    builtin_types: &mut BTreeMap<String, Type>,
+    builtin_types: &mut BTreeMap<BuiltinError, Type>,
 ) {
     for function in &module.functions {
         collect_hir_function_nominals(function, declarations, builtin_types);
@@ -392,7 +384,7 @@ fn collect_module_nominals(
 fn collect_shared_nominals(
     ty: &Type,
     declarations: &mut BTreeMap<String, HashSet<String>>,
-    builtin_types: &mut BTreeMap<String, Type>,
+    builtin_types: &mut BTreeMap<BuiltinError, Type>,
 ) {
     match ty.resolve_alias() {
         class @ Type::Class {
@@ -403,11 +395,11 @@ fn collect_shared_nominals(
             methods,
             ..
         } => {
-            if is_compiler_builtin_error(identity.as_deref(), name)
+            if let Some(builtin) = compiler_builtin_error(identity.as_deref(), name)
                 && sifr_type_system::io_error_kind(name).is_none()
             {
                 builtin_types
-                    .entry(name.clone())
+                    .entry(builtin)
                     .or_insert_with(|| class.clone());
             }
             if !class.is_python_object_contract() && !class.is_python_resource_identity_contract() {
@@ -509,11 +501,16 @@ fn collect_nominal_identity(
 }
 
 fn is_compiler_builtin_error(identity: Option<&str>, name: &str) -> bool {
-    crate::BUILTIN_ERROR_CLASSES.contains(&name)
-        && identity.is_none_or(|identity| {
+    compiler_builtin_error(identity, name).is_some()
+}
+
+fn compiler_builtin_error(identity: Option<&str>, name: &str) -> Option<BuiltinError> {
+    BuiltinError::from_name(name).filter(|_| {
+        identity.is_none_or(|identity| {
             identity.starts_with("sifr.builtin.")
                 || sifr_type_system::is_global_rust_nominal_identity(identity)
         })
+    })
 }
 
 #[cfg(test)]
@@ -750,7 +747,8 @@ mod tests {
             ),
         ]);
         let mut registry = ProjectNominalRegistry::default();
-        registry.register_builtin("ValueError", "ValueError".to_string());
+        let builtin = BuiltinError::from_name("ValueError").expect("known builtin fixture");
+        registry.register_builtin(builtin, "ValueError".to_string());
 
         paths.extend(registry.rust_paths);
 

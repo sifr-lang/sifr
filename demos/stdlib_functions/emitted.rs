@@ -1,11 +1,12 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::{
-        FloatOverflowError, FloatPrecisionLossError, IndexError,
+        FloatOverflowError, FloatPrecisionLossError,
         SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError, ValueError,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn bisect_left<T: Clone + 'static + PartialOrd>(
+    use ::sifr_runtime::SifrInt;
+    #[must_use]
+    pub fn bisect_left<T: Clone + 'static + PartialOrd>(
         a: &[T],
         x: &T,
         lo: SifrInt,
@@ -50,11 +51,12 @@ mod sifr_generated_generated_support {
         }
         left.clone()
     }
-    pub(crate) trait SifrGeneratedAdd: Sized {}
+    trait SifrGeneratedAdd: Sized {}
     impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
     impl SifrGeneratedAdd for f64 {}
     impl SifrGeneratedAdd for String {}
-    pub(crate) fn pairwise<T: Clone + 'static>(data: &[T]) -> Vec<Vec<T>> {
+    #[must_use]
+    pub fn pairwise<T: Clone + 'static>(data: &[T]) -> Vec<Vec<T>> {
         let mut result: Vec<Vec<T>> = Vec::new();
         let mut prev_values: Vec<T> = Vec::new();
         for value in data.iter().cloned() {
@@ -93,10 +95,9 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(crate) fn batched<T: Clone + 'static>(
-        data: &[T],
-        n: SifrInt,
-    ) -> Result<Vec<Vec<T>>, ValueError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn batched<T: Clone + 'static>(data: &[T], n: SifrInt) -> Result<Vec<Vec<T>>, ValueError> {
         if &n <= &SifrInt::from_i64(0) {
             return Err(ValueError::new("batched: n must be > 0".to_string()));
         }
@@ -114,13 +115,16 @@ mod sifr_generated_generated_support {
         }
         Ok(result)
     }
-    pub(crate) fn exp(x: f64) -> f64 {
+    #[must_use]
+    pub fn exp(x: f64) -> f64 {
         ::sifr_stdlib::math::exp(x)
     }
-    pub(crate) const fn isfinite(x: f64) -> bool {
+    #[must_use]
+    pub const fn isfinite(x: f64) -> bool {
         ::sifr_stdlib::math::isfinite(x)
     }
-    pub(crate) fn factorial(n: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn factorial(n: SifrInt) -> SifrInt {
         if &n < &SifrInt::from_i64(0) {
             return SifrInt::from_i64(0);
         }
@@ -132,7 +136,8 @@ mod sifr_generated_generated_support {
         }
         result.clone()
     }
-    pub(crate) fn gcd(a: SifrInt, b: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn gcd(a: SifrInt, b: SifrInt) -> SifrInt {
         let mut x: SifrInt = a.clone();
         let mut y: SifrInt = b.clone();
         if &x < &SifrInt::from_i64(0) {
@@ -148,11 +153,12 @@ mod sifr_generated_generated_support {
         }
         x.clone()
     }
+    #[must_use]
     #[expect(
         clippy::many_single_char_names,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
+    pub fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
         if &a == &SifrInt::from_i64(0) {
             return SifrInt::from_i64(0);
         }
@@ -173,7 +179,8 @@ mod sifr_generated_generated_support {
         }
         &x.floor_div_known_nonzero(&g) * &y
     }
-    pub(crate) fn comb(n: SifrInt, k: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn comb(n: SifrInt, k: SifrInt) -> SifrInt {
         if &k < &SifrInt::from_i64(0) {
             return SifrInt::from_i64(0);
         }
@@ -203,7 +210,8 @@ mod sifr_generated_generated_support {
         }
         result.clone()
     }
-    pub(crate) fn perm(n: SifrInt, k: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn perm(n: SifrInt, k: SifrInt) -> SifrInt {
         if &k < &SifrInt::from_i64(0) {
             return SifrInt::from_i64(0);
         }
@@ -218,14 +226,15 @@ mod sifr_generated_generated_support {
         }
         result.clone()
     }
-    pub(crate) fn prod(data: &[SifrInt]) -> SifrInt {
+    #[must_use]
+    pub fn prod(data: &[SifrInt]) -> SifrInt {
         let mut result: SifrInt = SifrInt::from_i64(1);
         for val in data.iter().cloned() {
             result = &result * &val;
         }
         result.clone()
     }
-    pub(crate) fn basename(path: &str) -> String {
+    fn basename(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
             &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
@@ -269,7 +278,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn stem(path: &str) -> String {
+    #[must_use]
+    pub fn stem(path: &str) -> String {
         let base: String = basename(path);
         let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
@@ -313,7 +323,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn is_absolute(path: &str) -> bool {
+    #[must_use]
+    pub fn is_absolute(path: &str) -> bool {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         if &SifrInt::from(sifr_generated_chars_path.len()) == &SifrInt::from_i64(0) {
             return false;
@@ -362,7 +373,7 @@ mod sifr_generated_generated_support {
         false
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -398,7 +409,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn sifr_generated_float_int(
+    fn sifr_generated_float_int(
         value: SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let sifr_generated_try_res: Result<
@@ -452,7 +463,9 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(crate) fn harmonic_mean(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn harmonic_mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -484,7 +497,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(crate) fn median_low(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn median_low(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -539,7 +554,9 @@ mod sifr_generated_generated_support {
             Ok(val2_value_4373ff00edde01ca)
         }
     }
-    pub(crate) fn median_high(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn median_high(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -576,7 +593,8 @@ mod sifr_generated_generated_support {
         };
         Ok(val)
     }
-    pub(crate) fn capwords(s: &str) -> String {
+    #[must_use]
+    pub fn capwords(s: &str) -> String {
         let normalized: String = s
             .replace('\t', " ")
             .replace('\n', " ")
@@ -613,7 +631,7 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::String;
     #[derive(Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError {
         pub message: String,
@@ -685,22 +703,14 @@ mod sifr_generated_project_nominals {
         }
     }
     impl ::std::error::Error for FloatPrecisionLossError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct IndexError {
-        pub message: String,
-    }
-    impl ::std::fmt::Display for IndexError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for IndexError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    String, batched, bisect_left, capwords, comb, exp, f64, factorial, gcd, harmonic_mean,
+    is_absolute, isfinite, lcm, median_high, median_low, pairwise, perm, prod, stem,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::FloatOverflowError;
 pub use sifr_generated_project_nominals::FloatPrecisionLossError;
-pub use sifr_generated_project_nominals::IndexError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError;
 pub use sifr_generated_project_nominals::ValueError;
 #[expect(
