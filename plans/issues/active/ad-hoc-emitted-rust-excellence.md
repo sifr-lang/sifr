@@ -2,6 +2,57 @@
 
 Status: active
 
+## In progress: 12K-B15 final prerequisite integration (2026-09-07)
+
+Sole owned clone `/private/tmp/sifr-b15-delivery.NykMhH/sifr`, branch
+`codex/implicit-format-capture-demand`, continues existing PR3746 / #3748.
+Full `cdc8354aec03d505d89cef09dacd71e4f43723c9` is preserved by normal merges
+of fetched actual main `0b97b3a3f1dd3f93bc724f75e1e40240f15ff942` and the separate
+B17 post-merge record `3cfb7f865fdb99023aa22decff999d53af05a839`. Only both owner
+documents conflicted; both histories are retained. The bounded parent registration
+below is copied as authority, without its unrelated pending orchestration records.
+Parent's two dirty documents and every predecessor remain read-only.
+
+Before any necessary named check, external `evidence/authentication.json`
+authenticated all34 B14,37 B15 and14 B17 indexed artifacts against the supplied
+terminal digests. Entire compiler/crates, manifests, locks, stdlib, Rust toolchain,
+and gitlink inputs match approved B14. All demos, producer scripts and workflows
+match B15; the three SQL registry/helper/profile files match approved B17 exactly.
+Only these three prerequisite files and the two owner records differ from B15.
+
+Registered reuse: B14's115canonicalizer/9capture tests (18lexical,3type-namespace,
+3native cases) and final compiler approval; B15's264freshness pairs, both native
+demos and fmt check, because their complete relevant source and Rust toolchain
+inputs are unchanged. Run only the remaining named file-size and whitespace
+checks on this integrated tree. Command adaptation: `git diff --check` also uses
+the fetched actual-main base to cover committed integration, not just worktree
+changes. B17's seven checks remain authenticated prerequisite evidence. Its root
+lock/codegen manifest differ from B14, so old readiness is not represented as
+an exact integrated PASS; the one full merge profile must freshly qualify all
+combined metadata, profile and crate execution along with the complete compiler.
+Pinned recursive submodules are prepared in this clone and their exact identities
+checked before review/gate. No duplicate compiler build, emission or graph warming.
+
+One remaining B15 remediation Opus request covers only final integration and
+evidence/approval reuse at the frozen candidate SHA; no new initial review and
+no third B14 compiler review. Existing B17 approval remains independent.
+After named evidence and approval, normally push the exact candidate and run
+`scripts/run_all_tests.sh --profile merge` once. No create-pr or second gate.
+The production prelude owns all92 exact generated dependency graphs. The full
+blocking area/toolchain/crate/E2E/stdlib results must pass before normal merge.
+Own TMPDIR/UV_CACHE_DIR/PYTHONPYCACHEPREFIX; CARGO_TARGET_DIR unset,
+CARGO_BUILD_JOBS=6 and RUST_TEST_THREADS=1. Inspect actual owned target/disk;
+sample free space every15s and stop only owned gate processes below8GiB.
+Initial free approximately34GiB; private target absent. No predecessor cleanup.
+Cold-cache durations are not controlled-host performance evidence or a budget waiver.
+
+Historical B15 oneFAILED gate, B14 oneFAILED gate/exhausted reviews and original
+12K fourFAILED+oneRESOURCE143/zeroPASS remain unchanged. This continuation owns
+one new changed-prerequisite attempt, whose outcome is recorded separately and
+cumulatively. Any new mechanism/external blocker is recorded with its later owner;
+no next-item implementation or blind gate retry. After delivery and owner records,
+STOP; B13/original12K/12D/12E/12F/retained12/12A are outside this item.
+
 ## Current orchestration: B16/B17 delivered; resume12K-B15 (2026-09-07)
 
 Darwin is CLOSED. PR3751 MERGED2026-09-07T16:05:33Z, issues3750/3749 CLOSED.
