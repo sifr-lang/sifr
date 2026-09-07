@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-09-07. Items 0–30 are complete. Item 36 reconciles the
-remaining inventory; independent work can proceed under the continuation
+Status: active on 2026-09-07. Items 0–30 and 36 are complete. Item 36 reconciled
+the remaining inventory; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
@@ -36,7 +36,7 @@ instructions below; historical gate and review evidence remains unchanged.
   registration into that worktree. The orchestrator's original worktree is
   `/Users/yaseralnajjar/.codex/worktrees/cb34/codebase` and preserves Item 31.
 
-#### Next ready item: 36 — execution inventory reconciliation
+#### Item 36 registration — execution inventory reconciliation (complete)
 
 Dependencies: none. This is the first step of the execution order proposed in
 the 2026-09-07 analysis. Items 0–30 keep their historical completed status;
@@ -335,10 +335,11 @@ is not a technical dependency.
 | 33 | pending | VS Code extension toolchain | Node types, VS Code types/engine, TypeScript, package locks, VSIX qualification, and the three-repository pointer chain merge in order. |
 | 34 | pending | Mint exact pin | Documentation tooling uses a tested exact latest-stable Mint release and documentation checks pass. |
 | 35 | pending; final only | Documentation-only phase closure | After Items 31–34 and 36–62, reuse item evidence and Item 62's official audit; one exact-SHA whole-phase Opus review; archive the phase and update roadmap. Implementation findings require separate items before this closer. |
+| 36 | complete | Execution inventory reconciliation | The continuation ledger, named tests, prerequisites, and every historical deferral owner merged in PR #3758; exact-SHA Opus review satisfied and documentation checks passed. |
 
 ## Item 36 — reconciled continuation ledger
 
-State: implementation record prepared; documentation only. Inspection base:
+State: complete; documentation only. Inspection base:
 `156157242b0995c01c4fff03575624b5c471c0d8` (main, 2026-09-07).
 Items 0–30 remain complete. The supplied September release targets above are
 the planning baseline, not a new official-source qualification by Item 36.
@@ -364,6 +365,8 @@ release URL/checksum, and take the newest non-prerelease release then available.
   local branch's `2aa891d302` merge includes relevant main changes; it is not
   covered by that approval. Item 61 is a new bounded integration owner; it
   must preserve Item 31's consumed gate/review history.
+  Item 61's qualified merge and record discharge original row 31; row 31 is
+  not a second implementation dispatch or an additional gate allowance.
 - [PR #3717](https://github.com/sifr-lang/sifr/pull/3717) is open, not main.
   On inspection its API head is `98480c78587d6cbd99a7079d10c71825360bd468`,
   while its terminal body refers to reviewed candidate `be0849a905f105d1733d24aafe880c93b7643438`
@@ -522,6 +525,7 @@ ordering, not permission for the audit coordinator to implement them.
 | 6 YAML step parser/evidence-only checkout | 37. |
 | 7 Ruff surface cleanup | 42. Cosmetic inherited commit title/comment and optional suite-clone cleanup are explicitly not required; 62 records tree evidence. |
 | 8 cxx misleading marker | Existing Rust-interop drift owner retains it; 43 verifies current probe marker against actual result and records external evidence/blocker rather than taking over that owner. Vendor/core-lock/unused declarations: 49. |
+| 9 syntax-stack convergence/final graph reconciliation | 45 (Syn/quote), 49 (exact first-party syntax edges and vendor/lock closure), 62 (final audited counts). |
 | 14 generic vendor closure | 49. |
 | 15 tracked locks, exact BigInt edge, demos | 49 and 62B. |
 | 16 impl safety, exact Syn/Prettyplease, stale vendor | Full header already fixed on main; 56 checks regression. Remaining graph invariants: 49. |
@@ -544,6 +548,38 @@ fixes receive credit only for the inspected mechanism; their remaining
 regressions have owners above. External failures remain under their existing
 issues. The final closer cannot mark the phase complete while any required
 item or external approval remains blocked.
+
+### Item 36 closure evidence
+
+Implementation [PR #3758](https://github.com/sifr-lang/sifr/pull/3758) merged
+on 2026-09-07. Base: `156157242b0995c01c4fff03575624b5c471c0d8`.
+Exact reviewed candidate: `40fdb2f42907e7f152de4dd2def97e1732cc39f7`.
+Merge: `0c1f1cf11be13039f4ca9cf4ae4f5f6096a5b0d2`.
+
+The only changed path was this phase record. Named checks passed:
+`git diff --check`; local record checks (two links, 30 owned paths, 73 suite
+references, 22 manifest-test references); and
+`python3 scripts/check_file_size_guardrails.py` (3,759 files, 900-line limit).
+No compiler, lockfile, fixture, or workflow inputs changed; neither Sifr gate
+ran. Read-only main/GitHub inventory inspection is recorded above, not claimed
+as a fresh upstream release audit or implementation qualification.
+
+The [one exact-SHA item-scoped Opus review](https://github.com/sifr-lang/sifr/pull/3758#issuecomment-5575614992)
+returned `SATISFIED`, with no blocking findings. No remediation request or
+whole-phase review ran. Raw review SHA-256:
+`a1231a79e2b8cd7f893f398590b9a84b78c01a158c4388a67329f5ed078204f0`.
+External evidence: `/tmp/sifr-item36-opus.NyeB10/response.md`; documentation
+checker: `/tmp/sifr-item36.IZj90p/check_record.py`.
+
+The post-merge record addresses all three review suggestions: an explicit
+Item 9 mapping, an Item 36 table row, and the statement that Item 61 discharges
+Item 31. These are record-only clarifications, not new implementation scope;
+no additional external review or Sifr gate applies.
+
+Item 36 blocker: **none**. E1/E2 and Rust inventory drift remain assigned
+prerequisites for their consumers. Exact next action: the parent may dispatch
+**Item 37 only**, on a fresh owned worktree. This Item 36 worker stops after
+the record update merges; it has implemented and tested no later item.
 
 ### Item 0 record
 
@@ -2779,12 +2815,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Item 36 documentation candidate is prepared on `codex/latest-stable-item36`,
-from main `156157242b0995c01c4fff03575624b5c471c0d8`, in isolated worktree
-`/tmp/sifr-item36.IZj90p/codebase`. Its named documentation checks and one
-item-scoped exact-SHA Opus review must pass before merge; record final PR/SHA
-and evidence after merge. No Sifr gate applies. Next dispatch after that record
-is Item 37 only; this worker must stop after delivery.
+Item 36 is complete via PR #3758, candidate
+`40fdb2f42907e7f152de4dd2def97e1732cc39f7`, merge
+`0c1f1cf11be13039f4ca9cf4ae4f5f6096a5b0d2`. Documentation checks passed and
+one exact-SHA Opus review returned `SATISFIED`; closure evidence is above.
+The post-merge record branch is `codex/latest-stable-item36-record` in isolated
+worktree `/tmp/sifr-item36.IZj90p/codebase`. Item 36 has no blocker and requires
+no Sifr gate. Next dispatch is Item 37 only; this worker stops after delivery.
 
 Items 0–30 are complete. Item 31 implementation
 [PR #3551](https://github.com/sifr-lang/sifr/pull/3551) remains draft. Its exact
