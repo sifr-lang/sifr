@@ -336,7 +336,13 @@ pub(in crate::lower) fn resolve_imports_early(
                 for name in &names {
                     let local = local_name_for(name);
                     if let Some(class_ty) = module_classes.get(name) {
-                        if !ctx.class_types.contains_key(&local) {
+                        if !ctx.class_types.contains_key(&local)
+                            || (local == "Error"
+                                && ctx
+                                    .class_types
+                                    .get(&local)
+                                    .is_some_and(sifr_type_system::Type::is_builtin_error_base))
+                        {
                             let imported_class_ty = super::imported_class_identity::type_for_import(
                                 class_ty,
                                 &module_key,
@@ -404,6 +410,8 @@ pub(in crate::lower) fn resolve_imports_early(
                             // Register as error type if flagged
                             if externals.is_error_type(&module_key, name) {
                                 ctx.error_types.insert(local.clone());
+                            } else if local == "Error" {
+                                ctx.error_types.remove(&local);
                             }
                             if let Some(module_workloads) =
                                 externals.function_workloads.get(&module_key)

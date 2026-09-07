@@ -224,7 +224,8 @@ impl Renderer {
                         Self::wrap_expr(receiver)
                     };
                 format!(
-                    "{receiver}.{method}({})",
+                    "{receiver}.{}({})",
+                    Self::render_identifier(method),
                     args.iter()
                         .map(Self::render_expr_string)
                         .collect::<Vec<_>>()

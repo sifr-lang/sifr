@@ -150,7 +150,7 @@ macro_rules! stmt_expr_method_call {
                             let lowered_index =
                                 Self::clone_non_copy_name_expr_for_ir(index, lowered_index);
                             let lowered_arg = $emitter
-                                .clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
+                                .materialize_reusable_value_for_ir(&args[0], lowered_arg);
                             let key_arg = Self::build_dict_lookup_key_arg_for_ir(lowered_index);
                             return Ok(Some(crate::RustExpr::Block {
                                 stmts: vec![crate::RustStmt::IfLet {
@@ -292,7 +292,7 @@ macro_rules! stmt_expr_method_call {
                 )
             {
                 lowered_args[0] = $emitter
-                    .clone_owned_append_arg_expr_for_ir(&args[0], lowered_args[0].clone());
+                    .materialize_reusable_value_for_ir(&args[0], lowered_args[0].clone());
                 return Ok(Some(crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_object),
                     method: "push".to_string(),

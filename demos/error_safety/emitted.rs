@@ -73,6 +73,11 @@ mod sifr_generated_project_nominals {
             Self::new(err.message)
         }
     }
+    impl From<crate::AppError> for Error {
+        fn from(err: crate::AppError) -> Self {
+            Self::new(err.message)
+        }
+    }
 }
 pub use sifr_generated_project_nominals::DivisionError;
 pub use sifr_generated_project_nominals::Error;

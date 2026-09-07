@@ -134,7 +134,7 @@ mod sifr_generated_generated_support {
         }
         let last: Option<String> = {
             let sifr_generated_string_index =
-                SifrInt::from(base.chars().count()) - SifrInt::from_i64(1);
+                &SifrInt::from(base.chars().count()) - &SifrInt::from_i64(1);
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_base.len());
             sifr_generated_chars_base

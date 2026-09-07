@@ -1421,7 +1421,7 @@ mod sifr_generated_generated_support {
         }
         let last: Option<String> = {
             let sifr_generated_string_index =
-                SifrInt::from(base.chars().count()) - SifrInt::from_i64(1);
+                &SifrInt::from(base.chars().count()) - &SifrInt::from_i64(1);
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_base.len());
             sifr_generated_chars_base
@@ -1840,7 +1840,7 @@ mod sifr_generated_generated_support {
                 while &consumed < &array_count {
                     let item_result: (SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, SifrInt) =
                         sifr_generated_decode_toml_value_at(tokens, next_index.clone())?;
-                    array_value.array_items.push(item_result.0);
+                    array_value.array_items.push(item_result.0.clone());
                     next_index = item_result.1.clone();
                     consumed = &consumed + &SifrInt::from_i64(1);
                 }
@@ -1871,7 +1871,7 @@ mod sifr_generated_generated_support {
                             tokens,
                             &next_index + &SifrInt::from_i64(1),
                         )?;
-                    table_value.table_items.push((key, item_result.0));
+                    table_value.table_items.push((key, item_result.0.clone()));
                     next_index = item_result.1.clone();
                     consumed = &consumed + &SifrInt::from_i64(1);
                 }
@@ -2571,6 +2571,17 @@ mod sifr_generated_project_nominals {
     }
     impl From<ScopeFailure> for Error {
         fn from(err: ScopeFailure) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl
+        From<
+            crate::sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2egraphlibX2eCycleError,
+        > for Error
+    {
+        fn from(
+            err: crate::sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2egraphlibX2eCycleError,
+        ) -> Self {
             Self::new(err.message)
         }
     }

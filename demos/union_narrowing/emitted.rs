@@ -97,7 +97,7 @@ fn describe_pet(
     }
 }
 fn find_value(x: Option<SifrInt>, target: SifrInt) -> String {
-    if x == Some(target) {
+    if x == Some(target.clone()) {
         return "found".to_string();
     }
     "not found".to_string()

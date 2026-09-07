@@ -840,7 +840,7 @@ mod sifr_generated_generated_support {
                 while &consumed < &array_count {
                     let item_result: (SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, SifrInt) =
                         sifr_generated_json_decode_value_at(tokens, next_index.clone())?;
-                    array_value.array_items.push(item_result.0);
+                    array_value.array_items.push(item_result.0.clone());
                     next_index = item_result.1.clone();
                     consumed = &consumed + &SifrInt::from_i64(1);
                 }
@@ -871,7 +871,7 @@ mod sifr_generated_generated_support {
                             tokens,
                             &next_index + &SifrInt::from_i64(1),
                         )?;
-                    object_value.object_items.push((key, item_result.0));
+                    object_value.object_items.push((key, item_result.0.clone()));
                     next_index = item_result.1.clone();
                     consumed = &consumed + &SifrInt::from_i64(1);
                 }
@@ -1817,6 +1817,15 @@ mod sifr_generated_project_nominals {
             Self::new(err.message)
         }
     }
+    impl From<
+        crate::sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2econfigparserX2eParsingError,
+    > for Error {
+        fn from(
+            err: crate::sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2econfigparserX2eParsingError,
+        ) -> Self {
+            Self::new(err.message)
+        }
+    }
 }
 pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::JSONDecodeError;
@@ -1930,7 +1939,7 @@ fn main() {
         SifrGeneratedStdlibSifrX2econfigparserX2eConfigParser::new(None, false, false);
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2econfigparserX2eParsingError> =
         (|| {
-            parser.read_string(
+            (&mut parser).read_string(
                 &"[DEFAULT]\nbase=/tmp\n[paths]\ncache=%(base)s/cache\n".to_string(),
             )?;
             Ok(())
@@ -1945,7 +1954,7 @@ fn main() {
         Some("/tmp/cache".to_string())
     );
     let mut registry: SifrGeneratedStdlibSifrX2ecsvX2eDialectRegistry = dialect_registry();
-    registry.register(
+    (&mut registry).register(
         &"pipe".to_string(),
         &SifrGeneratedStdlibSifrX2ecsvX2eDialect::new(
             "|".to_string(),
@@ -1975,5 +1984,5 @@ fn main() {
             "[[\"a\", \"b\"], [\"1\", \"2\"]]"
         );
     }
-    assert!(registry.unregister(&"pipe".to_string()));
+    assert!((&mut registry).unregister(&"pipe".to_string()));
 }

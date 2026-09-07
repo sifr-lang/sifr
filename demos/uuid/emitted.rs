@@ -278,7 +278,7 @@ mod sifr_generated_generated_support {
             .map(|character| character.to_string());
             let last: Option<String> = {
                 let sifr_generated_string_index =
-                    SifrInt::from(normalized_input.chars().count()) - SifrInt::from_i64(1);
+                    &SifrInt::from(normalized_input.chars().count()) - &SifrInt::from_i64(1);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_normalized_input.len());
                 sifr_generated_chars_normalized_input
@@ -290,7 +290,7 @@ mod sifr_generated_generated_support {
                 normalized_input = sifr_generated_substring(
                     &normalized_input,
                     SifrInt::from_i64(1),
-                    SifrInt::from(normalized_input.chars().count()) - SifrInt::from_i64(1),
+                    &SifrInt::from(normalized_input.chars().count()) - &SifrInt::from_i64(1),
                 );
                 sifr_generated_chars_normalized_input =
                     normalized_input.chars().collect::<Vec<char>>();

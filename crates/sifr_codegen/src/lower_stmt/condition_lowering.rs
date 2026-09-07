@@ -305,6 +305,14 @@ pub(crate) fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Opt
     }
     let mut lowered_left = try_lower_condition_operand_expr(left)?;
     let mut lowered_right = try_lower_condition_operand_expr(rhs_expr)?;
+    if matches!(left.as_ref(), HirExpr::ListLiteral { elements, .. } if elements.is_empty()) {
+        lowered_left =
+            crate::lower_expr::typed_empty_list_expr(rhs_expr.ty()).unwrap_or(lowered_left);
+    }
+    if matches!(rhs_expr, HirExpr::ListLiteral { elements, .. } if elements.is_empty()) {
+        lowered_right =
+            crate::lower_expr::typed_empty_list_expr(left.ty()).unwrap_or(lowered_right);
+    }
     let left_is_option = condition_operand_lowers_as_option(left);
     let right_is_option = condition_operand_lowers_as_option(rhs_expr);
     if !left_is_option
@@ -322,12 +330,18 @@ pub(crate) fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Opt
     if left_is_option && !right_is_option && !matches!(rhs_expr, HirExpr::NoneLiteral) {
         lowered_right = RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-            args: vec![lowered_right],
+            args: vec![crate::RustEmitter::clone_non_copy_name_expr_for_ir(
+                rhs_expr,
+                lowered_right,
+            )],
         };
     } else if !left_is_option && right_is_option && !matches!(left.as_ref(), HirExpr::NoneLiteral) {
         lowered_left = RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-            args: vec![lowered_left],
+            args: vec![crate::RustEmitter::clone_non_copy_name_expr_for_ir(
+                left,
+                lowered_left,
+            )],
         };
     } else if matches!(
         resolve_alias_type(left.ty()),

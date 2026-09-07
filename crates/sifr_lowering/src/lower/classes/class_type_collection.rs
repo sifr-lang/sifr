@@ -1,6 +1,6 @@
 use super::str;
 use crate::hir_nodes::HirExpr;
-use ruff_text_size::{Ranged, TextRange};
+use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt, StmtClassDef};
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -46,58 +46,10 @@ pub(super) fn method_signature_return_type(
     }
 }
 
-pub(super) fn missing_method_param_annotation(
-    ctx: &mut LowerCtx,
-    class_name: &str,
-    method_name: &str,
-    param_name: &str,
-    range: ruff_text_size::TextRange,
-) {
-    ctx.error_with_code_at(
-        DiagnosticCode::TYPE_MISSING_ANNOTATION,
-        format!(
-            "parameter '{param_name}' in {class_name}.{method_name} is missing a type annotation"
-        ),
-        range,
-    );
-}
-
-pub(super) fn invalid_class_base(
-    ctx: &mut LowerCtx,
-    class_name: &str,
-    reason: &str,
-    range: TextRange,
-) {
-    ctx.error_with_code_at(
-        DiagnosticCode::CLASS_INVALID_BASE,
-        format!("invalid base class for '{class_name}': {reason}"),
-        range,
-    );
-}
-
-pub(super) fn unsupported_class_declaration(
-    ctx: &mut LowerCtx,
-    class_name: &str,
-    detail: &str,
-    range: TextRange,
-) {
-    ctx.error_with_code_at(
-        DiagnosticCode::CLASS_UNSUPPORTED_DECLARATION,
-        format!("unsupported class declaration in '{class_name}': {detail}"),
-        range,
-    );
-}
-
-pub(super) fn parent_class_range(class_def: &StmtClassDef, parent_name: &str) -> TextRange {
-    class_def
-        .bases()
-        .iter()
-        .find_map(|base| match base {
-            Expr::Name(name) if name.id.as_str() == parent_name => Some(name.range()),
-            _ => None,
-        })
-        .unwrap_or_else(|| class_def.name.range())
-}
+use super::class_declaration_diagnostics::{
+    invalid_class_base, missing_method_param_annotation, parent_class_range,
+    unsupported_class_declaration,
+};
 
 pub(in crate::lower) fn collect_class_type(
     class_def: &StmtClassDef,
@@ -108,7 +60,7 @@ pub(in crate::lower) fn collect_class_type(
     let mut fields: Vec<(String, Type)> = Vec::new();
     let mut methods: Vec<(String, FunctionType)> = Vec::new();
     let mut method_ranges: HashMap<String, ruff_text_size::TextRange> = HashMap::new();
-    let is_error = is_error_class_with_ctx(class_def, &ctx.error_types);
+    let is_error = is_error_class_with_ctx(class_def, ctx);
     let is_protocol = is_protocol_class(class_def);
     let newtype_inner = get_newtype_inner(class_def);
 
@@ -301,12 +253,10 @@ pub(in crate::lower) fn collect_class_type(
         return;
     }
 
-    // For error types, ensure a 'message' field exists (add if not explicitly declared)
-    // This will be checked after collecting all fields
     // Inherit parent fields and methods for single inheritance
     let parent_class_name =
         crate::lower::descriptor_declarations::data_parent_name(&class_name, ctx);
-    let mut parent_class_chain: Option<String> = None;
+    let mut parent_class_chain = is_error.then(|| "Error".to_string());
     let mut inherited_field_defaults = Vec::new();
     if let Some(ref parent_name) = parent_class_name {
         if let Some(parent_ty) =
@@ -373,6 +323,9 @@ pub(in crate::lower) fn collect_class_type(
         }
     }
     let inherited_field_count = fields.len();
+    if is_error {
+        super::error_message_contract::seed(class_def, &mut fields);
+    }
 
     // Register a preliminary class type so self-referential annotations work
     // (e.g., `def distance(self, other: Point)` inside class Point)
@@ -771,6 +724,15 @@ pub(in crate::lower) fn collect_class_type(
     }
 
     let is_python_opaque = ctx.python_opaque_classes.contains_key(&class_name);
+    if is_error {
+        super::error_message_contract::collect(
+            class_def,
+            &mut fields,
+            &mut field_defaults,
+            &mut parent_class_chain,
+            ctx,
+        );
+    }
     let generic_type_args = ctx
         .class_declared_type_params
         .get(&class_name)
@@ -792,6 +754,7 @@ pub(in crate::lower) fn collect_class_type(
         },
     };
 
+    super::error_message_contract::inherit_constructor(class_def, &fields, is_error, ctx);
     // Update the constructor function to return the class type
     if is_python_opaque {
         ctx.functions.remove(&class_name);
@@ -885,6 +848,9 @@ pub(in crate::lower) fn collect_class_type(
 
     if is_error {
         ctx.error_types.insert(class_name.clone());
+    } else {
+        // A declaration can shadow a builtin error name without inheriting it.
+        ctx.error_types.remove(&class_name);
     }
 
     if !field_defaults.is_empty() {

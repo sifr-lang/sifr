@@ -361,8 +361,8 @@ fn main() {
                 sifr_generated_mode.to_string(),
             ))
         })()?;
-        writer.write_bytes(&payload)?;
-        writer.close();
+        (&mut writer).write_bytes(&payload)?;
+        (&mut writer).close();
         let mut reader: SifrGeneratedIoFileHandle = (|| {
             let sifr_generated_path = path.to_string();
             let sifr_generated_mode = "rb".to_string();
@@ -377,7 +377,7 @@ fn main() {
             ))
         })()?;
         let loaded: Vec<u8> = reader.read_bytes(&None)?;
-        reader.close();
+        (&mut reader).close();
         io_ok = loaded == payload
             && format!(
                 "{:?}",

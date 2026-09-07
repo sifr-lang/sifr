@@ -1207,7 +1207,7 @@ mod sifr_generated_project_nominals {
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2eloggingX2eLogger {
-        pub name_field: String,
+        pub name: String,
         pub level: SifrInt,
         pub log_path: String,
         pub handler_kind: String,
@@ -1231,7 +1231,7 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_98e9bbb8fd5643d6_5f68616e646c65725f666d74: String =
                 "%(levelname)s:%(name)s:%(message)s".to_string();
             Self {
-                name_field: sifr_generated_field_value_2570757371473f6d_5f6e616d65,
+                name: sifr_generated_field_value_2570757371473f6d_5f6e616d65,
                 level: sifr_generated_field_value_70fb616fceb1e22c_5f6c6576656c,
                 log_path: sifr_generated_field_value_1fb1dcbc22de0cba_5f6c6f675f70617468,
                 handler_kind:
@@ -1284,7 +1284,7 @@ mod sifr_generated_project_nominals {
         pub fn sifr_generated_handler_line(&self, level: &str, msg: &str) -> String {
             let formatter: SifrGeneratedStdlibSifrX2eloggingX2eFormatter =
                 SifrGeneratedStdlibSifrX2eloggingX2eFormatter::new(self.handler_fmt.clone());
-            formatter.format(level, &self.name_field.clone(), msg)
+            formatter.format(level, &self.name.clone(), msg)
         }
     }
     impl SifrGeneratedStdlibSifrX2eloggingX2eLogger {
@@ -1328,7 +1328,7 @@ mod sifr_generated_project_nominals {
                             let e2 = sifr_generated_try_err.clone();
                             let _ = e2.message.clone();
                         }
-                        fh.close();
+                        (&mut fh).close();
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1344,7 +1344,7 @@ mod sifr_generated_project_nominals {
                 sifr_generated_concat.push('[');
                 sifr_generated_concat.push_str(level);
                 sifr_generated_concat.push_str("] ");
-                sifr_generated_concat.push_str(self.name_field.clone().as_str());
+                sifr_generated_concat.push_str(self.name.clone().as_str());
                 sifr_generated_concat.push_str(": ");
                 sifr_generated_concat.push_str(msg);
                 sifr_generated_concat
@@ -1372,7 +1372,7 @@ mod sifr_generated_project_nominals {
                         let e2 = sifr_generated_try_err.clone();
                         let _ = e2.message.clone();
                     }
-                    fh.close();
+                    (&mut fh).close();
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1392,7 +1392,7 @@ mod sifr_generated_project_nominals {
             write!(
                 f,
                 "Logger(_name={}, _level={}, _log_path={}, _handler_kind={}, _handler_path={}, _handler_level={}, _handler_fmt={})",
-                self.name_field,
+                self.name,
                 self.level,
                 self.log_path,
                 self.handler_kind,
@@ -1886,14 +1886,14 @@ fn main() {
         let mut logger: SifrGeneratedStdlibSifrX2eloggingX2eLogger = getLogger(
             &"logging_and_timers-demo".to_string(),
         );
-        logger.set_file(&log_path);
+        (&mut logger).set_file(&log_path);
         let fh: SifrGeneratedStdlibSifrX2eloggingX2eFileHandler = SifrGeneratedStdlibSifrX2eloggingX2eFileHandler::new(
             log_path.to_string(),
             sifr_generated_const_494e464f(),
         );
-        logger.add_handler(&fh);
+        (&mut logger).add_handler(&fh);
         logger.info(&"hello".to_string());
-        logger.clear_handler();
+        (&mut logger).clear_handler();
         let gmt: SifrGeneratedStdlibSifrX2etimeX2estructTime = gmtime_struct(0.0_f64);
         let epoch_tm: SifrGeneratedStdlibSifrX2etimeX2estructTime = SifrGeneratedStdlibSifrX2etimeX2estructTime::new(
             SifrInt::from_i64(1970),

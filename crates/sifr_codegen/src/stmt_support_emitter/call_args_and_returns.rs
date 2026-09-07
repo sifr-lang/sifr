@@ -413,6 +413,9 @@ impl RustEmitter {
         ) {
             return Ok(Some(witness));
         }
+        if let Some(lowered) = self.lower_proven_read_with_error_carrier(object, index)? {
+            return Ok(Some(lowered));
+        }
         let witnessed_object_ty = match object {
             HirExpr::Index {
                 object: parent,
@@ -562,7 +565,10 @@ impl RustEmitter {
 
         if !matches!(
             value,
-            HirExpr::OkWrap { .. } | HirExpr::ErrWrap { .. } | HirExpr::Compare { .. }
+            HirExpr::OkWrap { .. }
+                | HirExpr::ErrWrap { .. }
+                | HirExpr::Compare { .. }
+                | HirExpr::BinOp { .. }
         ) {
             if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(value)? {
                 return Ok(Some(coerce_return(self, lowered_leaf)?));
@@ -601,7 +607,7 @@ impl RustEmitter {
                 }
             }
         }
-        if !matches!(expr, HirExpr::Compare { .. })
+        if !matches!(expr, HirExpr::Compare { .. } | HirExpr::BinOp { .. })
             && let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(expr)?
         {
             return Ok(Some(lowered_leaf));

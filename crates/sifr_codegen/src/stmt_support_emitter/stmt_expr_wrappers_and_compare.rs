@@ -365,7 +365,7 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
             };
             let collection_element_ty = collection.ty().contains_element_type();
             let union_wrapped_element = collection_element_ty.as_ref().and_then(|target_ty| {
-                let owned = $emitter.clone_owned_append_arg_expr_for_ir(
+                let owned = $emitter.materialize_reusable_value_for_ir(
                     element,
                     lowered_element.clone(),
                 );
@@ -559,6 +559,15 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         "is not" => "!=".to_string(),
                         _ => return Ok(None),
                     };
+                    if let Some(lowered_cmp) = $emitter.lower_static_none_comparison(lhs_expr, op, rhs_expr)? {
+                        lowered_chain = Some(if let Some(existing) = lowered_chain {
+                            crate::RustExpr::BinOp {
+                                left: Box::new(existing), op: "&&".to_string(), right: Box::new(lowered_cmp),
+                            }
+                        } else { lowered_cmp });
+                        lhs_expr = rhs_expr;
+                        continue;
+                    }
                     let left_none_like = matches!(lhs_expr, HirExpr::NoneLiteral)
                         || matches!(
                             crate::resolve_alias_type_for_plain_call(lhs_expr.ty()),
@@ -634,6 +643,12 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                     let Some(lowered_right) = $emitter.lower_stmt_expr_for_ir(rhs_expr)? else {
                         return Ok(None);
                     };
+                    let lowered_left = if matches!(lhs_expr, HirExpr::ListLiteral { elements, .. } if elements.is_empty()) {
+                        crate::lower_expr::typed_empty_list_expr(rhs_expr.ty()).unwrap_or(lowered_left)
+                    } else { lowered_left };
+                    let lowered_right = if matches!(rhs_expr, HirExpr::ListLiteral { elements, .. } if elements.is_empty()) {
+                        crate::lower_expr::typed_empty_list_expr(lhs_expr.ty()).unwrap_or(lowered_right)
+                    } else { lowered_right };
                     let left_witness_ty = match lhs_expr {
                         HirExpr::Index {
                             object, index, ty, ..
@@ -672,14 +687,14 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                                 lowered_left,
                                 crate::RustExpr::FnCall {
                                     func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
-                                    args: vec![lowered_right],
+                                    args: vec![$emitter.materialize_reusable_value_for_ir(rhs_expr, lowered_right)],
                                 },
                             )
                         } else if !left_is_option && right_is_option && !left_none_like {
                             (
                                 crate::RustExpr::FnCall {
                                     func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
-                                    args: vec![lowered_left],
+                                    args: vec![$emitter.materialize_reusable_value_for_ir(lhs_expr, lowered_left)],
                                 },
                                 lowered_right,
                             )
