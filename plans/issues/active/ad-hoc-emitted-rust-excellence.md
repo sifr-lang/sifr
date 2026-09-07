@@ -2,6 +2,91 @@
 
 Status: active
 
+## Terminal: 12K-B15 blocked on SQL coverage registry (2026-09-07)
+
+12K-B15 / [#3748](https://github.com/sifr-lang/sifr/issues/3748) is **blocked,
+not merged**. [PR3746](https://github.com/sifr-lang/sifr/pull/3746) remains draft.
+Main base `06ea86334b72f49f5aab250a64498ee955ec9331`; inherited complete B14
+record `20632a5bea2dca841bb4685b4343ad4132ec52e9`; exact frozen/pushed candidate
+`4a0a03f430f1ad87b080a6172bc46209082e955a`. Branch
+`codex/implicit-format-capture-demand`, owned clone
+`/private/tmp/sifr-companion.KIogHV/sifr`. Merge SHA: none. This terminal update
+changes records only and is pushed on the same branch, not main.
+
+The bounded companion implementation is complete: exact approved-compiler
+output restores PI/E in core_stdlib and PI in stdlib_loading, satisfying their
+existing captures. Both files are byte-identical to preserved compiler stdout.
+All8 inherited paths and all16 pinned submodules are preserved; no compiler,
+lockfile, demo input, lint policy, selection, baseline, or next-item code changed.
+The six named checks passed on the candidate, recorded under
+`/private/tmp/sifr-companion.KIogHV/evidence/`:
+
+- `demo-freshness.log`:264pairs PASS, SHA256
+  `b5fad0a979dfb8e2d7ed3bc117c83262f8ac93c58828638720493802fd21ad06`.
+- `core-stdlib-run.log`:native PASS, expected PI/E output, SHA256
+  `5e108a237c08efd0f6ea6f3d637461f7b25070e95239be8fa6c1f4f7db4ced0e`.
+- `stdlib-loading-run.log`:native PASS, expected PI output, SHA256
+  `daf87a334fee5521c8a15c4fab6da9e1053a418a12bef88800a79a66cfbbdea9`.
+- `fmt.log`:PASS, SHA256
+  `e9e4409f5d26e3a664e5abc6f633a9f5050ea471ca86e352d9d666e8e641aa83`.
+- `file-size.log`:3761files PASS, SHA256
+  `529d88cdc97e9116adb095f8ea31046ec18eeae718da5feac1506a86537ef70f`.
+- `diff.log`:PASS, SHA256
+  `1b517b832d5c92d93e6217c8d73649ce6fdc3870e135f0c6623656eb20534d48`.
+
+Exact command/count receipt `named-checks.json` SHA256
+`983b7ae8603983bec643d6a300141cee903ed37e074b59441d31a18e2f97665d`.
+Generation provenance SHA256
+`4445805db4fe5b187a98f6a8ff9f94e905b803ac378f2cccac99a1b262e438da`
+records generation-time HEAD20632, source/toolchain/binary/submodule and both
+raw diff hashes; its candidate key means generation-time identity. Future
+evidence-schema naming clarification is recorded only in the review receipt.
+Initial missing-submodule preparation failure and corrected pinned-checkout
+build remain preserved; no validation failure was discarded.
+
+[Initial B15 delta review](https://github.com/sifr-lang/sifr/pull/3746#issuecomment-5572544181)
+returned SATISFIED/no blockers:1initial/0remediation/1provider/0retries.
+Raw `../tmp/sifr-claude.tiTTsH/response.md` SHA256
+`1b78451a5156fa2a51581379ddc35612144b9087c5502ec386f7138d360c938b`.
+All34 B14 artifacts authenticated; unchanged compiler115/9focused evidence and
+final17484 approval are carried forward. B14 reviews remain exhausted and
+its1FAILED gate remains historical; no third compiler review was requested.
+Nonblocking latent follow-ups remain in #3747.
+
+The one full merge-profile gate naturally FAILEDexit1 after1170.64s.
+Production92graphs PASS, all13guards PASS (264freshness153652ms), RustInterop
+10variants PASS. Coverage readiness3/4PASS, registry check FAIL with23SQL
+diagnostics:9missing packages,13missing targets,1stale PostgreSQLlib versus rlib.
+Remaining18areas and2toolchain steps UNREACHED. No full-profile PASS or merge
+is claimed; no create-pr gate or second merge gate. Setup986467ms exceeded
+300000ms advisory budget only. A nested runner-foundation negative self-test
+emits a zero-duration setup failure marker; it is not another production failure.
+
+- `merge.4a0a03f430f1ad87b080a6172bc46209082e955a.log` SHA256
+  `d6d70bfacf3d1a8078348a393ea27e222bbee7c93880ea9894f7c8be4a85f204`.
+- Matching supervisor `.json` SHA256
+  `28b86d3734b75cc2fe7b8615095fe4dd07fbc9f6b67fd96761404448454e646c`.
+- `../sifr/target/verification/areas/coverage-matrix-merge-results.json` SHA256
+  `963eb6d42bad2867db29a47c1fed9d0428244b1b1e8cc3c5accbd2e1b69d167b`.
+- `../sifr/target/validation_lane_reports/merge.latest.json` SHA256
+  `e2781c72f1560cac734c18a31b0a7c21e32bd65ae8b24c3fdcb4ef4b24c6651b`.
+
+Existing SQL registry ownership is recorded in
+`ad-hoc-schema-first-sql-platform-review-follow-ups.md` and now tracked by
+[#3749](https://github.com/sifr-lang/sifr/issues/3749). SQL Cargo and coverage
+inputs are unchanged from main; historical issue records identify this failure
+class, but B15 ran no baseline replay. No registry fix or successor work starts.
+Minimum free39,878,000,640bytes; no cleanup or resource termination.
+No live gate/review/watchdog handles remain. Parent/predecessor source/Git/
+index/targets/evidence remain untouched. External terminal receipt
+`/private/tmp/sifr-companion.KIogHV/evidence/terminal.json` indexes final evidence.
+
+Exact next action: stop this owner; a later separately scoped SQL registry owner
+must qualify the prerequisite before capture-demand delivery resumes. Preserve
+the complete reviewed candidate and terminal record. Original12K remains
+4FAILED+1RESOURCE_TERMINATED143/0PASS with exhausted reviews; B13/PR3717/corpus48
+are unmerged. No B13,12D/12E/12F/retained12/docs-only12A or phase closure here.
+
 ## In progress: 12K-B15 companion concordance delivery (2026-09-07)
 
 [Owner3748](https://github.com/sifr-lang/sifr/issues/3748) continues bounded

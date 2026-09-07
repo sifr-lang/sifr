@@ -55,6 +55,38 @@ remediation review. These findings do not reopen the completed platform phase.
 
 ## Coverage registry blocker observed during naming cleanup (2026-09-05)
 
+### Capture-demand delivery recurrence (2026-09-07)
+
+Tracked by [#3749](https://github.com/sifr-lang/sifr/issues/3749), recorded only,
+not started. 12K-B15 / #3748, draft PR #3746, exact candidate
+`4a0a03f430f1ad87b080a6172bc46209082e955a` (main base
+`06ea86334b72f49f5aab250a64498ee955ec9331`) ran its single merge-profile gate.
+It naturally FAILEDexit1 after1170.64s at coverage readiness:9missing SQL
+package classifications,13missing targets,1stale PostgreSQLlib versus rlib.
+The other3readiness variants passed, as did production92graph setup, all13
+guards including264companion freshness, and10RustInterop variants.
+Remaining18areas/2toolchain steps were UNREACHED. SQL packages/manifests and
+coverage inputs are unchanged from main; no B15 baseline replay was executed.
+
+This existing owner must reconcile
+`verification/areas/coverage_matrix/data/cargo_metadata_classification.json`
+with the actual SQL Cargo graph. No classification or assertion was changed
+by B15. No new mechanism implementation, second gate, or merge was attempted.
+The approved compiler/companion delta is preserved on
+`codex/implicit-format-capture-demand`, independent clone
+`/private/tmp/sifr-companion.KIogHV/sifr`.
+Full diagnostics and bounded later-owner scope are in #3749; raw gate log
+`/private/tmp/sifr-companion.KIogHV/evidence/merge.4a0a03f430f1ad87b080a6172bc46209082e955a.log`
+SHA256 `d6d70bfacf3d1a8078348a393ea27e222bbee7c93880ea9894f7c8be4a85f204`;
+supervisor receipt SHA256
+`28b86d3734b75cc2fe7b8615095fe4dd07fbc9f6b67fd96761404448454e646c`.
+Coverage result SHA256
+`963eb6d42bad2867db29a47c1fed9d0428244b1b1e8cc3c5accbd2e1b69d167b`.
+These are failed-gate evidence, not full qualification. No cleanup or resource
+termination occurred; minimum free capacity39,878,000,640bytes.
+
+### Historical observations
+
 The repository naming cleanup ran `scripts/run_all_tests.sh` once. The gate
 failed in coverage-matrix readiness with nine unclassified SQL packages,
 unclassified SQL/host-tool test targets, an unclassified PostgreSQL `rlib`,
