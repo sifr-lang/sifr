@@ -2,6 +2,61 @@
 
 Status: active
 
+## Item12K-B19 investigation outcome: sampling cause unresolved (2026-09-08)
+
+Status: NOT COMPLETE / NOT MERGEABLE. Evidence-retention implementation
+`3181cc6dcd4bed372d6aa3291cc30ececc2f5538` fixes discarded diagnostic records;
+it does not fix or explain the actual sampling instability. Base remains full
+`4763c8c99a95eeac7f9e272b851e0f814d33bb78`. The bounded draft PR must retain
+this distinction and must not close owner3776 or original B13/PR3717.
+
+The registered benchmark and budget self-tests passed. File-size guardrail
+passed3788files; exact commit diff check passed. Both preservation maps were
+authenticated byte-for-byte (2422+125 files), with input identities in
+`/private/tmp/sifr-b19.udje7q/evidence/input-map.3181cc6dc.json`. No compiler,
+lockfile, fixture, workflow or gitlink changed; zero builds, zero Sifr gates.
+
+The sole registered instrumented formatter acquisition naturally FAILED exit1:
+three internal attempts, work CV0.048618/0.045376/0.042088 against unchanged0.02.
+All18 processes (3warmups+15measured) returned0 without timeout, with identical
+application output. Every parsed counter matches its raw `/usr/bin/time -l`
+line and independently recomputed CV. The rejected attempt artifact now retains
+all measured values. This excludes a demonstrated parser/aggregation mismatch;
+it does not explain the underlying work variation.
+
+After that new raw observation, one fixed startup/accounting comparison was
+registered in sibling evidence `comparison-registration.md` before execution:
+`python3 /private/tmp/sifr-b19.udje7q/evidence/compare_startup.py`. Exactly
+one warmup+five measurements of the same private binary's `--version` and
+`/usr/bin/true`, interleaved under existing host admission/monitoring; no retry,
+no formatter repeat. CV0.002335 and0.002253 respectively, no host rejection.
+These controls did not reproduce the formatter variation. Different commands
+and five observations cannot exclude intermittent startup or host effects;
+they do not prove a formatter/compiler defect or authorize baseline subtraction.
+
+Independent raw sample analysis and all diagnostic artifact hashes:
+`/private/tmp/sifr-b19.udje7q/evidence/sample-analysis.3181cc6dc.json`, SHA256
+`c6d1b0b91e7c8c59dae534b9b15e93c806675293f39420dc52e768384e2c4826`.
+Raw formatter and comparison records are copied outside the reviewed tree.
+The coordinator was notified of start/scope and release; both sessions ended
+naturally and no B19 validation processes remain.
+
+Concrete missing evidence: instruction attribution across fmt-specific CLI
+setup, configuration/discovery, parser/formatter work, and process/runtime/host
+accounting. Aggregate command counters, even complete raw ones, cannot select
+a causal correction among these boundaries. A separately registered producer
+boundary profiling experiment is needed before further mechanism edits; no
+specific compiler defect or external host cause is asserted. Do not merge this
+partial observability patch as B19 closure, repeat the formatter/full gate, or
+change thresholds/workloads to obtain a pass. The original B19 owner stays open.
+
+Representative benchmark-subset and dependent budget-subset remain UNEXECUTED
+for B19; no final cause correction exists to qualify. Initial exact-SHA Opus
+review is limited to this final candidate and full B19 acceptance criteria;
+publish its verdict outside the tree. No remediation is justified without a
+causal fix, and no second gate is authorized. B13 cumulative2FAILED/0PASS and
+all older gate/review counters remain unchanged. No next item has started.
+
 ## Item12K-B19: registered evidence acquisition (2026-09-08)
 
 Owner [#3776](https://github.com/sifr-lang/sifr/issues/3776). B19 is open;
