@@ -2,6 +2,78 @@
 
 Status: active
 
+## Item12K-B18 terminal: documentation repair merged to stack, NOT main (2026-09-07)
+
+Status: COMPLETE for this bounded documentation item. [PR3757](https://github.com/sifr-lang/sifr/pull/3757)
+merged at 20:31:27Z into `codex/support-visibility-imports`, **NOT main**.
+Base `db29be49fdad05b85b77fb3b517e8f92d40d1ad5`; exact tested and Opus-approved
+candidate `4d8eb9abea7b5f4391424339110da0fc804a4faf`; stack merge
+`348bd053d90657b6ac7a1f2a66bd378906d0ace9`. Candidate and stack merge have the
+same tree `c3a3550fd18f27c381dfa296418450b648c9db71`. This separate record is
+published on `codex/item12k-b18-docs-taxonomy`; its SHA is in the external terminal.
+
+Only implementation path changed:
+`verification/areas/generated_code_quality/representative_support_baseline.md`.
+Neutral verification wording replaces delivery labels. The twelve-surface limit,
+outstanding all-surface audit, remaining522diagnostics/nineteen lint owners,
+zero-debt disclaimer, source hashes, evidence paths and all seven derivation steps
+remain intact. Delivery lineage remains here: B13 owns the support visibility
+repair, B14 supplies approved capture semantics, and retainedItem12/whole-phase
+zero-debt completion remain outstanding. No compiler, tests, fixtures, lockfile,
+workflow, profile, registry, checker, numeric/signature baseline or policy changed.
+
+All named checks PASS on the exact candidate, each invoked once after all edits:
+
+- `uv run --project verification python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json target/verification/areas/coverage-matrix-docs-repair-results.json`:
+  all4 PASS (strict coverage13guarantees/34surfaces, profile19rows,
+  negative27cases, taxonomy). No separate taxonomy rerun.
+- `python3 scripts/check_file_size_guardrails.py`: PASS,3787files.
+- `git diff --check`: PASS. Record-only whitespace checked separately.
+
+One initial Opus **SATISFIED**, no blockers; one provider/zero retry/zero
+remediation. [Raw review publication](https://github.com/sifr-lang/sifr/pull/3757#issuecomment-5575377996)
+and [exact candidate evidence](https://github.com/sifr-lang/sifr/pull/3757#issuecomment-5575378155).
+Raw response `/private/tmp/sifr-b18.6K6VBu/tmp/sifr-claude.iAYmJT/response.md`,
+SHA256 `6824fe6cb41b42a705ccbbfdfb94e613fc944b5c7b2e9d420594c7c27d409e42`.
+No predecessor mechanism/whole-phase re-review. **Zero create-pr/merge gates**
+under the explicit docs-only rule; no compiler build/production92/native90/
+corpus411/representative9 reruns. No additional code item started.
+
+Owned clone `/private/tmp/sifr-b18.6K6VBu/sifr`; owned temp/cache paths registered
+before execution in `/private/tmp/sifr-b18.6K6VBu/registration.md`. All16gitlinks,
+including corpus8bcbe7ab, are preserved with independent exact-SHA checkouts.
+Parent's two dirty phase documents and predecessor clones remain untouched.
+Authenticated B13 receipts and exact Git tree input identity establish reuse:
+reviewed be0849 to full db29 changes only the phase record; db29 to B18 changes
+only the provenance Markdown. Source-identical B13 named PASS remains attributed
+to B13, not newly executed. No predecessor cleanup or destructive Git operations.
+
+Evidence root `/private/tmp/sifr-b18.6K6VBu/evidence`:
+
+| Receipt | SHA256 |
+| --- | --- |
+| `validation.4d8eb9abea7b5f4391424339110da0fc804a4faf.json` | `6817f64a56d97df59022733dcd05b6361b9fa55fa62d66598276a2352c54c83e` |
+| `readiness.4d8eb9abea7b5f4391424339110da0fc804a4faf.json` | `383e2959bca653c3fff24988c1927887c107ba7d2b3ac9d5aebdcd2f037ac196` |
+| `predecessor-reuse.json` | `3ed1dbcbdb322ec77fc7eafc2742571f4946c47cfb5a657ed292664cb804db32` |
+| `submodules.json` | `838c60f7d62a2dee64a60bdc42d4982cb530ebe89ccbe37e4af7496ee181d296` |
+
+Review follow-ups: optional cosmetic reflow of provenance lines12/37/56 is
+recorded as later documentation work only, not a prerequisite or started item.
+Reviewer PR-target verification is satisfied by GitHub metadata and actual stack
+merge above. The pre-existing integration dependency stays with [owner3744](https://github.com/sifr-lang/sifr/issues/3744).
+
+B18 blocker: **none**. Remaining delivery dependency: a separate integration
+worker must preserve full B13/db29 lineage plus this docs repair and qualify
+original3717 to main under its own registered final-SHA evidence reuse and one
+complete merge profile. B18 does not execute or qualify that continuation.
+B13's gate remains FAILED1/PASS0; original12K4FAILED+1RESOURCE143/PASS0,
+B14oneFAILED and B15twoFAILED are unchanged. All18unreached areas and both
+toolchain steps stay UNREACHED, including31unique full-mode commands (33 was
+duplicate-inclusive), full E2E/stdlib/ignored CLI and driver coverage.
+Original3717/3746/corpus48 and undelivered owner3744 stay OPEN. Optional3755/3756,
+12D/12E/12F/retained12 and final12A are not started. STOP after publishing this
+record and updating existing owner3744; no next-item work in this session.
+
 ## Item12K-B13 terminal: approved mechanism, gate FAILED, not merged (2026-09-07)
 
 Owner [#3744](https://github.com/sifr-lang/sifr/issues/3744) and existing draft
