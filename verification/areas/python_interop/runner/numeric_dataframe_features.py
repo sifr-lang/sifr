@@ -1,16 +1,13 @@
 from __future__ import annotations
 
-from importlib.metadata import version
-
 import numpy as np
 import pandas as pd
 
+from dependency_versions import runtime_version_marker
+
 
 def main() -> int:
-    if version("numpy") != "2.5.2":
-        raise RuntimeError("NumPy is not at the audited stable release")
-    if version("pandas") != "3.0.5":
-        raise RuntimeError("Pandas is not at the audited stable release")
+    versions = runtime_version_marker("numpy", "pandas")
 
     values = np.array([3, 1, 2], dtype=np.int64)
     if np.sort(values, descending=True).tolist() != [3, 2, 1]:
@@ -19,6 +16,8 @@ def main() -> int:
         raise RuntimeError("NumPy descending argsort behavior drifted")
 
     frame = pd.DataFrame({"city": ["oslo", None, "paris"], "value": [2, 3, 5]})
+    if type(frame).__module__ != "pandas":
+        raise RuntimeError("Pandas DataFrame producer module is not public pandas")
     if str(frame["city"].dtype) != "str" or not pd.isna(frame.iloc[1, 0]):
         raise RuntimeError("Pandas dedicated string dtype behavior drifted")
 
@@ -32,8 +31,9 @@ def main() -> int:
         raise RuntimeError("Pandas column-expression behavior drifted")
 
     print(
-        "python numeric/dataframe features ok: numpy=2.5.2 pandas=3.0.5 "
-        "descending-sort=ok string-dtype=ok copy-on-write=ok pd-col=ok"
+        f"python numeric/dataframe features ok: {versions} "
+        "descending-sort=ok string-dtype=ok copy-on-write=ok pd-col=ok "
+        "dataframe-producer=pandas"
     )
     return 0
 
