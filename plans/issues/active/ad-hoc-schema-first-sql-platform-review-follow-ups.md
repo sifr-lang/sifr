@@ -55,15 +55,59 @@ remediation review. These findings do not reopen the completed platform phase.
 
 ## Coverage registry blocker observed during naming cleanup (2026-09-05)
 
+### Capture-demand delivery recurrence (2026-09-07)
+
+Tracked by [#3749](https://github.com/sifr-lang/sifr/issues/3749), recorded only,
+not started. 12K-B15 / #3748, draft PR #3746, exact candidate
+`4a0a03f430f1ad87b080a6172bc46209082e955a` (main base
+`06ea86334b72f49f5aab250a64498ee955ec9331`) ran its single merge-profile gate.
+It naturally FAILEDexit1 after1170.64s at coverage readiness:9missing SQL
+package classifications,13missing targets,1stale PostgreSQLlib versus rlib.
+The other3readiness variants passed, as did production92graph setup, all13
+guards including264companion freshness, and10RustInterop variants.
+Remaining18areas/2toolchain steps were UNREACHED. SQL packages/manifests and
+coverage inputs are unchanged from main; no B15 baseline replay was executed.
+
+This existing owner must reconcile
+`verification/areas/coverage_matrix/data/cargo_metadata_classification.json`
+with the actual SQL Cargo graph. No classification or assertion was changed
+by B15. No new mechanism implementation, second gate, or merge was attempted.
+The approved compiler/companion delta is preserved on
+`codex/implicit-format-capture-demand`, independent clone
+`/private/tmp/sifr-companion.KIogHV/sifr`.
+Full diagnostics and bounded later-owner scope are in #3749; raw gate log
+`/private/tmp/sifr-companion.KIogHV/evidence/merge.4a0a03f430f1ad87b080a6172bc46209082e955a.log`
+SHA256 `d6d70bfacf3d1a8078348a393ea27e222bbee7c93880ea9894f7c8be4a85f204`;
+supervisor receipt SHA256
+`28b86d3734b75cc2fe7b8615095fe4dd07fbc9f6b67fd96761404448454e646c`.
+Coverage result SHA256
+`963eb6d42bad2867db29a47c1fed9d0428244b1b1e8cc3c5accbd2e1b69d167b`.
+These are failed-gate evidence, not full qualification. No cleanup or resource
+termination occurred; minimum free capacity39,878,000,640bytes.
+
 ### SQL registry delivery registration (2026-09-07)
 
-Current delivery owner: **12K-B17 / #3750** continues the complete B16 record
-in the existing PR #3751. Its bounded registration and seven named commands
-are at the top of `ad-hoc-emitted-rust-excellence.md`. The two new full-mode,
-blocking merge suite memberships retain compiler classification and execute
-through the existing runner. Combined registry/membership approval is required.
-This supersedes the historical blocked handoff below only after qualified merge;
-all B16 failed evidence and other SQL follow-up acceptance remain preserved.
+**12K-B17 / #3750 and B16 / #3749 are delivered** by
+[PR #3751](https://github.com/sifr-lang/sifr/pull/3751), both issues CLOSED.
+Actual-main base `06ea86334b72f49f5aab250a64498ee955ec9331`, candidate/review
+`e3862e5895fb2ace34571295e267f4951917752f`, verified normal-main merge
+`0b97b3a3f1dd3f93bc724f75e1e40240f15ff942`.
+The complete registry covers37 packages/117 targets; both compiler packages
+now have full-mode blocking executed `crate_test_membership.suites` entries.
+All seven named checks passed once: profiles/plan, MySQL11+1ignored,
+SQLite12+0ignored, readiness4/4 (profile19/negative26/taxonomy), file-size3759,
+diff. No ignored live test is counted as executed. Initial combined Opus
+SATISFIED/no blockers, providers1/retries0/remediation0; zero broad gates.
+The phase document's top terminal indexes all raw paths/hashes and the
+separate normally pushed post-merge record. No further review/gate is required.
+
+Later nonblocking SQL verification audit [#3752](https://github.com/sifr-lang/sifr/issues/3752)
+owns establishing actual runtime/tooling merge execution before deciding
+whether the existing compiler-only membership policy should change.
+Budget headroom belongs to the existing B15/#3748 qualification owner;
+the cold crate timings are not controlled-host merge performance evidence.
+Neither follow-up is started here. Other SQL acceptance criteria above remain
+open and all historical blocked handoffs below retain their original evidence.
 
 Terminal: B16 #3749 is **blocked, not merged**, preserved in draft
 [#3751](https://github.com/sifr-lang/sifr/pull/3751), candidate
@@ -102,6 +146,7 @@ terminal remains at `/private/tmp/sifr-companion.KIogHV/evidence/terminal.json`,
 SHA256 `657424e6ab98d7adaf150062f34f91abbba350d806cad23e3eacb73c9f6ffae7`.
 B14/B15 PR #3746 remains unmerged. Their historical review/gate counts are
 unchanged by this separate registry delivery. No successor work starts here.
+### Historical observations
 
 The repository naming cleanup ran `scripts/run_all_tests.sh` once. The gate
 failed in coverage-matrix readiness with nine unclassified SQL packages,

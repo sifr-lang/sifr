@@ -1,5 +1,56 @@
 # Python-interop qualification dependencies exposed by Item12B
 
+## B15 delivery recurrence: existing approved H/I/M1 stack is required (2026-09-07)
+
+This is an evidence/ownership update only; no new dependency implementation or
+duplicate issue. Final B15 candidate `875a3555a7d1bcd7885ad4151c75a4a7abf17a74`
+in OPEN DRAFTPR3746, main base `0b97b3a3f1dd3f93bc724f75e1e40240f15ff942`,
+finished its single continuation merge gate naturally exit1 after2833.76s.
+The delivered SQL prerequisite now passes integrated readiness4/4. All92graph
+preparations,13guards, RustInterop10/core-language5/CPython2 passed.
+Python interop completed30variants,26PASS/4blockingFAIL:
+
+- binding-authoring:8E0560, `sifr_generated_python_error` initializer versus
+  imported `python_error` declaration. Existing **12H**, [PR3697](https://github.com/sifr-lang/sifr/pull/3697),
+  approved source `9b52ac20094608c8a31f252db99e49ef7c963384`, full record
+  `b6e6210a97598fb631b929b2d4daf4012b41bb16`, still OPEN DRAFT.
+  [Final approval](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555345800),
+  [terminal evidence](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555393502).
+- callback-examples:3nativecases fail inaccessible cancellation task-local E0425,
+  3of14innerchecks failed. Existing **12I**, [PR3698](https://github.com/sifr-lang/sifr/pull/3698),
+  approved source `f6e8afd964bb214a44c50271dcb2014ee8e828b4`, record
+  `19ad69969a672d7b741122ded4dd879f2bdaf9ab`, OPEN DRAFT.
+- async-declaration-examples and async-context-examples: httpx2-client and
+  aiosqlite-session SIFR-RESULT-0003, PythonError incompatible with
+  Result[None,Error]. Existing correcting **12J-M1**, [PR3700](https://github.com/sifr-lang/sifr/pull/3700),
+  approved source `d726ffc11258c49f0185fd2d49697988cf90972c`, record
+  `a7e13eb45006eac925417491b89a932af5df2595`, OPEN DRAFT. Original12J/R1
+  is not independently approved; only its reviewed correctingM1 lineage applies.
+
+No baseline-runtime replay or new root-cause claim. Referenced naming producer
+files are unchanged from actual-main predecessor06ea863. Read-only Git ancestry
+verifies all three exact approved sources are already in B13's preserved full
+`4eef8a2bb4dbc24fb7c1d1213652be379047f4b1`. B13 owner #3744, PRnone, needs
+B14/#3745 capture demand plus its own singleton assertion. B15 now needs the
+existing H/I/M1 stack to pass qualification. This is a delivery dependency cycle,
+not permission to recreate or independently re-gate those items. Parent owns
+assessment of a fresh bounded B13 integration owner carrying approved875a and
+the complete B15 terminal record with mergedSQL into full4eef. No such work starts here.
+
+Remaining15areas and full-mode crate/E2E steps are UNREACHED, including stdlib
+parity and new SQL crate memberships. The emitted-Rust phase terminal lists all
+15areas, exact sources/PRs, historical limits and complete evidence. B15 Opus
+remediation SATISFIED but full gateFAILED, so PR3746 is not merged and #3748/#3745
+remain open. Cumulative B15 gates2FAILED/0PASS/0RESOURCE; reviews1initial+
+1remediation exhausted. B14's1FAILED and original12K4FAILED+1RESOURCE143/0PASS
+remain unchanged. No next-item code, cleanup, extra gate or review.
+
+Raw log `/private/tmp/sifr-b15-delivery.NykMhH/evidence/merge.875a3555a7d1bcd7885ad4151c75a4a7abf17a74.log`
+SHA256 `34a4bd772f4a459b2f5ffa8cfedc538504149279744ba7e53559a8c6a20e4076`;
+supervisor SHA256 `32e6bd96bba04676c8e769bfb4bdbf8aa6bc592ed066f5a418c3f82c6d61e6a8`;
+Python result SHA256 `b71c5d790aebbe2ffe07d9d3b3b2b4dc1d1ac3b0b1f3ca614db38b76513b6b9d`.
+The final native terminal indexes all artifacts. Parent and predecessors remain read-only.
+
 Status: active; fresh sequential dependency workers authorized on 2026-09-05.
 Owners: Python interop verification, codegen naming, project support assembly.
 
