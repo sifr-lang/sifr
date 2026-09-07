@@ -2,10 +2,11 @@
 
 Status: active
 
-## Current bounded owner: 12K-B12 report filename (2026-09-07)
+## Current bounded owner: 12K-B12 merged; worker stopped (2026-09-07)
 
-12K-B12 / [owner #3737](https://github.com/sifr-lang/sifr/issues/3737) is in
-progress in the independently owned clone `/private/tmp/sifr-item12k-b12.ItWxDa/sifr`,
+12K-B12 / [owner #3737](https://github.com/sifr-lang/sifr/issues/3737) is closed
+after [PR3738 normal merge](https://github.com/sifr-lang/sifr/pull/3738), in the
+independently owned clone `/private/tmp/sifr-item12k-b12.ItWxDa/sifr`,
 branch `codex/item12k-b12-report-filename`, from actual main
 `e0806799c2b36c47069d6c435353f590f64b9559`. Parent and predecessor checkouts,
 indexes and caches remain read-only. B10/PR3733 and B11/PR3735 are merged, and
@@ -20,9 +21,11 @@ preparation ordering, all92 positive graphs, locked/offline checks and both
 negative checks are unchanged. No taxonomy exemption or compatibility path is
 introduced. The only implementation change is the report destination literal.
 
-Run these six registered checks after implementation, then one exact-SHA Opus
-review with at most one remediation review, then normal merge and owner/phase
-updates. No additional focused regression command is required for the literal
+All six registered checks below passed after implementation at exact candidate
+`d87187b72d8964c707c26113504a29e54e4b9186`. One initial exact-SHA Opus review
+returned SATISFIED with no blockers; zero remediation reviews and provider retries.
+Normal main merge is `e97bf89621146b9ab29887fe4774cc87151c74cd`.
+No additional focused regression command was required for the literal
 rename: the existing taxonomy scan and negative self-tests cover its boundary.
 
 - `python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py`
@@ -32,8 +35,10 @@ rename: the existing taxonomy scan and negative self-tests cover its boundary.
 - `git diff --check`
 - `python3 scripts/check_file_size_guardrails.py`
 
-Reuse B11's92-graph qualification only after authenticating the complete Git
-input map and retained evidence. B11 reviewed candidate
+B11's92-graph qualification was reused after authenticating the complete Git
+input map and retained evidence: 32067 tracked entries, all16 unchanged gitlinks,
+197 artifacts including all92 manifest/lock pairs, offline passes and both negatives.
+B11 reviewed candidate
 `2f3ec54226b2e722b3fe44ea59177f780865c921` and B12's main base have identical
 trees. [B11 review/validation](https://github.com/sifr-lang/sifr/pull/3735#issuecomment-5563015836)
 and terminal receipt at `/private/tmp/sifr-item12k-b11.sasFlU/evidence/terminal.json`
@@ -54,7 +59,32 @@ PR3717 and corpusPR48 remain open/draft with exact corpus
 `8bcbe7ab7939e5c8362c10f61a80e368022cc372`. B12 does not restart integration
 qualification or implement12D/12E/12F/retained12/docs-only12A. No compiler,
 lockfile, fixture or workflow changes are needed, so no Sifr gate applies.
-After B12 merge and its record update, this worker stops.
+Published [exact-SHA review and validation](https://github.com/sifr-lang/sifr/pull/3738#issuecomment-5566683582):
+policy12 tests, runner self-test, taxonomy plus negative self-tests, diff and
+file-size3759 PASS. One earlier taxonomy self-test failed because its owned
+TMPDIR absolute path contained a delivery label. That failed attempt is retained;
+the fresh owned semantic TMPDIR `/private/tmp/sifr-report-checks.TGsWY0` fixed
+the environment without any source/exemption change. Final checks used private
+UV_CACHE_DIR/PYTHONPYCACHEPREFIX and unset CARGO_TARGET_DIR. Exact base/candidate
+whitespace inspection also passed. No expensive graph rerun or Sifr gate ran.
+
+Evidence outside the reviewed Git tree, sibling `evidence/`, keyed by candidate:
+
+- Final six-check validation SHA256 `d6ac6c6d2fc4c9e48d434f21ccda0fe7d146fa0d20e936342009805c11c1a782`.
+- Authenticated graph-reuse SHA256 `56700c9ece97654649bae9440cd83683035b42b71c36c092482085f98a35c7ac`.
+- Opus response SHA256 `efec5a1714073561f40d76dd2bdbd6480074b95ba5681075e6889ae01771f0de`.
+- Review receipt SHA256 `30ce9459d16efa3c6f2784d2715660f91e81391279e637037c22c155ee2aa15e`.
+
+The three optional pre-existing/infrastructure observations are recorded in
+[later owner3739](https://github.com/sifr-lang/sifr/issues/3739); they establish no
+new blocking mechanism or automatic delivery dependency and were not implemented.
+Counts: one initial review, zero remediation, one provider request, zero retries,
+six final passing named checks, one retained environment failure, zero
+create-pr/merge-profile gates, one normal merge. Only the helper and this phase
+Markdown changed; the post-merge update changes this Markdown only and is pushed
+on the preserved B12 branch, not main. No additional review or gate applies.
+No live handles; blocker none. This worker is stopped after owner/phase updates.
+Parent owns any separate original12K delivery sequencing; no next item started.
 
 ## Current orchestration: replacement12K blocked; B10 then B11 (2026-09-07)
 
