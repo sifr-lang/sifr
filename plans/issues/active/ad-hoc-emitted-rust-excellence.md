@@ -6,10 +6,30 @@ Status: active
 
 12K-R2 / [owner #3742](https://github.com/sifr-lang/sifr/issues/3742) owns only
 the resource plan, bounded closed-worker build-output recovery, and docs delivery.
-Resource implementation and integrity checks passed; review and merge remain pending. This
+**Complete and normally merged**; owner #3742 is closed. This
 section supersedes older current-state headings without rewriting their receipts.
 The parent and all predecessor source/Git/indexes remain read-only; the parent's
 two intentional Markdown edits are preserved. All previous workers are closed.
+
+Delivery: [PR #3743](https://github.com/sifr-lang/sifr/pull/3743), approved and
+validated candidate `4ebc58532474fa2ca86bb75ef4f019968b2d8d9f`, exact base
+`d3053066bc157fbf100b1bf67622b168838d891f`, normal main merge
+`06ea86334b72f49f5aab250a64498ee955ec9331` (2026-09-07 09:51:29 UTC).
+The [published exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3743#issuecomment-5568806025)
+is **SATISFIED**, with no blocking or follow-up findings: one initial review,
+one provider request, zero remediation and retries. Response outside the reviewed
+tree: `/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr-claude.0QhUaY/response.md`,
+SHA256 `557c8a934381196b6e4cae0c80ce850973159f659358a2d38dcb7a7e1c5d6c80`.
+Exact-candidate docs diff passed; file-size guardrail passed 3759 files/900 lines.
+No Sifr tests or create-pr/merge-profile gates ran. No review/gate allowance for
+original12K changed. Resource blocker: **none**.
+
+This post-merge record is pushed on `codex/item12k-r2-capacity`, separately from
+the merged candidate; the record-only commit is not main. External terminal
+receipt is `/private/tmp/sifr-capacity-r2.G8tOjZ/terminal.json`. No further review
+or broad validation applies to this record-only update. The resource worker
+stops after publishing it; parent owns any later separately sequenced validation.
+No live cleanup/gate/review handles remain and no successor work started.
 
 ### R1 closure and original qualification provenance
 
@@ -211,12 +231,12 @@ Raw before/after df/du/ps/lsof/shasum/Git logs and per-removal timestamps remain
 in the same external evidence root. Resource blocker: **none**. The original
 qualification remains unmerged and its gate/review counts are unchanged.
 
-Only the phase Markdown changes. After implementation, named docs checks are
+Only the phase Markdown changed. After implementation, both named docs checks passed:
 `git diff --check d3053066bc157fbf100b1bf67622b168838d891f HEAD` and
-`python3 scripts/check_file_size_guardrails.py`. One exact-SHA Opus review plus
-at most one remediation precedes normal docs merge; final review evidence is
+`python3 scripts/check_file_size_guardrails.py`. The one initial exact-SHA Opus
+review passed and normal docs merge completed; final review evidence is
 published outside its approved Git tree. No Sifr tests or create-pr/merge-profile
-gates run. After the merge and phase/owner record update, stop. No original12K
+gates ran. This phase/owner record update ends the item. No original12K
 third review, gate restart, original/corpus merge, or 12D/E/F/retained12/docs12A
 implementation is part of this resource item.
 
