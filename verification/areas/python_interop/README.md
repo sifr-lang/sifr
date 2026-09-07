@@ -131,16 +131,23 @@ default; live suites must declare their own `network_mode` and resource classes.
   report output.
 - `env`: interpreter, venv, ABI, platform, lock/env freshness, and probe rejection fixture coverage.
 - `dependency-versions`: exact PyPI stable versions and audited artifact hashes
-  for the maintained Python lock owners. Six mutations cover stale versions in
+  for the maintained Python lock owners. Mutations cover stale versions in
   both locks, a missing artifact, a missing declaration, retired HTTP client
-  packages, and a stale service image.
+  packages, a stale service image, installed runtime drift, and markers following
+  changed audited versions.
 - `minor-train-features`: direct runtime coverage for the new Schwifty 2026.7
-  checksum-solving `BBAN.random` implementation.
+  checksum-solving `BBAN.random` implementation, with generated counts and an
+  installed-version marker checked against `data/latest_stable_python.json`.
 - `crypto-abi-features`: CFFI 2.1 source generation through `cffi.gen_src`.
 - `redis-service-features`: Redis 8.1 commands, Fakeredis RESP3 behavior,
   Hiredis RESP3 parsing, and Testcontainers 4.15 community APIs.
 - `numeric-dataframe-features`: NumPy 2.5 descending sorts and Pandas 3 string
-  dtype, copy-on-write, and column expressions.
+  dtype, copy-on-write, column expressions, and the public `pandas` DataFrame
+  producer-module identity. This suite and `redis-service-features` derive exact
+  installed-version checks and markers from the same stable audit.
+  The Redis runner treats deprecations as errors only around Testcontainers
+  imports and API checks, then restores the caller's warning policy. It does
+  not suppress warnings; the numeric/dataframe runner installs no warning filter.
 - `imports`: root imports and native extension load diagnostics.
 - `native`: trusted native Python package load/use smoke.
 - `async`: Python event-loop/client behavior under Sifr blocking semantics.
@@ -224,7 +231,14 @@ and verifies that ordinary object/leak diagnostics return to their baseline:
 
 - biip GTIN parsing and schwifty BIC validation.
 - PyArrow 25 array compute, the `hypot` kernel, table-to-tensor conversion,
-  and Arrow PyCapsule metadata/release.
+  and Arrow PyCapsule metadata/release. These exercise APIs in the Arrow 25
+  release line, not fixes specific to maintenance release 25.0.1. The stable
+  audit owns the exact selected version and wheel hash. The hermetic PyArrow
+  bridge also retains its existing exact module-version assertion: it checks
+  the loaded runtime module, while the audit checks declarations and locks.
+  A future PyArrow upgrade must update that fixture-owned assertion together
+  with its lock/audit selection; the feature runners do not import audit data
+  into hermetic package bridges.
 - FastAPI frontend serving with dependency headers and background tasks.
   The same bridge validates Pydantic conversion, Starlette 1.6 body limits,
   and Starlette response rendering through HTTPX2.

@@ -1,22 +1,16 @@
 from __future__ import annotations
 
 import warnings
-from importlib.metadata import version
 
 import fakeredis
 import hiredis
 from redis import Redis
 
+from dependency_versions import runtime_version_marker
+
 
 def main() -> int:
-    if version("redis") != "8.1.0":
-        raise RuntimeError("Redis is not at the audited stable release")
-    if version("fakeredis") != "2.37.1":
-        raise RuntimeError("Fakeredis is not at the audited stable release")
-    if version("hiredis") != "3.4.1":
-        raise RuntimeError("Hiredis is not at the audited stable release")
-    if version("testcontainers") != "4.15.0":
-        raise RuntimeError("Testcontainers is not at the audited stable release")
+    versions = runtime_version_marker("redis", "fakeredis", "hiredis", "testcontainers")
 
     for command in ("sdiffcard", "sunioncard", "lmovem"):
         if not callable(getattr(Redis, command, None)):
@@ -32,6 +26,8 @@ def main() -> int:
     if reader.gets() != {b"safe": 1, b"count": 2}:
         raise RuntimeError("Hiredis RESP3 map parsing drifted")
 
+    # Only the Testcontainers import/API contract requires deprecations as errors.
+    # Restore the caller's warning policy after this block; do not suppress warnings.
     with warnings.catch_warnings():
         warnings.simplefilter("error", DeprecationWarning)
         from testcontainers.community.redis import RedisContainer
@@ -48,10 +44,7 @@ def main() -> int:
         if strategy.with_startup_timeout(60) is not strategy:
             raise RuntimeError("Testcontainers wait strategy configuration drifted")
 
-    print(
-        "python Redis service features ok: redis=8.1.0 fakeredis=2.37.1 "
-        "hiredis=3.4.1 testcontainers=4.15.0"
-    )
+    print(f"python Redis service features ok: {versions}")
     return 0
 
 

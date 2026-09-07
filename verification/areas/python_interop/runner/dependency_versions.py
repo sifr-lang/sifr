@@ -7,6 +7,7 @@ import json
 import re
 import tomllib
 from datetime import date
+from importlib.metadata import version
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -106,6 +107,63 @@ def release_map(audit: dict[str, object]) -> dict[str, dict[str, object]]:
     if releases.keys() != expected:
         raise ValueError("audited package set differs from the maintained package set")
     return releases
+
+
+def runtime_version_marker(*names: str) -> str:
+    """Validate installed feature dependencies against the canonical audit."""
+    audit = json.loads(AUDIT_PATH.read_text(encoding="utf-8"))
+    releases = release_map(audit)
+    markers = []
+    for name in names:
+        expected = releases[name]["latest_stable"]
+        installed = version(name)
+        if installed != expected:
+            raise RuntimeError(
+                f"{name}: expected audited release {expected}, found {installed}"
+            )
+        markers.append(f"{name}={installed}")
+    return " ".join(markers)
+
+
+def run_runtime_version_self_tests(audit: dict[str, object]) -> int:
+    from unittest.mock import patch
+
+    names = (
+        "schwifty", "numpy", "pandas", "redis", "fakeredis", "hiredis", "testcontainers"
+    )
+    releases = release_map(audit)
+    installed = {name: releases[name]["latest_stable"] for name in names}
+    with patch(f"{__name__}.version", side_effect=installed.__getitem__):
+        expected = " ".join(f"{name}={installed[name]}" for name in names)
+        if runtime_version_marker(*names) != expected:
+            raise AssertionError("runtime version markers differ from audited releases")
+        for name in names:
+            original = installed[name]
+            installed[name] = "0.0.0"
+            try:
+                runtime_version_marker(*names)
+            except RuntimeError as error:
+                if str(error) != (
+                    f"{name}: expected audited release {original}, found {installed[name]}"
+                ):
+                    raise AssertionError(
+                        "runtime version mismatch lost its identity"
+                    ) from error
+            else:
+                raise AssertionError(f"stale installed release was accepted: {name}")
+            finally:
+                installed[name] = original
+
+        changed = copy.deepcopy(audit)
+        for package in changed["packages"]:
+            if package["name"] in names:
+                package["latest_stable"] = installed[package["name"]] = "99.0.1"
+        with patch(f"{__name__}.AUDIT_PATH") as audit_path:
+            audit_path.read_text.return_value = json.dumps(changed)
+            expected_changed = " ".join(f"{name}=99.0.1" for name in names)
+            if runtime_version_marker(*names) != expected_changed:
+                raise AssertionError("runtime version markers did not follow the audit")
+    return len(names) + 1
 
 
 def project_map(
@@ -380,7 +438,7 @@ def run_self_tests(audit: dict[str, object]) -> int:
     stale_image["service_images"][0]["latest_stable"] = "4.13.1"
     if not validate_service_images(stale_image):
         raise AssertionError("stale service-image mutation was not rejected")
-    return 6 + retired_mutations
+    return 6 + retired_mutations + run_runtime_version_self_tests(audit)
 
 
 def main() -> int:

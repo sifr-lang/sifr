@@ -4,8 +4,11 @@ import random
 
 from schwifty import BBAN
 
+from dependency_versions import runtime_version_marker
+
 
 def main() -> int:
+    versions = runtime_version_marker("schwifty")
     random.seed(25)
     country_codes = ("BE", "DE", "ES", "FR", "IT", "NL", "NO", "PL")
     generated = [
@@ -15,7 +18,10 @@ def main() -> int:
         raise RuntimeError(
             "Schwifty generated a BBAN with an invalid national checksum"
         )
-    print("python minor train features ok: countries=8 schwifty-bban-checksums=32")
+    print(
+        f"python minor train features ok: {versions} "
+        f"countries={len(country_codes)} schwifty-bban-checksums={len(generated)}"
+    )
     return 0
 
 
