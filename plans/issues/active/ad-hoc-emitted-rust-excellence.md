@@ -2,6 +2,96 @@
 
 Status: active
 
+## Original12K terminal: gate4 resource-terminated, delivery unqualified (2026-09-07)
+
+This is the current terminal receipt. Original12K is **NOT SATISFIED and
+unmerged**. The sole cumulative gate4 ran on frozen/pushed candidate
+`3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c`, assessed main
+`e97bf89621146b9ab29887fe4774cc87151c74cd`, then was resource-terminated
+with exit143 to prevent filesystem exhaustion. No second attempt or source
+edit occurred. The three historical test-failed gates remain distinct from
+this resource termination; none is a passing gate.
+
+Normal ancestry preserves full record `031cc020451241c3cf7dfc78e206b418b1d1ce9b`,
+mergedB12 and its post-merge record `a46006391bd5027821686fa7116d7f9abb92b3d2`,
+all202 integration paths and all16 exact submodules. Corpus remains
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`; retainedItem12 source
+`8ad089a9458f35fcfa228e93fe44f4d69731828b` stays excluded. Since the retained
+record, only the independently approved B12 report literal and phase Markdown
+changed. Both Markdown histories were preserved. All mechanisms stayed frozen
+during qualification; the post-gate edits are terminal records only.
+
+All nine registered focused checks PASS. The [published approval-reuse receipt](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5566898804)
+authenticates32091 Git entries,479 retained artifacts, original initial and
+remediation approvals plus B10/B11/B12, with zero new Opus requests. Historical
+semantic evidence keeps its actual original input SHA; this is not a new
+reviewer verdict or fresh execution of inherited matrices.
+
+Actual gate4 evidence: production generated graph preparation92/92 PASS;
+all13 guards PASS, including264 fresh companions and3783-file guardrail;
+Rustinterop10/readiness4/core-language5/CPython-differential2/Pythoninterop30/
+diagnostics184/algorithmic-representative12 PASS. Runtime-platform30 variants
+have zero failures and3 predeclared policy skips. Developer tooling is INCOMPLETE:
+23 recorded cases passed, including completion quality and formatter rules;
+formatter-rule self-test was active at termination. Preparation1456.932s exceeded
+its300s advisory budget only; no cold-cache performance certification is claimed.
+
+UNREACHED: generated-code-quality representative execution, performance,
+distribution/sysroot/project/package/stdlib/regression/fuzz/ecosystem/SQL areas,
+full E2E, migrated stdlib parity, stdlib default/feature-API/all-features,
+normally ignored driver builds, CLI generated builds and remaining toolchain
+tests. The final profile/unfinished-area summaries were never produced. No
+prefix certificate, false pass or delivery follows from the completed areas.
+
+The measured blocker is **12K-R1 / [storage owner #3740](https://github.com/sifr-lang/sifr/issues/3740)**.
+Disk fell from23GiB to2.6GiB,1.4GiB and420224KiB (~410MiB), with the private
+target actively exceeding21GiB. At the last pre-termination snapshot the
+qualifier had elapsed01:23:06; exact total wall duration was not finalized.
+No ENOSPC or compiler defect is asserted. The verified owned process group61162
+was terminated; handle45119 returned143. The group is now empty, and an lsof
+audit found zero open handles under the two eligible compiled-output targets.
+
+Owned clone `/private/tmp/sifr-integration.uvTy0z/sifr`, branch
+`codex/item12k-final-integration`. Parent/predecessor indexes, branches and
+caches remain untouched. No cleanup occurred. After this worker closes, parent
+may hand off exactly `target/debug` (23658048KiB) and
+`target/sifr_generated_code_quality/merge.3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c.shared/cargo-target`
+(539212KiB) in this clone. Whole target measured24755404KiB; owned temporary
+directory5016212KiB; uv cache1151264KiB. Audit free space402853888bytes.
+The [bounded recovery registration](https://github.com/sifr-lang/sifr/issues/3740#issuecomment-5568126209)
+names exact before/after disk, process/open-file, Git/submodule and protected
+digest checks, with preservation acceptance and no new gate/compiler work.
+Safe in-scope next steps already have authorization; no blanket reapproval is
+required. This handoff does not reset the consumed validation allowance.
+
+All raw logs, canonical JSON,92 generated Cargo graph/source entries, unfinished
+profile logs, Git/source/submodules and historical evidence MUST survive. Do
+not run whole-target cargo clean or clean active/shared/predecessor paths.
+The final sibling `evidence/protected-evidence.sha256` covers cleanup integrity.
+Canonical evidence under this clone's `target/verification/areas`:
+
+- `integration-final-evidence.json`:2502 current artifacts plus479 retained,
+  SHA256 `4cc25a6923f3b0b50eb503cc56325bed21a2cf7115d50dfbe92b20b36e127257`.
+- `integration-provenance.json`:
+  `06bd78da6f2106e93787b340bf13358a40b02ff9a5f0b4017052c76f26dbb9eb`.
+- `integration-review-reuse.json`:
+  `3893d503a32e6c64b0c508ec720e3356b2e135162338df81be36e373b1845076`.
+- `integration-storage-handoff.json`:
+  `b94d448527ea33519b895680bc225040d2f31a6bbc9921b7270d273e4fa7559a`.
+- Sibling `evidence/merge.log`:
+  `5322e983541e8d30e0f1f8e8a58b4308be7bb8b3397be779a9c94b04b661c95c`.
+
+Counts:1initial+1remediation review,2provider requests,0retries;
+4integration gate attempts =3historical FAILED+1resource TERMINATED;
+0passing/create-pr gates;0integration/corpus merges. PR3717/corpus48 remain
+OPEN/draft. No dependent owner is falsely reconciled as delivered. Original12K
+requires the unreached actual gate lanes before closure. The separately retained
+Item12 owns the all-surface/full-GCQ/companions and residual semantic audit;
+that audit was neither started nor claimed here and is not this resource blocker.
+No12D/E/F/retained12/docs-only12A work started. All gate descendants stopped.
+Stop after publishing the terminal record; parent owns the bounded resource
+handoff and subsequent sequencing.
+
 ## Original12K changed-candidate qualification after B12 (2026-09-07)
 
 This continuation supersedes historical terminal instructions below. The user
@@ -2645,7 +2735,7 @@ It does not broaden the active item.
 | 12J | blocked: both reviews exhausted, unapproved | Async Python error-channel contract | Draft #3699 preserves final reviewed candidate `4bc432f3474134b1a1d43202d39fd147893bb014`; initial and remediation reviews are NOT SATISFIED. No gate or merge. Message-storage follow-up 12J-M1 requires adjudication; 12I remains external. |
 | 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
 | 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
-| 12K | approved inputs; gate3 externally blocked | Item 12B and Python dependency integration | Draft #3717 candidate `bd2371a1f8f1abc5227b0ff8a00829277675af5d`; authenticated review reuse, seven checks pass, gate3 failed taxonomy #3737. Three failed gates, no merge. See top terminal receipt. |
+| 12K | approved inputs; gate4 resource-terminated | Item 12B and Python dependency integration | Draft #3717 candidate `3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c`; authenticated review reuse, nine checks pass; actual readiness clearsB12. Three failed gates plus one resource termination143; storage owner #3740. No passing gate or merge. See top terminal receipt. |
 | 12K-B7 | merged | Direct filesystem inventory (#3722) | PR3725 merged; replacement gate verified the corrected inventory. |
 | 12K-B8 | merged | SQL bigint spelling versus compatibility guard (#3723) | PR3727 merged; replacement gate verified the SQL spelling boundary. |
 | 12K-B9 | merged | Formatter preview reference drift (#3724) | PR3729 merged; replacement gate verified all reference corrections. |

@@ -2,6 +2,32 @@
 
 Status: active; fresh sequential dependency workers authorized on 2026-09-05.
 
+## Original12K gate4: Python passed, disk capacity blocked delivery (2026-09-07)
+
+Exact combined candidate `3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c`, main
+`e97bf89621146b9ab29887fe4774cc87151c74cd`, corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`. Actual Pythoninterop30/30 passed
+in gate4, including the five dependency suites, readonly/binding/LSP authoring,
+runtime examples, both async suites and buffer/Arrow/DLPack runtime tests.
+Python area elapsed1536.086s. The B12 taxonomy blocker also passed readiness4/4.
+
+Gate4 later terminated143 under measured disk pressure (~410MiB free), during
+developer-tooling formatter-rule self-test. No source changed and no gate was
+restarted. All descendants stopped. **Original12K remains NOT SATISFIED and
+unmerged** because full E2E/migratedstdlib/ignored-driver/CLI and other required
+profile stages remain UNREACHED. CorrectingM1 approval remains distinct from
+historical12J/R1 failures; M1-F3 is not closed by the Python area alone.
+
+Resource owner [12K-R1/#3740](https://github.com/sifr-lang/sifr/issues/3740)
+defines two inactive compiled-output targets eligible only after ownership
+handoff, protected evidence, process checks and bounded recovery acceptance.
+No cleanup or compiler repair occurred. Nine focused checks and eight completed
+areas pass; final evidence is `/private/tmp/sifr-integration.uvTy0z/sifr/target/verification/areas/integration-final-evidence.json`,
+SHA256 `4cc25a6923f3b0b50eb503cc56325bed21a2cf7115d50dfbe92b20b36e127257`.
+Counts1initial+1remediation/2provider0retry;3FAILED+1resourceTERMINATED gates,
+0passing/create-pr gates or integration/corpus merges. PR3717/corpus48 stay
+OPEN/draft. No dependent owner is marked delivered; no successor work started.
+
 ## Original12K combined terminal: taxonomy blocks delivery (2026-09-07)
 
 Combined candidate `bd2371a1f8f1abc5227b0ff8a00829277675af5d` incorporates
