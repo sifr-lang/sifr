@@ -2,6 +2,120 @@
 
 Status: active
 
+## Item12K-B13 terminal: approved mechanism, gate FAILED, not merged (2026-09-07)
+
+Owner [#3744](https://github.com/sifr-lang/sifr/issues/3744) and existing draft
+integration [PR3717](https://github.com/sifr-lang/sifr/pull/3717) remain open.
+Sole owned clone `/private/tmp/sifr-b13-continuation.kr53D8/sifr`, branch
+`codex/support-visibility-imports`. Parent and predecessor trees remain read-only.
+No repair or successor implementation started after the gate failure.
+
+- Actual-main base `156157242b0995c01c4fff03575624b5c471c0d8`; B13 scope base
+  `b00f66e81fba59d5e3415fd068f7c9724704ab4d`.
+- Reviewed/tested candidate `be0849a905f105d1733d24aafe880c93b7643438`, normally
+  pushed to both support and original integration branches before the gate.
+  PR3717 retains this candidate; the separate full terminal-record SHA is
+  published in the external terminal receipt and on owner3744/PR3717.
+- Main/corpus merge SHAs: **none**. CorpusPR48 remains at
+  `8bcbe7ab7939e5c8362c10f61a80e368022cc372`, base
+  `7fcb9fd1eaf3e0cf9bf51e8858276b7927a83baf`.
+- All16 gitlinks and277 actual-main changed paths preserved. Full B13 `4eef8a2b`,
+  B14/B15 `44cbbd0b`, actual main and R3 post-record `b0daff54` are ancestors;
+  retainedItem12 source `8ad089a9458f35fcfa228e93fe44f4d69731828b` remains excluded.
+  No H/I/M1 reimplementation; I is unambiguously
+  `f6e8afd964bb214a44c50271dcb2014ee8e828b4` (40-character SHA).
+
+**Named qualification PASS**, distinct from the failed gate: production92
+(1090.7s); pre-Clippy14source hashes/12surfaces; representative9 (634.9s);
+native90 check+run (908.5s); corpus411 check-only (888.0s); actual-main whitespace.
+Support11/trait1/tasklocal8,fmt,size3787 are attributed unchanged-input reuse
+from `bc55a0d120811247ab5bdf522c7223a3965259e7`, not fresh executions on be0849.
+Its earlier representative8PASS/1FAIL remains preserved. Targeted166/18 warnings
+and six source-proven interface warnings are resolved;522 known diagnostics
+and19 exact signatures remain. This is not retainedItem12 or whole-phase completion.
+
+**One initial Opus SATISFIED**, no blockers: [publication](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5575172486).
+One provider/zero retry/zero remediation. Raw response
+`/private/tmp/sifr-b13-continuation.kr53D8/tmp/sifr-claude.CV1DGT/response.md`,
+SHA256 `b0fc08dce32a2a03ffdc202b9e9a6e646dd86b7a6658ab585c52f7c637ddfb7f`.
+Original12K/B14/B15 exhausted approvals reused with complete provenance, not
+requested again. Non-blocking later issues [3755](https://github.com/sifr-lang/sifr/issues/3755)
+(dead singleton-import regression suggestion) and [3756](https://github.com/sifr-lang/sifr/issues/3756)
+(reported pre-existing associated-constant visibility) are recorded only, not started.
+
+**The sole merge gate FAILED** exit1 after452.8s, no resource stop. Actual results:
+
+- Canonical production92 setup PASS38.8s, all92 cache hits; all13guards PASS,
+  including264 fresh companion pairs (384989ms); Rust interop10 PASS.
+- Coverage readiness3/4 PASS: coverage map, profile map and27negative cases PASS;
+  verification taxonomy FAIL at
+  `verification/areas/generated_code_quality/representative_support_baseline.md:6`
+  and`:72`. Both lines contain forbidden `Item12` delivery-plan terminology.
+  Line6 is inherited verbatim from B13 full4eef; line72 was added in this
+  continuation's fixed-debt provenance. This is B13-owned documentation debt,
+  not an external compiler defect or an accepted lint-policy failure.
+- Remaining18areas **UNREACHED**: core_language,cpython_differential,python_interop,
+  diagnostics,runtime_platform,algorithmic_compatibility,developer_tooling,
+  generated_code_quality,performance,distribution_release,sysroot_release,
+  project_workspace,package_management,stdlib_parity,regression,fuzz_property,
+  ecosystem_compatibility,sql_platform.
+- Both toolchain steps **UNREACHED**: cargo-test-sifr-full and e2e-pass. Thus
+  all31unique full-mode crate commands, stdlib default/API/all-features,
+  normally ignored driver/CLI and full726-fixture empty-manifest E2E were not
+  executed by this gate. Separate prior PASS does not fill these gate results.
+- The accepted31unique command count preserves both parents' exact command,
+  mode,blocking andexecuted flags;33 was duplicate-inclusive. No coverage dropped.
+  A setup0ms FAIL printed inside passing negative self-tests is not a second
+  real production-setup failure.
+
+B13 gate history now1FAILED/0PASS, no create-pr/no retry/resume/second gate.
+Original12K4FAILED+1RESOURCE143/0PASS, B14oneFAILED and B15twoFAILED remain.
+Admission57,504,505,856bytesfree/8,904,323,072ownedtarget;8GiB monitor active during
+the gate, no cleanup or capacity-reservation claim. Gate session65487,
+qualifier53150 and gatePGID53645/profile53670 ended; owned-path/PID/PGID scan
+finds no live validation processes. No owner is closed as main-delivered.
+
+Evidence root `/private/tmp/sifr-b13-continuation.kr53D8/evidence`:
+
+| Receipt | SHA256 |
+| --- | --- |
+| `qualification.be0849a905f105d1733d24aafe880c93b7643438.json` | `c295d4ebb135a90b3fbf1b2087eb44071cd42a297cc26d74295df51ae7b1878a` |
+| `opus-review.be0849a905f105d1733d24aafe880c93b7643438.json` | `fdb96519040cd3bf4c844431c90118f171602905de2059e13d2122afab6de8e4` |
+| `merge.be0849a905f105d1733d24aafe880c93b7643438.log` | `d6b25ced6a9b02acd3a5e3c30fdcd08bf55318d9bd651a74e73b45b96d4c43e0` |
+| `gate-outcome.be0849a905f105d1733d24aafe880c93b7643438.json` | `bec7c26348659c1a4ce63bf17357462d20a1ad116d63e88b905a77b4b0b9fb1d` |
+| `gate-preservation-map.be0849a905f105d1733d24aafe880c93b7643438.json` | `81f88ebac8c4552606dd3b1842fbce4985adf4689f09b634329eb00dca3c2c03` |
+
+The map preserves2248 current artifacts byte-identically. Historical authentication
+covers18,488 inherited artifacts/362mapped relocations; all four corrected R2/R3
+map digests and the canonical original approval-reuse publication are authenticated.
+Qualified compiler is separately preserved outside target with SHA256
+`cd7e5b30422326348d47a5b73b20d216796ae04674b2d3a8789eec2b4bc10ebd`.
+Final `terminal.json` adds the full record SHA, complete artifact index and
+publication references without modifying the reviewed candidate.
+
+**Bounded later docs-repair handoff, NOT executed here.** The user's latest
+instruction authorizes the orchestrator to dispatch that owner after this worker
+returns and is closed; no new blanket permission request is needed. Reuse this
+reviewed B13 mechanism and its source-identical qualification; do not reimplement
+or review it from scratch. Correct verification prose without weakening taxonomy,
+lint policy or the522 signatures; retain delivery-item disclaimers in this phase
+record. Preserve this FAILED gate and every UNREACHED lane exactly.
+
+Exact named check identities for the later owner's registration:
+
+```bash
+python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py
+uv run --project verification python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json target/verification/areas/coverage-matrix-docs-repair-results.json
+```
+
+The four-case readiness suite already includes the direct taxonomy command,
+coverage_matrix_readiness.py,profile_assignment_matrix.py and
+coverage_matrix_readiness_self_test.py (27negative cases); no duplicate execution
+is required merely to list both identities. These commands are a later bounded
+docs check, not a substitute for the18unreached areas or toolchain qualification.
+This worker makes no repair, requests no further review, runs no further gate,
+and stops after the terminal record/publications/native final.
+
 ## Item12K-B13 fixed-debt reconciliation checkpoint (2026-09-07)
 
 Candidate `bc55a0d120811247ab5bdf522c7223a3965259e7` was frozen/pushed and
