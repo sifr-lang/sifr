@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-09-07. Items 0–30 and 36–38 are complete. Item 38 added
-the uv pin/checksum invariant; independent work can proceed under the continuation
+Status: active on 2026-09-07. Items 0–30 and 36–39 are complete. Item 39 closed
+the runner dependency/API invariants; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
@@ -334,7 +334,7 @@ is not a technical dependency.
 | 32 | pending | Packaging and Hatchling | Packaging is current, Hatchling is explicitly pinned, and builds/locks are reproducible. |
 | 33 | pending | VS Code extension toolchain | Node types, VS Code types/engine, TypeScript, package locks, VSIX qualification, and the three-repository pointer chain merge in order. |
 | 34 | pending | Mint exact pin | Documentation tooling uses a tested exact latest-stable Mint release and documentation checks pass. |
-| 35 | pending; final only | Documentation-only phase closure | After Items 31–34 and 36–62, reuse item evidence and Item 62's official audit; one exact-SHA whole-phase Opus review; archive the phase and update roadmap. Implementation findings require separate items before this closer. |
+| 35 | pending; final only | Documentation-only phase closure | After Items 31–34 and 36–63, reuse item evidence and Item 62's official audit; one exact-SHA whole-phase Opus review; archive the phase and update roadmap. Implementation findings require separate items before this closer. |
 | 36 | complete | Execution inventory reconciliation | The continuation ledger, named tests, prerequisites, and every historical deferral owner merged in PR #3758; exact-SHA Opus review satisfied and documentation checks passed. |
 
 ## Item 36 — reconciled continuation ledger
@@ -403,13 +403,16 @@ its merge gate is already qualified. All rows start pending unless explicitly
 blocked. The dispatch order is:
 
 `37, 38, 39, 53, 54, 55, 58, 59, 60, 40, 33, 34, 41, 42, 43, 44, 45, 46,
-47, 48, 49, 32, 50, 51, 52, 57, 61, 62, 35`.
+47, 48, 49, 32, 50, 51, 52, 57, 63, 61, 62, 35`.
 
 Skip a row whose dependencies or merge-readiness prerequisites remain blocked;
 do not execute its tests to rediscover a recorded external failure. The first
-ready implementation item after Item 38's closure record merges is **39**.
-Item 39 remains an independent runner-only scope. No dependent
-implementation or tests ran in Items 36–38.
+ready implementation item after Item 39's closure record merges is **54**.
+The orchestrator reports Item 53's named readiness check remains blocked on
+E2 delivery to main; this is not independently an E1 blocker. Scheduled 62D
+retains E1/E2 merge-readiness prerequisites. Skip both until qualified.
+Item 39 remained an independent runner-only scope. No dependent
+implementation or tests ran in Items 36–39.
 
 Two existing external prerequisites are explicit, with no implementation
 transferred into this phase:
@@ -454,8 +457,8 @@ the named tests and never runs for docs/runner-only scopes.
 | --- | --- | --- | --- |
 | 37 | none | **Complete, PR #3760.** `scripts/check_submodule_ownership.py`: replace regex step splitting with YAML step parsing; explicitly classify evidence-only checkouts; reject named/unnamed/commented checkout bypasses without changing workflows or gitlinks. Existing workflow verification already uses Ruby's YAML parser; select an available maintained parser without adding a Python lock dependency in this runner-only item. | `python3 scripts/check_submodule_ownership.py --self-test`; `python3 scripts/check_submodule_ownership.py` |
 | 38 | none | **Complete, PR #3763.** uv pin invariant only: new `scripts/check_uv_toolchain.py` and its local self-tests; discover all maintained exact pins, setup-uv version-file references and platform checksums, reject disagreement/missing platform checksum. Qualify current pins; Item 41 changes versions and installs the check into CI. No toolchain/lock/workflow edits here. | `python3 scripts/check_uv_toolchain.py --self-test`; `python3 scripts/check_uv_toolchain.py` |
-| 39 | none | `verification/areas/python_interop/runner/dependency_versions.py` and runner self-tests: make retired-distribution rejection independent of owner labels; scan every runner module for retired Testcontainers imports/wait helpers, mutate each forbidden form, derive Redis numkeys from keys, examine E402 bootstrap suppressions. Preserve current locks, fixtures and audit selections. | `area python_interop: self-test, dependency-versions, redis-service-features, live-policy` |
-| 53 | none | `verification/runner/sifr_verify`, `verification/areas/coverage_matrix/checks`: require every non-live Python manifest suite in at least one delivery profile; reject a removed assignment; derive Schwifty/mutation counts. Credit present coverage. Do not rewrite profiles or custody evidence here. | `area coverage_matrix: readiness`; `area python_interop: self-test, minor-train-features` |
+| 39 | none | **Complete, PR #3766.** `verification/areas/python_interop/runner/dependency_versions.py` and runner self-tests: make retired-distribution rejection independent of owner labels; scan every runner module for retired Testcontainers imports/wait helpers, mutate each forbidden form, examine E402 bootstrap suppressions. Preserve current locks, fixtures and audit selections. The discovered fixture-owned Redis numkeys change is explicitly transferred to Item 63; do not claim that mechanism changed in Item 39. | `area python_interop: self-test, dependency-versions, redis-service-features, live-policy` |
+| 53 | E2 delivery to main for named readiness check | **Blocked pending E2 merge; not independently blocked by E1.** `verification/runner/sifr_verify`, `verification/areas/coverage_matrix/checks`: require every non-live Python manifest suite in at least one delivery profile; reject a removed assignment; derive Schwifty/mutation counts. Credit present coverage. Do not rewrite profiles or custody evidence here. | `area coverage_matrix: readiness`; `area python_interop: self-test, minor-train-features` |
 | 54 | none | `verification/areas/python_interop/runner/crypto_abi_features.py`: compile, load and invoke actual CFFI-generated source; test error path and cleanup. Keep CFFI/Cryptography releases unchanged. | `area python_interop: crypto-abi-features, callbacks` |
 | 55 | none | Python feature runners: derive exact-version markers from audit, directly assert public Pandas module identity, inspect warning-filter scope and duplicated Arrow version assertion; distinguish Arrow 25 API additions from 25.0.1 fixes in maintained descriptions. No new package upgrade. | `area python_interop: minor-train-features, numeric-dataframe-features, dependency-versions` |
 | 58 | none | Current protocol docs and taxonomy under `internal_docs/python_interop_architecture.md`, `verification/areas/python_interop`, and `verification/areas/coverage_matrix`: replace current HTTPX guidance with HTTPX2, classify tier-two pytest-httpx and historical mentions, align topology path ownership. Record real old performance environments unchanged. Docs/metadata only; code findings become later items. | `area documentation: structure`; `area coverage_matrix: readiness`; local link/path checks |
@@ -506,12 +509,30 @@ ordered inventory and inherit the same per-item review/gate rules:
 | 62A | 49; before 62 | SQLx clean-cache experiment in SQLx lock qualification and Rust interop runner: a fresh private CARGO_HOME, record whether root fetch caches the five inactive fixture summaries, certify separately locked offline fixture resolution without ambient cache. Add the smallest maintained regression if absent. No clean of another worktree/cache. | `manifest sqlx_dependency_version`; `area rust_interop: compatibility-matrix`, with a new private `CARGO_HOME` for the named SQLx offline scenario; record warm-up/fetch and frozen-offline outcome separately |
 | 62B | 49; before 62 | Maintained Rust demo compile enrollment in Rust interop verification; tracked demo discovery and manifest selection, no demo algorithm rewrite. Relax exact Itertools edge set only when a real maintained consumer requires it. | `manifest itertools_dependency_version`; `area rust_interop: matrix, compatibility-matrix` |
 | 62C | E2; before 62 | `crates/sifr_driver` sysroot/environment tests and their owned fixtures: negative resolver-2/absent-resolver, explicit missing ambient Python setup, meaningful parity assertion. Preserve historical environment-mutation records. | `cargo test -p sifr_driver sysroot`; `area python_interop: env, readonly-check-doctor` |
-| 62D | none; schedule immediately after 39 | LSP request-cancelled -32800 and strict unexpected-response handling in `crates/sifr_lsp` tests and developer-tooling protocol checks; no outbound request feature. | `cargo test -p sifr_lsp`; `manifest lsp_server_dependency_version`; `area developer_tooling: lsp-smoke` |
+| 62D | none technically; E1/E2 merge-readiness; schedule immediately after 39 when ready | **Blocked on E1/E2 merge-readiness.** LSP request-cancelled -32800 and strict unexpected-response handling in `crates/sifr_lsp` tests and developer-tooling protocol checks; no outbound request feature. | `cargo test -p sifr_lsp`; `manifest lsp_server_dependency_version`; `area developer_tooling: lsp-smoke` |
 
 Item 56 is scheduled immediately after Item 49. Items 62A/62B/62C are scheduled
 after Item 61 and before Item 62, skipping any that remain blocked. Item 62
 depends on 62A–62D as well as its numeric prerequisites; this is an acyclic
 ordering, not permission for the audit coordinator to implement them.
+
+On Item 39 closure, the coordinator confirms E2 PR #3717 remains **open** at
+`98480c78587d6cbd99a7079d10c71825360bd468`, with its full gate running.
+Readiness passed on that candidate but has not been delivered to main.
+This is reported external-owner status, not Item 39 validation. No later-item
+check was run to rediscover it. Item 53 waits for E2's merged readiness fix;
+62D waits for E1/E2 merge-readiness. The next presently ready row is 54.
+
+### Later findings registered during orchestration
+
+| ID | Technical dependencies and scheduling position | Owned scope and acceptance | Exact named focused tests |
+| --- | --- | --- | --- |
+| 63 | 39; E1/E2 merge-readiness; schedule after 57 and before 62 | **Blocked on E1/E2.** Item 39 found that the Redis numkeys literals live in `verification/areas/python_interop/fixtures/live_services/python_bridges/redis_live.py`, not a runner. Derive each call's numkeys from its actual keys in this fixture-owned item; preserve the canonical Redis API and do not add compatibility or fallback paths. This explicitly discharges the conflicting Redis clause in Item 39, without expanding its runner-only scope. | `area python_interop: redis-service-features, live-policy, live-examples`; shared diff/file-size guards; exactly one merge-profile gate on the reviewed SHA when prerequisites clear |
+
+Item 63 was registered from Item 39's read-only scope discovery before its
+review. No fixture edit or gate was authorized in Item 39. Its separate owner
+must supply the fixture evidence after E1/E2 clear; Item 62 and the Item 35
+closer remain blocked until Item 63 also merges.
 
 ### Disposition of every historical Item 35 deferral
 
@@ -539,7 +560,7 @@ ordering, not permission for the audit coordinator to implement them.
 | 25 reverse profiles, custody, counts, Torch tolerance | 53/59/52; present coverage is credited, invariant still required. |
 | 26 compile/load CFFI and requires_python | 54/50; there is one Python runtime lane and multiple project/lock owners. |
 | 27 retired distribution owner, taxonomy, HTTPX2 | 39/58. |
-| 28 duplicate markers, floating images, Testcontainers mutations, Redis variant/E402/numkeys | 55/57/39. |
+| 28 duplicate markers, floating images, Testcontainers mutations, Redis variant/E402/numkeys | 55/57/39; fixture-owned numkeys explicitly transferred to 63. |
 | 29 public Pandas identity, warning filter, minimum Python | 55/50. |
 | 30 Arrow line-vs-patch claims, version assertion, merge-only placement | 55/53; profile placement is intentional unless named coverage evidence shows a missing contract. |
 
@@ -678,6 +699,66 @@ The original Kafka worktree was preserved. This record-only update requires
 documentation checks, no external review and no Sifr gate. Exact next action:
 stop after this record merges and return Item 38's evidence; the parent may
 separately dispatch **Item 39 only** in a fresh owned worktree.
+
+### Item 39 closure evidence
+
+State: complete. Implementation [PR #3766](https://github.com/sifr-lang/sifr/pull/3766)
+merged on 2026-09-07. Base: `5b31262f8c6323f724daed5902a30aabf097fd53`.
+Exact reviewed candidate: `9b17c2dad02f66c91536182889bf5d35686c6316`.
+Merge: `7868c6d3b84ce90bc8fd309fbe91d31894fbb1c7`.
+
+Six runner paths changed. The dependency audit rejects retired `httpx` and
+`httpcore` direct or locked distributions under every owner label. The new
+`verification/areas/python_interop/runner/testcontainers_policy.py` scans the
+runner entry point and every nested Python runner module using AST imports and
+references, leaving comments and example strings intact. It rejects the four
+owned retired service import roots, `core.waiting_utils`, and both retired wait
+helpers. Live policy invokes this scan. No compiler, lockfile, fixture, workflow,
+audit selection or gitlink changed.
+
+E402 examination retained the required standalone common-resolver bootstraps in
+`binding_authoring.py`, `example_packages.py` and `readonly_check_doctor.py`,
+with explanatory comments. The two suppressions in the area `runner.py` also
+follow required local import-directory setup; comment consistency is a separate
+review suggestion. The Redis numkeys literals at
+`verification/areas/python_interop/fixtures/live_services/python_bridges/redis_live.py:19`
+and line 21 were preserved and assigned to Item 63 by the orchestrator before
+review. Item 39 does not qualify or claim that fixture mechanism changed.
+
+[Validation evidence](https://github.com/sifr-lang/sifr/pull/3766#issuecomment-5575889463)
+covers the unchanged bytes committed at the exact candidate. The named
+`area python_interop: self-test, dependency-versions, redis-service-features, live-policy`
+selection passed all four variants with zero failures. Testcontainers mutation
+coverage includes 31 forbidden forms and discovery mutations for all 48 current
+runner modules plus a new nested owner. The dependency audit passed 18 mutations,
+including both retired distributions as direct and locked dependencies under
+both current labels and a renamed owner. Existing selections remain two projects,
+19 packages, two locks and two images. `git diff --check` and
+`python3 scripts/check_file_size_guardrails.py` passed (3,761 files, 900-line
+limit). Neither Sifr gate ran under this runner-only item's authorized policy.
+
+The [one exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3766#issuecomment-5575910897)
+returned `SATISFIED`, with no blocking findings. No remediation review ran.
+[Review provenance](https://github.com/sifr-lang/sifr/pull/3766#issuecomment-5575910761)
+records raw review SHA-256:
+`a0f548bd25e67d09508dc2c967f3111cbb6cb37186b2bf8d409d426c2a4d7a6c`.
+External review: `/private/tmp/sifr-item39-opus.L4B8Wu/response.md`.
+External validation record:
+`/private/tmp/sifr-item39.yTCcy3/validation-9b17c2dad02f66c91536182889bf5d35686c6316.md`.
+
+Nonblocking observations are assigned to separate [issue #3767](https://github.com/sifr-lang/sifr/issues/3767):
+dynamic-import/getattr checks, future service-root coverage, remaining bootstrap
+comment consistency and possible discovery-scan duplication. They create no
+additional Item 39 acceptance requirements. No follow-up implementation ran.
+
+Item 39 blocker: **none**. E1/E2 ownership and consumed histories remain intact.
+Owned worktree: `/private/tmp/sifr-item39.yTCcy3/codebase`; implementation branch:
+`codex/latest-stable-item39`; record branch: `codex/latest-stable-item39-record`.
+The original Kafka worktree was preserved. This record-only update requires
+documentation checks, no external review and no Sifr gate. Exact next action:
+stop after this record merges and return Item 39's evidence; the parent may
+separately dispatch **Item 54 only** in a fresh owned worktree, subject to
+rechecking recorded prerequisite status. Item 53 and 62D remain blocked as above.
 
 ### Item 0 record
 
@@ -2913,14 +2994,17 @@ The phase closes only when:
 
 ## Current Handoff
 
-Item 38 is complete via PR #3763, candidate
-`293d62528005032aa4d67f8d43dbe037899a2457`, merge
-`619422a7a385ce9b124c9a78d0229e3213237933`. Both named checks and common diff /
+Item 39 is complete via PR #3766, candidate
+`9b17c2dad02f66c91536182889bf5d35686c6316`, merge
+`7868c6d3b84ce90bc8fd309fbe91d31894fbb1c7`. All four named suites and common diff /
 file-size checks passed; one exact-SHA Opus review returned `SATISFIED` with
 no blocking findings. Closure evidence is above. The post-merge record branch
-is `codex/latest-stable-item38-record` in isolated worktree
-`/private/tmp/sifr-item38.AHxKCb/codebase`. Item 38 has no blocker and requires
-no Sifr gate. Next dispatch is Item 39 only; this worker stops after delivery.
+is `codex/latest-stable-item39-record` in isolated worktree
+`/private/tmp/sifr-item39.yTCcy3/codebase`. Item 39 has no blocker and requires
+no Sifr gate. Next presently ready dispatch is Item 54 only; this worker stops
+after delivery. Item 53 waits for E2 delivery to main; 62D remains E1/E2 blocked.
+Fixture-owned Redis numkeys is separately registered as Item 63, blocked on
+E1/E2 merge-readiness and required before Items 62/35 close.
 
 Items 0–30 are complete. Item 31 implementation
 [PR #3551](https://github.com/sifr-lang/sifr/pull/3551) remains draft. Its exact
