@@ -25,6 +25,7 @@ sifr_sysroot = { workspace = true }
 sifr_syntax = { workspace = true }
 sifr_sql_contract = { workspace = true }
 clap = { version = "4.6.6", features = ["derive"] }
+ignore = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }

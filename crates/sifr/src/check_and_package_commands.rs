@@ -7,6 +7,7 @@ use super::diagnostic_rendering_and_run::{
     current_session_package_id, execute_cargo_plan, render_diagnostics,
 };
 use super::formatter_cli::FmtArgs;
+use super::formatter_discovery::FormatterGitignore;
 use super::package_graph_context::load_package_graph_context_for_entrypoint;
 use super::package_session_cli::package_session_for_cwd;
 use super::python_runtime_context::{package_python_runtime, package_python_runtime_for_check};
@@ -578,9 +579,11 @@ pub(super) fn fmt_entrypoint(
         args.paths.clone()
     };
     let mut diagnostics = Vec::new();
+    let gitignore = FormatterGitignore::load(&cwd, config.respect_gitignore, &mut provider)?;
     for target in targets {
         let explicit_target = provider.is_file(&target);
-        let files = select_formatter_files(&target, &config, explicit_target, &mut provider)?;
+        let files =
+            select_formatter_files(&target, &config, &gitignore, explicit_target, &mut provider)?;
         for file in files {
             if args.check {
                 diagnostics.extend(sifr_format::check_path_with_options(
@@ -694,46 +697,21 @@ fn flag_override(enable: bool, disable: bool) -> Option<bool> {
 fn select_formatter_files(
     target: &Path,
     config: &EffectiveFormatConfig,
+    gitignore: &FormatterGitignore,
     explicit_target: bool,
     provider: &mut impl SourceProvider,
 ) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
     let files = sifr_format::collect_sifr_files(target, provider)?;
     let mut selected = Vec::new();
-    let ignore_patterns = if config.respect_gitignore {
-        read_gitignore_patterns(provider)?
-    } else {
-        Vec::new()
-    };
     for file in files {
         let excluded =
-            pattern_matches(&file, &config.exclude) || pattern_matches(&file, &ignore_patterns);
+            pattern_matches(&file, &config.exclude) || gitignore.is_ignored(&file, provider)?;
         if excluded && (!explicit_target || config.force_exclude) {
             continue;
         }
         selected.push(file);
     }
     Ok(selected)
-}
-
-fn read_gitignore_patterns(
-    provider: &mut impl SourceProvider,
-) -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
-    let path = Path::new(".gitignore");
-    if !provider.is_file(path) {
-        return Ok(Vec::new());
-    }
-    let source = provider.read_file(path).map_err(|err| {
-        vec![formatter_cli_diagnostic(format!(
-            "could not read .gitignore for formatter discovery: {err}"
-        ))]
-    })?;
-    Ok(source
-        .as_str()
-        .lines()
-        .map(str::trim)
-        .filter(|line| !line.is_empty() && !line.starts_with('#'))
-        .map(str::to_string)
-        .collect())
 }
 
 fn pattern_matches(path: &Path, patterns: &[String]) -> bool {
@@ -854,6 +832,6 @@ fn formatting_drift_for_path(source: &str, path: &Path) -> RenderedDiagnostic {
     }
 }
 
-fn formatter_cli_diagnostic(message: impl Into<String>) -> RenderedDiagnostic {
+pub(super) fn formatter_cli_diagnostic(message: impl Into<String>) -> RenderedDiagnostic {
     diagnostic_with_code(message, DiagnosticCode::FMT_FORMATTING_DRIFT)
 }
