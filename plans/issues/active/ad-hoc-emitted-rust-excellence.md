@@ -2,6 +2,63 @@
 
 Status: active
 
+## Current bounded owner: implicit format capture demand (2026-09-07)
+
+12K-B14 / [owner #3745](https://github.com/sifr-lang/sifr/issues/3745) is implemented
+on current main base `06ea86334b72f49f5aab250a64498ee955ec9331` in independent clone
+`/private/tmp/sifr-capture-demand.aetT8U/sifr`, branch
+`codex/implicit-format-capture-demand`. Review and merge qualification are pending.
+The authoritative parent registration is its uncommitted top section
+"Current orchestration: B13 stopped; bounded12K-B14"; both intentional parent
+phase-document changes and every predecessor remain read-only.
+
+Main source contains the missing capture-demand consumer; this applicability
+finding is source inspection, not an executed baseline reproduction. The bounded
+fix reuses the shared format parser for import demand and resolves declaration
+and import references at their lexical scope. It covers initializers, nested
+blocks/items, function/closure parameters, loop/conditional/match patterns,
+width/precision captures, named format arguments, nested macros and glob imports.
+Unused imports and declarations remain eligible for pruning. The native test
+uses the existing tempfile version as a dev dependency; the lockfile adds only
+that dependency edge to sifr_codegen.
+
+Registration before execution is preserved outside Git at
+`/private/tmp/sifr-capture-demand.aetT8U/evidence/registration.md`, SHA256
+`78becc615f2e4d22bb423d746bd0876d11bd9c2b8003822c0b40941221dcd381`.
+Seven exact `implicit_format_capture` regression names are registered there,
+including 18 lexical cases and a rustc compile/run assertion of output
+`  1.25\n7\n1.25\n`. Postimplementation named checks passed:
+
+- `cargo test -p sifr_codegen generated_rust_canonicalizer`: 113 passed,
+  1303 filtered; `canonicalizer-scopes.log`, SHA256
+  `1294757d6e6f6720bf5abdeae559b6ecdea13ada0703e418e5e33e80eff17eda`.
+- `cargo test -p sifr_codegen implicit_format_capture`: 7 passed, 1409 filtered;
+  `implicit-captures.log`, SHA256
+  `4d0d38c2ed30767767ab7fd95183ce93f0012b6b4481575215b1a490da522e40`.
+- `cargo fmt --check`: PASS; `fmt.log`, SHA256
+  `10d230eae640adb79a205d49ddd0d3b4e3f7e2cb3e9046ffba75f0e413935518`.
+- `python3 scripts/check_file_size_guardrails.py`: PASS, 3761 files;
+  `file-size.log`, SHA256
+  `8bd501fc0a3a12020373cb3ccd34c373c51dcaf3e34311c07629c2a3c543aee5`.
+- `git diff --check`: PASS; `diff.log`, SHA256
+  `c6daa313b9e8a3d58fdf4188ac666dc5ece3bb7ef8551d8d9348e478f03832d0`.
+
+All logs are under that evidence directory. Two earlier failed checks are retained:
+`canonicalizer.log` (incorrect workspace dev-dependency declaration) and
+`canonicalizer-fixed-manifest.log` (syn 3 match-guard visitor compile error).
+Both were corrected before the passing source candidate; no baseline failure
+or performance evidence is claimed from these attempts.
+
+One exact-SHA initial Opus review plus at most one remediation is allowed. One
+merge-profile gate will qualify the final frozen/pushed SHA, with production
+generated-graph preparation as its online prelude; no create-pr or second gate.
+No final review is committed into its own candidate. B13 remains blocked/unmerged,
+its full read-only terminal record is `4eef8a2bb4dbc24fb7c1d1213652be379047f4b1`,
+and its singleton-import assertion belongs to its later continuation. No B13 or
+unqualified integration implementation was imported. Original12K remains four
+FAILED plus one resource termination143, zero PASS; its two reviews stay exhausted.
+PR3717/corpus48 and all successor items remain outside this delivery.
+
 ## Current bounded owner: 12K-R2 qualification capacity (2026-09-07)
 
 12K-R2 / [owner #3742](https://github.com/sifr-lang/sifr/issues/3742) owns only
