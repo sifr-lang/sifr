@@ -2,6 +2,69 @@
 
 Status: active
 
+## Original12K gate5 terminal: representative GCQ blocked; worker stopped (2026-09-07)
+
+Delivery remains **blocked**, not merged. PR3717 exact candidate
+`ef595b6da060c1bf3f6c2367361b0e774a0654a7`, actual main base
+`06ea86334b72f49f5aab250a64498ee955ec9331`, preserves full original terminal
+`6ce7ce09978e3544f5d8f43608254578e97e363d` ancestry, R1/R2 records,
+202 integration paths,16gitlinks and corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`. RetainedItem12 source is excluded.
+
+The sole newly authorized merge gate exited1 naturally after5589.72s. All9
+representative GCQ variants completed: inventory,corpus,panic-scan,
+intrinsic-panic-lint,rustfmt,determinism,demos,freshness PASS; Clippy FAIL.
+Immediate failure is missing exact owners for `clippy::redundant_pub_crate`
+(166) and `clippy::wildcard_imports` (18), within712 diagnostics/22codes.
+Selection `selection-7cddd09acf851f35` has no stored baseline by read-only
+inspection; exact-debt comparison was NOT reached and is not another executed
+failure. No source repair, baseline refresh, allowance, gate restart or merge.
+
+Later owner [12K-B13/#3744](https://github.com/sifr-lang/sifr/issues/3744) is
+recorded only, not started. Its handoff distinguishes ownership bookkeeping
+from assessing unnecessary producer visibility/imports, preserving private
+support ownership, sibling/trait-impl visibility and cancellation task-local
+semantics. Both lint categories AND missing-owner rejection occurred in
+preserved September5 full92 evidence (1156/82; same12 IDs166/18). Counts match,
+but full historical source/toolchain/signature equivalence is not asserted.
+This is not a newly proven producer regression or retainedItem12 completion.
+The issue registers exact12 surfaces, diagnostic paths/hashes, proposed focused
+commands and separate ownership/review/qualification dependencies.
+
+Actual passes:9focused,production92graphs,13guards/demo freshness264,
+Rustinterop10,readiness4,core5,CPython2,Python30/allfive,diagnostics184,
+runtime30variants with3declared skips,algorithmic12,developer-tooling42.
+GCQ8/9 passed. All later performance/distribution/sysroot/project/package/
+stdlib/regression/fuzz/ecosystem/SQL,31full-crate suites,fullE2E,ignored-driver/
+CLI and remaining toolchain lanes are UNREACHED, not certified by old evidence.
+Production setup1456849ms PASS exceeded its advisory300000ms budget; the
+report's additional setup0ms FAIL originates in a passing negative self-test,
+not a second production setup failure. Capacity184samples/minimum71299792896
+bytes remained safe; no cleanup or process termination occurred.
+
+Canonical evidence root: `/private/tmp/sifr-validation.wuRhoh/sifr/target/verification/areas`.
+`integration-final-evidence.json` SHA256
+`461405023c6b02a1c5027cf64bf88766af1c228e36fe35f0a2298ca8a969be85`
+indexes2599 preserved artifacts; external `evidence/protected-evidence.sha256`
+hash `193b31511d35510511ff3c3cc15507493e9acdcb1a720c14992522c1a7c8d71e`.
+Raw merge log SHA256 `1c55752ee74e6b2681d82dd66a1179a7dd60a8dfd29ebaadd9357498d0f2d1cf`.
+Quality blocker/handoff receipts hash respectively
+`b4c70712cc1b4a1fc7e09921d408b6d791a135e997476a9f38813bbe2ae5369a` /
+`2a5527794fd827a5b4e51c5f619273ec1d2f1fa7c9f5f3026b5adf106ec82a30`.
+Both immutable R2 relocation maps authenticated336 relocations and15082
+retained artifacts; no old missing path is treated as lost evidence.
+
+Cumulative gates:4FAILED+1RESOURCE_TERMINATED143,0PASS. Reviews remain consumed:
+1initial+1remediation SATISFIED,2provider0retry; no new review. Candidate-keyed
+[approval reuse](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5569006889)
+is authenticated, not a fresh verdict or gate pass. SifrPR3717/corpusPR48 stay
+unmerged; no dependent owner is closed as delivered. CorrectingM1 approval
+remains distinct from historical12J/R1 failures. Gate PGID20306,runner session
+34521 and monitor64424 ended; no live validation handles. This docs-only
+terminal record is pushed separately; its SHA is published in the immutable
+terminal receipt, not mislabeled as the qualified candidate. Stop; parent may
+dispatch the separately bounded owner only after native terminal confirmation.
+
 ## Original12K delivery after R1/R2 capacity recovery (2026-09-07)
 
 This is the current delivery registration. Source is already implemented; no
@@ -3156,13 +3219,14 @@ It does not broaden the active item.
 | 12J | blocked: both reviews exhausted, unapproved | Async Python error-channel contract | Draft #3699 preserves final reviewed candidate `4bc432f3474134b1a1d43202d39fd147893bb014`; initial and remediation reviews are NOT SATISFIED. No gate or merge. Message-storage follow-up 12J-M1 requires adjudication; 12I remains external. |
 | 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
 | 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
-| 12K | approved inputs; gate4 resource-terminated | Item 12B and Python dependency integration | Draft #3717 candidate `3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c`; authenticated review reuse, nine checks pass; actual readiness clearsB12. Three failed gates plus one resource termination143; storage owner #3740. No passing gate or merge. See top terminal receipt. |
+| 12K | approved inputs; gate5 failed representative GCQ | Item 12B and Python dependency integration | Draft #3717 candidate `ef595b6da060c1bf3f6c2367361b0e774a0654a7`; nine focused checks, production92, tooling42 and GCQ8/9 pass. Four failed gates plus one resource termination143; owner #3744. No passing gate or merge. See top terminal receipt. |
+| 12K-B13 | recorded, not started | Representative GCQ ownership and producer assessment (#3744) | Missing lint owners for redundant_pub_crate/wildcard_imports; distinguish existing bookkeeping debt from producer necessity. Same categories in historical92 audit; exact12 surfaces and proposed checks registered. RetainedItem12 remains incomplete. |
 | 12K-B7 | merged | Direct filesystem inventory (#3722) | PR3725 merged; replacement gate verified the corrected inventory. |
 | 12K-B8 | merged | SQL bigint spelling versus compatibility guard (#3723) | PR3727 merged; replacement gate verified the SQL spelling boundary. |
 | 12K-B9 | merged | Formatter preview reference drift (#3724) | PR3729 merged; replacement gate verified all reference corrections. |
 | 12K-B10 | merged | Current-source audit anchor (#3731) | PR3733, approved `4147d9235462178e870342abf2a390ac5ab3f890`; combined inventory/self-test pass. |
 | 12K-B11 | merged | Generated Cargo graph preparation (#3732) | PR3735, approved `2f3ec54226b2e722b3fe44ea59177f780865c921`; combined production preparation92/92 passes. |
-| 12K-B12 | recorded, not started | Delivery-neutral qualification report filename (#3737) | The B11 helper's report destination at line228 fails taxonomy. Preserve graph/provenance behavior and correct only its semantic artifact naming. |
+| 12K-B12 | merged | Delivery-neutral qualification report filename (#3737) | PR3738 merged at e97bf896; subsequent original12K taxonomy/readiness pass. Historical in-progress receipts retained below. |
 | 12K-B1 | approved correction; gate blocked | TypeVar diagnostic assertion fidelity (#3667) | Draft #3702, reviewed `a42545f759fac4e5e0537b6f9d9cc2fb8c9ed233`; named checks pass, Opus SATISFIED; one failed gate exposes 12K-B2/B3. Unmerged; see B1 terminal checkpoint above. |
 | 12K-B2 | merged | Canonical diagnostic-code matcher identity (#3704) | PR3706 merge770f1ab; recorda53b5d3 retained in12K ancestry; full historical receipt preserved. |
 | 12K-B3 | merged | Diagnostics schema synchronization (#3705) | PR3709 mergef11e1cd; recordc508c143 retained in12K ancestry; full historical receipt preserved. |

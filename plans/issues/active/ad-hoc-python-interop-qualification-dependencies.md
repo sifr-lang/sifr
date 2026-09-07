@@ -2,6 +2,31 @@
 
 Status: active; fresh sequential dependency workers authorized on 2026-09-05.
 
+## Original12K gate5 terminal: Python passes; representative GCQ blocks delivery (2026-09-07)
+
+PR3717 candidate `ef595b6da060c1bf3f6c2367361b0e774a0654a7`, actual main
+`06ea86334b72f49f5aab250a64498ee955ec9331`, exact corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`. Python30/allfive dependency suites
+passed in1518.200s. Required-string-message ErrorM1 contract/approval remains
+settled; historical12J/R1 failed reviews remain historical, not M1 verdicts.
+
+Gate5 naturally exited1 on representative GCQ Clippy missing exact owners for
+redundant_pub_crate/wildcard_imports; all9 variants finished,8passed. Later
+[12K-B13/#3744](https://github.com/sifr-lang/sifr/issues/3744) is recorded only
+with ownership-versus-producer distinction, historical diagnostics and bounded
+focused-check proposal. No source fix/baseline refresh/restart or new review.
+R1/R2 resolved storage; no resource termination occurred this attempt.
+
+No fullE2E/stdlib/ignored-driverCLI or later lane pass is claimed. Original12K,
+SifrPR3717 and corpusPR48 remain unmerged; M1-F3/dependent owners are not closed
+by Python passes alone. Cumulative4FAILED+1RESOURCE_TERMINATED143 gates,0PASS;
+1initial+1remediation SATISFIED/2provider0retry/no third review. No live runner
+or monitor handles. Final evidence2599artifacts:
+`/private/tmp/sifr-validation.wuRhoh/sifr/target/verification/areas/integration-final-evidence.json`,
+SHA256 `461405023c6b02a1c5027cf64bf88766af1c228e36fe35f0a2298ca8a969be85`.
+See emitted-Rust phase top terminal for complete coverage/counters; retained
+Item12 is not complete. This worker stops without starting another item.
+
 ## Original12K gate4: Python passed, disk capacity blocked delivery (2026-09-07)
 
 Exact combined candidate `3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c`, main
