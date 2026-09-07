@@ -11,6 +11,7 @@ AREA_ROOT = REPO_ROOT / "verification" / "areas" / "python_interop"
 COMMON_ROOT = REPO_ROOT / "verification" / "areas" / "common"
 sys.path.insert(0, str(COMMON_ROOT))
 
+# Direct script execution needs the common runner directory above before import.
 from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 COMMAND_HANG_TIMEOUT_SECONDS = 300

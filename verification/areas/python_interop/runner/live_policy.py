@@ -6,6 +6,10 @@ from pathlib import Path
 from typing import Any, Callable
 
 from env import RunnerPaths
+from testcontainers_policy import (
+    run_testcontainers_self_tests,
+    validate_runner_testcontainers,
+)
 
 REQUIRED_POLICY_KEYS = {
     "schema_version",
@@ -61,6 +65,7 @@ def build_live_policy_report(paths: RunnerPaths) -> dict[str, Any]:
     _validate_live_profile(profile, policy)
     _validate_offline_profiles(paths.repo_root, policy)
     _validate_service_runner_boundary(paths.area_root)
+    validate_runner_testcontainers(paths.area_root)
     return {
         "schema_version": 1,
         "area": "python_interop",
@@ -83,6 +88,7 @@ def run_live_policy_self_tests(paths: RunnerPaths) -> None:
         paths.repo_root / "verification" / "profiles" / f"{policy['profile']}.json"
     )
     build_live_policy_report(paths)
+    run_testcontainers_self_tests(paths.area_root)
 
     missing_key_policy = dict(policy)
     del missing_key_policy["result_statuses"]
@@ -139,13 +145,6 @@ def run_live_policy_self_tests(paths: RunnerPaths) -> None:
             "from kafka import KafkaProducer\nexecute_live_binary(binary, environment)\n"
         ),
         "runner owns service clients",
-    )
-    _expect_policy_failure(
-        lambda: _validate_service_runner_source(
-            "from testcontainers.redis import RedisContainer\n"
-            "execute_live_binary(binary, environment)\n"
-        ),
-        "legacy Testcontainers Redis import",
     )
 
 
@@ -262,11 +261,6 @@ def _validate_service_runner_source(source: str) -> None:
         "get_client(": "testcontainers service client",
         "psycopg": "Postgres client",
         "redis.Redis": "Redis client",
-        "testcontainers.kafka": "legacy Testcontainers Kafka import",
-        "testcontainers.localstack": "legacy Testcontainers LocalStack import",
-        "testcontainers.postgres": "legacy Testcontainers Postgres import",
-        "testcontainers.redis": "legacy Testcontainers Redis import",
-        "wait_for_logs": "legacy Testcontainers wait helper",
     }
     observed = sorted(label for token, label in forbidden.items() if token in source)
     if observed:

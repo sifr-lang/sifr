@@ -25,6 +25,7 @@ COMMON_ROOT = str(Path(__file__).resolve().parents[2] / "common")
 if COMMON_ROOT not in sys.path:
     sys.path.insert(0, COMMON_ROOT)
 
+# This standalone runner module bootstraps the shared resolver's import directory.
 from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 EXAMPLE_TIMEOUT_SECONDS = 600
