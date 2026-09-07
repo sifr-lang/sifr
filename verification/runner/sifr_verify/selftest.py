@@ -16,6 +16,7 @@ from verification.json_schema_202012 import lint_schema
 
 from .areas import discover_areas
 from .cargo_setup import cargo_setup_command
+from .generated_cargo_setup_checks import policy_checks as generated_cargo_setup_policy_checks
 from .errors import SchemaError
 from .profile_area_steps import run_selected_area
 from .profile_results import AreaResultError, validate_area_result
@@ -48,6 +49,7 @@ from .step_budgets import run_self_test as step_budget_self_test
 
 def run_all() -> list[str]:
     checks = [
+        ("generated Cargo setup policy checks", generated_cargo_setup_policy_checks),
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
         ("cache-aware step budget self-test", step_budget_self_test),

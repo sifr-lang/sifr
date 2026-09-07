@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import os
 import shlex
+import subprocess
+import sys
 from typing import Any, Callable
+
+from .paths import REPO_ROOT
 
 CANONICAL_SETUP_COMMAND = "cargo fetch --locked"
 
@@ -30,12 +34,25 @@ def prepare_cargo_cache(
     env: dict[str, str],
     command_runner: Callable[..., None],
 ) -> None:
-    """Populate the exact lock graph before profile execution becomes offline."""
+    """Populate workspace and generated lock graphs before offline execution."""
     command = cargo_setup_command(profile)
     setup_env = env.copy()
     setup_env.pop("CARGO_NET_OFFLINE", None)
     print(f"[sifr-profile-setup] command={' '.join(command)}")
     command_runner(command, env=setup_env)
+    if any(area["area"] == "generated_code_quality" for area in profile.get("selected_areas", [])):
+        revision = subprocess.check_output(
+            ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=REPO_ROOT, text=True
+        ).strip()
+        # A source-identical later commit still names a different Cargo Git source.
+        shared_root = REPO_ROOT / "target" / "sifr_generated_code_quality" / f"{profile['name']}.{revision}.shared"
+        env["SIFR_GCQ_SHARED_ROOT"] = str(shared_root)
+        setup_env["SIFR_GCQ_SHARED_ROOT"] = str(shared_root)
+        command_runner(
+            [sys.executable, "-m", "sifr_verify.generated_cargo_setup",
+             "--profile", str(profile["name"]), "--revision", revision],
+            env=setup_env,
+        )
 
 
 def enable_offline_cargo(env: dict[str, str]) -> None:

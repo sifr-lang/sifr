@@ -388,9 +388,10 @@
       "disposition": "confirmed",
       "severity": "blocking",
       "owner": "portability",
-      "mechanism": "Remaining generated indices and allocation counts can reach a panic-on-invalid-proof usize conversion without a local typed range boundary.",
-      "evidence": ["crates/sifr_codegen/src/methods/list.rs", "crates/sifr_codegen/src/preamble", "demos/**/emitted.rs"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/methods/list.rs", "contains": "args: vec![exact_int_to_usize_expr(args[0].clone()), args[1].clone()]"},
+      "mechanism": "Nonliteral RustExpr::Cast nodes targeting usize render through sifr_runtime::to_usize_proven. The runtime conversion panics on an invalid bound proof, so generated index and allocation-count callers retain an obligation to establish non-negative, addressable bounds before narrowing.",
+      "evidence": ["crates/sifr_codegen/src/render/render_expr_and_blocks.rs", "crates/sifr_runtime/src/conversion.rs", "crates/sifr_runtime/src/int.rs", "crates/sifr_codegen/src/methods/list.rs", "crates/sifr_codegen/src/methods/common.rs", "crates/sifr_codegen/src/preamble", "demos/**/emitted.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/render/render_expr_and_blocks.rs", "contains": "if matches!(ty, RustType::Named(name) if name == \"usize\") {\n                    return format!(\n                        \"::sifr_runtime::to_usize_proven(&({}))\","},
+      "qualification": "The former list.insert anchor is obsolete: lower_insert now calls exact_int_to_bound_expr, which emits clamp_slice_bound against the receiver length. This row instead anchors the remaining renderer/runtime proof boundary. Reconciliation preserves the confirmed blocking portability disposition; it neither establishes a new failing caller nor certifies all index and capacity proofs or targets.",
       "sources": ["internal", "external"]
     }
   ]

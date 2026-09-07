@@ -81,14 +81,14 @@ class ProfileRunner:
         self.profile_name = str(self.profile["name"])
         self.forward_args = forward_args
         self.env = os.environ.copy()
+        target_root = Path(self.env.get("CARGO_TARGET_DIR", REPO_ROOT / "target"))
+        if not target_root.is_absolute():
+            target_root = REPO_ROOT / target_root
         configured_sifr_binary = self.env.get("SIFR_GCQ_BIN") or self.env.get("SIFR_RUNTIME_PLATFORM_BIN")
         sifr_binary = (
             Path(configured_sifr_binary)
             if configured_sifr_binary
-            else resolve_sifr_binary(
-                REPO_ROOT,
-                default_binary=REPO_ROOT / "target" / "debug" / "sifr",
-            )
+            else target_root / "debug" / "sifr"
         )
         self.env.setdefault("SIFR_GCQ_BIN", str(sifr_binary))
         self.env.setdefault("SIFR_RUNTIME_PLATFORM_BIN", str(sifr_binary))
@@ -143,6 +143,11 @@ class ProfileRunner:
     def prepare_cargo_cache(self) -> None:
         try:
             prepare_profile_cargo_cache(self.profile, self.env, run_command)
+            if not (os.environ.get("SIFR_GCQ_BIN") or os.environ.get("SIFR_RUNTIME_PLATFORM_BIN")):
+                # Resolve/build only after the workspace setup has succeeded.
+                binary = resolve_sifr_binary(REPO_ROOT)
+                self.env["SIFR_GCQ_BIN"] = str(binary)
+                self.env["SIFR_RUNTIME_PLATFORM_BIN"] = str(binary)
         except ValueError as exc:
             raise ProfileRunnerError(str(exc)) from exc
 
@@ -235,9 +240,6 @@ class ProfileRunner:
         self.run_python(path, "--self-test")
 
     def run_area(self, area: str, suites: list[str]) -> None:
-        if area == "generated_code_quality":
-            shared_root = REPO_ROOT / "target" / "sifr_generated_code_quality" / f"{self.profile_name}.shared"
-            self.env["SIFR_GCQ_SHARED_ROOT"] = str(shared_root.relative_to(REPO_ROOT))
         result_slug = CRITICAL_RESULT_SLUGS.get(area, area.replace("_", "-"))
         run_selected_area(
             area=area,

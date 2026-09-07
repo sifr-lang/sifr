@@ -476,7 +476,7 @@ def gate_corpus(entries: list[Entry], args: argparse.Namespace) -> None:
         for entry in selected_positive_entries(entries, args.group):
             def check_entry() -> Path:
                 crate_root_inner = materialize_entry(entry, run_root)
-                run_command(["cargo", "check", "--manifest-path", str(crate_root_inner / "Cargo.toml")])
+                run_command(["cargo", "check", "--locked", "--manifest-path", str(crate_root_inner / "Cargo.toml")])
                 return crate_root_inner
 
             crate_root = timed_case("generated_code_quality", f"corpus/{entry.id}", check_entry)

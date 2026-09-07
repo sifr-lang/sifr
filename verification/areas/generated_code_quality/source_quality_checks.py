@@ -163,6 +163,7 @@ def run_strict_clippy(
             "--message-format=json",
             "--manifest-path",
             str(manifest),
+            "--locked",
             "--",
             *strict_clippy_args,
         ],
