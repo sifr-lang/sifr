@@ -2,6 +2,59 @@
 
 Status: active
 
+## Item 12K-B13 terminal: scope-blocked, not merged (2026-09-07)
+
+Owner [#3744](https://github.com/sifr-lang/sifr/issues/3744) remains open.
+Later canonicalizer item-demand owner [#3745](https://github.com/sifr-lang/sifr/issues/3745)
+is recorded only, not started. Per the user's different-mechanism boundary and
+`phase-closure-loop`, this worker stops without implementing that later fix,
+removing the failing regression, requesting Opus, running a merge gate or merging.
+
+- Branch `codex/support-visibility-imports`, owned clone
+  `/private/tmp/sifr-support.kmdI25/sifr`.
+- Full integration base `b00f66e81fba59d5e3415fd068f7c9724704ab4d`; freshly fetched
+  actual main `06ea86334b72f49f5aab250a64498ee955ec9331` remains unchanged.
+- Latest implementation candidate `2ef9aa30ed2b3715dba291b697aa0fdb7ab6b42d`,
+  normally pushed.134 B13-delta paths include118 mechanically regenerated demo
+  companions. The202 inherited integration paths and16 exact gitlinks, including
+  corpus `8bcbe7ab7939e5c8362c10f61a80e368022cc372`, remain preserved; excluded
+  retainedItem12 source is not an ancestor. PR and merge SHA: **none**.
+- On this exact candidate, the registered support-assembly group ran10 tests:
+  **8PASS/2FAIL**. The implicit-capture case loses its constant and import after
+  `println!("{}", ACTIVE)` becomes `println!("{ACTIVE}")`. The unchanged
+  `all_item_identifier_names` demand path does not collect names inside format
+  literals; pruning loses the owner before B13's final import refresh. This is
+  source-attributed to an unchanged base mechanism, not an executed base
+  reproduction or representative-corpus failure. #3745 preserves the exact case.
+  The second failure is an overly syntactic assertion expecting braces around
+  a singleton import; output has the equivalent flat import. It remains
+  uncorrected at the scope stop.
+- `cargo fmt --check`, file-size guardrail and `git diff --check`: **PASS** on
+  the latest implementation candidate. Remaining focused commands, production92
+  setup, source-concordance inspection and representative9 are **unreached on
+  this SHA**. No qualification is inferred from the predecessor candidate.
+- Earlier candidate `cc6397c1d1316bacfa8589861989282f5a8ba4ff` has focused passes,
+  production92 PASS, representative9 completed7PASS/2FAIL. Its in-scope
+  visibility/import failures led to the latest implementation but are not
+  claimed resolved by new production validation. The528-diagnostic baseline is
+  an authenticated source-derived prediction, not passing Clippy evidence.
+- B13 counters: **0 initial reviews,0 remediation reviews,0 provider attempts,
+  0 create-pr gates,0 merge gates**. Original12K remains **4FAILED plus
+  1RESOURCE_TERMINATED143,0PASS**, with its exhausted1initial+1remediation
+  approvals unchanged. Original PR3717 and corpus PR48 remain unmerged.
+- No owned validation/review process or handle remains live. No parent or
+  predecessor files/index/cache were modified; no cleanup occurred. Parent owns
+  later sequencing. No successor or retainedItem12 code was started.
+
+Exact-SHA raw evidence lives in `/private/tmp/sifr-support.kmdI25/evidence`.
+The failed latest `support-assembly.2ef9aa30ed2b3715dba291b697aa0fdb7ab6b42d.log`
+has SHA256 `665f728faacca226031d8cc924fb5fd8c7cacce3c23bf3b3b834ad37b72f895a`;
+its `.json` receipt has SHA256
+`814e7c325e74f604cd3dffe786e9089b21cb703122b9bd3a7a29c52793af2196`.
+`support-visibility-terminal.json` in that evidence directory records the
+docs-only terminal SHA, changed paths, receipt hashes and exact remaining work.
+Next action requires parent sequencing/new scope for #3745; this session stops.
+
 ## Item 12K-B13: support visibility and imports (2026-09-07)
 
 Owner [#3744](https://github.com/sifr-lang/sifr/issues/3744). Sole implementation
@@ -3294,7 +3347,7 @@ It does not broaden the active item.
 | 12J-R1 | blocked: second-review mechanism defect | Complete Item 12J non-builtin error conversions | Named local/project/stdlib native regressions pass, but the sole remediation review found invalid demand for errors without a string message and a remaining accepted-upcast omission. Stop; no third review or gate. |
 | 12J-M1 | recorded: requires adjudication, not started | Error message storage and root-upcast admissibility | Resolve the second-review storage/demand defect and remaining conversion contract without breaking valid specific-error channels or resetting 12J's exhausted review budget. |
 | 12K | approved inputs; gate5 failed representative GCQ | Item 12B and Python dependency integration | Draft #3717 candidate `ef595b6da060c1bf3f6c2367361b0e774a0654a7`; nine focused checks, production92, tooling42 and GCQ8/9 pass. Four failed gates plus one resource termination143; owner #3744. No passing gate or merge. See top terminal receipt. |
-| 12K-B13 | recorded, not started | Representative GCQ ownership and producer assessment (#3744) | Missing lint owners for redundant_pub_crate/wildcard_imports; distinguish existing bookkeeping debt from producer necessity. Same categories in historical92 audit; exact12 surfaces and proposed checks registered. RetainedItem12 remains incomplete. |
+| 12K-B13 | blocked, worker stopped; not merged | Support visibility/import repair (#3744) | Candidate2ef9aa30e: focused8/10; separate unchanged item-demand capture omission recorded as later owner#3745. Review/gate budgets unused; latest production92/representative9 unreached. RetainedItem12 remains incomplete. |
 | 12K-B7 | merged | Direct filesystem inventory (#3722) | PR3725 merged; replacement gate verified the corrected inventory. |
 | 12K-B8 | merged | SQL bigint spelling versus compatibility guard (#3723) | PR3727 merged; replacement gate verified the SQL spelling boundary. |
 | 12K-B9 | merged | Formatter preview reference drift (#3724) | PR3729 merged; replacement gate verified all reference corrections. |
