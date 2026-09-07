@@ -2,6 +2,104 @@
 
 Status: active
 
+## Terminal: 12K-B14 blocked on generated companion concordance (2026-09-07)
+
+12K-B14 / [owner3745](https://github.com/sifr-lang/sifr/issues/3745) is **blocked,
+not merged**. [PR3746](https://github.com/sifr-lang/sifr/pull/3746) remains draft.
+Independent main base `06ea86334b72f49f5aab250a64498ee955ec9331`; final pushed
+candidate `17484b59f1fc3c09848d1b18df7b7a8aa3ee44c4`; branch
+`codex/implicit-format-capture-demand`, clone `/private/tmp/sifr-capture-demand.aetT8U/sifr`.
+Merge SHA: none. The terminal record is documentation-only and is pushed on
+this branch, not main. Parent checkout/index/branch and all predecessor evidence
+remain untouched; this supersedes the older pending-status sections below.
+
+### Final-candidate bounded evidence
+
+All five named checks passed on the exact final SHA, with no later compiler,
+test, manifest or lockfile changes. Logs below are relative to
+`/private/tmp/sifr-capture-demand.aetT8U/evidence/`:
+
+- `cargo test -p sifr_codegen generated_rust_canonicalizer`:115PASS/0FAIL,
+  1303filtered; `canonicalizer-namespaces.log`, SHA256
+  `9da63d6dd84dcfd125198927afefc0187bf4b8b28460662e1fd924faab8a0eb9`.
+- `cargo test -p sifr_codegen implicit_format_capture`:9PASS/0FAIL,
+  1409filtered; `implicit-captures-namespaces.log`, SHA256
+  `9720aa03c7a4320a5d46c5e692a76f9fc7d9de14eb043cf3e51190cb1432a08b`.
+  Coverage includes18lexical cases,3type-namespace assertions and3native
+  rustc compile/run cases. Both filters select a nonzero set.
+- `cargo fmt --check`:PASS; `fmt-namespaces.log`, SHA256
+  `38b88b9c1d773d74259dc509a275ff8aa5d4db3fb21455d157e8afa3f90ae7c7`.
+- `python3 scripts/check_file_size_guardrails.py`:PASS3761files;
+  `file-size-namespaces.log`, SHA256
+  `ea9bdd04e66af8d9ece77d2f1d2cccfb116df7970a85b8c0c69bfed6236a213b`.
+- `git diff --check`:PASS; `diff-namespaces.log`, SHA256
+  `da304bccd48663751290caa268515bfb4ec9c885022c67bab27bbf4fda0b3e73`.
+
+Both pre-execution registrations and the two corrected earlier build failures
+remain preserved. The second registration is `registration-remediation.md`,
+SHA256 `09a5ebaa55543190a3ed30802dac86d274c83377dddd37f3ebd67b807423d5ff`.
+No baseline reproduction or first-cold-run performance qualification is claimed.
+
+### Reviews and single gate
+
+[Initial review](https://github.com/sifr-lang/sifr/pull/3746#issuecomment-5571854962)
+of `10145152b6bb11d2b26a2200eed72dca209fcdd3` and
+[remediation review](https://github.com/sifr-lang/sifr/pull/3746#issuecomment-5571944048)
+of final `17484b59f1fc3c09848d1b18df7b7a8aa3ee44c4` both returned SATISFIED with
+no blockers. Budget exhausted:1initial+1remediation,2provider requests,0retries.
+Raw final response is `../tmp/sifr-claude.2J2Cz2/response.md`, SHA256
+`b2aff2c8b71027e2452fd4efdba2a752844200a0439eea9c41b6104778b1e610`.
+Current-emission correctness was approved; latent/unreachable and safe
+over-retention follow-ups are recorded only in [#3747](https://github.com/sifr-lang/sifr/issues/3747).
+No third review or follow-up implementation was performed.
+
+The one `scripts/run_all_tests.sh --profile merge` attempt naturally FAILED
+exit1 after1250.06s. Production92/92generated graphs passed preparation;
+HIR/file-size guards passed. `guardrail_demo_emitted_freshness` then failed
+after152898ms, reporting two stale companions among264 compared pairs:
+
+- `demos/core_stdlib/emitted.rs`
+- `demos/stdlib_loading/emitted.rs`
+
+Both checked-in files are unchanged from main. The guard reported no emitter
+error, but it retains only stale paths, not the emitted content diffs. No
+baseline replay was executed and no pre-existing-failure attribution is made.
+This remains a candidate delivery/concordance omission. No refresh, assertion
+weakening, or second gate was attempted. The remaining10guards,20selected
+verification areas and2toolchain steps are UNREACHED; there is no full-profile
+PASS. Exceeded setup/wall-time budgets were advisory, not the failure cause.
+
+- Gate log `merge.17484b59f1fc3c09848d1b18df7b7a8aa3ee44c4.log`, SHA256
+  `82eb80388a2c2ca9338b6c430d9829a62ad70ffa573eda218d4e6f66863a4537`.
+- Matching supervisor `.json`, SHA256
+  `95733c203c193b0aaf9039a992da682dbfc5766559501607de3dd84fdd69f0b8`.
+- `../sifr/target/validation_lane_reports/merge.latest.json`, SHA256
+  `0f42e255b6792f58aaecd5163040b701b67f8db4efde5245a753ae31c8861043`.
+- `../sifr/target/verification/areas/generated-cargo-setup-merge.json`, SHA256
+  `d6c4636865ed3d373f2153b60bde35927d41c9e5dcea06c821223e3eaf759e02`.
+
+Storage minimum was49,291,149,312bytes free; no resource termination or cleanup.
+The owned target is approximately7.63GiB. No live build/review/watchdog handles
+remain. Final evidence is indexed by the external
+`/private/tmp/sifr-capture-demand.aetT8U/evidence/terminal.json` receipt.
+
+### Handoff and stop
+
+Later delivery dependency [#3748](https://github.com/sifr-lang/sifr/issues/3748)
+records only the exact two-companion concordance and qualification blocker.
+Its work is **not started**. The next action requires a fresh bounded owner to
+establish the exact companion diffs from this preserved main-based candidate
+and complete the newly scoped delivery qualification without silently resetting
+B14's exhausted budgets or repeating unchanged failed evidence. This session
+stops after publishing the record; no merge, successor code, or new task dispatch.
+
+B13's full `4eef8a2bb4dbc24fb7c1d1213652be379047f4b1` record remains read-only
+and unmerged; its terminal digest is still
+`28cf482158707bbc8635c726f25ab0e3449d3566bd8cdabee507447c5e07c441`.
+No B13/integration implementation was imported. Original12K remains4FAILED+
+1RESOURCE_TERMINATED143/0PASS with its reviews exhausted. PR3717/corpus48,
+B13 continuation,12D/12E/12F/retained12/12A remain outside this delivery.
+
 ## Current bounded owner: implicit format capture demand (2026-09-07)
 
 Initial candidate `10145152b6bb11d2b26a2200eed72dca209fcdd3` is pushed in draft
