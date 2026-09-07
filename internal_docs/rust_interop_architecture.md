@@ -1365,7 +1365,11 @@ The `opaque_resource_matrix` runtime certification consumes a generated
 `Handle<T>` through an owned async bridge on the generated current-thread
 runtime. Its locked package binds cleanup handles before spawning ephemeral
 HTTP, Redis RESP, and PostgreSQL wire-protocol servers, and uses a unique
-temporary database for bundled `rusqlite`. The bridge exercises one
+temporary database for bundled `rusqlite`. SQLite setup creates the `evidence`
+table, opens and commits a savepoint named `sifr; DROP TABLE evidence; --`,
+then the operation reads the original row with `SELECT value FROM evidence`.
+This exercises Rusqlite's quoted savepoint identifier handling and confirms
+that the SQL-shaped name leaves the table intact. The bridge exercises one
 deterministic operation per crate, then proves shared-alias closed-state
 visibility through a real operation, stable double close through an owned
 generated `close=async_close` member routed to the package bridge, redacted
@@ -1670,15 +1674,29 @@ lifecycle runtime claim.
 
 ## Trust Policy
 
-Rust interop extends existing native trust policy with Rust-specific evidence:
+Rust interop extends existing native trust policy with Rust-specific evidence.
+For example, the locked `resource_lifecycle_runtime` package declares the
+build-script crates and emitted native libraries for Reqwest's AWS-LC provider
+and bundled Rusqlite:
 
 ```toml
 [trust]
-rust-build-scripts = ["openssl-sys", "tokenizer_backend"]
+rust-build-scripts = ["aws-lc-sys", "libsqlite3-sys"]
+native-links = ["aws_lc_0_44_0_crypto", "sqlite3"]
+```
+
+These entries are the native portion of that package's trust policy; its
+bridge-specific `rust-no-panic` entries are also required. The
+`reqwest_loopback_runtime` package declares only `aws-lc-sys` and
+`aws_lc_0_44_0_crypto` for its native portion. Other trust categories use the
+following syntax, with entries supplied by the package's actual declarations:
+
+```toml
+[trust]
+rust-build-scripts = ["tokenizer_backend"]
 rust-proc-macros = ["serde_derive"]
-native-links = ["openssl"]
 unsafe-rust-bridges = ["src/bridges/tokenizer.rs"]
-build-env = ["OPENSSL_DIR"]
+build-env = ["TOKENIZER_DATA_DIR"]
 rust-no-panic = ["crc32fast.hash", "bridge.hash.fast_hash"]
 rust-panic-abort = ["legacy_backend.run"]
 ```
@@ -1689,7 +1707,7 @@ Trust gates:
 - procedural macros,
 - native links reported through Cargo `links` metadata or trusted build-script output,
 - unsafe code in first-party bridge files,
-- environment variables consumed by build scripts,
+- environment variables explicitly named by Rust declarations through `build_env`,
 - no-panic assertions through `rust-no-panic`,
 - process-aborting panic profiles through `rust-panic-abort`,
 - optional strict allowlist for Rust crate roots.
@@ -1714,7 +1732,34 @@ Post-execution evidence is allowed only after the build script or proc macro has
 - generated native or bindgen artifacts,
 - native library names discovered through trusted build output.
 
-Native trust names native link identities such as `openssl` or `rdkafka`, not Rust sys crates. The sys crate that runs build code must be listed in `rust-build-scripts`; the native link it exposes must be listed in `native-links`.
+Native trust names Cargo link identities and emitted libraries, such as
+`sqlite3` or `aws_lc_0_44_0_crypto`, separately from Rust build-script crates
+such as `libsqlite3-sys` or `aws-lc-sys`. Direct dependency metadata and
+post-build emitted links are distinct evidence surfaces; an allowlisted
+build-script crate does not automatically authorize every library it emits.
+
+The `build-env` gate checks explicitly declared `build_env` requirements. It
+does not discover every environment read inside a trusted dependency's build
+script or isolate its process environment. The locked AWS-LC Sys 0.44.0 build
+script still reads compiler and flag settings such as `CC` and `CFLAGS`, their
+target-specific forms, and `AWS_LC_SYS_*` controls, including
+`AWS_LC_SYS_CMAKE_BUILDER`. Upstream builder/toolchain autodetection remains
+active when those controls are absent. AWS-LC also enables system-library
+autodetection by default: without `AWS_LC_SYS_SYSTEM_DIR`, it probes
+`OPENSSL_DIR`, `OPENSSL_INCLUDE_DIR` / `OPENSSL_LIB_DIR`, then pkg-config.
+It adopts only a qualifying AWS-LC install with usable bindings; otherwise it
+builds the bundled source. `AWS_LC_SYS_USE_SYSTEM=0` disables that automatic
+detection, but the checked-in Reqwest fixtures do not impose this setting.
+Sifr's Cargo command setup forces SQLx offline and removes `DATABASE_URL`; it
+does not clear the general inherited build environment. Consequently,
+locked/offline resolution and the exact native-link allowlist do not certify
+an environment-independent or always-bundled AWS-LC build. The allowlist still
+rejects any resulting emitted native library outside its declared names.
+The implementation boundaries are
+[`rust_interop_trust.rs`](../crates/sifr_driver/src/build/rust_interop_trust.rs),
+[`rust_interop_sqlx_offline.rs`](../crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs),
+and the locked [AWS-LC build script](../vendor/aws-lc-sys/builder/main.rs), with
+the detection policy documented in its [README](../vendor/aws-lc-sys/README.md).
 
 Trust entries that name Rust call targets use canonical Sifr dotted target paths, not lowered Rust `::` paths. For direct bindings this is the target written in `@rust(...)`, such as `crc32fast.hash`; for package-local bridges this is the Sifr decorator target such as `bridge.hash.fast_hash`; for aborting legacy integrations this is the canonical target such as `legacy_backend.run`. Diagnostics point from the trust entry back to the matching decorator span.
 
@@ -2031,7 +2076,7 @@ of the Rust interop scope.
 
 Feature-sensitive fixtures must pin Cargo features in `rust_interop_fixture_matrix.json`:
 
-- `reqwest`: `default-features = false`, `features = ["rustls", "json"]`; do not enable `blocking` in async fixtures.
+- `reqwest`: `default-features = false`, `features = ["rustls", "json"]`; do not enable `blocking` in async fixtures. In the pinned 0.13.4 release, `rustls` enables AWS-LC and the platform certificate verifier. Client construction uses an installed Rustls provider when present, otherwise the compiled AWS-LC provider; this is separate from build-tool environment autodetection.
 - `tokio-postgres`: `default-features = false`, `features = ["runtime"]`; TLS is not part of the primary opaque-resource fixture.
 - `rusqlite`: `default-features = false`, `features = ["bundled"]`; the Rust interop scope certifies only the bundled native SQLite provider.
 - `redis`: `default-features = false`, `features = ["connection-manager", "tokio-comp"]`; the opaque-resource fixture exercises the bounded connection manager, and pub/sub fixtures use loopback service infrastructure.
@@ -2044,6 +2089,21 @@ Feature-sensitive fixtures must pin Cargo features in `rust_interop_fixture_matr
 - `flate2`: `default-features = false`, `features = ["rust_backend"]`.
 - `candle`: CPU-only default backend; GPU and accelerator backend features are out of scope for Rust interop.
 - `prost-build`: use default features over a checked-in `.proto` input; generated output must be deterministic.
+
+The optional dependencies in
+[`sifr_rust_interop_catalog`](../crates/sifr_rust_interop_catalog/Cargo.toml)
+retain the certification graph in the workspace lock without enabling it in
+ordinary compiler builds. The standalone Reqwest release anchor is
+[`vendor/reqwest-0.13.4`](../vendor/reqwest-0.13.4/Cargo.toml).
+[`reqwest_dependency_version`](../crates/sifr_stdlib_manifest/tests/reqwest_dependency_version.rs)
+checks that package's version, registry checksum field, upstream commit
+metadata, and canonical provider feature graph, alongside maintained
+declarations and selected locks. It does not build a standalone Reqwest
+runtime or verify every vendored file against its checksum. The separate
+[`rusqlite_dependency_version`](../crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs)
+check inspects declarations, locks, fixture source, and native-trust entries;
+execution evidence for the savepoint behavior belongs to the opaque-resource
+runtime certification described above.
 
 Runtime-service fixtures must declare whether they are compile/probe-only, loopback-service backed, or in-process stub backed. `reqwest`, `tokio-tungstenite`, and `notify` fixtures should prefer loopback or local filesystem inputs. `tokio-postgres` and `redis` fixtures require explicit local service configuration and must be skippable only by fixture-tier policy, not by silently degrading the interop behavior under test.
 
