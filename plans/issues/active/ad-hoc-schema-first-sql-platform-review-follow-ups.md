@@ -55,6 +55,26 @@ remediation review. These findings do not reopen the completed platform phase.
 
 ## Coverage registry blocker observed during naming cleanup (2026-09-05)
 
+### SQL registry delivery registration (2026-09-07)
+
+Item **12K-B16**, issue [#3749](https://github.com/sifr-lang/sifr/issues/3749),
+owns the bounded nine-package/thirteen-target registry reconciliation and stale
+PostgreSQL `lib` to `rlib` replacement. Its canonical scope, isolated main-based
+clone, exact base and three named checks are registered at the top of
+`ad-hoc-emitted-rust-excellence.md`. Complete metadata inventory is prepared
+from actual main; previous stack-only qualification is not reused as a pass.
+Two SQL negative regressions join the existing readiness self-tests. All prior
+coverage policy and checks remain intact; no compiler, lockfile or gate changes.
+Live-server targets are explicit `test-fixture` inputs to the existing live SQL
+adapters, rather than claims of execution in the offline nightly profile.
+
+The B15 recurrence on `4a0a03f430f1ad87b080a6172bc46209082e955a` failed its one
+merge gate with the same 23 registry diagnostics (readiness 3/4). Its raw
+terminal remains at `/private/tmp/sifr-companion.KIogHV/evidence/terminal.json`,
+SHA256 `657424e6ab98d7adaf150062f34f91abbba350d806cad23e3eacb73c9f6ffae7`.
+B14/B15 PR #3746 remains unmerged. Their historical review/gate counts are
+unchanged by this separate registry delivery. No successor work starts here.
+
 The repository naming cleanup ran `scripts/run_all_tests.sh` once. The gate
 failed in coverage-matrix readiness with nine unclassified SQL packages,
 unclassified SQL/host-tool test targets, an unclassified PostgreSQL `rlib`,

@@ -2,6 +2,98 @@
 
 Status: active
 
+## Current orchestration: B15 terminal; SQL registry prerequisite12K-B16 (2026-09-07)
+
+Herschel is CLOSED (native terminal received; subsequent close reports not found).
+B15/#3748 and B14/#3745 remain unmerged in draft PR3746. Candidate
+`4a0a03f430f1ad87b080a6172bc46209082e955a`, normally pushed record
+`cdc8354aec03d505d89cef09dacd71e4f43723c9`, preserved read-only in
+`/private/tmp/sifr-companion.KIogHV/sifr`. Authenticated terminal
+`/private/tmp/sifr-companion.KIogHV/evidence/terminal.json` SHA256
+`657424e6ab98d7adaf150062f34f91abbba350d806cad23e3eacb73c9f6ffae7`.
+All six named checks PASS, including264 fresh companions and both native demos.
+The companion delta restores only approved constant declarations. B15 initial
+Opus SATISFIED,1provider/0retries/0remediation; B14's exhausted two reviews reused.
+
+B15's sole merge-profile gate FAILEDexit1 after1170.64s. Production92graphs,
+13guards, RustInterop10 PASS; coverage readiness3/4PASS, registry FAIL with
+9missing SQL packages,13missing targets,1stale PostgreSQLlib versus rlib.
+Remaining18areas/2toolchain UNREACHED. SQL inputs unchanged from main does not
+constitute a baseline replay. No second gate, cleanup or resource termination.
+Raw log SHA256 `d6d70bfacf3d1a8078348a393ea27e222bbee7c93880ea9894f7c8be4a85f204`.
+Terminal https://github.com/sifr-lang/sifr/pull/3746#issuecomment-5572833082.
+
+Next ready **12K-B16 / [#3749](https://github.com/sifr-lang/sifr/issues/3749)**,
+owner SQL coverage registry, also recorded in
+`plans/issues/active/ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+Dependencies: closed B15 session, complete terminal diagnostics, actual main
+SQL graph. Standing user authorization covers implementation, bounded tests,
+exact-SHA Opus, normal PR/push/merge and records; no further blanket permission.
+
+Scope: independently deliver truthful complete SQL package/target classifications
+in `verification/areas/coverage_matrix/data/cargo_metadata_classification.json`
+against fetched actual main. Preserve coverage requirements and negative checks;
+no omitted packages/targets, disabled assertions, policy relaxation, compiler,
+Cargo manifest/lockfile changes or unqualified stack import. Inspect earlier
+approved registry lineage (integrated blob6823a657db7d8660cafe86fcfd2b71b21a529cd3,
+12B/B4 records) for reusable work, but qualify against actual main rather than
+claiming stack-only evidence applies. B4's taxonomy fix is a separate mechanism
+and is not permission to import its entire integration ancestry. Any required
+additional mechanism receives its own later owner and terminal handoff.
+
+Use a fresh independent owned main-based clone, codex branch, own temporary
+paths/caches, exact submodules where required. Parent/predecessor checkouts,
+indices, caches and all raw evidence remain read-only. Finish complete bounded
+registry implementation before tests. Named checks:
+`uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness --result-json target/verification/areas/sql-registry-readiness.json`;
+`python3 scripts/check_file_size_guardrails.py`; `git diff --check`.
+The readiness command includes strict full registry, profile assignment,
+negative self-tests and taxonomy: require all four PASS, no duplicate standalone
+reruns. Register any necessary bounded SQL-specific negative regressions and
+exact command adaptation before execution. Record metadata-to-registry coverage
+concordance for all nine packages,13targets and stale lib replacement; do not
+inflate partial prefixes into complete validation. Preparation is not a gate.
+
+One B16 initial exact-SHA Opus plus at most one remediation; no phase review.
+Registry/helper/docs-only delta has zero Sifr create-PR/merge gates under user
+rules. Compiler/lockfile/fixture/workflow changes would require new scoped
+authority and one exact-SHA merge-profile gate, not silent scope expansion.
+Normal merge to actual main only after named checks/review pass, then verify
+ancestry, update3749 and both owner records, return PR/SHA/evidence and STOP.
+Preserve historical B14/B15 failed gates and original12K4FAILED+1RESOURCE/
+0PASS; this metadata prerequisite resets none of their review/gate counters.
+
+After B16 delivery: fresh bounded B15 continuation preserves fullcdc835 record,
+normally integrates delivered prerequisite and qualifies changed final delivery
+candidate; never blindly repeats the failed SHA or reviews unchanged B14 code.
+Then B13 full4eef stack, original12K,12D/12E/12F,retained12,docs-only12A remain.
+No implementation or whole-phase closure is claimed by this registration.
+
+### B16 owned execution registration
+
+Sole implementer owns `/private/tmp/sifr-sql-registry.xaAOLM/sifr`, branch
+`codex/sql-coverage-registry-3749`, fetched main base
+`06ea86334b72f49f5aab250a64498ee955ec9331`. Parent and predecessor files,
+indices and caches remain read-only. B15 terminal SHA256 authenticated.
+Only registry classifications, bounded readiness self-tests and these owner
+records may change. Earlier registry blob `6823a657db7d8660cafe86fcfd2b71b21a529cd3`
+matches actual main's 37-package metadata inventory; no stack ancestry is imported.
+Seven ignored live-server test targets are assigned `test-fixture`, matching
+their explicit SQL live-matrix adapters. Unlike the inherited registry's
+`nightly` labels, this does not claim that main's offline nightly profile runs
+live suites. The SQLite runtime probe is also an explicit test fixture.
+The existing checker represents a Cargo target by its first kind (`rlib` for
+component targets that also emit `cdylib`), with no change to that mechanism.
+
+Named checks are exactly the three above. Register two SQL negative regressions
+inside the existing readiness self-test invocation: wrong component target kind
+and missing SQL test target. No separate regression command or test rerun.
+Execution uses owned `caller-tmp`, `uv-cache`, and `pycache` directories under
+`/private/tmp/sifr-sql-registry.xaAOLM`, with `CARGO_TARGET_DIR` unset.
+Ruff is initialized at main's exact gitlink solely for locked metadata loading.
+Implementation will be committed before these checks and exact-SHA Opus review.
+Registry/helper/docs-only delivery runs zero create-PR or merge-profile gates.
+
 ## Current bounded owner: 12K-R2 qualification capacity (2026-09-07)
 
 12K-R2 / [owner #3742](https://github.com/sifr-lang/sifr/issues/3742) owns only
