@@ -2,6 +2,58 @@
 
 Status: active
 
+## B16 terminal: registry preserved; profile prerequisite (2026-09-07)
+
+**12K-B16 / #3749 is blocked, not merged.** Draft
+[#3751](https://github.com/sifr-lang/sifr/pull/3751), branch
+`codex/sql-coverage-registry-3749`, preserves exact candidate
+`a7ea5b8106068ee9394d82dd46e8e95bc1263a36` on actual main base
+`06ea86334b72f49f5aab250a64498ee955ec9331`. Review SHA and merge SHA: none.
+The separate record commit containing this terminal is published on the issue.
+
+Complete locked metadata concordance covers 37 packages and 117 targets:
+all nine missing packages, thirteen missing existing-package targets and stale
+PostgreSQL lib-to-rlib replacement are resolved. Registry compiler classifications
+remain truthful. Seven ignored live-server targets and the SQLite probe have
+explicit test-fixture ownership. No policy/checker enforcement was weakened.
+
+Exactly one readiness invocation on the candidate completed **3/4 PASS**:
+profile assignment19, all26 negative cases and taxonomy PASS; strict registry
+FAIL with only missing merge crate-test membership for `sifr_sql_mysql` and
+`sifr_sql_sqlite`. Original23 diagnostics are cleared, not a full readiness pass.
+File-size PASS3759/limit900 and diff-check PASS. No tests repeated.
+
+Later prerequisite **12K-B17 / [#3750](https://github.com/sifr-lang/sifr/issues/3750)**,
+owner SQL verification / compiler-verification, is recorded only, not started.
+`verification/profiles/merge.json:44` lacks those two package memberships.
+Each requires unique package/command identity, `full` mode, blocking status and
+`executed_in_merge: true`, validated by `profiles.py:248` and executed through
+`profile_runner.py:292`; these are configuration semantics, not prior test evidence.
+Its issue registers exact profile check/plan, two crate-test, complete readiness,
+file-size and diff acceptance commands. Profile JSON and verification Python
+helpers are metadata/helpers, not `.github/workflows` workflow files: an owner
+limited to those paths remains zero-gate under the user's explicit rule.
+Standing authorization allows parent assignment without blanket permission.
+
+Evidence root `/private/tmp/sifr-sql-registry.xaAOLM/evidence/`:
+
+- `checks.a7ea5b8106068ee9394d82dd46e8e95bc1263a36.json` SHA256
+  `6273eb6aaa065108b0e7f6178c5de5941c9332c68d78b05dfe586d1c7e68edcb`.
+- `readiness.a7ea5b8106068ee9394d82dd46e8e95bc1263a36.log` SHA256
+  `faac853b79b31e050fac2f66c6c1ea98c91b79a7bc13140eaa2832f0f048d0f3`.
+- Owned `sifr/target/verification/areas/sql-registry-readiness.json` SHA256
+  `f0528ade8b319abf92a27643467b0ac09bff66bf3b36a259981597b326796244`.
+- `concordance.json` SHA256
+  `5170ac0706a4e7ad1f37c36218add18f2b03ea788bdddc88b7b1853325e51396`.
+- `cargo-metadata.main.json` SHA256
+  `3bd38c04cbb68dc67423b5451a00ff11c938f35e8f0ce322e43df28de3d740df`.
+
+Counts: three named checks once each; reviews0/providers0/retries0/remediation0;
+create-PR gates0/merge gates0/merges0. Validation failed before Opus review.
+No live handles remain at terminal. Parent/predecessor checkout/index/cache and
+historical B14/B15/original12K failures remain untouched. Preserve the full
+candidate and this record; parent owns later assignment. This worker STOPPED.
+
 ## Current orchestration: B15 terminal; SQL registry prerequisite12K-B16 (2026-09-07)
 
 Herschel is CLOSED (native terminal received; subsequent close reports not found).

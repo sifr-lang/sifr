@@ -57,6 +57,26 @@ remediation review. These findings do not reopen the completed platform phase.
 
 ### SQL registry delivery registration (2026-09-07)
 
+Terminal: B16 #3749 is **blocked, not merged**, preserved in draft
+[#3751](https://github.com/sifr-lang/sifr/pull/3751), candidate
+`a7ea5b8106068ee9394d82dd46e8e95bc1263a36`, main base
+`06ea86334b72f49f5aab250a64498ee955ec9331`. All original23 registry diagnostics
+are resolved against all37 packages/117 targets, but one exact-SHA readiness
+run is3/4PASS: strict registry now identifies missing merge crate-test membership
+for `sifr_sql_mysql` and `sifr_sql_sqlite`. Profile19/negative26/taxonomy PASS;
+file-size3759 and diff PASS. No review, gate or merge was attempted.
+
+Later owner **12K-B17 / [#3750](https://github.com/sifr-lang/sifr/issues/3750)**,
+SQL verification / compiler-verification, owns the two entries in
+`verification/profiles/merge.json:44`. Preserve compiler classifications and
+require blocking full-mode executed memberships with exact package commands.
+The later issue records concrete acceptance commands and distinguishes profile
+metadata/verification helpers from workflow files under the zero-gate rule.
+No later implementation started. Full terminal/evidence hashes are at the top
+of `ad-hoc-emitted-rust-excellence.md`; raw evidence remains under
+`/private/tmp/sifr-sql-registry.xaAOLM/evidence/`. B14/B15/original12K counters
+and draft #3746 remain unchanged. This worker stops at the preserved handoff.
+
 Item **12K-B16**, issue [#3749](https://github.com/sifr-lang/sifr/issues/3749),
 owns the bounded nine-package/thirteen-target registry reconciliation and stale
 PostgreSQL `lib` to `rlib` replacement. Its canonical scope, isolated main-based
