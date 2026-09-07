@@ -2,6 +2,39 @@
 
 Status: active
 
+## 12K-R3 closed: bounded storage recovery delivered (2026-09-07)
+
+[PR #3754](https://github.com/sifr-lang/sifr/pull/3754) merged normally into
+actual main at `156157242b0995c01c4fff03575624b5c471c0d8`,
+2026-09-07T17:54:33Z. Resource owner [#3753](https://github.com/sifr-lang/sifr/issues/3753)
+is CLOSED. Reviewed/qualified candidate
+`ee2cb8ec7455f008e94d962a88d502e07d2d120a`, base
+`0b97b3a3f1dd3f93bc724f75e1e40240f15ff942`. Candidate ancestry on fetched
+main and identical candidate/merge trees were verified. This post-merge update
+is a separate two-document record on `codex/item12k-r3-storage`.
+
+Named resource acceptance PASS:53,096protectedfiles/396symlinkidentities,
+336inheritedR2destinations/26newR3relocations, sixownerHEAD/index/source/
+96top-levelgitlinks plus nestedstate, unchanged parenttwo dirtyMDidentities,
+process nonuse and measured headroom. File-size3759 and whitespace PASS.
+Actual post-removal free73,135,403,008bytes (68.113GiB), net observed recovery
+62,076,620,800bytes (57.813GiB); acceptance sample73,133,318,144bytes.
+The65GiB estimate includes8GiB safety and is not a reservation or compiler PASS.
+Exactly twelve literal deps/incremental cache directories were removed inside
+the six authorized roots; all roots and other evidence remain intact. Rebuild
+recovers caches; original evidence bytes survive in the published R3 maps.
+Full literal paths/maps/digests are in the [resource record](ad-hoc-validation-storage-recovery-12k-r3.md).
+
+[Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3754#issuecomment-5574154649)
+SATISFIED, blocking0, initial1/provider1/retry0/remediation0, Sifr gates0.
+Raw response SHA256 `542113b4a4533d3451b608755ab9439595dc498179db95fabe96820204c60dd4`.
+Its editorial dispatch-sentence suggestion is resolved in this record-only
+update; existing B13/#3744 owns future headroom remeasurement and unmeasured
+late-lane uncertainty. No new mechanism or compiler work was started.
+External terminal `/private/tmp/sifr-storage-r3.TigHgT/terminal.json` binds the
+post-merge record SHA and complete evidence. Blocker: NONE. Next action: STOP.
+All original12K/B13/B14/B15 failure/review caps remain unchanged; no phase closure.
+
 ## Current orchestration: B15 terminal; storage12K-R3 then B13 combined delivery (2026-09-07)
 
 Schrodinger is CLOSED. B15 PR3746 remains OPEN DRAFT, normally pushed record
@@ -103,6 +136,7 @@ relocation maps/digests, source preservation, PR/SHA/evidence/blocker or none.
 No B13 code/testing/gate or further item starts in R3. Phase remains active;
 12D/12E/12F, retained12 and docs-only12A remain after combined delivery.
 Dispatched sole R3 worker Avicenna (`01a07ce4-7434-73e2-8319-c8ac3dd21111`),
+gpt-6-astra high, no parent history, exact base prompt and full bounded safety onboarding.
 
 ### 12K-R3 owned registration
 
