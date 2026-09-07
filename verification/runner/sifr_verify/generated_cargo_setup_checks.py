@@ -225,7 +225,7 @@ def clean_cache_checks() -> None:
                 "runtime_and_stdlib": True, "negative_checks": ["empty-cache", "lock-drift"],
                 "cargo_home": str(cargo_home), "setup_report": str(report_path),
                 "setup_report_sha256": hashlib.sha256(report_path.read_bytes()).hexdigest()}
-    destination = REPO_ROOT / "target/verification/areas/item12k-b11-clean-cache.json"
+    destination = REPO_ROOT / "target/verification/areas/generated-cargo-clean-cache.json"
     destination.write_text(json.dumps(evidence, indent=2) + "\n")
     print(json.dumps(evidence, indent=2))
 
