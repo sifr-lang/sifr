@@ -1,14 +1,14 @@
 //! Interpret the working directory's gitignore at its own path boundary.
 
 use super::check_and_package_commands::formatter_cli_diagnostic;
-use ignore::gitignore::{Gitignore, GitignoreBuilder};
+use ignore::gitignore::GitignoreBuilder;
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_frontend::SourceProvider;
 use std::path::{Component, Path, PathBuf};
 
 pub(super) struct FormatterGitignore {
     root: PathBuf,
-    matcher: Gitignore,
+    rules: Vec<String>,
 }
 
 impl FormatterGitignore {
@@ -20,6 +20,7 @@ impl FormatterGitignore {
         let root = normalize_path(cwd);
         let path = root.join(".gitignore");
         let mut builder = GitignoreBuilder::new(&root);
+        let mut rules = Vec::new();
         if enabled && provider.is_file(&path) {
             let source = provider.read_file(&path).map_err(|error| {
                 vec![formatter_cli_diagnostic(format!(
@@ -41,15 +42,12 @@ impl FormatterGitignore {
                             index + 1
                         ))]
                     })?;
+                if !line.is_empty() && !line.starts_with('#') {
+                    rules.push(line.to_string());
+                }
             }
         }
-        let matcher = builder.build().map_err(|error| {
-            vec![formatter_cli_diagnostic(format!(
-                "could not compile formatter gitignore {}: {error}",
-                path.display()
-            ))]
-        })?;
-        Ok(Self { root, matcher })
+        Ok(Self { root, rules })
     }
 
     pub(super) fn is_ignored(
@@ -57,7 +55,7 @@ impl FormatterGitignore {
         path: &Path,
         provider: &mut impl SourceProvider,
     ) -> Result<bool, Vec<RenderedDiagnostic>> {
-        if self.matcher.is_empty() {
+        if self.rules.is_empty() {
             return Ok(false);
         }
         let absolute = self.root.join(path);
@@ -75,19 +73,54 @@ impl FormatterGitignore {
                 parent.display()
             ))]
         })?;
-        Ok(self.matches_resolved_path(&parent.join(name)))
+        self.matches_resolved_path(&parent.join(name))
     }
 
-    fn matches_resolved_path(&self, path: &Path) -> bool {
+    fn matches_resolved_path(&self, path: &Path) -> Result<bool, Vec<RenderedDiagnostic>> {
         let absolute = normalize_path(&self.root.join(path));
         // A working-directory gitignore has no authority over an outside target.
         let Ok(relative) = absolute.strip_prefix(&self.root) else {
-            return false;
+            return Ok(false);
         };
-        self.matcher
+        // Skip automaton construction only when a mandatory literal cannot
+        // occur in this path or its parents. The gitignore engine still owns
+        // all possible matches and their ordering.
+        let mut builder = GitignoreBuilder::new(&self.root);
+        let mut relevant = false;
+        for rule in &self.rules {
+            if could_match(rule, relative) {
+                relevant = true;
+                builder.add_line(None, rule).map_err(ignore_error)?;
+            }
+        }
+        if !relevant {
+            return Ok(false);
+        }
+        Ok(builder
+            .build()
+            .map_err(ignore_error)?
             .matched_path_or_any_parents(relative, false)
-            .is_ignore()
+            .is_ignore())
     }
+}
+
+fn ignore_error(error: ignore::Error) -> Vec<RenderedDiagnostic> {
+    vec![formatter_cli_diagnostic(format!(
+        "could not compile formatter gitignore: {error}"
+    ))]
+}
+
+fn could_match(rule: &str, path: &Path) -> bool {
+    let Some(path) = path.to_str() else {
+        return true;
+    };
+    if rule.contains(['\\', '[', ']', '{', '}']) {
+        return true;
+    }
+    let rule = rule.trim_end();
+    let rule = rule.strip_prefix('!').unwrap_or(rule);
+    rule.split(['*', '?', '/'])
+        .all(|literal| path.contains(literal))
 }
 
 fn normalize_path(path: &Path) -> PathBuf {
@@ -125,28 +158,97 @@ mod tests {
             PathBuf::from("project/main.sifr"),
             PathBuf::from("./project/../project/main.sifr"),
         ] {
-            assert!(!ignore.matches_resolved_path(&path), "{}", path.display());
+            assert!(
+                !ignore.matches_resolved_path(&path).unwrap(),
+                "{}",
+                path.display()
+            );
         }
-        assert!(ignore.matches_resolved_path(&root.join("tmp/main.sifr")));
-        assert!(ignore.matches_resolved_path(Path::new("project/a.generated.sifr")));
-        assert!(!ignore.matches_resolved_path(&dir.path().join("outside/a.generated.sifr")));
-        assert!(!ignore.matches_resolved_path(Path::new("../outside/a.generated.sifr")));
+        assert!(
+            ignore
+                .matches_resolved_path(&root.join("tmp/main.sifr"))
+                .unwrap()
+        );
+        assert!(
+            ignore
+                .matches_resolved_path(Path::new("project/a.generated.sifr"))
+                .unwrap()
+        );
+        assert!(
+            !ignore
+                .matches_resolved_path(&dir.path().join("outside/a.generated.sifr"))
+                .unwrap()
+        );
+        assert!(
+            !ignore
+                .matches_resolved_path(Path::new("../outside/a.generated.sifr"))
+                .unwrap()
+        );
     }
 
     #[test]
     fn formatter_discovery_uses_globs_components_and_negation() {
         let dir = tempfile::tempdir().unwrap();
         let ignore = matcher(dir.path(), "build/\n*.sifr\n!keep.sifr\n", true);
-        assert!(ignore.matches_resolved_path(Path::new("nested/build/main.sifr")));
-        assert!(ignore.matches_resolved_path(Path::new("nested/main.sifr")));
-        assert!(!ignore.matches_resolved_path(Path::new("nested/keep.sifr")));
-        assert!(!ignore.matches_resolved_path(Path::new("rebuild/readme.txt")));
+        assert!(
+            ignore
+                .matches_resolved_path(Path::new("nested/build/main.sifr"))
+                .unwrap()
+        );
+        assert!(
+            ignore
+                .matches_resolved_path(Path::new("nested/main.sifr"))
+                .unwrap()
+        );
+        assert!(
+            !ignore
+                .matches_resolved_path(Path::new("nested/keep.sifr"))
+                .unwrap()
+        );
+        assert!(
+            !ignore
+                .matches_resolved_path(Path::new("rebuild/readme.txt"))
+                .unwrap()
+        );
     }
 
     #[test]
     fn formatter_discovery_disabled_ignores_select_all_files() {
         let dir = tempfile::tempdir().unwrap();
         let ignore = matcher(dir.path(), "*\n", false);
-        assert!(!ignore.matches_resolved_path(&dir.path().join("main.sifr")));
+        assert!(
+            !ignore
+                .matches_resolved_path(&dir.path().join("main.sifr"))
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn formatter_discovery_literal_filter_agrees_with_complete_engine() {
+        let dir = tempfile::tempdir().unwrap();
+        let rules = "/tmp/\n*.sifr\n!keep.sifr\nfoo/**/bar\n[ab].txt\n\\#name\n{one,two}.rs\n";
+        let ignore = matcher(dir.path(), rules, true);
+        let mut full = GitignoreBuilder::new(dir.path());
+        for rule in rules.lines() {
+            full.add_line(None, rule).unwrap();
+        }
+        let full = full.build().unwrap();
+        for name in [
+            "tmp/a.sifr",
+            "keep.sifr",
+            "other/a.sifr",
+            "foo/x/bar/baz",
+            "a.txt",
+            "#name",
+            "one.rs",
+            "unknown.txt",
+        ] {
+            let path = Path::new(name);
+            assert_eq!(
+                ignore.matches_resolved_path(path).unwrap(),
+                full.matched_path_or_any_parents(path, false).is_ignore(),
+                "{name}"
+            );
+        }
     }
 }
