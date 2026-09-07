@@ -8,7 +8,12 @@ use std::path::{Component, Path, PathBuf};
 
 pub(super) struct FormatterGitignore {
     root: PathBuf,
-    rules: Vec<String>,
+    rules: Vec<Rule>,
+}
+
+struct Rule {
+    source: String,
+    mandatory_literal: Option<String>,
 }
 
 impl FormatterGitignore {
@@ -43,7 +48,10 @@ impl FormatterGitignore {
                         ))]
                     })?;
                 if !line.is_empty() && !line.starts_with('#') {
-                    rules.push(line.to_string());
+                    rules.push(Rule {
+                        source: line.to_string(),
+                        mandatory_literal: mandatory_literal(line),
+                    });
                 }
             }
         }
@@ -90,7 +98,7 @@ impl FormatterGitignore {
         for rule in &self.rules {
             if could_match(rule, relative) {
                 relevant = true;
-                builder.add_line(None, rule).map_err(ignore_error)?;
+                builder.add_line(None, &rule.source).map_err(ignore_error)?;
             }
         }
         if !relevant {
@@ -110,17 +118,24 @@ fn ignore_error(error: ignore::Error) -> Vec<RenderedDiagnostic> {
     ))]
 }
 
-fn could_match(rule: &str, path: &Path) -> bool {
-    let Some(path) = path.to_str() else {
-        return true;
-    };
+// Compute this necessary condition once, rather than rescanning every rule
+// for each selected source. Escaped or compound syntax stays with the engine.
+fn mandatory_literal(rule: &str) -> Option<String> {
     if rule.contains(['\\', '[', ']', '{', '}']) {
-        return true;
+        return None;
     }
     let rule = rule.trim_end();
     let rule = rule.strip_prefix('!').unwrap_or(rule);
     rule.split(['*', '?', '/'])
-        .all(|literal| path.contains(literal))
+        .max_by_key(|literal| literal.len())
+        .map(str::to_string)
+}
+
+fn could_match(rule: &Rule, path: &Path) -> bool {
+    match (&rule.mandatory_literal, path.to_str()) {
+        (Some(literal), Some(path)) => path.contains(literal),
+        _ => true,
+    }
 }
 
 fn normalize_path(path: &Path) -> PathBuf {
@@ -226,7 +241,7 @@ mod tests {
     #[test]
     fn formatter_discovery_literal_filter_agrees_with_complete_engine() {
         let dir = tempfile::tempdir().unwrap();
-        let rules = "/tmp/\n*.sifr\n!keep.sifr\nfoo/**/bar\n[ab].txt\n\\#name\n{one,two}.rs\n";
+        let rules = "/tmp/\n*.sifr\n!keep.sifr\nfoo/**/bar\n[ab].txt\n\\#name\n{one,two}.rs\né?*.log\nspace\\ \n";
         let ignore = matcher(dir.path(), rules, true);
         let mut full = GitignoreBuilder::new(dir.path());
         for rule in rules.lines() {
@@ -242,6 +257,10 @@ mod tests {
             "#name",
             "one.rs",
             "unknown.txt",
+            "other/foo/x/bar/a.txt",
+            "éx.log",
+            "space ",
+            "nested/space ",
         ] {
             let path = Path::new(name);
             assert_eq!(
