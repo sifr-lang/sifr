@@ -2,6 +2,53 @@
 
 Status: active
 
+## In progress: 12K-B15 companion concordance delivery (2026-09-07)
+
+[Owner3748](https://github.com/sifr-lang/sifr/issues/3748) continues bounded
+delivery through existing [PR3746](https://github.com/sifr-lang/sifr/pull/3746).
+Independent owned clone `/private/tmp/sifr-companion.KIogHV/sifr` starts from
+complete B14 terminal record `20632a5bea2dca841bb4685b4343ad4132ec52e9`.
+Fetched main `06ea86334b72f49f5aab250a64498ee955ec9331` is its ancestor.
+All eight inherited paths are preserved; compiler/tests/manifest/lockfile
+remain identical to approved `17484b59f1fc3c09848d1b18df7b7a8aa3ee44c4`.
+No B13, original12K integration, or excluded retainedItem12 code is imported.
+
+The exact approved compiler was built with pinned Rust1.98.0 after initializing
+the checkout's pinned submodules. The initial missing-submodule preparation
+failure is preserved externally; it was not a validation gate. Its fresh output
+adds only the missing `PI` and `E` support constants in core_stdlib and `PI` in
+stdlib_loading, with their existing generated exact-constant annotations.
+These declarations satisfy existing implicit format captures in the companions
+(`pi = {PI}`, `e = {E}`, and `{PI}`). Only those two faithful generated outputs
+are updated. Demo inputs, compiler, lockfile, lint policy, selections and
+baselines are unchanged. This establishes the exact candidate output delta;
+no baseline replay or broad emitted-Rust qualification is claimed.
+
+Generation provenance `/private/tmp/sifr-companion.KIogHV/evidence/generation-provenance.json`
+SHA256 `4445805db4fe5b187a98f6a8ff9f94e905b803ac378f2cccac99a1b262e438da`
+records source/toolchain/binary/submodule identities and both raw delta hashes.
+All34 B14 terminal artifacts authenticated against terminal SHA256
+`92e516beca227827e680cb0938741c929cdee33abdc5eb699188e0ed80039420`.
+Reuse unchanged B14 115canonicalizer/9capture tests,18lexical cases,
+3type-namespace assertions and3native executions, plus final implementation
+approval SHA256 `b2aff2c8b71027e2452fd4efdba2a752844200a0439eea9c41b6104778b1e610`.
+No third B14 compiler review; nonblocking follow-ups remain in #3747.
+
+After this complete companion update, registered checks are:
+`python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --jobs 6`;
+`cargo run -q -p sifr -- run demos/core_stdlib/main.sifr`;
+`cargo run -q -p sifr -- run demos/stdlib_loading/main.sifr`;
+`cargo fmt --check`; `python3 scripts/check_file_size_guardrails.py`;
+`git diff --check`. No pass is claimed before execution.
+One exact-SHA B15 companion/delivery Opus review, at most one remediation;
+one full merge-profile gate on the final frozen/pushed SHA, including the
+profile's production92-graph online preparation. Skip create-pr; no second gate.
+Owned temp/cache directories, jobs6/testthreads1, actual storage inspection and
+bounded8GiB safety monitor apply. No predecessor cleanup or cache mutation.
+B14's one FAILED gate and exhausted reviews remain historical unchanged.
+Merge only after delta approval and full gate PASS; update phase/owners and STOP.
+No later item is started and no whole-phase closure is claimed.
+
 ## Terminal: 12K-B14 blocked on generated companion concordance (2026-09-07)
 
 12K-B14 / [owner3745](https://github.com/sifr-lang/sifr/issues/3745) is **blocked,

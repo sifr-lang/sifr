@@ -475,6 +475,16 @@ mod sifr_generated_generated_support {
             ) => json_dump_tokens(&sifr_generated_json_bridge_tokens(value)),
         }
     }
+    #[expect(
+        clippy::approx_constant,
+        reason = "generated Rust preserves this exact typed Sifr source contract"
+    )]
+    pub(crate) const PI: f64 = 3.141_592_653_589_793_f64;
+    #[expect(
+        clippy::approx_constant,
+        reason = "generated Rust preserves this exact typed Sifr source contract"
+    )]
+    pub(crate) const E: f64 = 2.718_281_828_459_045_f64;
     pub(crate) fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
