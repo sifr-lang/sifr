@@ -61,6 +61,8 @@ def main() -> int:
         ("equal release surface suite", equal_release_surface_suite, "must differ from nightly_release_suite"),
         ("orphaned release divergence metadata", orphaned_release_divergence_metadata, "metadata requires release_suite"),
         ("first-party crate without membership", missing_crate_membership, "missing merge crate-test membership"),
+        ("wrong SQL component target kind", wrong_component_target_kind, "target lacks classification: rlib:sifr_sql_postgresql"),
+        ("missing SQL test target", missing_sql_test_target, "target lacks classification: test:runtime_types"),
     ]
     failed: list[str] = []
     for name, func, expected in tests:
@@ -426,6 +428,28 @@ def orphaned_release_divergence_metadata() -> list[str]:
         [{"guarantee_id": "stable-guarantee", "support_status": "stable"}],
         OWNERS,
         True,
+        errors,
+    )
+    return errors
+
+
+def wrong_component_target_kind() -> list[str]:
+    errors: list[str] = []
+    coverage_matrix.validate_targets(
+        "sifr_sql_postgresql",
+        {"targets": [{"name": "sifr_sql_postgresql", "kind": ["rlib", "cdylib"]}]},
+        {"targets": [{"name": "sifr_sql_postgresql", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}]},
+        errors,
+    )
+    return errors
+
+
+def missing_sql_test_target() -> list[str]:
+    errors: list[str] = []
+    coverage_matrix.validate_targets(
+        "sifr_sql_postgresql_runtime",
+        {"targets": [{"name": "runtime_types", "kind": ["test"]}]},
+        {"targets": []},
         errors,
     )
     return errors
