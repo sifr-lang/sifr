@@ -14,7 +14,8 @@ Parent worktree and predecessor source, indexes, targets and evidence are read-o
 
 Scope is the two support assembly lint mechanisms plus authenticated exact debt
 for the unchanged twelve-surface representative selection. Private helper
-functions/imports stay private; sibling support access uses parent visibility;
+functions/imports stay private; demanded sibling-facing declarations are public
+inside the private support owner (including necessary signature types);
 consumers receive explicit names including required traits and macro task locals.
 Retained Item12 and all successor implementation remain outside this item.
 
@@ -58,6 +59,22 @@ This includes the migrated stdlib module checks, default stdlib API tests,
 `--no-default-features --features json,unicode,i18n,http`, `--all-features`,
 and both normally ignored driver and CLI build commands. These commands are
 already in the profile; no separate broad rerun is added.
+
+First complete candidate `cc6397c1d1316bacfa8589861989282f5a8ba4ff` passed the
+registered focused checks and production preparation of all92 graphs. Its
+representative run completed all9 variants,7PASS/2FAIL: Clippy still considers
+`pub(super)` redundant in a private module (105), while explicit import demand
+incorrectly counted local bindings and pre-canonicalization annotations (three
+unused imports and an unresolved `message` import in the demo variant).
+These are B13 implementation defects, corrected before review. No B13 Opus review
+or merge gate was consumed. Raw exact-SHA receipts remain in the owned evidence
+directory. Lexical scope, inferred-return visibility and post-canonicalization
+import regression cases are registered within the existing named
+`support_assembly_codegen_tests` command before their execution.
+Final source provenance also has a bounded read-only concordance check registered
+before execution: compare every predicted source SHA-256 in the twelve-surface
+baseline receipt with its exact-candidate production-prepared file. This verifies
+the derivation's materialization boundary; it does not run additional Cargo work.
 
 ## Original12K gate5 terminal: representative GCQ blocked; worker stopped (2026-09-07)
 

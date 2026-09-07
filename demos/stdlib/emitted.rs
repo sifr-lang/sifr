@@ -30,7 +30,7 @@ mod sifr_generated_generated_support {
         ::sifr_stdlib::time::perf_counter()
     }
     #[derive(Debug, Clone)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -99,7 +99,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn sifr_generated_six_digits(value: SifrInt) -> String {
+    #[must_use]
+    pub fn sifr_generated_six_digits(value: SifrInt) -> String {
         let mut rendered: String = value.to_string();
         let mut sifr_generated_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
         while &SifrInt::from(sifr_generated_chars_rendered.len()) < &SifrInt::from_i64(6) {
@@ -556,7 +557,8 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(super) fn now(
+    #[must_use]
+    pub fn now(
         tz: &Option<SifrGeneratedStdlibSifrX2edatetimeX2etimezone>,
     ) -> SifrGeneratedStdlibSifrX2edatetimeX2edatetime {
         let current_epoch: f64 = time_now();
@@ -656,17 +658,21 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn from_timestamp(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn from_timestamp(
         ts: f64,
         tz: &Option<SifrGeneratedStdlibSifrX2edatetimeX2etimezone>,
     ) -> Result<SifrGeneratedStdlibSifrX2edatetimeX2edatetime, ValueError> {
         sifr_generated_from_timestamp_with_tz(ts, tz)
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(super) fn get_close_matches(
+    pub fn get_close_matches(
         word: &str,
         possibilities: &[String],
         n: SifrInt,
@@ -1074,7 +1080,9 @@ mod sifr_generated_generated_support {
         ));
         merged_blocks
     }
-    pub(super) fn topological_sort(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn topological_sort(
         num_nodes: SifrInt,
         from_nodes: &[SifrInt],
         to_nodes: &[SifrInt],
@@ -1180,7 +1188,8 @@ mod sifr_generated_generated_support {
         }
         Ok(result)
     }
-    pub(super) fn is_valid_ipv4(addr: &str) -> bool {
+    #[must_use]
+    pub fn is_valid_ipv4(addr: &str) -> bool {
         let parts: Vec<String> = addr
             .split('.')
             .map(::std::string::ToString::to_string)
@@ -1355,14 +1364,16 @@ mod sifr_generated_generated_support {
         }
         private_hit
     }
-    pub(super) fn is_private(addr: &str) -> bool {
+    #[must_use]
+    pub fn is_private(addr: &str) -> bool {
         if !is_valid_ipv4(addr) {
             return false;
         }
         let val: SifrInt = sifr_generated_ip_to_int_raw(addr);
         sifr_generated_is_private_ipv4_value(val.clone())
     }
-    pub(super) fn is_loopback(addr: &str) -> bool {
+    #[must_use]
+    pub fn is_loopback(addr: &str) -> bool {
         if !is_valid_ipv4(addr) {
             return false;
         }
@@ -1388,19 +1399,23 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(super) fn getcwd() -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn getcwd() -> Result<String, IOError> {
         ::sifr_stdlib::fs::getcwd().map_err(sifr_generated_io_err)
     }
     #[expect(
         clippy::approx_constant,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(super) const TAU: f64 = 6.283_185_307_179_586_f64;
-    pub(super) const NAN: f64 = f64::NAN;
-    pub(super) const fn isnan(x: f64) -> bool {
+    pub const TAU: f64 = 6.283_185_307_179_586_f64;
+    pub const NAN: f64 = f64::NAN;
+    #[must_use]
+    pub const fn isnan(x: f64) -> bool {
         ::sifr_stdlib::math::isnan(x)
     }
-    pub(super) fn join_path(base: &str, child: &str) -> String {
+    #[must_use]
+    pub fn join_path(base: &str, child: &str) -> String {
         let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
         if &SifrInt::from(sifr_generated_chars_base.len()) == &SifrInt::from_i64(0) {
             return {
@@ -1440,7 +1455,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn basename(path: &str) -> String {
+    #[must_use]
+    pub fn basename(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
             &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
@@ -1484,7 +1500,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn extension(path: &str) -> String {
+    #[must_use]
+    pub fn extension(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
             &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
@@ -1532,10 +1549,12 @@ mod sifr_generated_generated_support {
     fn platform_arch() -> String {
         ::sifr_stdlib::platform::platform_arch()
     }
-    pub(super) fn system() -> String {
+    #[must_use]
+    pub fn system() -> String {
         platform_system()
     }
-    pub(super) fn machine() -> String {
+    #[must_use]
+    pub fn machine() -> String {
         platform_arch()
     }
     fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
@@ -1546,10 +1565,13 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(super) fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         re_findall(pattern, text)
     }
-    pub(super) fn default_timer() -> f64 {
+    #[must_use]
+    pub fn default_timer() -> f64 {
         perf_counter()
     }
     fn toml_parse_tokens(text: &str) -> Result<Vec<String>, ParseError> {
@@ -1560,7 +1582,7 @@ mod sifr_generated_generated_support {
         })
     }
     #[derive(Debug, Clone)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(ParseError),
         SifrGeneratedUnionVariant5X3aclass15X3aTOMLDecodeError1X3a0(TOMLDecodeError),
@@ -1901,7 +1923,9 @@ mod sifr_generated_generated_support {
             Err(TOMLDecodeError::new(e.message.clone()))
         })
     }
-    pub(super) fn loads(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn loads(
         text: &str,
     ) -> Result<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, TOMLDecodeError> {
         let sifr_generated_try_res: Result<
@@ -1916,7 +1940,8 @@ mod sifr_generated_generated_support {
             Err(TOMLDecodeError::new(e.message.clone()))
         })
     }
-    pub(super) fn uuid4() -> String {
+    #[must_use]
+    pub fn uuid4() -> String {
         ::sifr_stdlib::uuid::uuid4()
     }
     fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {

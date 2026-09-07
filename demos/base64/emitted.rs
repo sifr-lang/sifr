@@ -10,23 +10,31 @@ mod sifr_generated_generated_support {
             message: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(super) fn urlsafe_b64encode(s: &str) -> String {
+    #[must_use]
+    pub fn urlsafe_b64encode(s: &str) -> String {
         ::sifr_stdlib::base64::urlsafe_b64encode(s)
     }
-    pub(super) fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::urlsafe_b64decode(s).map_err(|sifr_generated_bridge_error| {
             ParseError {
                 message: sifr_generated_bridge_error.to_string(),
             }
         })
     }
-    pub(super) fn b64encode(s: &str) -> String {
+    #[must_use]
+    pub fn b64encode(s: &str) -> String {
         base64_encode(s)
     }
-    pub(super) fn b64decode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b64decode(s: &str) -> Result<String, ParseError> {
         base64_decode(s)
     }
-    pub(super) fn b16encode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b16encode(s: &str) -> Result<String, ParseError> {
         let sifr_generated_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
             let data: Vec<u8> = ::sifr_runtime::encoding::encode_bytes(
                 &s,
@@ -56,7 +64,9 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(super) fn b16decode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b16decode(s: &str) -> Result<String, ParseError> {
         let sifr_generated_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
             let data: Vec<u8> = {
                 let s: String = s.to_string();
@@ -103,7 +113,7 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(super) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+    pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -130,7 +140,7 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

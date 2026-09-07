@@ -126,7 +126,8 @@ mod sifr_generated_generated_support {
         }
         Vec::new()
     }
-    pub(super) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
+    #[must_use]
+    pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
             let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
@@ -140,14 +141,15 @@ mod sifr_generated_generated_support {
             sifr_generated_hex
         }
     }
-    pub(super) fn sha224(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    #[must_use]
+    pub fn sha224(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"sha224".to_string(), data)
     }
     ::tokio::task_local! {
-        pub (super) static SIFR_GENERATED_SIFR_TASK_CONTEXT_LABEL : String;
+        static SIFR_GENERATED_SIFR_TASK_CONTEXT_LABEL : String;
     }
-    pub(super) fn sifr_generated_task_current_context() -> SifrGeneratedStdlibSifrX2etaskX2eContext
-    {
+    #[must_use]
+    pub fn sifr_generated_task_current_context() -> SifrGeneratedStdlibSifrX2etaskX2eContext {
         SifrGeneratedStdlibSifrX2etaskX2eContext::new(
             SIFR_GENERATED_SIFR_TASK_CONTEXT_LABEL
                 .try_with(Clone::clone)

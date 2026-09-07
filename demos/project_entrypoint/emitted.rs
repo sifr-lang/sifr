@@ -1,7 +1,8 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use ::sifr_runtime::SifrInt;
-    pub(super) fn floor(x: f64) -> SifrInt {
+    #[must_use]
+    pub fn floor(x: f64) -> SifrInt {
         ::sifr_stdlib::math::floor(x).into_sifr_int()
     }
 }

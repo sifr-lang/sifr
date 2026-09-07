@@ -6,7 +6,8 @@ mod sifr_generated_generated_support {
         ValueError,
     };
     use ::sifr_runtime::SifrInt;
-    pub(super) fn random_word_to_unit_float(value: SifrInt) -> f64 {
+    #[must_use]
+    pub fn random_word_to_unit_float(value: SifrInt) -> f64 {
         ::sifr_stdlib::random::random_word_to_unit_float(
             ::sifr_runtime::interop::SifrIntBridge::from(value),
         )
@@ -76,10 +77,13 @@ mod sifr_generated_generated_support {
     fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2s_bytes(data)
     }
-    pub(super) fn b64encode(s: &str) -> String {
+    #[must_use]
+    pub fn b64encode(s: &str) -> String {
         base64_encode(s)
     }
-    pub(super) fn b64decode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b64decode(s: &str) -> Result<String, ParseError> {
         base64_decode(s)
     }
     fn sifr_generated_build_hash(
@@ -180,7 +184,8 @@ mod sifr_generated_generated_support {
         }
         Vec::new()
     }
-    pub(super) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
+    #[must_use]
+    pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
             let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
@@ -194,34 +199,43 @@ mod sifr_generated_generated_support {
             sifr_generated_hex
         }
     }
-    pub(super) fn md5(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    #[must_use]
+    pub fn md5(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"md5".to_string(), data)
     }
-    pub(super) fn sha256(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    #[must_use]
+    pub fn sha256(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"sha256".to_string(), data)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f4e() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f4e() -> SifrInt {
         SifrInt::from_i64(624)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f4d() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f4d() -> SifrInt {
         SifrInt::from_i64(397)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f4d41545249585f41() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f4d41545249585f41() -> SifrInt {
         SifrInt::from_i64(2_567_483_615)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f55505045525f4d41534b() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f55505045525f4d41534b() -> SifrInt {
         SifrInt::from_i64(2_147_483_648)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f4c4f5745525f4d41534b() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f4c4f5745525f4d41534b() -> SifrInt {
         SifrInt::from_i64(2_147_483_647)
     }
     const fn sifr_generated_const_5f4d545f46() -> SifrInt {
         SifrInt::from_i64(1_812_433_253)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f574f52445f4d41534b() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f574f52445f4d41534b() -> SifrInt {
         SifrInt::from_i64(4_294_967_295)
     }
-    pub(super) fn sifr_generated_state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn sifr_generated_state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
         let value: Option<SifrInt> = {
             let sifr_generated_checked_read_collection = &words;
             let sifr_generated_checked_read_index = index.clone();
@@ -236,20 +250,23 @@ mod sifr_generated_generated_support {
         };
         value_value_7ce4fd9430e80cea
     }
-    pub(super) fn sifr_generated_clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
+    #[must_use]
+    pub fn sifr_generated_clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
         let mut copied: Vec<SifrInt> = Vec::new();
         for word in words.iter().cloned() {
             copied.push(word);
         }
         copied
     }
-    pub(super) fn sifr_generated_normalize_seed_input(seed_value: Option<SifrInt>) -> SifrInt {
+    #[must_use]
+    pub fn sifr_generated_normalize_seed_input(seed_value: Option<SifrInt>) -> SifrInt {
         let Some(seed_value) = seed_value.clone() else {
             return random_seed();
         };
         seed_value.clone()
     }
-    pub(super) fn sifr_generated_seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
+    #[must_use]
+    pub fn sifr_generated_seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
         let mut words: Vec<SifrInt> =
             vec![&seed_value & &sifr_generated_const_5f4d545f574f52445f4d41534b()];
         let mut i: SifrInt = SifrInt::from_i64(1);
@@ -306,14 +323,17 @@ mod sifr_generated_generated_support {
     ) {
         sifr_generated_store_state_into_module_storage(&generator.getstate());
     }
-    pub(super) fn randint(minimum: SifrInt, maximum: SifrInt) -> Result<SifrInt, ValueError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn randint(minimum: SifrInt, maximum: SifrInt) -> Result<SifrInt, ValueError> {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let value: Result<SifrInt, ValueError> = generator.randint(&minimum, &maximum);
         sifr_generated_sync_module_random(&mut generator);
         value
     }
-    pub(super) fn random() -> f64 {
+    #[must_use]
+    pub fn random() -> f64 {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let value: f64 = generator.random();
@@ -336,19 +356,24 @@ mod sifr_generated_generated_support {
             },
         )
     }
-    pub(super) fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
         re_find(pattern, text)
     }
-    pub(super) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
         re_replace(pattern, replacement, text)
     }
     fn time_now() -> f64 {
         ::sifr_stdlib::time::time_now()
     }
-    pub(super) fn sleep(seconds: f64) {
+    pub fn sleep(seconds: f64) {
         ::sifr_stdlib::time::sleep(seconds);
     }
-    pub(super) fn time() -> f64 {
+    #[must_use]
+    pub fn time() -> f64 {
         time_now()
     }
 }

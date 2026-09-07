@@ -1,7 +1,9 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::IOError;
-    pub(super) fn run_command(cmd: &str) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn run_command(cmd: &str) -> Result<String, IOError> {
         ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
     }
     fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {

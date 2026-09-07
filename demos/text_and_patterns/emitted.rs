@@ -15,10 +15,13 @@ mod sifr_generated_generated_support {
             message: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(super) fn b64encode(s: &str) -> String {
+    #[must_use]
+    pub fn b64encode(s: &str) -> String {
         base64_encode(s)
     }
-    pub(super) fn b64decode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b64decode(s: &str) -> Result<String, ParseError> {
         base64_decode(s)
     }
     fn sifr_generated_const_6d6f6e74685f6e616d65() -> Vec<String> {
@@ -38,14 +41,16 @@ mod sifr_generated_generated_support {
             "December".to_string(),
         ]
     }
-    pub(super) fn sifr_generated_normalize_firstweekday(firstweekday: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn sifr_generated_normalize_firstweekday(firstweekday: SifrInt) -> SifrInt {
         let mut value: SifrInt = firstweekday.floor_mod_known_nonzero(&SifrInt::from_i64(7));
         if &value < &SifrInt::from_i64(0) {
             value = &value + &SifrInt::from_i64(7);
         }
         value.clone()
     }
-    pub(super) fn sifr_generated_month_name_lookup(month: SifrInt) -> Option<String> {
+    #[must_use]
+    pub fn sifr_generated_month_name_lookup(month: SifrInt) -> Option<String> {
         if &month < &SifrInt::from_i64(1) || &month > &SifrInt::from_i64(12) {
             return None;
         }
@@ -60,7 +65,9 @@ mod sifr_generated_generated_support {
                 .cloned()
         }
     }
-    pub(super) fn sifr_generated_similarity(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sifr_generated_similarity(
         a: &str,
         b: &str,
     ) -> Result<
@@ -357,7 +364,8 @@ mod sifr_generated_generated_support {
         ));
         merged_blocks
     }
-    pub(super) fn fnmatch(name: &str, pattern: &str) -> bool {
+    #[must_use]
+    pub fn fnmatch(name: &str, pattern: &str) -> bool {
         sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
     }
     fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
@@ -461,7 +469,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn translate(pattern: &str) -> String {
+    #[must_use]
+    pub fn translate(pattern: &str) -> String {
         let sifr_generated_chars_pattern: Vec<char> = pattern.chars().collect::<Vec<char>>();
         let mut body: String = String::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
@@ -501,14 +510,16 @@ mod sifr_generated_generated_support {
     fn html_unescape(s: &str) -> String {
         ::sifr_stdlib::html::html_unescape(s)
     }
-    pub(super) fn escape(s: &str, quote: bool) -> String {
+    #[must_use]
+    pub fn escape(s: &str, quote: bool) -> String {
         let escaped: String = html_escape(s);
         if quote {
             return escaped;
         }
         escaped.replace("&quot;", "\"").replace("&#x27;", "\'")
     }
-    pub(super) fn unescape(s: &str) -> String {
+    #[must_use]
+    pub fn unescape(s: &str) -> String {
         html_unescape(s)
     }
     fn sifr_generated_is_identifier_start(ch: &str) -> bool {
@@ -540,11 +551,13 @@ mod sifr_generated_generated_support {
         }
         None
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(super) fn sifr_generated_template_substitute_impl(
+    pub fn sifr_generated_template_substitute_impl(
         template: &str,
         mapping: &HashMap<String, String>,
         safe: bool,
@@ -828,11 +841,13 @@ mod sifr_generated_generated_support {
         }
         Ok(result)
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(super) fn sifr_generated_formatter_format_impl(
+    pub fn sifr_generated_formatter_format_impl(
         format_string: &str,
         values: &HashMap<String, String>,
     ) -> Result<String, ValueError> {
@@ -1018,7 +1033,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn sifr_generated_prepare_text(
+    #[must_use]
+    pub fn sifr_generated_prepare_text(
         text: &str,
         expand_tabs: bool,
         tabsize: SifrInt,
@@ -1170,7 +1186,8 @@ mod sifr_generated_generated_support {
             result.push(candidate);
         }
     }
-    pub(super) fn sifr_generated_wrap_with_indents(
+    #[must_use]
+    pub fn sifr_generated_wrap_with_indents(
         text: &str,
         total_width: SifrInt,
         initial_indent: &str,
@@ -1339,7 +1356,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn sifr_generated_apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
+    #[must_use]
+    pub fn sifr_generated_apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
         for line in lines.iter().cloned() {
             result.push(sifr_generated_apply_sentence_endings_line(&line));
@@ -1353,11 +1371,12 @@ mod sifr_generated_generated_support {
         }
         copied
     }
+    #[must_use]
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(super) fn sifr_generated_apply_max_lines(
+    pub fn sifr_generated_apply_max_lines(
         lines: &[String],
         width: SifrInt,
         max_lines: Option<SifrInt>,

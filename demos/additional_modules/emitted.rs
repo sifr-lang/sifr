@@ -23,22 +23,28 @@ mod sifr_generated_generated_support {
         .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
         .collect()
     }
-    pub(super) fn isleap(year: SifrInt) -> bool {
+    #[must_use]
+    pub fn isleap(year: SifrInt) -> bool {
         calendar_isleap(year.clone())
     }
-    pub(super) fn weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
         calendar_weekday(year.clone(), month.clone(), day.clone())
     }
-    pub(super) fn monthrange(year: SifrInt, month: SifrInt) -> Vec<SifrInt> {
+    #[must_use]
+    pub fn monthrange(year: SifrInt, month: SifrInt) -> Vec<SifrInt> {
         calendar_monthrange(year.clone(), month.clone())
     }
-    pub(super) fn remove_file(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
     }
     fn sifr_generated_const_44454641554c5453454354() -> String {
         "DEFAULT".to_string()
     }
-    pub(super) fn sifr_generated_default_section() -> String {
+    #[must_use]
+    pub fn sifr_generated_default_section() -> String {
         {
             let mut sifr_generated_concat: String =
                 String::with_capacity(sifr_generated_const_44454641554c5453454354().len());
@@ -47,13 +53,16 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn sifr_generated_normalize_option(option: &str) -> String {
+    #[must_use]
+    pub fn sifr_generated_normalize_option(option: &str) -> String {
         option.to_lowercase().trim().to_string()
     }
-    pub(super) fn sifr_generated_copy_optional_str(value: &Option<String>) -> Option<String> {
+    #[must_use]
+    pub fn sifr_generated_copy_optional_str(value: &Option<String>) -> Option<String> {
         value.clone()
     }
-    pub(super) fn sifr_generated_has_option_key(
+    #[must_use]
+    pub fn sifr_generated_has_option_key(
         values: &HashMap<String, Option<String>>,
         key: &str,
     ) -> bool {
@@ -64,7 +73,8 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(super) fn sifr_generated_lookup_option(
+    #[must_use]
+    pub fn sifr_generated_lookup_option(
         values: &HashMap<String, Option<String>>,
         key: &str,
     ) -> Option<String> {
@@ -79,7 +89,8 @@ mod sifr_generated_generated_support {
         }
         None
     }
-    pub(super) fn sifr_generated_copy_values(
+    #[must_use]
+    pub fn sifr_generated_copy_values(
         values: &HashMap<String, Option<String>>,
     ) -> HashMap<String, Option<String>> {
         let mut copied: HashMap<String, Option<String>> = HashMap::from([]);
@@ -107,7 +118,9 @@ mod sifr_generated_generated_support {
         }
         None
     }
-    pub(super) fn sifr_generated_split_option_line(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sifr_generated_split_option_line(
         line: &str,
         allow_no_value: bool,
         line_no: SifrInt,
@@ -200,7 +213,8 @@ mod sifr_generated_generated_support {
         };
         ch
     }
-    pub(super) fn sifr_generated_resolve_interpolation(
+    #[must_use]
+    pub fn sifr_generated_resolve_interpolation(
         value: &str,
         merged: &HashMap<String, Option<String>>,
         depth: SifrInt,
@@ -279,22 +293,33 @@ mod sifr_generated_generated_support {
     fn sifr_generated_gzip_decompress_bytes_impl(data: &[u8]) -> Result<String, IOError> {
         ::sifr_stdlib::gzip::gzip_decompress_bytes(data).map_err(sifr_generated_io_err)
     }
-    pub(super) fn zip_create(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn zip_create(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::zipfile::zip_create(path).map_err(sifr_generated_io_err)
     }
-    pub(super) fn zip_add_file(zip_path: &str, name: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn zip_add_file(zip_path: &str, name: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::zipfile::zip_add_file(zip_path, name, content).map_err(sifr_generated_io_err)
     }
-    pub(super) fn zip_read_file(zip_path: &str, name: &str) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn zip_read_file(zip_path: &str, name: &str) -> Result<String, IOError> {
         ::sifr_stdlib::zipfile::zip_read_file(zip_path, name).map_err(sifr_generated_io_err)
     }
-    pub(super) fn zip_namelist(zip_path: &str) -> Result<Vec<String>, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn zip_namelist(zip_path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::zipfile::zip_namelist(zip_path).map_err(sifr_generated_io_err)
     }
-    pub(super) fn compress(data: &str) -> Vec<u8> {
+    #[must_use]
+    pub fn compress(data: &str) -> Vec<u8> {
         sifr_generated_gzip_compress_bytes_impl(data)
     }
-    pub(super) fn decompress(data: &[u8]) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn decompress(data: &[u8]) -> Result<String, IOError> {
         sifr_generated_gzip_decompress_bytes_impl(data)
     }
     fn html_escape(s: &str) -> String {
@@ -303,26 +328,33 @@ mod sifr_generated_generated_support {
     fn html_unescape(s: &str) -> String {
         ::sifr_stdlib::html::html_unescape(s)
     }
-    pub(super) fn escape(s: &str, quote: bool) -> String {
+    #[must_use]
+    pub fn escape(s: &str, quote: bool) -> String {
         let escaped: String = html_escape(s);
         if quote {
             return escaped;
         }
         escaped.replace("&quot;", "\"").replace("&#x27;", "\'")
     }
-    pub(super) fn unescape(s: &str) -> String {
+    #[must_use]
+    pub fn unescape(s: &str) -> String {
         html_unescape(s)
     }
-    pub(super) fn add(a: SifrInt, b: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn add(a: SifrInt, b: SifrInt) -> SifrInt {
         &a + &b
     }
-    pub(super) fn sub(a: SifrInt, b: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn sub(a: SifrInt, b: SifrInt) -> SifrInt {
         &a - &b
     }
-    pub(super) fn mul(a: SifrInt, b: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn mul(a: SifrInt, b: SifrInt) -> SifrInt {
         &a * &b
     }
-    pub(super) fn floordiv(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn floordiv(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
         {
             let sifr_generated_floor_left: SifrInt = a.clone();
             let sifr_generated_floor_right: SifrInt = b.clone();
@@ -331,7 +363,9 @@ mod sifr_generated_generated_support {
                 .ok_or_else(|| DivisionError::new("division by zero".to_string()))
         }
     }
-    pub(super) fn mod_val(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mod_val(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
         {
             let sifr_generated_floor_left: SifrInt = a.clone();
             let sifr_generated_floor_right: SifrInt = b.clone();
@@ -340,13 +374,16 @@ mod sifr_generated_generated_support {
                 .ok_or_else(|| DivisionError::new("division by zero".to_string()))
         }
     }
-    pub(super) fn neg(a: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn neg(a: SifrInt) -> SifrInt {
         -&a
     }
-    pub(super) fn lt(a: SifrInt, b: SifrInt) -> bool {
+    #[must_use]
+    pub fn lt(a: SifrInt, b: SifrInt) -> bool {
         &a < &b
     }
-    pub(super) fn eq(a: SifrInt, b: SifrInt) -> bool {
+    #[must_use]
+    pub fn eq(a: SifrInt, b: SifrInt) -> bool {
         &a == &b
     }
     fn getitem<T: Clone + 'static>(items: &[T], index: SifrInt) -> Option<T> {
@@ -360,7 +397,8 @@ mod sifr_generated_generated_support {
                 .cloned()
         }
     }
-    pub(super) fn itemgetter<T: Clone + 'static>(items: &[T], index: SifrInt) -> Option<T> {
+    #[must_use]
+    pub fn itemgetter<T: Clone + 'static>(items: &[T], index: SifrInt) -> Option<T> {
         getitem(items, index.clone())
     }
     fn sys_version() -> String {
@@ -369,13 +407,16 @@ mod sifr_generated_generated_support {
     fn sys_maxsize() -> SifrInt {
         ::sifr_stdlib::sys::sys_maxsize().into_sifr_int()
     }
-    pub(super) fn version() -> String {
+    #[must_use]
+    pub fn version() -> String {
         sys_version()
     }
-    pub(super) fn maxsize() -> SifrInt {
+    #[must_use]
+    pub fn maxsize() -> SifrInt {
         sys_maxsize()
     }
-    pub(super) fn sifr_generated_zip_read_only_error() -> String {
+    #[must_use]
+    pub fn sifr_generated_zip_read_only_error() -> String {
         "zipfile operation requires write or append mode".to_string()
     }
     fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {

@@ -17,11 +17,12 @@ mod sifr_generated_generated_support {
             },
         )
     }
-    pub(super) fn sifr_generated_const_494e464f()
-    -> SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel {
+    #[must_use]
+    pub fn sifr_generated_const_494e464f() -> SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel {
         SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel::new("info".to_string())
     }
-    pub(super) fn diagnostic_event(
+    #[must_use]
+    pub fn diagnostic_event(
         level: &SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel,
         target: &str,
         name: &str,
@@ -34,7 +35,9 @@ mod sifr_generated_generated_support {
             message.to_owned(),
         )
     }
-    pub(super) fn emit_diagnostic(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn emit_diagnostic(
         event: &SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticEvent,
     ) -> Result<(), SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticError> {
         runtime_emit_diagnostic(

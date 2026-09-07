@@ -2,7 +2,9 @@
 mod sifr_generated_generated_support {
     use crate::IOError;
     use ::sifr_runtime::SifrInt;
-    pub(super) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
     fn listdir(path: &str) -> Result<Vec<String>, IOError> {
@@ -68,7 +70,8 @@ mod sifr_generated_generated_support {
         }
         &ni == &SifrInt::from(name.chars().count())
     }
-    pub(super) fn glob(directory: &str, pattern: &str) -> Vec<String> {
+    #[must_use]
+    pub fn glob(directory: &str, pattern: &str) -> Vec<String> {
         let sifr_generated_chars_pattern: Vec<char> = pattern.chars().collect::<Vec<char>>();
         let include_hidden: bool =
             &SifrInt::from(sifr_generated_chars_pattern.len()) > &SifrInt::from_i64(0) && {
@@ -144,13 +147,16 @@ mod sifr_generated_generated_support {
             sifr_generated_sorted_values
         }
     }
-    pub(super) fn run_command(cmd: &str) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn run_command(cmd: &str) -> Result<String, IOError> {
         ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
     }
-    pub(super) fn getpid() -> SifrInt {
+    #[must_use]
+    pub fn getpid() -> SifrInt {
         ::sifr_stdlib::sys::getpid().into_sifr_int()
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

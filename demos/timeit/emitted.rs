@@ -1,7 +1,7 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use ::sifr_runtime::SifrInt;
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -31,10 +31,11 @@ mod sifr_generated_generated_support {
     fn perf_counter() -> f64 {
         ::sifr_stdlib::time::perf_counter()
     }
-    pub(super) fn sleep(seconds: f64) {
+    pub fn sleep(seconds: f64) {
         ::sifr_stdlib::time::sleep(seconds);
     }
-    pub(super) fn default_timer() -> f64 {
+    #[must_use]
+    pub fn default_timer() -> f64 {
         perf_counter()
     }
     fn sifr_generated_elapsed_non_negative(start: f64, end: f64) -> f64 {
@@ -44,7 +45,8 @@ mod sifr_generated_generated_support {
         }
         elapsed
     }
-    pub(super) fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
+    #[must_use]
+    pub fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
         let start: f64 = perf_counter();
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &number {
@@ -54,7 +56,8 @@ mod sifr_generated_generated_support {
         let end: f64 = perf_counter();
         sifr_generated_elapsed_non_negative(start, end)
     }
-    pub(super) fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
+    #[must_use]
+    pub fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
         let mut results: Vec<f64> = Vec::new();
         let mut r: SifrInt = SifrInt::from_i64(0);
         while &r < &count {

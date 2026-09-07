@@ -19,25 +19,31 @@ mod sifr_generated_generated_support {
     fn platform_processor() -> String {
         ::sifr_stdlib::platform::platform_processor()
     }
-    pub(super) fn system() -> String {
+    #[must_use]
+    pub fn system() -> String {
         platform_system()
     }
-    pub(super) fn machine() -> String {
+    #[must_use]
+    pub fn machine() -> String {
         platform_arch()
     }
-    pub(super) fn node() -> String {
+    #[must_use]
+    pub fn node() -> String {
         platform_node()
     }
-    pub(super) fn release() -> String {
+    #[must_use]
+    pub fn release() -> String {
         platform_release()
     }
-    pub(super) fn version() -> String {
+    #[must_use]
+    pub fn version() -> String {
         platform_version()
     }
-    pub(super) fn processor() -> String {
+    #[must_use]
+    pub fn processor() -> String {
         platform_processor()
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

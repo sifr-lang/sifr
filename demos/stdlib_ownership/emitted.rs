@@ -3,7 +3,8 @@ mod sifr_generated_generated_support {
     use crate::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
     use ::sifr_runtime::SifrInt;
     use ::std::collections::HashMap;
-    pub(super) fn bisect_left<T: Clone + 'static + PartialOrd>(
+    #[must_use]
+    pub fn bisect_left<T: Clone + 'static + PartialOrd>(
         a: &[T],
         x: &T,
         lo: SifrInt,
@@ -48,7 +49,8 @@ mod sifr_generated_generated_support {
         }
         left.clone()
     }
-    pub(super) fn bisect_right<T: Clone + 'static + PartialOrd>(
+    #[must_use]
+    pub fn bisect_right<T: Clone + 'static + PartialOrd>(
         a: &[T],
         x: &T,
         lo: SifrInt,
@@ -93,7 +95,7 @@ mod sifr_generated_generated_support {
         }
         left.clone()
     }
-    pub(super) fn insort_left<T: Clone + 'static + PartialOrd>(
+    pub fn insort_left<T: Clone + 'static + PartialOrd>(
         a: &mut Vec<T>,
         x: &T,
         lo: SifrInt,
@@ -102,7 +104,7 @@ mod sifr_generated_generated_support {
         let pos: SifrInt = bisect_left(a, x, lo.clone(), hi.clone());
         a.insert(pos.clamp_slice_bound(a.len()), x.clone());
     }
-    pub(super) fn insort_right<T: Clone + 'static + PartialOrd>(
+    pub fn insort_right<T: Clone + 'static + PartialOrd>(
         a: &mut Vec<T>,
         x: &T,
         lo: SifrInt,
@@ -111,7 +113,8 @@ mod sifr_generated_generated_support {
         let pos: SifrInt = bisect_right(a, x, lo.clone(), hi.clone());
         a.insert(pos.clamp_slice_bound(a.len()), x.clone());
     }
-    pub(super) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    #[must_use]
+    pub fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
         items: &[T],
     ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
@@ -340,7 +343,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
+    pub fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
         "Convert list to a min-heap in-place. O(n) time.".to_string();
         let n: SifrInt = SifrInt::from(data.len());
         let mut i: SifrInt =
@@ -350,13 +353,14 @@ mod sifr_generated_generated_support {
             i = &i - &SifrInt::from_i64(1);
         }
     }
-    pub(super) fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
+    pub fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
         "Push item onto the heap in-place. O(log n) time.".to_string();
         heap.push(item.clone());
         let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
         sifr_generated_sift_up(heap, pos.clone());
     }
-    pub(super) fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
+    #[must_use]
+    pub fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
         "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
             .to_string();
         let n: SifrInt = SifrInt::from(heap.len());
@@ -403,7 +407,8 @@ mod sifr_generated_generated_support {
         }
         top
     }
-    pub(super) fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+    #[must_use]
+    pub fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
         let mut heap: Vec<T> = data.to_vec();
         heapify(&mut heap);
         let mut result: Vec<T> = Vec::new();
@@ -420,7 +425,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+    #[must_use]
+    pub fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
         if &n <= &SifrInt::from_i64(0) {
             return Vec::new();
         }
@@ -464,12 +470,12 @@ mod sifr_generated_generated_support {
         }
         result2
     }
-    pub(super) struct SifrGeneratedYielder<T> {
-        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    struct SifrGeneratedYielder<T> {
+        slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     }
-    pub(super) struct SifrGeneratedYieldFuture<T> {
-        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(super) value: Option<T>,
+    struct SifrGeneratedYieldFuture<T> {
+        slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        value: Option<T>,
     }
     impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
     impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
@@ -487,7 +493,7 @@ mod sifr_generated_generated_support {
         }
     }
     impl<T> SifrGeneratedYielder<T> {
-        pub(super) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
             SifrGeneratedYieldFuture {
                 slot: ::std::sync::Arc::clone(&self.slot),
                 value: Some(value),
@@ -511,14 +517,13 @@ mod sifr_generated_generated_support {
             Err(poisoned) => poisoned.into_inner().take(),
         }
     }
-    pub(super) struct SifrGeneratedGenerator<T> {
-        pub(super) producer:
-            Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
-        pub(super) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(super) complete: bool,
+    struct SifrGeneratedGenerator<T> {
+        producer: Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
+        yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        complete: bool,
     }
     impl<T> SifrGeneratedGenerator<T> {
-        pub(super) fn new<
+        fn new<
             F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
             Fut: ::std::future::Future<Output = ()> + 'static,
         >(
@@ -557,7 +562,8 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(super) fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
+    #[must_use]
+    pub fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
         let iterables = iterables.to_vec();
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {

@@ -8,7 +8,8 @@ mod sifr_generated_generated_support {
     };
     use ::sifr_runtime::SifrInt;
     use ::std::collections::HashMap;
-    pub(super) fn bisect_left<T: Clone + 'static + PartialOrd>(
+    #[must_use]
+    pub fn bisect_left<T: Clone + 'static + PartialOrd>(
         a: &[T],
         x: &T,
         lo: SifrInt,
@@ -53,7 +54,8 @@ mod sifr_generated_generated_support {
         }
         left.clone()
     }
-    pub(super) fn bisect_right<T: Clone + 'static + PartialOrd>(
+    #[must_use]
+    pub fn bisect_right<T: Clone + 'static + PartialOrd>(
         a: &[T],
         x: &T,
         lo: SifrInt,
@@ -98,7 +100,8 @@ mod sifr_generated_generated_support {
         }
         left.clone()
     }
-    pub(super) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    #[must_use]
+    pub fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
         items: &[T],
     ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
@@ -123,7 +126,7 @@ mod sifr_generated_generated_support {
         SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -159,7 +162,8 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn fnmatch(name: &str, pattern: &str) -> bool {
+    #[must_use]
+    pub fn fnmatch(name: &str, pattern: &str) -> bool {
         sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
     }
     fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
@@ -219,7 +223,8 @@ mod sifr_generated_generated_support {
         }
         &ni == &SifrInt::from(name.chars().count())
     }
-    pub(super) fn filter(names: &[String], pattern: &str) -> Vec<String> {
+    #[must_use]
+    pub fn filter(names: &[String], pattern: &str) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
         for name in names.iter().cloned() {
             if fnmatch(&name, pattern) {
@@ -354,7 +359,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
+    pub fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
         "Convert list to a min-heap in-place. O(n) time.".to_string();
         let n: SifrInt = SifrInt::from(data.len());
         let mut i: SifrInt =
@@ -364,7 +369,8 @@ mod sifr_generated_generated_support {
             i = &i - &SifrInt::from_i64(1);
         }
     }
-    pub(super) fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
+    #[must_use]
+    pub fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
         "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
             .to_string();
         let n: SifrInt = SifrInt::from(heap.len());
@@ -411,12 +417,12 @@ mod sifr_generated_generated_support {
         }
         top
     }
-    pub(super) struct SifrGeneratedYielder<T> {
-        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    struct SifrGeneratedYielder<T> {
+        slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     }
-    pub(super) struct SifrGeneratedYieldFuture<T> {
-        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(super) value: Option<T>,
+    struct SifrGeneratedYieldFuture<T> {
+        slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        value: Option<T>,
     }
     impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
     impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
@@ -434,7 +440,7 @@ mod sifr_generated_generated_support {
         }
     }
     impl<T> SifrGeneratedYielder<T> {
-        pub(super) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
             SifrGeneratedYieldFuture {
                 slot: ::std::sync::Arc::clone(&self.slot),
                 value: Some(value),
@@ -458,14 +464,13 @@ mod sifr_generated_generated_support {
             Err(poisoned) => poisoned.into_inner().take(),
         }
     }
-    pub(super) struct SifrGeneratedGenerator<T> {
-        pub(super) producer:
-            Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
-        pub(super) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(super) complete: bool,
+    struct SifrGeneratedGenerator<T> {
+        producer: Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
+        yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        complete: bool,
     }
     impl<T> SifrGeneratedGenerator<T> {
-        pub(super) fn new<
+        fn new<
             F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
             Fut: ::std::future::Future<Output = ()> + 'static,
         >(
@@ -504,11 +509,12 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(super) trait SifrGeneratedAdd: Sized {}
+    trait SifrGeneratedAdd: Sized {}
     impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
     impl SifrGeneratedAdd for f64 {}
     impl SifrGeneratedAdd for String {}
-    pub(super) fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
+    #[must_use]
+    pub fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
         let iterables = iterables.to_vec();
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
@@ -520,10 +526,8 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn repeat<T: Clone + 'static>(
-        value: T,
-        times: SifrInt,
-    ) -> Box<dyn Iterator<Item = T>> {
+    #[must_use]
+    pub fn repeat<T: Clone + 'static>(value: T, times: SifrInt) -> Box<dyn Iterator<Item = T>> {
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
                 let holder: Vec<T> = vec![value];
@@ -550,7 +554,8 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn take<T: Clone + 'static>(n: SifrInt, data: &[T]) -> Vec<T> {
+    #[must_use]
+    pub fn take<T: Clone + 'static>(n: SifrInt, data: &[T]) -> Vec<T> {
         let mut result: Vec<T> = Vec::new();
         let mut count: SifrInt = SifrInt::from_i64(0);
         for item in data.iter().cloned() {
@@ -575,7 +580,7 @@ mod sifr_generated_generated_support {
         ::sifr_stdlib::json::json_dump_tokens(tokens)
     }
     #[derive(Debug, Clone)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass15X3aJSONDecodeError1X3a0(JSONDecodeError),
         SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(ParseError),
@@ -610,7 +615,7 @@ mod sifr_generated_generated_support {
         }
     }
     #[derive(Debug, Clone, PartialEq)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0
     {
         SifrGeneratedUnionVariant4X3aatom4X3abool(bool),
         SifrGeneratedUnionVariant4X3aatom3X3astr(String),
@@ -1031,12 +1036,13 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(super) fn loads(
-        s: &str,
-    ) -> Result<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, JSONDecodeError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn loads(s: &str) -> Result<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, JSONDecodeError> {
         sifr_generated_decode_json(s)
     }
-    pub(super) fn dumps(
+    #[must_use]
+    pub fn dumps(
         value: &SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
     ) -> String {
         match value {
@@ -1063,14 +1069,17 @@ mod sifr_generated_generated_support {
         clippy::approx_constant,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(super) const PI: f64 = 3.141_592_653_589_793_f64;
-    pub(super) fn sqrt(x: f64) -> f64 {
+    pub const PI: f64 = 3.141_592_653_589_793_f64;
+    #[must_use]
+    pub fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
-    pub(super) fn sin(x: f64) -> f64 {
+    #[must_use]
+    pub fn sin(x: f64) -> f64 {
         ::sifr_stdlib::math::sin(x)
     }
-    pub(super) fn cos(x: f64) -> f64 {
+    #[must_use]
+    pub fn cos(x: f64) -> f64 {
         ::sifr_stdlib::math::cos(x)
     }
     const fn isnan(x: f64) -> bool {
@@ -1079,7 +1088,8 @@ mod sifr_generated_generated_support {
     const fn isinf(x: f64) -> bool {
         ::sifr_stdlib::math::isinf(x)
     }
-    pub(super) fn factorial(n: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn factorial(n: SifrInt) -> SifrInt {
         if &n < &SifrInt::from_i64(0) {
             return SifrInt::from_i64(0);
         }
@@ -1091,7 +1101,8 @@ mod sifr_generated_generated_support {
         }
         result.clone()
     }
-    pub(super) fn gcd(a: SifrInt, b: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn gcd(a: SifrInt, b: SifrInt) -> SifrInt {
         let mut x: SifrInt = a.clone();
         let mut y: SifrInt = b.clone();
         if &x < &SifrInt::from_i64(0) {
@@ -1107,11 +1118,12 @@ mod sifr_generated_generated_support {
         }
         x.clone()
     }
+    #[must_use]
     #[expect(
         clippy::many_single_char_names,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(super) fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
+    pub fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
         if &a == &SifrInt::from_i64(0) {
             return SifrInt::from_i64(0);
         }
@@ -1132,7 +1144,8 @@ mod sifr_generated_generated_support {
         }
         &x.floor_div_known_nonzero(&g) * &y
     }
-    pub(super) fn comb(n: SifrInt, k: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn comb(n: SifrInt, k: SifrInt) -> SifrInt {
         if &k < &SifrInt::from_i64(0) {
             return SifrInt::from_i64(0);
         }
@@ -1162,7 +1175,8 @@ mod sifr_generated_generated_support {
         }
         result.clone()
     }
-    pub(super) fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
+    #[must_use]
+    pub fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
         if rel_tol < 0.0_f64 {
             return false;
         }
@@ -1200,7 +1214,8 @@ mod sifr_generated_generated_support {
         }
         diff <= rel_bound
     }
-    pub(super) fn basename(path: &str) -> String {
+    #[must_use]
+    pub fn basename(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
             &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
@@ -1244,7 +1259,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn dirname(path: &str) -> String {
+    #[must_use]
+    pub fn dirname(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
             &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
@@ -1282,7 +1298,8 @@ mod sifr_generated_generated_support {
         }
         String::new()
     }
-    pub(super) fn extension(path: &str) -> String {
+    #[must_use]
+    pub fn extension(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
             &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
@@ -1348,13 +1365,19 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(super) fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
         re_find(pattern, text)
     }
-    pub(super) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
         re_replace(pattern, replacement, text)
     }
-    pub(super) fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         re_findall(pattern, text)
     }
     fn sifr_generated_sum(data: &[f64]) -> f64 {
@@ -1436,7 +1459,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(super) fn mean(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let count: SifrInt = SifrInt::from(data.len());
@@ -1448,7 +1473,9 @@ mod sifr_generated_generated_support {
         let total: f64 = sifr_generated_sum(data);
         sifr_generated_divide_by_int(total, count.clone())
     }
-    pub(super) fn median(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn median(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -1514,7 +1541,9 @@ mod sifr_generated_generated_support {
             Ok(val)
         }
     }
-    pub(super) fn stdev(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -1562,10 +1591,12 @@ mod sifr_generated_generated_support {
         };
         Ok(sqrt(v))
     }
-    pub(super) fn sifr_generated_const_61736369695f6c6f77657263617365() -> String {
+    #[must_use]
+    pub fn sifr_generated_const_61736369695f6c6f77657263617365() -> String {
         "abcdefghijklmnopqrstuvwxyz".to_string()
     }
-    pub(super) fn capwords(s: &str) -> String {
+    #[must_use]
+    pub fn capwords(s: &str) -> String {
         let normalized: String = s
             .replace('\t', " ")
             .replace('\n', " ")
@@ -1922,13 +1953,17 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn wrap(text: &str, width: SifrInt) -> Result<Vec<String>, ValueError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn wrap(text: &str, width: SifrInt) -> Result<Vec<String>, ValueError> {
         if &width <= &SifrInt::from_i64(0) {
             return Err(ValueError::new("wrap: width must be > 0".to_string()));
         }
         Ok(sifr_generated_wrap_impl(text, width.clone()))
     }
-    pub(super) fn fill(text: &str, width: SifrInt) -> Result<String, ValueError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn fill(text: &str, width: SifrInt) -> Result<String, ValueError> {
         if &width <= &SifrInt::from_i64(0) {
             return Err(ValueError::new("fill: width must be > 0".to_string()));
         }
@@ -1948,7 +1983,7 @@ mod sifr_generated_generated_support {
 mod sifr_generated_project_nominals {
     use crate::sifr_generated_generated_support::{
         SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
-        SifrInt, String, dumps, f64,
+        String, dumps, f64,
     };
     use ::sifr_runtime::SifrInt;
     use ::std::collections::HashMap;
@@ -2461,9 +2496,9 @@ mod sifr_generated_project_nominals {
 use crate::sifr_generated_generated_support::{
     PI,
     SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
-    SifrInt, String, basename, bisect_left, bisect_right, capwords, chain, comb, cos, dirname,
-    dumps, extension, f64, factorial, fill, filter, findall, fnmatch, from_list, gcd, heapify,
-    heappop, isclose, lcm, loads, mean, median, repeat, search,
+    String, basename, bisect_left, bisect_right, capwords, chain, comb, cos, dirname, dumps,
+    extension, f64, factorial, fill, filter, findall, fnmatch, from_list, gcd, heapify, heappop,
+    isclose, lcm, loads, mean, median, repeat, search,
     sifr_generated_const_61736369695f6c6f77657263617365, sin, sqrt, stdev, sub, take, wrap,
 };
 use ::sifr_runtime::SifrInt;

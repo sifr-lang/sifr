@@ -49,29 +49,40 @@ mod sifr_generated_generated_support {
             detail: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(super) const fn sifr_generated_const_49474e4f524543415345() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_49474e4f524543415345() -> SifrInt {
         SifrInt::from_i64(2)
     }
-    pub(super) fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
         re_find(pattern, text)
     }
-    pub(super) fn search_flags(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn search_flags(
         pattern: &str,
         text: &str,
         flags: SifrInt,
     ) -> Result<Option<String>, RegexError> {
         re_find_flags(pattern, text, flags.clone())
     }
-    pub(super) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
         re_replace(pattern, replacement, text)
     }
-    pub(super) fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         re_findall(pattern, text)
     }
-    pub(super) fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         re_split(pattern, text)
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

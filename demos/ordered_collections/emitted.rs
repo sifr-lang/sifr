@@ -3,7 +3,8 @@ mod sifr_generated_generated_support {
     use crate::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
     use ::sifr_runtime::SifrInt;
     use ::std::collections::HashMap;
-    pub(super) fn bisect_right<T: Clone + 'static + PartialOrd>(
+    #[must_use]
+    pub fn bisect_right<T: Clone + 'static + PartialOrd>(
         a: &[T],
         x: &T,
         lo: SifrInt,
@@ -48,7 +49,7 @@ mod sifr_generated_generated_support {
         }
         left.clone()
     }
-    pub(super) fn insort_right<T: Clone + 'static + PartialOrd>(
+    pub fn insort_right<T: Clone + 'static + PartialOrd>(
         a: &mut Vec<T>,
         x: &T,
         lo: SifrInt,
@@ -57,7 +58,8 @@ mod sifr_generated_generated_support {
         let pos: SifrInt = bisect_right(a, x, lo.clone(), hi.clone());
         a.insert(pos.clamp_slice_bound(a.len()), x.clone());
     }
-    pub(super) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    #[must_use]
+    pub fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
         items: &[T],
     ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
@@ -286,7 +288,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
+    pub fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
         "Convert list to a min-heap in-place. O(n) time.".to_string();
         let n: SifrInt = SifrInt::from(data.len());
         let mut i: SifrInt =
@@ -349,10 +351,8 @@ mod sifr_generated_generated_support {
         }
         top
     }
-    pub(super) fn heapreplace<T: Clone + 'static + PartialOrd>(
-        heap: &mut Vec<T>,
-        item: T,
-    ) -> Option<T> {
+    #[must_use]
+    pub fn heapreplace<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: T) -> Option<T> {
         if &SifrInt::from(heap.len()) == &SifrInt::from_i64(0) {
             return None;
         }
@@ -380,10 +380,8 @@ mod sifr_generated_generated_support {
         sifr_generated_sift_down(heap, SifrInt::from_i64(0), heap_len.clone());
         top
     }
-    pub(super) fn heappushpop<T: Clone + 'static + PartialOrd>(
-        heap: &mut Vec<T>,
-        item: &T,
-    ) -> Option<T> {
+    #[must_use]
+    pub fn heappushpop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) -> Option<T> {
         heappush(heap, item);
         heappop(heap)
     }

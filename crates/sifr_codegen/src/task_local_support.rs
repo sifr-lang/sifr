@@ -10,7 +10,7 @@ pub(crate) struct TaskLocal {
     attrs: Vec<syn::Attribute>,
     pub(crate) visibility: syn::Visibility,
     pub(crate) name: syn::Ident,
-    ty: syn::Type,
+    pub(crate) ty: syn::Type,
 }
 
 impl ToTokens for TaskLocal {

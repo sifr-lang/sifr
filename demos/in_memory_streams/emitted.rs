@@ -2,7 +2,8 @@
 mod sifr_generated_generated_support {
     use crate::{IOError, SifrGeneratedIoBinaryFileHandle, SifrGeneratedIoNativeFileHandle};
     use ::sifr_runtime::SifrInt;
-    pub(super) fn exists(path: &str) -> bool {
+    #[must_use]
+    pub fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
     fn sifr_generated_open_file(path: &str, mode: &str) -> Result<String, IOError> {
@@ -37,28 +38,36 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(super) fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
+    pub fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
         sifr_generated_file_close(&handle.id.clone());
     }
-    pub(super) fn file_read_bytes(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn file_read_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
         size: Option<SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
         sifr_generated_file_read_bytes(&handle.id.clone(), size.clone())
     }
-    pub(super) fn file_write_bytes(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn file_write_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
         data: &[u8],
     ) -> Result<(), IOError> {
         sifr_generated_file_write_bytes(&handle.id.clone(), data)
     }
-    pub(super) fn remove_file(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
     }
-    pub(super) fn sifr_generated_closed_stream_error() -> String {
+    #[must_use]
+    pub fn sifr_generated_closed_stream_error() -> String {
         "I/O operation on closed stream".to_string()
     }
-    pub(super) fn sifr_generated_invalid_whence_error(whence: SifrInt) -> String {
+    #[must_use]
+    pub fn sifr_generated_invalid_whence_error(whence: SifrInt) -> String {
         {
             let mut sifr_generated_concat: String = String::with_capacity(16usize);
             sifr_generated_concat.push_str("invalid whence: ");
@@ -66,7 +75,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn sifr_generated_negative_seek_error(offset: SifrInt) -> String {
+    #[must_use]
+    pub fn sifr_generated_negative_seek_error(offset: SifrInt) -> String {
         {
             let mut sifr_generated_concat: String = String::with_capacity(24usize);
             sifr_generated_concat.push_str("negative seek position: ");
@@ -74,18 +84,19 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn sifr_generated_mode_is_readable(mode: &str) -> bool {
+    #[must_use]
+    pub fn sifr_generated_mode_is_readable(mode: &str) -> bool {
         mode.contains(&"r".to_string()) || mode.contains(&"+".to_string())
     }
-    pub(super) fn sifr_generated_mode_is_writable(mode: &str) -> bool {
+    #[must_use]
+    pub fn sifr_generated_mode_is_writable(mode: &str) -> bool {
         mode.contains(&"w".to_string())
             || mode.contains(&"a".to_string())
             || mode.contains(&"+".to_string())
     }
-    pub(super) fn open_binary(
-        path: &str,
-        mode: &str,
-    ) -> Result<SifrGeneratedIoBinaryFileHandle, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn open_binary(path: &str, mode: &str) -> Result<SifrGeneratedIoBinaryFileHandle, IOError> {
         if !mode.contains(&"b".to_string()) {
             return Err(IOError::new("open_binary requires binary mode".to_string()));
         }

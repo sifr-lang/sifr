@@ -2,18 +2,20 @@
 mod sifr_generated_generated_support {
     use crate::{IOError, IndexError, ValueError};
     use ::sifr_runtime::SifrInt;
-    pub(super) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
     fn iterdir(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::iterdir(path).map_err(sifr_generated_io_err)
     }
-    pub(super) struct SifrGeneratedYielder<T> {
-        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    struct SifrGeneratedYielder<T> {
+        slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     }
-    pub(super) struct SifrGeneratedYieldFuture<T> {
-        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(super) value: Option<T>,
+    struct SifrGeneratedYieldFuture<T> {
+        slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        value: Option<T>,
     }
     impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
     impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
@@ -31,7 +33,7 @@ mod sifr_generated_generated_support {
         }
     }
     impl<T> SifrGeneratedYielder<T> {
-        pub(super) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
             SifrGeneratedYieldFuture {
                 slot: ::std::sync::Arc::clone(&self.slot),
                 value: Some(value),
@@ -55,14 +57,13 @@ mod sifr_generated_generated_support {
             Err(poisoned) => poisoned.into_inner().take(),
         }
     }
-    pub(super) struct SifrGeneratedGenerator<T> {
-        pub(super) producer:
-            Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
-        pub(super) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(super) complete: bool,
+    struct SifrGeneratedGenerator<T> {
+        producer: Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
+        yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        complete: bool,
     }
     impl<T> SifrGeneratedGenerator<T> {
-        pub(super) fn new<
+        fn new<
             F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
             Fut: ::std::future::Future<Output = ()> + 'static,
         >(
@@ -101,7 +102,7 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(super) trait SifrGeneratedAdd: Sized {
+    pub trait SifrGeneratedAdd: Sized {
         #[must_use]
         fn sifr_generated_add(self, rhs: Self) -> Self;
     }
@@ -140,7 +141,9 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn islice<T: Clone + 'static>(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn islice<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
         start_or_stop: SifrInt,
         slice_args: &[Option<SifrInt>],
@@ -191,7 +194,8 @@ mod sifr_generated_generated_support {
             actual_step_value_353dfaf5a4b331da.clone(),
         ))
     }
-    pub(super) fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
+    #[must_use]
+    pub fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
         data: Box<dyn Iterator<Item = T>>,
         initial: Option<T>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -278,7 +282,8 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn compress<T: Clone + 'static>(
+    #[must_use]
+    pub fn compress<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
         selectors: Box<dyn Iterator<Item = bool>>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -296,7 +301,8 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn takewhile<T: Clone + 'static>(
+    #[must_use]
+    pub fn takewhile<T: Clone + 'static>(
         pred: impl Fn(&T) -> bool + Send + Sync + 'static,
         data: Box<dyn Iterator<Item = T>>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -311,10 +317,13 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn run_command(cmd: &str) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn run_command(cmd: &str) -> Result<String, IOError> {
         ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
     }
-    pub(super) fn getpid() -> SifrInt {
+    #[must_use]
+    pub fn getpid() -> SifrInt {
         ::sifr_stdlib::sys::getpid().into_sifr_int()
     }
     fn sifr_generated_iter_list_str(entries: Vec<String>) -> Box<dyn Iterator<Item = String>> {
@@ -346,7 +355,9 @@ mod sifr_generated_generated_support {
     fn sifr_generated_iterdir_list(path: &str) -> Result<Vec<String>, IOError> {
         iterdir(path)
     }
-    pub(super) fn sifr_generated_iterdir_to_iter(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sifr_generated_iterdir_to_iter(
         path: &str,
     ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
         let sifr_generated_try_res: Result<
@@ -497,7 +508,7 @@ mod sifr_generated_project_unions {
     }
 }
 use crate::sifr_generated_generated_support::{
-    SifrInt, String, accumulate, compress, getpid, islice, run_command, takewhile, write_text,
+    String, accumulate, compress, getpid, islice, run_command, takewhile, write_text,
 };
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0;

@@ -7,7 +7,8 @@ mod sifr_generated_generated_support {
     };
     use ::sifr_runtime::SifrInt;
     use ::std::collections::HashMap;
-    pub(super) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    #[must_use]
+    pub fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
         items: &[T],
     ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
@@ -31,7 +32,8 @@ mod sifr_generated_generated_support {
         }
         SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
     }
-    pub(super) fn reduce<T: Clone + 'static, U: Clone + 'static>(
+    #[must_use]
+    pub fn reduce<T: Clone + 'static, U: Clone + 'static>(
         func: impl Fn(&U, &T) -> U,
         data: &[T],
         initial: &U,
@@ -225,7 +227,8 @@ mod sifr_generated_generated_support {
         }
         top
     }
-    pub(super) fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+    #[must_use]
+    pub fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
         let mut heap: Vec<T> = data.to_vec();
         heapify(&mut heap);
         let mut result: Vec<T> = Vec::new();
@@ -242,7 +245,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+    #[must_use]
+    pub fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
         if &n <= &SifrInt::from_i64(0) {
             return Vec::new();
         }
@@ -286,12 +290,12 @@ mod sifr_generated_generated_support {
         }
         result2
     }
-    pub(super) struct SifrGeneratedYielder<T> {
-        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    struct SifrGeneratedYielder<T> {
+        slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     }
-    pub(super) struct SifrGeneratedYieldFuture<T> {
-        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(super) value: Option<T>,
+    struct SifrGeneratedYieldFuture<T> {
+        slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        value: Option<T>,
     }
     impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
     impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
@@ -309,7 +313,7 @@ mod sifr_generated_generated_support {
         }
     }
     impl<T> SifrGeneratedYielder<T> {
-        pub(super) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
             SifrGeneratedYieldFuture {
                 slot: ::std::sync::Arc::clone(&self.slot),
                 value: Some(value),
@@ -333,14 +337,13 @@ mod sifr_generated_generated_support {
             Err(poisoned) => poisoned.into_inner().take(),
         }
     }
-    pub(super) struct SifrGeneratedGenerator<T> {
-        pub(super) producer:
-            Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
-        pub(super) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(super) complete: bool,
+    struct SifrGeneratedGenerator<T> {
+        producer: Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
+        yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        complete: bool,
     }
     impl<T> SifrGeneratedGenerator<T> {
-        pub(super) fn new<
+        fn new<
             F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
             Fut: ::std::future::Future<Output = ()> + 'static,
         >(
@@ -379,7 +382,7 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(super) trait SifrGeneratedAdd: Sized {
+    pub trait SifrGeneratedAdd: Sized {
         #[must_use]
         fn sifr_generated_add(self, rhs: Self) -> Self;
     }
@@ -399,7 +402,8 @@ mod sifr_generated_generated_support {
             self
         }
     }
-    pub(super) fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
+    #[must_use]
+    pub fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
         let iterables = iterables.to_vec();
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
@@ -411,7 +415,8 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn take<T: Clone + 'static>(n: SifrInt, data: &[T]) -> Vec<T> {
+    #[must_use]
+    pub fn take<T: Clone + 'static>(n: SifrInt, data: &[T]) -> Vec<T> {
         let mut result: Vec<T> = Vec::new();
         let mut count: SifrInt = SifrInt::from_i64(0);
         for item in data.iter().cloned() {
@@ -423,7 +428,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn flatten<T: Clone + 'static>(lists: &[Vec<T>]) -> Vec<T> {
+    #[must_use]
+    pub fn flatten<T: Clone + 'static>(lists: &[Vec<T>]) -> Vec<T> {
         let mut result: Vec<T> = Vec::new();
         for inner in lists.iter().cloned() {
             for val in inner.iter().cloned() {
@@ -432,7 +438,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
+    #[must_use]
+    pub fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
         data: Box<dyn Iterator<Item = T>>,
         initial: Option<T>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -519,7 +526,8 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn compress<T: Clone + 'static>(
+    #[must_use]
+    pub fn compress<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
         selectors: Box<dyn Iterator<Item = bool>>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -537,7 +545,8 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn dropwhile<T: Clone + 'static>(
+    #[must_use]
+    pub fn dropwhile<T: Clone + 'static>(
         pred: impl Fn(&T) -> bool + Send + Sync + 'static,
         data: Box<dyn Iterator<Item = T>>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -557,7 +566,8 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn takewhile<T: Clone + 'static>(
+    #[must_use]
+    pub fn takewhile<T: Clone + 'static>(
         pred: impl Fn(&T) -> bool + Send + Sync + 'static,
         data: Box<dyn Iterator<Item = T>>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -572,7 +582,8 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn filterfalse<T: Clone + 'static>(
+    #[must_use]
+    pub fn filterfalse<T: Clone + 'static>(
         pred: impl Fn(&T) -> bool + Send + Sync + 'static,
         data: Box<dyn Iterator<Item = T>>,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -586,7 +597,8 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(super) fn zip_longest<T: Clone + 'static>(
+    #[must_use]
+    pub fn zip_longest<T: Clone + 'static>(
         a: Box<dyn Iterator<Item = T>>,
         b: Box<dyn Iterator<Item = T>>,
         fill: &T,
@@ -651,28 +663,35 @@ mod sifr_generated_generated_support {
             message: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(super) const fn sifr_generated_const_5f4d545f4e() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f4e() -> SifrInt {
         SifrInt::from_i64(624)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f4d() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f4d() -> SifrInt {
         SifrInt::from_i64(397)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f4d41545249585f41() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f4d41545249585f41() -> SifrInt {
         SifrInt::from_i64(2_567_483_615)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f55505045525f4d41534b() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f55505045525f4d41534b() -> SifrInt {
         SifrInt::from_i64(2_147_483_648)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f4c4f5745525f4d41534b() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f4c4f5745525f4d41534b() -> SifrInt {
         SifrInt::from_i64(2_147_483_647)
     }
     const fn sifr_generated_const_5f4d545f46() -> SifrInt {
         SifrInt::from_i64(1_812_433_253)
     }
-    pub(super) const fn sifr_generated_const_5f4d545f574f52445f4d41534b() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5f4d545f574f52445f4d41534b() -> SifrInt {
         SifrInt::from_i64(4_294_967_295)
     }
-    pub(super) fn sifr_generated_state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
+    #[must_use]
+    pub fn sifr_generated_state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
         let value: Option<SifrInt> = {
             let sifr_generated_checked_read_collection = &words;
             let sifr_generated_checked_read_index = index.clone();
@@ -687,20 +706,23 @@ mod sifr_generated_generated_support {
         };
         value_value_7ce4fd9430e80cea
     }
-    pub(super) fn sifr_generated_clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
+    #[must_use]
+    pub fn sifr_generated_clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
         let mut copied: Vec<SifrInt> = Vec::new();
         for word in words.iter().cloned() {
             copied.push(word);
         }
         copied
     }
-    pub(super) fn sifr_generated_normalize_seed_input(seed_value: Option<SifrInt>) -> SifrInt {
+    #[must_use]
+    pub fn sifr_generated_normalize_seed_input(seed_value: Option<SifrInt>) -> SifrInt {
         let Some(seed_value) = seed_value.clone() else {
             return random_seed();
         };
         seed_value.clone()
     }
-    pub(super) fn sifr_generated_seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
+    #[must_use]
+    pub fn sifr_generated_seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
         let mut words: Vec<SifrInt> =
             vec![&seed_value & &sifr_generated_const_5f4d545f574f52445f4d41534b()];
         let mut i: SifrInt = SifrInt::from_i64(1);
@@ -757,7 +779,7 @@ mod sifr_generated_generated_support {
     ) {
         sifr_generated_store_state_into_module_storage(&generator.getstate());
     }
-    pub(super) fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
+    pub fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let n: SifrInt = SifrInt::from(items.len());
@@ -831,10 +853,9 @@ mod sifr_generated_generated_support {
 }
 mod sifr_generated_project_nominals {
     use crate::sifr_generated_generated_support::{
-        SifrInt, String, f64, sifr_generated_clone_words,
-        sifr_generated_const_5f4d545f4c4f5745525f4d41534b, sifr_generated_const_5f4d545f4d,
-        sifr_generated_const_5f4d545f4d41545249585f41, sifr_generated_const_5f4d545f4e,
-        sifr_generated_const_5f4d545f574f52445f4d41534b,
+        String, f64, sifr_generated_clone_words, sifr_generated_const_5f4d545f4c4f5745525f4d41534b,
+        sifr_generated_const_5f4d545f4d, sifr_generated_const_5f4d545f4d41545249585f41,
+        sifr_generated_const_5f4d545f4e, sifr_generated_const_5f4d545f574f52445f4d41534b,
         sifr_generated_const_5f4d545f55505045525f4d41534b, sifr_generated_normalize_seed_input,
         sifr_generated_seed_words_from_seed, sifr_generated_state_word_at,
     };
@@ -1532,8 +1553,8 @@ mod sifr_generated_project_nominals {
     impl ::std::error::Error for IndexError {}
 }
 use crate::sifr_generated_generated_support::{
-    SifrInt, String, accumulate, chain, compress, dropwhile, f64, filterfalse, flatten, from_list,
-    nlargest, nsmallest, reduce, shuffle, take, takewhile, zip_longest,
+    String, accumulate, chain, compress, dropwhile, f64, filterfalse, flatten, from_list, nlargest,
+    nsmallest, reduce, shuffle, take, takewhile, zip_longest,
 };
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IndexError;

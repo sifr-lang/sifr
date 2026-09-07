@@ -30,16 +30,15 @@ fn task_local_support_visibility_preserves_names_types_attributes_and_boundaries
         task_local! { static UNQUALIFIED: String; }
         mod nested { tokio::task_local! { static NESTED: String; } }
     "#;
-    let visible = crate::crate_visible_generated_support_source(source, &[]);
+    let consumers =
+        ["fn consume() { __SIFR_TASK_CANCELLATION.get(); __SIFR_TASK_CONTEXT_LABEL.get(); }"];
+    let visible = crate::crate_visible_generated_support_source(source, &consumers);
     let declared = locals(&visible);
     assert_eq!(declared.len(), 2);
     assert_eq!(declared[0].name, "__SIFR_TASK_CANCELLATION");
     assert_eq!(declared[1].name, "__SIFR_TASK_CONTEXT_LABEL");
     for declaration in &declared {
-        assert_eq!(
-            declaration.visibility.to_token_stream().to_string(),
-            "pub (super)"
-        );
+        assert_eq!(declaration.visibility.to_token_stream().to_string(), "pub");
     }
     assert_eq!(declared[0].ty.to_token_stream().to_string(), "Carrier");
     assert_eq!(declared[1].ty.to_token_stream().to_string(), "String");
@@ -53,7 +52,7 @@ fn task_local_support_visibility_preserves_names_types_attributes_and_boundaries
         );
     }
     assert_eq!(
-        crate::crate_visible_generated_support_source(&visible, &[]),
+        crate::crate_visible_generated_support_source(&visible, &consumers),
         visible
     );
     // Public module rewriting must not turn support macro statics into a public API.
@@ -155,7 +154,7 @@ fn assert_cancellation_owner(prelude: &str) {
     assert_eq!(cancellation.len(), 1, "{prelude}");
     assert_eq!(
         cancellation[0].visibility.to_token_stream().to_string(),
-        "pub (super)"
+        "pub"
     );
     assert_eq!(prelude.matches("mod __sifr_generated_support").count(), 1);
 }

@@ -8,7 +8,8 @@ mod sifr_generated_generated_support {
         ValueError,
     };
     use ::sifr_runtime::SifrInt;
-    pub(super) fn sifr_generated_split_inline_option(token: &str) -> (bool, String, String) {
+    #[must_use]
+    pub fn sifr_generated_split_inline_option(token: &str) -> (bool, String, String) {
         let sifr_generated_chars_token: Vec<char> = token.chars().collect::<Vec<char>>();
         let mut key: String = String::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
@@ -58,7 +59,8 @@ mod sifr_generated_generated_support {
             String::new(),
         )
     }
-    pub(super) fn sifr_generated_is_digit_string(value: &str) -> bool {
+    #[must_use]
+    pub fn sifr_generated_is_digit_string(value: &str) -> bool {
         if value.is_empty() {
             return false;
         }
@@ -69,7 +71,8 @@ mod sifr_generated_generated_support {
         }
         true
     }
-    pub(super) fn sifr_generated_normalize_nargs(nargs: &str) -> String {
+    #[must_use]
+    pub fn sifr_generated_normalize_nargs(nargs: &str) -> String {
         if nargs.is_empty() {
             return "1".to_string();
         }
@@ -106,7 +109,8 @@ mod sifr_generated_generated_support {
         }
         "1".to_string()
     }
-    pub(super) fn sifr_generated_nargs_is_multi(nargs: &str) -> bool {
+    #[must_use]
+    pub fn sifr_generated_nargs_is_multi(nargs: &str) -> bool {
         let normalized: String = sifr_generated_normalize_nargs(nargs);
         if normalized == "*" || normalized == "+" {
             return true;
@@ -132,7 +136,8 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(super) fn sifr_generated_coerce_bool(raw: &str) -> Option<String> {
+    #[must_use]
+    pub fn sifr_generated_coerce_bool(raw: &str) -> Option<String> {
         let normalized: String = raw.to_lowercase();
         if normalized == "1" || normalized == "true" || normalized == "yes" || normalized == "on" {
             return Some("true".to_string());
@@ -142,7 +147,8 @@ mod sifr_generated_generated_support {
         }
         None
     }
-    pub(super) fn sifr_generated_copy_token(value: &Option<String>) -> String {
+    #[must_use]
+    pub fn sifr_generated_copy_token(value: &Option<String>) -> String {
         let Some(value) = value.as_ref() else {
             return String::new();
         };
@@ -153,7 +159,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn sifr_generated_derive_dest(name: &str) -> String {
+    #[must_use]
+    pub fn sifr_generated_derive_dest(name: &str) -> String {
         let sifr_generated_chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
         if name.starts_with("--") {
             return {
@@ -196,7 +203,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn sifr_generated_is_option_like_token(
+    #[must_use]
+    pub fn sifr_generated_is_option_like_token(
         specs: &[SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec],
         token: &str,
     ) -> bool {
@@ -234,7 +242,8 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(super) fn sifr_generated_contains_int(values: &[SifrInt], target: SifrInt) -> bool {
+    #[must_use]
+    pub fn sifr_generated_contains_int(values: &[SifrInt], target: SifrInt) -> bool {
         for value in values.iter().cloned() {
             if &value == &target {
                 return true;
@@ -242,7 +251,9 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(super) fn topological_sort(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn topological_sort(
         num_nodes: SifrInt,
         from_nodes: &[SifrInt],
         to_nodes: &[SifrInt],
@@ -348,7 +359,8 @@ mod sifr_generated_generated_support {
         }
         Ok(result)
     }
-    pub(super) fn is_valid_ipv4(addr: &str) -> bool {
+    #[must_use]
+    pub fn is_valid_ipv4(addr: &str) -> bool {
         let parts: Vec<String> = addr
             .split('.')
             .map(::std::string::ToString::to_string)
@@ -431,7 +443,8 @@ mod sifr_generated_generated_support {
         }
         result.clone()
     }
-    pub(super) fn sifr_generated_ip_to_int_raw(addr: &str) -> SifrInt {
+    #[must_use]
+    pub fn sifr_generated_ip_to_int_raw(addr: &str) -> SifrInt {
         let parts: Vec<String> = addr
             .split('.')
             .map(::std::string::ToString::to_string)
@@ -523,7 +536,8 @@ mod sifr_generated_generated_support {
         }
         private_hit
     }
-    pub(super) fn int_to_ip(val: SifrInt) -> String {
+    #[must_use]
+    pub fn int_to_ip(val: SifrInt) -> String {
         if &val < &SifrInt::from_i64(0) || &val > &SifrInt::from_i64(4_294_967_295) {
             return "0.0.0.0".to_string();
         }
@@ -545,7 +559,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn is_global(addr: &str) -> bool {
+    #[must_use]
+    pub fn is_global(addr: &str) -> bool {
         if !is_valid_ipv4(addr) {
             return false;
         }
@@ -559,7 +574,8 @@ mod sifr_generated_generated_support {
         }
         !sifr_generated_is_private_ipv4_value(val.clone())
     }
-    pub(super) fn is_link_local(addr: &str) -> bool {
+    #[must_use]
+    pub fn is_link_local(addr: &str) -> bool {
         if !is_valid_ipv4(addr) {
             return false;
         }
@@ -570,7 +586,9 @@ mod sifr_generated_generated_support {
             SifrInt::from_i64(2_852_061_183),
         )
     }
-    pub(super) fn ip_address(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn ip_address(
         addr: &str,
     ) -> Result<
         SifrGeneratedStdlibSifrX2eipaddressX2eIPv4Address,
@@ -685,7 +703,8 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(super) fn sifr_generated_hex_digit_value(ch: &str) -> SifrInt {
+    #[must_use]
+    pub fn sifr_generated_hex_digit_value(ch: &str) -> SifrInt {
         if ch == "0" {
             return SifrInt::from_i64(0);
         }
@@ -954,10 +973,13 @@ mod sifr_generated_generated_support {
         }
         Ok(canonical)
     }
-    pub(super) fn uuid4_obj() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
+    #[must_use]
+    pub fn uuid4_obj() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid4())
     }
-    pub(super) fn uuid_from_hex(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn uuid_from_hex(
         hex_str: &str,
     ) -> Result<SifrGeneratedStdlibSifrX2euuidX2eUUID, ValueError> {
         let sifr_generated_try_res: Result<
@@ -2237,9 +2259,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-use crate::sifr_generated_generated_support::{
-    ip_address, is_global, is_link_local, uuid_from_hex, uuid4_obj,
-};
+use crate::sifr_generated_generated_support::{ip_address, uuid_from_hex, uuid4_obj};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ParseError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser;

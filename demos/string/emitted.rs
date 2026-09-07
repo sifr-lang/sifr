@@ -1,16 +1,20 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use ::sifr_runtime::SifrInt;
-    pub(super) fn sifr_generated_const_61736369695f6c6f77657263617365() -> String {
+    #[must_use]
+    pub fn sifr_generated_const_61736369695f6c6f77657263617365() -> String {
         "abcdefghijklmnopqrstuvwxyz".to_string()
     }
-    pub(super) fn sifr_generated_const_646967697473() -> String {
+    #[must_use]
+    pub fn sifr_generated_const_646967697473() -> String {
         "0123456789".to_string()
     }
-    pub(super) fn sifr_generated_const_77686974657370616365() -> String {
+    #[must_use]
+    pub fn sifr_generated_const_77686974657370616365() -> String {
         " \t\n\r\u{b}\u{c}".to_string()
     }
-    pub(super) fn capwords(s: &str) -> String {
+    #[must_use]
+    pub fn capwords(s: &str) -> String {
         let normalized: String = s
             .replace('\t', " ")
             .replace('\n', " ")
@@ -45,7 +49,7 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

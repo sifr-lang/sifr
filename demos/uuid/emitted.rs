@@ -2,7 +2,7 @@
 mod sifr_generated_generated_support {
     use crate::{SifrGeneratedStdlibSifrX2euuidX2eUUID, ValueError};
     use ::sifr_runtime::SifrInt;
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -29,7 +29,8 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(super) fn uuid4() -> String {
+    #[must_use]
+    pub fn uuid4() -> String {
         ::sifr_stdlib::uuid::uuid4()
     }
     fn uuid3_text(namespace: &str, name: &str) -> String {
@@ -133,7 +134,8 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(super) fn sifr_generated_hex_digit_value(ch: &str) -> SifrInt {
+    #[must_use]
+    pub fn sifr_generated_hex_digit_value(ch: &str) -> SifrInt {
         if ch == "0" {
             return SifrInt::from_i64(0);
         }
@@ -402,10 +404,13 @@ mod sifr_generated_generated_support {
         }
         Ok(canonical)
     }
-    pub(super) fn uuid4_obj() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
+    #[must_use]
+    pub fn uuid4_obj() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid4())
     }
-    pub(super) fn uuid_from_hex(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn uuid_from_hex(
         hex_str: &str,
     ) -> Result<SifrGeneratedStdlibSifrX2euuidX2eUUID, ValueError> {
         let sifr_generated_try_res: Result<
@@ -420,23 +425,26 @@ mod sifr_generated_generated_support {
             Err(ValueError::new(e.message.clone()))
         })
     }
-    pub(super) fn uuid3(
+    #[must_use]
+    pub fn uuid3(
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid3_text(&namespace.to_str(), name))
     }
-    pub(super) fn uuid5(
+    #[must_use]
+    pub fn uuid5(
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid5_text(&namespace.to_str(), name))
     }
+    #[must_use]
     #[expect(
         non_snake_case,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(super) fn NAMESPACE_DNS() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
+    pub fn NAMESPACE_DNS() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
             "6ba7b810-9dad-11d1-80b4-00c04fd430c8".to_string(),
         )

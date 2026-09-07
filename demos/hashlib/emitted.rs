@@ -29,7 +29,9 @@ mod sifr_generated_generated_support {
     fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2s_bytes(data)
     }
-    pub(super) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
     fn sifr_generated_open_file(path: &str, mode: &str) -> Result<String, IOError> {
@@ -148,7 +150,8 @@ mod sifr_generated_generated_support {
             SifrInt::from_i64(0),
         )
     }
-    pub(super) fn copy_hash(
+    #[must_use]
+    pub fn copy_hash(
         h: &SifrGeneratedStdlibSifrX2ehashlibX2eHashObject,
     ) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&h.algorithm.clone(), &h.data.clone())
@@ -164,7 +167,8 @@ mod sifr_generated_generated_support {
             || n == "blake2b"
             || n == "blake2s"
     }
-    pub(super) fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
+    #[must_use]
+    pub fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
         if algorithm == "md5" {
             return md5_bytes(data);
         } else if algorithm == "sha1" {
@@ -184,7 +188,8 @@ mod sifr_generated_generated_support {
         }
         Vec::new()
     }
-    pub(super) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
+    #[must_use]
+    pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
             let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
@@ -198,7 +203,9 @@ mod sifr_generated_generated_support {
             sifr_generated_hex
         }
     }
-    pub(super) fn new(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn new(
         name: &str,
         data: &[u8],
     ) -> Result<SifrGeneratedStdlibSifrX2ehashlibX2eHashObject, ValueError> {
@@ -212,7 +219,8 @@ mod sifr_generated_generated_support {
         }
         Ok(sifr_generated_build_hash(name, data))
     }
-    pub(super) fn algorithms_guaranteed() -> Vec<String> {
+    #[must_use]
+    pub fn algorithms_guaranteed() -> Vec<String> {
         vec![
             "md5".to_string(),
             "sha1".to_string(),
@@ -224,7 +232,9 @@ mod sifr_generated_generated_support {
             "blake2s".to_string(),
         ]
     }
-    pub(super) fn file_digest(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn file_digest(
         path: &str,
         name: &str,
     ) -> Result<String, SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError> {
@@ -271,13 +281,15 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(super) fn md5(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    #[must_use]
+    pub fn md5(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"md5".to_string(), data)
     }
-    pub(super) fn sha256(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    #[must_use]
+    pub fn sha256(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"sha256".to_string(), data)
     }
-    pub(super) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+    pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -304,7 +316,7 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

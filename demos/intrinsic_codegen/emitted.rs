@@ -1,19 +1,24 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use ::sifr_runtime::SifrInt;
-    pub(super) fn sqrt(x: f64) -> f64 {
+    #[must_use]
+    pub fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
-    pub(super) fn floor(x: f64) -> SifrInt {
+    #[must_use]
+    pub fn floor(x: f64) -> SifrInt {
         ::sifr_stdlib::math::floor(x).into_sifr_int()
     }
-    pub(super) fn ceil(x: f64) -> SifrInt {
+    #[must_use]
+    pub fn ceil(x: f64) -> SifrInt {
         ::sifr_stdlib::math::ceil(x).into_sifr_int()
     }
-    pub(super) fn atan2(y: f64, x: f64) -> f64 {
+    #[must_use]
+    pub fn atan2(y: f64, x: f64) -> f64 {
         ::sifr_stdlib::math::atan2(y, x)
     }
-    pub(super) const fn isfinite(x: f64) -> bool {
+    #[must_use]
+    pub const fn isfinite(x: f64) -> bool {
         ::sifr_stdlib::math::isfinite(x)
     }
 }

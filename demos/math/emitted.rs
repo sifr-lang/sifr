@@ -1,32 +1,39 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use ::sifr_runtime::SifrInt;
-    pub(super) const INF: f64 = f64::INFINITY;
+    pub const INF: f64 = f64::INFINITY;
     fn log(x: f64) -> f64 {
         ::sifr_stdlib::math::log(x)
     }
-    pub(super) fn cbrt(x: f64) -> f64 {
+    #[must_use]
+    pub fn cbrt(x: f64) -> f64 {
         ::sifr_stdlib::math::cbrt(x)
     }
-    pub(super) fn exp2(x: f64) -> f64 {
+    #[must_use]
+    pub fn exp2(x: f64) -> f64 {
         ::sifr_stdlib::math::exp2(x)
     }
-    pub(super) const fn isnan(x: f64) -> bool {
+    #[must_use]
+    pub const fn isnan(x: f64) -> bool {
         ::sifr_stdlib::math::isnan(x)
     }
     const fn isinf(x: f64) -> bool {
         ::sifr_stdlib::math::isinf(x)
     }
-    pub(super) fn remainder(x: f64, y: f64) -> f64 {
+    #[must_use]
+    pub fn remainder(x: f64, y: f64) -> f64 {
         ::sifr_stdlib::math::remainder(x, y)
     }
-    pub(super) fn fma(x: f64, y: f64, z: f64) -> f64 {
+    #[must_use]
+    pub fn fma(x: f64, y: f64, z: f64) -> f64 {
         ::sifr_stdlib::math::fma(x, y, z)
     }
-    pub(super) const fn isnormal(x: f64) -> bool {
+    #[must_use]
+    pub const fn isnormal(x: f64) -> bool {
         ::sifr_stdlib::math::isnormal(x)
     }
-    pub(super) fn issubnormal(x: f64) -> bool {
+    #[must_use]
+    pub fn issubnormal(x: f64) -> bool {
         ::sifr_stdlib::math::issubnormal(x)
     }
     fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
@@ -38,16 +45,20 @@ mod sifr_generated_generated_support {
     fn sumprod_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
         ::sifr_stdlib::math::sumprod(p, q)
     }
-    pub(super) fn nextafter(x: f64, y: f64) -> f64 {
+    #[must_use]
+    pub fn nextafter(x: f64, y: f64) -> f64 {
         ::sifr_stdlib::math::nextafter(x, y)
     }
-    pub(super) fn ulp(x: f64) -> f64 {
+    #[must_use]
+    pub fn ulp(x: f64) -> f64 {
         ::sifr_stdlib::math::ulp(x)
     }
-    pub(super) fn log_base(x: f64, base: f64) -> f64 {
+    #[must_use]
+    pub fn log_base(x: f64, base: f64) -> f64 {
         log(x) / log(base)
     }
-    pub(super) fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
+    #[must_use]
+    pub fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
         if rel_tol < 0.0_f64 {
             return false;
         }
@@ -92,22 +103,25 @@ mod sifr_generated_generated_support {
         }
         out
     }
-    pub(super) fn dist(p: &[f64], q: &[f64]) -> f64 {
+    #[must_use]
+    pub fn dist(p: &[f64], q: &[f64]) -> f64 {
         dist_impl(
             sifr_generated_copy_float_list(p),
             sifr_generated_copy_float_list(q),
         )
     }
-    pub(super) fn fsum(data: &[f64]) -> f64 {
+    #[must_use]
+    pub fn fsum(data: &[f64]) -> f64 {
         fsum_impl(sifr_generated_copy_float_list(data))
     }
-    pub(super) fn sumprod(p: &[f64], q: &[f64]) -> f64 {
+    #[must_use]
+    pub fn sumprod(p: &[f64], q: &[f64]) -> f64 {
         sumprod_impl(
             sifr_generated_copy_float_list(p),
             sifr_generated_copy_float_list(q),
         )
     }
-    pub(super) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+    pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -134,7 +148,7 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

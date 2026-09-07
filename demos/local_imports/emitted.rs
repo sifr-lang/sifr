@@ -5,8 +5,9 @@ mod sifr_generated_generated_support {
         clippy::approx_constant,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(super) const PI: f64 = 3.141_592_653_589_793_f64;
-    pub(super) fn floor(x: f64) -> SifrInt {
+    pub const PI: f64 = 3.141_592_653_589_793_f64;
+    #[must_use]
+    pub fn floor(x: f64) -> SifrInt {
         ::sifr_stdlib::math::floor(x).into_sifr_int()
     }
 }

@@ -9,7 +9,7 @@ struct Capture {
     range: Range<usize>,
 }
 
-pub(super) fn names(rust_macro: &syn::Macro) -> HashSet<String> {
+pub(crate) fn names(rust_macro: &syn::Macro) -> HashSet<String> {
     format_string(rust_macro)
         .map(|format| {
             captures(&format)

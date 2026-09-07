@@ -5,10 +5,13 @@ mod sifr_generated_generated_support {
         SifrGeneratedStdlibSifrX2etimeX2estructTime, ValueError,
     };
     use ::sifr_runtime::SifrInt;
-    pub(super) fn b32encode(s: &str) -> String {
+    #[must_use]
+    pub fn b32encode(s: &str) -> String {
         ::sifr_stdlib::base64::b32encode(s)
     }
-    pub(super) fn b32decode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b32decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::b32decode(s).map_err(|sifr_generated_bridge_error| ParseError {
             message: sifr_generated_bridge_error.to_string(),
         })
@@ -37,7 +40,8 @@ mod sifr_generated_generated_support {
     fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2s_bytes(data)
     }
-    pub(super) fn disk_usage(path: &str) -> Vec<SifrInt> {
+    #[must_use]
+    pub fn disk_usage(path: &str) -> Vec<SifrInt> {
         ::sifr_stdlib::fs::disk_usage(path)
             .into_iter()
             .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
@@ -141,7 +145,8 @@ mod sifr_generated_generated_support {
         }
         Vec::new()
     }
-    pub(super) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
+    #[must_use]
+    pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
             let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
@@ -155,49 +160,64 @@ mod sifr_generated_generated_support {
             sifr_generated_hex
         }
     }
-    pub(super) fn sha224(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    #[must_use]
+    pub fn sha224(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"sha224".to_string(), data)
     }
-    pub(super) fn sha384(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    #[must_use]
+    pub fn sha384(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"sha384".to_string(), data)
     }
-    pub(super) fn blake2b(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    #[must_use]
+    pub fn blake2b(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"blake2b".to_string(), data)
     }
-    pub(super) fn blake2s(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    #[must_use]
+    pub fn blake2s(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"blake2s".to_string(), data)
     }
-    pub(super) fn erf(x: f64) -> f64 {
+    #[must_use]
+    pub fn erf(x: f64) -> f64 {
         ::sifr_stdlib::math::erf(x)
     }
-    pub(super) fn erfc(x: f64) -> f64 {
+    #[must_use]
+    pub fn erfc(x: f64) -> f64 {
         ::sifr_stdlib::math::erfc(x)
     }
-    pub(super) fn gamma(x: f64) -> f64 {
+    #[must_use]
+    pub fn gamma(x: f64) -> f64 {
         ::sifr_stdlib::math::gamma(x)
     }
-    pub(super) fn lgamma(x: f64) -> f64 {
+    #[must_use]
+    pub fn lgamma(x: f64) -> f64 {
         ::sifr_stdlib::math::lgamma(x)
     }
-    pub(super) fn frexp(x: f64) -> Vec<f64> {
+    #[must_use]
+    pub fn frexp(x: f64) -> Vec<f64> {
         ::sifr_stdlib::math::frexp(x)
     }
-    pub(super) fn ldexp(m: f64, e: SifrInt) -> f64 {
+    #[must_use]
+    pub fn ldexp(m: f64, e: SifrInt) -> f64 {
         ::sifr_stdlib::math::ldexp(m, ::sifr_runtime::interop::SifrIntBridge::from(e))
     }
-    pub(super) fn modf(x: f64) -> Vec<f64> {
+    #[must_use]
+    pub fn modf(x: f64) -> Vec<f64> {
         ::sifr_stdlib::math::modf(x)
     }
-    pub(super) fn nextafter(x: f64, y: f64) -> f64 {
+    #[must_use]
+    pub fn nextafter(x: f64, y: f64) -> f64 {
         ::sifr_stdlib::math::nextafter(x, y)
     }
-    pub(super) fn ulp(x: f64) -> f64 {
+    #[must_use]
+    pub fn ulp(x: f64) -> f64 {
         ::sifr_stdlib::math::ulp(x)
     }
-    pub(super) fn getpid() -> SifrInt {
+    #[must_use]
+    pub fn getpid() -> SifrInt {
         ::sifr_stdlib::sys::getpid().into_sifr_int()
     }
-    pub(super) fn cpu_count() -> SifrInt {
+    #[must_use]
+    pub fn cpu_count() -> SifrInt {
         ::sifr_stdlib::sys::cpu_count().into_sifr_int()
     }
     fn platform_system() -> String {
@@ -209,16 +229,21 @@ mod sifr_generated_generated_support {
     fn platform_processor() -> String {
         ::sifr_stdlib::platform::platform_processor()
     }
-    pub(super) fn system() -> String {
+    #[must_use]
+    pub fn system() -> String {
         platform_system()
     }
-    pub(super) fn machine() -> String {
+    #[must_use]
+    pub fn machine() -> String {
         platform_arch()
     }
-    pub(super) fn processor() -> String {
+    #[must_use]
+    pub fn processor() -> String {
         platform_processor()
     }
-    pub(super) fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
         ::sifr_stdlib::time::strptime(s, fmt).map_err(|sifr_generated_bridge_error| ValueError {
             message: sifr_generated_bridge_error.to_string(),
         })
@@ -582,11 +607,13 @@ mod sifr_generated_generated_support {
             SifrInt::from_i64(0),
         )
     }
-    pub(super) fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+    #[must_use]
+    pub fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_gmtime_intrinsic(epoch);
         sifr_generated_to_struct_time(&rendered)
     }
-    pub(super) fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+    #[must_use]
+    pub fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_localtime_intrinsic(epoch);
         sifr_generated_to_struct_time(&rendered)
     }

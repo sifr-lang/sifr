@@ -7,6 +7,7 @@ mod api_cleanup;
 mod enum_variant_cleanup;
 mod field_name_cleanup;
 mod format_capture;
+pub(crate) use format_capture::names as generated_format_capture_names;
 mod identifier_canonicalizer;
 mod identifier_policy;
 mod item_demand;
@@ -20,6 +21,7 @@ pub(crate) use project_support_pruning::{
     import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
 };
 mod source_expectations;
+mod support_import_cleanup;
 mod syntax_cleanup;
 
 use api_cleanup::improve_generated_api_items;
@@ -63,12 +65,13 @@ pub fn canonicalize_generated_rust_project(
 ) -> Result<BTreeMap<String, String>, String> {
     let fields = field_name_cleanup::canonicalize_fields(sources)?;
     let names = identifier_canonicalizer::project_name_map(fields.values().map(String::as_str))?;
-    fields
+    let canonical = fields
         .into_iter()
         .map(|(module, source)| {
             canonicalize_source_with_names(&source, &names).map(|source| (module, source))
         })
-        .collect()
+        .collect::<Result<BTreeMap<_, _>, _>>()?;
+    support_import_cleanup::refresh_support_imports(canonical)
 }
 
 fn canonicalize_source_with_names(
@@ -77,7 +80,11 @@ fn canonicalize_source_with_names(
 ) -> Result<String, String> {
     let structurally_pruned = prune_closed_generated_binary(source)?;
     let source = structurally_pruned.as_deref().unwrap_or(source);
-    let mut canonical = identifier_canonicalizer::canonicalize_identifiers(source, names)?;
+    let canonical = identifier_canonicalizer::canonicalize_identifiers(source, names)?;
+    canonicalize_named_source(canonical)
+}
+
+fn canonicalize_named_source(mut canonical: String) -> Result<String, String> {
     for _ in 0..16 {
         let rewritten = rewrite_format_captures(&canonical)?;
         let structurally_pruned = prune_closed_generated_binary(&rewritten)?;

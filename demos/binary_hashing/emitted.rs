@@ -36,10 +36,13 @@ mod sifr_generated_generated_support {
     fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2s_bytes(data)
     }
-    pub(super) fn b64encode_bytes(data: &[u8]) -> Vec<u8> {
+    #[must_use]
+    pub fn b64encode_bytes(data: &[u8]) -> Vec<u8> {
         base64_encode_bytes(data)
     }
-    pub(super) fn b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
         base64_decode_bytes(data)
     }
     fn sifr_generated_build_hash(
@@ -131,7 +134,8 @@ mod sifr_generated_generated_support {
             || n == "blake2b"
             || n == "blake2s"
     }
-    pub(super) fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
+    #[must_use]
+    pub fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
         if algorithm == "md5" {
             return md5_bytes(data);
         } else if algorithm == "sha1" {
@@ -151,7 +155,8 @@ mod sifr_generated_generated_support {
         }
         Vec::new()
     }
-    pub(super) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
+    #[must_use]
+    pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
             let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
@@ -165,7 +170,9 @@ mod sifr_generated_generated_support {
             sifr_generated_hex
         }
     }
-    pub(super) fn new(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn new(
         name: &str,
         data: &[u8],
     ) -> Result<SifrGeneratedStdlibSifrX2ehashlibX2eHashObject, ValueError> {

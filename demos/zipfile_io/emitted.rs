@@ -2,13 +2,18 @@
 mod sifr_generated_generated_support {
     use crate::IOError;
     use ::sifr_runtime::SifrInt;
-    pub(super) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(super) fn exists(path: &str) -> bool {
+    #[must_use]
+    pub fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
-    pub(super) fn remove_file(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
     }
     fn gettempdir() -> String {
@@ -25,7 +30,8 @@ mod sifr_generated_generated_support {
         let n: SifrInt = random_int(SifrInt::from_i64(100_000), SifrInt::from_i64(999_999));
         n.to_string()
     }
-    pub(super) fn mktemp_path(prefix: &str) -> String {
+    #[must_use]
+    pub fn mktemp_path(prefix: &str) -> String {
         let suffix: String = sifr_generated_random_suffix();
         let mut root: String = gettempdir();
         let sifr_generated_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
@@ -65,33 +71,40 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn zip_create(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn zip_create(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::zipfile::zip_create(path).map_err(sifr_generated_io_err)
     }
-    pub(super) fn zip_add_file(zip_path: &str, name: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn zip_add_file(zip_path: &str, name: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::zipfile::zip_add_file(zip_path, name, content).map_err(sifr_generated_io_err)
     }
-    pub(super) fn zip_add_file_bytes(
-        zip_path: &str,
-        name: &str,
-        content: &[u8],
-    ) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn zip_add_file_bytes(zip_path: &str, name: &str, content: &[u8]) -> Result<(), IOError> {
         ::sifr_stdlib::zipfile::zip_add_file_bytes(zip_path, name, content)
             .map_err(sifr_generated_io_err)
     }
-    pub(super) fn zip_read_file_bytes(zip_path: &str, name: &str) -> Result<Vec<u8>, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn zip_read_file_bytes(zip_path: &str, name: &str) -> Result<Vec<u8>, IOError> {
         ::sifr_stdlib::zipfile::zip_read_file_bytes(zip_path, name).map_err(sifr_generated_io_err)
     }
     fn zip_namelist(zip_path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::zipfile::zip_namelist(zip_path).map_err(sifr_generated_io_err)
     }
-    pub(super) const fn sifr_generated_const_5a49505f53544f524544() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_5a49505f53544f524544() -> SifrInt {
         SifrInt::from_i64(0)
     }
-    pub(super) fn sifr_generated_zip_read_only_error() -> String {
+    #[must_use]
+    pub fn sifr_generated_zip_read_only_error() -> String {
         "zipfile operation requires write or append mode".to_string()
     }
-    pub(super) fn sifr_generated_zip_open_mode_error(mode: &str) -> String {
+    #[must_use]
+    pub fn sifr_generated_zip_open_mode_error(mode: &str) -> String {
         {
             let mut sifr_generated_concat: String = String::with_capacity(48usize + mode.len());
             sifr_generated_concat.push_str("zipfile open supports read-only mode only, got: ");
@@ -99,10 +112,12 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn sifr_generated_closed_stream_error() -> String {
+    #[must_use]
+    pub fn sifr_generated_closed_stream_error() -> String {
         "I/O operation on closed stream".to_string()
     }
-    pub(super) fn sifr_generated_zip_unimplemented_error(feature: &str) -> String {
+    #[must_use]
+    pub fn sifr_generated_zip_unimplemented_error(feature: &str) -> String {
         {
             let mut sifr_generated_concat: String =
                 String::with_capacity(8usize + feature.len() + 49usize);
@@ -112,7 +127,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn is_zipfile(path: &str) -> bool {
+    #[must_use]
+    pub fn is_zipfile(path: &str) -> bool {
         let sifr_generated_try_res: Result<bool, IOError> = (|| {
             let _names: Vec<String> = zip_namelist(path)?;
             Ok(true)

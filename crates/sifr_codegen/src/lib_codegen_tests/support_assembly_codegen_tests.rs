@@ -22,12 +22,12 @@ fn multi_module_support_has_one_private_owner_and_a_strict_size_budget() {
     assert!(
         generated
             .project_union_prelude
-            .contains("pub(super) fn shared_operation")
+            .contains("pub fn shared_operation")
     );
     assert!(
         !generated
             .project_union_prelude
-            .contains("pub fn shared_operation")
+            .contains("pub mod __sifr_generated_support")
     );
     assert!(
         generated.project_union_prelude.len() <= 512,
@@ -52,10 +52,119 @@ fn support_visibility_keeps_helper_functions_and_imports_private() {
     let source = "use std::fmt::Debug; fn helper() {} fn shared() { helper(); }";
     let visible =
         crate::crate_visible_generated_support_source(source, &["fn call() { shared(); }"]);
-    assert!(visible.contains("pub(super) fn shared()"), "{visible}");
+    assert!(visible.contains("pub fn shared()"), "{visible}");
     assert!(visible.contains("\nfn helper()"), "{visible}");
     assert!(visible.starts_with("use std::fmt::Debug;"), "{visible}");
     assert!(!visible.contains("pub(crate)"));
+}
+
+#[test]
+fn support_visibility_exposes_signature_types_but_not_private_implementation_types() {
+    let source = "struct ResultValue { value: i64 } struct Internal;\n\
+        fn helper(_: Internal) {} fn shared() -> ResultValue { helper(Internal); ResultValue { value: 1 } }";
+    let visible =
+        crate::crate_visible_generated_support_source(source, &["fn call() { shared(); }"]);
+    assert!(visible.contains("pub struct ResultValue"), "{visible}");
+    assert!(visible.contains("pub value: i64"), "{visible}");
+    assert!(visible.contains("\nstruct Internal;"), "{visible}");
+    assert!(!visible.contains("pub fn helper"), "{visible}");
+}
+
+#[test]
+fn support_imports_resolve_lexical_bindings_and_module_boundaries() {
+    let support = "fn channel() {} fn message() {} fn helper() {} struct Value;";
+    for consumer in [
+        "fn consume(channel: i64) { sink(channel); }",
+        "fn consume() { let channel = 0; sink(channel); }",
+        "fn consume() { let callback = |channel| sink(channel); }",
+        "fn consume() { for channel in values { sink(channel); } }",
+        "fn consume() { match value { Some(channel) => sink(channel), _ => () } }",
+        "fn consume() { if let Some(channel) = value { sink(channel); } }",
+        "fn consume() { while let Some(channel) = value { sink(channel); } }",
+        "fn consume() { let channel = 0; println!(\"{}\", channel); }",
+        "fn consume() { let channel = 0; println!(\"{channel}\"); }",
+        "struct Generic<Value> { value: Value }",
+        "fn consume<Value>(value: Value) { sink(value); }",
+        "mod child { fn consume() { channel(); } }",
+        "fn channel() {} fn consume() { channel(); }",
+    ] {
+        assert_eq!(
+            crate::generated_visibility::generated_support_import(consumer, support),
+            "",
+            "{consumer}"
+        );
+    }
+    for consumer in [
+        "fn consume() { let channel = channel(); sink(channel); }",
+        "fn consume() { { let channel = 0; sink(channel); } channel(); }",
+        "fn consume() { let channel = 0; fn nested() { channel(); } nested(); }",
+        "fn consume() { if let Some(channel) = value { sink(channel); } else { channel(); } }",
+    ] {
+        assert_eq!(
+            crate::generated_visibility::generated_support_import(consumer, support),
+            "use crate::__sifr_generated_support::{channel};",
+            "{consumer}"
+        );
+    }
+}
+
+#[test]
+fn support_imports_keep_implicit_format_captures_after_canonicalization() {
+    let source = "mod __sifr_generated_support { pub const ACTIVE: i64 = 1; }\n\
+        use crate::__sifr_generated_support::{ACTIVE};\n\
+        fn main() { println!(\"{}\", ACTIVE); }";
+    let canonical = crate::canonicalize_generated_rust_source(source).expect("canonical source");
+    assert!(canonical.contains("{ACTIVE}"), "{canonical}");
+    assert!(
+        canonical.contains("use crate::sifr_generated_generated_support::{ACTIVE};"),
+        "{canonical}"
+    );
+}
+
+#[test]
+fn support_imports_drop_reverse_nominal_edges_of_pruned_helpers() {
+    let source = "struct Used; struct Unused;\n\
+        mod __sifr_generated_support { use crate::{Used, Unused};\n\
+        pub fn create() -> Used { Used } fn unused() -> Unused { Unused } }\n\
+        use crate::__sifr_generated_support::{create}; fn main() { consume(create()); }\n\
+        fn consume<T>(_: T) {}";
+    let canonical = crate::canonicalize_generated_rust_source(source).expect("canonical source");
+    assert!(!canonical.contains("fn unused"), "{canonical}");
+    assert!(canonical.contains("use crate::{Used};"), "{canonical}");
+    assert!(!canonical.contains("Unused"), "{canonical}");
+    assert_eq!(
+        crate::canonicalize_generated_rust_source(&canonical).expect("idempotent source"),
+        canonical
+    );
+}
+
+#[test]
+fn support_imports_are_refreshed_after_reference_removing_canonicalization() {
+    let source = "mod __sifr_generated_support { pub struct Value; pub struct Task;\n\
+        impl Task { pub async fn result(self) -> Value { Value } } pub fn create() -> Task { Task } }\n\
+        use crate::__sifr_generated_support::{Value, create};\n\
+        #[tokio::main] async fn main() { let value: Value = create().result().await; consume(value); } fn consume<T>(_: T) {}";
+    let canonical = crate::canonicalize_generated_rust_source(source).expect("canonical source");
+    let file = syn::parse_file(&canonical).expect("final syntax");
+    let imports = file
+        .items
+        .iter()
+        .filter_map(|item| {
+            if let syn::Item::Use(item) = item {
+                Some(quote::quote!(#item).to_string())
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+    assert!(
+        imports.iter().all(|import| !import.contains("Value")),
+        "{canonical}"
+    );
+    assert!(
+        imports.iter().any(|import| import.contains("create")),
+        "{canonical}"
+    );
 }
 
 #[test]

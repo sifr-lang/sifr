@@ -1,7 +1,8 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use ::sifr_runtime::SifrInt;
-    pub(super) fn fnmatch(name: &str, pattern: &str) -> bool {
+    #[must_use]
+    pub fn fnmatch(name: &str, pattern: &str) -> bool {
         sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
     }
     fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
@@ -61,7 +62,8 @@ mod sifr_generated_generated_support {
         }
         &ni == &SifrInt::from(name.chars().count())
     }
-    pub(super) fn filter(names: &[String], pattern: &str) -> Vec<String> {
+    #[must_use]
+    pub fn filter(names: &[String], pattern: &str) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
         for name in names.iter().cloned() {
             if fnmatch(&name, pattern) {
@@ -70,7 +72,7 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

@@ -126,7 +126,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn sifr_generated_heapify_max<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
+    pub fn sifr_generated_heapify_max<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
         "Convert list to a max-heap in-place. O(n) time.".to_string();
         let n: SifrInt = SifrInt::from(data.len());
         let mut i: SifrInt =
@@ -136,7 +136,8 @@ mod sifr_generated_generated_support {
             i = &i - &SifrInt::from_i64(1);
         }
     }
-    pub(super) fn sifr_generated_heappop_max<T: Clone + 'static + PartialOrd>(
+    #[must_use]
+    pub fn sifr_generated_heappop_max<T: Clone + 'static + PartialOrd>(
         heap: &mut Vec<T>,
     ) -> Option<T> {
         "Pop and return the largest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
@@ -185,7 +186,8 @@ mod sifr_generated_generated_support {
         }
         top
     }
-    pub(super) fn sifr_generated_heapreplace_max<T: Clone + 'static + PartialOrd>(
+    #[must_use]
+    pub fn sifr_generated_heapreplace_max<T: Clone + 'static + PartialOrd>(
         heap: &mut Vec<T>,
         item: T,
     ) -> Option<T> {

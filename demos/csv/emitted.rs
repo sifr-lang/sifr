@@ -16,7 +16,8 @@ mod sifr_generated_generated_support {
     const fn sifr_generated_const_51554f54455f4e4f4e4e554d45524943() -> SifrInt {
         SifrInt::from_i64(2)
     }
-    pub(super) const fn sifr_generated_const_51554f54455f4e4f4e45() -> SifrInt {
+    #[must_use]
+    pub const fn sifr_generated_const_51554f54455f4e4f4e45() -> SifrInt {
         SifrInt::from_i64(3)
     }
     const fn sifr_generated_const_51554f54455f535452494e4753() -> SifrInt {
@@ -38,15 +39,16 @@ mod sifr_generated_generated_support {
             dialect.quoting.clone(),
         )
     }
-    pub(super) fn sifr_generated_validate_char(name: &str, value: &str) {
+    pub fn sifr_generated_validate_char(name: &str, value: &str) {
         let _ = name.to_owned();
         let _ = value.to_owned();
     }
+    #[must_use]
     #[expect(
         clippy::too_many_arguments,
         reason = "generated signature preserves the typed Sifr callable contract"
     )]
-    pub(super) fn sifr_generated_resolve_dialect(
+    pub fn sifr_generated_resolve_dialect(
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
         delimiter: &str,
         quotechar: &str,
@@ -118,11 +120,12 @@ mod sifr_generated_generated_support {
             &SifrInt::from(text.chars().count()) - &SifrInt::from_i64(1),
         )
     }
+    #[must_use]
     #[expect(
         clippy::too_many_arguments,
         reason = "generated signature preserves the typed Sifr callable contract"
     )]
-    pub(super) fn parse_row(
+    pub fn parse_row(
         line: &str,
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
         delimiter: &str,
@@ -161,6 +164,7 @@ mod sifr_generated_generated_support {
         }
         Vec::new()
     }
+    #[must_use]
     #[expect(
         clippy::too_many_arguments,
         reason = "generated signature preserves the typed Sifr callable contract"
@@ -169,7 +173,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(super) fn parse_csv(
+    pub fn parse_csv(
         text: &str,
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
         delimiter: &str,
@@ -458,11 +462,12 @@ mod sifr_generated_generated_support {
         }
         parts.join(&resolved.delimiter)
     }
+    #[must_use]
     #[expect(
         clippy::too_many_arguments,
         reason = "generated signature preserves the typed Sifr callable contract"
     )]
-    pub(super) fn format_csv(
+    pub fn format_csv(
         rows: &[Vec<String>],
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
         delimiter: &str,
@@ -522,11 +527,13 @@ mod sifr_generated_generated_support {
         }
         rendered.join(&resolved_lineterminator)
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     #[expect(
         clippy::too_many_arguments,
         reason = "generated signature preserves the typed Sifr callable contract"
     )]
-    pub(super) fn reader_from_path(
+    pub fn reader_from_path(
         path: &str,
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
         delimiter: &str,
@@ -557,11 +564,13 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     #[expect(
         clippy::too_many_arguments,
         reason = "generated signature preserves the typed Sifr callable contract"
     )]
-    pub(super) fn writer_to_path(
+    pub fn writer_to_path(
         path: &str,
         rows: &[Vec<String>],
         dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
@@ -586,7 +595,7 @@ mod sifr_generated_generated_support {
         );
         write_text(path, &payload)
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

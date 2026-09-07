@@ -7,14 +7,16 @@ mod sifr_generated_generated_support {
     fn html_unescape(s: &str) -> String {
         ::sifr_stdlib::html::html_unescape(s)
     }
-    pub(super) fn escape(s: &str, quote: bool) -> String {
+    #[must_use]
+    pub fn escape(s: &str, quote: bool) -> String {
         let escaped: String = html_escape(s);
         if quote {
             return escaped;
         }
         escaped.replace("&quot;", "\"").replace("&#x27;", "\'")
     }
-    pub(super) fn unescape(s: &str) -> String {
+    #[must_use]
+    pub fn unescape(s: &str) -> String {
         html_unescape(s)
     }
     fn sifr_generated_replace_whitespace_chars(text: &str, replace_tabs: bool) -> String {
@@ -78,7 +80,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn sifr_generated_prepare_text(
+    #[must_use]
+    pub fn sifr_generated_prepare_text(
         text: &str,
         expand_tabs: bool,
         tabsize: SifrInt,
@@ -230,7 +233,8 @@ mod sifr_generated_generated_support {
             result.push(candidate);
         }
     }
-    pub(super) fn sifr_generated_wrap_with_indents(
+    #[must_use]
+    pub fn sifr_generated_wrap_with_indents(
         text: &str,
         total_width: SifrInt,
         initial_indent: &str,
@@ -399,7 +403,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn sifr_generated_apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
+    #[must_use]
+    pub fn sifr_generated_apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
         for line in lines.iter().cloned() {
             result.push(sifr_generated_apply_sentence_endings_line(&line));
@@ -413,11 +418,12 @@ mod sifr_generated_generated_support {
         }
         copied
     }
+    #[must_use]
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(super) fn sifr_generated_apply_max_lines(
+    pub fn sifr_generated_apply_max_lines(
         lines: &[String],
         width: SifrInt,
         max_lines: Option<SifrInt>,

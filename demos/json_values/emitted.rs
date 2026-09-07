@@ -15,7 +15,7 @@ mod sifr_generated_generated_support {
         ::sifr_stdlib::json::json_dump_tokens(tokens)
     }
     #[derive(Debug, Clone)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass15X3aJSONDecodeError1X3a0(JSONDecodeError),
         SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(ParseError),
@@ -50,7 +50,7 @@ mod sifr_generated_generated_support {
         }
     }
     #[derive(Debug, Clone, PartialEq)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0(
             SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
@@ -66,7 +66,8 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn from_int(value: SifrInt) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
+    #[must_use]
+    pub fn from_int(value: SifrInt) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         let int_value: Option<SifrInt> = Some(value.clone());
         SifrGeneratedStdlibSifrX2ejsonX2eJsonValue::new(
             "int".to_string(),
@@ -76,7 +77,8 @@ mod sifr_generated_generated_support {
             None,
         )
     }
-    pub(super) fn from_str(value: &str) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
+    #[must_use]
+    pub fn from_str(value: &str) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         let str_value: Option<String> = Some({
             let mut sifr_generated_concat: String = String::with_capacity(value.len());
             sifr_generated_concat.push_str(value);
@@ -106,7 +108,8 @@ mod sifr_generated_generated_support {
         value.object_items.push((key, item_value));
         value
     }
-    pub(super) fn from_array(
+    #[must_use]
+    pub fn from_array(
         items: &[SifrGeneratedStdlibSifrX2ejsonX2eJsonValue],
     ) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         let mut value: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue =
@@ -122,7 +125,8 @@ mod sifr_generated_generated_support {
         }
         value
     }
-    pub(super) fn from_object(
+    #[must_use]
+    pub fn from_object(
         items: &[(String, SifrGeneratedStdlibSifrX2ejsonX2eJsonValue)],
     ) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         let mut value: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue =
@@ -510,12 +514,13 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(super) fn loads(
-        s: &str,
-    ) -> Result<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, JSONDecodeError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn loads(s: &str) -> Result<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, JSONDecodeError> {
         sifr_generated_decode_json(s)
     }
-    pub(super) fn dumps(
+    #[must_use]
+    pub fn dumps(
         value: &SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
     ) -> String {
         match value {

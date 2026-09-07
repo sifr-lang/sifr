@@ -14,7 +14,8 @@ for 166 `redundant_pub_crate` and 18 `wildcard_imports` diagnostics. Neither
 category receives a lint allowance or a newly accepted debt owner. The remaining
 528 diagnostics retain their existing twenty exact lint owners.
 
-The expected signatures were derived **before running new Clippy validation**:
+Expected signatures for each candidate are derived **before its Clippy validation**,
+using only the original authenticated evidence, never a failed candidate's output:
 
 1. Authenticate the original summary, handoff and emitted-source inventory by
    their recorded SHA-256 digests. Authenticate each original emitted Rust file.
@@ -33,7 +34,9 @@ The expected signatures were derived **before running new Clippy validation**:
    the new compiler's diagnostic output.
 4. Emit the same twelve unchanged Sifr inputs with the B13 compiler. Account for
    the unchanged build producer's native-bridge declaration, which materialization
-   includes and `emit` omits. Record before/after emitted-source hashes.
+   includes and `emit` omits. Remove source-listing separator newlines and apply
+   the unchanged materializer's final Rust formatting (including module-declaration
+   sorting after bridge insertion). Record before/after emitted-source hashes.
 5. Move each diagnostic coordinate only through matching source text. A diagnostic
    covering an entire helper declaration follows its first remaining token when
    the unnecessary `pub(crate)` prefix is removed. Record every coordinate and
@@ -46,7 +49,7 @@ Rust 1.98.0, Clippy's full version, each surface, each original diagnostic origi
 the source hashes, old/new signature aggregates and per-diagnostic relocations
 are in the JSON receipt. The derivation script is preserved outside Git at
 `/private/tmp/sifr-support.kmdI25/evidence/derive_support_debt.py`, SHA-256
-`c614584d53c2d19ac425c4d9fe49fb9253bbc66d02fd4065da569e8dc2954f2d`.
+`a4ebcbbfde314a067526742ebeaec2282270714794c4021ab1e2024e84dac2a6`.
 Its `--derive` mode emits an auditable patch; it does not run Clippy or change
 the existing quality checks. The original policy still rejects unknown owners,
 new debt, changed counts/signatures and stale fixed-debt records.

@@ -1,12 +1,12 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::Error;
-    pub(super) const INF: f64 = f64::INFINITY;
+    pub const INF: f64 = f64::INFINITY;
     #[expect(
         clippy::assertions_on_constants,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(super) fn assert_not_almost_eq(actual: f64, expected: f64, tolerance: f64) {
+    pub fn assert_not_almost_eq(actual: f64, expected: f64, tolerance: f64) {
         assert!(tolerance >= 0.0_f64);
         if actual == expected {
             assert!(false);
@@ -20,23 +20,23 @@ mod sifr_generated_generated_support {
         }
         assert!(diff > tolerance);
     }
-    pub(super) fn assert_ge<T: Clone + 'static + PartialOrd>(a: &T, b: &T) {
+    pub fn assert_ge<T: Clone + 'static + PartialOrd>(a: &T, b: &T) {
         assert!(*a >= *b);
     }
-    pub(super) fn assert_le<T: Clone + 'static + PartialOrd>(a: &T, b: &T) {
+    pub fn assert_le<T: Clone + 'static + PartialOrd>(a: &T, b: &T) {
         assert!(*a <= *b);
     }
-    pub(super) fn assert_some<T: Clone + 'static>(value: Option<T>) {
+    pub fn assert_some<T: Clone + 'static>(value: Option<T>) {
         assert!(value.is_some());
     }
-    pub(super) fn assert_none<T: Clone + 'static>(value: Option<T>) {
+    pub fn assert_none<T: Clone + 'static>(value: Option<T>) {
         assert!(value.is_none());
     }
     #[expect(
         clippy::assertions_on_constants,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(super) fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
+    pub fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
             let _out: T = value?;
             Ok(())
@@ -49,7 +49,7 @@ mod sifr_generated_generated_support {
         clippy::assertions_on_constants,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(super) fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
+    pub fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
             let _out: T = value?;
             assert!(false);

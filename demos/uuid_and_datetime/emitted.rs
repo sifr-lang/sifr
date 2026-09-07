@@ -24,7 +24,7 @@ mod sifr_generated_generated_support {
         ::sifr_stdlib::time::time_now()
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -61,7 +61,7 @@ mod sifr_generated_generated_support {
         }
     }
     #[derive(Debug, Clone)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -130,7 +130,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn sifr_generated_six_digits(value: SifrInt) -> String {
+    #[must_use]
+    pub fn sifr_generated_six_digits(value: SifrInt) -> String {
         let mut rendered: String = value.to_string();
         let mut sifr_generated_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
         while &SifrInt::from(sifr_generated_chars_rendered.len()) < &SifrInt::from_i64(6) {
@@ -370,11 +371,12 @@ mod sifr_generated_generated_support {
             Err(ValueError::new("invalid timezone string".to_string()))
         })
     }
+    #[must_use]
     #[expect(
         non_snake_case,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(super) fn UTC() -> SifrGeneratedStdlibSifrX2edatetimeX2etimezone {
+    pub fn UTC() -> SifrGeneratedStdlibSifrX2edatetimeX2etimezone {
         SifrGeneratedStdlibSifrX2edatetimeX2etimezone::new(SifrInt::from_i64(0))
     }
     #[expect(
@@ -594,7 +596,8 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(super) fn now(
+    #[must_use]
+    pub fn now(
         tz: &Option<SifrGeneratedStdlibSifrX2edatetimeX2etimezone>,
     ) -> SifrGeneratedStdlibSifrX2edatetimeX2edatetime {
         let current_epoch: f64 = time_now();
@@ -694,7 +697,9 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(super) fn from_timestamp(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn from_timestamp(
         ts: f64,
         tz: &Option<SifrGeneratedStdlibSifrX2edatetimeX2etimezone>,
     ) -> Result<SifrGeneratedStdlibSifrX2edatetimeX2edatetime, ValueError> {
@@ -706,7 +711,8 @@ mod sifr_generated_generated_support {
     fn uuid5_text(namespace: &str, name: &str) -> String {
         ::sifr_stdlib::uuid::uuid5_text(namespace, name)
     }
-    pub(super) fn sifr_generated_hex_digit_value(ch: &str) -> SifrInt {
+    #[must_use]
+    pub fn sifr_generated_hex_digit_value(ch: &str) -> SifrInt {
         if ch == "0" {
             return SifrInt::from_i64(0);
         }
@@ -757,23 +763,26 @@ mod sifr_generated_generated_support {
         }
         -&SifrInt::from_i64(1)
     }
-    pub(super) fn uuid3(
+    #[must_use]
+    pub fn uuid3(
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid3_text(&namespace.to_str(), name))
     }
-    pub(super) fn uuid5(
+    #[must_use]
+    pub fn uuid5(
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid5_text(&namespace.to_str(), name))
     }
+    #[must_use]
     #[expect(
         non_snake_case,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(super) fn NAMESPACE_DNS() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
+    pub fn NAMESPACE_DNS() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
         SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
             "6ba7b810-9dad-11d1-80b4-00c04fd430c8".to_string(),
         )

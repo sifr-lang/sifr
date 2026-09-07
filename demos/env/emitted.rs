@@ -13,10 +13,12 @@ mod sifr_generated_generated_support {
     fn env_items() -> Vec<String> {
         ::sifr_stdlib::sys::env_items()
     }
-    pub(super) fn getenv_opt(key: &str) -> Option<String> {
+    #[must_use]
+    pub fn getenv_opt(key: &str) -> Option<String> {
         env_get(key)
     }
-    pub(super) fn getenv(key: &str, default_value: &str) -> String {
+    #[must_use]
+    pub fn getenv(key: &str, default_value: &str) -> String {
         let val: Option<String> = env_get(key);
         let Some(val) = val else {
             return {
@@ -28,16 +30,19 @@ mod sifr_generated_generated_support {
         };
         val
     }
-    pub(super) fn keys() -> Vec<String> {
+    #[must_use]
+    pub fn keys() -> Vec<String> {
         env_keys()
     }
-    pub(super) fn values() -> Vec<String> {
+    #[must_use]
+    pub fn values() -> Vec<String> {
         env_values()
     }
-    pub(super) fn items() -> Vec<String> {
+    #[must_use]
+    pub fn items() -> Vec<String> {
         env_items()
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

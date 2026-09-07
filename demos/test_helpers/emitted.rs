@@ -9,7 +9,7 @@ mod sifr_generated_generated_support {
         ::sifr_stdlib::math::sqrt(x)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -124,7 +124,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(super) fn mean(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let count: SifrInt = SifrInt::from(data.len());
@@ -136,7 +138,9 @@ mod sifr_generated_generated_support {
         let total: f64 = sifr_generated_sum(data);
         sifr_generated_divide_by_int(total, count.clone())
     }
-    pub(super) fn variance(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn variance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -168,7 +172,9 @@ mod sifr_generated_generated_support {
         }
         sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))
     }
-    pub(super) fn pvariance(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn pvariance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -200,7 +206,9 @@ mod sifr_generated_generated_support {
         }
         sifr_generated_divide_by_int(total, n.clone())
     }
-    pub(super) fn stdev(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -248,7 +256,9 @@ mod sifr_generated_generated_support {
         };
         Ok(sqrt(v))
     }
-    pub(super) fn pstdev(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn pstdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());

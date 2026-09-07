@@ -16,7 +16,7 @@ mod sifr_generated_generated_support {
         ::sifr_stdlib::math::exp(x)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -131,7 +131,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(super) fn mean(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let count: SifrInt = SifrInt::from(data.len());
@@ -143,7 +145,9 @@ mod sifr_generated_generated_support {
         let total: f64 = sifr_generated_sum(data);
         sifr_generated_divide_by_int(total, count.clone())
     }
-    pub(super) fn median(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn median(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -209,7 +213,9 @@ mod sifr_generated_generated_support {
             Ok(val)
         }
     }
-    pub(super) fn variance(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn variance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -241,7 +247,9 @@ mod sifr_generated_generated_support {
         }
         sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))
     }
-    pub(super) fn stdev(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -289,7 +297,9 @@ mod sifr_generated_generated_support {
         };
         Ok(sqrt(v))
     }
-    pub(super) fn harmonic_mean(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn harmonic_mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -321,7 +331,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(super) fn geometric_mean(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn geometric_mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -353,7 +365,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(super) fn mode(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mode(
         data: &[SifrInt],
     ) -> Result<SifrInt, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         if &SifrInt::from(data.len()) == &SifrInt::from_i64(0) {
@@ -401,7 +415,9 @@ mod sifr_generated_generated_support {
             "mode: no mode found".to_string(),
         ))
     }
-    pub(super) fn multimode(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn multimode(
         data: &[SifrInt],
     ) -> Result<Vec<SifrInt>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         if &SifrInt::from(data.len()) == &SifrInt::from_i64(0) {
@@ -462,11 +478,13 @@ mod sifr_generated_generated_support {
         }
         Ok(result)
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(super) fn quantiles(
+    pub fn quantiles(
         data: &[f64],
         n: SifrInt,
     ) -> Result<Vec<f64>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -592,7 +610,9 @@ mod sifr_generated_generated_support {
         }
         Ok(result)
     }
-    pub(super) fn covariance(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn covariance(
         x: &[f64],
         y: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -654,11 +674,13 @@ mod sifr_generated_generated_support {
         }
         sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(super) fn correlation(
+    pub fn correlation(
         x: &[f64],
         y: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -770,7 +792,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(super) fn linear_regression(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn linear_regression(
         x: &[f64],
         y: &[f64],
     ) -> Result<Vec<f64>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -842,7 +866,7 @@ mod sifr_generated_generated_support {
         let result: Vec<f64> = vec![slope, intercept];
         Ok(result)
     }
-    pub(super) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+    pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -869,7 +893,7 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

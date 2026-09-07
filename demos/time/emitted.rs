@@ -6,7 +6,7 @@ mod sifr_generated_generated_support {
         ValueError,
     };
     use ::sifr_runtime::SifrInt;
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -39,16 +39,20 @@ mod sifr_generated_generated_support {
     fn time_format(epoch: f64, fmt: &str) -> String {
         ::sifr_stdlib::time::time_format(epoch, fmt)
     }
-    pub(super) fn perf_counter() -> f64 {
+    #[must_use]
+    pub fn perf_counter() -> f64 {
         ::sifr_stdlib::time::perf_counter()
     }
-    pub(super) fn sleep(seconds: f64) {
+    pub fn sleep(seconds: f64) {
         ::sifr_stdlib::time::sleep(seconds);
     }
-    pub(super) fn monotonic() -> f64 {
+    #[must_use]
+    pub fn monotonic() -> f64 {
         ::sifr_stdlib::time::monotonic()
     }
-    pub(super) fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
         ::sifr_stdlib::time::strptime(s, fmt).map_err(|sifr_generated_bridge_error| ValueError {
             message: sifr_generated_bridge_error.to_string(),
         })
@@ -60,7 +64,7 @@ mod sifr_generated_generated_support {
         ::sifr_stdlib::time::localtime(epoch)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -433,21 +437,27 @@ mod sifr_generated_generated_support {
             SifrInt::from_i64(0),
         )
     }
-    pub(super) fn time() -> f64 {
+    #[must_use]
+    pub fn time() -> f64 {
         time_now()
     }
-    pub(super) fn strftime(fmt: &str, epoch: f64) -> String {
+    #[must_use]
+    pub fn strftime(fmt: &str, epoch: f64) -> String {
         time_format(epoch, fmt)
     }
-    pub(super) fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+    #[must_use]
+    pub fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_gmtime_intrinsic(epoch);
         sifr_generated_to_struct_time(&rendered)
     }
-    pub(super) fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+    #[must_use]
+    pub fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_localtime_intrinsic(epoch);
         sifr_generated_to_struct_time(&rendered)
     }
-    pub(super) fn mktime(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mktime(
         t: &SifrGeneratedStdlibSifrX2etimeX2estructTime,
     ) -> Result<
         f64,

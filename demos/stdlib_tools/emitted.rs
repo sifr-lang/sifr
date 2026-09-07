@@ -4,10 +4,13 @@ mod sifr_generated_generated_support {
         IOError, ParseError, SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, TOMLDecodeError,
     };
     use ::sifr_runtime::SifrInt;
-    pub(super) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(super) fn exists(path: &str) -> bool {
+    #[must_use]
+    pub fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
     fn listdir(path: &str) -> Result<Vec<String>, IOError> {
@@ -82,7 +85,8 @@ mod sifr_generated_generated_support {
         }
         &ni == &SifrInt::from(name.chars().count())
     }
-    pub(super) fn glob(directory: &str, pattern: &str) -> Vec<String> {
+    #[must_use]
+    pub fn glob(directory: &str, pattern: &str) -> Vec<String> {
         let sifr_generated_chars_pattern: Vec<char> = pattern.chars().collect::<Vec<char>>();
         let include_hidden: bool =
             &SifrInt::from(sifr_generated_chars_pattern.len()) > &SifrInt::from_i64(0) && {
@@ -158,25 +162,36 @@ mod sifr_generated_generated_support {
             sifr_generated_sorted_values
         }
     }
-    pub(super) fn run_command(cmd: &str) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn run_command(cmd: &str) -> Result<String, IOError> {
         ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
     }
-    pub(super) fn copy(src: &str, dst: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn copy(src: &str, dst: &str) -> Result<(), IOError> {
         copy_file(src, dst)
     }
-    pub(super) fn move_file(src: &str, dst: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn move_file(src: &str, dst: &str) -> Result<(), IOError> {
         rename(src, dst)
     }
-    pub(super) fn rmtree(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn rmtree(path: &str) -> Result<(), IOError> {
         rmdir_all(path)
     }
-    pub(super) fn perf_counter() -> f64 {
+    #[must_use]
+    pub fn perf_counter() -> f64 {
         ::sifr_stdlib::time::perf_counter()
     }
-    pub(super) fn monotonic() -> f64 {
+    #[must_use]
+    pub fn monotonic() -> f64 {
         ::sifr_stdlib::time::monotonic()
     }
-    pub(super) fn default_timer() -> f64 {
+    #[must_use]
+    pub fn default_timer() -> f64 {
         perf_counter()
     }
     fn sifr_generated_elapsed_non_negative(start: f64, end: f64) -> f64 {
@@ -186,7 +201,8 @@ mod sifr_generated_generated_support {
         }
         elapsed
     }
-    pub(super) fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
+    #[must_use]
+    pub fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
         let start: f64 = perf_counter();
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &number {
@@ -196,7 +212,8 @@ mod sifr_generated_generated_support {
         let end: f64 = perf_counter();
         sifr_generated_elapsed_non_negative(start, end)
     }
-    pub(super) fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
+    #[must_use]
+    pub fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
         let mut results: Vec<f64> = Vec::new();
         let mut r: SifrInt = SifrInt::from_i64(0);
         while &r < &count {
@@ -221,7 +238,7 @@ mod sifr_generated_generated_support {
         })
     }
     #[derive(Debug, Clone)]
-    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(ParseError),
         SifrGeneratedUnionVariant5X3aclass15X3aTOMLDecodeError1X3a0(TOMLDecodeError),
@@ -562,7 +579,9 @@ mod sifr_generated_generated_support {
             Err(TOMLDecodeError::new(e.message.clone()))
         })
     }
-    pub(super) fn loads(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn loads(
         text: &str,
     ) -> Result<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, TOMLDecodeError> {
         let sifr_generated_try_res: Result<

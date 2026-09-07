@@ -2,7 +2,7 @@
 mod sifr_generated_generated_support {
     use crate::ValueError;
     use ::sifr_runtime::SifrInt;
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -378,13 +378,17 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn wrap(text: &str, width: SifrInt) -> Result<Vec<String>, ValueError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn wrap(text: &str, width: SifrInt) -> Result<Vec<String>, ValueError> {
         if &width <= &SifrInt::from_i64(0) {
             return Err(ValueError::new("wrap: width must be > 0".to_string()));
         }
         Ok(sifr_generated_wrap_impl(text, width.clone()))
     }
-    pub(super) fn fill(text: &str, width: SifrInt) -> Result<String, ValueError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn fill(text: &str, width: SifrInt) -> Result<String, ValueError> {
         if &width <= &SifrInt::from_i64(0) {
             return Err(ValueError::new("fill: width must be > 0".to_string()));
         }
@@ -400,11 +404,12 @@ mod sifr_generated_generated_support {
         }
         Ok(result)
     }
+    #[must_use]
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(super) fn dedent(text: &str) -> String {
+    pub fn dedent(text: &str) -> String {
         let lines: Vec<String> = text
             .split('\n')
             .map(::std::string::ToString::to_string)
@@ -507,7 +512,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn indent(text: &str, prefix: &str) -> String {
+    #[must_use]
+    pub fn indent(text: &str, prefix: &str) -> String {
         let lines: Vec<String> = text
             .split('\n')
             .map(::std::string::ToString::to_string)
@@ -528,7 +534,8 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(super) fn shorten(text: &str, width: SifrInt) -> String {
+    #[must_use]
+    pub fn shorten(text: &str, width: SifrInt) -> String {
         let normalized: String = sifr_generated_normalize_whitespace(text);
         let words: Vec<String> = normalized
             .split(' ')

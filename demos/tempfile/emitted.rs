@@ -5,7 +5,8 @@ mod sifr_generated_generated_support {
     fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(super) fn exists(path: &str) -> bool {
+    #[must_use]
+    pub fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
     fn mkdir(path: &str) -> Result<(), IOError> {
@@ -14,10 +15,13 @@ mod sifr_generated_generated_support {
     fn gettempdir() -> String {
         ::sifr_stdlib::fs::gettempdir()
     }
-    pub(super) fn run_command(cmd: &str) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn run_command(cmd: &str) -> Result<String, IOError> {
         ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
     }
-    pub(super) fn basename(path: &str) -> String {
+    #[must_use]
+    pub fn basename(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
             &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
@@ -61,7 +65,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn dirname(path: &str) -> String {
+    #[must_use]
+    pub fn dirname(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
         let mut i: SifrInt =
             &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
@@ -110,7 +115,8 @@ mod sifr_generated_generated_support {
         let n: SifrInt = random_int(SifrInt::from_i64(100_000), SifrInt::from_i64(999_999));
         n.to_string()
     }
-    pub(super) fn mktemp_path(prefix: &str) -> String {
+    #[must_use]
+    pub fn mktemp_path(prefix: &str) -> String {
         let suffix: String = sifr_generated_random_suffix();
         let mut root: String = gettempdir();
         let sifr_generated_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
@@ -165,7 +171,9 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(super) fn mkstemp(prefix: &str) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mkstemp(prefix: &str) -> Result<String, IOError> {
         let mut attempts: SifrInt = SifrInt::from_i64(0);
         let max_attempts: SifrInt = SifrInt::from_i64(64);
         while &attempts < &max_attempts {
@@ -203,7 +211,9 @@ mod sifr_generated_generated_support {
             max_attempts.clone(),
         )))
     }
-    pub(super) fn mkdtemp(prefix: &str) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mkdtemp(prefix: &str) -> Result<String, IOError> {
         let mut attempts: SifrInt = SifrInt::from_i64(0);
         let max_attempts: SifrInt = SifrInt::from_i64(64);
         while &attempts < &max_attempts {
@@ -241,7 +251,7 @@ mod sifr_generated_generated_support {
             max_attempts.clone(),
         )))
     }
-    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {

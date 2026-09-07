@@ -1,15 +1,19 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(super) fn log(x: f64) -> f64 {
+    #[must_use]
+    pub fn log(x: f64) -> f64 {
         ::sifr_stdlib::math::log(x)
     }
-    pub(super) fn sin(x: f64) -> f64 {
+    #[must_use]
+    pub fn sin(x: f64) -> f64 {
         ::sifr_stdlib::math::sin(x)
     }
-    pub(super) fn cos(x: f64) -> f64 {
+    #[must_use]
+    pub fn cos(x: f64) -> f64 {
         ::sifr_stdlib::math::cos(x)
     }
-    pub(super) fn fabs(x: f64) -> f64 {
+    #[must_use]
+    pub fn fabs(x: f64) -> f64 {
         ::sifr_stdlib::math::fabs(x)
     }
 }
