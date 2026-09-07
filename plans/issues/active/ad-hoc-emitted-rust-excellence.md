@@ -2,6 +2,60 @@
 
 Status: active
 
+## Current bounded owner: 12K-B12 report filename (2026-09-07)
+
+12K-B12 / [owner #3737](https://github.com/sifr-lang/sifr/issues/3737) is in
+progress in the independently owned clone `/private/tmp/sifr-item12k-b12.ItWxDa/sifr`,
+branch `codex/item12k-b12-report-filename`, from actual main
+`e0806799c2b36c47069d6c435353f590f64b9559`. Parent and predecessor checkouts,
+indexes and caches remain read-only. B10/PR3733 and B11/PR3735 are merged, and
+original12K gate3 is terminal; all B12 dependencies are satisfied.
+
+The maintained clean-cache qualification report now uses
+`target/verification/areas/generated-cargo-clean-cache.json`. A complete tracked
+consumer search found only the producer's destination; no active consumer or
+registration needs another change. Historical B11 evidence paths stay immutable.
+The report schema, exact revision provenance, canonical output root, production
+preparation ordering, all92 positive graphs, locked/offline checks and both
+negative checks are unchanged. No taxonomy exemption or compatibility path is
+introduced. The only implementation change is the report destination literal.
+
+Run these six registered checks after implementation, then one exact-SHA Opus
+review with at most one remediation review, then normal merge and owner/phase
+updates. No additional focused regression command is required for the literal
+rename: the existing taxonomy scan and negative self-tests cover its boundary.
+
+- `python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py`
+- `python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py --self-test`
+- `uv run --project verification python -m sifr_verify.generated_cargo_setup_checks policy`
+- `uv run --project verification python -m sifr_verify --self-test`
+- `git diff --check`
+- `python3 scripts/check_file_size_guardrails.py`
+
+Reuse B11's92-graph qualification only after authenticating the complete Git
+input map and retained evidence. B11 reviewed candidate
+`2f3ec54226b2e722b3fe44ea59177f780865c921` and B12's main base have identical
+trees. [B11 review/validation](https://github.com/sifr-lang/sifr/pull/3735#issuecomment-5563015836)
+and terminal receipt at `/private/tmp/sifr-item12k-b11.sasFlU/evidence/terminal.json`
+(SHA256 `18ba32ec4e7d590d789924a54a32aa2fefeac294027cb301c7a2f29be3e4b281`)
+remain historical evidence at the B11 SHA, not a fresh graph run at B12.
+B11's owner3732 is closed; its post-merge record
+`848151e03a299892667b7b7f0e246d434a1322f0` is preserved on its branch.
+
+Original12K remains approved, unmerged and gate-blocked after its
+[gate3 terminal handoff](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5566512872).
+Combined candidate `bd2371a1f8f1abc5227b0ff8a00829277675af5d`, full pushed record
+`031cc020451241c3cf7dfc78e206b418b1d1ce9b`: gate3 FAILED after1832.14s;
+seven focused checks, production preparation92/92, all13guards and Rust10 passed;
+readiness3PASS/1FAIL. All later stages remain UNREACHED. Cumulative counts remain
+one initial plus one remediation review, two provider requests, zero retries,
+three failed gates, zero passing/create-pr gates or integration/corpus merges.
+PR3717 and corpusPR48 remain open/draft with exact corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`. B12 does not restart integration
+qualification or implement12D/12E/12F/retained12/docs-only12A. No compiler,
+lockfile, fixture or workflow changes are needed, so no Sifr gate applies.
+After B12 merge and its record update, this worker stops.
+
 ## Current orchestration: replacement12K blocked; B10 then B11 (2026-09-07)
 
 This section supersedes older pending review/gate authorizations without erasing
