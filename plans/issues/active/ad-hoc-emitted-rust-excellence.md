@@ -4,8 +4,11 @@ Status: active
 
 ## Current bounded owner: 12K-R1 storage recovery (2026-09-07)
 
-12K-R1 / [owner #3740](https://github.com/sifr-lang/sifr/issues/3740): bounded
-recovery completed; docs delivery and exact-SHA review pending. This section
+12K-R1 / [owner #3740](https://github.com/sifr-lang/sifr/issues/3740): **closed**.
+Bounded recovery and [PR3741](https://github.com/sifr-lang/sifr/pull/3741) are complete.
+Normal merge at 09:21:13 UTC: `d3053066bc157fbf100b1bf67622b168838d891f`;
+reviewed candidate: `6f85725fde2af74cff5574b567d49f14436a9ab1`;
+base: `e97bf89621146b9ab29887fe4774cc87151c74cd`. This section
 supersedes older current-state headings while preserving their historical records.
 The original owner Leibniz is closed; the parent explicitly transferred exclusive
 cleanup ownership of the two paths in the
@@ -51,12 +54,18 @@ both before deletion, without changing predecessor data or weakening preservatio
 Docs delivery owns `/private/tmp/sifr-storage-recovery.RFXopr/sifr`, branch
 `codex/storage-recovery-12k-r1`, based on actual main
 `e97bf89621146b9ab29887fe4774cc87151c74cd`. Only this phase Markdown changes.
-Registered post-implementation checks, before execution:
+Registered post-implementation checks passed on the exact reviewed candidate:
 `git diff --check e97bf89621146b9ab29887fe4774cc87151c74cd HEAD` and
-`python3 scripts/check_file_size_guardrails.py` (the AGENTS.md guardrail).
-Use one exact-SHA Opus review plus at most one remediation, then normal docs merge
-and owner/phase update. Final review evidence stays outside its approved Git tree.
-No Sifr test, create-pr gate or merge-profile gate applies to this docs-only item.
+`python3 scripts/check_file_size_guardrails.py` (3759 files, 900-line limit).
+One initial Opus review returned SATISFIED, no blockers: one provider request,
+zero retries and zero remediation reviews. [SHA-keyed review and validation](https://github.com/sifr-lang/sifr/pull/3741#issuecomment-5568415354)
+remain outside the approved Git tree; response SHA256
+`df281ce85db75b8f8d5a012bfc04cc7894da8d0a561e91ccc3058f604bd8209a`.
+Recovery evidence digest-list SHA256:
+`2eb920b70ac084abe395d8184daf0bd09d4a43ff57d7054b9f4a9583ea8da5b7`.
+No Sifr test, create-pr gate or merge-profile gate ran for this docs-only item.
+This post-merge phase update is record-only, retained on the owned delivery branch;
+it is not a new reviewed implementation candidate and requires no repeat review/gate.
 
 ### Remaining resource scope, deferred and not started
 
@@ -68,8 +77,12 @@ record a capacity budget for compiler/test outputs, generated targets, temporary
 projects and dependency caches together, including remaining lanes and headroom.
 Use an isolated volume or host with additional capacity; no other owner's cache
 is eligible for cleanup under this item. No numeric sufficient-capacity claim or
-new gate authorization follows from this recovery. Record the resource gap in
-owner3740 and route the later resource scope separately before any continuation.
+new gate authorization follows from this recovery. The resource gap is recorded
+in closed owner3740 and routed to [later resource owner #3742](https://github.com/sifr-lang/sifr/issues/3742),
+which is registered only and not started. Original12K delivery remains blocked
+on establishing adequate capacity and separately governed qualification.
+Opus's optional numeral-spacing normalization and superseded-heading annotation
+are deferred to later phase-document maintenance; neither blocks bounded recovery.
 
 Original12K remains NOT SATISFIED, draft and unmerged at candidate
 `3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c`, basee97bf896 and complete record6ce7ce099,
@@ -86,7 +99,8 @@ passed; runtime30 has3declared skips. Developer tooling has23passing cases but i
 incomplete. GCQ/performance/fullE2E/stdlib/ignored-driver/CLI and later lanes remain
 UNREACHED. No recovery result certifies these lanes. No original third Opus,
 gate restart,12D/E/F/retained12/docs-only12A implementation or audit was started.
-Stop after this bounded recovery's docs merge and terminal phase/owner update.
+12K-R1 has no remaining blocker. This worker stops after the post-merge phase/owner
+receipt; the parent owns any later resource routing. No successor work starts here.
 
 ## Current bounded owner: 12K-B12 report filename (2026-09-07)
 
