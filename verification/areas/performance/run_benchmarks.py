@@ -59,6 +59,8 @@ from process_metrics import (
 )
 from query_processes import run_query_processes
 from query_processes import run_self_test as run_query_processes_self_test
+from sample_evidence import record_command_sample
+from sample_evidence import run_self_test as run_sample_evidence_self_test
 from trend_baseline import (
     TrendBaselineError,
     baseline_from_reference_run,
@@ -427,6 +429,9 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
         )
         command = command_for_case(case, output_dir)
         result = run_subprocess(command, case.timeout_ms)
+        record_command_sample(
+            run_root, case.id, sample_index, sample_index < warmups, command, result
+        )
         if sample_index < warmups:
             continue
         samples.append(result["duration_ms"])
@@ -705,6 +710,7 @@ def invalidate_output(path: Path) -> None:
 def run_self_test() -> None:
     run_benchmark_baseline_self_test()
     run_process_metrics_self_test()
+    run_sample_evidence_self_test()
     run_query_processes_self_test()
     run_work_baseline_self_test()
     run_trend_report_self_test()

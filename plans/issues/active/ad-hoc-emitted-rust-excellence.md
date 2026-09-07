@@ -2,6 +2,69 @@
 
 Status: active
 
+## Item12K-B19: registered evidence acquisition (2026-09-08)
+
+Owner [#3776](https://github.com/sifr-lang/sifr/issues/3776). B19 is open;
+the B13 sampling cause is not yet established. Independent owned clone
+`/private/tmp/sifr-b19.udje7q/sifr`, branch
+`codex/item12k-b19-controlled-sampling`, separate index and sibling evidence
+root. Parent and all predecessor trees remain read-only. Base/full B13 record
+`4763c8c99a95eeac7f9e272b851e0f814d33bb78`; bounded PR target is
+`codex/support-visibility-imports`, not main or corpus delivery. Latest main
+`8c2d03f4bc21556967df4f6b0fba1ea4b3d2bf24` has identical performance and
+formatter inputs. Preserve all16 gitlinks and corpus8bcbe7ab; exclude retained12
+source8ad089. Original B13/12K/B14/B15 gate/review counters remain unchanged.
+
+Preserved evidence/source establishes an observability defect: rejected
+`run_case` results are discarded by `controlled_sampling.py`, while command
+warmups, raw timing output and process outcomes are discarded by
+`run_benchmarks.py`. Only the three CVs and host snapshots survive. Source
+inspection establishes sorted serial discovery of two formatter files and no
+formatter cache writes in check mode. It does not establish why work varied.
+
+The instrumentation correction retains every command sample outside its timed
+interval and includes measurements in each control attempt. No workload,
+counter calculation, threshold, baseline, retry count or acceptance rule changes.
+All instrumentation edits precede execution. The new retained raw evidence is
+the changed prerequisite for one diagnostic acquisition; it is not a B13 gate
+retry or proof that sampling instability is fixed. Compare raw counters against
+their aggregate, sample completeness, output identity, warmup behavior, and
+host observations. Stop after one existing bounded invocation (at most three
+internal attempts); do not retry until lucky or claim cause from a lucky pass.
+
+Registered commands, in the owned clone:
+
+```bash
+python3 /private/tmp/sifr-b19.udje7q/evidence/audit_inputs.py
+python3 verification/areas/performance/run_benchmarks.py --self-test
+python3 verification/areas/performance/check_budgets.py --self-test
+python3 /private/tmp/sifr-b19.udje7q/evidence/acquire.py
+python3 scripts/check_file_size_guardrails.py
+git diff --check
+```
+
+`audit_inputs.py` authenticates both preservation maps (2422+125 files), the
+terminal/inventory digests, all16 gitlinks, source identity and the private copy
+of preserved compiler binary SHA256
+`cd7e5b30422326348d47a5b73b20d216796ae04674b2d3a8789eec2b4bc10ebd`.
+`acquire.py` calls the existing benchmark runner with
+`--case formatter-corpus-001-project-check --require-controlled-host
+--controlled-host-mode work --invocation-id 12K-B19-diagnostic-1`, manifest
+one warmup/five measured samples and existing three-attempt maximum. It verifies
+the binary hash and explicitly reuses that build; no predecessor target writes
+or duplicate Cargo setup. Its SHA256 is
+`7d5e5bf0b8f4bf0949eeb5c7ec987cb65675ff991b70d6b4ac6d581521b7ba69`.
+Outputs are private `target/performance/b19-diagnostic*`; full receipts are
+preserved outside the Git tree. Host window is available per coordinator;
+notify scope/start before acquisition and release at terminal.
+
+Representative `benchmark-subset` and dependent `budget-subset` remain required
+if a cause correction affects their measurement inputs; register their exact
+commands before execution. This evidence-only correction cannot qualify those
+unexecuted obligations. No Rust, lockfile, fixture or workflow edits: no Cargo
+fmt, compiler regression tests, create-pr or merge gate. Initial Opus review
+and at most one remediation are reserved for the final implementation SHA.
+
 ## Item12K-B13 delivery continuation terminal: performance sampling blocker (2026-09-08)
 
 Status: BLOCKED / NOT MERGED. The complete B18 documentation repair and record

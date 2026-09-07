@@ -78,6 +78,10 @@ def run_controlled_case(
             "stability_limit": stability_limit,
             "host_snapshots": monitor.snapshots,
             "rejection_reasons": rejection_reasons,
+            # Keep the measurements that produced the decision, including on
+            # rejected attempts. A CV alone cannot distinguish missing counters,
+            # workload changes, and variation across complete process samples.
+            "result": result.copy(),
         }
         if advisory_reasons:
             attempt_evidence["advisory_reasons"] = sorted(set(advisory_reasons))
@@ -162,6 +166,11 @@ def run_self_test(output_root: Path) -> None:
         raise BenchmarkError(
             "controlled retry self-test did not record retry admission evidence"
         )
+    if [entry["result"]["metrics"]["coefficient_variation"] for entry in
+            accepted["control"]["attempts"]] != [0.20, 0.05]:
+        raise BenchmarkError("controlled retry lost rejected or accepted measurements")
+    # Serializability also rejects an accidental cycle through result['control'].
+    json.dumps(accepted)
 
     def stable_work_run(
         _case: BenchmarkCase, _root: Path, _scale: str
@@ -237,6 +246,14 @@ def run_self_test(output_root: Path) -> None:
         raise BenchmarkError(
             "controlled retry self-test did not persist failure evidence"
         )
+    failure = json.loads(
+        output_root.joinpath("control-failures", f"{case.id}.json").read_text()
+    )
+    if len(failure["attempts"]) != 3 or any(
+        attempt["result"]["metrics"]["coefficient_variation"] != 0.20
+        for attempt in failure["attempts"]
+    ):
+        raise BenchmarkError("controlled retry exhaustion lost measurements")
 
 
 def assert_fails(action: Any, expected: str) -> None:
