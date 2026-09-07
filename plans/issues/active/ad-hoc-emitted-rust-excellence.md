@@ -2,6 +2,50 @@
 
 Status: active
 
+## Item12K-B19 terminal: incomplete causal investigation, not merged (2026-09-08)
+
+Status: NEEDS-NEW-SCOPE / NOT COMPLETE / NOT MERGED. B19 owner
+[#3776](https://github.com/sifr-lang/sifr/issues/3776) remains open. Partial
+diagnostic [PR3777](https://github.com/sifr-lang/sifr/pull/3777) stays OPEN DRAFT
+at frozen candidate `711b5a424cf9f2473f07693b3706f23b14587ba1`, base/full record
+`4763c8c99a95eeac7f9e272b851e0f814d33bb78`. No main, stack or corpus merge.
+This phase-record-only update is published separately on
+`codex/item12k-b19-terminal-record`; the reviewed PR head stays frozen.
+
+One initial exact-SHA [Opus review](https://github.com/sifr-lang/sifr/pull/3777#issuecomment-5576477224),
+one provider request, zero retries, zero remediation. Raw verdict SATISFIED
+for the diagnostic patch/stopping boundary, no patch blocking findings; the
+review explicitly says **full B19 cause-and-fix acceptance is not met**. Do not
+convert its partial-patch verdict into B19 closure or merge approval. Raw review
+SHA256 `f57ec2d85a4dac6cc60e61623685d44c175c26427559198cc9240d7a522c5257`,
+preserved in sibling evidence `review.711b5a424cf9f2473f07693b3706f23b14587ba1.md`.
+Reviewer independently repeated only both named self-tests and the file-size
+guardrail, reporting PASS; no broad gate or host-sensitive test was repeated.
+Deferred query-evidence/report/self-test suggestions are separately recorded in
+[#3778](https://github.com/sifr-lang/sifr/issues/3778), not started and not added
+to B19's acceptance criteria. Documentation below narrows the sample-retention
+claim to command-kind benchmarks; query-kind recording was not implemented.
+
+Evidence and blocker remain as detailed below: harness/budget self-tests and
+file-size3788/diff PASS; one formatter acquisition FAILED1 with three internal
+CV0.048618/0.045376/0.042088; one fixed startup/system comparison stable but
+inconclusive as to cause. Aggregate/raw agreement and unchanged output do not
+attribute instructions inside the formatter command. Representative benchmark
+and dependent budget subset remain UNEXECUTED. Zero compiler builds/Sifr gates;
+original B13 and older counters, all16 gitlinks/corpus8bcbe7ab and excluded
+retained12 source8ad089 remain unchanged. No next item was started.
+
+Required next scope decision for the performance owner: register a bounded
+producer-boundary instruction attribution experiment that can distinguish
+fmt-specific CLI setup, configuration/discovery, parser/formatter work and
+process/runtime/host accounting. No specific new compiler or host defect has
+been established; no speculative mechanism patch, unchanged benchmark/gate
+repeat, threshold change or baseline adjustment is justified by this terminal.
+Parent owns later orchestration. All B19 acquisition/comparison/review sessions
+ended naturally; host window released and no validation processes remain.
+Stop after publishing owner/PR terminal evidence. Parent and predecessors are
+read-only; nothing was cleaned, reset, reverted or transferred.
+
 ## Item12K-B19 investigation outcome: sampling cause unresolved (2026-09-08)
 
 Status: NOT COMPLETE / NOT MERGEABLE. Evidence-retention implementation
@@ -77,7 +121,7 @@ warmups, raw timing output and process outcomes are discarded by
 inspection establishes sorted serial discovery of two formatter files and no
 formatter cache writes in check mode. It does not establish why work varied.
 
-The instrumentation correction retains every command sample outside its timed
+The instrumentation correction retains every command-kind sample outside its timed
 interval and includes measurements in each control attempt. No workload,
 counter calculation, threshold, baseline, retry count or acceptance rule changes.
 All instrumentation edits precede execution. The new retained raw evidence is
