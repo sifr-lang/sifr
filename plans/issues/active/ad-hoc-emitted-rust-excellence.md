@@ -857,6 +857,135 @@ documents remain untouched. B16's historical3/4 failure, B14/B15 failed gates,
 and original12K four FAILED plus one RESOURCE/zero PASS and exhausted reviews
 are preserved. No later implementation, validation or review starts here.
 This session stops after these records; parent owns future B15 continuation.
+## Current orchestration: B15 terminal; storage12K-R3 then B13 combined delivery (2026-09-07)
+
+Schrodinger is CLOSED. B15 PR3746 remains OPEN DRAFT, normally pushed record
+`44cbbd0b126a63f705d7295cd763802ca0a83959`, reviewed/gated candidate
+`875a3555a7d1bcd7885ad4151c75a4a7abf17a74`, main base
+`0b97b3a3f1dd3f93bc724f75e1e40240f15ff942`. Read-only clone
+`/private/tmp/sifr-b15-delivery.NykMhH/sifr`. Authenticated terminal
+`/private/tmp/sifr-b15-delivery.NykMhH/evidence/terminal.json` SHA256
+`36006383cef47c1d4b0350b718d2af95164844978776421de42aa684734af2c6`,
+52artifacts/85inherited reauthenticated after gate. One continuation gate
+FAILEDexit1 naturally after2833.76s; B15 cumulative2FAILED/0PASS/0RESOURCE.
+Production92/13guards264fresh/Rust10/readiness4/core5/CPython2 PASS; Python30
+26PASS/4FAIL. All15 later areas and both toolchain steps UNREACHED, including
+new SQL memberships and E2E/stdlib. Rawlog SHA256
+`34a4bd772f4a459b2f5ffa8cfedc538504149279744ba7e53559a8c6a20e4076`;
+receipt `32e6bd96bba04676c8e769bfb4bdbf8aa6bc592ed066f5a418c3f82c6d61e6a8`.
+No cleanup/resource termination/live handles. Minimum free11,802,378,240bytes.
+B15 initial+remediation SATISFIED now EXHAUSTED,2providers/0retry; final review
+3746#issuecomment-5573377073 SHA256
+`6ee19e0c9a03f0c200b365fe8b41320e23e1d4f38435800a6d11a7dc260b884f`.
+B14 exhausted reviews/1failed gate and original12K4FAILED+1RESOURCE143/0PASS
+remain unchanged. Terminal3746#issuecomment-5573870586 and3744#5573871151.
+
+Failures match EXISTING approved-but-unmerged owners, not new mechanisms:
+binding-authoring8E0560 => H/PR3697 field identity; callback3nativeE0425 =>
+I/PR3698 task-local support; async declaration/contextRESULT0003 => correcting
+M1/PR3700. Worker verified all three approved sources/records are ancestors of
+full B13 record `4eef8a2bb4dbc24fb7c1d1213652be379047f4b1` (owner3744).
+The B13 terminal hash28cf482158707bbc8635c726f25ab0e3449d3566bd8cdabee507447c5e07c441
+was reauthenticated. B13 itself needs the now-approved B14 capture change and
+its own singleton-import assertion correction. This is a delivery cycle:
+standalone B15 needs existing H/I/M1; their full integration needs B14/B13.
+Do not create duplicate H/I/M1 fixes or spend another standalone B15 gate.
+
+Once storage is ready, a fresh B13 owner will normally combine full4eef with
+full44cbb B15 record and actual main SQL prerequisites, finish ONLY B13's own
+remaining implementation/assertion, qualify its registered tests and complete
+full-stack delivery. Preserve/reuse exhausted predecessor approvals and full
+original12K acceptance; no third B14/B15/original12K review. B13's own initial
+and at most one remediation, and its first final-candidate gate remain unused.
+Same full qualified SHA may satisfy integration delivery without duplicate
+gates; no unreviewed stack merge or false declaration of retained12 closure.
+
+Immediate next ready **12K-R3**, owner phase validation storage, is a bounded
+resource prerequisite before that fresh B13 worker. Dependencies: all six target
+owner sessions closed and preserved terminal handoffs; worker must verify no
+live processes use each exact candidate before cleanup. Parent read-only disk
+inventory now shows11GiB available. Six closed-owner target allocations (KiB):
+24,939,520 `/private/tmp/sifr-validation.wuRhoh/sifr/target`;
+9,351,676 `/private/tmp/sifr-support.kmdI25/sifr/target`;
+8,002,512 `/private/tmp/sifr-capture-demand.aetT8U/sifr/target`;
+5,776,056 `/private/tmp/sifr-companion.KIogHV/sifr/target`;
+3,603,432 `/private/tmp/sifr-sql-membership.4llFae/sifr/target`;
+16,812,900 `/private/tmp/sifr-b15-delivery.NykMhH/sifr/target`.
+These totals are inventory, not proof that all bytes are disposable or that
+space will be recovered. No deletion or test was performed by the parent.
+
+R3 scope/authority: fresh independent owned main-based docs-only clone/branch,
+register resource owner issue; restore adequate measured headroom by removing
+only verified rebuildable Cargo cache subdirectories within these SIX exact
+target roots. The user authorizes safe in-scope next actions and resource
+recovery. This explicit bounded owner may inspect those closed roots, preserve
+evidence and remove verified cache contents; no source/index/Git/submodule/
+parent edits, other worktree/global/shared cache cleanup or broad root deletion.
+Every target path must be literal, canonical, checked for symlinks and no live
+use before destructive action. No blanket removal of target roots containing
+evidence. Prefer smallest necessary cache set; stop if safe owned choices are
+insufficient, do not expand silently. Do not run cargo clean over preserved
+reports or use a broad unresolved glob/variable for deletion.
+
+Before deleting any cache, enumerate all referenced evidence in the six owner
+terminal/provenance manifests plus inherited relocation maps; preserve any
+artifact located inside selected cache paths to a new independent evidence
+root, with verified byte hashes and machine-readable old-to-new mapping.
+Do not delete sole copies of generated source/manifests/logs/review responses/
+native audit artifacts or symlink referents. Keep original nonselected evidence
+intact. Existing R2 preservation maps below remain read-only dependencies.
+Record actual candidate plan and before/after allocations/free space, clean
+source/index/gitlink identity for all six owners and parent dirtyMD identities.
+These pre-delete safety checks are operational preconditions, not test-first
+implementation. Complete bounded recovery/record implementation then acceptance.
+
+R3 named acceptance: authenticate every protected artifact SHA256 and symlink
+identity plus all relocation destinations; compare before/after HEAD/index/
+tracked source and16submodule gitlink identities for every affected owner;
+verify no unexpected parent/predecessor changes; measure actual free disk and
+remaining private cache allocation via df/du; assess concrete B13 full-profile
+working headroom plus safety margin from preserved comparable reports rather
+than a universal96GiB threshold; `python3 scripts/check_file_size_guardrails.py`
+and `git diff --check` in OWN docs clone only. Register exact bounded audit
+commands before execution and retain machine-readable receipts. No Cargo tests,
+compiler review or Sifr create-PR/merge gate belongs to R3.
+
+One exact-SHA resource/docs Opus initial plus at most one remediation; zero
+Sifr gates. Normal docs PR/push/merge authorized after evidence acceptance and
+review; verify actual main merge, update resource issue/phase and STOP. Return
+exact removed paths/recoverability, measured recovered bytes/headroom, all
+relocation maps/digests, source preservation, PR/SHA/evidence/blocker or none.
+No B13 code/testing/gate or further item starts in R3. Phase remains active;
+12D/12E/12F, retained12 and docs-only12A remain after combined delivery.
+Dispatched sole R3 worker Avicenna (`01a07ce4-7434-73e2-8319-c8ac3dd21111`),
+
+### 12K-R3 owned registration
+
+Resource owner [#3753](https://github.com/sifr-lang/sifr/issues/3753).
+Independent docs clone `/private/tmp/sifr-storage-r3.TigHgT/sifr`, branch
+`codex/item12k-r3-storage`, actual main base
+`0b97b3a3f1dd3f93bc724f75e1e40240f15ff942`.
+The issue registers exact bounded operational and acceptance commands before
+execution. Parent's existing two dirty Markdown files remain read-only.
+Only R3 resource/docs delivery is owned here; no B13 implementation or gate.
+
+Bounded recovery implementation and named acceptance PASS; exact-SHA
+resource/docs review follows. Twelve literal debug/deps and debug/incremental
+directories inside the six authorized targets were removed after evidence
+preservation and immediate safety checks. The two R3 maps preserve26references
+(595,553,833bytes);53,096protectedfiles/396symlinks and336R2destinations are
+retained. Actual post-removal free73,135,403,008bytes (68.112GiB), net recovered
+62,076,620,800bytes. The measured-footprint-based65GiB estimate includes8GiB
+safety; it is not a reservation or future gate PASS. Full path list, budget,
+digest pins and operation history live in the
+[R3 resource record](ad-hoc-validation-storage-recovery-12k-r3.md).
+No Cargo tests, compiler changes, Sifr gate or B13 work were performed.
+All protected hashes/links/destinations, six owner source/index/HEAD/96gitlinks
+and nested state, parent dirtyMD identities and process nonuse passed; before/
+after Git receipt SHA256 `717febbbc3861bda51f91e2038c204a501321fee1943cec263e36780a65e7030`.
+File-size3759/whitespace PASS. Acceptance receipt SHA256
+`190b15a1bd41ba9ed08fd6f44c09282a47873cb37b1d34645fa6813f4c1e3dfc`,
+final acceptance free73,133,318,144bytes. R3 maps remain external and immutable.
 
 ## Current orchestration: B16 terminal; bounded12K-B17 membership delivery (2026-09-07)
 
