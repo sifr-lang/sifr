@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-09-07. Items 0–30 and 36 are complete. Item 36 reconciled
-the remaining inventory; independent work can proceed under the continuation
+Status: active on 2026-09-07. Items 0–30 and 36–37 are complete. Item 37 closed
+the YAML checkout-discovery bypass; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
@@ -407,9 +407,9 @@ blocked. The dispatch order is:
 
 Skip a row whose dependencies or merge-readiness prerequisites remain blocked;
 do not execute its tests to rediscover a recorded external failure. The first
-ready implementation item after this record merges is **37**. Items 38 and 39
-are the next independent runner-only scopes. No dependent implementation or
-tests ran in Item 36.
+ready implementation item after Item 37's closure record merges is **38**.
+Items 38 and 39 remain independent runner-only scopes. No dependent
+implementation or tests ran in Items 36–37.
 
 Two existing external prerequisites are explicit, with no implementation
 transferred into this phase:
@@ -452,7 +452,7 @@ the named tests and never runs for docs/runner-only scopes.
 
 | ID | Technical dependencies | Owned scope and acceptance | Exact named focused tests |
 | --- | --- | --- | --- |
-| 37 | none | `scripts/check_submodule_ownership.py`: replace regex step splitting with YAML step parsing; explicitly classify evidence-only checkouts; reject named/unnamed/commented checkout bypasses without changing workflows or gitlinks. Existing workflow verification already uses Ruby's YAML parser; select an available maintained parser without adding a Python lock dependency in this runner-only item. | `python3 scripts/check_submodule_ownership.py --self-test`; `python3 scripts/check_submodule_ownership.py` |
+| 37 | none | **Complete, PR #3760.** `scripts/check_submodule_ownership.py`: replace regex step splitting with YAML step parsing; explicitly classify evidence-only checkouts; reject named/unnamed/commented checkout bypasses without changing workflows or gitlinks. Existing workflow verification already uses Ruby's YAML parser; select an available maintained parser without adding a Python lock dependency in this runner-only item. | `python3 scripts/check_submodule_ownership.py --self-test`; `python3 scripts/check_submodule_ownership.py` |
 | 38 | none | uv pin invariant only: new `scripts/check_uv_toolchain.py` and its local self-tests; discover all maintained exact pins, setup-uv version-file references and platform checksums, reject disagreement/missing platform checksum. Qualify current pins; Item 41 changes versions and installs the check into CI. No toolchain/lock/workflow edits here. | **new** `python3 scripts/check_uv_toolchain.py --self-test`; **new** `python3 scripts/check_uv_toolchain.py` |
 | 39 | none | `verification/areas/python_interop/runner/dependency_versions.py` and runner self-tests: make retired-distribution rejection independent of owner labels; scan every runner module for retired Testcontainers imports/wait helpers, mutate each forbidden form, derive Redis numkeys from keys, examine E402 bootstrap suppressions. Preserve current locks, fixtures and audit selections. | `area python_interop: self-test, dependency-versions, redis-service-features, live-policy` |
 | 53 | none | `verification/runner/sifr_verify`, `verification/areas/coverage_matrix/checks`: require every non-live Python manifest suite in at least one delivery profile; reject a removed assignment; derive Schwifty/mutation counts. Credit present coverage. Do not rewrite profiles or custody evidence here. | `area coverage_matrix: readiness`; `area python_interop: self-test, minor-train-features` |
@@ -580,6 +580,56 @@ Item 36 blocker: **none**. E1/E2 and Rust inventory drift remain assigned
 prerequisites for their consumers. Exact next action: the parent may dispatch
 **Item 37 only**, on a fresh owned worktree. This Item 36 worker stops after
 the record update merges; it has implemented and tested no later item.
+
+### Item 37 closure evidence
+
+State: complete. Implementation [PR #3760](https://github.com/sifr-lang/sifr/pull/3760)
+merged on 2026-09-07. Base: `b8639d9131aad26a866936dd0d71e78dc81e14a2`.
+Exact reviewed candidate: `f011d8e01d72cfb7cee9c6b72aa57da93348194f`.
+Merge: `11278a6ab0c3b60fe95c85e1a617ecc4514e87cb`.
+
+The only implementation path was `scripts/check_submodule_ownership.py`.
+Ruby/Psych safe YAML parsing now enumerates actual job steps and rejects
+malformed or ambiguous documents. Source checkouts require their own literal
+recursive input. Six explicit workflow/job/condition/input identities classify
+the existing publication-governance and stable/incident evidence checkouts.
+The source checkout used by the editor remains subject to recursive restoration.
+No workflow, gitlink, compiler, lockfile, or fixture changed.
+
+[Validation evidence](https://github.com/sifr-lang/sifr/pull/3760#issuecomment-5575730927)
+covers the exact committed bytes: both named checks passed,
+`python3 scripts/check_submodule_ownership.py --self-test` and
+`python3 scripts/check_submodule_ownership.py`; the required
+`python3 scripts/check_file_size_guardrails.py` passed (3,759 files, 900-line
+limit; touched source 559 lines); `git diff --check` passed. The self-test
+exercises named/unnamed/commented, quoted, flow and folded checkout forms,
+neighbor/run-text bypasses, aliases, malformed structures, and mutations of
+every non-source checkout classification. Neither Sifr gate ran: this was
+runner-only scope under the authorized continuation policy.
+
+The [one exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3760#issuecomment-5575730776)
+returned `SATISFIED`, with no blocking findings. The reviewer independently
+reproduced the old regex bypass and confirmed the named checks on the same
+candidate. No remediation review ran. Raw review SHA-256:
+`cbbaa23d317730417dd09dab52dfdfd70d87697f7e98cc53d0dc9662cfcb9d5b`.
+External review: `/tmp/sifr-item37-opus.muC8Os/response.md`.
+External validation record:
+`/private/tmp/sifr-item37.ZWAyPg/validation-f011d8e01d72cfb7cee9c6b72aa57da93348194f.md`.
+
+Nonblocking observations are assigned to separate [issue #3761](https://github.com/sifr-lang/sifr/issues/3761):
+batching Ruby self-tests, explicit non-source submodules-input policy,
+the prepare evidence classifications' currently latent role, possible future
+wrapper/fork action discovery, and documenting the existing Ruby prerequisite
+alongside guardrail registration. They add no Item 37 acceptance requirement.
+No follow-up implementation ran in this session.
+
+Item 37 blocker: **none**. E1/E2 ownership and consumed histories remain intact.
+Owned worktree: `/private/tmp/sifr-item37.ZWAyPg/codebase`; implementation branch:
+`codex/latest-stable-item37`; record branch: `codex/latest-stable-item37-record`.
+The original Kafka worktree was preserved. This record-only update needs no
+additional external review or Sifr gate. Exact next action: stop after this
+record merges and return Item 37's evidence; the parent may separately dispatch
+**Item 38 only** in a fresh owned worktree.
 
 ### Item 0 record
 
