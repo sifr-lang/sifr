@@ -1,9 +1,134 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-27. Items 0-30 are complete. Item 31 Kafka Python is
-blocked by the expired Phase 40 release-approval waiver.
+Status: active on 2026-09-07. Items 0–30 are complete. Item 36 reconciles the
+remaining inventory; independent work can proceed under the continuation
+ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
+
+### Orchestrated continuation — 2026-09-07
+
+The user has authorized one live implementer subagent at a time. The parent
+orchestrator manages item registration, dependency order, and returned status;
+it does not implement, test, review, or run Sifr gates. Each child receives only
+an item reference and the user's standard item prompt, without parent history.
+The following continuation instructions supersede conflicting older execution
+instructions below; historical gate and review evidence remains unchanged.
+
+- Run only the tests named on the dispatched item, then its exact-SHA Opus
+  review (at most one remediation review), then merge and update this record.
+- If compiler, lockfile, fixture, or workflow inputs change, run one merge-profile
+  gate on the final exact SHA. Skip create-pr when merging that SHA in the same
+  session. Never rerun a consumed gate; reuse an existing pass for the same SHA.
+- If those inputs do not change, do not run create-pr or merge gates.
+- Return merged, blocked, or needs-new-scope, with item ID, PR, SHA, evidence,
+  and blocker. Do not start or implement another item. Record a new mechanism
+  defect as a later item rather than adding review rounds.
+- Preserve the stable-release human-reviewer and expiring-waiver mechanisms.
+  The latest user direction is to wait for human approval; do not renew the
+  expired waiver or substitute automated review for the required human.
+- Whole-phase Opus review belongs only to one docs-only closer, dispatched
+  after every implementation item is merged. Item 35's implementation-bearing
+  audit follow-ups must be separate, bounded items before that closer.
+- Every child owns an isolated worktree/branch/index and temporary evidence.
+  Do not absorb another child's work or the preserved Kafka candidate. For
+  Item 36, create a branch from latest main and carry only this phase-document
+  registration into that worktree. The orchestrator's original worktree is
+  `/Users/yaseralnajjar/.codex/worktrees/cb34/codebase` and preserves Item 31.
+
+#### Next ready item: 36 — execution inventory reconciliation
+
+Dependencies: none. This is the first step of the execution order proposed in
+the 2026-09-07 analysis. Items 0–30 keep their historical completed status;
+newly stale releases require new items rather than reopening their evidence.
+
+Scope: documentation only. Reconcile the remaining execution plan against
+current main and register every remaining bounded implementation item with
+an explicit ID, dependency list, owned paths/acceptance criteria, and exact
+named focused tests. Separate real technical dependencies from scheduling
+order so that a blocked external approval does not silently block independent
+work. Keep one live implementer. Do not implement any of the registered work.
+
+Known remaining inventory to incorporate and verify by read-only inspection:
+
+- Original Item 31 is implemented in draft PR #3551, reviewed at
+  `dbdbd42915dd45fe0255681c224266dd08f453ea`, with consumed gates recorded below.
+  The preserved branch now includes main `156157242b` through merge
+  `2aa891d302`. Relevant compiler base changes require a bounded integration
+  scope, not treating old evidence as approval of the merged tree.
+- Original Items 32 (Packaging/Hatchling), 33 (editor), and 34 (Mint) are pending.
+- The Rust audit records 113 manifests / 168 declarations / 109 packages;
+  current maintained sources have 128 / 195 / 124. The Python audit owns only
+  20 packages, two projects/locks and two images, against six maintained Python
+  projects. Missing direct Python audit owners are aiosqlite, biip, packaging,
+  psycopg, pydantic, scikit-learn, plus the Hatchling build requirement.
+- New toolchain targets found in the official 2026-09-07 audit: Rust 1.98.1,
+  Ruff 0.16.6, uv 0.12.10, WASI SDK 34, npm 12.0.2. Python 3.14.7 and PyO3
+  0.29.2 remain current. Node 26.8.1 is latest stable; 24.20.0 is latest LTS.
+  Reconcile the older explicit Node-24 policy with the user's latest-stable
+  intent in the execution contract, without silently maintaining two lanes.
+- Stale Rust direct packages: arrow 59.3.0, bindgen 0.73.1, blake2 0.11.0,
+  cc 1.4.5, cxx 1.0.200, encoding_rs 0.8.40, flate2 1.1.10, hyper 1.11.1,
+  indexmap 2.14.2, mysql_async 0.37.1, mysql_common 0.38.2, quote 1.0.47,
+  rcgen 0.14.10, redis 1.7.0, rust_decimal 1.43.0, rustls 0.23.44,
+  syn 3.0.5, tokio-rustls 0.26.5, toml 1.1.5, tower-http 0.7.1, uuid 1.26.0,
+  zstd 0.14.0. The words component fixture also needs wit-bindgen 0.61.1
+  and wit-component 0.258.0 convergence.
+- MySQL needs a bounded type-identity solution: latest mysql_async still
+  requires mysql_common ^0.37.1, while Sifr imports Row/Value directly from
+  mysql_common. The driver re-exports both; inspect removing the unnecessary
+  direct dependency rather than adding conversion shims or duplicate types.
+- SQLite native source is 3.53.2 versus upstream 3.53.4, despite current
+  rusqlite/libsqlite3-sys versions. Register the native-source/grammar/runtime
+  qualification boundary explicitly; do not change only the grammar pin.
+  SQLite's component builder has ambient SDK/sysroot/compiler fallback paths.
+  SDK/WIT changes must regenerate owned WASM artifacts and provenance.
+- Python targets: alembic 1.19.2, boto3 1.43.89, numpy 2.5.3, packaging 26.3,
+  psycopg 3.3.5, pydantic 2.13.5, torch 2.14.0, exact Hatchling 1.32.0.
+  NumPy/Torch own both the interop and DLPack-demo locks. Packaging 26.3's
+  public range/specifier APIs are a candidate for stronger requirement checks.
+- Editor targets: TypeScript 7.0.2 (currently locked 5.9.3), VS Code types
+  1.136.0 / application qualification 1.136.1, vscode-languageclient 10.1.1,
+  matching Node types (26.5.0 for Node 26, or 24.13.3 for the old LTS policy).
+  @vscode/vsce 3.9.2 remains current. Mint target is exact 4.2.876.
+- Python live images: Redpanda 23.1.13 to 26.2.2, postgres:16-alpine to a
+  current, immutable PostgreSQL 18.6 selection. Redis/LocalStack releases
+  remain current. SQL's explicitly supported multi-major provider matrix is
+  a distinct semantic surface; do not silently delete it as a dependency bump.
+- Root/editor release-tagged action pins are current, but Ruff fork workflows
+  contain stale checkout/upload-artifact/attest-build-provenance/CodSpeed/
+  cargo-binstall/setup-buildx/install-action/run-on-arch/setup-mold pins.
+  Audit these inside the bounded fork owner. Three corpus/demo submodule
+  heads differ only by merge commits with identical trees; avoid code churn.
+- Reconcile every Item 35 deferral below against current implementation.
+  Examples still requiring ownership: uv pin/checksum invariant, YAML step
+  parser, exact first-party lock edges and maintained-lock discovery, vendor
+  closure, clean-cache offline qualification, compile/load CFFI-generated
+  source, Python requirement assertions, duplicate version markers,
+  Testcontainers mutations, LSP cancellation, Arrow/Polars assertions,
+  protocol docs and custody digests. Impl deduplication now includes the full
+  header; every Python suite currently appears in a profile. Credit these
+  fixes while checking whether regression invariants remain missing.
+- Release approval remains externally blocked: only yaseralnajjar has access,
+  no invitations; stable-release requires that owner with self-review allowed.
+  The real waiver validates historically but fails new-use expiry validation.
+  The repository self-test still requires the expired waiver to be unexpired.
+  Register restoration under its existing owning issue, preserving mechanisms
+  and historical evidence. Do not absorb this prerequisite into Kafka.
+- Unmerged compiler/Python integration PR #3717 and its owned prerequisites
+  are not part of main. Coordinate by recorded dependency/blocked status;
+  do not take over their implementations.
+
+Named tests for Item 36 only: `git diff --check`; local link/path checks for
+the changed phase record; `python3 scripts/check_file_size_guardrails.py`.
+No Sifr gate. One exact-SHA item-scoped Opus review, not a whole-phase review.
+Acceptance: an ordered, dispatchable ledger covers the inventory above and
+all existing unfinished work; each item has dependencies and named tests;
+the final closer is docs-only; the record change is merged with evidence.
+
+After Item 36, dispatch the first ready implementation item in its recorded
+execution order. Blocked prerequisites are explicit later-item records; do
+not dispatch a dependent item as ready or close the phase with blocked work.
 
 Move every maintained Sifr toolchain, direct dependency, fork, CI action, and
 editor integration to its latest stable release. Complete each compatibility
@@ -48,22 +173,24 @@ Every item follows this sequence:
 7. Apply all valid blocking findings in one batch. At most one remediation
    review is allowed. A new mechanism defect found on review two is recorded as
    a later item; there is no third review.
-8. If compiler inputs changed, run one create-PR gate and one merge gate on the
-   same final, agent-approved candidate SHA. Do not rerun either gate. If
-   compiler inputs did not change, do not run either Sifr gate.
+8. If compiler, lockfile, fixture, or workflow inputs changed, run one
+   merge-profile gate on the exact final, Opus-approved candidate SHA. Skip
+   create-PR when merging that SHA in this session. Reuse a pass for that SHA;
+   never rerun a consumed gate. Otherwise run neither Sifr gate.
 9. Merge the implementation PR only when its exact evidence is satisfied.
 10. Merge a record-only PR that updates this document with the implementation
     PR, base/candidate/merge SHAs, validation, review comment, deferrals, and
     exact next action. Do not externally review or run Sifr gates for that
     record-only update.
-11. Start the next item immediately from the resulting `origin/main`.
+11. Stop and return the item, PR, SHA, evidence, and blocker. Only the parent
+    dispatches another item, in a fresh isolated worktree.
 
-For this phase, compiler inputs are first-party Rust source, generated-runtime
-or code-generation templates, stdlib implementation/declarations, compiler
-fixtures/snapshots, workspace Cargo manifests, Cargo lockfiles, and `vendor/`.
-Workflow-only, planning-only, Python-environment-only, documentation-only, and
-editor-submodule-pointer-only changes do not trigger the Sifr create-PR or
-merge gates unless they also change one of those compiler inputs.
+For current continuation items, gate inputs include first-party Rust source,
+generated-runtime/code-generation templates, stdlib implementation/declarations,
+compiler fixtures/snapshots, Cargo manifests, all maintained lockfiles,
+`vendor/`, and workflows. Historical gate decisions below retain the policy
+under which they ran. Runner-only and documentation-only changes do not trigger
+Sifr gates. A submodule pointer takes the category of the change it introduces.
 
 Review evidence is posted outside the reviewed Git tree, keyed by candidate
 SHA, normally as a PR comment. A failed or incomplete agent request is retried
@@ -165,7 +292,10 @@ root pointer and consumer evidence.
 
 ## Ordered Items
 
-Only the first incomplete row may be active.
+Items 0–30 below are historical completed units. For unfinished work, the
+continuation ledger below governs dispatch: one live implementer, first ready
+row in scheduling order, skipping explicitly blocked rows. Scheduling position
+is not a technical dependency.
 
 | Item | State | Scope | Acceptance criteria |
 | --- | --- | --- | --- |
@@ -204,7 +334,216 @@ Only the first incomplete row may be active.
 | 32 | pending | Packaging and Hatchling | Packaging is current, Hatchling is explicitly pinned, and builds/locks are reproducible. |
 | 33 | pending | VS Code extension toolchain | Node types, VS Code types/engine, TypeScript, package locks, VSIX qualification, and the three-repository pointer chain merge in order. |
 | 34 | pending | Mint exact pin | Documentation tooling uses a tested exact latest-stable Mint release and documentation checks pass. |
-| 35 | pending | Final registry audit and phase closure | Official-source audit finds no stale maintained surface; all item records are complete; one exact-SHA whole-phase agent review is satisfied; closure docs merge and the record is archived. |
+| 35 | pending; final only | Documentation-only phase closure | After Items 31–34 and 36–62, reuse item evidence and Item 62's official audit; one exact-SHA whole-phase Opus review; archive the phase and update roadmap. Implementation findings require separate items before this closer. |
+
+## Item 36 — reconciled continuation ledger
+
+State: implementation record prepared; documentation only. Inspection base:
+`156157242b0995c01c4fff03575624b5c471c0d8` (main, 2026-09-07).
+Items 0–30 remain complete. The supplied September release targets above are
+the planning baseline, not a new official-source qualification by Item 36.
+Each release owner must recheck its official channel at dispatch, retain the
+release URL/checksum, and take the newest non-prerelease release then available.
+
+### Main versus preserved candidates
+
+- Tracked maintained Rust manifests, excluding vendor and third-party sources,
+  total **128 manifests / 195 versioned direct declarations / 124 packages**.
+  The committed registry snapshot and test still assert **113 / 168 / 109**.
+  Items 43–48 own incremental graph changes; Item 49 owns full discovery and
+  final coverage. A count mismatch is a real unsatisfied audit, never a pass.
+- Main's Python snapshot owns **19 packages / two projects and locks / two
+  images**. The preserved Kafka candidate owns 20 packages. Six maintained
+  Python projects exist: `verification`, `verification/areas/python_interop`,
+  and `demos/python_binding_authoring`, `demos/python_environment_checks`,
+  `demos/python_raw_api`, `demos/python_dlpack`. Empty dependency lists must be
+  represented, not silently omitted. Item 50 owns discovery; Item 32 owns the
+  build-system requirement as well as Packaging.
+- Main still constrains Kafka below 3. Draft [PR #3551](https://github.com/sifr-lang/sifr/pull/3551)
+  has reviewed head `dbdbd42915dd45fe0255681c224266dd08f453ea`. The original
+  local branch's `2aa891d302` merge includes relevant main changes; it is not
+  covered by that approval. Item 61 is a new bounded integration owner; it
+  must preserve Item 31's consumed gate/review history.
+- [PR #3717](https://github.com/sifr-lang/sifr/pull/3717) is open, not main.
+  On inspection its API head is `98480c78587d6cbd99a7079d10c71825360bd468`,
+  while its terminal body refers to reviewed candidate `be0849a905f105d1733d24aafe880c93b7643438`
+  and failed gate. Neither reference is a merged qualification. Its current
+  owner [#3744](https://github.com/sifr-lang/sifr/issues/3744) and
+  [Python qualification issue](ad-hoc-python-interop-qualification-dependencies.md)
+  retain all implementation and exhausted-evidence decisions.
+- `crates/sifr_codegen/src/stdlib_filter/dedup_keys.rs` already uses the full
+  impl header, including safety. Existing tests distinguish modifiers and
+  generic arguments. Item 56 checks the remaining negative invariant; it must
+  not reimplement this fix. Python suites currently all appear in a delivery
+  profile; Item 53 owns a reverse-coverage regression invariant, not restoring
+  a currently absent suite.
+- SQLite's component builder still selects SDK/sysroot/compiler alternatives
+  and embeds SQLite 3.53.2. Item 47 owns deterministic SDK/component provenance;
+  Item 48 owns native SQLite 3.53.4 qualification, not just a grammar label.
+- Root/editor action selections and three merge-only corpus/demo head changes
+  retain the supplied audit disposition. Item 62 must compare trees before any
+  new pointer proposal; identical trees need no code churn. The maintained Ruff
+  fork workflow audit belongs to Item 42.
+
+### Policy and readiness
+
+The current latest-stable intent selects **Node 26.8.1**, with matching Node
+types **26.5.0**, and npm **12.0.2** as the September baseline. Item 40 replaces
+the old explicit Node-24 policy in every maintained owner. Node 24.20.0 is
+latest LTS, but this continuation has one latest-stable lane, not two lanes.
+Item 33 consumes that same selection. Historical Item 5 evidence stays intact.
+Python 3.14.7 and PyO3 0.29.2 remain current in the supplied audit.
+
+Every row below has its own scope and acceptance; related paths do not confer
+authority over another row. `none` means no technical prerequisite, not that
+its merge gate is already qualified. All rows start pending unless explicitly
+blocked. The dispatch order is:
+
+`37, 38, 39, 53, 54, 55, 58, 59, 60, 40, 33, 34, 41, 42, 43, 44, 45, 46,
+47, 48, 49, 32, 50, 51, 52, 57, 61, 62, 35`.
+
+Skip a row whose dependencies or merge-readiness prerequisites remain blocked;
+do not execute its tests to rediscover a recorded external failure. The first
+ready implementation item after this record merges is **37**. Items 38 and 39
+are the next independent runner-only scopes. No dependent implementation or
+tests ran in Item 36.
+
+Two existing external prerequisites are explicit, with no implementation
+transferred into this phase:
+
+| ID | Owner and current state | Required evidence / consumers |
+| --- | --- | --- |
+| E1 | [Distinct release reviewer restoration](ad-hoc-distinct-release-reviewer-restoration.md), blocked on a human | GitHub currently requires only `yaseralnajjar`, self-review is allowed, admin bypass is disabled, and invitations are empty. Wait for the required distinct human approval/access and protected-environment restoration. Preserve expiring-waiver and human-review mechanisms; never renew the waiver. This owner also must separate historical waiver validation from new-use expiry in `verification/areas/distribution_release/governance/approval_waiver_selftest.py`, whose real-waiver self-test currently requires it to be unexpired. Named qualification: distribution_release suites `epoch-bootstrap`, `qualification`, `evidence-custody`, `protected-drill`, `stable-prepare`, `stable-publication`, plus `bash verification/areas/distribution_release/cases/stable_publication_workflow_contract.sh`. The owner's existing rules govern external work. Blocks any candidate whose required merge gate would encounter the recorded expiry failure. |
+| E2 | PR #3717 / issue #3744 and the Python qualification issue, externally owned and unmerged | Require an actual merged implementation SHA and its attributable qualification, not a draft or body claim. Named affected suites from that owner: python_interop `binding-authoring`, `callback-examples`, `async-declaration-examples`, `async-context-examples`, and coverage_matrix `readiness`. Blocks dependent compiled Python integration and a full merge gate while those known prerequisite failures remain on main. No repair, merge, gate retry, or reset of their histories is authorized here. |
+
+E1/E2 are **merge-readiness prerequisites** for gate-bearing rows, not technical
+dependencies of every edit. Runner/document-only rows with passing named checks
+can merge independently. Current Rust audit inventory drift is additionally a
+known gate constraint: Item 49 is its named owner, and each graph-changing row
+must update its owned audit entries/counts with its graph. Do not weaken audit
+assertions, exempt maintained paths, run a knowingly blocked full gate, or
+pretend a partial inventory is qualified. If independent graph units cannot
+reach a passing audit without another row's implementation, return
+`needs-new-scope` with the exact coupled edges for a bounded integration item;
+do not silently combine rows or create a dependency cycle.
+
+### Exact test notation
+
+All commands run from the item's owned repository root. Every item includes
+`git diff --check` and `python3 scripts/check_file_size_guardrails.py`; docs-only
+items additionally check local links and named paths. These two commands and
+local link/path checks are the **only** Item 36 tests.
+
+In the ledger, `area AREA: SUITE, SUITE` expands exactly to:
+`uv run --project verification --locked python -m sifr_verify areas run --area AREA --suite SUITE --suite SUITE`.
+`manifest TEST` expands to:
+`cargo test -p sifr_stdlib_manifest --test TEST`.
+Suite names were read from current area manifests. A proposed new focused
+self-test is explicitly marked **new** and must be implemented by that item
+before execution. Do not substitute a full area/profile for the named selection.
+The single merge gate, when applicable and unblocked, is
+`scripts/run_all_tests.sh`, on the final reviewed SHA; it is additional to
+the named tests and never runs for docs/runner-only scopes.
+
+### Independent verification work
+
+| ID | Technical dependencies | Owned scope and acceptance | Exact named focused tests |
+| --- | --- | --- | --- |
+| 37 | none | `scripts/check_submodule_ownership.py`: replace regex step splitting with YAML step parsing; explicitly classify evidence-only checkouts; reject named/unnamed/commented checkout bypasses without changing workflows or gitlinks. Existing workflow verification already uses Ruby's YAML parser; select an available maintained parser without adding a Python lock dependency in this runner-only item. | `python3 scripts/check_submodule_ownership.py --self-test`; `python3 scripts/check_submodule_ownership.py` |
+| 38 | none | uv pin invariant only: new `scripts/check_uv_toolchain.py` and its local self-tests; discover all maintained exact pins, setup-uv version-file references and platform checksums, reject disagreement/missing platform checksum. Qualify current pins; Item 41 changes versions and installs the check into CI. No toolchain/lock/workflow edits here. | **new** `python3 scripts/check_uv_toolchain.py --self-test`; **new** `python3 scripts/check_uv_toolchain.py` |
+| 39 | none | `verification/areas/python_interop/runner/dependency_versions.py` and runner self-tests: make retired-distribution rejection independent of owner labels; scan every runner module for retired Testcontainers imports/wait helpers, mutate each forbidden form, derive Redis numkeys from keys, examine E402 bootstrap suppressions. Preserve current locks, fixtures and audit selections. | `area python_interop: self-test, dependency-versions, redis-service-features, live-policy` |
+| 53 | none | `verification/runner/sifr_verify`, `verification/areas/coverage_matrix/checks`: require every non-live Python manifest suite in at least one delivery profile; reject a removed assignment; derive Schwifty/mutation counts. Credit present coverage. Do not rewrite profiles or custody evidence here. | `area coverage_matrix: readiness`; `area python_interop: self-test, minor-train-features` |
+| 54 | none | `verification/areas/python_interop/runner/crypto_abi_features.py`: compile, load and invoke actual CFFI-generated source; test error path and cleanup. Keep CFFI/Cryptography releases unchanged. | `area python_interop: crypto-abi-features, callbacks` |
+| 55 | none | Python feature runners: derive exact-version markers from audit, directly assert public Pandas module identity, inspect warning-filter scope and duplicated Arrow version assertion; distinguish Arrow 25 API additions from 25.0.1 fixes in maintained descriptions. No new package upgrade. | `area python_interop: minor-train-features, numeric-dataframe-features, dependency-versions` |
+| 58 | none | Current protocol docs and taxonomy under `internal_docs/python_interop_architecture.md`, `verification/areas/python_interop`, and `verification/areas/coverage_matrix`: replace current HTTPX guidance with HTTPX2, classify tier-two pytest-httpx and historical mentions, align topology path ownership. Record real old performance environments unchanged. Docs/metadata only; code findings become later items. | `area documentation: structure`; `area coverage_matrix: readiness`; local link/path checks |
+| 59 | none | `verification/areas/distribution_release/governance/evidence_custody.py` and owned release-profile custody records: reconcile digests with actual immutable evidence; preserve historical waiver identity and prohibit invented/rebound receipts. Any missing external artifact is a blocker, not permission to fabricate it. | `area distribution_release: evidence-custody` |
+| 60 | none | Current trust/native-provider documentation and checks in Reqwest/Rusqlite tests and Rust interop catalog: audit native trust examples, AWS-LC autodetection, standalone Reqwest vendor anchor, and savepoint overview accuracy. Update documentation only where current architecture is misdescribed; mechanism changes require an explicitly scoped follow-up. | `manifest reqwest_dependency_version`; `manifest rusqlite_dependency_version`; `area documentation: structure` |
+
+### Toolchain, package and component convergence
+
+All release rows own their selected direct declarations, corresponding generated
+locks/vendor entries, version assertions and current documentation. They must
+not hand-edit transitive packages or claim old evidence used new releases.
+
+| ID | Technical dependencies | Owned scope and acceptance | Exact named focused tests |
+| --- | --- | --- | --- |
+| 40 | none | Node/npm canonical selection: root release workflows, node contract, maintained Node demo, and editor owner pins; Node 26.8.1/npm 12.0.2 baseline with one explicit invariant and useful missing-checkout/mismatched-toolchain diagnostics. Coordinate editor-owned changes through their repositories. | `bash verification/areas/distribution_release/cases/node_toolchain_contract.sh`; `area developer_tooling: editor-release`; `area distribution_release: qualification` |
+| 33 | 40 | `editor_integrations/vscode` owner: TypeScript 7.0.2, Node types 26.5.0, VS Code types 1.136.0, engine/application qualification 1.136.1, vscode-languageclient 10.1.1; retain current vsce 3.9.2 if still latest. Resolve the three reported high-severity advisories with canonical dependency updates; extension PR, editor-integrations pointer PR, root pointer PR in order. | In extension repository: `npm ci`, `npm run compile`, `npm run lint`, `npm test`, `npm run package`, `npm audit`; root `area developer_tooling: editor-release`; `area distribution_release: qualification` |
+| 34 | 40 | `scripts/import-mintlify-docs.sh`, maintained Mint invocations and documentation configuration: exact Mint 4.2.876 baseline, no `mint@latest`; validate and detect broken links using that exact tool. | `npx --yes mint@4.2.876 validate` and `npx --yes mint@4.2.876 broken-links` from `docs`; `area documentation: structure` (substitute only the newly rechecked exact stable version if it advanced) |
+| 41 | 38 | Rust 1.98.1 and uv 0.12.10 selection: `rust-toolchain.toml`, exact Rust metadata, `tool.uv.required-version` in maintained pyprojects (including fork-owned selection), setup workflows/checksums and six Python project locks. Install Item 38's invariant and reject an unsupported runner platform explicitly. | `rustc --version`; `uv --version`; `python3 scripts/check_uv_toolchain.py --self-test`; `python3 scripts/check_uv_toolchain.py`; `uv lock --check --project verification`; `uv lock --check --project verification/areas/python_interop`; `uv lock --check --project demos/python_binding_authoring`; `uv lock --check --project demos/python_environment_checks`; `uv lock --check --project demos/python_raw_api`; `uv lock --check --project demos/python_dlpack`; `area python_interop: env` |
+| 42 | 37, 41 | Ruff fork owner, `.gitmodules`, ownership metadata, fork gitlink: Ruff 0.16.6 replay plus fork-local checkout/upload-artifact/attest-build-provenance/CodSpeed/cargo-binstall/setup-buildx/install-action/run-on-arch/setup-mold release-SHA audit. Preserve Sifr parser/formatter/linter changes and qualify before pointer merge. | In fork: `cargo test -p ruff_python_parser -p ruff_python_ast -p ruff_python_formatter`; root `area developer_tooling: static, formatter`; `area core_language: syntax_parser_lexer_matrix`; `python3 scripts/check_submodule_ownership.py --self-test` |
+| 43 | 41 | Rust utility/native train only: bindgen 0.73.1, blake2 0.11.0, cc 1.4.5, cxx 1.0.200, encoding_rs 0.8.40, flate2 1.1.10, indexmap 2.14.2, rust_decimal 1.43.0, toml 1.1.5, uuid 1.26.0, zstd 0.14.0; migrate packages sequentially inside the unit. Own Cargo declarations/catalog, direct consumers, locks/vendor and corresponding registry entries. Include Bindgen's upstream Itertools edge audit; do not forcibly rewrite external dependencies. | `manifest rust_direct_dependency_versions`; `cargo test -p sifr_stdlib`; `area rust_interop: matrix, compatibility-matrix` |
+| 44 | 41 | Rust network/cache train only: hyper 1.11.1, rcgen 0.14.10, rustls 0.23.44, tokio-rustls 0.26.5, tower-http 0.7.1, redis 1.7.0; exact direct declarations, generated-runtime catalog, owned consumers, locks/vendor and snapshots. | `manifest network_http_dependency_snapshots`; `manifest redis_dependency_version`; `manifest reqwest_dependency_version`; `area rust_interop: compatibility-matrix` |
+| 45 | 41 | Syntax/analytical patch unit: quote 1.0.47, syn 3.0.5, arrow 59.3.0 with current Prettyplease/DataFusion compatibility; update direct declarations and owned graph/snapshots. Preserve compiler canonical impl header behavior. | `manifest syn_prettyplease_dependency_versions`; `manifest arrow_datafusion_dependency_versions`; `cargo test -p sifr_codegen stdlib_filter::tests`; `area rust_interop: compatibility-matrix` |
+| 46 | 41 | MySQL type identity: workspace MySQL dependencies, `crates/sifr_sql_mysql_runtime/src/codec.rs`, SQL dependency lock and runtime/tool manifests. Baseline mysql_async 0.37.1 still requires mysql_common ^0.37.1 while upstream common is 0.38.2. Use driver's Row/Value re-exports and remove unnecessary direct common ownership (including features/anchors when no consumer remains), with no conversion shim or duplicate public identity. Audit the remaining legitimate upstream edge explicitly. | `cargo test -p sifr_sql_mysql_runtime`; `area sql_platform: dependency-baseline, mysql-provider, mysql-live`; `manifest rust_direct_dependency_versions` |
+| 47 | 41 | WASI SDK 34 and words WIT compatibility unit: `verification/areas/sql_platform/tools` component builders, component qualification/provenance records, SQL component artifacts, and `crates/sifr_compiler_component/fixtures/words_component`. Exact SDK/sysroot/compiler identity replaces ambient alternatives; wit-bindgen 0.61.1/wit-component 0.258.0; regenerate every affected owned WASM binary with source/tool digests. Keep each supported SQL major. | `area sql_platform: compiler-components, build-qualification`; `cargo test -p sifr_compiler_component`; `python3 verification/areas/sql_platform/tools/check_component_qualification.py --self-test` |
+| 48 | 47 | Native SQLite 3.53.4: SQLite source acquisition/binding boundary, `crates/sifr_sql_sqlite`, `crates/sifr_sql_sqlite_runtime`, builder, grammar/provider metadata, artifacts and qualification. Current rusqlite/libsqlite3-sys package versions do not prove current native source. Qualify compiler grammar and native runtime together; if upstream bundling prevents coherent selection, record the exact external dependency instead of changing just the label. | `area sql_platform: sqlite-provider, dependency-baseline, compiler-components, build-qualification`; `manifest rusqlite_dependency_version` |
+| 49 | 42, 43, 44, 45, 46, 47, 48 | Rust inventory/lock/vendor closure: `crates/sifr_stdlib_manifest/tests` and registry snapshot, maintained tracked Cargo locks, vendor closure and demo qualification. Discover all 128/195/124 owners (recount after intentional removals); require exact first-party Num BigInt/Syn/Prettyplease/Rusqlite edges, maintained-lock discovery including core fixtures, and reject stale versioned vendor directories. Resolve unused annotate-snippets/cookie ownership; inspect external Itertools 0.13 and all-target Clippy findings with attribution. Complete official registry/checksum audit, not count-only acceptance. | `manifest rust_direct_dependency_versions`; `manifest num_bigint_dependency_versions`; `manifest syn_prettyplease_dependency_versions`; `manifest rusqlite_dependency_version`; `manifest base64_dependency_version`; `manifest itertools_dependency_version`; `area rust_interop: matrix, compatibility-matrix`; `cargo clippy --workspace --all-targets -- -D warnings` |
+| 32 | 41 | Packaging/Hatchling: interop Packaging 26.3 and verification build-system exact Hatchling 1.32.0; regenerate selected locks, certify reproducible wheel/sdist, own both audit entries and build requirement. Prefer public Packaging range/specifier APIs when they strengthen existing checks. | `uv lock --check --project verification`; `uv lock --check --project verification/areas/python_interop`; `uv build --project verification`; `area python_interop: dependency-versions, env` |
+| 50 | 32 | Python inventory and requirement authority: `dependency_versions.py`, latest-stable snapshot, all six maintained projects/locks. Cover aiosqlite, biip, packaging, psycopg, pydantic, scikit-learn and build-system Hatchling; retain Kafka ownership in Item 61 until merged. Assert all direct requirements/extras/markers and package requires_python accept the single maintained Python 3.14 lane and actual locked version. Name empty owners, verify PyPI artifact hashes, and mutation-test omissions. No claim of six lock owners unless all six actual locks are discovered. | `area python_interop: self-test, dependency-versions, env`; `uv lock --check --project verification`; `uv lock --check --project verification/areas/python_interop`; `uv lock --check --project demos/python_dlpack` |
+| 51 | 50; E2 for compiled integration | Python service/model train: alembic 1.19.2, boto3 1.43.89, psycopg 3.3.5, pydantic 2.13.5 in interop lock/audit plus owned bridges. Validate sequential upgrades and latest APIs without absorbing E2 repairs. | `area python_interop: dependency-versions, minor-train-features, cloud-boto3, libraries, live-examples` |
+| 52 | 50; E2 for compiled integration | NumPy 2.5.3 and Torch 2.14.0, both interop and DLPack-demo manifests/locks and audit hashes. Preserve affine DLPack behavior; adjust cross-platform tolerance only from explicit numerical evidence. | `uv lock --check --project verification/areas/python_interop`; `uv lock --check --project demos/python_dlpack`; `area python_interop: dependency-versions, numeric-dataframe-features, dlpack-examples, dlpack-runtime, ml` |
+| 57 | 39, 50; E2 for compiled integration | Python live-service images in `live_case_config.py`/runners/audit: Redpanda 26.2.2 and immutable PostgreSQL 18.6 selection; distinguish Redis release identity from Alpine variant, verify existing LocalStack/Redis current digests. Preserve SQL's intentionally supported multi-major provider matrix. | `area python_interop: dependency-versions, live-policy, live-examples, redis-service-features`; `area sql_platform: schema-profiles` |
+
+### Remaining mechanism evidence and terminal items
+
+| ID | Technical dependencies | Owned scope and acceptance | Exact named focused tests |
+| --- | --- | --- | --- |
+| 56 | 45, 49 | Rust audit regression assertions: existing Syn impl header/safety coverage; exact DataFusion `table_exist` error-propagation chain and mutation; structural Polars sortedness assertion and mutation; remove redundant `nanvl` check only when covered. Own `crates/sifr_stdlib_manifest/tests` and `crates/sifr_codegen/src/stdlib_filter/tests.rs`, not fresh runtime features. | `manifest syn_prettyplease_dependency_versions`; `manifest arrow_datafusion_dependency_versions`; `manifest polars_dependency_version`; `cargo test -p sifr_codegen stdlib_filter::tests` |
+| 61 | E1, E2, 50, 51, 52, 57 | New Kafka/main integration scope, completing original Item 31 only after approval prerequisites: select latest kafka-python (3.0.11 supplied baseline), compare preserved #3551 mechanism against final main, integrate owned callback/live bridges and audit/locks, validate current compiler inputs. Preserve original consumed gates; exactly one new integration review and one gate for this separately registered scope, with no blanket retry of old candidate. | `area python_interop: dependency-versions, callbacks, callback-examples, live-policy, live-examples`; `uv lock --check --project verification/areas/python_interop` |
+| 62 | 31–34 complete, 36–61 complete, E1, E2 | Final audit and qualification evidence, before closer: official Rust/Python/toolchain/npm/Mint/action/fork/submodule queries; compare tracked inventories, checksum provenance and all deferred dispositions; clean-CARGO_HOME SQLx inactive-fixture sparse-index/offline experiment, idiomatic Rust demo compile coverage, explicit absent-environment fixture and resolver-2/absent-resolver negative tests, replace vacuous parity assertion, strict LSP response policy and -32800 cancellation assertion. **This is an audit coordinator, not an implementation catch-all:** the concrete implementation owners below must finish before it runs; any new stale release/mechanism becomes a newly numbered item and blocks 62/35. | `manifest rust_direct_dependency_versions`; `area python_interop: dependency-versions`; `area documentation: structure`; local link/path checks and official-source audit queries. Reuse completed implementation evidence; no broad gate for this docs-only audit result. |
+| 35 | 62 and every registered implementation item merged | One docs-only closer: this phase record, roadmap status and archive move only. Reuse exact-SHA item evidence; one whole-phase Opus review of closure SHA. No package upgrades, code, fixtures, workflows, locks or qualification implementation here. If audit finds work, register it and stop closure. | `git diff --check`; local link/path checks; `python3 scripts/check_file_size_guardrails.py` only; no Sifr gates |
+
+Item 62's inherited implementation concerns are assigned separate bounded
+subitems now, rather than being left for the closer. They are part of the
+ordered inventory and inherit the same per-item review/gate rules:
+
+| ID | Technical dependencies and scheduling position | Owned scope and acceptance | Exact named focused tests |
+| --- | --- | --- | --- |
+| 62A | 49; before 62 | SQLx clean-cache experiment in SQLx lock qualification and Rust interop runner: a fresh private CARGO_HOME, record whether root fetch caches the five inactive fixture summaries, certify separately locked offline fixture resolution without ambient cache. Add the smallest maintained regression if absent. No clean of another worktree/cache. | `manifest sqlx_dependency_version`; `area rust_interop: compatibility-matrix`, with a new private `CARGO_HOME` for the named SQLx offline scenario; record warm-up/fetch and frozen-offline outcome separately |
+| 62B | 49; before 62 | Maintained Rust demo compile enrollment in Rust interop verification; tracked demo discovery and manifest selection, no demo algorithm rewrite. Relax exact Itertools edge set only when a real maintained consumer requires it. | `manifest itertools_dependency_version`; `area rust_interop: matrix, compatibility-matrix` |
+| 62C | E2; before 62 | `crates/sifr_driver` sysroot/environment tests and their owned fixtures: negative resolver-2/absent-resolver, explicit missing ambient Python setup, meaningful parity assertion. Preserve historical environment-mutation records. | `cargo test -p sifr_driver sysroot`; `area python_interop: env, readonly-check-doctor` |
+| 62D | none; schedule immediately after 39 | LSP request-cancelled -32800 and strict unexpected-response handling in `crates/sifr_lsp` tests and developer-tooling protocol checks; no outbound request feature. | `cargo test -p sifr_lsp`; `manifest lsp_server_dependency_version`; `area developer_tooling: lsp-smoke` |
+
+Item 56 is scheduled immediately after Item 49. Items 62A/62B/62C are scheduled
+after Item 61 and before Item 62, skipping any that remain blocked. Item 62
+depends on 62A–62D as well as its numeric prerequisites; this is an acyclic
+ordering, not permission for the audit coordinator to implement them.
+
+### Disposition of every historical Item 35 deferral
+
+| Historical source | Current owner/disposition |
+| --- | --- |
+| 0, 8, 24 inventory counts | 49 (Rust), 50 (Python); 62 checks final counts. |
+| 2 resolver/env/vacuous parity | 62C; historical mutation descriptions to 58. Cosmetic crate test layout remains outside scope. |
+| 3 uv pins/checksums | 38 invariant, 41 upgrade/enrollment. |
+| 4 old Python performance evidence | 58 historical classification; never rewrite old versions. |
+| 5 Node/npm invariant, ambient/missing checkout, advisories | 40 canonical Node/npm; 33 extension advisory/toolchain closure. |
+| 6 YAML step parser/evidence-only checkout | 37. |
+| 7 Ruff surface cleanup | 42. Cosmetic inherited commit title/comment and optional suite-clone cleanup are explicitly not required; 62 records tree evidence. |
+| 8 cxx misleading marker | Existing Rust-interop drift owner retains it; 43 verifies current probe marker against actual result and records external evidence/blocker rather than taking over that owner. Vendor/core-lock/unused declarations: 49. |
+| 14 generic vendor closure | 49. |
+| 15 tracked locks, exact BigInt edge, demos | 49 and 62B. |
+| 16 impl safety, exact Syn/Prettyplease, stale vendor | Full header already fixed on main; 56 checks regression. Remaining graph invariants: 49. |
+| 17 response/cancellation protocol | 62D. |
+| 18 trust docs, AWS-LC autodetection, Reqwest vendor anchor | 60; retained upstream Reqwest edges audited by 49, no forced transitive migration. |
+| 19 Rusqlite uniqueness/savepoint overview | 49/60; historical tag rationale preserved. |
+| 20 fresh cache/inactive SQLx identities | 62A. |
+| 21 Itertools consumer set, external Bindgen/Clippy | 62B/43/49; pre-existing warning owners retain unrelated fixes. |
+| 22 Arrow catalog assertion/mutation, redundant nanvl, wrapper warning | 56; existing wrapper warning is not upgrade scope, record attribution in 62. |
+| 23 structural Polars sortedness | 56. |
+| 25 reverse profiles, custody, counts, Torch tolerance | 53/59/52; present coverage is credited, invariant still required. |
+| 26 compile/load CFFI and requires_python | 54/50; there is one Python runtime lane and multiple project/lock owners. |
+| 27 retired distribution owner, taxonomy, HTTPX2 | 39/58. |
+| 28 duplicate markers, floating images, Testcontainers mutations, Redis variant/E402/numkeys | 55/57/39. |
+| 29 public Pandas identity, warning filter, minimum Python | 55/50. |
+| 30 Arrow line-vs-patch claims, version assertion, merge-only placement | 55/53; profile placement is intentional unless named coverage evidence shows a missing contract. |
+
+No historical observation is silently converted into completed work. Existing
+fixes receive credit only for the inspected mechanism; their remaining
+regressions have owners above. External failures remain under their existing
+issues. The final closer cannot mark the phase complete while any required
+item or external approval remains blocked.
 
 ### Item 0 record
 
@@ -2409,20 +2748,14 @@ Next action: implement Item 31 Kafka Python from this record merge on
 
 ## Validation Ownership
 
-- Planning, record, and documentation-only items: `git diff --check`, link/path
-  checks applicable to changed records, and the first-party file-size guard.
-- Toolchain/edition and Rust dependency items: focused crate/area tests, format,
-  Clippy, maintainability/file-size guardrails, then the exact final-SHA
-  create-PR and merge gates.
-- Ruff: fork-native parser/AST/formatter tests plus Sifr syntax, formatter,
-  linter, ownership, and developer-tooling areas before the Sifr gates.
-- Python/uv: lock checks, environment probes, Python interop static suites, the
-  Python 3.14 lane, and live suites owned by the package item. They do not
-  trigger Sifr gates unless compiler inputs also change.
-- Workflow/action/Node items: workflow structure, distribution-release,
-  publication, artifact recovery, and release qualification contracts.
-- Editor: nested compile/lint/unit/package/VSIX tests, editor release
-  qualification, then coordinated pointer validation in each owner repository.
+- Run only the focused tests named by the dispatched continuation ledger row,
+  plus the common diff and file-size checks. Documentation-only records also
+  check local links/paths. Do not expand an area selection to broad validation.
+- Compiler, lockfile, fixture, or workflow changes require the one exact-SHA
+  merge-profile gate when prerequisites are satisfied. Skip create-PR when
+  merging that SHA in this session. Reuse a pass for that exact SHA.
+- Documentation/runner-only changes do not run Sifr gates. A docs-only record
+  update does not invalidate or repeat its implementation's evidence.
 - Before any long Cargo gate, check free disk and private target size. Clean
   only this worktree's unused private target if it exceeds 20 GiB.
 
@@ -2438,14 +2771,22 @@ The phase closes only when:
 - no historical evidence was rewritten as if it had used a newer version;
 - no compatibility fallback, unowned failure, or hidden deferred mechanism
   remains;
-- the last compiler-changing candidate has exactly one passing create-PR gate
-  and one passing merge gate on its exact approved SHA; and
+- every gate-bearing continuation candidate has one passing merge-profile
+  gate on its exact approved SHA, with no consumed-gate retry or rewritten
+  historical evidence; and
 - the Item 35 whole-phase exact-SHA agent review returns `SATISFIED` with no
   blocking finding.
 
 ## Current Handoff
 
-Current state: Items 0-30 are complete. Item 31 implementation
+Item 36 documentation candidate is prepared on `codex/latest-stable-item36`,
+from main `156157242b0995c01c4fff03575624b5c471c0d8`, in isolated worktree
+`/tmp/sifr-item36.IZj90p/codebase`. Its named documentation checks and one
+item-scoped exact-SHA Opus review must pass before merge; record final PR/SHA
+and evidence after merge. No Sifr gate applies. Next dispatch after that record
+is Item 37 only; this worker must stop after delivery.
+
+Items 0–30 are complete. Item 31 implementation
 [PR #3551](https://github.com/sifr-lang/sifr/pull/3551) remains draft. Its exact
 candidate is `dbdbd42915dd45fe0255681c224266dd08f453ea`, based on
 `2808a84cda557623a278703d6ae59223b172879d`. Its one exact-SHA agent review
