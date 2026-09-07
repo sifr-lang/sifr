@@ -2,7 +2,311 @@
 
 Status: active
 
-## Original12K terminal: gate4 resource-terminated, delivery unqualified (2026-09-07)
+## Current bounded owner: 12K-R2 qualification capacity (2026-09-07)
+
+12K-R2 / [owner #3742](https://github.com/sifr-lang/sifr/issues/3742) owns only
+the resource plan, bounded closed-worker build-output recovery, and docs delivery.
+Resource implementation and integrity checks passed; review and merge remain pending. This
+section supersedes older current-state headings without rewriting their receipts.
+The parent and all predecessor source/Git/indexes remain read-only; the parent's
+two intentional Markdown edits are preserved. All previous workers are closed.
+
+### R1 closure and original qualification provenance
+
+12K-R1 is complete: [PR #3741](https://github.com/sifr-lang/sifr/pull/3741)
+normally merged to main at `d3053066bc157fbf100b1bf67622b168838d891f`, reviewed
+candidate `6f85725fde2af74cff5574b567d49f14436a9ab1`, base
+`e97bf89621146b9ab29887fe4774cc87151c74cd`. Owner #3740 is closed. Its post-merge
+record `ce3eb2953851a351b40abfee3d2d87329671fa45` is pushed on
+`codex/storage-recovery-12k-r1`, not main. [R1 terminal](https://github.com/sifr-lang/sifr/pull/3741#issuecomment-5568464363)
+and [review](https://github.com/sifr-lang/sifr/pull/3741#issuecomment-5568415354)
+retain one initial SATISFIED, zero remediation/retries/gates, docs checks PASS.
+R1 removed only its two original-integration output paths: allocated
+24,777,994,240 bytes; observed recovery 24,440,135,680 bytes; after-free
+24,842,821,632 bytes. All 2506 protected digests, 66 symlinks and 16 gitlinks
+survived. R1 terminal `/private/tmp/sifr-storage-recovery.RFXopr/terminal.json`
+has SHA256 `32a19298fec8f642c4c63ad21e6a522900fb9400313bc7da6752f2fc9c9dae91`.
+
+Original12K is still unmerged and NOT SATISFIED: [PR #3717](https://github.com/sifr-lang/sifr/pull/3717)
+and [corpus PR #48](https://github.com/sifr-lang/leetcode/pull/48) remain draft.
+Frozen candidate `3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c`, base
+`e97bf89621146b9ab29887fe4774cc87151c74cd`, full pushed record
+`6ce7ce09978e3544f5d8f43608254578e97e363d`, exact corpus
+`8bcbe7ab7939e5c8362c10f61a80e368022cc372`. All 202 integration paths and 16
+gitlinks remain intact; retained Item12 source
+`8ad089a9458f35fcfa228e93fe44f4d69731828b` remains excluded. The
+[gate4 terminal](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5568197318)
+and original `/private/tmp/sifr-integration.uvTy0z/sifr/target/verification/areas/`
+receipts remain authoritative: `integration-terminal.json` SHA256
+`0282475e08116551f9dd99a3f1f9530ebd286cd0e49e49f7277d0fc3dec6e239`;
+`integration-final-evidence.json` SHA256
+`4cc25a6923f3b0b50eb503cc56325bed21a2cf7115d50dfbe92b20b36e127257`
+(2502 current + 479 retained artifacts). The separately pinned original
+`evidence/protected-evidence.sha256` has digest
+`fcb9c653fdba85c21aa4bde051ee98991777179dba976778bb7b6a89d03039e2`.
+
+Original counters remain one initial + one remediation review, two provider
+requests, zero retries; four gates = three FAILED + one RESOURCE_TERMINATED(143),
+zero passing/create-pr gates and zero integration/corpus merges. Nine focused
+checks, preparation92, guards13/demo264, Rust10/readiness4/core5/CPython2/Python30/
+diagnostics184/algorithmic-representative12 passed; runtime30 has three declared
+skips. Developer tooling has 23 passing cases but is incomplete. All later lanes
+listed below remain unqualified. Capacity recovery does not change those results.
+
+### Owned capacity and conservative budget
+
+Read-only `df -k` and mount metadata found no suitable additional mounted volume.
+General-purpose writable mounts share the same APFS container; mounted application
+images are read-only and tiny. Selected filesystem is `/dev/disk3s5` at
+`/System/Volumes/Data`. No sparse volume, personal-file inventory, paid/cloud
+provisioning, new validation host, compiler/profile change or gate is involved.
+
+Provisioned directory `/private/tmp/sifr-validation.wuRhoh` is independently
+owned, mode 0700, with empty `tmp`, `uv-cache`, and `pycache` children. A later
+sole validation owner can place its checkout there after separate sequencing;
+no successor source checkout or environment build has started. Docs/evidence
+root is `/private/tmp/sifr-capacity-r2.G8tOjZ`, with independent `sifr` clone,
+branch `codex/item12k-r2-capacity`, based on actual main `d3053066bc157fbf100b1bf67622b168838d891f`.
+
+This is a **96 GiB planning budget**, not a measured sufficient minimum or a
+guarantee for unexecuted lanes. GiB means 2^30 bytes. Prior retained allocations
+are already excluded from measured free space; the table budgets fresh outputs.
+
+| Allocation | GiB | Basis |
+| --- | ---: | --- |
+| Outer compiler/workspace tests, CLI, stdlib default/API/all-features | 30 | Historical debug outputs each reached 22.563 GiB before profile completion; includes another roughly 7.4 GiB for remaining builds and ignored test executables. |
+| GCQ generated targets and 92 graphs | 16 | Prepared shared target measured 0.514 GiB; actual GCQ execution is unreached. Estimate includes positive compilation/Clippy and negatives; maintained production setup shares the positive target. |
+| Temporary projects and nested driver/CLI/SQL bridge/probe caches | 12 | Original temporary tree 4.784 GiB; replacement 4.956 GiB. More than twice the observed lower bound. |
+| Private Cargo/uv dependencies, Python environments and checkout | 6 | uv measured 1.102 GiB; docs clone roughly 0.7 GiB. Remaining portion estimates exact-revision Cargo checkouts, registries and Python environments. |
+| Full E2E and migrated stdlib artifacts | 8 | Unreached estimate, including canonical E2E group cache with normal empty fixture manifest and unchanged jobs. |
+| Performance and remaining verification areas | 8 | Unreached estimate for release/performance, distribution/sysroot, project/package, regression/fuzz/ecosystem/SQL outputs; shared outer/temp builds are above. |
+| Filesystem and estimation safety margin | 16 | 20% above the 80 GiB working allocation, including APFS accounting and host activity. |
+| **Required free space at handoff** | **96** | **103,079,215,104 bytes**, after preservation and docs checkout. |
+
+The unchanged merge profile's complete remaining scope is GCQ representative,
+performance, distribution_release, sysroot_release, project_workspace,
+package_management, stdlib_parity, regression, fuzz_property,
+ecosystem_compatibility, sql_platform, remaining crate/toolchain tests, full E2E,
+normally ignored driver builds, CLI generated builds and stdlib default/feature
+API/all-features. Incomplete developer tooling and profile-required repeated
+prefixes fit the outer/temp/dependency allocations. None is skipped or certified
+by this estimate. No first cold-cache timing is performance evidence.
+
+Free space is shared, not reserved against other applications. Before any later
+separately authorized gate, its sole owner must remeasure the 96 GiB admission
+budget. Use private TMPDIR/uv/Python caches under the owned directory and leave
+outer CARGO_TARGET_DIR unset to retain nested target isolation. Canonical reports
+remain under the owned checkout's `target/verification/areas`; raw evidence stays
+outside Git. If observed growth invalidates this estimate, report that resource
+condition rather than changing coverage or inferring another cleanup/gate allowance.
+
+### Registered recovery and preservation
+
+The parent's exclusive output-only ownership transfer covers six closed-worker
+candidate paths. The [pre-action registration](https://github.com/sifr-lang/sifr/issues/3742#issuecomment-5568600158)
+first selected four; three largest cannot meet the budget at observed free
+space. That operation stopped at 95.2759 GiB, below the unchanged 96 GiB budget.
+The [additional pre-action registration](https://github.com/sifr-lang/sifr/issues/3742#issuecomment-5568694240)
+then selected Pasteur, the smallest remaining candidate within the six-path
+authority, with its own complete preservation map. Kant remains untouched.
+
+| Owner | Exact selected directory | Allocated KiB |
+| --- | --- | ---: |
+| Hooke | `/private/tmp/sifr-item12k-replacement.1xatjh/sifr/target/debug` | 23659324 |
+| Arendt | `/private/tmp/sifr-item12k-delivery.4J6JeK/sifr/target/debug` | 23658808 |
+| Kierkegaard | `/private/tmp/sifr-item12k-final.7sgsI9/sifr/target/debug` | 15912468 |
+| Archimedes | `/private/tmp/sifr-item12kb1.nnPBDD/sifr/target/debug` | 16522260 |
+| Pasteur (separate registration) | `/private/tmp/sifr-item12k-b6.YxonRW/sifr/target/debug` | 4351412 |
+
+The complete original published inventories and selected terminal/input maps
+authenticate 2985 distinct pinned/published artifacts. The expanded protection
+manifest includes 14730 files and 264 symlinks/target digests across selected
+workers' evidence, non-debug targets and original receipts. The 25 referenced
+debug compiler/test binaries (1,430,157,880 logical bytes) were copied, verified
+byte-identical and made read-only outside removal scope before action. Original
+receipts remain unchanged. The immutable old-to-new map is published in full in
+the registration, so old evidence references are explicitly redirected rather
+than silently lost. No non-debug symlink may point into a removed directory.
+
+Under `/private/tmp/sifr-capacity-r2.G8tOjZ`:
+
+- `preservation-map.json`: SHA256 `e1c252a0f3242f9f18a68dc373fd449d4d0979edac9a0efce71e0f4d0f376273`.
+- `protected-before.sha256`: SHA256 `669dbe6179c6b2aca6a7d29ad0c121e274588d6180eb379a9c45e56abd3e69d9`.
+- `protected-after.sha256`: SHA256 `d31d7f1e00b9f73c3726e70dd608ca54c79511cd6c7bfde73926f34cc0310eef`.
+- `selection.json`, `budget.md`, `referenced-debug-files.json`, raw audit logs
+  and copied artifacts under `preserved/` remain outside the reviewed Git tree.
+
+Named operational checks are literal `df`/`du`, removed-target absence, `ps`,
+`lsof`, complete manifest `shasum`, and each affected clone's Git status/HEAD/
+submodule status and exact input maps, before and after recovery. Direct actual
+child Git HEAD and clean-source checks cover all 16 gitlinks per clone; their
+existing standalone checkout layout produces `-` in parent submodule status.
+An initial strict parser assumption rejected that display marker before cleanup;
+direct child verification resolved it without altering any predecessor state.
+Main and child indexes are compared by digest. Paths must be real, non-symlink,
+owned directories with expected Cargo build layout and no live users immediately
+before removal. No whole-target clean or other cache/source removal is permitted.
+
+The first recovery removed 81,666,928,640 allocated bytes and recovered
+80,384,344,064 actual filesystem bytes: free space rose from 21,917,364,224 to
+102,301,708,288 bytes, a 777,506,816-byte shortfall against the budget. Its
+`recovery.json` SHA256 is
+`9b40fcf4b21b9c4fa8efe255981fe6edc6afaff3fd15f2a7e8ab0d30a497ebf1`.
+All 14730 protected digests, 264 symlinks, original 2506-file manifest, five
+clones' Git/input/index maps and 80 actual child HEADs remained unchanged.
+The failed capacity comparison is retained, not relabeled as a pass.
+
+Pasteur's published final-evidence digest
+`93ea65d243e422cc513ff56d2f46289d5dd1230674eccf29ba5bab61b2e6842c`
+and complete evidence inventory passed; its clean terminal HEAD is
+`08b2302a8f5e6af910cef00d6932c1da57ac3719`. Additional preservation covers
+3334 files, including 311 referenced debug forensic/dependency/compiler/test
+artifacts (1,368,269,270 logical bytes). These were copied and verified before
+removal. The full immutable map is published as gzip+base64 JSON in the second
+registration, keyed by its decoded-byte SHA256. Under the evidence root's
+`additional-verified/` directory:
+
+- `preservation-map.json`: SHA256 `01640d6a40f336c0288b80280daafedca5bbc65157fd11277e1381161c807b00`.
+- `protected-before.sha256`: SHA256 `9e5d7b1d45f8f38a12d4bb0d43e23e5fd59f663c48854060f1521bc0026ab260`.
+- `protected-after.sha256`: SHA256 `4bd55ee77133b18a2483a9cae16e41542b1778924246c63a78f8967bac148f65`.
+
+An initial additional reference scan rejected a JSON-escaped newline path before
+any removal; the corrected scanner decodes escaped line/tab separators. A
+separate audit of the first four-target evidence found zero additional escaped
+references. This local audit correction changed no predecessor receipt or source.
+
+### Verified resource result
+
+All five exact selected directories are absent and their compiled outputs are
+rebuildable from retained sources. No source, Git, index, other target/cache, or
+user-data directory was removed. Immediately before each removal and afterward,
+ps/lsof checks found no live users; no warnings were suppressed. The original
+integration and five affected clones retain their exact clean terminal HEADs,
+input maps, indexes and all 96 actual child HEADs/indexes. Both recovery manifests
+passed after removal; their union covers 15077 distinct retained files. The
+264 selected-worker symlinks and 66 original R1 symlinks/target digests are
+unchanged, and the original 2506-file manifest still passes. All raw/canonical
+logs, graph source/manifests/locks and test/review receipts survive, with explicit
+published redirection for 336 preserved debug artifacts (2,798,427,150 bytes).
+
+The additional recovery removed 4,455,845,888 allocated bytes and recovered
+4,421,087,232 actual bytes: free space rose from 100,866,015,232 to
+105,287,102,464 bytes (98.0563 GiB), after additional preservation. Combined
+removed allocation is 86,122,774,528 bytes; the sum of per-operation free-space
+gains is 84,805,431,296 bytes. Net free-space increase from the first pre-action
+measurement to the second post-action measurement is 83,369,738,240 bytes;
+additional preservation and host activity explain why these measurements differ.
+The later handoff measurement, with docs clone and all copies present, is
+**105,256,837,120 bytes (98.0281 GiB)**: the **96 GiB plan is met**, with
+2.0281 GiB beyond its included 16 GiB safety margin. This is available shared
+space for the documented estimated budget, not certification of future lanes.
+
+External result `/private/tmp/sifr-capacity-r2.G8tOjZ/resource-result.json`
+has SHA256 `9238c6dbc978df8ceb43344d1b7695000f3b5ecb1237626007b3bb136b3e59e7`.
+Additional `recovery.json` SHA256 is
+`702e9d54cab65de918f271191d7e5a68700b621668ba4fef1aed06aa2f29b902`;
+union `final-protected.sha256` SHA256 is
+`52c5ea2e326989ffc1270223d298c6edfdc80a242597a48ec346a09ac702900c`.
+Raw before/after df/du/ps/lsof/shasum/Git logs and per-removal timestamps remain
+in the same external evidence root. Resource blocker: **none**. The original
+qualification remains unmerged and its gate/review counts are unchanged.
+
+Only the phase Markdown changes. After implementation, named docs checks are
+`git diff --check d3053066bc157fbf100b1bf67622b168838d891f HEAD` and
+`python3 scripts/check_file_size_guardrails.py`. One exact-SHA Opus review plus
+at most one remediation precedes normal docs merge; final review evidence is
+published outside its approved Git tree. No Sifr tests or create-pr/merge-profile
+gates run. After the merge and phase/owner record update, stop. No original12K
+third review, gate restart, original/corpus merge, or 12D/E/F/retained12/docs12A
+implementation is part of this resource item.
+
+## Current bounded owner: 12K-R1 storage recovery (2026-09-07)
+
+12K-R1 / [owner #3740](https://github.com/sifr-lang/sifr/issues/3740): bounded
+recovery completed; docs delivery and exact-SHA review pending. This section
+supersedes older current-state headings while preserving their historical records.
+The original owner Leibniz is closed; the parent explicitly transferred exclusive
+cleanup ownership of the two paths in the
+[exact-target registration](https://github.com/sifr-lang/sifr/issues/3740#issuecomment-5568126209).
+Only these two inactive, real, non-symlink compiled-output directories were removed:
+
+- `/private/tmp/sifr-integration.uvTy0z/sifr/target/debug`
+- `/private/tmp/sifr-integration.uvTy0z/sifr/target/sifr_generated_code_quality/merge.3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c.shared/cargo-target`
+
+Deletion ran from 09:12:59 to 09:13:47 UTC. Both targets are absent; their contents
+are rebuildable build outputs. No whole-target clean or other cache cleanup ran.
+Immediate process/open-file checks found no users of either target and no process
+in retained group61162. The same checks passed after recovery without lsof warnings.
+All source, indexes, branches, submodules, other caches and parent/predecessor
+worktrees remained read-only. The parent's two intentional phase edits were preserved.
+
+The authoritative protected manifest SHA256 is
+`fcb9c653fdba85c21aa4bde051ee98991777179dba976778bb7b6a89d03039e2`.
+Its 2506 file digests passed before and after removal, with identical check output.
+Coverage was checked across the complete evidence, canonical area reports, profile
+logs and generated `entries/` and `preparation/` directories. An additional66
+file symlinks and their target digests were compared unchanged; no protected link
+points into a removed directory. All92 prepared graph sources/manifests/locks survive.
+Original clean HEAD remains `6ce7ce09978e3544f5d8f43608254578e97e363d`; all16
+gitlinks match the preserved provenance map. Their pre-existing uninitialized
+submodule status remains identical; no submodule was initialized or altered.
+
+Measured directory allocation removed: **24,777,994,240 bytes** (23.08GiB).
+Measured filesystem free space: **402,685,952 -> 24,842,821,632 bytes**,
+an observed gain of **24,440,135,680 bytes**. These separate measurements need not
+match on the shared filesystem. Free space was measured immediately after recovery,
+before creating the independent docs checkout; it is not a future reservation.
+External raw checks and receipts live at `/private/tmp/sifr-storage-recovery.RFXopr`:
+`before/result.json` SHA256
+`2ba2ae2874686e6da2954e8ce33991ab0831003e58c2b3897efbdac5873b9b6d`;
+`after/result.json` SHA256
+`199a9503924777335c0be3e2db42d5a936bf0ff70f1433949209b748d96ffc7a`.
+All registered `df`, pre-removal `du`/post-removal absence, `ps`, `lsof`, manifest
+`shasum` and original-clone Git checks passed. The local audit parser initially
+rejected uninitialized gitlinks and manifest-excluded symlinks; inspection resolved
+both before deletion, without changing predecessor data or weakening preservation.
+
+Docs delivery owns `/private/tmp/sifr-storage-recovery.RFXopr/sifr`, branch
+`codex/storage-recovery-12k-r1`, based on actual main
+`e97bf89621146b9ab29887fe4774cc87151c74cd`. Only this phase Markdown changes.
+Registered post-implementation checks, before execution:
+`git diff --check e97bf89621146b9ab29887fe4774cc87151c74cd HEAD` and
+`python3 scripts/check_file_size_guardrails.py` (the AGENTS.md guardrail).
+Use one exact-SHA Opus review plus at most one remediation, then normal docs merge
+and owner/phase update. Final review evidence stays outside its approved Git tree.
+No Sifr test, create-pr gate or merge-profile gate applies to this docs-only item.
+
+### Remaining resource scope, deferred and not started
+
+Future full-gate capacity is **not established**. Recovery restores approximately
+the23GiB available before gate4, which exhausted headroom with developer tooling
+still incomplete. Additional high-water storage for all later lanes is unmeasured.
+A later resource owner must provision separately owned validation storage and
+record a capacity budget for compiler/test outputs, generated targets, temporary
+projects and dependency caches together, including remaining lanes and headroom.
+Use an isolated volume or host with additional capacity; no other owner's cache
+is eligible for cleanup under this item. No numeric sufficient-capacity claim or
+new gate authorization follows from this recovery. Record the resource gap in
+owner3740 and route the later resource scope separately before any continuation.
+
+Original12K remains NOT SATISFIED, draft and unmerged at candidate
+`3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c`, basee97bf896 and complete record6ce7ce099,
+as established by the [gate4 terminal receipt](https://github.com/sifr-lang/sifr/pull/3717#issuecomment-5568197318).
+PR3717/corpusPR48 remain draft, exact corpus8bcbe7ab, full202 integration paths and
+16gitlinks retained; retainedItem12 source8ad089a remains excluded. B12/PR3738 is
+merged at e97bf896; its [terminal receipt](https://github.com/sifr-lang/sifr/pull/3738#issuecomment-5566738258)
+supersedes the older B12 in-progress heading below.
+Original counters remain1initial+1remediation review,2provider requests,0retries;
+4gate attempts =3FAILED+1RESOURCE_TERMINATED(exit143),0passing/create-pr gates
+and0integration/corpus merges. Nine focused checks, preparation92, guards13,
+demos264, Rust10/readiness4/core5/CPython2/Python30/diagnostics184/algorithmic12
+passed; runtime30 has3declared skips. Developer tooling has23passing cases but is
+incomplete. GCQ/performance/fullE2E/stdlib/ignored-driver/CLI and later lanes remain
+UNREACHED. No recovery result certifies these lanes. No original third Opus,
+gate restart,12D/E/F/retained12/docs-only12A implementation or audit was started.
+Stop after this bounded recovery's docs merge and terminal phase/owner update.
+
+## Current bounded owner: 12K-B12 report filename (2026-09-07)
 
 This is the current terminal receipt. Original12K is **NOT SATISFIED and
 unmerged**. The sole cumulative gate4 ran on frozen/pushed candidate
