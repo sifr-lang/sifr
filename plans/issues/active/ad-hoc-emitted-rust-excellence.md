@@ -2,6 +2,89 @@
 
 Status: active
 
+## Original12K delivery after R1/R2 capacity recovery (2026-09-07)
+
+This is the current delivery registration. Source is already implemented; no
+successor item starts. The sole worker owns independent checkout
+`/private/tmp/sifr-validation.wuRhoh/sifr`, branch
+`codex/item12k-delivery-completion`, Git/index/default target and sibling
+`tmp`, `uv-cache`, `pycache`, `evidence` paths. Parent and predecessor paths
+remain read-only. Normal ancestry starts at full original terminal record
+`6ce7ce09978e3544f5d8f43608254578e97e363d`, incorporates actual fetched main
+`06ea86334b72f49f5aab250a64498ee955ec9331`, and carries R1 post-merge record
+`ce3eb2953851a351b40abfee3d2d87329671fa45` and R2 post-merge record
+`b464bd7df6e5d001aa731462e62097ded4208bda`. Only phase records change from
+candidate `3dc5d50f55e8ce37d1acf2ce4fb1fa9e951ba80c`; all 202 integration paths,
+16 gitlinks and corpus `8bcbe7ab7939e5c8362c10f61a80e368022cc372` are retained.
+Retained Item12 source `8ad089a9458f35fcfa228e93fe44f4d69731828b` is excluded.
+
+Both allowed original12K Opus reviews are consumed: initial and remediation
+SATISFIED, two provider requests, zero retries. Authenticate the exact reviews,
+full input trees and artifacts using both immutable R2 relocation maps, then
+publish approval reuse keyed to the combined candidate. No third Opus request,
+new verdict or historical evidence relabeled as a fresh execution.
+
+R1/PR3741 and R2/PR3743 are merged and owners3740/3742 closed. R2 terminal
+SHA256 `8f144379c4206fd420ff14abf5bfe07ffaacfe9eb092f27cabafdbb6be5683ff`
+records 97.9971 GiB available against the unchanged 96 GiB plan (80 working,
+16 margin). Remeasure before the gate and at meaningful lane transitions;
+this is estimated headroom, not a reservation. No further predecessor cleanup.
+
+The newly authorized sole `scripts/run_all_tests.sh --profile merge` is
+cumulative attempt5 after three FAILED and one RESOURCE_TERMINATED(143);
+zero prior passes. Freeze and normally push the complete candidate to PR3717
+before the gate; skip create-pr. No second attempt or source edits mid-gate.
+Use production preparation of all 92 exact Git dependency graphs before
+locked/offline execution. CARGO_TARGET_DIR is unset; CARGO_BUILD_JOBS=6,
+RUST_TEST_THREADS=1; TMPDIR/UV_CACHE_DIR/PYTHONPYCACHEPREFIX use owned semantic
+sibling paths. Raw/review evidence stays outside Git; canonical JSON belongs
+under the owned checkout's `target/verification/areas`.
+
+### Exact focused commands and remaining coverage
+
+Run only these nine registered focused checks after integration is complete:
+
+- `python3 scripts/check_stdlib_manifest_schema.py`
+- `python3 scripts/check_file_size_guardrails.py`
+- `git diff --check origin/main HEAD`
+- `python3 verification/areas/generated_code_quality/check_emitted_rust_audit_inventory.py`
+- `python3 verification/areas/generated_code_quality/check_emitted_rust_audit_inventory.py --self-test`
+- `uv run --project verification python -m sifr_verify.generated_cargo_setup_checks policy`
+- `uv run --project verification python -m sifr_verify --self-test`
+- `python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py`
+- `python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py --self-test`
+
+All unchanged broad semantic evidence retains its authenticated original SHA:
+native90, algorithmic411, demo264, codegen1452, lowering1119+1ignored,
+frontend139, IR4, types147, driver595+77normallyignored/doctests, strictClippy,
+focused18+8, required-message/async filters, diagnostics184 and Python30/allfive.
+These receipts do not certify previously unreached profile stages.
+
+The unchanged merge profile and actual runner select all 20 area entries,
+31 full-mode crate suites, 13 guards, production Cargo setup and full E2E.
+The coverage receipt records every selected suite and concrete crate command
+before execution. Required remaining coverage includes:
+
+- generated quality representative: inventory, 12-entry corpus/panic-scan/
+  rustfmt/Clippy/determinism, intrinsic-panic-lint, demos and freshness (9 variants);
+- full E2E via `e2e-pass`, with the normal empty fixture manifest;
+- stdlib parity: module-merge-check, audit-fixtures, complexity-resource,
+  module-inventory; `cargo test -p sifr_stdlib`, its no-default-features
+  `--features json,unicode,i18n,http` variant, and `--all-features`;
+- `cargo test -p sifr_driver --lib -- --ignored --test-threads=1` and
+  `cargo test -p sifr --bin sifr -- --ignored --test-threads=1`, plus normal
+  driver/CLI and every other full-mode crate command selected by the profile;
+- complete developer tooling, performance, distribution/sysroot releases,
+  project/workspace, packages, regression, fuzz, ecosystem and SQL lanes,
+  together with every profile-required prefix area.
+
+The profile supplies this coverage; no supplementary broad command is added.
+Representative GCQ is distinct from retained Item12's all-surface/companions
+audit. A full actual pass permits normal corpus PR48 then Sifr PR3717 merges,
+verified main ancestry, dependent PR/owner reconciliation and phase update.
+A new mechanism or external failure receives a concrete later owner and terminal
+handoff; no immediate repair or gate rerun. Stop after delivery or that handoff.
+
 ## Current bounded owner: 12K-R2 qualification capacity (2026-09-07)
 
 12K-R2 / [owner #3742](https://github.com/sifr-lang/sifr/issues/3742) owns only
@@ -340,7 +423,7 @@ gate restart,12D/E/F/retained12/docs-only12A implementation or audit was started
 12K-R1 has no remaining blocker. This worker stops after the post-merge phase/owner
 receipt; the parent owns any later resource routing. No successor work starts here.
 
-## Current bounded owner: 12K-B12 report filename (2026-09-07)
+## Original12K terminal: gate4 resource-terminated, delivery unqualified (2026-09-07)
 
 This is the current terminal receipt. Original12K is **NOT SATISFIED and
 unmerged**. The sole cumulative gate4 ran on frozen/pushed candidate
