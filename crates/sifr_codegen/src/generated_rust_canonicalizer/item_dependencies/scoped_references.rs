@@ -7,6 +7,7 @@ pub(super) fn item_references(item: &syn::Item, definitions: &HashSet<String>) -
     let mut collector = ScopedReferences {
         definitions,
         bindings: HashSet::new(),
+        type_bindings: HashSet::new(),
         references: HashSet::new(),
     };
     collector.visit_item(item);
@@ -16,10 +17,34 @@ pub(super) fn item_references(item: &syn::Item, definitions: &HashSet<String>) -
 struct ScopedReferences<'scope> {
     definitions: &'scope HashSet<String>,
     bindings: HashSet<String>,
+    type_bindings: HashSet<String>,
     references: HashSet<String>,
 }
 
 impl ScopedReferences<'_> {
+    fn path_reference(&mut self, path: &syn::Path, type_namespace: bool) {
+        let mut segments = path.segments.iter();
+        if let Some(first) = segments.next() {
+            let qualified = matches!(first.ident.to_string().as_str(), "crate" | "self" | "super");
+            let candidate = if qualified {
+                segments.next()
+            } else {
+                Some(first)
+            };
+            if let Some(candidate) = candidate {
+                let name = candidate.ident.to_string();
+                let bindings = if type_namespace {
+                    &self.type_bindings
+                } else {
+                    &self.bindings
+                };
+                if self.definitions.contains(&name) && (qualified || !bindings.contains(&name)) {
+                    self.references.insert(name);
+                }
+            }
+        }
+    }
+
     fn reference(&mut self, name: String, qualified: bool) {
         if self.definitions.contains(&name) && (qualified || !self.bindings.contains(&name)) {
             self.references.insert(name);
@@ -36,7 +61,7 @@ impl ScopedReferences<'_> {
         for parameter in &signature.generics.params {
             match parameter {
                 syn::GenericParam::Type(parameter) => {
-                    self.bindings.insert(parameter.ident.to_string());
+                    self.type_bindings.insert(parameter.ident.to_string());
                 }
                 syn::GenericParam::Const(parameter) => {
                     self.bindings.insert(parameter.ident.to_string());
@@ -96,34 +121,58 @@ impl ScopedReferences<'_> {
 
 impl<'ast> Visit<'ast> for ScopedReferences<'_> {
     fn visit_path(&mut self, path: &'ast syn::Path) {
-        let mut segments = path.segments.iter();
-        if let Some(first) = segments.next() {
-            let qualified = matches!(first.ident.to_string().as_str(), "crate" | "self" | "super");
-            let candidate = if qualified {
-                segments.next()
-            } else {
-                Some(first)
-            };
-            if let Some(candidate) = candidate {
-                self.reference(candidate.ident.to_string(), qualified);
-            }
-        }
+        self.path_reference(path, path.segments.len() > 1);
         visit::visit_path(self, path);
+    }
+
+    fn visit_type_path(&mut self, ty: &'ast syn::TypePath) {
+        self.path_reference(&ty.path, true);
+        if let Some(qself) = &ty.qself {
+            self.visit_qself(qself);
+        }
+        for segment in &ty.path.segments {
+            self.visit_path_arguments(&segment.arguments);
+        }
+    }
+
+    fn visit_expr_struct(&mut self, expression: &'ast syn::ExprStruct) {
+        self.path_reference(&expression.path, true);
+        if let Some(qself) = &expression.qself {
+            self.visit_qself(qself);
+        }
+        for segment in &expression.path.segments {
+            self.visit_path_arguments(&segment.arguments);
+        }
+        for field in &expression.fields {
+            self.visit_field_value(field);
+        }
+        if let Some(rest) = &expression.rest {
+            self.visit_expr(rest);
+        }
+    }
+
+    fn visit_trait_bound(&mut self, bound: &'ast syn::TraitBound) {
+        self.path_reference(&bound.path, true);
+        for segment in &bound.path.segments {
+            self.visit_path_arguments(&segment.arguments);
+        }
     }
 
     fn visit_item_use(&mut self, _: &'ast syn::ItemUse) {}
 
     fn visit_item(&mut self, item: &'ast syn::Item) {
         let saved = self.bindings.clone();
+        let saved_types = self.type_bindings.clone();
         visit::visit_item(self, item);
         self.bindings = saved;
+        self.type_bindings = saved_types;
     }
 
     fn visit_generics(&mut self, generics: &'ast syn::Generics) {
         for parameter in &generics.params {
             match parameter {
                 syn::GenericParam::Type(parameter) => {
-                    self.bindings.insert(parameter.ident.to_string());
+                    self.type_bindings.insert(parameter.ident.to_string());
                 }
                 syn::GenericParam::Const(parameter) => {
                     self.bindings.insert(parameter.ident.to_string());
@@ -136,34 +185,58 @@ impl<'ast> Visit<'ast> for ScopedReferences<'_> {
 
     fn visit_item_fn(&mut self, function: &'ast syn::ItemFn) {
         let saved = std::mem::take(&mut self.bindings);
+        let saved_types = std::mem::take(&mut self.type_bindings);
         self.signature_bindings(&function.sig);
         visit::visit_item_fn(self, function);
         self.bindings = saved;
+        self.type_bindings = saved_types;
     }
 
     fn visit_impl_item_fn(&mut self, function: &'ast syn::ImplItemFn) {
         let saved = self.bindings.clone();
+        let saved_types = self.type_bindings.clone();
         self.signature_bindings(&function.sig);
         visit::visit_impl_item_fn(self, function);
         self.bindings = saved;
+        self.type_bindings = saved_types;
     }
 
     fn visit_block(&mut self, block: &'ast syn::Block) {
         let saved = self.bindings.clone();
+        let saved_types = self.type_bindings.clone();
         // Block-local items are visible throughout their block, unlike let bindings.
         for statement in &block.stmts {
             if let syn::Stmt::Item(item) = statement {
                 if let Some(name) = super::item_definition_name(item) {
-                    self.bindings.insert(name);
+                    match item {
+                        syn::Item::Struct(item) => {
+                            self.type_bindings.insert(name.clone());
+                            if !matches!(item.fields, syn::Fields::Named(_)) {
+                                self.bindings.insert(name);
+                            }
+                        }
+                        syn::Item::Enum(_)
+                        | syn::Item::Trait(_)
+                        | syn::Item::Type(_)
+                        | syn::Item::Union(_) => {
+                            self.type_bindings.insert(name);
+                        }
+                        syn::Item::Impl(_) => {}
+                        _ => {
+                            self.bindings.insert(name);
+                        }
+                    }
                 } else if let syn::Item::Use(item) = item {
                     let mut names = std::collections::BTreeSet::new();
                     super::super::collect_use_bindings(&item.tree, &mut names);
-                    self.bindings.extend(names);
+                    self.bindings.extend(names.iter().cloned());
+                    self.type_bindings.extend(names);
                 }
             }
         }
         visit::visit_block(self, block);
         self.bindings = saved;
+        self.type_bindings = saved_types;
     }
 
     fn visit_local(&mut self, local: &'ast syn::Local) {

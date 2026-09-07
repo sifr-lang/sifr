@@ -617,7 +617,8 @@ fn module_roots_from_parent_scope(
         }
         if let syn::Item::Mod(module) = item {
             if let Some((_, nested)) = &module.content {
-                let referenced_names = item_dependency_names(item, definitions);
+                let candidates = all_item_identifier_names(item);
+                let referenced_names = item_dependency_names(item, &candidates);
                 collect_nested_module_use_roots(
                     nested,
                     module_name,

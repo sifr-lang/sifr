@@ -4,6 +4,20 @@ Status: active
 
 ## Current bounded owner: implicit format capture demand (2026-09-07)
 
+Initial candidate `10145152b6bb11d2b26a2200eed72dca209fcdd3` is pushed in draft
+[PR3746](https://github.com/sifr-lang/sifr/pull/3746). Initial exact-SHA Opus
+returned SATISFIED with no blocking findings (one provider request, no retry),
+external response `/private/tmp/sifr-capture-demand.aetT8U/tmp/sifr-claude.7UF8Ir/response.md`,
+SHA256 `59eb8ca146f4060caa4b7193d448e12d41a2f555667b165910373a58922d971c`.
+The implementer's subsequent scope check found two remaining capture-demand
+paths: nested-module import aliases and a captured local value sharing an
+imported type's name. One corrective batch addresses those paths, with two
+additional pre-registered native regressions (nine under both named filters,
+three native executions). Type/value binding classification also prevents an
+impl block from being mistaken for a declaration introducing a shadowing name.
+The one allowed remediation review and final merge gate remain pending. Initial
+review follow-ups are recorded for later ownership, not acceptance requirements.
+
 12K-B14 / [owner #3745](https://github.com/sifr-lang/sifr/issues/3745) is implemented
 on current main base `06ea86334b72f49f5aab250a64498ee955ec9331` in independent clone
 `/private/tmp/sifr-capture-demand.aetT8U/sifr`, branch
