@@ -2,6 +2,68 @@
 
 Status: active
 
+## B17 terminal: combined registry and membership merged (2026-09-07)
+
+**12K-B17 / #3750 is complete**, and preserved B16 / #3749 is delivered in
+[PR #3751](https://github.com/sifr-lang/sifr/pull/3751). Both issues are CLOSED.
+Actual-main base `06ea86334b72f49f5aab250a64498ee955ec9331`; candidate and
+review SHA `e3862e5895fb2ace34571295e267f4951917752f`; normal merge commit
+`0b97b3a3f1dd3f93bc724f75e1e40240f15ff942` (2026-09-07T16:05:33Z).
+Fetched actual main contains the exact candidate and complete B16 record
+`e7886c9b5f6fb26805468f2283f5a41a207cdbd7`. This is actual-main delivery.
+
+All seven named checks ran once on the candidate and PASS: profiles check
+(five profiles), merge plan (both exact full-mode blocking executed entries),
+MySQL (11 passed, 1 explicitly ignored live-server test, 0 failures/filtered),
+SQLite (12 passed, 0 ignored/failures/filtered), readiness (4/4: strict registry
+13 guarantees/34 surfaces/0 temporary; profile19; negative26; taxonomy),
+file-size3759/limit900 and diff. The ignored MySQL test requires
+`SIFR_MYSQL_TEST_URL`; no live-server execution is claimed.
+Complete registry concordance is 37 packages/117 targets. The historical
+13 missing target-key repairs include twelve added existing-package test
+targets and the PostgreSQL lib-to-rlib replacement; its stale lib key is removed.
+All nine missing packages are restored. Prior artifact hashes and unchanged
+Cargo manifest/lock/gitlink identities authenticate B16 inventory reuse;
+current strict readiness independently checked current locked metadata.
+
+One initial Opus review of the entire combined B16/B17 delta is
+[SATISFIED, no blockers](https://github.com/sifr-lang/sifr/pull/3751#issuecomment-5573188882).
+Providers1/retries0/remediation0; create-PR gates0/merge gates0; normal merges1.
+The combined changes are registry/profile metadata, a verification helper and
+two owner documents. No compiler, lockfile, fixture or workflow changes occurred.
+
+Evidence root: `/private/tmp/sifr-sql-membership.4llFae/evidence/`.
+
+- Candidate receipt `checks.e3862e5895fb2ace34571295e267f4951917752f.json`,
+  SHA256 `a134a24d91e9bf1b4cb8c84550aa9b7fe4b509ff5a06868bb1fb87bc81f0b459`,
+  indexes all seven command logs/hashes, source inputs and toolchain identities.
+- Readiness log SHA256
+  `fe5dda551b6c2d8531d317b84400533bfa3bedfac5a2fbe41acc23273e145422`.
+- Structured result `sifr/target/verification/areas/sql-membership-readiness.json`
+  SHA256 `23307cb2becf41415265fe04e527a353dfda31efeab06f4fab9d85d7c038bd8d`.
+- Raw Opus response `/private/tmp/sifr-sql-membership.4llFae/tmp/sifr-claude.S2C2ER/response.md`,
+  SHA256 `ba6cd5ad3cbabb8bdebb0a22473bb23378375b247f8b37e7a92a46a4d138f56f`.
+- `terminal.json` in the evidence root records the separate post-merge record
+  SHA, changed paths, evidence hashes, counts and final handoff. This record
+  is normally pushed on `codex/sql-coverage-registry-3749`; it is documentation
+  after the reviewed/merged candidate, not a second implementation delivery.
+
+Nonblocking follow-up [#3752](https://github.com/sifr-lang/sifr/issues/3752)
+records an audit of actual runtime/tooling SQL merge execution. The reviewer
+enumerated seven packages while calling them six; no missing execution is
+claimed as an observed baseline result. Profile budget headroom is recorded
+for the existing B15 / #3748 qualification owner: these cold named crate
+invocations took117.765s and64.229s, which is not an additive controlled-host
+merge-budget measurement. No additional gate is requested by B17.
+Use `crate_test_membership.suites` as the stable membership reference;
+historical line citations remain preserved.
+
+Blocker: **none**. Parent/predecessor worktrees, indices, caches and dirty
+documents remain untouched. B16's historical3/4 failure, B14/B15 failed gates,
+and original12K four FAILED plus one RESOURCE/zero PASS and exhausted reviews
+are preserved. No later implementation, validation or review starts here.
+This session stops after these records; parent owns future B15 continuation.
+
 ## Current orchestration: B16 terminal; bounded12K-B17 membership delivery (2026-09-07)
 
 Kuhn is CLOSED. B16/#3749 is blocked/unreviewed/unmerged in draft PR3751,
