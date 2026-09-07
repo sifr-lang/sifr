@@ -91,7 +91,7 @@ fn format_argument_index(rust_macro: &syn::Macro) -> Option<usize> {
     }
 }
 
-pub(super) fn is_format_macro(rust_macro: &syn::Macro) -> bool {
+pub(crate) fn is_format_macro(rust_macro: &syn::Macro) -> bool {
     format_argument_index(rust_macro).is_some()
 }
 

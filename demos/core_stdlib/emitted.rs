@@ -488,12 +488,12 @@ mod sifr_generated_generated_support {
         clippy::approx_constant,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) const PI: f64 = 3.141_592_653_589_793_f64;
+    pub const PI: f64 = 3.141_592_653_589_793_f64;
     #[expect(
         clippy::approx_constant,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) const E: f64 = 2.718_281_828_459_045_f64;
+    pub const E: f64 = 2.718_281_828_459_045_f64;
     #[must_use]
     pub fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
@@ -656,7 +656,8 @@ mod sifr_generated_project_nominals {
     impl ::std::error::Error for JSONDecodeError {}
 }
 use crate::sifr_generated_generated_support::{
-    ceil, exists, floor, getenv_opt, loads, read_lines, read_text, run_command, sqrt, write_text,
+    E, PI, ceil, exists, floor, getenv_opt, loads, read_lines, read_text, run_command, sqrt,
+    write_text,
 };
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;

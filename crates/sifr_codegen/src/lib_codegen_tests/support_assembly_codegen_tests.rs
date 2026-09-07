@@ -115,10 +115,39 @@ fn support_imports_keep_implicit_format_captures_after_canonicalization() {
         fn main() { println!(\"{}\", ACTIVE); }";
     let canonical = crate::canonicalize_generated_rust_source(source).expect("canonical source");
     assert!(canonical.contains("{ACTIVE}"), "{canonical}");
-    assert!(
-        canonical.contains("use crate::sifr_generated_generated_support::{ACTIVE};"),
-        "{canonical}"
+    assert_explicit_import(
+        &canonical,
+        &["crate", "sifr_generated_generated_support", "ACTIVE"],
     );
+}
+
+#[test]
+fn support_imports_share_format_capture_argument_and_width_semantics() {
+    let support = "const label: i64 = 0; const value: f64 = 1.0; const width: usize = 3; const precision: usize = 1;";
+    for (consumer, expected) in [
+        (
+            "fn call() { println!(\"{label}\", label = value); }",
+            "use crate::__sifr_generated_support::{value};",
+        ),
+        (
+            "fn call() { println!(\"{value:width$.precision$}\"); }",
+            "use crate::__sifr_generated_support::{precision, value, width};",
+        ),
+        (
+            "fn call() { let width = 2; println!(\"{value:width$.precision$}\", precision = 0); }",
+            "use crate::__sifr_generated_support::{value};",
+        ),
+        (
+            "fn call() { other!(label = value); }",
+            "use crate::__sifr_generated_support::{label, value};",
+        ),
+    ] {
+        assert_eq!(
+            crate::generated_visibility::generated_support_import(consumer, support),
+            expected,
+            "{consumer}"
+        );
+    }
 }
 
 #[test]
@@ -130,7 +159,23 @@ fn support_imports_drop_reverse_nominal_edges_of_pruned_helpers() {
         fn consume<T>(_: T) {}";
     let canonical = crate::canonicalize_generated_rust_source(source).expect("canonical source");
     assert!(!canonical.contains("fn unused"), "{canonical}");
-    assert!(canonical.contains("use crate::{Used};"), "{canonical}");
+    let file = syn::parse_file(&canonical).expect("final syntax");
+    let support = file
+        .items
+        .iter()
+        .find_map(|item| match item {
+            syn::Item::Mod(module) if module.ident == "sifr_generated_generated_support" => {
+                module.content.as_ref().map(|(_, items)| items)
+            }
+            _ => None,
+        })
+        .expect("private support owner");
+    let support_source = support
+        .iter()
+        .map(|item| quote::quote!(#item).to_string())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert_explicit_import(&support_source, &["crate", "Used"]);
     assert!(!canonical.contains("Unused"), "{canonical}");
     assert_eq!(
         crate::canonicalize_generated_rust_source(&canonical).expect("idempotent source"),
@@ -238,6 +283,32 @@ fn test_project_support_is_rendered_once_for_support_and_test_modules() {
             .test_rust_files
             .values()
             .all(|source| !source.contains("fn shared_operation"))
+    );
+}
+
+fn assert_explicit_import(source: &str, expected: &[&str]) {
+    fn matches_path(tree: &syn::UseTree, expected: &[&str]) -> bool {
+        match (tree, expected) {
+            (syn::UseTree::Path(path), [head, tail @ ..]) if path.ident == *head => {
+                matches_path(&path.tree, tail)
+            }
+            (syn::UseTree::Name(name), [expected]) => name.ident == *expected,
+            (syn::UseTree::Group(group), _) => {
+                group.items.iter().any(|item| matches_path(item, expected))
+            }
+            _ => false,
+        }
+    }
+    let file = syn::parse_file(source).expect("valid import scope");
+    assert_eq!(
+        file.items
+            .iter()
+            .filter(|item| {
+                matches!(item, syn::Item::Use(import) if matches_path(&import.tree, expected))
+            })
+            .count(),
+        1,
+        "{source}"
     );
 }
 

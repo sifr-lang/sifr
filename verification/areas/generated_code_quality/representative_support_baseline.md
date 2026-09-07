@@ -45,6 +45,15 @@ using only the original authenticated evidence, never a failed candidate's outpu
    Counts must equal the authenticated original counts for all twenty retained
    codes. New Clippy execution must subsequently match these predictions exactly.
 
+The B13 continuation re-derives the same twenty-code,528-diagnostic aggregate
+after combining B14's approved capture semantics. The owned derivation is
+`/private/tmp/sifr-b13-continuation.kr53D8/evidence/derive_support_debt.py`, SHA-256
+`d67085e4fce7fdfe861c0be097bdc3b3df20b2133ec51a2b64bf54af50dfffcc`.
+It retains the original derivation algorithm and authenticates the same original
+evidence; adaptations are the owned compiler path and compact patch rendering.
+The source and signature changes are recorded before new Clippy execution, with
+production-materialized source concordance required before that execution.
+
 Rust 1.98.0, Clippy's full version, each surface, each original diagnostic origin,
 the source hashes, old/new signature aggregates and per-diagnostic relocations
 are in the JSON receipt. The derivation script is preserved outside Git at

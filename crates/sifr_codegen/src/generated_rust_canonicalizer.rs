@@ -7,6 +7,7 @@ mod api_cleanup;
 mod enum_variant_cleanup;
 mod field_name_cleanup;
 mod format_capture;
+pub(crate) use format_capture::is_format_macro as is_generated_format_macro;
 pub(crate) use format_capture::names as generated_format_capture_names;
 mod identifier_canonicalizer;
 mod identifier_policy;

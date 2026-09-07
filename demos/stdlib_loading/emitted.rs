@@ -4,9 +4,9 @@ mod sifr_generated_generated_support {
         clippy::approx_constant,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) const PI: f64 = 3.141_592_653_589_793_f64;
+    pub const PI: f64 = 3.141_592_653_589_793_f64;
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::PI;
 fn main() {
     println!("{PI}");
 }

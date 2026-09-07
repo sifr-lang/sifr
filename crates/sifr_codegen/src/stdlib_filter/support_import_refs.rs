@@ -348,6 +348,22 @@ impl<'ast> Visit<'ast> for ImportReferences<'_> {
             self.reference(&name, false);
         }
         self.visit_path(&mac.path);
+        if crate::generated_rust_canonicalizer::is_generated_format_macro(mac)
+            && let Ok(arguments) = mac.parse_body_with(
+                syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+            )
+        {
+            // A named formatting argument labels a slot; only its value can
+            // demand a support import. Use the shared parser's macro boundary.
+            for argument in &arguments {
+                if let syn::Expr::Assign(argument) = argument {
+                    self.visit_expr(&argument.right);
+                } else {
+                    self.visit_expr(argument);
+                }
+            }
+            return;
+        }
         self.macro_tokens(mac.tokens.clone());
     }
 }

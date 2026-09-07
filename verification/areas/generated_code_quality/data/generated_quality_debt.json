@@ -407,7 +407,7 @@
       "selection-7cddd09acf851f35": {
         "clippy::arithmetic_side_effects": {
           "count": 69,
-          "signature_sha256": "7a27c8ab31ea41f44daf9e24d2c427640e75e8a5ccb0d3e08d4ecc6e360b9106"
+          "signature_sha256": "6a04d87db121f356df744d4adcfe49473536b5861265beedda93c6021b7f9de0"
         },
         "clippy::assigning_clones": {
           "count": 2,
@@ -431,11 +431,11 @@
         },
         "clippy::needless_pass_by_value": {
           "count": 67,
-          "signature_sha256": "182abe3a138303557df95bfa2700f015ed87a843d447c461d04f3983ddfe373f"
+          "signature_sha256": "a652776dcf43d66ff0f7e9a0539f52a8c061676b435eb14ecefb7eace62276a1"
         },
         "clippy::op_ref": {
           "count": 58,
-          "signature_sha256": "c72566042207cf42cab0485cc5712d8cdb3b9c98c44ef046a3f6696f8c96f789"
+          "signature_sha256": "ab8d4e9da9b64f04fe70a6c374c16752c5881859f6a6420aebf8f08176baf858"
         },
         "clippy::redundant_clone": {
           "count": 200,

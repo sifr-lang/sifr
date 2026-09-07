@@ -92,7 +92,7 @@
   "derived_summary": {
     "clippy::arithmetic_side_effects": {
       "count": 69,
-      "signature_sha256": "7a27c8ab31ea41f44daf9e24d2c427640e75e8a5ccb0d3e08d4ecc6e360b9106"
+      "signature_sha256": "6a04d87db121f356df744d4adcfe49473536b5861265beedda93c6021b7f9de0"
     },
     "clippy::assigning_clones": {
       "count": 2,
@@ -116,11 +116,11 @@
     },
     "clippy::needless_pass_by_value": {
       "count": 67,
-      "signature_sha256": "182abe3a138303557df95bfa2700f015ed87a843d447c461d04f3983ddfe373f"
+      "signature_sha256": "a652776dcf43d66ff0f7e9a0539f52a8c061676b435eb14ecefb7eace62276a1"
     },
     "clippy::op_ref": {
       "count": 58,
-      "signature_sha256": "c72566042207cf42cab0485cc5712d8cdb3b9c98c44ef046a3f6696f8c96f789"
+      "signature_sha256": "ab8d4e9da9b64f04fe70a6c374c16752c5881859f6a6420aebf8f08176baf858"
     },
     "clippy::redundant_clone": {
       "count": 200,
@@ -1290,7 +1290,7 @@
       "sources": {
         "src/main.rs": {
           "before_sha256": "6433220f951357e4d2f9507c2ff0275afbc7c1cd9b9c17888b922c18a4d929e6",
-          "after_sha256": "1cef18b47df45c64ba969bcf2633c3a836b7fd68d3121a49d3d8c91bc0f088ab"
+          "after_sha256": "bf155f801e2bbe07134f7237cc5f24a471ef7e86e7dc56ccf63df18347397935"
         }
       },
       "relocated_diagnostics": [
@@ -1317,7 +1317,7 @@
             18
           ],
           "after": [
-            290,
+            258,
             18
           ],
           "relocation": "equal source text"
@@ -1331,7 +1331,7 @@
             5
           ],
           "after": [
-            291,
+            259,
             5
           ],
           "relocation": "equal source text"
@@ -1345,7 +1345,7 @@
             21
           ],
           "after": [
-            293,
+            261,
             21
           ],
           "relocation": "equal source text"
@@ -1359,7 +1359,7 @@
             8
           ],
           "after": [
-            294,
+            262,
             8
           ],
           "relocation": "equal source text"
@@ -1373,7 +1373,7 @@
             18
           ],
           "after": [
-            299,
+            267,
             18
           ],
           "relocation": "equal source text"
@@ -1387,7 +1387,7 @@
             5
           ],
           "after": [
-            300,
+            268,
             5
           ],
           "relocation": "equal source text"
@@ -7747,5 +7747,5 @@
       ]
     }
   ],
-  "derivation_script_sha256": "a4ebcbbfde314a067526742ebeaec2282270714794c4021ab1e2024e84dac2a6"
+  "derivation_script_sha256": "d67085e4fce7fdfe861c0be097bdc3b3df20b2133ec51a2b64bf54af50dfffcc"
 }
