@@ -6,6 +6,41 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
+#### Item 66 — feature-sensitive Rusqlite lock assertion prerequisite
+
+State: implementation prepared; the shared coordinator released its focused
+Cargo validation window. No package-upgrade or E1 technical prerequisite.
+Schedule before Items 65 and 60 resume. Coordinator adjudication splits this
+exact pre-existing test defect from Item 49 without moving its remaining
+inventory, package or lock work. Item 49's assertion clause is discharged only
+by Item 66's qualified merge.
+
+Scope: `crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs`
+and directly owned test helpers/regression cases only. Correct the lock-edge
+assertion to distinguish the explicitly cache-enabled workspace from the
+bundled-only standalone fixture. Preserve exact selected versions/checksums
+and reject missing required edges and unexpected edges using the actual
+feature context. No compiler, dependency declaration, lockfile, fixture input,
+vendor, workflow, performance, E1 policy or custody changes are authorized.
+
+Named focused test: `cargo test -p sifr_stdlib_manifest --test rusqlite_dependency_version`.
+Add positive/negative regression coverage for both cache contexts in that test
+target. Shared `git diff --check` and
+`python3 scripts/check_file_size_guardrails.py` apply; record-only local links
+must remain valid. Use an owned private target and obtain the shared
+coordinator's capacity release before Cargo compilation.
+
+One exact-SHA Opus review and at most one remediation. Under the user's
+file-category gate rule, verification-test-source-only changes require the
+named tests/shared guards and review, not Sifr create-pr/merge gates. The test
+target's inventory label `test_fixture` does not mean runtime fixture inputs
+changed. If changes cross the prohibited file categories or another applicable
+instruction requires a gate, stop and report the precise conflict first.
+No test exclusion, gate counter reset, or new policy exception is authorized.
+
+Items 62/35 also require Item 66 to merge. Item 65 retains its original scope
+and its initial/optional-remediation review and single-gate allowances.
+
 ### Orchestrated continuation — 2026-09-07
 
 The user has authorized one live implementer subagent at a time. The parent

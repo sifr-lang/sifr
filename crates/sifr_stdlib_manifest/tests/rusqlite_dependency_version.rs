@@ -3,6 +3,8 @@ mod support;
 use support::TestUnwrap as _;
 
 const CATALOG_MANIFEST: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
+const SQLITE_RUNTIME_MANIFEST: &str = include_str!("../../sifr_sql_sqlite_runtime/Cargo.toml");
+const SQL_LOCK_MANIFEST: &str = include_str!("../../sifr_sql_dependency_lock/Cargo.toml");
 const FIXTURE_MANIFEST: &str = include_str!(
     "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml"
 );
@@ -104,10 +106,24 @@ fn maintained_rusqlite_dependencies_use_the_latest_stable_policy() {
 
 #[test]
 fn maintained_lock_edges_use_rusqlite_0_40_2() {
-    for (label, source) in [
-        ("workspace", WORKSPACE_LOCK),
-        ("opaque resource runtime", FIXTURE_LOCK),
-    ] {
+    // Cargo unifies the workspace's explicit cache requests. The standalone
+    // resource fixture disables defaults and requests only bundled SQLite.
+    for manifest in [SQLITE_RUNTIME_MANIFEST, SQL_LOCK_MANIFEST] {
+        let manifest: toml::Value = toml::from_str(manifest).test_unwrap("manifest must parse");
+        let dependency = &manifest["dependencies"]["rusqlite"];
+        assert_eq!(dependency["workspace"].as_bool(), Some(true));
+        assert!(
+            dependency["features"]
+                .as_array()
+                .test_unwrap("rusqlite features must be an array")
+                .iter()
+                .any(|feature| feature.as_str() == Some("cache")),
+            "workspace lock context must explicitly enable rusqlite cache"
+        );
+    }
+
+    for context in [LockContext::WorkspaceCache, LockContext::BundledFixture] {
+        let (label, source) = context.lock();
         let lock: toml::Value =
             toml::from_str(source).unwrap_or_else(|error| panic!("{label} lock: {error}"));
         let packages = lock_packages(&lock);
@@ -116,24 +132,77 @@ fn maintained_lock_edges_use_rusqlite_0_40_2() {
             rusqlite.get("checksum").and_then(toml::Value::as_str),
             Some(RUSQLITE_PACKAGE_HASH)
         );
-        let dependencies = dependency_edges(rusqlite).collect::<Vec<_>>();
-        assert!(
-            dependencies
-                .iter()
-                .any(|edge| edge.starts_with("libsqlite3-sys"))
-        );
-        assert!(!dependencies.iter().any(|edge| edge.starts_with("hashlink")));
-        assert!(
-            !dependencies
-                .iter()
-                .any(|edge| edge.starts_with("sqlite-wasm-rs"))
-        );
+        check_dependency_edges(rusqlite, context)
+            .unwrap_or_else(|error| panic!("{label}: {error}"));
 
         let libsqlite = package(packages, "libsqlite3-sys", LIBSQLITE_VERSION);
         assert_eq!(
             libsqlite.get("checksum").and_then(toml::Value::as_str),
             Some(LIBSQLITE_PACKAGE_HASH)
         );
+    }
+}
+
+#[test]
+fn lock_edge_contract_accepts_both_feature_contexts() {
+    for context in [LockContext::WorkspaceCache, LockContext::BundledFixture] {
+        let (_, source) = context.lock();
+        let lock: toml::Value = toml::from_str(source).test_unwrap("lock must parse");
+        let rusqlite = package(lock_packages(&lock), "rusqlite", RUSQLITE_VERSION);
+        assert_eq!(check_dependency_edges(rusqlite, context), Ok(()));
+        let other_context = match context {
+            LockContext::WorkspaceCache => LockContext::BundledFixture,
+            LockContext::BundledFixture => LockContext::WorkspaceCache,
+        };
+        assert!(check_dependency_edges(rusqlite, other_context).is_err());
+    }
+}
+
+#[test]
+fn lock_edge_contract_rejects_each_missing_required_edge() {
+    for context in [LockContext::WorkspaceCache, LockContext::BundledFixture] {
+        let (_, source) = context.lock();
+        let lock: toml::Value = toml::from_str(source).test_unwrap("lock must parse");
+        let rusqlite = package(lock_packages(&lock), "rusqlite", RUSQLITE_VERSION);
+        for missing in context.expected_edges() {
+            let mut mutated = rusqlite.clone();
+            mutated["dependencies"]
+                .as_array_mut()
+                .test_unwrap("dependencies must be an array")
+                .retain(|edge| edge.as_str() != Some(missing));
+            assert!(
+                check_dependency_edges(&mutated, context).is_err(),
+                "{context:?} must reject missing {missing}"
+            );
+        }
+    }
+}
+
+#[test]
+fn lock_edge_contract_rejects_unexpected_duplicate_and_malformed_edges() {
+    for context in [LockContext::WorkspaceCache, LockContext::BundledFixture] {
+        let (_, source) = context.lock();
+        let lock: toml::Value = toml::from_str(source).test_unwrap("lock must parse");
+        let rusqlite = package(lock_packages(&lock), "rusqlite", RUSQLITE_VERSION);
+        for extra in ["hashlink 0.12.1", "sqlite-wasm-rs", "libsqlite3-sys-extra"] {
+            let mut mutated = rusqlite.clone();
+            mutated["dependencies"]
+                .as_array_mut()
+                .test_unwrap("dependencies must be an array")
+                .push(toml::Value::String(extra.to_owned()));
+            assert!(
+                check_dependency_edges(&mutated, context).is_err(),
+                "{context:?} must reject extra {extra}"
+            );
+        }
+        let mut malformed = rusqlite.clone();
+        malformed["dependencies"]
+            .as_array_mut()
+            .test_unwrap("dependencies must be an array")
+            .push(toml::Value::Integer(42));
+        assert!(check_dependency_edges(&malformed, context).is_err());
+        malformed["dependencies"] = toml::Value::String("libsqlite3-sys".to_owned());
+        assert!(check_dependency_edges(&malformed, context).is_err());
     }
 }
 
@@ -204,11 +273,58 @@ fn package<'a>(packages: &'a [toml::Value], name: &str, version: &str) -> &'a to
         .unwrap_or_else(|| panic!("lock must contain {name} {version}"))
 }
 
-fn dependency_edges(package: &toml::Value) -> impl Iterator<Item = &str> {
-    package
+#[derive(Clone, Copy, Debug)]
+enum LockContext {
+    WorkspaceCache,
+    BundledFixture,
+}
+
+impl LockContext {
+    fn lock(self) -> (&'static str, &'static str) {
+        match self {
+            Self::WorkspaceCache => ("workspace", WORKSPACE_LOCK),
+            Self::BundledFixture => ("opaque resource runtime", FIXTURE_LOCK),
+        }
+    }
+
+    fn expected_edges(self) -> &'static [&'static str] {
+        // Keep Cargo's version qualifiers: these roots resolve different
+        // package graphs, and only the workspace enables the cache feature.
+        match self {
+            Self::WorkspaceCache => &[
+                "bitflags 2.13.1",
+                "fallible-iterator 0.3.0",
+                "fallible-streaming-iterator",
+                "hashlink 0.12.1",
+                "libsqlite3-sys",
+                "smallvec",
+            ],
+            Self::BundledFixture => &[
+                "bitflags",
+                "fallible-iterator 0.3.0",
+                "fallible-streaming-iterator",
+                "libsqlite3-sys",
+                "smallvec",
+            ],
+        }
+    }
+}
+
+fn check_dependency_edges(package: &toml::Value, context: LockContext) -> Result<(), String> {
+    let dependencies = package
         .get("dependencies")
         .and_then(toml::Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(toml::Value::as_str)
+        .ok_or("rusqlite dependencies must be an array")?;
+    let mut edges = dependencies
+        .iter()
+        .map(|edge| edge.as_str().ok_or("dependency edge must be a string"))
+        .collect::<Result<Vec<_>, _>>()?;
+    edges.sort_unstable();
+    let expected = context.expected_edges();
+    if edges != expected {
+        return Err(format!(
+            "{context:?} rusqlite edges: expected {expected:?}, got {edges:?}"
+        ));
+    }
+    Ok(())
 }
