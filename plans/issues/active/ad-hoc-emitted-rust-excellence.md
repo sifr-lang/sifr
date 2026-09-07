@@ -2,6 +2,103 @@
 
 Status: active
 
+## Terminal: 12K-B15 approved integration blocked by existing H/I/M1 delivery cycle (2026-09-07)
+
+**Blocked, not merged.** Existing [PR3746](https://github.com/sifr-lang/sifr/pull/3746)
+remains OPEN DRAFT; owners #3748/#3745 remain open. Final approved/tested candidate
+`875a3555a7d1bcd7885ad4151c75a4a7abf17a74`, actual-main base
+`0b97b3a3f1dd3f93bc724f75e1e40240f15ff942`, branch
+`codex/implicit-format-capture-demand`, sole owned clone
+`/private/tmp/sifr-b15-delivery.NykMhH/sifr`. Merge SHA: none. Normal merges preserve
+full B15 record `cdc8354aec03d505d89cef09dacd71e4f43723c9`, actual SQL main merge,
+and separate B17 record `3cfb7f865fdb99023aa22decff999d53af05a839`. Only both
+owner-document conflicts were resolved, preserving both histories. This terminal
+record changes only phase/Python-owner Markdown and is normally pushed separately.
+
+All34 B14,37 B15 and14 B17 indexed artifacts authenticated. Exact relevant
+compiler/crates/manifest/lock/stdlib/toolchain/gitlink inputs are unchanged from
+approved B14; all demos match B15 and all three SQL prerequisite files match B17.
+Reused named evidence:115canonicalizer/9capture (18lexical/3type-namespace/3native),
+264fresh companions, both native demos, fmt. Final-SHA file-size3761 and committed
+actual-main whitespace checks PASS; recursive submodules match provenance.
+External authentication SHA256 `1c3f78fc9f0301dacaa373e090f9b58ed261ed0eb439bd6b6ee285ba485df499`;
+named receipt SHA256 `7ddb4943641e89e51a47e5d81b4ee80047babb2a4ce442807d52896e4c936b98`.
+
+[Final B15 remediation](https://github.com/sifr-lang/sifr/pull/3746#issuecomment-5573377073)
+is SATISFIED/no blockers on exact875a. Raw response SHA256
+`6ee19e0c9a03f0c200b365fe8b41320e23e1d4f38435800a6d11a7dc260b884f`.
+Continuation1provider/0retries; cumulative B15 oneinitial+oneremediation,
+2providers/0retries, exhausted. No third B14 compiler review; B17 approval is
+independently preserved. Existing #3747/#3752 remain nonblocking; profile-size
+headroom suggestion was recorded with #3752, not implemented.
+
+The one authorized changed-prerequisite merge gate **FAILED naturally exit1**,
+2026-09-07T16:23:56.259513Z to17:11:10.135987Z, elapsed2833.76s. No create-pr,
+second continuation gate, cleanup, resource termination or merge occurred.
+Production92/92graphs PASS; all13guards PASS including264freshness147524ms;
+RustInterop10, integrated coverage readiness4/4 (13guarantees/34surfaces/
+0temporary,19profile rows/26negative cases/taxonomy), core-language5 and
+CPython-differential2 PASS. SQL's historical registry blocker is cleared on
+the integrated inputs; full qualification is still not a PASS.
+
+Python interop completed30variants:26PASS,4blockingFAIL,0nonblockingFAIL:
+
+| Failed variant | Existing approved-but-unmerged owner |
+| --- | --- |
+| binding-authoring | Eight RustE0560: initializer `sifr_generated_python_error` disagrees with imported `python_error`; Item12H, PR3697, source `9b52ac20094608c8a31f252db99e49ef7c963384`, record `b6e6210a97598fb631b929b2d4daf4012b41bb16`. |
+| callback-examples | Three native cases fail inaccessible cancellation task-local RustE0425 (3of14innerchecks failed); Item12I, PR3698, source `f6e8afd964bb214a44c50271dcb2014ee8e828b4`, record `19ad69969a672d7b741122ded4dd879f2bdaf9ab`. |
+| async-declaration-examples | httpx2-client SIFR-RESULT-0003, PythonError incompatible with Result[None,Error]; correcting12J-M1, PR3700, source `d726ffc11258c49f0185fd2d49697988cf90972c`. |
+| async-context-examples | aiosqlite-session same error-channel diagnosis; same correctingM1, record `a7e13eb45006eac925417491b89a932af5df2595`. |
+
+All are existing owner mechanisms, not new B15 repairs. PR3697/3698/3700 remain
+OPEN DRAFT; source approvals are not merged qualification. No baseline runtime
+replay was executed. Referenced field-naming producers are unchanged from main.
+Python buffer5/Arrow13/DLPack19 runtime tests also passed, but do not substitute
+for the unreached full-mode crate suites.
+
+All15remaining selected areas are **UNREACHED**: diagnostics, runtime_platform,
+algorithmic_compatibility, developer_tooling, generated_code_quality, performance,
+distribution_release, sysroot_release, project_workspace, package_management,
+stdlib_parity, regression, fuzz_property, ecosystem_compatibility, sql_platform.
+Both toolchain steps `cargo-test-sifr-full` and `e2e-pass` are UNREACHED, including
+the new MySQL/SQLite full-mode memberships. No full crate/E2E/stdlib execution
+or controlled-host performance PASS is claimed. Setup1111551ms exceeded its
+300000ms advisory budget; overall warm15m/cold25m targets were exceeded. The
+nested zero-duration setup-fail marker is the runner-foundation negative self-test,
+not another production failure or gate. No budget or policy was weakened.
+
+External evidence under `/private/tmp/sifr-b15-delivery.NykMhH/evidence/`:
+
+- `merge.875a3555a7d1bcd7885ad4151c75a4a7abf17a74.log`, SHA256
+  `34a4bd772f4a459b2f5ffa8cfedc538504149279744ba7e53559a8c6a20e4076`.
+- Matching supervisor `.json`, SHA256
+  `32e6bd96bba04676c8e769bfb4bdbf8aa6bc592ed066f5a418c3f82c6d61e6a8`.
+- `gate-summary.875a3555a7d1bcd7885ad4151c75a4a7abf17a74.json`, SHA256
+  `23bc6df5d61afba09009964339a40a6bf59c250c6b03c966aad61286f8a25bf3`,
+  indexes32gate artifacts and all selected/unreached suites.
+- Python result SHA256 `b71c5d790aebbe2ffe07d9d3b3b2b4dc1d1ac3b0b1f3ca614db38b76513b6b9d`;
+  lane result SHA256 `eba438bf8150229b391001337e025297b9efe029c6ae7c14d317a39d2be2be0f`.
+
+Minimum free11,802,378,240bytes; final private target16,812,940KiB. No cleanup
+or live gate/review/watchdog handles. Parent two dirty documents and every
+predecessor/source/index/cache/evidence remain read-only. B15 cumulative gates:
+historical1FAILED plus this1FAILED =2FAILED/0PASS/0RESOURCE; B14 remains
+1FAILED/exhausted reviews; original12K remains4FAILED+1RESOURCE143/0PASS.
+
+Exact handoff: the authenticated B13 terminal
+`/private/tmp/sifr-support.kmdI25/evidence/support-visibility-terminal.json`
+SHA256 `28cf482158707bbc8635c726f25ab0e3449d3566bd8cdabee507447c5e07c441`
+and read-only Git ancestry prove full record `4eef8a2bb4dbc24fb7c1d1213652be379047f4b1`
+already includes approved H/I/correctingM1. B13 owner #3744, branch
+`codex/support-visibility-imports`, candidate `2ef9aa30ed2b3715dba291b697aa0fdb7ab6b42d`,
+PRnone, is blocked on the B14 capture-demand prerequisite plus its own singleton
+assertion. Standalone B15 needs those existing stack repairs, while that stack
+needs B14: a delivery dependency cycle. Parent may assess a fresh bounded B13
+integration owner carrying full875a/B15 record and mergedSQL into full4eef,
+preserving every source approval and qualification limit. This is handoff only:
+no H/I/M1 duplicate issue/import/implementation, no B13 code, no further B15 gate,
+no whole-phase closure. **STOP after publishing this record and native terminal.**
+
 ## In progress: 12K-B15 final prerequisite integration (2026-09-07)
 
 Sole owned clone `/private/tmp/sifr-b15-delivery.NykMhH/sifr`, branch
