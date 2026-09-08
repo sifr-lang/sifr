@@ -571,7 +571,7 @@ fn rust_opaque_self_target_requires_representable_state_error() {
     let errors = lower_errors(
         r"
 class ResourceError(Error):
-    detail: str
+    detail: int
 
 @rust.opaque(type=bridge.resources.Resource)
 class Resource:

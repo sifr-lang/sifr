@@ -1,5 +1,5 @@
 use quote::ToTokens;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
 
@@ -7,6 +7,8 @@ mod api_cleanup;
 mod enum_variant_cleanup;
 mod field_name_cleanup;
 mod format_capture;
+pub(crate) use format_capture::is_format_macro as is_generated_format_macro;
+pub(crate) use format_capture::names as generated_format_capture_names;
 mod identifier_canonicalizer;
 mod identifier_policy;
 mod item_demand;
@@ -20,6 +22,7 @@ pub(crate) use project_support_pruning::{
     import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
 };
 mod source_expectations;
+mod support_import_cleanup;
 mod syntax_cleanup;
 
 use api_cleanup::improve_generated_api_items;
@@ -27,7 +30,6 @@ pub use api_cleanup::{
     discover_project_const_function_names,
     finalize_formatted_generated_rust_source_with_project_consts,
 };
-use field_name_cleanup::canonicalize_generated_field_names;
 pub use identifier_canonicalizer::canonicalize_generated_rust_identifier;
 #[cfg(test)]
 use item_dependencies::IdentifierCollector;
@@ -48,9 +50,42 @@ use syntax_cleanup::canonicalize_syntax;
 /// are escaped too, keeping the mapping injective when user code deliberately uses
 /// a canonical prefix.
 pub fn canonicalize_generated_rust_source(source: &str) -> Result<String, String> {
+    let mut sources = canonicalize_generated_rust_project(&BTreeMap::from([(
+        String::new(),
+        source.to_string(),
+    )]))?;
+    sources
+        .remove("")
+        .ok_or_else(|| "missing canonical crate root".to_string())
+}
+
+/// Canonicalize all physical modules together before per-file cleanup. Keys use
+/// Rust module paths (`a::b`); the empty key is the crate root.
+pub fn canonicalize_generated_rust_project(
+    sources: &BTreeMap<String, String>,
+) -> Result<BTreeMap<String, String>, String> {
+    let fields = field_name_cleanup::canonicalize_fields(sources)?;
+    let names = identifier_canonicalizer::project_name_map(fields.values().map(String::as_str))?;
+    let canonical = fields
+        .into_iter()
+        .map(|(module, source)| {
+            canonicalize_source_with_names(&source, &names).map(|source| (module, source))
+        })
+        .collect::<Result<BTreeMap<_, _>, _>>()?;
+    support_import_cleanup::refresh_support_imports(canonical)
+}
+
+fn canonicalize_source_with_names(
+    source: &str,
+    names: &BTreeMap<String, String>,
+) -> Result<String, String> {
     let structurally_pruned = prune_closed_generated_binary(source)?;
     let source = structurally_pruned.as_deref().unwrap_or(source);
-    let mut canonical = identifier_canonicalizer::canonicalize_identifiers(source)?;
+    let canonical = identifier_canonicalizer::canonicalize_identifiers(source, names)?;
+    canonicalize_named_source(canonical)
+}
+
+fn canonicalize_named_source(mut canonical: String) -> Result<String, String> {
     for _ in 0..16 {
         let rewritten = rewrite_format_captures(&canonical)?;
         let structurally_pruned = prune_closed_generated_binary(&rewritten)?;
@@ -162,7 +197,7 @@ impl<'ast> Visit<'ast> for FallibleControlUse {
 fn rewrite_format_captures(source: &str) -> Result<String, String> {
     let mut file = syn::parse_file(source)
         .map_err(|error| format!("failed to parse canonical generated Rust: {error}"))?;
-    let field_names_changed = canonicalize_generated_field_names(&mut file);
+    let shorthand_changed = field_name_cleanup::compact_shorthand(&mut file);
     let syntax_changed = canonicalize_syntax_to_fixed_point(&mut file)?;
     let final_syntax = prettyplease::unparse(&file);
     let mut api_file = syn::parse_file(&final_syntax)
@@ -170,7 +205,7 @@ fn rewrite_format_captures(source: &str) -> Result<String, String> {
     let before_api = api_file.to_token_stream().to_string();
     improve_generated_api_items(&mut api_file.items, &final_syntax);
     let api_changed = api_file.to_token_stream().to_string() != before_api;
-    if !field_names_changed && !syntax_changed && !api_changed {
+    if !shorthand_changed && !syntax_changed && !api_changed {
         return Ok(source.to_string());
     }
     let first_api_source = prettyplease::unparse(&api_file);
@@ -444,7 +479,8 @@ fn prune_item_scope(
     used_names.extend(parent_demands);
     for item in items.iter() {
         if !matches!(item, syn::Item::Use(_) | syn::Item::Mod(_)) {
-            used_names.extend(all_item_identifier_names(item));
+            let candidates = all_item_identifier_names(item);
+            used_names.extend(item_dependency_names(item, &candidates));
         }
     }
 
@@ -616,7 +652,8 @@ fn module_roots_from_parent_scope(
         }
         if let syn::Item::Mod(module) = item {
             if let Some((_, nested)) = &module.content {
-                let referenced_names = item_dependency_names(item, definitions);
+                let candidates = all_item_identifier_names(item);
+                let referenced_names = item_dependency_names(item, &candidates);
                 collect_nested_module_use_roots(
                     nested,
                     module_name,
@@ -782,3 +819,7 @@ mod semantics_tests;
 #[cfg(test)]
 #[path = "generated_rust_canonicalizer_support_demand_tests.rs"]
 mod support_demand_tests;
+
+#[cfg(test)]
+#[path = "generated_rust_canonicalizer_capture_tests.rs"]
+mod capture_tests;

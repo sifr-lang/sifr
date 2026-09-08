@@ -1,6 +1,6 @@
 use crate::{SqlAnalysisDependency, SqlIncrementalAnalysisCache};
 use sifr_compiler_component::{
-    AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentError, ComponentHost, ComponentHostLimits,
+    AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentError, ComponentHost,
     EmbeddedAnalysisRequest, HoleDescriptor, PlanKind, SourceSpan, TemplatePart,
 };
 use sifr_diagnostics::RenderedDiagnostic;
@@ -18,7 +18,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 pub(super) struct SqlEditorRuntime {
     profiles: PreparedSqlProfiles,
-    host: ComponentHost,
+    host: Option<ComponentHost>,
     cache: SqlIncrementalAnalysisCache<ProviderAnalysis>,
     cancellation: Option<Arc<AtomicBool>>,
     diagnostics: BTreeMap<String, Vec<RenderedDiagnostic>>,
@@ -48,14 +48,12 @@ pub(super) fn sql_editor_initialization_diagnostic(error: &ComponentError) -> Re
 
 impl SqlEditorRuntime {
     pub(super) fn new(profiles: PreparedSqlProfiles) -> Result<Self, ComponentError> {
-        let limits = ComponentHostLimits {
-            fuel: 100_000_000,
-            ..ComponentHostLimits::default()
-        };
+        let mut host = None;
+        crate::sql_editor_host::update_host(&mut host, &profiles)?;
         let initialization_diagnostics = profiles.initialization_diagnostics().to_vec();
         Ok(Self {
             profiles,
-            host: ComponentHost::new(limits, None)?,
+            host,
             cache: SqlIncrementalAnalysisCache::open_default(),
             cancellation: None,
             diagnostics: BTreeMap::new(),
@@ -68,9 +66,14 @@ impl SqlEditorRuntime {
         self.cancellation = cancellation;
     }
 
-    pub(super) fn replace_profiles(&mut self, profiles: PreparedSqlProfiles) {
+    pub(super) fn replace_profiles(
+        &mut self,
+        profiles: PreparedSqlProfiles,
+    ) -> Result<(), ComponentError> {
+        crate::sql_editor_host::update_host(&mut self.host, &profiles)?;
         self.initialization_diagnostics = profiles.initialization_diagnostics().to_vec();
         self.profiles = profiles;
+        Ok(())
     }
 
     pub(super) fn diagnostics_for_source(&self, source: &str) -> Vec<RenderedDiagnostic> {
@@ -160,6 +163,13 @@ impl SqlEditorRuntime {
                 .map(|(_, _, _, component, request)| (component, request)),
             |(component, request)| {
                 self.host
+                    .as_mut()
+                    .ok_or_else(|| {
+                        ComponentError::new(
+                            sifr_compiler_component::ComponentErrorKind::Execution,
+                            "SQL editor query requires an initialized profile host",
+                        )
+                    })?
                     .analyze(&component.registration, &component.bytes, request)
             },
         )
@@ -261,6 +271,10 @@ impl SqlEditorRuntime {
         Ok(observed)
     }
 }
+
+#[cfg(test)]
+#[path = "sql_editor_runtime_tests.rs"]
+mod sql_editor_runtime_tests;
 
 fn relation_membership_identity(profile: &str, relation: &str) -> String {
     format!("{profile}::__relation-membership__::{relation}")

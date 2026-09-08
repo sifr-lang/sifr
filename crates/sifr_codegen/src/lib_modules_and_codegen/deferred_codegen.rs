@@ -1,5 +1,5 @@
 use super::{
-    CodegenResult, ModuleSupportDemand, ProjectStructuralLayoutLocation, RustEmitter, StdlibCode,
+    CodegenResult, ModuleSupportDemand, ProjectStructuralLayoutLocation, RustEmitter,
     project_imports,
 };
 use crate::ir_imports::collect_import_needs_from_items;
@@ -16,13 +16,13 @@ use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
 
 pub(super) fn deferred_codegen_result(
-    module: &HirModule,
-    stdlib_code: &StdlibCode,
+    _module: &HirModule,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
     mut emitter: RustEmitter,
     support_demand: ModuleSupportDemand,
     structural_layout_location: ProjectStructuralLayoutLocation,
     has_project_structural_layout: bool,
-) -> CodegenResult {
+) -> super::ModuleCodegenResult {
     let mut body_items = emitter.enum_items.clone();
     body_items.extend(emitter.body_items.clone());
     if support_demand.runtime.async_python || support_demand.runtime.native_async_cleanup {
@@ -78,7 +78,7 @@ pub(super) fn deferred_codegen_result(
         used_stdlib_modules,
         used_intrinsic_modules: std::mem::take(&mut emitter.used_stdlib_modules),
         required_features,
-        interop: crate::rust_interop_plan::interop_build_plan_for_module(module),
+        interop: (),
         constant_mappings: std::mem::take(&mut emitter.module_constants),
         lowering_stats: emitter.lowering_stats,
         support_demand,
@@ -87,12 +87,12 @@ pub(super) fn deferred_codegen_result(
 
 pub(super) fn inline_codegen_result(
     module: &HirModule,
-    stdlib_code: &StdlibCode,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
     emitter: RustEmitter,
     support_demand: ModuleSupportDemand,
     structural_layout_location: ProjectStructuralLayoutLocation,
     has_project_structural_layout: bool,
-) -> CodegenResult {
+) -> super::ModuleCodegenResult {
     let mut generated = deferred_codegen_result(
         module,
         stdlib_code,
@@ -131,7 +131,24 @@ pub(super) fn inline_codegen_result(
     .filter(|source| !source.is_empty())
     .collect::<Vec<_>>()
     .join("\n\n");
-    if let Err(error) = syn::parse_file(&assembled) {
+    let validation = if let Some(session) = stdlib_code.syntax_session {
+        let start = if import_source.trim().is_empty() {
+            0
+        } else {
+            import_source.trim().len() + 2
+        };
+        let end = start + rendered_support_source.trim().len();
+        // Empty support has no reusable interval, including empty whole files.
+        let support = if start <= assembled.len() {
+            start..end
+        } else {
+            0..0
+        };
+        session.validate(&assembled, support)
+    } else {
+        syn::parse_file(&assembled).map(|_| ())
+    };
+    if let Err(error) = validation {
         panic!("failed to parse inline support assembled by the canonical renderer: {error}");
     }
     generated.rust_source = format!("{}\n", assembled.trim_end());

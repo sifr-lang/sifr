@@ -66,9 +66,14 @@ mod sql_profiles;
 #[cfg(test)]
 mod sql_profiles_tests;
 mod sql_query_signatures;
+#[cfg(test)]
+mod stdlib_interop_demand_tests;
+#[cfg(test)]
+mod stdlib_interop_startup_tests;
 mod sysroot_interop;
 #[cfg(test)]
 mod sysroot_interop_tests;
+mod test_runner_interop;
 mod workspace;
 
 pub use api::{
@@ -99,9 +104,11 @@ pub use report::{
     MaterializedRustProjectReport, PythonDeclarationCheck, PythonEnvironmentCheck,
     PythonInteropCheckReport, PythonTargetCheck, PythonTargetCheckStatus,
 };
-pub(crate) use rust_formatter::format_generated_rust;
+pub(crate) use rust_formatter::canonicalize_project_fields;
+pub(crate) use rust_formatter::format_canonical_generated_rust;
 pub use sql_profiles::{PreparedSqlProfiles, load_sql_editor_profiles, prepare_sql_profiles};
 pub use sql_query_signatures::{QUERY_SIGNATURE_ARTIFACT_NAME, emit_query_signature_artifact};
+pub(crate) use test_runner_interop::finalize_test_runner_project;
 
 pub(crate) use cargo_manifest::{
     generate_dependency_cargo_toml_with_interop, try_generate_sysroot_dependency_plan,

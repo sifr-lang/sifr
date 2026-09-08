@@ -23,6 +23,7 @@ pub(crate) fn execute_test_runner_project(
     let cargo_plan = try_generate_test_runner_cargo_plan(
         &generated_project.all_stdlib_modules,
         &generated_project.all_required_features,
+        &generated_project.interop,
     )
     .map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
@@ -187,10 +188,11 @@ fn test_runner_cache_key(
         .collect::<Vec<_>>()
         .join("\n===\n");
     format!(
-        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[sysroot-dependency-inputs]\n{}[sysroot-dependency-plan]\n{}",
+        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[sysroot-dependency-inputs]\n{}[sysroot-dependency-plan]\n{}\n[interop]\n{}",
         generated_project.cache_scope.display(),
         dependency_plan.dependency_input_fingerprint(),
-        dependency_plan.cache_fingerprint
+        dependency_plan.cache_fingerprint,
+        generated_project.interop.cache_key_fragment()
     )
 }
 
@@ -207,6 +209,7 @@ mod tests {
     #[test]
     fn test_runner_cache_key_uses_sysroot_dependency_plan_inputs() {
         let generated_project = GeneratedTestRunnerProject {
+            interop: sifr_codegen::InteropBuildPlan::default(),
             cache_scope: PathBuf::from("/tmp/sifr-tests"),
             support_module_names: Vec::new(),
             support_rust_files: HashMap::new(),

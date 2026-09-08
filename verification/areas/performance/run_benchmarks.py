@@ -22,6 +22,7 @@ from benchmark_baseline import (
     work_budgets_from_run,
 )
 from benchmark_baseline import run_self_test as run_benchmark_baseline_self_test
+from benchmark_case_selftest import run_self_test as run_benchmark_case_self_test
 from benchmark_manifest import (
     RUNNER_VERSION,
     BenchmarkCase,
@@ -61,6 +62,8 @@ from process_metrics import (
 )
 from query_processes import run_query_processes
 from query_processes import run_self_test as run_query_processes_self_test
+from sample_evidence import record_command_sample, recording_query_runner
+from sample_evidence import run_self_test as run_sample_evidence_self_test
 from trend_baseline import (
     TrendBaselineError,
     baseline_from_reference_run,
@@ -411,9 +414,9 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
     warmups = 1 if sample_scale == "smoke" else case.warmups
     measured = 1 if sample_scale == "smoke" else case.measured
     if case.kind == "frontend-query":
-        return run_frontend_query_case(case, measured)
+        return run_frontend_query_case(case, measured, run_root)
     if case.kind == "lsp-query":
-        return run_lsp_query_case(case, measured)
+        return run_lsp_query_case(case, measured, run_root)
 
     ensure_sifr_binary()
     samples: list[float] = []
@@ -429,15 +432,9 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
         )
         command = command_for_case(case, output_dir)
         result = run_subprocess(command, case.timeout_ms)
-        if sample_index < warmups:
-            continue
-        samples.append(result["duration_ms"])
-        if result["peak_rss_bytes"] is not None:
-            peak_rss_values.append(result["peak_rss_bytes"])
-        if result["retired_instructions"] is not None:
-            instruction_samples.append(result["retired_instructions"])
-        if result["cycles_elapsed"] is not None:
-            cycle_samples.append(result["cycles_elapsed"])
+        record_command_sample(
+            run_root, case.id, sample_index, sample_index < warmups, command, result
+        )
         if result["timed_out"]:
             raise BenchmarkError(
                 f"benchmark {case.id} timed out after {case.timeout_ms}ms"
@@ -447,6 +444,15 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
             raise BenchmarkError(
                 f"benchmark {case.id} exited {result['exit_code']}, expected {sorted(expected_exit_codes)}"
             )
+        if sample_index < warmups:
+            continue
+        samples.append(result["duration_ms"])
+        if result["peak_rss_bytes"] is not None:
+            peak_rss_values.append(result["peak_rss_bytes"])
+        if result["retired_instructions"] is not None:
+            instruction_samples.append(result["retired_instructions"])
+        if result["cycles_elapsed"] is not None:
+            cycle_samples.append(result["cycles_elapsed"])
 
     stats = latency_metrics(samples)
     size_metrics = (
@@ -472,7 +478,7 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
     }
 
 
-def run_frontend_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
+def run_frontend_query_case(case: BenchmarkCase, measured: int, run_root: Path) -> dict[str, Any]:
     ensure_frontend_query_bench()
     return run_query_processes(
         case,
@@ -485,11 +491,11 @@ def run_frontend_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any
             str(iterations),
             str(case.raw.get("inner_repetitions", 100)),
         ],
-        run_subprocess,
+        recording_query_runner(run_root, case.id, run_subprocess),
     )
 
 
-def run_lsp_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
+def run_lsp_query_case(case: BenchmarkCase, measured: int, run_root: Path) -> dict[str, Any]:
     return run_query_processes(
         case,
         measured,
@@ -503,7 +509,7 @@ def run_lsp_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
             str(iterations),
             str(case.raw.get("inner_repetitions", 1)),
         ],
-        run_subprocess,
+        recording_query_runner(run_root, case.id, run_subprocess),
     )
 
 
@@ -616,6 +622,7 @@ def run_subprocess(command: list[str], timeout_ms: int) -> dict[str, Any]:
             "exit_code": None,
             "timed_out": True,
             "stdout": completed.stdout,
+            "stderr": completed.stderr,
             "stderr_tail": tail(completed.stderr),
         }
     rss_after = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
@@ -633,6 +640,7 @@ def run_subprocess(command: list[str], timeout_ms: int) -> dict[str, Any]:
         "exit_code": completed.returncode,
         "timed_out": False,
         "stdout": completed.stdout,
+        "stderr": completed.stderr,
         "stderr_tail": tail(completed.stderr),
     }
 
@@ -700,6 +708,8 @@ def invalidate_output(path: Path) -> None:
 
 def run_self_test() -> None:
     run_benchmark_process_self_test(run_subprocess)
+    run_benchmark_case_self_test(sys.modules[__name__])
+    run_sample_evidence_self_test()
     run_benchmark_baseline_self_test()
     run_process_metrics_self_test()
     run_query_processes_self_test()

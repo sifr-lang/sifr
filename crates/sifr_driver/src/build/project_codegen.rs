@@ -15,6 +15,7 @@ use std::collections::{BTreeMap, HashSet};
 pub(super) struct GeneratedBinaryProject {
     pub(super) main_rs: String,
     pub(super) support_modules: BTreeMap<String, String>,
+    pub(super) bridge_modules: BTreeMap<String, String>,
     pub(super) used_stdlib_modules: HashSet<String>,
     pub(super) required_features: HashSet<StdlibFeature>,
     pub(super) interop: sifr_codegen::InteropBuildPlan,
@@ -74,31 +75,67 @@ pub(super) fn codegen_single_file_frontend(
 pub(super) fn format_generated_binary_project(
     mut generated: GeneratedBinaryProject,
 ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
-    generated.main_rs =
-        super::rust_formatter::format_generated_rust(&generated.main_rs, "project main.rs")?;
-    for (module_name, source) in &mut generated.support_modules {
+    generated.bridge_modules = super::rust_interop_bridge_sources::generated_bridge_sources(
+        &generated.interop.rust.bridge_contracts.generated_types,
+    )
+    .map_err(|message| {
+        vec![crate::diagnostics::diagnostic_with_code(
+            message,
+            sifr_diagnostics::DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+        )]
+    })?;
+    super::rust_formatter::canonicalize_project_fields(
+        &mut generated.main_rs,
+        generated
+            .support_modules
+            .iter_mut()
+            .chain(generated.bridge_modules.iter_mut()),
+    )?;
+    generated.main_rs = super::rust_formatter::format_canonical_generated_rust(
+        &generated.main_rs,
+        "project main.rs",
+    )?;
+    for (module_name, source) in generated
+        .support_modules
+        .iter_mut()
+        .chain(generated.bridge_modules.iter_mut())
+    {
         let label = format!("project module {module_name}");
-        *source = super::rust_formatter::format_generated_rust(source, &label)?;
+        *source = super::rust_formatter::format_canonical_generated_rust(source, &label)?;
     }
     loop {
         let before = super::rust_formatter::discover_project_const_functions(
-            std::iter::once(generated.main_rs.as_str())
-                .chain(generated.support_modules.values().map(String::as_str)),
+            std::iter::once(generated.main_rs.as_str()).chain(
+                generated
+                    .support_modules
+                    .values()
+                    .chain(generated.bridge_modules.values())
+                    .map(String::as_str),
+            ),
         )?;
         generated.main_rs = super::rust_formatter::format_generated_rust_with_project_consts(
             &generated.main_rs,
             "project main.rs",
             &before,
         )?;
-        for (module_name, source) in &mut generated.support_modules {
+        for (module_name, source) in generated
+            .support_modules
+            .iter_mut()
+            .chain(generated.bridge_modules.iter_mut())
+        {
             let label = format!("project module {module_name}");
             *source = super::rust_formatter::format_generated_rust_with_project_consts(
                 source, &label, &before,
             )?;
         }
         let after = super::rust_formatter::discover_project_const_functions(
-            std::iter::once(generated.main_rs.as_str())
-                .chain(generated.support_modules.values().map(String::as_str)),
+            std::iter::once(generated.main_rs.as_str()).chain(
+                generated
+                    .support_modules
+                    .values()
+                    .chain(generated.bridge_modules.values())
+                    .map(String::as_str),
+            ),
         )?;
         if after == before {
             return Ok(generated);
@@ -138,6 +175,7 @@ pub(super) fn generated_single_file_binary_project(
         required_features: codegen_result.required_features,
         interop: codegen_result.interop,
         cache_key_fragment,
+        bridge_modules: BTreeMap::new(),
         python_runtime: None,
     }
 }
@@ -231,6 +269,7 @@ pub(super) fn generated_project_binary_project(
         required_features: codegen_result.required_features,
         interop: codegen_result.interop,
         cache_key_fragment,
+        bridge_modules: BTreeMap::new(),
         python_runtime: None,
     })
 }
@@ -317,6 +356,7 @@ mod tests {
             required_features: HashSet::new(),
             interop: sifr_codegen::InteropBuildPlan::default(),
             cache_key_fragment: None,
+            bridge_modules: BTreeMap::new(),
             python_runtime: None,
         }
     }

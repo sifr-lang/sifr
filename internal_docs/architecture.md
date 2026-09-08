@@ -28,7 +28,7 @@
   The query substrate adds stable reusable-template identities, top-level `RowOf`, typed fragments, static hygienic aliases, explicit cardinality adapters, and audited unsafe syntax. The frontend lowers accepted provider analysis to closed SQL HIR with normal Sifr parameter and structural-row types. The driver supplies one production profile-module registry. Generated schema names use one injective and reversible codec. [`sql_query_fragments.md`](./sql_query_fragments.md) records these contracts.
   The PostgreSQL compiler embeds exact `libpg_query` sources for PostgreSQL 13 through 18. Its owned adapter, catalog, analyzer, diagnostics, and server matrix are defined in [`sql_postgresql_compiler.md`](./sql_postgresql_compiler.md).
   The PostgreSQL runtime uses a verified and bounded raw-driver bridge. It owns typed session reset, explicit fetch contracts, consuming transactions, streams, cancellation cleanup, and live PostgreSQL 13 through 18 qualification. [`sql_postgresql_runtime.md`](./sql_postgresql_runtime.md) records the implemented boundary.
-  Incremental SQL analysis uses frontend-owned semantic keys and bounded values, plus an analysis-owned dependency index. The language server uses lossless virtual SQL documents, exact bidirectional maps, schema-aware editor facts, structured fixes, cancellation checkpoints, and named latency budgets. [`sql_incremental_editor.md`](./sql_incremental_editor.md) records this boundary. Provider-neutral schema lifecycle rules and the PostgreSQL live catalog adapter are host-only crates. They write one deterministic, atomic artifact generation and never enter the standard library or application graph. [`sql_schema_tools.md`](./sql_schema_tools.md) records this boundary.
+  Incremental SQL analysis uses frontend-owned semantic keys and bounded values, plus an analysis-owned dependency index. The language server uses lossless virtual SQL documents, exact bidirectional maps, schema-aware editor facts, structured fixes, cancellation checkpoints, and named latency budgets. [`sql_incremental_editor.md`](./sql_incremental_editor.md) records this boundary. The editor retains a component host only while prepared SQL profiles exist; enabling profiles initializes the host before publishing them, configured reloads retain it, and disabling profiles releases it. Profile-load diagnostics and cancellation remain available without a component host. Provider-neutral schema lifecycle rules and the PostgreSQL live catalog adapter are host-only crates. They write one deterministic, atomic artifact generation and never enter the standard library or application graph. [`sql_schema_tools.md`](./sql_schema_tools.md) records this boundary.
   The migration compiler checks every baseline path and creates one nominal state
   for each step. The runtime records exact recovery evidence and never creates a
   rollback plan. [`sql_migrations.md`](./sql_migrations.md) records this boundary.
@@ -399,6 +399,17 @@ New crates added as compiler and runtime needs grow:
 
 ## Formatter Architecture
 
+Generated Rust field cleanup runs before identifier and layout cleanup. One
+registry resolves module-qualified nominal declarations, imports and re-exports,
+and typed field receivers across the complete generated project. Field spelling
+and collisions belong to that nominal owner; shorthand pattern/value bindings
+retain their separate local identities. Binary bridge sources are generated and
+registered alongside main and support modules before this pass; their finalized
+sources also participate in the artifact cache identity. Binary and test-project
+materialization use the same registry and do not repeat field canonicalization
+while formatting individual files. External fields are not renamed, and an unresolved
+generated-field receiver is a code-generation diagnostic.
+
 The production Sifr formatter is Ruff-backed and in-process. `.sifr` source
 flows through `sifr_syntax` into the Sifr Ruff fork parser, AST, comments,
 trivia, and formatter rules, then through the Sifr-owned `sifr_format` wrapper.
@@ -442,6 +453,16 @@ large-file check and a representative project check.
   only inside the generated crate. Canonical item fingerprints reject conflicting
   support bodies instead of silently selecting one, and Rust interop bridge types
   use the same exact-deduplication/fail-closed ownership rule.
+  Compiler-owned `tokio::task_local!` statics share one declaration parser for
+  visibility, symbol discovery, and dependency pruning. Each declaration is a
+  separate demand owner; project relocation grants crate visibility while
+  preserving its name, type, attributes, and Tokio cancellation behavior.
+- Stdlib bootstrap owns one short-lived syntax-validation session for its source
+  inventory. Successful complete-file parsing can establish exact support text
+  as complete Rust items. Later inline assemblies reuse only that syntax identity
+  at proven item/token boundaries, while the full assembly is tokenized and all
+  remaining file syntax is parsed. Failures are never cached, source bytes and
+  module order are unchanged, and the session is dropped with bootstrap.
 - Generated-code simplification is structural at both boundaries. Typed
   `RustItem`/`RustStmt`/`RustExpr` optimization runs before rendering. After
   project metadata, inline stdlib, and bridge fragments have been assembled,
@@ -479,6 +500,30 @@ large-file check and a representative project check.
   analysis, Rust project generation, Cargo project materialization, and release
   native Cargo build.
 - Dependency metadata for both shapes comes from codegen outputs (`used_stdlib_modules` and `required_crates`), never from emitted Rust text scans.
+- Stdlib bootstrap retains the complete checked HIR and interop inventory.
+  Completed bootstrap HIR moves into shared immutable storage after module
+  emission. `StdlibEmissionCode` exposes only emission metadata; bootstrap
+  and deferred module results cannot construct an application interop plan.
+  Final single-file, project and test-project assembly select that plan once
+  over all application modules. Demand uses the IR-owned immutable visitor
+  for expressions, statement types, defaults and nested functions, then projects
+  selected declarations through the existing contract builder. Definitions-only
+  editor lookups project from the same success/error cache without copying the
+  compiled code bundle; the global checked inventory remains retained.
+  Test-project assembly retains its selected metadata, but the existing test
+  runner Cargo consumer still uses an empty interop plan; executing those
+  contracts remains a separate integration obligation.
+  Code generation selects application interop demand by canonical module and
+  declaration identity, following reexports, private calls, signatures and
+  nominal/structural types. A required class owns its complete methods,
+  operators and cleanup contracts. This typed closure is selected before
+  attachment and resolution; emitted Rust text and feature sets do not select
+  interop contracts. Native project and single-file consumers attach that same
+  selected plan with the separately validated sysroot trust context. Emit keeps
+  its trusted-sysroot probe deferral. The single-file resolved-plan cache binds
+  selected contracts and sysroot identity; package-owned contexts bypass that
+  stdlib-only cache. Whole-sysroot certification remains a toolchain
+  qualification responsibility.
 - Workspace design details and deferred package-management semantics are tracked in [`sifr_workspace_design.md`](./sifr_workspace_design.md).
 
 This keeps CLI mode resolution as the boundary that selects the rooted entrypoint shape while preserving one internal build architecture.
@@ -487,6 +532,12 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
 
 - `diagnostics.rs`: compile/public result types, panic boundaries, diagnostic serialization, and stderr rendering helpers
 - `stdlib/`: embedded stdlib sources, intrinsic mapping, cache lifecycle, and bootstrap compilation
+- Stdlib bootstrap publishes one immutable `Arc<StdlibCompiled>` through its
+  success/error cache. CLI frontend/build plans and test assembly retain that
+  owner; mutable lowering clones only external definitions. Bootstrap emission
+  borrows accumulated metadata and shares generic templates with emitters.
+  Pending private contracts share canonical HIR, borrow loaded sources, and
+  build the complete contract plan in source order before cache publication.
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
 - `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds
@@ -827,6 +878,20 @@ except IOError as e:
 - `except IOError` catches all variants (no guard)
 
 **User-defined error classes:** User-defined error classes inherit `message: str` from `Error`. The constructor accepts a message string, and `print(e)` formats it via `Display`. Users can add additional fields as needed.
+
+The inherited message is required constructor storage. An auto-generated
+constructor takes `message: str` before additional fields when the class does
+not declare its own message. Explicit string declarations retain their field
+order, including the five-field PythonError contract. A message field cannot
+have an incompatible type or a field default. Custom constructors must
+initialize the string (directly, from a matching required parameter, or through
+`super().__init__`); construction cannot finish with missing storage. A
+custom constructor requires a caller-supplied string parameter; a zero-argument
+constructor or a defaulted-only message input cannot satisfy this contract. A child
+without new fields or an explicit constructor forwards the parent's constructor
+signature and initialization. An inherited message is stored only in its data
+parent. Consuming root conversions move that parent or the owned message;
+they never derive a message from formatting or substitute missing text.
 
 ```python
 # Simple user-defined error — inherits message from Error
@@ -1765,12 +1830,14 @@ Generation reservation, exact resume, site reconciliation, public
 install/update/recovery smoke, Marketplace verification, and release/incident
 sign-off remain fail-closed. The one-time schema-epoch bootstrap is separately
 bound to the exact opaque pre-epoch asset identity and protected approval. The
-user-directed single-maintainer exception for that bootstrap and first GA is
-itself a canonical, expiring governance artifact. It permits only the named
-owner and those three operations, requires a real `stable-release` approval,
-is pinned by digest, prefers a distinct approval when one is available, and binds
-the selected approval policy plus initiator into retained evidence; normal and
-incident operations require distinct approval. The
+permanent live `solo-maintainer` policy requires explicit GitHub-recorded
+`stable-release` approval by `yaseralnajjar` for each exact run/attempt and
+prepare-summary evidence, including normal, rollback, incident, and recovery
+operations. Self-review is allowed and admin bypass is disabled. Governance
+executes from the workflow revision and checks the designated reviewer and
+current run before publication. Old waiver/report/signoff bytes remain immutable
+historical evidence; historical inspection evaluates the original event time
+and cannot authorize a new run. The
 post-index bootstrap recovery path revalidates the failed mutation and site
 attempts, both protected approvals, the already-live generation-1 bytes, and
 the reproducible site inputs before retrying only site publication and public

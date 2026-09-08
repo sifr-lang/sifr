@@ -66,7 +66,7 @@ def main():
         &attached_contract(),
     );
     let stdlib = compile_stdlib().expect("stdlib must compile");
-    let compiled = collect_project_hir_modules(&modules, stdlib.defs)
+    let compiled = collect_project_hir_modules(&modules, stdlib.defs.clone())
         .expect("attached API project must lower");
     let mut module_names = compiled.hir_modules.keys().cloned().collect::<Vec<_>>();
     module_names.sort();

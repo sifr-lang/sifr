@@ -1,6 +1,10 @@
 mod artifacts;
 mod execution;
+#[cfg(test)]
+mod interop_tests;
 mod orchestrator;
+
+pub(crate) use orchestrator::GeneratedTestRunnerProject;
 
 pub use orchestrator::run_tests;
 

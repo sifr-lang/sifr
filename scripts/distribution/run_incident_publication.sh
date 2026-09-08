@@ -296,15 +296,18 @@ fi
 fetch_governance "${work}/governance-initial"
 revalidate "${work}/governance-initial"
 
-gh api "repos/${repository}/actions/runs/${run_id}/approvals" \
-  >"${work}/approvals.json"
-approvers="$(
+approval="$(
   scripts/distribution/release_governance.py resolve-publication-approvers \
-    --approvals "${work}/approvals.json" \
     --initiator "${initiator}" \
-    --environment stable-release
+    --environment stable-release \
+    --repository "${repository}" --operation "${operation}" \
+    --run-id "${run_id}" --run-attempt "${run_attempt}" \
+    --evidence "${prepare_summary}" \
+    --expected-evidence-sha256 "${expected_summary_sha256}" --include-policy
 )"
-approver="$(jq -er '.[0]' <<<"${approvers}")"
+approver="$(jq -er '.approvers[0]' <<<"${approval}")"
+approval_mode="$(jq -er '.approval_policy.mode' <<<"${approval}")"
+approval_waiver_sha256="$(jq -er '.approval_policy.waiver_sha256' <<<"${approval}")"
 
 GH_TOKEN="${site_token}" \
   scripts/distribution/verify_site_workflow_identity.sh \
@@ -513,7 +516,9 @@ if [[ "${operation}" == "incident-roll-forward" ]]; then
     --release-assets "${work}/stable-staged/release-assets" \
     --site-facts "${work}/incident-staged/stable-site-release-facts.json" \
     --site-run "${work}/site-run.json" --smoke "${work}/stable-smoke" \
-    --run-id "${run_id}" --approver "${approver}" --out "${release_signoff}"
+    --run-id "${run_id}" --initiator "${initiator}" --approver "${approver}" \
+    --approval-mode "${approval_mode}" \
+    --approval-waiver-sha256 "${approval_waiver_sha256}" --out "${release_signoff}"
   release_signoff_arguments=(--release-signoff "${release_signoff}")
 fi
 mkdir "${work}/incident-smoke"

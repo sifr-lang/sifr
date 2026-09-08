@@ -16,7 +16,7 @@ impl RustEmitter {
     pub(crate) fn emit_imported_stdlib_structural_impls(
         &mut self,
         module: &HirModule,
-        stdlib_code: &crate::StdlibCode,
+        stdlib_code: &crate::StdlibEmissionCode,
     ) {
         if !self.structural_interop_enabled {
             return;
@@ -26,6 +26,9 @@ impl RustEmitter {
             let Some(templates) = stdlib_code.module_class_templates.get(&import.module) else {
                 continue;
             };
+            if !import.names.iter().any(|name| templates.contains_key(name)) {
+                continue;
+            }
             let support_module = HirModule {
                 functions: Vec::new(),
                 classes: templates.values().cloned().collect(),

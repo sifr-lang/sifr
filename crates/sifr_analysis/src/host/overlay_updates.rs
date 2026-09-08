@@ -93,7 +93,11 @@ impl AnalysisHost {
         let profiles =
             sifr_driver::load_sql_editor_profiles(root.root.as_path(), root.entrypoint.as_path())
                 .unwrap_or_else(sifr_driver::PreparedSqlProfiles::from_initialization_failure);
-        self.sql_editor_runtime.replace_profiles(profiles);
+        self.sql_editor_runtime
+            .replace_profiles(profiles)
+            .map_err(|error| {
+                vec![crate::sql_editor_runtime::sql_editor_initialization_diagnostic(&error)]
+            })?;
         Ok(())
     }
 

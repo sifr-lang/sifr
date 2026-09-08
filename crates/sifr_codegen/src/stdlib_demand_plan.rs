@@ -1,4 +1,3 @@
-use crate::StdlibCode;
 use crate::stdlib_filter::{
     filter_canonical_stdlib_ir_to_needed, rust_source_defined_item_names,
     rust_source_identifier_names,
@@ -7,7 +6,7 @@ use sifr_type_system::stdlib_class_rust_name;
 use std::collections::{HashMap, HashSet};
 
 pub(crate) fn plan_demanded_stdlib_sources(
-    stdlib_code: &StdlibCode,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
     module_order: &[String],
     directly_used_modules: &HashSet<String>,
     imported_names: &HashMap<String, HashSet<String>>,
@@ -171,7 +170,7 @@ mod tests {
 
     #[test]
     fn public_import_roots_seed_matching_transitive_private_definitions() {
-        let mut stdlib = StdlibCode::default();
+        let mut stdlib = crate::StdlibCode::default();
         stdlib.transitive_deps.insert(
             "sifr.io".to_string(),
             HashSet::from(["_sifr.fs".to_string()]),
@@ -196,7 +195,7 @@ mod tests {
         );
 
         let selected = plan_demanded_stdlib_sources(
-            &stdlib,
+            &stdlib.emission_view(),
             &["_sifr.fs".to_string(), "sifr.io".to_string()],
             &HashSet::from(["sifr.io".to_string()]),
             &HashMap::from([(

@@ -7539,6 +7539,7 @@ name = "sifr"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "ignore",
  "ruff_python_ast",
  "ruff_text_size",
  "serde",
@@ -7596,6 +7597,7 @@ dependencies = [
  "sifr_type_system",
  "static_assertions",
  "syn 3.0.4",
+ "tempfile",
  "unicode-ident",
 ]
 
@@ -7723,6 +7725,7 @@ name = "sifr_lowering"
 version = "0.0.0"
 dependencies = [
  "bigdecimal",
+ "insta",
  "num-bigint 0.5.1",
  "ruff_python_ast",
  "ruff_python_parser",

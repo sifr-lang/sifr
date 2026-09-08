@@ -51,7 +51,9 @@ impl RustEmitter {
         }
     }
 
-    pub(crate) fn clone_owned_append_arg_expr_for_ir(
+    /// Materialize a source value at an owned Rust boundary. Preserve reusable
+    /// places unless the body analysis proves this exact expression is the last use.
+    pub(crate) fn materialize_reusable_value_for_ir(
         &self,
         expr: &HirExpr,
         lowered: crate::RustExpr,

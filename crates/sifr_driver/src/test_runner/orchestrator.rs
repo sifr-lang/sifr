@@ -1,5 +1,5 @@
 use super::execution::execute_test_runner_project;
-use crate::build::format_generated_rust;
+use crate::build::finalize_test_runner_project;
 use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary, write_stderr_line};
 use crate::project::{
     DiscoveryDiagnosticStyle, ModuleResolver, ParsedProjectModule,
@@ -18,6 +18,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 pub(crate) struct GeneratedTestRunnerProject {
+    pub(crate) interop: sifr_codegen::InteropBuildPlan,
     pub(crate) cache_scope: PathBuf,
     pub(crate) support_module_names: Vec<String>,
     pub(crate) support_rust_files: HashMap<String, String>,
@@ -71,7 +72,7 @@ pub(crate) fn build_test_runner_project(
 
     let stdlib_compiled = compile_stdlib()?;
     let project_lowering =
-        collect_project_hir_source_modules(&support_modules, stdlib_compiled.defs)?;
+        collect_project_hir_source_modules(&support_modules, stdlib_compiled.defs.clone())?;
     let project_externals = project_lowering.external_defs.clone();
     let mut support_module_names: Vec<String> =
         project_lowering.hir_modules.keys().cloned().collect();
@@ -127,7 +128,7 @@ pub(crate) fn build_test_runner_project(
         .iter()
         .map(|(name, module)| (name.as_str(), module))
         .collect::<Vec<_>>();
-    let mut generated = run_codegen_with_boundary(
+    let generated = run_codegen_with_boundary(
         "internal compiler panic during test-project code generation",
         || {
             generate_rust_test_project_with_metadata(
@@ -138,11 +139,6 @@ pub(crate) fn build_test_runner_project(
         },
     )
     .map_err(|error| vec![*error])?;
-
-    for (module_name, source) in &mut generated.support_rust_files {
-        let label = format!("test support module {module_name}");
-        *source = format_generated_rust(source, &label)?;
-    }
 
     let mut all_rust_code = generated.project_union_prelude;
     if !all_rust_code.is_empty() {
@@ -165,14 +161,16 @@ pub(crate) fn build_test_runner_project(
         all_rust_code.push_str(rust_source);
         all_rust_code.push('\n');
     }
-    all_rust_code = format_generated_rust(&all_rust_code, "test runner lib.rs body")?;
-
-    Ok(GeneratedTestRunnerProject {
-        cache_scope: test_dir.to_path_buf(),
-        support_module_names,
-        support_rust_files: generated.support_rust_files,
-        all_rust_code,
-        all_stdlib_modules: generated.used_stdlib_modules,
-        all_required_features: generated.required_features,
-    })
+    finalize_test_runner_project(
+        GeneratedTestRunnerProject {
+            interop: generated.interop,
+            cache_scope: test_dir.to_path_buf(),
+            support_module_names,
+            support_rust_files: generated.support_rust_files,
+            all_rust_code,
+            all_stdlib_modules: generated.used_stdlib_modules,
+            all_required_features: generated.required_features,
+        },
+        &stdlib_compiled.interop,
+    )
 }

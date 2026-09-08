@@ -40,7 +40,7 @@ fn project_identity_with_stdlib_prefix_gets_no_origin_bypass() {
 
     let generated = crate::generate_rust_with_stdlib_for_module_with_project_policy(
         &module,
-        &crate::StdlibCode::default(),
+        &crate::StdlibCode::default().emission_view(),
         Some("main"),
         Some("main"),
         true,

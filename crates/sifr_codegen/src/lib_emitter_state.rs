@@ -106,7 +106,7 @@ pub struct RustEmitter {
     /// Map of generic class name -> list of type parameter names (e.g., `Counter` -> `T`)
     pub(crate) generic_class_params: HashMap<String, Vec<String>>,
     /// Map of generic class name -> original HIR class template.
-    pub(crate) generic_class_templates: HashMap<String, sifr_ir::HirClass>,
+    pub(crate) generic_class_templates: HashMap<String, std::sync::Arc<sifr_ir::HirClass>>,
     /// Opaque Python class declarations available to direct wrapper lowering.
     pub(crate) python_opaque_classes: HashMap<String, sifr_ir::PythonInteropDeclaration>,
     /// Exact typed retained-callback failures stored on each opaque owner.
