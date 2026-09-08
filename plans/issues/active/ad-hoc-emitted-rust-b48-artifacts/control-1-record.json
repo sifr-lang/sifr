@@ -1,0 +1,80 @@
+{
+  "argv": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+    "record",
+    "--template",
+    "Time Profiler",
+    "--instrument",
+    "Allocations",
+    "--time-limit",
+    "60s",
+    "--no-prompt",
+    "--output",
+    "/private/tmp/sifr-b48.jvQSBN/evidence/control-1.trace",
+    "--env",
+    "TMPDIR=/private/tmp/sifr-b48.jvQSBN/tmp",
+    "--env",
+    "SIFR_SYSROOT=/private/tmp/sifr-b48.jvQSBN/sifr",
+    "--target-stdout",
+    "/private/tmp/sifr-b48.jvQSBN/evidence/control-1.stdout",
+    "--launch",
+    "--",
+    "/private/tmp/sifr-b48.jvQSBN/sifr/target/debug/sifr",
+    "--version"
+  ],
+  "pid": 97134,
+  "pgid": 97134,
+  "elapsed_seconds": 62.462064500083216,
+  "returncode": 1,
+  "error": "target60s deadline exceeded",
+  "tracked": [
+    {
+      "pid": 97134,
+      "ppid": 96995,
+      "pgid": 97134,
+      "start": "Tue Sep 8 20:18:29 2026",
+      "command": "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace"
+    },
+    {
+      "pid": 97167,
+      "ppid": 97134,
+      "pgid": 97167,
+      "start": "Tue Sep 8 20:18:31 2026",
+      "command": "/Applications/Xcode.app/Contents/SharedFrameworks/DVTInstrumentsFoundation.framework/Resources/DTServiceHub"
+    },
+    {
+      "pid": 97262,
+      "ppid": 97134,
+      "pgid": 97262,
+      "start": "Tue Sep 8 20:18:35 2026",
+      "command": "/private/tmp/sifr-b48.jvQSBN/sifr/target/debug/sifr"
+    }
+  ],
+  "signals": [
+    [
+      97134,
+      "SIGTERM"
+    ],
+    [
+      97167,
+      "SIGTERM"
+    ],
+    [
+      97262,
+      "SIGTERM"
+    ],
+    [
+      97262,
+      "SIGTERM"
+    ]
+  ],
+  "remaining": [],
+  "before": {
+    "owned_bytes": 899391488,
+    "free_bytes": 58540224512
+  },
+  "after": {
+    "owned_bytes": 899452928,
+    "free_bytes": 58260217856
+  }
+}

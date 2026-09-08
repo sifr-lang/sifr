@@ -1,0 +1,207 @@
+{
+  "item": "12K-B48",
+  "root": "/private/tmp/sifr-b48.jvQSBN",
+  "source": "df0056ad1b9d7fcbaacda3a3f0809da66279ea84",
+  "start_epoch": 1788891370.0,
+  "setup_elapsed": 110.18619394302368,
+  "capacity": {
+    "owned_bytes": 899379200,
+    "free_bytes": 56389128192
+  },
+  "binary_sha256": "1d34f40dde09932a852be1420a72493de548de9c14def52b792c45a528248424",
+  "input_sha256": "948ecd80ced4da3aab8f31f5f9712b2cd36a4c0186469d05c85dce335aefc448",
+  "commands": [
+    {
+      "label": "control-1",
+      "record": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "record",
+        "--template",
+        "Time Profiler",
+        "--instrument",
+        "Allocations",
+        "--time-limit",
+        "60s",
+        "--no-prompt",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-1.trace",
+        "--env",
+        "TMPDIR=/private/tmp/sifr-b48.jvQSBN/tmp",
+        "--env",
+        "SIFR_SYSROOT=/private/tmp/sifr-b48.jvQSBN/sifr",
+        "--target-stdout",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-1.stdout",
+        "--launch",
+        "--",
+        "/private/tmp/sifr-b48.jvQSBN/sifr/target/debug/sifr",
+        "--version"
+      ],
+      "toc": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "export",
+        "--input",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-1.trace",
+        "--toc",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-1.toc.xml"
+      ],
+      "data": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "export",
+        "--input",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-1.trace",
+        "--xpath",
+        "/trace-toc/run[@number=\"1\"]/data/table",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-1.tables.xml"
+      ]
+    },
+    {
+      "label": "check-1",
+      "record": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "record",
+        "--template",
+        "Time Profiler",
+        "--instrument",
+        "Allocations",
+        "--time-limit",
+        "60s",
+        "--no-prompt",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-1.trace",
+        "--env",
+        "TMPDIR=/private/tmp/sifr-b48.jvQSBN/tmp",
+        "--env",
+        "SIFR_SYSROOT=/private/tmp/sifr-b48.jvQSBN/sifr",
+        "--target-stdout",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-1.stdout",
+        "--launch",
+        "--",
+        "/private/tmp/sifr-b48.jvQSBN/sifr/target/debug/sifr",
+        "check",
+        "/private/tmp/sifr-b48.jvQSBN/sifr/crates/sifr/tests/e2e/pass/arithmetic.sifr"
+      ],
+      "toc": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "export",
+        "--input",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-1.trace",
+        "--toc",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-1.toc.xml"
+      ],
+      "data": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "export",
+        "--input",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-1.trace",
+        "--xpath",
+        "/trace-toc/run[@number=\"1\"]/data/table",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-1.tables.xml"
+      ]
+    },
+    {
+      "label": "check-2",
+      "record": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "record",
+        "--template",
+        "Time Profiler",
+        "--instrument",
+        "Allocations",
+        "--time-limit",
+        "60s",
+        "--no-prompt",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-2.trace",
+        "--env",
+        "TMPDIR=/private/tmp/sifr-b48.jvQSBN/tmp",
+        "--env",
+        "SIFR_SYSROOT=/private/tmp/sifr-b48.jvQSBN/sifr",
+        "--target-stdout",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-2.stdout",
+        "--launch",
+        "--",
+        "/private/tmp/sifr-b48.jvQSBN/sifr/target/debug/sifr",
+        "check",
+        "/private/tmp/sifr-b48.jvQSBN/sifr/crates/sifr/tests/e2e/pass/arithmetic.sifr"
+      ],
+      "toc": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "export",
+        "--input",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-2.trace",
+        "--toc",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-2.toc.xml"
+      ],
+      "data": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "export",
+        "--input",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-2.trace",
+        "--xpath",
+        "/trace-toc/run[@number=\"1\"]/data/table",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/check-2.tables.xml"
+      ]
+    },
+    {
+      "label": "control-2",
+      "record": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "record",
+        "--template",
+        "Time Profiler",
+        "--instrument",
+        "Allocations",
+        "--time-limit",
+        "60s",
+        "--no-prompt",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-2.trace",
+        "--env",
+        "TMPDIR=/private/tmp/sifr-b48.jvQSBN/tmp",
+        "--env",
+        "SIFR_SYSROOT=/private/tmp/sifr-b48.jvQSBN/sifr",
+        "--target-stdout",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-2.stdout",
+        "--launch",
+        "--",
+        "/private/tmp/sifr-b48.jvQSBN/sifr/target/debug/sifr",
+        "--version"
+      ],
+      "toc": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "export",
+        "--input",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-2.trace",
+        "--toc",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-2.toc.xml"
+      ],
+      "data": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+        "export",
+        "--input",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-2.trace",
+        "--xpath",
+        "/trace-toc/run[@number=\"1\"]/data/table",
+        "--output",
+        "/private/tmp/sifr-b48.jvQSBN/evidence/control-2.tables.xml"
+      ]
+    }
+  ],
+  "limits": {
+    "setup": 120,
+    "target": 60,
+    "recorder": 90,
+    "cleanup": 30,
+    "exports_total": 120,
+    "overall": 720,
+    "storage": 2147483648,
+    "free": 4294967296
+  }
+}
