@@ -6,6 +6,30 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
+### Item 70 — bounded recovery assessment / authorized disposition
+
+The current historical evidence disposition is INCOMPLETE/UNRECOVERED.
+The user-authorized direction is a prospective replacement qualification
+under NEW source/run/evidence identity after separately owned delivery.
+No historical digest, waiver or qualification identity changes.
+The [Item 70 assessment](ad-hoc-latest-stable-item70-evidence-recovery.md)
+records exact retained/missing bytes, bounded local/GitHub recovery, the
+complete matrix, durable-custody proposal and completed bounded Git search.
+
+Inspection base: `7339aed05db02b3de95b7930e5e1291edecd07fe`; owned independent
+clone `/private/tmp/sifr-item70-resume.aEgoQY/codebase`, branch
+`codex/latest-stable-item70-recovery-resume`. The prior clone/evidence remains
+read-only. After B37's explicit release, metadata/reflog inspection passed in
+59 deduplicated stores: 225,250 unique objects. The authorized selected read
+covered 99,567 small blobs / 2,269,583,001 bytes; 6,058 exact-size/JSON candidates
+were hashed. Only the already-retained Rust result matched; no missing original
+was newly recovered. Scan capacity is released. Assessment scope is complete
+and pending exact-SHA review/merge; Items 59/64 remain unqualified and the phase
+is not closed. No Sifr gate is needed for these three Markdown files.
+Later work 70-F1 registers durable all-byte evidence retention only; it is not
+implemented or dispatched. Next action: named checks, one exact-SHA Opus review,
+merge and phase-record update, then stop. No repeated Git-pointer request.
+
 ### Item 69 — public HTTPX2 documentation closure
 
 State: complete on 2026-09-08 via implementation

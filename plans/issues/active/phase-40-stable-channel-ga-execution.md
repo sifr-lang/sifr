@@ -1,5 +1,17 @@
 # Phase 40 Stable Channel GA Execution
 
+## Current evidence disposition — 2026-09-08
+
+Historical qualification evidence is INCOMPLETE/UNRECOVERED under the
+user-authorized [Item 70 disposition and prospective plan](ad-hoc-latest-stable-item70-evidence-recovery.md).
+The original report, index, sign-offs and decisions below remain historical
+records. The authorized bounded local/GitHub/Git-object recovery search is
+complete; missing original bytes were not recovered within its stated coverage.
+A NEW source/run/evidence qualification
+is the adopted future direction, conditional on compiler/policy delivery and
+durable custody. No qualification, waiver renewal or publication is authorized
+by this status. Recovery ownership remains [issue #3775](https://github.com/sifr-lang/sifr/issues/3775).
+
 ## Status
 
 In progress. This is the execution checklist for
