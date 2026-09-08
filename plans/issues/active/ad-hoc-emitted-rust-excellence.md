@@ -2,6 +2,52 @@
 
 Status: active
 
+## Item12K-B26: joint-delivery assessment (2026-09-08)
+
+B26 is the sole emitted-phase assessment owner for the dependency coordinator's
+external Item68 request. Its authoritative registration came from the parent's
+uncommitted B26 top section, read-only. The assessment runs in independent
+`/private/tmp/sifr-b26.hQtWkE/codebase`, branch
+`codex/item12k-b26-joint-delivery-assessment`, based on actual main
+`3a7bf16a722912eedc63e1b6d3942b62b65784ce`. Parent/predecessor checkouts, targets,
+indexes, dirty ledgers and evidence remain read-only; none were copied wholesale.
+Before review, B26 normally merged newer main
+`91004bfb154b23980380863eaa1965ddc69099e4` and incorporated its Python-delivery
+coverage and HTTPX2 documentation changes in the assessment. That is the final
+review base; only the three scoped Markdown files differ from it.
+
+Deliverables: [complete assessment and sequential registrations](ad-hoc-joint-emitted-rust-delivery-assessment.md)
+and [exact source/path/blob inventory](ad-hoc-joint-emitted-rust-delivery-inputs.md).
+They retain B25's complete builtin contract, the actual list-repeat correction,
+H/I/M1 caller/storage/bridge boundaries, approved65 policy and full original
+integration obligations. The proposed combined candidate preserves newer main
+inputs; it cannot be assembled by copying the old stack or last H/I/M1 commits.
+There is no65-main-first prerequisite. B22/B23/B24 remain separate owners, with
+causal/performance qualification still necessary before the proposed B27 gate.
+
+B25 terminal authenticates as SHA256
+`53b1f40689c660c36e43a9ceb58024aa6ea908d9ed990d8e64635d3e82194fe3`:
+source `64847befe1722df5848a7ca99e913431f5797d0b`, record
+`7f3330c4599cd2e59c977e4cb771487b9d343b31`, no PR/Opus/gate/merge;
+focused2PASS, full codegen1409PASS/2unchanged list-repeat FAIL. Driver/Clippy/fmt
+were unreached.65's alternative terminal.md authenticates as
+`afa5c0dbdf8e6acc169bf0ebb4d16cba4d14d88d8c9f04b7620c62d63348db45`:
+approved source `4c7068b36904e216b02778f5664d2b8fd1159a6a`, draft3785,
+one initial SATISFIED, one FAILED gate/Python26PASS4FAIL; no merge. Its missing
+terminal.json/record commit and transient Rust are not reconstructed. Exact
+source/review/receipt identities and every predecessor counter are in the assessment.
+
+Named B26 validation only: exact-base/candidate `git diff --check`,
+`python3 scripts/check_hir_maintainability_guardrails.py`,
+`python3 scripts/check_file_size_guardrails.py`, and read-only commit/PR/blob/
+receipt/proposed-command checks. One initial exact-SHA Opus assessment review,
+at most one remediation; zero compiler tests/builds/Clippy/acquisitions/Sifr gates.
+External evidence root: `/private/tmp/sifr-b26.hQtWkE/evidence`.
+No B27 implementation, dispatch or new gate/review allowance is granted here.
+After this documentation merge and its record-only update, report the exact
+PR/base/candidate/merge/evidence to parent/coordinator and STOP. Broader3717,
+corpus48,12D/12E/12F/retained12/docs-only12A remain open future work.
+
 ## Current orchestration: 12K-B21 independent builtin assessment (2026-09-08)
 
 **12K-B21 MERGED / COMPLETE.** Documentation PR
