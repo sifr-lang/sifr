@@ -16,7 +16,7 @@ The root application owns the Python environment. Sifr verifies and consumes it;
 
 ```toml
 [trust]
-python = ["pandas", "pyarrow", "torch", "httpx"]
+python = ["pandas", "pyarrow", "torch", "httpx2"]
 python-native = ["numpy", "pyarrow", "torch"]
 ```
 
@@ -194,12 +194,12 @@ Every public `sifr.python` operation is `@blocking_io`. Direct Python calls in a
 ```python
 from sifr.python import PythonError
 
-@python.opaque(type=httpx.Response, cleanup=drop)
+@python.opaque(type=httpx2.Response, cleanup=drop)
 class Response:
     @python.attr(Self.status_code)
     def status_code(self) -> Result[int, PythonError]: ...
 
-@python(httpx.get)
+@python(httpx2.get)
 def get(url: str) -> Result[Response, PythonError]: ...
 
 async def fetch_status() -> Result[int, PythonError]:
@@ -220,7 +220,7 @@ Libraries with genuine coroutine APIs use typed async declarations. The generate
 ```python
 from sifr.python import PythonError
 
-@python.opaque(type=httpx.AsyncClient, cleanup=async_close)
+@python.opaque(type=httpx2.AsyncClient, cleanup=async_close)
 class AsyncClient:
     @python.coroutine(Self.aclose)
     async def aclose(own self) -> Result[None, PythonError]: ...
