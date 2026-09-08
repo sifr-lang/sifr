@@ -13,6 +13,9 @@ certified Arrow C Data Interface declarations are active. Declaration-first
 DLPack tensor and stream acquisition, validation, and one-shot transfer are
 active as well. Read-only Python plan inspection and deterministic doctor
 suggestions are active on the same package/driver path used by compilation.
+The [protocol architecture](./python_interop_protocol_architecture.md) defines
+the async, context, callback, and zero-copy rules, including the maintained
+HTTPX2 coroutine example.
 
 ## Ownership Boundary
 
@@ -215,6 +218,7 @@ The public examples in `docs/python-interop.mdx` are intentionally backed by che
 | biip / schwifty package calls | `library-examples` runs `simple_import/biip_schwifty_full_example.sifr`; Tier 1a package matrix entries and `simple_import` contract coverage remain inventory evidence. |
 | installed package-local biip bridge | `package_bridge_archive/package_bridge_evidence.json` records the archive/unpack/build/run proof; the package bridge showcase runs the compiled fixture after checkout and installed bridge-source removal. |
 | FastAPI app construction | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `fastapi_app_contract.json` remains the contract inventory. |
+| HTTPX2 async client | `async-declaration-examples` runs `async_declaration/httpx2_client.sifr` with an offline ASGI transport, typed bridge response, shared application loop, and consuming async close. The `coroutine-declaration` row in `declaration_capabilities.json` binds the current report, case, source, and marker. |
 | Pydantic / pydantic-core validation | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `pydantic_models_contract.json` remains the contract inventory. |
 | pandas / pyarrow / polars Arrow bridge | `arrow-examples` creates and read-only rechecks exact environment-bound certifications, then compiles and runs `pyarrow_capsule/arrow_declaration_compiled.sifr` against all three producers with zero residual resources. The lower-level dataframe/library examples remain dynamic API evidence. |
 | PyTorch DLPack | `dlpack-examples` compiles and runs the declaration-first PyTorch transfer and checks stable data pointers, exact one-shot cleanup, and zero residual resources. `ml-examples` retains the lower-level raw PyTorch example. |

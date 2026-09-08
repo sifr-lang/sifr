@@ -123,6 +123,8 @@ groups = ["imports"]
 import-roots = ["requests_mock"]
 
 [[packages]]
+# Retained package identity for deterministic matrix inventory only. This row
+# does not certify installation or HTTPX2 support; see ../README.md.
 name = "pytest-httpx"
 tier = "tier2"
 groups = ["imports"]

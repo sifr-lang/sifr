@@ -36,7 +36,7 @@ hermetic, and the root application owns environment and trust decisions.
 Python coroutine targets use `@python.coroutine(path)` on `async def` declarations:
 
 ```sifr
-@python.opaque(type=httpx.AsyncClient, cleanup=async_close)
+@python.opaque(type=httpx2.AsyncClient, cleanup=async_close)
 class AsyncClient:
     @python.coroutine(Self.get)
     async def get(
@@ -54,6 +54,15 @@ class AsyncClient:
 item, buffer, Arrow, and DLPack declarations are synchronous `blocking_io`
 operations. Async context and callback declarations have their own explicit
 forms below.
+
+The maintained HTTPX2 example is
+[`httpx2_client.sifr`](../verification/areas/python_interop/fixtures/async_declaration/httpx2_client.sifr).
+Its [package-local bridge](../verification/areas/python_interop/fixtures/async_declaration/python_bridges/client.py)
+creates an `httpx2.AsyncClient` with `httpx2.ASGITransport`, adapts the response
+to a typed Sifr record, and exercises consuming async close on the owned loop.
+The `async-declaration-examples` suite owns this compiled offline ASGI evidence;
+the declaration above illustrates the protocol shape rather than a complete
+package.
 
 ### Event-Loop Ownership
 
