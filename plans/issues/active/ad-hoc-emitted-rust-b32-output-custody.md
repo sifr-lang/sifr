@@ -1,7 +1,9 @@
 # 12K-B32: canonical inferior-output custody
 
 Date: 2026-09-08. Sole owner: performance / issue3776. Exactly B31-F1.
-State: OFFLINE PASS231/231 / READY FOR SOLE FROZEN PROOF. No live execution yet.
+State: NEEDS-NEW-SCOPE / COVERAGE INCONCLUSIVE / NOT REVIEWED / NOT MERGED.
+The sole proof ended; only terminal bookkeeping follows. No live repair, retry,
+Opus review, PR, merge, broad gate or next-item code.
 
 ## Scope and ownership
 
@@ -180,3 +182,82 @@ Commit/export this registration then write immutable `prelaunch.json`, binding
 the exact commit, all helper/input/registration hashes and run identity. Parent
 and coordinator receive the freeze identities and start notice before the sole
 proof, with no additional acknowledgement required for this unchanged contract.
+
+## Sole-proof terminal result
+
+The exact registered command ran once, exit1 after8.142497042s. One live
+debugger/session/target,5 observed stops and4 explicit continues; no retry.
+Observer local elapsed4.806614667s. Mode3 stop6 retained the authenticated
+positive9.1 notifier pair and same thread128043321 with invalid frame PC and
+empty modules; the preserved B31 transition guard accepted it and cleared the
+old epoch. At stop7, mode0/current map was delivered at PC6558044876, but
+`lldb_coverage.py:98` rejected `('ambiguous current module', 'notifier')`.
+Parent assigned later **12K-B33 exactly B32-F1** and **12K-B34 exactly B32-F2**,
+without duplicate owners. This registration grants no next-item work here.
+
+**Later finding12K-B32-F1**, sole owner performance / issue3776: the inherited
+module resolver's handover identity model cannot adjudicate the two mapped
+`/usr/lib/dyld` rows in preserved stop7. Both have UUID
+`74E52480-C2BD-3C8D-812D-95FE2B74A096`, triplearm64e-apple-macosx26.6.0,
+header_file6443581440 and header_load6557810688. These equal scalar fields do
+not establish SBModule object identity or authorize choosing/deduplicating a
+row. Preserve full sections/raw; a later owner must establish installed module
+instance semantics from these receipts before any scoped repair/proof. Do not
+drop ambiguity guards or infer a current binding from a prior absolute address.
+No rearming completed, handover_count0 and required_hits[] in this run.
+
+**Later finding12K-B32-F2**, same sole owner3776: the outer custody watcher
+independently recorded `owned process identity changed`. Frozen `custody.json`
+contains the first-seen identities but not the conflicting current row that
+triggered that predicate; `stop.json` has the rejection string and final elapsed
+only. The changed field/PID and ordering relative to observer failure cannot be
+recovered conclusively from those records. No claim of PID reuse, exec rename,
+zombie transition or debugger failure is made. Later custody adjudication owns
+this evidence gap; no weakened authentication or unobserved fix is applied.
+
+Both installed fd1/fd2 actions returned true and were recorded for run
+`12K-B32-U1mf9E-output-1`, inferior7391. Both owned files remain0 bytes because
+the proof stopped before workload completion. The final file consumer was never
+called, and there is no output-completion receipt, exit0, two-file completion,
+live output-routing success, full coverage or performance acceptance claim.
+Offline231/231 remains valid for the frozen implementation, but does not turn
+this failed live run into a pass. The apparatus and raw outputs remain frozen.
+
+Observer Kill returned success. Final release: remaining[], groups_absent=true,
+watcher_alive=false, monitor_alive=false. Groups7308/7391 absent; independent
+`ps -p 6774,7308,7391,7392 -o pid=,ppid=,pgid=,etime=,command=` returned no rows
+for launcher/debugger/inferior/debugserver. Capacity released and parent and
+coordinator notified of the terminal outcome. No evidence was removed.
+
+Prelaunch registration commit `e71fbf1ab0ec12cdaa752fb9c9d3bc7c44aaa39a`, exported
+registration SHA256 `22ab0f158e88a0440ed1955fadff9b71495c9b314eadb4c16aaf0a325f3ffd68`;
+manifest SHA256 `17d9fb3da2b5728353306b6d949b79d06afc5c39a3dce42f8d1482dd5f8ff7b8`.
+Parent/coordinator received these identities and actual-start notice before
+the sole command, under the unchanged approved contract.
+
+| Raw artifact under E/coverage | SHA256 |
+| --- | --- |
+| outcome.json | e411bf32a305246792dd1d7966c4a5a833b9075f1350356c9defccab72a335d5 |
+| events.json | 503a922565c558967651362e8a9f5cc28742707ba5b2d6004ca9860d53254c61 |
+| observer-result.json | 7ea23135b7272134867c5fdca967bd7d355ee0a40c4d8f2a6b5e4bbd927cf8ed |
+| process-release.json | 4f041f1ee34d966b05a3a159841418bf07dbb0c54fceae06e332fa0b684a2735 |
+| debugger-result.json | a4f644ffd4022568ceea7809040a0d6183d98a2c0276b382676843e621d1ae5d |
+| output-route.json | 8f33e567ee1a5174d5ad04d0c6545c9c185ba729746b0c4eba336255a9dfc4e2 |
+| custody.json | 890321de29542a85a2790ded26f037b1f2284e66330bcd54bbc957a5d4d298aa |
+| stop.json | 7aafb6b29bc327ed92d8b25be057f7ad54fc0331ea98d2761126c23373e96792 |
+
+Counts: one offline command231/231; one live command/session/target; zero retries,
+initial/remediation/provider reviews, PRs, merges, create-pr/merge gates,
+compiler builds/tests, CV/counter/acceptance acquisitions and postfailure
+apparatus edits/probes. Success-only HIR/review/merge branch was not reached.
+Only terminal documentation diff and file-size guardrail are run; external
+terminal.json binds the final record SHA, check evidence, all artifact hashes,
+owner issue comment and independently verified process release.
+
+Next action: STOP after immutable terminal/record/issue3776 bookkeeping. Later
+F1/B33 and F2/B34 are registered for separate adjudication, with no next-item implementation
+or new proof authority. B24, B27 and the full emitted-Rust obligations remain.
+
+Terminal file-size guardrail PASS3762 files,900-line limit. No HIR or broad gate
+ran on the failure branch. The exact final committed documentation diff and
+external maintained-source line counts are bound to the terminal record SHA.

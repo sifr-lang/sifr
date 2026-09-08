@@ -13,8 +13,17 @@ pre-execution registration are in
 One named offline suite followed conditionally by one changed-apparatus proof;
 success-only exact-SHA review/documentation merge. No compiler or broad gate,
 counter/CV/acceptance acquisition or next-item code. B24, B27 and full-phase
-obligations remain open. Current state: sole offline suite PASS231/231,
-registration ready for freeze before the single authorized live proof.
+obligations remain open. Current state: NEEDS-NEW-SCOPE / NOT REVIEWED / NOT MERGED.
+Sole offline suite PASS231/231; sole live proof INCONCLUSIVE8.142497042s,
+5stops/4continues,0completed handovers/required hits. Both fd actions accepted,
+but inherited resolver rejected two mapped dyld rows at mode0 stop7; outer
+custody also reported an identity change without preserving the conflicting
+row. Later12K-B33 is exactly B32-F1; later12K-B34 is exactly B32-F2. Both belong
+to performance/issue3776, no duplicate owner or repair here.
+Zero processes, capacity released, zero retries/reviews/PRs/merges/gates.
+Registration SHA `e71fbf1ab0ec12cdaa752fb9c9d3bc7c44aaa39a`; raw outcome digest
+`e411bf32a305246792dd1d7966c4a5a833b9075f1350356c9defccab72a335d5`.
+Only immutable terminal bookkeeping remains, then STOP. No B31/B32 posthoc PASS.
 
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
