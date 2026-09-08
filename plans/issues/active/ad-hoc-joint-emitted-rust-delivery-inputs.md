@@ -15,6 +15,12 @@ compiler. Architecture prose must be semantically merged with current main
 and approved policy. B25 assertions merge into the retained builtin registry.
 B22/B23/B24 future corrections are not present or implicitly authorized here.
 
+Before B26 review, current main advanced to
+`91004bfb154b23980380863eaa1965ddc69099e4`. The assessment records its required
+Python-delivery coverage merge; external `main-update.json` gives all nine paths
+and new blobs. The original main column below stays the initial3a7bf16 snapshot.
+Do not overwrite the newer coverage self-test with the stack reference blob.
+
 ## Retained semantic and qualification inputs
 
 | Path | Owner / treatment | Exact retained blob |

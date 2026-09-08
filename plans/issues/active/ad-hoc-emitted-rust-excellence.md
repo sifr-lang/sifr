@@ -11,6 +11,10 @@ uncommitted B26 top section, read-only. The assessment runs in independent
 `codex/item12k-b26-joint-delivery-assessment`, based on actual main
 `3a7bf16a722912eedc63e1b6d3942b62b65784ce`. Parent/predecessor checkouts, targets,
 indexes, dirty ledgers and evidence remain read-only; none were copied wholesale.
+Before review, B26 normally merged newer main
+`91004bfb154b23980380863eaa1965ddc69099e4` and incorporated its Python-delivery
+coverage and HTTPX2 documentation changes in the assessment. That is the final
+review base; only the three scoped Markdown files differ from it.
 
 Deliverables: [complete assessment and sequential registrations](ad-hoc-joint-emitted-rust-delivery-assessment.md)
 and [exact source/path/blob inventory](ad-hoc-joint-emitted-rust-delivery-inputs.md).

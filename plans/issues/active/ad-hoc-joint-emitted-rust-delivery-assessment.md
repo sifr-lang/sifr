@@ -40,8 +40,12 @@ and none of their unqualified source is imported into this documentation PR.
 
 ## Authenticated inputs and limits
 
-Assessed actual main and B26 base is
-`3a7bf16a722912eedc63e1b6d3942b62b65784ce`. The independent owned clone is
+The initial source-assessment main snapshot is
+`3a7bf16a722912eedc63e1b6d3942b62b65784ce`. Before the first Opus request,
+main advanced to `91004bfb154b23980380863eaa1965ddc69099e4`; B26 normally
+merged that base and incorporated its relevant coverage changes below. The
+final B26 review base is91004bfb, with only the three scoped Markdown files
+in the candidate diff. The independent owned clone is
 `/private/tmp/sifr-b26.hQtWkE/codebase`, branch
 `codex/item12k-b26-joint-delivery-assessment`, with sibling `tmp` and `evidence`.
 The parent's two dirty Markdown files and all predecessor clones, indexes,
@@ -328,11 +332,25 @@ The exact lineage is4eef8a2bb4dbc24fb7c1d1213652be379047f4b1 →98480 →4763 �
    capture tests, `insta` for lowering snapshots), without unrelated upgrades.
    Preserve the union of profile memberships, commands, modes and blocking flags:
    MySQL/SQLite smoke+full in the stack must not lose main's full memberships or
-   duplicate IDs. All31 unique full-mode commands still execute. Keep27 coverage
-   negative cases, including missing and stale SQL target assertions. Main's
+   duplicate IDs. All31 unique full-mode commands still execute. Keep the stack's
+   27 coverage negative cases, including missing and stale SQL target assertions,
+   together with all newer main Python-delivery mutations described below. Main's
    resolved SQL classifications are preserved rather than replaying their old
    failing gate. The stateless Python metadata test's structural borrowed/raw.0
    propagation assertion and portable-project Clippy corrections also remain.
+
+Pre-review current-main update91004bfb adds item53's canonical
+`validate_python_delivery_coverage` in `verification/runner/sifr_verify/profiles.py`,
+its `profile_assignment_matrix.py` consumer and dynamically enumerated negative
+mutations in `coverage_matrix_readiness_self_test.py`. They require every
+non-live Python manifest suite in at least one delivery profile; an opt-in live
+profile cannot satisfy that requirement. The stack's extra stale-SQL-target
+negative must be merged into this updated test list, not replace it. Item58's
+HTTPX2 protocol documentation, Python README and tier2 package-identity comment
+also survive. The nine changed main paths and exact blobs are captured in
+B26 `main-update.json`. This update changes qualification inputs and was assessed
+before review; it does not change the retained compiler/formatter root analysis.
+The inventory's original main column remains explicitly the3a7bf16 snapshot.
 
 The full98480 gate passed production92,13 guards, Python30, diagnostics184,
 algorithmic representative12, developer tooling42 and generated quality9, among
