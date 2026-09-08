@@ -1,10 +1,86 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-09-08. Items 0–30, 36–39, 53–55 and 66–67 are complete. Item 39 closed
+Status: active on 2026-09-08. Items 0–30, 36–39, 53–55, 58 and 66–67 are complete. Item 39 closed
 the runner dependency/API invariants; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
+
+### Item 58 — HTTPX2 protocol documentation closure
+
+State: complete on 2026-09-08 via implementation
+[PR #3792](https://github.com/sifr-lang/sifr/pull/3792).
+Base: `f55756bbc98a995c195c5d4e2978d0bc28a1ee4a` (includes Item 53 record #3791).
+Exact reviewed candidate: `d592713207f12acc2b16ae4dedf0e73bc006ea1d`.
+Merge: `030e75de3261055bc79c30c4e99ddc9055e71bc5`.
+
+The internal protocol guide now uses `httpx2.AsyncClient` and links the actual
+compiled Sifr fixture and hermetic offline ASGI bridge. The architecture index
+names its shared-loop and consuming-close evidence. The Python-area README
+classifies retained `pytest-httpx`/`pytest_httpx` as deterministic tier-two
+inventory, without installation or HTTPX2 compatibility claims. The package
+row's comment leaves its parsed TOML data unchanged. The Python and coverage
+READMEs document fixture-relative sources, repository-relative suite/report
+paths, current profile reachability, taxonomy roots, and their owners.
+
+Only four Markdown files and comments in `packages/tier2.toml` changed.
+No compiler, runtime, dependency declaration, lockfile, fixture, workflow,
+checker behavior, generated report, upstream source, or historical performance
+record changed. Historical HTTPX descriptions remain provenance, including
+the archived [declaration-first record](../archive/ad-hoc-declaration-first-python-interop.md).
+The coordinator's current row superseded the obsolete blanket E2 prerequisite:
+Items 67 and 53 were merged and the actual named readiness suite passed.
+External Item 65/68 qualification and Item 64 custody failures remain owned
+there; this item did not retry their gates or repair their inputs.
+
+Named checks passed on the exact candidate:
+
+- `documentation:structure`: 1/1, zero failures, including its GA mutation harness.
+- `coverage_matrix:readiness`: 4/4, zero failures; strict 13 guarantees/34
+  surfaces; 19 assignment rows/30 non-live Python delivery suites; 57 negative
+  tests including 31 delivery mutations; taxonomy passed.
+- Local documentation checks: 28 links, three HTTPX2 topology paths, identical
+  parsed tier-two TOML before/after, and absence of `pytest-httpx` from the
+  maintained project/lock. Historical/performance paths remained unchanged.
+- `git diff --check` and first-party file-size guard: 3,761 files, 900-line limit.
+
+The one exact-SHA Opus review returned `SATISFIED` with no blocking findings.
+No remediation review ran. Full
+[review and validation evidence](https://github.com/sifr-lang/sifr/pull/3792#issuecomment-5577817809)
+is published outside the reviewed tree and keyed by the candidate. Raw response:
+`/private/tmp/sifr-item58-opus.0Oghdz/response.md`, SHA-256
+`0513ca875d4a3a68f37419b891f03745ca6d8d6d9300b5b6915d777d5c75a15f`.
+Logs are under `/private/tmp/sifr-item58.G2nowx/`:
+
+- `documentation-structure.log`: `3c541bd5ddc4908bf52dedb9444f56d4da3eb2604ce210295491d032851c0f93`.
+- `coverage-readiness.log`: `bd92b8d0ec746f5bcf5be30c3b31b74f6a644d47e869584bd3da1fe8381a5faa`.
+- `local-paths.log`: `c120c4b350cf601d6f467d81f10c4a478ae4b62eaeeb34912a02b7ba1bbd8e7c`.
+
+Result JSON digests are retained in the linked PR evidence. Pinned Ruff and
+nested VSCode sources were initialized only for named check inputs; no gitlink
+changed. Readiness used offline, locked `cargo metadata --no-deps`; no native
+compilation or execution ran. Under the explicit docs/metadata-only rule, no
+create-pr or merge-profile gate ran.
+
+Deferred public guidance is separately owned by Item 69,
+[issue #3793](https://github.com/sifr-lang/sifr/issues/3793), dependent on 58 and
+scheduled by the coordinator after 60. Exact untouched references are
+`docs/python-interop.mdx:19,197,202,223` and
+`docs/packages/dependencies.mdx:108`. Its bounded tests are documentation
+structure and shared diff/file-size/local links. This worker did not start it.
+Two nonblocking review suggestions belong to later Item 35's documentation
+audit: move the tier-two retention comment above its table header, and add a
+representative historical-record citation to the Python README. No mechanism
+defect was reported.
+
+Terminal blocker: none. Owned worktree:
+`/private/tmp/sifr-item58.G2nowx/codebase`; implementation branch:
+`codex/latest-stable-item58`; record branch: `codex/latest-stable-item58-record`.
+The original cb34/Kafka worktree and orchestrator ledger were preserved.
+All owned test/review processes ended. This documentation-only record reuses
+the implementation evidence; no additional Opus review or gate applies.
+Exact next action: stop after the record merges and return the item, PR, SHA,
+evidence, and blocker status. No later implementation was started.
 
 ### Item 53 — non-live Python delivery coverage closure
 
@@ -681,7 +757,7 @@ the named tests and never runs for docs/runner-only scopes.
 | 53 | none; readiness prerequisite cleared by 67 | **Complete, PR #3789.** `verification/runner/sifr_verify`, `verification/areas/coverage_matrix/checks`: require every non-live Python manifest suite in at least one delivery profile; reject a removed assignment; derive mutation counts and credit Item 55's Schwifty counts. Present coverage retained; no profile or custody rewrite. Historical blanket E2 block superseded by actual passing readiness. | `area coverage_matrix: readiness`; `area python_interop: self-test, minor-train-features` |
 | 54 | none | **Complete, PR #3769.** `verification/areas/python_interop/runner/crypto_abi_features.py`: compile, load and invoke actual CFFI-generated source; test error path and cleanup. Keep CFFI/Cryptography releases unchanged. | `area python_interop: crypto-abi-features, callbacks` |
 | 55 | none | **Complete, PR #3772.** Python feature runners: derive exact-version markers from audit, directly assert public Pandas module identity, inspect warning-filter scope and duplicated Arrow version assertion; distinguish Arrow 25 API additions from 25.0.1 fixes in maintained descriptions. No new package upgrade. | `area python_interop: minor-train-features, numeric-dataframe-features, dependency-versions` |
-| 58 | E2 delivery to main for named readiness check | **Blocked pending E2 merge; not independently blocked by E1.** Current protocol docs and taxonomy under `internal_docs/python_interop_architecture.md`, `verification/areas/python_interop`, and `verification/areas/coverage_matrix`: replace current HTTPX guidance with HTTPX2, classify tier-two pytest-httpx and historical mentions, align topology path ownership. Record real old performance environments unchanged. Docs/metadata only; code findings become later items. | `area documentation: structure`; `area coverage_matrix: readiness`; local link/path checks |
+| 58 | 53 and 67 qualified merges satisfied | **Complete.** [PR #3792](https://github.com/sifr-lang/sifr/pull/3792), candidate `d592713207f12acc2b16ae4dedf0e73bc006ea1d`; current internal HTTPX2 protocol guidance, retained tier-two/history classification, and taxonomy/topology ownership documented. Historical performance records unchanged. One Opus review satisfied; public references assigned separately to Item 69 / #3793. | `area documentation: structure` 1/1; `area coverage_matrix: readiness` 4/4; local paths/shared guards passed; no Sifr gates |
 | 59 | none | `verification/areas/distribution_release/governance/evidence_custody.py` and owned release-profile custody records: reconcile digests with actual immutable evidence; preserve historical waiver identity and prohibit invented/rebound receipts. Any missing external artifact is a blocker, not permission to fabricate it. | `area distribution_release: evidence-custody` |
 | 60 | none | Current trust/native-provider documentation and checks in Reqwest/Rusqlite tests and Rust interop catalog: audit native trust examples, AWS-LC autodetection, standalone Reqwest vendor anchor, and savepoint overview accuracy. Update documentation only where current architecture is misdescribed; mechanism changes require an explicitly scoped follow-up. | `manifest reqwest_dependency_version`; `manifest rusqlite_dependency_version`; `area documentation: structure` |
 
