@@ -2,6 +2,26 @@
 
 Status: active
 
+## Item12K-B31: notifier dispatch/protocol identity (2026-09-08)
+
+B31 implements exactly B30-F1 under performance issue3776, following the
+approved concrete B31 registration and authenticated closed B30 predecessor.
+Owned independent clone `/private/tmp/sifr-b31.4v8Yzw/sifr`, branch
+`codex/item12k-b31-notifier-identity`, base
+`491ba4ede1609ce476831015dc209a9064cd8ffc`. Parent/predecessor trees and evidence
+remain read-only. Complete scope, registered commands, API/source support and
+external apparatus contract are in the [B31 scoped record](ad-hoc-emitted-rust-b31-notifier-identity.md).
+
+Only the external observer's notifier dispatch/protocol identity and required
+offline cases/path plumbing change. No production/compiler/fixture/lock/workflow
+change or Sifr gate. All apparatus precedes the single named offline self-test;
+only PASS permits frozen prelaunch registration and one bounded changed-
+apparatus proof. First live failure is terminal with later ownership, no repair,
+retry, review or merge. Success permits only named record checks, one exact-SHA
+Opus plus at most one remediation, docs-only merge/phase record, then stop.
+B24 causal/full representative/budget acceptance, B27 joint delivery including
+SQL builtin fix plus approved65, and the complete emitted-Rust phase remain open.
+
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
 **B23 MERGED / COMPLETE; blocker none.**
