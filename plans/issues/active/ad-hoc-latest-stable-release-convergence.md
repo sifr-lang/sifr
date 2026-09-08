@@ -6,6 +6,33 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
+### Item 70-F1C0 — selected R2 contract and offline implementation plan
+
+Documentation-only planning item under release/distribution, after completed
+F1A/F1B. The coordinator selected R2 Standard, indefinite bucket locks,
+segregated configuration/producer credentials and separately controlled
+full-byte copy. Account/access/copy identities are still not established.
+The [R2 plan](ad-hoc-latest-stable-item70-f1c0-r2-plan.md) specifies the exact
+ArchiveStore adapter/configuration boundary, official current API evidence,
+conditional-create and fresh-read failures, no-expiry admission, credential
+and receipt-writer separation, and real custody limits. It registers ready
+offline **70-F1C1** with exact source paths, one unittest command and nine
+named synthetic cases; separately gated online **70-F1C2** owns real SDK,
+configuration/access and independent-copy proof. F1D retains compiler/policy
+and custody prerequisites for NEW producer qualification.
+
+F1C0 scope is this plan and record only: no adapter, security code, SDK install,
+lock, workflow, fixture, resource, credential, historical search, qualification
+or publication changes. Named checks are diff/file-size, local doc paths and
+exact source/API evidence identities. No Sifr gates. One exact-SHA Opus review
+and at most one remediation, source-inspection only; record-only update has
+no additional review/gate. After merge and phase-record update, stop.
+Owned independent clone `/private/tmp/sifr-item70-f1c0.XM898D/codebase`, branch
+`codex/latest-stable-item70-f1c0`, base
+`0c0f4f046b769deeb8cf91a83d62fbb7ae983ec1`; sibling private evidence root.
+Parent/predecessor trees remain read-only. Plan blocker: none; actual
+account/access/custodian actions are explicit later F1C2 prerequisites.
+
 ### Item 70-F1B — offline archival contract complete
 
 COMPLETE via [PR #3814](https://github.com/sifr-lang/sifr/pull/3814), merged
