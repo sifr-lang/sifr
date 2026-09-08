@@ -1,7 +1,7 @@
 # 12K-B36: sampled native custody lifecycle
 
 Date: 2026-09-08. Owner: performance / issue3776. Scope: B35-F1 only.
-State: offline implementation complete; exact-SHA review and merge pending.
+State: static/offline contract MERGED; record-only closure bookkeeping.
 
 ## Ownership and execution boundary
 
@@ -120,8 +120,10 @@ Final PASS414/414: all365 inherited assertions retained, plus49 lifecycle cases.
 Three same-suite invocations: initial410/414, then413/414, then414/414. All
 failed receipts and exact source copies remain at E/`offline-result-attempt-1.json`,
 `offline-result-attempt-2.json`, and `attempt-{1,2,3}-sources`. Corrections addressed
-test expectations for unaffected groups/new authenticated roles and the complete
-B35 inferior-display replay, including the synthetic kernel-name width. No
+test expectations for unaffected groups/new authenticated roles, mechanism edits
+anchoring display to native path/kernel comm and replacing acknowledgement/output
+ps-command equality with native-path/full-replay validation, and the complete B35
+inferior-display replay including the synthetic kernel-name width. No
 inherited acceptance assertion was dropped or converted into a later item.
 
 Cases include actual B35 rows with native identity explicitly UNKNOWN, and
@@ -155,3 +157,62 @@ Remaining obligations: B35 combined live coverage unqualified; B24 causal/full
 unchanged representative budget, SQL/B27/builtin-fix/approved65 delivery and the
 original emitted-Rust phase remain OPEN. B34-F2/F3/F4 are not absorbed.
 After this item's merged phase record and frozen terminal callback: STOP.
+
+## Exact-SHA approval, merge and follow-up record
+
+[Implementation PR3808](https://github.com/sifr-lang/sifr/pull/3808) merged
+2026-09-08T07:04:48Z, merge `aa11ed8a8dfe808b8727863ffe6c83e7ca4a29fe`.
+Validated/reviewed candidate `e2d42f05dec4cce446ac1a33beccd68080eadf20`, base
+`b92faf990877d2f553c70b2d29994d82ac60d4f0`. Candidate and merge trees both
+`6fb38b0b1d7f700f3e52c9e17ed5a685a154371c`; no intervening base change.
+
+ONE initial Opus review: SATISFIED, no blocking findings; zero remediation or
+provider retries. The reviewer authenticated all48 frozen paths, all17 tested
+source hashes, the complete B35 predecessor copy, retained365 case names and
+49 new cases, and the full native producer/ack/cleanup/finalization contract.
+The reviewer ran no tests/helpers/probes. The full response is published outside
+the approved tree in the
+[exact-SHA PR review comment](https://github.com/sifr-lang/sifr/pull/3808#issuecomment-5580763845).
+E/`review-e2d42f05dec4cce446ac1a33beccd68080eadf20.md` SHA256
+`804134b7b5a022757a2a896b5960cfe5c2cc08a33c506703be4eae3a0f16a433`.
+
+E/`checks-e2d42f05dec4cce446ac1a33beccd68080eadf20.json` SHA256
+`8b89e930c42f55a48d8b4b32230315f2ce5bfcdb60700c87fe98c6b85523b748` records
+diff, HIR and file-size PASS3762; maximum external maintained source603 lines.
+Suite414/414 and frozen source identities cover the exact approved candidate.
+All48 frozen paths reauthenticated after review and before merge. All53 copied
+predecessor evidence files also reauthenticated against the original receipt.
+No compiler/lock/fixture/workflow changes or create-pr/merge-profile gates.
+
+Nonblocking review follow-ups are recorded under the existing sole owner
+performance / issue3776, for later scoped work; none is implemented in B36:
+
+- B36-F1, infrastructure: a non-probe descendant disappearing between ps and
+  native sampling yields sticky ambiguity/INCONCLUSIVE. This conservative
+  acquisition behavior can reduce success of a later live qualification.
+- B36-F2, infrastructure: after attach, losing the authenticated debugserver
+  while the inferior is still listed rejects custody, even for legitimate exit.
+  This is conservative and can reduce later live qualification yield.
+- B36-F3, suggestion: bind the transient ps exemption to the observation's own
+  child PID rather than every `/bin/ps` command display, so another lingering ps
+  descendant cannot be excluded from native subjects/final remaining evidence.
+- B36-F4, suggestion: malformed acknowledgement native-target lookup can raise
+  TypeError instead of ValueError. Broad caller handling still fails closed.
+- The review's narrative-precision suggestion is addressed by this record-only
+  clarification of the mechanism edits between preserved suite attempts above.
+
+The original failed proof remains INCONCLUSIVE/native cause UNKNOWN; no live
+readiness claim follows from this static approval. The accepted sampled-API
+limitations remain explicit. B24/full budget, SQL/B27/65 and original full phase
+stay open. Record-only PR reuses approval and validation, with no external review,
+suite, gate or implementation change. Terminal metadata under E/`terminal.json`
+binds record PR/SHA, final source/evidence identities and native release.
+
+Counts: suite families1/invocations3; initial Opus1, remediation0, provider retry0;
+implementation PR/merge1; native process tests/debugger sessions/proofs/targets/
+launches/attaches/continues0; compiler builds/tests/CV/counters/broad gates0.
+Review driver34348, Opus34783, watchdog34784 and child34785 all absent after
+normal completion, verified by ps. No proof processes were created.
+
+Blocker: none. Next action: finish this record-only merge and frozen terminal,
+send terminal callback, then STOP. No successor implementation or phase closure.
