@@ -2,6 +2,41 @@
 
 Status: active
 
+## 12K-B39 changed-host continuation terminal (2026-09-08)
+
+Owned clone `/private/tmp/sifr-b39-host.8IkfrA/sifr`, branch
+`codex/item12k-b39-host-8IkfrA`, main base
+`4b4cc339964baeeb6641e57dc669fef700a5fa24`; prelaunch/source pushed
+`dc4fea3f4755eb69973f568b8a99ae83a1b104dd` before sole allocation.
+[Full scoped registration and terminal](ad-hoc-emitted-rust-b39-changed-host.md)
+binds original/new input hashes, preserved predecessor882/878 paths, READY
+receipt, frozen979 paths and reused493/162/84 tests. Parent dirty ledgers and
+all predecessor files/indexes/refs are untouched. No production source changes.
+
+INCONCLUSIVE8.750775333028287s: one setup/LLDB, one target49460, zero events,
+completed observations or output qualification. Admission and saved monitor
+CPU checks passed. First failure seq13 is native/ps group mismatch: psPGID49424
+versus native/handshakePGID49460. Record B39-HOST-F1 for later launch/acquisition
+mechanism adjudication. B39-HOST-F2 records omission of native/handshake-only
+group49460 from original retirement groups. No code repair or retry follows.
+
+Actual launcher49351 exit1 at8.695690s, watcher/monitor joined, debugger-owned
+target Kill success/DeleteTarget true. Original release PASS34 subjects/probes
+checks only groups49351/49424; do not claim complete-group release within540s.
+Separate post-run read-only supplemental release PASS35 subjects/probes and
+all groups49351/49424/49460 absent, no retirement signals. Supplemental digest
+`6460ff9f01502d278eb771206a6b20f365002070dff085f413ba696b2fbb69f6`;
+actual-root-exit digest
+`920b19e9ecd69d9b995cfdce34e4db7b441a51f6e0f415749928c42fcc96dece`.
+Original receipts remain unchanged; supplemental proof is not backdated.
+
+All979 frozen paths and predecessor882/878 paths reauthenticated; relevant
+identity/diff/file-size/record checks pass. Saved analyzer one partial, no
+complete trace. Zero post-live apparatus edits/tests/Opus/Sifr gates/PR/merge.
+Five unlaunched targets not banked. Resource slot released. Publish owner3776
+terminal and retire. Full B24/B27/exact65/SQL/corpus/retained12/phase stay OPEN;
+no next item is started. Parent orchestrator alone owns its separate live ledger.
+
 ## Item12K-B38: coherent acquisition and batch qualification (2026-09-08)
 
 **B38 MERGED / SCOPED QUALIFICATION COMPLETE; blocker none.**

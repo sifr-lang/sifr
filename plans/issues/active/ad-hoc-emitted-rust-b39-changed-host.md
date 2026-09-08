@@ -131,3 +131,102 @@ Every active source and test receipt hash, preserved original/new path mapping,
 system input and command is recorded in these external receipts. The prelaunch
 commit binds this registration to them; its exact SHA will be reported before
 any live allocation. All active source copies are read-only after freeze.
+
+## Terminal outcome: native/ps group disagreement before first event
+
+State: INCONCLUSIVE / TERMINAL STOP. Prelaunch/source
+`dc4fea3f4755eb69973f568b8a99ae83a1b104dd` was pushed before execution.
+The sole allocation lasted8.750775333028287s: one setup, one LLDB49424,
+one warmup target49460 and zero observed events, entry hits, paired returns,
+handover, completed output or observation receipts. All five unlaunched targets
+are not banked. Saved-event analysis retains one partial and zero complete traces.
+
+Fresh admission passed all three snapshots: externalCPU106.5/183.7/248.7.
+The saved monitor snapshot271.2 also passed the unchanged400 threshold.
+The monitor's terminal rejection is producer-lifecycle failure propagated from
+custody; it is not a CPU threshold rejection. READY did not qualify the mechanism.
+
+After12 accepted custody observations, sequence13 failed with
+`native/ps group mismatch`. The raw ps table records target49460, parent49424,
+group49424, stopped stateT, and the exact owned binary path. Native initial,
+before/after and registration samples record the same target PID, parent, path
+and microsecond birth identity with group49460. The launch handshake also records
+group49460 and flags134. Four consumer rejection rows retain the same rejected
+sequence; the target remains outside accepted target_ids and receives no custody
+acknowledgment. No PID/group identity exception or no-event liveness was inferred.
+
+The preserved records establish disagreement during target creation. They do
+not establish a historical OS/security defect or prove the precise ordering of
+the target's group transition inside ps's whole-table capture. The acquisition
+interval began520031.66052125 and ended520031.71263875 on the outer clock; the
+target birth timestamp is1788868477.237461 on the native wall-time identity.
+Those distinct domains are preserved, not directly subtracted or equated.
+
+### Later findings under owner3776; no implementation here
+
+**B39-HOST-F1 — target launch/group transition versus custody acquisition.**
+Retain sequence13 and the exact launch/native/table records as the discriminator.
+The whole-host helper protocol successfully reached target launch but does not
+by itself qualify the LLDB target-launch/group-transition boundary. A later owner
+can assess a bounded launch/acquisition synchronization protocol with explicit
+transition evidence, or another supported observation route preserving the same
+identity and stop rules. These are alternatives for concrete adjudication, not
+permission to retry, change API use, accept mismatched groups, or implement here.
+
+**B39-HOST-F2 — native/handshake-only group absent from retirement inventory.**
+The original producer inventory includes targetPID49460, but groups contains only
+49424. `Inventory.collect` preserves native record PIDs while group obligations
+come from rooted ps rows whose PID equals PGID. Here that ps row reported49424,
+so native/handshake group49460 did not enter original final group checks. The
+supervisor's original complete-process-release PASS covers34 subjects/probes and
+groups49351/49424, but cannot certify all observed groups. Preserve that raw PASS
+and limitation; do not upgrade it to complete-group release within540s.
+A later owner must assess preserving every observed rooted native/launch group
+as an absence obligation independently from accepted custody and signal authority.
+No apparatus repair, new test or acquisition follows in this session.
+
+### Actual process release and retained limits
+
+Launcher49351 actually exited1 at8.695690124994144s; its supervisor completed
+at8.750775333028287s. LLDB retained-handle target Kill returned success and
+DeleteTarget returned true. Watcher and host monitor joins were recorded.
+No retirement PID/group signals were sent; this statement does not erase the
+recorded debugger-owned target Kill.
+
+A separate post-run read-only complete-inventory check used the unchanged
+frozen `Inventory`, `Lifecycle`, `Darwin` and `absence` functions. It included
+all original34 subjects/probes, raw rejected custody observations and the
+native/handshake-derived group49460. Supplemental PASS proves35 subjects/probes
+absent after its exact capture helper51427 reaped, plus all three groups
+49351/49424/49460 absent. There are34 before samples and35 after samples:
+the newly spawned capture probe has only honest post-capture native absence.
+The supplemental receipt and lifecycle record are separate from the allocation;
+they do not backdate release or repair the missing original group coverage.
+The read-only command completed0. Actual diagnostic resources are released.
+
+All979 current frozen inputs, all882 predecessor terminal paths and all878
+predecessor frozen inputs reauthenticated unchanged. Source/SDK/contract and
+493/162/84 historical test evidence remain intact. Evidence at record check
+1608415114 bytes, below2GiB. Prelaunch file-size evidence remains applicable:
+PASS3770 repository files, external maximum835 lines. Post-live work consists
+only of saved-event analysis, read-only release/identity checks and records.
+Zero post-live apparatus changes/tests, Opus reviews, Sifr gates, PR or merge.
+
+| Receipt under E | SHA256 |
+| --- | --- |
+| allocation-outcome.json | `37d2fda83fe3b1e8606ac75242faf65a67ffa6f40988fe31c0c562c90161c9aa` |
+| launcher-exit.json | `920b19e9ecd69d9b995cfdce34e4db7b441a51f6e0f415749928c42fcc96dece` |
+| complete-process-release.json | `41346e86effdb790a73e844518e7d1676684162696cdaa052e8dcbbdd2bd7ef6` |
+| supplemental-complete-release.json | `6460ff9f01502d278eb771206a6b20f365002070dff085f413ba696b2fbb69f6` |
+| supplemental-release-lifecycle.json | `5a6a359399c76a47fb088220529366a41a2eb20a024793f07a1f07e5392ae6ca` |
+| boundaries/target-0/custody.json | `45b7332529bcd8fdc99f80bfdd799e8477d65d9727e4c7dd445d002d7f77026f` |
+| boundaries/target-0/inferior.json | `8a7757a359e9d13f603f2101d749bf72520b99d66479fb112e752c794322a869` |
+| analysis.json | `fe377de61a9171404c0a291537e738aa7c4598e082c4ec63924349ce5b0166e9` |
+| terminal-record-checks.json | `cd4072c12ba2168edb43ee86b17e71cb6117256c0df076fc419e5d092a3de544` |
+
+Full B24 causation/unchanged10-case representative/same-invocation budget and
+both self-tests, B27 complete joint delivery, exact65/SQL/corpus/retained12 and
+the original phase remain OPEN. The next action belongs to coordinator3776:
+adjudicate the two concrete mechanism findings after this frozen terminal and
+native retirement. No unchanged retry, host-only retry, new implementation or
+next-item work is allocated by this record. This continuation stops.
