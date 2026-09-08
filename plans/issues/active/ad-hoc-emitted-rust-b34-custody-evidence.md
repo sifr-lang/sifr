@@ -1,7 +1,7 @@
 # 12K-B34: truthful process-custody rejection evidence
 
 Date: 2026-09-08. Exactly B32-F2, performance / issue3776.
-State: STATIC/OFFLINE IMPLEMENTATION COMPLETE; awaiting exact-SHA review/merge.
+State: MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.
 
 ## Scope, ownership and registration
 
@@ -208,3 +208,68 @@ behavior, bounded cleanup and output acceptance are unqualified. B24 causal/full
 representative budget, SQL/B27 joint delivery including builtin fix/approved65,
 and the full emitted-Rust phase remain open. This item stops after its own
 static-contract merge and phase record; no successor code is authorized here.
+
+## Exact-SHA review, merge and terminal record
+
+[PR3806](https://github.com/sifr-lang/sifr/pull/3806) merged at
+2026-09-08T06:06:34Z, merge SHA `9ca73396926b9b90c77f7f05aabbaaf8f245331a`.
+Reviewed/validated candidate `5b76c50bd838f26cdabcb573b7d3f78d9fc1ab51`, base
+`d1cfc49a12938affb921afcb806f9f9e9ecf67c7`. Both candidate and merge trees are
+`a6139f0e35110729b3b349a2b803aedad96210a7`; no intervening base change.
+
+The ONE initial Opus review returned SATISFIED with no blocking findings.
+It authenticated all30 frozen files and all12 tested-source hashes, checked
+installed ps/execve/killpg semantics, unchanged B33 resolver inheritance and
+the complete producer/observer/output/cleanup integration. Read-only review;
+no tests, gates or live probes were run by the reviewer. Zero remediation or
+provider retries. Full review response is published in the
+[PR description](https://github.com/sifr-lang/sifr/pull/3806), outside the
+reviewed Git tree. Immutable local response
+E/`review-5b76c50bd838f26cdabcb573b7d3f78d9fc1ab51.md`, SHA256
+`44cf8362c856c5abe167bf5c8403e72e44e969e706d1677f11ec88a9e9362265`.
+
+E/`checks-5b76c50bd838f26cdabcb573b7d3f78d9fc1ab51.json`, SHA256
+`f3ebf19133c50942dc39a33cfcc05e58e1eb25c0570a434abcd24afd03a2b554`, records
+exact candidate diff, HIR and file-size PASS3762, maximum external Python593.
+All30 frozen inputs were reauthenticated unchanged after review and before
+merge. The349/349 suite pass applies to this exact external/Git candidate.
+No create-pr or merge gate applies to this Markdown-only Git delta.
+
+Non-blocking review follow-ups are recorded here under the existing sole
+performance/issue3776 owner; none is implemented by B34:
+
+- Infrastructure follow-up B34-F1: `run_coverage.py` iterates target/group sets
+  that fresh cleanup observation can extend. A new role appearing during the
+  loop can raise a set-size RuntimeError, retaining INCONCLUSIVE and denying
+  unproved release. Reviewer classified this as non-blocking infrastructure;
+  later maintenance should iterate a snapshot. No live proof or retry is
+  allocated by this finding.
+- B34-F2, provenance receipt suggestion: the B31 observer-result input is
+  authenticated by freeze and bound by the manifest, but is omitted from
+  input-authentication.json's single raw_sources list. A later record cleanup
+  can consolidate it; the actual owned input is preserved and byte-identical.
+- B34-F3, test precision suggestion: add direct label assertions for observed
+  ancestry/group/state/unchanged classifications. Existing predicates exercise
+  those branches and preserve UNKNOWN cause; no missing mechanism was found.
+- B34-F4, redundant diagnostic suggestion: an unowned empty cleanup group adds
+  a rejection reason only to an already-failed run; owned empty groups do not.
+- Bookkeeping portability is pre-existing: `record_b34.py` uses Homebrew Python's
+  hashlib.file_digest and is not part of the embedded-Python3.9 apparatus claim.
+
+Record-only updates use a separate Markdown PR because main requires PRs,
+reusing validation and review without another Opus request or gate. The final
+immutable E/`terminal.json` records that PR, candidate and merge SHA, all source
+and evidence identities, command counts, release state and owner handoff.
+
+Counts before record bookkeeping: suite invocations2, suite families1,
+initial Opus1, remediation0, provider retries0, implementation PR/merge1,
+diff/HIR/file-size checks1 each, broad gates0, compiler builds/tests0,
+live process tests/debugger sessions/proofs/targets/inferior launches/attaches/
+continues0, CV/counter/acceptance acquisitions0. No proof processes were created
+or need cleanup; the review command completed normally, with no sleep watchdog.
+Parent/predecessor files and all historical raw remain read-only and preserved.
+
+Blocker: none. Next action: STOP after this phase-record PR merges and the
+terminal receipt is written. No B35 or other next-item implementation. The
+combined-proof proposal above remains unallocated for later adjudication;
+B24, SQL/B27 and the full emitted-Rust phase remain open.
