@@ -96,7 +96,7 @@ fn async_python_error_channel_preserves_local_and_imported_error_ancestry() {
         ),
     ]);
     let stdlib = compile_stdlib().expect("stdlib must compile");
-    let lowered = collect_project_hir_modules(&modules, stdlib.defs)
+    let lowered = collect_project_hir_modules(&modules, stdlib.defs.clone())
         .expect("exported errors must retain their declared ancestry");
     let root = &lowered.hir_modules["errors"].classes[0];
     assert!(root.parent_class.is_none());

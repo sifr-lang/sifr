@@ -500,6 +500,10 @@ large-file check and a representative project check.
   analysis, Rust project generation, Cargo project materialization, and release
   native Cargo build.
 - Dependency metadata for both shapes comes from codegen outputs (`used_stdlib_modules` and `required_crates`), never from emitted Rust text scans.
+- Test projects resolve their selected stdlib interop demand through the same
+  trusted resolver and shared field/bridge finalization as native binaries.
+  The resolved plan feeds Cargo dependencies and cache identity; generated
+  bridge files are materialized with the support modules before Cargo tests run.
 - Stdlib bootstrap retains the complete checked HIR and interop inventory.
   Completed bootstrap HIR moves into shared immutable storage after module
   emission. `StdlibEmissionCode` exposes only emission metadata; bootstrap
