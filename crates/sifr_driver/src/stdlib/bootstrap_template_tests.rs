@@ -1,6 +1,32 @@
 use super::*;
 
 #[test]
+fn stdlib_bootstrap_syntax_session_preserves_full_inventory_and_source_order() {
+    let compiled = compile_stdlib_uncached().expect("complete bootstrap");
+    let session = sifr_codegen::StdlibSyntaxSession::default();
+    let mut names = compiled.code.hir_modules.keys().collect::<Vec<_>>();
+    names.reverse();
+    assert!(names.iter().any(|name| name.starts_with("_sifr.")));
+    assert!(names.iter().any(|name| name.starts_with("sifr.")));
+    for name in names {
+        let module = &compiled.code.hir_modules[name];
+        let reference =
+            sifr_codegen::generate_stdlib_module_body(module, &compiled.code.emission, name);
+        let generated = session.generate_module(module, &compiled.code.emission, name);
+        assert_eq!(generated.rust_source, reference.rust_source, "{name}");
+        assert_eq!(
+            generated.required_features, reference.required_features,
+            "{name}"
+        );
+        assert_eq!(
+            generated.used_stdlib_modules, reference.used_stdlib_modules,
+            "{name}"
+        );
+        syn::parse_file(&generated.rust_source).expect("trusted full inventory syntax oracle");
+    }
+}
+
+#[test]
 fn stdlib_bootstrap_borrowed_emission_preserves_imports_and_generic_templates() {
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
     let source = "from sifr.collections import deque as Queue\nfrom sifr.calendar import isleap as leap\ndef example() -> bool:\n    values: Queue[int] = Queue([1, 2])\n    return leap(len(values))\n";

@@ -58,6 +58,7 @@ fn compile_stdlib_sources_with_sysroot(
     let mut stdlib_code = StdlibCode::default();
     let mut hir_modules = std::collections::BTreeMap::new();
     let mut private_interop_modules = Vec::new();
+    let syntax_session = sifr_codegen::StdlibSyntaxSession::default();
 
     for stdlib_source in sources {
         let module_name = stdlib_source.module.as_str();
@@ -329,13 +330,7 @@ fn compile_stdlib_sources_with_sysroot(
                 format!(
                     "internal compiler panic during stdlib code generation for '{module_name}'"
                 ),
-                || {
-                    sifr_codegen::generate_stdlib_module_body(
-                        &module,
-                        &stdlib_code.emission,
-                        module_name,
-                    )
-                },
+                || syntax_session.generate_module(&module, &stdlib_code.emission, module_name),
             )
             .map_err(|e| {
                 let mut diagnostic = *e;

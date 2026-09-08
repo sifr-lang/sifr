@@ -190,7 +190,9 @@ pub use rust_interop_plan::{
 };
 mod rust_ir;
 pub use rust_ir::*;
+mod inline_syntax;
 mod stdlib_codegen_metadata;
+pub use inline_syntax::StdlibSyntaxSession;
 mod stdlib_filter;
 mod stdlib_interop_demand;
 pub use stdlib_codegen_metadata::{StdlibCode, StdlibEmissionCode, StdlibEmissionView};

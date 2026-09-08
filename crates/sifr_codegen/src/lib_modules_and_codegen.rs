@@ -138,12 +138,27 @@ pub fn generate_stdlib_module_body(
     metadata: &crate::StdlibEmissionCode,
     name: &str,
 ) -> ModuleCodegenResult {
-    generate_rust_with_stdlib_for_module_with_structural_policy(
-        module,
-        &metadata.bootstrap_view(&HashMap::new()),
-        Some(name),
-        crate::rust_interop_plan::module_uses_structural_interop(module),
-    )
+    crate::StdlibSyntaxSession::default().generate_module(module, metadata, name)
+}
+
+impl crate::StdlibSyntaxSession {
+    /// Emit every bootstrap module in source order through one syntax owner.
+    pub fn generate_module(
+        &self,
+        module: &HirModule,
+        metadata: &crate::StdlibEmissionCode,
+        name: &str,
+    ) -> ModuleCodegenResult {
+        let sources = HashMap::new();
+        let mut view = metadata.bootstrap_view(&sources);
+        view.syntax_session = Some(self);
+        generate_rust_with_stdlib_for_module_with_structural_policy(
+            module,
+            &view,
+            Some(name),
+            crate::rust_interop_plan::module_uses_structural_interop(module),
+        )
+    }
 }
 
 #[allow(clippy::too_many_arguments)]

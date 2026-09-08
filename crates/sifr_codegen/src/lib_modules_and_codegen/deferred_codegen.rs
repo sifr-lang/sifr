@@ -131,7 +131,24 @@ pub(super) fn inline_codegen_result(
     .filter(|source| !source.is_empty())
     .collect::<Vec<_>>()
     .join("\n\n");
-    if let Err(error) = syn::parse_file(&assembled) {
+    let validation = if let Some(session) = stdlib_code.syntax_session {
+        let start = if import_source.trim().is_empty() {
+            0
+        } else {
+            import_source.trim().len() + 2
+        };
+        let end = start + rendered_support_source.trim().len();
+        // Empty support has no reusable interval, including empty whole files.
+        let support = if start <= assembled.len() {
+            start..end
+        } else {
+            0..0
+        };
+        session.validate(&assembled, support)
+    } else {
+        syn::parse_file(&assembled).map(|_| ())
+    };
+    if let Err(error) = validation {
         panic!("failed to parse inline support assembled by the canonical renderer: {error}");
     }
     generated.rust_source = format!("{}\n", assembled.trim_end());

@@ -442,6 +442,12 @@ large-file check and a representative project check.
   only inside the generated crate. Canonical item fingerprints reject conflicting
   support bodies instead of silently selecting one, and Rust interop bridge types
   use the same exact-deduplication/fail-closed ownership rule.
+- Stdlib bootstrap owns one short-lived syntax-validation session for its source
+  inventory. Successful complete-file parsing can establish exact support text
+  as complete Rust items. Later inline assemblies reuse only that syntax identity
+  at proven item/token boundaries, while the full assembly is tokenized and all
+  remaining file syntax is parsed. Failures are never cached, source bytes and
+  module order are unchanged, and the session is dropped with bootstrap.
 - Generated-code simplification is structural at both boundaries. Typed
   `RustItem`/`RustStmt`/`RustExpr` optimization runs before rendering. After
   project metadata, inline stdlib, and bridge fragments have been assembled,

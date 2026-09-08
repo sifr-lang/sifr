@@ -56,6 +56,7 @@ pub struct StdlibEmissionCode {
 pub struct StdlibEmissionView<'a> {
     metadata: &'a StdlibEmissionCode,
     pub(crate) module_rust_code: &'a HashMap<String, StdlibRustSource>,
+    pub(crate) syntax_session: Option<&'a crate::StdlibSyntaxSession>,
 }
 
 impl StdlibEmissionCode {
@@ -63,6 +64,7 @@ impl StdlibEmissionCode {
         StdlibEmissionView {
             metadata: self,
             module_rust_code: &self.module_rust_code,
+            syntax_session: None,
         }
     }
 
@@ -73,6 +75,7 @@ impl StdlibEmissionCode {
         StdlibEmissionView {
             metadata: self,
             module_rust_code,
+            syntax_session: None,
         }
     }
 }
