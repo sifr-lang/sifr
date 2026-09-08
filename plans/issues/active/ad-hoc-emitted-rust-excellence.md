@@ -4,6 +4,15 @@ Status: active
 
 ## Item12K-B33: static module-instance contract (2026-09-08)
 
+**B33 MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.**
+[PR3804](https://github.com/sifr-lang/sifr/pull/3804) merged as
+`dae0d285bf8cc34924ef4d47a349c28591eb50f0`. Exact reviewed/validated candidate
+`3446f57dc2d21f584d30188f91ede95540af67f7`, base
+`491ba4ede1609ce476831015dc209a9064cd8ffc`. Merge tree equals candidate tree.
+[One Opus review](https://github.com/sifr-lang/sifr/pull/3804#issuecomment-5579842289)
+SATISFIED, no blockers, zero remediation reviews. Exact diff/HIR/file-size checks
+PASS; broad gates0 and live proof/session/launch/attach/continue0.
+
 Exactly B32-F1, sole performance/issue3776 owner. The
 [scoped contract](ad-hoc-emitted-rust-b33-module-instance.md) implements owned
 external resolver/observer integration grounded in native SBModule equality
@@ -15,7 +24,9 @@ Named offline suite PASS299/299 (retained231 plus68 module cases), after one
 in-scope alias file-roundtrip correction; first297/299 receipt/source retained.
 The frozen external manifest digest is
 `81597f166178476699cb73a6ca7b13c980624125a5603c89c6b7cafc5e185a31` under
-`/private/tmp/sifr-b33.W1oIqs/evidence`. Exact-SHA static-contract review pending.
+`/private/tmp/sifr-b33.W1oIqs/evidence`. Review response SHA256
+`432ab8c8586843136b21f7c9a77b74d8075faeeb96998ed996d5c9fdc9a0b0b8`, preserved
+outside Git as `review-3446f57dc2d21f584d30188f91ede95540af67f7.md`.
 Only Markdown enters Git; no compiler/fixture/lock/workflow edits or broad gates.
 
 B32 authenticated/native closed, historical proof remains INCONCLUSIVE.
@@ -25,6 +36,9 @@ combined proof is proposed; no combined proof or host window is allocated.
 B24 causal/full representative budget, SQL/B27 joint delivery/approved65 and
 the full emitted-Rust phase remain open. This item stops after scoped merge
 and record update; no B34 code or next-item work is included.
+Record-only follow-ups and process-release details are in the scoped contract;
+immutable `evidence/terminal.json` binds final record SHA and all receipts.
+Next action: STOP; B33 retires after this record. No new proof allowance.
 
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
