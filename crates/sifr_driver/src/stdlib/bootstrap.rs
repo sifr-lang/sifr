@@ -1,10 +1,10 @@
 use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary};
 use crate::export_policy::should_export_callable;
-use crate::stdlib::cache::{STDLIB_COMPILED_CACHE, get_or_init_stdlib_cache};
+use crate::stdlib::cache::{STDLIB_COMPILED_CACHE, get_or_init_stdlib_cache, project_stdlib_cache};
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
 use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
 use crate::stdlib::types::StdlibCompiled;
-use sifr_codegen::{StdlibCode, StdlibRustSource};
+use sifr_codegen::{StdlibCode, StdlibEmissionCode, StdlibRustSource};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{
     ExternalDefs, HirFunction, HirParam, canonicalize_user_export_type,
@@ -27,7 +27,11 @@ pub(crate) fn compile_stdlib() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>
 }
 
 pub fn external_defs() -> Result<ExternalDefs, Vec<RenderedDiagnostic>> {
-    compile_stdlib().map(|compiled| compiled.defs)
+    project_stdlib_cache(
+        &STDLIB_COMPILED_CACHE,
+        compile_stdlib_uncached,
+        |compiled| compiled.defs.clone(),
+    )
 }
 
 pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
@@ -52,6 +56,7 @@ fn compile_stdlib_sources_with_sysroot(
 ) -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     let mut stdlib_defs = ExternalDefs::default();
     let mut stdlib_code = StdlibCode::default();
+    let mut hir_modules = std::collections::BTreeMap::new();
     let mut private_interop_modules = Vec::new();
 
     for stdlib_source in sources {
@@ -117,10 +122,6 @@ fn compile_stdlib_sources_with_sysroot(
             .map(|class| (class.name.clone(), format!("{module_name}.{}", class.name)))
             .collect::<HashMap<_, _>>();
         canonicalize_stdlib_hir_signatures(&mut result.module, module_name, &local_classes);
-        stdlib_code.hir_modules.insert(
-            module_name.to_string(),
-            std::sync::Arc::new(result.module.clone()),
-        );
         if let Some(module) = pending_private_interop_module(stdlib_source, &result.module) {
             private_interop_modules.push(module);
         }
@@ -129,6 +130,7 @@ fn compile_stdlib_sources_with_sysroot(
             && result.module.constants.is_empty()
             && result.module.classes.is_empty()
         {
+            hir_modules.insert(module_name.to_string(), std::sync::Arc::new(result.module));
             continue;
         }
 
@@ -322,8 +324,7 @@ fn compile_stdlib_sources_with_sysroot(
             || !result.module.constants.is_empty()
             || !result.module.classes.is_empty();
         if has_pure_sifr_code {
-            let codegen_stdlib = StdlibCode {
-                hir_modules: stdlib_code.hir_modules.clone(),
+            let codegen_stdlib = StdlibEmissionCode {
                 module_rust_code: HashMap::new(),
                 module_constants: stdlib_code.module_constants.clone(),
                 func_signatures: stdlib_code.func_signatures.clone(),
@@ -343,10 +344,10 @@ fn compile_stdlib_sources_with_sysroot(
                     "internal compiler panic during stdlib code generation for '{module_name}'"
                 ),
                 || {
-                    sifr_codegen::generate_rust_with_stdlib_for_module(
+                    sifr_codegen::generate_stdlib_module_body(
                         &result.module,
                         &codegen_stdlib,
-                        Some(module_name),
+                        module_name,
                     )
                 },
             )
@@ -555,8 +556,10 @@ fn compile_stdlib_sources_with_sysroot(
                 result.module.type_param_bounds.clone(),
             );
         }
+        hir_modules.insert(module_name.to_string(), std::sync::Arc::new(result.module));
     }
 
+    stdlib_code.hir_modules = std::sync::Arc::new(hir_modules);
     Ok(StdlibCompiled {
         defs: stdlib_defs,
         code: stdlib_code,

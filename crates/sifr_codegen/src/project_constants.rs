@@ -1,10 +1,10 @@
-use crate::{HashMap, HashSet, HirModule, RustEmitter, StdlibCode};
+use crate::{HashMap, HashSet, HirModule, RustEmitter};
 use sifr_type_system::Type;
 
 pub(crate) fn register_imported_constants(
     emitter: &mut RustEmitter,
     module: &HirModule,
-    project_code: &StdlibCode,
+    project_code: &crate::StdlibEmissionCode,
 ) {
     for import in &module.imports {
         let Some(constants) = project_code.module_constants.get(&import.module) else {
@@ -27,7 +27,7 @@ pub(crate) fn register_imported_constants(
 }
 
 pub(crate) fn extend_project_constant_mappings(
-    project_code: &mut StdlibCode,
+    project_code: &mut crate::StdlibEmissionCode,
     modules: &[(&str, &HirModule)],
     crate_root_modules: &HashSet<&str>,
 ) {

@@ -4,15 +4,16 @@
 //! of a required class participate, including methods called only by generated
 //! support. Imports inside a stdlib module are edges, not roots. The inventory
 //! remains complete for bootstrap and whole-sysroot qualification.
+mod observation;
 mod types;
+pub use observation::observe_stdlib_interop_selection;
 
-use crate::hir_analysis::traversal::walk_expr;
 use crate::{RustInteropPlan, StdlibCode};
 use sifr_ir::{
     CompilerIntrinsicId, HirClass, HirExpr, HirFunction, HirModule, RustInteropDeclaration,
     RustInteropValue,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum Owner {
@@ -27,9 +28,37 @@ struct Declaration {
     owner: Owner,
 }
 
+pub(crate) fn application_plan(
+    stdlib: &StdlibCode,
+    modules: &[(Option<&str>, &HirModule)],
+) -> crate::InteropBuildPlan {
+    let mut plan = crate::interop_build_plan_for_named_modules(modules.iter().copied());
+    plan.stdlib_demand = select(
+        stdlib,
+        &modules
+            .iter()
+            .map(|(_, module)| *module)
+            .collect::<Vec<_>>(),
+    );
+    plan
+}
+
 pub(crate) fn select(stdlib: &StdlibCode, applications: &[&HirModule]) -> RustInteropPlan {
+    observation::selected();
+    let mut intrinsics: HashMap<CompilerIntrinsicId, Vec<(&str, &str)>> = HashMap::new();
+    for (name, module) in stdlib.hir_modules.iter() {
+        for function in &module.functions {
+            if let Some(intrinsic) = function.compiler_intrinsic {
+                intrinsics
+                    .entry(intrinsic)
+                    .or_default()
+                    .push((name, &function.name));
+            }
+        }
+    }
     let mut demand = Demand {
         stdlib,
+        intrinsics,
         pending: BTreeSet::new(),
         selected: BTreeSet::new(),
     };
@@ -71,29 +100,53 @@ pub(crate) fn select(stdlib: &StdlibCode, applications: &[&HirModule]) -> RustIn
     // Rebuild contracts through the existing compiler authority, with all
     // selected nominal definitions available together. This includes generated
     // bridge layouts and structural identities; no signature is hand-filtered.
-    let mut modules = BTreeMap::new();
+    let mut modules: BTreeMap<String, HirModule> = BTreeMap::new();
     for declaration in &demand.selected {
-        modules
+        let source = &stdlib.hir_modules[&declaration.module];
+        let module = modules
             .entry(declaration.module.clone())
-            .or_insert_with(|| {
-                let mut module = (*stdlib.hir_modules[&declaration.module]).clone();
-                let selected = |owner| {
-                    demand.selected.contains(&Declaration {
-                        module: declaration.module.clone(),
-                        owner,
-                    })
-                };
+            .or_insert_with(|| HirModule {
+                functions: Vec::new(),
+                classes: Vec::new(),
+                constants: Vec::new(),
+                imports: source.imports.clone(),
+                generic_functions: HashMap::new(),
+                type_param_bounds: HashMap::new(),
+            });
+        let name = match &declaration.owner {
+            Owner::Function(name) => {
                 module
                     .functions
-                    .retain(|f| selected(Owner::Function(f.name.clone())));
+                    .extend(source.functions.iter().filter(|f| &f.name == name).cloned());
+                if let Some(params) = source.generic_functions.get(name) {
+                    module
+                        .generic_functions
+                        .insert(name.clone(), params.clone());
+                }
+                name
+            }
+            Owner::Class(name) => {
                 module
                     .classes
-                    .retain(|c| selected(Owner::Class(c.name.clone())));
-                module
-                    .constants
-                    .retain(|(name, _, _)| selected(Owner::Constant(name.clone())));
-                module
-            });
+                    .extend(source.classes.iter().filter(|c| &c.name == name).cloned());
+                name
+            }
+            Owner::Constant(name) => {
+                module.constants.extend(
+                    source
+                        .constants
+                        .iter()
+                        .filter(|(n, _, _)| n == name)
+                        .cloned(),
+                );
+                name
+            }
+        };
+        if let Some(bounds) = source.type_param_bounds.get(name) {
+            module
+                .type_param_bounds
+                .insert(name.clone(), bounds.clone());
+        }
     }
     crate::interop_build_plan_for_named_modules(
         modules
@@ -105,6 +158,7 @@ pub(crate) fn select(stdlib: &StdlibCode, applications: &[&HirModule]) -> RustIn
 
 struct Demand<'a> {
     stdlib: &'a StdlibCode,
+    intrinsics: HashMap<CompilerIntrinsicId, Vec<(&'a str, &'a str)>>,
     pending: BTreeSet<Declaration>,
     selected: BTreeSet<Declaration>,
 }
@@ -204,14 +258,17 @@ impl Demand<'_> {
     }
 
     fn function(&mut self, name: &str, module: &HirModule, function: &HirFunction) {
-        // Reuse the exhaustive IR visitor for statement-only type metadata as
-        // well as expression types, defaults and nested callable bodies.
-        let mut function = function.clone();
-        sifr_ir::transform_hir_function_types(&mut function, &mut |ty| self.ty(name, module, ty));
-        sifr_ir::visit_hir_function_exprs_mut(&mut function, &mut |expr| {
-            self.expr_node(name, module, expr)
-        });
-        self.lifecycle(name, module, &function.rust_interop);
+        sifr_ir::visit_hir_function(function, &mut |node| self.node(name, module, node));
+    }
+
+    fn node(&mut self, name: &str, module: &HirModule, node: sifr_ir::HirNode<'_>) {
+        match node {
+            sifr_ir::HirNode::Type(ty) => self.ty(name, module, ty),
+            sifr_ir::HirNode::Expr(expr) => self.expr_node(name, module, expr),
+            sifr_ir::HirNode::Function(function) => {
+                self.lifecycle(name, module, &function.rust_interop)
+            }
+        }
     }
 
     fn class(&mut self, name: &str, module: &HirModule, class: &HirClass) {
@@ -261,10 +318,7 @@ impl Demand<'_> {
     }
 
     fn expression(&mut self, name: &str, module: &HirModule, expr: &HirExpr) {
-        walk_expr(expr, &mut |expr| {
-            self.ty(name, module, &expr.ty());
-            self.expr_node(name, module, expr);
-        });
+        sifr_ir::visit_hir_expr(expr, &mut |node| self.node(name, module, node));
     }
 
     fn expr_node(&mut self, name: &str, module: &HirModule, expr: &HirExpr) {
@@ -292,11 +346,9 @@ impl Demand<'_> {
                     }
                     _ => {}
                 }
-                for (owner, hir) in &self.stdlib.hir_modules {
-                    for function in &hir.functions {
-                        if function.compiler_intrinsic == Some(*intrinsic) {
-                            self.symbol(owner, &function.name);
-                        }
+                if let Some(owners) = self.intrinsics.get(intrinsic).cloned() {
+                    for (owner, name) in owners {
+                        self.symbol(owner, name);
                     }
                 }
             }

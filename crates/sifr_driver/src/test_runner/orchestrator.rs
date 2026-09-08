@@ -18,6 +18,8 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 pub(crate) struct GeneratedTestRunnerProject {
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) interop: sifr_codegen::InteropBuildPlan,
     pub(crate) cache_scope: PathBuf,
     pub(crate) support_module_names: Vec<String>,
     pub(crate) support_rust_files: HashMap<String, String>,
@@ -168,6 +170,7 @@ pub(crate) fn build_test_runner_project(
     all_rust_code = format_generated_rust(&all_rust_code, "test runner lib.rs body")?;
 
     Ok(GeneratedTestRunnerProject {
+        interop: generated.interop,
         cache_scope: test_dir.to_path_buf(),
         support_module_names,
         support_rust_files: generated.support_rust_files,

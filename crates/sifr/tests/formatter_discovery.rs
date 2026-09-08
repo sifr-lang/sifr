@@ -3,6 +3,44 @@
 use std::path::Path;
 use std::process::{Command, Output};
 
+#[test]
+fn formatter_discovery_reuses_rules_without_cross_path_decisions() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    std::fs::create_dir(root.join("project")).unwrap();
+    std::fs::write(root.join(".gitignore"), "*.sifr\n![km]eep.sifr\n").unwrap();
+    for name in ["keep.sifr", "drop.sifr"] {
+        std::fs::write(root.join("project").join(name), "def main( ):\n    pass\n").unwrap();
+    }
+    let output = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .current_dir(root)
+        .args(["fmt", "--no-cache", "project"])
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(
+        std::fs::read_to_string(root.join("project/keep.sifr")).unwrap(),
+        "def main():\n    pass\n"
+    );
+    assert_eq!(
+        std::fs::read_to_string(root.join("project/drop.sifr")).unwrap(),
+        "def main( ):\n    pass\n"
+    );
+    std::fs::write(root.join(".gitignore"), "# ordered\n*.sifr\n{a,b\n").unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .current_dir(root)
+        .args(["fmt", "--no-cache", "project/drop.sifr", "project"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains(".gitignore:3:"));
+    assert_eq!(
+        std::fs::read_to_string(root.join("project/drop.sifr")).unwrap(),
+        "def main():\n    pass\n",
+        "earlier explicit target is processed before invalid-directory discovery"
+    );
+}
+
 fn check(root: &Path, target: &Path, extra: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_sifr"))
         .current_dir(root)

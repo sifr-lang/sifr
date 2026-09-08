@@ -7,7 +7,27 @@ use std::collections::{HashMap, HashSet};
 pub struct StdlibCode {
     /// Full checked inventory. Application interop demand follows these typed
     /// declarations before any generated Rust is rendered or parsed.
-    pub hir_modules: std::collections::BTreeMap<String, std::sync::Arc<sifr_ir::HirModule>>,
+    pub hir_modules:
+        std::sync::Arc<std::collections::BTreeMap<String, std::sync::Arc<sifr_ir::HirModule>>>,
+    pub emission: StdlibEmissionCode,
+}
+
+impl std::ops::Deref for StdlibCode {
+    type Target = StdlibEmissionCode;
+    fn deref(&self) -> &Self::Target {
+        &self.emission
+    }
+}
+
+impl std::ops::DerefMut for StdlibCode {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.emission
+    }
+}
+
+/// Metadata consumed by module emission; application HIR inventory is not accessible here.
+#[derive(Clone, Default)]
+pub struct StdlibEmissionCode {
     /// Checked Rust source for each stdlib module.
     pub module_rust_code: HashMap<String, StdlibRustSource>,
     /// Exported constants and their generated Rust names by module.

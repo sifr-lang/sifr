@@ -21,6 +21,7 @@ use sifr_stdlib_manifest::StdlibFeature;
 
 /// Generated Rust sources and aggregate dependency metadata for one test crate.
 pub struct TestProjectCodegenResult {
+    pub interop: crate::InteropBuildPlan,
     pub support_rust_files: HashMap<String, String>,
     pub test_rust_files: HashMap<String, String>,
     pub project_union_prelude: String,
@@ -300,6 +301,13 @@ pub fn generate_rust_test_project_with_metadata(
     });
 
     TestProjectCodegenResult {
+        interop: crate::stdlib_interop_demand::application_plan(
+            stdlib_code,
+            &all_modules
+                .iter()
+                .map(|(name, module)| (Some(*name), *module))
+                .collect::<Vec<_>>(),
+        ),
         support_rust_files,
         test_rust_files,
         project_union_prelude,

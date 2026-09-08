@@ -13,12 +13,14 @@ pub mod hir_nodes;
 pub mod lowering_outcome;
 pub mod lowering_result;
 pub mod python_interop;
+mod readonly_visit;
 pub mod rust_interop;
 mod specialization_metadata;
 mod sql_migrations;
 mod sql_queries;
 mod template_strings;
 mod type_visit;
+pub use readonly_visit::{HirNode, visit_hir_expr, visit_hir_function};
 
 pub use cfg::*;
 pub use diagnostic_types::*;

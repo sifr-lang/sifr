@@ -207,6 +207,7 @@ mod tests {
     #[test]
     fn test_runner_cache_key_uses_sysroot_dependency_plan_inputs() {
         let generated_project = GeneratedTestRunnerProject {
+            interop: sifr_codegen::InteropBuildPlan::default(),
             cache_scope: PathBuf::from("/tmp/sifr-tests"),
             support_module_names: Vec::new(),
             support_rust_files: HashMap::new(),

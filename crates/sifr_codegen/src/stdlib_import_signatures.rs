@@ -1,4 +1,4 @@
-use crate::{FuncSignature, RustEmitter, StdlibCode};
+use crate::{FuncSignature, RustEmitter};
 use sifr_ir::HirImport;
 use std::collections::BTreeSet;
 
@@ -11,7 +11,7 @@ fn local_import_name(import: &HirImport, name: &str) -> String {
 }
 
 fn transitive_stdlib_signature(
-    stdlib_code: &StdlibCode,
+    stdlib_code: &crate::StdlibEmissionCode,
     module_name: &str,
     name: &str,
 ) -> Option<FuncSignature> {
@@ -35,7 +35,7 @@ fn transitive_stdlib_signature(
 
 pub(crate) fn register_imported_stdlib_signature(
     emitter: &mut RustEmitter,
-    stdlib_code: &StdlibCode,
+    stdlib_code: &crate::StdlibEmissionCode,
     import: &HirImport,
     name: &str,
 ) {
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn private_alias_registration_preserves_local_signatures_without_overwriting_origin() {
-        let mut code = StdlibCode::default();
+        let mut code = crate::StdlibCode::default();
         code.func_signatures.insert(
             "_sifr.first".to_string(),
             [("shared_name".to_string(), signature(Type::Int))].into(),

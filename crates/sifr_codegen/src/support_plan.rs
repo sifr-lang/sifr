@@ -15,7 +15,7 @@ use crate::stdlib_filter::{
 };
 use crate::{
     BUILTIN_ERROR_CLASSES, Renderer, RuntimeNeeds, RuntimeSupportDemand, RustEmitter, RustExpr,
-    RustFile, RustItem, RustLiteral, StdlibCode, Type, build_async_exit_cause_type_items,
+    RustFile, RustItem, RustLiteral, Type, build_async_exit_cause_type_items,
     build_cancellation_error_type_items, build_cpu_offload_items, build_error_into_error_impl,
     build_error_type_items, build_failure_type_items, build_file_handle_infra_items,
     build_file_handle_struct_items, build_generator_runtime_items, build_io_error_items,
@@ -156,7 +156,7 @@ pub(crate) struct RenderedSupport {
 
 pub(crate) fn render_support(
     demand: &ModuleSupportDemand,
-    stdlib_code: &StdlibCode,
+    stdlib_code: &crate::StdlibEmissionCode,
 ) -> RenderedSupport {
     let stdlib = render_stdlib_support(demand, stdlib_code);
     let needs_file_handles = demand.runtime_needs.file_handles() || stdlib.needs_file_handles;
@@ -380,7 +380,10 @@ struct StdlibSupport {
     provides_file_handle_struct: bool,
 }
 
-fn render_stdlib_support(demand: &ModuleSupportDemand, stdlib_code: &StdlibCode) -> StdlibSupport {
+fn render_stdlib_support(
+    demand: &ModuleSupportDemand,
+    stdlib_code: &crate::StdlibEmissionCode,
+) -> StdlibSupport {
     let mut module_order = Vec::new();
     let mut seen_modules = HashSet::new();
     for module_name in demand
@@ -466,7 +469,7 @@ fn render_stdlib_support(demand: &ModuleSupportDemand, stdlib_code: &StdlibCode)
 
 fn append_stdlib_dependencies(
     module_name: &str,
-    stdlib_code: &StdlibCode,
+    stdlib_code: &crate::StdlibEmissionCode,
     seen_modules: &mut HashSet<String>,
     module_order: &mut Vec<String>,
 ) {
@@ -604,7 +607,7 @@ mod tests {
             .locally_shadowed_error_classes
             .insert("SecondaryError".to_string());
 
-        let rendered = render_support(&demand, &StdlibCode::default());
+        let rendered = render_support(&demand, &crate::StdlibEmissionCode::default());
 
         assert!(!rendered.source.contains("struct SecondaryError"));
     }
@@ -622,7 +625,7 @@ mod tests {
         let mut project = ModuleSupportDemand::default();
         project.merge_project_module(&module);
 
-        let mut stdlib = StdlibCode::default();
+        let mut stdlib = crate::StdlibCode::default();
         stdlib.module_rust_code.insert(
             "sifr.fixture".to_string(),
             StdlibRustSource {

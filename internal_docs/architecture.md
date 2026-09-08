@@ -480,6 +480,18 @@ large-file check and a representative project check.
   native Cargo build.
 - Dependency metadata for both shapes comes from codegen outputs (`used_stdlib_modules` and `required_crates`), never from emitted Rust text scans.
 - Stdlib bootstrap retains the complete checked HIR and interop inventory.
+  Completed bootstrap HIR moves into shared immutable storage after module
+  emission. `StdlibEmissionCode` exposes only emission metadata; bootstrap
+  and deferred module results cannot construct an application interop plan.
+  Final single-file, project and test-project assembly select that plan once
+  over all application modules. Demand uses the IR-owned immutable visitor
+  for expressions, statement types, defaults and nested functions, then projects
+  selected declarations through the existing contract builder. Definitions-only
+  editor lookups project from the same success/error cache without copying the
+  compiled code bundle; the global checked inventory remains retained.
+  Test-project assembly retains its selected metadata, but the existing test
+  runner Cargo consumer still uses an empty interop plan; executing those
+  contracts remains a separate integration obligation.
   Code generation selects application interop demand by canonical module and
   declaration identity, following reexports, private calls, signatures and
   nominal/structural types. A required class owns its complete methods,

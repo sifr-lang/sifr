@@ -1,9 +1,10 @@
 //! Interpret the working directory's gitignore at its own path boundary.
 
 use super::check_and_package_commands::formatter_cli_diagnostic;
-use ignore::gitignore::GitignoreBuilder;
+use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_frontend::SourceProvider;
+use std::cell::OnceCell;
 use std::path::{Component, Path, PathBuf};
 
 pub(super) struct FormatterGitignore {
@@ -12,7 +13,8 @@ pub(super) struct FormatterGitignore {
 }
 
 struct Rule {
-    source: String,
+    validated: GitignoreBuilder,
+    compiled: OnceCell<Result<Gitignore, ignore::Error>>,
     mandatory_literal: Option<String>,
 }
 
@@ -24,7 +26,6 @@ impl FormatterGitignore {
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let root = normalize_path(cwd);
         let path = root.join(".gitignore");
-        let mut builder = GitignoreBuilder::new(&root);
         let mut rules = Vec::new();
         if enabled && provider.is_file(&path) {
             let source = provider.read_file(&path).map_err(|error| {
@@ -33,6 +34,7 @@ impl FormatterGitignore {
                 ))]
             })?;
             for (index, line) in source.as_str().lines().enumerate() {
+                let mut builder = GitignoreBuilder::new(&root);
                 let line = if index == 0 {
                     line.trim_start_matches('\u{feff}')
                 } else {
@@ -49,7 +51,8 @@ impl FormatterGitignore {
                     })?;
                 if !line.is_empty() && !line.starts_with('#') {
                     rules.push(Rule {
-                        source: line.to_string(),
+                        validated: builder,
+                        compiled: OnceCell::new(),
                         mandatory_literal: mandatory_literal(line),
                     });
                 }
@@ -93,22 +96,36 @@ impl FormatterGitignore {
         // Skip automaton construction only when a mandatory literal cannot
         // occur in this path or its parents. The gitignore engine still owns
         // all possible matches and their ordering.
-        let mut builder = GitignoreBuilder::new(&self.root);
-        let mut relevant = false;
+        let mut relevant = Vec::new();
         for rule in &self.rules {
             if could_match(rule, relative) {
-                relevant = true;
-                builder.add_line(None, &rule.source).map_err(ignore_error)?;
+                relevant.push(
+                    rule.compiled
+                        .get_or_init(|| rule.validated.build())
+                        .as_ref()
+                        .map_err(|error| ignore_error(error.clone()))?,
+                );
             }
         }
-        if !relevant {
-            return Ok(false);
+        // Match the file before its parents, preserving the gitignore engine's
+        // nearest-path precedence. Within each path, the last rule wins.
+        // Only parsed rules and sparse automata are reused, never decisions.
+        let mut candidate = Some(absolute.as_path());
+        let mut is_dir = false;
+        while let Some(path) = candidate {
+            for matcher in relevant.iter().rev() {
+                let result = matcher.matched(path, is_dir);
+                if !result.is_none() {
+                    return Ok(result.is_ignore());
+                }
+            }
+            if path == self.root {
+                break;
+            }
+            candidate = path.parent();
+            is_dir = true;
         }
-        Ok(builder
-            .build()
-            .map_err(ignore_error)?
-            .matched_path_or_any_parents(relative, false)
-            .is_ignore())
+        Ok(false)
     }
 }
 
@@ -156,6 +173,58 @@ fn normalize_path(path: &Path) -> PathBuf {
 mod tests {
     use super::*;
     use sifr_frontend::DiskSourceProvider;
+
+    #[test]
+    fn formatter_discovery_reuses_rules_without_cross_path_decisions() {
+        let dir = tempfile::tempdir().unwrap();
+        let ignore = matcher(
+            dir.path(),
+            "*.sifr\n![km]eep.sifr\nunrelated/**/*.rs\n",
+            true,
+        );
+        let rule_count = || {
+            ignore
+                .rules
+                .iter()
+                .filter(|r| r.compiled.get().is_some())
+                .count()
+        };
+        assert_eq!(rule_count(), 0);
+        assert!(
+            ignore
+                .matches_resolved_path(Path::new("drop.sifr"))
+                .unwrap()
+        );
+        assert_eq!(rule_count(), 2);
+        let first = ignore.rules[0].compiled.get().unwrap().as_ref().unwrap() as *const _;
+        assert!(
+            !ignore
+                .matches_resolved_path(Path::new("keep.sifr"))
+                .unwrap()
+        );
+        assert!(
+            ignore
+                .matches_resolved_path(Path::new("other.sifr"))
+                .unwrap()
+        );
+        assert_eq!(rule_count(), 2, "unrelated rule stays uncompiled");
+        assert_eq!(
+            first,
+            ignore.rules[0].compiled.get().unwrap().as_ref().unwrap() as *const _
+        );
+        let parents = matcher(dir.path(), "!keep.sifr\nbuild/\n", true);
+        assert!(
+            !parents
+                .matches_resolved_path(Path::new("build/keep.sifr"))
+                .unwrap(),
+            "file-level whitelist precedes parent matches"
+        );
+        assert!(
+            parents
+                .matches_resolved_path(Path::new("build/drop.sifr"))
+                .unwrap()
+        );
+    }
 
     fn matcher(root: &Path, rules: &str, enabled: bool) -> FormatterGitignore {
         std::fs::create_dir_all(root).unwrap();

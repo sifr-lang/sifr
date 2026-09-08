@@ -14,7 +14,7 @@ use sifr_ir::{HirModule, RustInteropArgument, RustInteropValue};
 use std::collections::{BTreeSet, HashMap};
 use std::sync::Arc;
 
-fn owners(plan: &RustInteropPlan) -> BTreeSet<String> {
+pub(super) fn owners(plan: &RustInteropPlan) -> BTreeSet<String> {
     plan.declarations
         .iter()
         .map(|entry| {
@@ -34,13 +34,13 @@ fn owners(plan: &RustInteropPlan) -> BTreeSet<String> {
         .collect()
 }
 
-fn generated(source: &str) -> (sifr_codegen::CodegenResult, StdlibCompiled) {
+pub(super) fn generated(source: &str) -> (sifr_codegen::CodegenResult, StdlibCompiled) {
     let frontend = compile_single_file_frontend(source).expect("application lowers");
     let generated = codegen_single_file_frontend(&frontend).expect("application generates");
     (generated, frontend.stdlib)
 }
 
-fn resolve(
+pub(super) fn resolve(
     generated: sifr_codegen::CodegenResult,
     stdlib: &StdlibCompiled,
     policy: DirectProbePolicy,
@@ -159,9 +159,7 @@ def expose() -> Result[bool, ValueError | RustPanicError]:
         }
         .expect("checked test stdlib");
         sifr_frontend::collect_module_exports(name, &lowered, &mut stdlib.defs);
-        stdlib
-            .code
-            .hir_modules
+        Arc::make_mut(&mut stdlib.code.hir_modules)
             .insert(name.to_string(), Arc::new(lowered.module));
     }
     // The reexport is represented by checked import identities, not source text.

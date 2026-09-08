@@ -193,7 +193,9 @@ pub use rust_ir::*;
 mod stdlib_codegen_metadata;
 mod stdlib_filter;
 mod stdlib_interop_demand;
-pub use stdlib_codegen_metadata::StdlibCode;
+pub use stdlib_codegen_metadata::{StdlibCode, StdlibEmissionCode};
+#[doc(hidden)]
+pub use stdlib_interop_demand::observe_stdlib_interop_selection;
 mod stdlib_import_signatures;
 mod stdlib_rust_source;
 pub use stdlib_rust_source::StdlibRustSource;

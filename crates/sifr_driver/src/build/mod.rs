@@ -68,6 +68,8 @@ mod sql_profiles_tests;
 mod sql_query_signatures;
 #[cfg(test)]
 mod stdlib_interop_demand_tests;
+#[cfg(test)]
+mod stdlib_interop_startup_tests;
 mod sysroot_interop;
 #[cfg(test)]
 mod sysroot_interop_tests;

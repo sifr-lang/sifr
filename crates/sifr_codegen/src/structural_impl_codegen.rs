@@ -16,7 +16,7 @@ impl RustEmitter {
     pub(crate) fn emit_imported_stdlib_structural_impls(
         &mut self,
         module: &HirModule,
-        stdlib_code: &crate::StdlibCode,
+        stdlib_code: &crate::StdlibEmissionCode,
     ) {
         if !self.structural_interop_enabled {
             return;

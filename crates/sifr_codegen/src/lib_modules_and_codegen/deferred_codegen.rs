@@ -1,5 +1,5 @@
 use super::{
-    CodegenResult, ModuleSupportDemand, ProjectStructuralLayoutLocation, RustEmitter, StdlibCode,
+    CodegenResult, ModuleSupportDemand, ProjectStructuralLayoutLocation, RustEmitter,
     project_imports,
 };
 use crate::ir_imports::collect_import_needs_from_items;
@@ -16,13 +16,13 @@ use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
 
 pub(super) fn deferred_codegen_result(
-    module: &HirModule,
-    stdlib_code: &StdlibCode,
+    _module: &HirModule,
+    stdlib_code: &crate::StdlibEmissionCode,
     mut emitter: RustEmitter,
     support_demand: ModuleSupportDemand,
     structural_layout_location: ProjectStructuralLayoutLocation,
     has_project_structural_layout: bool,
-) -> CodegenResult {
+) -> super::ModuleCodegenResult {
     let mut body_items = emitter.enum_items.clone();
     body_items.extend(emitter.body_items.clone());
     if support_demand.runtime.async_python || support_demand.runtime.native_async_cleanup {
@@ -78,11 +78,7 @@ pub(super) fn deferred_codegen_result(
         used_stdlib_modules,
         used_intrinsic_modules: std::mem::take(&mut emitter.used_stdlib_modules),
         required_features,
-        interop: {
-            let mut plan = crate::rust_interop_plan::interop_build_plan_for_module(module);
-            plan.stdlib_demand = crate::stdlib_interop_demand::select(stdlib_code, &[module]);
-            plan
-        },
+        interop: (),
         constant_mappings: std::mem::take(&mut emitter.module_constants),
         lowering_stats: emitter.lowering_stats,
         support_demand,
@@ -91,12 +87,12 @@ pub(super) fn deferred_codegen_result(
 
 pub(super) fn inline_codegen_result(
     module: &HirModule,
-    stdlib_code: &StdlibCode,
+    stdlib_code: &crate::StdlibEmissionCode,
     emitter: RustEmitter,
     support_demand: ModuleSupportDemand,
     structural_layout_location: ProjectStructuralLayoutLocation,
     has_project_structural_layout: bool,
-) -> CodegenResult {
+) -> super::ModuleCodegenResult {
     let mut generated = deferred_codegen_result(
         module,
         stdlib_code,
