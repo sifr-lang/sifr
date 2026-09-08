@@ -4,6 +4,63 @@ Status: active
 
 ## Item12K-B26: joint-delivery assessment (2026-09-08)
 
+**B26 MERGED / COMPLETE — ASSESSMENT ONLY.** Documentation
+[PR3795](https://github.com/sifr-lang/sifr/pull/3795) merged as
+`857a52c1f636ba2d55e3e50fd15030db3e155177`. Exact reviewed candidate
+`2e500a411d3250b8ffdfbf212c72d08c33bb09cd`, review base
+`91004bfb154b23980380863eaa1965ddc69099e4`; actual merge first parent
+`ffe6dfe2e4ebf5428093a5a81e10fe8706f37d81`. The intervening main changes
+were only Item60 Rust-trust prose and its separate latest-stable record; the
+three reviewed B26 document blobs equal the merge. No relevant validation or
+review input changed. Full-tree equality is not claimed.
+
+One initial exact-SHA Opus assessment was SATISFIED, no blockers, zero
+remediation/provider retries. [Published full review](https://github.com/sifr-lang/sifr/pull/3795#issuecomment-5577959953).
+Raw external response:
+`/private/tmp/sifr-b26.hQtWkE/evidence/opus-2e500a411d3250b8ffdfbf212c72d08c33bb09cd.AGIGx8/response.md`,
+SHA256 `0aea264789d061c13b23ef026bacc330a78d2065deb5f802239f32ded224e6f8`.
+
+Named checks PASS on that candidate; external root
+`/private/tmp/sifr-b26.hQtWkE/evidence`:
+
+- `hir.2e500a411d3250b8ffdfbf212c72d08c33bb09cd.json`, SHA256
+  `21dde06ea87a63c93c4872bee717f4f4f53e962d55796bf8a635fb32a1afd2d6`.
+- `file-size.2e500a411d3250b8ffdfbf212c72d08c33bb09cd.json`, PASS3761,
+  SHA256 `5616fd38f2f21b98873323447775e5092ed8d794038e8d53e3ff239130ffc628`.
+- `exact-diff.2e500a411d3250b8ffdfbf212c72d08c33bb09cd.json`, SHA256
+  `5ddd86a3b04c3d6aeee89028271d2c7e9d6f821574cc0a675a9701660d9150b1`.
+- `source-audit.json`, full558-path/18-ref immutable input matrix,
+  SHA256 `d1899cff2d8b89b25a51ffaeb01f533cf7eee44fa98bdc15ba7e0c83cd535ed6`.
+- `identity-checks.json`,74 PASS read-only source/command/receipt checks,
+  SHA256 `5cd134bfa896142e19d883a2ffc13bce4044c1a6220bfae12a9a870f9370922b`;
+  reused unchanged retained identities, supplemented by `main-update.json`,
+  SHA256 `3ea46c4ad28349396d09dadd22271c88c8ec1aabf6a9a97e28a827ad8c649d9c`.
+
+Review suggestions are clarification-only records, not new mechanism work:
+the historical performance area has two failing variants, benchmark producer
+and dependent budget; the budget did not acquire independent evidence. The
+standalone65 eight-suite command includes `evidence-custody`, while the merge
+profile's eight-suite set substitutes `representative`; both sets retain their
+own required coverage. The counter table covers input/open predecessor owners;
+closed merged non-input B12/B16/B17/B21 allowances remain closed, never reset.
+Future filters such as `corpus_repair` and formatter-discovery tests require
+their registered retained inputs; they are not asserted to exist on current
+main. Existing list-repeat failures remain owned by Naming cleanup validation
+findings until their later complete correction; B26 does not repair them.
+
+Only three Markdown files changed. Zero compiler tests/builds/Clippy/benchmark
+acquisitions/create-pr or merge-profile gates. The record-only update reuses
+this evidence, needs no new external review or Sifr gate, and changes only this
+phase record. Parent/predecessor state remains read-only; the local-only SQL ref
+is preserved in the independent clone at
+`4f53a1ce39f612e5e8c26b8802e5ef798c07d026`.
+Blocker for B26: none. Next scope, not started: separately owned B22/B23 as
+necessary, B24 attributable causal/controlled qualification, then registered
+B27 complete joint integration only after its explicit changed-input allowance
+is authorized. No65-main-first dependency and no new execution allowance here.
+The full emitted phase remains active. After this record merges, return the
+native final receipts to parent/coordinator and STOP; do not start the next item.
+
 B26 is the sole emitted-phase assessment owner for the dependency coordinator's
 external Item68 request. Its authoritative registration came from the parent's
 uncommitted B26 top section, read-only. The assessment runs in independent
