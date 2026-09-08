@@ -112,7 +112,7 @@ fn failed_assembly_never_publishes_support_and_changed_content_is_revalidated() 
 fn support_reuse_preserves_canonical_rendering_bytes_and_order() {
     use crate::lib_modules_and_codegen::generate_rust_with_stdlib_for_module_with_structural_policy;
     let parsed = sifr_python_parser::parse_module(
-        "def main() -> None:\n    values: list[int] = [1, 2]\n    print(values[0])\n",
+        "def read(values: list[int], index: int) -> Result[int, IndexError]:\n    return values[index]\n",
     )
     .expect("parse source");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("lower source");
@@ -125,6 +125,7 @@ fn support_reuse_preserves_canonical_rendering_bytes_and_order() {
         false,
     );
     let session = StdlibSyntaxSession::default();
+    assert!(reference.rust_source.contains("struct IndexError"));
     for name in ["sifr.fixture", "_sifr.private_fixture", "sifr.fixture"] {
         let emitted = session.generate_module(&lowered.module, &metadata, name);
         assert_eq!(emitted.rust_source, reference.rust_source);
