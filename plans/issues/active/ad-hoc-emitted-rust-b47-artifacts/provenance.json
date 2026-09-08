@@ -1,0 +1,241 @@
+{
+  "B45_reused_record": "826679ca3a6f23af4f52ec88b132542e99372700",
+  "B46_record": "bcbd5c8c71d1cb74ef849bd5c74fa104e149dcd5",
+  "B46_release": "c136ec3137707156b8eb7c78accf21b3695d61bd82f545b010b750fec687b18f",
+  "B46_terminal_sha256": "302f407be75cfaadc5f72ca714298f4a7f94163eed4d8588be552f815532a87d",
+  "current_read_receipts": "/private/tmp/sifr-b47.axK5oy/evidence/read-receipts.json",
+  "current_read_receipts_sha256": "928b38df7a86c0b300403607643f7edb37262f9d06a167d1eff6425bc600ef11",
+  "installed_tool_help": {
+    "xctrace-export-help": {
+      "argv": [
+        "xcrun",
+        "xctrace",
+        "help",
+        "export"
+      ],
+      "bytes": 1384,
+      "exit_code": 0,
+      "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/xctrace-export-help.json",
+      "sha256": "6d90ea8ff4ffa1cf0931579f7b9902235e73964f5914d390056f8791c6359f52"
+    },
+    "xctrace-help": {
+      "argv": [
+        "xcrun",
+        "xctrace",
+        "help",
+        "record"
+      ],
+      "bytes": 3444,
+      "exit_code": 0,
+      "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/xctrace-help.json",
+      "sha256": "fae847d6c61a521d6caf106ca63bc7e5fe95e77cb923abd2bae47052fa7b4fc6"
+    },
+    "xctrace-instruments": {
+      "argv": [
+        "xcrun",
+        "xctrace",
+        "list",
+        "instruments"
+      ],
+      "bytes": 1294,
+      "exit_code": 0,
+      "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/xctrace-instruments.json",
+      "sha256": "f94af90dd7f2c1d4126e97b51ba94b6efd305ee87d650d42196c776bca8079d0"
+    },
+    "xctrace-list-help": {
+      "argv": [
+        "xcrun",
+        "xctrace",
+        "help",
+        "list"
+      ],
+      "bytes": 474,
+      "exit_code": 0,
+      "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/xctrace-list-help.json",
+      "sha256": "b137091312f476e5c167976dceb83ae4f0fd4cc722b0acafb6c4685dea255f83"
+    },
+    "xctrace-metadata": {
+      "argv": [
+        "xcrun",
+        "--find",
+        "xctrace"
+      ],
+      "bytes": 293,
+      "exit_code": 0,
+      "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/xctrace-metadata.json",
+      "sha256": "8026bf5897a4edec2adbf50e46045f19e189a5b6a79d628f4e897a5a33bafe65"
+    },
+    "xctrace-templates": {
+      "argv": [
+        "xcrun",
+        "xctrace",
+        "list",
+        "templates"
+      ],
+      "bytes": 647,
+      "exit_code": 0,
+      "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/xctrace-templates.json",
+      "sha256": "25c67c18a88705c24c543f164abce4aaf2f0c9db941bfa92835bff667600270e"
+    },
+    "xctrace-version": {
+      "argv": [
+        "xcrun",
+        "xctrace",
+        "version"
+      ],
+      "bytes": 265,
+      "exit_code": 0,
+      "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/xctrace-version.json",
+      "sha256": "7bbef4f3c8b92b9d534adac35d211642115ca3540fcb1935fa360ea841c29741"
+    }
+  },
+  "item": "12K-B47",
+  "lookup": {
+    "candidate_disposition": [
+      "Governed21363-byte artifact metadata is aggregate budgets, not original raw capture; existing authenticated SHA56f91e matches governed artifact only.",
+      "Archive/PR3101 repeats target rawdigest but exposes no raw path, issue attachment URL, Git blob or release/action asset locator.",
+      "Known local metadata exposes only later B19diagnostic/B20bench-1788825805-84570; indexed locator search found no targetdigest/b59/capture/baseline candidate.",
+      "Thus no raw candidate selected for content hashing; no falsely attributed match. Metadata/read receipt hashes bind exact searched material."
+    ],
+    "git_scope": [
+      "main:plans/issues/archive/adhoc_performance_budget_host_variance.md, especially148-176 and actual references3100/3101/3116",
+      "67ee71150285f1ee90cff5d28a7758f04ced937f:plans/issues/active/adhoc_performance_budget_host_variance.md (blob364e52ec8b38b649ce640b72697bb1210312a656,21895bytes)",
+      "67ee71150285f1ee90cff5d28a7758f04ced937f:verification/areas/performance/data/work_budgets.json (blobf7818a78dd2a494386765e534735f13fad797447,21363bytes)",
+      "exact67ee and b59fb commit metadata; targeted git grep in67ee phase/reviews/performance data; PR3101linkedcommit metadata only",
+      "target/performance/m3 at67ee: absent from Git tree"
+    ],
+    "github_assets": "No linked raw download asset in searched authoritative records; no unreferenced release/action enumeration.",
+    "local_scope": [
+      "B19 /private/tmp/sifr-b19.udje7q/evidence: matching filenames metadata, terminal inventory pointer, artifact-inventory.json selected locator fields; target/performance immediate entries only",
+      "B20 /private/tmp/sifr-b20.bj6Au6/evidence: matching filenames metadata, terminal inventory pointer, evidence-inventory.json selected locator fields; target/performance immediate entries only",
+      "B41 /private/tmp/sifr-b41.rVHbYl/evidence: matching filenames metadata, terminal record pointer; exact9c5514record paths; record authentication.json/source-matrix.json selected locator fields; target/performance absent"
+    ],
+    "lookup_batches": 1,
+    "matching_raw_bytes": false,
+    "not_searched": "No home/global-object scan, arbitrary roots, alternate stores, B13preservation maps without a locator, expired410 retry, rebuild or new baseline.",
+    "original_absolute_root": null,
+    "original_argv_recovered": null,
+    "original_protected_inputs_recovered": null,
+    "outcome": "UNKNOWN; no matching raw bytes recovered",
+    "policy": "Narrow UNKNOWN only; zero-file capture unproven. All nine limits remain enforceable. Proven LSP project drift does not waive RSS.",
+    "raw_candidates_hashed": 0,
+    "searched_scope": {
+      "lookup-artifact-metadata": {
+        "argv": [
+          "python3",
+          "-c",
+          "import json,subprocess; d=json.loads(subprocess.check_output([\"git\",\"show\",\"67ee71150285f1ee90cff5d28a7758f04ced937f:verification/areas/performance/data/work_budgets.json\"])); print(json.dumps({k:v for k,v in d.items() if k not in [\"benchmarks\",\"budgets\",\"cases\"]},indent=2)[:10000])"
+        ],
+        "bytes": 1096,
+        "exit_code": 0,
+        "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/lookup-artifact-metadata.json",
+        "sha256": "2d5fcdd296db7e6f3d79f8979f88f062001d0448607db68f40520395ae161ad9"
+      },
+      "lookup-issue3100": {
+        "argv": [
+          "gh",
+          "issue",
+          "view",
+          "3100",
+          "--repo",
+          "sifr-lang/sifr",
+          "--json",
+          "title,body,url,comments"
+        ],
+        "bytes": 8573,
+        "exit_code": 0,
+        "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/lookup-issue3100.json",
+        "sha256": "bcb2dfabc659c285fa64a1932cc41b8fdd998be3d9192118de468b815bac3746"
+      },
+      "lookup-known-indexes": {
+        "argv": [
+          "python3",
+          "-c",
+          "import json,pathlib; roots=[pathlib.Path(\"/private/tmp/sifr-b41.rVHbYl/evidence\"),pathlib.Path(\"/private/tmp/sifr-b19.udje7q/evidence\"),pathlib.Path(\"/private/tmp/sifr-b20.bj6Au6/evidence\")]; terms=[\"f8c09d47\",\"b59fb265\",\"host_variance\",\"work-capture\",\"work_capture\",\"work-budget\",\"baseline\",\"provenance\",\"inventory\",\"assessment\"]; [(print(str(r), [(p.name,p.stat().st_size) for p in r.iterdir() if p.is_file() and any(t in p.name.lower() for t in terms)])) for r in roots]; [(print(str(r/\"terminal.json\"), {k:v for k,v in json.loads((r/\"terminal.json\").read_text()).items() if any(t in k.lower() for t in [\"inventory\",\"record\",\"assessment\"])})) for r in roots]"
+        ],
+        "bytes": 2182,
+        "exit_code": 0,
+        "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/lookup-known-indexes.json",
+        "sha256": "4d896b51f7575e4bcca96a088cab5dfdb771cf7fa2d41e11ceb08182ba47b401"
+      },
+      "lookup-known-performance-metadata": {
+        "argv": [
+          "python3",
+          "-c",
+          "from pathlib import Path; roots=[Path(\"/private/tmp/sifr-b19.udje7q/sifr/target/performance\"),Path(\"/private/tmp/sifr-b20.bj6Au6/sifr/target/performance\"),Path(\"/private/tmp/sifr-b41.rVHbYl/sifr/target/performance\")]; [(print(str(r),\"ABSENT\" if not r.exists() else [(p.name,\"dir\" if p.is_dir() else p.stat().st_size) for p in r.iterdir()])) for r in roots]"
+        ],
+        "bytes": 823,
+        "exit_code": 0,
+        "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/lookup-known-performance-metadata.json",
+        "sha256": "42e33561e69db745d165bed66f6dd7e06de10226535a04fd6a0f5382225b1de8"
+      },
+      "lookup-pr3101": {
+        "argv": [
+          "gh",
+          "pr",
+          "view",
+          "3101",
+          "--repo",
+          "sifr-lang/sifr",
+          "--json",
+          "title,url,body,comments,commits",
+          "--jq",
+          "{title,url,body,comments:[.comments[]|{url,body}],commits:[.commits[]|{oid,messageHeadline}]}"
+        ],
+        "bytes": 11288,
+        "exit_code": 0,
+        "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/lookup-pr3101.json",
+        "sha256": "ff12258bc23d2a56bed7b718e3d1c2317ee422d68639ab52732ae8a7999b3ba6"
+      },
+      "lookup-pr3116": {
+        "argv": [
+          "gh",
+          "pr",
+          "view",
+          "3116",
+          "--repo",
+          "sifr-lang/sifr",
+          "--json",
+          "title,url,body,comments"
+        ],
+        "bytes": 5323,
+        "exit_code": 0,
+        "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/lookup-pr3116.json",
+        "sha256": "ae56db6e20069bd759a3ad24b7c31c4e265c19625b2ebc5e3175c7bce1fdd306"
+      },
+      "lookup-referenced-blobs": {
+        "argv": [
+          "git",
+          "ls-tree",
+          "-rl",
+          "67ee71150285f1ee90cff5d28a7758f04ced937f",
+          "--",
+          "plans/issues/active/adhoc_performance_budget_host_variance.md",
+          "verification/areas/performance/data/work_budgets.json",
+          "target/performance/m3"
+        ],
+        "bytes": 687,
+        "exit_code": 0,
+        "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/lookup-referenced-blobs.json",
+        "sha256": "400be8dfad86df1b98ab4a65b310b0847b807ca914ddcb1dfe25b2e003833d7a"
+      },
+      "lookup-selected-index-rows": {
+        "argv": [
+          "python3",
+          "-c",
+          "import json,pathlib; target=\"f8c09d47e29ecbdfe2c8d9efb451db40481cc519a0d8c96a2cda247c80051713\"; paths=[\"/private/tmp/sifr-b19.udje7q/evidence/artifact-inventory.json\",\"/private/tmp/sifr-b20.bj6Au6/evidence/evidence-inventory.json\",\"/private/tmp/sifr-b41.rVHbYl/sifr/plans/issues/active/ad-hoc-emitted-rust-b41-artifacts/authentication.json\",\"/private/tmp/sifr-b41.rVHbYl/sifr/plans/issues/active/ad-hoc-emitted-rust-b41-artifacts/source-matrix.json\"]; terms=[target,\"b59fb265\",\"host_variance\",\"work-capture\",\"work_capture\",\"baseline\",\"preserv\"]; [(print(p,pathlib.Path(p).stat().st_size),print(\"\\n\".join(line for line in pathlib.Path(p).read_text().splitlines() if any(t in line.lower() for t in terms)))) for p in paths]"
+        ],
+        "bytes": 1345,
+        "exit_code": 0,
+        "path": "/private/tmp/sifr-b47.axK5oy/evidence/command-receipts/lookup-selected-index-rows.json",
+        "sha256": "d88f3cc70325f07504e7e1dff187f07ff326a454abc6c7f981ea4243e9b58343"
+      }
+    },
+    "target_raw_sha256": "f8c09d47e29ecbdfe2c8d9efb451db40481cc519a0d8c96a2cda247c80051713"
+  },
+  "new_raw_process_receipts_authenticated": 111,
+  "no_new_target_execution": true,
+  "old_bulk_inventory_rehashed": false,
+  "saved_current_paths_authenticated": 430,
+  "source_crosswalk_paths": 79
+}

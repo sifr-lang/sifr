@@ -1,0 +1,90 @@
+{
+  "item": "12K-B47",
+  "status": "PROPOSAL ONLY; zero recordings or target processes launched",
+  "decision_owner": "https://github.com/sifr-lang/sifr/issues/3776; coordinator Police",
+  "experiment": "Attribute current cold-process check startup to bootstrap construction versus semantic lowering using one fixed four-process instrumented contrast",
+  "qualification_relationship": "Current merge profile requires representative performance. This diagnostic is a proposed route to choosing a sufficient repair, not itself a required gate, historical-cause prerequisite, or permission to launch.",
+  "verified_public_capability": {
+    "executable": "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace",
+    "version": "xctrace version 16.0 (17F113)",
+    "template": "Time Profiler",
+    "additional_instrument": "Allocations",
+    "verified_options": ["record", "--template", "--instrument", "--time-limit", "--output", "--launch --", "--env", "--target-stdout", "--no-prompt", "export --toc", "export --xpath"],
+    "evidence": "/private/tmp/sifr-b47.axK5oy/evidence/tool-capabilities.json",
+    "limit": "Installed metadata/help establishes the public interface; successful recording, symbol resolution and export schema are not claimed before the first authorized recording. No historical LLDB capability is substituted."
+  },
+  "source_and_binary": {
+    "source": "df0056ad1b9d7fcbaacda3a3f0809da66279ea84",
+    "saved_binary": "/private/tmp/sifr-b46.rvEbWp/sifr/target/debug/sifr",
+    "binary_sha256": "1d34f40dde09932a852be1420a72493de548de9c14def52b792c45a528248424",
+    "binary_bytes": 176152808,
+    "format": "Mach-O 64-bit executable arm64",
+    "future_setup": "One new independent HTTPS clone at exact source, own index/refs/objects/no alternates. Copy this authenticated binary into its target/debug only; do not build it or run a preparation target. Work only in new owner root; all B46 source/cache/evidence remains read-only. Set SIFR_SYSROOT to the new exact-source clone, private TMPDIR and unset CARGO_TARGET_DIR. Check copied hash, source input hashes and unchanged source before first target. No changed compiler, sysroot, fixture, config or workload.",
+    "input": "crates/sifr/tests/e2e/pass/arithmetic.sifr at exact df0056ad1",
+    "control": "same binary --version; CLI Clap parser exits before compiler initialization (cli_model_and_entrypoint.rs:31,410-411). Shared executable/dyld startup, zero semantic compilation.",
+    "no_baseline_binary": true,
+    "no_rebuild": true
+  },
+  "fixed_design": {
+    "setup_sessions": 1,
+    "setup_target_invocations": 0,
+    "recording_order": ["control-1", "check-1", "check-2", "control-2"],
+    "target_process_samples": 4,
+    "check_processes": 2,
+    "control_processes": 2,
+    "profiler_record_processes": 4,
+    "toc_export_processes": 4,
+    "data_export_processes": 4,
+    "warmups": 0,
+    "retries": 0,
+    "extra_qualifications": 0,
+    "event_sampling": "Four fixed process samples. Time Profiler uses its installed template sampling interval, recorded in trace metadata; Allocations emits allocation/free events. Their event counts are data, not an invented fixed-frequency promise. Do not alter the template or increase process count to obtain more events."
+  },
+  "commands_after_separate_authorization": [
+    "For each registered label in fixed order, cwd=<new-root>/sifr; TMPDIR=<new-root>/tmp; CARGO_TARGET_DIR unset; exact xctrace executable below.",
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace record --template 'Time Profiler' --instrument Allocations --time-limit 60s --no-prompt --output <new-root>/evidence/<label>.trace --env TMPDIR=<new-root>/tmp --env SIFR_SYSROOT=<new-root>/sifr --target-stdout <new-root>/evidence/<label>.stdout --launch -- <new-root>/sifr/target/debug/sifr <registered-arguments>",
+    "control arguments: --version",
+    "check arguments: check <new-root>/sifr/crates/sifr/tests/e2e/pass/arithmetic.sifr",
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace export --input <new-root>/evidence/<label>.trace --toc --output <new-root>/evidence/<label>.toc.xml",
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace export --input <new-root>/evidence/<label>.trace --xpath '/trace-toc/run[@number=\"1\"]/data/table' --output <new-root>/evidence/<label>.tables.xml"
+  ],
+  "hypotheses_and_predictions": [
+    {
+      "hypothesis": "Remaining bootstrap emission/metadata/private-contract construction is the actionable cost owner",
+      "prediction": "Both check traces resolve the same hot allocation/call-stack family below compile_stdlib_sources_with_sysroot outside lower_stdlib_source: generate_stdlib_module_body, emission metadata/template clones, pending_private_interop_module or build_stdlib_rust_interop. Allocation lifetime distinguishes temporary churn from bundle data still live before compiler termination. --version lacks this family.",
+      "decision": "Report ranked source owners and actual byte/event/sample-time observations; propose one behavior-preserving repair only at the demonstrated family. Do not promise it clears all nine limits."
+    },
+    {
+      "hypothesis": "The residual primarily arises in required parsing/lowering/canonical semantic work rather than the remaining construction candidates",
+      "prediction": "Both check traces instead resolve the largest compiler CPU stack weight under parse_module_raw/lower_stdlib_source/semantic canonicalization, while the named construction families have smaller separately attributed weight; allocations may be temporary semantic state. This rejects another metadata-allocation patch as the next sufficient action.",
+      "decision": "Name the concrete semantic subphase from the trace for coordinator scoping; no blanket removal of checks, lazy failure semantics, or speculative allocation patch."
+    },
+    {
+      "hypothesis": "The supposed compiler heap explanation is not established",
+      "prediction": "Allocated/live heap bytes do not explain the stored RSS scale, or load/runtime frames dominate, or the two check traces disagree, or symbolization is inadequate.",
+      "decision": "Record the narrow result/inconclusive boundary and stop. Do not turn allocator bytes or CPU samples into Darwin RSS bytes or retired-instruction fractions."
+    }
+  ],
+  "measurement_boundaries": {
+    "cpu": "Resolved sampled CPU stack weights in the single launched sifr process; use table-declared units, normalize time weights to ms only when declared. Aggregate identical source families once; avoid counting parent inclusive weights twice. No conversion to instructions or claimed saved-cost fractions.",
+    "allocations": "Per-process allocated/freed/live heap bytes and event counts at trace timestamps; last live set before process termination, not post-exit zero. This is not ru_maxrss, physical footprint or a leak proof.",
+    "control_use": "Shared executable-startup negative control only; do not subtract its short trace as an exact baseline correction.",
+    "coverage_limit": "Prioritize the common19.4B check/diagnostic startup path. No new formatter/LSP target or canonical suite. LSP-specific engine/snapshot residency and formatter excess remain separately mapped and unquantified; no claim one trace clears them.",
+    "acceptance": "Usable per-process identity, both check traces contain symbol-resolved bootstrap/lowering stacks, allocations/lifetimes export with declared units, expected check/version exit0, no changed input, and the same leading family in both check traces. If not, stop rather than append samples."
+  },
+  "fixed_limits": {
+    "setup_seconds": 120,
+    "recording_seconds_each": 60,
+    "target_deadline_seconds_each": 60,
+    "recorder_deadline_seconds_each": 90,
+    "cleanup_seconds_each": 30,
+    "exports_total_seconds": 120,
+    "overall_seconds": 720,
+    "total_new_owned_storage_bytes": 2147483648,
+    "required_free_space_bytes": 4294967296,
+    "bounded_storage_checks": "Before and after each process and every5s only within owned output during recording; stop before launching another process if capacity limit breached. A process-local file-size ceiling and the owned-directory monitor bound exports/trace growth; never clean another target.",
+    "first_failure": "Hash/source mismatch, permission/UI requirement, unavailable combined instrument, timeout, storage boundary, nonzero target/recorder/export, missing units or insufficient symbolization: stop immediately; no retry, alternate profiler, added launch or new build. The first control is the setup-capability discriminator; no separate smoke target.",
+    "cleanup": "Each future recorder/target uses an owned process group with tracked descendant identities; at deadline stop recorder, TERM only owned descendants/group, then KILL only survivors within30s; wait/reap and verify absence before next process. Preserve incomplete trace and failure receipt; do not reset any prior failure counter. Retain successful source/trace/exports with inventory; no automatic deletion of predecessor or diagnostic evidence."
+  },
+  "authorization": "No measurement authority in B47. Police may accept, reject or replace this one proposal when choosing the smallest complete builtin/list-repeat/qualification delivery. This record does not mandate B27 whole-phase integration."
+}

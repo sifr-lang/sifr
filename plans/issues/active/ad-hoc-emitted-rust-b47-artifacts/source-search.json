@@ -1,0 +1,2428 @@
+{
+  "baseline": "b59fb265cf58327e0018778b39e5cd5001bd6edd",
+  "baseline_capture_root": null,
+  "commands": [
+    "git ls-tree -l REV -- PATH (metadata first)",
+    "git show REV:PATH (selected source)",
+    "stdlib inventory parsed from literal declarations in sources.rs; no compiler/parser launch"
+  ],
+  "crosswalk": {
+    ".cargo/config.toml": {
+      "B46": {
+        "blob": "e167b9cfac62e44d6057f5202db8e4a2afd42f82",
+        "bytes": 279,
+        "lines": 6,
+        "sha256": "6de721168ee30393ad5f8fd394c49deae30c3570f552a5d8afcf2a4cde7daf6b"
+      },
+      "baseline": {
+        "blob": "11a60613c0f5bde5340dea98fa4923272084436c",
+        "bytes": 134,
+        "lines": 2,
+        "sha256": "2f2727a19f0bf04764612914943f3160aae0c1b0315458a2088c071dafbb672a"
+      }
+    },
+    ".gitignore": {
+      "B46": {
+        "blob": "1550a8c5bf3f3a524a1f7ac7e283b943ad8554f7",
+        "bytes": 1110,
+        "lines": 65,
+        "sha256": "ec28a5c57c198a8da7840e77013767912f7e476f5984fa00914304ebee61c2fd"
+      },
+      "baseline": {
+        "blob": "1550a8c5bf3f3a524a1f7ac7e283b943ad8554f7",
+        "bytes": 1110,
+        "lines": 65,
+        "sha256": "ec28a5c57c198a8da7840e77013767912f7e476f5984fa00914304ebee61c2fd"
+      }
+    },
+    ".gitmodules": {
+      "B46": {
+        "blob": "8bd34e050b8ecc719eea8d3c3baf4f00bd93374c",
+        "bytes": 2910,
+        "lines": 57,
+        "sha256": "64f08a2c0f032e806af5fdea2e28b29a23aacc696b205f730193cbea84788897"
+      },
+      "baseline": {
+        "blob": "3b137533db99107b407e56668b4364028ca4c1a6",
+        "bytes": 2020,
+        "lines": 36,
+        "sha256": "63ed5c6f9eb58fb6b52a137dbe41adac92fc9c7448b0f73f6c9fbb61d441335e"
+      }
+    },
+    "Cargo.lock": {
+      "B46": {
+        "blob": "b1143a8be49c1d01f27a02a621249692cfa16bc4",
+        "bytes": 249256,
+        "lines": 10702,
+        "sha256": "f465c06f00187dd4e11e04d4c73d04bbb83cb7644dfd29b190c620c4ac8e2d27"
+      },
+      "baseline": {
+        "blob": "e228898a4090f9a18fa2a8c8919505cba5ee19c8",
+        "bytes": 223768,
+        "lines": 9489,
+        "sha256": "602c5cc841545314054aa7cf846b2ed991b171ab8c229f995deefa2d14e2a52b"
+      }
+    },
+    "Cargo.toml": {
+      "B46": {
+        "blob": "26fa7a91806087fb83a1a9c3ad28f1c179398308",
+        "bytes": 10577,
+        "lines": 248,
+        "sha256": "d5b4eb9801fd73520b81e57a9c0fc9ba7e9ad6fd18da0d91db65925d1922f8d3"
+      },
+      "baseline": {
+        "blob": "63c2ad36267a484f7c9dccd025b75538305c943d",
+        "bytes": 7728,
+        "lines": 204,
+        "sha256": "8e5262a604365fb30bc8042b79c61058f833f6f2e4d825626e6b0b76ec277ca9"
+      }
+    },
+    "crates/sifr/Cargo.toml": {
+      "B46": {
+        "blob": "78db7394b96ef54567e1b426ac63bb17e4101ca6",
+        "bytes": 1069,
+        "lines": 39,
+        "sha256": "d4402146220e4b786e42a1f6b6610eba859a6054314b602f91de238b8859b44e"
+      },
+      "baseline": {
+        "blob": "bcff18f934c680d53770b41e723e77479425deb5",
+        "bytes": 978,
+        "lines": 36,
+        "sha256": "157607ff7c20ce016280ccb6b1a952d816199fcf12d46d3cbae24604a6a7f029"
+      }
+    },
+    "crates/sifr/src/check_and_package_commands.rs": {
+      "B46": {
+        "blob": "8fe65dfb5c7107b5087c81f432c9e039a6556786",
+        "bytes": 29418,
+        "lines": 848,
+        "sha256": "5322ae40b0a1760bc6ccccac670c49d26c8a74a92c31a877b4a0e957da800fc5"
+      },
+      "baseline": {
+        "blob": "95f64932e7fbdcd91b1d9b198b3b09da89172b83",
+        "bytes": 26690,
+        "lines": 776,
+        "sha256": "1bb5732cf80f9fc85584c2cc8a8c93c85def302dd13b5691daf194c03de2a25e"
+      }
+    },
+    "crates/sifr/src/cli_model_and_entrypoint.rs": {
+      "B46": {
+        "blob": "a4bdf6c5bd82146623af86be5f1190d15224d489",
+        "bytes": 26706,
+        "lines": 855,
+        "sha256": "fba9d107e048707cfd3971af7dc3e2e2a2b6e1528a81231aee2b17e9441fbc9e"
+      },
+      "baseline": {
+        "blob": "bfca99f7ca8839508281c8222ed277eb1b5afb14",
+        "bytes": 27533,
+        "lines": 888,
+        "sha256": "8733cf2b7edc731edfb28c16eae6c4fd65fd015d0a280b51b3bbab1882a24a50"
+      }
+    },
+    "crates/sifr/src/formatter_discovery.rs": {
+      "B46": {
+        "blob": "a474844b648068d2415496051e5054d9562ff586",
+        "bytes": 12968,
+        "lines": 379,
+        "sha256": "cbfa5d73d8f1d9bc96ec6ea55fcf5d126ca42c1e7f9ac85fac14c6f1dfd3fcd9"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr/src/main.rs": {
+      "B46": {
+        "blob": "7817909d956bab36f04ce81d2b551b0fe1db5a14",
+        "bytes": 1543,
+        "lines": 54,
+        "sha256": "c7d49bdf334f4a8554fd819c62c9d3932f32d83a45beadb3de517a0ff40adf4f"
+      },
+      "baseline": {
+        "blob": "71418fea8c20e49eae0ae6a8dde719fe1f48f8af",
+        "bytes": 1451,
+        "lines": 50,
+        "sha256": "6bd1f3633955e8bc940445baf27eec91c6d9a5f705cbf4859d37543d47e49cc2"
+      }
+    },
+    "crates/sifr/tests/e2e/fail/type_mismatch.sifr": {
+      "B46": {
+        "blob": "c911dc59d1fac0ba6d262e25143521690ee76af4",
+        "bytes": 72,
+        "lines": 3,
+        "sha256": "8cc15b4b958878ab888ad3d6f05a34644175b00273fded4ad8d40d438bc87456"
+      },
+      "baseline": {
+        "blob": "c911dc59d1fac0ba6d262e25143521690ee76af4",
+        "bytes": 72,
+        "lines": 3,
+        "sha256": "8cc15b4b958878ab888ad3d6f05a34644175b00273fded4ad8d40d438bc87456"
+      }
+    },
+    "crates/sifr/tests/e2e/pass/arithmetic.sifr": {
+      "B46": {
+        "blob": "ca5d018956923d124235383957ddcfebd4fef250",
+        "bytes": 194,
+        "lines": 10,
+        "sha256": "948ecd80ced4da3aab8f31f5f9712b2cd36a4c0186469d05c85dce335aefc448"
+      },
+      "baseline": {
+        "blob": "ca5d018956923d124235383957ddcfebd4fef250",
+        "bytes": 194,
+        "lines": 10,
+        "sha256": "948ecd80ced4da3aab8f31f5f9712b2cd36a4c0186469d05c85dce335aefc448"
+      }
+    },
+    "crates/sifr/tests/e2e/pass/break_continue.sifr": {
+      "B46": {
+        "blob": "7eeffefcf08e67e962a977d0002ee595a58ce2d7",
+        "bytes": 215,
+        "lines": 11,
+        "sha256": "bdc90467d4d895310d6de6f650fc3b5c924b7d4e5fd4a3a67e40defec8f0cb6f"
+      },
+      "baseline": {
+        "blob": "7eeffefcf08e67e962a977d0002ee595a58ce2d7",
+        "bytes": 215,
+        "lines": 11,
+        "sha256": "bdc90467d4d895310d6de6f650fc3b5c924b7d4e5fd4a3a67e40defec8f0cb6f"
+      }
+    },
+    "crates/sifr/tests/formatter_discovery.rs": {
+      "B46": {
+        "blob": "bdc7e41d101fd05d7c74baf63cc8e985adde6dbd",
+        "bytes": 7247,
+        "lines": 173,
+        "sha256": "064eb0704d9ce89cceaa682bab03dc13c71039beea3088dc7ec98a88385a5741"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_analysis/src/host/construction.rs": {
+      "B46": {
+        "blob": "7822eccac663326214f8a332fd0be514dfe85251",
+        "bytes": 2464,
+        "lines": 60,
+        "sha256": "050aba871ef94eb06cb627a1d89d5bc1b697d82f46fb7b84803dbe4d8d563cc1"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_analysis/src/host/overlay_updates.rs": {
+      "B46": {
+        "blob": "ef7e6812c4ba973e93c4e828ab6ed969a9ffa529",
+        "bytes": 5655,
+        "lines": 169,
+        "sha256": "21da168623ab14bdaa1cce1b13954962062a96357d984fa04c2b8d7c310e50ab"
+      },
+      "baseline": {
+        "blob": "3e69ef95f848b0879d0b5ffe38a972173886ed89",
+        "bytes": 4120,
+        "lines": 130,
+        "sha256": "9e9c35d7eea7a93ecb1372567be2e4e30f09b0361f1c020ced1a9b6ea8ded7ee"
+      }
+    },
+    "crates/sifr_analysis/src/host/stdlib_tests.rs": {
+      "B46": {
+        "blob": "4b5cecccdb69075432ca989c5e417cd072aa2b43",
+        "bytes": 10462,
+        "lines": 322,
+        "sha256": "0d5980fca540f346cb2143f99c0c1e312b9916bff2a1012e7d4ccba9d4458c88"
+      },
+      "baseline": {
+        "blob": "b9c5598ec6a117b99fbaa0a4ea69814c0e7b3804",
+        "bytes": 7021,
+        "lines": 208,
+        "sha256": "53aca165946772d01ed1f96cca788701330832f85736ffcf543ac51210d49dcd"
+      }
+    },
+    "crates/sifr_analysis/src/sql_editor_runtime.rs": {
+      "B46": {
+        "blob": "144a8b978770bee779c0ce02dc0c6d35cde23ed1",
+        "bytes": 19325,
+        "lines": 500,
+        "sha256": "3d3cfd9c254b2e42255bb7f369e2cbaea4fcbebe5d1efa539c4d1d9fe9deafda"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_analysis/src/sql_incremental_cache.rs": {
+      "B46": {
+        "blob": "dae64be1410975eca0eaf4ba18d41f6d3808012f",
+        "bytes": 8470,
+        "lines": 255,
+        "sha256": "b219c91b7ba6b85a47f6f659b58a92d03bb6a7c7b716b51d51d565cedec0f73a"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_codegen/src/lib_modules_and_codegen.rs": {
+      "B46": {
+        "blob": "a36e56b063df626327f85556afa5a8abff672c56",
+        "bytes": 12781,
+        "lines": 306,
+        "sha256": "a7922090b32a88d6bcd8bf693c99c908e357d37d16169f7bc9f7b6bf0161826b"
+      },
+      "baseline": {
+        "blob": "8234cbe6ee7736c81135e81c939d1e80308c801d",
+        "bytes": 36150,
+        "lines": 816,
+        "sha256": "8bdf2aad601f7fa836f9cf2acf6f6cc93829e3c5689ae3df15de017d69ff6a3a"
+      }
+    },
+    "crates/sifr_codegen/src/lib_modules_and_codegen/deferred_codegen.rs": {
+      "B46": {
+        "blob": "76500f16944e39712ee0807a1130eed138443b3d",
+        "bytes": 6226,
+        "lines": 164,
+        "sha256": "998974b451c374dae2785878d719bcc16b5d44c0365b672722a8477718c5a454"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_codegen/src/lib_modules_and_codegen/structural_policy.rs": {
+      "B46": {
+        "missing": true
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_codegen/src/lib_project_codegen.rs": {
+      "B46": {
+        "blob": "5c8ded88cffdad9d223aa852e0f3092c3ce88fc4",
+        "bytes": 23052,
+        "lines": 589,
+        "sha256": "c2e6b5a2eaed705da9faca86216159b815729c360c9386878912361c89ce525d"
+      },
+      "baseline": {
+        "blob": "8c7444fcd5d6356811fc15ba425d8fdbddf9722e",
+        "bytes": 13631,
+        "lines": 373,
+        "sha256": "500143d200d4058738e9825bfa4c29b42924c506879197122abd6f8ea5fc6887"
+      }
+    },
+    "crates/sifr_codegen/src/rust_interop_plan.rs": {
+      "B46": {
+        "blob": "6263d1fea8ae55c87ed76499feade0de298b03ac",
+        "bytes": 27182,
+        "lines": 813,
+        "sha256": "65258c05fb7c0c9136f33c8b06e14e6390b136c9aab762606a40a843830508e6"
+      },
+      "baseline": {
+        "blob": "1b3ae534d2b4d6c786b18ac71b8d4cbc5ff6e2af",
+        "bytes": 22950,
+        "lines": 707,
+        "sha256": "54ee6c92f3eafff514352575ed384492a96c833ec547714b766d06d4d67c6763"
+      }
+    },
+    "crates/sifr_codegen/src/stdlib_codegen_metadata.rs": {
+      "B46": {
+        "blob": "d9de6ebe226f18d7283a9e22e64eba76505a0d8f",
+        "bytes": 2200,
+        "lines": 51,
+        "sha256": "dedb143798231672973f8e49020a4bcc7a54ed9f2699a9bfda2d6913fc731551"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_codegen/src/stdlib_interop_demand.rs": {
+      "B46": {
+        "blob": "04ed203990d6978a17a89d8ccca0223efbdb8002",
+        "bytes": 14956,
+        "lines": 398,
+        "sha256": "b991163483520da8b172e5b2bcce756634cb22f298f44295a63ab04679dcb585"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_codegen/src/stdlib_interop_demand/types.rs": {
+      "B46": {
+        "blob": "8aef594dcb8dd0be02472dd31a67b645a58ef10a",
+        "bytes": 4648,
+        "lines": 131,
+        "sha256": "61d106f95c52da0ec96f5eb2f517300216bfff28e0ddc888000d2898252bb134"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_compiler_component/src/host.rs": {
+      "B46": {
+        "blob": "bf6ce02be4bc09c5bf3714cb270154d63175d1b1",
+        "bytes": 11128,
+        "lines": 304,
+        "sha256": "4e82d3a868211617eba4ae5ba691c0c96ceab883e995572e98b44e62b3c9bea3"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_driver/src/build/api.rs": {
+      "B46": {
+        "blob": "3038001f50236eefd38d40c36899f0b0c5700204",
+        "bytes": 5726,
+        "lines": 181,
+        "sha256": "a802765293d19c93625324c14d00313ff73318342f7ae9f71aca8a805b81376e"
+      },
+      "baseline": {
+        "blob": "62e10608a7d5de807e6f9d760b56e25db8630017",
+        "bytes": 3717,
+        "lines": 108,
+        "sha256": "56b39b427c79b52cf9b4d0e24ffd7a9fb4216d8f52403deb37c2b0e159487498"
+      }
+    },
+    "crates/sifr_driver/src/build/entrypoint.rs": {
+      "B46": {
+        "blob": "d0ecf1d73aa48cac0e4d551e81cb900b65a1a512",
+        "bytes": 28206,
+        "lines": 719,
+        "sha256": "bbbda51a3b396e512118a9388645b06484aa8ffec542796a60b88aa1e3f35bb4"
+      },
+      "baseline": {
+        "blob": "d30ca288fd32519dd2706e82f88784482991a983",
+        "bytes": 35523,
+        "lines": 893,
+        "sha256": "95e6e914f774acec78bf935eb954337a7e5d50d915205347cbda7ec40ec51dd1"
+      }
+    },
+    "crates/sifr_driver/src/build/single_file_interop_cache.rs": {
+      "B46": {
+        "blob": "c520fcf8fbc382615dbd9a621c5982fd5740e41f",
+        "bytes": 4018,
+        "lines": 103,
+        "sha256": "67e872f73f734b54dd1c2d1363b32a1ed566b1959bd04ca0efd0b1ae610cf533"
+      },
+      "baseline": {
+        "blob": "200f76f3cc857ffa3a22bd9af658de792f6e97a3",
+        "bytes": 3794,
+        "lines": 99,
+        "sha256": "9fbe45b4d4f1064003c024a130837f86c7a59af0cf72606ad13cb95aee7b2b72"
+      }
+    },
+    "crates/sifr_driver/src/build/sql_application_queries.rs": {
+      "B46": {
+        "blob": "f5ea13d8451629809d6f6ceaab7e1457e2acf764",
+        "bytes": 16411,
+        "lines": 408,
+        "sha256": "c845d0eae645a609d828fdc19e39ea9ac8e88706a281d3c8fd2a753be35dd061"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_driver/src/build/sysroot_interop.rs": {
+      "B46": {
+        "blob": "170f0ccfd595161d0277d0336f92cbf9786b4323",
+        "bytes": 30918,
+        "lines": 833,
+        "sha256": "0c3b47e7882ec36b979931e05ea124ae81f0d030afc9ab72a4aa5b5dfc00f613"
+      },
+      "baseline": {
+        "blob": "70a431ed92ce93b1cc36f27c045da1fa89fd1627",
+        "bytes": 29312,
+        "lines": 790,
+        "sha256": "e4a0165e2e1663c79d42afde3ba0dcdec6ae06bafbf621e171fc4b453bbf9ba2"
+      }
+    },
+    "crates/sifr_driver/src/frontend/api.rs": {
+      "B46": {
+        "blob": "ad7b75620c2e47e24ed77fd335a0d5769c1b8090",
+        "bytes": 3950,
+        "lines": 111,
+        "sha256": "315aed6f6f5790945a6ca4f82699c4305767f5309a261b6ee0893baa554d5405"
+      },
+      "baseline": {
+        "blob": "650b8ef6ec400fc5079a9be876c75762fad9c033",
+        "bytes": 3517,
+        "lines": 99,
+        "sha256": "48302afe9f2cae6e69a7f1fd0ed1a803b7c86fa23b27292aef34375d365a29f6"
+      }
+    },
+    "crates/sifr_driver/src/stdlib/bootstrap.rs": {
+      "B46": {
+        "blob": "c62682ac3470956deecc6b642f79730a79b9e44e",
+        "bytes": 31828,
+        "lines": 791,
+        "sha256": "b0b9783863bea6c0c1426fbc4d5cc99bfa4ca0b007ec644e348bfb25df0e2cc5"
+      },
+      "baseline": {
+        "blob": "3f7711e010d762aab0f8f7c692032b83c41008f3",
+        "bytes": 28785,
+        "lines": 710,
+        "sha256": "139e073c2072337e356baab756eaf09169e1bfd2563b282606782087bfd0e944"
+      }
+    },
+    "crates/sifr_driver/src/stdlib/cache.rs": {
+      "B46": {
+        "blob": "61139bf2b198740756dbf69f944dd0811df9446d",
+        "bytes": 6780,
+        "lines": 174,
+        "sha256": "a228d6ed06247fd41b29097017af5272bd299fb9830b9efb07583deffadc1a3e"
+      },
+      "baseline": {
+        "blob": "4447c875f42b85cc223085b8c7fc9ebdbdc5379e",
+        "bytes": 2828,
+        "lines": 74,
+        "sha256": "c643ef289b606d2fa544d3fa9afd69654d77cc2b837b71a41ea10d3271145886"
+      }
+    },
+    "crates/sifr_driver/src/stdlib/interop.rs": {
+      "B46": {
+        "blob": "f7869e680ca589d94f37f60b6d55958abcdb36ea",
+        "bytes": 2446,
+        "lines": 82,
+        "sha256": "aa67ca4d6a2350745f7601f51c71b8439536a467e64660d0536e08c9a0bb51d3"
+      },
+      "baseline": {
+        "blob": "f7869e680ca589d94f37f60b6d55958abcdb36ea",
+        "bytes": 2446,
+        "lines": 82,
+        "sha256": "aa67ca4d6a2350745f7601f51c71b8439536a467e64660d0536e08c9a0bb51d3"
+      }
+    },
+    "crates/sifr_driver/src/stdlib/tooling.rs": {
+      "B46": {
+        "blob": "bd5c633ca51a605e1eb5b7a6d7e70f96d21d50db",
+        "bytes": 3200,
+        "lines": 94,
+        "sha256": "ac9448e6b3541f6d897563e1ad0446bed342da6837e1b5c9c30eb6e413d26871"
+      },
+      "baseline": {
+        "blob": "66b386616ee15e4e4fcba0b4bbfc758a34e24bc4",
+        "bytes": 3200,
+        "lines": 94,
+        "sha256": "ac05a411974629d27cb923afe53acc382549550f3805bd7125d551ff0484308d"
+      }
+    },
+    "crates/sifr_driver/src/stdlib/types.rs": {
+      "B46": {
+        "blob": "287cfaa0c4cb04b1d764797045133ca61a4a3984",
+        "bytes": 681,
+        "lines": 24,
+        "sha256": "87438fb456f089f461aede7357bd229d465310019527e9b96383e70ac2b4f9d2"
+      },
+      "baseline": {
+        "blob": "287cfaa0c4cb04b1d764797045133ca61a4a3984",
+        "bytes": 681,
+        "lines": 24,
+        "sha256": "87438fb456f089f461aede7357bd229d465310019527e9b96383e70ac2b4f9d2"
+      }
+    },
+    "crates/sifr_driver/src/test_runner/artifacts.rs": {
+      "B46": {
+        "blob": "1116b9dca75355c14cbafc9c460a8e6441d82509",
+        "bytes": 2737,
+        "lines": 84,
+        "sha256": "8fa3ee6b6ebf779fd36fc556ff5c17b0e6295e09947c0d00a195ea35cf6c5c37"
+      },
+      "baseline": {
+        "blob": "3ce62da95b6cb44deb1e0fe34b06aa9ae26a6f74",
+        "bytes": 2167,
+        "lines": 69,
+        "sha256": "d19052d2a23311f7fc6d47471fea268d407047539db65fb105a892b9f95ac85c"
+      }
+    },
+    "crates/sifr_frontend/src/frontend_reuse.rs": {
+      "B46": {
+        "blob": "b20e8b67ea579d9dd0fb2000f218f8970906f618",
+        "bytes": 4536,
+        "lines": 167,
+        "sha256": "9d5782e2144f47e65eca281219db819a41f510a4d15e88b8a9f644a4a1e306c9"
+      },
+      "baseline": {
+        "blob": "b20e8b67ea579d9dd0fb2000f218f8970906f618",
+        "bytes": 4536,
+        "lines": 167,
+        "sha256": "9d5782e2144f47e65eca281219db819a41f510a4d15e88b8a9f644a4a1e306c9"
+      }
+    },
+    "crates/sifr_frontend/src/workspace_trace.rs": {
+      "B46": {
+        "blob": "d7967a4073fbddc706a2fc41f7885d104c8d5d11",
+        "bytes": 8152,
+        "lines": 275,
+        "sha256": "071b36423404cbc5af6548d566b373cbbccf6b3ceefdc86d85bc07b0bc2cd95d"
+      },
+      "baseline": {
+        "blob": "d7967a4073fbddc706a2fc41f7885d104c8d5d11",
+        "bytes": 8152,
+        "lines": 275,
+        "sha256": "071b36423404cbc5af6548d566b373cbbccf6b3ceefdc86d85bc07b0bc2cd95d"
+      }
+    },
+    "crates/sifr_ir/src/lib.rs": {
+      "B46": {
+        "blob": "19505b63f4cd99b953fd754898473d6881bd9438",
+        "bytes": 6552,
+        "lines": 203,
+        "sha256": "3c63f9c7311834c32e4986222edf2696b45eb73952560e9f3de0be6e19f519c8"
+      },
+      "baseline": {
+        "blob": "c44a4c699c6ab332d05b95aef4f8073d90a39d90",
+        "bytes": 6243,
+        "lines": 190,
+        "sha256": "69134c8cf75e9a60fcfc2a397449fce0a7daee5e944c5820c903dcc1b082fcc9"
+      }
+    },
+    "crates/sifr_ir/src/readonly_visit.rs": {
+      "B46": {
+        "blob": "2b3905b73321c40c1af544046df7d3360968e2c6",
+        "bytes": 19105,
+        "lines": 666,
+        "sha256": "1f3e15a0a7f84644ff5e73ff72a7406b06dddbca657c8134d369fb6cce3e1547"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "crates/sifr_ir/src/type_visit.rs": {
+      "B46": {
+        "blob": "f7c10b31722e23c51a35783dab1c43c5b3ffe42c",
+        "bytes": 25710,
+        "lines": 794,
+        "sha256": "ff69004f1c82081358d5e30735aaa642e2a111b7197482ec0f0d6d7b6dad43b9"
+      },
+      "baseline": {
+        "blob": "e8434b6c226575a82482a9a27bfb912bb6897eb8",
+        "bytes": 23556,
+        "lines": 728,
+        "sha256": "5712d62057761702905e941991428061bdb29389b7ddb89214fc5ba5780c09f2"
+      }
+    },
+    "crates/sifr_stdlib_manifest/src/sources.rs": {
+      "B46": {
+        "blob": "51d2ac646407cbed581c8ce9b35c114fbdf313cb",
+        "bytes": 29236,
+        "lines": 870,
+        "sha256": "f6ec51b447d24a73e59a984b3689c229df9265ce9c4922bbab5ff74ac07c8e06"
+      },
+      "baseline": {
+        "blob": "03702ae836fc1e91d85ba91f9c716af66600afa4",
+        "bytes": 28599,
+        "lines": 847,
+        "sha256": "c4e5721ffc0ae27c43e4b89e3bb81e4efe98554a774d0aa5d50120f2009bf2af"
+      }
+    },
+    "crates/sifr_sysroot/src/resolve.rs": {
+      "B46": {
+        "blob": "e1e9a9af208ae9b70eded6479c5f40030245d534",
+        "bytes": 4270,
+        "lines": 133,
+        "sha256": "37f59b6c28df9ac8a70a4030d5d39a927774dfcb0685eeb4c89aaa75d711ff3d"
+      },
+      "baseline": {
+        "blob": "e1e9a9af208ae9b70eded6479c5f40030245d534",
+        "bytes": 4270,
+        "lines": 133,
+        "sha256": "37f59b6c28df9ac8a70a4030d5d39a927774dfcb0685eeb4c89aaa75d711ff3d"
+      }
+    },
+    "demos/additional_modules/main.sifr": {
+      "B46": {
+        "blob": "27e970ff8f42be9656eb52176b060179fb845002",
+        "bytes": 3640,
+        "lines": 106,
+        "sha256": "815cabee5893b9e7ca61afc0fd7e070bad605f4e2bf3832be4598464d05829f9"
+      },
+      "baseline": {
+        "blob": "19869a307d37d6344750197d809dbc77d70fdf05",
+        "bytes": 3707,
+        "lines": 108,
+        "sha256": "35092fb51f676f80e9681d6e1bbc78194b34f1e470bd2e6e0c0d0f6ad11c00dd"
+      }
+    },
+    "demos/project_graph/main.sifr": {
+      "B46": {
+        "blob": "7d3769e8c33640242cb44ed4f086fd1d9aee6541",
+        "bytes": 65,
+        "lines": 4,
+        "sha256": "d01509cc85130359377dd15870654531fc10a385049d5f295467a4e399baf6a1"
+      },
+      "baseline": {
+        "blob": "7d3769e8c33640242cb44ed4f086fd1d9aee6541",
+        "bytes": 65,
+        "lines": 4,
+        "sha256": "d01509cc85130359377dd15870654531fc10a385049d5f295467a4e399baf6a1"
+      }
+    },
+    "rust-toolchain.toml": {
+      "B46": {
+        "blob": "4ecc04c729c7e5788ec3da6e7ad426ad195c405d",
+        "bytes": 86,
+        "lines": 4,
+        "sha256": "c7bdffe5b4c71aeafb84939751c9a1690bc39d0e305d4a534ddf7ce9ce64c675"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "scripts/check_file_size_guardrails.py": {
+      "B46": {
+        "blob": "f39b8a7f55ddbba74e59fbb9266f2fce5a6fa4fc",
+        "bytes": 12638,
+        "lines": 351,
+        "sha256": "f029f370ba9a87ed7093c63940c12ec27d1a41f280a924ca467e6398d0de572d"
+      },
+      "baseline": {
+        "blob": "8fdd76769948c13fa231441cadb2c632e9edb54b",
+        "bytes": 12579,
+        "lines": 346,
+        "sha256": "a261e633b2ccb5309727759b5463eeb552768f092506695e4302bfb909df1a91"
+      }
+    },
+    "verification/areas/developer_tooling/lsp_protocol.py": {
+      "B46": {
+        "blob": "6bb4e2e4439f73d6ac110d0d708f541b407293d7",
+        "bytes": 9434,
+        "lines": 234,
+        "sha256": "4da5113993afd293bcb27246e803726bf8a6e5fc3a1502504f80407600ff08f6"
+      },
+      "baseline": {
+        "blob": "6bb4e2e4439f73d6ac110d0d708f541b407293d7",
+        "bytes": 9434,
+        "lines": 234,
+        "sha256": "4da5113993afd293bcb27246e803726bf8a6e5fc3a1502504f80407600ff08f6"
+      }
+    },
+    "verification/areas/performance/adapter.py": {
+      "B46": {
+        "missing": true
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "verification/areas/performance/benchmark_baseline.py": {
+      "B46": {
+        "blob": "ba2c118b89cdec6342da4297b6c23a061067d76e",
+        "bytes": 7975,
+        "lines": 213,
+        "sha256": "332c982ac420ac4e43775a537232b187ed7fe447276b073416c7bd1b62ca852b"
+      },
+      "baseline": {
+        "blob": "ba2c118b89cdec6342da4297b6c23a061067d76e",
+        "bytes": 7975,
+        "lines": 213,
+        "sha256": "332c982ac420ac4e43775a537232b187ed7fe447276b073416c7bd1b62ca852b"
+      }
+    },
+    "verification/areas/performance/benchmark_case_selftest.py": {
+      "B46": {
+        "blob": "99a94de3853b92266540c629cc22a93f48d78569",
+        "bytes": 8739,
+        "lines": 166,
+        "sha256": "fb8941000afe602867efae8aa27b30207015905de24f0b23ebda91ad47069295"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "verification/areas/performance/benchmark_process.py": {
+      "B46": {
+        "blob": "e72c2127ccd0fade0838ecd7e1a66fae39307cba",
+        "bytes": 9451,
+        "lines": 233,
+        "sha256": "15ae218f8a186f75dadc4edee6bb33a7675e324f6e24a035bda9bedc4e52c515"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "verification/areas/performance/check_budgets.py": {
+      "B46": {
+        "blob": "349996f164ed9f49d58a6edab1f34cc878fca2e7",
+        "bytes": 30710,
+        "lines": 797,
+        "sha256": "e471635195eababa5d162ae15bc21591bf57480fed3949020e0aeb89d15839fb"
+      },
+      "baseline": {
+        "blob": "349996f164ed9f49d58a6edab1f34cc878fca2e7",
+        "bytes": 30710,
+        "lines": 797,
+        "sha256": "e471635195eababa5d162ae15bc21591bf57480fed3949020e0aeb89d15839fb"
+      }
+    },
+    "verification/areas/performance/controlled_sampling.py": {
+      "B46": {
+        "blob": "8e89af4a1876973375366f2519eb5b7caf9f1d2b",
+        "bytes": 12591,
+        "lines": 321,
+        "sha256": "dca5451e555fbfef8a2c9f03a3534f315b5f0ebe48968d8c7665b05803950f9f"
+      },
+      "baseline": {
+        "blob": "fcb2f079a435a50b0c6cd8af99c32ce3d15aa36a",
+        "bytes": 8248,
+        "lines": 232,
+        "sha256": "e47817c2e5491f2469877a3901c2cdb29039ee238d22cb8585e655dec0f5c97d"
+      }
+    },
+    "verification/areas/performance/data/baselines.json": {
+      "B46": {
+        "blob": "3aa26589d21b4622a791ecaac8bef58aaeb50f07",
+        "bytes": 57616,
+        "lines": 2197,
+        "sha256": "67868b45e86306bb0738221b74b3d7049ab87f0ca427000cf900adadb9766f39"
+      },
+      "baseline": {
+        "blob": "3aa26589d21b4622a791ecaac8bef58aaeb50f07",
+        "bytes": 57616,
+        "lines": 2197,
+        "sha256": "67868b45e86306bb0738221b74b3d7049ab87f0ca427000cf900adadb9766f39"
+      }
+    },
+    "verification/areas/performance/data/benchmark_manifest.json": {
+      "B46": {
+        "blob": "4d2d02b37b18c2437f6c21854e4ad428e9442cc3",
+        "bytes": 32046,
+        "lines": 971,
+        "sha256": "d6994b8c7343310e33d980a84a1a843aedaf6326d11fde0dbfdc819006ed64a2"
+      },
+      "baseline": {
+        "blob": "013523d17392558a28af5270857f524dc5077b84",
+        "bytes": 31224,
+        "lines": 971,
+        "sha256": "f2e180e4d8f09dcf7e7f527416c198b7bd7dc33322839d125fa59d18d3325e8b"
+      }
+    },
+    "verification/areas/performance/data/budgets.json": {
+      "B46": {
+        "blob": "f1f63ba27a547b2206057ba659319c989ceaaf89",
+        "bytes": 43205,
+        "lines": 1323,
+        "sha256": "134b6da29af85fc288bbe4b828adaa77c539f8fa050fedef7ae80495f3a542d5"
+      },
+      "baseline": {
+        "blob": "f1f63ba27a547b2206057ba659319c989ceaaf89",
+        "bytes": 43205,
+        "lines": 1323,
+        "sha256": "134b6da29af85fc288bbe4b828adaa77c539f8fa050fedef7ae80495f3a542d5"
+      }
+    },
+    "verification/areas/performance/data/waivers.json": {
+      "B46": {
+        "blob": "f1b3655e3674eaea4b96cda094cd66cfd60c7c98",
+        "bytes": 253,
+        "lines": 5,
+        "sha256": "bf09e74bdd9f0c30725498eb47a7f293a1c1ab67a92c57ec30367dd42d070268"
+      },
+      "baseline": {
+        "blob": "f1b3655e3674eaea4b96cda094cd66cfd60c7c98",
+        "bytes": 253,
+        "lines": 5,
+        "sha256": "bf09e74bdd9f0c30725498eb47a7f293a1c1ab67a92c57ec30367dd42d070268"
+      }
+    },
+    "verification/areas/performance/data/work_budgets.json": {
+      "B46": {
+        "blob": "f7818a78dd2a494386765e534735f13fad797447",
+        "bytes": 21363,
+        "lines": 535,
+        "sha256": "56f91e711d78b4efb7e759e20868a3edec67c95f5b70368f08ddb5e70f98cc26"
+      },
+      "baseline": {
+        "blob": "593a4e90edcc25a634617d6dd9ce246ed588ae8b",
+        "bytes": 21364,
+        "lines": 535,
+        "sha256": "127d520b28bf280f830226a4e73d728c2eff03edab1c31972735694a6dc03d96"
+      }
+    },
+    "verification/areas/performance/formatter_large_file.sifr": {
+      "B46": {
+        "blob": "d1ecf2378cc280aae7170debc6f0edb2322dbd9f",
+        "bytes": 3481,
+        "lines": 121,
+        "sha256": "75131f9b2465b38dafb5a6e7ae1c64864afcce084dc9d6b135bbff64710aacba"
+      },
+      "baseline": {
+        "blob": "d1ecf2378cc280aae7170debc6f0edb2322dbd9f",
+        "bytes": 3481,
+        "lines": 121,
+        "sha256": "75131f9b2465b38dafb5a6e7ae1c64864afcce084dc9d6b135bbff64710aacba"
+      }
+    },
+    "verification/areas/performance/formatter_project/main.sifr": {
+      "B46": {
+        "blob": "9120d2a22f7df9e707fd3141c248ab8f2b1f2207",
+        "bytes": 174,
+        "lines": 7,
+        "sha256": "6333b5937a9f8f2d1cf6f717cbcc6f9bc3b9d3d9290ac659656bb989d1bcebaf"
+      },
+      "baseline": {
+        "blob": "9120d2a22f7df9e707fd3141c248ab8f2b1f2207",
+        "bytes": 174,
+        "lines": 7,
+        "sha256": "6333b5937a9f8f2d1cf6f717cbcc6f9bc3b9d3d9290ac659656bb989d1bcebaf"
+      }
+    },
+    "verification/areas/performance/formatter_project/sifr.toml": {
+      "B46": {
+        "blob": "00fd793b24e9f0d840f110a652b8b2500fce487a",
+        "bytes": 20,
+        "lines": 2,
+        "sha256": "5caa0c9c269563804b921292aced4b552b8dcd9df20879b1035650464c653e00"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "verification/areas/performance/formatter_project/util.sifr": {
+      "B46": {
+        "blob": "bb150a4dee69887234f4f7caab0151f82dbe80a0",
+        "bytes": 265,
+        "lines": 7,
+        "sha256": "f586fc76bf3054af293bf7803c852716a1cf8979c045fd7a5d8dac7f7d7eb2d4"
+      },
+      "baseline": {
+        "blob": "bb150a4dee69887234f4f7caab0151f82dbe80a0",
+        "bytes": 265,
+        "lines": 7,
+        "sha256": "f586fc76bf3054af293bf7803c852716a1cf8979c045fd7a5d8dac7f7d7eb2d4"
+      }
+    },
+    "verification/areas/performance/lsp_query_bench.py": {
+      "B46": {
+        "blob": "5ebfef67e3fdcd4ef830af9cb180e25d8eeb7ff5",
+        "bytes": 13851,
+        "lines": 344,
+        "sha256": "796ea1f22ed22dfa6f793567333d5bb335e10592e3d6b0e883c0fd54d654a7d9"
+      },
+      "baseline": {
+        "blob": "45e077b13dadcddbafafb2831e12ba04f221141b",
+        "bytes": 15811,
+        "lines": 387,
+        "sha256": "85eaf7a2e3ecce693e6e9ab25406676c0fa941f21fe54142bb57becc30219c2a"
+      }
+    },
+    "verification/areas/performance/process_metrics.py": {
+      "B46": {
+        "blob": "b50f5623eb456d4c6352ba18cb904d4727c6161c",
+        "bytes": 6671,
+        "lines": 182,
+        "sha256": "cdfcc15e8fc45bb7eff1052ff8aafa78189895082c2265d95100080612886492"
+      },
+      "baseline": {
+        "blob": "b50f5623eb456d4c6352ba18cb904d4727c6161c",
+        "bytes": 6671,
+        "lines": 182,
+        "sha256": "cdfcc15e8fc45bb7eff1052ff8aafa78189895082c2265d95100080612886492"
+      }
+    },
+    "verification/areas/performance/query_processes.py": {
+      "B46": {
+        "blob": "048a9384880dd7d781440024b8e806e4115abe85",
+        "bytes": 6210,
+        "lines": 175,
+        "sha256": "84261287ed88c9305c7da5b4ea07b4215cd876ad638f5261070dc2979766dc88"
+      },
+      "baseline": {
+        "blob": "048a9384880dd7d781440024b8e806e4115abe85",
+        "bytes": 6210,
+        "lines": 175,
+        "sha256": "84261287ed88c9305c7da5b4ea07b4215cd876ad638f5261070dc2979766dc88"
+      }
+    },
+    "verification/areas/performance/query_projects/edit_loop/main.sifr": {
+      "B46": {
+        "blob": "a11a9bf207b8310ced3053f963a08ba704117f6d",
+        "bytes": 131,
+        "lines": 6,
+        "sha256": "cacb0e5d6e82eff54c14e8a151549092585326abff9a315d02c71469d5a18afb"
+      },
+      "baseline": {
+        "blob": "a11a9bf207b8310ced3053f963a08ba704117f6d",
+        "bytes": 131,
+        "lines": 6,
+        "sha256": "cacb0e5d6e82eff54c14e8a151549092585326abff9a315d02c71469d5a18afb"
+      }
+    },
+    "verification/areas/performance/query_projects/interactive/main.sifr": {
+      "B46": {
+        "blob": "f3664c5dd513c5415acdde121817cfea12ce521e",
+        "bytes": 116,
+        "lines": 6,
+        "sha256": "73d4a1a6d6480aa39f818d663eabc8615d59c71149c47f947f73282016caaf3e"
+      },
+      "baseline": {
+        "blob": "f3664c5dd513c5415acdde121817cfea12ce521e",
+        "bytes": 116,
+        "lines": 6,
+        "sha256": "73d4a1a6d6480aa39f818d663eabc8615d59c71149c47f947f73282016caaf3e"
+      }
+    },
+    "verification/areas/performance/query_projects/lsp/main.sifr": {
+      "B46": {
+        "missing": true
+      },
+      "baseline": {
+        "blob": "cf161d173becf9e2b98d32ac11a6916eb1f5f91d",
+        "bytes": 119,
+        "lines": 6,
+        "sha256": "6c44046b6ccafe4d46e9f0b7257ea6becf5d76617e0c5d4468a50eb34ad3f63d"
+      }
+    },
+    "verification/areas/performance/query_projects/lsp/sifr.toml": {
+      "B46": {
+        "blob": "46c182f89037c2ed89b9999d6dd261c0502b0b67",
+        "bytes": 96,
+        "lines": 7,
+        "sha256": "a71b70bcbe7c2ae7904e10fccde0e67473709cbe5de2a50fe8cee0b2c08d96c6"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "verification/areas/performance/query_projects/lsp/src/main.sifr": {
+      "B46": {
+        "blob": "cf161d173becf9e2b98d32ac11a6916eb1f5f91d",
+        "bytes": 119,
+        "lines": 6,
+        "sha256": "6c44046b6ccafe4d46e9f0b7257ea6becf5d76617e0c5d4468a50eb34ad3f63d"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "verification/areas/performance/run_benchmarks.py": {
+      "B46": {
+        "blob": "38ebe2d4d9d55594dce4f6fc2dd8548e5801e4cb",
+        "bytes": 29420,
+        "lines": 826,
+        "sha256": "f2564795bb0ba6b7a5844a3aa5c1df5b88a840335f08cfcb59ab47b2ef40c003"
+      },
+      "baseline": {
+        "blob": "a58bfb7e66476c05527b6c263f16a0c94f093cbf",
+        "bytes": 28288,
+        "lines": 807,
+        "sha256": "1877321383d2d64002624b181b80736b08f3712d2c059ec3ce50b6c2e85a070f"
+      }
+    },
+    "verification/areas/performance/runner.py": {
+      "B46": {
+        "blob": "19ceb216f358cec99237f11a09578fb49b0a1044",
+        "bytes": 11012,
+        "lines": 297,
+        "sha256": "f7026eaaa849904b9c4b5bf866b33bc9c0fd6e8cb850fad84a32c9e5f4cd46dc"
+      },
+      "baseline": {
+        "blob": "ef52d26e52c26f52ab367a30229fdb8f9e96b63d",
+        "bytes": 11237,
+        "lines": 302,
+        "sha256": "42f5ca5f0517f5b88f922927ff1f543df6b17dda0e221064780b76e5c60d0451"
+      }
+    },
+    "verification/areas/performance/sample_evidence.py": {
+      "B46": {
+        "blob": "3296da821ccaedbe25e6fbba04693cce5abda4ad",
+        "bytes": 5632,
+        "lines": 129,
+        "sha256": "4568da4f2d64ee6e211efcbf8404da5e4f9b71dfa01393fcc64374d2f04012c9"
+      },
+      "baseline": {
+        "missing": true
+      }
+    },
+    "verification/profiles/merge.json": {
+      "B46": {
+        "blob": "372b8599822ec62d95a2bedefdaa69a584c9100b",
+        "bytes": 17825,
+        "lines": 851,
+        "sha256": "fcc430a013f2bce1e1faaecae6e60482716286eb1f606cbc18bbd9b307d61d78"
+      },
+      "baseline": {
+        "blob": "cf7e92f651977801b1edbdd6f934a8fdf206dea7",
+        "bytes": 12809,
+        "lines": 399,
+        "sha256": "0f0bdf73030d80f1ec744e0cf53bbc8648e1170dea85bbaf4580f56e918f3070"
+      }
+    }
+  },
+  "examined_source": "df0056ad1b9d7fcbaacda3a3f0809da66279ea84",
+  "item": "12K-B47",
+  "loaded_source_inventory": {
+    "B46": {
+      "entries": {
+        "stdlib/_sifr/calendar.sifr": {
+          "blob": "3a28ad6711683ab81d5c4cad474d196cfd6e1e6d",
+          "bytes": 379,
+          "lines": 13,
+          "sha256": "e5dcb48154f627ebfa7bfbc326e5af5d98a252a61b2e966fceb98408e44e44c8"
+        },
+        "stdlib/_sifr/compress.sifr": {
+          "blob": "019f2464fff10306c59741eb8064b1f2214ff3f7",
+          "bytes": 1029,
+          "lines": 40,
+          "sha256": "ecb990608f9e1178d4077068c095c5b1bbdb188cc0c00921d52571b28f2895bb"
+        },
+        "stdlib/_sifr/crypto.sifr": {
+          "blob": "8299dd3b6d938c8846f916986d2746dccf124d25",
+          "bytes": 3430,
+          "lines": 133,
+          "sha256": "3904f00fa127d5f9f800e30fb72da0728c5294a181e8f837a8575eb4ec095605"
+        },
+        "stdlib/_sifr/datetime.sifr": {
+          "blob": "347c4db63b2d8a02cefd18eea9ab5cd7d71412a3",
+          "bytes": 438,
+          "lines": 17,
+          "sha256": "52cb27e5abd4a69aa301402af62ecdc229448315e8bc8210e0eb650de1a67885"
+        },
+        "stdlib/_sifr/encoding.sifr": {
+          "blob": "9f0ffa467c389d8960e0643f965bad36dbe2c00a",
+          "bytes": 1662,
+          "lines": 50,
+          "sha256": "c51335e6bdf9111fcd115d9684df8793e8717ed3c33e4ba0074a78895692b27a"
+        },
+        "stdlib/_sifr/fs.sifr": {
+          "blob": "c90fb2e54878ba868ab1a21a5ad3e203b204a095",
+          "bytes": 5088,
+          "lines": 240,
+          "sha256": "93c91ba7110527dac4e702c02547b735dcbabd1d1ae2076901dd7d896ff0f9d1"
+        },
+        "stdlib/_sifr/html.sifr": {
+          "blob": "6c6294b6e00952049bca92f19ced7443501a1ed7",
+          "bytes": 206,
+          "lines": 9,
+          "sha256": "90dff0a0d115cf694efed3c2929d253a7cb7118b004981fe20344fda16290d95"
+        },
+        "stdlib/_sifr/http.sifr": {
+          "blob": "de5685332c0e6dca9cd1768c9629e88874b4a329",
+          "bytes": 1182,
+          "lines": 51,
+          "sha256": "62f76f3cbc8f7da74766f1d4021d4740d8075695402e298310ad8a1e21a50aa3"
+        },
+        "stdlib/_sifr/i18n.sifr": {
+          "blob": "aa107642385a25b267d4aeac41b140ea8f7ea7f4",
+          "bytes": 2177,
+          "lines": 85,
+          "sha256": "f96c1aeadc404e4c24a53b26d747104c5da6dfcd023911b21ad4581f80d586cc"
+        },
+        "stdlib/_sifr/json.sifr": {
+          "blob": "448d723789a4a5f87739af8cdcb60b39796ed2c4",
+          "bytes": 792,
+          "lines": 30,
+          "sha256": "a8aef534f09f10f96b9e11196b366a6655f0af95d7c1e03257b6246f6101f40a"
+        },
+        "stdlib/_sifr/logging.sifr": {
+          "blob": "68ec1c7515032784a5180cf798a5b0cf3b24959c",
+          "bytes": 231,
+          "lines": 10,
+          "sha256": "3cb90d18bcdab6087d91015e8b0a0bbf05cd829ed28e478207b9ddb6377169d1"
+        },
+        "stdlib/_sifr/math.sifr": {
+          "blob": "2a2b200d13073c240ed4ead4931af0bf50521381",
+          "bytes": 4372,
+          "lines": 237,
+          "sha256": "92adc217d3440c324a70a427a241d4417e450cce41d33f3435814c5f594a61d4"
+        },
+        "stdlib/_sifr/net.sifr": {
+          "blob": "8da063fe521e8e53e604f80530b89121fd46c6a4",
+          "bytes": 3009,
+          "lines": 126,
+          "sha256": "cc7746eca608daeb61968973774f1b330a12e35a16c60a947fe9ba087f8530ba"
+        },
+        "stdlib/_sifr/platform.sifr": {
+          "blob": "dcc5f3a06bc5b1dcf2898d7bb786e9d7ffce8694",
+          "bytes": 552,
+          "lines": 25,
+          "sha256": "b53331c6f93ab6d9856848b3054f7552ecfb4ff991a53308a2ae7cff5eefae45"
+        },
+        "stdlib/_sifr/process.sifr": {
+          "blob": "4dcd68a54284ff61d6fd53a6a9c7b188046161d6",
+          "bytes": 7985,
+          "lines": 348,
+          "sha256": "a007056c8e7db8a1315e16127a528ea01ec7ae8bfbc307b4bbb8dba0b0297cff"
+        },
+        "stdlib/_sifr/python.sifr": {
+          "blob": "732046da0f2cf38ae26cae68fb5208bd4bf9dfbe",
+          "bytes": 11793,
+          "lines": 407,
+          "sha256": "245da649f17a8a8d74958176fd7da8279eb294cc896c0deea16fc8a0c0f11c9f"
+        },
+        "stdlib/_sifr/regex.sifr": {
+          "blob": "f552f13e86af19b9a5ce5af2e090b0ec094e9115",
+          "bytes": 2908,
+          "lines": 93,
+          "sha256": "c067039a5db929b24ceeea81733c74cc745de1a04a891747c3b40da57c966fb1"
+        },
+        "stdlib/_sifr/runtime.sifr": {
+          "blob": "657733e507bce7e5e4496e6f330ab37e6844fa7c",
+          "bytes": 298,
+          "lines": 15,
+          "sha256": "e30f89e3122e38e4b2f23de78ec22ea8778e169251d16b548f8474bed3ca5848"
+        },
+        "stdlib/_sifr/signal.sifr": {
+          "blob": "674d6932e3b288f689338b15401beaec1070e617",
+          "bytes": 423,
+          "lines": 20,
+          "sha256": "e72aea6a91686e1902b1209753fe6743e6ddbcde09886672156d77a45a4995f4"
+        },
+        "stdlib/_sifr/sys.sifr": {
+          "blob": "f6aeb7dbb37abad00cf6473ac6b2d29fd100e1ef",
+          "bytes": 1181,
+          "lines": 65,
+          "sha256": "50fd3281d0a7a2cf059d05e10d32f6f48f099ec92053530d1cb5b430b47438bc"
+        },
+        "stdlib/_sifr/time.sifr": {
+          "blob": "4df3ed028d9122d914f0260398d778442d455d33",
+          "bytes": 1242,
+          "lines": 57,
+          "sha256": "22691c1f45e45b03cc4ac5ccfbd9ae9e2e2d44d77907305f1cce108de1983578"
+        },
+        "stdlib/_sifr/tls.sifr": {
+          "blob": "b4b13b71439b3b970b3ee6a3ec2d1640fcd9d391",
+          "bytes": 3877,
+          "lines": 164,
+          "sha256": "f302669a2d9ef547caf80c613292a1cb258923e7cafa51258c0363df159fc5de"
+        },
+        "stdlib/_sifr/toml.sifr": {
+          "blob": "9a060caa1bfd48810f2017e538a75b5aa59a0c82",
+          "bytes": 166,
+          "lines": 5,
+          "sha256": "45ebf6200aa865fbaf26eab1575d7f9ad49262188e4c359930bc2092e35342a5"
+        },
+        "stdlib/_sifr/unicode.sifr": {
+          "blob": "ca38631fc198ea2f4bb6c61ccd90249bfe4afe20",
+          "bytes": 2195,
+          "lines": 95,
+          "sha256": "49358c4f0fe408239c07fabe1c9fc092c8405e1fb1ee9e90ba3b3b7647613de8"
+        },
+        "stdlib/_sifr/url.sifr": {
+          "blob": "ccfc37102ca1f7287af0abe7f50ff6e8052caf43",
+          "bytes": 1141,
+          "lines": 43,
+          "sha256": "8f86d695f2fc4fc8a3b245a1ce5c0e606efb5ae640732c8d90163bb89bbd3f4c"
+        },
+        "stdlib/_sifr/uuid.sifr": {
+          "blob": "e74a437a0092b67c31a209a8aa7fdd163714f923",
+          "bytes": 246,
+          "lines": 11,
+          "sha256": "47de0be8047a3162cc98e5fe05884376522ff9bca1279216c7c3cdc2c5d5b053"
+        },
+        "stdlib/sifr/argparse.sifr": {
+          "blob": "812e265ad8db598e3ae6b1a78eafb2ed209e9ad9",
+          "bytes": 21549,
+          "lines": 635,
+          "sha256": "eded8374cdbc3cef46135766d85cb832b1f7232494590424bd4cdfe48be9fe79"
+        },
+        "stdlib/sifr/base64.sifr": {
+          "blob": "a06cd513406f0115f0d766477645b2b468984d7a",
+          "bytes": 2742,
+          "lines": 70,
+          "sha256": "9f612ddc2222d0c5fae3bba90ef45da01d5ba4a01cdd920e579cccc942effff6"
+        },
+        "stdlib/sifr/bisect.sifr": {
+          "blob": "1b38a213d8bb72a2ae689317ffa22ce356b3268c",
+          "bytes": 2356,
+          "lines": 70,
+          "sha256": "4038ed902b446f98d1de8e0138309750703e86b71243f6ae4c2bff37f5c4d52b"
+        },
+        "stdlib/sifr/calendar.sifr": {
+          "blob": "a95e5a254efcfa0b4a987f89db2c3ec6b2f25737",
+          "bytes": 4102,
+          "lines": 151,
+          "sha256": "095c03141d437420416c739446c875b99a1c76e51d7ff183e07c0517064e5714"
+        },
+        "stdlib/sifr/collections.sifr": {
+          "blob": "0c190facd849ccce94709c5a4b2e198ffd9c0272",
+          "bytes": 13030,
+          "lines": 398,
+          "sha256": "58d40f815a6bf8bb641060c8380a7ef1be8cb286dca564651b77723c2ca82edb"
+        },
+        "stdlib/sifr/configparser.sifr": {
+          "blob": "48cc6eb6ff5fe74b38b3aa3e33ad38d7b1712998",
+          "bytes": 18590,
+          "lines": 521,
+          "sha256": "d1ec6ce6734694edf2786e15267959e6aba27e9a6c1fb30383d5b6571d0635d6"
+        },
+        "stdlib/sifr/csv.sifr": {
+          "blob": "e3518e4e247133687eebb7796c0e8c10c94f7e9b",
+          "bytes": 25307,
+          "lines": 867,
+          "sha256": "65b1ac76f0417c4c8a5b2691db6236b038bca34eea8d89b8237cd4956a6dc82a"
+        },
+        "stdlib/sifr/datetime.sifr": {
+          "blob": "c6275608154a3389502ead54820f1e014e6cbbf3",
+          "bytes": 15566,
+          "lines": 473,
+          "sha256": "23cfb8545bbba62297d0c0e726bf873b71ae1a76852c5d5f6de549313a35e11a"
+        },
+        "stdlib/sifr/difflib.sifr": {
+          "blob": "0f6cbef8fb2e6d983e1a808c35cd90bd4fca0170",
+          "bytes": 8841,
+          "lines": 242,
+          "sha256": "c13c66d5858cb57ba7ba9f1befa4d62617dfbf865bc0e8b98106b209d7780b07"
+        },
+        "stdlib/sifr/encoding.sifr": {
+          "blob": "4c2f65fa8697bf9e43099707a6d16a0bf3dabbcc",
+          "bytes": 11464,
+          "lines": 365,
+          "sha256": "fb9347ceae44034555d28181ccbf2c96e8ed3235b535b0a32d32243263446943"
+        },
+        "stdlib/sifr/env.sifr": {
+          "blob": "ec8a61475a70d4ee6d4a1475850a5705d56bd393",
+          "bytes": 700,
+          "lines": 22,
+          "sha256": "cb869690edd7ac31218ac702c816cdfe5e9ac33e06e02874b2cbff91459c3866"
+        },
+        "stdlib/sifr/fnmatch.sifr": {
+          "blob": "94457ac19ed86549230f8c6c2d962d22a4fbcdb3",
+          "bytes": 2518,
+          "lines": 91,
+          "sha256": "dbd698bead92432379a1bacd1938ef99ae8db9576292300dcb437c6722612835"
+        },
+        "stdlib/sifr/functools.sifr": {
+          "blob": "5f6916769ba4480635589abd4400d4b7e5806e52",
+          "bytes": 240,
+          "lines": 11,
+          "sha256": "ae164aefb0b669f4c9f3ba54ea473f1bbc139b5ad165d909607d22f98a1c1486"
+        },
+        "stdlib/sifr/glob.sifr": {
+          "blob": "79821e77056f203e1a6d11abea29b2034044c799",
+          "bytes": 871,
+          "lines": 28,
+          "sha256": "2f8e3f7c853e0a668b2c3ba0393799a037c014a5a09719a1167c0df9c25986de"
+        },
+        "stdlib/sifr/graphlib.sifr": {
+          "blob": "655062852ab94d5ded3d08f4f9134078f95e765d",
+          "bytes": 5458,
+          "lines": 164,
+          "sha256": "6ad570fcb3a3a19d73565c305f82c891cbeae8b9f98226972a29c2b8d2fd0d14"
+        },
+        "stdlib/sifr/gzip.sifr": {
+          "blob": "3801c6d27d362ca005a41f2270ea573180c12845",
+          "bytes": 306,
+          "lines": 8,
+          "sha256": "8a4add54aad50cb29aa86a5b03c011bf66e2610ffce8b4d8fad744dfff61fd3d"
+        },
+        "stdlib/sifr/hashlib.sifr": {
+          "blob": "605feb3819790b6f9929587988a065d0e878c7dd",
+          "bytes": 5786,
+          "lines": 187,
+          "sha256": "cf45e3285847fb1a00126abc55f8ada804839f90d7e81b341c07090de281259e"
+        },
+        "stdlib/sifr/heapq.sifr": {
+          "blob": "e09ce0459e5c3651e32c97eca35c6498fbe15452",
+          "bytes": 11122,
+          "lines": 305,
+          "sha256": "61f857ab9e1a0bf3fff70634d9d1062dd6cea6471dc1a1707fbc5a2bba12ac11"
+        },
+        "stdlib/sifr/html.sifr": {
+          "blob": "522d30ff1c4cb4d2574a09eb81b3c359075fe60b",
+          "bytes": 402,
+          "lines": 12,
+          "sha256": "de400ada35ecc1f351f6a294da2adbbd4822dd175c53e67de5408d4bd9cca87a"
+        },
+        "stdlib/sifr/http.sifr": {
+          "blob": "62b7fe84b745b707988463803488fb11f11927d0",
+          "bytes": 6557,
+          "lines": 264,
+          "sha256": "19d17d235f11f75f8e3a29d9829a104ee69d0d31b7b5bc86fad465065090d2af"
+        },
+        "stdlib/sifr/i18n.sifr": {
+          "blob": "8aa00f49fac007b6b4ca14f44ddd310d75a52999",
+          "bytes": 14862,
+          "lines": 491,
+          "sha256": "3832f29f84c6f67ff3694a1b4f32a9a12210023dfaf4c226103135e49a509c7f"
+        },
+        "stdlib/sifr/io.sifr": {
+          "blob": "09679a0cde948778bf54d20d6142ec43dc13d547",
+          "bytes": 17947,
+          "lines": 603,
+          "sha256": "725d1e3b7d9c13096667561ed706291e5913733eef21f10af92fc8f62708cfbb"
+        },
+        "stdlib/sifr/ipaddress.sifr": {
+          "blob": "d613d90a7016fde2910233dd5d395a8c0548ce54",
+          "bytes": 6953,
+          "lines": 233,
+          "sha256": "77ef73d018a0cc3bac6934140e598e7dca8867c26c4226ca0c40cc7e09048a80"
+        },
+        "stdlib/sifr/ipc.sifr": {
+          "blob": "31da1f7f72b1e95f8242cede57aa64adb22e0afe",
+          "bytes": 2220,
+          "lines": 85,
+          "sha256": "4f963f91cead9a7c648dc4820691c02d71b2f71b6c1e140158f29e0bf40d604a"
+        },
+        "stdlib/sifr/itertools.sifr": {
+          "blob": "e9456ab46b391b903454fa0e2c6f521bd27b2abd",
+          "bytes": 14652,
+          "lines": 486,
+          "sha256": "e454ad684f5ab64fc4890033bf9e68f32f576b4e3e3bff906947e759c36d89eb"
+        },
+        "stdlib/sifr/json.sifr": {
+          "blob": "3f0f98a3227029210b85209eca0f87d5be043d50",
+          "bytes": 14666,
+          "lines": 442,
+          "sha256": "4c8e39dc4bd51f59ecc778fcd3f655387917535eace8999fb7c92d5624e33f1c"
+        },
+        "stdlib/sifr/logging.sifr": {
+          "blob": "afaa0013cad111a40a88d6320bde97a9ab91a9a7",
+          "bytes": 9030,
+          "lines": 318,
+          "sha256": "9f27a0d91f01b2c38fe09ce608cba04d3fe774257023e434633f52d78012457b"
+        },
+        "stdlib/sifr/math.sifr": {
+          "blob": "6757b82a49af0ed5cfe170b883a38723935c07c8",
+          "bytes": 4136,
+          "lines": 162,
+          "sha256": "8bace7c7a286c9e1c5bb0957bdb8006eb0bf896ffac3317b5388befd637f95f0"
+        },
+        "stdlib/sifr/meta.sifr": {
+          "blob": "460040ca2923ee7f95c53ed12719977ce60109f7",
+          "bytes": 3813,
+          "lines": 204,
+          "sha256": "aa30001a100d5fb29cf397fe18e83812bbc66c41cc3c011374c9fd1bac8615d4"
+        },
+        "stdlib/sifr/net.sifr": {
+          "blob": "66f9da02fffdc809b698c0faf70ba56fb00f0668",
+          "bytes": 8892,
+          "lines": 304,
+          "sha256": "2971d74ac1aec6ce297e5b8642b1cc8defe1e8082c35cb0f1349fa0399c07f8b"
+        },
+        "stdlib/sifr/operator.sifr": {
+          "blob": "de3f8ef355f90374393f4775c1cb25b7484cf6eb",
+          "bytes": 1410,
+          "lines": 81,
+          "sha256": "64966a40cad98c208e674f85cb4d5273822cc90bcfe98bdf5970cbd25fa74a96"
+        },
+        "stdlib/sifr/os.sifr": {
+          "blob": "e9a3ad1f9a761b2d1af65befcd60471c0f115744",
+          "bytes": 512,
+          "lines": 12,
+          "sha256": "a61b33b7b8fe924e11bcefdc32b820c3257d03b5b961a38834e0719eb3acfb9c"
+        },
+        "stdlib/sifr/parallel.sifr": {
+          "blob": "0572d8df68b5f5b9116bd14a6a5df09fc2b93701",
+          "bytes": 1098,
+          "lines": 46,
+          "sha256": "a06f0ab639b8a082253e181d7b6f15e44d581bfcf087957d820509232d2c8232"
+        },
+        "stdlib/sifr/pathlib.sifr": {
+          "blob": "a09e573025219783135c36741b86ff817afe6133",
+          "bytes": 5666,
+          "lines": 207,
+          "sha256": "ecdf11033277b9f90c52442efecec74b81aa027183f0bddcc0a7f62c36d108c7"
+        },
+        "stdlib/sifr/platform.sifr": {
+          "blob": "0b6b337deb7b0624636f161ae7849f03b434c472",
+          "bytes": 566,
+          "lines": 20,
+          "sha256": "d6197eb17bb3adce2485ffd87f667c6a4815f6a59e2b055ee4080a6040129f4f"
+        },
+        "stdlib/sifr/process.sifr": {
+          "blob": "78860b2c0dfb36da4b4442fa2f20d93545c985fb",
+          "bytes": 25518,
+          "lines": 843,
+          "sha256": "35f7a6e6904cce42f0be89f0497643114964a09c13f11a6cd35d9b22e07dde85"
+        },
+        "stdlib/sifr/python.sifr": {
+          "blob": "2225ba5ae421a89f729804323893134a54b4a53a",
+          "bytes": 20343,
+          "lines": 801,
+          "sha256": "5c06d23ba104915a8c42890e6606bcea2d0cc0ff3f219ac550a189b387cd0c59"
+        },
+        "stdlib/sifr/python_core.sifr": {
+          "blob": "abf84936fe30a3f195885a69562e33bcb7b0d093",
+          "bytes": 2644,
+          "lines": 94,
+          "sha256": "2ab92b9f8c5ff34121798f1ed9b56c4a96ea31b75cd04b67c97db3d539757db8"
+        },
+        "stdlib/sifr/random.sifr": {
+          "blob": "1942cb629bd297b583e23bc8c9d64c1c83dff516",
+          "bytes": 15719,
+          "lines": 496,
+          "sha256": "128fe9ebd0bc3582afa27003d2c6ecbf8e55b4283213722fd0265eaa1f2a316c"
+        },
+        "stdlib/sifr/re.sifr": {
+          "blob": "8bd6a0e25e99f054e850579d2d8dd4880ddeac4f",
+          "bytes": 7317,
+          "lines": 212,
+          "sha256": "cf86b2c8870af6a80749f384e601aab010dbfcfd6bc66ce8d9778c38f72fa9eb"
+        },
+        "stdlib/sifr/resource.sifr": {
+          "blob": "7a5a7890da39207adfd3a932cb870a7e83fbc0cc",
+          "bytes": 279,
+          "lines": 15,
+          "sha256": "ffcca52481daf0e8166addf1a5ae09972c3956ecc1cd5d38cc4fc65d033f1b93"
+        },
+        "stdlib/sifr/runtime.sifr": {
+          "blob": "56128dd406b137bdfb9f58667a1da742c4af5502",
+          "bytes": 1283,
+          "lines": 56,
+          "sha256": "53baf8b491706df3d6a48ced358181b33ec209a1a7103165cd0f155002346482"
+        },
+        "stdlib/sifr/secrets.sifr": {
+          "blob": "495ecbea9bbc28311135695ee9877a77a21ab650",
+          "bytes": 1182,
+          "lines": 45,
+          "sha256": "0b41d0b38c4ba3522217b8b512c478c74056a607dead07c7833839185cb96703"
+        },
+        "stdlib/sifr/shutil.sifr": {
+          "blob": "3ded23d94c20dec81823071d0dadde057950534f",
+          "bytes": 459,
+          "lines": 13,
+          "sha256": "ceee2d3551bd380e89b20d6415acdb7c26d9d94e983520acd01e4ef910e81dd4"
+        },
+        "stdlib/sifr/signal.sifr": {
+          "blob": "a3dc355d18e83cbdeff49d7e6c47c3df4b313f20",
+          "bytes": 1501,
+          "lines": 67,
+          "sha256": "47da569cbc94d49d444a2d28d0630ede88b5a35779848daabc4e3ebb88ce8441"
+        },
+        "stdlib/sifr/sql.migration.sifr": {
+          "blob": "a7c0bb504d0e927f4b130fdd1312ae4b9e0a312f",
+          "bytes": 774,
+          "lines": 32,
+          "sha256": "e2b04e269ea0da59f5d60bd46adc54fc00c26d4a1e9919f7f3688557bfc73762"
+        },
+        "stdlib/sifr/sql.sifr": {
+          "blob": "ea53a1548d885c19b654cfb583639a968b488043",
+          "bytes": 479,
+          "lines": 45,
+          "sha256": "ed19f05ff311f8bd474e31532f315d5da51ea5ffdd0063fe0ab89b2ef3dfadb2"
+        },
+        "stdlib/sifr/statistics.sifr": {
+          "blob": "d5af3055bd43f0ea23c5d5609205a2efd07a8cd3",
+          "bytes": 14046,
+          "lines": 412,
+          "sha256": "d624fed9f0bc99beeaaa4f99ddcc9b577394974dba5da5d7dbad9b64fbeae679"
+        },
+        "stdlib/sifr/string.sifr": {
+          "blob": "7b740bc0aa031592d525693d5fa446d60abb381e",
+          "bytes": 9382,
+          "lines": 278,
+          "sha256": "e6ebeb44c7d8edc4aff4e5a7835fbe5da0303f3e6ac09bda26d80dc28a921da1"
+        },
+        "stdlib/sifr/sync.sifr": {
+          "blob": "f4cbf3e7690ec9491de210a3d54e088b349305da",
+          "bytes": 4749,
+          "lines": 205,
+          "sha256": "ee9f5d9aa1c3006daf7f82b4ee7d6a8f96a6f6d67d576937a1a13503c2508d98"
+        },
+        "stdlib/sifr/sys.sifr": {
+          "blob": "38fd6551db450a2e744f8bb395faa788b323458c",
+          "bytes": 470,
+          "lines": 17,
+          "sha256": "e1f12890e4f5899ef7535d4bd414c29546d89a7963270c4f987d5ae1f372d886"
+        },
+        "stdlib/sifr/task.sifr": {
+          "blob": "1a3b955d92c521c6104a626b063c5800fd58a96d",
+          "bytes": 511,
+          "lines": 29,
+          "sha256": "2a58775304b4e47d46816f799b9a47404e60be88ed5f050f2f119cf0c79ec361"
+        },
+        "stdlib/sifr/tempfile.sifr": {
+          "blob": "2e1b9da949a2f66fb14400085522b45f137e60b3",
+          "bytes": 5124,
+          "lines": 182,
+          "sha256": "8158563b502208d596b2b9e950da44bb583bf0424b26e20681a708e798bd5c18"
+        },
+        "stdlib/sifr/test.sifr": {
+          "blob": "cbb0e7e0c9b823c6151cd80acb34939869b64c6f",
+          "bytes": 2171,
+          "lines": 81,
+          "sha256": "d53bfa33bd931af299495ab126b617b518544204f4c15e12e984e239377f38ac"
+        },
+        "stdlib/sifr/textwrap.sifr": {
+          "blob": "48538f84d223feaba8ade29b2eca8a6994fd308c",
+          "bytes": 13320,
+          "lines": 463,
+          "sha256": "18f0532848f4eb0f3541de3e6de26015f07ca3eae40c694919af15e4c94fefef"
+        },
+        "stdlib/sifr/time.sifr": {
+          "blob": "b90f3a39c85284b2ce5e12227f9c232ff0be26b8",
+          "bytes": 7850,
+          "lines": 292,
+          "sha256": "9cbc5fcae7382980ca04c480846cc1a6b32435a93437b71bc234ca76ed3f9184"
+        },
+        "stdlib/sifr/timeit.sifr": {
+          "blob": "e6f06c13202e0ef5a9a5ea02dbaacd5031241a7d",
+          "bytes": 1468,
+          "lines": 50,
+          "sha256": "0f3e632e50591b8cb5f6a8e0ec2b92c259915df92170dce527c079a0a723b443"
+        },
+        "stdlib/sifr/tls.sifr": {
+          "blob": "8a4d655177eccec8ff04843709bc4a806bdeb538",
+          "bytes": 10105,
+          "lines": 354,
+          "sha256": "f48edbcf4eee21f7f4ff3b38335f963c4c450ec6102e2c937c1d353e8359bb91"
+        },
+        "stdlib/sifr/tomllib.sifr": {
+          "blob": "e5dbed2c6d5828139e26827fab47f6b0814b2978",
+          "bytes": 8782,
+          "lines": 259,
+          "sha256": "6545f36b3f36e36afc895554a62c4ebe343012dd14cadae156489eef4b872ee8"
+        },
+        "stdlib/sifr/unicode.sifr": {
+          "blob": "fd15670915d50ada862ede1bec5cf5f0cfeb1783",
+          "bytes": 4912,
+          "lines": 186,
+          "sha256": "ff43df9abe21072e30b4196f71db53f69857024ac345d8d900527bc01832bbaa"
+        },
+        "stdlib/sifr/url.sifr": {
+          "blob": "ba5d9b406433a3c0b251e17958ee8747fe243a9a",
+          "bytes": 6316,
+          "lines": 238,
+          "sha256": "7fcf18f65c4fb411a0caabcecdcc998854ea419b4669b14fa5b4d9c74b31b6f8"
+        },
+        "stdlib/sifr/uuid.sifr": {
+          "blob": "7d0bd5c945dbb51d2e817396cb447f9272e8d522",
+          "bytes": 5850,
+          "lines": 233,
+          "sha256": "a5cd4a7dfce03b5def0d13aa0e6078941fb4cd8ed7cde190142b196f653b1672"
+        },
+        "stdlib/sifr/zipfile.sifr": {
+          "blob": "f2ad1172cfed745152274395034acbb4d220928d",
+          "bytes": 4179,
+          "lines": 140,
+          "sha256": "6fb9962dcee50145fa81544ae4d161e6d44646ddbe408d42d56f7cbd92535207"
+        }
+      },
+      "module_count": 89,
+      "private_modules": [
+        "_sifr.calendar",
+        "_sifr.compress",
+        "_sifr.crypto",
+        "_sifr.datetime",
+        "_sifr.encoding",
+        "_sifr.fs",
+        "_sifr.html",
+        "_sifr.http",
+        "_sifr.i18n",
+        "_sifr.json",
+        "_sifr.logging",
+        "_sifr.math",
+        "_sifr.net",
+        "_sifr.platform",
+        "_sifr.process",
+        "_sifr.python",
+        "_sifr.regex",
+        "_sifr.runtime",
+        "_sifr.signal",
+        "_sifr.sys",
+        "_sifr.time",
+        "_sifr.tls",
+        "_sifr.toml",
+        "_sifr.unicode",
+        "_sifr.url",
+        "_sifr.uuid"
+      ],
+      "public_modules": [
+        "sifr.sql",
+        "sifr.sql.migration",
+        "sifr.meta",
+        "sifr.test",
+        "sifr.env",
+        "sifr.encoding",
+        "sifr.unicode",
+        "sifr.i18n",
+        "sifr.base64",
+        "sifr.math",
+        "sifr.hashlib",
+        "sifr.io",
+        "sifr.os",
+        "sifr.json",
+        "sifr.time",
+        "sifr.random",
+        "sifr.re",
+        "sifr.collections",
+        "sifr.sync",
+        "sifr.task",
+        "sifr.parallel",
+        "sifr.process",
+        "sifr.python_core",
+        "sifr.python",
+        "sifr.net",
+        "sifr.tls",
+        "sifr.url",
+        "sifr.http",
+        "sifr.resource",
+        "sifr.signal",
+        "sifr.runtime",
+        "sifr.ipc",
+        "sifr.string",
+        "sifr.bisect",
+        "sifr.functools",
+        "sifr.secrets",
+        "sifr.graphlib",
+        "sifr.uuid",
+        "sifr.platform",
+        "sifr.pathlib",
+        "sifr.logging",
+        "sifr.heapq",
+        "sifr.itertools",
+        "sifr.textwrap",
+        "sifr.csv",
+        "sifr.argparse",
+        "sifr.fnmatch",
+        "sifr.shutil",
+        "sifr.tempfile",
+        "sifr.difflib",
+        "sifr.ipaddress",
+        "sifr.timeit",
+        "sifr.tomllib",
+        "sifr.datetime",
+        "sifr.operator",
+        "sifr.calendar",
+        "sifr.html",
+        "sifr.sys",
+        "sifr.gzip",
+        "sifr.zipfile",
+        "sifr.configparser",
+        "sifr.statistics",
+        "sifr.glob"
+      ],
+      "source_bytes": 498665,
+      "source_lines": 17105
+    },
+    "baseline": {
+      "entries": {
+        "stdlib/_sifr/bytes.sifr": {
+          "blob": "913026683dba409bfe02f7fca9c7c6d37048e1fd",
+          "bytes": 337,
+          "lines": 15,
+          "sha256": "4a7c50e9666c3f57f484c71f5d21028a45bd132def99d22cfc64ddf8bff13ed4"
+        },
+        "stdlib/_sifr/calendar.sifr": {
+          "blob": "3a28ad6711683ab81d5c4cad474d196cfd6e1e6d",
+          "bytes": 379,
+          "lines": 13,
+          "sha256": "e5dcb48154f627ebfa7bfbc326e5af5d98a252a61b2e966fceb98408e44e44c8"
+        },
+        "stdlib/_sifr/collections.sifr": {
+          "blob": "fb844c38115c3c568488ae5c9f687db58e0d4eff",
+          "bytes": 942,
+          "lines": 40,
+          "sha256": "7fc13ae5107cbcca967edb8e6046a53769a7ea1da13d9025a2618388d41ca4ac"
+        },
+        "stdlib/_sifr/compress.sifr": {
+          "blob": "019f2464fff10306c59741eb8064b1f2214ff3f7",
+          "bytes": 1029,
+          "lines": 40,
+          "sha256": "ecb990608f9e1178d4077068c095c5b1bbdb188cc0c00921d52571b28f2895bb"
+        },
+        "stdlib/_sifr/crypto.sifr": {
+          "blob": "469786af45afb57e3b7c9574ebf508e105ae0165",
+          "bytes": 3774,
+          "lines": 157,
+          "sha256": "147064c2ee439396a548393019ec63b4d21beb87317d3986d89aa3d80a35b32c"
+        },
+        "stdlib/_sifr/datetime.sifr": {
+          "blob": "347c4db63b2d8a02cefd18eea9ab5cd7d71412a3",
+          "bytes": 438,
+          "lines": 17,
+          "sha256": "52cb27e5abd4a69aa301402af62ecdc229448315e8bc8210e0eb650de1a67885"
+        },
+        "stdlib/_sifr/encoding.sifr": {
+          "blob": "9f0ffa467c389d8960e0643f965bad36dbe2c00a",
+          "bytes": 1662,
+          "lines": 50,
+          "sha256": "c51335e6bdf9111fcd115d9684df8793e8717ed3c33e4ba0074a78895692b27a"
+        },
+        "stdlib/_sifr/fs.sifr": {
+          "blob": "cc3338d127828bd0a3fab1d83622ddba7ed0c394",
+          "bytes": 4390,
+          "lines": 213,
+          "sha256": "6b1664918904ae113542934544d4017eefcb108099f5717641e0c9c75d35460a"
+        },
+        "stdlib/_sifr/html.sifr": {
+          "blob": "6c6294b6e00952049bca92f19ced7443501a1ed7",
+          "bytes": 206,
+          "lines": 9,
+          "sha256": "90dff0a0d115cf694efed3c2929d253a7cb7118b004981fe20344fda16290d95"
+        },
+        "stdlib/_sifr/http.sifr": {
+          "blob": "de5685332c0e6dca9cd1768c9629e88874b4a329",
+          "bytes": 1182,
+          "lines": 51,
+          "sha256": "62f76f3cbc8f7da74766f1d4021d4740d8075695402e298310ad8a1e21a50aa3"
+        },
+        "stdlib/_sifr/i18n.sifr": {
+          "blob": "aa107642385a25b267d4aeac41b140ea8f7ea7f4",
+          "bytes": 2177,
+          "lines": 85,
+          "sha256": "f96c1aeadc404e4c24a53b26d747104c5da6dfcd023911b21ad4581f80d586cc"
+        },
+        "stdlib/_sifr/json.sifr": {
+          "blob": "448d723789a4a5f87739af8cdcb60b39796ed2c4",
+          "bytes": 792,
+          "lines": 30,
+          "sha256": "a8aef534f09f10f96b9e11196b366a6655f0af95d7c1e03257b6246f6101f40a"
+        },
+        "stdlib/_sifr/logging.sifr": {
+          "blob": "68ec1c7515032784a5180cf798a5b0cf3b24959c",
+          "bytes": 231,
+          "lines": 10,
+          "sha256": "3cb90d18bcdab6087d91015e8b0a0bbf05cd829ed28e478207b9ddb6377169d1"
+        },
+        "stdlib/_sifr/math.sifr": {
+          "blob": "25cb99ccb930dd97627115825c3481aab8476472",
+          "bytes": 4445,
+          "lines": 241,
+          "sha256": "5543ea54292c0afaf779d3a7588a787e69a89b915c6f0fda28bd46388c07913f"
+        },
+        "stdlib/_sifr/net.sifr": {
+          "blob": "8da063fe521e8e53e604f80530b89121fd46c6a4",
+          "bytes": 3009,
+          "lines": 126,
+          "sha256": "cc7746eca608daeb61968973774f1b330a12e35a16c60a947fe9ba087f8530ba"
+        },
+        "stdlib/_sifr/platform.sifr": {
+          "blob": "dcc5f3a06bc5b1dcf2898d7bb786e9d7ffce8694",
+          "bytes": 552,
+          "lines": 25,
+          "sha256": "b53331c6f93ab6d9856848b3054f7552ecfb4ff991a53308a2ae7cff5eefae45"
+        },
+        "stdlib/_sifr/process.sifr": {
+          "blob": "4dcd68a54284ff61d6fd53a6a9c7b188046161d6",
+          "bytes": 7985,
+          "lines": 348,
+          "sha256": "a007056c8e7db8a1315e16127a528ea01ec7ae8bfbc307b4bbb8dba0b0297cff"
+        },
+        "stdlib/_sifr/python.sifr": {
+          "blob": "732046da0f2cf38ae26cae68fb5208bd4bf9dfbe",
+          "bytes": 11793,
+          "lines": 407,
+          "sha256": "245da649f17a8a8d74958176fd7da8279eb294cc896c0deea16fc8a0c0f11c9f"
+        },
+        "stdlib/_sifr/regex.sifr": {
+          "blob": "8ce6c640d89f0846f72b71f7bcba30c5519439ae",
+          "bytes": 1581,
+          "lines": 49,
+          "sha256": "4c8740f8f3fb0086f48b1e0781c4d62f7bbcc7c156914119d0c4d32964bda7c6"
+        },
+        "stdlib/_sifr/runtime.sifr": {
+          "blob": "657733e507bce7e5e4496e6f330ab37e6844fa7c",
+          "bytes": 298,
+          "lines": 15,
+          "sha256": "e30f89e3122e38e4b2f23de78ec22ea8778e169251d16b548f8474bed3ca5848"
+        },
+        "stdlib/_sifr/signal.sifr": {
+          "blob": "674d6932e3b288f689338b15401beaec1070e617",
+          "bytes": 423,
+          "lines": 20,
+          "sha256": "e72aea6a91686e1902b1209753fe6743e6ddbcde09886672156d77a45a4995f4"
+        },
+        "stdlib/_sifr/sys.sifr": {
+          "blob": "9d7d1bd60d6e2e7d0a3c510152e4c8e64c48247c",
+          "bytes": 1339,
+          "lines": 73,
+          "sha256": "c0205f3d9ac6196a428ea9ca1ea5e33df04328612b359193cc1ed97dcb62895f"
+        },
+        "stdlib/_sifr/time.sifr": {
+          "blob": "4df3ed028d9122d914f0260398d778442d455d33",
+          "bytes": 1242,
+          "lines": 57,
+          "sha256": "22691c1f45e45b03cc4ac5ccfbd9ae9e2e2d44d77907305f1cce108de1983578"
+        },
+        "stdlib/_sifr/tls.sifr": {
+          "blob": "b4b13b71439b3b970b3ee6a3ec2d1640fcd9d391",
+          "bytes": 3877,
+          "lines": 164,
+          "sha256": "f302669a2d9ef547caf80c613292a1cb258923e7cafa51258c0363df159fc5de"
+        },
+        "stdlib/_sifr/toml.sifr": {
+          "blob": "9a060caa1bfd48810f2017e538a75b5aa59a0c82",
+          "bytes": 166,
+          "lines": 5,
+          "sha256": "45ebf6200aa865fbaf26eab1575d7f9ad49262188e4c359930bc2092e35342a5"
+        },
+        "stdlib/_sifr/unicode.sifr": {
+          "blob": "ca38631fc198ea2f4bb6c61ccd90249bfe4afe20",
+          "bytes": 2195,
+          "lines": 95,
+          "sha256": "49358c4f0fe408239c07fabe1c9fc092c8405e1fb1ee9e90ba3b3b7647613de8"
+        },
+        "stdlib/_sifr/url.sifr": {
+          "blob": "ccfc37102ca1f7287af0abe7f50ff6e8052caf43",
+          "bytes": 1141,
+          "lines": 43,
+          "sha256": "8f86d695f2fc4fc8a3b245a1ce5c0e606efb5ae640732c8d90163bb89bbd3f4c"
+        },
+        "stdlib/_sifr/uuid.sifr": {
+          "blob": "e74a437a0092b67c31a209a8aa7fdd163714f923",
+          "bytes": 246,
+          "lines": 11,
+          "sha256": "47de0be8047a3162cc98e5fe05884376522ff9bca1279216c7c3cdc2c5d5b053"
+        },
+        "stdlib/sifr/argparse.sifr": {
+          "blob": "b0b2c947f1e7b5347c30a51a22bf0f974bb55068",
+          "bytes": 21497,
+          "lines": 635,
+          "sha256": "9d18c99aa9e5cbd8a7a1529a6b3d29c7fa3db236d153c0b6b95f06486ed0d6d4"
+        },
+        "stdlib/sifr/base64.sifr": {
+          "blob": "f9720745b157a4a7debf7c9316bc5ab7c715bd04",
+          "bytes": 4198,
+          "lines": 115,
+          "sha256": "847f976147954e08d1bb36a6bea2b005362246cf7aefd17911b346d92138b4e1"
+        },
+        "stdlib/sifr/bisect.sifr": {
+          "blob": "55a9edfd5c6eb5ef9b3f6d792d73b702b0017041",
+          "bytes": 3787,
+          "lines": 112,
+          "sha256": "bfecfdf3f9505fb0cc416bfb0b1cbfeb84d8e330067e540fb304b3465b88da38"
+        },
+        "stdlib/sifr/bytes.sifr": {
+          "blob": "9f792a3e546436e680dd199870ca4ea2183e137c",
+          "bytes": 2090,
+          "lines": 86,
+          "sha256": "37a7e6fbc77d87fc02668ac47752b9c36111b55b3a1b330850712d0428a150a7"
+        },
+        "stdlib/sifr/calendar.sifr": {
+          "blob": "35e687675e0a02edfef19b78713d4f43a896af79",
+          "bytes": 3940,
+          "lines": 149,
+          "sha256": "584d1e58095a1664e1aeb0d217b35680e934e396015cf6904970c01ecd06f724"
+        },
+        "stdlib/sifr/collections.sifr": {
+          "blob": "510ec64fcd7c308eb6cef1c3e3ccce73a57bc899",
+          "bytes": 14123,
+          "lines": 446,
+          "sha256": "515e701cfaa7f5f7249eaa1285e3034a21accd5faf9be41371ee42144e6686fd"
+        },
+        "stdlib/sifr/configparser.sifr": {
+          "blob": "06905c6ed242247f12e49422724c4d9dc27c20b8",
+          "bytes": 18768,
+          "lines": 529,
+          "sha256": "0ea0f66b1fabe03aaa7035553743fcff95bbf187a67c79ae26bd31acf102908f"
+        },
+        "stdlib/sifr/csv.sifr": {
+          "blob": "6ac72cfcda01a3be13ff8d0f1ed25a150979155b",
+          "bytes": 25255,
+          "lines": 867,
+          "sha256": "4d3e49db2ef4fbb73152bd32a4b1a9382be1f1b182d3dac85df9fc55fd0b9223"
+        },
+        "stdlib/sifr/datetime.sifr": {
+          "blob": "3415ca119a6f58642324abb406a764c7a5b897d5",
+          "bytes": 14715,
+          "lines": 460,
+          "sha256": "d1378f0729d176475b70715aa8a5ca2d6f51f9c8e2b3e5375b5dee8f48609d49"
+        },
+        "stdlib/sifr/difflib.sifr": {
+          "blob": "d2dca01d65e60acf0aa0b9469aab3c087905b41a",
+          "bytes": 7776,
+          "lines": 222,
+          "sha256": "ca3747532948ca2bb84115d716971c2a17932eea19ae221b1c6d894b6da7d4c2"
+        },
+        "stdlib/sifr/encoding.sifr": {
+          "blob": "abd965b104cb4ab045f45fbb720dd4851f8aa2db",
+          "bytes": 11440,
+          "lines": 365,
+          "sha256": "a48b523ccbe0fe03429245df4761f2af15a0405825ccac4a3d39f65727e56d86"
+        },
+        "stdlib/sifr/env.sifr": {
+          "blob": "a8f186c97207fda92f693fbbced7fda980ca17ec",
+          "bytes": 680,
+          "lines": 27,
+          "sha256": "8a5940d353f26e3d25e8f9e053dca57d608f3a5f81795981a6871461a438a0ff"
+        },
+        "stdlib/sifr/fnmatch.sifr": {
+          "blob": "9fb5edcc8fd86674957ccecd5dfc335b74528869",
+          "bytes": 2896,
+          "lines": 103,
+          "sha256": "627c17ec11eb1e706491b420a524d2662fb33de02bd9c9cb7743b6e0302e04ba"
+        },
+        "stdlib/sifr/functools.sifr": {
+          "blob": "5f6916769ba4480635589abd4400d4b7e5806e52",
+          "bytes": 240,
+          "lines": 11,
+          "sha256": "ae164aefb0b669f4c9f3ba54ea473f1bbc139b5ad165d909607d22f98a1c1486"
+        },
+        "stdlib/sifr/glob.sifr": {
+          "blob": "79821e77056f203e1a6d11abea29b2034044c799",
+          "bytes": 871,
+          "lines": 28,
+          "sha256": "2f8e3f7c853e0a668b2c3ba0393799a037c014a5a09719a1167c0df9c25986de"
+        },
+        "stdlib/sifr/graphlib.sifr": {
+          "blob": "25461e07ecabdc3e2d1b9de6ae7ead30416f460f",
+          "bytes": 5413,
+          "lines": 164,
+          "sha256": "74511ffccfac4f178e189bb12b286aaa7dd241c0ac01f1cad947708ecc140dfc"
+        },
+        "stdlib/sifr/gzip.sifr": {
+          "blob": "348911f0f46c8ff7d9ed84f06f6d4e0bd5204460",
+          "bytes": 930,
+          "lines": 25,
+          "sha256": "7782b4dfa1d3b3ba505a2ec768b02f1b03fb8659b423184106124797a527ae2f"
+        },
+        "stdlib/sifr/hashlib.sifr": {
+          "blob": "954d6a1f7e770a1c484d2a07f5d9ebac6a7e86df",
+          "bytes": 7265,
+          "lines": 262,
+          "sha256": "c35408cbf2c210023067e72a6399472d3dc6f23488fabb6c514c594cfeefb8ef"
+        },
+        "stdlib/sifr/heapq.sifr": {
+          "blob": "565fcf26daf3f545b69196d309e180b9ac34684b",
+          "bytes": 11689,
+          "lines": 332,
+          "sha256": "9024030d10b81f1cf3a0bb166ed1e902ab3406f3574be2158a34ec5ebd074813"
+        },
+        "stdlib/sifr/html.sifr": {
+          "blob": "1db1a02e1fa44dab87de52833a6402e6218daccf",
+          "bytes": 324,
+          "lines": 11,
+          "sha256": "9fe5e5cddf5c1b3b17bc1c20623b8a435adf9aecb3268c5f5fda57f9eaa08e10"
+        },
+        "stdlib/sifr/http.sifr": {
+          "blob": "62b7fe84b745b707988463803488fb11f11927d0",
+          "bytes": 6557,
+          "lines": 264,
+          "sha256": "19d17d235f11f75f8e3a29d9829a104ee69d0d31b7b5bc86fad465065090d2af"
+        },
+        "stdlib/sifr/i18n.sifr": {
+          "blob": "71a50ac06cb81c7ccfe7b066ee49e5a02ef34cc4",
+          "bytes": 14830,
+          "lines": 491,
+          "sha256": "616e30e5c74b2fbee9232ef4d2f7ee0a3303453b14932088106f5b2a88351ae9"
+        },
+        "stdlib/sifr/io.sifr": {
+          "blob": "0aa333b06916c40f5fcc20f1ede2f6ca247e7643",
+          "bytes": 17778,
+          "lines": 603,
+          "sha256": "29df95445e20c1dfeeb95d1995f13e722e5b9365bfa91759048fc6d60fd3e478"
+        },
+        "stdlib/sifr/ipaddress.sifr": {
+          "blob": "df229de3a2b03711f9697acafe7705995cee19e5",
+          "bytes": 6945,
+          "lines": 233,
+          "sha256": "52859a559aa5d0687f5f5f28b545a0dc0b52f6053b44136e449af58843f0c3c0"
+        },
+        "stdlib/sifr/ipc.sifr": {
+          "blob": "31da1f7f72b1e95f8242cede57aa64adb22e0afe",
+          "bytes": 2220,
+          "lines": 85,
+          "sha256": "4f963f91cead9a7c648dc4820691c02d71b2f71b6c1e140158f29e0bf40d604a"
+        },
+        "stdlib/sifr/itertools.sifr": {
+          "blob": "161f8cb3f836276b4460805fa967f4b3e66ad3bf",
+          "bytes": 12172,
+          "lines": 426,
+          "sha256": "9175de20a55e2e723033cfde903354b5eb464885abd12951f03df624fd1d281d"
+        },
+        "stdlib/sifr/json.sifr": {
+          "blob": "4e244d8ae5dab13169abc0c5944c92980bdd9594",
+          "bytes": 14538,
+          "lines": 465,
+          "sha256": "36a7465809c07c6723f4be286b1872d25465cc73f0b9ebd69ad7941ef0dca66e"
+        },
+        "stdlib/sifr/logging.sifr": {
+          "blob": "2375bd4fbd00f4645948ec77b5f854248648efd7",
+          "bytes": 8974,
+          "lines": 318,
+          "sha256": "aef5ee0731ec48cfa424d1d7f9b5c557346a34b028a2718dfe770af420b80350"
+        },
+        "stdlib/sifr/math.sifr": {
+          "blob": "0c315e720308535f7575f80944734d868eb36c92",
+          "bytes": 3988,
+          "lines": 156,
+          "sha256": "c401d3861290b198c05dbeceb9265077d2bbc8da3fdc083da7b1e68a411326d8"
+        },
+        "stdlib/sifr/meta.sifr": {
+          "blob": "fcfc373347ed6da7c35d4772279eb5443f65d02e",
+          "bytes": 593,
+          "lines": 30,
+          "sha256": "6dbb0a9e8b67c91c4049e1498c1c8aa0b939d6a1f04043531131f06cf4e77840"
+        },
+        "stdlib/sifr/net.sifr": {
+          "blob": "b848262cce0f801ac01e5f6aa82e41e8d8152003",
+          "bytes": 8872,
+          "lines": 304,
+          "sha256": "049d1198b0fa187ba0def4053b25de1540c3ac15115f14fb7d227c74dc0b1f29"
+        },
+        "stdlib/sifr/operator.sifr": {
+          "blob": "ba945baae5851f310b99627bf620d358b55cdbe4",
+          "bytes": 1364,
+          "lines": 81,
+          "sha256": "04f392e45ee1f75b48cffe2c5acf92f1b4f9ae14a80750134936962908f22924"
+        },
+        "stdlib/sifr/os.sifr": {
+          "blob": "ae2b21797c72866066556c7dd3148de9e8c779ae",
+          "bytes": 522,
+          "lines": 12,
+          "sha256": "a72a5d354311e20d62c99d746f68d8f3725379a175f746f9a9850e252edcb088"
+        },
+        "stdlib/sifr/parallel.sifr": {
+          "blob": "0572d8df68b5f5b9116bd14a6a5df09fc2b93701",
+          "bytes": 1098,
+          "lines": 46,
+          "sha256": "a06f0ab639b8a082253e181d7b6f15e44d581bfcf087957d820509232d2c8232"
+        },
+        "stdlib/sifr/pathlib.sifr": {
+          "blob": "bed791452a5148bc2d4fb33c675aa478b91b792d",
+          "bytes": 5717,
+          "lines": 207,
+          "sha256": "9e7fd06c032d852f2588bb2ca0312685bcbc8f58565c20b58a6ae3ef7643554d"
+        },
+        "stdlib/sifr/platform.sifr": {
+          "blob": "00651bc8114a0ba6c8b4fda7d0310857f5612de2",
+          "bytes": 510,
+          "lines": 21,
+          "sha256": "4affe3c0db8efbc9f45f347e7cff54582ba35360e3cd253833c1470b4fa9110b"
+        },
+        "stdlib/sifr/process.sifr": {
+          "blob": "d5a82bce5c15f90b2168b73dbd3901c4d3a91087",
+          "bytes": 25365,
+          "lines": 839,
+          "sha256": "26891cfcaec7443cbb647c9e18f8d0ecea070c166bba7d2f4daca3a27e09f43f"
+        },
+        "stdlib/sifr/python.sifr": {
+          "blob": "2225ba5ae421a89f729804323893134a54b4a53a",
+          "bytes": 20343,
+          "lines": 801,
+          "sha256": "5c06d23ba104915a8c42890e6606bcea2d0cc0ff3f219ac550a189b387cd0c59"
+        },
+        "stdlib/sifr/python_core.sifr": {
+          "blob": "abf84936fe30a3f195885a69562e33bcb7b0d093",
+          "bytes": 2644,
+          "lines": 94,
+          "sha256": "2ab92b9f8c5ff34121798f1ed9b56c4a96ea31b75cd04b67c97db3d539757db8"
+        },
+        "stdlib/sifr/random.sifr": {
+          "blob": "92ad74803d5f4edc8fc6e797033bb8e1675fb5a7",
+          "bytes": 14511,
+          "lines": 480,
+          "sha256": "97ffb618aa21eff0723cface71ff26a0898e63448aaffcf99ae139fbb2d6433b"
+        },
+        "stdlib/sifr/re.sifr": {
+          "blob": "a191633a6180138c7edb239e3842be4afad0bb5d",
+          "bytes": 8492,
+          "lines": 239,
+          "sha256": "7aa121aad03d0a65e1613e763d2924aaba0910bc3193db8445094f01b94c6b73"
+        },
+        "stdlib/sifr/resource.sifr": {
+          "blob": "7a5a7890da39207adfd3a932cb870a7e83fbc0cc",
+          "bytes": 279,
+          "lines": 15,
+          "sha256": "ffcca52481daf0e8166addf1a5ae09972c3956ecc1cd5d38cc4fc65d033f1b93"
+        },
+        "stdlib/sifr/runtime.sifr": {
+          "blob": "56128dd406b137bdfb9f58667a1da742c4af5502",
+          "bytes": 1283,
+          "lines": 56,
+          "sha256": "53baf8b491706df3d6a48ced358181b33ec209a1a7103165cd0f155002346482"
+        },
+        "stdlib/sifr/secrets.sifr": {
+          "blob": "8b022e50dcb17c99f2ff2b85e108951d2fbd7bea",
+          "bytes": 1228,
+          "lines": 47,
+          "sha256": "f6e5369e6bd860a75cb84b5184ea300faf6dbd7f64ef6af90a49955256ee5c78"
+        },
+        "stdlib/sifr/shutil.sifr": {
+          "blob": "3ded23d94c20dec81823071d0dadde057950534f",
+          "bytes": 459,
+          "lines": 13,
+          "sha256": "ceee2d3551bd380e89b20d6415acdb7c26d9d94e983520acd01e4ef910e81dd4"
+        },
+        "stdlib/sifr/signal.sifr": {
+          "blob": "a3dc355d18e83cbdeff49d7e6c47c3df4b313f20",
+          "bytes": 1501,
+          "lines": 67,
+          "sha256": "47da569cbc94d49d444a2d28d0630ede88b5a35779848daabc4e3ebb88ce8441"
+        },
+        "stdlib/sifr/statistics.sifr": {
+          "blob": "c4c967897040cd2ff3b162e3b2ba7830252f2e0b",
+          "bytes": 11182,
+          "lines": 334,
+          "sha256": "29bdcde2ef4db0ae0596f51e0957ec20a7793b4cc7ae58633d677d848b8e9571"
+        },
+        "stdlib/sifr/string.sifr": {
+          "blob": "e3348a395404e912e0b4b0580d5355e937186f96",
+          "bytes": 9366,
+          "lines": 278,
+          "sha256": "8cf4cfae9d3de20422aa82a8d3bb0be0aaafd4a8384df1b273b05426e466cc90"
+        },
+        "stdlib/sifr/sync.sifr": {
+          "blob": "340792ac8b7c6bf9f5bfc60a716f93e120354915",
+          "bytes": 4717,
+          "lines": 205,
+          "sha256": "dce4769c403284da495f698c51cad1dbe0d6c8fea72de52d4f3f0eefd65ba388"
+        },
+        "stdlib/sifr/sys.sifr": {
+          "blob": "e426d2050cd3266101f0ecd886b944b77c9efa69",
+          "bytes": 410,
+          "lines": 19,
+          "sha256": "b29daf811e51094dfc0e558c69f8db90866b053547415d24cd88fbdaffd08600"
+        },
+        "stdlib/sifr/task.sifr": {
+          "blob": "1a3b955d92c521c6104a626b063c5800fd58a96d",
+          "bytes": 511,
+          "lines": 29,
+          "sha256": "2a58775304b4e47d46816f799b9a47404e60be88ed5f050f2f119cf0c79ec361"
+        },
+        "stdlib/sifr/tempfile.sifr": {
+          "blob": "bfc712306252e20a239018b83103c984b39fa752",
+          "bytes": 5138,
+          "lines": 182,
+          "sha256": "f1dfb1acbb8e1fddb3b86c1872489dc98dea17f723e2208bce69de09a43c4d36"
+        },
+        "stdlib/sifr/test.sifr": {
+          "blob": "cbb0e7e0c9b823c6151cd80acb34939869b64c6f",
+          "bytes": 2171,
+          "lines": 81,
+          "sha256": "d53bfa33bd931af299495ab126b617b518544204f4c15e12e984e239377f38ac"
+        },
+        "stdlib/sifr/textwrap.sifr": {
+          "blob": "655234b4a68d735fbf2d984b9128da69fd76b969",
+          "bytes": 13168,
+          "lines": 460,
+          "sha256": "0f68e9b50de3300222aec735acd1e1088021683fc8578200ea37928aa2f60eb2"
+        },
+        "stdlib/sifr/time.sifr": {
+          "blob": "9629f6ef8d7a6cc78ce153e510567473ca6b4a36",
+          "bytes": 7699,
+          "lines": 293,
+          "sha256": "d7309a3e3347e87ffa1cfea3a76722454725756656711235163cd12dc27fac0a"
+        },
+        "stdlib/sifr/timeit.sifr": {
+          "blob": "e6f06c13202e0ef5a9a5ea02dbaacd5031241a7d",
+          "bytes": 1468,
+          "lines": 50,
+          "sha256": "0f3e632e50591b8cb5f6a8e0ec2b92c259915df92170dce527c079a0a723b443"
+        },
+        "stdlib/sifr/tls.sifr": {
+          "blob": "d6e1ab27ac09b3cbec9c91a4af8bb3187b0a1baa",
+          "bytes": 10081,
+          "lines": 354,
+          "sha256": "ed510c460939a7bdecd3b82d75a7a6300dd4b045b213739ffb6baa51619c3d04"
+        },
+        "stdlib/sifr/tomllib.sifr": {
+          "blob": "7444f02b5ac6df14496f5245d57e017f0d806fb6",
+          "bytes": 8849,
+          "lines": 263,
+          "sha256": "83c2ee9f5982a059885b84e110282267f17c189a1faa5610a5c757d9ce07b25c"
+        },
+        "stdlib/sifr/unicode.sifr": {
+          "blob": "fd15670915d50ada862ede1bec5cf5f0cfeb1783",
+          "bytes": 4912,
+          "lines": 186,
+          "sha256": "ff43df9abe21072e30b4196f71db53f69857024ac345d8d900527bc01832bbaa"
+        },
+        "stdlib/sifr/url.sifr": {
+          "blob": "d14a16d9373d81e2fbb8fe32cf727ece77cbbccb",
+          "bytes": 6180,
+          "lines": 254,
+          "sha256": "597b7ef1f35efec6a8a7e2e2695da781dbd78c272d4b4e83e7d066530d74f827"
+        },
+        "stdlib/sifr/uuid.sifr": {
+          "blob": "03225439b005cacb95f3a046153e25cd54c4ac80",
+          "bytes": 5842,
+          "lines": 233,
+          "sha256": "005fd1da58e766b32ab2bef8928ba7cd85d0167ac94e00c0efc9f19ffaf91481"
+        },
+        "stdlib/sifr/zipfile.sifr": {
+          "blob": "dfdf625c33120675559c78b88f0750022f30ac26",
+          "bytes": 4163,
+          "lines": 140,
+          "sha256": "efc364b0ec51a3d8f2a8b7b87fff2606f0d8ff91eaccdf9dd29358f025ca2b56"
+        }
+      },
+      "module_count": 90,
+      "private_modules": [
+        "_sifr.bytes",
+        "_sifr.calendar",
+        "_sifr.collections",
+        "_sifr.compress",
+        "_sifr.crypto",
+        "_sifr.datetime",
+        "_sifr.encoding",
+        "_sifr.fs",
+        "_sifr.html",
+        "_sifr.http",
+        "_sifr.i18n",
+        "_sifr.json",
+        "_sifr.logging",
+        "_sifr.math",
+        "_sifr.net",
+        "_sifr.platform",
+        "_sifr.process",
+        "_sifr.python",
+        "_sifr.regex",
+        "_sifr.runtime",
+        "_sifr.signal",
+        "_sifr.sys",
+        "_sifr.time",
+        "_sifr.tls",
+        "_sifr.toml",
+        "_sifr.unicode",
+        "_sifr.url",
+        "_sifr.uuid"
+      ],
+      "public_modules": [
+        "sifr.meta",
+        "sifr.test",
+        "sifr.env",
+        "sifr.bytes",
+        "sifr.encoding",
+        "sifr.unicode",
+        "sifr.i18n",
+        "sifr.base64",
+        "sifr.math",
+        "sifr.hashlib",
+        "sifr.io",
+        "sifr.os",
+        "sifr.json",
+        "sifr.time",
+        "sifr.random",
+        "sifr.re",
+        "sifr.collections",
+        "sifr.sync",
+        "sifr.task",
+        "sifr.parallel",
+        "sifr.process",
+        "sifr.python_core",
+        "sifr.python",
+        "sifr.net",
+        "sifr.tls",
+        "sifr.url",
+        "sifr.http",
+        "sifr.resource",
+        "sifr.signal",
+        "sifr.runtime",
+        "sifr.ipc",
+        "sifr.string",
+        "sifr.bisect",
+        "sifr.functools",
+        "sifr.secrets",
+        "sifr.graphlib",
+        "sifr.uuid",
+        "sifr.platform",
+        "sifr.pathlib",
+        "sifr.logging",
+        "sifr.heapq",
+        "sifr.itertools",
+        "sifr.textwrap",
+        "sifr.csv",
+        "sifr.argparse",
+        "sifr.fnmatch",
+        "sifr.shutil",
+        "sifr.tempfile",
+        "sifr.difflib",
+        "sifr.ipaddress",
+        "sifr.timeit",
+        "sifr.tomllib",
+        "sifr.datetime",
+        "sifr.operator",
+        "sifr.calendar",
+        "sifr.html",
+        "sifr.sys",
+        "sifr.gzip",
+        "sifr.zipfile",
+        "sifr.configparser",
+        "sifr.statistics",
+        "sifr.glob"
+      ],
+      "source_bytes": 494368,
+      "source_lines": 17112
+    }
+  },
+  "no_cost_fractions": true,
+  "reuse": "B45 seven-revision/59-path history reused; only current blob bindings and absent baseline entries added",
+  "source_inventory_delta": {
+    "added": [
+      "stdlib/sifr/sql.migration.sifr",
+      "stdlib/sifr/sql.sifr"
+    ],
+    "changed": [
+      "stdlib/_sifr/crypto.sifr",
+      "stdlib/_sifr/fs.sifr",
+      "stdlib/_sifr/math.sifr",
+      "stdlib/_sifr/regex.sifr",
+      "stdlib/_sifr/sys.sifr",
+      "stdlib/sifr/argparse.sifr",
+      "stdlib/sifr/base64.sifr",
+      "stdlib/sifr/bisect.sifr",
+      "stdlib/sifr/calendar.sifr",
+      "stdlib/sifr/collections.sifr",
+      "stdlib/sifr/configparser.sifr",
+      "stdlib/sifr/csv.sifr",
+      "stdlib/sifr/datetime.sifr",
+      "stdlib/sifr/difflib.sifr",
+      "stdlib/sifr/encoding.sifr",
+      "stdlib/sifr/env.sifr",
+      "stdlib/sifr/fnmatch.sifr",
+      "stdlib/sifr/graphlib.sifr",
+      "stdlib/sifr/gzip.sifr",
+      "stdlib/sifr/hashlib.sifr",
+      "stdlib/sifr/heapq.sifr",
+      "stdlib/sifr/html.sifr",
+      "stdlib/sifr/i18n.sifr",
+      "stdlib/sifr/io.sifr",
+      "stdlib/sifr/ipaddress.sifr",
+      "stdlib/sifr/itertools.sifr",
+      "stdlib/sifr/json.sifr",
+      "stdlib/sifr/logging.sifr",
+      "stdlib/sifr/math.sifr",
+      "stdlib/sifr/meta.sifr",
+      "stdlib/sifr/net.sifr",
+      "stdlib/sifr/operator.sifr",
+      "stdlib/sifr/os.sifr",
+      "stdlib/sifr/pathlib.sifr",
+      "stdlib/sifr/platform.sifr",
+      "stdlib/sifr/process.sifr",
+      "stdlib/sifr/random.sifr",
+      "stdlib/sifr/re.sifr",
+      "stdlib/sifr/secrets.sifr",
+      "stdlib/sifr/statistics.sifr",
+      "stdlib/sifr/string.sifr",
+      "stdlib/sifr/sync.sifr",
+      "stdlib/sifr/sys.sifr",
+      "stdlib/sifr/tempfile.sifr",
+      "stdlib/sifr/textwrap.sifr",
+      "stdlib/sifr/time.sifr",
+      "stdlib/sifr/tls.sifr",
+      "stdlib/sifr/tomllib.sifr",
+      "stdlib/sifr/url.sifr",
+      "stdlib/sifr/uuid.sifr",
+      "stdlib/sifr/zipfile.sifr"
+    ],
+    "removed": [
+      "stdlib/_sifr/bytes.sifr",
+      "stdlib/_sifr/collections.sifr",
+      "stdlib/sifr/bytes.sifr"
+    ],
+    "unchanged": [
+      "stdlib/_sifr/calendar.sifr",
+      "stdlib/_sifr/compress.sifr",
+      "stdlib/_sifr/datetime.sifr",
+      "stdlib/_sifr/encoding.sifr",
+      "stdlib/_sifr/html.sifr",
+      "stdlib/_sifr/http.sifr",
+      "stdlib/_sifr/i18n.sifr",
+      "stdlib/_sifr/json.sifr",
+      "stdlib/_sifr/logging.sifr",
+      "stdlib/_sifr/net.sifr",
+      "stdlib/_sifr/platform.sifr",
+      "stdlib/_sifr/process.sifr",
+      "stdlib/_sifr/python.sifr",
+      "stdlib/_sifr/runtime.sifr",
+      "stdlib/_sifr/signal.sifr",
+      "stdlib/_sifr/time.sifr",
+      "stdlib/_sifr/tls.sifr",
+      "stdlib/_sifr/toml.sifr",
+      "stdlib/_sifr/unicode.sifr",
+      "stdlib/_sifr/url.sifr",
+      "stdlib/_sifr/uuid.sifr",
+      "stdlib/sifr/functools.sifr",
+      "stdlib/sifr/glob.sifr",
+      "stdlib/sifr/http.sifr",
+      "stdlib/sifr/ipc.sifr",
+      "stdlib/sifr/parallel.sifr",
+      "stdlib/sifr/python.sifr",
+      "stdlib/sifr/python_core.sifr",
+      "stdlib/sifr/resource.sifr",
+      "stdlib/sifr/runtime.sifr",
+      "stdlib/sifr/shutil.sifr",
+      "stdlib/sifr/signal.sifr",
+      "stdlib/sifr/task.sifr",
+      "stdlib/sifr/test.sifr",
+      "stdlib/sifr/timeit.sifr",
+      "stdlib/sifr/unicode.sifr"
+    ]
+  }
+}
