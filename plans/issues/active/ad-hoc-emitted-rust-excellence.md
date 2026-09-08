@@ -2,6 +2,30 @@
 
 Status: active
 
+## Item12K-B33: static module-instance contract (2026-09-08)
+
+Exactly B32-F1, sole performance/issue3776 owner. The
+[scoped contract](ad-hoc-emitted-rust-b33-module-instance.md) implements owned
+external resolver/observer integration grounded in native SBModule equality
+and current mapped header/section/symbol/address checks. Actual B32 duplicate
+metadata is replayed with historical object identity UNKNOWN. Positive aliases
+use explicitly synthetic identities and do not prove future live equivalence.
+
+Named offline suite PASS299/299 (retained231 plus68 module cases), after one
+in-scope alias file-roundtrip correction; first297/299 receipt/source retained.
+The frozen external manifest digest is
+`81597f166178476699cb73a6ca7b13c980624125a5603c89c6b7cafc5e185a31` under
+`/private/tmp/sifr-b33.W1oIqs/evidence`. Exact-SHA static-contract review pending.
+Only Markdown enters Git; no compiler/fixture/lock/workflow edits or broad gates.
+
+B32 authenticated/native closed, historical proof remains INCONCLUSIVE.
+B34 separately owns B32-F2 custody evidence and has no live proof allowance.
+Both static contracts and integrated negatives must complete before a later
+combined proof is proposed; no combined proof or host window is allocated.
+B24 causal/full representative budget, SQL/B27 joint delivery/approved65 and
+the full emitted-Rust phase remain open. This item stops after scoped merge
+and record update; no B34 code or next-item work is included.
+
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
 **B23 MERGED / COMPLETE; blocker none.**
