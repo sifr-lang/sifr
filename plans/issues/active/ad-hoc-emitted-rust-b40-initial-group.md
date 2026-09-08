@@ -183,3 +183,22 @@ source/exact65/SQL/corpus/retained12 and original emitted phase remain OPEN.
 No new mechanism defect was established. Parent/coordinator own any later
 fact-based adjudication after terminal/native retirement. This owner stops here;
 no next-item implementation, acceptance acquisition, review or merge is started.
+
+## Final causal interpretation and proposed route (records only)
+
+The coordinator-requested concrete interpretation is preserved in
+[causal-handoff.md](ad-hoc-emitted-rust-b40-artifacts/causal-handoff.md), with
+all six captures' seven endpoint metrics, warmup versus observation partitions,
+limitations and the proposed B24 causal-to-production-to-B27 route. P0's excess
+spans loader and application phases and accompanies higher system, not user,
+time accounting. P1-P5 config/discovery variation exceeds the narrow file-check
+instruction ranges; this motivates discrimination, not a production fix claim.
+No new analysis execution, source edit, test, review, gate or allocation was
+performed for that interpretation. The original full10-case same-invocation
+producer/budget and both self-tests, B26's full joint-source/qualification
+inventory and retained Item12 obligations are explicitly preserved.
+
+Initial owner3776 terminal publication:
+https://github.com/sifr-lang/sifr/issues/3776#issuecomment-5585164165.
+Final interpretation publication and exact terminal hash are supplied in the
+external terminal and direct parent/coordinator handoff. Diagnostic blocker NONE.
