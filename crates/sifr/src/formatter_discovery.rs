@@ -239,6 +239,43 @@ mod tests {
     }
 
     #[test]
+    fn formatter_discovery_malformed_rules_keep_source_line_diagnostics() {
+        let dir = tempfile::tempdir().unwrap();
+        for rule in ["{a,b", "[z-a]", "\\"] {
+            std::fs::write(
+                dir.path().join(".gitignore"),
+                format!("# rules\n\n{rule}\n"),
+            )
+            .unwrap();
+            let result = FormatterGitignore::load(dir.path(), true, &mut DiskSourceProvider::new());
+            let Err(diagnostics) = result else {
+                panic!("malformed rule {rule:?} must retain its diagnostic");
+            };
+            assert_eq!(diagnostics.len(), 1);
+            assert_eq!(diagnostics[0].code, "SIFR-FMT-0001");
+            assert!(
+                diagnostics[0]
+                    .message
+                    .contains("invalid formatter gitignore")
+            );
+            assert!(diagnostics[0].message.contains(".gitignore:3:"));
+        }
+    }
+
+    #[test]
+    fn formatter_discovery_disabled_ignores_do_not_parse_malformed_rules() {
+        let dir = tempfile::tempdir().unwrap();
+        for rule in ["{a,b", "[z-a]", "\\"] {
+            let ignore = matcher(dir.path(), &format!("*.sifr\n{rule}\n"), false);
+            assert!(
+                !ignore
+                    .matches_resolved_path(Path::new("nested/main.sifr"))
+                    .unwrap()
+            );
+        }
+    }
+
+    #[test]
     fn formatter_discovery_literal_filter_agrees_with_complete_engine() {
         let dir = tempfile::tempdir().unwrap();
         let rules = "/tmp/\n*.sifr\n!keep.sifr\nfoo/**/bar\n[ab].txt\n\\#name\n{one,two}.rs\né?*.log\nspace\\ \n";

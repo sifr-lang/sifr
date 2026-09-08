@@ -47,3 +47,89 @@ fn formatter_discovery_preserves_explicit_file_and_exclusion_controls() {
         assert_eq!(result.status.code(), Some(expected), "{result:?}");
     }
 }
+
+#[test]
+fn formatter_discovery_explicit_files_bypass_malformed_ignore_rules() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    std::fs::write(root.join("main.sifr"), "def main():\n    pass\n").unwrap();
+    std::fs::write(root.join("drift.sifr"), "def main( ):\n    pass\n").unwrap();
+    for rule in ["{a,b", "[z-a]", "\\"] {
+        std::fs::write(root.join(".gitignore"), format!("*.sifr\n{rule}\n")).unwrap();
+        for (name, expected) in [("main.sifr", 0), ("drift.sifr", 1)] {
+            for target in [root.join(name), name.into()] {
+                let result = check(root, &target, &[]);
+                assert_eq!(result.status.code(), Some(expected), "{rule:?}: {result:?}");
+                let stderr = String::from_utf8_lossy(&result.stderr);
+                assert!(!stderr.contains("gitignore"), "{stderr}");
+                if expected == 1 {
+                    assert!(stderr.contains("SIFR-FMT-0001"), "{stderr}");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn formatter_discovery_directory_and_forced_files_report_malformed_ignore_rules() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    std::fs::create_dir(root.join("empty")).unwrap();
+    std::fs::write(root.join("main.sifr"), "def main():\n    pass\n").unwrap();
+    for rule in ["{a,b", "[z-a]", "\\"] {
+        std::fs::write(root.join(".gitignore"), format!("# rules\n\n{rule}\n")).unwrap();
+        for (target, args) in [
+            (Path::new("."), vec![]),
+            (Path::new("empty"), vec![]),
+            (Path::new("main.sifr"), vec!["--force-exclude"]),
+        ] {
+            let result = check(root, target, &args);
+            assert_eq!(result.status.code(), Some(1), "{rule:?}: {result:?}");
+            let stderr = String::from_utf8_lossy(&result.stderr);
+            assert!(stderr.contains("SIFR-FMT-0001"), "{stderr}");
+            assert!(stderr.contains("invalid formatter gitignore"), "{stderr}");
+            assert!(stderr.contains(".gitignore:3:"), "{stderr}");
+        }
+    }
+}
+
+#[test]
+fn formatter_discovery_no_respect_gitignore_bypasses_malformed_rules() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    std::fs::write(root.join("main.sifr"), "def main( ):\n    pass\n").unwrap();
+    for rule in ["{a,b", "[z-a]", "\\"] {
+        std::fs::write(root.join(".gitignore"), format!("*.sifr\n{rule}\n")).unwrap();
+        for target in [Path::new("."), Path::new("main.sifr")] {
+            let result = check(root, target, &["--force-exclude", "--no-respect-gitignore"]);
+            assert_eq!(result.status.code(), Some(1), "{rule:?}: {result:?}");
+            let stderr = String::from_utf8_lossy(&result.stderr);
+            assert!(stderr.contains("SIFR-FMT-0001"), "{stderr}");
+            assert!(!stderr.contains("gitignore"), "{stderr}");
+        }
+    }
+}
+
+#[test]
+fn formatter_discovery_mixed_targets_load_rules_at_directory_selection() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    std::fs::create_dir(root.join("empty")).unwrap();
+    std::fs::write(root.join(".gitignore"), "{a,b\n").unwrap();
+    for name in ["first.sifr", "second.sifr"] {
+        std::fs::write(root.join(name), "def main( ):\n    pass\n").unwrap();
+    }
+    let result = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .current_dir(root)
+        .args(["fmt", "--no-cache", "first.sifr", "second.sifr", "empty"])
+        .output()
+        .unwrap();
+    assert_eq!(result.status.code(), Some(1), "{result:?}");
+    assert!(String::from_utf8_lossy(&result.stderr).contains("invalid formatter gitignore"));
+    for name in ["first.sifr", "second.sifr"] {
+        assert_eq!(
+            std::fs::read_to_string(root.join(name)).unwrap(),
+            "def main():\n    pass\n"
+        );
+    }
+}
