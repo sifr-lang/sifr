@@ -174,7 +174,7 @@ fn stdlib_interop_startup_readonly_walk_preserves_hidden_edges() {
     assert!(selected.contains("_sifr.fs._open_file"));
     assert!(selected.contains("_sifr.fs._file_close"));
     let (mut python, stdlib) = generated(
-        "from sifr.python import from_bool\ndef main():\n    value = from_bool(True)\n    _ = value.get_attr(\"attribute\")\n",
+        "from sifr.python import from_bool, Object, PythonError\ndef main():\n    try:\n        value: Object = from_bool(True)\n        _ = value.get_attr(\"attribute\")\n    except PythonError:\n        pass\n",
     );
     assert!(owners(&python.interop.stdlib_demand).contains("_sifr.python.py_get_attr"));
     assert!(
