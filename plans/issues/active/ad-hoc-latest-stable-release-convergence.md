@@ -6,6 +6,26 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
+### Item 70 — expanded recovery / authorized disposition, blocked
+
+The current historical evidence disposition is INCOMPLETE/UNRECOVERED.
+The user-authorized direction is a prospective replacement qualification
+under NEW source/run/evidence identity after separately owned delivery.
+No historical digest, waiver or qualification identity changes.
+The [Item 70 assessment](ad-hoc-latest-stable-item70-evidence-recovery.md)
+records exact retained/missing bytes, bounded local/GitHub recovery, the
+complete matrix, durable-custody proposal and queued Git search.
+
+Inspection base: `7339aed05db02b3de95b7930e5e1291edecd07fe`; owned independent
+clone `/private/tmp/sifr-item70.L0HK3e/codebase`, branch
+`codex/latest-stable-item70`. No missing original was newly recovered.
+Bulk reachable/reflog/unreachable-object scanning awaits shared-host clearance;
+this is an incomplete, unreviewed and unmerged assessment. Items 59/64 remain
+unqualified; the phase is not closed. No Opus allowance or gate was consumed.
+Later work 70-F1 registers durable all-byte evidence retention only; it is not
+implemented or dispatched. Next action: clear the bounded scan and resume
+this same recovery item. Do not repeat the request for a Git pointer.
+
 ### Item 69 — public HTTPX2 documentation closure
 
 State: complete on 2026-09-08 via implementation
