@@ -162,10 +162,12 @@ fn corpus_repair_repeat_count_reuse_exact_counts_and_general_sequences() {
             let body = rust.split("fn repeat(").nth(1).expect("repeat function");
             assert!(!body.contains("std::iter::repeat("), "{body}");
             assert!(body.contains("count.clone()"), "{body}");
-            assert!(
-                body.replace('&', "").contains("<= SifrInt::from_i64(0)"),
-                "{body}"
-            );
+            let zero_comparison = if ty == "str" {
+                "<= 0"
+            } else {
+                "<= SifrInt::from_i64(0)"
+            };
+            assert!(body.replace('&', "").contains(zero_comparison), "{body}");
             assert!(
                 !body.contains("as usize") && !body.contains(".take("),
                 "{body}"
