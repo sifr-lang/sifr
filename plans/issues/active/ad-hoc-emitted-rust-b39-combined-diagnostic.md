@@ -127,3 +127,72 @@ Passed493/493 coverage,162/162 observer,84/84 analyzer. All failures and source 
 | boundaries_output.py | `ceeb32f75c0d469d48c9f031a2958dd06fc7f931d19eeab956fd3335a993e514` |
 | coverage_b37_tests.py | `c2ee802e69a77a8bbbcbb10d70c981faa3e567b60c97e0170ba52e50d631ad6f` |
 | boundaries.lldb | `464c00da1eb015aa2e8c32cf3893de572a06c753d6c4fb1dbaabca38ff725d9a` |
+
+## Terminal outcome: host rejection, no target launched
+
+State: INCONCLUSIVE / TERMINAL STOP. Prelaunch6441592fa32673d4f9595ee9b9f0d5c5b31cf8c9
+was pushed before the sole allocation. One setup, one LLDB session, zero target
+launches,9.903648083040025s total. The unchanged three-snapshot admission passed.
+The second monitoring snapshot reported434.9% external CPU against400.0% allowed,
+so the watcher issued terminal stop while LLDB was still in setup. All six targets
+remain unlaunched and are not banked capacity. No intervention or retry follows.
+
+The rejection snapshot's top observed CPU rows were Google PID3976/71.1%,
+FileAnalysisService877/69.7%, Codex33195/52.3%, WindowServer615/43.9% and
+Google83469/23.6%. No competing-build process was classified. This establishes
+the host-policy trigger, not which process caused total pressure, historical
+executable identity, a security defect, or formatter startup causation.
+
+There were18 accepted custody observations, zero custody rejections and no
+producer-lifecycle failure. No target entry, return, counter, formatter output,
+fixup attribution or cross-process range was measured. Saved-event analysis
+retains one partial target directory with zero events and zero complete processes.
+F1 serialization and F3 retirement exercised host/debugger resources; target-race
+and F2 interval qualification remain offline only. No production/CV pass.
+
+Fresh complete-process-release.json proves46 observed subject/probe PIDs absent,
+including actual launcher17780 and LLDB17842. Both owned groups are absent.
+launcher-exit.json records actual root exit1. Watcher and monitor joins were
+recorded; no retirement signals were sent. Each capture's newly created exact
+probe is explicitly distinguished from subjects sampled before that capture;
+its retained handle/reap and post-capture absence are not fabricated prior evidence.
+Supervisor elapsed time includes root exit and this final receipt. Capacity released.
+
+Offline evidence:493/493 inherited checks after one in-scope transactional-state
+assertion correction;162/162 observer (121 retained plus41) and84/84 analyzer
+(42 retained plus42). First failed receipts and every source snapshot remain.
+Later local producer tests ensured even a timeout caught by the inherited host
+parser remains terminal, and exercised the actual host capture wrapper. Final
+affected named suites passed before freeze. Unchanged493 evidence was reused
+after later boundary-only changes. No post-live tests or apparatus/source edits.
+
+Record checks reauthenticated all878 frozen input paths. File-size guardrail
+PASS3770 repository files and external maximum835 lines; no compiler, fixture,
+workflow, lockfile, SDK stack, production build, Opus review, Sifr gate, PR or merge.
+
+Follow-up B39-F1 belongs to owner3776/coordinator: actual host-pressure rejection
+prevented target acquisition despite successful admission. The record supports
+adjudication of a materially changed controlled-host/measurement route using the
+preserved host snapshots and original workload/policy. It does not support an
+unchanged reattempt, a relaxed threshold, an OS/loader production fix, or attributing
+the pressure to a displayed process name. An independently controlled environment
+or a separately evidenced host-workload coordination change are discussion routes,
+not new allocated work. This owner writes no later-item implementation.
+
+Full B24 causation/unchanged10case representative plus same-invocation budget and
+both benchmark/budget self-tests, B27 complete joint delivery/exact65/SQL, and the
+original emitted-quality phase remain OPEN. The combined B39 diagnostic stage is
+terminal; no reviewed merge/production completion is claimed.
+
+| Outcome receipt under E | SHA256 |
+| --- | --- |
+| allocation-outcome.json | `23d50d0b38e3927d2f7e300a5e157161bfeb81c33999fabd41f79296d205403b` |
+| launcher-exit.json | `8b404ab81b6c6f60a3f269e8fe69ad74bcce9689d6243890fcbb288bd66b5bac` |
+| complete-process-release.json | `b79208154d7102c3dadfe2cc13bcd78867aaf1cea690de7a677975d5d22dd9e0` |
+| boundaries/outcome.json | `354591c895e0941c4585499310d4afd01455c16e42d5cfd75bb0f338699110dd` |
+| boundaries/producer-lifecycle.json | `849ebf3ff33dc810d74a4e62cad0111ab38b2eed3abc971c18b860cd3c99ec8c` |
+| boundaries/process-release.json | `5db4d017a8e2baa130c468b94043658f032674b88686da72dd1547a9ba6dead6` |
+| boundaries/host.json | `4cd223603b2d5fd2f5d890da6689d8cf99d483685d5677dc23df35c612a6e175` |
+| boundaries/target-0/custody.json | `62f233b3d5e2d491e69a10c0f476a69d0f15f339684cb7892108b995e6e9a33c` |
+| analysis.json | `43a41a4731a8b0d7bd1baaa46508c9871de61caedf724403b0f115c051165616` |
+| offline-summary.json | `0fe9ea2db3ade005fa02787d012789bb5b4706edc6b1937407a8351dbeadb574` |
