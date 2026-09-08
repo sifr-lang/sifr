@@ -2,6 +2,80 @@
 
 Status: active
 
+## Item12K-B22: approved prerequisite staged; main delivery awaits B27 (2026-09-08)
+
+State: **APPROVED / STAGED, NOT MAIN-QUALIFIED OR MAIN-MERGED**.
+The current user dispatch and merged B26 assessment limit this item to B20's
+explicit-file discovery remediation. [PR3801](https://github.com/sifr-lang/sifr/pull/3801)
+merged only into the independently owned `codex/item12k-b22-staging` branch.
+Base `ac4c277b30c6cac046ab1746fe4020c04df7eaf1`, reviewed/tested candidate
+`77d9976d868d9c0d4a1ead1c5ed321489e8359f9`, staging merge
+`86caaa2fd3052b4747f1953f76d485fe059f7b40`. The staging merge's tree is identical
+to the candidate. Source branch: `codex/item12k-b22-formatter-remediation`.
+This separate record is on `codex/item12k-b22-terminal-record`; it does not
+alter the candidate approved by Opus. Predecessor PR3783/branches are untouched.
+
+Explicit file targets now bypass ignore loading and matching before any rule
+parse can fail. Directory and forced-exclusion targets load the working-root
+rules once on demand and retain existing malformed-rule source/line diagnostics.
+Rooted directory/glob/component/negation and file-symlink spelling code remains
+unchanged. The three changed source/test paths are
+`crates/sifr/src/check_and_package_commands.rs`,
+`crates/sifr/src/formatter_discovery.rs` (unit cases only), and
+`crates/sifr/tests/formatter_discovery.rs`. All implementation and six new tests
+were completed before validation; no lockfile, fixture, workflow or other
+compiler mechanism changed.
+
+Exactly the registered commands ran on the candidate: formatter_discovery bin
+unit suite **6/6 PASS**, formatter_discovery integration suite **6/6 PASS**,
+`cargo fmt --check`, exact-base/candidate `git diff --check`, HIR maintainability
+and file-size guardrails **PASS** (3790 files; touched files 848/310/135 lines).
+No other tests, Clippy, performance acquisition, create-pr or merge-profile
+gate ran. Full gate/delivery remain expressly deferred to B27, after B24 and
+its concrete allowance; a known-blocked inherited-stack gate was not attempted.
+Source validation is reused unchanged for this record-only update.
+
+Owned evidence root: `/private/tmp/sifr-b22.gWLgQ9/evidence`.
+`validation.77d9976d868d9c0d4a1ead1c5ed321489e8359f9.json` SHA256
+`f396560b4a65623bb96d36c694f6c6fa2cb2185a816688e2de3a440492cf2404` records all six
+commands, exact SHA, timings, raw paths and hashes. Unit log SHA256
+`e259852264b374ee41461b7f3b0217ae23d39aafac3f1408eaadedc86ecc6f35`; CLI log
+`7359aaf28d679a48259fa4cee9805c46b7bea315e906f609277aa1fa4aa86005`.
+
+The **one remaining B20 remediation review returned SATISFIED**, no blockers:
+[raw publication](https://github.com/sifr-lang/sifr/pull/3801#issuecomment-5578152904).
+SHA-keyed external raw `opus-review.77d9976d868d9c0d4a1ead1c5ed321489e8359f9.md`
+SHA256 `c9fa9aa0b4eba258d4a1dc1da53f59cd1816e742963391ad0518a759c9fdc355`.
+One current provider request, zero retries, zero reviewer tests or writes.
+B20's initial NOT SATISFIED remains consumed (raw SHA256
+`17d7c16179b389a74730ae04a16d00c685dc3aee9e5e83287763b123cffcaf92`); cumulative
+initial1 + remediation1 are now exhausted. No review-counter reset occurred.
+B20's complete terminal remains `96d051e4c16771ae1902f6e8aa77ecd836d45fa6` and
+its terminal JSON SHA256 remains
+`0b4fe5b32beb604527091fdfbeab9ff3b4b7dbd6d4d194e27ebb17d3260999dc`.
+
+Deferred, unstarted formatter follow-up work from review: assess the inherited
+per-path matcher construction and physical-root invariant; add explicit
+file-symlink spelling coverage; document mixed-target partial formatting before
+a later directory diagnostic when integration is adjudicated. These are
+nonblocking pre-existing issues/coverage and a documentation suggestion, not
+new B22 mechanism defects or permission to broaden this implementation.
+
+The invalid B20 acquisition and absent startup/CV causal explanation remain
+B24/owner3776; timeout descendant cleanup remains B23. This patch does not prove
+discovery explains original variability. B27 must conditionally integrate B22
+if B24 retains B20 discovery, reconcile current inputs and supply full exact-SHA
+qualification/delivery. Nothing here closes original3717/corpus48 or the phase.
+
+Isolation: independent clone/index/branches at
+`/private/tmp/sifr-b22.gWLgQ9/codebase`, sibling private `tmp`, CARGO_TARGET_DIR
+unset, private target retained (5.3 GiB), no cleanup or ownership transfer.
+Coordinator explicitly cleared the sole compiler window; named commands and
+review exited normally. Final terminal/no-process receipt is in the evidence
+root. Parent's two dirty Markdown files and predecessor clones remain read-only.
+Exact next action belongs to the parent: retain this staged prerequisite and
+proceed under separate registrations. This B22 session stops without B23/B24 code.
+
 ## Item12K-B20 qualification candidate: discovery corrected, causal acceptance open (2026-09-08)
 
 B20 alone owns producer-boundary attribution and causal correction along
