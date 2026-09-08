@@ -2,6 +2,37 @@
 
 Status: active
 
+## Item12K-B52–B54: terminal performance batch (2026-09-08)
+
+Source implemented, 71 named case executions plus four guards PASS; ONE grouped
+exact-SHA Opus SATISFIED, initial1/remediation0/providererrors0. Final source
+`6a59be12ec4076e2801652ffbf99250e67e5a258` over production B49
+`30b25c551566bf0c146290c7ec38a55621c5d526`, source branch
+`codex/production-batch-b52-MItiGD`. B52 syntax ownership at
+`dd691bf2759c96f2d8cd5cec96ca552109e9b698` (26 cases); B53 SQL host demand at
+`fb7bcc2578352453cfc9e144f7f9d8f3202b9962` (15); B54 raw-parser validation at final
+SHA (30). All source UNMERGED, PR none, full gates/merges zero and HELD.
+
+ONE Police-released combined canonical invocation
+`performance-representative-1788901704922050000` FAILED after154.790451292s,
+owned release PASS. Six rules PASS; five preceding cases accepted; formatter
+corpus exhausted original three attempts (instruction CV .036634/.038932/.044864
+above unchanged .02 limit). Four later cases unreached. Actual budget checker
+argv empty/exit null, blocked by producer; no numeric budget verdict or performance
+saving claimed. B49 nine budget failures remain binding. Source, binaries and221
+protected inputs unchanged; no external retry, repair/replay or corpus reduction.
+
+[Complete scope, tests, review, existing criterion and evidence](ad-hoc-emitted-rust-b52-b54-performance.md).
+[Published grouped review](https://github.com/sifr-lang/sifr/issues/3776#issuecomment-5591731875).
+External `/private/tmp/sifr-production-batch.MItiGD/evidence`; source-validation
+SHA256 `ce9e4a3c008cad7c14b14b25bdf5a937593192f43211ca000b42bd67a8f62f73`,
+qualification details `66737921c9cac1a28d840b900d4d76f65fd6c8fcaa7b5b754ee054d44226dc17`.
+48 raw receipts/full stderr sidecars retained. Optional review suggestions are in
+a [separate backlog](ad-hoc-emitted-rust-optional-review-backlog.md), not new phase
+requirements. Latest user scope fixes this worker to B52–B54 only; after handoff
+stop, fresh worker owns subsequent authorized package. Existing phase/integration
+obligations and whole-phase docs-only closure remain open, not expanded or waived.
+
 ## Item12K-B38: coherent acquisition and batch qualification (2026-09-08)
 
 **B38 MERGED / SCOPED QUALIFICATION COMPLETE; blocker none.**
