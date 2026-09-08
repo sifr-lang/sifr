@@ -1,0 +1,164 @@
+{
+  "authenticated": {
+    "/private/tmp/sifr-b42-host.FVuvOb/sifr/target/debug/sifr": {
+      "sha256": "ba05221d463c08e8c4ca2f1a5001e6d0088ef705d0eb1a09896ee0a23028c293",
+      "bytes": 175993880
+    },
+    "/private/tmp/sifr-b42-host.FVuvOb/sifr/target/debug/frontend_query_bench": {
+      "sha256": "6c5e9793e16c50ad73115b181c4aaababfbc1845a9127e0a5091d722c4a3e4fc",
+      "bytes": 28384376
+    },
+    "/private/tmp/sifr-b13-integration.oBoJJW/gate-outcome.98480c78587d6cbd99a7079d10c71825360bd468.json": {
+      "sha256": "57415124d13a0c6429e4e4020d7544235bf5b7fbb1bd3830364b57527b2d2235",
+      "bytes": 27584
+    },
+    "/private/tmp/sifr-b13-integration.oBoJJW/merge.98480c78587d6cbd99a7079d10c71825360bd468.json": {
+      "sha256": "d9a35097fa8a5a7b0b76feccd575edb90b653808f0aa930e6d45a04773009ca6",
+      "bytes": 36898
+    },
+    "/private/tmp/sifr-b13-integration.oBoJJW/merge.98480c78587d6cbd99a7079d10c71825360bd468.log": {
+      "sha256": "8b4300207b4c34a9272b1d06f1664cc2c6136fd99bfd2615ec5a3deb5294c89b",
+      "bytes": 155600
+    },
+    "/private/tmp/sifr-b42-host.FVuvOb/evidence/representative-01.json": {
+      "sha256": "c7cae91614fb98c68a74571c6fad8c7ba677db004ddfc5d0de3b207b8f4c0e94",
+      "bytes": 363696
+    }
+  },
+  "observed_process_starts": [
+    {
+      "pid": 33590,
+      "ppid": 33589,
+      "pgid": 33589,
+      "start": "Tue Sep 8 16:14:03 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/1.98.0-aarch64-apple-darwin/bin/cargo build -q -p sifr"
+    },
+    {
+      "pid": 33598,
+      "ppid": 33597,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:14:04 2026",
+      "command": "/private/tmp/sifr-b42-host.FVuvOb/sifr/target/debug/sifr build /private/tmp/sifr-b42-host.FVuvOb/sifr/demos/additional_modules/main.sifr --output /private/tmp/sifr-b42-host.FVuvOb/sifr/target/performance/bench-1788876840-33516/attempts/1/artifacts/build-project-001-additional-modules/shared-build"
+    },
+    {
+      "pid": 33658,
+      "ppid": 33598,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:14:06 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/1.98.0-aarch64-apple-darwin/bin/cargo metadata --format-version 1"
+    },
+    {
+      "pid": 33833,
+      "ppid": 33598,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:14:11 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo --config source.crates-io.replace-with=\"sifr-vendor\" --config source.sifr-vendor.directory=\"/private/tmp/sifr-b42-host.FVuvOb/sifr/vendor\" metadata --format-version=1"
+    },
+    {
+      "pid": 33900,
+      "ppid": 33872,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:14:12 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name indexmap --edition=2024 /private/tmp/sifr-b42-host.FVuvOb/sifr/vendor/indexmap/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --deny=unsafe-code --deny=unreachable-pub --deny=unnameable-types --allow=clippy::style --warn=rust-2018-idioms --deny=private-interfaces --deny=private-bounds --cfg feature=\"default\" --cfg feature=\"std\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"arbitrary\", \"borsh\", \"default\", \"quickcheck\", \"rayon\", \"serde\", \"std\", \"sval\", \"test_debug\")) -C metadata=12907efa1749bb85 -C extra-filename=-9e8221d23eeaebcc --out-dir /private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps -L dependency=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps --extern equivalent=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libequivalent-e5d941760f049c88.rmeta --extern hashbrown=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libhashbrown-1ff40ae4492ef002.rmeta --cap-lints allow"
+    },
+    {
+      "pid": 33884,
+      "ppid": 33872,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:14:12 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name encoding_rs --edition=2018 /private/tmp/sifr-b42-host.FVuvOb/sifr/vendor/encoding_rs/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg feature=\"alloc\" --cfg feature=\"default\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"alloc\", \"any_all_workaround\", \"default\", \"fast-big5-hanzi-encode\", \"fast-gb-hanzi-encode\", \"fast-hangul-encode\", \"fast-hanja-encode\", \"fast-kanji-encode\", \"fast-legacy-encode\", \"less-slow-big5-hanzi-encode\", \"less-slow-gb-hanzi-encode\", \"less-slow-kanji-encode\", \"serde\", \"simd-accel\")) -C metadata=3efb4c2d5d361397 -C extra-filename=-21223270f175513f --out-dir /private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps -L dependency=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps --extern cfg_if=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libcfg_if-42a0ba2ffcde8df6.rmeta --cap-lints allow"
+    },
+    {
+      "pid": 34105,
+      "ppid": 33598,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:14:15 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo --config source.crates-io.replace-with=\"sifr-vendor\" --config source.sifr-vendor.directory=\"/private/tmp/sifr-b42-host.FVuvOb/sifr/vendor\" check --quiet --locked --frozen"
+    },
+    {
+      "pid": 34742,
+      "ppid": 34573,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:14:22 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name sifr_runtime --edition=2024 /private/tmp/sifr-b42-host.FVuvOb/sifr/crates/sifr_runtime/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=clippy::pedantic --warn=clippy::unwrap_used --warn=unsafe_code --warn=unreachable_pub --allow=clippy::too_many_lines --allow=clippy::struct_excessive_bools --allow=clippy::similar_names --warn=clippy::print_stdout --warn=clippy::print_stderr --allow=clippy::option_option --allow=clippy::needless_raw_string_hashes --allow=clippy::must_use_candidate --allow=clippy::module_name_repetitions --allow=clippy::missing_panics_doc --allow=clippy::missing_errors_doc --allow=clippy::match_same_arms --allow=clippy::map_unwrap_or --allow=clippy::manual_let_else --allow=clippy::large_enum_variant --allow=clippy::implicit_hasher --warn=clippy::expect_used --allow=clippy::default_trait_access --warn=clippy::dbg_macro --allow=clippy::collapsible_if --allow=clippy::collapsible_else_if --allow=clippy::char_lit_as_u8 --cfg feature=\"default\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"http\", \"i18n\", \"net\", \"python\", \"structural\", \"tls\", \"unicode\")) -C metadata=4ca18e690da78090 -C extra-filename=-090ddf5b898b9842 --out-dir /private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps -C incremental=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/incremental -L dependency=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps --extern encoding_rs=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libencoding_rs-21223270f175513f.rmeta --extern indexmap=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libindexmap-9e8221d23eeaebcc.rmeta --extern memchr=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libmemchr-33d9faf5a30a66f8.rmeta --extern num_bigint=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libnum_bigint-7d99df0e17c95481.rmeta --extern num_traits=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libnum_traits-a937fdd30ec110ff.rmeta"
+    },
+    {
+      "pid": 38218,
+      "ppid": 33598,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:14:45 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo --config source.crates-io.replace-with=\"sifr-vendor\" --config source.sifr-vendor.directory=\"/private/tmp/sifr-b42-host.FVuvOb/sifr/vendor\" check --quiet --locked --frozen"
+    },
+    {
+      "pid": 45012,
+      "ppid": 38218,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:15:03 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name sifr_runtime --edition=2024 /private/tmp/sifr-b42-host.FVuvOb/sifr/crates/sifr_runtime/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=clippy::pedantic --warn=clippy::unwrap_used --warn=unsafe_code --warn=unreachable_pub --allow=clippy::too_many_lines --allow=clippy::struct_excessive_bools --allow=clippy::similar_names --warn=clippy::print_stdout --warn=clippy::print_stderr --allow=clippy::option_option --allow=clippy::needless_raw_string_hashes --allow=clippy::must_use_candidate --allow=clippy::module_name_repetitions --allow=clippy::missing_panics_doc --allow=clippy::missing_errors_doc --allow=clippy::match_same_arms --allow=clippy::map_unwrap_or --allow=clippy::manual_let_else --allow=clippy::large_enum_variant --allow=clippy::implicit_hasher --warn=clippy::expect_used --allow=clippy::default_trait_access --warn=clippy::dbg_macro --allow=clippy::collapsible_if --allow=clippy::collapsible_else_if --allow=clippy::char_lit_as_u8 --cfg feature=\"default\" --cfg feature=\"http\" --cfg feature=\"net\" --cfg feature=\"tls\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"http\", \"i18n\", \"net\", \"python\", \"structural\", \"tls\", \"unicode\")) -C metadata=009d6dead8ca7b5f -C extra-filename=-67f0b388f7c5bfae --out-dir /private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps -C incremental=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/incremental -L dependency=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps --extern bytes=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libbytes-1f68b5b7cf16e6c8.rmeta --extern encoding_rs=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libencoding_rs-21223270f175513f.rmeta --extern h2=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libh2-f8187e4e812644ce.rmeta --extern http=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libhttp-c67dd3d820a67244.rmeta --extern http_body=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libhttp_body-c8870559cc8b1c4e.rmeta --extern http_body_util=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libhttp_body_util-71da28ee044be1cb.rmeta --extern hyper=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libhyper-152cf6817cb8bfd4.rmeta --extern hyper_util=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libhyper_util-7705b88c152ed3f7.rmeta --extern indexmap=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libindexmap-9e8221d23eeaebcc.rmeta --extern memchr=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libmemchr-33d9faf5a30a66f8.rmeta --extern num_bigint=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libnum_bigint-67a9e6e3d304c5c2.rmeta --extern num_traits=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libnum_traits-cf9f746541d53905.rmeta --extern rustls=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/librustls-556d9d50ae1e34ab.rmeta --extern rustls_pemfile=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/librustls_pemfile-a488471953bae909.rmeta --extern rustls_platform_verifier=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/librustls_platform_verifier-6ff58815caff6196.rmeta --extern tokio=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libtokio-2a1bcb8a523f2905.rmeta --extern tokio_rustls=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libtokio_rustls-283b61a93946c0ec.rmeta --extern tower_service=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libtower_service-3e874b44b1de8bae.rmeta -L native=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/build/aws-lc-sys-1aef4d92814da40b/out"
+    },
+    {
+      "pid": 46161,
+      "ppid": 45370,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:15:15 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name sifr_runtime --edition=2024 /private/tmp/sifr-b42-host.FVuvOb/sifr/crates/sifr_runtime/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=clippy::pedantic --warn=clippy::unwrap_used --warn=unsafe_code --warn=unreachable_pub --allow=clippy::too_many_lines --allow=clippy::struct_excessive_bools --allow=clippy::similar_names --warn=clippy::print_stdout --warn=clippy::print_stderr --allow=clippy::option_option --allow=clippy::needless_raw_string_hashes --allow=clippy::must_use_candidate --allow=clippy::module_name_repetitions --allow=clippy::missing_panics_doc --allow=clippy::missing_errors_doc --allow=clippy::match_same_arms --allow=clippy::map_unwrap_or --allow=clippy::manual_let_else --allow=clippy::large_enum_variant --allow=clippy::implicit_hasher --warn=clippy::expect_used --allow=clippy::default_trait_access --warn=clippy::dbg_macro --allow=clippy::collapsible_if --allow=clippy::collapsible_else_if --allow=clippy::char_lit_as_u8 --cfg feature=\"default\" --cfg feature=\"i18n\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"http\", \"i18n\", \"net\", \"python\", \"structural\", \"tls\", \"unicode\")) -C metadata=7bf4faf0a7619858 -C extra-filename=-d4a008a8b5929115 --out-dir /private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps -C incremental=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/incremental -L dependency=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps --extern encoding_rs=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libencoding_rs-21223270f175513f.rmeta --extern icu_collator=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libicu_collator-e966fbc48132d0af.rmeta --extern icu_datetime=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libicu_datetime-398811df2d6369d7.rmeta --extern icu_decimal=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libicu_decimal-92e71a2472a3171f.rmeta --extern icu_locale=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libicu_locale-babddae57c7a42a0.rmeta --extern icu_plurals=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libicu_plurals-6866a81a6ae8bdd9.rmeta --extern indexmap=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libindexmap-9e8221d23eeaebcc.rmeta --extern memchr=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libmemchr-33d9faf5a30a66f8.rmeta --extern num_bigint=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libnum_bigint-67a9e6e3d304c5c2.rmeta --extern num_traits=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libnum_traits-cf9f746541d53905.rmeta"
+    },
+    {
+      "pid": 49548,
+      "ppid": 49543,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:15:40 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name sifr_runtime --edition=2024 /private/tmp/sifr-b42-host.FVuvOb/sifr/crates/sifr_runtime/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=clippy::pedantic --warn=clippy::unwrap_used --warn=unsafe_code --warn=unreachable_pub --allow=clippy::too_many_lines --allow=clippy::struct_excessive_bools --allow=clippy::similar_names --warn=clippy::print_stdout --warn=clippy::print_stderr --allow=clippy::option_option --allow=clippy::needless_raw_string_hashes --allow=clippy::must_use_candidate --allow=clippy::module_name_repetitions --allow=clippy::missing_panics_doc --allow=clippy::missing_errors_doc --allow=clippy::match_same_arms --allow=clippy::map_unwrap_or --allow=clippy::manual_let_else --allow=clippy::large_enum_variant --allow=clippy::implicit_hasher --warn=clippy::expect_used --allow=clippy::default_trait_access --warn=clippy::dbg_macro --allow=clippy::collapsible_if --allow=clippy::collapsible_else_if --allow=clippy::char_lit_as_u8 --cfg feature=\"default\" --cfg feature=\"net\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"http\", \"i18n\", \"net\", \"python\", \"structural\", \"tls\", \"unicode\")) -C metadata=7c58f32072dd0a98 -C extra-filename=-3e7b94101e8697f1 --out-dir /private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps -C incremental=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/incremental -L dependency=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps --extern encoding_rs=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libencoding_rs-21223270f175513f.rmeta --extern indexmap=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libindexmap-9e8221d23eeaebcc.rmeta --extern memchr=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libmemchr-33d9faf5a30a66f8.rmeta --extern num_bigint=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libnum_bigint-67a9e6e3d304c5c2.rmeta --extern num_traits=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libnum_traits-cf9f746541d53905.rmeta --extern tokio=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libtokio-ea2b271cec950073.rmeta"
+    },
+    {
+      "pid": 52340,
+      "ppid": 33598,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:15:57 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo --config source.crates-io.replace-with=\"sifr-vendor\" --config source.sifr-vendor.directory=\"/private/tmp/sifr-b42-host.FVuvOb/sifr/vendor\" check --quiet --locked --frozen"
+    },
+    {
+      "pid": 52417,
+      "ppid": 52340,
+      "pgid": 33597,
+      "start": "Tue Sep 8 16:16:02 2026",
+      "command": "/Users/yaseralnajjar/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name pyo3_build_config --edition=2021 /private/tmp/sifr-b42-host.FVuvOb/sifr/vendor/pyo3-build-config/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --cfg feature=\"default\" --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values(\"default\", \"extension-module\", \"generate-import-lib\", \"resolve-config\")) -C metadata=79e6638acfe84267 -C extra-filename=-4ee83d329f06e25b --out-dir /private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps -L dependency=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps --extern target_lexicon=/private/tmp/sifr-b42-host.FVuvOb/tmp/sifr_generated_artifact_cache/rust_bridge_probe_target/debug/deps/libtarget_lexicon-48ec00dbdf760769.rmeta --cap-lints allow"
+    }
+  ],
+  "B13": {
+    "production_setup": {
+      "current_revision": true,
+      "graphs": 92,
+      "step": {
+        "name": "cargo_cache_setup",
+        "elapsed_ms": 1601078,
+        "status": "pass"
+      }
+    },
+    "freshness": {
+      "id": "demo-emitted-freshness",
+      "result": {
+        "name": "guardrail_demo_emitted_freshness",
+        "elapsed_ms": 722863,
+        "status": "pass"
+      }
+    },
+    "selected_log_lines": [
+      {
+        "line": 1311,
+        "text": "performance budget note: skipped p95_ms for 39 benchmark(s) with sample_count < 20: build-project-001-additional-modules:5, build-project-002-branch-paths:5, build-project-003-cargo-manifest:5, build-project-004-dependency-manifest:5, build-project-005-project-graph:5, build-single-file-001-break-continue:5, build-single-file-002-builtin-any-all:5, build-single-file-003-builtin-enumerate-zip:5, build-single-file-004-bytes-constructors:5, build-single-file-005-class-methods:5, build-single-file-006-collection-len:5, build-single-file-007-comp-set:5, build-single-file-008-decimal-conversions:5, build-single-file-009-dict-get-option:5, build-single-file-010-generic-identity:5, check-project-001-imports:5, check-project-002-mode-consistency:5, check-project-003-project-build:5, check-project-004-project-graph:5, check-project-005-rooted-entrypoint:5, check-single-file-001-arithmetic:5, check-single-file-002-break-continue:5, check-single-file-003-builtin-any-all:5, check-single-file-004-builtin-enumerate-zip:5, check-single-file-005-bytes-constructors:5, check-single-file-006-class-methods:5, check-single-file-007-collection-len:5, check-single-file-008-comp-set:5, check-single-file-009-decimal-conversions:5, check-single-file-010-dict-get-option:5, diagnostic-non-regression-001-human-success-exit:5, diagnostic-non-regression-002-json-diagnostic-schema:5, diagnostic-non-regression-003-compact-diagnostic-schema:5, diagnostic-non-regression-004-recovery-limit:5, diagnostic-non-regression-005-project-error-exit:5, formatter-corpus-001-project-check:5, formatter-large-file-001-check:5, lsp-query-001-request-families:5, lsp-query-002-cold-start:5"
+      },
+      {
+        "line": 1321,
+        "text": "[sifr-case-timing] bucket=performance case=build-project-001-additional-modules elapsed_ms=100496 status=pass"
+      }
+    ],
+    "limit": "Case aggregate timings are not raw warmup durations or a before-first-use cache inventory."
+  },
+  "retained_build_artifact_metadata": {
+    "root": "/private/tmp/sifr-b42-host.FVuvOb/sifr/target/performance/bench-1788876840-33516/attempts/1/artifacts/build-project-001-additional-modules",
+    "exists_at_B43_read": false,
+    "files_at_B43_read": [],
+    "custody": "B43 read-only retained filesystem observation, not a historical start/end snapshot."
+  }
+}
