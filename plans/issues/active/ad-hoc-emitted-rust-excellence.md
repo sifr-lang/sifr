@@ -2,6 +2,86 @@
 
 Status: active
 
+## Item12K-B20 terminal: acceptance unmet, qualification invalid, not merged (2026-09-08)
+
+Status: NEEDS-NEW-SCOPE / NOT COMPLETE / NOT MERGED, stopping under the latest
+explicit user direction to finish bounded review/terminal without further code
+or replay. [PR3783](https://github.com/sifr-lang/sifr/pull/3783) stays OPEN DRAFT
+at frozen candidate `ac4c277b30c6cac046ab1746fe4020c04df7eaf1`, exact base
+`fb66ed00d7672b9f5c623e3291d1b8498d50ec45`. Merge SHA: none. This separate
+record-only branch is `codex/item12k-b20-terminal-record`; no reviewed code is
+amended. Owner [3776](https://github.com/sifr-lang/sifr/issues/3776) stays OPEN.
+Parent scopes the next owner from evidence; no next item is implemented here.
+
+One initial exact-SHA [Opus review](https://github.com/sifr-lang/sifr/pull/3783#issuecomment-5577108250),
+one provider request, zero provider retries, zero remediation reviews, zero
+gates. Raw verdict NOT SATISFIED for full B20 acceptance. Review SHA256
+`17d7c16179b389a74730ae04a16d00c685dc3aee9e5e83287763b123cffcaf92`.
+Raw response is preserved under sibling evidence
+`opus-provider-ac4c277b30c6cac046ab1746fe4020c04df7eaf1.b68rjm7o/response.md`.
+Reviewer ran no tests/builds/profilers/gates. Its phrase "2 of 10 representative
+cases launched" is inaccurate: there were two target launches of the SAME first
+build-project case, not two distinct cases. Raw review remains unaltered.
+Its proposed future rerun is a correction recommendation, not authorization for
+a replay in this session. Follow-up suggestions are not accepted mechanisms.
+
+Review blockers: (1) required valid representative/formatter/budget qualification
+is missing; (2) a supported causal explanation/correction for pre-initializer
+instruction variation is missing, with no specific unavailable intervention
+demonstrated; (3) eager hard-failing gitignore parsing at
+`crates/sifr/src/formatter_discovery.rs:42` /
+`crates/sifr/src/check_and_package_commands.rs:582` introduces a regression:
+unsupported rule syntax can abort formatting even for explicit-file targets
+that bypass exclusions. Existing well-formed-rule regressions do not cover it.
+The independently proven root-/tmp/-matching correction does not solve startup
+CV, and the earlier progress record's preserved-controls claim is narrowed by
+this finding. No remediation code or second review was performed after the
+user's terminal-only direction.
+
+Exact candidate short checks PASS: benchmark/budget selftests, four discovery
+unit tests, two fmt CLI regressions, Rust formatting, file-size guardrail, and
+worktree/base-candidate diff checks (eight command receipts in
+`evidence/final-tests/results.json`). Final canonical binary SHA256
+`dad2fb83e97720aa4a256c7e555cf02ac4d48034ee3834b43a530dd6c4f7e2dd`;
+diagnostic linking/instrumentation is absent. No `sifr_format` final source diff.
+
+Qualification is INVALID_ISOLATION_ABORTED, not a pass or fabricated aggregate.
+Separate these facts:
+
+- Operator setup omission: this worker's launcher omitted owned `TMPDIR`.
+  Generated bridge probe compilation used the shared default temporary cache
+  despite a private compiler target. This violates qualification isolation;
+  it is not automatically an external dependency or repository cache defect.
+  Our descendants accessed shared storage; no claim of exclusive writes there,
+  shared cleanup, ownership transfer or restoration of unknown files is made.
+- Observed timeout/overlap: the first build-project warmup timed out at
+  120004.34008298907ms, unavailable counters/empty output. Target85215 survived
+  the time wrapper as PPID1 while next sample3862 launched. Preserved process
+  evidence identifies both in ownedPGID84008 with their Cargo descendants.
+  Only that validated group was terminated; runner exit143, group then empty.
+- Independently evidenced pre-existing cleanup deficiency: the unchanged timed
+  wrapper handling at `run_benchmarks.py:605-624` returns timeout failure without
+  descendant-group cleanup. Base/candidate source blob is identical
+  `7dc3270d0226f68ead596c347d15c38cc21fa33b`. The actual surviving child/overlap
+  supports this narrow finding, not the cause of the initial120s timeout or CV.
+
+Formatter, remaining representative cases and dependent budget were UNREACHED.
+No canonical aggregate or final host report was produced. Preserve the raw
+attempt, `final-profile/abort-record.json`, first warmup JSON, stopped process
+snapshot and producer log. No silent replay, full gate, merge, or threshold/
+baseline/workload/retry changes. Experiment02 chronology remains0+0+6 launches
+for02/02b/02c; changed setups were registered before continuation, all failures
+retained, and the coordinator's unused-budget snapshot predates02c.
+
+Evidence root `/private/tmp/sifr-b20.bj6Au6/evidence`; terminal.json and
+evidence-inventory.json authenticate the final handoff outside Git. All diagnostic
+registrations, unsuccessful/limited traces, raw controls and exact budgets remain.
+All16 gitlinks/corpus8bcbe7ab and excluded8ad089 boundary are unchanged. Latest
+main1970c35c25b84d3801533e0790374a1ef3b8d007 had no relevant B20 input changes.
+Original3717/B19 integration remains parent-owned. SQL builtin3f422/PR3694
+independent coupling: not assessed. Release governance/Item65/67 not absorbed.
+Acquisition capacity released; no B20 acquisition/build/profiler processes remain.
+
 ## Item12K-B20 qualification candidate: discovery corrected, causal acceptance open (2026-09-08)
 
 B20 alone owns producer-boundary attribution and causal correction along
