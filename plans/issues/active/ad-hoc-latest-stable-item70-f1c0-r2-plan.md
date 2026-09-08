@@ -222,7 +222,7 @@ starting the later offline F1C1 item in a fresh session.
 ## Registered later items; not implemented here
 
 **70-F1C1 — offline R2 adapter and admission contract**, release/distribution.
-Ready after F1C0 merges; no live account, compiler/policy, credential or SDK
+Implemented pending exact-SHA review/merge; no live account, compiler/policy, credential or SDK
 installation prerequisite. Exact new implementation paths:
 
 - `verification/areas/distribution_release/governance/archive_r2_store.py`:
@@ -275,6 +275,46 @@ retention/error precedence, credential rights or custody independence.
 Use one exact-SHA Opus review plus at most one remediation; only source
 inspection in review. Apply actual changed-path gate rules; the registered
 source/docs-only F1C1 paths require no Sifr gate. Merge, record, and stop.
+
+F1C1 implementation: `R2Target` is immutable and validates the canonical
+manifest against an externally supplied digest and source/run/attempt before
+deriving the root. Clients expose standard SDK `meta.endpoint_url` and
+`meta.config` fields; admission requires region `auto`, path addressing,
+one total request attempt and required-only checksum negotiation. The same
+binding is rechecked before every operation. Successful PUT requires 200 and
+a nonempty ETag, used only as response completeness metadata. GET requires
+200, exact ContentLength and explicit STANDARD, reads through EOF and closes
+the body, rejecting range/encoding/expiration indicators. The ETag never
+establishes byte integrity. Missing Standard metadata is a fail-closed online
+compatibility question, not an inferred Standard default.
+
+`PolicyObservation` holds immutable UTF-8 JSON envelope bytes. Its exact fields
+are `account`, `jurisdiction`, `bucket`, `archive_root`, `source_commit`,
+`run_id`, `run_attempt`, `endpoint`, `method`, `path`, `operation`, `headers`,
+`observed_at`, `status`, `request_id`, `authority_ref`, `raw_response` and
+`response_sha256`. `raw_response` preserves the provider JSON text whose
+UTF-8 bytes the digest identifies. Operations are `metadata`, `locks` and
+`lifecycle`; paths and jurisdiction headers follow the contract above.
+Lifecycle observations serialize the SDK response shape with ResponseMetadata,
+Rules or the explicit 404/NoSuchLifecycleConfiguration error. All JSON layers
+reject duplicate keys; policy shapes admit only supported fields and filters.
+The admission result retains all three observations and says
+`supplied-policy-observations-only`. This format is an offline consumption
+boundary, not a network transport, authentication claim or live freshness check.
+The later owner must capture and preserve before/after observations.
+
+`R2ArchiveReader` exposes only reads. `R2ReadbackStore` composes it with a
+separate `R2ArchiveStore` receipt writer with matching location/root/digest
+and distinct client/reference; only receipt keys may be written. Every read,
+including receipt verification, stays on the dedicated reader. Local labels
+do not prove the actual credential rights or administrative independence.
+Only the three registered Python modules and this plan/phase record change;
+the F1B manifest, schema, store, CLI and synthetic builder remain unchanged.
+Owned clone `/private/tmp/sifr-item70-f1c1.fDMx42/codebase`, branch
+`codex/latest-stable-item70-f1c1`, base
+`5614f06c8ff49411dd8d0b8107e6479e4274ec96`; sibling private evidence root.
+No SDK installation, factory, real service call, fixture, workflow, lock,
+Cargo, native run, historical recovery, F1C2/D work or qualification occurs.
 
 **70-F1C2 — real SDK/configuration/access and independent-copy proof**,
 release/distribution with the existing storage/copy owners. Not ready for

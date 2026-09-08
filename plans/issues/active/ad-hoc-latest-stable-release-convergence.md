@@ -6,6 +6,33 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
+### Item 70-F1C1 — offline R2 adapter and admission contract
+
+IMPLEMENTED pending exact-SHA review/merge under the merged
+[F1C0 scope and nine-test table](ad-hoc-latest-stable-item70-f1c0-r2-plan.md).
+Only the registered `archive_r2_store.py`, `archive_r2_config.py` and
+`archive_r2_selftest.py` source modules plus plan/phase records change.
+Immutable manifest-bound target, canonical endpoint/location/key checks,
+explicit SDK metadata binding, one conditional PUT, fresh full GET with body
+cleanup and sanitized errors, strict supplied lock/lifecycle/Standard
+observations, and dedicated reader/separate receipt-writer composition.
+F1B source/schema/CLI remain unchanged; tests import its synthetic inventory.
+Mocks prove logic only; live SDK/retention/error precedence and separately
+controlled full-byte copy remain F1C2 prerequisites, with no readiness claim.
+
+Named checks only: Python 3.14.7
+`python3 -m unittest verification.areas.distribution_release.governance.archive_r2_selftest`,
+`git diff --check`, `python3 scripts/check_file_size_guardrails.py`.
+One exact-SHA Opus review plus at most one remediation, Read/Grep/Glob only;
+no reviewer command/test execution. Registered source/docs paths require no
+Sifr gate. No SDK install, credential/resource, transport/factory, workflow,
+lockfile, fixture, compiler/native, historical or qualification work.
+Owned clone `/private/tmp/sifr-item70-f1c1.fDMx42/codebase`, branch
+`codex/latest-stable-item70-f1c1`, base
+`5614f06c8ff49411dd8d0b8107e6479e4274ec96`; sibling external evidence root.
+Parent/predecessor stores remain read-only. Blocker: none. Merge, record and
+stop; do not start F1C2/D or any next item.
+
 ### Item 70-F1C0 — selected R2 contract and offline implementation plan
 
 COMPLETE via [PR #3816](https://github.com/sifr-lang/sifr/pull/3816), merged
