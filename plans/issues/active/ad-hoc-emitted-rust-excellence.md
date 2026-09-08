@@ -4,8 +4,11 @@ Status: active
 
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
-Bounded implementation awaiting its named validation and exact-SHA review.
-Base: `16a97d07327c3c3b0f153acb3662bd2bd89925a3`; independent owner root
+**B23 MERGED / COMPLETE; blocker none.**
+[PR3802](https://github.com/sifr-lang/sifr/pull/3802) merged to main as
+`7e0a3dc268ae4d180b9f69fa684eeac8a2e5e881`. Exact reviewed/validated candidate
+`1af54249499ebdf42dcbb42c1fe3272810d9ee3a`; the merge tree equals the candidate
+tree. Base: `16a97d07327c3c3b0f153acb3662bd2bd89925a3`; independent owner root
 `/private/tmp/sifr-b23.inohbu`, branch `codex/item12k-b23-timeout-lifecycle`.
 The parent and every predecessor clone, index, target and reference are read-only.
 Owned launch environment uses sibling `tmp` and `evidence`, with
@@ -40,10 +43,47 @@ Named validation only:
 - `python3 scripts/check_hir_maintainability_guardrails.py`
 - `python3 scripts/check_file_size_guardrails.py`
 
-One initial exact-SHA Opus review and at most one remediation belong to this new
-mechanism. No compiler/lock/fixture/workflow changes, builds, Cargo/Clippy,
-benchmark acquisitions, create-pr or merge-profile gates are authorized here.
-This independent Python prerequisite may merge main after these checks/review.
+All five commands PASS on the exact candidate. Benchmark self-test includes
+seven lifecycle checks and the inherited suites; budget self-test PASS;
+HIR PASS; file-size PASS3762 (runner816 lines, helper233). No code changed after
+validation. External receipts are under `/private/tmp/sifr-b23.inohbu/evidence`:
+
+| Receipt | SHA256 |
+| --- | --- |
+| `validation.1af54249499ebdf42dcbb42c1fe3272810d9ee3a.json` (commands, timings, exact SHA and all log digests) | `0dbbbccfae532dcbd3942cf36bb9ff9d72262a88793be696ec10d9bedabad4fa` |
+| `benchmark-self-test.1af54249499ebdf42dcbb42c1fe3272810d9ee3a.log` | `6f620f8c8645fb74461f5acf68648a68daced69e070a0c2be3698a33aa448098` |
+| `budget-self-test.1af54249499ebdf42dcbb42c1fe3272810d9ee3a.log` | `fbd0e47bb91b465f3b4eeec2336e6704d39273aad8e51dc9bba504b851ad78e2` |
+| `exact-diff.1af54249499ebdf42dcbb42c1fe3272810d9ee3a.log` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| `hir.1af54249499ebdf42dcbb42c1fe3272810d9ee3a.log` | `0371f7ff0407b48ec3c2b827e55899ed48ef9f856b1b3562c29558d86f65f945` |
+| `file-size.1af54249499ebdf42dcbb42c1fe3272810d9ee3a.log` | `1b09e0abd8311497ed029a696dc754b156d49aa80a33bead0e812389245b94f1` |
+
+One initial exact-SHA Opus review SATISFIED, no blocking findings, zero
+remediation/provider retries and zero reviewer tests/builds/gates.
+[Published complete review](https://github.com/sifr-lang/sifr/pull/3802#issuecomment-5578311702).
+External raw response `opus-1af54249499ebdf42dcbb42c1fe3272810d9ee3a.fSQ2hi/response.md`,
+SHA256 `62889dd3be376f38ea9b7e268cb9f06ec4811e09f27cb3fbd4b013bc55fe84ab`.
+The reviewer authenticated all five logs. Actual tree execution is Darwin-only;
+no Linux execution or broader performance qualification is claimed.
+
+Nonblocking review follow-ups are separate later work, recorded but not started:
+
+- B23-F1 (suggestion): assess the rare POSIX PID/PGID reuse race after leader
+  reaping before any future ownership-helper expansion.
+- B23-F2 (suggestion): normalize an unsignalable member's `PermissionError`
+  into `BenchmarkError`; the current exception already prevents further samples.
+- B23-F3 (suggestion): assert group/session leadership directly while the test
+  leader is alive, beyond the existing caller-group separation assertion.
+- B23-F4 (pre-existing): warmup timeouts are skipped by the existing warmup
+  `continue`; B23 now cleans them first but does not change sampling policy.
+- B23-F5 (infrastructure): consider deferring the inline self-test's mock imports
+  from the production import path, consistent with the area's test convention.
+
+No compiler/lock/fixture/workflow changes, builds, Cargo/Clippy, benchmark
+acquisitions, create-pr or merge-profile gates: all counts zero. This scoped
+Python prerequisite is delivered independently. The record-only update reuses
+candidate evidence, runs only diff hygiene and has no new Opus review or gate.
+Final external `terminal.json`, `merge-identities.json`, `evidence-inventory.json`
+and `zero-owned-processes.json` bind the record PR/SHA and the native handoff.
 
 Authenticated B20 terminal SHA256
 `0b4fe5b32beb604527091fdfbeab9ff3b4b7dbd6d4d194e27ebb17d3260999dc` and stopped-group
