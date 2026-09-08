@@ -1,8 +1,9 @@
 # 12K-B28: early-loader observability feasibility
 
 Date: 2026-09-08. Owner: performance / issue3776. This is B24-F1's sole
-registered owner, not a second owner. State: ASSESSMENT COMPLETE / PROPOSAL
-AWAITING ORCHESTRATOR ADJUDICATION / NOT EXECUTED / NOT REVIEWED / NOT MERGED.
+registered owner, not a second owner. State: NEEDS-NEW-SCOPE / COVERAGE PROOF
+INCONCLUSIVE / NOT QUALIFIED / NOT REVIEWED / NOT MERGED. The first-stage
+assessment and approved registration below are preserved as chronological records.
 
 ## Finding and limits
 
@@ -287,3 +288,70 @@ with phase record and terminal stop. Review covers evidence and claim boundaries
 not compiler/whole-phase/causal acceptance. No second proof is permitted by a
 review. If the proof FAILs, preserve raw receipts and return NEEDS-NEW-SCOPE;
 no automatic review, redesign, second target or next-item implementation.
+
+## Sole-proof terminal result
+
+The single registered invocation ended INCONCLUSIVE in7.498421s: one debugger
+session, one target, one recorded initial stop, zero continues, zero armed early
+sites, zero entry-family hits. TargetPID/PGID3082 was killed successfully while
+stopped. LLDBgroup3036 and inferior group3082 are absent; no debugserver,
+debugger, target, monitor or watcher remains. Capacity is released. This attempt
+and its scripts are frozen; there is no retry, review or main merge.
+
+The failure is a defect in this observer's initial-address guard, not evidence
+of an LLDB/OS capability limitation. `lldb_coverage.py:219` compared
+`address.GetFileAddress()` directly to disk-file VA0x49c0. The registered proposal
+required a section-relative mapping. Raw stopID1 is SIGSTOP at `_dyld_start`,
+module `/usr/lib/dyld`, expected arm64e UUID
+`74E52480-C2BD-3C8D-812D-95FE2B74A096`. It records:
+
+| Coordinate | Actual raw value |
+| --- | --- |
+| PC | 4550560192 |
+| dyld header / TEXT load address | 4550541312 |
+| dyld header / TEXT file address | 6443581440 |
+| LLDB PC file address in assertion error | `0x1801189c0` |
+| PC minus TEXT load | 18880 = `0x49c0` |
+
+Thus the requested early stop was delivered and its relative offset agrees with
+the static entry offset. The observer rejected it because its coordinate check
+was wrong. These records do not prove trap arming, image-handover stops, prepare,
+JIT/generic entry coverage, normal formatter execution, two-file completion or
+exit0. None was reached. No target instructions were deliberately continued.
+The failure was not caused by the transferred-clock issue: clocks were separate,
+and the assertion ended this run before any timeout branch was exercised.
+
+Later follow-up **12K-B28-F1**, same performance owner3776: this concrete observer
+address-coordinate guard defect. Record only. No correction or replacement
+diagnostic is implemented here; parent owns any later concrete scope decision.
+The failed run does not create an allowance for another target or initial review.
+
+Prelaunch chronology is authenticated: the final registration commit was
+`232ed99fd2637a4e4bf8dbb2a3b8a63316e2eee4`, registration SHA256
+`608a1f73c7d2dcafb29a6ff564cbdd29d38b85c16ee12286b7cc887749accc76`.
+Its exact text is retained in Git and external
+`evidence/prelaunch-registration.from-git.md`. Before invocation, the full manifest
+and all three script hashes were written and sent to parent/coordinator:
+
+| File under owned `evidence` | SHA256 |
+| --- | --- |
+| `prelaunch.json` | `aa2460d31cfbdcbd96615aa4b7966d35da163b905f3f1679a20bcbfe315146db` |
+| `run_coverage.py` | `0c1858bf4fd10d419b772a9d4868a24b307edcf63aca2330af9550bcded2a785` |
+| `lldb_coverage.py` | `29d81013eb32291798639b97f593aa3a04e69713d6384a90cfda3f1570bde344` |
+| `coverage.lldb` | `9e4e47c91918202df759139246354fcb18b1b79f8dd4315283b504570d796b7a` |
+| `coverage/outcome.json` | `5ada80ef8dc9cff3e14309453d6263af7c6254d37f59b21311354ce6745da7d7` |
+| `coverage/events.json` | `9a19e58a30074723b12bdfddc35f463613d647b3ba7ce9e24940c63ce3508da2` |
+| `coverage/process-release.json` | `47f68057bd53b73a2731d3ded98ff7cf903752967961ad6f33c5b1a7fc21da73` |
+| `coverage/debugger-result.json` | `4851f6b58379cf92d351b958bce1df766b59fa1cc50befda7bdfa44348a5390c` |
+
+The launcher exited1 normally after recording failure/release. Three counter-free
+host-admission snapshots passed; that is not a coverage or benchmark pass.
+The 170MiB owned evidence tree includes the retained immutable diagnostic binary.
+No predecessor cleanup, production edit, build, behavioral test, counter/CV
+acquisition, Opus request, PR or Sifr gate occurred. The successful-proof review/
+merge branch was never entered. Only terminal documentation is completed after
+failure; parent/coordinator received the precise failure and zero-process callback.
+
+Next action: STOP with NEEDS-NEW-SCOPE. Parent adjudicates any future owner/scope.
+B24 causality and unchanged acceptance and B27's separate integration remain
+unmet, with all original full-phase goals and exhausted historical reviews intact.

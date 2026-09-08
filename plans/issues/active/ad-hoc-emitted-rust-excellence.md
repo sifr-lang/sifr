@@ -2,7 +2,7 @@
 
 Status: active
 
-## Item12K-B28: observability feasibility awaiting adjudication (2026-09-08)
+## Item12K-B28: sole coverage proof needs new scope (2026-09-08)
 
 B28 is the sole B24-F1 / issue3776 owner. The
 [read-only assessment and one-target proposal](ad-hoc-emitted-rust-b28-observability-feasibility.md)
@@ -19,16 +19,38 @@ then requires actual early entries in exactly one diagnostic target. Source
 version limits and failure criteria are explicit. Neither target behavior nor
 B24's missing-hit cause has been established by this assessment.
 
-State: ASSESSMENT COMPLETE / AWAITING ORCHESTRATOR ADJUDICATION; NOT EXECUTED,
-NOT REVIEWED, NOT MERGED. No PR. Read-only source/API/receipt/command checks
-and documentation diff only; zero debugger sessions/targets/builds/tests/
-acquisitions/Opus/gates. External evidence is under the owned sibling `evidence`.
-No binary copy, diagnostic scripts or compiler target have been created.
+Parent approved the exact three external scripts and immutable diagnostic copy;
+coordinator cleared the one-target window. Prelaunch registration commit
+`232ed99fd2637a4e4bf8dbb2a3b8a63316e2eee4` and manifest SHA256
+`aa2460d31cfbdcbd96615aa4b7966d35da163b905f3f1679a20bcbfe315146db`
+were preserved/notified before execution. The sole proof ended INCONCLUSIVE
+in7.498421s after one target/session, one initial stop and zero continues.
 
-Parent must concretely register implementation/execution and final-review
-allowances before the proposed proof. Coordinator owns the capacity window.
-This does not close B24 causation/unchanged acceptance, replenish B20/B22 review
-allowances, qualify B27, or start another item's code. Hold for adjudication.
+The observer wrongly compared LLDB's PC file address directly to disk VA0x49c0
+at `lldb_coverage.py:219`. Actual SIGSTOP was at `_dyld_start` in expected dyld
+UUID; PC minus mapped TEXT load equals0x49c0. This is an observer coordinate-
+guard defect, not an unavailable early stop or a diagnosed OS/loader defect.
+Trap arming and every required prepare/JIT/generic hit were unexecuted. Full
+coverage criteria are NOT met. Later **12K-B28-F1** records this precise guard
+defect under the same performance owner3776; no fix or replacement run is started.
+
+State: NEEDS-NEW-SCOPE / NOT QUALIFIED / NOT REVIEWED / NOT MERGED. No PR.
+Raw `evidence/coverage/outcome.json` SHA256
+`5ada80ef8dc9cff3e14309453d6263af7c6254d37f59b21311354ce6745da7d7`;
+`events.json` SHA256
+`9a19e58a30074723b12bdfddc35f463613d647b3ba7ce9e24940c63ce3508da2`;
+`process-release.json` SHA256
+`47f68057bd53b73a2731d3ded98ff7cf903752967961ad6f33c5b1a7fc21da73`.
+Target3082 was killed before continue; its group and debugger group3036 are
+absent, as are monitor/watcher and debugserver. Capacity released; parent and
+coordinator received exact failure/release. Only record docs follow the failure.
+
+Zero production changes/builds/behavioral tests/counters/CV/acquisitions/Opus/
+gates/retries. The conditional success-only review/merge branch was not entered.
+All three scripts, prelaunch identities and raw receipts are immutable; owned
+170MiB evidence including binary is retained. This does not close B24 causation/
+unchanged acceptance, replenish B20/B22 review allowances, qualify B27, or start
+another item's code. STOP; parent owns future scope adjudication.
 
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
