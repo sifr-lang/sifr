@@ -19,6 +19,7 @@ class ProfileError(VerificationError):
 
 
 _WORKSPACE_PACKAGE_NAMES: set[str] | None = None
+DELIVERY_PROFILE_NAMES = ("create-pr", "merge", "nightly", "release")
 E2E_PASS_FIXTURE_DIR = REPO_ROOT / "crates" / "sifr" / "tests" / "e2e" / "pass"
 PYTHON_INTEROP_CAPABILITY_MATRIX = (
     REPO_ROOT / "verification" / "areas" / "python_interop" / "declaration_capabilities.json"
@@ -114,6 +115,39 @@ def selected_suites_for_area(profile: dict[str, Any], area_name: str) -> list[st
         if isinstance(raw_suites, list):
             suites.extend(str(suite) for suite in raw_suites)
     return suites
+
+
+def validate_python_delivery_coverage(
+    profiles: dict[str, dict[str, Any]], manifest: dict[str, Any]
+) -> int:
+    """Require each non-live manifest suite in at least one delivery profile."""
+    suites = manifest.get("suites")
+    if manifest.get("name") != "python_interop" or not isinstance(suites, list) or not suites:
+        raise ProfileError("Python interop manifest must declare non-empty suites")
+    declared: set[str] = set()
+    required: set[str] = set()
+    for suite in suites:
+        name = suite.get("name") if isinstance(suite, dict) else None
+        if not isinstance(name, str) or not name or name in declared:
+            raise ProfileError("Python interop manifest has invalid or duplicate suites")
+        declared.add(name)
+        network_mode = suite.get("network_mode", manifest.get("network_mode"))
+        if network_mode not in {"offline", "live"}:
+            raise ProfileError(f"Python interop suite {name} has invalid network_mode")
+        if network_mode != "live":
+            required.add(name)
+    assigned = {
+        suite
+        for name in DELIVERY_PROFILE_NAMES
+        for suite in selected_suites_for_area(profiles.get(name, {}), "python_interop")
+    }
+    missing = sorted(required - assigned)
+    if missing:
+        raise ProfileError(
+            "non-live Python interop suites have no delivery profile assignment: "
+            + ", ".join(missing)
+        )
+    return len(required)
 
 
 def validate_selected_area_suites(profile: dict[str, Any]) -> None:
