@@ -1,6 +1,6 @@
 # 12K-B35: integrated module/custody/output coverage qualification
 
-Date: 2026-09-08. Owner: performance / issue3776. State: OFFLINE PASS, PRELAUNCH FROZEN.
+Date: 2026-09-08. Owner: performance / issue3776. State: TERMINAL INCONCLUSIVE; NOT MERGED.
 
 ## Scope and exclusive ownership
 
@@ -123,3 +123,62 @@ E/`prelaunch.json` SHA256
 commands, unchanged binary, private output run identity, limits, ancestor config
 and frozen manifest. Live proof has not yet run; all claims above remain static.
 This registration must be committed and pushed before callback and actual launch.
+
+## Sole live outcome and terminal handoff
+
+Prelaunch registration committed/pushed
+`379ab2ea8884ebb0b856b312f738e5b3ee210d0f` before parent/coordinator callbacks
+and execution. The sole live command exited1: INCONCLUSIVE after
+9.87207841698546s. One debugger session, one target (PID1959), flags134; launch
+success, canonical fd actions accepted, but custody acknowledgement UNREACHED.
+Zero event observations, continues, handovers or entry hits. Output completion
+UNREACHED. No inferred workload PASS or performance result.
+
+The complete custody receipt preserves both rows. At first authentication,
+inferior1959 had parent1885 (LLDB), process group1959, state T, and creation
+field `Tue Sep 8 06:23:23 2026`. The first conflict changed parent to1960
+(observed debugserver) and state TX; recorded PID/group/start/command were equal.
+Both observed ancestry chains reached owned launcher1226. The unchanged
+conservative parent-identity predicate rejected this at launch before ack;
+it did not reauthenticate the initial identity or grant cleanup authority.
+Later, debugserver1960 changed displayed command from its full executable path
+to `(debugserver)` and state S to R, retaining its other scalar fields. Both
+first/conflicting raw rows, clock brackets, compared values and ancestry are
+preserved. Native process identity and lifecycle cause remain UNKNOWN; these
+observations are not proof of a supported transition, exec, PID reuse or zombie.
+No retrospective B32 diagnosis or cross-run ordering inference is made.
+
+Outer cleanup denied the tainted inferior group. The observer's process Kill
+returned success and the debugger transcript records inferior killed status9.
+Final fresh release at9.871620499994606s: remaining[], groups1885/1959 absent,
+watcher false, monitor false. All proof processes released. No cleanup of
+parent/predecessor resources. B34-F1 set-iteration failure did not occur.
+
+Immutable raw receipts under E/`coverage`, SHA256:
+
+- outcome.json: `5a08c3d90a35aaa04e6cb8453149d5fa6690d1ef25a8f7fc0ef8bda352635978`.
+- custody.json: `acd8bacb5e31194a0c577669487caa5a7552e90bf2d4aa5ecd86ae74b08459da`.
+- observer-result.json: `c79d82045212768718b0e6919403522bedc61b6648d37c58d75c639691cb878b`.
+- process-release.json: `53a20f45e87c94554f273fcae275cf1faaf21652e9e85393cf359cb2d8fdb9b2`.
+- inventory.json: `5a804393ec3b62d68b7379c7d40850822a92c9eb2d03f5ebfa770a0c317e601a`.
+
+Later owner B35-F1, performance / issue3776: establish an explicit supported
+process identity/ancestry/lifecycle contract for the observed launch-time parent
+transition and command-display changes before proposing any new qualification.
+Retain the first/conflicting evidence and conservative signal authority; do not
+fix this by dropping parent/command checks or guessing native identity. This is
+recorded later work only, with no implementation, live allowance or new item
+started by this session. B34-F2/F3/F4 remain unabsorbed follow-ups.
+
+Counts: one offline suite365/365 PASS, one live proof INCONCLUSIVE, one debugger/
+target, zero continues/handovers/hits, zero Opus/provider/remediation requests,
+zero PRs/merges/create-pr/merge gates, zero compiler builds/tests/CV/counters.
+The success-only HIR/review/merge path is not entered. Terminal documentation
+diff and mandatory file-size guardrail are the only post-failure checks.
+E/`terminal.json` binds terminal record SHA, checks, final source/raw hashes
+and issue-owner publication. Failed evidence is never overwritten or relabeled.
+
+Blocker: B35-F1 custody launch-time identity/ancestry rejection. Next action:
+STOP after immutable terminal and owner/parent/coordinator handoff; no repair,
+retry, review, PR/merge or successor code. B35 coverage qualification is not
+closed as successful. B24/full budget, SQL/B27 and original phase remain open.

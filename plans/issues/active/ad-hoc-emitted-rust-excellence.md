@@ -2,6 +2,41 @@
 
 Status: active
 
+## Item12K-B35: integrated proof terminal INCONCLUSIVE (2026-09-08)
+
+B35 stopped on its sole authorized live failure; no PR/review/merge or retry.
+Owned independent clone `/private/tmp/sifr-b35.a3TVXg/sifr`, branch
+`codex/item12k-b35-integrated-qualification`, fresh-main base
+`b92faf990877d2f553c70b2d29994d82ac60d4f0`. Prelaunch pushed
+`379ab2ea8884ebb0b856b312f738e5b3ee210d0f` before callbacks/launch.
+See [B35 terminal record](ad-hoc-emitted-rust-b35-integrated-qualification.md).
+
+Complete inherited module/custody/canonical-output apparatus plus explicitly
+adopted B34-F1 stable cleanup/discovery: named suite PASS365/365 (349+16), one
+invocation; frozen external manifest
+`7606a96e060b17f91931549cdc77388d959264f4c26ee05c65de9a25e3dd0175`.
+Sole proof INCONCLUSIVE9.87207841698546s: one session/target, zero events,
+continues, handovers/hits; custody ack and output completion UNREACHED.
+
+Full first/conflicting receipts now show inferior1959 parent1885→1960 and T→TX,
+with equal recorded PID/group/start/command and observed ancestry still under
+launcher1226. The immutable parent check rejected before acknowledgement.
+Later debugserver1960 command display changed full path→`(debugserver)`, S→R.
+Cause/native identity remain UNKNOWN; no historical B32 inference. Observer
+Kill success, inferior killed status9; final fresh release remaining[] and
+groups absent, watcher/monitor stopped. Raw E/coverage/outcome.json digest
+`5a08c3d90a35aaa04e6cb8453149d5fa6690d1ef25a8f7fc0ef8bda352635978`, custody
+`acd8bacb5e31194a0c577669487caa5a7552e90bf2d4aa5ecd86ae74b08459da`.
+
+Later B35-F1 owner is performance / issue3776: qualify the observed launch-time
+ancestry/identity and command-display lifecycle contract before proposing any
+new proof; preserve signal authority, never drop checks or infer native identity.
+Recorded only, no successor implementation/allowance. Zero Opus/PR/merge/gates;
+terminal doc diff and mandatory file-size check only. B34-F2/F3/F4 unabsorbed.
+B35 qualification unsuccessful; B24/full representative budget, SQL/B27 including
+builtin fix/approved65, and full original phase remain open. STOP after terminal
+and owner handoff. Parent/predecessor files/indexes/refs/raw remain read-only.
+
 ## Item12K-B34: static custody evidence contract (2026-09-08)
 
 **B34 MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.**
