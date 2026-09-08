@@ -1,0 +1,68 @@
+{
+  "state": "INCONCLUSIVE",
+  "root_pid": 99,
+  "root_exit": 0,
+  "release": "FAIL",
+  "elapsed_seconds": 9.0,
+  "error": "Traceback (most recent call last):\n  File \"/private/tmp/sifr-b40.urwpgv/evidence/boundaries_supervisor.py\", line 72, in execute\n    require(receipt['state'] == 'PASS', 'root-inclusive retirement unproved')\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/private/tmp/sifr-b40.urwpgv/evidence/coverage_symbols.py\", line 19, in require\n    raise ValueError(reason)\nValueError: root-inclusive retirement unproved\n"
+}
+{
+  "state": "INCONCLUSIVE",
+  "root_pid": 99,
+  "root_exit": 0,
+  "release": "FAIL",
+  "elapsed_seconds": 9.0,
+  "error": "Traceback (most recent call last):\n  File \"/private/tmp/sifr-b40.urwpgv/evidence/boundaries_supervisor.py\", line 72, in execute\n    require(receipt['state'] == 'PASS', 'root-inclusive retirement unproved')\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/private/tmp/sifr-b40.urwpgv/evidence/coverage_symbols.py\", line 19, in require\n    raise ValueError(reason)\nValueError: root-inclusive retirement unproved\n"
+}
+{
+  "state": "INCONCLUSIVE",
+  "root_pid": 99,
+  "root_exit": 0,
+  "release": "FAIL",
+  "elapsed_seconds": 9.0,
+  "error": "Traceback (most recent call last):\n  File \"/private/tmp/sifr-b40.urwpgv/evidence/boundaries_supervisor.py\", line 72, in execute\n    require(receipt['state'] == 'PASS', 'root-inclusive retirement unproved')\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/private/tmp/sifr-b40.urwpgv/evidence/coverage_symbols.py\", line 19, in require\n    raise ValueError(reason)\nValueError: root-inclusive retirement unproved\n"
+}
+{
+  "state": "INCONCLUSIVE",
+  "root_pid": 99,
+  "root_exit": 0,
+  "release": null,
+  "elapsed_seconds": 541.0,
+  "error": "Traceback (most recent call last):\n  File \"/private/tmp/sifr-b40.urwpgv/evidence/boundaries_supervisor.py\", line 56, in execute\n    with life.section('root-inclusive-final-retirement', seconds=min(15, deadline - time.monotonic()), retirement=True):\n         ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py\", line 141, in __enter__\n    return next(self.gen)\n  File \"/private/tmp/sifr-b40.urwpgv/evidence/boundaries_lifecycle.py\", line 39, in section\n    raise ValueError('bounded lifecycle lock deadline')\nValueError: bounded lifecycle lock deadline\n"
+}
+{
+  "state": "INCONCLUSIVE",
+  "root_pid": 99,
+  "root_exit": 0,
+  "release": "FAIL",
+  "elapsed_seconds": 9.0,
+  "error": "Traceback (most recent call last):\n  File \"/private/tmp/sifr-b40.urwpgv/evidence/boundaries_supervisor.py\", line 32, in execute\n    stdout, stderr = child.communicate(timeout=max(.001, start + 510 - time.monotonic()))\n                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/private/tmp/sifr-b40.urwpgv/evidence/boundaries_b40_tests.py\", line 154, in communicate\n    if mode=='before-normal-read-exception':raise ValueError('injected after root exit before normal read')\n                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: injected after root exit before normal read\n"
+}
+{
+  "state": "FAIL",
+  "count": 191,
+  "receipt": "/private/tmp/sifr-b40.urwpgv/tmp/B24-observer-y5gufbkc/receipt.json",
+  "failures": [
+    {
+      "name": "B40-absent-PID-retirement-absent",
+      "pass": false,
+      "expected_rejection": false,
+      "error": "ValueError('complete retirement PID/group coverage unproved')",
+      "native": "SYNTHETIC"
+    },
+    {
+      "name": "B40-frozen35subjects-three-groups-original-limited-proof-rejected",
+      "pass": false,
+      "expected_rejection": false,
+      "error": "ValueError('frozen35 subject/probe inventory differs')",
+      "native": "SYNTHETIC"
+    },
+    {
+      "name": "B40-supervisor-all-six",
+      "pass": false,
+      "expected_rejection": false,
+      "error": "ValueError('complete within-budget root/group/join proof failed')",
+      "native": "SYNTHETIC"
+    }
+  ]
+}

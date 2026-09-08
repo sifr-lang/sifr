@@ -1,0 +1,3742 @@
+{
+  "cases": [
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-cache_restart",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "disk-and-relocated-cache_restart",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-completion",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-constructor",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-fixups",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "disk-and-relocated-fixups",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-generic",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "disk-and-relocated-generic",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-handover_complete",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "disk-and-relocated-handover_complete",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-handover_prepare",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "disk-and-relocated-handover_prepare",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-initial_entry",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "disk-and-relocated-initial_entry",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-libsystem",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-main",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-notifier",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "disk-and-relocated-notifier",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-prepare",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "disk-and-relocated-prepare",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "identity-and-binding-sanitizers",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "exact code context count is not one",
+      "expected_accept": false,
+      "name": "zero-contexts",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "exact code context count is not one",
+      "expected_accept": false,
+      "name": "ambiguous-identical-contexts",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong exact symbol identity",
+      "expected_accept": false,
+      "name": "wrong-name",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong exact symbol identity",
+      "expected_accept": false,
+      "name": "wrong-mangled",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong exact symbol identity",
+      "expected_accept": false,
+      "name": "wrong-display",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "not a code symbol",
+      "expected_accept": false,
+      "name": "wrong-type-trampoline",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "not a code symbol",
+      "expected_accept": false,
+      "name": "invalid-symbol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong module UUID or architecture",
+      "expected_accept": false,
+      "name": "wrong-module-UUID",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong module path",
+      "expected_accept": false,
+      "name": "wrong-path",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong module UUID or architecture",
+      "expected_accept": false,
+      "name": "wrong-architecture",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid symbol address/UUID",
+      "expected_accept": false,
+      "name": "wrong-address-UUID",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong code section",
+      "expected_accept": false,
+      "name": "wrong-code-section",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid symbol address/UUID",
+      "expected_accept": false,
+      "name": "invalid-code-address",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unexpected entry/extent relative identity",
+      "expected_accept": false,
+      "name": "empty-code-section",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong file/section relation",
+      "expected_accept": false,
+      "name": "wrong-entry-offset",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong header relation",
+      "expected_accept": false,
+      "name": "wrong-header-offset",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown file-address domain",
+      "expected_accept": false,
+      "name": "wrong-file-domain",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unexpected entry/extent relative identity",
+      "expected_accept": false,
+      "name": "reversed-extent",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unloaded/invalid mapping",
+      "expected_accept": false,
+      "name": "unloaded-symbol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unloaded/invalid mapping",
+      "expected_accept": false,
+      "name": "unloaded-section",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unloaded/invalid mapping",
+      "expected_accept": false,
+      "name": "unloaded-header",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "null live mapping",
+      "expected_accept": false,
+      "name": "null-live-address",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong live section offset",
+      "expected_accept": false,
+      "name": "wrong-load-offset",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong live header offset",
+      "expected_accept": false,
+      "name": "wrong-live-header",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong live section offset",
+      "expected_accept": false,
+      "name": "overflowed-section",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong roundtrip UUID",
+      "expected_accept": false,
+      "name": "wrong-roundtrip-UUID",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong roundtrip module",
+      "expected_accept": false,
+      "name": "wrong-roundtrip-path",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong roundtrip section/offset",
+      "expected_accept": false,
+      "name": "wrong-roundtrip-offset",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong roundtrip load",
+      "expected_accept": false,
+      "name": "wrong-roundtrip-address",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unproved executable region",
+      "expected_accept": false,
+      "name": "nonexecutable-region",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unproved executable region",
+      "expected_accept": false,
+      "name": "region-query-failed",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "entry outside executable region",
+      "expected_accept": false,
+      "name": "region-exclusive-upper-bound",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "entry outside executable region",
+      "expected_accept": false,
+      "name": "region-start-after-entry",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unloaded/invalid mapping",
+      "expected_accept": false,
+      "name": "negative-address",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unloaded/invalid mapping",
+      "expected_accept": false,
+      "name": "bool-address",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "not a code symbol",
+      "expected_accept": false,
+      "name": "sanitizer-real-trampoline",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong exact symbol identity",
+      "expected_accept": false,
+      "name": "jit-real-block-entry",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong exact symbol identity",
+      "expected_accept": false,
+      "name": "generic-real-cold-entry",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "complete-epoch-handover-eight-family-sequence",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "fixups before prepare",
+      "expected_accept": false,
+      "name": "reject-out-of-order-fixups",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "fixups before prepare",
+      "expected_accept": false,
+      "name": "reject-out-of-order-generic",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "later boundary before complete early coverage",
+      "expected_accept": false,
+      "name": "reject-out-of-order-libsystem",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "later boundary before complete early coverage",
+      "expected_accept": false,
+      "name": "reject-out-of-order-sanitizers",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "later boundary before complete early coverage",
+      "expected_accept": false,
+      "name": "reject-out-of-order-constructor",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "later boundary before complete early coverage",
+      "expected_accept": false,
+      "name": "reject-out-of-order-main",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "later boundary before complete early coverage",
+      "expected_accept": false,
+      "name": "reject-out-of-order-completion",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "entry without completed handover",
+      "expected_accept": false,
+      "name": "missing-handover",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing required entry coverage",
+      "expected_accept": false,
+      "name": "missing-all-entries",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "reused/out-of-order stop",
+      "expected_accept": false,
+      "name": "reused-stop-ID",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "contradictory notifier PC",
+      "expected_accept": false,
+      "name": "bad-handover-out-pc",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown notifier mode",
+      "expected_accept": false,
+      "name": "bad-handover-out-mode",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "bad-handover-out-count",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "not a breakpoint stop",
+      "expected_accept": false,
+      "name": "bad-handover-out-breakpoint",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unexpected empty or contradictory module map",
+      "expected_accept": false,
+      "name": "unexpected-empty-map",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "handover did not return mapped mode0",
+      "expected_accept": false,
+      "name": "bad-handover-in-mode",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong new notifier PC",
+      "expected_accept": false,
+      "name": "bad-handover-in-pc",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "handover did not return mapped mode0",
+      "expected_accept": false,
+      "name": "bad-handover-in-current_map",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "handover did not return mapped mode0",
+      "expected_accept": false,
+      "name": "bad-handover-in-breakpoint",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "repeated-handover",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "stale site epoch",
+      "expected_accept": false,
+      "name": "stale-bindings-after-handover",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "handover retained old mapping",
+      "expected_accept": false,
+      "name": "stale-addresses-with-new-epoch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing early/notifier site",
+      "expected_accept": false,
+      "name": "missing-generic-site",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "late-handover-after-entry",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "stale site epoch",
+      "expected_accept": false,
+      "name": "bad-site-epoch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid/disabled/unresolved breakpoint site",
+      "expected_accept": false,
+      "name": "bad-site-valid",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid/disabled/unresolved breakpoint site",
+      "expected_accept": false,
+      "name": "bad-site-enabled",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid/disabled/unresolved breakpoint site",
+      "expected_accept": false,
+      "name": "bad-site-resolved",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong location count/address",
+      "expected_accept": false,
+      "name": "bad-site-locations",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong location count/address",
+      "expected_accept": false,
+      "name": "bad-site-load",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid site ID",
+      "expected_accept": false,
+      "name": "bad-site-location_id",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong hit location identity",
+      "expected_accept": false,
+      "name": "wrong-hit-location-ID",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "entry PC/reason mismatch",
+      "expected_accept": false,
+      "name": "wrong-hit-PC",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "entry PC/reason mismatch",
+      "expected_accept": false,
+      "name": "wrong-hit-reason",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing successful two-file completion",
+      "expected_accept": false,
+      "name": "bad-completion-(1, 2)",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing successful two-file completion",
+      "expected_accept": false,
+      "name": "bad-completion-(0, 1)",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing successful two-file completion",
+      "expected_accept": false,
+      "name": "bad-completion-(0, 3)",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "preserved-B29-actual-initial-coordinates",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "unchanged-B29-coordinate-helper",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "preserved-B30-stop4-stop6-dispatch-and-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint data length",
+      "expected_accept": false,
+      "name": "B30-replay-missing-pair-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint data length",
+      "expected_accept": false,
+      "name": "B30-replay-missing-pair-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing exact owned notifier pair",
+      "expected_accept": false,
+      "name": "B30-replay-internal-only-pair-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing exact owned notifier pair",
+      "expected_accept": false,
+      "name": "B30-replay-internal-only-pair-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing exact owned notifier pair",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-breakpoint-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing exact owned notifier pair",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-breakpoint-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing exact owned notifier pair",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-location-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing exact owned notifier pair",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-location-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint data length",
+      "expected_accept": false,
+      "name": "B30-replay-odd-words-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint data length",
+      "expected_accept": false,
+      "name": "B30-replay-odd-words-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint ID",
+      "expected_accept": false,
+      "name": "B30-replay-zero-location-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint ID",
+      "expected_accept": false,
+      "name": "B30-replay-zero-location-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint ID",
+      "expected_accept": false,
+      "name": "B30-replay-negative-ID-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint ID",
+      "expected_accept": false,
+      "name": "B30-replay-negative-ID-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint ID",
+      "expected_accept": false,
+      "name": "B30-replay-bool-ID-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint ID",
+      "expected_accept": false,
+      "name": "B30-replay-bool-ID-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint ID",
+      "expected_accept": false,
+      "name": "B30-replay-overflow-ID-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed breakpoint ID",
+      "expected_accept": false,
+      "name": "B30-replay-overflow-ID-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "duplicate breakpoint pair",
+      "expected_accept": false,
+      "name": "B30-replay-duplicate-pair-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "duplicate breakpoint pair",
+      "expected_accept": false,
+      "name": "B30-replay-duplicate-pair-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "competing or contradictory owned site",
+      "expected_accept": false,
+      "name": "B30-replay-contradictory-owned-location-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "competing or contradictory owned site",
+      "expected_accept": false,
+      "name": "B30-replay-contradictory-owned-location-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "competing or contradictory owned site",
+      "expected_accept": false,
+      "name": "B30-replay-competing-owned-entry-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "competing or contradictory owned site",
+      "expected_accept": false,
+      "name": "B30-replay-competing-owned-entry-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "competing or contradictory owned site",
+      "expected_accept": false,
+      "name": "B30-replay-competing-entry-wrong-location-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "competing or contradictory owned site",
+      "expected_accept": false,
+      "name": "B30-replay-competing-entry-wrong-location-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-thread-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-thread-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid stopped thread identity",
+      "expected_accept": false,
+      "name": "B30-replay-two-threads-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid stopped thread identity",
+      "expected_accept": false,
+      "name": "B30-replay-two-threads-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid stopped thread identity",
+      "expected_accept": false,
+      "name": "B30-replay-zero-thread-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid stopped thread identity",
+      "expected_accept": false,
+      "name": "B30-replay-zero-thread-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong active event epoch/stop",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-event-epoch-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong active event epoch/stop",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-event-epoch-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong active event epoch/stop",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-stop-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong active event epoch/stop",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-stop-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "stale site epoch",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-site-epoch-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "stale site epoch",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-site-epoch-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "stale site epoch",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-binding-epoch-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "stale site epoch",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-binding-epoch-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-prior-epoch-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-prior-epoch-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-prior-thread-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-prior-thread-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-prior-stop-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-prior-stop-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-missing-prior-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-missing-prior-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-prior-binding-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "no matching prior authenticated notifier epoch/thread/site",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-prior-binding-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid PC outside explicit empty-map mode3",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-mode0-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid PC outside explicit empty-map mode3",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-mode0-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown notifier mode",
+      "expected_accept": false,
+      "name": "B30-replay-unknown-mode-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown notifier mode",
+      "expected_accept": false,
+      "name": "B30-replay-unknown-mode-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown notifier mode",
+      "expected_accept": false,
+      "name": "B30-replay-bool-mode-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown notifier mode",
+      "expected_accept": false,
+      "name": "B30-replay-bool-mode-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-count-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-count-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "B30-replay-bool-count-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "B30-replay-bool-count-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "dispatch outside active epoch",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-phase-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unexpected notifier outside active epoch",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-phase-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "B30-replay-prior-hit-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "B30-replay-prior-hit-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "B30-replay-repeated-handover-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "late/repeated/invalid handover",
+      "expected_accept": false,
+      "name": "B30-replay-repeated-handover-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "contradictory notifier PC",
+      "expected_accept": false,
+      "name": "B30-replay-contradictory-valid-PC-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "contradictory notifier PC",
+      "expected_accept": false,
+      "name": "B30-replay-contradictory-valid-PC-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid PC outside explicit empty-map mode3",
+      "expected_accept": false,
+      "name": "B30-replay-invalid-PC-with-map-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid PC outside explicit empty-map mode3",
+      "expected_accept": false,
+      "name": "B30-replay-invalid-PC-with-map-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid PC outside explicit empty-map mode3",
+      "expected_accept": false,
+      "name": "B30-replay-unmapped-but-nonempty-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid PC outside explicit empty-map mode3",
+      "expected_accept": false,
+      "name": "B30-replay-unmapped-but-nonempty-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "not a breakpoint stop",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-reason-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "not a breakpoint stop",
+      "expected_accept": false,
+      "name": "B30-replay-wrong-reason-protocol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "dispatch/protocol pair disagreement",
+      "expected_accept": false,
+      "name": "B30-replay-pairs-disagree-with-raw-dispatch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "dispatch/protocol pair disagreement",
+      "expected_accept": false,
+      "name": "B30-replay-pairs-disagree-with-raw-protocol",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "B30-valid-matching-PC-False",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "B30-valid-matching-PC-True",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "B30-owned-pair-without-internal",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "ambiguous stopped threads",
+      "expected_accept": false,
+      "name": "B30-raw-thread-count-0",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "ambiguous stopped threads",
+      "expected_accept": false,
+      "name": "B30-raw-thread-count-2",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "normal-entry-dispatch-unchanged",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "output-complete-producer-consumer-protocol-decision",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "empty or truncated phase stream",
+      "expected_accept": false,
+      "name": "output-empty",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "empty or truncated phase stream",
+      "expected_accept": false,
+      "name": "output-truncated-last-line",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed or non-inferior phase record",
+      "expected_accept": false,
+      "name": "output-truncated-payload",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong file phase sequence or count",
+      "expected_accept": false,
+      "name": "output-one-file",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong file phase sequence or count",
+      "expected_accept": false,
+      "name": "output-three-file-checks",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "duplicate file completion record",
+      "expected_accept": false,
+      "name": "output-duplicate-record",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing/duplicate cli completion",
+      "expected_accept": false,
+      "name": "output-duplicate-cli",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing/duplicate cli completion",
+      "expected_accept": false,
+      "name": "output-no-cli",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed or non-inferior phase record",
+      "expected_accept": false,
+      "name": "output-wrong-count-field",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed or non-inferior phase record",
+      "expected_accept": false,
+      "name": "output-nondecimal",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed or non-inferior phase record",
+      "expected_accept": false,
+      "name": "output-negative-payload",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed or non-inferior phase record",
+      "expected_accept": false,
+      "name": "output-debugger-echo",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "malformed or non-inferior phase record",
+      "expected_accept": false,
+      "name": "output-substring-marker",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unexpected inferior stdout",
+      "expected_accept": false,
+      "name": "output-wrong-stream",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unexpected inferior stdout",
+      "expected_accept": false,
+      "name": "output-duplicate-cross-stream",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing exact format-check success",
+      "expected_accept": false,
+      "name": "output-missing-success",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing exact format-check success",
+      "expected_accept": false,
+      "name": "output-duplicate-success",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong file phase sequence or count",
+      "expected_accept": false,
+      "name": "output-wrong-file-order",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong run identity",
+      "expected_accept": false,
+      "name": "output-wrong-run-observer",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "rejected/wrong-run ack",
+      "expected_accept": false,
+      "name": "output-wrong-run-route",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong run identity",
+      "expected_accept": false,
+      "name": "output-wrong-run-handshake",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong ack target",
+      "expected_accept": false,
+      "name": "output-wrong-pid",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "completion lost initial custody",
+      "expected_accept": false,
+      "name": "output-two-targets",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong ack target",
+      "expected_accept": false,
+      "name": "output-wrong-binary",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong inferior handshake",
+      "expected_accept": false,
+      "name": "output-wrong-group",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong inferior handshake",
+      "expected_accept": false,
+      "name": "output-wrong-flags",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "completion lost initial custody",
+      "expected_accept": false,
+      "name": "output-missing-custody",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong installed output actions",
+      "expected_accept": false,
+      "name": "output-wrong-actions",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "observer not complete",
+      "expected_accept": false,
+      "name": "output-observer-error",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "observer not complete",
+      "expected_accept": false,
+      "name": "output-observer-not-complete",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "inferior not exited successfully",
+      "expected_accept": false,
+      "name": "output-nonzero-exit",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "inferior not exited successfully",
+      "expected_accept": false,
+      "name": "output-not-exited",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "process release incomplete",
+      "expected_accept": false,
+      "name": "output-remaining-process",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "process release incomplete",
+      "expected_accept": false,
+      "name": "output-live-group",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "process release incomplete",
+      "expected_accept": false,
+      "name": "output-live-watcher",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "process release incomplete",
+      "expected_accept": false,
+      "name": "output-live-monitor",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing complete handover",
+      "expected_accept": false,
+      "name": "output-missing-handover",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing required entry coverage",
+      "expected_accept": false,
+      "name": "output-missing-entry",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing complete handover",
+      "expected_accept": false,
+      "name": "output-wrong-protocol-phase",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "stale or replaced output inode",
+      "expected_accept": false,
+      "name": "output-stale-inode",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "installed output action unsupported",
+      "expected_accept": false,
+      "name": "output-unsupported-fd-1",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "installed output action unsupported",
+      "expected_accept": false,
+      "name": "output-unsupported-fd-2",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "stale prelaunch output",
+      "expected_accept": false,
+      "name": "output-nonempty-prelaunch",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "[Errno 17] File exists: '/private/tmp/sifr-b40.urwpgv/tmp/b32-synthetic-output-s0zoaei7/inferior.stdout'",
+      "expected_accept": false,
+      "name": "output-existing-route-no-retry",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "empty or truncated phase stream",
+      "expected_accept": false,
+      "name": "output-debugger-only-markers-ignored",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "missing exact format-check success",
+      "expected_accept": false,
+      "name": "output-whole-historical-debugger-transcript-rejected",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "name": "output-historical-payload-syntax-only",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "'pid'",
+      "expected_accept": false,
+      "name": "output-historical-observer-failure-stays-rejected",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "distinct or unknown mapped module instances",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-actual-B32-stop7-identical-rows-identity-UNKNOWN",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-synthetic-native-alias-count-1",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-synthetic-native-alias-count-2",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-synthetic-native-alias-count-3",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-cache_restart",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-completion",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-constructor",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-fixups",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-generic",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-handover_complete",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-handover_prepare",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-initial_entry",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-libsystem",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-main",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-notifier",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-prepare",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-all13-current-mapped-symbol-sanitizers",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "distinct or unknown mapped module instances",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-distinct-metadata-identical-modules",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "distinct or unknown mapped module instances",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-one-unknown-module",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid module row",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-invalid-module",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "conflicting alias module/header metadata",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-module-UUID",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "conflicting alias module/header metadata",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-module-triple",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "module inventory changed within snapshot",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-alias-hidden-under-wrong-path",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "alias header load conflict",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-alias-header-file",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "alias header load conflict",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-alias-header-load",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "contradictory alias mapping",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-alias-unloaded",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "invalid mapped header",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-null-header-load",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting section owner instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-section-owner",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting alias section instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-section-instance",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "conflicting alias section metadata",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-section-size",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "conflicting alias section metadata",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-section-file",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "conflicting alias section metadata",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-section-load",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting symbol context module instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-context-owner",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "exact code context count is not one",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-zero-contexts",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "exact code context count is not one",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-duplicate-contexts",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting code symbol instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-instance",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting code symbol instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-unknown-symbol-instance",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "wrong exact symbol identity",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-name",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "not a code symbol",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-type",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unexpected entry/extent relative identity",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-start",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unexpected entry/extent relative identity",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-end",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting symbol endpoint module instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-start-owner",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting symbol endpoint module instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-end-owner",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting alias section instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-section-instance",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting mapped header module instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-header-roundtrip-module",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting header roundtrip section instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-header-roundtrip-section",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "header roundtrip address conflict",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-header-roundtrip-offset",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting symbol endpoint roundtrip module instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-roundtrip-module",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting symbol endpoint roundtrip section instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-roundtrip-section",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "symbol endpoint roundtrip address conflict",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-roundtrip-offset",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting roundtrip symbol instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-wrong-symbol-roundtrip-symbol",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "module snapshot requires stopped process",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-not-stopped",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "stop/epoch changed during module snapshot",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-stop-changes-during-resolution",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "stop/epoch changed during module snapshot",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-epoch-changes-during-resolution",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unproved executable region",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-nonexecutable-region",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unproved executable region",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-failed-region-query",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting header file roundtrip module instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-file-roundtrip-foreign-header",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting symbol endpoint file roundtrip module instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-file-roundtrip-foreign-start",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting symbol endpoint file roundtrip module instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-file-roundtrip-foreign-end",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-optional-image-unloaded",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "('unloaded required image', 'notifier')",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-required-image-unloaded",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-stable-native-identity-next-stop-reversed-alias-order",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-same-metadata-replacement-visible-in-binding",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-observer-identity-supplied-False",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting supplied current module instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-observer-identity-supplied-True",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-initial-PC-native-module-False",
+      "pass": true
+    },
+    {
+      "accepted": false,
+      "error": "unknown or conflicting initial PC module instance",
+      "expected_accept": false,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-initial-PC-native-module-True",
+      "pass": true
+    },
+    {
+      "accepted": true,
+      "error": null,
+      "expected_accept": true,
+      "identity_provenance": "unobserved for historical replay; all positive tokens synthetic",
+      "name": "module-incoherent-equality-is-unknown",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-real-parser-bracketed-producer-with-injected-ps",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "malformed ps row",
+      "expected_error": "malformed",
+      "name": "custody-parser-reject-bad row",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "invalid ps identifiers",
+      "expected_error": "invalid",
+      "name": "custody-parser-reject-0 1 1 Tue Sep 8 07:0",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "duplicate ps PID",
+      "expected_error": "duplicate",
+      "name": "custody-parser-reject-1 0 1 Tue Sep 8 07:0",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-initial-ack-json-roundtrip-and-owned-cleanup",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-retained-conflict-and-no-readoption-command",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-retained-conflict-and-no-readoption-created",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-retained-conflict-and-no-readoption-pgid",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-retained-conflict-and-no-readoption-ppid",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-retained-conflict-and-no-readoption-stat",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-normal-state-observation-I",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-normal-state-observation-R",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-normal-state-observation-S",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-normal-state-observation-T",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-normal-state-observation-U",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "inferior not currently authenticated and live",
+      "expected_error": "not currently authenticated",
+      "name": "custody-zombie-is-state-not-identity-proof-or-live-ack",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-truthful-classification-UNKNOWN_MISSING_ROW",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-truthful-classification-UNKNOWN_PROCESS_STATE",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-truthful-classification-COMMAND_CHANGED",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-truthful-classification-START_FIELD_CHANGED_REPLACEMENT_SUSPECTED",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-foreign-member",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-ancestry-cycle",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-wrong-initial-group",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-two-targets",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-ancestor-replaced",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-invalid-snapshot-raw-disagrees",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-invalid-snapshot-error",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-invalid-snapshot-wrong-command",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-invalid-snapshot-nan-clock",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-invalid-snapshot-reverse-clock",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected",
+      "expected_error": "custody rejected",
+      "name": "custody-invalid-snapshot-stale",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-absent-then-replacement-keeps-original",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-cleanup-reject-changed-ancestor-created",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-cleanup-reject-changed-ancestor-command",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-cleanup-reject-changed-ancestor-ppid",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-cleanup-reject-changed-ancestor-pgid",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-cleanup-reject-changed-ancestor-stat",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "rejected/wrong-run ack",
+      "expected_error": "rejected/wrong-run",
+      "name": "custody-consumer-ack-state",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "rejected/wrong-run ack",
+      "expected_error": "rejected/wrong-run",
+      "name": "custody-consumer-ack-run_id",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "rejected/wrong-run ack",
+      "expected_error": "rejected/wrong-run",
+      "name": "custody-consumer-ack-schema",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "rejected/wrong-run ack",
+      "expected_error": "rejected/wrong-run",
+      "name": "custody-consumer-ack-rejections",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "wrong ack comparison contract",
+      "expected_error": "comparison",
+      "name": "custody-consumer-ack-compared_fields",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "ack ancestry unproved",
+      "expected_error": "ancestry unproved",
+      "name": "custody-consumer-ack-forged-ancestry",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-actual-B32-first-rows-missing-conflict-remain-UNKNOWN",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "custody-combined-module-custody-output-contract",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "distinct or unknown mapped module instances",
+      "expected_error": "distinct or unknown",
+      "name": "custody-combined-reject-module-unknown",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "custody rejected at completion",
+      "expected_error": "custody rejected at completion",
+      "name": "custody-combined-reject-custody-conflict",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "empty or truncated phase stream",
+      "expected_error": "empty or truncated phase stream",
+      "name": "custody-combined-reject-output-empty",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "missing complete handover",
+      "expected_error": "missing complete handover",
+      "name": "custody-combined-reject-handover",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": "missing required entry coverage",
+      "expected_error": "missing required entry coverage",
+      "name": "custody-combined-reject-missing-entry",
+      "pass": true,
+      "provenance": "SYNTHETIC process identities; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-group-grows-during-fresh-cleanup-observation",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-target-set-growth-retains-single-target-rejection",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-sole-target-discovered-during-group-pass",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-new-role-reject-foreign-member",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-new-role-reject-changed-ancestor",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-new-role-reject-wrong-group",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-new-role-reject-unknown-state",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-surviving-group-exhausts-bounded-discovery",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-fresh-final-release-reject-new-debugger",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-fresh-final-release-reject-new-target",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-fresh-final-release-reject-foreign-known-group",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-fresh-final-release-reject-binary-unowned",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-fresh-final-release-reject-known-helper",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-fresh-final-release-reject-capture-invalid",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-fresh-final-release-reject-kernel-group-survives",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "name": "cleanup-fresh-release-feeds-real-output-decision",
+      "pass": true,
+      "provenance": "SYNTHETIC rows/clocks/signals; no live process"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-attach-display-cleanup-return-finalization",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-unknown-parent",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-other-lldb-child",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-root-parent",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-foreign-group",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-target-replaced",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-old-parent-replaced",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-new-parent-replaced",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-root-replaced",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-missing-native",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-short-native",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-path-failure",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-exec",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-watch-loss",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-watch-eof",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-registration-replay",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-contradictory-bracket",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-foreign-member",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-reject-unknown-ancestor",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-native-executable-replacement-123",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-native-executable-replacement-100",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-native-executable-replacement-124",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-native-executable-replacement-99",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-parentheses-alone-never-identity",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-actual-B35-raw-native-identity-remains-UNKNOWN",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-actual-B35-row-shape-with-explicit-synthetic-native-evidence",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-producer-registration-parent-race",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-producer-registration-start-race",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-producer-exec-during-registration",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-producer-registration-error",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-producer-poll-error",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-producer-path-error",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-producer-short-sample",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-producer-ordinary",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-termination-with-delayed-exit",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-termination-with-delivered-exit",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-departed-PID-never-readopted-even-identical-samples",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-ack-replay-reject-lost-transition",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-ack-replay-reject-lost-event",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-ack-replay-reject-replaced-registration",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-ack-replay-reject-native-path",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-ack-replay-reject-foreign-parent",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-completion-replay-reject-lost-transition",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-completion-replay-reject-lost-event",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-completion-replay-reject-replaced-registration",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-completion-replay-reject-native-path",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-completion-replay-reject-foreign-parent",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "expected_error": null,
+      "name": "B36-producer-ack-transition-release-real-final-output",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": "ValueError('fresh native process absence unproved')",
+      "expected_error": "fresh native process absence unproved",
+      "name": "B36-final-output-rejects-boolean-release-with-live-native-subjects",
+      "pass": true,
+      "provenance": "OFFLINE; added native identities/events SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B37-acquisition-gone-False-producer-ack-cleanup-finalization",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-acquisition-gone-True-producer-ack-cleanup-finalization",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-acquisition-reject-still-listed",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-acquisition-reject-native-return",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-acquisition-reject-stale",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-acquisition-reject-bound",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-acquisition-return-sticky-rejection",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-ack-reject-corroboration-tamper-before",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-ack-reject-corroboration-tamper-after",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-ack-reject-corroboration-tamper-initial_sample",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-ack-reject-corroboration-tamper-end",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-ack-reject-corroboration-tamper-snapshot",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-ack-reject-corroboration-tamper-records",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-zombie-ack-cleanup-finalization",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-delivered-exit-ack-cleanup-finalization",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-reject-live",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-reject-ps-only",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-reject-exit-only",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-reject-no-prior-chain",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-reject-tracer-replaced",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-reject-inferior-replaced",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-reject-watch-loss",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-reject-unknown-parent",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-reject-foreign-group",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-producer-preserves-actual-spawned-probe-pid",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-probe-pid-binding-True",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-probe-pid-binding-False",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-foreign-ps-remains-visible-at-final-release",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B37-terminal-tracer-canonical-output-requires-actual-exit",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence"
+    },
+    {
+      "error": null,
+      "name": "B38-coherent-1-round-producer-ack-cleanup-finalization",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-coherent-2-round-producer-ack-cleanup-finalization",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-actual-sequence-16-raw-and-injected-fresh-replay",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-actual-sequence-26-raw-and-injected-fresh-replay",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-unknown-parent",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-foreign-group",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-reuse",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-path",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-exec",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-lost",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-eof",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-budget",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-root-gone",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-partial",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-transient-native-parent",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-reject-transient-ps-parent",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-two-round-exhaustion-no-third-snapshot",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-combined-parent-and-3-departures",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-combined-parent-and-10-departures",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-combined-parent-and-60-departures",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-65-subject-limit-before-round",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-mixed-batch-reappearance-retains-all-samples",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-ack-reject-tamper-original",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-completion-reject-tamper-original",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-ack-reject-tamper-before",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-completion-reject-tamper-before",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-ack-reject-tamper-after",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-completion-reject-tamper-after",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-ack-reject-tamper-registration",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-completion-reject-tamper-registration",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-ack-reject-tamper-events",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-completion-reject-tamper-events",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-ack-reject-tamper-subjects",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-completion-reject-tamper-subjects",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-ack-reject-tamper-rounds",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-completion-reject-tamper-rounds",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-ack-reject-tamper-end",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-completion-reject-tamper-end",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-ack-reject-tamper-missing",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-completion-reject-tamper-missing",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-ack-reject-tamper-root",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-completion-reject-tamper-root",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-continuous-original-registration-no-replacement",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-three-known-tracer-helper-departures-terminal-cleanup-finalization",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-chain-reject-old-parent",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-chain-reject-new-parent",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-chain-reject-other-chain",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-chain-reject-root-parent",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-initial-chain-reject-group",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B38-exhausted-shared-batch-never-captures-third",
+      "pass": true,
+      "provenance": "OFFLINE injected native/probe evidence; actual initial B37 replay where named, fresh rounds SYNTHETIC"
+    },
+    {
+      "error": null,
+      "name": "B40-frozen-seq13-original-still-rejected",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-frozen-seq13-appended-coherent-initial-only-pass",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-producer-group-parent-False-rounds-1",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-producer-group-parent-False-rounds-2",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-producer-group-parent-True-rounds-1",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-producer-group-parent-True-rounds-2",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-unknown-parent",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-foreign-group",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-reuse",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-path",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-exec",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-lost",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-eof",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-budget",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-root-gone",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-partial",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-transient-native-parent",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-group-negative-transient-ps-parent",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-initial-eligibility-arbitrary-old-group",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-initial-eligibility-unknown-old-parent",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-initial-eligibility-unknown-debugger",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-initial-eligibility-established-registration",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-initial-eligibility-native-registration-group",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-initial-eligibility-native-bracket-group",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-initial-eligibility-no-expected-binary",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-same-budget-group-parent-departures-3",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-same-budget-group-parent-departures-10",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-same-budget-group-parent-departures-60",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-shared-two-round-exhaustion",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-shared-64-active-bound",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-mixed-parent-group-departure-negative-budget",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-mixed-parent-group-departure-negative-partial",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-mixed-parent-group-departure-negative-return",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-mixed-parent-group-departure-negative-exhausted",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-fresh-new-descendant-no-name-exemption",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-accepted-target-initial-group-replay-denied",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-group-list",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-expected-binary",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-fresh-group",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-original-group",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-registration",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-birth",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-exec",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-watch-loss",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-missing-round",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-budget",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    },
+    {
+      "error": null,
+      "name": "B40-independent-receipt-negative-selected-ps",
+      "pass": true,
+      "provenance": "frozen original retained; appended fresh evidence explicitly SYNTHETIC, zero native launches"
+    }
+  ],
+  "contract_sha256": "3ebc80789a4d9843badee45fb69587b12dd62101f0211a6b09d3a59896a1972d",
+  "count": 540,
+  "inferior_launches": 0,
+  "inherited_cases": 443,
+  "item": "12K-B40",
+  "lifecycle_cases": 97,
+  "map_provenance": "B29/B30 raw retained; B32 duplicate rows authentic, historical native identity UNKNOWN; positive module/section/symbol identities SYNTHETIC",
+  "source_hashes": {
+    "coverage.lldb": "4f2fc7af0c2d1134ad312b3aed7a07f8b83a56860e4880a7da3133f7b34f58b2",
+    "coverage_acquisition.py": "b2189f1ad09bd0318198674d05c100e1970061f1607414ad7283161a1580306e",
+    "coverage_address.py": "0df357c922d11386b5af80cfca7648d5542c8ebdec1072ba136a49be7c0bca9b",
+    "coverage_b37_tests.py": "c2ee802e69a77a8bbbcbb10d70c981faa3e567b60c97e0170ba52e50d631ad6f",
+    "coverage_b38_tests.py": "af3379e234f4680552a62de83dda3a26f9d6852c55c52de59c02e6726f7f0bac",
+    "coverage_b40_tests.py": "f3ea36b7c2ab0758e4411f3a3166eea2e8995c4596f12d62b95eb144ed0b6a28",
+    "coverage_cleanup.py": "10372a851f39d3e207db7f00cd1af8c75f10b44cb47120a7b638d95ed84d0667",
+    "coverage_cleanup_tests.py": "244ec3eb47f2a4383dc2a5a4e214c0a9e1ca570bd9103bb3c6355475cf09b35d",
+    "coverage_custody.py": "9beb034b54de33743bd43b6a498c7b4c9139141be2874e1fbf3c9eba9b0c2d1e",
+    "coverage_custody_tests.py": "bcacd2b7a131c1430a2b88963469ee442e996343dfaed36c7b7afcce4925a2b6",
+    "coverage_initial_group.py": "1b9e1cfc96b39dd7dbbc2bccabe6eb93361cc099295141430c193d9e84bcf773",
+    "coverage_lifecycle_tests.py": "1f10569eadffd5ed3107a9f91f4e5a5def6c235545bf115f0e2925284312533a",
+    "coverage_module.py": "abac42555a71b17273358980da83ad4f517bc15a57f379fcca7287caa12540e7",
+    "coverage_module_fakes.py": "6365e9a9ced06301e7497341f147df11cb02b6aa10546c6f10874637d4f77d48",
+    "coverage_module_tests.py": "6c8d014cd4a5466c62e33c8e6e186fde265eef120eb42058017ff48d9180177d",
+    "coverage_native.py": "784cbb727efc0bb7d925dc82de07808889038ca621bca6913bc8be7561c7991d",
+    "coverage_native_fakes.py": "8c0eb2115e4a1c7fffe4a5868253a5e061d682ecbbab30b8be0a890af7c8c975",
+    "coverage_output.py": "77f06d7799efaac2fa80e3955bdb1fc1a60ac56b94f32843c2c9225d4fefdc18",
+    "coverage_output_tests.py": "36db2b83cceeb87b7b29819bec700a0f5255cd9b33b9c127a64f7e6220021a7f",
+    "coverage_symbols.py": "8191edeefe96bd2d6b64122477d42ed535b773139bc401c70724f36696874243",
+    "lldb_coverage.py": "2312b568ac78f5b9ae27e60200dd2ddb30c96a4d19b490b3a5225d4cd641b4a1",
+    "run_coverage.py": "60e4f38004e8c6e3924336d736072984f7b4c2676a4a4f32e9b862a5111ca986"
+  },
+  "state": "PASS"
+}

@@ -1,0 +1,1389 @@
+{
+  "cases": [
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "nested-reentrant-same-PC-multithread-pairing",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "all-families-thread-1",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "all-families-thread-7",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "all-families-thread-900",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('unproved unwound caller')",
+      "expected_rejection": true,
+      "name": "bad-unwind-valid-False",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('unproved unwound caller')",
+      "expected_rejection": true,
+      "name": "bad-unwind-executable-False",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing/invalid unwound caller')",
+      "expected_rejection": true,
+      "name": "bad-unwind-pc-0",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing/invalid unwound caller')",
+      "expected_rejection": true,
+      "name": "bad-unwind-pc-18446744073709551615",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing/invalid unwound caller')",
+      "expected_rejection": true,
+      "name": "bad-unwind-cfa-0",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('invalid caller stack/module')",
+      "expected_rejection": true,
+      "name": "bad-unwind-cfa-999",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('invalid caller stack/module')",
+      "expected_rejection": true,
+      "name": "bad-unwind-module-",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('invalid caller stack/module')",
+      "expected_rejection": true,
+      "name": "bad-unwind-uuid-",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing/ambiguous/out-of-order return stack identity')",
+      "expected_rejection": true,
+      "name": "wrong-return-pc",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing/ambiguous/out-of-order return stack identity')",
+      "expected_rejection": true,
+      "name": "wrong-return-cfa",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing/ambiguous/out-of-order return stack identity')",
+      "expected_rejection": true,
+      "name": "wrong-return-module",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing/ambiguous/out-of-order return stack identity')",
+      "expected_rejection": true,
+      "name": "wrong-return-uuid",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('unmatched return thread')",
+      "expected_rejection": true,
+      "name": "unmatched-return",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing/ambiguous/out-of-order return stack identity')",
+      "expected_rejection": true,
+      "name": "crossing-return-rejected",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing required return coverage')",
+      "expected_rejection": true,
+      "name": "missing-return-rejected",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('ambiguous/reused active stack frame')",
+      "expected_rejection": true,
+      "name": "ambiguous-frame-rejected",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "SDK-all35-fields-exact-size",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "prelaunch-unique-constructor",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('ambiguous prelaunch symbol locations')",
+      "expected_rejection": true,
+      "name": "prelaunch-ambiguous-constructor",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing prelaunch application symbol')",
+      "expected_rejection": true,
+      "name": "prelaunch-pending-constructor",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "prelaunch-unique-main",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('ambiguous prelaunch symbol locations')",
+      "expected_rejection": true,
+      "name": "prelaunch-ambiguous-main",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing prelaunch application symbol')",
+      "expected_rejection": true,
+      "name": "prelaunch-pending-main",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "prelaunch-unique-completion",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('ambiguous prelaunch symbol locations')",
+      "expected_rejection": true,
+      "name": "prelaunch-ambiguous-completion",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing prelaunch application symbol')",
+      "expected_rejection": true,
+      "name": "prelaunch-pending-completion",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "prelaunch-unique-libsystem",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('ambiguous prelaunch symbol locations')",
+      "expected_rejection": true,
+      "name": "prelaunch-ambiguous-libsystem",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "prelaunch-pending-libsystem",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "prelaunch-unique-sanitizers",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('ambiguous prelaunch symbol locations')",
+      "expected_rejection": true,
+      "name": "prelaunch-ambiguous-sanitizers",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "prelaunch-pending-sanitizers",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "counter-monotonic-success",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('nonmonotonic counter ri_instructions')",
+      "expected_rejection": true,
+      "name": "counter-backwards-ri_instructions",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('nonmonotonic counter ri_cycles')",
+      "expected_rejection": true,
+      "name": "counter-backwards-ri_cycles",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('nonmonotonic counter ri_user_time')",
+      "expected_rejection": true,
+      "name": "counter-backwards-ri_user_time",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('nonmonotonic counter ri_system_time')",
+      "expected_rejection": true,
+      "name": "counter-backwards-ri_system_time",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('nonmonotonic counter ri_pageins')",
+      "expected_rejection": true,
+      "name": "counter-backwards-ri_pageins",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('nonmonotonic counter ri_diskio_bytesread')",
+      "expected_rejection": true,
+      "name": "counter-backwards-ri_diskio_bytesread",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('nonmonotonic counter ri_diskio_byteswritten')",
+      "expected_rejection": true,
+      "name": "counter-backwards-ri_diskio_byteswritten",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('counter acquisition failed')",
+      "expected_rejection": true,
+      "name": "counter-invalid-status-1",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('counter acquisition failed')",
+      "expected_rejection": true,
+      "name": "counter-invalid-errno1",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('counter PID invalid')",
+      "expected_rejection": true,
+      "name": "counter-invalid-pid0",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('counter process identity changed')",
+      "expected_rejection": true,
+      "name": "counter-invalid-pid124",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('counter process identity changed')",
+      "expected_rejection": true,
+      "name": "counter-invalid-uuid[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('invalid counter uint64')",
+      "expected_rejection": true,
+      "name": "counter-uint--1",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('instruction/cycle counter unavailable')",
+      "expected_rejection": true,
+      "name": "counter-uint-0",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('invalid counter uint64')",
+      "expected_rejection": true,
+      "name": "counter-uint-18446744073709551616",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('invalid counter uint64')",
+      "expected_rejection": true,
+      "name": "counter-uint-None",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('invalid counter uint64')",
+      "expected_rejection": true,
+      "name": "counter-uint-True",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('counter fields missing')",
+      "expected_rejection": true,
+      "name": "counter-field-missing",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "local-clock-origin-0",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "last-full-window-0",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('full60s target cannot fit before cleanup')",
+      "expected_rejection": true,
+      "name": "refuse-short-window-0",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "local-clock-origin-1000",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "last-full-window-1000",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('full60s target cannot fit before cleanup')",
+      "expected_rejection": true,
+      "name": "refuse-short-window-1000",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "local-clock-origin-1000000000",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "last-full-window-1000000000",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('full60s target cannot fit before cleanup')",
+      "expected_rejection": true,
+      "name": "refuse-short-window-1000000000",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('local elapsed deadline')",
+      "expected_rejection": true,
+      "name": "elapsed-reject-60",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('local elapsed deadline')",
+      "expected_rejection": true,
+      "name": "elapsed-reject--1",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('invalid clock')",
+      "expected_rejection": true,
+      "name": "elapsed-reject-nan",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('invalid clock')",
+      "expected_rejection": true,
+      "name": "elapsed-reject-inf",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('local elapsed deadline')",
+      "expected_rejection": true,
+      "name": "separate-clock-origin-rejected",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target schedule exhausted')",
+      "expected_rejection": true,
+      "name": "schedule-bound--1",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target schedule exhausted')",
+      "expected_rejection": true,
+      "name": "schedule-bound-6",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target schedule exhausted')",
+      "expected_rejection": true,
+      "name": "schedule-bound-True",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-cache_restart",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-cache_restart",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-completion",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-completion",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-constructor",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-constructor",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-fixups",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-fixups",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-generic",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-generic",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-handover_complete",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-handover_complete",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-handover_prepare",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-handover_prepare",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-initial_entry",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-initial_entry",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-libsystem",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-libsystem",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-main",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-main",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-notifier",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-notifier",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-prepare",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-prepare",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "missing-symbol-sanitizers",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('exact code context count is not one')",
+      "expected_rejection": true,
+      "name": "ambiguous-identical-symbol-sanitizers",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "canonical-output-after-target-release-session-retained",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target release missing')",
+      "expected_rejection": true,
+      "name": "reject-next-launch-release-state",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target release missing')",
+      "expected_rejection": true,
+      "name": "reject-next-launch-release-groups_absent",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target release missing')",
+      "expected_rejection": true,
+      "name": "reject-next-launch-release-run_id",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target release missing')",
+      "expected_rejection": true,
+      "name": "reject-next-launch-release-target_ids",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target release does not match fresh custody')",
+      "expected_rejection": true,
+      "name": "reject-next-launch-release-native_sequence",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target release does not match fresh custody')",
+      "expected_rejection": true,
+      "name": "reject-next-launch-release-keepers",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target exit invalid')",
+      "expected_rejection": true,
+      "name": "per-target-observer-exit",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('wrong per-target identity')",
+      "expected_rejection": true,
+      "name": "per-target-observer-run_id",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('observer not complete')",
+      "expected_rejection": true,
+      "name": "per-target-observer-target_deleted",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing required entry coverage')",
+      "expected_rejection": true,
+      "name": "per-target-observer-hits",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('output fd provenance mismatch')",
+      "expected_rejection": true,
+      "name": "per-target-observer-output_actions",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('missing complete handover')",
+      "expected_rejection": true,
+      "name": "per-target-observer-handover_count",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('wrong per-target identity')",
+      "expected_rejection": true,
+      "name": "per-target-observer-target_launches",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "fresh-group-query-blocks-next",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "live-target-blocks-next",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('session/root identity lost before release')",
+      "expected_rejection": true,
+      "name": "lost-session-blocks-next",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('stale or replaced output inode')",
+      "expected_rejection": true,
+      "name": "canonical-inode-replacement-rejected",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "two-targets-continuous-native-watch-and-release-before-next",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "embedded-Python39-syntax-boundaries_core.py",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "embedded-Python39-syntax-boundaries_output.py",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "embedded-Python39-syntax-lldb_boundaries.py",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "embedded-Python39-syntax-analyze_boundaries.py",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-actual-seq-62-still-rejected-and-uncommitted",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-actual-seq-63-still-rejected-and-uncommitted",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-all82-frozen-observed-subjects-no-machine-wide-import",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-complete-inventory-release-absent",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-complete-inventory-release-still-present",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-complete-inventory-release-new-descendant",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('native unavailable')",
+      "expected_rejection": true,
+      "name": "B39-complete-inventory-release-missing-native",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('capture failed')",
+      "expected_rejection": true,
+      "name": "B39-complete-inventory-release-capture-failed",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-invalid-state-commit-and-inventory-reuse",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-invalid-state-commit-and-inventory-path",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-invalid-state-commit-and-inventory-exec",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-invalid-state-commit-and-inventory-lost",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-invalid-state-commit-and-inventory-partial",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-invalid-state-commit-and-inventory-unknown-parent",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('new unobserved acquisition descendant')",
+      "expected_rejection": true,
+      "name": "B39-same-name-unknown-reject-(ps)",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('new unobserved acquisition descendant')",
+      "expected_rejection": true,
+      "name": "B39-same-name-unknown-reject-/bin/ps",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('new unobserved acquisition descendant')",
+      "expected_rejection": true,
+      "name": "B39-same-name-unknown-reject-(Python)",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-producer-overlap-entire-acquisition-through-reap-fresh-monitor",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-bounded-lifecycle-contention",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-bounded-lifecycle-deadline",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-bounded-lifecycle-exception",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-bounded-lifecycle-helper-stall",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-bounded-lifecycle-sink-failure",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-exact-current-and-prior-probe-provenance",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-host-caught-helper-timeout-remains-terminal-with-raw-partial",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-actual-host-wrapper-retains-policy-and-fresh-brackets",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-full-six-target-continuous-custody-release-output-cumulative-inventory",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-six-scheduler-first-custody-terminal",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-six-scheduler-first-counter-terminal",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-six-scheduler-first-output-terminal",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-six-scheduler-first-release-terminal",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-six-scheduler-first-host-terminal",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-six-scheduler-first-evidence-terminal",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B39-six-scheduler-first-deadline-terminal",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target including release deadline')",
+      "expected_rejection": true,
+      "name": "B39-six-scheduler-bound-release60",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target including release deadline')",
+      "expected_rejection": true,
+      "name": "B39-six-scheduler-bound-observation510",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('full60s target cannot fit before cleanup')",
+      "expected_rejection": true,
+      "name": "B39-six-scheduler-bound-full60fit",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('target event cap')",
+      "expected_rejection": true,
+      "name": "B39-six-scheduler-bound-events257",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('storage cap')",
+      "expected_rejection": true,
+      "name": "B39-six-scheduler-bound-bytes2GiB",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('storage cap')",
+      "expected_rejection": true,
+      "name": "B39-six-scheduler-bound-free4GiB",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('schedule failed/custody replaced')",
+      "expected_rejection": true,
+      "name": "B39-six-scheduler-bound-collector",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-inventory-initial_sample",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-inventory-before",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-inventory-after",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-inventory-registration-before",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-inventory-registration-after",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-inventory-round-before",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-inventory-round-after",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-inventory-nested-round-ps",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-absent-PID-retirement-absent",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-absent-PID-retirement-live-group",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-absent-PID-retirement-unknown-group",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('complete retirement PID/group coverage unproved')",
+      "expected_rejection": true,
+      "name": "B40-absent-PID-retirement-missing-group-proof",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": "ValueError('complete retirement PID/group coverage unproved')",
+      "expected_rejection": true,
+      "name": "B40-absent-PID-retirement-missing-pid-proof",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-arbitrary-foreign-shared-groups-never-signal-authority",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-owned-launch-record-handshake-only",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-owned-launch-record-terminal-only",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-owned-launch-record-late-handshake",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-owned-launch-record-wrong-run",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-owned-launch-record-partial-json",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-pre-handshake-registration-exception",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-pre-handshake-after-exception",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-pre-handshake-round-exception",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-pre-handshake-consumer-exception",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-frozen35subjects-three-groups-original-limited-proof-rejected",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-supervisor-all-six",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-supervisor-live-sixth-group",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-supervisor-missing-join",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-supervisor-over-budget",
+      "native": "SYNTHETIC",
+      "pass": true
+    },
+    {
+      "error": null,
+      "expected_rejection": false,
+      "name": "B40-supervisor-before-normal-read-exception",
+      "native": "SYNTHETIC",
+      "pass": true
+    }
+  ],
+  "count": 191,
+  "native_launches": 0,
+  "native_probes": 0,
+  "source_hashes": {
+    "analyze_boundaries.py": "2fee73c62ece78ef303aac68a63e52e4aad8214f4229fe1ba5673e83e82b8cce",
+    "benchmark_process.py": "e11ff09ab592301490886f1e1fece50c8d0afa3a129f0218894c5d2a891a2a52",
+    "boundaries.lldb": "2b49c8b9dcadc02f4eb82deb56aa01fa89c9947f4d66e18fad02bdf791d29cd6",
+    "boundaries_b39_tests.py": "430f9fda3675aa3f80ad71742f3108df0502ea2eb0ce27a8badd261b76a6adc8",
+    "boundaries_b40_tests.py": "97086dfac54b6243a14c4b769577e416601a806af25c8364d7fac0eafbe62326",
+    "boundaries_core.py": "e4f6b23392de46997dfd8a36978e2904500be9c1f60bc3e185a6d6aebad8a8d8",
+    "boundaries_inventory.py": "779aae54c28a7c857981c7337545e5a6c5807c7255fbaf65750f2193c0915e4c",
+    "boundaries_lifecycle.py": "4ad0078d53ce35dee10f8bfcab627748bb75ba27acee0656506d4f592c2702bd",
+    "boundaries_output.py": "ceeb32f75c0d469d48c9f031a2958dd06fc7f931d19eeab956fd3335a993e514",
+    "boundaries_schedule.py": "e70a01c12bd755bb65c1b630f444dcb676a03d6ce92933c235686fd050857eb0",
+    "boundaries_supervisor.py": "2e3eb74eda3170910ed7b70e5514bf3cd6d3990450c875804c2a843c4ac36c77",
+    "boundaries_tests.py": "e695081e25b98d087944c6db8e9c3292c3329448fef04fb5e5beb2a1949e4537",
+    "coverage.lldb": "4f2fc7af0c2d1134ad312b3aed7a07f8b83a56860e4880a7da3133f7b34f58b2",
+    "coverage_acquisition.py": "b2189f1ad09bd0318198674d05c100e1970061f1607414ad7283161a1580306e",
+    "coverage_address.py": "0df357c922d11386b5af80cfca7648d5542c8ebdec1072ba136a49be7c0bca9b",
+    "coverage_b37_tests.py": "c2ee802e69a77a8bbbcbb10d70c981faa3e567b60c97e0170ba52e50d631ad6f",
+    "coverage_b38_tests.py": "af3379e234f4680552a62de83dda3a26f9d6852c55c52de59c02e6726f7f0bac",
+    "coverage_b40_tests.py": "71f8250d6e2df4928f4d73dbb20792e9714025ac7d0cbc080ca8ae844c76594f",
+    "coverage_cleanup.py": "10372a851f39d3e207db7f00cd1af8c75f10b44cb47120a7b638d95ed84d0667",
+    "coverage_cleanup_tests.py": "244ec3eb47f2a4383dc2a5a4e214c0a9e1ca570bd9103bb3c6355475cf09b35d",
+    "coverage_custody.py": "9beb034b54de33743bd43b6a498c7b4c9139141be2874e1fbf3c9eba9b0c2d1e",
+    "coverage_custody_tests.py": "bcacd2b7a131c1430a2b88963469ee442e996343dfaed36c7b7afcce4925a2b6",
+    "coverage_initial_group.py": "1b9e1cfc96b39dd7dbbc2bccabe6eb93361cc099295141430c193d9e84bcf773",
+    "coverage_lifecycle_tests.py": "1f10569eadffd5ed3107a9f91f4e5a5def6c235545bf115f0e2925284312533a",
+    "coverage_module.py": "abac42555a71b17273358980da83ad4f517bc15a57f379fcca7287caa12540e7",
+    "coverage_module_fakes.py": "6365e9a9ced06301e7497341f147df11cb02b6aa10546c6f10874637d4f77d48",
+    "coverage_module_tests.py": "6c8d014cd4a5466c62e33c8e6e186fde265eef120eb42058017ff48d9180177d",
+    "coverage_native.py": "784cbb727efc0bb7d925dc82de07808889038ca621bca6913bc8be7561c7991d",
+    "coverage_native_fakes.py": "8c0eb2115e4a1c7fffe4a5868253a5e061d682ecbbab30b8be0a890af7c8c975",
+    "coverage_output.py": "77f06d7799efaac2fa80e3955bdb1fc1a60ac56b94f32843c2c9225d4fefdc18",
+    "coverage_output_tests.py": "36db2b83cceeb87b7b29819bec700a0f5255cd9b33b9c127a64f7e6220021a7f",
+    "coverage_symbols.py": "8191edeefe96bd2d6b64122477d42ed535b773139bc401c70724f36696874243",
+    "host_control.py": "142bb171c8a1dba90411ce21cf306ac9613165670c9ceb6ff5fe016d0b0c4fb9",
+    "lldb_boundaries.py": "8d51f6829951c952df9b9f2dd178fcdbf99251e1df72032e18f3c9f74b1b603b",
+    "lldb_coverage.py": "2312b568ac78f5b9ae27e60200dd2ddb30c96a4d19b490b3a5225d4cd641b4a1",
+    "offline_b40.py": "7febf8f4bb482997e755c33bb8c557cd19897245baf64fb80d276429f35f9fc8",
+    "prepare_b40.py": "2804fa32c3bd819a63f5204ccd34aa92b35c0519de04aabac7b4e802e99d61fe",
+    "run_boundaries.py": "3de600d396c2428b618e7edea0f143a58ff6f8df118e9e3cc8695de6460cb306",
+    "run_coverage.py": "60e4f38004e8c6e3924336d736072984f7b4c2676a4a4f32e9b862a5111ca986"
+  },
+  "sources": "/private/tmp/sifr-b40.urwpgv/tmp/B24-observer-jkprzo39/sources",
+  "state": "PASS",
+  "suite": "observer",
+  "unchanged_B38_reused": 493
+}

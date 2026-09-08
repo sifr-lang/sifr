@@ -1,0 +1,22 @@
+{
+  "analyzer": {
+    "basis": "exact AST/function/data dependency comparison; analyzer byte-identical",
+    "count": 84,
+    "receipt": "/private/tmp/sifr-b39.20ZQBg/evidence/final-analyzer-receipt.json",
+    "reused": true,
+    "sha256": "78ef202e07fe39b80ccfea799cac6f85b0572b0d61864af6b3a71f289ca4d35f",
+    "state": "PASS"
+  },
+  "coverage": {
+    "count": 540,
+    "receipt": "/private/tmp/sifr-b40.urwpgv/evidence/offline-b40/coverage-2/receipt.json",
+    "sha256": "dbc7816aa6069d9edc820bcbbb83d2ce4629982b14a46754edd600be373a8b75",
+    "state": "PASS"
+  },
+  "observer": {
+    "count": 192,
+    "receipt": "/private/tmp/sifr-b40.urwpgv/evidence/offline-b40/observer-4/receipt.json",
+    "sha256": "2ed9e272872e4b91ce2e51b1117ab09eefef1366e08b1c09e9f57d96027bcc9e",
+    "state": "PASS"
+  }
+}

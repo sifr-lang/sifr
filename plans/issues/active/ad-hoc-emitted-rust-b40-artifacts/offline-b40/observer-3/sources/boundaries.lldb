@@ -1,0 +1,3 @@
+command script import /private/tmp/sifr-b40.urwpgv/evidence/lldb_boundaries.py
+script lldb_boundaries.run(lldb.debugger)
+quit

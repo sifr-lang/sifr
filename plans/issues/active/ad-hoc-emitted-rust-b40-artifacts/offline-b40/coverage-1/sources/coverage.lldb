@@ -1,0 +1,3 @@
+command script import /private/tmp/sifr-b38.tJeQq1/evidence/lldb_coverage.py
+script lldb_coverage.run(lldb.debugger)
+quit

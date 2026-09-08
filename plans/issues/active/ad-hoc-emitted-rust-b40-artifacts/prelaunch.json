@@ -1,0 +1,226 @@
+{
+  "admission_seconds": 180,
+  "ancestor_config": [
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/verification/areas/performance/sifr.toml",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/verification/areas/performance/.gitignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/verification/areas/performance/.ignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/verification/areas/sifr.toml",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/verification/areas/.gitignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/verification/areas/.ignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/verification/sifr.toml",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/verification/.gitignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/verification/.ignore",
+      "sha256": null
+    },
+    {
+      "exists": true,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/sifr.toml",
+      "sha256": "411edd1ec6a45e7bcaef0c9169055870dd2ccf16db861cf77fc6d6896f5d8f0b"
+    },
+    {
+      "exists": true,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/.gitignore",
+      "sha256": "ec28a5c57c198a8da7840e77013767912f7e476f5984fa00914304ebee61c2fd"
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr/.ignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/sifr.toml",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/.gitignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr-b40.urwpgv/.ignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/sifr.toml",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/.gitignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/tmp/.ignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/sifr.toml",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/.gitignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/private/.ignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/sifr.toml",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/.gitignore",
+      "sha256": null
+    },
+    {
+      "exists": false,
+      "path": "/.ignore",
+      "sha256": null
+    }
+  ],
+  "base_sha": "4b4cc339964baeeb6641e57dc669fef700a5fa24",
+  "binary_sha256": "a4386baecd7576b256dc6d68eb2e240952f591fa0a468df55f60080189c4b392",
+  "branch": "codex/item12k-b40-urwpgv",
+  "cleanup_seconds": 30,
+  "debugger_command": [
+    "/usr/bin/lldb",
+    "--no-lldbinit",
+    "-b",
+    "-s",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries.lldb"
+  ],
+  "diagnostic_patch_sha256": "b097f41b801029f6e5708d381c630b93447a5f7571ee5ae26c7b87fc6f29b085",
+  "event_cap": 256,
+  "evidence_cap": 2147483648,
+  "file_hashes": {
+    "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/resource.h": "7d16930e6b75f11ba203238faa5580d31d48fcd4230f2b3f604aaa5fd7e86b58",
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb": "0035650adb4c8278122f70771e2e052a2b6e6d644a76745ffecf8c3a0bd686ca",
+    "/Applications/Xcode.app/Contents/SharedFrameworks/LLDB.framework/Versions/A/Resources/Python/lldb/__init__.py": "08d7c4c689459429ae660a2a3e9f8a9b39788fcc3754e9db3316efd3b3fab676",
+    "/Applications/Xcode.app/Contents/SharedFrameworks/LLDB.framework/Versions/A/Resources/debugserver": "e4827dadbc1a45bb7b27a37d895a7c24084de18ccd97c22e1b627ab097950ff4",
+    "/bin/ps": "3bbba882e30d91fc4ff6e6844ca7c59fef4351b9a3fea35dca55708d6d487d1c",
+    "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/bin/python3.14": "87d4df53fd91304be5bac391fb204643c36b7df2023c04a0953bcbc7d4fdf634",
+    "/private/tmp/sifr-b40.urwpgv/evidence/analyze_boundaries.py": "2fee73c62ece78ef303aac68a63e52e4aad8214f4229fe1ba5673e83e82b8cce",
+    "/private/tmp/sifr-b40.urwpgv/evidence/benchmark_process.py": "e11ff09ab592301490886f1e1fece50c8d0afa3a129f0218894c5d2a891a2a52",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries.lldb": "2b49c8b9dcadc02f4eb82deb56aa01fa89c9947f4d66e18fad02bdf791d29cd6",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries_b39_tests.py": "430f9fda3675aa3f80ad71742f3108df0502ea2eb0ce27a8badd261b76a6adc8",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries_b40_tests.py": "d826c781d51d41ee52c8f670aa5039fbb51d3372f7be6113459f787a0af5cf5b",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries_core.py": "e4f6b23392de46997dfd8a36978e2904500be9c1f60bc3e185a6d6aebad8a8d8",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries_inventory.py": "dbab1cdd69d939c4846963610726d340b3f0931169306776f8b376d62629c2d3",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries_lifecycle.py": "4ad0078d53ce35dee10f8bfcab627748bb75ba27acee0656506d4f592c2702bd",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries_output.py": "ceeb32f75c0d469d48c9f031a2958dd06fc7f931d19eeab956fd3335a993e514",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries_schedule.py": "e70a01c12bd755bb65c1b630f444dcb676a03d6ce92933c235686fd050857eb0",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries_supervisor.py": "2e3eb74eda3170910ed7b70e5514bf3cd6d3990450c875804c2a843c4ac36c77",
+    "/private/tmp/sifr-b40.urwpgv/evidence/boundaries_tests.py": "e695081e25b98d087944c6db8e9c3292c3329448fef04fb5e5beb2a1949e4537",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage.lldb": "4f2fc7af0c2d1134ad312b3aed7a07f8b83a56860e4880a7da3133f7b34f58b2",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_acquisition.py": "b2189f1ad09bd0318198674d05c100e1970061f1607414ad7283161a1580306e",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_address.py": "0df357c922d11386b5af80cfca7648d5542c8ebdec1072ba136a49be7c0bca9b",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_b37_tests.py": "c2ee802e69a77a8bbbcbb10d70c981faa3e567b60c97e0170ba52e50d631ad6f",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_b38_tests.py": "af3379e234f4680552a62de83dda3a26f9d6852c55c52de59c02e6726f7f0bac",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_b40_tests.py": "f3ea36b7c2ab0758e4411f3a3166eea2e8995c4596f12d62b95eb144ed0b6a28",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_cleanup.py": "10372a851f39d3e207db7f00cd1af8c75f10b44cb47120a7b638d95ed84d0667",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_cleanup_tests.py": "244ec3eb47f2a4383dc2a5a4e214c0a9e1ca570bd9103bb3c6355475cf09b35d",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_custody.py": "9beb034b54de33743bd43b6a498c7b4c9139141be2874e1fbf3c9eba9b0c2d1e",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_custody_tests.py": "bcacd2b7a131c1430a2b88963469ee442e996343dfaed36c7b7afcce4925a2b6",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_initial_group.py": "1b9e1cfc96b39dd7dbbc2bccabe6eb93361cc099295141430c193d9e84bcf773",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_lifecycle_tests.py": "1f10569eadffd5ed3107a9f91f4e5a5def6c235545bf115f0e2925284312533a",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_module.py": "abac42555a71b17273358980da83ad4f517bc15a57f379fcca7287caa12540e7",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_module_fakes.py": "6365e9a9ced06301e7497341f147df11cb02b6aa10546c6f10874637d4f77d48",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_module_tests.py": "6c8d014cd4a5466c62e33c8e6e186fde265eef120eb42058017ff48d9180177d",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_native.py": "784cbb727efc0bb7d925dc82de07808889038ca621bca6913bc8be7561c7991d",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_native_fakes.py": "8c0eb2115e4a1c7fffe4a5868253a5e061d682ecbbab30b8be0a890af7c8c975",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_output.py": "77f06d7799efaac2fa80e3955bdb1fc1a60ac56b94f32843c2c9225d4fefdc18",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_output_tests.py": "36db2b83cceeb87b7b29819bec700a0f5255cd9b33b9c127a64f7e6220021a7f",
+    "/private/tmp/sifr-b40.urwpgv/evidence/coverage_symbols.py": "8191edeefe96bd2d6b64122477d42ed535b773139bc401c70724f36696874243",
+    "/private/tmp/sifr-b40.urwpgv/evidence/freeze_b40.py": "26657fbd7aef36c8f2e0750f69b9b2a4d5217bd78fe49807831c65b679c8e2b2",
+    "/private/tmp/sifr-b40.urwpgv/evidence/host_control.py": "142bb171c8a1dba90411ce21cf306ac9613165670c9ceb6ff5fe016d0b0c4fb9",
+    "/private/tmp/sifr-b40.urwpgv/evidence/identity-contract.json": "3ebc80789a4d9843badee45fb69587b12dd62101f0211a6b09d3a59896a1972d",
+    "/private/tmp/sifr-b40.urwpgv/evidence/lldb_boundaries.py": "8d51f6829951c952df9b9f2dd178fcdbf99251e1df72032e18f3c9f74b1b603b",
+    "/private/tmp/sifr-b40.urwpgv/evidence/lldb_coverage.py": "2312b568ac78f5b9ae27e60200dd2ddb30c96a4d19b490b3a5225d4cd641b4a1",
+    "/private/tmp/sifr-b40.urwpgv/evidence/offline_b40.py": "7febf8f4bb482997e755c33bb8c557cd19897245baf64fb80d276429f35f9fc8",
+    "/private/tmp/sifr-b40.urwpgv/evidence/prepare_b40.py": "2804fa32c3bd819a63f5204ccd34aa92b35c0519de04aabac7b4e802e99d61fe",
+    "/private/tmp/sifr-b40.urwpgv/evidence/record_b40.py": "639aab9886f1a44370b1aca40ffe094da56d18dee839d1a1997de60eed741351",
+    "/private/tmp/sifr-b40.urwpgv/evidence/run_boundaries.py": "3de600d396c2428b618e7edea0f143a58ff6f8df118e9e3cc8695de6460cb306",
+    "/private/tmp/sifr-b40.urwpgv/evidence/run_coverage.py": "60e4f38004e8c6e3924336d736072984f7b4c2676a4a4f32e9b862a5111ca986",
+    "/private/tmp/sifr-b40.urwpgv/evidence/sifr-experiment09": "a4386baecd7576b256dc6d68eb2e240952f591fa0a468df55f60080189c4b392",
+    "/private/tmp/sifr-b40.urwpgv/sifr/.gitignore": "ec28a5c57c198a8da7840e77013767912f7e476f5984fa00914304ebee61c2fd",
+    "/private/tmp/sifr-b40.urwpgv/sifr/sifr.toml": "411edd1ec6a45e7bcaef0c9169055870dd2ccf16db861cf77fc6d6896f5d8f0b",
+    "/private/tmp/sifr-b40.urwpgv/sifr/verification/areas/performance/formatter_project/main.sifr": "6333b5937a9f8f2d1cf6f717cbcc6f9bc3b9d3d9290ac659656bb989d1bcebaf",
+    "/private/tmp/sifr-b40.urwpgv/sifr/verification/areas/performance/formatter_project/sifr.toml": "5caa0c9c269563804b921292aced4b552b8dcd9df20879b1035650464c653e00",
+    "/private/tmp/sifr-b40.urwpgv/sifr/verification/areas/performance/formatter_project/util.sifr": "f586fc76bf3054af293bf7803c852716a1cf8979c045fd7a5d8dac7f7d7eb2d4",
+    "/usr/bin/lldb": "b8763cf250e607a778bb4603cecb5b90338814d0a3dfcba0d57b1de242f610e9",
+    "/usr/bin/pmset": "6061af4d9144c3af682c28f30045c5987f842e3ed9bf470d358d1545d04f80a1",
+    "/usr/bin/vm_stat": "0127fec1de1d99c7f0b0cf185fec048c7fe92d1f1b2ad380882c583f0c921df7",
+    "/usr/lib/dyld": "373fce2b3689c2113d5341a6bba735e9f970401ba64896c0a6379680192f1cdf"
+  },
+  "free_floor": 4294967296,
+  "item": "12K-B40",
+  "launcher_command": [
+    "/opt/homebrew/bin/python3",
+    "/private/tmp/sifr-b40.urwpgv/evidence/run_boundaries.py"
+  ],
+  "manifest_sha256": "32367ad66f352ed3d7d9adc68f4a4dccd58a54227ee5ab51fc74ae7ff0677e44",
+  "max_targets": 6,
+  "probe_sha256": "a8a5453c2933de0402d22def51e61f946f2a37b074e85013581e09456aa6ece3",
+  "protocol": "B39 shared lifecycle plus B40 initial group coherence and complete retirement-only obligations",
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "relocation_sha256": "e8e59a0fa3fcd0d73409a788abfeaf82f2d7f1dfa0610c8e2ead1fd52e091d97",
+  "run_ids": [
+    "12K-B40-urwpgv-target-0",
+    "12K-B40-urwpgv-target-1",
+    "12K-B40-urwpgv-target-2",
+    "12K-B40-urwpgv-target-3",
+    "12K-B40-urwpgv-target-4",
+    "12K-B40-urwpgv-target-5"
+  ],
+  "source": "d294aa5b396f0f80916698a387d4abf0bf222e5b",
+  "supervisor_command": [
+    "/opt/homebrew/bin/python3",
+    "/private/tmp/sifr-b40.urwpgv/evidence/run_boundaries.py"
+  ],
+  "target_seconds": 60,
+  "total_seconds": 540
+}
