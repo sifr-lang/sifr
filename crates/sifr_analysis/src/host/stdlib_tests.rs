@@ -34,7 +34,7 @@ fn stdlib_interop_startup_editor_retained_snapshot_after_defs_projection() {
     let old = host.snapshot();
     let old_answers = old.diagnostics(&mut host, file).unwrap();
     assert!(old_answers.value().is_empty());
-    let weak = std::sync::Arc::downgrade(&old.workspace().overlays);
+    let weak = std::sync::Arc::downgrade(old.workspace().source_map.as_ref().unwrap());
     let defs = sifr_driver::stdlib_external_defs().unwrap();
     assert!(defs.functions.contains_key("sifr.calendar"));
     let changed = source.replace("return result", "return \"wrong\"");
@@ -54,11 +54,31 @@ fn stdlib_interop_startup_editor_retained_snapshot_after_defs_projection() {
         old_answers.metadata().revision
     );
     assert_eq!(
-        current.workspace().overlays[0].version,
-        DocumentVersion::new(2)
+        host.context().unwrap().document_version_for_file(file),
+        Some(DocumentVersion::new(2))
     );
     assert_eq!(old.workspace().overlays[0].version, DocumentVersion::new(1));
-    assert_eq!(old.workspace().overlays[0].source.as_str(), source);
+    assert_eq!(
+        old.workspace()
+            .source_map
+            .as_ref()
+            .unwrap()
+            .source_for_file(file)
+            .unwrap()
+            .as_str(),
+        source
+    );
+    assert!(
+        current
+            .workspace()
+            .source_map
+            .as_ref()
+            .unwrap()
+            .source_for_file(file)
+            .unwrap()
+            .as_str()
+            .contains("return \"wrong\"")
+    );
     assert!(old_answers.value().is_empty());
     assert!(
         old.diagnostics(&mut host, file).is_err(),
@@ -73,8 +93,8 @@ fn stdlib_interop_startup_editor_retained_snapshot_after_defs_projection() {
         .unwrap();
     let final_snapshot = host.snapshot();
     assert_eq!(
-        final_snapshot.workspace().overlays[0].version,
-        DocumentVersion::new(3)
+        host.context().unwrap().document_version_for_file(file),
+        Some(DocumentVersion::new(3))
     );
     assert!(
         final_snapshot
@@ -83,9 +103,16 @@ fn stdlib_interop_startup_editor_retained_snapshot_after_defs_projection() {
             .value()
             .is_empty()
     );
-    assert_eq!(
-        current.workspace().overlays[0].version,
-        DocumentVersion::new(2)
+    assert!(
+        current
+            .workspace()
+            .source_map
+            .as_ref()
+            .unwrap()
+            .source_for_file(file)
+            .unwrap()
+            .as_str()
+            .contains("return \"wrong\"")
     );
 }
 
