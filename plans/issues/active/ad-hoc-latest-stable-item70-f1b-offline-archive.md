@@ -139,8 +139,13 @@ classes/results/logs, rehashed cross-link defects and ZIP entries, duplicate
 logical roles and producer identities, interrupted/immutable storage, full
 fresh copy readback, unchanged live freshness, unsafe paths/symlinks and
 untrusted digests. Tests use only inline synthetic data and temporary files.
-The new schema has one minimal entry in the existing exact-schema registry;
-the selftest verifies that enrollment. No broad test command, Cargo, native
+The new schema has one entry in the existing exact-schema registry and one
+explicit independently versioned declaration in the two v2-epoch guards.
+Only the two archive modules owning v1 literals are exempted from the v2
+source sweep; existing schemas and source retain v2 enforcement. The runner's
+schema-count registration includes the new twentieth schema. The named
+selftest checks this enrollment and the preserved v2 rejection boundaries.
+No broad test command, Cargo, native
 execution, provider, workflow, lockfile, tracked fixture file, or historical
 evidence changes are part of this item; no Sifr gate is required.
 

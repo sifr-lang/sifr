@@ -225,11 +225,28 @@ class ArchiveOfflineTests(unittest.TestCase):
 
     def test_complete_all_class_roundtrip(self):
         from verification.json_schema_202012 import validate_instance
+        from verification.runner.sifr_verify.selftest import GOVERNANCE_SCHEMA_COUNT
+        from . import schema_epoch
         from .schema_contracts import schema_fixtures
         validate_instance(self.manifest, SCHEMA)
         registered = schema_fixtures()
         self.assertEqual(set(registered), {path.name for path in SCHEMA.parent.glob("*.schema.json")})
         self.assertEqual(registered[SCHEMA.name], self.manifest)
+        self.assertEqual(len(registered), GOVERNANCE_SCHEMA_COUNT)
+        declaration = json.loads(SCHEMA.read_bytes())
+        schema_epoch.check_schema_declaration(SCHEMA, declaration)
+        with self.assertRaises(ValueError):
+            schema_epoch.check_schema_declaration(SCHEMA.with_name("release_index.schema.json"), declaration)
+        changed_declaration = copy.deepcopy(declaration)
+        changed_declaration["properties"]["schema_version"] = {"const": 2}
+        with self.assertRaises(ValueError):
+            schema_epoch.check_schema_declaration(SCHEMA, changed_declaration)
+        schema_epoch.check_schema_declaration(SCHEMA.with_name("release_index.schema.json"), changed_declaration)
+        expected_exclusions = {Path(__file__), Path(__file__).with_name("archive_store.py")}
+        self.assertEqual(schema_epoch.ARCHIVE_SOURCE_EXCLUSIONS, expected_exclusions)
+        self.assertTrue(expected_exclusions.isdisjoint(schema_epoch.governed_sources()))
+        with self.assertRaises(ValueError):
+            schema_epoch.check_source_text(Path("existing-release-owner.py"), '{"schema_version": 1}')
         roles = {row["role"] for row in self.manifest["artifacts"]}
         self.assertTrue(REQUIRED_ROLES <= roles)
         self.assertEqual(len(self.manifest["matrix"]), 6)
