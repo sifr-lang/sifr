@@ -274,6 +274,12 @@ The actual outer command, debugger command, target arguments and bounds remain
 exactly those registered above. The launcher records an exclusive attempt
 directory and will refuse another invocation. No additional script is introduced.
 
+Admission records three quiet-host snapshots with the existing host evaluator;
+`include_calibration=False` and `require_work_counter=False` enforce the explicit
+no-counters/no-CV scope. Any rejected snapshot ends this attempt. This is coverage
+custody only, not performance admission/qualification or changed benchmark policy.
+The monitor likewise uses the existing non-calibrating snapshot path.
+
 If the proof PASSes only its stated coverage criteria, parent authorizes scoped
 documentation completion, exact diff/HIR/file-size checks, one initial exact-SHA
 Opus assessment review plus at most one remediation, and docs-only main merge
