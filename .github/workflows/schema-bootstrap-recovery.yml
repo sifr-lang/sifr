@@ -131,7 +131,8 @@ jobs:
             "repos/${GITHUB_REPOSITORY}/actions/runs/${ORIGINAL_RUN_ID}/approvals" \
             >original-approvals.json
           scripts/distribution/release_governance.py \
-            resolve-publication-approvers \
+            inspect-historical-publication-approval \
+            --original-run original-run.json \
             --approvals original-approvals.json \
             --initiator "${original_initiator}" \
             --environment stable-release \
@@ -262,7 +263,8 @@ jobs:
             "repos/${GITHUB_REPOSITORY}/actions/runs/${ORIGINAL_RUN_ID}/approvals" \
             >original-approvals.json
           scripts/distribution/release_governance.py \
-            resolve-publication-approvers \
+            inspect-historical-publication-approval \
+            --original-run original-run.json \
             --approvals original-approvals.json \
             --initiator "${original_initiator}" \
             --environment stable-release \
@@ -280,19 +282,15 @@ jobs:
             exit 2
           }
 
-          gh api \
-            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/approvals" \
-            >recovery-approvals.json
           scripts/distribution/release_governance.py \
             resolve-publication-approvers \
-            --approvals recovery-approvals.json \
             --initiator "${GITHUB_TRIGGERING_ACTOR}" \
             --environment stable-release \
             --repository "${GITHUB_REPOSITORY}" \
-            --operation bootstrap-index \
-            --single-maintainer-waiver \
-              plans/releases/single-maintainer-approval-waiver.json \
-            --expected-waiver-sha256 "${WAIVER_SHA256}" \
+            --operation bootstrap-recovery \
+            --run-id "${GITHUB_RUN_ID}" --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --evidence protected-prepare/summary.json \
+            --expected-evidence-sha256 "${EXPECTED_RECOVERY_SUMMARY_SHA256}" \
             --include-policy >recovery-approval-decision.json
 
           [[ -n "${SITE_TOKEN}" ]] || {

@@ -147,17 +147,8 @@ jobs:
       SITE_WORKFLOW_RULESET_ID: "19899766"
       SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-28T13:22:41.496Z"
       SITE_WORKFLOW_SHA256: a9360c82395f6e9d9822f201e56cc0f2eabab1bacda01c31e4e9f22d0202b3af
-      SINGLE_MAINTAINER_APPROVAL_WAIVER: plans/releases/single-maintainer-approval-waiver.json
-      SINGLE_MAINTAINER_APPROVAL_WAIVER_SHA256: b9630cc060ca281946da76a9cb9bc67564759c8d5446b6a33157a7d138080008
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: env.STABLE_MUTATION_OPERATION != 'true'
-        with:
-          ref: ${{ inputs.source_commit }}
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: env.STABLE_MUTATION_OPERATION == 'true'
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -243,25 +234,15 @@ jobs:
             exit 2
           }
           if [[ "${GOVERNANCE_MODE}" == bootstrap-* ]]; then
-            waiver_sha256="$(
-              sha256sum "${SINGLE_MAINTAINER_APPROVAL_WAIVER}" | awk '{print $1}'
-            )"
-            test "${waiver_sha256}" = "${SINGLE_MAINTAINER_APPROVAL_WAIVER_SHA256}" || {
-              echo "::error::single-maintainer approval waiver digest drifted"
-              exit 2
-            }
-            gh api \
-              "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/approvals" \
-              >protected-prepare/approvals.json
             approval_json="$(
               scripts/distribution/release_governance.py resolve-publication-approvers \
-                --approvals protected-prepare/approvals.json \
                 --initiator "${GITHUB_TRIGGERING_ACTOR}" \
                 --environment stable-release \
                 --repository "${GITHUB_REPOSITORY}" \
                 --operation "${GOVERNANCE_MODE}" \
-                --single-maintainer-waiver "${SINGLE_MAINTAINER_APPROVAL_WAIVER}" \
-                --expected-waiver-sha256 "${SINGLE_MAINTAINER_APPROVAL_WAIVER_SHA256}" \
+                --run-id "${GITHUB_RUN_ID}" --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+                --evidence protected-prepare/summary.json \
+                --expected-evidence-sha256 "${PREPARE_SUMMARY_SHA256}" \
                 --include-policy
             )"
             {
@@ -831,12 +812,6 @@ jobs:
           VSCE_BIN: ${{ github.workspace }}/stable-source/editor_integrations/vscode/node_modules/.bin/vsce
         run: |
           set -euo pipefail
-          approval_waiver_args=()
-          if [[ "${GOVERNANCE_MODE}" == "ga-activation" ]]; then
-            approval_waiver_args=(
-              --approval-waiver "${SINGLE_MAINTAINER_APPROVAL_WAIVER}"
-            )
-          fi
           scripts/distribution/run_stable_publication.sh \
             --operation "${GOVERNANCE_MODE}" --mode "${PUBLICATION_MODE}" \
             --repository "${GITHUB_REPOSITORY}" --evidence-root stable-evidence \
@@ -849,8 +824,6 @@ jobs:
             --workflow-ref "${GITHUB_REF}" --workflow-commit "${GITHUB_SHA}" \
             --run-id "${GITHUB_RUN_ID}" --run-attempt "${GITHUB_RUN_ATTEMPT}" \
             --initiator "${GITHUB_TRIGGERING_ACTOR}" \
-            "${approval_waiver_args[@]}" \
-            --expected-approval-waiver-sha256 "${SINGLE_MAINTAINER_APPROVAL_WAIVER_SHA256}" \
             --site-repository "${SITE_REPOSITORY}" \
             --site-workflow "${SITE_WORKFLOW}" \
             --site-workflow-ref "${SITE_WORKFLOW_REF}" \

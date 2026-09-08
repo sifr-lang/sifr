@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+from .approval_policy import SOLO_MAINTAINER
+
 from .common import (
     fail,
     require_array,
@@ -17,7 +19,8 @@ from .common import (
 
 DISTINCT_REVIEWER = "distinct-reviewer"
 SINGLE_MAINTAINER_WAIVER = "single-maintainer-waiver"
-APPROVAL_MODES = {DISTINCT_REVIEWER, SINGLE_MAINTAINER_WAIVER}
+# Historical identities remain readable, but are never live authorization.
+APPROVAL_MODES = {DISTINCT_REVIEWER, SINGLE_MAINTAINER_WAIVER, SOLO_MAINTAINER}
 WAIVED_OPERATIONS = {"bootstrap-alpha", "bootstrap-index", "ga-activation"}
 CANONICAL_WAIVER_EXPIRY = "2026-08-27T00:00:00Z"
 
@@ -119,9 +122,9 @@ def validate_approval_policy(payload: Any, location: str) -> dict[str, str]:
     )
     mode = require_enum(policy["mode"], APPROVAL_MODES, f"{location}.mode")
     waiver_sha256 = policy["waiver_sha256"]
-    if mode == DISTINCT_REVIEWER:
+    if mode != SINGLE_MAINTAINER_WAIVER:
         if waiver_sha256 != "none":
-            fail(f"{location}.waiver_sha256", "must be none for distinct review")
+            fail(f"{location}.waiver_sha256", "must be none without a historical waiver")
     else:
         require_sha256(waiver_sha256, f"{location}.waiver_sha256")
     return {"mode": mode, "waiver_sha256": waiver_sha256}

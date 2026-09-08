@@ -1,20 +1,15 @@
-# Ad Hoc Issue: Distinct Release Reviewer Restoration
+# Ad Hoc Issue: Permanent Solo-Maintainer Release Approval
 
 ## Status
 
-Active blocking follow-up. The user-directed Phase 40 single-maintainer
-approval exception expired on 2026-08-27.
+Implementation owned by latest-stable convergence Item 65. On 2026-09-08 the
+user permanently superseded the distinct-person requirement: `stable-release`
+requires explicit GitHub-recorded approval by `yaseralnajjar`, permits self-review,
+and disables admin bypass. This decision approves policy only, not any release
+run or publication. No second-person invitation is a prerequisite.
 
-The repository currently has one maintainer. Phase 40 bootstrap and first-GA
-publication may therefore use the canonical, expiring
-`plans/releases/single-maintainer-approval-waiver.json`. The exception does
-not remove protected approval: `stable-release` must require a GitHub-recorded
-approval, admin bypass must be disabled, the approver must equal the named
-owner, and retained evidence must bind the waiver digest.
-
-The waiver expires on 2026-08-27 and authorizes only `bootstrap-alpha`,
-`bootstrap-index`, and `ga-activation`. It cannot authorize `normal`,
-`rollback`, or `incident-roll-forward`.
+Historical waiver, report, and signoff bytes and digests remain immutable.
+The expiry failure below is retained evidence, not a reason to renew the waiver.
 
 ## Blocking Evidence
 
@@ -32,34 +27,22 @@ The report SHA-256 is
 The evidence is in the
 [#3551 gate comment](https://github.com/sifr-lang/sifr/pull/3551#issuecomment-5432642050).
 
-Do not extend the waiver or weaken its expiry check. A distinct human reviewer
-must accept repository access. The `stable-release` environment must then use
-that reviewer with self-review and admin bypass disabled. Latest-stable Item
-31 remains draft and cannot consume a second merge gate under its current
-phase rules.
+Do not extend the waiver or alter historical identities. Latest-stable Item 31
+remains draft and cannot consume a second merge gate under its current rules.
 
-## Scope
+## Scope and acceptance
 
-- Add a genuinely distinct human release/distribution reviewer with repository
-  access.
-- Configure `stable-release` with that user or team as required reviewer,
-  `prevent_self_review: true`, and admin bypass disabled.
-- Keep historical bootstrap and first-GA evidence readable with its exact
-  single-maintainer waiver identity.
-- Remove the live waiver input from publication workflows after the environment
-  has a distinct reviewer.
-- Prove self-approval fails for every future stable and incident operation.
+- Require the designated maintainer for every exact protected run/attempt and
+  release evidence, including normal, rollback, incident roll-forward, and recovery.
+- Read back `stable-release`: reviewer `yaseralnajjar`,
+  `prevent_self_review: false`, `can_admins_bypass: false`.
+- Remove live waiver selection from workflows and direct approval entrypoints.
+- Preserve historical validity at the original event time separately from new-use
+  authorization; do not reconstruct missing original receipts.
+- Reject absent/non-designated approvals, mismatched run/evidence identities,
+  bypass-enabled configuration, and new use of the retired waiver.
+- Qualify Item 65 with its named focused suites, one exact-SHA Opus review
+  (at most one remediation), and one final-candidate merge gate.
 
-## Acceptance Criteria
-
-- [ ] A distinct reviewer or release/distribution team has accepted repository
-  access.
-- [ ] `stable-release` requires that reviewer/team, prevents self-review, and
-  disallows admin bypass.
-- [ ] Bootstrap and first-GA evidence produced under the expired waiver remains
-  canonical and validates as historical evidence.
-- [ ] No workflow can select the expired waiver for a new publication.
-- [ ] Normal, rollback, and incident roll-forward operations reject initiating
-  owner self-approval.
-- [ ] Focused distribution suites, workflow contracts, the authoritative local
-  gates, and repeated agent review pass.
+Completion and exact evidence are recorded in
+[latest-stable convergence](ad-hoc-latest-stable-release-convergence.md).

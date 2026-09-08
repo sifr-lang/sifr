@@ -43,7 +43,7 @@ def parse_args() -> argparse.Namespace:
     signoff.add_argument(
         "--approval-mode",
         required=True,
-        choices=("distinct-reviewer", "single-maintainer-waiver"),
+        choices=("distinct-reviewer", "single-maintainer-waiver", "solo-maintainer"),
     )
     signoff.add_argument("--approval-waiver-sha256", required=True)
     signoff.add_argument("--out", type=Path, required=True)

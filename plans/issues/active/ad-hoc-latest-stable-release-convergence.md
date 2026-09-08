@@ -1,5 +1,48 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+### Item 65 — permanent solo-maintainer approval migration
+
+State: implementation resumed from main `6bd085f40e42c04b1d81a09ce1660a392541bd1e`,
+adopting preserved candidate `3c481750c977d182464cdd90932843eabaedbc48`.
+Items 66 and 67 have discharged the recorded qualification prerequisites.
+The 2026-09-08 user policy decision supersedes the distinct-human E1 prerequisite.
+The sole live policy requires explicit GitHub-recorded approval by `yaseralnajjar`
+for every exact stable publication run/attempt and release evidence. Self-review
+is allowed; admin bypass remains disabled. This authorizes policy implementation,
+not release approval or publication.
+
+Owned scope: release governance validators, schemas, signoff, fixtures/contracts,
+maintained publication/recovery workflows and directly invoked approval scripts,
+current policy docs and E1. The publication root must execute governance from
+the workflow revision; release-source/evidence checkouts retain exact commits.
+The corresponding exact `NON_SOURCE_CHECKOUTS` identity and mutations are owned.
+No parser weakening, compiler/package, custody, or performance repair is in scope.
+Historical waiver/report/signoff bytes and identities remain immutable; historical
+validation uses the original event time and cannot authorize new publication.
+
+Acceptance: remove all live waiver selection; reject absent/non-designated
+approval, mismatched run/attempt/evidence, bypass-enabled configuration, and
+new use of retired waiver flags. Read back `stable-release` with designated
+reviewer `yaseralnajjar`, `prevent_self_review: false`, and
+`can_admins_bypass: false`. Preserve unrelated environment settings.
+
+Named focused suites: `distribution_release: epoch-bootstrap, qualification,
+evidence-custody, incident-governance, protected-drill, stable-prepare,
+stable-publish-primitives, stable-publication`; the stable publication workflow
+contract; submodule ownership guard and self-test; diff/file-size/local doc-link
+checks. If required to resolve the precise E2 uncertainty, only
+`coverage_matrix: readiness` is an additional allowed preflight. Item 66 has
+discharged the feature-sensitive Rusqlite assertion prerequisite. An actual
+external qualification failure must be recorded and handed to its owner.
+
+One exact-SHA Opus review, at most one remediation review, then one merge-profile
+gate on the final candidate because workflows/fixtures change. Skip create-pr;
+do not rerun a consumed gate. Coordinate heavy host capacity before Cargo or
+broad validation. Preserve the original Kafka and partial Item 65 worktrees.
+The owned continuation worktree is
+`/private/tmp/sifr-item65-delivery.zoLQU3/codebase`, branch
+`codex/solo-maintainer-approval-item65-delivery`.
+
 Status: active on 2026-09-08. Items 0–30, 36–39, 54–55 and 66–67 are complete. Item 39 closed
 the runner dependency/API invariants; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
@@ -170,9 +213,9 @@ instructions below; historical gate and review evidence remains unchanged.
 - Return merged, blocked, or needs-new-scope, with item ID, PR, SHA, evidence,
   and blocker. Do not start or implement another item. Record a new mechanism
   defect as a later item rather than adding review rounds.
-- Preserve the stable-release human-reviewer and expiring-waiver mechanisms.
-  The latest user direction is to wait for human approval; do not renew the
-  expired waiver or substitute automated review for the required human.
+- Preserve mandatory GitHub-recorded stable-release approval by the designated
+  human under Item 65's permanent policy. Never renew the historical waiver or
+  substitute automated review or chat authorization for release approval.
 - Whole-phase Opus review belongs only to one docs-only closer, dispatched
   after every implementation item is merged. Item 35's implementation-bearing
   audit follow-ups must be separate, bounded items before that closer.
@@ -567,7 +610,7 @@ transferred into this phase:
 
 | ID | Owner and current state | Required evidence / consumers |
 | --- | --- | --- |
-| E1 | [Distinct release reviewer restoration](ad-hoc-distinct-release-reviewer-restoration.md), blocked on a human | GitHub currently requires only `yaseralnajjar`, self-review is allowed, admin bypass is disabled, and invitations are empty. Wait for the required distinct human approval/access and protected-environment restoration. Preserve expiring-waiver and human-review mechanisms; never renew the waiver. This owner also must separate historical waiver validation from new-use expiry in `verification/areas/distribution_release/governance/approval_waiver_selftest.py`, whose real-waiver self-test currently requires it to be unexpired. Named qualification: distribution_release suites `epoch-bootstrap`, `qualification`, `evidence-custody`, `protected-drill`, `stable-prepare`, `stable-publication`, plus `bash verification/areas/distribution_release/cases/stable_publication_workflow_contract.sh`. The owner's existing rules govern external work. Blocks any candidate whose required merge gate would encounter the recorded expiry failure. |
+| E1 | [Permanent solo-maintainer release approval](ad-hoc-distinct-release-reviewer-restoration.md), owned by Item 65 | The user's 2026-09-08 policy decision supersedes the distinct-person requirement. Every exact stable publication run/attempt and evidence requires explicit GitHub-recorded approval by `yaseralnajjar`; self-review is allowed and admin bypass is disabled. Item 65 owns live validators, workflows/direct entrypoints, schemas/signoff, tests, and current docs. Retained waiver/report/signoff bytes remain immutable historical evidence, checked at their original event time. No waiver renewal or publication authorization is implied. Qualification remains pending until Item 65's exact candidate passes its named suites, review, and single merge gate. |
 | E2 | PR #3717 / issue #3744 and the Python qualification issue, externally owned and unmerged | Require an actual merged implementation SHA and its attributable qualification, not a draft or body claim. Named affected suites from that owner: python_interop `binding-authoring`, `callback-examples`, `async-declaration-examples`, `async-context-examples`, and coverage_matrix `readiness`. Blocks dependent compiled Python integration and a full merge gate while those known prerequisite failures remain on main. No repair, merge, gate retry, or reset of their histories is authorized here. |
 
 E1/E2 are **merge-readiness prerequisites** for gate-bearing rows, not technical
@@ -3295,9 +3338,9 @@ single-maintainer approval waiver because it expired at
 Neither gate was rerun. The exact evidence is in the
 [#3551 gate comment](https://github.com/sifr-lang/sifr/pull/3551#issuecomment-5432642050).
 
-The blocker belongs to
-`plans/issues/active/ad-hoc-distinct-release-reviewer-restoration.md`. A
-distinct human release reviewer must accept repository access, and the
-protected `stable-release` environment must require that reviewer. Do not
-extend the expired waiver or add a fallback. Item 31 cannot consume a second
-merge gate under the current phase rules.
+The historical blocker belongs to
+`plans/issues/active/ad-hoc-distinct-release-reviewer-restoration.md`.
+Item 65's user-approved permanent policy supersedes the earlier second-person
+requirement. It still requires explicit GitHub-recorded approval by the
+designated maintainer for each publication. Do not extend the historical waiver.
+Item 31 cannot consume a second merge gate under the current phase rules.
