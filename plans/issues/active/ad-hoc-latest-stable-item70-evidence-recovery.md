@@ -1,7 +1,7 @@
 # Item 70: original-evidence recovery and prospective disposition
 
-State: BLOCKED / bounded recovery incomplete, 2026-09-08. This is an
-unreviewed assessment and authorized current disposition, not qualification.
+State: bounded recovery assessment complete, 2026-09-08; pending exact-SHA
+review and merge. This is the authorized current disposition, not qualification.
 Owner: release/distribution, [issue #3775](https://github.com/sifr-lang/sifr/issues/3775).
 Source of scope: Item 70 in the coordinator's read-only convergence ledger,
 relaying the user's authorization to take recommended decisions on their behalf.
@@ -13,19 +13,24 @@ sign-off and waiver bytes remain unchanged. This disposition does not turn
 the recorded historical pass into authenticated complete custody, close Item
 59, approve a publication run, renew a waiver, or authorize qualification now.
 It replaces the need to ask again for the same Git pointer. Genuine originals
-may still be recovered; the expanded object-store search remains unperformed.
+may still exist outside the completed bounded search. Item 70 closes the
+recovery assessment and disposition only; the original custody gaps remain.
 
 ## Ownership and evidence identities
 
 Inspection base: `7339aed05db02b3de95b7930e5e1291edecd07fe`.
-Owned branch: `codex/latest-stable-item70`; independent clone:
-`/private/tmp/sifr-item70.L0HK3e/codebase`.
-Evidence root: `/private/tmp/sifr-item70.L0HK3e`.
+Resumed owned branch: `codex/latest-stable-item70-recovery-resume`; independent
+clone: `/private/tmp/sifr-item70-resume.aEgoQY/codebase`.
+New evidence root: `/private/tmp/sifr-item70-resume.aEgoQY`.
+Prior candidate `59f726c2594a626c00f30d2933c54378c4efd065` and evidence root
+`/private/tmp/sifr-item70.L0HK3e` remain read-only. Its light-search evidence is
+reused; this continuation does not reset the Item 70 review allowances.
 The parent cb34/Kafka worktree, dirty orchestration ledger, predecessor
-worktrees, Git stores, targets and indexes are read-only. Only main was cloned;
-no remote ref was fetched into another owner’s store.
+worktrees, Git stores, targets and indexes are read-only. The prior clone was
+copied without shared hardlinks, current main fetched into the new clone and
+the same three-document proposal adopted there; no foreign store was written.
 
-Historical version `0.1.0), producer
+Historical version `0.1.0`, producer
 `c9d611fb7c7c5d05421d784d53a2b78c1a7dcae9`, workflow run
 [30416219284](https://github.com/sifr-lang/sifr/actions/runs/30416219284),
 attempt 1. Reuse the authenticated Item 64 run metadata and Item 59 HTTP 410
@@ -56,8 +61,8 @@ also retained in [its issue comment](https://github.com/sifr-lang/sifr/issues/37
   source repositories were excluded. Resolved common Git directories and
   alternates: 91 roots, 59 distinct common directories, 6,060,100,266 pack bytes.
   Multiple worktrees sharing one store are deduplicated in
-  `store-inventory.json`; alternate-store references are recorded. This is
-  store metadata, not a completed blob search.
+  `store-inventory.json`; alternate-store references are recorded. The later
+  completed object scan below uses this exact frozen 59-store inventory.
 - Checked 273 explicit directories: each root's
   `target/verification/areas`, `target/validation_lane_reports`, and
   `plans/releases/candidates/0.1.0`; 148 exist. Inspected direct files only.
@@ -74,14 +79,15 @@ also retained in [its issue comment](https://github.com/sifr-lang/sifr/issues/37
   and `light-recovery.json`. No release was created or changed.
 - Original and current root `.gitattributes`, `.gitmodules`, release
   candidate records and the qualification workflow expose no relevant LFS
-  reference. No LFS server or complete historical LFS-pointer search ran.
-  The queued blob search must inspect matching-size LFS pointer contents and
-  follow a relevant pointer only into the child's owned evidence root.
+  reference. The selected Git blob scan also inspected LFS pointer signatures
+  and found none. No LFS server request was therefore needed. LFS pointers
+  outside the scanned stores and small-blob bound remain excluded.
 
 Excluded: recursive build-target traversal, nested/renamed local archives,
 arbitrary local files outside the named locations, deleted remote refs,
-inaccessible/offline/cloud backups, unrelated repository stores, and the
-queued reachable/reflog-only/unreachable Git blob search. No gc, prune,
+inaccessible/offline/cloud backups, unrelated or newly created repository
+stores outside the frozen inventory, unknown-size result blobs over 1,000,000
+bytes, and large blobs with nonmatching artifact sizes. No gc, prune,
 reflog expiry, cleanup, build, reconstruction, synthetic receipt or digest
 rebind was performed. The search does not establish that every backup is absent.
 
@@ -133,27 +139,46 @@ remains absent under the reused Item 59 evidence. A result digest, report
 summary, successful run metadata, matching filename or source commit cannot
 replace any of these bytes. A recovered subset remains partial recovery.
 
-## Queued bounded Git search
+## Completed bounded Git search
 
-The shared-host coordinator has not cleared bulk scanning; outgoing thread
-coordination is unavailable. The parent explicitly requires a hold. No process
-is waiting or holding a host reservation. Estimated work is 1–5 minutes of
-sequential metadata enumeration across approximately 6.06 GB of packs,
-followed by separately measured selected payload reads.
+The coordinator relayed E2 B37's explicit proof-window release before this
+scan started, then confirmed the measured small-blob read budget. Sequential
+read-only `git --git-dir=<store> cat-file --batch-all-objects
+--batch-check='%(objectname) %(objecttype) %(objectsize)'` completed across all
+59 stores in 41.25 seconds. All metadata and reflog commands exited zero.
+Global object-ID deduplication, including alternate stores, yielded 225,250
+unique objects. This enumerates extant reachable, reflog-only and unreachable
+objects independently of filenames; it does not resurrect pruned objects.
+Per-store counts, reflog entry counts and reflog-list hashes are retained.
 
-Upon explicit host clearance, use read-only `git cat-file --batch-all-objects`
-with type/size metadata in the 59 inventoried stores, deduplicate object IDs
-globally and alternate-store ownership, then hash exact known-size candidates.
-This includes extant unreachable and reflog-only objects without relying on
-paths or branch reachability. Inventory reflog roots read-only for provenance.
-For unknown-size results, first total small-blob candidates (up to 1 MB),
-inspect JSON/result/source signatures, and hash qualifying candidates; report
-candidate counts/byte estimate before expanding that bounded read budget.
-Check small LFS-pointer signatures against the required OIDs/sizes. Do not
-use a full filesystem hash walk or inflate every large blob. Preserve any
-matching original bytes with store/object provenance and exact hash/size.
-If coordination remains unavailable, preserve this blocked handoff; do not
-review an incomplete recovery scope as complete.
+There were 130 exact-size candidates totaling 119,521 bytes, all small. These
+were read and hashed first. The full selected set contained 99,567 distinct
+blobs no larger than 1,000,000 bytes, totaling exactly 2,269,583,001 bytes.
+The coordinator authorized that exact hard cap before the sequential reads.
+All selected reads completed in 5.13 seconds; no blob over the bound was read.
+Exact-size candidates and blobs with a leading JSON object/array signature
+were SHA-256 hashed: 6,058 candidates, 110,738,030 bytes. All selected blobs
+were inspected for LFS pointer signatures; zero were found.
+
+The only authenticated match was the already-retained Rust result:
+Git blob `489a78026e68dfa8f3c9595e42c1e4108ba94125`, 6,436 bytes,
+SHA-256 `95176b5937b4ed0e1c9843ef6c3896969f6336431bc8a0d08350cc2db9b9555e`,
+read from `/Users/yaseralnajjar/work/sifr/codebase/.git` and preserved unchanged
+in the new evidence root's `recovered/` directory. No missing original was
+newly recovered. All 20 qualification payloads and all four separately listed
+result gaps remain INCOMPLETE/UNRECOVERED within this coverage.
+
+The scan ended and host capacity was released immediately. No scan process
+or host reservation remains. Raw evidence is outside the reviewed Git tree:
+
+| Evidence in new root | SHA-256 |
+| --- | --- |
+| `metadata.json` | `d62f8cd13d61cc73cdba32b5ab352b65c5532d3a4706d2fcfba762288748d9b9` |
+| `selected-objects.json` | `b2c011e5d65362acfcbdcbead476c5c801602a02014a635ba6a4de3f3aea7bf1` |
+| `selected-hashes.json` | `88367b803bcb62235d94224258a315b18d17da4aba802577121af3119fd87011` |
+
+This completes the authorized bounded search and supports the accepted
+disposition. It does not establish exhaustive absence from every backup.
 
 ## Prospective replacement qualification plan
 
@@ -254,25 +279,19 @@ index is outside this design.
 
 ## Handoff
 
-Only documentation changed. Named checks are exact retained identities and
-candidate SHA-256/size checks, `git diff --check`,
-`python3 scripts/check_file_size_guardrails.py`, and local documentation
-paths/links. No custody suite, Cargo, native execution, Sifr gate, package
-update, Opus review, PR or merge was performed for this incomplete recovery.
-The review allowance remains unused.
+Only three Markdown files changed. Named checks are exact retained identities,
+recovered-candidate SHA-256/size checks, scan coverage/count consistency,
+`git diff --check`, `python3 scripts/check_file_size_guardrails.py`, and local
+documentation paths/links. The checks authenticate five retained records,
+all 20 original index rows and their 533,998,429-byte total, prior evidence
+identities, the six-row matrix and all selected-read evidence identities.
+No custody suite, Cargo, native execution, Sifr gate or package update is
+authorized or needed for this documentation-only assessment.
 
-Completed named checks PASS: five retained exact identities and preserved
-byte sizes; all 20 index rows and their 533,998,429-byte total; prior Item 64
-inventory identity; seven new local documentation links; diff whitespace;
-first-party file-size guard (3,762 files, 900-line limit). These checks
-authenticate the bounded assessment; they do not cover the queued scan.
-
-Blocker: explicit shared-host clearance is required for the queued expanded
-Git recovery scan. External compiler/policy and durable-custody delivery
-separately block future qualification, not these documentation checks.
-Exact next action: coordinator clears the bounded scan, then resume this same
-Item 70 from its preserved clone/evidence; update the assessment with actual
-coverage and recovery, run its named checks, and use its single exact-SHA
-review before any mergeable completed assessment. Do not start 70-F1 or
-another item. The final candidate SHA and check receipts are recorded outside
-the reviewed tree in `terminal.md` under the evidence root.
+Item 70 assessment blocker: none. Missing historical custody and external
+compiler/policy/durable-custody delivery still block qualification; they are
+preserved as later work, not satisfied by this assessment. Exact next action:
+complete the named checks and one exact-SHA Opus review, merge this assessment,
+update phase records and stop. Do not start 70-F1 or another item. Final
+candidate, validation, review and merge receipts are recorded outside the
+reviewed tree and in the subsequent record-only phase update.
