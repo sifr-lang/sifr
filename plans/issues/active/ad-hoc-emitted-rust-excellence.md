@@ -4,8 +4,17 @@ Status: active
 
 ## Item12K-B34: static custody evidence contract (2026-09-08)
 
-Exactly B32-F2, performance / issue3776. Static/offline implementation complete,
-awaiting exact-SHA review and scoped merge. The
+**B34 MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.**
+[PR3806](https://github.com/sifr-lang/sifr/pull/3806) merged as
+`9ca73396926b9b90c77f7f05aabbaaf8f245331a`. Reviewed/validated candidate
+`5b76c50bd838f26cdabcb573b7d3f78d9fc1ab51`, base
+`d1cfc49a12938affb921afcb806f9f9e9ecf67c7`; merge tree equals candidate tree.
+One initial Opus SATISFIED, no blockers, zero remediation/retries; full review
+published in PR description, response SHA256
+`44cf8362c856c5abe167bf5c8403e72e44e969e706d1677f11ec88a9e9362265`.
+Exact diff/HIR/file-size checks PASS3762; maximum external Python593 lines.
+
+Exactly B32-F2, performance / issue3776. The
 [B34 contract](ad-hoc-emitted-rust-b34-custody-evidence.md) preserves first and
 conflicting process rows, compared values, timestamps, ancestry/group/custody
 state, immutable initial cleanup identities and shared acknowledgement/output
@@ -22,7 +31,7 @@ B32's missing conflicting row, cause and ordering remain UNKNOWN; historical
 proof stays INCONCLUSIVE and output acceptance UNREACHED. The scoped contract
 contains a concrete later combined-proof proposal, with no execution allowance
 or host reservation. B24, SQL/B27 and the full phase remain open. Stop after this
-item's merge and phase-record update; no next-item implementation.
+item’s merge and phase-record update; no next-item implementation.
 
 ## Item12K-B33: static module-instance contract (2026-09-08)
 
