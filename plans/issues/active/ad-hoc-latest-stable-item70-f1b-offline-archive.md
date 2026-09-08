@@ -1,5 +1,9 @@
 # Item 70-F1B: offline release evidence archive contract
 
+COMPLETE via [PR #3814](https://github.com/sifr-lang/sifr/pull/3814), merged
+`7b2c25707e012c66893de5eb631fef7270384dfa` on 2026-09-08T08:42:37Z.
+Final tested/reviewed candidate `d85d2008572090f62e7d6d8d900a8bb42e92e5b9`.
+
 Implements the independently ready offline item registered by the merged
 [F1A assessment](ad-hoc-latest-stable-item70-f1a-backend-readiness.md).
 Owner: release/distribution, [issue #3775](https://github.com/sifr-lang/sifr/issues/3775).
@@ -157,3 +161,18 @@ One exact-SHA Opus review, at most one remediation. Record validation and
 review outside the reviewed tree, merge, update the phase record without a
 second review/gate, and stop. F1C provider/copy proof and F1D integration are
 later owners; neither is started by this item.
+
+Final [validation](https://github.com/sifr-lang/sifr/pull/3814#issuecomment-5581936758)
+passed seven named tests (6.408 seconds), both diff checks and the file-size
+guard (3,767 files). One initial review found only required schema-registry
+enrollment regressions; one batch fixed them while retaining strict v2
+enforcement for existing owners. The single
+[remediation review](https://github.com/sifr-lang/sifr/pull/3814#issuecomment-5581974957)
+returned SATISFIED/no blockers, no new mechanism defect. Final raw review
+SHA-256 `56a3255816233e49bdcd2a88fdf8a5dbdc6499e12ed4e6e18e8c2d1025aa79ab`.
+Zero Sifr gates; no further review for this record-only closure. The initial
+reviewer's two unauthorized extra read-only guard executions and outcomes,
+plus deferred nonblocking 70-F1B-M1/M2 suggestions, are recorded in the
+[phase record](ad-hoc-latest-stable-release-convergence.md). The remediation
+review obeyed source-inspection-only limits. Blocker: none; after record
+merge, stop.

@@ -6,6 +6,72 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
+### Item 70-F1B — offline archival contract complete
+
+COMPLETE via [PR #3814](https://github.com/sifr-lang/sifr/pull/3814), merged
+2026-09-08T08:42:37Z. Exact final tested/reviewed candidate
+`d85d2008572090f62e7d6d8d900a8bb42e92e5b9`, merge
+`7b2c25707e012c66893de5eb631fef7270384dfa`. Base
+`579770185d7c14c62e1b60bee7f740b077cac84e`. The
+[offline contract](ad-hoc-latest-stable-item70-f1b-offline-archive.md) implements
+the F1A registration: canonical independent archive v1, complete immutable
+inventory and byte/cross-link checks, create-only store interface/sealing,
+separate append-only copy/readback receipts, offline CLI and synthetic tests.
+No provider adapter, credential, workflow, lockfile, compiler, tracked fixture,
+historical evidence or existing report/index schema changed. F1C/F1D remain
+separate later owners. Historical Items 59/64 remain unqualified.
+
+Exact final-SHA evidence: [validation](https://github.com/sifr-lang/sifr/pull/3814#issuecomment-5581936758),
+[final Opus review](https://github.com/sifr-lang/sifr/pull/3814#issuecomment-5581974957).
+Named unittest module passed all seven required tests in 6.408 seconds,
+including complete inventory and CLI/schema registration, all-byte mutations,
+rehashed cross-links/ZIP attacks, wrong identities, unsafe paths/symlinks,
+interrupted storage, fresh complete copy readback and unchanged live expiry.
+`git diff --check`, exact base/candidate diff check, and the first-party
+file-size guard passed (3,767 files, 900-line limit). Test log SHA-256
+`67fc72d71a2687cff4027b20b6f0ab634609be7bae80fb7a4cb5fbc75f8dd0c6`;
+file-size log `9b2033018f6858be88cd75258a50ddae4241243f8b2c1f7c2a2830b4ac580fdd`.
+
+One initial Opus review of `d490f23404367cda14d34bb6eb556274e4a37b61`
+found only three schema-enrollment regressions. One bounded batch registered
+the independent schema in both v2 guards, exempted exactly its two v1-literal
+source owners, and registered the twentieth schema in the runner guard.
+Existing v2 enforcement remains strict, with negative checks inside the named
+archive module. The single remediation review returned SATISFIED/no blockers
+and no new mechanism defect. Final raw response SHA-256
+`56a3255816233e49bdcd2a88fdf8a5dbdc6499e12ed4e6e18e8c2d1025aa79ab`.
+Both review allowances are consumed; zero Sifr gates were required or run.
+
+Process deviation, recorded in the
+[initial review](https://github.com/sifr-lang/sifr/pull/3814#issuecomment-5581902039):
+despite the prompt's test restriction, the first reviewer executed
+`python3 -m verification.areas.distribution_release.governance.schema_epoch`
+(exit 2, rejected the new independent archive v1) and
+`python3 -m verification.areas.distribution_release.governance.selftest`
+(exit 1, the same schema epoch assertion). These unauthorized extra read-only
+review checks are not named item validation, gates, or permission to repeat.
+The remediation reviewer used git diffs/file reads only, no execution.
+
+Deferred nonblocking work, not started: **70-F1B-M1**, release/distribution,
+consider clearer invalid-kind/empty-store receipt diagnostics, cleanup if
+`os.fdopen` itself fails, moving the synthetic schema builder out of the test
+module, and detecting stale archive source-exclusion paths after a future
+rename. **70-F1B-M2**, verification foundation, investigate whether its
+standalone selftest is selected by the intended profiles before proposing
+any wiring change. These suggestions do not block this item and create no
+new approval, provider, qualification or broad-validation requirement.
+The review's inventory-version-constant note is already enforced by the
+strict schema; no defect or additional mechanism work is registered for it.
+
+Owned implementation branch `codex/latest-stable-item70-f1b`; record-only
+branch `codex/latest-stable-item70-f1b-record`; independent clone
+`/private/tmp/sifr-item70-f1b.qRSMYj/codebase`, external evidence root
+`/private/tmp/sifr-item70-f1b.qRSMYj`. Parent/predecessor stores remained
+read-only. Implementation/review/watchdog processes have ended and lightweight
+capacity is released. Blocker: none. This record-only update reuses the final
+implementation evidence and receives no new review or Sifr gate. After the
+record merges, stop and return terminal; no next item is started here.
+
 ### Item 70-F1A — durable backend capability and implementation readiness
 
 Assessment COMPLETE via [PR #3812](https://github.com/sifr-lang/sifr/pull/3812).
