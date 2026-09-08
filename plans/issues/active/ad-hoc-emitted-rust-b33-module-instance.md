@@ -1,7 +1,7 @@
 # 12K-B33: module instance identity at mapped handover
 
 Date: 2026-09-08. Owner: performance / issue3776. Exactly B32-F1.
-State: static/offline contract implemented; 299/299 PASS, awaiting exact-SHA review.
+State: MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.
 
 ## Scope and ownership
 
@@ -84,7 +84,7 @@ operators. No LLDB target or process was created for capability inspection.
 Pinned public implementation at Swift LLVM commit
 `82cdc19fa54d566969527b56f587ea8ea30bef51` supplies these semantics:
 
-- [SBModule.cpp](https://github.com/swiftlang/llvm-project/blob/82cdc19fa54d566969527b56f587ea8ea30bef51/lldb/source/API/SBModule.cpp#L185):
+- [SBModule.cpp](https://github.com/swiftlang/llvm-project/blob/82cdc19fa54d566969527b56f587ea8ea30bef51/lldb/source/API/SBModule.cpp#L197):
   valid module equality compares the underlying Module pointer; copy wrappers
   retain that pointer. FindSymbols preserves the owning module in each context.
 - [SBAddress.cpp](https://github.com/swiftlang/llvm-project/blob/82cdc19fa54d566969527b56f587ea8ea30bef51/lldb/source/API/SBAddress.cpp#L203):
@@ -160,3 +160,65 @@ Review covers only this Markdown delta and frozen external static contract.
 Final review/check/merge/terminal identities are recorded after approval outside
 the reviewed tree. No create-pr/merge gate, compiler/fixture/lock/workflow edit,
 live debugger session, inferior launch/attach/continue or new proof occurred.
+
+## Exact-SHA review, merge and terminal handoff
+
+[PR3804](https://github.com/sifr-lang/sifr/pull/3804) merged at
+2026-09-08T05:36:46Z, mergeSHA `dae0d285bf8cc34924ef4d47a349c28591eb50f0`.
+Exact candidate `3446f57dc2d21f584d30188f91ede95540af67f7`, base
+`491ba4ede1609ce476831015dc209a9064cd8ffc`; both merge and candidate trees are
+`5a409daae3262532cce5b5bd9f73176dd0a1aac0`. No intervening base change.
+
+The ONE initial Opus review returned SATISFIED with no blocking findings.
+It authenticated every frozen helper/reference digest and inspected the complete
+integration, installed API, preserved failure and passing evidence. No tests or
+live probes were rerun by the reviewer. Response
+E/`review-3446f57dc2d21f584d30188f91ede95540af67f7.md`, SHA256
+`432ab8c8586843136b21f7c9a77b74d8075faeeb96998ed996d5c9fdc9a0b0b8`, is
+[published outside the reviewed tree](https://github.com/sifr-lang/sifr/pull/3804#issuecomment-5579842289).
+No remediation/provider retry; no final review was committed into its candidate.
+
+E/`checks-3446f57dc2d21f584d30188f91ede95540af67f7.json`, SHA256
+`c90fc41833a398d501c963ec78b61daa27a4a6c4e79ad43f2b54f0c8163b7d05`, records
+exact candidate diff/HIR/file-size PASS3762 repository files. All external
+maintained helpers are below900 lines, largest588; the resolver is261 lines.
+The passing suite evidence and frozen inputs cover the reviewed SHA unchanged.
+This post-merge update changes records only and receives no additional external
+review, behavioral test or gate.
+
+Non-blocking review follow-ups, sole issue3776 owner, deferred without new code:
+
+- The SBModule source link line anchor was corrected to197 in this record update.
+- Cosmetic dead imports in the observer may be removed in later maintenance;
+  the reviewed helper is retained byte-for-byte here.
+- Persistence failure can mask a rejection while saving evidence, analogous to
+  the inherited event-save pattern. A later evidence-persistence item may retain
+  both errors; no expanded mechanism work or new live allowance is inferred.
+- B33 intentionally has no prelaunch manifest/executable proof registration.
+  A future combined-proof owner must supply its own authenticated integrated
+  apparatus after both static contracts and negatives are ready. This is not
+  a B33 omission or permission to implement B34 here.
+
+The review shell left an orphaned `sleep2400` watchdog holding its command
+channel open after the reviewer exited. PID34385/group33942 was authenticated
+read-only through its exact B33 cwd and command, then terminated with TERM;
+subsequent ps returned no row. The completed response was collected through
+command completion, with no response-file polling, new request or review quota
+reset. This was review-harness cleanup only; no inferior existed to clean up.
+All first-failure evidence and parent/predecessor sources remain preserved.
+
+Implementation counts: offline invocations2, named suite families1, initial Opus1,
+remediation0, provider retries0, PR1, merge1, create-pr/merge gates0, compiler
+builds/tests0, live debugger contexts/sessions/proofs0, inferior launches/
+attaches/continues0, CV/counter/acceptance acquisitions0. Final immutable
+E/`terminal.json` binds the phase-record commit, all external hashes, review,
+named checks, remote identity and process absence. Blocker: none.
+
+Main's PR-only repository rule rejected the direct post-merge record push.
+The owned branch push succeeded; the same record update therefore uses a
+separate Markdown-only PR, with no new review or gate. Its PR/merge/record
+identities and aggregate PR counts are bound in the external terminal receipt.
+
+Next action: STOP. B33 static/offline prerequisite is complete and this worker
+retires; B34 and any combined proof remain separate future work. This record
+does not close output custody proof, B24, SQL/B27 or the full emitted-Rust phase.
