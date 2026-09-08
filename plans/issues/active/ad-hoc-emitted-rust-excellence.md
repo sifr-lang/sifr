@@ -4,10 +4,10 @@ Status: active
 
 ## Item12K-B29: observer coordinate repair (2026-09-08)
 
-B29 is the sole owner of B28-F1 under performance issue3776. State: implemented,
-registered before deterministic offline validation and one corrected coverage
-proof. See the [complete B29 registration](ad-hoc-emitted-rust-b29-observer-coordinate-repair.md)
-for exact scope, commands, ownership, acceptance and first-error stop rules.
+B29 is the sole owner of B28-F1 under performance issue3776. Terminal state:
+NEEDS-NEW-SCOPE / COVERAGE INCONCLUSIVE / NOT REVIEWED / NOT MERGED. See the
+[complete B29 registration and terminal](ad-hoc-emitted-rust-b29-observer-coordinate-repair.md)
+for exact scope, commands, immutable evidence, acceptance and stop rules.
 Fresh-main base `491ba4ede1609ce476831015dc209a9064cd8ffc`; owned root
 `/private/tmp/sifr-b29.XrqnzO`, branch
 `codex/item12k-b29-observer-coordinate-repair`. Parent dirty history and all
@@ -16,6 +16,18 @@ predecessors remain read-only. B28 is terminal/inconclusive at remote record
 comparison is repaired only in copied external observer code, with the shared
 pure predicate and registered offline positive/negative cases. B24 cause,
 unchanged performance acceptance, B27 and the full phase remain open.
+
+Offline26/26 PASS; the corrected coordinate predicate also PASSed the actual
+initial dyld entry. The sole coverage proof stopped at unchanged
+`SBModule.FindSymbols` prepare lookup returning0 code-symbol contexts in active
+`/usr/lib/dyld`, UUID74E52480-C2BD-3C8D-812D-95FE2B74A096. One session/target,
+7.694957792s, one stop, zero continues/sites/hits; target killed, owned processes0
+and capacity released. Later **12K-B29-F1** under3776 owns that observed lookup
+failure; cause is unproven, no OS/runtime limitation inferred. Scripts/raws are
+frozen. No retry, repair, Opus, gate, PR, merge or next-item code. Registration
+SHA `f2fcc1641a17c39819cf9c6cfc27cb87dd52f5af`; exact terminal SHA/check receipts
+live outside Git at `/private/tmp/sifr-b29.XrqnzO/evidence/terminal.json`.
+Parent/coordinator own later registration after this owner stops.
 
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
