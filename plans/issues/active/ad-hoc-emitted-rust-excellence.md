@@ -4,6 +4,37 @@ Status: active
 
 ## Current orchestration: 12K-B21 independent builtin assessment (2026-09-08)
 
+**12K-B21 MERGED / COMPLETE.** Documentation PR
+[#3787](https://github.com/sifr-lang/sifr/pull/3787) merged as
+`d7671085653a0d634449cf112e9420b4b790b925`, exact reviewed candidate
+`e7d8b64b31dea715a7710e309dc03ff14ab19e55`, base
+`6bd085f40e42c04b1d81a09ce1660a392541bd1e`. The merge tree equals the reviewed
+candidate tree. One initial Opus assessment review SATISFIED, no blockers;
+zero remediation/provider retries/compiler tests/builds/benchmarks/Sifr gates.
+[Published review](https://github.com/sifr-lang/sifr/pull/3787#issuecomment-5577227276),
+raw `/private/tmp/sifr-b21.csIcGN/evidence/opus-e7d8b64b31dea715a7710e309dc03ff14ab19e55.e7I485/response.md`,
+SHA256 `a5ef6326a7674f103571913234fb41a75b8ffa715342a04aa31b463bf0b78b70`.
+
+Evidence `/private/tmp/sifr-b21.csIcGN/evidence`: `source-audit.json` PASS,
+SHA256 `838349bc14d46a11e88bce22cfcd3b8a3e5681430ccbbe540487f01f3d47be34`;
+`diff-check.log` PASS, SHA256
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`;
+`hir-guard.log` PASS, SHA256
+`0371f7ff0407b48ec3c2b827e55899ed48ef9f856b1b3562c29558d86f65f945`;
+`file-size-guard.log` PASS3761, SHA256
+`5199b7369504c868efc7414044c167032391a5720d05502921115894a43f9dc5`.
+Raw review's abbreviated SQL hash has a transcription typo; the complete SQL
+digest in the assessment and authenticated source audit is authoritative.
+
+Nonblocking review notes stay with their owners: B25 has30 lines of nominal-file
+headroom before its added assertions and must keep the responsibility-based
+file-size boundary; existing missing-path panic remains retained Item12 work;
+the local-only SQL commit is retained in this owned clone's `refs/assessment/sql`
+and must be preserved for the next owner. No new implementation was started.
+Final record is documentation only and needs no second review/gate. Blocker: none.
+Next action: stop B21; a fresh owner may later execute the registered B25 scope,
+with heavy execution waiting for coordinator release of dependency65's window.
+
 This bounded registration supersedes the older orchestration entries below.
 B20 is closed, NOT MERGED / NEEDS-NEW-SCOPE. Its terminal record is
 `96d051e4c16771ae1902f6e8aa77ecd836d45fa6`, retained remotely on
