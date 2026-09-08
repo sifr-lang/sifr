@@ -269,7 +269,7 @@ mod tests {
             "[sysroot-dependency-inputs]\n[stdlib]\nsifr.json\n[features]\nserde_json\n"
         ));
         assert!(cache_key.contains("[sysroot-dependency-plan]\nfingerprint-a"));
-        let identity = |project| {
+        let identity = |project: &GeneratedTestRunnerProject| {
             test_runner_cache_key(
                 project,
                 "[package]\nname = \"sifr_tests\"\n",
