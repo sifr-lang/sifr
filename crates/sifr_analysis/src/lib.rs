@@ -11,6 +11,7 @@ mod handles;
 mod host;
 mod queries;
 mod snapshot;
+mod sql_editor_host;
 mod sql_editor_runtime;
 mod sql_incremental_cache;
 mod symbols;
