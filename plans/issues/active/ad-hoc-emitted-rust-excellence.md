@@ -2,6 +2,66 @@
 
 Status: active
 
+## Item12K-B20 qualification candidate: discovery corrected, causal acceptance open (2026-09-08)
+
+B20 alone owns producer-boundary attribution and causal correction along
+`formatter-corpus-001-project-check`: CLI/config/discovery/file I/O/parser/
+formatter, process/runtime and measurement accounting. Owner
+[#3776](https://github.com/sifr-lang/sifr/issues/3776) remains OPEN. This is
+NOT closure, NOT merge approval, and NOT original3717/corpus48 delivery.
+Base/full predecessor record is `fb66ed00d7672b9f5c623e3291d1b8498d50ec45`;
+owned clone `/private/tmp/sifr-b20.bj6Au6/sifr`, sibling `evidence`, branch
+`codex/item12k-b20-attribution`. Parent and all predecessor trees/targets remain
+read-only. All16 gitlinks and corpus8bcbe7ab are retained; excluded8ad089 is out.
+
+The concrete discovery defect is proven: root `.gitignore` `/tmp/` was reduced
+to an unanchored substring and matched `/private/tmp/` in an absolute host path.
+The exact benchmark therefore checked zero source files. Six LLDB launches
+reached discovery but never parsing/formatting; a clean/drift × absolute/relative
+four-process intervention produced exits0/0/0/1. The correction applies the
+working-directory ignore at its own relative boundary, handles directory aliases,
+preserves explicit-file/force-exclude/no-respect controls, and uses the existing
+ignore engine for patterns/ordering. Absolute and relative drift checks now both
+fail1. Production checkpoints a0d0122 and d294 correct matching and eager matcher
+construction; aff93db2ff199488d191b0e32584f9a4c4a0cbbd precomputes the mandatory
+literal filter after measured repeated rule scans. Focused unit/CLI regressions
+are included. No thresholds, baselines, fixtures, retries or workload shrinkage.
+
+Startup variability is not claimed solved by this independent discovery fix.
+Experiment09's five measured in-image snapshots put26.04M..30.36M instructions
+before the first Sifr initializer, while main-to-CLI-completion stays near17.8M;
+both intended files actually reach formatting. Raw/external counters are retained.
+The process/core/address-layout controls did not establish a corrective mechanism.
+Suspended-spawn10 samples only thousands of instructions before user entry, but
+its stable observations are not a production remedy. System Trace11 identifies
+dyld opcode rebasing with107 copy-on-write/108 file-backed faults. Diagnostic
+chained-link comparison12 lowers startup mean by about6M but retains variability;
+the link flag is NOT adopted. CPU profiles13 are sparse and their effective
+high-frequency setting is0; timer profile14 confirms100us and kernel stacks,
+including SHA-256/VM/security work, without proving which mechanism causes warm
+variation. No unavailable host intervention or specific OS defect is established.
+All temporary source instrumentation is removed; patches/binaries/traces remain
+outside Git. No further granular profiling or unchanged acceptance retries.
+
+Experiment02 chronology is explicit:02 symbol-resolution failure launched0
+targets;02b embedded-Python host-monitor setup failure launched0;02c was separately
+registered before execution with external system-Python monitoring and launched
+exactly6. The old coordinator snapshot of unused target budget preceded02c and
+is not current. Earlier stop/no-retry language stopped those failed setups; no
+target acquisition was retried unchanged. All setup failures are retained.
+
+Final named qualification is registered in sibling
+`evidence/final-qualification-registration.md`: benchmark/budget selftests,
+focused formatter-discovery unit/CLI tests, Rust formatting, file-size/diff guards,
+then exactly the representative benchmark-subset/dependent budget-subset using
+unchanged controlled-work criteria. No redundant standalone formatter acquisition.
+`sifr_format` has no final source diff. One exact-SHA Opus review of full actual
+B20 acceptance, at most one remediation; no third review. Compiler/lock edge
+changed, so at most one merge-profile gate only after qualification/approval;
+skip create-pr gate, no second gate. Remaining causal acceptance stays explicit
+even if a targeted test passes. At this record, final tests/review/gates are
+UNEXECUTED; no PASS or completion is inferred from diagnostic controls.
+
 ## Item12K-B19 terminal: incomplete causal investigation, not merged (2026-09-08)
 
 Status: NEEDS-NEW-SCOPE / NOT COMPLETE / NOT MERGED. B19 owner
