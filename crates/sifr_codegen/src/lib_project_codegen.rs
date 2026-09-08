@@ -512,9 +512,19 @@ pub fn generate_rust_multi_with_metadata(
         project_union_prelude,
         used_stdlib_modules,
         required_features,
-        interop: crate::rust_interop_plan::interop_build_plan_for_named_modules(
-            modules.iter().map(|(name, module)| (Some(*name), *module)),
-        ),
+        interop: {
+            let mut plan = crate::rust_interop_plan::interop_build_plan_for_named_modules(
+                modules.iter().map(|(name, module)| (Some(*name), *module)),
+            );
+            plan.stdlib_demand = crate::stdlib_interop_demand::select(
+                stdlib_code,
+                &modules
+                    .iter()
+                    .map(|(_, module)| *module)
+                    .collect::<Vec<_>>(),
+            );
+            plan
+        },
     }
 }
 

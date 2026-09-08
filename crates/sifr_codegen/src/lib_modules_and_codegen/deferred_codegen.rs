@@ -78,7 +78,11 @@ pub(super) fn deferred_codegen_result(
         used_stdlib_modules,
         used_intrinsic_modules: std::mem::take(&mut emitter.used_stdlib_modules),
         required_features,
-        interop: crate::rust_interop_plan::interop_build_plan_for_module(module),
+        interop: {
+            let mut plan = crate::rust_interop_plan::interop_build_plan_for_module(module);
+            plan.stdlib_demand = crate::stdlib_interop_demand::select(stdlib_code, &[module]);
+            plan
+        },
         constant_mappings: std::mem::take(&mut emitter.module_constants),
         lowering_stats: emitter.lowering_stats,
         support_demand,

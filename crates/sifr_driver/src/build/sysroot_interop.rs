@@ -30,10 +30,18 @@ pub(super) fn attach_stdlib_rust_interop(
     package_context: Option<PackageRustInteropContext>,
     stdlib_interop: &StdlibRustInterop,
 ) -> (GeneratedBinaryProject, Option<PackageRustInteropContext>) {
-    if stdlib_interop.plan.rust.declarations.is_empty() {
+    let selected = InteropBuildPlan {
+        rust: std::mem::take(&mut generated.interop.stdlib_demand),
+        ..InteropBuildPlan::default()
+    };
+    if selected.rust.declarations.is_empty() {
         return (generated, package_context);
     }
-    merge_interop_plan(&mut generated.interop, &stdlib_interop.plan);
+    debug_assert!(
+        !stdlib_interop.plan.rust.declarations.is_empty(),
+        "selected stdlib contracts require a bootstrapped interop inventory"
+    );
+    merge_interop_plan(&mut generated.interop, &selected);
     (
         generated,
         merge_contexts(package_context, stdlib_context(stdlib_interop)),
@@ -293,6 +301,15 @@ mod tests {
     use std::collections::HashSet;
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn attach_stdlib_rust_interop(
+        mut generated: GeneratedBinaryProject,
+        context: Option<PackageRustInteropContext>,
+        stdlib: &StdlibRustInterop,
+    ) -> (GeneratedBinaryProject, Option<PackageRustInteropContext>) {
+        generated.interop.stdlib_demand = stdlib.plan.rust.clone();
+        super::attach_stdlib_rust_interop(generated, context, stdlib)
+    }
 
     #[test]
     fn sysroot_private_interop_resolves_canonical_stdlib_crate() {

@@ -5,6 +5,9 @@ use std::collections::{HashMap, HashSet};
 /// Compiled stdlib information for code generation.
 #[derive(Clone, Default)]
 pub struct StdlibCode {
+    /// Full checked inventory. Application interop demand follows these typed
+    /// declarations before any generated Rust is rendered or parsed.
+    pub hir_modules: std::collections::BTreeMap<String, std::sync::Arc<sifr_ir::HirModule>>,
     /// Checked Rust source for each stdlib module.
     pub module_rust_code: HashMap<String, StdlibRustSource>,
     /// Exported constants and their generated Rust names by module.

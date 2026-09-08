@@ -479,6 +479,18 @@ large-file check and a representative project check.
   analysis, Rust project generation, Cargo project materialization, and release
   native Cargo build.
 - Dependency metadata for both shapes comes from codegen outputs (`used_stdlib_modules` and `required_crates`), never from emitted Rust text scans.
+- Stdlib bootstrap retains the complete checked HIR and interop inventory.
+  Code generation selects application interop demand by canonical module and
+  declaration identity, following reexports, private calls, signatures and
+  nominal/structural types. A required class owns its complete methods,
+  operators and cleanup contracts. This typed closure is selected before
+  attachment and resolution; emitted Rust text and feature sets do not select
+  interop contracts. Native project and single-file consumers attach that same
+  selected plan with the separately validated sysroot trust context. Emit keeps
+  its trusted-sysroot probe deferral. The single-file resolved-plan cache binds
+  selected contracts and sysroot identity; package-owned contexts bypass that
+  stdlib-only cache. Whole-sysroot certification remains a toolchain
+  qualification responsibility.
 - Workspace design details and deferred package-management semantics are tracked in [`sifr_workspace_design.md`](./sifr_workspace_design.md).
 
 This keeps CLI mode resolution as the boundary that selects the rooted entrypoint shape while preserving one internal build architecture.

@@ -192,6 +192,7 @@ mod rust_ir;
 pub use rust_ir::*;
 mod stdlib_codegen_metadata;
 mod stdlib_filter;
+mod stdlib_interop_demand;
 pub use stdlib_codegen_metadata::StdlibCode;
 mod stdlib_import_signatures;
 mod stdlib_rust_source;

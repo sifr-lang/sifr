@@ -117,6 +117,10 @@ fn compile_stdlib_sources_with_sysroot(
             .map(|class| (class.name.clone(), format!("{module_name}.{}", class.name)))
             .collect::<HashMap<_, _>>();
         canonicalize_stdlib_hir_signatures(&mut result.module, module_name, &local_classes);
+        stdlib_code.hir_modules.insert(
+            module_name.to_string(),
+            std::sync::Arc::new(result.module.clone()),
+        );
         if let Some(module) = pending_private_interop_module(stdlib_source, &result.module) {
             private_interop_modules.push(module);
         }
@@ -319,6 +323,7 @@ fn compile_stdlib_sources_with_sysroot(
             || !result.module.classes.is_empty();
         if has_pure_sifr_code {
             let codegen_stdlib = StdlibCode {
+                hir_modules: stdlib_code.hir_modules.clone(),
                 module_rust_code: HashMap::new(),
                 module_constants: stdlib_code.module_constants.clone(),
                 func_signatures: stdlib_code.func_signatures.clone(),
