@@ -1,0 +1,2933 @@
+{
+  "all_raw_and_producer_metrics_match": true,
+  "invocation_id": "performance-representative-1788881948856349000",
+  "item": "12K-B45",
+  "method": "Independent pure arithmetic over saved raw sidecars/receipts; no gate imported or executed.",
+  "passing_controls": [
+    "build-project-001-additional-modules",
+    "formatter-large-file-001-check",
+    "incremental-local-loop-001-unchanged-file-update",
+    "interactive-tooling-foundation-002-warm-diagnostics-query"
+  ],
+  "producer_input": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/representative.budget.latest.json",
+  "raw_process_receipts": 105,
+  "results": [
+    {
+      "accepted_attempt": 1,
+      "budget_id": "perf.build.project.additional_modules",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache_policy": {},
+      "case_manifest": {
+        "budget_id": "perf.build.project.additional_modules",
+        "evidence_category": "project-imports",
+        "expected_exit_codes": [
+          0
+        ],
+        "group": "build-project",
+        "id": "build-project-001-additional-modules",
+        "kind": "command",
+        "measured": 5,
+        "mode": "build",
+        "source_path": "demos/additional_modules/main.sifr",
+        "timeout_ms": 120000,
+        "warmups": 1
+      },
+      "checks": {
+        "cache": true,
+        "instructions": true,
+        "rss": true,
+        "stability": true,
+        "timeout_exit": true
+      },
+      "id": "build-project-001-additional-modules",
+      "instruction_lower_bound": 69759918032,
+      "instruction_uncertainty": 56139060,
+      "latency_enforced": false,
+      "metric_boundary": "Five complete command processes; warmup validated but excluded from every budget metric.",
+      "metrics": {
+        "coefficient_variation": 0.011471,
+        "instructions_coefficient_variation": 0.00022,
+        "instructions_mad": 18713020,
+        "mad_ms": 53.235,
+        "median_cycles_per_instruction": 0.299571,
+        "median_instructions": 69816057092,
+        "median_ms": 8302.862,
+        "p95_instructions": 69835825735,
+        "p95_ms": 8512.571,
+        "peak_rss_bytes": 208486400
+      },
+      "raw_receipts": [
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/additional_modules/main.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-project-001-additional-modules/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-project-001-additional-modules/0.json",
+          "result": {
+            "cpu_time_ms": 50020.0,
+            "cycles_elapsed": 24389753379,
+            "duration_ms": 31104.059292003512,
+            "exit_code": 0,
+            "peak_rss_bytes": 256950272,
+            "retired_instructions": 80367548308,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "warmup"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/additional_modules/main.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-project-001-additional-modules/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-project-001-additional-modules/1.json",
+          "result": {
+            "cpu_time_ms": 9010.0,
+            "cycles_elapsed": 20708879369,
+            "duration_ms": 8512.570999911986,
+            "exit_code": 0,
+            "peak_rss_bytes": 204865536,
+            "retired_instructions": 69797344072,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/additional_modules/main.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-project-001-additional-modules/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-project-001-additional-modules/2.json",
+          "result": {
+            "cpu_time_ms": 9020.0,
+            "cycles_elapsed": 20717304116,
+            "duration_ms": 8249.627834069543,
+            "exit_code": 0,
+            "peak_rss_bytes": 203210752,
+            "retired_instructions": 69796758565,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/additional_modules/main.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-project-001-additional-modules/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-project-001-additional-modules/3.json",
+          "result": {
+            "cpu_time_ms": 9070.0,
+            "cycles_elapsed": 20914875027,
+            "duration_ms": 8266.418167040683,
+            "exit_code": 0,
+            "peak_rss_bytes": 205996032,
+            "retired_instructions": 69816057092,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/additional_modules/main.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-project-001-additional-modules/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-project-001-additional-modules/4.json",
+          "result": {
+            "cpu_time_ms": 9060.0,
+            "cycles_elapsed": 20947443529,
+            "duration_ms": 8302.862457931042,
+            "exit_code": 0,
+            "peak_rss_bytes": 207486976,
+            "retired_instructions": 69824927426,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/additional_modules/main.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-project-001-additional-modules/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-project-001-additional-modules/5.json",
+          "result": {
+            "cpu_time_ms": 9210.0,
+            "cycles_elapsed": 20960765044,
+            "duration_ms": 8372.12225003168,
+            "exit_code": 0,
+            "peak_rss_bytes": 208486400,
+            "retired_instructions": 69835825735,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        }
+      ],
+      "rejection_reasons": [],
+      "size_advisory": {
+        "emitted_rust_bytes": 55284,
+        "emitted_rust_lines": 1301,
+        "generated_binary_bytes": 1183264
+      },
+      "work_baseline": {
+        "baseline_median_instructions": 117631892992,
+        "baseline_peak_rss_bytes": 208207872,
+        "benchmark_id": "build-project-001-additional-modules",
+        "budget_id": "perf.build.project.additional_modules",
+        "threshold_median_instructions": 119984530852,
+        "threshold_peak_rss_bytes": 241762304
+      }
+    },
+    {
+      "accepted_attempt": 1,
+      "budget_id": "perf.build.single.break_continue",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache_policy": {},
+      "case_manifest": {
+        "benchmark_source_id": "e2e-004-break-continue",
+        "budget_id": "perf.build.single.break_continue",
+        "evidence_category": "compiler-control-flow",
+        "expected_exit_codes": [
+          0
+        ],
+        "group": "build-single-file",
+        "id": "build-single-file-001-break-continue",
+        "kind": "command",
+        "measured": 5,
+        "mode": "build",
+        "source_path": "crates/sifr/tests/e2e/pass/break_continue.sifr",
+        "timeout_ms": 120000,
+        "warmups": 1
+      },
+      "checks": {
+        "cache": true,
+        "instructions": true,
+        "rss": false,
+        "stability": true,
+        "timeout_exit": true
+      },
+      "id": "build-single-file-001-break-continue",
+      "instruction_lower_bound": 21385523859,
+      "instruction_uncertainty": 3157176,
+      "latency_enforced": false,
+      "metric_boundary": "Five complete command processes; warmup validated but excluded from every budget metric.",
+      "metrics": {
+        "coefficient_variation": 0.008474,
+        "instructions_coefficient_variation": 0.000195,
+        "instructions_mad": 1052392,
+        "mad_ms": 21.895,
+        "median_cycles_per_instruction": 0.299958,
+        "median_instructions": 21388681035,
+        "median_ms": 2814.986,
+        "p95_instructions": 21389733427,
+        "p95_ms": 2862.985,
+        "peak_rss_bytes": 185466880
+      },
+      "raw_receipts": [
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/break_continue.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-single-file-001-break-continue/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-single-file-001-break-continue/0.json",
+          "result": {
+            "cpu_time_ms": 14650.0,
+            "cycles_elapsed": 6582645373,
+            "duration_ms": 6689.545709057711,
+            "exit_code": 0,
+            "peak_rss_bytes": 279445504,
+            "retired_instructions": 21795913903,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "warmup"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/break_continue.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-single-file-001-break-continue/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-single-file-001-break-continue/1.json",
+          "result": {
+            "cpu_time_ms": 2700.0,
+            "cycles_elapsed": 6382106125,
+            "duration_ms": 2793.0918750353158,
+            "exit_code": 0,
+            "peak_rss_bytes": 184647680,
+            "retired_instructions": 21389733427,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/break_continue.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-single-file-001-break-continue/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-single-file-001-break-continue/2.json",
+          "result": {
+            "cpu_time_ms": 2700.0,
+            "cycles_elapsed": 6397747625,
+            "duration_ms": 2814.4953339360654,
+            "exit_code": 0,
+            "peak_rss_bytes": 185466880,
+            "retired_instructions": 21378391572,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/break_continue.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-single-file-001-break-continue/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-single-file-001-break-continue/3.json",
+          "result": {
+            "cpu_time_ms": 2700.0,
+            "cycles_elapsed": 6414647428,
+            "duration_ms": 2814.9863750441,
+            "exit_code": 0,
+            "peak_rss_bytes": 184385536,
+            "retired_instructions": 21385183781,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/break_continue.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-single-file-001-break-continue/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-single-file-001-break-continue/4.json",
+          "result": {
+            "cpu_time_ms": 2750.0,
+            "cycles_elapsed": 6500463475,
+            "duration_ms": 2862.9853749880567,
+            "exit_code": 0,
+            "peak_rss_bytes": 184778752,
+            "retired_instructions": 21388681035,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "build",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/break_continue.sifr",
+            "--output",
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/artifacts/build-single-file-001-break-continue/shared-build"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/build-single-file-001-break-continue/5.json",
+          "result": {
+            "cpu_time_ms": 2730.0,
+            "cycles_elapsed": 6444068226,
+            "duration_ms": 2838.9243750134483,
+            "exit_code": 0,
+            "peak_rss_bytes": 184647680,
+            "retired_instructions": 21388761831,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        }
+      ],
+      "rejection_reasons": [],
+      "size_advisory": {
+        "emitted_rust_bytes": 440,
+        "emitted_rust_lines": 16,
+        "generated_binary_bytes": 526272
+      },
+      "work_baseline": {
+        "baseline_median_instructions": 111360304534,
+        "baseline_peak_rss_bytes": 148094976,
+        "benchmark_id": "build-single-file-001-break-continue",
+        "budget_id": "perf.build.single.break_continue",
+        "threshold_median_instructions": 113587510625,
+        "threshold_peak_rss_bytes": 181649408
+      }
+    },
+    {
+      "accepted_attempt": 1,
+      "budget_id": "perf.check.project.project_graph",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache_policy": {},
+      "case_manifest": {
+        "budget_id": "perf.check.project.project_graph",
+        "evidence_category": "compiler-project-imports",
+        "expected_exit_codes": [
+          0
+        ],
+        "group": "check-project",
+        "id": "check-project-004-project-graph",
+        "kind": "command",
+        "measured": 5,
+        "mode": "check",
+        "source_path": "demos/project_graph/main.sifr",
+        "timeout_ms": 60000,
+        "warmups": 1
+      },
+      "checks": {
+        "cache": true,
+        "instructions": false,
+        "rss": false,
+        "stability": true,
+        "timeout_exit": true
+      },
+      "id": "check-project-004-project-graph",
+      "instruction_lower_bound": 20667077619,
+      "instruction_uncertainty": 37950054,
+      "latency_enforced": false,
+      "metric_boundary": "Five complete command processes; warmup validated but excluded from every budget metric.",
+      "metrics": {
+        "coefficient_variation": 0.090561,
+        "instructions_coefficient_variation": 0.000684,
+        "instructions_mad": 12650018,
+        "mad_ms": 35.966,
+        "median_cycles_per_instruction": 0.301393,
+        "median_instructions": 20705027673,
+        "median_ms": 2208.582,
+        "p95_instructions": 20733340754,
+        "p95_ms": 2701.737,
+        "peak_rss_bytes": 185597952
+      },
+      "raw_receipts": [
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/project_graph/main.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-project-004-project-graph/0.json",
+          "result": {
+            "cpu_time_ms": 2110.0,
+            "cycles_elapsed": 6186495589,
+            "duration_ms": 2158.2029999699444,
+            "exit_code": 0,
+            "peak_rss_bytes": 184418304,
+            "retired_instructions": 20699064783,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "warmup"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/project_graph/main.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-project-004-project-graph/1.json",
+          "result": {
+            "cpu_time_ms": 2120.0,
+            "cycles_elapsed": 6199134437,
+            "duration_ms": 2172.6160420803353,
+            "exit_code": 0,
+            "peak_rss_bytes": 185139200,
+            "retired_instructions": 20705027673,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/project_graph/main.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-project-004-project-graph/2.json",
+          "result": {
+            "cpu_time_ms": 2100.0,
+            "cycles_elapsed": 6171703288,
+            "duration_ms": 2150.590959005058,
+            "exit_code": 0,
+            "peak_rss_bytes": 185597952,
+            "retired_instructions": 20691672796,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/project_graph/main.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-project-004-project-graph/3.json",
+          "result": {
+            "cpu_time_ms": 2320.0,
+            "cycles_elapsed": 6635400936,
+            "duration_ms": 2701.737374998629,
+            "exit_code": 0,
+            "peak_rss_bytes": 184860672,
+            "retired_instructions": 20733340754,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/project_graph/main.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-project-004-project-graph/4.json",
+          "result": {
+            "cpu_time_ms": 2170.0,
+            "cycles_elapsed": 6244153544,
+            "duration_ms": 2215.052207931876,
+            "exit_code": 0,
+            "peak_rss_bytes": 184549376,
+            "retired_instructions": 20717677691,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/demos/project_graph/main.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-project-004-project-graph/5.json",
+          "result": {
+            "cpu_time_ms": 2140.0,
+            "cycles_elapsed": 6259322398,
+            "duration_ms": 2208.5818329360336,
+            "exit_code": 0,
+            "peak_rss_bytes": 185122816,
+            "retired_instructions": 20703656657,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        }
+      ],
+      "rejection_reasons": [],
+      "size_advisory": {
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null
+      },
+      "work_baseline": {
+        "baseline_median_instructions": 13665603234,
+        "baseline_peak_rss_bytes": 146046976,
+        "benchmark_id": "check-project-004-project-graph",
+        "budget_id": "perf.check.project.project_graph",
+        "threshold_median_instructions": 13938915299,
+        "threshold_peak_rss_bytes": 179601408
+      }
+    },
+    {
+      "accepted_attempt": 1,
+      "budget_id": "perf.check.single.arithmetic",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache_policy": {},
+      "case_manifest": {
+        "budget_id": "perf.check.single.arithmetic",
+        "evidence_category": "control-flow",
+        "expected_exit_codes": [
+          0
+        ],
+        "group": "check-single-file",
+        "id": "check-single-file-001-arithmetic",
+        "kind": "command",
+        "measured": 5,
+        "mode": "check",
+        "source_path": "crates/sifr/tests/e2e/pass/arithmetic.sifr",
+        "timeout_ms": 60000,
+        "warmups": 1
+      },
+      "checks": {
+        "cache": true,
+        "instructions": false,
+        "rss": false,
+        "stability": true,
+        "timeout_exit": true
+      },
+      "id": "check-single-file-001-arithmetic",
+      "instruction_lower_bound": 20637475031,
+      "instruction_uncertainty": 13726632,
+      "latency_enforced": false,
+      "metric_boundary": "Five complete command processes; warmup validated but excluded from every budget metric.",
+      "metrics": {
+        "coefficient_variation": 0.011971,
+        "instructions_coefficient_variation": 0.000264,
+        "instructions_mad": 4575544,
+        "mad_ms": 21.486,
+        "median_cycles_per_instruction": 0.301266,
+        "median_instructions": 20651201663,
+        "median_ms": 2194.748,
+        "p95_instructions": 20659091714,
+        "p95_ms": 2242.96,
+        "peak_rss_bytes": 185139200
+      },
+      "raw_receipts": [
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/arithmetic.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-single-file-001-arithmetic/0.json",
+          "result": {
+            "cpu_time_ms": 2170.0,
+            "cycles_elapsed": 6272136211,
+            "duration_ms": 2224.6077499585226,
+            "exit_code": 0,
+            "peak_rss_bytes": 184172544,
+            "retired_instructions": 20646525257,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "warmup"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/arithmetic.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-single-file-001-arithmetic/1.json",
+          "result": {
+            "cpu_time_ms": 2140.0,
+            "cycles_elapsed": 6223880428,
+            "duration_ms": 2182.05087503884,
+            "exit_code": 0,
+            "peak_rss_bytes": 184139776,
+            "retired_instructions": 20659091714,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/arithmetic.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-single-file-001-arithmetic/2.json",
+          "result": {
+            "cpu_time_ms": 2120.0,
+            "cycles_elapsed": 6221220146,
+            "duration_ms": 2173.2622910058126,
+            "exit_code": 0,
+            "peak_rss_bytes": 184270848,
+            "retired_instructions": 20644007092,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/arithmetic.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-single-file-001-arithmetic/3.json",
+          "result": {
+            "cpu_time_ms": 2140.0,
+            "cycles_elapsed": 6255653975,
+            "duration_ms": 2194.7478340007365,
+            "exit_code": 0,
+            "peak_rss_bytes": 184582144,
+            "retired_instructions": 20651201663,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/arithmetic.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-single-file-001-arithmetic/4.json",
+          "result": {
+            "cpu_time_ms": 2140.0,
+            "cycles_elapsed": 6214722379,
+            "duration_ms": 2225.2089579124004,
+            "exit_code": 0,
+            "peak_rss_bytes": 185139200,
+            "retired_instructions": 20654849178,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/pass/arithmetic.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/check-single-file-001-arithmetic/5.json",
+          "result": {
+            "cpu_time_ms": 2150.0,
+            "cycles_elapsed": 6179650582,
+            "duration_ms": 2242.9599170573056,
+            "exit_code": 0,
+            "peak_rss_bytes": 183943168,
+            "retired_instructions": 20646626119,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        }
+      ],
+      "rejection_reasons": [],
+      "size_advisory": {
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null
+      },
+      "work_baseline": {
+        "baseline_median_instructions": 13607274985,
+        "baseline_peak_rss_bytes": 147881984,
+        "benchmark_id": "check-single-file-001-arithmetic",
+        "budget_id": "perf.check.single.arithmetic",
+        "threshold_median_instructions": 13879420485,
+        "threshold_peak_rss_bytes": 181436416
+      }
+    },
+    {
+      "accepted_attempt": 1,
+      "budget_id": "perf.diagnostic.json_diagnostic_schema",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache_policy": {},
+      "case_manifest": {
+        "budget_id": "perf.diagnostic.json_diagnostic_schema",
+        "evidence_category": "diagnostics-json",
+        "expected_exit_codes": [
+          1
+        ],
+        "global_args": [
+          "--diagnostic-format",
+          "json"
+        ],
+        "group": "diagnostic-non-regression",
+        "id": "diagnostic-non-regression-002-json-diagnostic-schema",
+        "kind": "command",
+        "measured": 5,
+        "mode": "check",
+        "source_path": "crates/sifr/tests/e2e/fail/type_mismatch.sifr",
+        "timeout_ms": 60000,
+        "warmups": 1
+      },
+      "checks": {
+        "cache": true,
+        "instructions": false,
+        "rss": false,
+        "stability": true,
+        "timeout_exit": true
+      },
+      "id": "diagnostic-non-regression-002-json-diagnostic-schema",
+      "instruction_lower_bound": 20634512512,
+      "instruction_uncertainty": 10761990,
+      "latency_enforced": false,
+      "metric_boundary": "Five complete command processes; warmup validated but excluded from every budget metric.",
+      "metrics": {
+        "coefficient_variation": 0.002294,
+        "instructions_coefficient_variation": 0.000159,
+        "instructions_mad": 3587330,
+        "mad_ms": 2.197,
+        "median_cycles_per_instruction": 0.299072,
+        "median_instructions": 20645274502,
+        "median_ms": 2153.839,
+        "p95_instructions": 20649299157,
+        "p95_ms": 2163.066,
+        "peak_rss_bytes": 185253888
+      },
+      "raw_receipts": [
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "--diagnostic-format",
+            "json",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/fail/type_mismatch.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/0.json",
+          "result": {
+            "cpu_time_ms": 2130.0,
+            "cycles_elapsed": 6210160495,
+            "duration_ms": 2178.272624965757,
+            "exit_code": 1,
+            "peak_rss_bytes": 184795136,
+            "retired_instructions": 20654528104,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "warmup"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "--diagnostic-format",
+            "json",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/fail/type_mismatch.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/1.json",
+          "result": {
+            "cpu_time_ms": 2100.0,
+            "cycles_elapsed": 6156958755,
+            "duration_ms": 2154.5311249792576,
+            "exit_code": 1,
+            "peak_rss_bytes": 183894016,
+            "retired_instructions": 20641687172,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "--diagnostic-format",
+            "json",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/fail/type_mismatch.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/2.json",
+          "result": {
+            "cpu_time_ms": 2110.0,
+            "cycles_elapsed": 6206683013,
+            "duration_ms": 2163.0657920613885,
+            "exit_code": 1,
+            "peak_rss_bytes": 184926208,
+            "retired_instructions": 20649299157,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "--diagnostic-format",
+            "json",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/fail/type_mismatch.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/3.json",
+          "result": {
+            "cpu_time_ms": 2100.0,
+            "cycles_elapsed": 6188067192,
+            "duration_ms": 2151.642084005289,
+            "exit_code": 1,
+            "peak_rss_bytes": 185253888,
+            "retired_instructions": 20642135964,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "--diagnostic-format",
+            "json",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/fail/type_mismatch.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/4.json",
+          "result": {
+            "cpu_time_ms": 2100.0,
+            "cycles_elapsed": 6175568153,
+            "duration_ms": 2153.839125065133,
+            "exit_code": 1,
+            "peak_rss_bytes": 184287232,
+            "retired_instructions": 20649134514,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "--diagnostic-format",
+            "json",
+            "check",
+            "/private/tmp/sifr-b44.rub8EG/sifr/crates/sifr/tests/e2e/fail/type_mismatch.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/5.json",
+          "result": {
+            "cpu_time_ms": 2100.0,
+            "cycles_elapsed": 6172332836,
+            "duration_ms": 2148.136332980357,
+            "exit_code": 1,
+            "peak_rss_bytes": 185139200,
+            "retired_instructions": 20645274502,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        }
+      ],
+      "rejection_reasons": [],
+      "size_advisory": {
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null
+      },
+      "work_baseline": {
+        "baseline_median_instructions": 13601964578,
+        "baseline_peak_rss_bytes": 147193856,
+        "benchmark_id": "diagnostic-non-regression-002-json-diagnostic-schema",
+        "budget_id": "perf.diagnostic.json_diagnostic_schema",
+        "threshold_median_instructions": 13874003870,
+        "threshold_peak_rss_bytes": 180748288
+      }
+    },
+    {
+      "accepted_attempt": 1,
+      "budget_id": "perf.formatter.corpus.project_check",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache_policy": {},
+      "case_manifest": {
+        "budget_id": "perf.formatter.corpus.project_check",
+        "evidence_category": "formatter-project",
+        "expected_exit_codes": [
+          0
+        ],
+        "group": "formatter",
+        "id": "formatter-corpus-001-project-check",
+        "kind": "command",
+        "measured": 5,
+        "mode": "fmt-check",
+        "source_path": "verification/areas/performance/formatter_project",
+        "timeout_ms": 60000,
+        "warmups": 1
+      },
+      "checks": {
+        "cache": true,
+        "instructions": false,
+        "rss": true,
+        "stability": true,
+        "timeout_exit": true
+      },
+      "id": "formatter-corpus-001-project-check",
+      "instruction_lower_bound": 46170688,
+      "instruction_uncertainty": 229842,
+      "latency_enforced": false,
+      "metric_boundary": "Five complete command processes; warmup validated but excluded from every budget metric.",
+      "metrics": {
+        "coefficient_variation": 0.085107,
+        "instructions_coefficient_variation": 0.001977,
+        "instructions_mad": 76614,
+        "mad_ms": 1.123,
+        "median_cycles_per_instruction": 0.394076,
+        "median_instructions": 46400530,
+        "median_ms": 22.427,
+        "p95_instructions": 46567248,
+        "p95_ms": 25.621,
+        "peak_rss_bytes": 14860288
+      },
+      "raw_receipts": [
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_project"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-corpus-001-project-check/0.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 23710093,
+            "duration_ms": 24.469582946039736,
+            "exit_code": 0,
+            "peak_rss_bytes": 14778368,
+            "retired_instructions": 53022906,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "warmup"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_project"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-corpus-001-project-check/1.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 18351042,
+            "duration_ms": 22.427499992772937,
+            "exit_code": 0,
+            "peak_rss_bytes": 14860288,
+            "retired_instructions": 46567248,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_project"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-corpus-001-project-check/2.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 20214523,
+            "duration_ms": 25.62070800922811,
+            "exit_code": 0,
+            "peak_rss_bytes": 14794752,
+            "retired_instructions": 46400530,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_project"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-corpus-001-project-check/3.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 17263361,
+            "duration_ms": 21.304875030182302,
+            "exit_code": 0,
+            "peak_rss_bytes": 14860288,
+            "retired_instructions": 46437105,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_project"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-corpus-001-project-check/4.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 17487013,
+            "duration_ms": 22.758333012461662,
+            "exit_code": 0,
+            "peak_rss_bytes": 14860288,
+            "retired_instructions": 46323916,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_project"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-corpus-001-project-check/5.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 18260662,
+            "duration_ms": 19.85820906702429,
+            "exit_code": 0,
+            "peak_rss_bytes": 14761984,
+            "retired_instructions": 46314303,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        }
+      ],
+      "rejection_reasons": [],
+      "size_advisory": {
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null
+      },
+      "work_baseline": {
+        "baseline_median_instructions": 36059926,
+        "baseline_peak_rss_bytes": 11239424,
+        "benchmark_id": "formatter-corpus-001-project-check",
+        "budget_id": "perf.formatter.corpus.project_check",
+        "threshold_median_instructions": 38059926,
+        "threshold_peak_rss_bytes": 44793856
+      }
+    },
+    {
+      "accepted_attempt": 1,
+      "budget_id": "perf.formatter.large_file.check",
+      "cache": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache_policy": {},
+      "case_manifest": {
+        "budget_id": "perf.formatter.large_file.check",
+        "evidence_category": "formatter-large-file",
+        "expected_exit_codes": [
+          0
+        ],
+        "group": "formatter",
+        "id": "formatter-large-file-001-check",
+        "kind": "command",
+        "measured": 5,
+        "mode": "fmt-check",
+        "source_path": "verification/areas/performance/formatter_large_file.sifr",
+        "timeout_ms": 60000,
+        "warmups": 1
+      },
+      "checks": {
+        "cache": true,
+        "instructions": true,
+        "rss": true,
+        "stability": true,
+        "timeout_exit": true
+      },
+      "id": "formatter-large-file-001-check",
+      "instruction_lower_bound": 56282448,
+      "instruction_uncertainty": 143076,
+      "latency_enforced": false,
+      "metric_boundary": "Five complete command processes; warmup validated but excluded from every budget metric.",
+      "metrics": {
+        "coefficient_variation": 0.165599,
+        "instructions_coefficient_variation": 0.011314,
+        "instructions_mad": 47692,
+        "mad_ms": 2.253,
+        "median_cycles_per_instruction": 0.375471,
+        "median_instructions": 56425524,
+        "median_ms": 18.039,
+        "p95_instructions": 57996350,
+        "p95_ms": 23.771,
+        "peak_rss_bytes": 13058048
+      },
+      "raw_receipts": [
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_large_file.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-large-file-001-check/0.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 21843263,
+            "duration_ms": 26.481666951440275,
+            "exit_code": 0,
+            "peak_rss_bytes": 13058048,
+            "retired_instructions": 57243531,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "warmup"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_large_file.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-large-file-001-check/1.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 21198009,
+            "duration_ms": 19.91941698361188,
+            "exit_code": 0,
+            "peak_rss_bytes": 13041664,
+            "retired_instructions": 56457064,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_large_file.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-large-file-001-check/2.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 20223948,
+            "duration_ms": 15.34616609569639,
+            "exit_code": 0,
+            "peak_rss_bytes": 13041664,
+            "retired_instructions": 56377832,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_large_file.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-large-file-001-check/3.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 20828208,
+            "duration_ms": 18.03908299189061,
+            "exit_code": 0,
+            "peak_rss_bytes": 13008896,
+            "retired_instructions": 56425524,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_large_file.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-large-file-001-check/4.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 24388680,
+            "duration_ms": 15.786416013725102,
+            "exit_code": 0,
+            "peak_rss_bytes": 13025280,
+            "retired_instructions": 57996350,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/formatter_large_file.sifr"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/formatter-large-file-001-check/5.json",
+          "result": {
+            "cpu_time_ms": 0.0,
+            "cycles_elapsed": 21277482,
+            "duration_ms": 23.7711250083521,
+            "exit_code": 0,
+            "peak_rss_bytes": 13058048,
+            "retired_instructions": 56323790,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "measured"
+        }
+      ],
+      "rejection_reasons": [],
+      "size_advisory": {
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null
+      },
+      "work_baseline": {
+        "baseline_median_instructions": 57134110,
+        "baseline_peak_rss_bytes": 11419648,
+        "benchmark_id": "formatter-large-file-001-check",
+        "budget_id": "perf.formatter.large_file.check",
+        "threshold_median_instructions": 59134110,
+        "threshold_peak_rss_bytes": 44974080
+      }
+    },
+    {
+      "accepted_attempt": 1,
+      "budget_id": "perf.incremental.unchanged_file_update",
+      "cache": {
+        "hits": 2300,
+        "misses": 2300
+      },
+      "cache_policy": {
+        "min_hits": 2300
+      },
+      "case_manifest": {
+        "budget_id": "perf.incremental.unchanged_file_update",
+        "evidence_category": "cache-hit",
+        "group": "incremental-local-loop",
+        "id": "incremental-local-loop-001-unchanged-file-update",
+        "kind": "frontend-query",
+        "measured": 20,
+        "scenario": "incremental.unchanged_file_update",
+        "source_path": "verification/areas/performance/query_projects/edit_loop/main.sifr",
+        "timeout_ms": 30000,
+        "warmups": 3
+      },
+      "checks": {
+        "cache": true,
+        "instructions": true,
+        "rss": true,
+        "stability": true,
+        "timeout_exit": true
+      },
+      "id": "incremental-local-loop-001-unchanged-file-update",
+      "instruction_lower_bound": 847864692.5,
+      "instruction_uncertainty": 1359721.5,
+      "latency_enforced": false,
+      "metric_boundary": "RSS, latency and counters from aggregate 23 iterations; work from 20 independent complete processes each 4 iterations. Inner repetitions=100. No per-request instruction division.",
+      "metrics": {
+        "coefficient_variation": 0.066839,
+        "instructions_coefficient_variation": 0.00121,
+        "instructions_mad": 453240,
+        "mad_ms": 0.005,
+        "median_cycles_per_instruction": 0.303242,
+        "median_instructions": 849224414,
+        "median_ms": 0.183,
+        "p95_instructions": 851605694,
+        "p95_ms": 0.19,
+        "peak_rss_bytes": 6668288
+      },
+      "raw_receipts": [
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "23",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/0.json",
+          "result": {
+            "cpu_time_ms": 430.0,
+            "cycles_elapsed": 1442063516,
+            "duration_ms": 1079.403750016354,
+            "exit_code": 0,
+            "peak_rss_bytes": 6668288,
+            "retired_instructions": 4776279279,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "aggregate-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/1.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 260497817,
+            "duration_ms": 94.31537508498877,
+            "exit_code": 0,
+            "peak_rss_bytes": 6455296,
+            "retired_instructions": 851605694,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/2.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 256138034,
+            "duration_ms": 93.57641695532948,
+            "exit_code": 0,
+            "peak_rss_bytes": 6324224,
+            "retired_instructions": 848547546,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/3.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 257583936,
+            "duration_ms": 97.897749976255,
+            "exit_code": 0,
+            "peak_rss_bytes": 6455296,
+            "retired_instructions": 849649407,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/4.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 259703024,
+            "duration_ms": 95.13820800930262,
+            "exit_code": 0,
+            "peak_rss_bytes": 6455296,
+            "retired_instructions": 851137410,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/5.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 257367230,
+            "duration_ms": 95.82583303563297,
+            "exit_code": 0,
+            "peak_rss_bytes": 6406144,
+            "retired_instructions": 849276846,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/6.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 258787466,
+            "duration_ms": 98.48858299665153,
+            "exit_code": 0,
+            "peak_rss_bytes": 6471680,
+            "retired_instructions": 849403336,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/7.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 258962955,
+            "duration_ms": 94.74258299451321,
+            "exit_code": 0,
+            "peak_rss_bytes": 6422528,
+            "retired_instructions": 849459781,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/8.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 259381222,
+            "duration_ms": 96.47841693367809,
+            "exit_code": 0,
+            "peak_rss_bytes": 6356992,
+            "retired_instructions": 848924232,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/9.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 261068820,
+            "duration_ms": 94.36758293304592,
+            "exit_code": 0,
+            "peak_rss_bytes": 6373376,
+            "retired_instructions": 849171981,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/10.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 254534706,
+            "duration_ms": 93.7897500116378,
+            "exit_code": 0,
+            "peak_rss_bytes": 6389760,
+            "retired_instructions": 849000010,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/11.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 254524769,
+            "duration_ms": 95.08512506727129,
+            "exit_code": 0,
+            "peak_rss_bytes": 6324224,
+            "retired_instructions": 848415241,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/12.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 256173191,
+            "duration_ms": 95.03866697195917,
+            "exit_code": 0,
+            "peak_rss_bytes": 6340608,
+            "retired_instructions": 848879513,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/13.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 256477891,
+            "duration_ms": 94.24079197924584,
+            "exit_code": 0,
+            "peak_rss_bytes": 6356992,
+            "retired_instructions": 848674700,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/14.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 257939619,
+            "duration_ms": 97.54216601140797,
+            "exit_code": 0,
+            "peak_rss_bytes": 6438912,
+            "retired_instructions": 851060371,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/15.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 259355679,
+            "duration_ms": 95.67779209464788,
+            "exit_code": 0,
+            "peak_rss_bytes": 6291456,
+            "retired_instructions": 848531854,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/16.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 259604312,
+            "duration_ms": 94.78958300314844,
+            "exit_code": 0,
+            "peak_rss_bytes": 6389760,
+            "retired_instructions": 849357649,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/17.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 257731160,
+            "duration_ms": 96.88066702801734,
+            "exit_code": 0,
+            "peak_rss_bytes": 6488064,
+            "retired_instructions": 849705901,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/18.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 265909754,
+            "duration_ms": 100.82262509968132,
+            "exit_code": 0,
+            "peak_rss_bytes": 6488064,
+            "retired_instructions": 851827419,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/19.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 256272332,
+            "duration_ms": 94.36991694383323,
+            "exit_code": 0,
+            "peak_rss_bytes": 6324224,
+            "retired_instructions": 848456335,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "incremental.unchanged_file_update",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/edit_loop/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/20.json",
+          "result": {
+            "cpu_time_ms": 70.0,
+            "cycles_elapsed": 256216552,
+            "duration_ms": 97.04866702668369,
+            "exit_code": 0,
+            "peak_rss_bytes": 6373376,
+            "retired_instructions": 849116487,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        }
+      ],
+      "rejection_reasons": [],
+      "size_advisory": {
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null
+      },
+      "work_baseline": {
+        "baseline_median_instructions": 918442841,
+        "baseline_peak_rss_bytes": 5079040,
+        "benchmark_id": "incremental-local-loop-001-unchanged-file-update",
+        "budget_id": "perf.incremental.unchanged_file_update",
+        "threshold_median_instructions": 936811698,
+        "threshold_peak_rss_bytes": 38633472
+      }
+    },
+    {
+      "accepted_attempt": 1,
+      "budget_id": "perf.interactive.warm_diagnostics_query",
+      "cache": {
+        "hits": 2300,
+        "misses": 2300
+      },
+      "cache_policy": {
+        "min_hits": 2300
+      },
+      "case_manifest": {
+        "budget_id": "perf.interactive.warm_diagnostics_query",
+        "evidence_category": "editor-diagnostics",
+        "group": "interactive-tooling-foundation",
+        "id": "interactive-tooling-foundation-002-warm-diagnostics-query",
+        "kind": "frontend-query",
+        "measured": 20,
+        "scenario": "interactive.warm_diagnostics_query",
+        "source_path": "verification/areas/performance/query_projects/interactive/main.sifr",
+        "timeout_ms": 30000,
+        "warmups": 3
+      },
+      "checks": {
+        "cache": true,
+        "instructions": true,
+        "rss": true,
+        "stability": true,
+        "timeout_exit": true
+      },
+      "id": "interactive-tooling-foundation-002-warm-diagnostics-query",
+      "instruction_lower_bound": 1426929501.0,
+      "instruction_uncertainty": 3994563.0,
+      "latency_enforced": false,
+      "metric_boundary": "RSS, latency and counters from aggregate 23 iterations; work from 20 independent complete processes each 4 iterations. Inner repetitions=100. No per-request instruction division.",
+      "metrics": {
+        "coefficient_variation": 0.009534,
+        "instructions_coefficient_variation": 0.001017,
+        "instructions_mad": 1331521,
+        "mad_ms": 0.002,
+        "median_cycles_per_instruction": 0.28622,
+        "median_instructions": 1430924064,
+        "median_ms": 0.291,
+        "p95_instructions": 1433353254,
+        "p95_ms": 0.295,
+        "peak_rss_bytes": 10551296
+      },
+      "raw_receipts": [
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "23",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/0.json",
+          "result": {
+            "cpu_time_ms": 670.0,
+            "cycles_elapsed": 2281720228,
+            "duration_ms": 697.9996670270339,
+            "exit_code": 0,
+            "peak_rss_bytes": 10551296,
+            "retired_instructions": 8059598652,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "aggregate-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/1.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 406513892,
+            "duration_ms": 138.43295897822827,
+            "exit_code": 0,
+            "peak_rss_bytes": 10321920,
+            "retired_instructions": 1431711984,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/2.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 411249883,
+            "duration_ms": 144.50449997093529,
+            "exit_code": 0,
+            "peak_rss_bytes": 10338304,
+            "retired_instructions": 1432493872,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/3.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 411373832,
+            "duration_ms": 140.5689170351252,
+            "exit_code": 0,
+            "peak_rss_bytes": 10354688,
+            "retired_instructions": 1431699980,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/4.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 408992636,
+            "duration_ms": 139.40983300562948,
+            "exit_code": 0,
+            "peak_rss_bytes": 10371072,
+            "retired_instructions": 1433353254,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/5.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 411229590,
+            "duration_ms": 146.0647089406848,
+            "exit_code": 0,
+            "peak_rss_bytes": 10354688,
+            "retired_instructions": 1431419717,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/6.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 413033893,
+            "duration_ms": 147.03758305404335,
+            "exit_code": 0,
+            "peak_rss_bytes": 10354688,
+            "retired_instructions": 1433459053,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/7.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 413835918,
+            "duration_ms": 141.1607499467209,
+            "exit_code": 0,
+            "peak_rss_bytes": 10321920,
+            "retired_instructions": 1432816687,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/8.json",
+          "result": {
+            "cpu_time_ms": 110.0,
+            "cycles_elapsed": 405506596,
+            "duration_ms": 141.63287507835776,
+            "exit_code": 0,
+            "peak_rss_bytes": 10256384,
+            "retired_instructions": 1429545111,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/9.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 409424026,
+            "duration_ms": 140.7241669949144,
+            "exit_code": 0,
+            "peak_rss_bytes": 10387456,
+            "retired_instructions": 1429625023,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/10.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 408876068,
+            "duration_ms": 140.8316659508273,
+            "exit_code": 0,
+            "peak_rss_bytes": 10321920,
+            "retired_instructions": 1429045885,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/11.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 409477029,
+            "duration_ms": 145.21120802965015,
+            "exit_code": 0,
+            "peak_rss_bytes": 10321920,
+            "retired_instructions": 1430129434,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/12.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 414576171,
+            "duration_ms": 144.6038339054212,
+            "exit_code": 0,
+            "peak_rss_bytes": 10289152,
+            "retired_instructions": 1430428410,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/13.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 410043190,
+            "duration_ms": 142.73400011006743,
+            "exit_code": 0,
+            "peak_rss_bytes": 10371072,
+            "retired_instructions": 1429671890,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/14.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 406657053,
+            "duration_ms": 144.91029200144112,
+            "exit_code": 0,
+            "peak_rss_bytes": 10305536,
+            "retired_instructions": 1429318489,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/15.json",
+          "result": {
+            "cpu_time_ms": 110.0,
+            "cycles_elapsed": 403994879,
+            "duration_ms": 144.36162495985627,
+            "exit_code": 0,
+            "peak_rss_bytes": 10371072,
+            "retired_instructions": 1430205171,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/16.json",
+          "result": {
+            "cpu_time_ms": 110.0,
+            "cycles_elapsed": 407623854,
+            "duration_ms": 139.7900419542566,
+            "exit_code": 0,
+            "peak_rss_bytes": 10321920,
+            "retired_instructions": 1432457814,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/17.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 408676289,
+            "duration_ms": 138.75762501265854,
+            "exit_code": 0,
+            "peak_rss_bytes": 10338304,
+            "retired_instructions": 1432288065,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/18.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 408296965,
+            "duration_ms": 140.98083309363574,
+            "exit_code": 0,
+            "peak_rss_bytes": 10371072,
+            "retired_instructions": 1429829514,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/19.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 413136860,
+            "duration_ms": 138.6614580405876,
+            "exit_code": 0,
+            "peak_rss_bytes": 10289152,
+            "retired_instructions": 1430366633,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "/private/tmp/sifr-b44.rub8EG/sifr/target/debug/frontend_query_bench",
+            "interactive.warm_diagnostics_query",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/interactive/main.sifr",
+            "4",
+            "100"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/20.json",
+          "result": {
+            "cpu_time_ms": 120.0,
+            "cycles_elapsed": 409605063,
+            "duration_ms": 138.44050001353025,
+            "exit_code": 0,
+            "peak_rss_bytes": 10371072,
+            "retired_instructions": 1433208232,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        }
+      ],
+      "rejection_reasons": [],
+      "size_advisory": {
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null
+      },
+      "work_baseline": {
+        "baseline_median_instructions": 1451960168,
+        "baseline_peak_rss_bytes": 7962624,
+        "benchmark_id": "interactive-tooling-foundation-002-warm-diagnostics-query",
+        "budget_id": "perf.interactive.warm_diagnostics_query",
+        "threshold_median_instructions": 1480999372,
+        "threshold_peak_rss_bytes": 41517056
+      }
+    },
+    {
+      "accepted_attempt": 1,
+      "budget_id": "perf.lsp.diagnostics.document",
+      "cache": {
+        "hits": 0,
+        "misses": 23
+      },
+      "cache_policy": {},
+      "case_manifest": {
+        "budget_id": "perf.lsp.diagnostics.document",
+        "evidence_category": "lsp-diagnostics",
+        "group": "lsp-query",
+        "id": "lsp-query-003-diagnostics",
+        "inner_repetitions": 20,
+        "kind": "lsp-query",
+        "measured": 20,
+        "project_root": "verification/areas/performance/query_projects/lsp",
+        "scenario": "lsp.diagnostics",
+        "source_path": "verification/areas/performance/query_projects/lsp/src/main.sifr",
+        "timeout_ms": 60000,
+        "warmups": 3
+      },
+      "checks": {
+        "cache": true,
+        "instructions": true,
+        "rss": false,
+        "stability": true,
+        "timeout_exit": true
+      },
+      "id": "lsp-query-003-diagnostics",
+      "instruction_lower_bound": 362477769.67,
+      "instruction_uncertainty": 1821496.33,
+      "latency_enforced": false,
+      "metric_boundary": "RSS, latency and counters from aggregate 23 iterations; work from 20 independent complete processes each 4 iterations. Inner repetitions=20. No per-request instruction division.",
+      "metrics": {
+        "coefficient_variation": 0.020929,
+        "instructions_coefficient_variation": 0.003226,
+        "instructions_mad": 921526,
+        "mad_ms": 0.087,
+        "median_cycles_per_instruction": 0.50348,
+        "median_instructions": 364299266,
+        "median_ms": 4.67,
+        "p95_instructions": 365559580,
+        "p95_ms": 4.798,
+        "peak_rss_bytes": 150945792
+      },
+      "raw_receipts": [
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "23",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/0.json",
+          "result": {
+            "cpu_time_ms": 4010.0,
+            "cycles_elapsed": 305817601,
+            "duration_ms": 4052.3264999501407,
+            "exit_code": 0,
+            "peak_rss_bytes": 150945792,
+            "retired_instructions": 594093843,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "aggregate-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/1.json",
+          "result": {
+            "cpu_time_ms": 2230.0,
+            "cycles_elapsed": 185430113,
+            "duration_ms": 2271.0102919954807,
+            "exit_code": 0,
+            "peak_rss_bytes": 151109632,
+            "retired_instructions": 365212943,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/2.json",
+          "result": {
+            "cpu_time_ms": 2230.0,
+            "cycles_elapsed": 183668669,
+            "duration_ms": 2262.5986670609564,
+            "exit_code": 0,
+            "peak_rss_bytes": 151011328,
+            "retired_instructions": 364519446,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/3.json",
+          "result": {
+            "cpu_time_ms": 2230.0,
+            "cycles_elapsed": 186330248,
+            "duration_ms": 2264.834792003967,
+            "exit_code": 0,
+            "peak_rss_bytes": 150618112,
+            "retired_instructions": 364516855,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/4.json",
+          "result": {
+            "cpu_time_ms": 2200.0,
+            "cycles_elapsed": 175105572,
+            "duration_ms": 2233.9963329723105,
+            "exit_code": 0,
+            "peak_rss_bytes": 150323200,
+            "retired_instructions": 363643768,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/5.json",
+          "result": {
+            "cpu_time_ms": 2210.0,
+            "cycles_elapsed": 183719875,
+            "duration_ms": 2244.059333926998,
+            "exit_code": 0,
+            "peak_rss_bytes": 150896640,
+            "retired_instructions": 364098473,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/6.json",
+          "result": {
+            "cpu_time_ms": 2280.0,
+            "cycles_elapsed": 198205763,
+            "duration_ms": 2334.016958018765,
+            "exit_code": 0,
+            "peak_rss_bytes": 151437312,
+            "retired_instructions": 365559580,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/7.json",
+          "result": {
+            "cpu_time_ms": 2180.0,
+            "cycles_elapsed": 182862071,
+            "duration_ms": 2223.1023750500754,
+            "exit_code": 0,
+            "peak_rss_bytes": 150781952,
+            "retired_instructions": 365349610,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/8.json",
+          "result": {
+            "cpu_time_ms": 2180.0,
+            "cycles_elapsed": 183222727,
+            "duration_ms": 2211.588083067909,
+            "exit_code": 0,
+            "peak_rss_bytes": 151453696,
+            "retired_instructions": 364191121,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/9.json",
+          "result": {
+            "cpu_time_ms": 2190.0,
+            "cycles_elapsed": 180382956,
+            "duration_ms": 2228.4350829431787,
+            "exit_code": 0,
+            "peak_rss_bytes": 151715840,
+            "retired_instructions": 364676234,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/10.json",
+          "result": {
+            "cpu_time_ms": 2210.0,
+            "cycles_elapsed": 184015423,
+            "duration_ms": 2257.1997919585556,
+            "exit_code": 0,
+            "peak_rss_bytes": 151175168,
+            "retired_instructions": 364407410,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/11.json",
+          "result": {
+            "cpu_time_ms": 2190.0,
+            "cycles_elapsed": 181603665,
+            "duration_ms": 2233.6920000379905,
+            "exit_code": 0,
+            "peak_rss_bytes": 151011328,
+            "retired_instructions": 362315483,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/12.json",
+          "result": {
+            "cpu_time_ms": 2190.0,
+            "cycles_elapsed": 184225415,
+            "duration_ms": 2220.6173749873415,
+            "exit_code": 0,
+            "peak_rss_bytes": 150487040,
+            "retired_instructions": 363031389,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/13.json",
+          "result": {
+            "cpu_time_ms": 2200.0,
+            "cycles_elapsed": 182171198,
+            "duration_ms": 2252.7984579792246,
+            "exit_code": 0,
+            "peak_rss_bytes": 151502848,
+            "retired_instructions": 362265364,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/14.json",
+          "result": {
+            "cpu_time_ms": 2210.0,
+            "cycles_elapsed": 174740751,
+            "duration_ms": 2247.6105829700828,
+            "exit_code": 0,
+            "peak_rss_bytes": 150962176,
+            "retired_instructions": 361971375,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/15.json",
+          "result": {
+            "cpu_time_ms": 2210.0,
+            "cycles_elapsed": 175375610,
+            "duration_ms": 2251.6701669665053,
+            "exit_code": 0,
+            "peak_rss_bytes": 151945216,
+            "retired_instructions": 362814021,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/16.json",
+          "result": {
+            "cpu_time_ms": 2210.0,
+            "cycles_elapsed": 178735235,
+            "duration_ms": 2251.052833045833,
+            "exit_code": 0,
+            "peak_rss_bytes": 151175168,
+            "retired_instructions": 363683355,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/17.json",
+          "result": {
+            "cpu_time_ms": 2250.0,
+            "cycles_elapsed": 189482409,
+            "duration_ms": 2286.2709580222145,
+            "exit_code": 0,
+            "peak_rss_bytes": 151191552,
+            "retired_instructions": 362550100,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/18.json",
+          "result": {
+            "cpu_time_ms": 2250.0,
+            "cycles_elapsed": 193646176,
+            "duration_ms": 2283.1614169990644,
+            "exit_code": 0,
+            "peak_rss_bytes": 149749760,
+            "retired_instructions": 365934135,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/19.json",
+          "result": {
+            "cpu_time_ms": 2220.0,
+            "cycles_elapsed": 185768065,
+            "duration_ms": 2264.242500066757,
+            "exit_code": 0,
+            "peak_rss_bytes": 150880256,
+            "retired_instructions": 364898498,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        },
+        {
+          "command": [
+            "python3",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/lsp_query_bench.py",
+            "lsp.diagnostics",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp",
+            "/private/tmp/sifr-b44.rub8EG/sifr/verification/areas/performance/query_projects/lsp/src/main.sifr",
+            "4",
+            "20"
+          ],
+          "path": "/private/tmp/sifr-b44.rub8EG/sifr/target/performance/bench-1788881948-87646/attempts/1/samples/lsp-query-003-diagnostics/20.json",
+          "result": {
+            "cpu_time_ms": 2210.0,
+            "cycles_elapsed": 177422452,
+            "duration_ms": 2245.672916993499,
+            "exit_code": 0,
+            "peak_rss_bytes": 150945792,
+            "retired_instructions": 365228641,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "role": "work-sample-with-internal-warmups"
+        }
+      ],
+      "rejection_reasons": [],
+      "size_advisory": {
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null
+      },
+      "work_baseline": {
+        "baseline_median_instructions": 382809470,
+        "baseline_peak_rss_bytes": 75038720,
+        "benchmark_id": "lsp-query-003-diagnostics",
+        "budget_id": "perf.lsp.diagnostics.document",
+        "threshold_median_instructions": 390465660,
+        "threshold_peak_rss_bytes": 108593152
+      }
+    }
+  ],
+  "units": "Darwin rusage RSS bytes, retired instructions raw integers. Peak memory footprint is a different field. Wall times ms are advisory in work mode.",
+  "violations": [
+    {
+      "id": "build-single-file-001-break-continue",
+      "metric": "rss"
+    },
+    {
+      "id": "check-project-004-project-graph",
+      "metric": "instructions"
+    },
+    {
+      "id": "check-project-004-project-graph",
+      "metric": "rss"
+    },
+    {
+      "id": "check-single-file-001-arithmetic",
+      "metric": "instructions"
+    },
+    {
+      "id": "check-single-file-001-arithmetic",
+      "metric": "rss"
+    },
+    {
+      "id": "diagnostic-non-regression-002-json-diagnostic-schema",
+      "metric": "instructions"
+    },
+    {
+      "id": "diagnostic-non-regression-002-json-diagnostic-schema",
+      "metric": "rss"
+    },
+    {
+      "id": "formatter-corpus-001-project-check",
+      "metric": "instructions"
+    },
+    {
+      "id": "lsp-query-003-diagnostics",
+      "metric": "rss"
+    }
+  ],
+  "work_baseline_metadata": {
+    "host": {
+      "architecture": "arm64",
+      "host_os": "macOS-26.6-arm64-arm-64bit-Mach-O",
+      "rss_counter_source": "darwin-rusage-process-tree",
+      "work_counter_source": "darwin-rusage-instructions"
+    },
+    "instruction_threshold_rule": "max(baseline_median_instructions * 1.02, baseline_median_instructions + 2000000)",
+    "rss_threshold_rule": "max(baseline_peak_rss_bytes * 1.10, baseline_peak_rss_bytes + 33554432)",
+    "runner_version": 1,
+    "source_commit": "b59fb265cf58327e0018778b39e5cd5001bd6edd",
+    "version": 1
+  }
+}
