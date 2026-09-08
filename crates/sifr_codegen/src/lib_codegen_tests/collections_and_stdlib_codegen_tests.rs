@@ -633,7 +633,12 @@ fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
     assert!(generate_block.contains("inline_codegen_result("));
     assert!(assembly_src.contains("let rendered_support = render_support("));
     assert!(assembly_src.contains("split_leading_imports("));
-    assert!(assembly_src.contains("if let Err(error) = syn::parse_file(&assembled)"));
+    assert!(assembly_src.contains("session.validate(&assembled, support)"));
+    assert!(assembly_src.contains("syn::parse_file(&assembled).map(|_| ())"));
+    assert!(assembly_src.contains("if let Err(error) = validation"));
+    assert!(
+        assembly_src.contains("failed to parse inline support assembled by the canonical renderer")
+    );
     assert!(!generate_block.contains("assert_output_drained("));
     assert!(!generate_block.contains("emitter.output"));
 }
