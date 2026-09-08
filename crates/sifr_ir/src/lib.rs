@@ -4,6 +4,7 @@
 //! Lowering construction algorithms remain in the producer crate.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
+pub mod b50_phase_diagnostic;
 pub mod cfg;
 pub mod diagnostic_types;
 pub mod flow_graph;

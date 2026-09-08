@@ -17,7 +17,9 @@ pub(in crate::lower) fn lower_module_impl(
     externals: &ExternalDefs,
     mut ctx: LowerCtx,
 ) -> Result<LoweringResult, Vec<HirDiagnostic>> {
+    let b50_externals = sifr_ir::b50_phase_diagnostic::span(sifr_ir::b50_phase_diagnostic::Phase::LowerExternals);
     ctx.externals = externals.clone();
+    drop(b50_externals);
     // Register built-in functions
     register_builtins(&mut ctx);
     integer_literal_diagnostics::validate_module_integer_literals(stmts, &mut ctx);

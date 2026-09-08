@@ -10,6 +10,7 @@ pub(crate) fn get_or_init_stdlib_cache(
     cache: &OnceLock<Result<Arc<StdlibCompiled>, Vec<RenderedDiagnostic>>>,
     build: impl FnOnce() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>>,
 ) -> Result<Arc<StdlibCompiled>, Vec<RenderedDiagnostic>> {
+    let _b50_cache = sifr_ir::b50_phase_diagnostic::span(sifr_ir::b50_phase_diagnostic::Phase::Cache);
     cache
         .get_or_init(|| build().map(Arc::new))
         .as_ref()
@@ -22,6 +23,7 @@ pub(crate) fn project_stdlib_cache<T>(
     build: impl FnOnce() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>>,
     project: impl FnOnce(&StdlibCompiled) -> T,
 ) -> Result<T, Vec<RenderedDiagnostic>> {
+    let _b50_cache = sifr_ir::b50_phase_diagnostic::span(sifr_ir::b50_phase_diagnostic::Phase::Cache);
     cache
         .get_or_init(|| build().map(Arc::new))
         .as_ref()

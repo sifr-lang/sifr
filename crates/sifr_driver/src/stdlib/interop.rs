@@ -27,6 +27,7 @@ pub(crate) fn build_stdlib_rust_interop(
     sysroot: Option<ResolvedSysroot>,
     modules: &[PendingStdlibInteropModule<'_>],
 ) -> StdlibRustInterop {
+    let _b50_plan = sifr_ir::b50_phase_diagnostic::span(sifr_ir::b50_phase_diagnostic::Phase::PrivatePlan);
     if modules.is_empty() {
         return StdlibRustInterop {
             sysroot,

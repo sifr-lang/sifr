@@ -5,6 +5,7 @@ use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_
 use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::{StdlibCode, StdlibRustSource};
+use sifr_ir::b50_phase_diagnostic::{self as b50, Phase};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{
     ExternalDefs, HirFunction, HirParam, canonicalize_user_export_type,
@@ -35,6 +36,8 @@ pub fn external_defs() -> Result<ExternalDefs, Vec<RenderedDiagnostic>> {
 }
 
 pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
+    let _b50_bootstrap = b50::span(Phase::Bootstrap);
+    let b50_inventory = b50::span(Phase::Inventory);
     let sysroot = sifr_sysroot::resolve_sysroot(None).map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
             error.boundary_message(),
@@ -47,6 +50,7 @@ pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDi
             DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
         )]
     })?;
+    drop(b50_inventory);
     compile_stdlib_sources_with_sysroot(&sources, sysroot)
 }
 
@@ -61,7 +65,9 @@ fn compile_stdlib_sources_with_sysroot(
 
     for stdlib_source in sources {
         let module_name = stdlib_source.module.as_str();
+        let _b50_module = b50::module(module_name);
         let source_name = stdlib_source.path.display().to_string();
+        let b50_parse = b50::span(Phase::Parse);
         let parsed = match parse_module_raw(stdlib_source.source.as_str(), Some(&source_name)) {
             Ok(parsed) => {
                 if !parsed.has_valid_syntax() {
@@ -95,6 +101,8 @@ fn compile_stdlib_sources_with_sysroot(
                     .collect());
             }
         };
+        drop(b50_parse);
+        let b50_lower = b50::span(Phase::Lowering);
         let mut result = match lower_stdlib_source(stdlib_source, parsed.suite(), &stdlib_defs) {
             Ok(result) => result,
             Err(errors) => {
@@ -114,6 +122,8 @@ fn compile_stdlib_sources_with_sysroot(
                 return Err(diagnostics);
             }
         };
+        drop(b50_lower);
+        let b50_canonical = b50::span(Phase::Canonicalization);
         let private_declaration = stdlib_source.kind == LoadedStdlibSourceKind::PrivateDeclaration;
         let local_classes = result
             .module
@@ -123,9 +133,12 @@ fn compile_stdlib_sources_with_sysroot(
             .collect::<HashMap<_, _>>();
         canonicalize_stdlib_hir_signatures(&mut result.module, module_name, &local_classes);
         let module = std::sync::Arc::new(result.module);
+        drop(b50_canonical);
+        let b50_pending = b50::span(Phase::PrivatePlan);
         if let Some(pending) = pending_private_interop_module(stdlib_source, &module) {
             private_interop_modules.push(pending);
         }
+        drop(b50_pending);
         if private_declaration
             && module.functions.is_empty()
             && module.constants.is_empty()
@@ -135,6 +148,7 @@ fn compile_stdlib_sources_with_sysroot(
             continue;
         }
 
+        let b50_exports = b50::span(Phase::Exports);
         let mut transitive_deps_for_module = HashSet::new();
 
         let mut fn_exports = HashMap::new();
@@ -321,10 +335,12 @@ fn compile_stdlib_sources_with_sysroot(
             }
         }
 
+        drop(b50_exports);
         let has_pure_sifr_code = !module.functions.is_empty()
             || !module.constants.is_empty()
             || !module.classes.is_empty();
         if has_pure_sifr_code {
+            let b50_emission = b50::span(Phase::Emission);
             let codegen_result = run_codegen_with_boundary(
                 format!(
                     "internal compiler panic during stdlib code generation for '{module_name}'"
@@ -342,6 +358,8 @@ fn compile_stdlib_sources_with_sysroot(
                 diagnostic.message = format!("[stdlib:{module_name}] {}", diagnostic.message);
                 vec![diagnostic]
             })?;
+            drop(b50_emission);
+            let _b50_metadata = b50::span(Phase::Metadata);
             let rust_source = stdlib_rust_source(
                 module_name,
                 stdlib_source,
@@ -470,6 +488,7 @@ fn compile_stdlib_sources_with_sysroot(
                 .insert(module_name.to_string(), class_templates);
         }
 
+        let _b50_publish = b50::span(Phase::Exports);
         if !transitive_deps_for_module.is_empty() {
             stdlib_code
                 .transitive_deps

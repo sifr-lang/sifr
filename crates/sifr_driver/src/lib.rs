@@ -8,6 +8,7 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 mod build;
+pub use sifr_ir::b50_phase_diagnostic;
 mod diagnostics;
 mod export_policy;
 mod frontend;
