@@ -2,6 +2,50 @@
 
 Status: active
 
+## Item12K-B38: coherent acquisition and batch qualification (2026-09-08)
+
+**B38 MERGED / SCOPED QUALIFICATION COMPLETE; blocker none.**
+[PR3820](https://github.com/sifr-lang/sifr/pull/3820) merged as
+`ab16c6687bb65bed22e1d3bead3a0682ce67ef2b`. Exact reviewed/validated candidate
+`f7e0f1fdb5a74862f5c3be1671263e66264db693`, base
+`5614f06c8ff49411dd8d0b8107e6479e4274ec96`. The reviewed record blob is unchanged
+at merge; unrelated Item70 main additions do not invalidate B38 evidence.
+Complete [B38 scoped record](ad-hoc-emitted-rust-b38-acquisition-reconciliation.md).
+
+B37-F2/F3 addressed together: initial ps/native disagreement retained, coherent
+native identity/watch/current-chain acquisition before authority, and batch
+departure corroboration across all subjects sharing at most2 fresh snapshots /
+6 seconds /64 subjects. Producer, ack replay, cleanup and terminal output use
+the same receipts. Native debugserver identity uses its exact canonical path.
+No arbitrary parent/foreign-group acceptance, helper exemption, ps-only signal
+authority, absent-event exit inference or historical transition claim.
+
+Named offline PASS493/493 (all443 retained+50), four same-suite invocations with
+every receipt/source preserved. Sole live proof PASS23.172343459s, one LLDB/
+target84958, one handover, all8 ordered hits,15events, actual exit0/exact2files
+and canonical output.71 custody observations/no rejection; no race required
+resampling in this live schedule, so offline tests own F2/F3 race coverage.
+Independent fresh native-before/fullps/native-after verifies all4 owned PID/
+groups absent, ESRCH/no matching rows, watcher/monitor false; capacity released.
+
+External root `/private/tmp/sifr-b38.tJeQq1/evidence`: offline SHA256
+`6d7608448544a9bcd5adb4a695daec04e5376c34a95964773a729927ecd4a93e`, frozen351
+manifest `b0574fafb39f089037ffd0698ebb997aa5851563adeee158e8a2000b5a88bf34`,
+outcome `9f4b4255badb50c1c00ec63b55e1584de3b6588ecb344cc62c5e3b5b3da8ede5`,
+fresh release `8e252fea58fd176550699c29143b55bb81c7b2f03906fec940146b24b9190978`.
+One initial Opus SATISFIED/no blockers; zero remediation/provider retries.
+[Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3820#issuecomment-5583126928),
+response `404c9a4aeb793936a714caba04301b73b00af2601814fff454c78f2ff17a6b41`.
+Diff/HIR/file-size PASS3767, maximum external source611. No Sifr gates under the
+explicit Markdown-only rule. B38-F1/F2 suggestions, F3 inherited validation
+boundary and F4 honest live-coverage limitation are recorded for later owner3776,
+without implementing any follow-up. Parent/predecessor files/indexes/refs remain
+untouched. Phase-record update reuses the completed review and validation.
+
+B37's original failure stays INCONCLUSIVE. Full B24 causal/representative budget,
+B27 joint source delivery/builtin fix/exact65, SQL and the original emitted-Rust
+phase remain OPEN. Finish this record-only merge and terminal callback, then STOP.
+
 ## Item12K-B36: sampled native custody lifecycle (2026-09-08)
 
 **B36 MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.**

@@ -1,7 +1,57 @@
 # 12K-B38: coherent acquisition and batch corroboration
 
 Date: 2026-09-08. Owner: performance / issue3776.
-State: offline and sole live qualification PASS; exact-SHA review/merge pending.
+State: MERGED / B38 COMPLETE; blocker none. Full phase remains open.
+
+## Merge, exact-SHA review and deferred work
+
+[PR3820](https://github.com/sifr-lang/sifr/pull/3820) merged as
+`ab16c6687bb65bed22e1d3bead3a0682ce67ef2b`. Final reviewed/validated candidate
+`f7e0f1fdb5a74862f5c3be1671263e66264db693`, base
+`5614f06c8ff49411dd8d0b8107e6479e4274ec96`. The reviewed record blob is identical
+at merge; intervening main changes were confined to unrelated Item70 archive
+adapter files and records, with no effect on B38's inputs or evidence.
+
+One initial Opus **SATISFIED**, no blocking findings, zero remediation reviews
+and zero provider retries. The reviewer inspected actual frozen apparatus,
+all351 input hashes, inherited modules/assertions, raw qualification/release
+evidence and validation. Full
+[review](https://github.com/sifr-lang/sifr/pull/3820#issuecomment-5583126928),
+external E/`opus-review-f7e0f1fdb5a74862f5c3be1671263e66264db693.md`, SHA256
+`404c9a4aeb793936a714caba04301b73b00af2601814fff454c78f2ff17a6b41`.
+E/`review-manifest-f7e0f1fdb5a74862f5c3be1671263e66264db693.json`, SHA256
+`2593af88f08777153f259a4651be3b8aa5e12b1018499660d27a1189272d5488`, binds
+the exact candidate to actual source, offline, live and release evidence.
+
+Named checks on the final candidate: diff whitespace PASS, HIR maintainability
+PASS, repository file-size PASS3767, maximum external maintained source611 lines.
+No create-PR or Sifr merge gate: Git changes only Markdown, as explicitly directed.
+Proof/observer/watchdog/Opus processes are released. This record-only update
+reuses evidence and does not require another external review or broad gate.
+
+Nonblocking Opus follow-ups are separately recorded for performance / issue3776;
+none is implemented or required to close B38:
+
+- **B38-F1 — suggestions, apparatus readability:** remove the redundant root-
+  absence guard at `coverage_native.py:129`, unused imports in B38 tests, ancestry
+  variable shadowing at `coverage_custody.py:299`, and the dead integer-key lookup
+  at `coverage_acquisition.py:149`. No mechanism change is authorized here.
+- **B38-F2 — test-coverage suggestion:** directly exercise the implemented new-
+  descendant rejection at `coverage_acquisition.py:140`; the approved B38 evidence
+  enumeration did not require that additional case.
+- **B38-F3 — pre-existing validation boundary:** the inherited no-reconciliation
+  path does not validate the new redundant `initial_sample` field or the six-
+  second total native bracket. `checked_record` still validates its before/after
+  identity evidence; no regression or B38 blocker was found.
+- **B38-F4 — live coverage limitation:** this proof needed no F2/F3 resampling.
+  The named offline suite owns those races. Any later live race qualification
+  needs separate scope; this record does not claim live batch-path coverage.
+
+Counters: one suite family/four invocations, final493/493; one actual LLDB/target
+proof PASS; native process tests0; initial/remediation Opus1/0; provider retries0;
+compiler/build/Cargo/CV/counter/Sifr gates0; next-item code0. Finish the phase
+record merge and immutable terminal callback, then STOP. B24/B27/SQL/original
+phase remains OPEN.
 
 ## Sole live outcome and verified release
 
