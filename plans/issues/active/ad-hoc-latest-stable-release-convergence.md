@@ -6,6 +6,33 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
+### Item 70-F1A — durable backend capability and implementation readiness
+
+Assessment complete; exact-SHA review and merge pending. The coordinator
+authorized this read-only metadata/docs unit independently of compiler/policy
+delivery. The [assessment](ad-hoc-latest-stable-item70-f1a-backend-readiness.md)
+records scoped repository/org/four-environment API identities, secret names
+only, and AWS's unavailable current identity. No suitable existing durable
+backend or independent retained copy was verified. This is a coverage-limited
+finding, not a claim that no account or storage exists.
+
+Official-sourced R2 indefinite-lock and S3 Object Lock alternatives include
+cost and concrete access actions for coordinator disposition; no provisioning,
+settings change, credential read, test upload or publication occurred. Later
+70-F1B is registered as an independently ready offline manifest/readback
+contract with exact planned focused tests. Later 70-F1C owns actual selected
+backend/copy delivery and online proof; 70-F1D owns producer integration and
+NEW qualification after compiler/accepted solo-policy delivery. No later item
+is implemented or started here. Historical Items 59/64 remain unqualified.
+
+Owned base `65b8ec51d2e23435cd71716d16f07bb6fbcd5977`, independent clone
+`/private/tmp/sifr-item70-f1a.SSOhNS/codebase`, branch
+`codex/latest-stable-item70-f1a`. Only two Markdown files change. Named checks:
+diff, file-size guardrail, local links/paths and exact source/API metadata
+identities. No Cargo, native execution, historical search, Sifr gate or
+qualification. One Opus review, at most one remediation; merge assessment,
+record evidence without another review/gate, then stop.
+
 ### Item 70 — merged bounded recovery assessment / authorized disposition
 
 The current historical evidence disposition is INCOMPLETE/UNRECOVERED.
