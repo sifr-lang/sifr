@@ -2,6 +2,28 @@
 
 Status: active
 
+## Item12K-B34: static custody evidence contract (2026-09-08)
+
+Exactly B32-F2, performance / issue3776. Static/offline implementation complete,
+awaiting exact-SHA review and scoped merge. The
+[B34 contract](ad-hoc-emitted-rust-b34-custody-evidence.md) preserves first and
+conflicting process rows, compared values, timestamps, ancestry/group/custody
+state, immutable initial cleanup identities and shared acknowledgement/output
+consumers. B33 module resolution is retained in the complete owned apparatus.
+
+Registered suite PASS349/349 (all299 inherited plus50 custody/integration cases),
+after a retained344-case pass and pre-review ancestor-cleanup hardening; one
+suite family, two invocations. Frozen external manifest
+`f54cda93e7518f6d234fd12afd30b3c74098e4020692a3ebb808e3ec7688127e`
+under `/private/tmp/sifr-b34.nVIi3L/evidence`. Only Markdown enters Git, so zero
+create-pr/merge gates. No live process/proof/session/launch/attach/continue.
+
+B32's missing conflicting row, cause and ordering remain UNKNOWN; historical
+proof stays INCONCLUSIVE and output acceptance UNREACHED. The scoped contract
+contains a concrete later combined-proof proposal, with no execution allowance
+or host reservation. B24, SQL/B27 and the full phase remain open. Stop after this
+item's merge and phase-record update; no next-item implementation.
+
 ## Item12K-B33: static module-instance contract (2026-09-08)
 
 **B33 MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.**
