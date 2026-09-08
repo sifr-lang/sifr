@@ -2,6 +2,24 @@
 
 Status: active
 
+## Item12K-B24: bounded experiment registration (2026-09-08)
+
+B24 is unqualified and unmerged. The sole worker has registered a proposed
+[startup instruction-boundary experiment](ad-hoc-emitted-rust-b24-experiment-registration.md)
+from main `491ba4ede1609ce476831015dc209a9064cd8ffc` in independent clone
+`/private/tmp/sifr-b24.4MtvfE/sifr`. Initial source/evidence reading authenticated
+B23/B22/B20/B19/original98480 terminal identities. No compiler build, diagnostic
+target launch, benchmark acquisition, test suite, Opus review or Sifr gate has
+run. Only this scoped record and registration are authored; the parent's dirty
+ledgers and all predecessor sources/targets remain read-only.
+
+Next action is the orchestrator's concrete experiment-scope decision and the
+coordinator's validation-window allocation, then continuation by this same B24
+worker. This is not a user-authorization blocker or B24 closure. Owner3776's
+attributable cause and unchanged controlled formatter/representative/budget
+acceptance remain outstanding. B27 and every next-item implementation stay out
+of scope; all predecessor review/gate counters remain unchanged.
+
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
 **B23 MERGED / COMPLETE; blocker none.**
