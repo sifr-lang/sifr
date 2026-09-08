@@ -2,6 +2,68 @@
 
 Status: active
 
+## 12K-B25 terminal: independent builtin registration blocked (2026-09-08)
+
+State: implementation preserved; NOT qualified, NOT reviewed, NOT merged.
+Implementation PR: none. Independent clone `/private/tmp/sifr-b25.MUmZ3C/codebase`,
+source branch `codex/item12k-b25-builtin-registration`, base
+`3a7bf16a722912eedc63e1b6d3942b62b65784ce`, frozen candidate
+`64847befe1722df5848a7ca99e913431f5797d0b`. Scope is the complete three-file
+closure and assertions registered in
+[the B21 assessment](ad-hoc-builtin-registration-delivery-assessment.md).
+The retained reference is `8e532f15895e7005fae8c658739ba3c3a6818c18`;
+no M1, Python, SQL, B20, fixture, workflow, lock or submodule change was imported.
+Parent dirty documents and every predecessor clone/ref/target remain read-only.
+
+After the coordinator explicitly released capacity following Item65's natural
+terminal and zero-process confirmation, B25 ran its named commands sequentially
+with owned TMPDIR and `CARGO_TARGET_DIR` unset. Preflight found a clean exact
+candidate, no private target and 143 GiB free. Results:
+
+- `cargo test -p sifr_codegen corpus_repair_builtin_registration`: PASS, 2/2.
+  Raw `/private/tmp/sifr-b25.MUmZ3C/evidence/focused.log`, SHA256
+  `2a95c66bb2d02a30312cb8b1a810994cb2eade243327b044333e3b51f2a0c33a`.
+- `cargo test -p sifr_codegen`: FAIL, 1,409 passed / 2 failed, exit 101.
+  Raw `/private/tmp/sifr-b25.MUmZ3C/evidence/codegen.log`, SHA256
+  `7976234006e427308dfb721c4945b3c6e57d19248f8c71b4e70fc5ecb0879e59`.
+  Failures are `lib_codegen_tests::collections_and_stdlib_codegen_tests::test_list_repeat_lowers_without_vec_mul_shape`
+  and `lib_codegen_tests::performance_codegen_tests::single_element_list_repeat_uses_std_repeat_not_extend_loop`.
+
+These exact two failures are already owned by this issue's
+[Naming cleanup validation findings](#naming-cleanup-validation-findings-2026-09-05).
+Both tests expect `std::iter::repeat(SifrInt::from_i64(0))`; the existing
+`stmt_support_emitter/stmt_expr_binop.rs` emits an extend loop. The two test files
+and producer are unchanged between B25's exact base and candidate. The first
+test uses single-file metadata generation, outside the changed project registry.
+This is an out-of-B25-scope predecessor failure, not authority to repair list
+repetition. No rerun or broader fix was attempted.
+
+The named launcher stopped naturally on that failure. Both exact driver tests,
+workspace Clippy and Cargo formatting were UNREACHED. Initial Opus reviews 0,
+remediation reviews 0, provider retries 0, create-PR gates 0, merge gates 0.
+No historical review or failed-gate allowance is reset. No code approval or
+complete qualification is claimed. Only documentation/record guards may follow
+the stop; their receipts live beside the raw logs.
+
+The independently reported full-profile prerequisite also remains unresolved:
+Item65's binding-authoring/callback-examples/async-declaration-examples/
+async-context-examples failures belong to existing retained 12H/PR3697,
+12I/PR3698 and M1/PR3700 repairs. Reported 12H source candidate is
+`9b52ac20094608c8a31f252db99e49ef7c963384`; all three PRs remain open.
+B25's single merge gate stays HELD and unspent; it must not knowingly encounter
+that demonstrated unresolved prerequisite. No reduced profile, duplicate fix,
+blind stack cherry-pick or new gate quota follows from this terminal.
+
+The owner confirmed no remaining B25 compiler/test processes and returned the
+validation window to coordinator `01a07d84-7c62-77f0-b7c7-ecf310829a11`.
+The parent callback received the blocker and preserved source identities.
+External source audit and terminal evidence are under
+`/private/tmp/sifr-b25.MUmZ3C/evidence`; final receipt is `terminal.json`.
+Next action belongs to the parent: scope one subsequent integration/delivery
+assessment using the existing list-repetition owner and retained Python repairs.
+Do not start that work in B25, close the wider phase/PR3694/PR3717/corpus48/3776,
+or treat this source checkpoint as main delivery. This B25 worker stops here.
+
 ## Current orchestration: 12K-B21 independent builtin assessment (2026-09-08)
 
 **12K-B21 MERGED / COMPLETE.** Documentation PR
