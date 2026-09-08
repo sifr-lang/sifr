@@ -46,6 +46,8 @@ from .schemas import (
 )
 from .step_budgets import run_self_test as step_budget_self_test
 
+GOVERNANCE_SCHEMA_COUNT = 20
+
 
 def run_all() -> list[str]:
     checks = [
@@ -92,7 +94,7 @@ def _schema_self_test() -> None:
         Path(__file__).resolve().parents[3] / "verification" / "areas" / "distribution_release" / "schemas"
     )
     governed = [lint_schema(path) for path in sorted(governance_schemas.glob("*.schema.json"))]
-    if len(governed) != 19:
+    if len(governed) != GOVERNANCE_SCHEMA_COUNT:
         raise AssertionError("release-governance schema lint registration drifted")
     try:
         validate_schema_requirement({"type": "object", "oneOf": []}, Path("bad.schema.json"))

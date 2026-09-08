@@ -362,6 +362,8 @@ def mutate(
 
 
 def test_schemas_use_epoch_two() -> None:
+    from .schema_epoch import check_schema_declaration
+
     def contains_default_keyword(value: Any) -> bool:
         if isinstance(value, dict):
             return "default" in value or any(
@@ -375,8 +377,7 @@ def test_schemas_use_epoch_two() -> None:
     assert schema_paths
     for path in schema_paths:
         schema = json.loads(path.read_text(encoding="utf-8"))
-        assert "schema_version" in schema["required"], path
-        assert schema["properties"]["schema_version"] == {"const": 2}, path
+        check_schema_declaration(path, schema)
         assert not contains_default_keyword(schema), path
         assert '"rc"' not in path.read_text(encoding="utf-8"), path
     validate_schema_contracts()

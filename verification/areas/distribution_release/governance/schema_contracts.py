@@ -171,8 +171,11 @@ def validate_schema_contracts() -> None:
 
 
 def schema_fixtures() -> dict[str, Any]:
+    from .archive_offline_selftest import archive_schema_example
+
     index = preview_index()
     return {
+        "release_evidence_archive.schema.json": archive_schema_example(),
         "qualification_artifact_index.schema.json": qualification_index(),
         "protected_release_drill_evidence.schema.json": protected_drill_evidence(),
         "release_index.schema.json": index,
