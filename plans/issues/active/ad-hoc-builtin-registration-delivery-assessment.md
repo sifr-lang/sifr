@@ -251,6 +251,8 @@ on the strength of this narrow delivery. SQL's owner owns its own fresh validati
 
 B21's source audit, immutable identities, command-name checks, named documentation
 validation and bounded Opus review live under `/private/tmp/sifr-b21.csIcGN/evidence`.
-The phase record receives the exact B21 candidate, PR, review/validation hashes,
-merge and final record after review/merge. Only documentation changed; no Sifr
-gate is permitted. After that record, B21 stops without starting B25.
+The [phase terminal record](ad-hoc-emitted-rust-excellence.md) now records merged
+B21 PR3787, exact candidate/base/merge and all review/validation hashes. One
+initial Opus review is SATISFIED, with no blocker or remediation. Only
+documentation changed; no Sifr gate ran. B21 is complete and stops here;
+B25 remains unstarted and dependency65 retains its active validation window.
