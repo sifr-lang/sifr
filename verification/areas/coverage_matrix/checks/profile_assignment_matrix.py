@@ -8,13 +8,19 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from sifr_verify.profiles import (
+    DELIVERY_PROFILE_NAMES,
+    ProfileError,
+    validate_python_delivery_coverage,
+)
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 AREA_ROOT = REPO_ROOT / "verification" / "areas" / "coverage_matrix"
 MATRIX_PATH = AREA_ROOT / "profile_assignment_matrix.json"
 SURFACE_MATRIX_PATH = AREA_ROOT / "compiler_surface_matrix.json"
 PROFILES_DIR = REPO_ROOT / "verification" / "profiles"
 AREA_ROOTS = REPO_ROOT / "verification" / "areas"
-PROFILE_NAMES = ("create-pr", "merge", "nightly", "release")
+PROFILE_NAMES = DELIVERY_PROFILE_NAMES
 
 
 def main() -> int:
@@ -29,6 +35,12 @@ def main() -> int:
     area_suites = load_area_suites(errors)
     release_suites = load_release_surface_suites(area_suites, errors)
     profiles = {profile: load_profile(profile, errors) for profile in PROFILE_NAMES}
+    python_manifest = load_json(AREA_ROOTS / "python_interop" / "manifest.json", errors)
+    python_delivery_suites = 0
+    try:
+        python_delivery_suites = validate_python_delivery_coverage(profiles, python_manifest)
+    except ProfileError as error:
+        errors.append(str(error))
     profile_suites = {
         profile: selected_area_suite_tokens(payload)
         for profile, payload in profiles.items()
@@ -86,7 +98,10 @@ def main() -> int:
         for error in errors:
             print(f"profile-assignment-matrix error: {error}", file=sys.stderr)
         return 1
-    print(f"profile assignment matrix ok: rows={len(rows)}")
+    print(
+        f"profile assignment matrix ok: rows={len(rows)} "
+        f"python-delivery-suites={python_delivery_suites}"
+    )
     return 0
 
 

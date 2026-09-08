@@ -4,16 +4,18 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 import tempfile
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import date
+from functools import partial
 from io import StringIO
 from pathlib import Path
 from typing import Any, Callable
 
 import coverage_matrix
 import profile_assignment_matrix
-from sifr_verify.profiles import compare_plans
+from sifr_verify.profiles import ProfileError, compare_plans, validate_python_delivery_coverage
 
 
 OWNERS = {
@@ -65,6 +67,8 @@ def main() -> int:
         ("missing SQL test target", missing_sql_test_target, "target lacks classification: test:runtime_types"),
     ]
     failed: list[str] = []
+    python_delivery_tests = python_delivery_coverage_tests()
+    tests.extend(python_delivery_tests)
     for name, func, expected in tests:
         errors = func()
         if not any(expected in error for error in errors):
@@ -73,8 +77,81 @@ def main() -> int:
         for failure in failed:
             print(f"coverage matrix self-test: {failure}")
         return 1
-    print(f"coverage matrix readiness self-tests ok: cases={len(tests)}")
+    print(
+        f"coverage matrix readiness self-tests ok: cases={len(tests)} "
+        f"python-delivery-mutations={len(python_delivery_tests)}"
+    )
     return 0
+
+
+def python_delivery_coverage_tests() -> list[tuple[str, Callable[[], list[str]], str]]:
+    manifest = json.loads(
+        (profile_assignment_matrix.AREA_ROOTS / "python_interop" / "manifest.json").read_text()
+    )
+    errors: list[str] = []
+    profiles = {
+        name: profile_assignment_matrix.load_profile(name, errors)
+        for name in profile_assignment_matrix.PROFILE_NAMES
+    }
+    if errors:
+        raise AssertionError(errors)
+    validate_python_delivery_coverage(profiles, manifest)
+    # Discover mutations from the manifest, independently of assignment data.
+    non_live = [
+        suite["name"]
+        for suite in manifest["suites"]
+        if suite.get("network_mode", manifest["network_mode"]) != "live"
+    ]
+    tests = []
+    for suite in non_live:
+        removed = deepcopy(profiles)
+        for profile in removed.values():
+            for selection in profile.get("selected_areas", []):
+                if selection.get("area") == "python_interop":
+                    selection["suites"] = [name for name in selection["suites"] if name != suite]
+        # The opt-in live profile cannot supply delivery coverage.
+        removed["python-interop-live"] = {
+            "selected_areas": [{"area": "python_interop", "suites": [suite]}]
+        }
+        tests.append((
+            f"unassigned Python suite {suite}",
+            partial(python_delivery_errors, removed, manifest),
+            f"no delivery profile assignment: {suite}",
+        ))
+    extended = deepcopy(manifest)
+    extended["suites"].append({"name": "new-unassigned-suite", "network_mode": "offline"})
+    tests.append((
+        "new unassigned Python manifest suite",
+        partial(python_delivery_errors, profiles, extended),
+        "no delivery profile assignment: new-unassigned-suite",
+    ))
+    # One assignment is sufficient, including an offline override in a live area.
+    boundary_manifest = {
+        "name": "python_interop",
+        "network_mode": "live",
+        "suites": [
+            {"name": "offline-override", "network_mode": "offline"},
+            {"name": "inherited-live"},
+            {"name": "explicit-live", "network_mode": "live"},
+        ],
+    }
+    for name in profile_assignment_matrix.PROFILE_NAMES:
+        one_profile = {
+            name: {"selected_areas": [{"area": "python_interop", "suites": ["offline-override"]}]}
+        }
+        if validate_python_delivery_coverage(one_profile, boundary_manifest) != 1:
+            raise AssertionError("Python delivery suite count did not follow network policy")
+    return tests
+
+
+def python_delivery_errors(
+    profiles: dict[str, dict[str, Any]], manifest: dict[str, Any]
+) -> list[str]:
+    try:
+        validate_python_delivery_coverage(profiles, manifest)
+    except ProfileError as error:
+        return [str(error)]
+    return []
 
 
 def stable_guarantee_without_matrix_row() -> list[str]:
