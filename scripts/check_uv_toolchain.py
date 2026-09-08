@@ -25,7 +25,7 @@ EXCLUDED_PARTS = {
     "vendor", "third_party", "fixtures", "corpora", "snapshots", "target",
     ".venv", "plans",
 }
-# Release-qualified archive digest retained from Item 3 / PR #3495:
+# Qualified archive SHA-256 from the upstream release checksum asset:
 # https://github.com/astral-sh/uv/releases/download/0.12.5/
 # uv-x86_64-unknown-linux-gnu.tar.gz.sha256
 # A version/platform change must add its qualified digest explicitly. Never

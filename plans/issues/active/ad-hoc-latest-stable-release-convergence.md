@@ -6,6 +6,34 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
+### Item 67 — durable uv checksum comment provenance
+
+State: implementation candidate. Scope is the explanatory comment at
+`scripts/check_uv_toolchain.py:28`, owned by Item 38. The comment now identifies
+the upstream release checksum asset as the provenance of the qualified archive
+SHA-256. Its historical attribution remains Item 3 / [PR #3495](https://github.com/sifr-lang/sifr/pull/3495).
+The archive URL, digest, selected version and checker behavior are unchanged.
+No taxonomy rule, exemption, compiler, lockfile, fixture or workflow changes.
+
+This bounded prerequisite is tracked in
+[issue #3781](https://github.com/sifr-lang/sifr/issues/3781). Item 65 candidate
+`3c481750c977d182464cdd90932843eabaedbc48` encountered the delivery-plan wording
+in the named readiness check after all eight distribution suites passed. Its
+raw readiness log is retained outside Git at
+`/private/tmp/sifr-item65-resume.G7NlnI/readiness-1.log`, SHA-256
+`3c80f3d53a976fe3cfc90b9eca9f52cf1f3139c9a084a1167f7f3d3935dc7ed7`.
+That candidate and its unused review/gate allowances remain preserved.
+
+Named checks: `python3 scripts/check_uv_toolchain.py --self-test`;
+`python3 scripts/check_uv_toolchain.py`;
+`uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness`;
+`git diff --check`; `python3 scripts/check_file_size_guardrails.py`; local
+record link/path checks. Readiness requires a coordinated metadata-only Cargo
+window. One exact-SHA Opus review and at most one remediation apply. This
+comment-only source change requires no Sifr create-pr or merge gate under the
+user's file-category rule. Item 65 may resume only after this qualified merge;
+no Item 65 implementation or policy change is included here.
+
 ### Item 66 — feature-sensitive Rusqlite lock assertion prerequisite
 
 State: complete on 2026-09-08. No package-upgrade or E1 technical prerequisite.
