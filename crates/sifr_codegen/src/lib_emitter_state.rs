@@ -402,6 +402,7 @@ impl RustEmitter {
         module_name: Option<&str>,
     ) {
         let saved_module_name = self.current_module_name.clone();
+        let b51_setup = sifr_ir::b51_phase_diagnostic::span(sifr_ir::b51_phase_diagnostic::Phase::Setup);
         self.current_module_name = module_name.map(str::to_string);
 
         if self.reject_invalid_codegen_module_types(module) {
@@ -410,6 +411,7 @@ impl RustEmitter {
         }
 
         self.prescan_module_metadata(module);
+        drop(b51_setup);
 
         self.emit_module_constants(module, module_public);
         self.register_sifr_int_function_returns(module);

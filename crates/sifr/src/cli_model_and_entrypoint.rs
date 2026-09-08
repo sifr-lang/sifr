@@ -408,8 +408,10 @@ pub(crate) fn diagnostic_with_code(
 }
 
 pub(super) fn main() {
-    let cli = Cli::parse();
-    process::exit(run_cli(cli));
+    process::exit(sifr_driver::b51_phase_diagnostic::run_command(|| {
+        let cli = Cli::parse();
+        run_cli(cli)
+    }));
 }
 
 fn run_cli(cli: Cli) -> i32 {

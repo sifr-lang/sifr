@@ -2,6 +2,7 @@ use super::{ModuleSupportDemand, RustEmitter};
 use crate::StdlibCode;
 use crate::stdlib_import_signatures::register_imported_stdlib_signature;
 use sifr_ir::HirModule;
+use sifr_ir::b51_phase_diagnostic::{self as b51, Phase};
 use sifr_stdlib_manifest::StdlibFeature;
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -161,6 +162,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     project_structural_identity_expressions: Option<&HashMap<String, String>>,
     support_emission: SupportEmission,
 ) -> ModuleCodegenResult {
+    let b51_setup = b51::span(Phase::Setup);
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
     emitter.project_structural_record_identities = project_structural_record_identities.cloned();
@@ -235,6 +237,8 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         }
     }
 
+    drop(b51_setup);
+    let b51_types = b51::span(Phase::TypePasses);
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
     crate::lib_project_codegen::register_imported_union_types(&mut emitter, module, stdlib_code);
@@ -270,8 +274,12 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         emitter.generate_structural_record_definitions();
     }
 
+    drop(b51_types);
+    let b51_body = b51::span(Phase::HirBody);
     // Second pass: emit the actual code
     emitter.emit_named_module(module, false, false, module_name);
+    drop(b51_body);
+    let b51_structural = b51::span(Phase::StructuralPost);
     emitter.emit_imported_stdlib_structural_impls(module, stdlib_code);
     // Expression lowering can introduce canonical intermediate error unions.
     if let Some(owned_union_enums) = owned_union_enums {
@@ -285,6 +293,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     }
     emitter.generate_enum_definitions();
     let support_demand = ModuleSupportDemand::from_emitter(module, &emitter);
+    drop(b51_structural);
     if support_emission == SupportEmission::Deferred {
         return deferred_codegen_result(
             module,

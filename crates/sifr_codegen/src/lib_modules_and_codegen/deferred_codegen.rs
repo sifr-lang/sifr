@@ -13,6 +13,7 @@ use crate::{
     render_support, scope_async_main_cancellation,
 };
 use sifr_ir::HirModule;
+use sifr_ir::b51_phase_diagnostic::{self as b51, Phase};
 use sifr_stdlib_manifest::StdlibFeature;
 
 pub(super) fn deferred_codegen_result(
@@ -23,6 +24,7 @@ pub(super) fn deferred_codegen_result(
     structural_layout_location: ProjectStructuralLayoutLocation,
     has_project_structural_layout: bool,
 ) -> super::ModuleCodegenResult {
+    let b51_ir = b51::span(Phase::IrPasses);
     let mut body_items = emitter.enum_items.clone();
     body_items.extend(emitter.body_items.clone());
     if support_demand.runtime.async_python || support_demand.runtime.native_async_cleanup {
@@ -53,7 +55,11 @@ pub(super) fn deferred_codegen_result(
             .collect::<Vec<_>>()
             .join(" | ")
     );
+    drop(b51_ir);
+    let b51_render = b51::span(Phase::BodyRender);
     let module_body_source = Renderer::new().render_file(&RustFile { items: file_items });
+    drop(b51_render);
+    let _b51_assembly = b51::span(Phase::Assembly);
 
     let mut used_stdlib_modules = support_demand.directly_used_stdlib_modules();
     for module_name in support_demand.directly_used_stdlib_modules() {
@@ -101,7 +107,10 @@ pub(super) fn inline_codegen_result(
         structural_layout_location,
         has_project_structural_layout,
     );
+    let b51_support = b51::span(Phase::Support);
     let rendered_support = render_support(&generated.support_demand, stdlib_code);
+    drop(b51_support);
+    let b51_assembly = b51::span(Phase::Assembly);
     let support_imports = Renderer::new().render_file(&RustFile {
         items: render_import_items(&rendered_support.import_needs),
     });
@@ -131,9 +140,13 @@ pub(super) fn inline_codegen_result(
     .filter(|source| !source.is_empty())
     .collect::<Vec<_>>()
     .join("\n\n");
+    drop(b51_assembly);
+    let b51_parse = b51::span(Phase::FinalParse);
     if let Err(error) = syn::parse_file(&assembled) {
         panic!("failed to parse inline support assembled by the canonical renderer: {error}");
     }
+    drop(b51_parse);
+    let _b51_final_assembly = b51::span(Phase::Assembly);
     generated.rust_source = format!("{}\n", assembled.trim_end());
     generated
         .used_stdlib_modules

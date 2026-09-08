@@ -5,6 +5,7 @@ use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_
 use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::{StdlibCode, StdlibRustSource};
+use sifr_ir::b51_phase_diagnostic::{self as b51, Phase};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{
     ExternalDefs, HirFunction, HirParam, canonicalize_user_export_type,
@@ -35,6 +36,7 @@ pub fn external_defs() -> Result<ExternalDefs, Vec<RenderedDiagnostic>> {
 }
 
 pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
+    let _b51_bootstrap = b51::span(Phase::Bootstrap);
     let sysroot = sifr_sysroot::resolve_sysroot(None).map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
             error.boundary_message(),
@@ -61,6 +63,8 @@ fn compile_stdlib_sources_with_sysroot(
 
     for stdlib_source in sources {
         let module_name = stdlib_source.module.as_str();
+        let _b51_module = b51::module(module_name);
+        let _b51_module_bootstrap = b51::span(Phase::Bootstrap);
         let source_name = stdlib_source.path.display().to_string();
         let parsed = match parse_module_raw(stdlib_source.source.as_str(), Some(&source_name)) {
             Ok(parsed) => {
@@ -325,6 +329,7 @@ fn compile_stdlib_sources_with_sysroot(
             || !module.constants.is_empty()
             || !module.classes.is_empty();
         if has_pure_sifr_code {
+            let b51_emission = b51::span(Phase::Emission);
             let codegen_result = run_codegen_with_boundary(
                 format!(
                     "internal compiler panic during stdlib code generation for '{module_name}'"
@@ -342,6 +347,7 @@ fn compile_stdlib_sources_with_sysroot(
                 diagnostic.message = format!("[stdlib:{module_name}] {}", diagnostic.message);
                 vec![diagnostic]
             })?;
+            drop(b51_emission);
             let rust_source = stdlib_rust_source(
                 module_name,
                 stdlib_source,
