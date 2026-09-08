@@ -1,0 +1,1876 @@
+{
+  "index": 0,
+  "pid": 84536,
+  "warmup": true,
+  "state": "OBSERVED_UNDER_LLDB",
+  "events": [
+    {
+      "sequence": 0,
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 3304,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 429657,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 292037,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 147552,
+          "ri_lifetime_max_phys_footprint": 147552,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 147552,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 131072,
+          "ri_runnable_time": 4086,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 3304,
+          "ri_user_time": 0,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 1,
+      "kind": "library",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 8735,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 1168254,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 1598872,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 344160,
+          "ri_lifetime_max_phys_footprint": 344160,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 344160,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 770048,
+          "ri_runnable_time": 9610,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 6943,
+          "ri_user_time": 1792,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 2,
+      "kind": "library",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 11811,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 1586835,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 2244700,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 360544,
+          "ri_lifetime_max_phys_footprint": 360544,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 360544,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 786432,
+          "ri_runnable_time": 12875,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 8128,
+          "ri_user_time": 3683,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 3,
+      "kind": "handover",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 13626,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 1832212,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 2480469,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 360592,
+          "ri_lifetime_max_phys_footprint": 360592,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 360592,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 753664,
+          "ri_runnable_time": 14826,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 9476,
+          "ri_user_time": 4150,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 4,
+      "kind": "handover-mode0",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 14172,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 1906129,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 2526155,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 360592,
+          "ri_lifetime_max_phys_footprint": 360592,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 360592,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 770048,
+          "ri_runnable_time": 15481,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 9995,
+          "ri_user_time": 4177,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 5,
+      "kind": "library",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 19481,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 2643308,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 3303202,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 508096,
+          "ri_lifetime_max_phys_footprint": 508096,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 508096,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 1409024,
+          "ri_runnable_time": 21075,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 13885,
+          "ri_user_time": 5596,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 6,
+      "kind": "entry",
+      "label": "prepare",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 26584,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 3606370,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 4289239,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 508096,
+          "ri_lifetime_max_phys_footprint": 508096,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 295080,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 770048,
+          "ri_runnable_time": 28348,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 20131,
+          "ri_user_time": 6453,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 7,
+      "kind": "entry",
+      "label": "fixups",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 35494,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 4818123,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 6417124,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 508096,
+          "ri_lifetime_max_phys_footprint": 508096,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 327848,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 983040,
+          "ri_runnable_time": 37474,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 24594,
+          "ri_user_time": 10900,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 8,
+      "kind": "entry",
+      "label": "generic",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 51147,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 7002983,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 14221191,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 508096,
+          "ri_lifetime_max_phys_footprint": 508096,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 344256,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 1130496,
+          "ri_runnable_time": 53548,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 26866,
+          "ri_user_time": 24281,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 9,
+      "kind": "return",
+      "label": "generic",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 86584,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 11981625,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 25688918,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 2097344,
+          "ri_lifetime_max_phys_footprint": 2097344,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 2097344,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 2916352,
+          "ri_runnable_time": 89316,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 55382,
+          "ri_user_time": 31202,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 10,
+      "kind": "return",
+      "label": "fixups",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 87532,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 12110428,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 25775599,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 2097344,
+          "ri_lifetime_max_phys_footprint": 2097344,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 2097344,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 2916352,
+          "ri_runnable_time": 90446,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 56251,
+          "ri_user_time": 31281,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 11,
+      "kind": "library",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 93949,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 12983177,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 27235170,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 2326864,
+          "ri_lifetime_max_phys_footprint": 2326864,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 2326864,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 3276800,
+          "ri_runnable_time": 96924,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 60010,
+          "ri_user_time": 33939,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 12,
+      "kind": "entry",
+      "label": "libsystem",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 99141,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 13679199,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 27916076,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 2326864,
+          "ri_lifetime_max_phys_footprint": 2326864,
+          "ri_logical_writes": 0,
+          "ri_pageins": 0,
+          "ri_phys_footprint": 2261304,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 3522560,
+          "ri_runnable_time": 102391,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 64107,
+          "ri_user_time": 35034,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 13,
+      "kind": "entry",
+      "label": "sanitizers",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 102735,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 14165147,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 28407244,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 2441576,
+          "ri_lifetime_max_phys_footprint": 2441576,
+          "ri_logical_writes": 0,
+          "ri_pageins": 3,
+          "ri_phys_footprint": 2441576,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 4079616,
+          "ri_runnable_time": 106212,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 67229,
+          "ri_user_time": 35506,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 14,
+      "kind": "return",
+      "label": "sanitizers",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 0,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 104270,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 14351233,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 28542258,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 2474392,
+          "ri_lifetime_max_phys_footprint": 2474392,
+          "ri_logical_writes": 0,
+          "ri_pageins": 3,
+          "ri_phys_footprint": 2474392,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 4128768,
+          "ri_runnable_time": 108067,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 68651,
+          "ri_user_time": 35619,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 15,
+      "kind": "return",
+      "label": "libsystem",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 3273,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 121129,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 16729261,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 31725301,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 2965936,
+          "ri_lifetime_max_phys_footprint": 2965936,
+          "ri_logical_writes": 0,
+          "ri_pageins": 5,
+          "ri_phys_footprint": 2965936,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 6520832,
+          "ri_runnable_time": 125448,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 81299,
+          "ri_user_time": 39830,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 16,
+      "kind": "entry",
+      "label": "constructor",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 3273,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 124439,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 17165472,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 32350094,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 3015088,
+          "ri_lifetime_max_phys_footprint": 3015088,
+          "ri_logical_writes": 0,
+          "ri_pageins": 5,
+          "ri_phys_footprint": 2965936,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 6537216,
+          "ri_runnable_time": 128960,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 82674,
+          "ri_user_time": 41765,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 17,
+      "kind": "return",
+      "label": "prepare",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 3273,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 134292,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 18486737,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 34098623,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 3047880,
+          "ri_lifetime_max_phys_footprint": 3047880,
+          "ri_logical_writes": 0,
+          "ri_pageins": 5,
+          "ri_phys_footprint": 2998728,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 6963200,
+          "ri_runnable_time": 139236,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 91099,
+          "ri_user_time": 43193,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 18,
+      "kind": "entry",
+      "label": "main",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 3273,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 138136,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 19019912,
+          "ri_diskio_bytesread": 0,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 34489038,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 3047880,
+          "ri_lifetime_max_phys_footprint": 3047880,
+          "ri_logical_writes": 0,
+          "ri_pageins": 5,
+          "ri_phys_footprint": 3015112,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 7077888,
+          "ri_runnable_time": 143258,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 94507,
+          "ri_user_time": 43629,
+          "ri_wired_size": 0
+        }
+      }
+    },
+    {
+      "sequence": 19,
+      "kind": "entry",
+      "label": "completion",
+      "counter": {
+        "errno": 0,
+        "pid": 84536,
+        "status": 0,
+        "uuid": [
+          229,
+          39,
+          246,
+          142,
+          84,
+          249,
+          52,
+          99,
+          171,
+          197,
+          248,
+          200,
+          221,
+          136,
+          167,
+          37
+        ],
+        "values": {
+          "ri_billed_energy": 0,
+          "ri_billed_system_time": 3273,
+          "ri_child_elapsed_abstime": 0,
+          "ri_child_interrupt_wkups": 0,
+          "ri_child_pageins": 0,
+          "ri_child_pkg_idle_wkups": 0,
+          "ri_child_system_time": 0,
+          "ri_child_user_time": 0,
+          "ri_cpu_time_qos_background": 0,
+          "ri_cpu_time_qos_default": 0,
+          "ri_cpu_time_qos_legacy": 349271,
+          "ri_cpu_time_qos_maintenance": 0,
+          "ri_cpu_time_qos_user_initiated": 0,
+          "ri_cpu_time_qos_user_interactive": 0,
+          "ri_cpu_time_qos_utility": 0,
+          "ri_cycles": 48863467,
+          "ri_diskio_bytesread": 16384,
+          "ri_diskio_byteswritten": 0,
+          "ri_instructions": 74840858,
+          "ri_interrupt_wkups": 0,
+          "ri_interval_max_phys_footprint": 4768200,
+          "ri_lifetime_max_phys_footprint": 4768200,
+          "ri_logical_writes": 24576,
+          "ri_pageins": 5,
+          "ri_phys_footprint": 4768200,
+          "ri_pkg_idle_wkups": 0,
+          "ri_proc_exit_abstime": 0,
+          "ri_proc_start_abstime": 12526853730918,
+          "ri_resident_size": 17612800,
+          "ri_runnable_time": 355521,
+          "ri_serviced_energy": 0,
+          "ri_serviced_system_time": 0,
+          "ri_system_time": 265010,
+          "ri_user_time": 84261,
+          "ri_wired_size": 0
+        }
+      }
+    }
+  ],
+  "intervals": [
+    {
+      "caller": {
+        "cfa": 6101425200,
+        "executable": true,
+        "module": "/usr/lib/dyld",
+        "pc": 6558078308,
+        "uuid": "74E52480-C2BD-3C8D-812D-95FE2B74A096",
+        "valid": true
+      },
+      "entry_cfa": 6101420240,
+      "entry_pc": 6558106484,
+      "entry_sequence": 8,
+      "id": 2,
+      "label": "generic",
+      "return_sequence": 9,
+      "tid": 129556677
+    },
+    {
+      "caller": {
+        "cfa": 6101431760,
+        "executable": true,
+        "module": "/usr/lib/dyld",
+        "pc": 6557946768,
+        "uuid": "74E52480-C2BD-3C8D-812D-95FE2B74A096",
+        "valid": true
+      },
+      "entry_cfa": 6101425200,
+      "entry_pc": 6558077632,
+      "entry_sequence": 7,
+      "id": 1,
+      "label": "fixups",
+      "return_sequence": 10,
+      "tid": 129556677
+    },
+    {
+      "caller": {
+        "cfa": 6101418112,
+        "executable": true,
+        "module": "/usr/lib/libSystem.B.dylib",
+        "pc": 6828634904,
+        "uuid": "4FED5EE2-5D3E-35B1-A170-9859C4B683BB",
+        "valid": true
+      },
+      "entry_cfa": 6101418000,
+      "entry_pc": 10951534572,
+      "entry_sequence": 13,
+      "id": 4,
+      "label": "sanitizers",
+      "return_sequence": 14,
+      "tid": 129556677
+    },
+    {
+      "caller": {
+        "cfa": 6101418288,
+        "executable": true,
+        "module": "/usr/lib/dyld",
+        "pc": 6558132776,
+        "uuid": "74E52480-C2BD-3C8D-812D-95FE2B74A096",
+        "valid": true
+      },
+      "entry_cfa": 6101418112,
+      "entry_pc": 6828634716,
+      "entry_sequence": 12,
+      "id": 3,
+      "label": "libsystem",
+      "return_sequence": 15,
+      "tid": 129556677
+    },
+    {
+      "caller": {
+        "cfa": 6101431856,
+        "executable": true,
+        "module": "/usr/lib/dyld",
+        "pc": 6557944624,
+        "uuid": "74E52480-C2BD-3C8D-812D-95FE2B74A096",
+        "valid": true
+      },
+      "entry_cfa": 6101431760,
+      "entry_pc": 6557944652,
+      "entry_sequence": 6,
+      "id": 0,
+      "label": "prepare",
+      "return_sequence": 17,
+      "tid": 129556677
+    }
+  ],
+  "phases": [
+    {
+      "name": "constructor",
+      "values": {
+        "ri_instructions": 32515540,
+        "ri_cycles": 17381184,
+        "ri_user_time": 41850,
+        "ri_system_time": 84313
+      }
+    },
+    {
+      "name": "main",
+      "values": {
+        "ri_instructions": 34551958,
+        "ri_cycles": 19146993,
+        "ri_user_time": 43693,
+        "ri_system_time": 95389
+      }
+    },
+    {
+      "name": "cli.parsed",
+      "values": {
+        "ri_instructions": 46145495,
+        "ri_cycles": 27459750,
+        "ri_user_time": 56043,
+        "ri_system_time": 143683
+      }
+    },
+    {
+      "name": "fmt.entry",
+      "values": {
+        "ri_instructions": 46590364,
+        "ri_cycles": 27830638,
+        "ri_user_time": 56121,
+        "ri_system_time": 146146
+      }
+    },
+    {
+      "name": "config.done",
+      "values": {
+        "ri_instructions": 53140050,
+        "ri_cycles": 33536050,
+        "ri_user_time": 58880,
+        "ri_system_time": 183103
+      }
+    },
+    {
+      "name": "ignore.before.read",
+      "values": {
+        "ri_instructions": 53745508,
+        "ri_cycles": 34152386,
+        "ri_user_time": 59138,
+        "ri_system_time": 187066
+      }
+    },
+    {
+      "name": "ignore.after.read",
+      "values": {
+        "ri_instructions": 54112829,
+        "ri_cycles": 34521827,
+        "ri_user_time": 59471,
+        "ri_system_time": 189322
+      }
+    },
+    {
+      "name": "ignore.loaded",
+      "values": {
+        "ri_instructions": 58440440,
+        "ri_cycles": 37067102,
+        "ri_user_time": 65506,
+        "ri_system_time": 201844
+      }
+    },
+    {
+      "name": "match.before.rules",
+      "values": {
+        "ri_instructions": 60296635,
+        "ri_cycles": 38636506,
+        "ri_user_time": 66196,
+        "ri_system_time": 212414
+      }
+    },
+    {
+      "name": "match.after.rules",
+      "values": {
+        "ri_instructions": 62232732,
+        "ri_cycles": 39811018,
+        "ri_user_time": 69128,
+        "ri_system_time": 217527
+      }
+    },
+    {
+      "name": "match.engine.built",
+      "values": {
+        "ri_instructions": 63093714,
+        "ri_cycles": 40626180,
+        "ri_user_time": 69703,
+        "ri_system_time": 222535
+      }
+    },
+    {
+      "name": "match.done",
+      "values": {
+        "ri_instructions": 63287062,
+        "ri_cycles": 40793412,
+        "ri_user_time": 70020,
+        "ri_system_time": 223364
+      }
+    },
+    {
+      "name": "match.before.rules",
+      "values": {
+        "ri_instructions": 63484533,
+        "ri_cycles": 40914008,
+        "ri_user_time": 70199,
+        "ri_system_time": 224011
+      }
+    },
+    {
+      "name": "match.after.rules",
+      "values": {
+        "ri_instructions": 64612410,
+        "ri_cycles": 41281949,
+        "ri_user_time": 72678,
+        "ri_system_time": 224052
+      }
+    },
+    {
+      "name": "match.engine.built",
+      "values": {
+        "ri_instructions": 64650271,
+        "ri_cycles": 41299266,
+        "ri_user_time": 72758,
+        "ri_system_time": 224091
+      }
+    },
+    {
+      "name": "match.done",
+      "values": {
+        "ri_instructions": 64701983,
+        "ri_cycles": 41319539,
+        "ri_user_time": 72866,
+        "ri_system_time": 224121
+      }
+    },
+    {
+      "name": "files.selected",
+      "values": {
+        "ri_instructions": 64732536,
+        "ri_cycles": 41331481,
+        "ri_user_time": 72916,
+        "ri_system_time": 224153
+      }
+    },
+    {
+      "name": "file.before.read",
+      "values": {
+        "ri_instructions": 64751661,
+        "ri_cycles": 41336456,
+        "ri_user_time": 72922,
+        "ri_system_time": 224181
+      }
+    },
+    {
+      "name": "file.after.read",
+      "values": {
+        "ri_instructions": 65015088,
+        "ri_cycles": 41599410,
+        "ri_user_time": 73163,
+        "ri_system_time": 225801
+      }
+    },
+    {
+      "name": "file.after.check",
+      "values": {
+        "ri_instructions": 72189128,
+        "ri_cycles": 47332206,
+        "ri_user_time": 78632,
+        "ri_system_time": 259736
+      }
+    },
+    {
+      "name": "file.before.read",
+      "values": {
+        "ri_instructions": 72208696,
+        "ri_cycles": 47345477,
+        "ri_user_time": 78642,
+        "ri_system_time": 259817
+      }
+    },
+    {
+      "name": "file.after.read",
+      "values": {
+        "ri_instructions": 72487848,
+        "ri_cycles": 47528044,
+        "ri_user_time": 78802,
+        "ri_system_time": 260995
+      }
+    },
+    {
+      "name": "file.after.check",
+      "values": {
+        "ri_instructions": 74455840,
+        "ri_cycles": 48452623,
+        "ri_user_time": 84104,
+        "ri_system_time": 262306
+      }
+    },
+    {
+      "name": "cli.done",
+      "values": {
+        "ri_instructions": 74803279,
+        "ri_cycles": 48813170,
+        "ri_user_time": 84257,
+        "ri_system_time": 264663
+      }
+    }
+  ],
+  "raw_phases_equal_analysis": true,
+  "metrics": {
+    "ri_cycles": {
+      "measured_endpoint": 48863467,
+      "partition": {
+        "cli_parse": 8439838,
+        "completion_residual": 429090,
+        "config": 6076300,
+        "constructor_to_main_unassigned": 533175,
+        "discovery": 7795431,
+        "file_check_1": 5732796,
+        "file_check_2": 924579,
+        "file_read_1": 262954,
+        "file_read_2": 182567,
+        "fixups": 7292305,
+        "library_initialization": 3050062,
+        "loader_other": 4538000,
+        "measured_pre_first_stop_prefix": 429657,
+        "pre_prepare": 3176713,
+        "remaining_preconstructor": 0
+      }
+    },
+    "ri_diskio_bytesread": {
+      "measured_endpoint": 16384,
+      "partition": {
+        "constructor_to_main_unassigned": 0,
+        "fixups": 0,
+        "library_initialization": 0,
+        "loader_other": 0,
+        "main_to_completion_unassigned": 16384,
+        "measured_pre_first_stop_prefix": 0,
+        "pre_prepare": 0,
+        "remaining_preconstructor": 0
+      }
+    },
+    "ri_diskio_byteswritten": {
+      "measured_endpoint": 0,
+      "partition": {
+        "constructor_to_main_unassigned": 0,
+        "fixups": 0,
+        "library_initialization": 0,
+        "loader_other": 0,
+        "main_to_completion_unassigned": 0,
+        "measured_pre_first_stop_prefix": 0,
+        "pre_prepare": 0,
+        "remaining_preconstructor": 0
+      }
+    },
+    "ri_instructions": {
+      "measured_endpoint": 74840858,
+      "partition": {
+        "cli_parse": 11656457,
+        "completion_residual": 423711,
+        "config": 6994555,
+        "constructor_to_main_unassigned": 390415,
+        "discovery": 11592486,
+        "file_check_1": 7174040,
+        "file_check_2": 1967992,
+        "file_read_1": 263427,
+        "file_read_2": 279152,
+        "fixups": 19358475,
+        "library_initialization": 3809225,
+        "loader_other": 6641684,
+        "measured_pre_first_stop_prefix": 292037,
+        "pre_prepare": 3997202,
+        "remaining_preconstructor": 0
+      }
+    },
+    "ri_pageins": {
+      "measured_endpoint": 5,
+      "partition": {
+        "constructor_to_main_unassigned": 0,
+        "fixups": 0,
+        "library_initialization": 5,
+        "loader_other": 0,
+        "main_to_completion_unassigned": 0,
+        "measured_pre_first_stop_prefix": 0,
+        "pre_prepare": 0,
+        "remaining_preconstructor": 0
+      }
+    },
+    "ri_system_time": {
+      "measured_endpoint": 265010,
+      "partition": {
+        "cli_parse": 49176,
+        "completion_residual": 2813,
+        "config": 39420,
+        "constructor_to_main_unassigned": 3408,
+        "discovery": 41050,
+        "file_check_1": 33935,
+        "file_check_2": 1311,
+        "file_read_1": 1620,
+        "file_read_2": 1178,
+        "fixups": 31657,
+        "library_initialization": 17192,
+        "loader_other": 22119,
+        "measured_pre_first_stop_prefix": 3304,
+        "pre_prepare": 16827,
+        "remaining_preconstructor": 0
+      }
+    },
+    "ri_user_time": {
+      "measured_endpoint": 84261,
+      "partition": {
+        "cli_parse": 12414,
+        "completion_residual": 173,
+        "config": 2837,
+        "constructor_to_main_unassigned": 436,
+        "discovery": 14036,
+        "file_check_1": 5469,
+        "file_check_2": 5302,
+        "file_read_1": 241,
+        "file_read_2": 160,
+        "fixups": 20381,
+        "library_initialization": 4796,
+        "loader_other": 11563,
+        "measured_pre_first_stop_prefix": 0,
+        "pre_prepare": 6453,
+        "remaining_preconstructor": 0
+      }
+    }
+  },
+  "output_completion": {
+    "canonical_output_after_target_release": true,
+    "file_check_phases": 2,
+    "pid": 84536,
+    "release_native_sequence": 51,
+    "run_id": "12K-B40-urwpgv-target-0",
+    "session_still_owned": true,
+    "state": "PASS",
+    "streams": {
+      "stderr": {
+        "device": 16777233,
+        "fd": 2,
+        "inode": 757114709,
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/inferior.stderr",
+        "sha256": "d605545d7309a906bdd82422c4c6c1a4c15be3a51915d1ba70c2f0596b6f559c",
+        "size": 1361,
+        "uid": 501
+      },
+      "stdout": {
+        "device": 16777233,
+        "fd": 1,
+        "inode": 757114708,
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/inferior.stdout",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0,
+        "uid": 501
+      }
+    }
+  },
+  "receipts": {
+    "events.json": {
+      "ref": {
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/events.json",
+        "sha256": "57970c7d4287da2e1d6e2171f11915c84627e19157ab378b5ecf9a0a63928280"
+      },
+      "summary": {
+        "count": 20
+      }
+    },
+    "inferior.stderr": {
+      "ref": {
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/inferior.stderr",
+        "sha256": "d605545d7309a906bdd82422c4c6c1a4c15be3a51915d1ba70c2f0596b6f559c"
+      }
+    },
+    "counter-layout.json": {
+      "ref": {
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/counter-layout.json",
+        "sha256": "24eb87a67dd328ea7e334710a9554a95f490054f0e2b30e19f0c6e55c28b5f52"
+      },
+      "summary": {
+        "clock_limit": "raw rusage fields never compared with Python monotonic origins",
+        "declaration": "\n\tuint8_t  ri_uuid[16];\n\tuint64_t ri_user_time;\n\tuint64_t ri_system_time;\n\tuint64_t ri_pkg_idle_wkups;\n\tuint64_t ri_interrupt_wkups;\n\tuint64_t ri_pageins;\n\tuint64_t ri_wired_size;\n\tuint64_t ri_resident_size;\n\tuint64_t ri_phys_footprint;\n\tuint64_t ri_proc_start_abstime;\n\tuint64_t ri_proc_exit_abstime;\n\tuint64_t ri_child_user_time;\n\tuint64_t ri_child_system_time;\n\tuint64_t ri_child_pkg_idle_wkups;\n\tuint64_t ri_child_interrupt_wkups;\n\tuint64_t ri_child_pageins;\n\tuint64_t ri_child_elapsed_abstime;\n\tuint64_t ri_diskio_bytesread;\n\tuint64_t ri_diskio_byteswritten;\n\tuint64_t ri_cpu_time_qos_default;\n\tuint64_t ri_cpu_time_qos_maintenance;\n\tuint64_t ri_cpu_time_qos_background;\n\tuint64_t ri_cpu_time_qos_utility;\n\tuint64_t ri_cpu_time_qos_legacy;\n\tuint64_t ri_cpu_time_qos_user_initiated;\n\tuint64_t ri_cpu_time_qos_user_interactive;\n\tuint64_t ri_billed_system_time;\n\tuint64_t ri_serviced_system_time;\n\tuint64_t ri_logical_writes;\n\tuint64_t ri_lifetime_max_phys_footprint;\n\tuint64_t ri_instructions;\n\tuint64_t ri_cycles;\n\tuint64_t ri_billed_energy;\n\tuint64_t ri_serviced_energy;\n\tuint64_t ri_interval_max_phys_footprint;\n\tuint64_t ri_runnable_time;\n",
+        "fault_limit": "v4 supplies pageins; no minor/major-fault fields",
+        "flavor": 4,
+        "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/resource.h",
+        "sdk_sha256": "7d16930e6b75f11ba203238faa5580d31d48fcd4230f2b3f604aaa5fd7e86b58",
+        "size_bytes": 296,
+        "uuid": "16 raw bytes; not substituted for sampled native custody"
+      }
+    },
+    "observer-result.json": {
+      "ref": {
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/observer-result.json",
+        "sha256": "09077533a89c61a643d76b5114e288a6825d331cf56926ca7c1055dafa2a4ce4"
+      },
+      "summary": {
+        "clock": "embedded local elapsed only",
+        "elapsed_seconds": 17.619766249999998,
+        "event_count": 20,
+        "exit": 0,
+        "exited": true,
+        "final_phase": "active",
+        "handover_count": 1,
+        "index": 0,
+        "pid": 84536,
+        "python": "3.9.6 (default, May 22 2026, 11:13:45) \n[Clang 21.0.0 (clang-2100.1.1.101)]",
+        "run_id": "12K-B40-urwpgv-target-0",
+        "stage": "completion",
+        "state": "ENTRIES_COMPLETE",
+        "target_deleted": true,
+        "target_launches": 1,
+        "warmup": true
+      }
+    },
+    "custody-ack.json": {
+      "ref": {
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/custody-ack.json",
+        "sha256": "150dd9037e0f078945d4dfe94bff550059bef18ba9d3a7282f13e92cdc72b63a"
+      },
+      "summary": {
+        "run_id": "12K-B40-urwpgv-target-0",
+        "schema": "12K-B36-custody-v1",
+        "state": "ACTIVE"
+      }
+    },
+    "target-release.json": {
+      "ref": {
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/target-release.json",
+        "sha256": "ad13df8000ec799f0dc17a0596ab543ebab366fee99e0fcc988a1b4f0f33d044"
+      },
+      "summary": {
+        "groups_absent": true,
+        "native_sequence": 51,
+        "observation_index": 50,
+        "run_id": "12K-B40-urwpgv-target-0",
+        "state": "PASS"
+      }
+    },
+    "complete-inventory-release.json": {
+      "ref": {
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/complete-inventory-release.json",
+        "sha256": "c1b6eadcb668e88bfbfa44e1515da62b3c3bec08f9c377fc3ff0b8cfadeff336"
+      },
+      "summary": {
+        "authority": "absence only",
+        "current_probe_rule": "exact capture handle reaped; only post-capture native sample exists for a newly spawned probe",
+        "state": "PASS"
+      }
+    },
+    "next-ready.json": {
+      "ref": {
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/next-ready.json",
+        "sha256": "acc1509df91cc736131d603f5ecfb0198beac6c93bd015974d1a1b6a39a681d0"
+      },
+      "summary": {
+        "completion_sha256": "00d379042a6ad3796322458db425ab76ca6932db94e860647d5a220e3755a778",
+        "index": 0,
+        "release_sha256": "ad13df8000ec799f0dc17a0596ab543ebab366fee99e0fcc988a1b4f0f33d044",
+        "run_id": "12K-B40-urwpgv-target-0",
+        "state": "PASS"
+      }
+    },
+    "output-completion.json": {
+      "ref": {
+        "path": "/private/tmp/sifr-b40.urwpgv/evidence/boundaries/target-0/output-completion.json",
+        "sha256": "00d379042a6ad3796322458db425ab76ca6932db94e860647d5a220e3755a778"
+      },
+      "summary": {
+        "canonical_output_after_target_release": true,
+        "file_check_phases": 2,
+        "pid": 84536,
+        "release_native_sequence": 51,
+        "run_id": "12K-B40-urwpgv-target-0",
+        "session_still_owned": true,
+        "state": "PASS"
+      }
+    }
+  }
+}

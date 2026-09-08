@@ -1,0 +1,51 @@
+{
+  "item": "12K-B41",
+  "kind": "documentary hygiene and saved-evidence arithmetic only; no tests/gates or live observations",
+  "base": "4b4cc339964baeeb6641e57dc669fef700a5fa24",
+  "file_size": {
+    "command": "python3 scripts/check_file_size_guardrails.py",
+    "result": "PASS",
+    "files": 3770,
+    "limit": 900,
+    "self_test": false
+  },
+  "diff": {
+    "command": "git diff --cached --check",
+    "result": "PASS after removing trailing document blank line"
+  },
+  "source_change_check": {
+    "command": "git diff --name-only 4b4cc339964baeeb6641e57dc669fef700a5fa24 -- crates Cargo.lock verification scripts .github .gitignore sifr.toml",
+    "output": "",
+    "result": "unchanged"
+  },
+  "saved_arithmetic": {
+    "B19_all18_raw_instruction_matches": true,
+    "B20_all6_raw_phase_matches": true,
+    "B40_all6_raw_phase_matches": true,
+    "B40_events_per_target": 20,
+    "B40_checked_files_per_target": 2,
+    "B40_all6_instruction_partition_sums_equal_endpoints": true,
+    "B40_observed_population_CV": 0.009163502111575647,
+    "acceptance_claim": false
+  },
+  "ownership": {
+    "target_exists": false,
+    "alternates_exists": false,
+    "git_common_dir": ".git",
+    "parent_mutations": 0,
+    "predecessor_mutations": 0
+  },
+  "execution": {
+    "targets": 0,
+    "host_samples": 0,
+    "LLDB": 0,
+    "profilers": 0,
+    "builds": 0,
+    "tests": 0,
+    "Opus": 0,
+    "Sifr_gates": 0,
+    "PR": 0,
+    "merge": 0,
+    "production_edits": 0
+  }
+}

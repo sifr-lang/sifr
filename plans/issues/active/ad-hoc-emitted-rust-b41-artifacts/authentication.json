@@ -1,0 +1,57 @@
+{
+  "kind": "saved-file authentication only; no apparatus or tests executed",
+  "inventories": [
+    {
+      "item": "B19",
+      "terminal_sha256": "190df22816de0acdefcd6a438c1bac3a074d582fa52bbaed1e8a0befa2f27b05",
+      "inventory_path": "/private/tmp/sifr-b19.udje7q/evidence/artifact-inventory.json",
+      "inventory_sha256": "033993caeb243da175480360ac0d40cb7c354081112136e318225a5c2f0445b6",
+      "count": 52,
+      "mismatches": []
+    },
+    {
+      "item": "B20",
+      "terminal_sha256": "0b4fe5b32beb604527091fdfbeab9ff3b4b7dbd6d4d194e27ebb17d3260999dc",
+      "inventory_path": "/private/tmp/sifr-b20.bj6Au6/evidence/evidence-inventory.json",
+      "inventory_sha256": "31e42892a35d7d3bc5ef06b5fe826b66aea2b99c8d66b2ab83ab0b628cf97bf9",
+      "count": 1193,
+      "mismatches": []
+    },
+    {
+      "item": "B22",
+      "terminal_sha256": "c7b6be89344ed4b8587f70032521601e00c5423c40f5fa84c197e72c152aee6b",
+      "inventory_path": "/private/tmp/sifr-b22.gWLgQ9/evidence/evidence-inventory.json",
+      "inventory_sha256": "9a155b76c183e4cc4a0273c9f249472180ba655ded1be7898a3cccb3aee63425",
+      "count": 18,
+      "mismatches": []
+    },
+    {
+      "item": "B23",
+      "terminal_sha256": "95e4a1e05c2811c7404d12e0731f8967705a5bd5ff7a0956e9453ec1062cab55",
+      "inventory_path": "/private/tmp/sifr-b23.inohbu/evidence/evidence-inventory.json",
+      "inventory_sha256": "72afb330e4b82451a61671876c7d1e367995f0751ad37759f4e9ca7faae9140e",
+      "count": 17,
+      "mismatches": []
+    },
+    {
+      "item": "B40",
+      "name": "terminal_original",
+      "count": 1480,
+      "mismatches": []
+    },
+    {
+      "item": "B40",
+      "name": "terminal_supplements",
+      "count": 5,
+      "mismatches": []
+    },
+    {
+      "item": "B40",
+      "name": "frozen",
+      "count": 1360,
+      "mismatches": []
+    }
+  ],
+  "B40_terminal_sha256": "ec6174b69425e7a9b7997b9220b465e926fa829a3f56ad601d0e89d806e37142",
+  "unique_paths_read": 2796
+}

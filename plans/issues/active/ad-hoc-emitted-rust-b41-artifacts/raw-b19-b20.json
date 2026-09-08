@@ -1,0 +1,1692 @@
+{
+  "b19": [
+    {
+      "attempt": 1,
+      "population_cv": 0.048618,
+      "samples": [
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/1/samples/formatter-corpus-001-project-check/0.json",
+            "sha256": "57511fe327dbca4a194f715135e6f0e4833c893bc8d245bb7d3b6fac28e369b2"
+          },
+          "index": 0,
+          "warmup": true,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 10,
+            "cycles_elapsed": 37666468,
+            "duration_ms": 2109.3678749748506,
+            "exit_code": 0,
+            "peak_rss_bytes": 10452992,
+            "retired_instructions": 59022832,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/1/samples/formatter-corpus-001-project-check/1.json",
+            "sha256": "39b4698dfe1b22246b3ff4491988c968885d57228316fe9e8ad31286cca11edf"
+          },
+          "index": 1,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 20731980,
+            "duration_ms": 14.424332999624312,
+            "exit_code": 0,
+            "peak_rss_bytes": 10403840,
+            "retired_instructions": 40266907,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/1/samples/formatter-corpus-001-project-check/2.json",
+            "sha256": "38e2c0481afefe6c42431d4c9a650ece1235fb6dfd3422f0f5cf7d9dd18b6b56"
+          },
+          "index": 2,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 15075621,
+            "duration_ms": 15.962708974257112,
+            "exit_code": 0,
+            "peak_rss_bytes": 10436608,
+            "retired_instructions": 35670999,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/1/samples/formatter-corpus-001-project-check/3.json",
+            "sha256": "71405487fd25d1284c631f5a42d6cf122e0ad0e958c9d15ddee1e7ce38eb0b19"
+          },
+          "index": 3,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 16883215,
+            "duration_ms": 12.962375010829419,
+            "exit_code": 0,
+            "peak_rss_bytes": 10403840,
+            "retired_instructions": 36851371,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/1/samples/formatter-corpus-001-project-check/4.json",
+            "sha256": "4d8b320e8843abf0987b988b86365f20ede5f468ccb79092bf84edb8d47a710a"
+          },
+          "index": 4,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 14445063,
+            "duration_ms": 14.164040971081704,
+            "exit_code": 0,
+            "peak_rss_bytes": 10420224,
+            "retired_instructions": 36648653,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/1/samples/formatter-corpus-001-project-check/5.json",
+            "sha256": "fadd0d45c801e50f5596e3a316a819f428f37f1b07629ca0372e6874260aa56a"
+          },
+          "index": 5,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 14842526,
+            "duration_ms": 13.68774997536093,
+            "exit_code": 0,
+            "peak_rss_bytes": 10387456,
+            "retired_instructions": 35114068,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        }
+      ]
+    },
+    {
+      "attempt": 2,
+      "population_cv": 0.045376,
+      "samples": [
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/2/samples/formatter-corpus-001-project-check/0.json",
+            "sha256": "d78afa2bebffff98e68ce3648e99c3ef16e172ff92eafc1a7f816a2710bc2143"
+          },
+          "index": 0,
+          "warmup": true,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 13351119,
+            "duration_ms": 22.649958031252027,
+            "exit_code": 0,
+            "peak_rss_bytes": 10436608,
+            "retired_instructions": 34979179,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/2/samples/formatter-corpus-001-project-check/1.json",
+            "sha256": "7e8259125ab0fbb2ff7ffd4465656a8c57bc0cf925fb11e6aad44a262f1c2385"
+          },
+          "index": 1,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 12661456,
+            "duration_ms": 19.28962499368936,
+            "exit_code": 0,
+            "peak_rss_bytes": 10420224,
+            "retired_instructions": 34945033,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/2/samples/formatter-corpus-001-project-check/2.json",
+            "sha256": "055c940544545e2fc9f77014b351966de32457a679530406227889da15e0cb9d"
+          },
+          "index": 2,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 12389430,
+            "duration_ms": 19.221582973841578,
+            "exit_code": 0,
+            "peak_rss_bytes": 10387456,
+            "retired_instructions": 34959852,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/2/samples/formatter-corpus-001-project-check/3.json",
+            "sha256": "435a60d9927a3c603c79668d747d71f3761962e1dae7af5eb3b23f8b18b5451c"
+          },
+          "index": 3,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 11977778,
+            "duration_ms": 17.7936659893021,
+            "exit_code": 0,
+            "peak_rss_bytes": 10420224,
+            "retired_instructions": 34925573,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/2/samples/formatter-corpus-001-project-check/4.json",
+            "sha256": "d55f27bf52e370d4e7ab7c4b41919ff3c32072c3c815ce25cbd98014ffda6da8"
+          },
+          "index": 4,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 20177898,
+            "duration_ms": 21.814792009536177,
+            "exit_code": 0,
+            "peak_rss_bytes": 10420224,
+            "retired_instructions": 39009536,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/2/samples/formatter-corpus-001-project-check/5.json",
+            "sha256": "b55cafd7a9c77b31a97d54150c7dec41649f8ea2196203ebc842649e8f5dc294"
+          },
+          "index": 5,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 14289252,
+            "duration_ms": 20.769333001226187,
+            "exit_code": 0,
+            "peak_rss_bytes": 10403840,
+            "retired_instructions": 34980217,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        }
+      ]
+    },
+    {
+      "attempt": 3,
+      "population_cv": 0.042088,
+      "samples": [
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/3/samples/formatter-corpus-001-project-check/0.json",
+            "sha256": "e3b9da004e36e3f5fde0d041fb800f68610f723285e87cc5778cd21d3bcff7fe"
+          },
+          "index": 0,
+          "warmup": true,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 13997208,
+            "duration_ms": 20.512457995209843,
+            "exit_code": 0,
+            "peak_rss_bytes": 10420224,
+            "retired_instructions": 35030002,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/3/samples/formatter-corpus-001-project-check/1.json",
+            "sha256": "fa133f9dec738d6d4c5d4d3e5205badc8393665e27f0852008a705dde62a7e26"
+          },
+          "index": 1,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 16376852,
+            "duration_ms": 13.590833987109363,
+            "exit_code": 0,
+            "peak_rss_bytes": 10420224,
+            "retired_instructions": 36756464,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/3/samples/formatter-corpus-001-project-check/2.json",
+            "sha256": "16ac8fa897c18a39d4d71c0d73e506d78dfb179ca2dab08f9642b3badc37615a"
+          },
+          "index": 2,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 12873235,
+            "duration_ms": 13.09283304726705,
+            "exit_code": 0,
+            "peak_rss_bytes": 10403840,
+            "retired_instructions": 35017935,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/3/samples/formatter-corpus-001-project-check/3.json",
+            "sha256": "2c67685e3df75b2d5f8faef53bb9c6c8d9cea2ba3d18e5db44ecaf0dfeda1c7c"
+          },
+          "index": 3,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 12672331,
+            "duration_ms": 12.568125035613775,
+            "exit_code": 0,
+            "peak_rss_bytes": 10420224,
+            "retired_instructions": 35181470,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/3/samples/formatter-corpus-001-project-check/4.json",
+            "sha256": "48b9f8645b25fe94b31e8698304aac8c6a64c867312ab2e376bca82e8f7fefa7"
+          },
+          "index": 4,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 18854129,
+            "duration_ms": 14.269584033172578,
+            "exit_code": 0,
+            "peak_rss_bytes": 10420224,
+            "retired_instructions": 39304106,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        },
+        {
+          "ref": {
+            "path": "/private/tmp/sifr-b19.udje7q/evidence/formatter-acquisition/bench-1788821534-85348/attempts/3/samples/formatter-corpus-001-project-check/5.json",
+            "sha256": "569b67cf237fd903ae976e5d6053a1ea4f96d20779060dbea3cc3740d6b462e8"
+          },
+          "index": 5,
+          "warmup": false,
+          "command": [
+            "/private/tmp/sifr-b19.udje7q/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b19.udje7q/sifr/verification/areas/performance/formatter_project"
+          ],
+          "result": {
+            "cpu_time_ms": 0,
+            "cycles_elapsed": 15888258,
+            "duration_ms": 17.673540976829827,
+            "exit_code": 0,
+            "peak_rss_bytes": 10420224,
+            "retired_instructions": 36656277,
+            "timed_out": false,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "raw_equals_parsed": true
+        }
+      ]
+    }
+  ],
+  "b20_09": [
+    {
+      "ref": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/0.json",
+        "sha256": "282f1468a75e85e4868e515c81c4cdfe7966d8b3058bb843e24c21401dca1da9"
+      },
+      "index": 0,
+      "warmup": true,
+      "pid": "not persisted; self-PID in probe source",
+      "exit": 0,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+        "fmt",
+        "--check",
+        "--no-cache",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+      ],
+      "metrics": {
+        "peak_rss_bytes": 14123008,
+        "retired_instructions": 79695680,
+        "cycles_elapsed": 54353055,
+        "cpu_time_ms": 10,
+        "work_counter_source": "darwin-rusage-instructions"
+      },
+      "events": [
+        {
+          "phase": "constructor",
+          "instructions": 34377611,
+          "cycles": 21705148,
+          "user_time": 75326,
+          "system_time": 131519
+        },
+        {
+          "phase": "main",
+          "instructions": 36280759,
+          "cycles": 23141365,
+          "user_time": 77422,
+          "system_time": 143665
+        },
+        {
+          "phase": "cli.parsed",
+          "instructions": 48250761,
+          "cycles": 31374522,
+          "user_time": 91590,
+          "system_time": 193304
+        },
+        {
+          "phase": "fmt.entry",
+          "instructions": 48763031,
+          "cycles": 31906455,
+          "user_time": 91825,
+          "system_time": 197482
+        },
+        {
+          "phase": "config.done",
+          "instructions": 56003798,
+          "cycles": 37790658,
+          "user_time": 94407,
+          "system_time": 239542
+        },
+        {
+          "phase": "ignore.before.read",
+          "instructions": 56659549,
+          "cycles": 38375768,
+          "user_time": 94613,
+          "system_time": 243638
+        },
+        {
+          "phase": "ignore.after.read",
+          "instructions": 57184646,
+          "cycles": 38809580,
+          "user_time": 95130,
+          "system_time": 246311
+        },
+        {
+          "phase": "ignore.loaded",
+          "instructions": 62003889,
+          "cycles": 42184227,
+          "user_time": 103477,
+          "system_time": 263606
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 63878988,
+          "cycles": 43751910,
+          "user_time": 104323,
+          "system_time": 274286
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 65821518,
+          "cycles": 44799397,
+          "user_time": 107376,
+          "system_time": 278934
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 66678612,
+          "cycles": 45493907,
+          "user_time": 107802,
+          "system_time": 283616
+        },
+        {
+          "phase": "match.done",
+          "instructions": 66872404,
+          "cycles": 45649565,
+          "user_time": 108091,
+          "system_time": 284472
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 67093847,
+          "cycles": 45853815,
+          "user_time": 108466,
+          "system_time": 285597
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 68222436,
+          "cycles": 46277711,
+          "user_time": 111400,
+          "system_time": 285780
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 68261210,
+          "cycles": 46324703,
+          "user_time": 111674,
+          "system_time": 285853
+        },
+        {
+          "phase": "match.done",
+          "instructions": 68313377,
+          "cycles": 46366709,
+          "user_time": 111924,
+          "system_time": 285912
+        },
+        {
+          "phase": "files.selected",
+          "instructions": 68345034,
+          "cycles": 46389249,
+          "user_time": 112041,
+          "system_time": 285960
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 68364629,
+          "cycles": 46396247,
+          "user_time": 112051,
+          "system_time": 286002
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 68749454,
+          "cycles": 46716504,
+          "user_time": 112320,
+          "system_time": 288086
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 76029256,
+          "cycles": 52249800,
+          "user_time": 118842,
+          "system_time": 322251
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 76049447,
+          "cycles": 52273234,
+          "user_time": 118861,
+          "system_time": 322403
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 76470477,
+          "cycles": 52562387,
+          "user_time": 119130,
+          "system_time": 324259
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 78446037,
+          "cycles": 53575126,
+          "user_time": 125113,
+          "system_time": 325723
+        },
+        {
+          "phase": "cli.done",
+          "instructions": 78634430,
+          "cycles": 53733277,
+          "user_time": 125284,
+          "system_time": 326715
+        }
+      ],
+      "raw_equals_parsed": true,
+      "constructor": 34377611,
+      "main_to_done": 42353671,
+      "tail": 1061250
+    },
+    {
+      "ref": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/1.json",
+        "sha256": "bb05b8faa7f85988b727a7a013cd5861b698977b287c54c0be760c030a6f86d1"
+      },
+      "index": 1,
+      "warmup": false,
+      "pid": "not persisted; self-PID in probe source",
+      "exit": 0,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+        "fmt",
+        "--check",
+        "--no-cache",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+      ],
+      "metrics": {
+        "peak_rss_bytes": 14090240,
+        "retired_instructions": 48274974,
+        "cycles_elapsed": 24597243,
+        "cpu_time_ms": 0,
+        "work_counter_source": "darwin-rusage-instructions"
+      },
+      "events": [
+        {
+          "phase": "constructor",
+          "instructions": 28861395,
+          "cycles": 15439022,
+          "user_time": 35571,
+          "system_time": 78114
+        },
+        {
+          "phase": "main",
+          "instructions": 29560594,
+          "cycles": 15752747,
+          "user_time": 36770,
+          "system_time": 79223
+        },
+        {
+          "phase": "cli.parsed",
+          "instructions": 35020342,
+          "cycles": 18231612,
+          "user_time": 49878,
+          "system_time": 84341
+        },
+        {
+          "phase": "fmt.entry",
+          "instructions": 35092619,
+          "cycles": 18273579,
+          "user_time": 49960,
+          "system_time": 84567
+        },
+        {
+          "phase": "config.done",
+          "instructions": 36627377,
+          "cycles": 19145669,
+          "user_time": 52794,
+          "system_time": 88210
+        },
+        {
+          "phase": "ignore.before.read",
+          "instructions": 36736529,
+          "cycles": 19217437,
+          "user_time": 52966,
+          "system_time": 88566
+        },
+        {
+          "phase": "ignore.after.read",
+          "instructions": 37069412,
+          "cycles": 19337036,
+          "user_time": 53309,
+          "system_time": 89102
+        },
+        {
+          "phase": "ignore.loaded",
+          "instructions": 39620563,
+          "cycles": 20217697,
+          "user_time": 58770,
+          "system_time": 90120
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 40194510,
+          "cycles": 20535903,
+          "user_time": 59304,
+          "system_time": 91870
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 41420078,
+          "cycles": 20978701,
+          "user_time": 62128,
+          "system_time": 92210
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 41568803,
+          "cycles": 21089604,
+          "user_time": 62522,
+          "system_time": 92607
+        },
+        {
+          "phase": "match.done",
+          "instructions": 41638291,
+          "cycles": 21143099,
+          "user_time": 62809,
+          "system_time": 92703
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 41798905,
+          "cycles": 21225029,
+          "user_time": 63009,
+          "system_time": 93088
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 42926359,
+          "cycles": 21593878,
+          "user_time": 65763,
+          "system_time": 93134
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 42964586,
+          "cycles": 21613789,
+          "user_time": 65863,
+          "system_time": 93178
+        },
+        {
+          "phase": "match.done",
+          "instructions": 43016716,
+          "cycles": 21634481,
+          "user_time": 65978,
+          "system_time": 93211
+        },
+        {
+          "phase": "files.selected",
+          "instructions": 43047978,
+          "cycles": 21648932,
+          "user_time": 66043,
+          "system_time": 93249
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 43067533,
+          "cycles": 21655049,
+          "user_time": 66047,
+          "system_time": 93288
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 43292889,
+          "cycles": 21737832,
+          "user_time": 66164,
+          "system_time": 93762
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 45249177,
+          "cycles": 22995511,
+          "user_time": 73041,
+          "system_time": 95868
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 45269195,
+          "cycles": 23004155,
+          "user_time": 73050,
+          "system_time": 95921
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 45503689,
+          "cycles": 23087890,
+          "user_time": 73164,
+          "system_time": 96405
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 47321331,
+          "cycles": 24011691,
+          "user_time": 79420,
+          "system_time": 97032
+        },
+        {
+          "phase": "cli.done",
+          "instructions": 47384959,
+          "cycles": 24106299,
+          "user_time": 79737,
+          "system_time": 97454
+        }
+      ],
+      "raw_equals_parsed": true,
+      "constructor": 28861395,
+      "main_to_done": 17824365,
+      "tail": 890015
+    },
+    {
+      "ref": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/2.json",
+        "sha256": "971030154a99d8998e5aa17b1f28b590eb08850d75549f164c8c63a0648aeb62"
+      },
+      "index": 2,
+      "warmup": false,
+      "pid": "not persisted; self-PID in probe source",
+      "exit": 0,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+        "fmt",
+        "--check",
+        "--no-cache",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+      ],
+      "metrics": {
+        "peak_rss_bytes": 14041088,
+        "retired_instructions": 47355839,
+        "cycles_elapsed": 21730216,
+        "cpu_time_ms": 0,
+        "work_counter_source": "darwin-rusage-instructions"
+      },
+      "events": [
+        {
+          "phase": "constructor",
+          "instructions": 27892470,
+          "cycles": 12126527,
+          "user_time": 36475,
+          "system_time": 53967
+        },
+        {
+          "phase": "main",
+          "instructions": 28616354,
+          "cycles": 12488631,
+          "user_time": 37916,
+          "system_time": 55497
+        },
+        {
+          "phase": "cli.parsed",
+          "instructions": 34044355,
+          "cycles": 15215702,
+          "user_time": 52315,
+          "system_time": 62389
+        },
+        {
+          "phase": "fmt.entry",
+          "instructions": 34116541,
+          "cycles": 15262238,
+          "user_time": 52394,
+          "system_time": 62652
+        },
+        {
+          "phase": "config.done",
+          "instructions": 35670190,
+          "cycles": 16166357,
+          "user_time": 55148,
+          "system_time": 66546
+        },
+        {
+          "phase": "ignore.before.read",
+          "instructions": 35779256,
+          "cycles": 16234152,
+          "user_time": 55310,
+          "system_time": 66883
+        },
+        {
+          "phase": "ignore.after.read",
+          "instructions": 36112115,
+          "cycles": 16342180,
+          "user_time": 55626,
+          "system_time": 67361
+        },
+        {
+          "phase": "ignore.loaded",
+          "instructions": 38653798,
+          "cycles": 17198119,
+          "user_time": 61137,
+          "system_time": 68278
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 39224240,
+          "cycles": 17500851,
+          "user_time": 61649,
+          "system_time": 70006
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 40449822,
+          "cycles": 17941000,
+          "user_time": 64607,
+          "system_time": 70372
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 40598035,
+          "cycles": 18047753,
+          "user_time": 64975,
+          "system_time": 70789
+        },
+        {
+          "phase": "match.done",
+          "instructions": 40667527,
+          "cycles": 18103517,
+          "user_time": 65285,
+          "system_time": 70889
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 40823610,
+          "cycles": 18166657,
+          "user_time": 65487,
+          "system_time": 71151
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 42030593,
+          "cycles": 18722877,
+          "user_time": 68773,
+          "system_time": 71955
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 42070582,
+          "cycles": 18753823,
+          "user_time": 68910,
+          "system_time": 72046
+        },
+        {
+          "phase": "match.done",
+          "instructions": 42122722,
+          "cycles": 18776474,
+          "user_time": 69033,
+          "system_time": 72089
+        },
+        {
+          "phase": "files.selected",
+          "instructions": 42153805,
+          "cycles": 18793155,
+          "user_time": 69114,
+          "system_time": 72131
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 42173308,
+          "cycles": 18798805,
+          "user_time": 69122,
+          "system_time": 72165
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 42398956,
+          "cycles": 18887244,
+          "user_time": 69246,
+          "system_time": 72691
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 44356977,
+          "cycles": 20149586,
+          "user_time": 76210,
+          "system_time": 74979
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 44376972,
+          "cycles": 20158647,
+          "user_time": 76220,
+          "system_time": 75034
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 44611639,
+          "cycles": 20241376,
+          "user_time": 76334,
+          "system_time": 75511
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 46413194,
+          "cycles": 21102987,
+          "user_time": 82065,
+          "system_time": 76118
+        },
+        {
+          "phase": "cli.done",
+          "instructions": 46476444,
+          "cycles": 21148825,
+          "user_time": 82190,
+          "system_time": 76321
+        }
+      ],
+      "raw_equals_parsed": true,
+      "constructor": 27892470,
+      "main_to_done": 17860090,
+      "tail": 879395
+    },
+    {
+      "ref": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/3.json",
+        "sha256": "76c13c2505ab87f65903bda3d2896abf8edc8d6934aa94970a5b08cf2c0ecc11"
+      },
+      "index": 3,
+      "warmup": false,
+      "pid": "not persisted; self-PID in probe source",
+      "exit": 0,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+        "fmt",
+        "--check",
+        "--no-cache",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+      ],
+      "metrics": {
+        "peak_rss_bytes": 14123008,
+        "retired_instructions": 45414618,
+        "cycles_elapsed": 17192970,
+        "cpu_time_ms": 0,
+        "work_counter_source": "darwin-rusage-instructions"
+      },
+      "events": [
+        {
+          "phase": "constructor",
+          "instructions": 26038358,
+          "cycles": 8735696,
+          "user_time": 34824,
+          "system_time": 30195
+        },
+        {
+          "phase": "main",
+          "instructions": 26736952,
+          "cycles": 9026512,
+          "user_time": 35937,
+          "system_time": 31160
+        },
+        {
+          "phase": "cli.parsed",
+          "instructions": 32172259,
+          "cycles": 11387128,
+          "user_time": 47844,
+          "system_time": 36067
+        },
+        {
+          "phase": "fmt.entry",
+          "instructions": 32244526,
+          "cycles": 11431809,
+          "user_time": 47910,
+          "system_time": 36316
+        },
+        {
+          "phase": "config.done",
+          "instructions": 33778800,
+          "cycles": 12246193,
+          "user_time": 50531,
+          "system_time": 39817
+        },
+        {
+          "phase": "ignore.before.read",
+          "instructions": 33888079,
+          "cycles": 12303507,
+          "user_time": 50708,
+          "system_time": 40170
+        },
+        {
+          "phase": "ignore.after.read",
+          "instructions": 34221325,
+          "cycles": 12407272,
+          "user_time": 51024,
+          "system_time": 40681
+        },
+        {
+          "phase": "ignore.loaded",
+          "instructions": 36770789,
+          "cycles": 13261668,
+          "user_time": 56658,
+          "system_time": 41670
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 37356178,
+          "cycles": 13559853,
+          "user_time": 57126,
+          "system_time": 43331
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 38581610,
+          "cycles": 13993303,
+          "user_time": 59904,
+          "system_time": 43650
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 38729483,
+          "cycles": 14087109,
+          "user_time": 60221,
+          "system_time": 44002
+        },
+        {
+          "phase": "match.done",
+          "instructions": 38798987,
+          "cycles": 14138912,
+          "user_time": 60504,
+          "system_time": 44089
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 38956180,
+          "cycles": 14201372,
+          "user_time": 60696,
+          "system_time": 44344
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 40083724,
+          "cycles": 14566884,
+          "user_time": 63262,
+          "system_time": 44388
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 40121832,
+          "cycles": 14583868,
+          "user_time": 63343,
+          "system_time": 44429
+        },
+        {
+          "phase": "match.done",
+          "instructions": 40173953,
+          "cycles": 14604495,
+          "user_time": 63453,
+          "system_time": 44466
+        },
+        {
+          "phase": "files.selected",
+          "instructions": 40205308,
+          "cycles": 14616791,
+          "user_time": 63508,
+          "system_time": 44499
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 40224908,
+          "cycles": 14622546,
+          "user_time": 63513,
+          "system_time": 44535
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 40451112,
+          "cycles": 14705471,
+          "user_time": 63622,
+          "system_time": 45018
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 42409273,
+          "cycles": 15825579,
+          "user_time": 69902,
+          "system_time": 47083
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 42429625,
+          "cycles": 15834836,
+          "user_time": 69912,
+          "system_time": 47139
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 42668012,
+          "cycles": 15917876,
+          "user_time": 70020,
+          "system_time": 47625
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 44488855,
+          "cycles": 16741464,
+          "user_time": 75669,
+          "system_time": 48019
+        },
+        {
+          "phase": "cli.done",
+          "instructions": 44552791,
+          "cycles": 16782329,
+          "user_time": 75779,
+          "system_time": 48214
+        }
+      ],
+      "raw_equals_parsed": true,
+      "constructor": 26038358,
+      "main_to_done": 17815839,
+      "tail": 861827
+    },
+    {
+      "ref": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/4.json",
+        "sha256": "58be03b2a075a6c6e2f3394189a10330df1481516a2b03050f8f8c5fa38888a8"
+      },
+      "index": 4,
+      "warmup": false,
+      "pid": "not persisted; self-PID in probe source",
+      "exit": 0,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+        "fmt",
+        "--check",
+        "--no-cache",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+      ],
+      "metrics": {
+        "peak_rss_bytes": 14057472,
+        "retired_instructions": 49318474,
+        "cycles_elapsed": 23580772,
+        "cpu_time_ms": 0,
+        "work_counter_source": "darwin-rusage-instructions"
+      },
+      "events": [
+        {
+          "phase": "constructor",
+          "instructions": 29897682,
+          "cycles": 15203960,
+          "user_time": 34349,
+          "system_time": 77250
+        },
+        {
+          "phase": "main",
+          "instructions": 30604797,
+          "cycles": 15494290,
+          "user_time": 35415,
+          "system_time": 78229
+        },
+        {
+          "phase": "cli.parsed",
+          "instructions": 35993263,
+          "cycles": 17743758,
+          "user_time": 47127,
+          "system_time": 82357
+        },
+        {
+          "phase": "fmt.entry",
+          "instructions": 36065543,
+          "cycles": 17791072,
+          "user_time": 47186,
+          "system_time": 82631
+        },
+        {
+          "phase": "config.done",
+          "instructions": 37613983,
+          "cycles": 18574529,
+          "user_time": 49674,
+          "system_time": 86055
+        },
+        {
+          "phase": "ignore.before.read",
+          "instructions": 37723246,
+          "cycles": 18635118,
+          "user_time": 49816,
+          "system_time": 86339
+        },
+        {
+          "phase": "ignore.after.read",
+          "instructions": 38062443,
+          "cycles": 18751665,
+          "user_time": 50111,
+          "system_time": 86864
+        },
+        {
+          "phase": "ignore.loaded",
+          "instructions": 40603763,
+          "cycles": 19580669,
+          "user_time": 55115,
+          "system_time": 87699
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 41175509,
+          "cycles": 19845195,
+          "user_time": 55552,
+          "system_time": 89217
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 42401113,
+          "cycles": 20274352,
+          "user_time": 58256,
+          "system_time": 89536
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 42550095,
+          "cycles": 20379769,
+          "user_time": 58562,
+          "system_time": 89971
+        },
+        {
+          "phase": "match.done",
+          "instructions": 42619616,
+          "cycles": 20427623,
+          "user_time": 58814,
+          "system_time": 90056
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 42776387,
+          "cycles": 20487820,
+          "user_time": 58992,
+          "system_time": 90303
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 43908105,
+          "cycles": 20884463,
+          "user_time": 61519,
+          "system_time": 90569
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 43946607,
+          "cycles": 20902048,
+          "user_time": 61602,
+          "system_time": 90609
+        },
+        {
+          "phase": "match.done",
+          "instructions": 43998773,
+          "cycles": 20923323,
+          "user_time": 61714,
+          "system_time": 90647
+        },
+        {
+          "phase": "files.selected",
+          "instructions": 44030224,
+          "cycles": 20935680,
+          "user_time": 61765,
+          "system_time": 90683
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 44049796,
+          "cycles": 20941298,
+          "user_time": 61770,
+          "system_time": 90718
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 44275012,
+          "cycles": 21021142,
+          "user_time": 61879,
+          "system_time": 91172
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 46230873,
+          "cycles": 22117905,
+          "user_time": 67617,
+          "system_time": 93157
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 46250928,
+          "cycles": 22126918,
+          "user_time": 67625,
+          "system_time": 93212
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 46485329,
+          "cycles": 22205787,
+          "user_time": 67730,
+          "system_time": 93663
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 48391633,
+          "cycles": 23055616,
+          "user_time": 73012,
+          "system_time": 94365
+        },
+        {
+          "phase": "cli.done",
+          "instructions": 48455145,
+          "cycles": 23095979,
+          "user_time": 73106,
+          "system_time": 94556
+        }
+      ],
+      "raw_equals_parsed": true,
+      "constructor": 29897682,
+      "main_to_done": 17850348,
+      "tail": 863329
+    },
+    {
+      "ref": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/5.json",
+        "sha256": "8d388b857ff52072b393ed902f80baa4075cc36eed51e562f9b9e80260f65df4"
+      },
+      "index": 5,
+      "warmup": false,
+      "pid": "not persisted; self-PID in probe source",
+      "exit": 0,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+        "fmt",
+        "--check",
+        "--no-cache",
+        "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+      ],
+      "metrics": {
+        "peak_rss_bytes": 14057472,
+        "retired_instructions": 49828807,
+        "cycles_elapsed": 22341674,
+        "cpu_time_ms": 0,
+        "work_counter_source": "darwin-rusage-instructions"
+      },
+      "events": [
+        {
+          "phase": "constructor",
+          "instructions": 30357048,
+          "cycles": 13878211,
+          "user_time": 33601,
+          "system_time": 67190
+        },
+        {
+          "phase": "main",
+          "instructions": 31064065,
+          "cycles": 14190283,
+          "user_time": 34660,
+          "system_time": 68327
+        },
+        {
+          "phase": "cli.parsed",
+          "instructions": 36598278,
+          "cycles": 16525815,
+          "user_time": 46822,
+          "system_time": 73894
+        },
+        {
+          "phase": "fmt.entry",
+          "instructions": 36670499,
+          "cycles": 16576559,
+          "user_time": 46865,
+          "system_time": 74209
+        },
+        {
+          "phase": "config.done",
+          "instructions": 38201093,
+          "cycles": 17321735,
+          "user_time": 48892,
+          "system_time": 77429
+        },
+        {
+          "phase": "ignore.before.read",
+          "instructions": 38310072,
+          "cycles": 17392837,
+          "user_time": 49001,
+          "system_time": 77821
+        },
+        {
+          "phase": "ignore.after.read",
+          "instructions": 38646550,
+          "cycles": 17540759,
+          "user_time": 49288,
+          "system_time": 78576
+        },
+        {
+          "phase": "ignore.loaded",
+          "instructions": 41173755,
+          "cycles": 18358070,
+          "user_time": 54195,
+          "system_time": 79425
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 41744954,
+          "cycles": 18615645,
+          "user_time": 54581,
+          "system_time": 80853
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 42970361,
+          "cycles": 19043037,
+          "user_time": 57250,
+          "system_time": 81193
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 43119168,
+          "cycles": 19142156,
+          "user_time": 57485,
+          "system_time": 81656
+        },
+        {
+          "phase": "match.done",
+          "instructions": 43188633,
+          "cycles": 19185727,
+          "user_time": 57703,
+          "system_time": 81745
+        },
+        {
+          "phase": "match.before.rules",
+          "instructions": 43351891,
+          "cycles": 19248306,
+          "user_time": 57883,
+          "system_time": 82006
+        },
+        {
+          "phase": "match.after.rules",
+          "instructions": 44481514,
+          "cycles": 19630643,
+          "user_time": 60439,
+          "system_time": 82143
+        },
+        {
+          "phase": "match.engine.built",
+          "instructions": 44520011,
+          "cycles": 19648021,
+          "user_time": 60521,
+          "system_time": 82184
+        },
+        {
+          "phase": "match.done",
+          "instructions": 44572163,
+          "cycles": 19669524,
+          "user_time": 60630,
+          "system_time": 82226
+        },
+        {
+          "phase": "files.selected",
+          "instructions": 44603495,
+          "cycles": 19681884,
+          "user_time": 60677,
+          "system_time": 82266
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 44623013,
+          "cycles": 19687659,
+          "user_time": 60682,
+          "system_time": 82302
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 44848256,
+          "cycles": 19763926,
+          "user_time": 60783,
+          "system_time": 82737
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 46810206,
+          "cycles": 20793030,
+          "user_time": 65950,
+          "system_time": 85077
+        },
+        {
+          "phase": "file.before.read",
+          "instructions": 46830199,
+          "cycles": 20801319,
+          "user_time": 65958,
+          "system_time": 85127
+        },
+        {
+          "phase": "file.after.read",
+          "instructions": 47064371,
+          "cycles": 20879209,
+          "user_time": 66068,
+          "system_time": 85567
+        },
+        {
+          "phase": "file.after.check",
+          "instructions": 48858392,
+          "cycles": 21670193,
+          "user_time": 71223,
+          "system_time": 85981
+        },
+        {
+          "phase": "cli.done",
+          "instructions": 48921651,
+          "cycles": 21719872,
+          "user_time": 71307,
+          "system_time": 86247
+        }
+      ],
+      "raw_equals_parsed": true,
+      "constructor": 30357048,
+      "main_to_done": 17857586,
+      "tail": 907156
+    }
+  ]
+}

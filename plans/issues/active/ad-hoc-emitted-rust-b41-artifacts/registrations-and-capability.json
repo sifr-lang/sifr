@@ -1,0 +1,1044 @@
+{
+  "b20_interventions": {
+    "11": {
+      "rows": [
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment11/result.json",
+          "sha256": "747538404fe2bf3ad17d5ecb662181e6d8c187eb9ae4c31f68ed99640fb5a094",
+          "exit": 0,
+          "command": [
+            "xcrun",
+            "xctrace",
+            "record",
+            "--template",
+            "System Trace",
+            "--output",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/experiment11/startup.trace",
+            "--time-limit",
+            "10s",
+            "--target-stdout",
+            "-",
+            "--no-prompt",
+            "--launch",
+            "--",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        }
+      ],
+      "registration": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment-11.md",
+        "sha256": "50402143e8979d2157f9d2054ea75b2d92d1c811a14b137de90ce3a37a10b83b"
+      }
+    },
+    "12": {
+      "rows": [
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/0-chained.json",
+          "sha256": "c02411bf226b5fddb7d1856cd8ea5235155a35ec5f0ded86b90b91a8327915d2",
+          "index": 0,
+          "warmup": true,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 12664832,
+            "retired_instructions": 67349603,
+            "cycles_elapsed": 48956073,
+            "cpu_time_ms": 10,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/0-legacy.json",
+          "sha256": "4c97f757c57bafbb482dbaaeb7bd03ed37c3ef39dc18c528adb25d5b934df523",
+          "index": 0,
+          "warmup": true,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14073856,
+            "retired_instructions": 78873760,
+            "cycles_elapsed": 50359524,
+            "cpu_time_ms": 10,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-experiment09",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/1-chained.json",
+          "sha256": "9e346a89b78174216fac1f25c229a7b41d84d95bb92a66f02660a58a515cfb97",
+          "index": 1,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 12615680,
+            "retired_instructions": 40598841,
+            "cycles_elapsed": 22207113,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/1-legacy.json",
+          "sha256": "9619d1f8854101ea65bedc660049d5be70d5ec0f07ad9b679ac179de6741f6c2",
+          "index": 1,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14106624,
+            "retired_instructions": 47126290,
+            "cycles_elapsed": 23051274,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-experiment09",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/2-chained.json",
+          "sha256": "ff9d0578a0b3a2bdbf1b6e2d5f5e8361e8b8de99bf4b99170612598de1701dcf",
+          "index": 2,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 12566528,
+            "retired_instructions": 41127757,
+            "cycles_elapsed": 23649276,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/2-legacy.json",
+          "sha256": "da1d7e056e1079d276bd0ab86f450f5bc859f6df7ddac5b531744e114868cd46",
+          "index": 2,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14090240,
+            "retired_instructions": 49955952,
+            "cycles_elapsed": 24723932,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-experiment09",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/3-chained.json",
+          "sha256": "1309404be2a1ad94d234e08a7f3df36e0f0338b0fda362250ffaae59fab66b59",
+          "index": 3,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 12615680,
+            "retired_instructions": 41133812,
+            "cycles_elapsed": 21842047,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/3-legacy.json",
+          "sha256": "3d18d4609338f7a2d6ed4ad80fc35469480c714329595cd69795f70f9eb62b15",
+          "index": 3,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14073856,
+            "retired_instructions": 45152397,
+            "cycles_elapsed": 18059970,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-experiment09",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/4-chained.json",
+          "sha256": "b57e22f018de918c0075f8003749de4f2d851a27e98aa47e2269dd8d51501213",
+          "index": 4,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 12632064,
+            "retired_instructions": 43410031,
+            "cycles_elapsed": 26871660,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/4-legacy.json",
+          "sha256": "315567f2ec15691b6f74d996786de68b81ce07e48bda5857bd9bde5cb01b6820",
+          "index": 4,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14106624,
+            "retired_instructions": 47233964,
+            "cycles_elapsed": 23796827,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-experiment09",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/5-chained.json",
+          "sha256": "c158530f1ffefe5548c3095011d7125f4d9b67fc598c4eb2350ec9d6f4c2682a",
+          "index": 5,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 12599296,
+            "retired_instructions": 40948175,
+            "cycles_elapsed": 20345682,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment12/5-legacy.json",
+          "sha256": "1638340e5b58fd90166e736e4b69659882681e10b5439d06f86f496914be9c69",
+          "index": 5,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14090240,
+            "retired_instructions": 46844172,
+            "cycles_elapsed": 22434148,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-experiment09",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        }
+      ],
+      "registration": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment-12.md",
+        "sha256": "38146c8baadadb38098be6a096055bcfacdeef5ecbcb9fc86e443cb4d367fbd9"
+      }
+    },
+    "13": {
+      "rows": [
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment13/chained.json",
+          "sha256": "e1ad4dbc2eaebf61b90e7195f45a66f1c20f54a6049df04e86b565ac7b5aeac1",
+          "exit": 0,
+          "command": [
+            "xcrun",
+            "xctrace",
+            "record",
+            "--template",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/CPU-Profiler-B20.tracetemplate",
+            "--output",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/experiment13/chained.trace",
+            "--time-limit",
+            "10s",
+            "--target-stdout",
+            "-",
+            "--no-prompt",
+            "--launch",
+            "--",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-experiment12",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment13/legacy.json",
+          "sha256": "e6f2f8e617f1d5725288347360ee6152021dd2bb471690de8671a6f2714e0179",
+          "exit": 0,
+          "command": [
+            "xcrun",
+            "xctrace",
+            "record",
+            "--template",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/CPU-Profiler-B20.tracetemplate",
+            "--output",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/experiment13/legacy.trace",
+            "--time-limit",
+            "10s",
+            "--target-stdout",
+            "-",
+            "--no-prompt",
+            "--launch",
+            "--",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-experiment09",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        }
+      ],
+      "registration": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment-13.md",
+        "sha256": "d295fb6b39e3c1c2bd8a890816d1ea67a454b093f491f874f4bc249a5986d633"
+      }
+    },
+    "14": {
+      "rows": [
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment14/result.json",
+          "sha256": "9663e38c5334a306f316d7e585e0893e4cc304a1c007ea2f610c37aa5852508d",
+          "exit": 0,
+          "command": [
+            "xcrun",
+            "xctrace",
+            "record",
+            "--template",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/Time-Profiler-B20.tracetemplate",
+            "--output",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/experiment14/timer.trace",
+            "--time-limit",
+            "10s",
+            "--target-stdout",
+            "-",
+            "--no-prompt",
+            "--launch",
+            "--",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-experiment09",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        }
+      ],
+      "registration": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment-14.md",
+        "sha256": "ea89f154e620116dce8f71548e40fed93d17194439481714e6fc5c9143e9c03b"
+      }
+    },
+    "03": {
+      "rows": [
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment03/clean-False.json",
+          "sha256": "7f8eaa6e7832e5dc1175dd3bff0cadab5bc1bbd7988e10454908c8542d773fbb",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 13238272,
+            "retired_instructions": 53293978,
+            "cycles_elapsed": 28484612,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-original",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "clean"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment03/clean-True.json",
+          "sha256": "b19762c17f52859d69c7f6987a6be5b0c41e03c49fc383bc63e42cf6181f4d7b",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 10452992,
+            "retired_instructions": 80580003,
+            "cycles_elapsed": 45825468,
+            "cpu_time_ms": 10,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-original",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/experiment03/workspace/clean"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment03/drift-False.json",
+          "sha256": "fede5e32062775cf85dc2fb3187fd8464e61af6aa4fe30dc49d0f40ae2c069d8",
+          "exit": 1,
+          "metrics": {
+            "peak_rss_bytes": 14532608,
+            "retired_instructions": 48393904,
+            "cycles_elapsed": 24986800,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-original",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "drift"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment03/drift-True.json",
+          "sha256": "889af33d34280cd1cce5b7bb0e6a3c763e05f5b39a32837de3a751d4ce9f7931",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 10387456,
+            "retired_instructions": 35292053,
+            "cycles_elapsed": 14882347,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/sifr-original",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/experiment03/workspace/drift"
+          ]
+        }
+      ],
+      "registration": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment-03.md",
+        "sha256": "eb07d174435b81b79938441fde6ccae8af0c63f907713fe631c12e18219eae03"
+      }
+    },
+    "07": {
+      "rows": [
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment07/0-bypass.json",
+          "sha256": "ba4c65368085185aac4e4a8d559e84fcd9241ae2023e5d649f86cba0b0fa60fb",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 13336576,
+            "retired_instructions": 43130029,
+            "cycles_elapsed": 24335243,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "--no-respect-gitignore",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment07/0-standard.json",
+          "sha256": "f85e303f62fedc20f786e09b6826866320371248a2215868807c9abba05a6172",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 15089664,
+            "retired_instructions": 93638353,
+            "cycles_elapsed": 51477996,
+            "cpu_time_ms": 10,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment07/1-bypass.json",
+          "sha256": "3334b60d2e5f1d8690aa1dc075f6738f6d4f2cd5ad6319cc1fbb5bfe0948bb7a",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 13320192,
+            "retired_instructions": 40116404,
+            "cycles_elapsed": 20600908,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "--no-respect-gitignore",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment07/1-standard.json",
+          "sha256": "b0345af00c05dfc07dff87cfd41c9caa4c9af0cd2198be401f3eadefe5aae621",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14925824,
+            "retired_instructions": 64582850,
+            "cycles_elapsed": 32697628,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment07/2-bypass.json",
+          "sha256": "2e0d4e00fe75f4712c42dd5826a958ff005aaa0062a216105690aa78081c16bd",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 13336576,
+            "retired_instructions": 42883144,
+            "cycles_elapsed": 23062271,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "--no-respect-gitignore",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment07/2-standard.json",
+          "sha256": "2c28d0af43b4d987b2850fbb123c9176491723bee6c701157a27a47e80c6c48e",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14925824,
+            "retired_instructions": 60408072,
+            "cycles_elapsed": 23888183,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment07/3-bypass.json",
+          "sha256": "51f90ad8e96cd74fd2a45d26b6cde3f16ca6372ccb0311d83b48600e3924e2fe",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 13336576,
+            "retired_instructions": 42065139,
+            "cycles_elapsed": 22618822,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "--no-respect-gitignore",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment07/3-standard.json",
+          "sha256": "db6a81f2de25081eb780656056ad07f963e35f2108516e1f398727c398470df4",
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14942208,
+            "retired_instructions": 63710870,
+            "cycles_elapsed": 31580249,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment07/drift-False.json",
+          "sha256": "4ad23d58c885a0c1de5d96fb0612f21f4a71729ec847d94c9584218050449ccb",
+          "exit": 1,
+          "metrics": {
+            "peak_rss_bytes": 16351232,
+            "retired_instructions": 67332676,
+            "cycles_elapsed": 34426984,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "drift"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment07/drift-True.json",
+          "sha256": "6754ccae22b30b9e37546e4f43ef3c8c76887b2520bc353b6dfb4c96160818cc",
+          "exit": 1,
+          "metrics": {
+            "peak_rss_bytes": 16302080,
+            "retired_instructions": 68163967,
+            "cycles_elapsed": 37096305,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/evidence/experiment03/workspace/drift"
+          ]
+        }
+      ],
+      "registration": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment-07.md",
+        "sha256": "195b93526aba0b559848cc653b15fb61592d9e157e3816a64bbdadac0a18bc20"
+      }
+    },
+    "08": {
+      "rows": [
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment08/0-bypass.json",
+          "sha256": "07a35fa66f8ba831a3f3906dd612cf3bff7b427da1a9878846ef5097a9973eb1",
+          "index": 0,
+          "warmup": true,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 12976128,
+            "retired_instructions": 43132099,
+            "cycles_elapsed": 26128503,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "--no-respect-gitignore",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment08/0-standard.json",
+          "sha256": "49b689af93e7b30ee631ba4488e6e32437267fe54644489540feca0e8c7e8a82",
+          "index": 0,
+          "warmup": true,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 13991936,
+            "retired_instructions": 77637055,
+            "cycles_elapsed": 48220471,
+            "cpu_time_ms": 10,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment08/1-bypass.json",
+          "sha256": "b5e682f0c5f29eb504cbc820b57aaed5c9f99220bffce3231bdac4c9b2558732",
+          "index": 1,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 12959744,
+            "retired_instructions": 42535061,
+            "cycles_elapsed": 27181736,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "--no-respect-gitignore",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment08/1-standard.json",
+          "sha256": "ec22de05a43c149b1a68277a67935fabdd32b64f3308e3e53810c2c73698df36",
+          "index": 1,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 13959168,
+            "retired_instructions": 46462022,
+            "cycles_elapsed": 24623050,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment08/2-bypass.json",
+          "sha256": "475c26002b9d721634651b0ca94aba815837ddbf971c02d756feec334db2e8f8",
+          "index": 2,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 12992512,
+            "retired_instructions": 43709896,
+            "cycles_elapsed": 34232076,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "--no-respect-gitignore",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment08/2-standard.json",
+          "sha256": "64c7d09192e90e8ade9089755881395b61ba22c6fafb0b943e6906d904a027e5",
+          "index": 2,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 13959168,
+            "retired_instructions": 50144426,
+            "cycles_elapsed": 29633590,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        }
+      ],
+      "registration": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment-08.md",
+        "sha256": "a4344ae8bf40daf49de1b701f079229d915ff7ec549848a154e5bb85959d36bd"
+      }
+    },
+    "09": {
+      "rows": [
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/0.json",
+          "sha256": "282f1468a75e85e4868e515c81c4cdfe7966d8b3058bb843e24c21401dca1da9",
+          "index": 0,
+          "warmup": true,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14123008,
+            "retired_instructions": 79695680,
+            "cycles_elapsed": 54353055,
+            "cpu_time_ms": 10,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/1.json",
+          "sha256": "bb05b8faa7f85988b727a7a013cd5861b698977b287c54c0be760c030a6f86d1",
+          "index": 1,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14090240,
+            "retired_instructions": 48274974,
+            "cycles_elapsed": 24597243,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/2.json",
+          "sha256": "971030154a99d8998e5aa17b1f28b590eb08850d75549f164c8c63a0648aeb62",
+          "index": 2,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14041088,
+            "retired_instructions": 47355839,
+            "cycles_elapsed": 21730216,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/3.json",
+          "sha256": "76c13c2505ab87f65903bda3d2896abf8edc8d6934aa94970a5b08cf2c0ecc11",
+          "index": 3,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14123008,
+            "retired_instructions": 45414618,
+            "cycles_elapsed": 17192970,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/4.json",
+          "sha256": "58be03b2a075a6c6e2f3394189a10330df1481516a2b03050f8f8c5fa38888a8",
+          "index": 4,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14057472,
+            "retired_instructions": 49318474,
+            "cycles_elapsed": 23580772,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        },
+        {
+          "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment09/5.json",
+          "sha256": "8d388b857ff52072b393ed902f80baa4075cc36eed51e562f9b9e80260f65df4",
+          "index": 5,
+          "warmup": false,
+          "exit": 0,
+          "metrics": {
+            "peak_rss_bytes": 14057472,
+            "retired_instructions": 49828807,
+            "cycles_elapsed": 22341674,
+            "cpu_time_ms": 0,
+            "work_counter_source": "darwin-rusage-instructions"
+          },
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/target/debug/sifr",
+            "fmt",
+            "--check",
+            "--no-cache",
+            "/private/tmp/sifr-b20.bj6Au6/sifr/verification/areas/performance/formatter_project"
+          ]
+        }
+      ],
+      "registration": {
+        "path": "/private/tmp/sifr-b20.bj6Au6/evidence/experiment-09.md",
+        "sha256": "77d2e513f667db550f8e0eddaa58ec0fa099faeb4da0206d592cc3c90ed97c0c"
+      }
+    }
+  },
+  "read_boundaries": [
+    {
+      "path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/resource.h",
+      "sha256": "7d16930e6b75f11ba203238faa5580d31d48fcd4230f2b3f604aaa5fd7e86b58"
+    },
+    {
+      "path": "/Applications/Xcode.app/Contents/Applications/Instruments.app/Contents/Packages/CPU Counters.instrdst/Contents/Documentation/fulldoc.html",
+      "sha256": "3d79d58e4247d9d9520882a5eccf9cb41d84ed84f3ded0dd6f14c3ba37034ed3"
+    },
+    {
+      "path": "/Applications/Xcode.app/Contents/Applications/Instruments.app/Contents/Packages/CPU Profiler.instrdst/Contents/Documentation/fulldoc.html",
+      "sha256": "e2df2edb00562641b154ca669e9278c15e1ef0fcd6383941c23b3814286260e4"
+    },
+    {
+      "path": "/Applications/Xcode.app/Contents/Applications/Instruments.app/Contents/Resources/templates/CPU Counters.tracetemplate",
+      "sha256": "e05c9cebabea6e4afcc9b0ede2dcf9afe75517ae794d1a0bf5b38bd897174740"
+    },
+    {
+      "path": "/private/tmp/sifr-b24.4MtvfE/sifr/plans/issues/active/ad-hoc-emitted-rust-b24-experiment-registration.md",
+      "sha256": "3f63888d9a15f974c6f9f9e48183586986b0dedf4d572883270faec660463458"
+    },
+    {
+      "path": "/private/tmp/sifr-b41.rVHbYl/sifr/plans/issues/active/ad-hoc-joint-emitted-rust-delivery-assessment.md",
+      "sha256": "a9b600eb04adb4a8241696fc43c5ad2a801ddd6436a247c2e906abcbcc66955b"
+    },
+    {
+      "path": "/private/tmp/sifr-b41.rVHbYl/sifr/plans/issues/active/ad-hoc-joint-emitted-rust-delivery-inputs.md",
+      "sha256": "728e6505bab7a448ffc1163e8106e3b9894aff617118d28dc57ac939239723b3"
+    },
+    {
+      "path": "/private/tmp/sifr-b40.urwpgv/evidence/causal-handoff.md",
+      "sha256": "ce0c5b12ce7af02fa6470fffeea4ad6de547218dfbfb8a74d750112dbcfceea1"
+    }
+  ],
+  "static_capability": {
+    "method": "read installed files only; no observation/help/version controls",
+    "established": "CPU Counters schema describes time/PMI and pmc-events; CPU Profiler uses cycle-PMI; SDK rusage_v4 is296bytes:35u64 fields plus16-byte UUID.",
+    "not_established": "Configured accessible retired-instruction event providing compatible process-wide per-PC user/kernel attribution. Template PMC event/sample fields are null. Not proof of OS unavailability."
+  }
+}
