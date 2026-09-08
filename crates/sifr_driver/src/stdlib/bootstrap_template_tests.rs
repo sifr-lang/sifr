@@ -1,39 +1,46 @@
 use super::*;
 
 #[test]
-fn stdlib_codegen_selects_only_modules_with_explicit_class_imports() {
-    let available = HashMap::from([
-        (
-            "sifr.alpha".to_string(),
-            HashMap::from([("First".to_string(), 1), ("Second".to_string(), 2)]),
-        ),
-        (
-            "sifr.unused".to_string(),
-            HashMap::from([("Unused".to_string(), 3)]),
-        ),
-    ]);
-    let imports = vec![
-        sifr_ir::HirImport {
-            module: "sifr.alpha".to_string(),
-            names: vec!["Second".to_string(), "Missing".to_string()],
-            aliases: vec![("Second".to_string(), "Renamed".to_string())],
-        },
-        sifr_ir::HirImport {
-            module: "sifr.alpha".to_string(),
-            names: vec!["Second".to_string()],
-            aliases: Vec::new(),
-        },
-    ];
-
-    let selected = select_imported_class_templates(&imports, &available);
-
-    assert_eq!(
-        selected,
-        HashMap::from([(
-            "sifr.alpha".to_string(),
-            HashMap::from([("First".to_string(), 1), ("Second".to_string(), 2)]),
-        )])
+fn stdlib_bootstrap_borrowed_emission_preserves_imports_and_generic_templates() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let source = "from sifr.collections import deque as Queue\nfrom sifr.calendar import isleap as leap\ndef example() -> bool:\n    values: Queue[int] = Queue([1, 2])\n    return leap(len(values))\n";
+    let parsed = parse_module_raw(source, None).expect("parse imported generic");
+    let lowered = lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &compiled.defs)
+        .expect("lower borrowed generic and alias signatures");
+    let template = std::sync::Arc::clone(
+        compiled
+            .code
+            .generic_class_templates
+            .get("deque")
+            .expect("generic deque template"),
     );
+    let before = format!("{:?}", lowered.module);
+    let generated = sifr_codegen::generate_stdlib_module_body(
+        &lowered.module,
+        &compiled.code.emission,
+        "sifr.borrowed_example",
+    );
+    assert!(syn::parse_file(&generated.rust_source).is_ok());
+    assert!(!generated.rust_source.contains("// --- stdlib:"));
+    assert!(generated.used_stdlib_modules.contains("sifr.calendar"));
+    assert!(!generated.rust_source.is_empty());
+    assert_eq!(format!("{:?}", lowered.module), before);
+    assert!(std::sync::Arc::ptr_eq(
+        &template,
+        &compiled.code.generic_class_templates["deque"],
+    ));
+    // The same owner still supplies full application support after bootstrap emission.
+    let application = sifr_codegen::generate_rust_with_stdlib(&lowered.module, &compiled.code);
+    assert!(application.rust_source.contains("// --- stdlib:"));
+    assert!(
+        application
+            .interop
+            .stdlib_demand
+            .declarations
+            .iter()
+            .any(|declaration| declaration.module_name.as_deref() == Some("_sifr.calendar"),)
+    );
+    assert!(syn::parse_file(&application.rust_source).is_ok());
 }
 
 #[test]

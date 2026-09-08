@@ -98,7 +98,7 @@ pub fn generate_rust_test_project_with_metadata(
         let structural_identity_module_name = Some(*module_name);
         let generated = generate_rust_with_stdlib_for_module_with_project_policy(
             module,
-            &module_code,
+            &module_code.emission_view(),
             Some(module_name),
             structural_identity_module_name,
             structural_interop_enabled,
@@ -167,7 +167,7 @@ pub fn generate_rust_test_project_with_metadata(
         required_features.extend(generated.required_features);
     }
 
-    let rendered_support = render_support(&project_support_demand, stdlib_code);
+    let rendered_support = render_support(&project_support_demand, &stdlib_code.emission_view());
     used_stdlib_modules.extend(rendered_support.used_stdlib_modules.iter().cloned());
     required_features.extend(rendered_support.required_features.iter().copied());
     let (nominal_prelude, remaining_support) = extract_project_stdlib_nominal_prelude(

@@ -4,7 +4,7 @@ use crate::stdlib::cache::{STDLIB_COMPILED_CACHE, get_or_init_stdlib_cache, proj
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
 use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
 use crate::stdlib::types::StdlibCompiled;
-use sifr_codegen::{StdlibCode, StdlibEmissionCode, StdlibRustSource};
+use sifr_codegen::{StdlibCode, StdlibRustSource};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{
     ExternalDefs, HirFunction, HirParam, canonicalize_user_export_type,
@@ -22,7 +22,7 @@ use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-pub(crate) fn compile_stdlib() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
+pub(crate) fn compile_stdlib() -> Result<std::sync::Arc<StdlibCompiled>, Vec<RenderedDiagnostic>> {
     get_or_init_stdlib_cache(&STDLIB_COMPILED_CACHE, compile_stdlib_uncached)
 }
 
@@ -122,15 +122,16 @@ fn compile_stdlib_sources_with_sysroot(
             .map(|class| (class.name.clone(), format!("{module_name}.{}", class.name)))
             .collect::<HashMap<_, _>>();
         canonicalize_stdlib_hir_signatures(&mut result.module, module_name, &local_classes);
-        if let Some(module) = pending_private_interop_module(stdlib_source, &result.module) {
-            private_interop_modules.push(module);
+        let module = std::sync::Arc::new(result.module);
+        if let Some(pending) = pending_private_interop_module(stdlib_source, &module) {
+            private_interop_modules.push(pending);
         }
         if private_declaration
-            && result.module.functions.is_empty()
-            && result.module.constants.is_empty()
-            && result.module.classes.is_empty()
+            && module.functions.is_empty()
+            && module.constants.is_empty()
+            && module.classes.is_empty()
         {
-            hir_modules.insert(module_name.to_string(), std::sync::Arc::new(result.module));
+            hir_modules.insert(module_name.to_string(), module);
             continue;
         }
 
@@ -146,7 +147,7 @@ fn compile_stdlib_sources_with_sysroot(
         let mut vararg_exports = HashMap::new();
         let mut workload_exports = HashMap::new();
 
-        for func in &result.module.functions {
+        for func in &module.functions {
             if private_declaration || should_export_callable(module_name, &func.name) {
                 fn_exports.insert(func.name.clone(), function_type_from_hir(func));
                 if let Some(intrinsic) = func.compiler_intrinsic {
@@ -176,7 +177,7 @@ fn compile_stdlib_sources_with_sysroot(
         }
 
         let mut const_exports = HashMap::new();
-        for import in &result.module.imports {
+        for import in &module.imports {
             if import.module.starts_with("_sifr.") {
                 transitive_deps_for_module.insert(import.module.clone());
                 let has_compiled_exports = stdlib_defs
@@ -241,7 +242,7 @@ fn compile_stdlib_sources_with_sysroot(
             }
         }
 
-        for (name, ty, _expr) in &result.module.constants {
+        for (name, ty, _expr) in &module.constants {
             if private_declaration || !name.starts_with('_') {
                 const_exports.insert(name.clone(), ty.clone());
             }
@@ -263,13 +264,13 @@ fn compile_stdlib_sources_with_sysroot(
             const_exports.retain(|name, _| !name.starts_with('_'));
         }
         let const_integer_value_exports = collect_public_constant_integer_value_exports(
-            result.module.constants.iter().filter_map(|(name, _, _)| {
+            module.constants.iter().filter_map(|(name, _, _)| {
                 (private_declaration || !name.starts_with('_')).then_some(name.as_str())
             }),
             &result.constant_integer_values,
         );
 
-        for class in &result.module.classes {
+        for class in &module.classes {
             if private_declaration || !class.name.starts_with('_') {
                 class_instance_method_exports.insert(
                     class.name.clone(),
@@ -320,33 +321,18 @@ fn compile_stdlib_sources_with_sysroot(
             }
         }
 
-        let has_pure_sifr_code = !result.module.functions.is_empty()
-            || !result.module.constants.is_empty()
-            || !result.module.classes.is_empty();
+        let has_pure_sifr_code = !module.functions.is_empty()
+            || !module.constants.is_empty()
+            || !module.classes.is_empty();
         if has_pure_sifr_code {
-            let codegen_stdlib = StdlibEmissionCode {
-                module_rust_code: HashMap::new(),
-                module_constants: stdlib_code.module_constants.clone(),
-                func_signatures: stdlib_code.func_signatures.clone(),
-                transitive_deps: stdlib_code.transitive_deps.clone(),
-                generator_functions: stdlib_code.generator_functions.clone(),
-                generic_classes: stdlib_code.generic_classes.clone(),
-                generic_class_params: stdlib_code.generic_class_params.clone(),
-                generic_class_templates: stdlib_code.generic_class_templates.clone(),
-                module_class_fields: stdlib_code.module_class_fields.clone(),
-                module_class_templates: select_imported_class_templates(
-                    &result.module.imports,
-                    &stdlib_code.module_class_templates,
-                ),
-            };
             let codegen_result = run_codegen_with_boundary(
                 format!(
                     "internal compiler panic during stdlib code generation for '{module_name}'"
                 ),
                 || {
                     sifr_codegen::generate_stdlib_module_body(
-                        &result.module,
-                        &codegen_stdlib,
+                        &module,
+                        &stdlib_code.emission,
                         module_name,
                     )
                 },
@@ -360,8 +346,7 @@ fn compile_stdlib_sources_with_sysroot(
                 module_name,
                 stdlib_source,
                 &sysroot,
-                result
-                    .module
+                module
                     .classes
                     .iter()
                     .filter(|class| {
@@ -383,13 +368,13 @@ fn compile_stdlib_sources_with_sysroot(
                     .insert(module_name.to_string(), codegen_result.constant_mappings);
             }
             let mut sig_map = HashMap::new();
-            for func in &result.module.functions {
+            for func in &module.functions {
                 if private_declaration || should_export_callable(module_name, &func.name) {
                     let param_info = signature_params(&func.params, None);
                     sig_map.insert(func.name.clone(), (param_info, func.return_type.clone()));
                 }
             }
-            for class in &result.module.classes {
+            for class in &module.classes {
                 let mut has_constructor = false;
                 for method in &class.methods {
                     let param_info = signature_params(
@@ -438,7 +423,7 @@ fn compile_stdlib_sources_with_sysroot(
             }
 
             let mut gen_fns = HashSet::new();
-            for func in &result.module.functions {
+            for func in &module.functions {
                 if (private_declaration || should_export_callable(module_name, &func.name))
                     && sifr_codegen::body_contains_yield(&func.body)
                 {
@@ -451,7 +436,7 @@ fn compile_stdlib_sources_with_sysroot(
                     .insert(module_name.to_string(), gen_fns);
             }
 
-            for class in &result.module.classes {
+            for class in &module.classes {
                 if !class.type_params.is_empty() {
                     stdlib_code.generic_classes.insert(class.name.clone());
                     stdlib_code
@@ -459,11 +444,10 @@ fn compile_stdlib_sources_with_sysroot(
                         .insert(class.name.clone(), class.type_params.clone());
                     stdlib_code
                         .generic_class_templates
-                        .insert(class.name.clone(), class.clone());
+                        .insert(class.name.clone(), std::sync::Arc::new(class.clone()));
                 }
             }
-            let class_fields = result
-                .module
+            let class_fields = module
                 .classes
                 .iter()
                 .map(|class| (class.name.clone(), class.fields.clone()))
@@ -471,8 +455,7 @@ fn compile_stdlib_sources_with_sysroot(
             stdlib_code
                 .module_class_fields
                 .insert(module_name.to_string(), class_fields);
-            let class_templates = result
-                .module
+            let class_templates = module
                 .classes
                 .iter()
                 .map(|class| {
@@ -544,19 +527,17 @@ fn compile_stdlib_sources_with_sysroot(
                 .constant_integer_values
                 .insert(module_name.to_string(), const_integer_value_exports);
         }
-        if !result.module.generic_functions.is_empty() {
-            stdlib_defs.generic_functions.insert(
-                module_name.to_string(),
-                result.module.generic_functions.clone(),
-            );
+        if !module.generic_functions.is_empty() {
+            stdlib_defs
+                .generic_functions
+                .insert(module_name.to_string(), module.generic_functions.clone());
         }
-        if !result.module.type_param_bounds.is_empty() {
-            stdlib_defs.type_param_bounds.insert(
-                module_name.to_string(),
-                result.module.type_param_bounds.clone(),
-            );
+        if !module.type_param_bounds.is_empty() {
+            stdlib_defs
+                .type_param_bounds
+                .insert(module_name.to_string(), module.type_param_bounds.clone());
         }
-        hir_modules.insert(module_name.to_string(), std::sync::Arc::new(result.module));
+        hir_modules.insert(module_name.to_string(), module);
     }
 
     stdlib_code.hir_modules = std::sync::Arc::new(hir_modules);
@@ -746,28 +727,6 @@ fn collect_public_constant_integer_value_exports<'a, T: Clone>(
                 .map(|value| (name.to_string(), value.clone()))
         })
         .collect()
-}
-
-fn select_imported_class_templates<T: Clone>(
-    imports: &[sifr_ir::HirImport],
-    available: &HashMap<String, HashMap<String, T>>,
-) -> HashMap<String, HashMap<String, T>> {
-    let mut selected = HashMap::<String, HashMap<String, T>>::new();
-    for import in imports {
-        let Some(module_templates) = available.get(&import.module) else {
-            continue;
-        };
-        if import
-            .names
-            .iter()
-            .any(|name| module_templates.contains_key(name))
-        {
-            selected
-                .entry(import.module.clone())
-                .or_insert_with(|| module_templates.clone());
-        }
-    }
-    selected
 }
 
 fn stdlib_class_template(module_name: &str, class: &sifr_ir::HirClass) -> sifr_ir::HirClass {

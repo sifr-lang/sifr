@@ -4,7 +4,10 @@ use super::*;
 fn adapter_edits_but_not_consumer_source_movement_invalidate_program_identity() {
     fn identities(main: &str, contract: &str) -> ([u8; 32], [u8; 32]) {
         let modules = project(main, contract);
-        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let stdlib_defs = compile_stdlib()
+            .expect("stdlib should compile")
+            .defs
+            .clone();
         let compiled = collect_project_hir_modules(&modules, stdlib_defs)
             .expect("adapter identity project should compile");
         let invocation = compiled

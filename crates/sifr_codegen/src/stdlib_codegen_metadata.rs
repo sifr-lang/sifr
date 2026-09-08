@@ -43,9 +43,44 @@ pub struct StdlibEmissionCode {
     /// Declared type parameters for each generic stdlib class.
     pub generic_class_params: HashMap<String, Vec<String>>,
     /// Generic stdlib class templates used for concrete inference.
-    pub generic_class_templates: HashMap<String, sifr_ir::HirClass>,
+    pub generic_class_templates: HashMap<String, std::sync::Arc<sifr_ir::HirClass>>,
     /// Ordered fields for each stdlib class by module.
     pub module_class_fields: HashMap<String, HashMap<String, Vec<(String, Type)>>>,
     /// Checked stdlib classes retained for late project-policy implementations.
     pub module_class_templates: HashMap<String, HashMap<String, sifr_ir::HirClass>>,
+}
+
+/// Synchronous emission borrows the checked metadata. Bootstrap renders each
+/// module separately, so its source view excludes previously emitted modules.
+/// All signatures, templates and dependency facts still come from the same owner.
+pub struct StdlibEmissionView<'a> {
+    metadata: &'a StdlibEmissionCode,
+    pub(crate) module_rust_code: &'a HashMap<String, StdlibRustSource>,
+}
+
+impl StdlibEmissionCode {
+    pub fn emission_view(&self) -> StdlibEmissionView<'_> {
+        StdlibEmissionView {
+            metadata: self,
+            module_rust_code: &self.module_rust_code,
+        }
+    }
+
+    pub(crate) fn bootstrap_view<'a>(
+        &'a self,
+        module_rust_code: &'a HashMap<String, StdlibRustSource>,
+    ) -> StdlibEmissionView<'a> {
+        StdlibEmissionView {
+            metadata: self,
+            module_rust_code,
+        }
+    }
+}
+
+impl std::ops::Deref for StdlibEmissionView<'_> {
+    type Target = StdlibEmissionCode;
+
+    fn deref(&self) -> &Self::Target {
+        self.metadata
+    }
 }

@@ -96,7 +96,7 @@ impl RustEmitter {
                 self.generic_class_params
                     .insert(class.name.clone(), class.type_params.clone());
                 self.generic_class_templates
-                    .insert(class.name.clone(), class.clone());
+                    .insert(class.name.clone(), std::sync::Arc::new(class.clone()));
             }
         }
 

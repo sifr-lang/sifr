@@ -77,7 +77,10 @@ pub(super) fn compile_errors(
     modules: &HashMap<String, Suite>,
     message: &str,
 ) -> Vec<sifr_diagnostics::RenderedDiagnostic> {
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     match collect_project_hir_modules(modules, stdlib_defs) {
         Ok(_) => panic!("{message}"),
         Err(errors) => errors,
@@ -157,7 +160,10 @@ def main():
 "#,
         &contract,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     collect_project_hir_modules(&modules, stdlib_defs)
         .expect("a MethodSlots-bound attached API owner should lower");
 }
@@ -178,7 +184,10 @@ class Model(Contract):
 "#,
         CONTRACT,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("the non-Pydantic adapter should derive and specialize the class");
 
@@ -269,7 +278,10 @@ def main():
 "#,
         &contract,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("the adapter should select its attached API set");
     let selection = compiled
@@ -468,7 +480,10 @@ def main():
 "#,
         &contract,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     collect_project_hir_modules(&modules, stdlib_defs)
         .expect("an unbound generic adapter declaration should remain usable concretely");
 }
@@ -502,7 +517,10 @@ def main():
 "#,
         &contract,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("concrete generic adapted child should receive attached APIs");
     let output = compiled
@@ -677,7 +695,10 @@ class Model(Contract):
         "fixture.facade".to_string(),
         parse_suite("from fixture.contract import Contract, contract_config\n"),
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("a public marker re-export should remain a compile-time base");
     let selection = compiled
@@ -763,7 +784,10 @@ class Child(Contract, Parent):
 "#,
         CONTRACT,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("marker and one data parent should coexist");
     let child = compiled

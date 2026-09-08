@@ -3,7 +3,8 @@ use sifr_lowering::ExternalDefs;
 use sifr_sysroot::ResolvedSysroot;
 use std::collections::HashMap;
 
-#[derive(Clone)]
+/// Completed bootstrap owner, shared immutably by compilation consumers.
+/// Mutable lowering receives its own definitions projection.
 pub(crate) struct StdlibCompiled {
     pub(crate) defs: ExternalDefs,
     pub(crate) code: StdlibCode,

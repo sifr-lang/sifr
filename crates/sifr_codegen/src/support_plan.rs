@@ -156,7 +156,7 @@ pub(crate) struct RenderedSupport {
 
 pub(crate) fn render_support(
     demand: &ModuleSupportDemand,
-    stdlib_code: &crate::StdlibEmissionCode,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
 ) -> RenderedSupport {
     let stdlib = render_stdlib_support(demand, stdlib_code);
     let needs_file_handles = demand.runtime_needs.file_handles() || stdlib.needs_file_handles;
@@ -382,7 +382,7 @@ struct StdlibSupport {
 
 fn render_stdlib_support(
     demand: &ModuleSupportDemand,
-    stdlib_code: &crate::StdlibEmissionCode,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
 ) -> StdlibSupport {
     let mut module_order = Vec::new();
     let mut seen_modules = HashSet::new();
@@ -469,7 +469,7 @@ fn render_stdlib_support(
 
 fn append_stdlib_dependencies(
     module_name: &str,
-    stdlib_code: &crate::StdlibEmissionCode,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
     seen_modules: &mut HashSet<String>,
     module_order: &mut Vec<String>,
 ) {
@@ -607,7 +607,10 @@ mod tests {
             .locally_shadowed_error_classes
             .insert("SecondaryError".to_string());
 
-        let rendered = render_support(&demand, &crate::StdlibEmissionCode::default());
+        let rendered = render_support(
+            &demand,
+            &crate::StdlibEmissionCode::default().emission_view(),
+        );
 
         assert!(!rendered.source.contains("struct SecondaryError"));
     }
@@ -637,7 +640,7 @@ mod tests {
             },
         );
 
-        let rendered = render_support(&project, &stdlib);
+        let rendered = render_support(&project, &stdlib.emission_view());
 
         assert!(rendered.source.contains("struct ValueError"));
     }

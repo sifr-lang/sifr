@@ -82,7 +82,7 @@ fn stdlib_interop_startup_project_selection_is_once_per_complete_application() {
 
 #[test]
 fn stdlib_interop_startup_readonly_walk_preserves_hidden_edges() {
-    let mut stdlib = crate::stdlib::compile_stdlib().unwrap();
+    let mut stdlib = crate::stdlib::compile_stdlib_uncached().unwrap();
     let private = "@rust.opaque(type=sifr_stdlib.Resource, close=close, send=False, sync=False)\nclass Hidden:\n    @rust(Self.close, panic=trusted_no_panic)\n    def close(own self) -> Result[None, ValueError]: ...\n\n@rust(sifr_stdlib.make)\ndef default_value() -> int: ...\n";
     for name in ["_sifr.startup_a", "_sifr.startup_b"] {
         let parsed = sifr_syntax::parse_module_raw(private, None).unwrap();

@@ -285,7 +285,7 @@ pub(crate) fn register_imported_generic_classes(
             code.generic_class_params
                 .insert(local_name.to_string(), source_class.type_params.clone());
             code.generic_class_templates
-                .insert(local_name.to_string(), template);
+                .insert(local_name.to_string(), std::sync::Arc::new(template));
         }
     }
 }
@@ -355,7 +355,7 @@ pub fn generate_rust_multi_with_metadata(
         };
         let codegen_result = generate_rust_with_stdlib_for_module_with_project_policy(
             module,
-            &module_codegen_code,
+            &module_codegen_code.emission_view(),
             Some(module_name),
             structural_identity_module_name,
             structural_interop_enabled,
@@ -406,7 +406,7 @@ pub fn generate_rust_multi_with_metadata(
         required_features.extend(codegen_result.required_features);
     }
 
-    let rendered_support = render_support(&project_support_demand, stdlib_code);
+    let rendered_support = render_support(&project_support_demand, &stdlib_code.emission_view());
     used_stdlib_modules.extend(rendered_support.used_stdlib_modules.iter().cloned());
     required_features.extend(rendered_support.required_features.iter().copied());
     let (nominal_prelude, remaining_support) = extract_project_stdlib_nominal_prelude(

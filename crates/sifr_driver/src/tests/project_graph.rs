@@ -1,7 +1,8 @@
 use super::support::parse_suite;
+use crate::stdlib::external_defs;
 use crate::{
     FrontendDiagnosticStyle, assemble_project_main_rs, check, collect_project_hir_modules,
-    compile_frontend_modules, compile_stdlib, compute_module_compile_order,
+    compile_frontend_modules, compute_module_compile_order,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{HirExpr, HirStmt};
@@ -21,7 +22,7 @@ def main():
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = crate::stdlib::external_defs().expect("stdlib should compile");
     let bare_errors = compile_frontend_modules(
         &parsed_modules,
         stdlib_defs.clone(),
@@ -60,7 +61,7 @@ def main():
 
     let mut parsed_modules = HashMap::new();
     parsed_modules.insert("main".to_string(), parse_suite(source));
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let project_errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .err()
         .unwrap_or_else(|| panic!("project lowering should report same frontend type errors"));
@@ -107,7 +108,7 @@ def close_borrowed(resource: Resource) -> None:
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
 
     let errors = match collect_project_hir_modules(&parsed_modules, stdlib_defs) {
         Ok(_) => panic!("borrowed imported close must fail before codegen"),
@@ -153,7 +154,7 @@ def close_borrowed(resource: ManagedResource) -> None:
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
 
     let errors = match collect_project_hir_modules(&parsed_modules, stdlib_defs) {
         Ok(_) => panic!("borrowed reexported close must fail before codegen"),
@@ -190,7 +191,7 @@ def value() -> int:
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .expect("single-level relative imports should resolve in project lowering");
     assert!(result.hir_modules.contains_key("main"));
@@ -223,7 +224,7 @@ def area_like(r: float) -> float:
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .expect("project lowering should resolve non-main stdlib imports");
     assert!(result.hir_modules.contains_key("main"));
@@ -265,7 +266,7 @@ def value() -> int:
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .expect("project lowering should resolve non-main local imports");
     assert!(result.hir_modules.contains_key("main"));
@@ -472,7 +473,7 @@ def get() -> int:
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let Err(errors) = collect_project_hir_modules(&parsed_modules, stdlib_defs) else {
         panic!("project lowering should fail when non-main imports missing module");
     };
@@ -530,7 +531,7 @@ def attach(state: LocalState):
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let Err(errors) = collect_project_hir_modules(&parsed_modules, stdlib_defs) else {
         panic!("retained callback capture should be rejected across module reexports");
     };
@@ -581,7 +582,7 @@ def attach(registrar: Registrar, state: LocalState):
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .err()
         .unwrap_or_else(|| panic!("imported method callback capture should be rejected"));
@@ -630,7 +631,7 @@ def value_b() -> int:
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .err()
         .unwrap_or_else(|| panic!("project lowering should fail when there is a dependency cycle"));
@@ -796,7 +797,7 @@ ANSWER: int = 42
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .expect("project lowering should resolve local constant imports");
     let constants = result
@@ -842,7 +843,7 @@ BASE: int = 250 + 4
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .expect("project lowering should fit imported integer constants");
     let main_module = result
@@ -885,7 +886,7 @@ BASE: int = 254
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = external_defs().expect("stdlib should compile");
     let Err(errors) = collect_project_hir_modules(&parsed_modules, stdlib_defs) else {
         panic!("shadowed imported integer constant should not fit");
     };

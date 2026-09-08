@@ -73,7 +73,7 @@ pub(crate) fn build_test_runner_project(
 
     let stdlib_compiled = compile_stdlib()?;
     let project_lowering =
-        collect_project_hir_source_modules(&support_modules, stdlib_compiled.defs)?;
+        collect_project_hir_source_modules(&support_modules, stdlib_compiled.defs.clone())?;
     let project_externals = project_lowering.external_defs.clone();
     let mut support_module_names: Vec<String> =
         project_lowering.hir_modules.keys().cloned().collect();

@@ -511,6 +511,12 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
 
 - `diagnostics.rs`: compile/public result types, panic boundaries, diagnostic serialization, and stderr rendering helpers
 - `stdlib/`: embedded stdlib sources, intrinsic mapping, cache lifecycle, and bootstrap compilation
+- Stdlib bootstrap publishes one immutable `Arc<StdlibCompiled>` through its
+  success/error cache. CLI frontend/build plans and test assembly retain that
+  owner; mutable lowering clones only external definitions. Bootstrap emission
+  borrows accumulated metadata and shares generic templates with emitters.
+  Pending private contracts share canonical HIR, borrow loaded sources, and
+  build the complete contract plan in source order before cache publication.
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
 - `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds

@@ -122,7 +122,7 @@ pub fn generate_rust_with_stdlib_for_module(
 ) -> CodegenResult {
     let body = generate_rust_with_stdlib_for_module_with_structural_policy(
         module,
-        stdlib_code,
+        &stdlib_code.emission_view(),
         module_name,
         crate::rust_interop_plan::module_uses_structural_interop(module),
     );
@@ -140,7 +140,7 @@ pub fn generate_stdlib_module_body(
 ) -> ModuleCodegenResult {
     generate_rust_with_stdlib_for_module_with_structural_policy(
         module,
-        metadata,
+        &metadata.bootstrap_view(&HashMap::new()),
         Some(name),
         crate::rust_interop_plan::module_uses_structural_interop(module),
     )
@@ -149,7 +149,7 @@ pub fn generate_stdlib_module_body(
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     module: &HirModule,
-    stdlib_code: &crate::StdlibEmissionCode,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
     module_name: Option<&str>,
     structural_identity_module_name: Option<&str>,
     structural_interop_enabled: bool,

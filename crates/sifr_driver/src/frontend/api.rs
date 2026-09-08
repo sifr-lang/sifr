@@ -10,7 +10,7 @@ use sifr_lowering::LoweringResult;
 use sifr_python_ast::Suite;
 
 pub(crate) struct FrontendCompiled {
-    pub(crate) stdlib: StdlibCompiled,
+    pub(crate) stdlib: std::sync::Arc<StdlibCompiled>,
     pub(crate) lowering_result: LoweringResult,
 }
 

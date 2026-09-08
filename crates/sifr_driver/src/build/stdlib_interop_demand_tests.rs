@@ -34,7 +34,7 @@ pub(super) fn owners(plan: &RustInteropPlan) -> BTreeSet<String> {
         .collect()
 }
 
-pub(super) fn generated(source: &str) -> (sifr_codegen::CodegenResult, StdlibCompiled) {
+pub(super) fn generated(source: &str) -> (sifr_codegen::CodegenResult, Arc<StdlibCompiled>) {
     let frontend = compile_single_file_frontend(source).expect("application lowers");
     let generated = codegen_single_file_frontend(&frontend).expect("application generates");
     (generated, frontend.stdlib)
@@ -138,7 +138,7 @@ def expose() -> Result[bool, ValueError | RustPanicError]:
         raise error
 "#;
     let facade_source = "from sifr.demand_support import expose as available\n";
-    let mut stdlib = crate::stdlib::compile_stdlib().expect("stdlib inventory");
+    let mut stdlib = crate::stdlib::compile_stdlib_uncached().expect("stdlib inventory");
     for (name, source, private) in [
         ("_sifr.demand_support", private_source, true),
         ("sifr.demand_support", public_source, false),
@@ -348,10 +348,10 @@ fn stdlib_interop_demand_cache_disjoint_programs() {
         }
     }
     assert_ne!(expected[A], expected[B]);
-    let (output, mut stdlib) = generated(A);
+    let (output, stdlib) = generated(A);
     let original = stdlib_interop_cache_key(&stdlib.interop, &output.interop);
-    stdlib
-        .interop
+    let mut changed_interop = stdlib.interop.clone();
+    changed_interop
         .sysroot
         .as_mut()
         .expect("sysroot")
@@ -359,7 +359,7 @@ fn stdlib_interop_demand_cache_disjoint_programs() {
         .sysroot_content_sha256 = "changed-content".to_string();
     assert_ne!(
         original,
-        stdlib_interop_cache_key(&stdlib.interop, &output.interop)
+        stdlib_interop_cache_key(&changed_interop, &output.interop)
     );
     let (mut output, stdlib) = generated(A);
     let original = stdlib_interop_cache_key(&stdlib.interop, &output.interop);

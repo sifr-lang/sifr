@@ -6,7 +6,7 @@ use sifr_type_system::stdlib_class_rust_name;
 use std::collections::{HashMap, HashSet};
 
 pub(crate) fn plan_demanded_stdlib_sources(
-    stdlib_code: &crate::StdlibEmissionCode,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
     module_order: &[String],
     directly_used_modules: &HashSet<String>,
     imported_names: &HashMap<String, HashSet<String>>,
@@ -195,7 +195,7 @@ mod tests {
         );
 
         let selected = plan_demanded_stdlib_sources(
-            &stdlib,
+            &stdlib.emission_view(),
             &["_sifr.fs".to_string(), "sifr.io".to_string()],
             &HashSet::from(["sifr.io".to_string()]),
             &HashMap::from([(

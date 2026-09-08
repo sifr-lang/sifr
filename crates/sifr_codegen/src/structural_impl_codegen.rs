@@ -26,6 +26,9 @@ impl RustEmitter {
             let Some(templates) = stdlib_code.module_class_templates.get(&import.module) else {
                 continue;
             };
+            if !import.names.iter().any(|name| templates.contains_key(name)) {
+                continue;
+            }
             let support_module = HirModule {
                 functions: Vec::new(),
                 classes: templates.values().cloned().collect(),

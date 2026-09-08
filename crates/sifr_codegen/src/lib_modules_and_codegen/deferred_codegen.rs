@@ -17,7 +17,7 @@ use sifr_stdlib_manifest::StdlibFeature;
 
 pub(super) fn deferred_codegen_result(
     _module: &HirModule,
-    stdlib_code: &crate::StdlibEmissionCode,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
     mut emitter: RustEmitter,
     support_demand: ModuleSupportDemand,
     structural_layout_location: ProjectStructuralLayoutLocation,
@@ -87,7 +87,7 @@ pub(super) fn deferred_codegen_result(
 
 pub(super) fn inline_codegen_result(
     module: &HirModule,
-    stdlib_code: &crate::StdlibEmissionCode,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
     emitter: RustEmitter,
     support_demand: ModuleSupportDemand,
     structural_layout_location: ProjectStructuralLayoutLocation,
