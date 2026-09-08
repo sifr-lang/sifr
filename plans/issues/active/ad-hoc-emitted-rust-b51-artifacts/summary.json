@@ -1,0 +1,31 @@
+{
+  "item": "12K-B51",
+  "status": "attributed",
+  "diagnostic_only": true,
+  "qualification_credit": false,
+  "production_base": "30b25c551566bf0c146290c7ec38a55621c5d526",
+  "diagnostic_source": "0e7a1f37f49f070a494095284c1cf43aac6eb91b",
+  "window_seconds": 13.680223166942596,
+  "target_seconds_U_I_I_U": [
+    4.5767405410297215,
+    3.897435500053689,
+    2.337899583973922,
+    1.90727841691114
+  ],
+  "instrumented_mean_over_control_mean": 0.9616466460807163,
+  "control_first_over_last": 2.3996184827812432,
+  "perturbation": "inconclusive; no exact overhead correction or speedup claim",
+  "leading_phase_agrees": true,
+  "leading_module_family_agrees": true,
+  "leading_phase": "final_parse",
+  "leading_module_family": "public_stdlib",
+  "phase_integrity_records": [
+    "check-02-instrumented.integrity.json",
+    "check-03-instrumented.integrity.json"
+  ],
+  "capacity": {
+    "owned_bytes": 6429089792,
+    "free_bytes": 113311973376
+  },
+  "release_pass": true
+}

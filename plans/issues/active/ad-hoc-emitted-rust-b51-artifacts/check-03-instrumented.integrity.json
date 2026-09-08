@@ -1,0 +1,1032 @@
+{
+  "name": "check-03-instrumented",
+  "raw_sha256": "37fe2f1e50e73569589dc2ecfbff497c78d968800cb900a427c7ad878fb86e36",
+  "integrity_pass": true,
+  "unit": "ns",
+  "command_ns": 2306179375,
+  "bootstrap_ns": 1729926875,
+  "module_total_ns": 1695824162,
+  "module_covered_exclusive_ns": 1695765252,
+  "ranked_exclusive_phase_ns": [
+    [
+      "bootstrap",
+      756029505
+    ],
+    [
+      "command",
+      576252500
+    ],
+    [
+      "final_parse",
+      534832082
+    ],
+    [
+      "hir_body",
+      240718039
+    ],
+    [
+      "ir_passes",
+      80732918
+    ],
+    [
+      "body_render",
+      40658419
+    ],
+    [
+      "setup",
+      23861998
+    ],
+    [
+      "type_passes",
+      18201244
+    ],
+    [
+      "support",
+      14338284
+    ],
+    [
+      "emission",
+      8230850
+    ],
+    [
+      "assembly",
+      6268788
+    ],
+    [
+      "structural_post",
+      6054748
+    ]
+  ],
+  "leading_phase": "final_parse",
+  "ranked_emission_subphase_ns": [
+    [
+      "final_parse",
+      534832082
+    ],
+    [
+      "hir_body",
+      240718039
+    ],
+    [
+      "ir_passes",
+      80732918
+    ],
+    [
+      "body_render",
+      40658419
+    ],
+    [
+      "setup",
+      23861998
+    ],
+    [
+      "type_passes",
+      18201244
+    ],
+    [
+      "support",
+      14338284
+    ],
+    [
+      "assembly",
+      6268788
+    ],
+    [
+      "structural_post",
+      6054748
+    ]
+  ],
+  "emission_total_ns": 973897370,
+  "emission_children_ns": 965666520,
+  "leading_module_family": "public_stdlib",
+  "leading_phase_module_family_ns": {
+    "global": 0,
+    "private_stdlib": 61680291,
+    "public_stdlib": 473151791
+  },
+  "top_phase_module_rows": [
+    {
+      "module": "global",
+      "phase": "command",
+      "calls": 1,
+      "inclusive_ns": 2306179375,
+      "children_ns": 1729926875,
+      "exclusive_ns": 576252500
+    },
+    {
+      "module": "sifr.json",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 68352833,
+      "children_ns": 32314000,
+      "exclusive_ns": 36038833
+    },
+    {
+      "module": "sifr.argparse",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 81202042,
+      "children_ns": 45507417,
+      "exclusive_ns": 35694625
+    },
+    {
+      "module": "global",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 1729926875,
+      "children_ns": 1695765252,
+      "exclusive_ns": 34161623
+    },
+    {
+      "module": "sifr.statistics",
+      "phase": "final_parse",
+      "calls": 1,
+      "inclusive_ns": 33186500,
+      "children_ns": 0,
+      "exclusive_ns": 33186500
+    },
+    {
+      "module": "sifr.argparse",
+      "phase": "final_parse",
+      "calls": 1,
+      "inclusive_ns": 30591708,
+      "children_ns": 0,
+      "exclusive_ns": 30591708
+    },
+    {
+      "module": "sifr.csv",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 57717667,
+      "children_ns": 32307959,
+      "exclusive_ns": 25409708
+    },
+    {
+      "module": "sifr.configparser",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 57475958,
+      "children_ns": 32776958,
+      "exclusive_ns": 24699000
+    },
+    {
+      "module": "sifr.datetime",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 64260750,
+      "children_ns": 39892334,
+      "exclusive_ns": 24368416
+    },
+    {
+      "module": "sifr.process",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 62569125,
+      "children_ns": 39117916,
+      "exclusive_ns": 23451209
+    },
+    {
+      "module": "sifr.random",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 52119125,
+      "children_ns": 28858583,
+      "exclusive_ns": 23260542
+    },
+    {
+      "module": "sifr.tomllib",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 45741292,
+      "children_ns": 22733750,
+      "exclusive_ns": 23007542
+    },
+    {
+      "module": "sifr.datetime",
+      "phase": "final_parse",
+      "calls": 1,
+      "inclusive_ns": 21533125,
+      "children_ns": 0,
+      "exclusive_ns": 21533125
+    },
+    {
+      "module": "sifr.itertools",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 53449500,
+      "children_ns": 32073125,
+      "exclusive_ns": 21376375
+    },
+    {
+      "module": "sifr.difflib",
+      "phase": "bootstrap",
+      "calls": 1,
+      "inclusive_ns": 46447833,
+      "children_ns": 25649209,
+      "exclusive_ns": 20798624
+    }
+  ],
+  "module_totals": [
+    {
+      "module": "sifr.argparse",
+      "total_ns": 81203916,
+      "covered_exclusive_ns": 81202042,
+      "emission_ns": 45507417,
+      "emission_children_ns": 45330416,
+      "emission_residual_ns": 177001,
+      "uncovered_ns": 1874
+    },
+    {
+      "module": "sifr.json",
+      "total_ns": 68353542,
+      "covered_exclusive_ns": 68352833,
+      "emission_ns": 32314000,
+      "emission_children_ns": 31994749,
+      "emission_residual_ns": 319251,
+      "uncovered_ns": 709
+    },
+    {
+      "module": "sifr.datetime",
+      "total_ns": 64261416,
+      "covered_exclusive_ns": 64260750,
+      "emission_ns": 39892334,
+      "emission_children_ns": 39240207,
+      "emission_residual_ns": 652127,
+      "uncovered_ns": 666
+    },
+    {
+      "module": "sifr.statistics",
+      "total_ns": 63102208,
+      "covered_exclusive_ns": 63099583,
+      "emission_ns": 45529750,
+      "emission_children_ns": 45359626,
+      "emission_residual_ns": 170124,
+      "uncovered_ns": 2625
+    },
+    {
+      "module": "sifr.process",
+      "total_ns": 62570375,
+      "covered_exclusive_ns": 62569125,
+      "emission_ns": 39117916,
+      "emission_children_ns": 38796917,
+      "emission_residual_ns": 320999,
+      "uncovered_ns": 1250
+    },
+    {
+      "module": "sifr.csv",
+      "total_ns": 57719333,
+      "covered_exclusive_ns": 57717667,
+      "emission_ns": 32307959,
+      "emission_children_ns": 32083834,
+      "emission_residual_ns": 224125,
+      "uncovered_ns": 1666
+    },
+    {
+      "module": "sifr.configparser",
+      "total_ns": 57476916,
+      "covered_exclusive_ns": 57475958,
+      "emission_ns": 32776958,
+      "emission_children_ns": 32610917,
+      "emission_residual_ns": 166041,
+      "uncovered_ns": 958
+    },
+    {
+      "module": "sifr.io",
+      "total_ns": 56638791,
+      "covered_exclusive_ns": 56637542,
+      "emission_ns": 35877417,
+      "emission_children_ns": 35635832,
+      "emission_residual_ns": 241585,
+      "uncovered_ns": 1249
+    },
+    {
+      "module": "sifr.itertools",
+      "total_ns": 53450458,
+      "covered_exclusive_ns": 53449500,
+      "emission_ns": 32073125,
+      "emission_children_ns": 31765127,
+      "emission_residual_ns": 307998,
+      "uncovered_ns": 958
+    },
+    {
+      "module": "sifr.i18n",
+      "total_ns": 53037875,
+      "covered_exclusive_ns": 53037375,
+      "emission_ns": 33245125,
+      "emission_children_ns": 32995207,
+      "emission_residual_ns": 249918,
+      "uncovered_ns": 500
+    },
+    {
+      "module": "sifr.python",
+      "total_ns": 52688458,
+      "covered_exclusive_ns": 52687792,
+      "emission_ns": 35621625,
+      "emission_children_ns": 35368330,
+      "emission_residual_ns": 253295,
+      "uncovered_ns": 666
+    },
+    {
+      "module": "sifr.random",
+      "total_ns": 52120083,
+      "covered_exclusive_ns": 52119125,
+      "emission_ns": 28858583,
+      "emission_children_ns": 28586208,
+      "emission_residual_ns": 272375,
+      "uncovered_ns": 958
+    },
+    {
+      "module": "sifr.difflib",
+      "total_ns": 46449334,
+      "covered_exclusive_ns": 46447833,
+      "emission_ns": 25649209,
+      "emission_children_ns": 25547668,
+      "emission_residual_ns": 101541,
+      "uncovered_ns": 1501
+    },
+    {
+      "module": "sifr.tomllib",
+      "total_ns": 45741875,
+      "covered_exclusive_ns": 45741292,
+      "emission_ns": 22733750,
+      "emission_children_ns": 22535708,
+      "emission_residual_ns": 198042,
+      "uncovered_ns": 583
+    },
+    {
+      "module": "sifr.collections",
+      "total_ns": 45030041,
+      "covered_exclusive_ns": 45029250,
+      "emission_ns": 26665625,
+      "emission_children_ns": 26051250,
+      "emission_residual_ns": 614375,
+      "uncovered_ns": 791
+    },
+    {
+      "module": "sifr.textwrap",
+      "total_ns": 43744458,
+      "covered_exclusive_ns": 43743959,
+      "emission_ns": 23628791,
+      "emission_children_ns": 23487749,
+      "emission_residual_ns": 141042,
+      "uncovered_ns": 499
+    },
+    {
+      "module": "sifr.heapq",
+      "total_ns": 38607084,
+      "covered_exclusive_ns": 38606500,
+      "emission_ns": 20957041,
+      "emission_children_ns": 20757042,
+      "emission_residual_ns": 199999,
+      "uncovered_ns": 584
+    },
+    {
+      "module": "sifr.tls",
+      "total_ns": 37192834,
+      "covered_exclusive_ns": 37192084,
+      "emission_ns": 19176625,
+      "emission_children_ns": 18894833,
+      "emission_residual_ns": 281792,
+      "uncovered_ns": 750
+    },
+    {
+      "module": "_sifr.python",
+      "total_ns": 35001875,
+      "covered_exclusive_ns": 35001458,
+      "emission_ns": 29487750,
+      "emission_children_ns": 29321416,
+      "emission_residual_ns": 166334,
+      "uncovered_ns": 417
+    },
+    {
+      "module": "sifr.logging",
+      "total_ns": 34751333,
+      "covered_exclusive_ns": 34750500,
+      "emission_ns": 17426083,
+      "emission_children_ns": 17272542,
+      "emission_residual_ns": 153541,
+      "uncovered_ns": 833
+    },
+    {
+      "module": "sifr.string",
+      "total_ns": 32658791,
+      "covered_exclusive_ns": 32658333,
+      "emission_ns": 15958208,
+      "emission_children_ns": 15886122,
+      "emission_residual_ns": 72086,
+      "uncovered_ns": 458
+    },
+    {
+      "module": "sifr.fnmatch",
+      "total_ns": 28640125,
+      "covered_exclusive_ns": 28637875,
+      "emission_ns": 11531833,
+      "emission_children_ns": 11425375,
+      "emission_residual_ns": 106458,
+      "uncovered_ns": 2250
+    },
+    {
+      "module": "sifr.time",
+      "total_ns": 27798417,
+      "covered_exclusive_ns": 27797583,
+      "emission_ns": 19156209,
+      "emission_children_ns": 19046877,
+      "emission_residual_ns": 109332,
+      "uncovered_ns": 834
+    },
+    {
+      "module": "sifr.ipaddress",
+      "total_ns": 26989917,
+      "covered_exclusive_ns": 26989250,
+      "emission_ns": 13538542,
+      "emission_children_ns": 13467207,
+      "emission_residual_ns": 71335,
+      "uncovered_ns": 667
+    },
+    {
+      "module": "sifr.encoding",
+      "total_ns": 26730375,
+      "covered_exclusive_ns": 26729834,
+      "emission_ns": 15450958,
+      "emission_children_ns": 15321251,
+      "emission_residual_ns": 129707,
+      "uncovered_ns": 541
+    },
+    {
+      "module": "sifr.net",
+      "total_ns": 26066292,
+      "covered_exclusive_ns": 26065625,
+      "emission_ns": 14783833,
+      "emission_children_ns": 14632999,
+      "emission_residual_ns": 150834,
+      "uncovered_ns": 667
+    },
+    {
+      "module": "sifr.pathlib",
+      "total_ns": 24033042,
+      "covered_exclusive_ns": 24032000,
+      "emission_ns": 14744958,
+      "emission_children_ns": 14612291,
+      "emission_residual_ns": 132667,
+      "uncovered_ns": 1042
+    },
+    {
+      "module": "sifr.re",
+      "total_ns": 23028667,
+      "covered_exclusive_ns": 23027916,
+      "emission_ns": 13630708,
+      "emission_children_ns": 13499666,
+      "emission_residual_ns": 131042,
+      "uncovered_ns": 751
+    },
+    {
+      "module": "sifr.tempfile",
+      "total_ns": 22313041,
+      "covered_exclusive_ns": 22312583,
+      "emission_ns": 11399750,
+      "emission_children_ns": 11264793,
+      "emission_residual_ns": 134957,
+      "uncovered_ns": 458
+    },
+    {
+      "module": "sifr.graphlib",
+      "total_ns": 20702375,
+      "covered_exclusive_ns": 20701958,
+      "emission_ns": 8509583,
+      "emission_children_ns": 8463124,
+      "emission_residual_ns": 46459,
+      "uncovered_ns": 417
+    },
+    {
+      "module": "sifr.http",
+      "total_ns": 20630000,
+      "covered_exclusive_ns": 20629292,
+      "emission_ns": 11951334,
+      "emission_children_ns": 11820247,
+      "emission_residual_ns": 131087,
+      "uncovered_ns": 708
+    },
+    {
+      "module": "sifr.uuid",
+      "total_ns": 18764708,
+      "covered_exclusive_ns": 18764208,
+      "emission_ns": 10790333,
+      "emission_children_ns": 10732834,
+      "emission_residual_ns": 57499,
+      "uncovered_ns": 500
+    },
+    {
+      "module": "sifr.hashlib",
+      "total_ns": 17250250,
+      "covered_exclusive_ns": 17249667,
+      "emission_ns": 13390125,
+      "emission_children_ns": 13311000,
+      "emission_residual_ns": 79125,
+      "uncovered_ns": 583
+    },
+    {
+      "module": "sifr.sync",
+      "total_ns": 16396958,
+      "covered_exclusive_ns": 16394875,
+      "emission_ns": 10210417,
+      "emission_children_ns": 10049417,
+      "emission_residual_ns": 161000,
+      "uncovered_ns": 2083
+    },
+    {
+      "module": "sifr.url",
+      "total_ns": 15932458,
+      "covered_exclusive_ns": 15931667,
+      "emission_ns": 9294208,
+      "emission_children_ns": 9236251,
+      "emission_residual_ns": 57957,
+      "uncovered_ns": 791
+    },
+    {
+      "module": "sifr.shutil",
+      "total_ns": 14701167,
+      "covered_exclusive_ns": 14700625,
+      "emission_ns": 1481916,
+      "emission_children_ns": 1463459,
+      "emission_residual_ns": 18457,
+      "uncovered_ns": 542
+    },
+    {
+      "module": "_sifr.process",
+      "total_ns": 14105250,
+      "covered_exclusive_ns": 14104667,
+      "emission_ns": 10688000,
+      "emission_children_ns": 10621873,
+      "emission_residual_ns": 66127,
+      "uncovered_ns": 583
+    },
+    {
+      "module": "sifr.zipfile",
+      "total_ns": 13989458,
+      "covered_exclusive_ns": 13988958,
+      "emission_ns": 6969209,
+      "emission_children_ns": 6913750,
+      "emission_residual_ns": 55459,
+      "uncovered_ns": 500
+    },
+    {
+      "module": "sifr.meta",
+      "total_ns": 12254375,
+      "covered_exclusive_ns": 12252417,
+      "emission_ns": 8425000,
+      "emission_children_ns": 8323376,
+      "emission_residual_ns": 101624,
+      "uncovered_ns": 1958
+    },
+    {
+      "module": "sifr.unicode",
+      "total_ns": 11856916,
+      "covered_exclusive_ns": 11856667,
+      "emission_ns": 7956875,
+      "emission_children_ns": 7906415,
+      "emission_residual_ns": 50460,
+      "uncovered_ns": 249
+    },
+    {
+      "module": "sifr.math",
+      "total_ns": 11730792,
+      "covered_exclusive_ns": 11730375,
+      "emission_ns": 6818584,
+      "emission_children_ns": 6778709,
+      "emission_residual_ns": 39875,
+      "uncovered_ns": 417
+    },
+    {
+      "module": "sifr.calendar",
+      "total_ns": 11500167,
+      "covered_exclusive_ns": 11499750,
+      "emission_ns": 5821250,
+      "emission_children_ns": 5786667,
+      "emission_residual_ns": 34583,
+      "uncovered_ns": 417
+    },
+    {
+      "module": "sifr.timeit",
+      "total_ns": 11281125,
+      "covered_exclusive_ns": 11280708,
+      "emission_ns": 4050666,
+      "emission_children_ns": 3978291,
+      "emission_residual_ns": 72375,
+      "uncovered_ns": 417
+    },
+    {
+      "module": "_sifr.fs",
+      "total_ns": 10252042,
+      "covered_exclusive_ns": 10251625,
+      "emission_ns": 7231000,
+      "emission_children_ns": 7183165,
+      "emission_residual_ns": 47835,
+      "uncovered_ns": 417
+    },
+    {
+      "module": "sifr.glob",
+      "total_ns": 10084708,
+      "covered_exclusive_ns": 10083958,
+      "emission_ns": 5375791,
+      "emission_children_ns": 5341290,
+      "emission_residual_ns": 34501,
+      "uncovered_ns": 750
+    },
+    {
+      "module": "sifr.test",
+      "total_ns": 8432166,
+      "covered_exclusive_ns": 8431625,
+      "emission_ns": 6585083,
+      "emission_children_ns": 6562290,
+      "emission_residual_ns": 22793,
+      "uncovered_ns": 541
+    },
+    {
+      "module": "sifr.python_core",
+      "total_ns": 8389209,
+      "covered_exclusive_ns": 8388792,
+      "emission_ns": 4172625,
+      "emission_children_ns": 4122832,
+      "emission_residual_ns": 49793,
+      "uncovered_ns": 417
+    },
+    {
+      "module": "sifr.base64",
+      "total_ns": 8324792,
+      "covered_exclusive_ns": 8324542,
+      "emission_ns": 6300500,
+      "emission_children_ns": 6262833,
+      "emission_residual_ns": 37667,
+      "uncovered_ns": 250
+    },
+    {
+      "module": "sifr.bisect",
+      "total_ns": 8171500,
+      "covered_exclusive_ns": 8170875,
+      "emission_ns": 3342875,
+      "emission_children_ns": 3309000,
+      "emission_residual_ns": 33875,
+      "uncovered_ns": 625
+    },
+    {
+      "module": "sifr.operator",
+      "total_ns": 7156708,
+      "covered_exclusive_ns": 7156166,
+      "emission_ns": 2813708,
+      "emission_children_ns": 2782125,
+      "emission_residual_ns": 31583,
+      "uncovered_ns": 542
+    },
+    {
+      "module": "sifr.ipc",
+      "total_ns": 7094959,
+      "covered_exclusive_ns": 7094625,
+      "emission_ns": 3352208,
+      "emission_children_ns": 3326418,
+      "emission_residual_ns": 25790,
+      "uncovered_ns": 334
+    },
+    {
+      "module": "_sifr.regex",
+      "total_ns": 6998083,
+      "covered_exclusive_ns": 6997000,
+      "emission_ns": 5394000,
+      "emission_children_ns": 5345834,
+      "emission_residual_ns": 48166,
+      "uncovered_ns": 1083
+    },
+    {
+      "module": "_sifr.math",
+      "total_ns": 6831167,
+      "covered_exclusive_ns": 6830667,
+      "emission_ns": 4220875,
+      "emission_children_ns": 4195751,
+      "emission_residual_ns": 25124,
+      "uncovered_ns": 500
+    },
+    {
+      "module": "sifr.signal",
+      "total_ns": 6827542,
+      "covered_exclusive_ns": 6827084,
+      "emission_ns": 3390667,
+      "emission_children_ns": 3354833,
+      "emission_residual_ns": 35834,
+      "uncovered_ns": 458
+    },
+    {
+      "module": "_sifr.crypto",
+      "total_ns": 6359291,
+      "covered_exclusive_ns": 6357041,
+      "emission_ns": 4933000,
+      "emission_children_ns": 4903080,
+      "emission_residual_ns": 29920,
+      "uncovered_ns": 2250
+    },
+    {
+      "module": "_sifr.tls",
+      "total_ns": 6250167,
+      "covered_exclusive_ns": 6249917,
+      "emission_ns": 4790750,
+      "emission_children_ns": 4761209,
+      "emission_residual_ns": 29541,
+      "uncovered_ns": 250
+    },
+    {
+      "module": "sifr.secrets",
+      "total_ns": 6245000,
+      "covered_exclusive_ns": 6244417,
+      "emission_ns": 2341584,
+      "emission_children_ns": 2318583,
+      "emission_residual_ns": 23001,
+      "uncovered_ns": 583
+    },
+    {
+      "module": "_sifr.net",
+      "total_ns": 5761417,
+      "covered_exclusive_ns": 5761083,
+      "emission_ns": 4094625,
+      "emission_children_ns": 4056000,
+      "emission_residual_ns": 38625,
+      "uncovered_ns": 334
+    },
+    {
+      "module": "sifr.parallel",
+      "total_ns": 4985917,
+      "covered_exclusive_ns": 4985333,
+      "emission_ns": 3050875,
+      "emission_children_ns": 3025710,
+      "emission_residual_ns": 25165,
+      "uncovered_ns": 584
+    },
+    {
+      "module": "sifr.runtime",
+      "total_ns": 4668125,
+      "covered_exclusive_ns": 4667792,
+      "emission_ns": 1565458,
+      "emission_children_ns": 1546414,
+      "emission_residual_ns": 19044,
+      "uncovered_ns": 333
+    },
+    {
+      "module": "sifr.html",
+      "total_ns": 4627208,
+      "covered_exclusive_ns": 4626875,
+      "emission_ns": 510833,
+      "emission_children_ns": 497749,
+      "emission_residual_ns": 13084,
+      "uncovered_ns": 333
+    },
+    {
+      "module": "sifr.gzip",
+      "total_ns": 4566417,
+      "covered_exclusive_ns": 4566125,
+      "emission_ns": 1068625,
+      "emission_children_ns": 1058668,
+      "emission_residual_ns": 9957,
+      "uncovered_ns": 292
+    },
+    {
+      "module": "sifr.sql",
+      "total_ns": 4513083,
+      "covered_exclusive_ns": 4512584,
+      "emission_ns": 3562250,
+      "emission_children_ns": 3536417,
+      "emission_residual_ns": 25833,
+      "uncovered_ns": 499
+    },
+    {
+      "module": "sifr.functools",
+      "total_ns": 4442833,
+      "covered_exclusive_ns": 4442459,
+      "emission_ns": 1025625,
+      "emission_children_ns": 1000875,
+      "emission_residual_ns": 24750,
+      "uncovered_ns": 374
+    },
+    {
+      "module": "sifr.resource",
+      "total_ns": 3804250,
+      "covered_exclusive_ns": 3803834,
+      "emission_ns": 780583,
+      "emission_children_ns": 762959,
+      "emission_residual_ns": 17624,
+      "uncovered_ns": 416
+    },
+    {
+      "module": "_sifr.i18n",
+      "total_ns": 3572375,
+      "covered_exclusive_ns": 3571959,
+      "emission_ns": 2662625,
+      "emission_children_ns": 2642747,
+      "emission_residual_ns": 19878,
+      "uncovered_ns": 416
+    },
+    {
+      "module": "_sifr.compress",
+      "total_ns": 3565042,
+      "covered_exclusive_ns": 3564625,
+      "emission_ns": 2725166,
+      "emission_children_ns": 2703124,
+      "emission_residual_ns": 22042,
+      "uncovered_ns": 417
+    },
+    {
+      "module": "sifr.platform",
+      "total_ns": 3520666,
+      "covered_exclusive_ns": 3520292,
+      "emission_ns": 437042,
+      "emission_children_ns": 424500,
+      "emission_residual_ns": 12542,
+      "uncovered_ns": 374
+    },
+    {
+      "module": "sifr.sys",
+      "total_ns": 3517500,
+      "covered_exclusive_ns": 3517125,
+      "emission_ns": 409750,
+      "emission_children_ns": 400168,
+      "emission_residual_ns": 9582,
+      "uncovered_ns": 375
+    },
+    {
+      "module": "_sifr.unicode",
+      "total_ns": 3497583,
+      "covered_exclusive_ns": 3497417,
+      "emission_ns": 2386375,
+      "emission_children_ns": 2365293,
+      "emission_residual_ns": 21082,
+      "uncovered_ns": 166
+    },
+    {
+      "module": "_sifr.http",
+      "total_ns": 3150125,
+      "covered_exclusive_ns": 3149750,
+      "emission_ns": 2475250,
+      "emission_children_ns": 2449502,
+      "emission_residual_ns": 25748,
+      "uncovered_ns": 375
+    },
+    {
+      "module": "sifr.os",
+      "total_ns": 3047500,
+      "covered_exclusive_ns": 3047291,
+      "emission_ns": 1241041,
+      "emission_children_ns": 1211541,
+      "emission_residual_ns": 29500,
+      "uncovered_ns": 209
+    },
+    {
+      "module": "sifr.sql.migration",
+      "total_ns": 2845500,
+      "covered_exclusive_ns": 2845125,
+      "emission_ns": 1768833,
+      "emission_children_ns": 1727916,
+      "emission_residual_ns": 40917,
+      "uncovered_ns": 375
+    },
+    {
+      "module": "sifr.task",
+      "total_ns": 2677459,
+      "covered_exclusive_ns": 2677083,
+      "emission_ns": 872042,
+      "emission_children_ns": 858791,
+      "emission_residual_ns": 13251,
+      "uncovered_ns": 376
+    },
+    {
+      "module": "_sifr.sys",
+      "total_ns": 2488250,
+      "covered_exclusive_ns": 2487875,
+      "emission_ns": 1709959,
+      "emission_children_ns": 1700167,
+      "emission_residual_ns": 9792,
+      "uncovered_ns": 375
+    },
+    {
+      "module": "_sifr.json",
+      "total_ns": 2479708,
+      "covered_exclusive_ns": 2479208,
+      "emission_ns": 1721125,
+      "emission_children_ns": 1705290,
+      "emission_residual_ns": 15835,
+      "uncovered_ns": 500
+    },
+    {
+      "module": "_sifr.encoding",
+      "total_ns": 2465291,
+      "covered_exclusive_ns": 2464917,
+      "emission_ns": 1833167,
+      "emission_children_ns": 1817543,
+      "emission_residual_ns": 15624,
+      "uncovered_ns": 374
+    },
+    {
+      "module": "_sifr.url",
+      "total_ns": 2270417,
+      "covered_exclusive_ns": 2270083,
+      "emission_ns": 1379916,
+      "emission_children_ns": 1369125,
+      "emission_residual_ns": 10791,
+      "uncovered_ns": 334
+    },
+    {
+      "module": "_sifr.time",
+      "total_ns": 2181375,
+      "covered_exclusive_ns": 2181041,
+      "emission_ns": 1399250,
+      "emission_children_ns": 1389000,
+      "emission_residual_ns": 10250,
+      "uncovered_ns": 334
+    },
+    {
+      "module": "sifr.env",
+      "total_ns": 1974625,
+      "covered_exclusive_ns": 1974334,
+      "emission_ns": 784459,
+      "emission_children_ns": 772499,
+      "emission_residual_ns": 11960,
+      "uncovered_ns": 291
+    },
+    {
+      "module": "_sifr.calendar",
+      "total_ns": 1779208,
+      "covered_exclusive_ns": 1778583,
+      "emission_ns": 896458,
+      "emission_children_ns": 869583,
+      "emission_residual_ns": 26875,
+      "uncovered_ns": 625
+    },
+    {
+      "module": "_sifr.signal",
+      "total_ns": 1571083,
+      "covered_exclusive_ns": 1570708,
+      "emission_ns": 976500,
+      "emission_children_ns": 964917,
+      "emission_residual_ns": 11583,
+      "uncovered_ns": 375
+    },
+    {
+      "module": "_sifr.runtime",
+      "total_ns": 1397375,
+      "covered_exclusive_ns": 1396958,
+      "emission_ns": 780375,
+      "emission_children_ns": 769708,
+      "emission_residual_ns": 10667,
+      "uncovered_ns": 417
+    },
+    {
+      "module": "_sifr.datetime",
+      "total_ns": 1099417,
+      "covered_exclusive_ns": 1099083,
+      "emission_ns": 698500,
+      "emission_children_ns": 687458,
+      "emission_residual_ns": 11042,
+      "uncovered_ns": 334
+    },
+    {
+      "module": "_sifr.toml",
+      "total_ns": 837000,
+      "covered_exclusive_ns": 836667,
+      "emission_ns": 418416,
+      "emission_children_ns": 413416,
+      "emission_residual_ns": 5000,
+      "uncovered_ns": 333
+    },
+    {
+      "module": "_sifr.platform",
+      "total_ns": 823958,
+      "covered_exclusive_ns": 823584,
+      "emission_ns": 367625,
+      "emission_children_ns": 357960,
+      "emission_residual_ns": 9665,
+      "uncovered_ns": 374
+    },
+    {
+      "module": "_sifr.uuid",
+      "total_ns": 677667,
+      "covered_exclusive_ns": 677333,
+      "emission_ns": 236458,
+      "emission_children_ns": 231999,
+      "emission_residual_ns": 4459,
+      "uncovered_ns": 334
+    },
+    {
+      "module": "_sifr.logging",
+      "total_ns": 649250,
+      "covered_exclusive_ns": 648833,
+      "emission_ns": 230791,
+      "emission_children_ns": 225082,
+      "emission_residual_ns": 5709,
+      "uncovered_ns": 417
+    },
+    {
+      "module": "_sifr.html",
+      "total_ns": 452333,
+      "covered_exclusive_ns": 451958,
+      "emission_ns": 183125,
+      "emission_children_ns": 177584,
+      "emission_residual_ns": 5541,
+      "uncovered_ns": 375
+    }
+  ]
+}

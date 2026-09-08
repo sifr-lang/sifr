@@ -1,0 +1,136 @@
+{
+  "item": "12K-B51",
+  "production_base": "30b25c551566bf0c146290c7ec38a55621c5d526",
+  "diagnostic_source": "0e7a1f37f49f070a494095284c1cf43aac6eb91b",
+  "status": "diagnostic-complete; final_parse localized; production repair unresolved",
+  "leading_mechanism": "syn::parse_file of complete assembled inline Rust source, including successful syntax AST disposal",
+  "source_span_B49": "crates/sifr_codegen/src/lib_modules_and_codegen/deferred_codegen.rs:134-136",
+  "production_repair_recommendation": null,
+  "unresolved_boundary": "Lexer/token-stream construction, syn grammar/AST construction, and returned AST destruction are one measured call. No evidence supports changing or removing required syntax validation, or selects an error-equivalent lower-cost implementation.",
+  "perturbation": "inconclusive; no exact overhead correction or speedup claim",
+  "runs": [
+    {
+      "name": "check-02-instrumented",
+      "unit": "ns",
+      "module_count": 89,
+      "max_depth": 6,
+      "final_parse_calls": 89,
+      "exclusive_phase_ns": {
+        "bootstrap": 625622335,
+        "final_parse": 466215292,
+        "command": 374945582,
+        "hir_body": 209125040,
+        "ir_passes": 75129167,
+        "body_render": 35457584,
+        "setup": 19316673,
+        "type_passes": 15194632,
+        "support": 12717710,
+        "emission": 6495850,
+        "assembly": 5292713,
+        "structural_post": 5081838
+      },
+      "emission_ns": 850026499,
+      "final_parse_share_of_emission": 0.5484714800638233,
+      "final_parse_share_of_command": 0.25192732020001946,
+      "emission_partition_coverage": 0.9923580617690837,
+      "module_coverage": 0.9999762827399906,
+      "process_outside_command_ns": 2046841084.053689,
+      "top_final_parse_modules": [
+        {
+          "module": "sifr.datetime",
+          "final_parse_ns": 19704542
+        },
+        {
+          "module": "_sifr.python",
+          "final_parse_ns": 19606042
+        },
+        {
+          "module": "sifr.process",
+          "final_parse_ns": 18823959
+        },
+        {
+          "module": "sifr.configparser",
+          "final_parse_ns": 17741583
+        },
+        {
+          "module": "sifr.itertools",
+          "final_parse_ns": 17656625
+        },
+        {
+          "module": "sifr.argparse",
+          "final_parse_ns": 17317667
+        },
+        {
+          "module": "sifr.csv",
+          "final_parse_ns": 16978791
+        },
+        {
+          "module": "sifr.python",
+          "final_parse_ns": 15661125
+        }
+      ]
+    },
+    {
+      "name": "check-03-instrumented",
+      "unit": "ns",
+      "module_count": 89,
+      "max_depth": 6,
+      "final_parse_calls": 89,
+      "exclusive_phase_ns": {
+        "bootstrap": 756029505,
+        "command": 576252500,
+        "final_parse": 534832082,
+        "hir_body": 240718039,
+        "ir_passes": 80732918,
+        "body_render": 40658419,
+        "setup": 23861998,
+        "type_passes": 18201244,
+        "support": 14338284,
+        "emission": 8230850,
+        "assembly": 6268788,
+        "structural_post": 6054748
+      },
+      "emission_ns": 973897370,
+      "final_parse_share_of_emission": 0.5491667792469754,
+      "final_parse_share_of_command": 0.23191261174122677,
+      "emission_partition_coverage": 0.9915485447917372,
+      "module_coverage": 0.9999652617285919,
+      "process_outside_command_ns": 31720208.973921776,
+      "top_final_parse_modules": [
+        {
+          "module": "sifr.statistics",
+          "final_parse_ns": 33186500
+        },
+        {
+          "module": "sifr.argparse",
+          "final_parse_ns": 30591708
+        },
+        {
+          "module": "sifr.datetime",
+          "final_parse_ns": 21533125
+        },
+        {
+          "module": "sifr.process",
+          "final_parse_ns": 19656792
+        },
+        {
+          "module": "sifr.itertools",
+          "final_parse_ns": 19408458
+        },
+        {
+          "module": "sifr.configparser",
+          "final_parse_ns": 19260042
+        },
+        {
+          "module": "_sifr.python",
+          "final_parse_ns": 19182458
+        },
+        {
+          "module": "sifr.python",
+          "final_parse_ns": 17979000
+        }
+      ]
+    }
+  ],
+  "qualifying_instruction_RSS_or_budget_credit": false
+}

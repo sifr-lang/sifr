@@ -1,0 +1,25 @@
+{
+  "item": "12K-B51",
+  "status": "PASS",
+  "exact_targets": 4,
+  "instrumented_records": 2,
+  "compile_attempts": 1,
+  "remediation_builds": 0,
+  "testsuite_runs": 0,
+  "opus_reviews": 0,
+  "full_gates": 0,
+  "PRs": 0,
+  "merges": 0,
+  "production_repairs": 0,
+  "unchanged_protected_inputs": 132,
+  "capacity": {
+    "owned_bytes": 6429134848,
+    "free_bytes": 113291857920
+  },
+  "release_pass": true,
+  "remaining": [],
+  "raw_hashes": {
+    "check-02-instrumented": "7199ff2c224260127043da38d3867100c931eb9a57311be787cebff55a912cd7",
+    "check-03-instrumented": "37fe2f1e50e73569589dc2ecfbff497c78d968800cb900a427c7ad878fb86e36"
+  }
+}

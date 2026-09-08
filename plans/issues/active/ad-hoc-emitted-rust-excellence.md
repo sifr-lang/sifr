@@ -2,6 +2,24 @@
 
 Status: active
 
+## Item12K-B51: bounded emission-internal diagnostic complete (2026-09-08)
+
+Diagnostic-only complete; no execution blocker/PR/merge/production repair.
+[Full B51 record](ad-hoc-emitted-rust-b51-emission-internal-diagnostic.md).
+Independent exactB49 production30b25c551566bf0c146290c7ec38a55621c5d526;
+TEMP diagnostic0e7a1f37f49f070a494095284c1cf43aac6eb91b NEVERmerge/baseproduction.
+Separate plans-only branch codex/item12k-b51-record-8B6YsH directlyB49.
+One locked buildPASS112.801440s, exact4U/I/I/UPASS/window13.680223s/reaped/remaining[].
+No testsuite/Opus/profiler/retry/gate/qualification credit. Twelve refined families,
+89modules,132unchangedinputs, full exclusive accounting. Final syn::parse_file
+validation+successfulASTdisposal leads89calls466.215292/534.832082ms (~54.85/54.92%
+emission) in both, PUBLICSTDLIB family407.208418/473.151791ms. Individual topmodule
+differs; controls2.3996xvariable -> perturbationINCONCLUSIVE. Precise remaining
+boundary tokenization/grammar/ASTconstruction/disposal within final parse; no
+supported error-equivalent production replacement/checkremoval recommendation.
+All original budgets/owners/phase12D/12E/12F/full12/12A and complete qualified
+builtin/listrepeat delivery remain open. No automatic nextdiagnostic/repair. STOP.
+
 ## Item12K-B38: coherent acquisition and batch qualification (2026-09-08)
 
 **B38 MERGED / SCOPED QUALIFICATION COMPLETE; blocker none.**
