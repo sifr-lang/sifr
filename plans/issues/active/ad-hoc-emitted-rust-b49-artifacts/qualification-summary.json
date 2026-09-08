@@ -1,0 +1,573 @@
+{
+  "item": "12K-B49",
+  "source": "30b25c551566bf0c146290c7ec38a55621c5d526",
+  "verdict": "FAIL",
+  "blocker": "nine actual budget metrics fail",
+  "invocation_id": "performance-representative-1788894418571178000",
+  "run_id": "bench-1788894418-36219",
+  "outer_acquisitions": 1,
+  "external_retries": 0,
+  "full_gates": 0,
+  "prs": 0,
+  "merges": 0,
+  "freeze_unchanged": true,
+  "protected_inputs_verified": 221,
+  "binaries": {
+    "target/debug/sifr": "41203eb21fcfe364925bdcc57309b0dbdcb8d5aef65bcbd2fb353e0aa6e26a12",
+    "target/debug/frontend_query_bench": "384e072c4f599b20d989545a333cf1bac86305e61bb14bf0d13bbbd730dae71f"
+  },
+  "freeze_sha256": "911ed746f78747727e902bd03ccc5a257903b5c9e5dd4901a676f940cb381a81",
+  "rules_pass": 6,
+  "accepted_cases": 10,
+  "actual_variants": [
+    {
+      "actual_exit_code": 0,
+      "argv": [
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/.venv/bin/python",
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/areas/performance/run_benchmarks.py",
+        "--validate-only"
+      ],
+      "duration_ms": 100.609,
+      "expected_exit_code": 0,
+      "label": "benchmark-manifest",
+      "mismatches": [],
+      "status": "pass"
+    },
+    {
+      "actual_exit_code": 0,
+      "argv": [
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/.venv/bin/python",
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/areas/performance/run_benchmarks.py",
+        "--self-test"
+      ],
+      "duration_ms": 3193.758,
+      "expected_exit_code": 0,
+      "label": "benchmark-runner-self-test",
+      "mismatches": [],
+      "status": "pass"
+    },
+    {
+      "actual_exit_code": 0,
+      "argv": [
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/.venv/bin/python",
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/areas/performance/check_budgets.py"
+      ],
+      "duration_ms": 58.789,
+      "expected_exit_code": 0,
+      "label": "budget-policy",
+      "mismatches": [],
+      "status": "pass"
+    },
+    {
+      "actual_exit_code": 0,
+      "argv": [
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/.venv/bin/python",
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/areas/performance/check_budgets.py",
+        "--self-test"
+      ],
+      "duration_ms": 91.099,
+      "expected_exit_code": 0,
+      "label": "budget-policy-self-test",
+      "mismatches": [],
+      "status": "pass"
+    },
+    {
+      "actual_exit_code": 0,
+      "argv": [
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/.venv/bin/python",
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/areas/performance/check_trend_policy.py"
+      ],
+      "duration_ms": 52.786,
+      "expected_exit_code": 0,
+      "label": "trend-policy",
+      "mismatches": [],
+      "status": "pass"
+    },
+    {
+      "actual_exit_code": 0,
+      "argv": [
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/.venv/bin/python",
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/areas/performance/check_trend_policy.py",
+        "--self-test"
+      ],
+      "duration_ms": 57.814,
+      "expected_exit_code": 0,
+      "label": "trend-policy-self-test",
+      "mismatches": [],
+      "status": "pass"
+    },
+    {
+      "actual_exit_code": 0,
+      "argv": [
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/.venv/bin/python",
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/areas/performance/run_benchmarks.py",
+        "--json-out",
+        "target/performance/representative.budget.latest.json",
+        "--invocation-id",
+        "performance-representative-1788894418571178000",
+        "--require-controlled-host",
+        "--controlled-host-mode",
+        "work",
+        "--case",
+        "check-single-file-001-arithmetic",
+        "--case",
+        "check-project-004-project-graph",
+        "--case",
+        "build-single-file-001-break-continue",
+        "--case",
+        "build-project-001-additional-modules",
+        "--case",
+        "formatter-corpus-001-project-check",
+        "--case",
+        "formatter-large-file-001-check",
+        "--case",
+        "incremental-local-loop-001-unchanged-file-update",
+        "--case",
+        "interactive-tooling-foundation-002-warm-diagnostics-query",
+        "--case",
+        "lsp-query-003-diagnostics",
+        "--case",
+        "diagnostic-non-regression-002-json-diagnostic-schema"
+      ],
+      "duration_ms": 188617.497,
+      "expected_exit_code": 0,
+      "label": "benchmark-subset",
+      "mismatches": [],
+      "status": "pass"
+    },
+    {
+      "actual_exit_code": 1,
+      "argv": [
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/.venv/bin/python",
+        "/private/tmp/sifr-b49.4WCpNp/sifr/verification/areas/performance/check_budgets.py",
+        "--results",
+        "target/performance/representative.budget.latest.json",
+        "--allow-subset",
+        "--expected-invocation-id",
+        "performance-representative-1788894418571178000"
+      ],
+      "duration_ms": 64.151,
+      "expected_exit_code": 0,
+      "label": "budget-subset",
+      "mismatches": [
+        "unexpected-exit"
+      ],
+      "status": "fail"
+    }
+  ],
+  "budget_failures_verbatim": [
+    "build-single-file-001-break-continue (perf.build.single.break_continue) peak_rss_bytes regression: measured=185958400 threshold=181649408 waiver_status=no_waiver",
+    "check-project-004-project-graph (perf.check.project.project_graph) median_instructions regression: measured=17467799652 lower_bound=17455322727.000 uncertainty=12476925.000 threshold=13938915299 waiver_status=no_waiver",
+    "check-project-004-project-graph (perf.check.project.project_graph) peak_rss_bytes regression: measured=185860096 threshold=179601408 waiver_status=no_waiver",
+    "check-single-file-001-arithmetic (perf.check.single.arithmetic) median_instructions regression: measured=17409689048 lower_bound=17405045888.000 uncertainty=4643160.000 threshold=13879420485 waiver_status=no_waiver",
+    "check-single-file-001-arithmetic (perf.check.single.arithmetic) peak_rss_bytes regression: measured=185434112 threshold=181436416 waiver_status=no_waiver",
+    "diagnostic-non-regression-002-json-diagnostic-schema (perf.diagnostic.json_diagnostic_schema) median_instructions regression: measured=17410040211 lower_bound=17403904872.000 uncertainty=6135339.000 threshold=13874003870 waiver_status=no_waiver",
+    "diagnostic-non-regression-002-json-diagnostic-schema (perf.diagnostic.json_diagnostic_schema) peak_rss_bytes regression: measured=185630720 threshold=180748288 waiver_status=no_waiver",
+    "formatter-corpus-001-project-check (perf.formatter.corpus.project_check) median_instructions regression: measured=46165395 lower_bound=45935946.000 uncertainty=229449.000 threshold=38059926 waiver_status=no_waiver",
+    "lsp-query-003-diagnostics (perf.lsp.diagnostics.document) peak_rss_bytes regression: measured=151437312 threshold=108593152 waiver_status=no_waiver"
+  ],
+  "cases": [
+    {
+      "id": "build-project-001-additional-modules",
+      "kind": "command",
+      "sample_count": 5,
+      "metrics": {
+        "coefficient_variation": 0.015117,
+        "emitted_rust_bytes": 55284,
+        "emitted_rust_lines": 1301,
+        "generated_binary_bytes": 1183264,
+        "instructions_coefficient_variation": 0.000383,
+        "instructions_mad": 19037574,
+        "mad_ms": 53.086,
+        "median_cycles_per_instruction": 0.298543,
+        "median_instructions": 66511620270,
+        "median_ms": 8043.13,
+        "p95_instructions": 66530657844,
+        "p95_ms": 8293.633,
+        "peak_rss_bytes": 190513152
+      },
+      "accepted_attempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "coefficient_variation": 0.000383,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [],
+          "advisory_reasons": [
+            "external-cpu-pressure"
+          ],
+          "raw_receipts": 6
+        }
+      ]
+    },
+    {
+      "id": "build-single-file-001-break-continue",
+      "kind": "command",
+      "sample_count": 5,
+      "metrics": {
+        "coefficient_variation": 0.01239,
+        "emitted_rust_bytes": 440,
+        "emitted_rust_lines": 16,
+        "generated_binary_bytes": 526272,
+        "instructions_coefficient_variation": 0.000253,
+        "instructions_mad": 1976982,
+        "mad_ms": 15.301,
+        "median_cycles_per_instruction": 0.304142,
+        "median_instructions": 18114989560,
+        "median_ms": 2606.061,
+        "p95_instructions": 18116966542,
+        "p95_ms": 2669.341,
+        "peak_rss_bytes": 185958400
+      },
+      "accepted_attempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "coefficient_variation": 0.000253,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [],
+          "advisory_reasons": [
+            "external-cpu-pressure"
+          ],
+          "raw_receipts": 6
+        }
+      ]
+    },
+    {
+      "id": "check-project-004-project-graph",
+      "kind": "command",
+      "sample_count": 5,
+      "metrics": {
+        "coefficient_variation": 0.004453,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "instructions_coefficient_variation": 0.000261,
+        "instructions_mad": 4158975,
+        "mad_ms": 1.149,
+        "median_cycles_per_instruction": 0.30491,
+        "median_instructions": 17467799652,
+        "median_ms": 1907.353,
+        "p95_instructions": 17474664439,
+        "p95_ms": 1926.115,
+        "peak_rss_bytes": 185860096
+      },
+      "accepted_attempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "coefficient_variation": 0.000261,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [],
+          "advisory_reasons": [],
+          "raw_receipts": 6
+        }
+      ]
+    },
+    {
+      "id": "check-single-file-001-arithmetic",
+      "kind": "command",
+      "sample_count": 5,
+      "metrics": {
+        "coefficient_variation": 0.006047,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "instructions_coefficient_variation": 0.000222,
+        "instructions_mad": 1547720,
+        "mad_ms": 4.794,
+        "median_cycles_per_instruction": 0.30295,
+        "median_instructions": 17409689048,
+        "median_ms": 1895.461,
+        "p95_instructions": 17418021130,
+        "p95_ms": 1918.342,
+        "peak_rss_bytes": 185434112
+      },
+      "accepted_attempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "coefficient_variation": 0.000222,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [],
+          "advisory_reasons": [],
+          "raw_receipts": 6
+        }
+      ]
+    },
+    {
+      "id": "diagnostic-non-regression-002-json-diagnostic-schema",
+      "kind": "command",
+      "sample_count": 5,
+      "metrics": {
+        "coefficient_variation": 0.011176,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "instructions_coefficient_variation": 0.000246,
+        "instructions_mad": 2045113,
+        "mad_ms": 12.827,
+        "median_cycles_per_instruction": 0.304588,
+        "median_instructions": 17410040211,
+        "median_ms": 1911.15,
+        "p95_instructions": 17412085324,
+        "p95_ms": 1923.977,
+        "peak_rss_bytes": 185630720
+      },
+      "accepted_attempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "coefficient_variation": 0.000246,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [],
+          "advisory_reasons": [],
+          "raw_receipts": 6
+        }
+      ]
+    },
+    {
+      "id": "formatter-corpus-001-project-check",
+      "kind": "command",
+      "sample_count": 5,
+      "metrics": {
+        "coefficient_variation": 0.06681,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "instructions_coefficient_variation": 0.013881,
+        "instructions_mad": 76483,
+        "mad_ms": 0.149,
+        "median_cycles_per_instruction": 0.447214,
+        "median_instructions": 46165395,
+        "median_ms": 23.916,
+        "p95_instructions": 47752373,
+        "p95_ms": 26.935,
+        "peak_rss_bytes": 14974976
+      },
+      "accepted_attempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "coefficient_variation": 0.013881,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [],
+          "advisory_reasons": [],
+          "raw_receipts": 6
+        }
+      ]
+    },
+    {
+      "id": "formatter-large-file-001-check",
+      "kind": "command",
+      "sample_count": 5,
+      "metrics": {
+        "coefficient_variation": 0.051495,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "instructions_coefficient_variation": 0.012589,
+        "instructions_mad": 437248,
+        "mad_ms": 0.702,
+        "median_cycles_per_instruction": 0.386938,
+        "median_instructions": 57713274,
+        "median_ms": 24.366,
+        "p95_instructions": 58911549,
+        "p95_ms": 26.848,
+        "peak_rss_bytes": 13156352
+      },
+      "accepted_attempt": 3,
+      "attempts": [
+        {
+          "attempt": 1,
+          "coefficient_variation": 0.026197,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [
+            "unstable-samples"
+          ],
+          "advisory_reasons": [],
+          "raw_receipts": 6
+        },
+        {
+          "attempt": 2,
+          "coefficient_variation": 0.033774,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [
+            "unstable-samples"
+          ],
+          "advisory_reasons": [],
+          "raw_receipts": 6
+        },
+        {
+          "attempt": 3,
+          "coefficient_variation": 0.012589,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [],
+          "advisory_reasons": [],
+          "raw_receipts": 6
+        }
+      ]
+    },
+    {
+      "id": "incremental-local-loop-001-unchanged-file-update",
+      "kind": "frontend-query",
+      "sample_count": 20,
+      "metrics": {
+        "coefficient_variation": 0.041976,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "instructions_coefficient_variation": 0.000771,
+        "instructions_mad": 237527,
+        "mad_ms": 0.006,
+        "median_cycles_per_instruction": 0.30603,
+        "median_instructions": 856008736,
+        "median_ms": 0.187,
+        "p95_instructions": 857910033,
+        "p95_ms": 0.205,
+        "peak_rss_bytes": 6815744
+      },
+      "accepted_attempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "coefficient_variation": 0.000771,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [],
+          "advisory_reasons": [],
+          "raw_receipts": 21
+        }
+      ]
+    },
+    {
+      "id": "interactive-tooling-foundation-002-warm-diagnostics-query",
+      "kind": "frontend-query",
+      "sample_count": 20,
+      "metrics": {
+        "coefficient_variation": 0.022005,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "instructions_coefficient_variation": 0.00143,
+        "instructions_mad": 1775809,
+        "mad_ms": 0.003,
+        "median_cycles_per_instruction": 0.293522,
+        "median_instructions": 1438228174,
+        "median_ms": 0.296,
+        "p95_instructions": 1441938143,
+        "p95_ms": 0.313,
+        "peak_rss_bytes": 10715136
+      },
+      "accepted_attempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "coefficient_variation": 0.00143,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [],
+          "advisory_reasons": [],
+          "raw_receipts": 21
+        }
+      ]
+    },
+    {
+      "id": "lsp-query-003-diagnostics",
+      "kind": "lsp-query",
+      "sample_count": 20,
+      "metrics": {
+        "coefficient_variation": 0.050339,
+        "emitted_rust_bytes": null,
+        "emitted_rust_lines": null,
+        "generated_binary_bytes": null,
+        "instructions_coefficient_variation": 0.016931,
+        "instructions_mad": 1350402,
+        "mad_ms": 0.069,
+        "median_cycles_per_instruction": 0.524608,
+        "median_instructions": 372983147,
+        "median_ms": 5.315,
+        "p95_instructions": 387341988,
+        "p95_ms": 5.701,
+        "peak_rss_bytes": 151437312
+      },
+      "accepted_attempt": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "coefficient_variation": 0.016931,
+          "stability_metric": "instructions_coefficient_variation",
+          "stability_limit": 0.02,
+          "rejection_reasons": [],
+          "advisory_reasons": [
+            "external-cpu-pressure"
+          ],
+          "raw_receipts": 21
+        }
+      ]
+    }
+  ],
+  "raw_receipts": 117,
+  "raw_sidecars_verified": true,
+  "evidence_inventory": "/private/tmp/sifr-b49.4WCpNp/evidence/qualification-inventory.json",
+  "inventory_sha256": "3e374a8594c5d8eb1026634d12e5b9ad5f53ebfe0722ff361e67683202f56d81",
+  "recorded_files": 316,
+  "receipt": {
+    "argv": [
+      "uv",
+      "run",
+      "--project",
+      "verification",
+      "--locked",
+      "python",
+      "-m",
+      "sifr_verify",
+      "areas",
+      "run",
+      "--area",
+      "performance",
+      "--suite",
+      "representative"
+    ],
+    "TMPDIR": "/private/tmp/sifr-b49.4WCpNp/qualification-tmp",
+    "timeout_seconds": 1800.0,
+    "timed_out": false,
+    "exit_code": 1,
+    "elapsed_seconds": 193.59601004095748,
+    "release_pass": true,
+    "remaining": [],
+    "cleanup_signals": []
+  },
+  "cache_state_before": {
+    "cargo_debug_dir": "/private/tmp/sifr-b49.4WCpNp/sifr/target/debug",
+    "cargo_lock_present": true,
+    "generated_artifact_cache_root": "/private/tmp/sifr-b49.4WCpNp/qualification-tmp/sifr_generated_artifact_cache",
+    "generated_artifact_entries": 0,
+    "helper_binaries": {
+      "frontend_query_bench": true,
+      "sifr": true
+    },
+    "helper_cache": "warm"
+  },
+  "cache_state_after": {
+    "cargo_debug_dir": "/private/tmp/sifr-b49.4WCpNp/sifr/target/debug",
+    "cargo_lock_present": true,
+    "generated_artifact_cache_root": "/private/tmp/sifr-b49.4WCpNp/qualification-tmp/sifr_generated_artifact_cache",
+    "generated_artifact_entries": 9,
+    "helper_binaries": {
+      "frontend_query_bench": true,
+      "sifr": true
+    },
+    "helper_cache": "warm"
+  },
+  "interpretation": "Darwin RSS is bytes, not KiB or footprint. Work-process and query-aggregate boundaries are separate. This is not attribution of the historical residual. No after-failure repair or retry."
+}

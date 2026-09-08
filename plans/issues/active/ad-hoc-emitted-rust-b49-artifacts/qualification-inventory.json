@@ -1,0 +1,1266 @@
+{
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/results/build-project-001-additional-modules.json": {
+    "sha256": "497a5b3af15b633a388c2ef9072e4881e1d670f58ff13832d2eceef18030a661",
+    "bytes": 29093
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/results/build-single-file-001-break-continue.json": {
+    "sha256": "1b7e6d39d98dd3dd787a575fb7aab3746988976f60c283aee65323b3d8ab4ae0",
+    "bytes": 11262
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/results/check-project-004-project-graph.json": {
+    "sha256": "6521d8612de8dcf8e02077741804499eefde0db743f2f7cb5ddd9b6f121ffbc3",
+    "bytes": 9321
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/results/check-single-file-001-arithmetic.json": {
+    "sha256": "00fda04e495180aa8ef6e14f704070ecf338b680f3f8fa5d123fab2cdb4f9f80",
+    "bytes": 9269
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/results/diagnostic-non-regression-002-json-diagnostic-schema.json": {
+    "sha256": "1084a92d23910ae7ed3f25c38d903a95d972db7f6921852055515e0754b86680",
+    "bytes": 9415
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/results/formatter-corpus-001-project-check.json": {
+    "sha256": "b2afa18e22714817dd4f284bf67bbc12bd29e8b6462bd50d9c9c5c4d51f1078c",
+    "bytes": 5729
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/results/formatter-large-file-001-check.json": {
+    "sha256": "4a9c47b5c4d56a07cc6e977bf558b4ba954d625d2cf950c3f0a454b6c4a55601",
+    "bytes": 5723
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/results/incremental-local-loop-001-unchanged-file-update.json": {
+    "sha256": "b2f19002cc29207b229025d94d576c64198f533ab4efb00ae3b0ce35fbc8d68e",
+    "bytes": 8843
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/results/interactive-tooling-foundation-002-warm-diagnostics-query.json": {
+    "sha256": "0c191025e033bc71e1bfa2e8d0932585017da58837f96345f838c769148bea8d",
+    "bytes": 9015
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/results/lsp-query-003-diagnostics.json": {
+    "sha256": "24d3c693be45bf9cce2609db076ea4743b0ef998a66fc105dd947b4ae14d2c20",
+    "bytes": 24338
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/0.json": {
+    "sha256": "dfa6baf164c6796358bba8ad17a23230a9ecc7d1ec1c948da695d7bd05860458",
+    "bytes": 2894
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/0.stderr": {
+    "sha256": "fbde9dc17ef32db95fcfe36b808ff0734c1dd1dbac94dc9be2ee6be0058e9d51",
+    "bytes": 1610
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/1.json": {
+    "sha256": "742fa248447dbd21a457b28f904ff47708793369b7c426a45e5cac12c495be2f",
+    "bytes": 2891
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/1.stderr": {
+    "sha256": "ded7b41bb6fbebf321a803fdb3e0e7bf179556a441cf47fdb47eb1c9caa19684",
+    "bytes": 1609
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/2.json": {
+    "sha256": "6d46cfe56f2f6212708bf99d905961954eb257bd7dd09a97520e36a1fbbf4c93",
+    "bytes": 2892
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/2.stderr": {
+    "sha256": "38a6f69b2efe42acf19cb7da44de36947afb15702f8ba752a263ec59abdf403a",
+    "bytes": 1609
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/3.json": {
+    "sha256": "fa6ec48c10f06c7ce42adc4419e006fd54d6ce76bbfb0a851b126cbe4845bce9",
+    "bytes": 2891
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/3.stderr": {
+    "sha256": "88b0757898a0e0844d9b6436b2c86448b04ff93c3d934fc7ff283e9ba70a2f17",
+    "bytes": 1609
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/4.json": {
+    "sha256": "8ae03830b55c3149b85d1d1535ac54ea01a65cfdb503f13b09011eee69a65b93",
+    "bytes": 2892
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/4.stderr": {
+    "sha256": "aa8efd97d329f04e293d6879b7970231fe3d34dc5ecd5006144beda63c719977",
+    "bytes": 1609
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/5.json": {
+    "sha256": "2ab418434c0d083262aa5ab6d6d60717f520580e0224b3895cdc7b352ee713df",
+    "bytes": 2891
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-project-001-additional-modules/5.stderr": {
+    "sha256": "4daf805ccedc20cede5eff81a2b262ac0871762975e02cbfacf9ee98c6265d39",
+    "bytes": 1609
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/0.json": {
+    "sha256": "b471941792fa45aad130cbd385dcf96338dbd8916708e57d31608bde4544934b",
+    "bytes": 2917
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/0.stderr": {
+    "sha256": "1b12a954f842781c9d2d60f7e5b3645ceb0ccd68e9143c02c17421e4b1b189ba",
+    "bytes": 1623
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/1.json": {
+    "sha256": "3648418ce774a1a6084377830d4bf8d4ce8ace6c5ded47f54652d25cf070d640",
+    "bytes": 2918
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/1.stderr": {
+    "sha256": "27c05f1b682b3cdf711d8fbda926dd25ae293d9574cbebe9daa6ff0b15607932",
+    "bytes": 1623
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/2.json": {
+    "sha256": "310b409d3dc785dca5b765c4aa62062d6f352deda739467753675892cd4d7db4",
+    "bytes": 2917
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/2.stderr": {
+    "sha256": "8eedd00cda59320f6cb815036ab6f7297d12afcb6a7b076de41dd7d71581dbd6",
+    "bytes": 1623
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/3.json": {
+    "sha256": "1f06f57cbf2d44c64a969c02c57665f1d9d5db4ad1faea619ee464077e3dcd7b",
+    "bytes": 2918
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/3.stderr": {
+    "sha256": "0df1d11a2cfbc57f822fad03ff39cbdd8f63124560b9772c6231d600aeb01a09",
+    "bytes": 1623
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/4.json": {
+    "sha256": "fef4b6bcd80e306d15c249041fb820cf99fafadc28d80834363f6532b7a983fb",
+    "bytes": 2918
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/4.stderr": {
+    "sha256": "68dca4fe62ec7af25cf35a49e22d001042f02dfd210aea27ec866a4484519b68",
+    "bytes": 1623
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/5.json": {
+    "sha256": "c2e659591386b62471bd85004131d991f7b84c8becb82249717cabfb0351dc6e",
+    "bytes": 2917
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/build-single-file-001-break-continue/5.stderr": {
+    "sha256": "c8902c6daccd6fe41b703cd2d239ae7ffde1e340bd011f9818762164f5d41ded",
+    "bytes": 1623
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/0.json": {
+    "sha256": "7d81d857ae79a28d1db33310a2eddb92e13f2612c699f53f82e2f09c10ae7a47",
+    "bytes": 1870
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/0.stderr": {
+    "sha256": "de9ad3e711c63c1fac25c887c20c42ff60bb0bef84c6dfd750007d68d0b59269",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/1.json": {
+    "sha256": "6a98abf3b4e9af4a775b1bd093dc54929246a4d81c7460dc7634b1aba3b3a54a",
+    "bytes": 1872
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/1.stderr": {
+    "sha256": "34fe482874c194e199219e36940c0798c713cd36f3b0a0fdfb11e58f0da328d7",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/2.json": {
+    "sha256": "0680c37d7359f0e1bfe38ca0cb990a69ff184af5dbfb6679875f0add88f96b5f",
+    "bytes": 1872
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/2.stderr": {
+    "sha256": "c697363c6ac9f172930c404976ee624863f5fc6ca92227704dbe61bd73c88a29",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/3.json": {
+    "sha256": "7508faa8d97d130ab2f89abca4c8677c2d5b5cc3027a979e7cd1f6db37518a61",
+    "bytes": 1872
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/3.stderr": {
+    "sha256": "e7b9c4f73b819e96b326d2af9ece913b7443312b242e2a42784328f4d77994b6",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/4.json": {
+    "sha256": "94e8611b4f806fb8be4bd79dfd64ef7714bb6ddc94d582615bccee413f28b6f9",
+    "bytes": 1872
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/4.stderr": {
+    "sha256": "e046f4b3d4c7297aca4a72dde2045f77ccf5c045f3bade5314cea6a2401fbb04",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/5.json": {
+    "sha256": "b77dd197e649d0902fb8eff1a13c6850bac88da9b3e8296beacc532fd342f4de",
+    "bytes": 1872
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-project-004-project-graph/5.stderr": {
+    "sha256": "46354fd4382920bfd1c5241792cd824091d39cf4d306690b6cdbd591cda7c2a6",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/0.json": {
+    "sha256": "efbadf9ea4756458d1b9c6579da43d0d838ca44c96dc3c8015fefa8ac2d863cd",
+    "bytes": 1886
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/0.stderr": {
+    "sha256": "76bf919c1d15d54a8644c00123bf0355a1909e4fa13f4ceef9b09d09d7b2f051",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/1.json": {
+    "sha256": "93412431a9601a6823c66f05bddad01e618f400fd229e4e804baeaf931ca502f",
+    "bytes": 1887
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/1.stderr": {
+    "sha256": "3c6934d06963c6f81dd99ee6c3110ac738327929da72a48dde7e20e3d50e6e50",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/2.json": {
+    "sha256": "2df716bb53466d473080eb396dadcf5c10302130adbb2fdac10f6273249c5acc",
+    "bytes": 1887
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/2.stderr": {
+    "sha256": "26b22d80e5cf1a93933b24d18060f056e130b084b1a9052ff4e577de4753e531",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/3.json": {
+    "sha256": "19be3b9b4fca2fcdb27d4f4c69b21145a1c8d1ff32e453706b0d9e2b3120bf5b",
+    "bytes": 1887
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/3.stderr": {
+    "sha256": "63e4405a6ec2cbf0c139e68014631849e12d30d5d9018ccef4caa5a8effcbceb",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/4.json": {
+    "sha256": "50edac001b23e312704ecb3c58d262236065a11d1f72a25dc6409cccb77d3f68",
+    "bytes": 1887
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/4.stderr": {
+    "sha256": "c30b79e137547f150a388ab5b50e2ed02e242fed62fc39c800b619f6b860c82c",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/5.json": {
+    "sha256": "a4ed882b0e4f2aa484144ac0b827231204ee7bf382c567f277d9d7916ba7e9fe",
+    "bytes": 1887
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/check-single-file-001-arithmetic/5.stderr": {
+    "sha256": "a12b70795c010fc88b9b7321bbd669578466d91ccfcc06a5b44f679673dfb0ed",
+    "bytes": 793
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/0.json": {
+    "sha256": "461b3eecb2d01b03899b44a93bcc2f3d7d5280d50691fafc5f01fd8010f77948",
+    "bytes": 2986
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/0.stderr": {
+    "sha256": "dc89e3c2d1ea27ee74d7905e45fae62ab4e5d78bb916a77ded2c653e1a5b95e2",
+    "bytes": 1699
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/1.json": {
+    "sha256": "a5e16e15fc64aede3ad6b692f1f41008732d3a9f34cafe03e3b66744d5e10289",
+    "bytes": 2987
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/1.stderr": {
+    "sha256": "96c0c3fb1768ceeda38c9b6019209c779a67224cbf56d7233a1a68f1105a7942",
+    "bytes": 1699
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/2.json": {
+    "sha256": "92ac1f927ab54808bd64dd449a192f3aeee8baea6544aeff9eef62ad66cbbe42",
+    "bytes": 2987
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/2.stderr": {
+    "sha256": "ef1706691cb8f8ef55ba7fa155959aeffc2cb87bd6d855b1c2d6ca3869fb1cc6",
+    "bytes": 1699
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/3.json": {
+    "sha256": "0242d484b3b6dca3c4d511f68931701a96c8ca28368df63da6fe5e0b6a9e9469",
+    "bytes": 2987
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/3.stderr": {
+    "sha256": "b8e05f85c30e5c88a2c53151afdaf069da57d86ed7bfa033655c18e1ee250ac8",
+    "bytes": 1699
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/4.json": {
+    "sha256": "d8c846088c48eafd10142a847ab1b975fd7c0e98dcd855465b907c895cf25015",
+    "bytes": 2987
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/4.stderr": {
+    "sha256": "7cdb2bba1d03d9852bae24d4e08e2dd4fb4cc6b900f3bb5d58d537580d70eea4",
+    "bytes": 1699
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/5.json": {
+    "sha256": "2f9c23c99229ad7ed7d0d73e7220bcee74105b42888c3867067056e5dbce9cdd",
+    "bytes": 2987
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/diagnostic-non-regression-002-json-diagnostic-schema/5.stderr": {
+    "sha256": "f0809d48815311b5d5ce758d391791bbb45be87e9ca18390abd8c285e4a1fd8e",
+    "bytes": 1699
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/0.json": {
+    "sha256": "1d04796afd9d29a2da5f5f8bd29bcd30b34615ef89f81d07d7ec941a5fe64262",
+    "bytes": 1922
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/0.stderr": {
+    "sha256": "5b98e3fed5eb306200006bc015fa40e34f2e3ee0ac3ee696f274c66161474466",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/1.json": {
+    "sha256": "6edbd083cfe9c0eb48a152039237a1b16719a2cfab32423f7dc31258722a14a1",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/1.stderr": {
+    "sha256": "ed9dfbdd0f131129f23824ef3436991b734a8c5b1260b206b55a7dad21187807",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/2.json": {
+    "sha256": "aa7a5932e0830a5830f5eb3fc889e2c26fe7673d07b972062b25fbcea73c8680",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/2.stderr": {
+    "sha256": "940958a86a4bee9f07c386602774cbdd4e81e2fa34595ee7ba5754e6e5a14971",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/3.json": {
+    "sha256": "8f8f2f86cd53e508e0267125e1d0aab2977cd2c45c74d7b41bc27f224fbab703",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/3.stderr": {
+    "sha256": "852cff46bd18025e77a7661bd06a0a290b4691b5042210c3b047232d4c99398e",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/4.json": {
+    "sha256": "feb9ddb323b84b07710eedd0cda122e6251e4ebfef9b9a47cb497de7fd97895e",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/4.stderr": {
+    "sha256": "1d6c804aeaac64f89958f2e2125734283648d03da4a5bf50709f8e9690b77293",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/5.json": {
+    "sha256": "8a0f980ce22450f86caefc3888bd0a5d7278bf0450aad7ac8f03973ce62d4689",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-corpus-001-project-check/5.stderr": {
+    "sha256": "82194cee5f3916394619ff65b4305d3d37ecd71b610a8c5e64967eded0b090bb",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/0.json": {
+    "sha256": "fbf38a58f2398f1bf1cad461d9e70f9a688ee2c34ce99d1de5d0c132c506e0da",
+    "bytes": 1922
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/0.stderr": {
+    "sha256": "de2f75b906fd460411a0ccbff8d451f85a7489dc358d4eda98f22d0bc7e85df4",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/1.json": {
+    "sha256": "13224ee7c3a473ca7ed4ec8d230131d193a1675ce38fe9b824ab833507ce7286",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/1.stderr": {
+    "sha256": "47b5e9e350b57f04b2f0d58d2b4ba8aaadf04d1a2b0711cbc5accebf7fa38b74",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/2.json": {
+    "sha256": "9169014815ac6e60bacb53756894175565c7dae59a5d92144e806f8e443a48bf",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/2.stderr": {
+    "sha256": "ae1c057245ed2e09ac02849da17f96a65570bc67d5c7b2b6f58c55b4b12f0441",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/3.json": {
+    "sha256": "18278fba1657ba32fdf70cef42a43ef6504e6b7a2e0a327cf5ddf53228e42312",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/3.stderr": {
+    "sha256": "dd896c7cf2f59da68438085dada85a14a88094c5f6a359ab8ff0084b0ed88949",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/4.json": {
+    "sha256": "63774c14fac8adcfdda226ddaac081dd042d51f28def7d4691f30b9bed65a34f",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/4.stderr": {
+    "sha256": "6fa38a5a9c924fadfe2011fa9eb0423c9d9086bf2038ebaaf05bfa6eb534dc98",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/5.json": {
+    "sha256": "2db1c63fcc3592846c02d0f1d78210c4dc0b5728a83691db44b34a02e6da1f99",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/formatter-large-file-001-check/5.stderr": {
+    "sha256": "9b95cd3c52911f0e97fb60ce8fc76a65e0ff78dafec702b03ee2b160930844db",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/0.json": {
+    "sha256": "d7790b4e9f0965e36c3ee4aace99423d6c3989da4ff49f424f0ea174328b4a5c",
+    "bytes": 2212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/0.stderr": {
+    "sha256": "515b7a4d7a16c71d105ff5985a8a8cba5cadd11f9a510ddbb3fe60585e8b90d9",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/0.stdout": {
+    "sha256": "f5a200971c118c8f87fdab738f5cecfaf11618a85a04cd7984aebe2b70eb503f",
+    "bytes": 505
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/1.json": {
+    "sha256": "47949f4c4fef2d296bf5b8376c9533cb120be453d15e611e5db0c40d1868308f",
+    "bytes": 2208
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/1.stderr": {
+    "sha256": "6cca7155425767942e596ce694250207c29bac2d0f6d97ee7660a738f9911394",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/1.stdout": {
+    "sha256": "474da7dbe58035d3bfdf63cd08145dc6d243dea7fa766ce53aeacdf480754c36",
+    "bytes": 211
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/10.json": {
+    "sha256": "988b80efccbe150784449587e5c5863a086db2522f92937f3901d912277267bd",
+    "bytes": 2212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/10.stderr": {
+    "sha256": "e6aacb372dce9a2d682fdae6d922952e8925f640afe484363f2fca29a7dc04f6",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/10.stdout": {
+    "sha256": "3fdce511a5763797add3d4412200957665808b2a2cc8c670db4bbfdc705c5778",
+    "bytes": 201
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/11.json": {
+    "sha256": "dd8539438f5aa19db60602a902a19ab6e384558562be4b316b1a591482cb0c81",
+    "bytes": 2212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/11.stderr": {
+    "sha256": "da01d17db8088f1cadf2efbf22ce7752cc98b06a28487074a3b845749024277c",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/11.stdout": {
+    "sha256": "50639330bded9bb06a33d5ba60c6bfb5c012fc26610c2b083937dcf086180646",
+    "bytes": 202
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/12.json": {
+    "sha256": "a783876c94209dd64be8d4a7cd4534b36741593c97eb359d61985901be71e153",
+    "bytes": 2212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/12.stderr": {
+    "sha256": "4f45177882de521c61220c440f7972ddc5619b1263e392fb09044ea26e9c6a3d",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/12.stdout": {
+    "sha256": "9b0adfc588b7bb3ac43ae78ba7aed99ee2ad876cf5baa70096f6256490a3f801",
+    "bytes": 211
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/13.json": {
+    "sha256": "d451dfbe9f962d29b3e36a7a24944e6cab9f677ec4dc451afe89494f579329e2",
+    "bytes": 2212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/13.stderr": {
+    "sha256": "c32b03a71ab05e9dee301bbea9303509521d079a4e988a1e6e34564f3e600d21",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/13.stdout": {
+    "sha256": "da84d00e51b79808a58b7651b69c837e5734812a62a0e78f59b32334f9949498",
+    "bytes": 192
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/14.json": {
+    "sha256": "d40bdd276d80c6d489314232bbb0a0c0dd38ed00559e0a7d6ace9f83dd8438ff",
+    "bytes": 2212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/14.stderr": {
+    "sha256": "a91d82a0d58a1b55392278814628eb22c5f64b0af4eec4a890a163c96b7b9f86",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/14.stdout": {
+    "sha256": "cbad7735b38103f4ea12c93617d10dfd62903d7f7240b98a119875628f4dbc78",
+    "bytes": 202
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/15.json": {
+    "sha256": "12ac0814c46e8fffe0068751bdcd03619349b837e008c5558a91dc66836ddcdc",
+    "bytes": 2212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/15.stderr": {
+    "sha256": "e72d750c168cf0905416f7b0c1a2e24497bf3daa627eb84ac9509c23b3b80600",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/15.stdout": {
+    "sha256": "1045382f8de72704049dac6a013f7d73a0c9306730f564baf89f42b25eb74f0a",
+    "bytes": 202
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/16.json": {
+    "sha256": "bd12b965a0ce5b790488f709c1cd77de9dc79ed4ed621a01a342ab122a27dc15",
+    "bytes": 2212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/16.stderr": {
+    "sha256": "be5d0dbf211362a56a4eb88ecf8a9fc1b959ae9117482524dea6f117cc130185",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/16.stdout": {
+    "sha256": "4c9e754f0ef4b7703cc554b9141e35f276e956af2e852c1084ce2939740997bd",
+    "bytes": 200
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/17.json": {
+    "sha256": "d3fa16738fb3a59cbf619445a852a999831d6ed0a095920ac408281f1f88af93",
+    "bytes": 2211
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/17.stderr": {
+    "sha256": "dac471fd3154a24bd49d4de14e113782fe4f8ce89a755616ee8b3b802e8f199b",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/17.stdout": {
+    "sha256": "ebd62febde7fdd5b061174cebc2e6be647c68766d3981c26ba66ea37117222eb",
+    "bytes": 202
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/18.json": {
+    "sha256": "7aef310f508cc505ba9ec8481fa523484bf3f2a555701004cecf1c85a1a9a796",
+    "bytes": 2212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/18.stderr": {
+    "sha256": "18ebe2d818574370a76b74233e9879993e1a1dbbda80c912524995f855534ea0",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/18.stdout": {
+    "sha256": "12a17188105a7d669d553e9cce76bdac805174a5da7db5fbaec1e6babf3ac67b",
+    "bytes": 182
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/19.json": {
+    "sha256": "daba284d737c1a27b70acddb7fb3a9dcb073057e01fdc39744b707ef19126ba4",
+    "bytes": 2213
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/19.stderr": {
+    "sha256": "db994e70042a630f42d4e79e3edd48bfd0837ff913949b2495e39479cb8ea72b",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/19.stdout": {
+    "sha256": "1e280c21425d2197a050102785a118b46041b224e1c32510b8e01f9431d13b08",
+    "bytes": 201
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/2.json": {
+    "sha256": "b0ebe63f99017a438c3ba1b4f8af32c9a73b2b9ad6b3545b917d39f37f097467",
+    "bytes": 2209
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/2.stderr": {
+    "sha256": "c4af555c3b7cbf50cb2e8750d8e3bee4c9e01f9899aafce04a6cd4429b616763",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/2.stdout": {
+    "sha256": "16921382858fbf28646c88184d1fcc36acc43e8160b007fe790ac90943c3ab72",
+    "bytes": 211
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/20.json": {
+    "sha256": "2969fa0e6833a86abf42cc943bda5fbdd6bc16d107a24a7ed822c573491cea9e",
+    "bytes": 2212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/20.stderr": {
+    "sha256": "f747374cf98a81e2bd495fb13279ba18b858b6822521a12878cfd46d2b18f71e",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/20.stdout": {
+    "sha256": "a373a3419ec12e1ec8990c98a0034684d26131cbe3802bea5fef5b6f9928bb40",
+    "bytes": 211
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/3.json": {
+    "sha256": "569261fae09837d6ae08e68d03890ba1c4444da670a97291135cc52cee771bfa",
+    "bytes": 2209
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/3.stderr": {
+    "sha256": "3c85bf7fb0d98116451786cdb69c6a2929d31e9721380b3afc5db56cb4e88510",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/3.stdout": {
+    "sha256": "51f5c6b40ba50211aa80cf97704197709430140854e5d62c16c72f7ffaebe508",
+    "bytes": 192
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/4.json": {
+    "sha256": "ba4fd4e2f0294cab2af6a0b434fcd0d7382b853bb02f36d71e0d076c8f873990",
+    "bytes": 2209
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/4.stderr": {
+    "sha256": "79aa1628d9307efb5c3fdd5efad56aeaa0bac19fd3f564dc499bfa280ec09a22",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/4.stdout": {
+    "sha256": "569a6994547abc1869e37f53256e0e570d61e92402e9ca36f0d9160f373433a0",
+    "bytes": 202
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/5.json": {
+    "sha256": "b1b95865b3918bb95861cda853d66036f8fc3eb4d69d302d7f75b3b29970114a",
+    "bytes": 2210
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/5.stderr": {
+    "sha256": "bd0b469f8e3734cd5ebb2b2e82d1d3e9dfe3be22d69831d6cad41bd13b7a9078",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/5.stdout": {
+    "sha256": "aa412527d976adab14bd6fdd99447282bcf495449fe11e2d4aba24dea0294fe9",
+    "bytes": 209
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/6.json": {
+    "sha256": "a5b5c4cf4c40c7e01e4e234b4d59d2d0db8c89d747dc65a00c6c7a02194c5c70",
+    "bytes": 2209
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/6.stderr": {
+    "sha256": "6c472f99100979115564e19280237504bcac1d9f76808207a5a71729a10ba847",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/6.stdout": {
+    "sha256": "3bbc9417655d84778f288a6b3fcfd045641eb487ce29f243cdf2c261647c18f6",
+    "bytes": 202
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/7.json": {
+    "sha256": "14b3ea94692cc3a609eb2a31b5eb7243d5941c4ae57afc9031c1736cacad18ce",
+    "bytes": 2209
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/7.stderr": {
+    "sha256": "3a8ee45894349d8b88e6f8f34f17102dbd377e06b29faa791a178506af56272a",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/7.stdout": {
+    "sha256": "5a18d406ca6e9b0ec9cc169eb3d86294389e369984e9f50579f870411619b6d9",
+    "bytes": 211
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/8.json": {
+    "sha256": "06f6beb45f68343a6d40007e7d515bbc408962c550f38a0c092b803690bf8e73",
+    "bytes": 2209
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/8.stderr": {
+    "sha256": "360bb6455ea7312f76240548a8e80e6b0b5417ce837efe4cd087589be1fc2495",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/8.stdout": {
+    "sha256": "a80b541dbcb75410536172cb03b097a29c7183d2db77b04ab0767bd5754fb6bb",
+    "bytes": 202
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/9.json": {
+    "sha256": "7c7468750faf2f7265b9f223f366b358ca72b2629788e7a523a6d62c52118dbe",
+    "bytes": 2209
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/9.stderr": {
+    "sha256": "fd73753aed649b0090fff0b41a649076fcc5a40b857e1444bfa2c917ae8c2f07",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/incremental-local-loop-001-unchanged-file-update/9.stdout": {
+    "sha256": "aac19e9257ad02db3cee80d52e8fbe43ad3349f688b278f96b9e240cc2e7e474",
+    "bytes": 193
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/0.json": {
+    "sha256": "173d509e35452d60cebecb6416291ab297c65b552fdc32634a8bc34ec34cf73f",
+    "bytes": 2241
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/0.stderr": {
+    "sha256": "d34a4cac66035cb1329f6d6b0ce44e297b83cd51de0b3c1f79c6eee8504312a4",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/0.stdout": {
+    "sha256": "6ba4dfd4a3cf8580983c4800a84333bb9afd971d17addd7fcd48a19f8f923800",
+    "bytes": 435
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/1.json": {
+    "sha256": "8e90011b46da9732ba69570e986623dbc2703358822919e1dc3d2f9a00d1928f",
+    "bytes": 2243
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/1.stderr": {
+    "sha256": "c1142992342f8bf9d3cd909b5681edf49972e465c005fc7cf14481e66bd90508",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/1.stdout": {
+    "sha256": "f4490425e403269994d8ab4363509d973bf16182f384f32b6947c5c3dbdc1fa5",
+    "bytes": 212
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/10.json": {
+    "sha256": "cc348addd86fe011e71431e0407fd743a5da6155770b6c7aa2e0d55b0235b011",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/10.stderr": {
+    "sha256": "630f598156580c1e80811fe03f9c5bfd5081d31f147e7c63dc3b9324aa8811f0",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/10.stdout": {
+    "sha256": "991f68a5b8cfd7172dd3bed21dc613480d3d39c4070bb7d09678d39b180c82a6",
+    "bytes": 194
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/11.json": {
+    "sha256": "39fc37d6dd9215e9feb7669d5716cc6a6303c7fbc5b1f38674771766c1d16fe6",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/11.stderr": {
+    "sha256": "4cc1105d639130cb81af04b9d794fc1560b240aff7453c2e254a42f41b254593",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/11.stdout": {
+    "sha256": "a80a0e99501c408c28fe453a3a19efee2f4c332fc08d268244556c9be710c51f",
+    "bytes": 185
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/12.json": {
+    "sha256": "b8000b4b1e669b99a4d7fab98a4c819f8405371e9868b215ea3a83a75d9f09ef",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/12.stderr": {
+    "sha256": "e268f85bb8b74358e97e210cd658b64a51bede8fac4f5e810d2e6c0a8628bbfa",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/12.stdout": {
+    "sha256": "d5886fd791af8c4a0530c216cd8ead2437041e938d1fa084f3387a6a0a959519",
+    "bytes": 180
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/13.json": {
+    "sha256": "af228604f13b65a5991f279c53058beadb3b26e446104c6b6a81542dccddfe8e",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/13.stderr": {
+    "sha256": "394a4d104f543e195e22412ef5caf24f4025fe999701d3af20683b6ac5250fcb",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/13.stdout": {
+    "sha256": "a2311949a420c6bb6c4c138e54dc1af443e008b2a07e7be997031018facde4cb",
+    "bytes": 185
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/14.json": {
+    "sha256": "8c00fbbe3e4cd8ffefb2fed2d80a66dcf473ba8fbee6c42721092ca2c03750c3",
+    "bytes": 2245
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/14.stderr": {
+    "sha256": "9820dad430df6f23a5a425b328af0dbb22e9880b2a6945574d8b5c6cd9872424",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/14.stdout": {
+    "sha256": "42d58d72891f411ec28f84dde8f26ba3ced7a3d46872ae8be82aeb64fb52998f",
+    "bytes": 180
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/15.json": {
+    "sha256": "17b10e29a0119a878aa835a47ff97da6bd7b1d254c64957a6cfa7b682805385b",
+    "bytes": 2245
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/15.stderr": {
+    "sha256": "b9656933299e8ac9f8ba8c59a49984dbb9a40479a5670a219abecbd194eb9410",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/15.stdout": {
+    "sha256": "3a666837acbed3993edd67df1d560598f53991229734e6015c0da1f4c0ffe03d",
+    "bytes": 191
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/16.json": {
+    "sha256": "87d939916d3adb02ab35aa39dfc78201c4ef64c890220907fca61fd9d9f60b1b",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/16.stderr": {
+    "sha256": "291814bdafb5f9dc06c64225135a86f284b33a778aafbfde54e723b4da1b7cf9",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/16.stdout": {
+    "sha256": "5d91d7f447cd61bd17d6a135aecd327a74e1bb366a36328dd3b8f0b7ab7e4da0",
+    "bytes": 203
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/17.json": {
+    "sha256": "877e8a0442d9f6bed0f8ad3a200ac63f15d4f78d9514747973a460dc522febdc",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/17.stderr": {
+    "sha256": "ccea18d721c1eafc9f660e08227a17aeb6cf10bd83dfeed3e81449a76e89c488",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/17.stdout": {
+    "sha256": "4788319c900f43b446fe5147a587c136aa620bdf6716926da08b9d05b04c7f75",
+    "bytes": 203
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/18.json": {
+    "sha256": "f08bb754d3319715a25eaff473499a8a7e0231e43aa9b55a3404addc7de4ff34",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/18.stderr": {
+    "sha256": "5b3ba7e1916119ecd7859e5c3aaa744828701a9dee0e6cde0f95b903204f50fb",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/18.stdout": {
+    "sha256": "dce18d13051873c876a0eabbaabbe499ad1fe9fa322df0b6e8213a478fc7e4f7",
+    "bytes": 194
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/19.json": {
+    "sha256": "e2510aae118dd77704ada6a494582b160b5aa324d8c5e34d2a2aa96c27af5f1b",
+    "bytes": 2245
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/19.stderr": {
+    "sha256": "7ab38e7fab74d07acaef1554472a93b4e1d5f79aa665f262cd5be5e82f56aceb",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/19.stdout": {
+    "sha256": "b959572aacd65668cc82dab1324b2ebee6846ef76256f6ac70dc2f9347a2ff05",
+    "bytes": 193
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/2.json": {
+    "sha256": "28e84c14f5435c95861f42795d21e3940885d8b1c3f05551d10f5e93444d1f8f",
+    "bytes": 2243
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/2.stderr": {
+    "sha256": "b5205a955229cbf95555e04814ba543e92282472172dd3d900870ac49da33338",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/2.stdout": {
+    "sha256": "2b278b87f3ec01034b8b82e5708c5e6bc9043798d15aa3a440c53385615caa52",
+    "bytes": 182
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/20.json": {
+    "sha256": "ad38b74c50c1b7758f7368000fffad93584e050f78e622add52e8393b69a030b",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/20.stderr": {
+    "sha256": "757808aa94478b88a27443d71fdc8576d11686871175b83429fba68413889c15",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/20.stdout": {
+    "sha256": "5e81d273c5d578430e2be30d2675ad4e7acf99d87b695bf5e42e731deecff89b",
+    "bytes": 185
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/3.json": {
+    "sha256": "ade69aa39f853244115b988ce5d8cf8e30adaaa209ffa118b436ed2481f4c27b",
+    "bytes": 2243
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/3.stderr": {
+    "sha256": "f204364110e4c2b9ad0dc516a097342eb5967d29335b47a9113c2cdec76a2045",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/3.stdout": {
+    "sha256": "5f08c4263b69e59174857d10f85bba3761c7ff7caa87de7d400a480f05b248b6",
+    "bytes": 185
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/4.json": {
+    "sha256": "2e205bb7b9ce401c9f8ef7bbf2c7d9385d405533075ec2406c4586b466f53150",
+    "bytes": 2243
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/4.stderr": {
+    "sha256": "59a0e556b3e39b1388ada0947a7d3ba88471355d3c3e755e7975643c0dd91c6d",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/4.stdout": {
+    "sha256": "d6a2ff4fcf550e88c90ed98733eca2d1aef6201bfca7a664b3811785325ac3ed",
+    "bytes": 182
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/5.json": {
+    "sha256": "2b2e346c8e772e4e385526cc86924626981275ba25de990fddf370f5e33906ee",
+    "bytes": 2243
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/5.stderr": {
+    "sha256": "0513e7ee74cbdb0afe6770a8b45f7e827776b469cccbdb5ca8f58910138c6d91",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/5.stdout": {
+    "sha256": "43e320ad55ce61d512505a481a04ad2d9be7004dee68c6bef51cf0833b46a089",
+    "bytes": 193
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/6.json": {
+    "sha256": "8db1e41d628d79fadb56c7f7ab42706b086419cf4e4d166dcae4a021951f691a",
+    "bytes": 2243
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/6.stderr": {
+    "sha256": "68c5db416607af99af77c8378dcaa082eed408dbf33a561762c3e99970c77a52",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/6.stdout": {
+    "sha256": "4282902839148ab94bbe18263b4c42c495591f2738c8df5ce909847c4e32d689",
+    "bytes": 203
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/7.json": {
+    "sha256": "79a4cbad0968c7b654bb7c532ebcaa63e30074b547ac854e1cac4259a85b8de5",
+    "bytes": 2243
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/7.stderr": {
+    "sha256": "4605b2cd33de35756a6ef4fbc1529d1616da5afb2a569faf49d4d9aa40385968",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/7.stdout": {
+    "sha256": "a15a97326bc8e45682746a62dcc259f84284d5e09abe3be170b50a2de94b8b39",
+    "bytes": 185
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/8.json": {
+    "sha256": "b1a06f8bec8cb0978733ee9e9e0b8478e24f893297b10337564ea562c3e34e28",
+    "bytes": 2243
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/8.stderr": {
+    "sha256": "85aea108c6ac55203c016f54db8237bd3772264abd4a68ad4bc2420503845a9b",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/8.stdout": {
+    "sha256": "1bbb296179c72402a863768f84b5e47d68d2b59491cde500f544b4612b5721ac",
+    "bytes": 185
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/9.json": {
+    "sha256": "702eff54219a9aae76e79e664a320fc46bdc35dcfd217ec82384cd6c8a820dd5",
+    "bytes": 2243
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/9.stderr": {
+    "sha256": "446793590ef1b3679d26199a77d342026693ac3a336a91e75cdbe2f15b7c9447",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/interactive-tooling-foundation-002-warm-diagnostics-query/9.stdout": {
+    "sha256": "5e68712b5a78e8996790c7c41ee8137e8ce9b8987f8767b2d1eb3506260d4de3",
+    "bytes": 193
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/0.json": {
+    "sha256": "0ea67c8685ed308dd9f44b770cce77e66a6d7a383c9adad4f118414db70e1c2c",
+    "bytes": 2244
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/0.stderr": {
+    "sha256": "1ba35e322393168b32566ae136d908b2f2641082084a1292b24ce71a1448aadb",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/0.stdout": {
+    "sha256": "d7b3c60555b16524b83bcfb98aa4c1cb7a168bba78129f6f32967be270fb90b3",
+    "bytes": 538
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/1.json": {
+    "sha256": "82467b34c1009ac53cea0dd270855c062a25e0822a9caf7c253a749ed5238e8d",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/1.stderr": {
+    "sha256": "495c31ec5e25b7cb22330aa57bd1c96fab9ea6288197001cdb342b32955e5fb7",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/1.stdout": {
+    "sha256": "5eda77f225d3077d001ca72fd2a7945fcc41209197d592f2f8657494ab6aa10c",
+    "bytes": 174
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/10.json": {
+    "sha256": "0a4c1f10b237acc21dcce07c835befff88a570a2d2acef4c251bf1ad2d0bb347",
+    "bytes": 2249
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/10.stderr": {
+    "sha256": "5180d736226e739092ed87b5749a3881bd29f14f78e1396cd53ec70238b80c58",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/10.stdout": {
+    "sha256": "d927cb7c37b98ff921d8050d65fa6c7d43a49a508308c5cee5f2e15d85f69b71",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/11.json": {
+    "sha256": "c0d7fb920f3b83d2fc6146cffbf6046429dd947d34fd3d5e8f7693bbca7246ac",
+    "bytes": 2249
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/11.stderr": {
+    "sha256": "afeaf2eea375676f1ae6a8d05aed03f7c9bbc73e48ecbc8e4a5556bda9a0b9b9",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/11.stdout": {
+    "sha256": "899db2c91614c3a7148c23d21ba243fa51e553b93d2cf8cfaf6c9cc03be60883",
+    "bytes": 174
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/12.json": {
+    "sha256": "d44dd6f49f59cf54b87334af2ed0b1ece497a95440e1a8bbbec22044974bedaa",
+    "bytes": 2249
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/12.stderr": {
+    "sha256": "66d0e7989aeb3aaf8db1fbb4f1287bb28f004559e7b70f1c529ed207da838024",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/12.stdout": {
+    "sha256": "a22d4daa92eb13fd7b50666d5156d4e99e991e5660c6a9d266af91090a903fb5",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/13.json": {
+    "sha256": "65c32b9b860fa8cf5a5f2e9f020ef7019a4037bae2eb331b32fa92e43156ba6b",
+    "bytes": 2249
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/13.stderr": {
+    "sha256": "289d49ba42c3bd7dc1b2b0a47dc90d99a248071955664ad1e44147c01b4d8692",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/13.stdout": {
+    "sha256": "7db10df8bb6f1beba91b76e43eff4ce4a95cbec591ae2ec3e9450e9442ef5ccc",
+    "bytes": 174
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/14.json": {
+    "sha256": "1c53239495c0e88e040a42b96db17af4f4d21ac9f6d6ccfed93faba804056956",
+    "bytes": 2249
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/14.stderr": {
+    "sha256": "75001e02fb5745217b616c78f1f54ec4be5ddafd9c2813e350f14f53dac11d80",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/14.stdout": {
+    "sha256": "cab3ec5af2b3c844697aa897dc50283ab9615017e41ede9939b908c1bff65104",
+    "bytes": 174
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/15.json": {
+    "sha256": "41062d3df22deb5e47d39f9b2bc3b485131f8fc6fb4f44bf677409682e70d218",
+    "bytes": 2248
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/15.stderr": {
+    "sha256": "bdb4e9b0a54476b6d28ac0d1307d4edec948da9c91b4a03bec292bc7e02cb47f",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/15.stdout": {
+    "sha256": "81d37c7c4b782e6cda254412c1fb3d7aa47a74706b19602c79f3f61277c0f305",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/16.json": {
+    "sha256": "900984d6f8869a78f972037dc036e6785dd4e9e141780acc15b5498fc0874ce4",
+    "bytes": 2249
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/16.stderr": {
+    "sha256": "14af9ccd4579c9e17c00cd9f1e78efd48ebe1aa39292111f1a1ca42920e963f5",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/16.stdout": {
+    "sha256": "9ddb844f2ff7d31ec6f732f5e9d2a1997a2b99d2304a33427289bf807432ce86",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/17.json": {
+    "sha256": "ac1902e0e7dc8e03b2e041bd85d474d8fe7f0159a56e50028f43a2e368c5e3d4",
+    "bytes": 2249
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/17.stderr": {
+    "sha256": "94d442d3a61df553eae936b8ee2ca0ff3236b5ae722a9732317c1bd97bedaf45",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/17.stdout": {
+    "sha256": "417d56a486b1106ad15879d0dd76b797bd024c7a4f45b99e34f7fdb4140a2d6a",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/18.json": {
+    "sha256": "bd7488246ec99787b998d67ef9730b485cdf483738bb64de4ad702c082148925",
+    "bytes": 2249
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/18.stderr": {
+    "sha256": "5b1502702aa5052804b5a5ec4a810b5b351c1f9f4ae95d28bbcdc88e1efe0370",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/18.stdout": {
+    "sha256": "8d0712f8e19b90bfe60c84669a30a7b20fde503909fa947cd5e162253c8befb2",
+    "bytes": 172
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/19.json": {
+    "sha256": "1ab53c26d72cbea93abdf60852fd421050bef4ff36ccf565045f2939f7f32cc1",
+    "bytes": 2248
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/19.stderr": {
+    "sha256": "8a790c85c069da707697ca4122375a00421ae0724fef11bda89015404f7b73c7",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/19.stdout": {
+    "sha256": "8059646224c7ee900de507c10282e3dd5c99bfb27a023056f47f485e9c21729a",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/2.json": {
+    "sha256": "1d31531c9929c57cb997b7ac09b61ff03f5182a532de1c134c59e67b631eea3d",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/2.stderr": {
+    "sha256": "39874485568df75fd943dfacb7255896c960e71db33b5bde221f37aabd9401d1",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/2.stdout": {
+    "sha256": "cb25d418728f44d02983df446cae86890db1318f60af29b7895247ab3fa686ec",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/20.json": {
+    "sha256": "1ff1e3e7670c9a267262b97eb6d313f1d89dd64cc094b3a18db968cd1a58df18",
+    "bytes": 2249
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/20.stderr": {
+    "sha256": "843b2a43721109ccc3a44d602b256965b0a66afd4e3eaf838cedfed3c66b2474",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/20.stdout": {
+    "sha256": "1242c7a6dc9191d1fd23bf115ab7dc0a822e24477cd4c80caf4e00d5211c335c",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/3.json": {
+    "sha256": "11e796959fe27bdda4701e8b35a24cac760c3ba2e384fb8f6f64ed285bb6f1e0",
+    "bytes": 2244
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/3.stderr": {
+    "sha256": "0e4f47fac5d218b5b60cb38d7c47c4a25250bdfddf93ef06ff3674cc2f995bed",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/3.stdout": {
+    "sha256": "aa06ff185b2abf258d02c0e1e9e9902b380caa1afbe8285d22880016abca5c2d",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/4.json": {
+    "sha256": "09ee8ad1f972617c149f19709fc624b5bcf602a9c739755e130b94f50436d9a8",
+    "bytes": 2245
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/4.stderr": {
+    "sha256": "9e326839ae782481c89873aa8c64745442e1708776664ad5d2d6ea73f118e71d",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/4.stdout": {
+    "sha256": "48f44ebf795b7ac4b4cce9c5828b4758af36e33df581f720bda4941286989a37",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/5.json": {
+    "sha256": "cac2aaf7640c96d5c4d0f0862bd44800d8ab01e9ce5b1f4d204e67dff5e950e1",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/5.stderr": {
+    "sha256": "550aaa977529a623a9109ddadc31a9baed8d994906eb387b2eaffee5cd72c54a",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/5.stdout": {
+    "sha256": "fe20a8b2af05a39ef7025aace61ba91edb4aec5966fd64d965ef92cfcc09ac04",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/6.json": {
+    "sha256": "97a0471f94cd4eccd04c746b28d9c6f4649b810c3ebf39577cc40db2cb95f8b3",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/6.stderr": {
+    "sha256": "0522fb0d31da7caea6e85edc1bebcea1f439864f2f2672e53df7401f40784960",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/6.stdout": {
+    "sha256": "22c0813ecfdf123766ea3271089176b930f0ec5d687c3afda7f24e6604e59886",
+    "bytes": 173
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/7.json": {
+    "sha256": "84ef787b58aa8d604e2f775732c83edf961e81290dc4f6f72d305cb6f6beb01c",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/7.stderr": {
+    "sha256": "c1138d9fe4694715cf22bf24af1291bf826934810cb3b985adc9284122a8a5c6",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/7.stdout": {
+    "sha256": "08ec600aaf19e39cbd5bcc2971d63324b5d6474d9424010056355fecfb745999",
+    "bytes": 174
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/8.json": {
+    "sha256": "18b6936c121f6b31ecbf6ddf9102af1d13536a756e58a0fe1e818858cbe18cb8",
+    "bytes": 2246
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/8.stderr": {
+    "sha256": "93931bfbe675d9a71b05ba5d57bb0c35a55326689cde573e7137d9545ce3c35a",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/8.stdout": {
+    "sha256": "89bdc590968e84fedf939a4e290987aaebc76e9ba8f32d95c4f28f73279cf538",
+    "bytes": 175
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/9.json": {
+    "sha256": "f15f8a6ccb5a5837be7da78b0bd6e604d5c3d8e58e2b1a64a633896c9337ea63",
+    "bytes": 2245
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/9.stderr": {
+    "sha256": "da044d067bbfe3828396a460646f0c74b054b7c7bd4a28eb8bafbdd61e74bdde",
+    "bytes": 777
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/1/samples/lsp-query-003-diagnostics/9.stdout": {
+    "sha256": "c7b3ae7e797fd2ac141ca0ee13e1a51f3d461e9340d619e28198eb1ac9202f87",
+    "bytes": 170
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/results/formatter-large-file-001-check.json": {
+    "sha256": "b228b3ccb8f1e8cc1d9a948811aaf0dcf1ad0d9020930f402ef4df0449b03e90",
+    "bytes": 12671
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/0.json": {
+    "sha256": "14ac77ce648521734030d723e8f3a7b9b4b4cfc0ce7f81a1db8028104f61404a",
+    "bytes": 1922
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/0.stderr": {
+    "sha256": "e05fa6efefa9efed4a993a18fc53b2d6de6fabb07426d59608d74c45fae84c2f",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/1.json": {
+    "sha256": "79d409fd6331e4903399a06d8dab3a5a7d9a52593c88ba28700e249a914d7f04",
+    "bytes": 1922
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/1.stderr": {
+    "sha256": "e911b33b3cc00c3dada4ffbd3ae9efc3dcd708c034409b2a5e658a7cc73754b0",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/2.json": {
+    "sha256": "f42438f0a18b2484e9987e8b15d271be0a622e3ab080cef130596b18f4f1aae9",
+    "bytes": 1922
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/2.stderr": {
+    "sha256": "8770edbd33a5e505292497aaaa338d497a1653f458852ead86c6289bc28286ec",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/3.json": {
+    "sha256": "4c1edda0d7694eba80f39d865ddb4d049e4ae4a5b29bf55ed8902ad437a1b946",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/3.stderr": {
+    "sha256": "bb46640c12777313e9bdd81d0cea701b82e62026029d777aa496d7ca66b1ea57",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/4.json": {
+    "sha256": "70af03be89de3313517e59dc16a43d61ca68c1f9deb7372da0baf0280ab1a257",
+    "bytes": 1922
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/4.stderr": {
+    "sha256": "2892161f92dc60305c2cf8ae7e4914a9e10a82978fb469c11efe1ae790e2215d",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/5.json": {
+    "sha256": "d9e52f811b7e84f61d65119bf8c6543abacbc345c9198bd1a5c8183440c3c3f4",
+    "bytes": 1922
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/2/samples/formatter-large-file-001-check/5.stderr": {
+    "sha256": "4f1fcdd4db97cfc3b5dd8f9be2e0ff1ce4bc0d88d807e88f7ec1dafbe7dbb319",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/results/formatter-large-file-001-check.json": {
+    "sha256": "e7ddb1dfea1d1f9d248681b2cf5f0ce6433c84c56fcb73b49d634b19036bc04c",
+    "bytes": 12635
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/0.json": {
+    "sha256": "373b60506adfa4a9e6c99d5d08adc9a5417b54dea40a5ba3b2e875cb0c127aa8",
+    "bytes": 1921
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/0.stderr": {
+    "sha256": "4efeee44df703d5be6cfe1b5ca306fb69a1cd08af37c96ffda3b9007732e5308",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/1.json": {
+    "sha256": "a71fdbce4194d345747aca02fe67ba3fa68a051bfb5f077896f7e708079a03c9",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/1.stderr": {
+    "sha256": "ce81131d29ae787e82e6277ef799509dc54fc6bcbee9e34c9775e0bb5768f70a",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/2.json": {
+    "sha256": "9190c69d0ebca9b23c16b99c61d5ca5aa7ebac8e69081484be81d48bde4e4cff",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/2.stderr": {
+    "sha256": "971a3274bc1f251561a2362df16933b253157c6d5b5735570e54128f72cbe02a",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/3.json": {
+    "sha256": "a2ea23776a31f04d5712613f4df82c3acc576fabd60987169629217dcb009657",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/3.stderr": {
+    "sha256": "cdd487bb1b8bbcca5b9fa523e54d2452b0f49dafcde8f202857e1c8283912309",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/4.json": {
+    "sha256": "a7d93ecb10ac9f6b3baca132fed522be359646ab0dde389a1973eea17855db52",
+    "bytes": 1923
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/4.stderr": {
+    "sha256": "29edad991d14432db93e9ebf4f4793985dd0765d9745d35796ca8556fc83c39d",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/5.json": {
+    "sha256": "7663c57c565614d4e95c1b50031bc59a2a56214af700d61107a9a823c8f447a0",
+    "bytes": 1922
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/bench-1788894418-36219/attempts/3/samples/formatter-large-file-001-check/5.stderr": {
+    "sha256": "1a9e6ffb5b8de0e2c3453f7f7b643dc16491bff5479ca4ab504f0f35546be144",
+    "bytes": 797
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/evidence/bench-1788894418-36219.json": {
+    "sha256": "f7b4a79edd6fac93aa245e9bbece5846aa27410d1e716f9a1b1c7f5465343918",
+    "bytes": 223352
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/trend/bench-1788894418-36219.trend.json": {
+    "sha256": "e05d4d797ce39ce23351197834f9afeafd7d1c2f2013b9b3e52c2b8a386ff783",
+    "bytes": 26361
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/verification/areas/performance-results.json": {
+    "sha256": "125a5ac981700b4fee032d3cd891a4008a13e4ace7ab35df7eef80c01d4fcc85",
+    "bytes": 6210
+  },
+  "/private/tmp/sifr-b49.4WCpNp/sifr/target/performance/representative.budget.latest.json": {
+    "sha256": "f7b4a79edd6fac93aa245e9bbece5846aa27410d1e716f9a1b1c7f5465343918",
+    "bytes": 223352
+  },
+  "/private/tmp/sifr-b49.4WCpNp/evidence/representative-01.json": {
+    "sha256": "a66b50b865467e84920bb535cf3406736a9ab4f9610d315ef761d358a78b761c",
+    "bytes": 153440
+  },
+  "/private/tmp/sifr-b49.4WCpNp/evidence/representative-01.log": {
+    "sha256": "ab6beb509466bf4f5dc80f87ee4db81b21ce36be57039cdcb7d7aed521c30ce0",
+    "bytes": 8041
+  },
+  "/private/tmp/sifr-b49.4WCpNp/evidence/representative-01.started.json": {
+    "sha256": "268fd0bea6d438b2fb0af28badf3d997438cd8713f2903271b70f3ae2b1046c4",
+    "bytes": 437
+  }
+}

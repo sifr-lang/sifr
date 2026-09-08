@@ -1,0 +1,1036 @@
+{
+  "item": "12K-B49",
+  "source": "30b25c551566bf0c146290c7ec38a55621c5d526",
+  "tree": "a9a402fd36b99d97d4c0b9d2cb080c9bb55cb679",
+  "base": "df0056ad1b9d7fcbaacda3a3f0809da66279ea84",
+  "changed_paths": [
+    "crates/sifr_codegen/src/field_analysis_helpers.rs",
+    "crates/sifr_codegen/src/lib.rs",
+    "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs",
+    "crates/sifr_codegen/src/lib_emitter_state.rs",
+    "crates/sifr_codegen/src/lib_modules_and_codegen.rs",
+    "crates/sifr_codegen/src/lib_modules_and_codegen/deferred_codegen.rs",
+    "crates/sifr_codegen/src/lib_modules_structural_policy.rs",
+    "crates/sifr_codegen/src/lib_project_codegen.rs",
+    "crates/sifr_codegen/src/lib_test_project_codegen.rs",
+    "crates/sifr_codegen/src/stdlib_codegen_metadata.rs",
+    "crates/sifr_codegen/src/stdlib_demand_plan.rs",
+    "crates/sifr_codegen/src/structural_impl_codegen.rs",
+    "crates/sifr_codegen/src/support_plan.rs",
+    "crates/sifr_driver/src/build/entrypoint.rs",
+    "crates/sifr_driver/src/build/entrypoint_single_file.rs",
+    "crates/sifr_driver/src/build/stdlib_interop_demand_tests.rs",
+    "crates/sifr_driver/src/build/stdlib_interop_startup_tests.rs",
+    "crates/sifr_driver/src/frontend/api.rs",
+    "crates/sifr_driver/src/stdlib/bootstrap.rs",
+    "crates/sifr_driver/src/stdlib/bootstrap_template_tests.rs",
+    "crates/sifr_driver/src/stdlib/cache.rs",
+    "crates/sifr_driver/src/stdlib/interop.rs",
+    "crates/sifr_driver/src/stdlib/types.rs",
+    "crates/sifr_driver/src/test_runner/orchestrator.rs",
+    "crates/sifr_driver/src/tests/adapter_defaults.rs",
+    "crates/sifr_driver/src/tests/attached_api_aliases.rs",
+    "crates/sifr_driver/src/tests/attached_api_codegen.rs",
+    "crates/sifr_driver/src/tests/early_adapters.rs",
+    "crates/sifr_driver/src/tests/early_adapters/identity_tests.rs",
+    "crates/sifr_driver/src/tests/handler_descriptors.rs",
+    "crates/sifr_driver/src/tests/imported_attached_apis.rs",
+    "crates/sifr_driver/src/tests/inheritance_metadata.rs",
+    "crates/sifr_driver/src/tests/project_graph.rs",
+    "crates/sifr_driver/src/tests/stdlib_exports.rs",
+    "crates/sifr_driver/src/tests/typed_descriptors.rs",
+    "internal_docs/architecture.md"
+  ],
+  "test_count": 37,
+  "guard_count": 4,
+  "checks": [
+    {
+      "name": "stdlib_interop_startup",
+      "test_count": 4,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "stdlib_interop_startup",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_interop_startup-01.source.json",
+      "source_binding_sha256": "f5795270f7d4586469937d386f6179710d58cc3ba5624d16150aca2021970770",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_interop_startup-01.json",
+      "receipt_sha256": "8f7009cc6d2041cb3f0785c35985af2aed9b7a4d364cf8c337b93349ba907115",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_interop_startup-01.log",
+      "log_sha256": "7020b0265f748a1bca484879a503bf77526da3d2620efb2ea62c27cac438be06",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "stdlib_interop_demand",
+      "test_count": 5,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "stdlib_interop_demand",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_interop_demand-01.source.json",
+      "source_binding_sha256": "65b50efa3e9198c6c0222ccf9cf6e07d352b38b96502413dcd8d6202b167dbd8",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_interop_demand-01.json",
+      "receipt_sha256": "8822f1e05315f3c47525075ef0447aef2ade3ae9b4ddf3d77cab782c9e622f23",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_interop_demand-01.log",
+      "log_sha256": "3a5a4d1ffd40a50503b23ebaa08af12800bfe6ef78f9048f3fb91e96af676ea6",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "private_stdlib_interop_resolves_sysroot_crate_target",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "private_stdlib_interop_resolves_sysroot_crate_target",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/private_stdlib_interop_resolves_sysroot_crate_target-01.source.json",
+      "source_binding_sha256": "f4a676e637c2a023bfea3467b37e5b6ea9f8f6acf6f8250c751652e3eecd883a",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/private_stdlib_interop_resolves_sysroot_crate_target-01.json",
+      "receipt_sha256": "b2accb3a510662510feb7cfde6e0f995ef9f38da5c94086e25519ecdb0118468",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/private_stdlib_interop_resolves_sysroot_crate_target-01.log",
+      "log_sha256": "47d6bb209a05a3c73961581c13a22f68c13a30815308260424824710b2cfb512",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "merged_user_and_private_stdlib_interop_both_resolve",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "merged_user_and_private_stdlib_interop_both_resolve",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/merged_user_and_private_stdlib_interop_both_resolve-01.source.json",
+      "source_binding_sha256": "ff586213418983fd5c7112f4c48b12e6ebba29d6f258c32b1c08c516a141113b",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/merged_user_and_private_stdlib_interop_both_resolve-01.json",
+      "receipt_sha256": "0f1eb1b6e408f38d19e3d4bfb95301606db794b9abaf8f7371627da350ef23e6",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/merged_user_and_private_stdlib_interop_both_resolve-01.log",
+      "log_sha256": "cdac912e42040bdb641794ee340988651a2f48be1fa86e2c87f296d9644fd347",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "merged_user_and_private_stdlib_interop_keeps_user_trust_separate",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "merged_user_and_private_stdlib_interop_keeps_user_trust_separate",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/merged_user_and_private_stdlib_interop_keeps_user_trust_separate-01.source.json",
+      "source_binding_sha256": "d85b3c87bad0149a9e97e7de7ec18f1d4c1a6294a36f79095eaf5a0b01ef83c8",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/merged_user_and_private_stdlib_interop_keeps_user_trust_separate-01.json",
+      "receipt_sha256": "fb299a28013a80251d4d430a6ade87e73a0472ae8c722c4b948e1f8892c848b5",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/merged_user_and_private_stdlib_interop_keeps_user_trust_separate-01.log",
+      "log_sha256": "11cb4bbd91ab687f655d1a2074de9bf81417bec92b42fd382b84b4933429c9db",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "package_rust_interop_direct_probe_checks_signature_shape",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "package_rust_interop_direct_probe_checks_signature_shape",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_direct_probe_checks_signature_shape-01.source.json",
+      "source_binding_sha256": "120e7bfb284f455f9b3cd44799692fd2d201ca58b9c3cf2418ce36fd86b77d56",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_direct_probe_checks_signature_shape-01.json",
+      "receipt_sha256": "964531358d817af35e763ff151a0494853e9918bb9576b5bab428d2243afb727",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_direct_probe_checks_signature_shape-01.log",
+      "log_sha256": "19a12a1051c59ea6e6bdcdef8344959ce7797217cc85f4d9f5e7470c9205ceab",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "package_rust_interop_direct_probe_accepts_bridge_signature",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "package_rust_interop_direct_probe_accepts_bridge_signature",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_direct_probe_accepts_bridge_signature-01.source.json",
+      "source_binding_sha256": "d23178608b9449392c706717b1615e49db8d15b665d9ee4979e2dbde14b97ae8",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_direct_probe_accepts_bridge_signature-01.json",
+      "receipt_sha256": "8d2fcf9299a69ae8439019e0279fd48e43680bdd8485e6b947d8ea6a81f06d76",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_direct_probe_accepts_bridge_signature-01.log",
+      "log_sha256": "301664bd7c6c7031a523887cb16d7a2e3d88ea98c13d2acb68fc9a20e2981578",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "package_rust_interop_direct_probe_rejects_unsafe_fn",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "package_rust_interop_direct_probe_rejects_unsafe_fn",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_direct_probe_rejects_unsafe_fn-01.source.json",
+      "source_binding_sha256": "88ea31004f4960a0b2ec5be278e6f7f9a2edc20f787f36b9dc8d0f38dc0935d6",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_direct_probe_rejects_unsafe_fn-01.json",
+      "receipt_sha256": "5c348ef36196cbf6bf0cb8b3ea92e552f2c26ccad1017f148bf6a5938b90a92e",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_direct_probe_rejects_unsafe_fn-01.log",
+      "log_sha256": "f800a1fa9b84840fd520abddf65692901f98f862ec6f18a507bb62e6b39f88da",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "package_rust_interop_opaque_probe_rejects_unsatisfied_send_obligation",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "package_rust_interop_opaque_probe_rejects_unsatisfied_send_obligation",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_opaque_probe_rejects_unsatisfied_send_obligation-01.source.json",
+      "source_binding_sha256": "ca931fe434fd2736cc6d1f75a3c9aaf5386a0ac7e09e9b63dcc6460c1d9ecc1e",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_opaque_probe_rejects_unsatisfied_send_obligation-01.json",
+      "receipt_sha256": "9ec7227b19f8fc7263964e3e383532ae2611871ef1a4b4bd2f12756b10370382",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_opaque_probe_rejects_unsatisfied_send_obligation-01.log",
+      "log_sha256": "5025bf4fa66208b85b0ea7a111648fa271e746a806978157e51a2441b84f471b",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "package_rust_interop_cache_fragment_is_deterministic",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "package_rust_interop_cache_fragment_is_deterministic",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_cache_fragment_is_deterministic-01.source.json",
+      "source_binding_sha256": "268d96e3365f1b71f39f9b754ad47068743795d9e56cd3e52c1536970599f884",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_cache_fragment_is_deterministic-01.json",
+      "receipt_sha256": "fe3d0472241e4bd44baa7039e37dad5378bfbcb431ead9717e3b1db1dea58e44",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_cache_fragment_is_deterministic-01.log",
+      "log_sha256": "56e59279e298e627ce3c827a788d623c1931770851b4497e6be99298553776e2",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "package_rust_interop_cache_changes_with_trust_policy",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "package_rust_interop_cache_changes_with_trust_policy",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_cache_changes_with_trust_policy-01.source.json",
+      "source_binding_sha256": "451fd5b1e96084d4f7e8c2320b50432b9d49bd9c6a567c484ee1e63d5d1d20ef",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_cache_changes_with_trust_policy-01.json",
+      "receipt_sha256": "4de42b17014bf020012c90e6cac510449374bded83657640fa7fb0293747dd90",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/package_rust_interop_cache_changes_with_trust_policy-01.log",
+      "log_sha256": "e6ac332eb9112356ac9ec31fdb95479048188edea5d0f567338437f7f0566960",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "private_stdlib_imports_resolve_only_from_compiled_source_exports",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "private_stdlib_imports_resolve_only_from_compiled_source_exports",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/private_stdlib_imports_resolve_only_from_compiled_source_exports-01.source.json",
+      "source_binding_sha256": "8a5dad17ba914400863e5a3c5e78a0dc50dc59eb8bd781a5b7290093e74a9f16",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/private_stdlib_imports_resolve_only_from_compiled_source_exports-01.json",
+      "receipt_sha256": "63fd7b97e853afe4167ec86445e9eb1b94923bdd85ff552a05621890caf4d33d",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/private_stdlib_imports_resolve_only_from_compiled_source_exports-01.log",
+      "log_sha256": "31dca2173c7e4ab0feb994946d0b5ff71316dd07f869be3fc139c656eb922688",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "missing_private_stdlib_member_is_a_structured_bootstrap_failure",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "missing_private_stdlib_member_is_a_structured_bootstrap_failure",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/missing_private_stdlib_member_is_a_structured_bootstrap_failure-01.source.json",
+      "source_binding_sha256": "09565e298a7c0dc965c2b7bcd3624a1be9d46239c2413d8116bc39069fb9917f",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/missing_private_stdlib_member_is_a_structured_bootstrap_failure-01.json",
+      "receipt_sha256": "d1d921eda6cb28ceac927c8caa6b6d76b0794a60e0fc6ac2ff140c2a177bef89",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/missing_private_stdlib_member_is_a_structured_bootstrap_failure-01.log",
+      "log_sha256": "5a4a0d5d4a64d43f4ba2c63421e82ebeadc3289bafcf5711d346d6a3d63ea57d",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "missing_private_stdlib_module_is_a_structured_bootstrap_failure",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "missing_private_stdlib_module_is_a_structured_bootstrap_failure",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/missing_private_stdlib_module_is_a_structured_bootstrap_failure-01.source.json",
+      "source_binding_sha256": "f4ab6934438183fdde71e191956e3c53600f96520b9645149a826fce2ed8b263",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/missing_private_stdlib_module_is_a_structured_bootstrap_failure-01.json",
+      "receipt_sha256": "c0da95aee9093f6db02c3651d6ac89107e53e0e8ace10fbd23b8c13a7a2af42c",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/missing_private_stdlib_module_is_a_structured_bootstrap_failure-01.log",
+      "log_sha256": "2d71be55dcb7413222d33e8bbc168ea77e72d49c0f92a2ebc2902428e987f5ce",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "test_get_or_init_stdlib_cache_reuses_",
+      "test_count": 2,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "test_get_or_init_stdlib_cache_reuses_",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/test_get_or_init_stdlib_cache_reuses_-01.source.json",
+      "source_binding_sha256": "9de6a717fcda617b762cec6d15c4a6300a192494f3ab6e3a3d844584e107e3b8",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/test_get_or_init_stdlib_cache_reuses_-01.json",
+      "receipt_sha256": "a89f02d934b02b1bd9e49eb66529aac571c8e055014ccb65cad0a09aa5d85f7e",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/test_get_or_init_stdlib_cache_reuses_-01.log",
+      "log_sha256": "2d2455aeeb65f031e98d8eebf902aa0221259f7bb8b9eb88caf286315b96b945",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "stdlib_class_exports_preserve_parent_markers_and_generic_templates",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "stdlib_class_exports_preserve_parent_markers_and_generic_templates",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_class_exports_preserve_parent_markers_and_generic_templates-01.source.json",
+      "source_binding_sha256": "bf1ab18a36af98c1ce074aedc91c2e0ed39833355d64cedb056f24fa5be66293",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_class_exports_preserve_parent_markers_and_generic_templates-01.json",
+      "receipt_sha256": "927a46fd88b67a7493ae2ae2ec75d9a09eddcf0c3b732cf50c4894adcbcc409a",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_class_exports_preserve_parent_markers_and_generic_templates-01.log",
+      "log_sha256": "b716eb72abbadc06e31a2835ba4483f4176df320fc086cf3071cac26b81dad34",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "stdlib_structural_templates_retain_signatures_without_bodies",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "stdlib_structural_templates_retain_signatures_without_bodies",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_structural_templates_retain_signatures_without_bodies-01.source.json",
+      "source_binding_sha256": "786a5cc5d9bb2b72f96d994983c9896015066e03c542afd67399b4c7215af4cb",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_structural_templates_retain_signatures_without_bodies-01.json",
+      "receipt_sha256": "f262e45ac32160a3636e0bc11d9864f15d470472b2b884ff04f36ee36d1c028e",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_structural_templates_retain_signatures_without_bodies-01.log",
+      "log_sha256": "bedfa9d0b75404abff0423199ca041c3cbdd90ce14ee9bf4cd7e5ba7ca14a48e",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "stdlib_bootstrap_borrowed_emission_preserves_imports_and_generic_templates",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "stdlib_bootstrap_borrowed_emission_preserves_imports_and_generic_templates",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_bootstrap_borrowed_emission_preserves_imports_and_generic_templates-01.source.json",
+      "source_binding_sha256": "a1b4de1f3b9a065463d46f459ce74954e757f356a1263fc1bceede579292db67",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_bootstrap_borrowed_emission_preserves_imports_and_generic_templates-01.json",
+      "receipt_sha256": "9fdf07e27d87cab467097d43ad7c69dd03e591d13049e1eb507cdb96dcc3c7ca",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_bootstrap_borrowed_emission_preserves_imports_and_generic_templates-01.log",
+      "log_sha256": "5d4501fa03d1e80601bc129c338fabd64809d75d6b68b74cc427acc4b9a0d3d3",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "stdlib_cache_shared_bundle_outlives_cache_and_keeps_definitions_isolated",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "stdlib_cache_shared_bundle_outlives_cache_and_keeps_definitions_isolated",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_cache_shared_bundle_outlives_cache_and_keeps_definitions_isolated-01.source.json",
+      "source_binding_sha256": "b3ea6804fd6c7a8c8b36c36aea7fdbb650997dce9d96ddff681a7e98f6494df4",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_cache_shared_bundle_outlives_cache_and_keeps_definitions_isolated-01.json",
+      "receipt_sha256": "968da0a109324683d2733448f0567b12d41afa8b8efd49c812b6e4bab6fc2d33",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_cache_shared_bundle_outlives_cache_and_keeps_definitions_isolated-01.log",
+      "log_sha256": "089bd647242f50249cf41da3f72acd4342f0e9b967a060169959da35134a38f4",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "private_interop_pending_inventory_preserves_lifetime_and_source_order",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "private_interop_pending_inventory_preserves_lifetime_and_source_order",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/private_interop_pending_inventory_preserves_lifetime_and_source_order-01.source.json",
+      "source_binding_sha256": "39ae3f6c5c353a8e52b0f044a9eb9390f2378a1d1b7ea6e05c4ddc84dc31082b",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/private_interop_pending_inventory_preserves_lifetime_and_source_order-01.json",
+      "receipt_sha256": "b5dd37e97df42745c70965af2c186d08305a014aa4e56b3b7ee1ffe77f20c44b",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/private_interop_pending_inventory_preserves_lifetime_and_source_order-01.log",
+      "log_sha256": "5aac62de8bfaeacbd6e1885b4fafa7182ffa3a1790c371456c501c297cec332f",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "test_check_project_imports_generic_function_metadata_through_facade",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "test_check_project_imports_generic_function_metadata_through_facade",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/test_check_project_imports_generic_function_metadata_through_facade-01.source.json",
+      "source_binding_sha256": "5434502a578577b6fada2ef57eb18debb47c554d5db24ad402a7e73bab2be5ef",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/test_check_project_imports_generic_function_metadata_through_facade-01.json",
+      "receipt_sha256": "1474d15813a5085454c40961254fb98e418a596613fb1f6869205a71df6e8653",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/test_check_project_imports_generic_function_metadata_through_facade-01.log",
+      "log_sha256": "71de739623d7b540644d923652982e7359f6f4a2bb08b8d4112164d3833ec121",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "test_build_project_imports_generic_function_metadata_through_facade",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "test_build_project_imports_generic_function_metadata_through_facade",
+        "--",
+        "--test-threads=1",
+        "--include-ignored"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/test_build_project_imports_generic_function_metadata_through_facade-01.source.json",
+      "source_binding_sha256": "f8671f0339608f2cfffe8a937ae330abd16f133e2c00a32cadfa667d8a627753",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/test_build_project_imports_generic_function_metadata_through_facade-01.json",
+      "receipt_sha256": "1a624a46f539e25bc8094e1776226c5e65dd5b777e9c6d28196d41c91d7a42b2",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/test_build_project_imports_generic_function_metadata_through_facade-01.log",
+      "log_sha256": "ca86bc6ac257e0086ca5fef67ed373fa2b5a606ad4c19fc8667ea1035568db4e",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
+        "--",
+        "--test-threads=1",
+        "--include-ignored"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/test_build_project_keeps_aliased_same_name_generic_classes_distinct-01.source.json",
+      "source_binding_sha256": "7b0a4b732de2c81b5899e4834330dda6cb41c368fc7a7eddd79bb2c888164270",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/test_build_project_keeps_aliased_same_name_generic_classes_distinct-01.json",
+      "receipt_sha256": "d93877e154285e48c126d28c5d3da36b769c59dccc04dd8d21a0231dcdbb3ac0",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/test_build_project_keeps_aliased_same_name_generic_classes_distinct-01.log",
+      "log_sha256": "83cdcb37e5d8cb4b47e30462fdd1b893df08d49ad379aabbf31378290a9beaf9",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "test_check_and_project_lowering_share_typecheck_rules",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "test_check_and_project_lowering_share_typecheck_rules",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/test_check_and_project_lowering_share_typecheck_rules-01.source.json",
+      "source_binding_sha256": "b1eb256ffa0cb0cd0b948f71fcdbabaefd2239f36832e594c301914e944e3217",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/test_check_and_project_lowering_share_typecheck_rules-01.json",
+      "receipt_sha256": "a1ef245918935bcf15d2a9683b211a026defebd5bb4a3634e672a3ea545f086b",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/test_check_and_project_lowering_share_typecheck_rules-01.log",
+      "log_sha256": "f1b198a93edecc6eac118748e08220aff48b4081f78dde03d3fe2b3585765833",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "test_collect_project_modules_allows_non_main_stdlib_imports",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "test_collect_project_modules_allows_non_main_stdlib_imports",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/test_collect_project_modules_allows_non_main_stdlib_imports-01.source.json",
+      "source_binding_sha256": "915565d2f9e25f59f3aae38e67db99b64fd5d796f394e86b45a0442c24f327ce",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/test_collect_project_modules_allows_non_main_stdlib_imports-01.json",
+      "receipt_sha256": "c838542d0286ce6208c5ced770aa8bfe73cb73418477f387333212b2743f3bed",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/test_collect_project_modules_allows_non_main_stdlib_imports-01.log",
+      "log_sha256": "15e91c484dd214e446a40e4e17869e513094d8f3e037a7342f24d0ba1f5af7e8",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "test_imported_python_object_identity_reaches_check_and_compile",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "--lib",
+        "test_imported_python_object_identity_reaches_check_and_compile",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/test_imported_python_object_identity_reaches_check_and_compile-01.source.json",
+      "source_binding_sha256": "e3f2271ca7c0b56585a59cc059c81a8f4587fda7ffcb07faf67a633c4cd39f6f",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/test_imported_python_object_identity_reaches_check_and_compile-01.json",
+      "receipt_sha256": "d1cee73f7bc6f02f06845585f794c0fe7d67c7d881bee411ffd38bccc08199ef",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/test_imported_python_object_identity_reaches_check_and_compile-01.log",
+      "log_sha256": "f1f8f0e43cd9a6d7e404a8bd6480d8ca41d5d404fef77c625d6487f5eb2e2e12",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "stdlib_interop_startup_editor_retained_snapshot_after_defs_projection",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_analysis",
+        "--lib",
+        "stdlib_interop_startup_editor_retained_snapshot_after_defs_projection",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "96511e20a159f93806d4af24580a17e144276c94",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": {
+        "changed_paths": [
+          "crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs"
+        ],
+        "reason": "Only a cfg(test) codegen-local test caller changed. Driver and analysis compile codegen as a dependency without that test module; all their implementation and test inputs are unchanged."
+      },
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_interop_startup_editor_retained_snapshot_after_defs_projection-01.source.json",
+      "source_binding_sha256": "10bba0dd30de7b32ddec7eb46221dc9da9c834ab2e6cb53f88dcbdd39bd0e730",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_interop_startup_editor_retained_snapshot_after_defs_projection-01.json",
+      "receipt_sha256": "8bff5ed4ea5cd740876121d062b61672fc8618c9fb8272ff55095478a1771caf",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/stdlib_interop_startup_editor_retained_snapshot_after_defs_projection-01.log",
+      "log_sha256": "8597e69f848eb794880e18540f38cc56e01d1f2271c89d59e456dcc62298021c",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "private_alias_registration_preserves_local_signatures_without_overwriting_origin",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_codegen",
+        "--lib",
+        "private_alias_registration_preserves_local_signatures_without_overwriting_origin",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": null,
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/private_alias_registration_preserves_local_signatures_without_overwriting_origin-02.source.json",
+      "source_binding_sha256": "0b39a2efbc677e67e15493680251b1964b9a6895b6edaad68b7d500b9616ce87",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/private_alias_registration_preserves_local_signatures_without_overwriting_origin-02.json",
+      "receipt_sha256": "167a728a1fdf4c9752f5877d34f9049513f5612c42d449630dc867bb74324eb3",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/private_alias_registration_preserves_local_signatures_without_overwriting_origin-02.log",
+      "log_sha256": "e80c5b7dd00102f191108b5f50ede916221d391a77a3b5652ab738140dc3222a",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "public_import_roots_seed_matching_transitive_private_definitions",
+      "test_count": 1,
+      "argv": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_codegen",
+        "--lib",
+        "public_import_roots_seed_matching_transitive_private_definitions",
+        "--",
+        "--test-threads=1"
+      ],
+      "receipt_source": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": null,
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/public_import_roots_seed_matching_transitive_private_definitions-01.source.json",
+      "source_binding_sha256": "9e00fed3d07aa81a8f9b725933068a0816e5032f55bb28aa8bb0db5bb19bee26",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/public_import_roots_seed_matching_transitive_private_definitions-01.json",
+      "receipt_sha256": "81b76368907aca9875ad9350d4c4e4b2d32bf44a1e672075dba4f8863d0c1457",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/public_import_roots_seed_matching_transitive_private_definitions-01.log",
+      "log_sha256": "f7228d94c729fb7b4371f540c3bf13cb361442bd9eac5201d99e1f23473e4c09",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "fmt",
+      "test_count": null,
+      "argv": [
+        "cargo",
+        "fmt",
+        "--check"
+      ],
+      "receipt_source": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": null,
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/fmt-01.source.json",
+      "source_binding_sha256": "92cf37ae734add6d74e3745ff0952bfe77b731f24aaff55d232c89062ca6270d",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/fmt-01.json",
+      "receipt_sha256": "28f3ac557522a35ee38bec175ea98d1de58293579d06a339696bdaccc09bd834",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/fmt-01.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "diff",
+      "test_count": null,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "receipt_source": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": null,
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/diff-01.source.json",
+      "source_binding_sha256": "3b6f8fed3dce2834c853570882fb0319b1152fe6236498b1fa687ee04eec473f",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/diff-01.json",
+      "receipt_sha256": "4f6bd5d934c41d2a3ab03b0e1b28072a08aa2bf39882d09463d6029bea42a7d9",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/diff-01.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "hir",
+      "test_count": null,
+      "argv": [
+        "python3",
+        "scripts/check_hir_maintainability_guardrails.py"
+      ],
+      "receipt_source": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": null,
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/hir-01.source.json",
+      "source_binding_sha256": "1c30496e6e5c8aae1116221fef2387663c721171bef31738b765719b159efd88",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/hir-01.json",
+      "receipt_sha256": "0047ba7e572de8accf5609b7d9df561840b562d6114935b3c695a756ecdb519f",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/hir-01.log",
+      "log_sha256": "0371f7ff0407b48ec3c2b827e55899ed48ef9f856b1b3562c29558d86f65f945",
+      "status": "PASS",
+      "release_pass": true
+    },
+    {
+      "name": "file-size",
+      "test_count": null,
+      "argv": [
+        "python3",
+        "scripts/check_file_size_guardrails.py"
+      ],
+      "receipt_source": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "validated_candidate": "30b25c551566bf0c146290c7ec38a55621c5d526",
+      "reuse": null,
+      "source_binding": "/private/tmp/sifr-b49.4WCpNp/evidence/file-size-01.source.json",
+      "source_binding_sha256": "7c077fcc34f511b9a3e43935e9a37edaf564f3fcf98f6dc14db0cf7781ceccab",
+      "receipt": "/private/tmp/sifr-b49.4WCpNp/evidence/file-size-01.json",
+      "receipt_sha256": "517abfa11d80e59b1791c987afda3d6502f5909e68e99dffdb94742cb5ee06aa",
+      "log": "/private/tmp/sifr-b49.4WCpNp/evidence/file-size-01.log",
+      "log_sha256": "51a0120e3053072dd6cab4350d54fa2a428decf2a2176b73d4fa04c46fb27efa",
+      "status": "PASS",
+      "release_pass": true
+    }
+  ],
+  "predecessor_bindings": {
+    "B46_terminal": [
+      "/private/tmp/sifr-b46.rvEbWp/evidence/terminal.json",
+      "302f407be75cfaadc5f72ca714298f4a7f94163eed4d8588be552f815532a87d"
+    ],
+    "B46_freeze": [
+      "/private/tmp/sifr-b46.rvEbWp/evidence/freeze.df0056ad1b9d7fcbaacda3a3f0809da66279ea84.json",
+      "a1d14706d846b2b2eaa22c3f67d5fc4e63ba593bb1b84769106e17a419c6d96a"
+    ],
+    "B47_assessment": [
+      "/private/tmp/sifr-b47.axK5oy/sifr/plans/issues/active/ad-hoc-emitted-rust-b47-remaining-cost-assessment.md",
+      "a7e4721ac08c81596e934f375d63b551624bf99dcb800c65a3d7e8c6078b13a1"
+    ],
+    "B48_terminal": [
+      "/private/tmp/sifr-b48.jvQSBN/evidence/terminal.json",
+      "cf9949b1504d91f62e80c18eb9c98eba3073d590bb879c4e0ae7f595b9a5b860"
+    ]
+  },
+  "reused_evidence": "Unaffected B46 formatter14 and unchanged readonly IR visitor source evidence. B47 selected430/111raw assessment reused, no bulk rehash or attribution from B48. All inherited review/failure counters preserved."
+}
