@@ -1,6 +1,10 @@
 # Item 70-F1C0: selected R2 contract and offline implementation plan
 
-Planning assessment, 2026-09-08. Owner: release/distribution,
+COMPLETE via [PR #3816](https://github.com/sifr-lang/sifr/pull/3816), merged
+2026-09-08T09:01:45Z. Exact tested/reviewed candidate
+`cae41b5aaf98f132d6eebe39f761d4a514293e38`, merge
+`a69457362791b1807475cded4a98ea9a04ee0ceb`.
+Owner: release/distribution,
 [issue #3775](https://github.com/sifr-lang/sifr/issues/3775).
 This implements the coordinator's registered documentation-only F1C0 scope.
 R2 Standard is the selected primary design, with indefinite bucket locks,
@@ -339,3 +343,23 @@ Publish exact-SHA validation and Opus review outside the reviewed tree,
 merge the plan, make a record-only update without another review/gate, then
 stop. Plan blocker: none. Real account/access/custodian proof remains later
 F1C2 work, explicitly unfulfilled.
+
+Final [validation](https://github.com/sifr-lang/sifr/pull/3816#issuecomment-5582210368)
+passed exact-base/working-tree diff checks, the file-size guard (3,767 files),
+four local plan links and the ledger link, three absent proposed source paths,
+five exact base-tree blobs, five source snapshots and API identity markers.
+The one [Opus review](https://github.com/sifr-lang/sifr/pull/3816#issuecomment-5582250991)
+returned SATISFIED/no blockers on that exact candidate, using only
+Read/Grep/Glob; no command/test execution, remediation review or Sifr gate.
+Raw review SHA-256:
+`ec97097e32daf80946563e3765e07f138e9e8f16d1714881a4f93d5de184aaaa`.
+
+Nonblocking review follow-ups stay with F1C2, not this completed item:
+carry F1A's current pricing recheck into actual account/capacity planning;
+retain remaining official SDK/control-plane/limits/error source snapshots
+alongside the five explicitly named R2 HTML snapshots above; consider citing
+the provider's longest-retention precedence for overlapping lock rules in
+the eventual admission rationale. These are documentation suggestions, not
+new mechanism defects, approval requirements or ready code work in F1C0.
+This record-only update reuses implementation evidence without another review
+or gate. After its merge, stop; no F1C1/C2/D implementation or test is started.
