@@ -53,7 +53,11 @@ pub(crate) fn generate_rust_test_with_project_policy(
     emitter.project_structural_identity_expressions =
         project_structural_identity_expressions.cloned();
     emitter.structural_identity_module_name = Some(module_name.to_string());
-    crate::project_constants::register_imported_constants(&mut emitter, module, project_code);
+    crate::stdlib_import_signatures::register_imported_stdlib_metadata(
+        &mut emitter,
+        module,
+        project_code,
+    );
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);

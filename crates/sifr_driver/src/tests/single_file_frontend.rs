@@ -7,12 +7,28 @@ use sifr_frontend::SourceOrigin;
 
 #[test]
 fn generated_rust_production_preserves_deferred_sysroot_probe_plan() {
-    let compiled = compile_with_metadata("def main() -> int:\n    return 0\n");
+    let compiled = compile_with_metadata(
+        "from sifr.calendar import isleap\n\ndef main() -> bool:\n    return isleap(2024)\n",
+    );
     let CompileResultFull::Success { interop, .. } = compiled else {
         panic!("valid source should produce generated Rust metadata");
     };
 
     assert!(!interop.rust.probe_plan.probes.is_empty());
+    assert!(
+        interop
+            .rust
+            .probe_plan
+            .probes
+            .iter()
+            .all(|probe| { probe.module_name.as_deref() == Some("_sifr.calendar") })
+    );
+
+    let empty = compile_with_metadata("def main() -> int:\n    return 0\n");
+    let CompileResultFull::Success { interop, .. } = empty else {
+        panic!("valid empty-demand source should produce generated Rust metadata");
+    };
+    assert!(interop.rust.probe_plan.probes.is_empty());
 }
 
 fn assert_check_compile_error_parity(source: &str, expected_code: DiagnosticCode) {
