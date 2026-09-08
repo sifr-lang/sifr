@@ -579,11 +579,9 @@ pub(super) fn fmt_entrypoint(
         args.paths.clone()
     };
     let mut diagnostics = Vec::new();
-    let gitignore = FormatterGitignore::load(&cwd, config.respect_gitignore, &mut provider)?;
+    let mut gitignore = None;
     for target in targets {
-        let explicit_target = provider.is_file(&target);
-        let files =
-            select_formatter_files(&target, &config, &gitignore, explicit_target, &mut provider)?;
+        let files = select_formatter_files(&target, &config, &cwd, &mut gitignore, &mut provider)?;
         for file in files {
             if args.check {
                 diagnostics.extend(sifr_format::check_path_with_options(
@@ -697,16 +695,29 @@ fn flag_override(enable: bool, disable: bool) -> Option<bool> {
 fn select_formatter_files(
     target: &Path,
     config: &EffectiveFormatConfig,
-    gitignore: &FormatterGitignore,
-    explicit_target: bool,
+    cwd: &Path,
+    gitignore: &mut Option<FormatterGitignore>,
     provider: &mut impl SourceProvider,
 ) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
+    // Explicit files bypass exclusion entirely, including reading and parsing
+    // ignore rules. Load once when a directory or --force-exclude needs them.
+    if provider.is_file(target) && !config.force_exclude {
+        return sifr_format::collect_sifr_files(target, provider);
+    }
+    let gitignore = match gitignore {
+        Some(gitignore) => gitignore,
+        None => gitignore.insert(FormatterGitignore::load(
+            cwd,
+            config.respect_gitignore,
+            provider,
+        )?),
+    };
     let files = sifr_format::collect_sifr_files(target, provider)?;
     let mut selected = Vec::new();
     for file in files {
         let excluded =
             pattern_matches(&file, &config.exclude) || gitignore.is_ignored(&file, provider)?;
-        if excluded && (!explicit_target || config.force_exclude) {
+        if excluded {
             continue;
         }
         selected.push(file);
