@@ -125,3 +125,61 @@ Sources and all offline receipts are committed beside this record in
 ad-hoc-emitted-rust-b40-artifacts. Active apparatus is read-only after freeze.
 Exact pushed prelaunch SHA is sent to parent/coordinator before allocation.
 No live attempt, Opus, gate, PR, merge or production acceptance exists at freeze.
+
+## Terminal: apparatus complete, sole diagnostic PASS
+
+Prelaunch source `3e32b301fa3f1e4ba8eae0127415fe21ce094848` was pushed before
+the sole allocation. Total106.315466seconds, ONE setup/LLDB84498, exactly six
+targets (warmup84536; observations84969,85183,85473,85744,85977). All six retain
+20events, complete entry/return observations, one handover, custody acknowledgment,
+canonical two-file output, per-target retirement, and next-ready receipts.
+No failed/partial target, repeated allocation, unbanked extra target or retry.
+Fresh local admission and continuous host monitoring passed unchanged policy.
+
+All228 custody observations passed (51/38/36/35/34/34); no acquired initial-group
+chain or parent transition occurred in this live run. Therefore the new F1
+inconsistency/corroboration route is supported by the expanded offline proof,
+including frozen13 plus synthetic fresh evidence; this live run does not
+establish that the original group inconsistency recurred or was repaired in vivo.
+The original frozen13 contradiction still rejects without appended evidence.
+
+Actual launcher84453 exited0 at106.134752seconds. Root-inclusive final absence
+PASS covers342 observed subjects/probes and ALL14 groups:
+84453,84498,84536,84537,84969,84970,85183,85184,85473,85474,85744,85745,85977,85978.
+Watcher and host monitor joins are recorded. All groups are absent; the retirement
+receipt contains zero signals. Current capture-probe handle/reap/post-capture
+absence remains distinct from before-spawn samples. This attempt has actual
+complete release within540; predecessor34PID/2group limited proof and its later
+35subject/3group supplemental proof remain unchanged and separately attributed.
+All diagnostic resources are released.
+
+Saved analyzer completed once, retaining six observed processes/zero partials and
+all seven metric units. It preserves inclusive loader/fixup/library totals and
+explicit non-overlapping partitions, including the measured pre-first-stop
+prefix. The warmup shows additional work across loader/fixups, CLI/config,
+discovery and file-check intervals. These are process-wide LLDB observations,
+not a supported intervention or uninstrumented causality/CV/acceptance result.
+No debugger overhead is subtracted; unknown work and exit tail remain unassigned.
+
+All1360 frozen paths reauthenticated unchanged after the attempt. Record evidence
+size2054169764bytes is below2GiB; prelaunch file-size proof remains applicable.
+Only saved analysis, source/record/diff checks and terminal publication followed
+live completion. Zero post-live apparatus edits/tests, Opus, Sifr gates, PR or
+merge. The staged diff artifact uses exact JSON string encoding; original raw
+diff remains immutable externally. Its initial record-format whitespace check
+failure is preserved and did not cause an implementation/test rerun.
+
+| Outcome receipt under E | SHA256 |
+| --- | --- |
+| allocation-outcome.json | `c45d141027f098d45a927f5bacd63cf2678810bf8b8ae45f0f5a569be777cc58` |
+| launcher-exit.json | `2787b6c248de3ce694faa51d18c130176dd52cbc6c6143ff5d90d356261c1d30` |
+| complete-process-release.json | `596502b80d2fee8274a1e312407f0d7dbb67ace3523f36e814d89a7f20aea134` |
+| analysis.json | `b3e44d9c1bb92b2c79ace683ed2008baf17eac4a518ca95af7bcf216f9942fac` |
+| terminal-record-checks.json | `596a1eaf9e7611aa11e9297b4c225a9559c7f402c4a57b85f391cda8c451a445` |
+
+B40 diagnostic-stage blocker: NONE. Full B24 causation/unchanged10-case
+representative with same-invocation budget and both self-tests, B27 complete joint
+source/exact65/SQL/corpus/retained12 and original emitted phase remain OPEN.
+No new mechanism defect was established. Parent/coordinator own any later
+fact-based adjudication after terminal/native retirement. This owner stops here;
+no next-item implementation, acceptance acquisition, review or merge is started.
