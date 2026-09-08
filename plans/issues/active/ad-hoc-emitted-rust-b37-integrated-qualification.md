@@ -1,7 +1,66 @@
 # 12K-B37: integrated native-custody qualification
 
 Date: 2026-09-08. Owner: performance / issue3776.
-State: changed-host continuation registered; live qualification pending, unmerged.
+State: TERMINAL INCONCLUSIVE after changed-host continuation; unmerged, STOP.
+
+## Continuation terminal outcome
+
+Registered/pushed candidate `d98f4d48b3495c005fc090eeadb2fb3b1dbabf1e` ran
+exactly once. All three admission snapshots passed on AC with nominal thermal
+and no rejections. One LLDB session/target; elapsed9.842366958037019s. The observer
+stopped during launch before acknowledgement, events, handover or entry hits,
+then reported Kill success. No successful target exit or exact2-file output
+completion was proved. The original battery admission below remains failed.
+
+Later owners B37-F2/F3 are recorded in
+[issue3776](https://github.com/sifr-lang/sifr/issues/3776#issuecomment-5582457963).
+No repair/retry, guard weakening, review, PR or merge follows this live failure.
+
+B37-F2: native sequence16 rejected first target36592 because ps PPID36554
+(LLDB) differs from native before/after PPID36593 (debugserver). PGID36592
+agrees. Native target start1788858610.861809/path remain equal across its
+registration and before/after samples. Native tracer36593→LLDB36554→root35993
+is recorded. `first:null` means no prior accepted target identity. No atomic
+transition, historical cause, replacement or conflict acceptance is inferred;
+cause UNKNOWN. Full first rows and native records are retained. ps bracket
+510165.395965791→510165.447953541, native capture bracket
+510165.395963041→510165.449392083; source call order is ps followed by native
+sampling/registration/re-sampling, without invented individual sample timings.
+
+B37-F3: cleanup sequence26 exhausted the unchanged two-corroboration limit.
+Complete fresh chains for36554 and36592 retain initial/nativeBefore/nativeAfter
+None with fresh ps absence, brackets510167.559749708→510167.608136166 and
+510167.609517375→510167.657458791. Full capture bracket
+510167.158748625→510167.658408541 also contains pmset36633, PPID/PGID35993.
+This does not establish that pmset caused exhaustion. Full partial records and
+later sticky failures remain for coordinator adjudication; no mechanism change.
+
+Runner `groups_absent:false`, `zero_processes:false` remains unchanged. Fresh
+post-terminal native-before/ps/native-after independently proves launcher35993,
+LLDB36554, target36592 and debugserver36593 absent; all four groups return ESRCH,
+ps has no matching PID/group/binary, watcher/monitor false. Fresh check delivered
+no signals. Capacity-release callbacks went to parent, coordinator and dependency
+parent after verification. Release does not relabel the failed proof.
+
+Continuation evidence root `/private/tmp/sifr-b37-cont.bJIsfC/evidence`:
+
+- `coverage/outcome.json`: `7f3503bf86b4cab69a7f10128c4951b519025bb96801dd546e0732e0872b772e`
+- `coverage/custody.json`: `ae6ba64cf9027bb18042d0e47ab88e4c6ec03f3b0d2e6ce08614caae1ff6d904`
+- `coverage/admission.json`: `cc12fe2ddb0812b26bc1b0942eb57ce4194013e5d99409c61e56ee8dedf8adbf`
+- `coverage/process-release.json`: `1dd59a00bd588535631e692cf8c315772d62eed726ea45a63bed2f980538dd82`
+- `coverage/inventory.json`: `826bef376306e40023c54fefd32fa037fd751bbcac6b6a5028ef060cc63af405`
+- `failure-evidence.json`: `223c1e01b8aa0952e2b3dcd31138ccd7b3a93a0f40cb5030620b76e71c3e8d98`
+- `fresh-process-release.json`: `c202c2a4520b11c5c4be2d9aa7d35892d7a5621f6c0e69c4d8dad16975e9e0ca`
+
+Failure evidence binds the complete first rejection, full sequence26/corroboration
+chain, all raw coverage hashes and fresh release. Original144/current200 frozen
+inputs and original terminal authenticated unchanged after execution.443/443
+offline evidence reused; zero reexecution. Across B37: two preserved original
+suite invocations, original failed admission plus one changed-host attempt,
+one actual LLDB/target total, zero events/handover/hits/reviews/PRs/merges/gates.
+Success-only diff/HIR/file-size checks were not entered. Frozen external terminal
+`terminal.json` follows this unmerged record commit. Parent/predecessor files and
+refs remain untouched. Coordinator owns later adjudication; STOP, no next code.
 
 ## Changed-host continuation registration (2026-09-08)
 

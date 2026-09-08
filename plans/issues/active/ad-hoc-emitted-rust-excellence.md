@@ -2,6 +2,25 @@
 
 Status: active
 
+## Item12K-B37: changed-host continuation terminal (2026-09-08)
+
+**INCONCLUSIVE / UNMERGED / STOP.** Candidate
+`d98f4d48b3495c005fc090eeadb2fb3b1dbabf1e`, independent root
+`/private/tmp/sifr-b37-cont.bJIsfC`, branch
+`codex/item12k-b37-continuation-bJIsfC`, base
+`5614f06c8ff49411dd8d0b8107e6479e4274ec96`. Complete scoped record:
+[B37 integrated qualification](ad-hoc-emitted-rust-b37-integrated-qualification.md).
+Original battery failure preserved; changed-host AC admission passed. Sole
+continuation proof stopped9.842366958s on first-target ps/native parent mismatch
+(PGID agrees), before ack/events/handover/hits; later cleanup corroboration limit
+exhausted. Cause UNKNOWN. Later B37-F2/F3 recorded in
+[owner3776](https://github.com/sifr-lang/sifr/issues/3776#issuecomment-5582457963).
+Fresh native/ps/group absence proved and capacity released; failed runner release
+remains failed. Original144/current200 frozen inputs unchanged,443/443 reused,
+no suite rerun/repair/retry/review/PR/merge/gate/next code. Full raw evidence and
+external frozen terminal are retained in owned `evidence`. B24/B27/SQL/original
+phase remain OPEN. Next action: terminal callback and STOP.
+
 ## Item12K-B36: sampled native custody lifecycle (2026-09-08)
 
 **B36 MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.**
