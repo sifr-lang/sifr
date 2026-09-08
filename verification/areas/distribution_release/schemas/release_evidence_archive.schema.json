@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Release evidence archive v1 (custody only, no authorization)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "identity", "matrix", "artifacts", "archive_root", "inventory_sha256"],
+  "properties": {
+    "schema_version": {"const": 1, "type": "integer"},
+    "identity": {"$ref": "#/$defs/identity"},
+    "archive_root": {"type": "string", "minLength": 1},
+    "inventory_sha256": {"$ref": "#/$defs/digest"},
+    "matrix": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["target", "mode", "reasons"],
+        "properties": {
+          "target": {"type": "string", "minLength": 1},
+          "mode": {"enum": ["native", "structured-skip"]},
+          "reasons": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["role", "path", "size_bytes", "sha256", "key", "producer"],
+        "properties": {
+          "role": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "size_bytes": {"type": "integer", "minimum": 1},
+          "sha256": {"$ref": "#/$defs/digest"},
+          "key": {"type": "string", "minLength": 1},
+          "producer": {
+            "type": "object", "additionalProperties": false,
+            "required": ["repository", "source_commit", "workflow_path", "run_id", "run_attempt", "job", "execution"],
+            "properties": {
+              "repository": {"const": "sifr-lang/sifr"},
+              "source_commit": {"$ref": "#/$defs/commit"},
+              "workflow_path": {"const": ".github/workflows/release-qualification.yml"},
+              "run_id": {"type": "integer", "minimum": 1},
+              "run_attempt": {"type": "integer", "minimum": 1},
+              "job": {"type": "string", "minLength": 1},
+              "execution": {"enum": ["workflow", "local"]},
+              "artifact_id": {"type": "integer", "minimum": 1}
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$", "not": {"const": "0000000000000000000000000000000000000000"}},
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "source_commit", "workflow_path", "run_id", "run_attempt", "index_sha256", "submodules", "lock_sha256", "toolchain", "profile_sha256"],
+      "properties": {
+        "repository": {"const": "sifr-lang/sifr"},
+        "source_commit": {"$ref": "#/$defs/commit"},
+        "workflow_path": {"const": ".github/workflows/release-qualification.yml"},
+        "run_id": {"type": "integer", "minimum": 1},
+        "run_attempt": {"type": "integer", "minimum": 1},
+        "index_sha256": {"$ref": "#/$defs/digest"},
+        "submodules": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/commit"}},
+        "lock_sha256": {"$ref": "#/$defs/digest"},
+        "profile_sha256": {"$ref": "#/$defs/digest"},
+        "toolchain": {
+          "type": "object", "additionalProperties": false,
+          "required": ["rustc", "cargo", "uv", "python"],
+          "properties": {
+            "rustc": {"type": "string", "minLength": 1},
+            "cargo": {"type": "string", "minLength": 1},
+            "uv": {"type": "string", "minLength": 1},
+            "python": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    }
+  }
+}
