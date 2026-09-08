@@ -2,6 +2,21 @@
 
 Status: active
 
+## Item12K-B29: observer coordinate repair (2026-09-08)
+
+B29 is the sole owner of B28-F1 under performance issue3776. State: implemented,
+registered before deterministic offline validation and one corrected coverage
+proof. See the [complete B29 registration](ad-hoc-emitted-rust-b29-observer-coordinate-repair.md)
+for exact scope, commands, ownership, acceptance and first-error stop rules.
+Fresh-main base `491ba4ede1609ce476831015dc209a9064cd8ffc`; owned root
+`/private/tmp/sifr-b29.XrqnzO`, branch
+`codex/item12k-b29-observer-coordinate-repair`. Parent dirty history and all
+predecessors remain read-only. B28 is terminal/inconclusive at remote record
+`e56c9882bc555d9717eb86580d8a663950c57a8b`; its invalid file-VA/disk-offset
+comparison is repaired only in copied external observer code, with the shared
+pure predicate and registered offline positive/negative cases. B24 cause,
+unchanged performance acceptance, B27 and the full phase remain open.
+
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
 **B23 MERGED / COMPLETE; blocker none.**
