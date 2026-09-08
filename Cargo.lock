@@ -7539,6 +7539,7 @@ name = "sifr"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "ignore",
  "ruff_python_ast",
  "ruff_text_size",
  "serde",
