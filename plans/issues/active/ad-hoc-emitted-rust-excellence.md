@@ -2,6 +2,34 @@
 
 Status: active
 
+## Item12K-B28: observability feasibility awaiting adjudication (2026-09-08)
+
+B28 is the sole B24-F1 / issue3776 owner. The
+[read-only assessment and one-target proposal](ad-hoc-emitted-rust-b28-observability-feasibility.md)
+is complete in independent clone `/private/tmp/sifr-b28.prJZsY/sifr`, branch
+`codex/item12k-b28-observability-feasibility`, base
+`491ba4ede1609ce476831015dc209a9064cd8ffc`. Parent dirty ledgers and all
+predecessor source/index/targets/evidence remain read-only.
+
+Installed dyld static disassembly corroborates a pre-prepare image-handover
+notification. Public LLDB launch/loader source supports explicit initial-stop
+and image-change interception. The proposal records active image UUID/header/
+section load addresses and enabled/resolved breakpoint sites at those stops,
+then requires actual early entries in exactly one diagnostic target. Source
+version limits and failure criteria are explicit. Neither target behavior nor
+B24's missing-hit cause has been established by this assessment.
+
+State: ASSESSMENT COMPLETE / AWAITING ORCHESTRATOR ADJUDICATION; NOT EXECUTED,
+NOT REVIEWED, NOT MERGED. No PR. Read-only source/API/receipt/command checks
+and documentation diff only; zero debugger sessions/targets/builds/tests/
+acquisitions/Opus/gates. External evidence is under the owned sibling `evidence`.
+No binary copy, diagnostic scripts or compiler target have been created.
+
+Parent must concretely register implementation/execution and final-review
+allowances before the proposed proof. Coordinator owns the capacity window.
+This does not close B24 causation/unchanged acceptance, replenish B20/B22 review
+allowances, qualify B27, or start another item's code. Hold for adjudication.
+
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
 **B23 MERGED / COMPLETE; blocker none.**
