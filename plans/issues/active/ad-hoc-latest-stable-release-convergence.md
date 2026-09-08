@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-09-08. Items 0–30, 36–39, 54–55 and 66 are complete. Item 39 closed
+Status: active on 2026-09-08. Items 0–30, 36–39, 54–55 and 66–67 are complete. Item 39 closed
 the runner dependency/API invariants; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
@@ -8,7 +8,7 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ### Item 67 — durable uv checksum comment provenance
 
-State: implementation candidate. Scope is the explanatory comment at
+State: complete on 2026-09-08. Scope is the explanatory comment at
 `scripts/check_uv_toolchain.py:28`, owned by Item 38. The comment now identifies
 the upstream release checksum asset as the provenance of the qualified archive
 SHA-256. Its historical attribution remains Item 3 / [PR #3495](https://github.com/sifr-lang/sifr/pull/3495).
@@ -33,6 +33,47 @@ window. One exact-SHA Opus review and at most one remediation apply. This
 comment-only source change requires no Sifr create-pr or merge gate under the
 user's file-category rule. Item 65 may resume only after this qualified merge;
 no Item 65 implementation or policy change is included here.
+
+Implementation [PR #3782](https://github.com/sifr-lang/sifr/pull/3782) started
+from `1970c35c25b84d3801533e0790374a1ef3b8d007`, qualified exact candidate
+`bc80989266758fd18a8f65bee57f4cf29365775d`, and merged as
+`deccdbe09aab7b419767c02b2e22086e7acdc59c`.
+
+All named checks passed on that candidate. The uv self-test passed 46 checks;
+the guard passed six exact pins and three setup-uv steps. Readiness passed
+four variants with zero failures: strict coverage (13 guarantees, 34 surfaces,
+zero temporary rows), profile assignments (19 rows), negative self-tests
+(26 cases), and verification taxonomy. Diff, file-size (3,761 files, 900-line
+limit), and local record path/link checks passed.
+
+Readiness ran only after the shared coordinator released a metadata-only
+window. No Cargo compilation ran; all owned metadata/preflight processes
+ended and the window was returned immediately. No Sifr gates ran.
+
+The one initial exact-SHA Opus review returned `SATISFIED` with no blocking
+findings. No remediation review ran. The external
+[validation receipt](https://github.com/sifr-lang/sifr/pull/3782#issuecomment-5577064904)
+and [full Opus response](https://github.com/sifr-lang/sifr/pull/3782#issuecomment-5577067562)
+are keyed to the approved candidate. Raw receipts are retained under
+`/private/tmp/sifr-item67.5OceYz/`; the readiness log SHA-256 is
+`2945cb7ccc2528a471bad0af70da87692a1c26697b2671aa7596d19ab4369557`
+and its result JSON SHA-256 is
+`111bffb9ea3febdd88927716ebbf590db1df2ed0eb04bdb34ac566d722ff7ffe`.
+The response at `/private/tmp/sifr-item67-opus.aWUVqA/response.md` has SHA-256
+`e3ef6f15254824a6f0e39a13e0aa1e96a09b6f724fb14d01761177edb3b0e438`.
+
+Deferred nonblocking observations for Item 35's final audit: preserve receipt
+content durably beyond temporary paths, and retain discoverable historical
+qualifying-change attribution in phase evidence. No new mechanism defect was
+found. Issue #3781 is closed. Item 67's prerequisite for Items 65/62/35 is
+satisfied; all prior candidates and their review/gate counters remain intact.
+
+Terminal state: implementation merged; phase record on
+`codex/latest-stable-item67-record` in
+`/private/tmp/sifr-item67.5OceYz/codebase`. Blocker: none. The next action belongs
+to a fresh Item 65 continuation from its preserved candidate, reusing unchanged
+evidence and validating this changed prerequisite. This session stops after
+the record merge and does not begin that continuation.
 
 ### Item 66 — feature-sensitive Rusqlite lock assertion prerequisite
 
