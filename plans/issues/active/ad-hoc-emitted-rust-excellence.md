@@ -12,13 +12,20 @@ Owned independent clone `/private/tmp/sifr-b31.4v8Yzw/sifr`, branch
 remain read-only. Complete scope, registered commands, API/source support and
 external apparatus contract are in the [B31 scoped record](ad-hoc-emitted-rust-b31-notifier-identity.md).
 
-Only the external observer's notifier dispatch/protocol identity and required
-offline cases/path plumbing change. No production/compiler/fixture/lock/workflow
-change or Sifr gate. All apparatus precedes the single named offline self-test;
-only PASS permits frozen prelaunch registration and one bounded changed-
-apparatus proof. First live failure is terminal with later ownership, no repair,
-retry, review or merge. Success permits only named record checks, one exact-SHA
-Opus plus at most one remediation, docs-only merge/phase record, then stop.
+**B31 NEEDS-NEW-SCOPE / INCONCLUSIVE / NOT REVIEWED / NOT MERGED.**
+Single offline self-test PASS182/182. Prelaunch registration
+`efe99d3daaf0ad94b2bd090c2192db9ef5036b8e`, manifest SHA256
+`5a29e12f165e345ad6224cf611abc2885d5bcb2b5c71dfa931327d196bb79b4a`.
+Sole proof8.188232208s,15 stops/continues, one completed mode3-to-mode0 handover,
+all8 required entry families, target exit0. Final observer completion rejected
+because its streams were empty; debugger stdout preserves both required
+file.after.check markers. No posthoc pass substitution. Later12K-B31-F1 under
+performance issue3776 maps exactly to later12K-B32, which owns the output
+custody/reader-boundary defect. No later
+code, repair/retry/Opus/PR/merge or Sifr gate. Only terminal record bookkeeping.
+Outcome SHA256 `9be1b4cd726d1d6005c44db9e89492640406f3ea517f9627af0471eb4561c308`;
+release `66b71c7778d70444f92e1a89d68e5ca1aec9f65e043c697164e989a49649eb5d`.
+Every process absent, capacity released, all sources/raw evidence frozen.
 B24 causal/full representative/budget acceptance, B27 joint delivery including
 SQL builtin fix plus approved65, and the complete emitted-Rust phase remain open.
 

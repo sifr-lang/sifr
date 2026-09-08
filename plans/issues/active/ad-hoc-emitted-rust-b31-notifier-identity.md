@@ -1,7 +1,9 @@
 # 12K-B31: authenticated notifier dispatch and protocol identity
 
 Date: 2026-09-08. Owner: performance / issue3776; exactly B30-F1.
-State: implementing the approved bounded observer contract.
+State: NEEDS-NEW-SCOPE / COVERAGE INCONCLUSIVE / NOT REVIEWED / NOT MERGED.
+The sole live proof ended. Only terminal bookkeeping follows; no retry,
+apparatus repair, review, gate, PR, merge or next-item code is authorized.
 
 ## Ownership and authorization
 
@@ -167,3 +169,88 @@ all authenticated inputs and ancestor-config presence. Parent/coordinator
 receive manifest/registration/offline identities and actual start notice before
 the sole command. No further acknowledgement is required. All original bounds,
 first-error terminal behavior and success-only review/merge branch apply.
+
+## Sole-proof terminal result
+
+The exact registered command ran once, exit1 after8.188232208s. One live
+debugger session, one target,15 stops and15 continues; no retry. Observer
+elapsed5.00455325s in its separate embedded clock domain. The repaired
+dispatch/protocol accepted mode3 stop6 with empty modules, invalid frame PC,
+owned9.1 plus internal-1.1, thread127985349 and prior authenticated notifier
+binding. The original mapped mode0 transition at stop7 completed once with
+the registered dyld UUID `74E52480-C2BD-3C8D-812D-95FE2B74A096`, changed header
+and newly enabled/resolved notifier13.1. No old absolute address was reused.
+
+Historical values for this process only: initial dyld header4512825344 and
+notifier4513059532; new header6557810688 and notifier6558044876. Stop6 raw
+PC register was valid, value4513059532, value error success and read success;
+Frame.GetPC was18446744073709551615. Register evidence was diagnostic only,
+never used in classification. It does not create an alternate acceptance route.
+
+All eight required families hit exactly once in order: prepare stop11, JIT
+fixups13, generic15, libSystem19, sanitizers21, constructor23, main25 and
+completion27. The target exited0. This proves observed handover and entry
+delivery in the one run, but does not meet the full registered proof predicate.
+
+Final `lldb_coverage.py:360` called `Protocol.finish`, which rejected at
+`coverage_symbols.py:248`: `missing successful two-file completion`.
+Observer stdout/stderr were both empty, so its marker count was0. Preserved
+outer `debugger-result.json` stdout contains `format check passed` and exactly
+two `B20_PHASE file.after.check` records. This is evidence of a diagnostic
+output ownership/reader-boundary defect; absent workload completion is not
+established. The outer transcript is not substituted post hoc into the failed
+observer criterion. Result remains INCONCLUSIVE, no qualification or merge.
+Incidental phase payloads in the raw transcript are retained as bytes only;
+no counter analysis, CV sampling or performance acceptance was performed.
+
+**Later finding12K-B31-F1**, sole owner performance / issue3776: establish a
+single authenticated inferior-output custody path for the registered two-file
+completion criterion. The current observer's SBProcess stream reads were empty
+while the debugger's captured output contained both markers. A later item must
+first ground its complete output ownership contract in these preserved raw
+receipts and relevant installed API/source. No fix, alternate read route,
+weakened completion criterion, probe or new proof is implemented here. This
+finding is a later owner registration, not authority to start its code.
+Parent assigned later **12K-B32** to exactly B31-F1, with no duplicate owner.
+Parent directed only immutable terminal/record/issue3776 bookkeeping and STOP;
+there is no need to await the coordinator's read-only later-contract work.
+
+Process release: remaining[], groups_absent=true, watcher_alive=false and
+monitor_alive=false. Inferior84722 exited0; debugger84681, debugserver84723
+and launcher84114 are absent in independent
+`ps -p 84114,84681,84722,84723 -o pid=,ppid=,pgid=,etime=,command=` output.
+Capacity released. No owned or predecessor evidence was removed or rewritten.
+All apparatus source hashes still match the tested prelaunch manifest.
+
+Prelaunch registration commit `efe99d3daaf0ad94b2bd090c2192db9ef5036b8e`;
+exported registration SHA256
+`2e79aafeb6359da4bb2b936b7121e72e0ebf5f35bc1d036cff73129d114180da`;
+manifest SHA256 `5a29e12f165e345ad6224cf611abc2885d5bcb2b5c71dfa931327d196bb79b4a`.
+Both parent and coordinator received exact hashes and actual-start callback
+before execution, then received terminal outcome/release notification.
+
+| Raw artifact under evidence/coverage | SHA256 |
+| --- | --- |
+| outcome.json | 9be1b4cd726d1d6005c44db9e89492640406f3ea517f9627af0471eb4561c308 |
+| events.json | 3293ca9c76e5877482cd5a5fbb9cd29284197753c0244c5768c389ad4811320b |
+| observer-result.json | 1db95cc2feaf3478173c2f4546321c92e152f4df06972221abc3d4843a6854b2 |
+| debugger-result.json | dd7663a0005c1942cefc1d4358dd9e03e5c90b9a71c9dc3752939fc45aa53b2f |
+| process-release.json | 66b71c7778d70444f92e1a89d68e5ca1aec9f65e043c697164e989a49649eb5d |
+| site-arming.json | 011d5eb6b097ab2979e0acc2b46d01546c337b6fd24a5434bc7167f85373944d |
+| identity-resolutions.json | 08ed3a7f668a2f68998919d775c9ee8f7d3d37b19202888af37dc6af35c82d6b |
+| inventory.json | 3615402b0e6ad2af7fc5a40e2cb3fc7172c0d7a8b2964345cf82e285b988d7d5 |
+
+Counts: one offline command182/182; one live command/session/target; zero
+retries, Opus/provider requests, remediation reviews, PRs, merges, create-pr
+or merge gates, compiler builds/tests, counter/CV/acceptance acquisitions and
+postfailure apparatus edits/probes. Success-only HIR/review/merge branch was
+not reached. Exact terminal record diff/file-size checks and remote record SHA,
+owner issue comment, final hashes and independent release are authenticated
+in external `evidence/terminal.json`. Next action: STOP after that terminal
+callback. B24, B27 and all full-phase obligations remain open.
+
+Terminal file-size guardrail PASS3762 files with900-line limit. Owned maintained
+sources: symbols577, address140, observer378, launcher280, registration101 lines;
+each is below the limit. No HIR or broad gate ran on this failure branch.
+The exact final committed documentation diff is checked once in terminal
+bookkeeping, with its command/result bound to the terminal record SHA.
