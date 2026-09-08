@@ -2,6 +2,33 @@
 
 Status: active
 
+## Item12K-B50: bounded in-process phase diagnostic (2026-09-08)
+
+**DIAGNOSTIC COMPLETE; no execution blocker; STOP/no production merge.**
+Exact B49 production base `30b25c551566bf0c146290c7ec38a55621c5d526`.
+Temporary diagnostic `eaac03390bce342fba77da5a73669cbc096dc584` is separately
+retained on `codex/item12k-b50-38g7V9`; NEVER use it as production input.
+This docs-only branch is rooted directly at B49 and excludes instrumentation.
+[B50 full record](ad-hoc-emitted-rust-b50-in-process-phase-diagnostic.md).
+
+One locked ordinary build PASS107.425s; exact four U/I/I/U arithmetic checks all
+exit0/contract preserved/releasePASS,12.775s window, no timeout/retry. Raw bounded
+ns records cover89 modules/depth5; exclusive sums and all132 selected unchanged
+inputs validated. Both runs localize public-stdlib Rust emission as largest
+exclusive family:843.942/838.335ms,57.10%/57.22% bootstrap. Private full contract
+batch2.348/2.224ms and metadata17.375/17.249ms are distinct small boundaries.
+Actual owner bootstrap.rs328-344 -> codegen generate_stdlib_module_body and its
+project-policy/inline result path. Emission internals remain unpartitioned;
+no specific production repair is supported yet. Coordinator may scope that
+remaining attribution later; no next item was started.
+
+Whole-process perturbation inconclusive: U/I/I/U4.389716/3.863845/1.851679/1.888970s,
+controls vary2.324x; internal instrumented command1.843543/1.835696s. No exact
+correction, instruction/RSS inference, baseline adjustment or qualification credit.
+No testsuite/Opus/profiler/formatter/fullgate/PR/merge. All original phase items,
+nine budget failures, excluded owners and qualified builtin/listrepeat priority
+remain open. Own root `/private/tmp/sifr-b50.38g7V9`; parent ledgers untouched.
+
 ## Item12K-B38: coherent acquisition and batch qualification (2026-09-08)
 
 **B38 MERGED / SCOPED QUALIFICATION COMPLETE; blocker none.**

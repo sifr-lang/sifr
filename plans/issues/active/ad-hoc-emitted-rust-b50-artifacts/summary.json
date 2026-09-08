@@ -1,0 +1,29 @@
+{
+  "item": "12K-B50",
+  "status": "attributed",
+  "diagnostic_only": true,
+  "qualification_credit": false,
+  "production_base": "30b25c551566bf0c146290c7ec38a55621c5d526",
+  "diagnostic_source": "eaac03390bce342fba77da5a73669cbc096dc584",
+  "window_seconds": 12.775430000037886,
+  "target_seconds_U_I_I_U": [
+    4.389716124976985,
+    3.86384545895271,
+    1.8516793749295175,
+    1.8889701250009239
+  ],
+  "instrumented_mean_over_control_mean": 0.9103058516265783,
+  "leading_phase_agrees": true,
+  "leading_module_family_agrees": true,
+  "leading_phase": "emission",
+  "leading_module_family": "public_stdlib",
+  "phase_integrity_records": [
+    "check-02-instrumented.integrity.json",
+    "check-03-instrumented.integrity.json"
+  ],
+  "capacity": {
+    "owned_bytes": 6475153408,
+    "free_bytes": 135909146624
+  },
+  "release_pass": true
+}
