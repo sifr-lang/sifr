@@ -250,3 +250,34 @@ to parent01a06e86-414a-7e11-9256-1f45bdb5a6c7 and coordinator
 01a07d84-7c62-77f0-b7c7-ecf310829a11. Hold with zero owned execution processes
 for concrete orchestrator adjudication; no user permission loop and no automatic
 review, merge, target, benchmark or subsequent mechanism.
+
+## Approved execution registration (before launch)
+
+Parent authenticated original proposal hash `be2c46b17398e2b51737678fde5e49681cc9c1ec79de8a90706c9a2d60b83e23`
+and handoff `8651499d6703122419aaa49784e37c38ab759fcd648ca3dd913be3505511f92f`,
+then authorized the same worker to implement exactly the three external scripts
+and owned immutable diagnostic copy and execute the sole coverage proof above.
+Coordinator cleared/reserved the exact window; parent subsequently confirmed
+both decisions complete. No further permission checkpoint is pending.
+
+The three complete external files are now authored; the immutable copy has
+the registered `a4386bae` full binary digest. Python3.9 grammar parsing is a
+static source check, not an interpreter import, debugger session or target.
+Installed API inspection removed a nonexistent shared-library stop enum before
+execution; image events use actual breakpoint stops and notifier/kind identity.
+There was no failed setup or target run. No diagnostic module has been imported.
+
+Final registration, source/helper/workload and script SHA256 values are recorded
+in external `evidence/prelaunch.json` before the command is invoked. The launcher
+verifies all manifest hashes and ancestor-configuration identity before admission.
+The actual outer command, debugger command, target arguments and bounds remain
+exactly those registered above. The launcher records an exclusive attempt
+directory and will refuse another invocation. No additional script is introduced.
+
+If the proof PASSes only its stated coverage criteria, parent authorizes scoped
+documentation completion, exact diff/HIR/file-size checks, one initial exact-SHA
+Opus assessment review plus at most one remediation, and docs-only main merge
+with phase record and terminal stop. Review covers evidence and claim boundaries,
+not compiler/whole-phase/causal acceptance. No second proof is permitted by a
+review. If the proof FAILs, preserve raw receipts and return NEEDS-NEW-SCOPE;
+no automatic review, redesign, second target or next-item implementation.
