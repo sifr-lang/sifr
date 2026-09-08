@@ -2,6 +2,57 @@
 
 Status: active
 
+## Current orchestration: 12K-B21 independent builtin assessment (2026-09-08)
+
+This bounded registration supersedes the older orchestration entries below.
+B20 is closed, NOT MERGED / NEEDS-NEW-SCOPE. Its terminal record is
+`96d051e4c16771ae1902f6e8aa77ecd836d45fa6`, retained remotely on
+`codex/item12k-b20-terminal-record`; PR3783 remains open and unapproved at
+`ac4c277b30c6cac046ab1746fe4020c04df7eaf1`, base
+`fb66ed00d7672b9f5c623e3291d1b8498d50ec45`. No B20 retry is authorized here.
+
+12K-B21 owns source/dependency assessment and documentation only. The authoritative
+parent registration was read from `/Users/yaseralnajjar/.codex/worktrees/f862/codebase`;
+its two intentional dirty Markdown files and all predecessor clones remain read-only.
+Owned clone `/private/tmp/sifr-b21.csIcGN/sifr`, branch
+`codex/item12k-b21-builtin-assessment`, base/current main at assessment
+`6bd085f40e42c04b1d81a09ce1660a392541bd1e`; evidence and temp storage are sibling
+directories under `/private/tmp/sifr-b21.csIcGN`. No source or history was copied
+wholesale from the parent. Retained refs are comparison inputs only.
+
+The [B21 assessment and complete next-item registration](ad-hoc-builtin-registration-delivery-assessment.md)
+find a three-file independent source closure for the existing builtin repair.
+This is not delivery approval or a compiler test result. SQL's reported Clippy
+failure is authenticated and its offending source is identical on assessed main.
+B20, formatter/performance work, Python integration and release-policy Item65
+are not demonstrated source prerequisites for this repair. Full candidate
+qualification still applies; no gate or broad-review waiver is granted.
+
+Named B21 validation: exact-base/candidate `git diff --check`,
+`python3 scripts/check_hir_maintainability_guardrails.py`, read-only commit/PR/
+receipt and command/test-name verification; the AGENTS file-size guardrail also
+applies. One exact-SHA Opus assessment review, at most one remediation; zero
+compiler tests, builds, benchmarks, create-pr or merge-profile gates. Review
+evidence stays outside the reviewed Git tree. Merge only these documents,
+update the phase record, then stop; do not implement the registered delivery.
+
+Next emitted-code owner is **12K-B25**, the independently scoped builtin delivery
+registered in the assessment. It is unstarted. Coordinator task
+`01a07d84-7c62-77f0-b7c7-ecf310829a11` retains heavy-validation ordering;
+release-policy dependency65 owns the active broad-validation window for its
+single gate at `4c7068b36904e216b02778f5664d2b8fd1159a6a` until coordinator
+release. B21 docs validation/review may continue. Item67's taxonomy
+wording is already merged at the assessed main SHA; it was not an E2 prerequisite.
+No E1/Item65 or SQL repair is absorbed. Parent callback task is
+`01a06e86-414a-7e11-9256-1f45bdb5a6c7`.
+
+Later registrations remain unstarted: B22 owns B20's eager fatal gitignore
+parsing regression (preserving its consumed initial review); B23 owns timed
+benchmark descendant cleanup; B24 owns unresolved owner3776 causal acceptance
+and valid qualification. Their full registration remains in the authoritative
+parent/B20 handoff, not duplicated here. Original PR3717/corpus48 and later
+12D/12E/12F/retained12/docs-only12A are not closed or started by B21.
+
 ## Current orchestration: B15 terminal; storage12K-R3 then B13 combined delivery (2026-09-07)
 
 Schrodinger is CLOSED. B15 PR3746 remains OPEN DRAFT, normally pushed record
