@@ -1,7 +1,10 @@
 # 12K-B30: complete observer identity and arming contract
 
 Date: 2026-09-08. Owner: performance / issue3776; exactly B29-F1.
-State: APPROVED COMPLETE APPARATUS IMPLEMENTED; OFFLINE99 PASS; SOLE PROOF NEXT.
+State: NEEDS-NEW-SCOPE / COVERAGE INCONCLUSIVE / NOT REVIEWED / NOT MERGED.
+The sole proof has ended and every owned execution process is absent. Sources
+and raw receipts are frozen. The terminal result and later owner are recorded
+at the end; no repair, retry, new probe or next-item implementation follows.
 The first-stage proposal and its chronology below are preserved. The parent
 approved proposal05b2a2055dcac56dcdc32affb20fea5775163f19, document SHA256
 644e46b9b7921073464c2ad38c6656050a3ebc9c7598e092c85f3814d0bae9eb, and the
@@ -424,3 +427,88 @@ directory exists and no cleanup is needed or performed. The external and
 embedded clocks stay separate. Parent/coordinator receive final manifest and
 registration identities plus actual start notice BEFORE execution; they have
 already authorized execution without another acknowledgement.
+
+## Sole-proof terminal result and later owner
+
+The exact registered command executed once, launcher exit1 after7.780856750s.
+One live debugger session, one target, four observed stops(1,2,4,6), three
+explicit continues. The unchanged B29 coordinate predicate PASSed the actual
+initial stop. All8 dyld identities resolved in epoch0; prepare/JIT/generic and
+the notifier obtained unique enabled/resolved sites, as did all3 app entries.
+LibSystem/sanitizers remained pending. There were zero required-family entry
+hits and zero accepted/completed handovers. Full coverage is INCONCLUSIVE.
+
+Raw initial dyld UUID `74E52480-C2BD-3C8D-812D-95FE2B74A096`, header load
+4557881344, file6443581440. Initial PC4557900224, header-relative0x49c0.
+Verified notifier site: load4558115532, breakpoint9/location1. Epoch0 early
+sites: prepare4558015308/id6, JIT4558148288/id7, generic4558177140/id8.
+App header4377591808 with the registered UUID; completion4378641316/id1,
+constructor4378641272/id2, main4378206440/id4. These are THIS stopped process's
+historical observed loads only, never constants for a future attempt.
+
+Stops2 and4 reported mode0/count1 at verified notifier PC4558115532,
+breakpoint data `[18446744073709551615,1,9,1]` (internal-1.1 plus owned9.1).
+Stop6 retained the same breakpoint data, x0=3/x1=1, function
+`lldb_image_notifier` and module string `/usr/lib/dyld`, but the module list was
+empty and `SBFrame.GetPC()` returned `18446744073709551615` (LLDB_INVALID_ADDRESS).
+No raw register-PC value was captured; its availability is not established.
+
+The observer's saved-notifier-PC equality at `lldb_coverage.py:316` therefore
+failed to recognize this mode3 event. It fell into entry classification and
+`refresh_later()` at332 raised at170:
+`ValueError: ('required image unloaded', 'completion')`, via
+`coverage_symbols.py:19`. This is a concrete handover-address representation
+defect in the observer, not absence of the mapped symbols or a demonstrated
+OS/runtime/formatter defect. The outer cleanup then killed the inferior; no
+continue was issued from this failed stop. The mode3-to-mode0 coverage criterion
+was not met, and the recorded mode3 arguments alone are not a handover pass.
+
+Later item **12K-B30-F1**, owner performance / issue3776: support authenticated
+notifier stop identity when the LLDB module list is cleared and SBFrame.GetPC
+is invalid at the mode3 boundary, preserving strict identity/custody/coverage.
+Parent assigned later **12K-B31** to exactly B30-F1, not a duplicate item/owner.
+Only the missing observed representation is recorded here. A future owner must
+register its own bounded scope; no alternate PC acquisition API, resolver
+change, guard relaxation, new target or offline repair is implemented now.
+
+The inferior PID/PGID60878 was killed successfully. Debugger PID/PGID60838,
+debugserver PID/PGID60879 and launcher60367 are absent in an independent final
+`ps -p 60367,60838,60878,60879 -o pid=,ppid=,pgid=,etime=,command=` check.
+The process-release receipt has remaining[], groups_absent=true,
+watcher_alive=false and monitor_alive=false. Capacity is released. Three
+non-calibrating admission snapshots passed; timeout paths were not exercised.
+The immutable binary, all scripts and every static/offline/live receipt are
+retained; no predecessor or owned evidence cleanup occurred.
+
+Prelaunch registration commit `e7afa037ade4c347000970b3115e4f2b93ac294f`,
+registration/export SHA256 `04082a7c0775cd7648b2352c99adf9ce55eb35e6aac36e459105164324ce8655`;
+manifest SHA256 `e507bd82d22804ba964d590882a0bdf4bccfa0e6913cb6e1b895f1065c618144`.
+Both parent/coordinator received those final identities and actual start notice
+before launch. No prelaunch identity is backdated. Final sources are precisely
+the once-tested/launched bytes in that manifest; no postfailure code changes.
+
+| Raw artifact under evidence/coverage | SHA256 |
+| --- | --- |
+| outcome.json | 2f91df32e789430989a207894e3d5559c2107a8960c4ab495ab1ceca97e0852f |
+| events.json | a0c2ed89affe3c9d0e10498a4fa8d58f446f3d606dce1c74ebddf3c032fa8d3f |
+| process-release.json | 41bfd87b0b2488b1c0b795695e623b83e615daddc41edfbee5281c03b819b2eb |
+| observer-result.json | f2f75ff2864010f15657deb69321147b591de77a154530173f308de4eb61e056 |
+| site-arming.json | 7cadaca1ce02bd5419b637d43534a7b34f83bbb9b82f3bfadd5f871f00dd11e5 |
+| identity-resolutions.json | c8edd6db86b0e1adc7079f9ea82cfbfe2ee7480117e192fd74f461360db61a51 |
+| inventory.json | 165599198ffdaaed0e3a84b4467023f650d2e18088b5ea3fbaec9e928de7925c |
+| debugger-result.json | 326a8955843fe4934426e0d89de1086eab65a5b087f2b4c5f75ecd9e38e391ec |
+
+Counts: two static sessions/contexts with no process, one offline command99cases,
+one live coverage command/session/target, zero retries, zero Opus/provider/
+remediation requests, zero PRs/merges/Sifr gates/compiler builds or tests,
+zero counter/CV/performance acquisitions. The success-only HIR/review/merge
+branch was not reached. Terminal documentation diff and file-size bookkeeping
+are recorded in the final external terminal.json, with the terminal record SHA
+and owner issue comment. No broader validation is run.
+
+Next action: STOP after terminal documentation/owner record and callback. B24
+cause/full unchanged acceptance, B27 joint delivery and every retained full-phase
+obligation remain unmet; historical review and gate allowances are not reset.
+Parent acknowledged the outcome and directed only immutable terminal/record/
+issue3776 bookkeeping, then stop. No additional later-contract read or probe
+is required in this owner; coordinator follow-up is not a reason to continue.

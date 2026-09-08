@@ -4,7 +4,21 @@ Status: active
 
 ## Item12K-B30: resolver/arming proposal checkpoint (2026-09-08)
 
-Current execution update: parent approved exact proposal05b2a2055/SHA256644e46b9
+Terminal update: NEEDS-NEW-SCOPE / COVERAGE INCONCLUSIVE / NOT REVIEWED / NOT
+MERGED. Offline99/99 and initial coordinate/identity/site arming passed; the
+single live proof ended7.780856750s with4stops/3continues/7installed initial
+sites, zero required entry hits or completed handovers. At mode3 stop6, modules
+were empty and SBFrame.GetPC returned LLDB_INVALID_ADDRESS despite notifier
+breakpoint data and x0=3/x1=1. Saved-PC classification missed the event and
+refresh_later raised `required image unloaded: completion`. Raw scripts/evidence
+are frozen. All owned execution processes are absent; capacity released.
+Later **12K-B30-F1**, performance/3776: authenticated mode3 notifier identity
+when frame PC becomes invalid after module-map clearing. Recorded only; no
+duplicate owner: parent assigned **12K-B31** to exactly B30-F1. No
+repair/retry/new probe/review/PR/merge/gate or next-item code. Full details and
+hashes are in the linked B30 scoped record; final terminal.json is external.
+
+Prelaunch execution update: parent approved exact proposal05b2a2055/SHA256644e46b9
 and coordinator capacity is cleared/reserved. Complete proposed external
 apparatus is implemented; the single named offline check PASSed99/99. The
 registration below links its frozen script/contract/result hashes. Next is
