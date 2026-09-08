@@ -4,6 +4,58 @@ use std::path::Path;
 use std::process::{Command, Output};
 
 #[test]
+fn formatter_validation_rechecks_no_cache_inputs_and_preserves_failures() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let file = root.join("main.sifr");
+    let cache = root.join("format-cache");
+    let run = || {
+        Command::new(env!("CARGO_BIN_EXE_sifr"))
+            .current_dir(root)
+            .args(["fmt", "--no-cache", "--cache-dir"])
+            .arg(&cache)
+            .arg(&file)
+            .output()
+            .unwrap()
+    };
+    for source in ["def first( ):\n    pass\n", "def second( ):\n    pass\n"] {
+        std::fs::write(&file, source).unwrap();
+        let output = run();
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(
+            std::fs::read_to_string(&file).unwrap(),
+            source.replace("( )", "()")
+        );
+        assert!(!cache.exists());
+    }
+    let invalid = "def broken(:\n";
+    std::fs::write(&file, invalid).unwrap();
+    assert_eq!(run().status.code(), Some(1));
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), invalid);
+    assert!(!cache.exists());
+}
+
+#[test]
+fn formatter_validation_rejects_invalid_source_before_cache_publication() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let source = "value = \"unterminated\n";
+    std::fs::write(root.join("main.sifr"), source).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .current_dir(root)
+        .args(["fmt", "--cache-dir", "format-cache", "main.sifr"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("SIFR-FMT-0001"));
+    assert_eq!(
+        std::fs::read_to_string(root.join("main.sifr")).unwrap(),
+        source
+    );
+    assert!(!root.join("format-cache").exists());
+}
+
+#[test]
 fn formatter_discovery_reuses_rules_without_cross_path_decisions() {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path();

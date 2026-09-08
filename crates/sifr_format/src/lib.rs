@@ -11,7 +11,7 @@ use ruff_python_formatter::{
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
 use sifr_frontend::SourceProvider;
-use sifr_syntax::{SourceText, parse_module};
+use sifr_syntax::{SourceText, parse_module_raw};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -78,7 +78,9 @@ pub fn format_source(
     let formatted = format_sifr_module_source(source, ruff_options)
         .map_err(|error| vec![format_module_error_diagnostic(source, file, &error)])?
         .into_code();
-    parse_module(
+    // Validation consumes no public syntax-token projection. Keep the complete
+    // parser checks without allocating printable token kinds only to drop them.
+    parse_module_raw(
         &formatted,
         file.map(|path| path.display().to_string()).as_deref(),
     )?;
@@ -125,7 +127,7 @@ pub fn format_range(
     }
     let roundtripped = source_with_edit(source, edit_range, &replacement)
         .ok_or_else(|| vec![invalid_range_diagnostic(source, file, edit_range)])?;
-    parse_module(
+    parse_module_raw(
         &roundtripped,
         file.map(|path| path.display().to_string()).as_deref(),
     )?;
@@ -529,6 +531,7 @@ fn is_default_excluded_dir(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sifr_syntax::parse_module;
 
     #[test]
     fn formatter_is_ruff_backed_and_preserves_string_contents() {
@@ -653,3 +656,6 @@ mod tests {
         parse_module(&formatted, None).expect("formatted source should parse");
     }
 }
+
+#[cfg(test)]
+mod validation_tests;
