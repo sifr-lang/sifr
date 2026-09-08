@@ -8,7 +8,9 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ### Item 70-F1A — durable backend capability and implementation readiness
 
-Assessment complete; exact-SHA review and merge pending. The coordinator
+Assessment COMPLETE via [PR #3812](https://github.com/sifr-lang/sifr/pull/3812).
+Reviewed candidate `e74ea1dc366edea5d324b25da4a52be571337bc5`, merge
+`546c0f3b22438aeaf2d6b012264744356777032f`. The coordinator
 authorized this read-only metadata/docs unit independently of compiler/policy
 delivery. The [assessment](ad-hoc-latest-stable-item70-f1a-backend-readiness.md)
 records scoped repository/org/four-environment API identities, secret names
@@ -32,6 +34,21 @@ diff, file-size guardrail, local links/paths and exact source/API metadata
 identities. No Cargo, native execution, historical search, Sifr gate or
 qualification. One Opus review, at most one remediation; merge assessment,
 record evidence without another review/gate, then stop.
+
+All named checks passed, including the 3,762-file size guardrail; ONE exact-SHA
+Opus review returned SATISFIED/no blockers. Zero remediation and zero Sifr
+gates. [Validation](https://github.com/sifr-lang/sifr/pull/3812#issuecomment-5581503394),
+[sanitized metadata](https://github.com/sifr-lang/sifr/pull/3812#issuecomment-5581503738),
+[supplemental metadata](https://github.com/sifr-lang/sifr/pull/3812#issuecomment-5581503975),
+[review](https://github.com/sifr-lang/sifr/pull/3812#issuecomment-5581510828).
+Review SHA-256 `638dbca68aa76961e7f0139ff6c110c0b2a46f4b33427a5c006cc8e588538303`.
+F1C follow-ups: refresh provider pricing at actual selection; capture full
+timestamps for future API receipts; evaluate actual storage access separation
+without inferring a new environment-approval requirement from existing rules.
+Assessment blocker: none. Online access/copy proof remains a later prerequisite.
+Record-only branch `codex/latest-stable-item70-f1a-record`; after this record
+merges, stop and return terminal. F1B is merely registered for a future sole
+child; this session starts no next item.
 
 ### Item 70 — merged bounded recovery assessment / authorized disposition
 
