@@ -1,7 +1,7 @@
 # 12K-B24 experiment registration: startup instruction boundaries
 
 Date: 2026-09-08. Owner: emitted-code performance / issue3776.
-State: sole adjudicated attempt stopped INCONCLUSIVE; no retry or further targets.
+State: NEEDS-NEW-SCOPE / NOT QUALIFIED / NOT REVIEWED / NOT MERGED.
 This registration is not a causal finding, qualification, review or closure.
 
 Adjudication: parent approved the exact experiment and coordinator cleared its
@@ -272,6 +272,23 @@ registration commit/hash `0d6fc7bda9a2a8021ae2dc7ed55726173b819bcb` /
 `d21d2a0f60c86dd791aaf0949583983913e285f4ba47da3421c7a2a3294696fb`
 remain preserved; no evidence is backdated or overwritten.
 
-The five unlaunched targets are not banked capacity. Same-worker continuation
-requires result/scope adjudication. No PR, merge, cause correction, controlled
-acceptance, Opus request or Sifr gate exists for B24 at this checkpoint.
+The five unlaunched targets are not banked capacity. Parent adjudication ends
+this worker after durable records; no further diagnostic, repair, review or
+qualification is authorized. Later12K-B24-F1 under owner3776 records missing
+critical loader coverage and requires a materially supported measurement route
+before separately scoped execution. It is not designed or implemented here.
+
+Additional record limitation: external-window timestamps and embedded-LLDB
+timestamps have different observed monotonic origins. The observer's comparison
+against the transferred absolute deadline is not valid evidence of its guard.
+The external launcher's own-clock deadline/watchdog remains distinct, and actual
+elapsed time was8.77s. No timeout behavior was exercised or qualified. Record this
+under the later measurement owner; do not repair or rerun this diagnostic.
+
+Exact original and amended registration text are exported at terminal to
+`evidence/registration-original.from-git.md` and
+`evidence/registration-amended.preserved-after-run.md`, matching respectively
+the d21d2a0f and e905918b hashes above. The second is an explicitly post-run
+preservation from the recorded text changes, not a prelaunch custody receipt.
+No PR, merge, cause correction, controlled acceptance, Opus request or Sifr gate
+exists for B24. Parent owns later dispatch; this worker stops.

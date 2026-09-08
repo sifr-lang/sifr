@@ -2,9 +2,11 @@
 
 Status: active
 
-## Item12K-B24: bounded experiment registration (2026-09-08)
+## Item12K-B24: needs new scope after sole diagnostic (2026-09-08)
 
-B24 is unqualified and unmerged. The sole worker registered the
+**B24 NEEDS-NEW-SCOPE / NOT QUALIFIED / NOT REVIEWED / NOT MERGED.**
+Owner: [3776](https://github.com/sifr-lang/sifr/issues/3776).
+The sole worker registered the
 [startup instruction-boundary experiment](ad-hoc-emitted-rust-b24-experiment-registration.md)
 from main `491ba4ede1609ce476831015dc209a9064cd8ffc` in independent clone
 `/private/tmp/sifr-b24.4MtvfE/sifr`. Original registration commit
@@ -33,11 +35,27 @@ also found none. Capacity was released and both parent/coordinator received
 the result. Offline `evidence/boundary-analysis.json` SHA256
 `10902e1b710c45bbd3060a5ea455f2571ba25430b34570c621c2fe7f7ffc6f8c`.
 
-Next action is parent result/scope adjudication for this same B24 worker; no
-diagnostic remediation or new acquisition follows automatically. This is not
-B24 closure or a user-authorization blocker. Owner3776's attributable cause
-and unchanged controlled formatter/representative/budget acceptance remain
-outstanding. B27 and every next-item implementation stay out of scope.
+Parent adjudicated the result INCONCLUSIVE and ended this worker's execution
+allowance. No further target, setup attempt, diagnostic remediation, acceptance
+acquisition, Opus review or production code is authorized. Only durable records
+were completed afterward. Owner3776's attributable cause and unchanged controlled
+formatter/representative/budget acceptance remain outstanding; no PR or merge.
+
+Later item **12K-B24-F1**, owner performance/3776: missing critical early-loader
+measurement coverage. Recorded only, not designed or implemented. A materially
+supported measurement route and concrete separate scope adjudication are required
+before any execution; the failed attempt and five unlaunched targets do not reset
+quota. No specific OS, loader, formatter or counter defect is asserted.
+
+Record limitation: the external launcher's monotonic timestamps are near488359s,
+whereas the embedded observer's are near0–3s. The observer's cross-process absolute
+deadline comparison therefore cannot be treated as valid deadline evidence.
+The external launcher/watchdog owns its own clock and reports actual8.77s elapsed;
+the attempted timeout branches were not exercised. Preserve this diagnostic
+limitation under the later measurement owner, without repair or another run.
+
+Stop after this terminal record. Parent owns any later dispatch; B27 and every
+next-item implementation remain out of scope.
 
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
