@@ -2,6 +2,43 @@
 
 Status: active
 
+## Item12K-B36: sampled native custody lifecycle (2026-09-08)
+
+**B36 MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.**
+[PR3808](https://github.com/sifr-lang/sifr/pull/3808) merged as
+`aa11ed8a8dfe808b8727863ffe6c83e7ca4a29fe`. Reviewed/validated candidate
+`e2d42f05dec4cce446ac1a33beccd68080eadf20`, base
+`b92faf990877d2f553c70b2d29994d82ac60d4f0`; candidate and merge trees equal.
+Exactly B35-F1, owner performance / issue3776. Complete scoped record:
+[B36 custody lifecycle](ad-hoc-emitted-rust-b36-custody-lifecycle.md).
+
+The accepted sampled public-API contract uses BSD PID/group/start/path evidence,
+bracketed retained exec/exit watches, authenticated LLDB/debugserver transitions,
+native-backed display observations and the same replayed producer contract in
+acknowledgement, cleanup and finalization. No private generation API, arbitrary
+parent adoption, ps signal fallback, atomicity or historical identity claim.
+Named offline suite414/414 PASS, all365 inherited plus49, three same-suite
+invocations with failed receipts and exact sources preserved. Diff/HIR/file-size
+PASS3762; max external maintained source603. Frozen manifest
+`4eba23d064c0dc568fbb71debdd121a31ab2d2a92f72c81acd5fcafda8160dc5`, external
+root `/private/tmp/sifr-b36.WgYCUo/evidence`.
+
+One initial Opus SATISFIED/no blockers, zero remediation/provider retries. Full
+[exact-SHA review](https://github.com/sifr-lang/sifr/pull/3808#issuecomment-5580763845),
+response SHA256 `804134b7b5a022757a2a896b5960cfe5c2cc08a33c506703be4eae3a0f16a433`.
+48 frozen files and53 immutable predecessor copies reauthenticated. B36-F1/F2
+conservative disappearance/live-yield follow-ups and F3/F4 probe-identity/error
+precision suggestions are recorded in the scoped document for later work only.
+No successor code, live tests/proof, compiler/build/CV/counter or broad gates.
+Only Markdown enters Git; record-only update reuses approval and validation.
+
+B35 remains INCONCLUSIVE9.87207841698546s, zero events/handovers/hits; native
+identity/cause UNKNOWN. Its spent proof was not retried. All B35 processes and
+B36 review command/watchdog processes are released. Terminal E/`terminal.json`
+binds record PR/SHA and final evidence. B24 causal/full unchanged representative
+budget, SQL/B27/builtin-fix/approved65 and the original phase remain OPEN.
+Next action: complete this record-only merge and terminal callback, then STOP.
+
 ## Item12K-B34: static custody evidence contract (2026-09-08)
 
 **B34 MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.**
