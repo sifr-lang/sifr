@@ -1,7 +1,41 @@
 # 12K-B38: coherent acquisition and batch corroboration
 
 Date: 2026-09-08. Owner: performance / issue3776.
-State: implementation and offline qualification complete; sole live proof pending.
+State: offline and sole live qualification PASS; exact-SHA review/merge pending.
+
+## Sole live outcome and verified release
+
+Prelaunch candidate `ad59a78f0e4ac79cdfbb247c3d93845e5f80284f` was committed
+and pushed before both callbacks and the sole actual command. PASS in
+23.17234345903853 seconds: one LLDB session/target84958;15 events; one
+mode3→mappedmode0 handover; all8 ordered entries; actual exit0 and exactly2 file
+checks. Canonical stdout is empty and stderr1361 bytes. Full output completion
+passed after actual exit and fresh runner process release. All3 AC admission
+snapshots passed. No repair, retry, second proof or counter/CV acquisition.
+
+Custody retained71 observations with no rejections. This live scheduling did
+not require acquisition resampling; F2/F3 race coverage is the named offline
+suite, including actual sequence16/26 initial receipts and synthetic fresh
+rounds. The live result qualifies the integrated apparatus, without claiming
+that those races recurred in this proof.
+
+Independent post-command native-before/full-ps/native-after verifies all owned
+PIDs and groups84299/84866/84958/84959 absent; group queries return ESRCH,
+no matching rows, watcher/monitor false. No signals were delivered by this fresh
+verification. Capacity-release callbacks were sent to parent and coordinator.
+
+Evidence under E=`/private/tmp/sifr-b38.tJeQq1/evidence`:
+
+- `coverage/outcome.json`: `9f4b4255badb50c1c00ec63b55e1584de3b6588ecb344cc62c5e3b5b3da8ede5`
+- `coverage/custody.json`: `585449af7c6d1c8f2934f99eb1f5f2eb921bd269da40a6f46c8d3b1b8101cdd7`
+- `coverage/output-completion.json`: `1357d564c2eb5ce985799b462b3d967dc03e18f7f47240db3d1d2bde547cf47c`
+- `coverage/process-release.json`: `9ec9345ef5926386e83c26ee5adf1b8a76445222069cc3f1ed578ed7eda69d1d`
+- `fresh-process-release.json`: `8e252fea58fd176550699c29143b55bb81c7b2f03906fec940146b24b9190978`
+
+All tested executable files remain unchanged. Success-only named checks and
+exact-SHA external Opus review follow. Only this diagnostic record changes in
+the repository, so create-PR and merge Sifr gates are not applicable under the
+user's explicit item instructions. Full B24/B27/SQL/original phase remains open.
 
 ## Ownership and authority
 
