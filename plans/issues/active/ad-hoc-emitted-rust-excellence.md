@@ -2,6 +2,20 @@
 
 Status: active
 
+## Item 12K-B32: canonical inferior-output custody (2026-09-08)
+
+Exactly B31-F1, performance / issue3776. Independent owner at
+`/private/tmp/sifr-b32.U1mf9E/sifr`, branch `codex/item12k-b32-output-custody`,
+base `491ba4ede1609ce476831015dc209a9064cd8ffc`. B31 closed with coverage
+INCONCLUSIVE; no historical PASS substitution. Complete B32 apparatus and
+pre-execution registration are in
+[the scoped record](ad-hoc-emitted-rust-b32-output-custody.md).
+One named offline suite followed conditionally by one changed-apparatus proof;
+success-only exact-SHA review/documentation merge. No compiler or broad gate,
+counter/CV/acceptance acquisition or next-item code. B24, B27 and full-phase
+obligations remain open. Current state: sole offline suite PASS231/231,
+registration ready for freeze before the single authorized live proof.
+
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
 **B23 MERGED / COMPLETE; blocker none.**
