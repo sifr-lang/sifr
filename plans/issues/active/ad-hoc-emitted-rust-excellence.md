@@ -2,6 +2,27 @@
 
 Status: active
 
+## Item12K-B30: resolver/arming proposal checkpoint (2026-09-08)
+
+B30 is exactly B29-F1 under performance issue3776. First-stage installed API,
+module/symbol/function and bootstrap/handover inventory is complete; all13
+required identities are mapped. The full contract, owned paths, exact proposed
+offline checks and ONE changed-apparatus coverage proof are recorded in
+[B30 resolver contract](ad-hoc-emitted-rust-b30-resolver-contract.md).
+This is awaiting scoped orchestrator adjudication, not reviewed/qualified/merged.
+
+Independent fresh-main root `/private/tmp/sifr-b30.PiHI2k`, branch
+`codex/item12k-b30-resolver-contract`, base491ba4ede1609ce476831015dc209a9064cd8ffc.
+Parent dirty ledgers and predecessor refs/trees/targets/evidence remain read-only.
+Two static LLDB sessions/contexts, zero inferior launches/attaches/continues/sites;
+both contexts deleted without a valid process. API/source/receipt identity PASS37.
+Exact mangled typed queries uniquely resolve the three dyld entries; replacing
+FindSymbols with FindFunctions using the same display names still returns0.
+Disk/cache UUID and all8 dyld code-relative identities agree; future load maps
+and actual trap/handover coverage remain unproved. No implementation self-test,
+compiler change/build, Opus, gate, PR or merge. B24 cause/full acceptance, B27
+and full-phase obligations remain open. Only meaningful proposal callbacks next.
+
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 
 **B23 MERGED / COMPLETE; blocker none.**
