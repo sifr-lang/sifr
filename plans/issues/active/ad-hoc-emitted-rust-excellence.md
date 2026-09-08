@@ -4,6 +4,15 @@ Status: active
 
 ## Item12K-B30: resolver/arming proposal checkpoint (2026-09-08)
 
+Current execution update: parent approved exact proposal05b2a2055/SHA256644e46b9
+and coordinator capacity is cleared/reserved. Complete proposed external
+apparatus is implemented; the single named offline check PASSed99/99. The
+registration below links its frozen script/contract/result hashes. Next is
+self-register/freeze, prelaunch identity notification, then the sole bounded
+coverage proof without another routine acknowledgement. No live proof yet;
+no compiler/build/CV/counter/Opus/gate/PR/merge. First live failure remains
+terminal with no repair/retry. The original first-stage checkpoint follows.
+
 B30 is exactly B29-F1 under performance issue3776. First-stage installed API,
 module/symbol/function and bootstrap/handover inventory is complete; all13
 required identities are mapped. The full contract, owned paths, exact proposed

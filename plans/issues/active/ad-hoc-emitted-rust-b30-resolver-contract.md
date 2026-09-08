@@ -1,9 +1,12 @@
 # 12K-B30: complete observer identity and arming contract
 
 Date: 2026-09-08. Owner: performance / issue3776; exactly B29-F1.
-State: FIRST-STAGE MAPPING COMPLETE; AWAITING CONCRETE ADJUDICATION.
-No live proof or observer implementation has been performed. This is a proposal
-checkpoint, not item closure, reviewer approval, qualification or merge.
+State: APPROVED COMPLETE APPARATUS IMPLEMENTED; OFFLINE99 PASS; SOLE PROOF NEXT.
+The first-stage proposal and its chronology below are preserved. The parent
+approved proposal05b2a2055dcac56dcdc32affb20fea5775163f19, document SHA256
+644e46b9b7921073464c2ad38c6656050a3ebc9c7598e092c85f3814d0bae9eb, and the
+coordinator cleared/reserved capacity. No further acknowledgement is required
+after the prelaunch hash/start callback absent a material scope deviation.
 
 ## Ownership and inputs
 
@@ -355,3 +358,69 @@ do not request redundant user authorization or treat this checkpoint as terminal
 closure. Pre-execution registration/script hashes and command outcomes are
 retained in the external execution chronology; the exact command sections above
 remain in this proposal. No final review or terminal closure is claimed.
+
+## Execution authorization and completed apparatus
+
+Parent explicitly approved the complete proposal and same-owner implementation,
+single offline check and, only on PASS, self-registration/freeze and one proof.
+Coordinator's conditional capacity clearance is effective with that scope
+approval. Both callbacks are required before launch; another acknowledgement
+is not. All limits/failure/success-only review-and-merge rules above apply.
+
+All proposed source files are now implemented before the offline command:
+`coverage_symbols.py` supplies the pure identity, binding, site and Protocol
+predicates plus the one self-test; `lldb_coverage.py` uses these for all8 required
+families and verifies all8 dyld identities at each arming epoch. Exact typed
+mangled/C-name lookup is the sole runtime path. It records initial-entry inputs,
+pending sites, complete live identity/binding/site records and every stop/continue.
+The observer arms its own verified notifier site alongside the three early
+sites; mode3 classification survives the expected empty module list by matching
+the previously verified notifier PC. It invalidates old bindings and re-arms
+from the freshly mapped mode0 image before continuing. Every required hit checks
+the actual location ID/PC and renewed image mapping. Protocol enforces exactly
+one handover and all8 entry families plus both file phases/exit0.
+
+`coverage_address.py` and `sifr-experiment09` are byte-identical B29 copies.
+`run_coverage.py` retains B29's custody/clock/watchdog/admission/release mechanism;
+only the owned root and B30 labels change. The new manifest will include every
+new helper/contract plus the unchanged B23 helper/workload/ancestor config.
+The single offline command also parses all four Python files against3.9 grammar
+without importing the live observer. No command or live attempt has run yet.
+
+## Frozen offline result and prelaunch registration
+
+The single named offline command executed once and PASSed99/99 with no failures.
+This includes all13 static/live synthetic identities, disk/cache positives,
+actual wrong-module trampoline/block/cold negatives, unknown/ambiguous contexts,
+wrong name/type/UUID/mapping/site cases, complete and rejected handover/entry
+sequences, and B29's authenticated live coordinate receipt/unchanged predicate.
+All four Python source files parse as Python3.9. This is not a live coverage pass.
+
+The complete external implementation is frozen at these SHA256 identities:
+
+| Owned artifact | SHA256 |
+| --- | --- |
+| coverage_symbols.py | 57590d84f0f7b3ce6ebc6003647db7df95a0de24c4cf4de95281072e05d3202d |
+| coverage_address.py | 0df357c922d11386b5af80cfca7648d5542c8ebdec1072ba136a49be7c0bca9b |
+| lldb_coverage.py | d2033d1b3bfde0493c54eda381777a01218d956626e6794822c8e0934dc95c26 |
+| run_coverage.py | 884dfd3887264461b7c6b4070bae97760e13e385660fd6624f879cdd588390d7 |
+| coverage.lldb | 9f93bd03b0a6387b0e76ca6d752c048db8fbf6b6a3021da090e34de51e183882 |
+| sifr-experiment09 | a4386baecd7576b256dc6d68eb2e240952f591fa0a468df55f60080189c4b392 |
+| offline-result.json | 77598cac829f297bec1a31f377d6bee0b830b59635cf79c5f972ad59ce248ef3 |
+| identity-contract.json | 3ebc80789a4d9843badee45fb69587b12dd62101f0211a6b09d3a59896a1972d |
+
+The final external prelaunch.json will bind these exact bytes, installed API and
+dyld, all new static receipts, this committed registration and the main phase
+record, unchanged owned workload/config, B23 custody helpers and predecessor
+receipt identities. Ancestor config presence is recorded before launch. The
+launcher authenticates this manifest before admission. Prelaunch registration
+is copied outside Git before any run result changes this document.
+
+The sole command, target argv, flags134, first-error/no-retry behavior and all
+limits are exactly the approved proposal. Initial free disk139338388KiB;
+owned evidence181612KiB including both immutable binary inventory/proof copies.
+The launcher will recheck floor/cap at admission and during custody. No target
+directory exists and no cleanup is needed or performed. The external and
+embedded clocks stay separate. Parent/coordinator receive final manifest and
+registration identities plus actual start notice BEFORE execution; they have
+already authorized execution without another acknowledgement.
