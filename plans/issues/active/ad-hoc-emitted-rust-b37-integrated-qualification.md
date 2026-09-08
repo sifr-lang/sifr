@@ -1,7 +1,7 @@
 # 12K-B37: integrated native-custody qualification
 
 Date: 2026-09-08. Owner: performance / issue3776.
-State: PRELAUNCH REGISTERED; no live result or closure claim.
+State: TERMINAL INCONCLUSIVE at host admission; unmerged, qualification not achieved.
 
 ## Ownership and approved scope
 
@@ -122,3 +122,47 @@ owned proof processes absent; notify its parent, coordinator and parent orchestr
 B24 actual causal/full representative budget and B27 complete joint source
 delivery with builtin fix/exact65 remain OPEN. This diagnostic proof does not
 unblock SQL or close the original emitted-Rust excellence phase.
+
+## Terminal outcome: B37-F1 host admission
+
+The registered sole attempt ran after concrete prelaunch commit/push
+`b250dd59bae5946b5eec49ce669bb9c2dfb78dd4`. It stopped on the first admission
+snapshot with `not-on-ac-power`: host power source `battery`, required AC true.
+The raw admission reports no competing processes and nominal thermal status.
+Elapsed0.7924854999873787s; INCONCLUSIVE. No LLDB setup/session, target launch,
+attach, continue, event, handover or entry hit occurred. No output completion was
+claimed. This is a failed registered attempt, not unused permission to retry.
+
+E/`coverage/outcome.json` SHA256
+`7dc4dd2a8e7d3fd5da728a97521f16ef85e496d1c78c38862320a679df23eb89`;
+E/`coverage/admission.json`
+`7f1c426e43167d6873b779b19ab8a48e81b425aa94475c1f836de5cf554e694a`;
+E/`coverage/process-release.json`
+`6a7ce93dafe80e36b5ea54a9349f6a30ed981a8595ecf7ae5be83ef2fa226b80`;
+E/`coverage/custody.json`
+`002a6cbc6b8ea920252e6bbebe05a4783207385299b36c0dcc41a96db9e4bb18`.
+Complete raw inventory and original sources/failed/final offline receipts retained.
+The frozen144-file manifest remains authenticated; live execution made no source
+changes and did not mutate parent/predecessor records.
+
+Release: owned groups[], remaining[], groups_absent=true, watcher_alive=false,
+monitor_alive=false. Launcher88318 independently verified absent after command
+completion by `/bin/ps -p 88318 -o pid=,ppid=,pgid=,stat=,comm=` (exit1, empty).
+Explicit capacity-release callbacks sent to coordinator, dependency Item70 parent
+and parent orchestrator only after this verification. Item70 can proceed under
+its standing authorization. No B37 heavy work remains.
+
+Later owner **B37-F1**, infrastructure: AC-power admission blocked qualification.
+Owned by performance / issue3776. A later separately scoped qualification must
+retain this failure and the frozen tested apparatus; this session does not
+repair/retry the proof, change host guards, or start any successor item.
+
+Counts: one suite family/two invocations, final443/443; native process tests0;
+registered live attempts1, debugger sessions0, targets0; initial/remediation Opus0,
+provider retries0, PRs0, merges0, compiler/build/Cargo/CV/counter/Sifr gates0.
+Success-only diff/HIR/file-size validation and review/merge were not entered.
+Only terminal documentation bookkeeping follows. The initial implementation is
+not reviewed or merged; no main-delivery or live-readiness claim follows.
+
+Blocker: B37-F1 `not-on-ac-power`. Next action: freeze terminal metadata and
+send terminal callback, then STOP. B24/B27/SQL/original phase remain OPEN.

@@ -2,6 +2,40 @@
 
 Status: active
 
+## Item12K-B37: terminal host-admission failure (2026-09-08)
+
+**B37 INCONCLUSIVE / UNMERGED / STOP.** Sole registered proof failed on its
+first admission snapshot: `not-on-ac-power` (battery); elapsed0.7924854999873787s.
+Zero debugger sessions, target launches, events, handovers or entry hits.
+Prelaunch candidate `b250dd59bae5946b5eec49ce669bb9c2dfb78dd4` was committed
+and pushed before callback/launch from independent owned clone
+`/private/tmp/sifr-b37.qPJOjN/sifr`, branch
+`codex/item12k-b37-integrated-qualification`, base
+`7339aed05db02b3de95b7930e5e1291edecd07fe`.
+
+Complete B36-F1/F2/F3 integration preceded the named offline suite: final443/443,
+all414 inherited plus29. Two same-suite invocations, first441/443 retained with
+exact source copies. No live process tests. Frozen144 files manifest
+`98359e20861fdf6a823a93c520c673cdc9028543bbc2b49e194836cb3c025f67`;
+offline receipt `120f26aa7e13a524acf887c46a5d6845bd059bbc9f9e5eab17d6bd84c600f408`;
+sole outcome `7dc4dd2a8e7d3fd5da728a97521f16ef85e496d1c78c38862320a679df23eb89`.
+Complete [B37 scoped record](ad-hoc-emitted-rust-b37-integrated-qualification.md)
+and external E/`coverage` retain raw admission/custody/release/output evidence.
+
+All owned processes released: groups[], remaining[], groups_absent=true,
+watcher/monitor false; launcher88318 independently freshly ps-absent (exit1).
+Capacity-release callbacks sent to coordinator, dependency Item70 parent and
+parent orchestrator. B37 native owner is finishing terminal recording only.
+
+Later **B37-F1**, infrastructure, owner performance / issue3776: AC-power
+admission prevented qualification. First-live-failure rule is terminal; no retry,
+repair, fallback or guard bypass. No Opus review, PR, merge, success-only checks,
+compiler/lock/fixture/workflow changes, Cargo/build/CV/counters/Sifr gates or
+successor implementation. B36 stays merged; B35 historical cause UNKNOWN and
+failed proof unchanged. B24 causal/full budget, B27 joint delivery/builtin fix/
+exact65, SQL and the original emitted-Rust excellence phase remain OPEN.
+Next action: terminal callback and STOP; later work requires a separate scope.
+
 ## Item12K-B36: sampled native custody lifecycle (2026-09-08)
 
 **B36 MERGED / STATIC-OFFLINE CONTRACT COMPLETE; blocker none.**
