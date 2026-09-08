@@ -1,6 +1,7 @@
 # Item 70-F1A: durable backend capability and implementation readiness
 
-Assessment complete, 2026-09-08. Owner: release/distribution,
+Assessment complete and merged, 2026-09-08, via
+[PR #3812](https://github.com/sifr-lang/sifr/pull/3812). Owner: release/distribution,
 [issue #3775](https://github.com/sifr-lang/sifr/issues/3775).
 This docs-only unit implements the coordinator's Item 70-F1A registration.
 It makes no resource, credential, permission, upload, qualification or
@@ -234,3 +235,24 @@ historical search, create-PR gate, merge gate, qualification or publication.
 One exact-SHA Opus assessment review, at most one remediation; publish review
 and validation outside the reviewed tree. Merge assessment, then update the
 phase record without another review or Sifr gate, and stop.
+
+Reviewed candidate `e74ea1dc366edea5d324b25da4a52be571337bc5`, merge
+`546c0f3b22438aeaf2d6b012264744356777032f`. Named checks passed on unchanged
+candidate bytes: file-size guardrail 3,762 files, diff/local paths, 14 API
+collection identities/counts, two metadata hashes and five base-tree blobs.
+The ONE Opus review returned SATISFIED/no blockers; zero remediation, zero
+Sifr gates. [Validation receipt](https://github.com/sifr-lang/sifr/pull/3812#issuecomment-5581503394),
+[full sanitized metadata](https://github.com/sifr-lang/sifr/pull/3812#issuecomment-5581503738),
+[supplemental metadata](https://github.com/sifr-lang/sifr/pull/3812#issuecomment-5581503975),
+and [full review](https://github.com/sifr-lang/sifr/pull/3812#issuecomment-5581510828)
+are published outside the reviewed Git tree. Raw review response SHA-256:
+`638dbca68aa76961e7f0139ff6c110c0b2a46f4b33427a5c006cc8e588538303`.
+
+Nonblocking review follow-ups belong to later F1C: recheck pricing when an
+actual provider is selected; use full timestamps for future metadata receipts;
+evaluate storage-role separation with observed environment protection metadata.
+Existing environment rules are not an in-scope defect or authorization to add
+approval requirements. These do not change F1B's offline boundary.
+F1A blocker: none. This record-only update needs no second review or Sifr
+gate. After its merge, release the owned session and stop; no later item,
+provider action, qualification or publication is executed here.
