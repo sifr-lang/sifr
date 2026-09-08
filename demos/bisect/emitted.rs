@@ -1,7 +1,8 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn bisect_left<T: Clone + 'static + PartialOrd>(
+    use ::sifr_runtime::SifrInt;
+    #[must_use]
+    pub fn bisect_left<T: Clone + 'static + PartialOrd>(
         a: &[T],
         x: &T,
         lo: SifrInt,
@@ -46,7 +47,8 @@ mod sifr_generated_generated_support {
         }
         left.clone()
     }
-    pub(crate) fn bisect_right<T: Clone + 'static + PartialOrd>(
+    #[must_use]
+    pub fn bisect_right<T: Clone + 'static + PartialOrd>(
         a: &[T],
         x: &T,
         lo: SifrInt,
@@ -91,7 +93,7 @@ mod sifr_generated_generated_support {
         }
         left.clone()
     }
-    pub(crate) fn insort_left<T: Clone + 'static + PartialOrd>(
+    pub fn insort_left<T: Clone + 'static + PartialOrd>(
         a: &mut Vec<T>,
         x: &T,
         lo: SifrInt,
@@ -100,7 +102,7 @@ mod sifr_generated_generated_support {
         let pos: SifrInt = bisect_left(a, x, lo.clone(), hi.clone());
         a.insert(pos.clamp_slice_bound(a.len()), x.clone());
     }
-    pub(crate) fn insort_right<T: Clone + 'static + PartialOrd>(
+    pub fn insort_right<T: Clone + 'static + PartialOrd>(
         a: &mut Vec<T>,
         x: &T,
         lo: SifrInt,
@@ -109,7 +111,7 @@ mod sifr_generated_generated_support {
         let pos: SifrInt = bisect_right(a, x, lo.clone(), hi.clone());
         a.insert(pos.clamp_slice_bound(a.len()), x.clone());
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -137,7 +139,9 @@ mod sifr_generated_generated_support {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, bisect_left, bisect_right, insort_left, insort_right,
+};
 use ::sifr_runtime::SifrInt;
 fn collect_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();

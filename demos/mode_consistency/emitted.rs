@@ -1,7 +1,8 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn floor(x: f64) -> SifrInt {
+    use ::sifr_runtime::SifrInt;
+    #[must_use]
+    pub fn floor(x: f64) -> SifrInt {
         ::sifr_stdlib::math::floor(x).into_sifr_int()
     }
 }
@@ -14,7 +15,7 @@ fn main() {
 }
 
 // src/helper.rs
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::floor;
 pub use ::sifr_runtime::SifrInt;
 #[must_use]
 pub const fn sifr_generated_const_42415345() -> SifrInt {

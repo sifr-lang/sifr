@@ -1,22 +1,24 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn env_get(key: &str) -> Option<String> {
+    use ::sifr_runtime::SifrInt;
+    fn env_get(key: &str) -> Option<String> {
         ::sifr_stdlib::sys::env_get(key)
     }
-    pub(crate) fn env_keys() -> Vec<String> {
+    fn env_keys() -> Vec<String> {
         ::sifr_stdlib::sys::env_keys()
     }
-    pub(crate) fn env_values() -> Vec<String> {
+    fn env_values() -> Vec<String> {
         ::sifr_stdlib::sys::env_values()
     }
-    pub(crate) fn env_items() -> Vec<String> {
+    fn env_items() -> Vec<String> {
         ::sifr_stdlib::sys::env_items()
     }
-    pub(crate) fn getenv_opt(key: &str) -> Option<String> {
+    #[must_use]
+    pub fn getenv_opt(key: &str) -> Option<String> {
         env_get(key)
     }
-    pub(crate) fn getenv(key: &str, default_value: &str) -> String {
+    #[must_use]
+    pub fn getenv(key: &str, default_value: &str) -> String {
         let val: Option<String> = env_get(key);
         let Some(val) = val else {
             return {
@@ -28,16 +30,19 @@ mod sifr_generated_generated_support {
         };
         val
     }
-    pub(crate) fn keys() -> Vec<String> {
+    #[must_use]
+    pub fn keys() -> Vec<String> {
         env_keys()
     }
-    pub(crate) fn values() -> Vec<String> {
+    #[must_use]
+    pub fn values() -> Vec<String> {
         env_values()
     }
-    pub(crate) fn items() -> Vec<String> {
+    #[must_use]
+    pub fn items() -> Vec<String> {
         env_items()
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -65,7 +70,9 @@ mod sifr_generated_generated_support {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, getenv, getenv_opt, items, keys, values,
+};
 use ::sifr_runtime::SifrInt;
 fn main() {
     let with_default: String = getenv(

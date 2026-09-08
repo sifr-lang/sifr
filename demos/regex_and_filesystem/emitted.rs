@@ -4,31 +4,28 @@ mod sifr_generated_generated_support {
         IOError, RegexError, SifrGeneratedStdlibSifrX2ereX2eMatch,
         SifrGeneratedStdlibSifrX2ereX2ePattern, SifrGeneratedStdlibSifrX2eregexX2eCompiledPattern,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    use ::sifr_runtime::SifrInt;
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn listdir(path: &str) -> Result<Vec<String>, IOError> {
+    fn listdir(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::listdir(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn iterdir(path: &str) -> Result<Vec<String>, IOError> {
+    fn iterdir(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::iterdir(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn glob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
+    fn glob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::glob_pattern(dir, pattern).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn rglob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
+    fn rglob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::rglob_pattern(dir, pattern).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn fnmatch(name: &str, pattern: &str) -> bool {
+    fn fnmatch(name: &str, pattern: &str) -> bool {
         sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
     }
-    pub(crate) fn sifr_generated_match(
-        name: &str,
-        mut ni: SifrInt,
-        pattern: &str,
-        mut pi: SifrInt,
-    ) -> bool {
+    fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
         while &pi < &SifrInt::from(pattern.chars().count()) {
             let pc: Option<String> = {
                 let sifr_generated_string_chars = pattern.chars().collect::<Vec<char>>();
@@ -85,12 +82,12 @@ mod sifr_generated_generated_support {
         }
         &ni == &SifrInt::from(name.chars().count())
     }
-    pub(crate) struct SifrGeneratedYielder<T> {
-        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    struct SifrGeneratedYielder<T> {
+        slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     }
-    pub(crate) struct SifrGeneratedYieldFuture<T> {
-        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(crate) value: Option<T>,
+    struct SifrGeneratedYieldFuture<T> {
+        slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        value: Option<T>,
     }
     impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
     impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
@@ -108,14 +105,14 @@ mod sifr_generated_generated_support {
         }
     }
     impl<T> SifrGeneratedYielder<T> {
-        pub(crate) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
             SifrGeneratedYieldFuture {
                 slot: ::std::sync::Arc::clone(&self.slot),
                 value: Some(value),
             }
         }
     }
-    pub(crate) fn sifr_generated_store_suspended<T>(
+    fn sifr_generated_store_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
         value: T,
     ) {
@@ -124,7 +121,7 @@ mod sifr_generated_generated_support {
             Err(poisoned) => *poisoned.into_inner() = Some(value),
         }
     }
-    pub(crate) fn sifr_generated_take_suspended<T>(
+    fn sifr_generated_take_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     ) -> Option<T> {
         match slot.lock() {
@@ -132,14 +129,13 @@ mod sifr_generated_generated_support {
             Err(poisoned) => poisoned.into_inner().take(),
         }
     }
-    pub(crate) struct SifrGeneratedGenerator<T> {
-        pub(crate) producer:
-            Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
-        pub(crate) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(crate) complete: bool,
+    struct SifrGeneratedGenerator<T> {
+        producer: Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
+        yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        complete: bool,
     }
     impl<T> SifrGeneratedGenerator<T> {
-        pub(crate) fn new<
+        fn new<
             F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
             Fut: ::std::future::Future<Output = ()> + 'static,
         >(
@@ -178,7 +174,7 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(crate) fn glob(directory: &str, pattern: &str) -> Vec<String> {
+    fn glob(directory: &str, pattern: &str) -> Vec<String> {
         let sifr_generated_chars_pattern: Vec<char> = pattern.chars().collect::<Vec<char>>();
         let include_hidden: bool =
             &SifrInt::from(sifr_generated_chars_pattern.len()) > &SifrInt::from_i64(0) && {
@@ -254,7 +250,8 @@ mod sifr_generated_generated_support {
             sifr_generated_sorted_values
         }
     }
-    pub(crate) fn iglob(directory: &str, pattern: &str) -> Box<dyn Iterator<Item = String>> {
+    #[must_use]
+    pub fn iglob(directory: &str, pattern: &str) -> Box<dyn Iterator<Item = String>> {
         let directory = directory.to_owned();
         let pattern = pattern.to_owned();
         Box::new(SifrGeneratedGenerator::new(
@@ -283,15 +280,16 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(crate) fn run_command(cmd: &str) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn run_command(cmd: &str) -> Result<String, IOError> {
         ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn getpid() -> SifrInt {
+    #[must_use]
+    pub fn getpid() -> SifrInt {
         ::sifr_stdlib::sys::getpid().into_sifr_int()
     }
-    pub(crate) fn sifr_generated_iter_list_str(
-        entries: Vec<String>,
-    ) -> Box<dyn Iterator<Item = String>> {
+    fn sifr_generated_iter_list_str(entries: Vec<String>) -> Box<dyn Iterator<Item = String>> {
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<String>| {
                 let mut i: SifrInt = SifrInt::from_i64(0);
@@ -317,22 +315,18 @@ mod sifr_generated_generated_support {
             },
         ))
     }
-    pub(crate) fn sifr_generated_iterdir_list(path: &str) -> Result<Vec<String>, IOError> {
+    fn sifr_generated_iterdir_list(path: &str) -> Result<Vec<String>, IOError> {
         iterdir(path)
     }
-    pub(crate) fn sifr_generated_glob_list(
-        path: &str,
-        pattern: &str,
-    ) -> Result<Vec<String>, IOError> {
+    fn sifr_generated_glob_list(path: &str, pattern: &str) -> Result<Vec<String>, IOError> {
         glob_pattern(path, pattern)
     }
-    pub(crate) fn sifr_generated_rglob_list(
-        path: &str,
-        pattern: &str,
-    ) -> Result<Vec<String>, IOError> {
+    fn sifr_generated_rglob_list(path: &str, pattern: &str) -> Result<Vec<String>, IOError> {
         rglob_pattern(path, pattern)
     }
-    pub(crate) fn sifr_generated_iterdir_to_iter(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sifr_generated_iterdir_to_iter(
         path: &str,
     ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
         let sifr_generated_try_res: Result<
@@ -347,7 +341,9 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(crate) fn sifr_generated_glob_to_iter(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sifr_generated_glob_to_iter(
         path: &str,
         pattern: &str,
     ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
@@ -363,7 +359,9 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(crate) fn sifr_generated_rglob_to_iter(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sifr_generated_rglob_to_iter(
         path: &str,
         pattern: &str,
     ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
@@ -379,7 +377,7 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(crate) trait SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods {
+    pub trait SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods {
         fn search(&self, text: &str) -> Result<Option<String>, RegexError>;
         fn is_match(&self, text: &str) -> Result<bool, RegexError>;
         fn sub(&self, replacement: &str, text: &str) -> Result<String, RegexError>;
@@ -388,7 +386,7 @@ mod sifr_generated_generated_support {
         fn pattern(&self) -> Result<String, RegexError>;
         fn flags(&self) -> Result<SifrInt, RegexError>;
     }
-    pub(crate) fn compile_pattern(
+    fn compile_pattern(
         pattern: &str,
     ) -> Result<SifrGeneratedStdlibSifrX2eregexX2eCompiledPattern, RegexError> {
         ::sifr_stdlib::regex::compile_pattern(pattern).map_err(|sifr_generated_bridge_error| {
@@ -398,7 +396,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::re_findall(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -406,7 +404,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_findall_flags(
+    fn re_findall_flags(
         pattern: &str,
         text: &str,
         flags: SifrInt,
@@ -421,7 +419,8 @@ mod sifr_generated_generated_support {
             detail: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(crate) fn sifr_generated_iter_matches(
+    #[must_use]
+    pub fn sifr_generated_iter_matches(
         matches: Vec<SifrGeneratedStdlibSifrX2ereX2eMatch>,
     ) -> Box<dyn Iterator<Item = SifrGeneratedStdlibSifrX2ereX2eMatch>> {
         Box::new(SifrGeneratedGenerator::new(
@@ -430,9 +429,7 @@ mod sifr_generated_generated_support {
             >| {
                 let mut i: SifrInt = SifrInt::from_i64(0);
                 while &i < &SifrInt::from(matches.len()) {
-                    let Some(
-                        sifr_generated_checked_value_0_user_736966725f67656e6572617465645f636865636b65645f76616c75655f30,
-                    ) = ({
+                    let Some(sifr_generated_checked_value_0) = ({
                         let sifr_generated_checked_read_collection = &matches;
                         let sifr_generated_checked_read_index = i.clone();
                         let sifr_generated_checked_read_normalized =
@@ -442,26 +439,18 @@ mod sifr_generated_generated_support {
                         sifr_generated_checked_read_collection
                             .get(sifr_generated_checked_read_normalized)
                             .cloned()
-                    })
-                    else {
+                    }) else {
                         break;
                     };
                     sifr_generated_yielder
-                        .suspend(
-                            sifr_generated_checked_value_0_user_736966725f67656e6572617465645f636865636b65645f76616c75655f30
-                                .clone(),
-                        )
+                        .suspend(sifr_generated_checked_value_0.clone())
                         .await;
                     i = &i + &SifrInt::from_i64(1);
                 }
             },
         ))
     }
-    pub(crate) fn sifr_generated_find_index_from(
-        text: &str,
-        needle: &str,
-        start: SifrInt,
-    ) -> SifrInt {
+    fn sifr_generated_find_index_from(text: &str, needle: &str, start: SifrInt) -> SifrInt {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let sifr_generated_chars_needle: Vec<char> = needle.chars().collect::<Vec<char>>();
         if &start < &SifrInt::from_i64(0) {
@@ -499,7 +488,7 @@ mod sifr_generated_generated_support {
         }
         -&SifrInt::from_i64(1)
     }
-    pub(crate) fn sifr_generated_findall_for_finditer(
+    fn sifr_generated_findall_for_finditer(
         pattern: &str,
         text: &str,
         flags: SifrInt,
@@ -509,7 +498,8 @@ mod sifr_generated_generated_support {
         }
         re_findall(pattern, text)
     }
-    pub(crate) fn sifr_generated_finditer_from_items(
+    #[must_use]
+    pub fn sifr_generated_finditer_from_items(
         found_items: &[String],
         text: &str,
     ) -> Vec<SifrGeneratedStdlibSifrX2ereX2eMatch> {
@@ -536,7 +526,7 @@ mod sifr_generated_generated_support {
         }
         matches
     }
-    pub(crate) fn sifr_generated_finditer_materialize(
+    fn sifr_generated_finditer_materialize(
         pattern: &str,
         text: &str,
         flags: SifrInt,
@@ -554,7 +544,9 @@ mod sifr_generated_generated_support {
             Err(RegexError::new(e.message.clone()))
         })
     }
-    pub(crate) fn finditer(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn finditer(
         pattern: &str,
         text: &str,
     ) -> Result<Box<dyn Iterator<Item = SifrGeneratedStdlibSifrX2ereX2eMatch>>, RegexError> {
@@ -571,9 +563,9 @@ mod sifr_generated_generated_support {
             Err(RegexError::new(e.message.clone()))
         })
     }
-    pub(crate) fn compile(
-        pattern: &str,
-    ) -> Result<SifrGeneratedStdlibSifrX2ereX2ePattern, RegexError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn compile(pattern: &str) -> Result<SifrGeneratedStdlibSifrX2ereX2ePattern, RegexError> {
         let sifr_generated_try_res: Result<
             Result<SifrGeneratedStdlibSifrX2ereX2ePattern, RegexError>,
             RegexError,
@@ -591,7 +583,7 @@ mod sifr_generated_generated_support {
             Err(RegexError::new(error.message.clone()))
         })
     }
-    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+    fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
         let kind = {
             let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
@@ -611,7 +603,11 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods,
+        sifr_generated_finditer_from_items, sifr_generated_glob_to_iter,
+        sifr_generated_iter_matches, sifr_generated_iterdir_to_iter, sifr_generated_rglob_to_iter,
+    };
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2epathlibX2ePath {
@@ -837,7 +833,9 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for RegexError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    compile, finditer, getpid, iglob, run_command, write_text,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::RegexError;

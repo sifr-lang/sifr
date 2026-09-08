@@ -1,32 +1,40 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::ParseError;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn base64_encode(s: &str) -> String {
+    use ::sifr_runtime::SifrInt;
+    fn base64_encode(s: &str) -> String {
         ::sifr_stdlib::base64::base64_encode(s)
     }
-    pub(crate) fn base64_decode(s: &str) -> Result<String, ParseError> {
+    fn base64_decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::base64_decode(s).map_err(|sifr_generated_bridge_error| ParseError {
             message: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(crate) fn urlsafe_b64encode(s: &str) -> String {
+    #[must_use]
+    pub fn urlsafe_b64encode(s: &str) -> String {
         ::sifr_stdlib::base64::urlsafe_b64encode(s)
     }
-    pub(crate) fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::urlsafe_b64decode(s).map_err(|sifr_generated_bridge_error| {
             ParseError {
                 message: sifr_generated_bridge_error.to_string(),
             }
         })
     }
-    pub(crate) fn b64encode(s: &str) -> String {
+    #[must_use]
+    pub fn b64encode(s: &str) -> String {
         base64_encode(s)
     }
-    pub(crate) fn b64decode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b64decode(s: &str) -> Result<String, ParseError> {
         base64_decode(s)
     }
-    pub(crate) fn b16encode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b16encode(s: &str) -> Result<String, ParseError> {
         let sifr_generated_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
             let data: Vec<u8> = ::sifr_runtime::encoding::encode_bytes(
                 &s,
@@ -56,7 +64,9 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(crate) fn b16decode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b16decode(s: &str) -> Result<String, ParseError> {
         let sifr_generated_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
             let data: Vec<u8> = {
                 let s: String = s.to_string();
@@ -103,7 +113,7 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(crate) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+    pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -130,7 +140,7 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -170,7 +180,10 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ParseError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, assert_vector_eq, b16decode, b16encode, b64decode, b64encode,
+    urlsafe_b64decode, urlsafe_b64encode,
+};
 pub use sifr_generated_project_nominals::ParseError;
 fn encode_b64_or_empty(payload: &str) -> String {
     b64encode(payload)

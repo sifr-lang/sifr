@@ -4,19 +4,19 @@ mod sifr_generated_generated_support {
         FloatOverflowError, FloatPrecisionLossError,
         SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError, ValueError,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) use ::std::collections::HashMap;
-    pub(crate) fn sqrt(x: f64) -> f64 {
+    use ::sifr_runtime::SifrInt;
+    use ::std::collections::HashMap;
+    fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
-    pub(crate) fn log(x: f64) -> f64 {
+    fn log(x: f64) -> f64 {
         ::sifr_stdlib::math::log(x)
     }
-    pub(crate) fn exp(x: f64) -> f64 {
+    fn exp(x: f64) -> f64 {
         ::sifr_stdlib::math::exp(x)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -52,14 +52,14 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn sifr_generated_sum(data: &[f64]) -> f64 {
+    fn sifr_generated_sum(data: &[f64]) -> f64 {
         let mut total: f64 = 0.0_f64;
         for val in data.iter().copied() {
             total += val;
         }
         total
     }
-    pub(crate) fn sifr_generated_float_int(
+    fn sifr_generated_float_int(
         value: SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let sifr_generated_try_res: Result<
@@ -113,7 +113,7 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(crate) fn sifr_generated_divide_by_int(
+    fn sifr_generated_divide_by_int(
         numerator: f64,
         denominator: SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -131,7 +131,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(crate) fn mean(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let count: SifrInt = SifrInt::from(data.len());
@@ -143,7 +145,9 @@ mod sifr_generated_generated_support {
         let total: f64 = sifr_generated_sum(data);
         sifr_generated_divide_by_int(total, count.clone())
     }
-    pub(crate) fn median(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn median(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -209,7 +213,9 @@ mod sifr_generated_generated_support {
             Ok(val)
         }
     }
-    pub(crate) fn variance(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn variance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -241,7 +247,9 @@ mod sifr_generated_generated_support {
         }
         sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))
     }
-    pub(crate) fn stdev(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -289,7 +297,9 @@ mod sifr_generated_generated_support {
         };
         Ok(sqrt(v))
     }
-    pub(crate) fn harmonic_mean(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn harmonic_mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -321,7 +331,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(crate) fn geometric_mean(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn geometric_mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
@@ -353,7 +365,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(crate) fn mode(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mode(
         data: &[SifrInt],
     ) -> Result<SifrInt, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         if &SifrInt::from(data.len()) == &SifrInt::from_i64(0) {
@@ -401,7 +415,9 @@ mod sifr_generated_generated_support {
             "mode: no mode found".to_string(),
         ))
     }
-    pub(crate) fn multimode(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn multimode(
         data: &[SifrInt],
     ) -> Result<Vec<SifrInt>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         if &SifrInt::from(data.len()) == &SifrInt::from_i64(0) {
@@ -462,11 +478,13 @@ mod sifr_generated_generated_support {
         }
         Ok(result)
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn quantiles(
+    pub fn quantiles(
         data: &[f64],
         n: SifrInt,
     ) -> Result<Vec<f64>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -592,7 +610,9 @@ mod sifr_generated_generated_support {
         }
         Ok(result)
     }
-    pub(crate) fn covariance(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn covariance(
         x: &[f64],
         y: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -654,11 +674,13 @@ mod sifr_generated_generated_support {
         }
         sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn correlation(
+    pub fn correlation(
         x: &[f64],
         y: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -770,7 +792,9 @@ mod sifr_generated_generated_support {
             ))
         })
     }
-    pub(crate) fn linear_regression(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn linear_regression(
         x: &[f64],
         y: &[f64],
     ) -> Result<Vec<f64>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -842,7 +866,7 @@ mod sifr_generated_generated_support {
         let result: Vec<f64> = vec![slope, intercept];
         Ok(result)
     }
-    pub(crate) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+    pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -869,7 +893,7 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -964,7 +988,10 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for FloatPrecisionLossError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, assert_vector_eq, correlation, covariance, geometric_mean,
+    harmonic_mean, linear_regression, mean, median, mode, multimode, quantiles, stdev, variance,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::FloatOverflowError;
 pub use sifr_generated_project_nominals::FloatPrecisionLossError;
