@@ -2,6 +2,23 @@
 
 Status: active
 
+## Existing 12K-B25 held source batch terminal
+
+Source ad47c96b26104096d9f10ca5c680407de4e6ce33 is published on
+codex/item12k-b25-held-delivery-DyhOGS. Complete builtin/list-repeat closure plus
+only two Police-approved mandatory portable-driver Clippy corrections; 21 paths.
+Scoped repeat7/last_use3/native-shadow2/portability3 passing evidence with explicit
+unchanged-input attribution; final workspace Clippy and four guards PASS.
+Sole initial83eea61 and sole remediationad47c96 Opus reviews SATISFIED, no blockers;
+both counters consumed, no reset/third review. Original full1413PASS2FAIL and all
+later failed receipts retained; no final full-suite PASS claim.
+
+PR NONE, merge NONE, full gates0/performance acquisitions0. Existing H/I/M1/65
+integration and B49/B52-B54 qualification holds remain. This is source completion
+only, not qualified main or phase closure. Independent record/evidence publication,
+native/review RELEASE, then RETIRE; no next package started.
+See [the exact source, validation, review, blocker and handoff record](ad-hoc-emitted-rust-excellence-b25-held-source-record.md).
+
 ## Item12K-B38: coherent acquisition and batch qualification (2026-09-08)
 
 **B38 MERGED / SCOPED QUALIFICATION COMPLETE; blocker none.**
