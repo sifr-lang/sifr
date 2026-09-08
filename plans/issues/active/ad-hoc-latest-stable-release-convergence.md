@@ -8,7 +8,10 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ### Item 70-F1C1 — offline R2 adapter and admission contract
 
-IMPLEMENTED pending exact-SHA review/merge under the merged
+COMPLETE via [PR #3818](https://github.com/sifr-lang/sifr/pull/3818), merged
+2026-09-08T09:22:26Z. Exact tested/reviewed candidate
+`29a1f965ebfdfb7c40261d903a993e74507fdc13`, merge
+`c1d91d5df93ac289270941473ce3c5c89c2666c6`. Implemented under the merged
 [F1C0 scope and nine-test table](ad-hoc-latest-stable-item70-f1c0-r2-plan.md).
 Only the registered `archive_r2_store.py`, `archive_r2_config.py` and
 `archive_r2_selftest.py` source modules plus plan/phase records change.
@@ -32,6 +35,30 @@ Owned clone `/private/tmp/sifr-item70-f1c1.fDMx42/codebase`, branch
 `5614f06c8ff49411dd8d0b8107e6479e4274ec96`; sibling external evidence root.
 Parent/predecessor stores remain read-only. Blocker: none. Merge, record and
 stop; do not start F1C2/D or any next item.
+
+Final [validation](https://github.com/sifr-lang/sifr/pull/3818#issuecomment-5582542157)
+passed all nine named tests in 1.277 seconds under Python 3.14.7, clean
+working-tree and exact-base diff checks, and file-size guard (3,770 files).
+Test log SHA-256 `5dcab6424c8475e8b3e0e7504225609681413e6fc5e8488e340a3c6427c84242`.
+One [Opus review](https://github.com/sifr-lang/sifr/pull/3818#issuecomment-5582574518)
+returned SATISFIED/no blockers on that exact SHA, using Read/Grep/Glob only
+with explicit no-command/test/network confirmation. Raw review SHA-256
+`11a289c658c2e209d16c5ae35140e37bcee81c7faaeeb7e1f419b88d591364a4`.
+Zero remediation reviews and zero Sifr gates. The initial shell wrapper was
+rejected before launch because its failure cleanup used `rm -f`; a safer
+wrapper preserved incomplete output instead. Only one actual review request
+ran, completed successfully, and produced the evidence above.
+
+Deferred **70-F1C1-M1**, owner release/distribution: four nonblocking review
+suggestions concern the shared private assertion helper, distinguishing local
+read diagnostics/body-cleanup errors while retaining redaction, a narrow
+client-binding accessor, and readback docstring indentation. No mechanism
+defect or new F1C2 prerequisite; freeze scope and named tests before any later
+dispatch. None is implemented in this closure. F1C2 still owns actual SDK,
+account/access/protection and independently controlled copy proof; no online
+or qualification readiness is asserted. Record-only branch
+`codex/latest-stable-item70-f1c1-record` reuses implementation evidence with
+no second review or gate. After record merge, stop and retire the owned child.
 
 ### Item 70-F1C0 — selected R2 contract and offline implementation plan
 
