@@ -4,21 +4,40 @@ Status: active
 
 ## Item12K-B24: bounded experiment registration (2026-09-08)
 
-B24 is unqualified and unmerged. The sole worker has registered a proposed
+B24 is unqualified and unmerged. The sole worker registered the
 [startup instruction-boundary experiment](ad-hoc-emitted-rust-b24-experiment-registration.md)
 from main `491ba4ede1609ce476831015dc209a9064cd8ffc` in independent clone
-`/private/tmp/sifr-b24.4MtvfE/sifr`. Initial source/evidence reading authenticated
-B23/B22/B20/B19/original98480 terminal identities. No compiler build, diagnostic
-target launch, benchmark acquisition, test suite, Opus review or Sifr gate has
-run. Only this scoped record and registration are authored; the parent's dirty
-ledgers and all predecessor sources/targets remain read-only.
+`/private/tmp/sifr-b24.4MtvfE/sifr`. Original registration commit
+`0d6fc7bda9a2a8021ae2dc7ed55726173b819bcb` remains preserved. Parent scope and
+coordinator capacity were approved; all five predecessor terminal hashes matched.
 
-Next action is the orchestrator's concrete experiment-scope decision and the
-coordinator's validation-window allocation, then continuation by this same B24
-worker. This is not a user-authorization blocker or B24 closure. Owner3776's
-attributable cause and unchanged controlled formatter/representative/budget
-acceptance remain outstanding. B27 and every next-item implementation stay out
-of scope; all predecessor review/gate counters remain unchanged.
+The sole approved diagnostic stopped INCONCLUSIVE after one target (the labelled
+warmup) in one LLDB session,8.770980s total. The target exited0, but required
+`prepare`, `JustInTimeLoader::applyFixups` and `Loader::applyFixupsGeneric`
+boundaries never hit. Library-initializer and application boundaries plus raw
+buffered formatter output survive. The stop rule prevented the five remaining
+targets; they are not a reusable launch allowance. No cause or acceptance pass
+is established. No compiler build, production edit, benchmark acquisition,
+test suite, Opus review or Sifr gate ran. All predecessor counters are unchanged.
+
+Evidence root `/private/tmp/sifr-b24.4MtvfE/evidence/boundaries`:
+`outcome.json` SHA256
+`0a5c9a47e6d0523cae63b84de72987b35f37d93ed2047a7cca5cf124571266c8`;
+`process-release.json` SHA256
+`be7185a28322db1ec4a75ba0a4307e595716a3087db71c997f24faf2e2c5be8e`;
+`inventory.json` SHA256
+`47f88a2119f04ee9cc48e1da266b81621fd08dbf07416fcf032a35d7269b1ecc`.
+The release receipt proves no remaining processes, target group61955 absent,
+and both monitor/watcher stopped; an independent post-launcher process check
+also found none. Capacity was released and both parent/coordinator received
+the result. Offline `evidence/boundary-analysis.json` SHA256
+`10902e1b710c45bbd3060a5ea455f2571ba25430b34570c621c2fe7f7ffc6f8c`.
+
+Next action is parent result/scope adjudication for this same B24 worker; no
+diagnostic remediation or new acquisition follows automatically. This is not
+B24 closure or a user-authorization blocker. Owner3776's attributable cause
+and unchanged controlled formatter/representative/budget acceptance remain
+outstanding. B27 and every next-item implementation stay out of scope.
 
 ## Item12K-B23: timed subprocess group ownership (2026-09-08)
 

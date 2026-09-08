@@ -1,8 +1,15 @@
 # 12K-B24 experiment registration: startup instruction boundaries
 
 Date: 2026-09-08. Owner: emitted-code performance / issue3776.
-State: PROPOSED; awaiting orchestrator scope and coordinator capacity adjudication.
+State: sole adjudicated attempt stopped INCONCLUSIVE; no retry or further targets.
 This registration is not a causal finding, qualification, review or closure.
+
+Adjudication: parent approved the exact experiment and coordinator cleared its
+one window. Both required a cleanup reserve inside the540s total. The launcher
+reserves the FINAL30s for cleanup, ends observation by510s and refuses a target
+unless its full60s allowance fits before510s. No deadline extension or further
+attempt is authorized. The four registered external diagnostic files are now
+authored; no production file changes or new diagnostic scope are included.
 
 ## Owned state and authenticated inputs
 
@@ -104,8 +111,8 @@ Only after scope/capacity adjudication, author these external diagnostic files:
 Commands, proposed and NOT executed:
 
 ```bash
-env -u CARGO_TARGET_DIR TMPDIR=/private/tmp/sifr-b24.4MtvfE/tmp PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 /private/tmp/sifr-b24.4MtvfE/evidence/run_boundaries.py
-env -u CARGO_TARGET_DIR TMPDIR=/private/tmp/sifr-b24.4MtvfE/tmp PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 /private/tmp/sifr-b24.4MtvfE/evidence/analyze_boundaries.py
+env -u CARGO_TARGET_DIR TMPDIR=/private/tmp/sifr-b24.4MtvfE/tmp PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 /private/tmp/sifr-b24.4MtvfE/evidence/run_boundaries.py
+env -u CARGO_TARGET_DIR TMPDIR=/private/tmp/sifr-b24.4MtvfE/tmp PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 /private/tmp/sifr-b24.4MtvfE/evidence/analyze_boundaries.py
 ```
 
 The first command launches exactly one `/usr/bin/lldb -b -s
@@ -113,6 +120,13 @@ The first command launches exactly one `/usr/bin/lldb -b -s
 Python owns the current main's `wait_for_controlled_host(180, control_mode="work")`
 and `HostActivityMonitor(control_mode="work")`, avoiding B20's embedded-Python
 host-monitor import failure. The current-main B23 helper owns that outer session.
+
+Prelaunch command-identity correction: `/usr/bin/python3 --version` reports
+3.9.6, whereas the unchanged host-control runtime uses `isinstance(x,int|float)`.
+The resolved external `/opt/homebrew/bin/python3` reports3.14.7 and supplies the
+intended compatible host monitor. Only the external interpreter path above is
+corrected; LLDB still uses its own observer-only interpreter. This was detected
+before any setup session or target launch; no failed attempt is hidden/retried.
 
 The debugger runs at most SIX targets, one labelled warmup and five observations,
 with no conditional extension, internal retry, version/help target or control arm:
@@ -224,3 +238,40 @@ concrete scope/gate adjudication before implementation, not silent expansion.
 
 Await the parent's concrete scope decision and coordinator's owned window.
 The same sole B24 worker continues after adjudication; no next item starts.
+
+## Sole-attempt checkpoint
+
+Exactly one target launched in one LLDB session, then critical missing loader
+coverage stopped the attempt before a second target. The target exited0;
+libSystem/sanitizer and constructor/main/completion boundaries were observed.
+No `prepare`, `fixups` or `generic` entry was observed. Raw debugger output
+retains all buffered formatter phases, including two source checks. This does
+not establish why the early breakpoints were missed or why original uninstrumented
+instruction counts vary. No speculative correction or changed setup is adopted.
+
+Raw outcome SHA256
+`0a5c9a47e6d0523cae63b84de72987b35f37d93ed2047a7cca5cf124571266c8`,
+target0 SHA256
+`220f537acd7c2a0d3ec9d042e78126c1d54bd9d4ac930284784d7a49b6c232d1`,
+and zero-process receipt SHA256
+`be7185a28322db1ec4a75ba0a4307e595716a3087db71c997f24faf2e2c5be8e`
+are under `/private/tmp/sifr-b24.4MtvfE/evidence/boundaries`.
+Total elapsed8.770980s; PID/PGID61955 absent, monitor/watcher stopped, capacity
+released. Offline analysis ran once; no additional diagnostic execution.
+
+Timing distinction: source inspection and read-only version/path checks caught
+the incompatible3.9.6 launcher before execution. The compatible3.14.7 external
+interpreter correction and updated registration text were recorded/notified
+before launch, and the four diagnostic script hashes were recorded before launch.
+The parent's subsequent explicit interpreter acknowledgment added an instruction
+to record the amended registration HASH before launch; that message arrived
+after the8.77s execution. That amended-text hash
+`e905918bf9e7d8b97c0a6b600e23780ff3118bb36210491304b376d7cd0f4563`
+was computed after execution and is not claimed as a prelaunch receipt. Original
+registration commit/hash `0d6fc7bda9a2a8021ae2dc7ed55726173b819bcb` /
+`d21d2a0f60c86dd791aaf0949583983913e285f4ba47da3421c7a2a3294696fb`
+remain preserved; no evidence is backdated or overwritten.
+
+The five unlaunched targets are not banked capacity. Same-worker continuation
+requires result/scope adjudication. No PR, merge, cause correction, controlled
+acceptance, Opus request or Sifr gate exists for B24 at this checkpoint.
