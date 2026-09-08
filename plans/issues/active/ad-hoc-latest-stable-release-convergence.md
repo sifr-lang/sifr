@@ -1,12 +1,12 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-09-08. Items 0–30, 36–39, 53–55, 58, 60, 66–67 and 69 are complete. Item 39 closed
+Status: active on 2026-09-08. Items 0–30, 36–39, 53–55, 58, 60, 66–67 and 69–70 are complete. Item 39 closed
 the runner dependency/API invariants; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
-### Item 70 — bounded recovery assessment / authorized disposition
+### Item 70 — merged bounded recovery assessment / authorized disposition
 
 The current historical evidence disposition is INCOMPLETE/UNRECOVERED.
 The user-authorized direction is a prospective replacement qualification
@@ -24,11 +24,31 @@ read-only. After B37's explicit release, metadata/reflog inspection passed in
 covered 99,567 small blobs / 2,269,583,001 bytes; 6,058 exact-size/JSON candidates
 were hashed. Only the already-retained Rust result matched; no missing original
 was newly recovered. Scan capacity is released. Assessment scope is complete
-and pending exact-SHA review/merge; Items 59/64 remain unqualified and the phase
-is not closed. No Sifr gate is needed for these three Markdown files.
-Later work 70-F1 registers durable all-byte evidence retention only; it is not
-implemented or dispatched. Next action: named checks, one exact-SHA Opus review,
-merge and phase-record update, then stop. No repeated Git-pointer request.
+via [PR #3810](https://github.com/sifr-lang/sifr/pull/3810), reviewed candidate
+`d9d23149f8a59579f5e399bbb2239912198b524e`, merge
+`df093dab01b27484b684060443d1129d9898df04`.
+
+Named exact-candidate checks passed: five retained identities/sizes, all 20
+index rows, seven local links, six-row matrix, 59-store and selected-read
+evidence consistency, authenticated retained Rust match, diff whitespace and
+file-size guard (3,762 files, 900-line limit). One Opus review returned
+SATISFIED with no blockers; no remediation or Sifr gate ran for these three
+Markdown files. External
+[validation/review evidence](https://github.com/sifr-lang/sifr/pull/3810#issuecomment-5581186433)
+and [full response](https://github.com/sifr-lang/sifr/pull/3810#issuecomment-5581186774)
+cover the same candidate. Raw response SHA-256:
+`922ca904484ed50badb0330ab4fb21dccb8048694753ba99af37f0fb6288e682`.
+
+Items 59/64 remain unqualified and the phase is not closed. The authorized
+INCOMPLETE/UNRECOVERED disposition removes the repeated Git-pointer decision;
+it does not make the original evidence complete. Prospective replacement
+qualification remains dependent on separately owned compiler/policy delivery
+and later 70-F1 durable custody/qualification work. Raw host-local evidence
+impermanence is also retained with that later work under #3775. No 70-F1 or
+other implementation is started. Item 70 blocker: none. This record-only
+update settles the review's pending-status follow-up, reuses its evidence,
+and needs no new review or gate. Next action: finish records, return this
+completed handoff and stop.
 
 ### Item 69 — public HTTPX2 documentation closure
 

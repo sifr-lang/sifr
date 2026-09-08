@@ -11,6 +11,12 @@ A NEW source/run/evidence qualification
 is the adopted future direction, conditional on compiler/policy delivery and
 durable custody. No qualification, waiver renewal or publication is authorized
 by this status. Recovery ownership remains [issue #3775](https://github.com/sifr-lang/sifr/issues/3775).
+Item 70's assessment/disposition merged through
+[PR #3810](https://github.com/sifr-lang/sifr/pull/3810), reviewed candidate
+`d9d23149f8a59579f5e399bbb2239912198b524e`; this leaves Items 59/64 unqualified.
+Later 70-F1 custody/qualification work and compiler/policy delivery remain
+prerequisites for the prospective replacement; no repeated Git-pointer
+decision or retrospective success is required or claimed.
 
 ## Status
 

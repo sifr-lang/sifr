@@ -1,7 +1,8 @@
 # Item 70: original-evidence recovery and prospective disposition
 
-State: bounded recovery assessment complete, 2026-09-08; pending exact-SHA
-review and merge. This is the authorized current disposition, not qualification.
+State: bounded recovery assessment complete and merged, 2026-09-08, via
+[PR #3810](https://github.com/sifr-lang/sifr/pull/3810). This is the authorized
+current disposition, not qualification.
 Owner: release/distribution, [issue #3775](https://github.com/sifr-lang/sifr/issues/3775).
 Source of scope: Item 70 in the coordinator's read-only convergence ledger,
 relaying the user's authorization to take recommended decisions on their behalf.
@@ -288,10 +289,22 @@ identities, the six-row matrix and all selected-read evidence identities.
 No custody suite, Cargo, native execution, Sifr gate or package update is
 authorized or needed for this documentation-only assessment.
 
-Item 70 assessment blocker: none. Missing historical custody and external
-compiler/policy/durable-custody delivery still block qualification; they are
-preserved as later work, not satisfied by this assessment. Exact next action:
-complete the named checks and one exact-SHA Opus review, merge this assessment,
-update phase records and stop. Do not start 70-F1 or another item. Final
-candidate, validation, review and merge receipts are recorded outside the
-reviewed tree and in the subsequent record-only phase update.
+Reviewed candidate: `d9d23149f8a59579f5e399bbb2239912198b524e`.
+Merge: `df093dab01b27484b684060443d1129d9898df04`.
+All named checks passed on that exact candidate. The first and only Opus
+review returned SATISFIED with no blocking findings; no remediation review
+or Sifr gate ran. The
+[validation/review receipt](https://github.com/sifr-lang/sifr/pull/3810#issuecomment-5581186433)
+and [full review](https://github.com/sifr-lang/sifr/pull/3810#issuecomment-5581186774)
+are published outside the approved tree. Raw response SHA-256:
+`922ca904484ed50badb0330ab4fb21dccb8048694753ba99af37f0fb6288e682`.
+
+Item 70 assessment blocker: none. Items 59/64 remain unqualified; historical
+custody is still INCOMPLETE/UNRECOVERED. Their prospective replacement depends
+on separately owned compiler/policy delivery and later 70-F1 durable custody
+and qualification work. These are later prerequisites, not satisfied by this
+assessment. Review follow-ups are settled by this current-status update or
+retained under issue #3775/70-F1, including the impermanence of host-local raw
+scan evidence. Exact next action: finish this record-only update and return
+the handoff, then stop. Do not start 70-F1 or another item. No new review or
+gate is required for this record-only update.
