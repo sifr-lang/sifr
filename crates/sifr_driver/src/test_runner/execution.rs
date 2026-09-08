@@ -9,7 +9,7 @@ use crate::diagnostics::{RenderedDiagnostic, write_stderr, write_stderr_line};
 use crate::project::namespace_module_files;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_stdlib_manifest::SysrootDependencyPlan;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub(crate) struct TestRunnerExecutionOutcome {
     pub(crate) success: bool,
@@ -41,11 +41,21 @@ pub(crate) fn execute_test_runner_project(
         &test_lib,
         &cargo_plan.dependency_plan,
     );
-    let required_paths = [
-        Path::new("Cargo.toml"),
-        Path::new("src/lib.rs"),
-        Path::new("target"),
+    let mut required_files = vec![
+        PathBuf::from("Cargo.toml"),
+        PathBuf::from("src/lib.rs"),
+        PathBuf::from("target"),
     ];
+    required_files.extend(
+        generated_project
+            .bridge_rust_files
+            .keys()
+            .map(|path| Path::new("src").join(path)),
+    );
+    let required_paths = required_files
+        .iter()
+        .map(PathBuf::as_path)
+        .collect::<Vec<_>>();
     let prepared = prepare_cached_artifact(
         "test_runner",
         &generated_project.cache_scope,
@@ -71,31 +81,41 @@ pub(crate) fn execute_test_runner_project(
             },
         )?;
 
-        for module_name in &generated_project.support_module_names {
-            if let Some(code) = generated_project.support_rust_files.get(module_name) {
-                let module_path = test_support_module_file_path(module_name);
-                let output_path = src_dir.join(&module_path);
-                if let Some(parent) = output_path.parent() {
-                    std::fs::create_dir_all(parent).map_err(|error| {
-                        vec![crate::diagnostics::diagnostic_with_code(
-                            format!(
-                                "failed to create test support module directory '{}': {error}",
-                                parent.display()
-                            ),
-                            DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-                        )]
-                    })?;
-                }
-                std::fs::write(&output_path, code).map_err(|error| {
+        let support_files = generated_project
+            .support_module_names
+            .iter()
+            .filter_map(|name| {
+                generated_project
+                    .support_rust_files
+                    .get(name)
+                    .map(|code| (test_support_module_file_path(name), code))
+            });
+        let bridge_files = generated_project
+            .bridge_rust_files
+            .iter()
+            .map(|(path, code)| (path.clone(), code));
+        for (module_path, code) in support_files.chain(bridge_files) {
+            let output_path = src_dir.join(&module_path);
+            if let Some(parent) = output_path.parent() {
+                std::fs::create_dir_all(parent).map_err(|error| {
                     vec![crate::diagnostics::diagnostic_with_code(
                         format!(
-                            "failed to write test support module '{}': {error}",
-                            output_path.display()
+                            "failed to create test support module directory '{}': {error}",
+                            parent.display()
                         ),
                         DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
                     )]
                 })?;
             }
+            std::fs::write(&output_path, code).map_err(|error| {
+                vec![crate::diagnostics::diagnostic_with_code(
+                    format!(
+                        "failed to write test support module '{}': {error}",
+                        output_path.display()
+                    ),
+                    DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                )]
+            })?;
         }
 
         for namespace_file in namespace_module_files(&generated_project.support_module_names) {
@@ -187,8 +207,10 @@ fn test_runner_cache_key(
         .map(|(name, code)| format!("{name}\n{code}"))
         .collect::<Vec<_>>()
         .join("\n===\n");
+    let bridge_files = serde_json::to_string(&generated_project.bridge_rust_files)
+        .expect("canonical UTF-8 bridge paths and source strings serialize");
     format!(
-        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[sysroot-dependency-inputs]\n{}[sysroot-dependency-plan]\n{}\n[interop]\n{}",
+        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[bridge-files]\n{bridge_files}\n[sysroot-dependency-inputs]\n{}[sysroot-dependency-plan]\n{}\n[interop]\n{}",
         generated_project.cache_scope.display(),
         dependency_plan.dependency_input_fingerprint(),
         dependency_plan.cache_fingerprint,
@@ -208,11 +230,12 @@ mod tests {
 
     #[test]
     fn test_runner_cache_key_uses_sysroot_dependency_plan_inputs() {
-        let generated_project = GeneratedTestRunnerProject {
+        let mut generated_project = GeneratedTestRunnerProject {
             interop: sifr_codegen::InteropBuildPlan::default(),
             cache_scope: PathBuf::from("/tmp/sifr-tests"),
             support_module_names: Vec::new(),
             support_rust_files: HashMap::new(),
+            bridge_rust_files: Default::default(),
             all_rust_code: "#[test]\nfn test_case() {}\n".to_string(),
             all_stdlib_modules: HashSet::from(["sifr.json".to_string()]),
             all_required_features: HashSet::from([StdlibFeature::SerdeJson]),
@@ -246,5 +269,32 @@ mod tests {
             "[sysroot-dependency-inputs]\n[stdlib]\nsifr.json\n[features]\nserde_json\n"
         ));
         assert!(cache_key.contains("[sysroot-dependency-plan]\nfingerprint-a"));
+        let identity = |project| {
+            test_runner_cache_key(
+                project,
+                "[package]\nname = \"sifr_tests\"\n",
+                "#[test]\nfn test_case() {}\n",
+                &dependency_plan,
+            )
+        };
+        let path = PathBuf::from("sifr_generated_bridge/contract.rs");
+        generated_project
+            .bridge_rust_files
+            .insert(path.clone(), "pub struct First;".into());
+        let with_bridge = identity(&generated_project);
+        assert_ne!(with_bridge, cache_key);
+        generated_project
+            .bridge_rust_files
+            .insert(path.clone(), "pub struct Second;".into());
+        let changed_content = identity(&generated_project);
+        assert_ne!(changed_content, with_bridge);
+        let content = generated_project
+            .bridge_rust_files
+            .remove(&path)
+            .expect("bridge exists");
+        generated_project
+            .bridge_rust_files
+            .insert(PathBuf::from("sifr_generated_bridge/renamed.rs"), content);
+        assert_ne!(identity(&generated_project), changed_content);
     }
 }

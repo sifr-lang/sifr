@@ -321,7 +321,7 @@ fn materialize_binary_project_files(
     Ok(())
 }
 
-fn canonical_rust_module_path(path: &Path) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
+pub(super) fn canonical_rust_module_path(path: &Path) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let mut canonical = PathBuf::new();
     for component in path.components() {
         let std::path::Component::Normal(component) = component else {

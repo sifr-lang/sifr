@@ -3,7 +3,7 @@ use super::execution::execute_test_runner_project;
 use super::orchestrator::build_test_runner_project;
 use crate::project::discover_test_root_modules;
 use sifr_frontend::DiskSourceProvider;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 struct TestSource(PathBuf);
 
@@ -33,7 +33,7 @@ impl Drop for TestSource {
 fn stdlib_interop_test_project_materializes_selected_contracts() {
     let source = TestSource::new(
         "native",
-        "from helper import leap\nfrom sifr.math import isfinite\n\ndef test_contract():\n    assert leap(2024)\n    assert not leap(2023)\n    assert isfinite(1.5)\n",
+        "from helper import leap\nfrom sifr.math import isfinite\nfrom sifr.process import Command, ProcessError, run\n\ndef test_contract():\n    assert leap(2024)\n    assert not leap(2023)\n    assert isfinite(1.5)\n    try:\n        _ = run(Command(\"\"))\n        assert False\n    except ProcessError as error:\n        assert len(error.message) > 0\n",
     );
     std::fs::write(
         source.0.join("helper.sifr"),
@@ -54,6 +54,7 @@ fn stdlib_interop_test_project_materializes_selected_contracts() {
         .collect::<Vec<_>>();
     assert!(modules.contains(&"_sifr.calendar"), "{modules:?}");
     assert!(modules.contains(&"_sifr.math"), "{modules:?}");
+    assert!(modules.contains(&"_sifr.process"), "{modules:?}");
     assert!(!modules.contains(&"_sifr.python"), "{modules:?}");
     let plan = try_generate_test_runner_cargo_plan(
         &project.all_stdlib_modules,
@@ -64,10 +65,24 @@ fn stdlib_interop_test_project_materializes_selected_contracts() {
     assert!(plan.cargo_toml.contains("sifr_stdlib"));
     assert!(project.support_rust_files.contains_key("helper"));
     assert!(
-        execute_test_runner_project(&project)
-            .expect("execute selected contracts through the actual Cargo consumer")
-            .success
+        project
+            .bridge_rust_files
+            .contains_key(Path::new("sifr_generated_bridge/mod.rs"))
     );
+    assert!(
+        project
+            .bridge_rust_files
+            .contains_key(Path::new("sifr_generated_bridge/sifr_generated_process.rs"))
+    );
+    let outcome = execute_test_runner_project(&project)
+        .expect("execute selected contracts through the actual Cargo consumer");
+    assert!(outcome.success);
+    for (path, expected) in &project.bridge_rust_files {
+        let actual =
+            std::fs::read_to_string(outcome.cache_report.workspace_root().join("src").join(path))
+                .expect("canonical bridge file materialized");
+        assert_eq!(&actual, expected);
+    }
 }
 
 #[test]
@@ -81,6 +96,7 @@ fn stdlib_interop_test_project_empty_demand_stays_empty() {
     assert!(project.interop.rust.resolved_targets.is_empty());
     assert!(project.interop.rust.cargo_inputs.is_none());
     assert!(project.interop.stdlib_demand.declarations.is_empty());
+    assert!(project.bridge_rust_files.is_empty());
     let plan = try_generate_test_runner_cargo_plan(
         &project.all_stdlib_modules,
         &project.all_required_features,
