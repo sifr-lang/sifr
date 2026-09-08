@@ -8,6 +8,26 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ### Item 70-F1C0 — selected R2 contract and offline implementation plan
 
+COMPLETE via [PR #3816](https://github.com/sifr-lang/sifr/pull/3816), merged
+2026-09-08T09:01:45Z. Exact tested/reviewed candidate
+`cae41b5aaf98f132d6eebe39f761d4a514293e38`, merge
+`a69457362791b1807475cded4a98ea9a04ee0ceb`. Only two Markdown files changed.
+[Validation](https://github.com/sifr-lang/sifr/pull/3816#issuecomment-5582210368)
+passed exact-base/working-tree diff, file-size (3,767 files), local plan/ledger
+links, proposed-path absence, five base-tree blobs, five official-source
+snapshot hashes and API identity markers. One
+[Opus review](https://github.com/sifr-lang/sifr/pull/3816#issuecomment-5582250991)
+returned SATISFIED/no blockers, with only Read/Grep/Glob tools enabled.
+Raw review SHA-256
+`ec97097e32daf80946563e3765e07f138e9e8f16d1714881a4f93d5de184aaaa`.
+Zero remediation reviews, zero Sifr gates, no unrequested test/command
+execution. Nonblocking F1C2 follow-ups: carry F1A pricing recheck into actual
+account/capacity planning, retain remaining official-source snapshots, and
+consider explicit overlapping-lock precedence rationale. No new mechanism
+defect or additional approval requirement. No later item implementation begun.
+Record-only branch `codex/latest-stable-item70-f1c0-record` reuses this evidence
+without another review/gate. After record merge, stop and return terminal.
+
 Documentation-only planning item under release/distribution, after completed
 F1A/F1B. The coordinator selected R2 Standard, indefinite bucket locks,
 segregated configuration/producer credentials and separately controlled
