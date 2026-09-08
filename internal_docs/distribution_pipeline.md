@@ -686,16 +686,17 @@ and deployed commit. Each protected run retains its own
 `stable-release-signoff-<version>-attempt-<run>-<attempt>.json`, so a completed
 sign-off never has to be rewritten and a later resume remains convergent.
 
-The temporary initial-stable single-maintainer exception is a canonical, expiring
-waiver under `plans/releases/`. It authorizes only `bootstrap-alpha`,
-`bootstrap-index`, and first `ga-activation`; the protected job must still
-pause for a GitHub-recorded `stable-release` approval by the named owner and
-admin bypass remains disabled. Bootstrap evidence and stable sign-off record
-the approval mode and waiver SHA-256. The workflow pins the checked-in waiver
-digest, prefers any distinct environment reviewer over owner self-approval,
-and derives the retained mode from that selected approval set before
-publication. `normal`, `rollback`, and `incident-roll-forward` cannot select
-the waiver.
+Every stable publication, bootstrap, recovery, rollback, and incident roll-forward
+requires explicit GitHub-recorded approval by `yaseralnajjar` for its exact run,
+attempt, and reviewer-visible release evidence. The `stable-release` environment
+designates only that user, permits self-review, and disables admin bypass.
+The canonical live policy is `solo-maintainer`, with `waiver_sha256: none`.
+Governance runs from the workflow revision; selected release source and evidence
+retain their own exact commits. The resolver fetches the current run, environment
+configuration, and approval history from GitHub and checks the prepare-summary
+digest before publication. Chat authorization and agent review cannot approve a
+release run. The expired waiver remains immutable historical evidence and has
+no live selection path.
 
 `rollback` and `incident-roll-forward` enter the same protected `publish` job
 from an exact incident evidence commit. The read-only prepare path verifies the
@@ -737,12 +738,8 @@ migration, or fallback is retained.
 
 Both bootstrap stages run in the `stable-release` environment. Publish reads
 the workflow run's GitHub approval history and fails unless it contains an
-authorized environment reviewer. The default requires a login distinct from
-`GITHUB_TRIGGERING_ACTOR`; the canonical unexpired single-maintainer waiver
-allows the named owner only for the two bootstrap stages. Its checked-in digest
-is pinned by the protected workflow, and any distinct reviewer takes precedence
-over the waiver. The final evidence binds the selected approval mode and waiver
-digest, plus the alpha-stage evidence
+explicit approval by `yaseralnajjar` under the live policy above. The final
+evidence binds the selected approval policy plus the alpha-stage evidence
 digest, run/attempt, initiator, approvers, and prepare-summary digest as well as
 the final stage's own prepare-summary digest. The final stage
 reserves `channels-generation-1.json`, replaces only `channels.json`,
@@ -779,8 +776,7 @@ Activation advances the live index to generation 2; doing that first
 intentionally makes the generation-1 recovery precondition fail and forfeits
 the one-time bootstrap evidence. For candidate `0.1.0`, protected GA prepare
 must begin before `2026-08-21T02:17:30Z` so the qualification still has the
-required seven full days remaining. The later single-maintainer-waiver expiry
-does not extend that candidate deadline.
+required seven full days remaining. The permanent approval policy does not extend that historical candidate deadline.
 
 Run the protected bootstrap and incident-specific suites, plus the capability
 demo, with:

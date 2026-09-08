@@ -128,7 +128,7 @@ end
 class NonSourceCheckout:
     workflow: str
     job: str
-    condition: str
+    condition: str | None
     inputs: dict[str, object]
     purpose: str
 
@@ -139,17 +139,9 @@ class NonSourceCheckout:
 # Match the full input identity, job, and condition, never a step name or ordinal.
 NON_SOURCE_CHECKOUTS = (
     NonSourceCheckout(
-        "release-publication.yml", "publish",
-        "env.STABLE_MUTATION_OPERATION != 'true'",
-        {"ref": "${{ inputs.source_commit }}", "fetch-depth": 0,
-         "persist-credentials": False},
-        "preview/bootstrap governance and prebuilt release artifacts",
-    ),
-    NonSourceCheckout(
-        "release-publication.yml", "publish",
-        "env.STABLE_MUTATION_OPERATION == 'true'",
+        "release-publication.yml", "publish", None,
         {"fetch-depth": 0, "persist-credentials": False},
-        "stable publication governance scripts at the workflow revision",
+        "publication governance scripts at the workflow revision",
     ),
     NonSourceCheckout(
         "release-publication.yml", "publish",
@@ -420,12 +412,21 @@ def run_workflow_self_tests() -> None:
     for owner in NON_SOURCE_CHECKOUTS:
         at = REPO_ROOT / ".github/workflows" / owner.workflow
         step = {"uses": "actions/checkout@v7", "if": owner.condition, "with": owner.inputs}
+        if owner.condition is None:
+            del step["if"]
 
         def document(candidate: dict[str, object], job: str = owner.job) -> str:
             # JSON is a YAML subset and keeps exact expressions quoted.
             return json.dumps({"jobs": {job: {"steps": [candidate]}}})
 
         check(owner.purpose, document(step), accepted=True, at=at)
+        if owner.workflow == "release-publication.yml" and not owner.condition:
+            check("governance cannot select old source policy", document({
+                **step, "with": {**owner.inputs, "ref": "${{ inputs.source_commit }}"},
+            }), at=at)
+            check("retired conditional governance checkout", document({
+                **step, "if": "env.STABLE_MUTATION_OPERATION == 'true'",
+            }), at=at)
         check("wrong workflow: " + owner.purpose, document(step))
         check("wrong job: " + owner.purpose, document(step, "other"), at=at)
         check("wrong condition: " + owner.purpose, document({**step, "if": "true"}), at=at)

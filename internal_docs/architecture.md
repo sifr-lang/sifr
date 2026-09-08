@@ -1765,12 +1765,14 @@ Generation reservation, exact resume, site reconciliation, public
 install/update/recovery smoke, Marketplace verification, and release/incident
 sign-off remain fail-closed. The one-time schema-epoch bootstrap is separately
 bound to the exact opaque pre-epoch asset identity and protected approval. The
-user-directed single-maintainer exception for that bootstrap and first GA is
-itself a canonical, expiring governance artifact. It permits only the named
-owner and those three operations, requires a real `stable-release` approval,
-is pinned by digest, prefers a distinct approval when one is available, and binds
-the selected approval policy plus initiator into retained evidence; normal and
-incident operations require distinct approval. The
+permanent live `solo-maintainer` policy requires explicit GitHub-recorded
+`stable-release` approval by `yaseralnajjar` for each exact run/attempt and
+prepare-summary evidence, including normal, rollback, incident, and recovery
+operations. Self-review is allowed and admin bypass is disabled. Governance
+executes from the workflow revision and checks the designated reviewer and
+current run before publication. Old waiver/report/signoff bytes remain immutable
+historical evidence; historical inspection evaluates the original event time
+and cannot authorize a new run. The
 post-index bootstrap recovery path revalidates the failed mutation and site
 attempts, both protected approvals, the already-live generation-1 bytes, and
 the reproducible site inputs before retrying only site publication and public
