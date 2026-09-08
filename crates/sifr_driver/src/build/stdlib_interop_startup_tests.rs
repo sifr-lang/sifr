@@ -173,6 +173,33 @@ fn stdlib_interop_startup_readonly_walk_preserves_hidden_edges() {
     let selected = owners(&open.interop.stdlib_demand);
     assert!(selected.contains("_sifr.fs._open_file"));
     assert!(selected.contains("_sifr.fs._file_close"));
+    let fs_order: Vec<_> = open
+        .interop
+        .stdlib_demand
+        .declarations
+        .iter()
+        .filter_map(|entry| match (&entry.owner, entry.module_name.as_deref()) {
+            (RustInteropOwner::Function { name }, Some("_sifr.fs")) => Some(name.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        fs_order,
+        [
+            "_open_file",
+            "_file_read",
+            "_file_write",
+            "_file_readline",
+            "_file_readlines",
+            "_file_close",
+            "_file_read_bytes",
+            "_file_write_bytes",
+            "_file_flush",
+            "_file_seek",
+            "_file_tell",
+        ],
+        "selected contracts retain declaration order for diagnostics and cache identity"
+    );
     let (mut python, stdlib) = generated(
         "from sifr.python import from_bool, Object, PythonError\ndef main():\n    try:\n        value: Object = from_bool(True)\n        _ = value.get_attr(\"attribute\")\n    except PythonError:\n        pass\n",
     );

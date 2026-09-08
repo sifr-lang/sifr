@@ -100,60 +100,84 @@ pub(crate) fn select(stdlib: &StdlibCode, applications: &[&HirModule]) -> RustIn
     // Rebuild contracts through the existing compiler authority, with all
     // selected nominal definitions available together. This includes generated
     // bridge layouts and structural identities; no signature is hand-filtered.
-    let mut modules: BTreeMap<String, HirModule> = BTreeMap::new();
+    let mut selections: BTreeMap<&str, SelectedDeclarations<'_>> = BTreeMap::new();
     for declaration in &demand.selected {
-        let source = &stdlib.hir_modules[&declaration.module];
-        let module = modules
-            .entry(declaration.module.clone())
-            .or_insert_with(|| HirModule {
-                functions: Vec::new(),
-                classes: Vec::new(),
-                constants: Vec::new(),
-                imports: source.imports.clone(),
-                generic_functions: HashMap::new(),
-                type_param_bounds: HashMap::new(),
-            });
-        let name = match &declaration.owner {
+        let selected = selections.entry(&declaration.module).or_default();
+        match &declaration.owner {
             Owner::Function(name) => {
-                module
-                    .functions
-                    .extend(source.functions.iter().filter(|f| &f.name == name).cloned());
-                if let Some(params) = source.generic_functions.get(name) {
-                    module
-                        .generic_functions
-                        .insert(name.clone(), params.clone());
-                }
-                name
+                selected.functions.insert(name);
             }
             Owner::Class(name) => {
-                module
-                    .classes
-                    .extend(source.classes.iter().filter(|c| &c.name == name).cloned());
-                name
+                selected.classes.insert(name);
             }
             Owner::Constant(name) => {
-                module.constants.extend(
-                    source
-                        .constants
-                        .iter()
-                        .filter(|(n, _, _)| n == name)
-                        .cloned(),
-                );
-                name
+                selected.constants.insert(name);
             }
-        };
-        if let Some(bounds) = source.type_param_bounds.get(name) {
-            module
-                .type_param_bounds
-                .insert(name.clone(), bounds.clone());
         }
     }
+    let modules: BTreeMap<&str, HirModule> = selections
+        .into_iter()
+        .map(|(name, selected)| {
+            let source = &stdlib.hir_modules[name];
+            // Source vector order is part of diagnostic and cache-key identity.
+            // Membership selects declarations; it must not determine their order.
+            let module = HirModule {
+                functions: source
+                    .functions
+                    .iter()
+                    .filter(|f| selected.functions.contains(f.name.as_str()))
+                    .cloned()
+                    .collect(),
+                classes: source
+                    .classes
+                    .iter()
+                    .filter(|c| selected.classes.contains(c.name.as_str()))
+                    .cloned()
+                    .collect(),
+                constants: source
+                    .constants
+                    .iter()
+                    .filter(|(n, _, _)| selected.constants.contains(n.as_str()))
+                    .cloned()
+                    .collect(),
+                imports: source.imports.clone(),
+                generic_functions: selected
+                    .functions
+                    .iter()
+                    .filter_map(|name| {
+                        source
+                            .generic_functions
+                            .get(*name)
+                            .map(|params| ((*name).to_string(), params.clone()))
+                    })
+                    .collect(),
+                type_param_bounds: selected
+                    .functions
+                    .iter()
+                    .chain(&selected.classes)
+                    .chain(&selected.constants)
+                    .filter_map(|name| {
+                        source
+                            .type_param_bounds
+                            .get(*name)
+                            .map(|bounds| ((*name).to_string(), bounds.clone()))
+                    })
+                    .collect(),
+            };
+            (name, module)
+        })
+        .collect();
     crate::interop_build_plan_for_named_modules(
-        modules
-            .iter()
-            .map(|(name, module)| (Some(name.as_str()), module)),
+        modules.iter().map(|(name, module)| (Some(*name), module)),
     )
     .rust
+}
+
+#[derive(Default)]
+struct SelectedDeclarations<'a> {
+    functions: BTreeSet<&'a str>,
+    classes: BTreeSet<&'a str>,
+    constants: BTreeSet<&'a str>,
 }
 
 struct Demand<'a> {
