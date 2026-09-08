@@ -207,12 +207,17 @@ command completion, with no response-file polling, new request or review quota
 reset. This was review-harness cleanup only; no inferior existed to clean up.
 All first-failure evidence and parent/predecessor sources remain preserved.
 
-Final counts: offline invocations2, named suite families1, initial Opus1,
+Implementation counts: offline invocations2, named suite families1, initial Opus1,
 remediation0, provider retries0, PR1, merge1, create-pr/merge gates0, compiler
 builds/tests0, live debugger contexts/sessions/proofs0, inferior launches/
 attaches/continues0, CV/counter/acceptance acquisitions0. Final immutable
 E/`terminal.json` binds the phase-record commit, all external hashes, review,
 named checks, remote identity and process absence. Blocker: none.
+
+Main's PR-only repository rule rejected the direct post-merge record push.
+The owned branch push succeeded; the same record update therefore uses a
+separate Markdown-only PR, with no new review or gate. Its PR/merge/record
+identities and aggregate PR counts are bound in the external terminal receipt.
 
 Next action: STOP. B33 static/offline prerequisite is complete and this worker
 retires; B34 and any combined proof remain separate future work. This record
