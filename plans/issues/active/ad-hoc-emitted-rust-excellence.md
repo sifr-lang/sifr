@@ -2,6 +2,62 @@
 
 Status: active
 
+## Item12K-B23: timed subprocess group ownership (2026-09-08)
+
+Bounded implementation awaiting its named validation and exact-SHA review.
+Base: `16a97d07327c3c3b0f153acb3662bd2bd89925a3`; independent owner root
+`/private/tmp/sifr-b23.inohbu`, branch `codex/item12k-b23-timeout-lifecycle`.
+The parent and every predecessor clone, index, target and reference are read-only.
+Owned launch environment uses sibling `tmp` and `evidence`, with
+`CARGO_TARGET_DIR` unset. No historical parent ledger is copied into this record.
+
+Scope follows the dispatched B23 registration and the merged
+[B26 assessment](ad-hoc-joint-emitted-rust-delivery-assessment.md#existing-b23-timeout-descendant-lifecycle).
+Only `run_benchmarks.py`'s timed process boundary and its registered
+`benchmark_process.py` helper change. The helper owns each command's new session
+and process group, terminates descendants on timeout, drains output, reaps the
+leader and waits for the group to disappear before returning. Resistant members
+receive SIGKILL after a bounded TERM grace. Failure to drain or finish reaping
+raises a benchmark error, preventing another sample. Ordinary success/error
+status and output survive; timeout output is text and unavailable metrics remain
+unavailable. Background descendants left by an exited leader are cleaned too.
+POSIX descendants inherit this group; deliberate session/group escape is outside
+this benchmark-command contract. Orphan reaping belongs to the OS adopter, and
+failure to reap is a blocking error rather than an overlapping next sample.
+
+All deterministic tests are implemented before execution: ordinary exit0/7;
+ready-handshaken cooperative and TERM-resistant child/grandchild trees;
+leader-exit with inherited pipes; closed-pipe background descendants; UTF-8
+stdout/stderr retention; PID/group disappearance and a following sample proving
+no overlap; simulated failure to reap must fail closed. These checks are called
+by the existing benchmark `--self-test`, with no compiler or benchmark workload.
+
+Named validation only:
+
+- `python3 verification/areas/performance/run_benchmarks.py --self-test`
+- `python3 verification/areas/performance/check_budgets.py --self-test`
+- `git diff --check <exact-base> <exact-candidate>`
+- `python3 scripts/check_hir_maintainability_guardrails.py`
+- `python3 scripts/check_file_size_guardrails.py`
+
+One initial exact-SHA Opus review and at most one remediation belong to this new
+mechanism. No compiler/lock/fixture/workflow changes, builds, Cargo/Clippy,
+benchmark acquisitions, create-pr or merge-profile gates are authorized here.
+This independent Python prerequisite may merge main after these checks/review.
+
+Authenticated B20 terminal SHA256
+`0b4fe5b32beb604527091fdfbeab9ff3b4b7dbd6d4d194e27ebb17d3260999dc` and stopped-group
+receipt SHA256 `bb8cfafa105efc55b06bf83acd4a9d198756e92d5d6110142924d2c00d79a06e`
+show orphan85215 overlapping3862, both launches of the same first case in
+PGID84008. B20 wrapper blob `7dc3270d0226f68ead596c347d15c38cc21fa33b` differs from
+main blob `95ff6b6d8fb58223396cbf91b5f67b4c244fee88` only by diagnostic sample
+recording imports/call/self-test; the timed subprocess function is identical.
+Preserve main's current evidence contracts without importing B19/B20 code.
+This fix does not explain the first120s timeout or original formatter CV.
+Private TMPDIR is independently required for future launchers. B24 owns causal
+and controlled qualification; B27 owns later joint delivery. All predecessor
+review/gate counts remain unchanged. After merge and record update, stop.
+
 ## Item12K-B26: joint-delivery assessment (2026-09-08)
 
 **B26 MERGED / COMPLETE — ASSESSMENT ONLY.** Documentation

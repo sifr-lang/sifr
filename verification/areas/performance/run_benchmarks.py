@@ -30,6 +30,8 @@ from benchmark_manifest import (
     select_cases,
     validate_manifest,
 )
+from benchmark_process import run_owned_process
+from benchmark_process import run_self_test as run_benchmark_process_self_test
 from controlled_sampling import (
     run_controlled_case,
 )
@@ -600,16 +602,10 @@ def collect_build_size_metrics(output_dir: Path) -> dict[str, int | None]:
 def run_subprocess(command: list[str], timeout_ms: int) -> dict[str, Any]:
     started = time.perf_counter()
     rss_before = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-    try:
-        completed = subprocess.run(
-            timed_command(command),
-            cwd=REPO_ROOT,
-            text=True,
-            capture_output=True,
-            timeout=timeout_ms / 1000.0,
-            check=False,
-        )
-    except subprocess.TimeoutExpired as error:
+    completed, timed_out = run_owned_process(
+        timed_command(command), REPO_ROOT, timeout_ms / 1000.0
+    )
+    if timed_out:
         return {
             "duration_ms": (time.perf_counter() - started) * 1000.0,
             "peak_rss_bytes": None,
@@ -619,8 +615,8 @@ def run_subprocess(command: list[str], timeout_ms: int) -> dict[str, Any]:
             "work_counter_source": "unavailable",
             "exit_code": None,
             "timed_out": True,
-            "stdout": error.stdout or "",
-            "stderr_tail": tail(error.stderr or ""),
+            "stdout": completed.stdout,
+            "stderr_tail": tail(completed.stderr),
         }
     rss_after = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
     process_data = parse_process_metrics(completed.stderr)
@@ -703,6 +699,7 @@ def invalidate_output(path: Path) -> None:
 
 
 def run_self_test() -> None:
+    run_benchmark_process_self_test(run_subprocess)
     run_benchmark_baseline_self_test()
     run_process_metrics_self_test()
     run_query_processes_self_test()
