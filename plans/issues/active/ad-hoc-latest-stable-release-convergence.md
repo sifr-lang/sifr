@@ -1,10 +1,78 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-09-08. Items 0–30, 36–39, 53–55, 58 and 66–67 are complete. Item 39 closed
+Status: active on 2026-09-08. Items 0–30, 36–39, 53–55, 58, 60 and 66–67 are complete. Item 39 closed
 the runner dependency/API invariants; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
+
+### Item 60 — native trust documentation closure
+
+State: complete on 2026-09-08 via implementation
+[PR #3796](https://github.com/sifr-lang/sifr/pull/3796).
+Base: `91004bfb154b23980380863eaa1965ddc69099e4`.
+Exact reviewed candidate: `a816fb1e3960ab25e8cd4f8f5cbe1f0a18be662d`.
+Merge: `7f1dfcd92c7ab0f1efa37b5ec98b8c6c8b395ab4`.
+
+The preserved unreviewed candidate `8fc31a5ad9cb91138073e26626893190818331f7`
+was reconciled on current main in a fresh owned clone. Item 66 / PR #3779
+cleared the concrete feature-sensitive Rusqlite assertion prerequisite.
+The predecessor and coordinator worktrees, indexes, targets and uncommitted
+orchestration records were preserved. No unrelated prerequisite was assumed.
+
+Only [Rust interop architecture](../../../internal_docs/rust_interop_architecture.md)
+changed. It now documents actual AWS-LC/SQLite native trust entries,
+declaration-scoped `build-env` checks, AWS-LC system-library and build-tool
+autodetection, Reqwest's provider selection and standalone vendor metadata
+anchor, the optional catalog graph, and the existing quoted-savepoint runtime
+exercise. It does not claim always-bundled or environment-independent AWS-LC
+builds, standalone runtime validation by metadata tests, or per-file vendor
+checksum verification. No compiler, dependency, lockfile, fixture, workflow,
+vendor, test mechanism, runtime evidence or historical receipt changed.
+
+Named validation passed on the exact candidate:
+
+- `cargo test -p sifr_stdlib_manifest --test reqwest_dependency_version`: 3/3.
+- `cargo test -p sifr_stdlib_manifest --test rusqlite_dependency_version`: 6/6.
+- `area documentation: structure`: 1/1, including the GA mutation harness.
+- Diff check, first-party file-size guard (3,761 files, 900-line limit), and
+  all eight added local path targets passed.
+
+The named Cargo tests ran after coordinator capacity clearance with one build
+job and a private target. Free disk was 145 GiB before compilation; the final
+target was 144 MiB. All owned validation processes ended and capacity was
+released before review. Only documentation changed, so no create-pr or
+merge-profile gate ran under the user's explicit file-category rule.
+
+The first and only exact-SHA Opus review returned `SATISFIED`, with no blocking
+findings. No remediation review ran. External
+[validation and review evidence](https://github.com/sifr-lang/sifr/pull/3796#issuecomment-5577925378)
+and the [full response](https://github.com/sifr-lang/sifr/pull/3796#issuecomment-5577925516)
+are keyed by the approved candidate. The response is retained outside Git at
+`/private/tmp/sifr-item60-opus.RPh5Yy/response.md`, SHA-256
+`2d9c5e2b917eb10d97a5bc5966d5ae358e0dd3710607d0af577981145d8b15d1`.
+Named logs and result JSON are under `/private/tmp/sifr-item60-resume.I86v1B/`:
+
+- Reqwest log: `ace32d9c3b638559b07a41b825870a6a2dbf3bc3371b428506cd50278e250ec2`.
+- Rusqlite log: `6462c7b8100623d8e96d57f6549c56080caf3d2d0803f2257637ae57f62daaf3`.
+- Documentation log: `a08aa9a073a0ceb4a899a735fef63f37741fc8e0297dc6a47e5c0e008667b56a`.
+- Documentation result: `ea95dc834a35a549e49abd151dbf920e88b8515998cfa5222ab14fab6c7de4e1`.
+
+Deferred follow-ups: existing Item 43 owns the untouched `native_build_script`
+paragraph's stale `cc 1.2.63` / `cxx 1.0.198` claims; current lock/catalog select
+`cc 1.4.4` / `cxx 1.0.199`. This is part of its corresponding current-docs
+ownership, not a new implementation item. Existing Item 35 owns two cosmetic
+suggestions: clarify the second trust example's “Other trust categories”
+lead-in while it repeats `rust-build-scripts`, and label `sqlite3` as a Cargo
+`links` identity versus `aws_lc_0_44_0_crypto` as an emitted library (its crate
+declares `links = "aws_lc_0_44_0"`). Neither suggestion blocks item 60.
+
+Terminal state: merged; blocker: none. Owned clone:
+`/private/tmp/sifr-item60-resume.I86v1B/codebase`; implementation branch:
+`codex/latest-stable-item60-resume`; record branch:
+`codex/latest-stable-item60-record`. This record-only update reuses the approved
+implementation evidence and requires no new Opus review or Sifr gate. Next
+action: return the completed handoff to the coordinator. No later item started.
 
 ### Item 58 — HTTPX2 protocol documentation closure
 
@@ -759,7 +827,7 @@ the named tests and never runs for docs/runner-only scopes.
 | 55 | none | **Complete, PR #3772.** Python feature runners: derive exact-version markers from audit, directly assert public Pandas module identity, inspect warning-filter scope and duplicated Arrow version assertion; distinguish Arrow 25 API additions from 25.0.1 fixes in maintained descriptions. No new package upgrade. | `area python_interop: minor-train-features, numeric-dataframe-features, dependency-versions` |
 | 58 | 53 and 67 qualified merges satisfied | **Complete.** [PR #3792](https://github.com/sifr-lang/sifr/pull/3792), candidate `d592713207f12acc2b16ae4dedf0e73bc006ea1d`; current internal HTTPX2 protocol guidance, retained tier-two/history classification, and taxonomy/topology ownership documented. Historical performance records unchanged. One Opus review satisfied; public references assigned separately to Item 69 / #3793. | `area documentation: structure` 1/1; `area coverage_matrix: readiness` 4/4; local paths/shared guards passed; no Sifr gates |
 | 59 | none | `verification/areas/distribution_release/governance/evidence_custody.py` and owned release-profile custody records: reconcile digests with actual immutable evidence; preserve historical waiver identity and prohibit invented/rebound receipts. Any missing external artifact is a blocker, not permission to fabricate it. | `area distribution_release: evidence-custody` |
-| 60 | none | Current trust/native-provider documentation and checks in Reqwest/Rusqlite tests and Rust interop catalog: audit native trust examples, AWS-LC autodetection, standalone Reqwest vendor anchor, and savepoint overview accuracy. Update documentation only where current architecture is misdescribed; mechanism changes require an explicitly scoped follow-up. | `manifest reqwest_dependency_version`; `manifest rusqlite_dependency_version`; `area documentation: structure` |
+| 60 | 66 qualified merge satisfied | **Complete.** [PR #3796](https://github.com/sifr-lang/sifr/pull/3796), candidate `a816fb1e3960ab25e8cd4f8f5cbe1f0a18be662d`; current native trust, AWS-LC autodetection, standalone Reqwest vendor anchor, catalog and quoted-savepoint documentation. One Opus review satisfied. Pre-existing native version paragraph assigned to Item 43; cosmetic suggestions to Item 35. | `manifest reqwest_dependency_version` 3/3; `manifest rusqlite_dependency_version` 6/6; `area documentation: structure` 1/1; local paths/shared guards passed; no Sifr gates |
 
 ### Toolchain, package and component convergence
 
