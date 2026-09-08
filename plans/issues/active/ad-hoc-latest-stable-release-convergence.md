@@ -6,6 +6,20 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 
 ## Objective
 
+### Item 70-F1C2A — real SDK/runtime and controlled configuration transport
+
+IMPLEMENTED, pending exact-candidate focused validation and source-only review;
+merge withheld until the gate-bearing new SDK lock has one passing applicable
+merge-profile gate. The coordinator split this offline item from F1C2B live
+access/custody proof after completed F1C1. Exact paths, ten named cases,
+owned installation/check commands and external gate prerequisites were
+[registered before implementation](ad-hoc-latest-stable-item70-f1c2a-runtime.md).
+Only the three new runtime/control/test modules, distribution-owned runtime
+pyproject/lock and item/phase records change. No compiler, existing adapter,
+fixture, workflow, historical recovery or live service operation changes.
+F1C2B and F1D remain separately blocked; this item creates no live access,
+durability, custody or release-qualification claim.
+
 ### Item 70-F1C1 — offline R2 adapter and admission contract
 
 COMPLETE via [PR #3818](https://github.com/sifr-lang/sifr/pull/3818), merged
