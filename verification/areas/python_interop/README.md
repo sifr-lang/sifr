@@ -9,6 +9,45 @@ The single maintained interpreter is GIL-enabled CPython 3.14.7. The area
 project pins it exactly; there is no older compatibility project or fallback
 interpreter lane.
 
+## HTTP Client Evidence And Retained Names
+
+The maintained project uses `httpx2` and `httpcore2`. The
+[dependency audit](runner/dependency_versions.py) rejects the retired `httpx`
+and `httpcore` distributions in the owned project manifests and locks. The
+[protocol guide](../../../internal_docs/python_interop_protocol_architecture.md)
+uses the current `httpx2.AsyncClient` identity.
+
+The [tier-two matrix](packages/tier2.toml) retains the distribution name
+`pytest-httpx` and import root `pytest_httpx` as deterministic inventory. Its
+matrix `certified` label describes checked-in package metadata; it provides no
+installation, live-import, or HTTPX2 compatibility evidence. This package is
+absent from the maintained area's project and lock. It is not a replacement
+for the compiled HTTPX2 client suite, and the name must not be mechanically
+rewritten to a different distribution.
+
+Historical issue/review records and captured performance environments retain
+the HTTPX names and versions actually used by those runs. They are provenance,
+not current dependency guidance or qualification of the maintained environment.
+Third-party source and its own locks retain their upstream ownership.
+
+## Verification Path Ownership
+
+Paths in the package and declaration ledgers have distinct bases:
+
+| Input or artifact | Owner and path interpretation |
+| --- | --- |
+| [Package matrices](packages/tier1.toml), [async packages](packages/async.toml), and [tier-two packages](packages/tier2.toml) | `runtime/python-interop` owns inventory. Import roots are Python module identities, not repository paths. |
+| [Area manifest](manifest.json) | Suite `entry` paths are repository-relative; the outer [area runner](runner.py) selects the owned suite. |
+| [Declaration ledger](declaration_capabilities.json) | `compiled_evidence.sifr_source` is relative to `fixtures/`; `report` is repository-relative under `target/verification/areas/python_interop/`. |
+| [Async example registry](runner/async_declaration_examples.py) | Case `httpx2-client` resolves `async_declaration/httpx2_client.sifr` under `fixtures/`, with its adjacent `python_bridges/client.py` packaged hermetically. |
+| [Coverage and taxonomy checks](../coverage_matrix/README.md) | `compiler-verification` owns profile reachability and naming checks; the Python area owns fixture meaning and generated suite evidence. |
+
+The HTTPX2 ledger entry consumes
+`target/verification/areas/python_interop/async-declaration-examples.latest.json`
+for the current selected run. The outer area result is
+`target/verification/areas/python-interop-results.json`; these paths are generated
+outputs, not checked-in evidence to relabel when a dependency changes.
+
 The canonical entrypoint is:
 
 ```bash
