@@ -133,7 +133,17 @@ fn corpus_repair_repeat_count_reuse_exact_counts_and_general_sequences() {
             );
             assert!(!body.contains("__sifr_repeat_out.extend"), "{body}");
             if count.contains("18446744073709551616") {
-                assert!(body.contains("18446744073709551616"), "{body}");
+                assert!(
+                    body.contains(
+                        "SifrInt::from_signed_bytes_be(&vec![1, 0, 0, 0, 0, 0, 0, 0, 0])"
+                    ),
+                    "{body}"
+                );
+                assert_eq!(
+                    body.contains("= -(SifrInt::from_signed_bytes_be("),
+                    count.starts_with('-'),
+                    "{body}"
+                );
             }
         }
     }
@@ -197,4 +207,65 @@ fn corpus_repair_repeat_count_reuse_statement_occurrences() {
         assert!(occurrences > 0, "must inspect the direct count occurrence");
         syn::parse_file(&crate::generate_rust(&lowering.module)).expect("repeat Rust parses");
     }
+}
+
+fn assert_count_move_in_statement(source: &str, should_move: bool) {
+    let parsed = sifr_python_parser::parse_module(source).expect("parse");
+    let lowering = sifr_lowering::lower_module(parsed.suite()).expect("lower");
+    let function = &lowering.module.functions[0];
+    let (_, moves) = crate::body_analysis::BodyAnalysis::build(function, &Default::default());
+    let value = match &function.body[1] {
+        sifr_ir::HirStmt::Let { value, .. }
+        | sifr_ir::HirStmt::Return { value: Some(value) }
+        | sifr_ir::HirStmt::While {
+            condition: value, ..
+        } => value,
+        other => panic!("unexpected statement: {other:?}"),
+    };
+    let mut occurrences = 0;
+    crate::hir_analysis::traversal::walk_expr(value, &mut |expr| {
+        if matches!(expr, sifr_ir::HirExpr::Name { name, .. } if name == "count") {
+            occurrences += 1;
+            assert_eq!(
+                moves.contains(&crate::body_analysis::expr_key(expr)),
+                should_move,
+                "{source}"
+            );
+        }
+    });
+    assert_eq!(occurrences, 1, "inspect exactly one direct count use");
+    let rust = crate::generate_rust(&lowering.module);
+    assert_eq!(
+        rust.contains("let __sifr_repeat_n = count;"),
+        should_move,
+        "{rust}"
+    );
+    if !should_move {
+        assert!(rust.contains("count.clone()"), "{rust}");
+    }
+    syn::parse_file(&rust).expect("repeat ownership Rust parses");
+}
+
+#[test]
+fn corpus_repair_repeat_count_reuse_implicit_augassign_read() {
+    assert_count_move_in_statement(
+        "def repeat() -> int:\n    count = 3\n    values = [0] * count\n    count -= 1\n    return len(values)\n",
+        false,
+    );
+}
+
+#[test]
+fn corpus_repair_repeat_count_reuse_repeated_header_without_body_read() {
+    assert_count_move_in_statement(
+        "def repeat() -> int:\n    count = 3\n    while len([0] * count) > 0:\n        break\n    return 0\n",
+        false,
+    );
+}
+
+#[test]
+fn corpus_repair_repeat_count_reuse_straight_line_last_use() {
+    assert_count_move_in_statement(
+        "def repeat() -> list[int]:\n    count = 3\n    return [0] * count\n",
+        true,
+    );
 }
