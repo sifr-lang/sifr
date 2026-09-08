@@ -222,7 +222,10 @@ starting the later offline F1C1 item in a fresh session.
 ## Registered later items; not implemented here
 
 **70-F1C1 — offline R2 adapter and admission contract**, release/distribution.
-Implemented pending exact-SHA review/merge; no live account, compiler/policy, credential or SDK
+COMPLETE via [PR #3818](https://github.com/sifr-lang/sifr/pull/3818), merged
+2026-09-08T09:22:26Z. Exact tested/reviewed candidate
+`29a1f965ebfdfb7c40261d903a993e74507fdc13`, merge
+`c1d91d5df93ac289270941473ce3c5c89c2666c6`. No live account, compiler/policy, credential or SDK
 installation prerequisite. Exact new implementation paths:
 
 - `verification/areas/distribution_release/governance/archive_r2_store.py`:
@@ -315,6 +318,19 @@ Owned clone `/private/tmp/sifr-item70-f1c1.fDMx42/codebase`, branch
 `5614f06c8ff49411dd8d0b8107e6479e4274ec96`; sibling private evidence root.
 No SDK installation, factory, real service call, fixture, workflow, lock,
 Cargo, native run, historical recovery, F1C2/D work or qualification occurs.
+
+F1C1 final [validation](https://github.com/sifr-lang/sifr/pull/3818#issuecomment-5582542157)
+passed all nine named tests under Python 3.14.7 in 1.277 seconds, both diff
+checks and file-size guard (3,770 files). The one
+[Opus review](https://github.com/sifr-lang/sifr/pull/3818#issuecomment-5582574518)
+returned SATISFIED/no blockers, Read/Grep/Glob only and no command/test/network
+execution. Raw review SHA-256
+`11a289c658c2e209d16c5ae35140e37bcee81c7faaeeb7e1f419b88d591364a4`.
+Zero remediation reviews, zero Sifr gates. Four nonblocking maintainability/
+diagnostic suggestions are deferred as 70-F1C1-M1 in the phase ledger, not
+implemented and not new F1C2 prerequisites. Blocker: none. This record-only
+closure reuses implementation evidence without another review or gate; after
+record merge, stop. No later item is started.
 
 **70-F1C2 — real SDK/configuration/access and independent-copy proof**,
 release/distribution with the existing storage/copy owners. Not ready for
