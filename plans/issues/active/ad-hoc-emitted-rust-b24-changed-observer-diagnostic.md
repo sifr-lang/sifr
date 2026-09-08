@@ -1,7 +1,104 @@
 # 12K-B24: changed-observer startup diagnostic
 
 Date: 2026-09-08. Owner: performance / issue3776.
-State: PRELAUNCH; full B24 OPEN. No causal correction or acceptance claim.
+State: INCONCLUSIVE / NEEDS LATER SCOPE / TERMINAL STOP; full B24 OPEN.
+No causal correction, acceptance, Opus review, PR or merge claim.
+
+## Sole diagnostic outcome and terminal handoff
+
+Prelaunch registration was committed/pushed as
+`802a960836ebfdd72f2ac74f6d1bdbd3efee40a6` before parent/coordinator callbacks
+and the sole command. One setup, one LLDB session, one warmup target70018;
+no second target or retries. Total21.368428665969986 seconds. First live failure
+was custody sequence62: `invalid acquisition: new unobserved acquisition
+descendant`. Root69420, LLDB69936 and debugserver70020 were owned. All three
+admission snapshots passed. No counter acquisition failure was reported.
+
+The observer obeyed the outer stop at main entry and killed its target through
+the retained SBProcess handle (`Kill` succeeded). Nineteen stops retain raw
+counters, one mode3→mappedmode0 handover, seven entry hits and five matched
+startup returns. Completion was never observed; canonical stdout/stderr are
+both empty, no two-file formatter completion or target exit0 is established.
+LLDB itself returned0 without timeout. That is not target success.
+
+| Sole process / partition | Retained evidence |
+| --- | --- |
+| P0 warmup, PID/PGID70018 | INCONCLUSIVE;19 stops; all later targets unlaunched |
+| Pre-prepare | first stop279924 instructions; prepare entry4278078 |
+| Loader inclusive (`prepare`) | entry4278078; return34082915; delta29804837 |
+| JIT fixups inclusive | entry6405715; return25905636; delta19499921 |
+| Generic fixups inclusive | entry14212176; return25817460; delta11605284 |
+| Fixups union |19499921; generic interval is nested, not an additional total |
+| Loader exclusive of fixups |10304916; includes library/constructor work and is not a disjoint pre-constructor category |
+| libSystem inclusive | entry28036990; return31702059; delta3665069 |
+| Sanitizers inclusive | entry28470939; return28599694; delta128755, nested in libSystem |
+| Remaining pre-constructor | unassigned; no qualified complete partition |
+| Constructor / main stop |32325959 /34474683; main classification interrupted by outer stop |
+| CLI/config/discovery, source check1/check2, completion residual | unavailable: stopped before buffered completion |
+
+These are unqualified raw retained endpoints, not accepted attribution. The
+named analyzer ran once after the attempt and preserved one partial warmup,
+zero observed complete processes and no cross-process ranges. All counters and
+partial events are in E/analysis.json; no debugger overhead was subtracted.
+There is no stability, causation, production CV or full B24 pass.
+
+The runner's final native collector was sticky-rejected and honestly recorded
+`zero_processes=false`. The registered post-command check then proved the four
+accepted root/debugger/target/tracer PIDs and groups absent. A supplemental
+terminal record check extended that inventory to every82 observed subjects,
+including unaccepted transient helpers and nested acquisition snapshots:
+native-before/full-ps/native-after all absent, all four groups ESRCH, zero
+signals. Watcher/host monitor are false. This supplemental read-only release
+receipt does not rewrite or validate the failed custody chain, launch a target,
+repair the apparatus or qualify a cleanup mechanism. All resources are released.
+
+Evidence under E:
+
+| File | SHA256 |
+| --- | --- |
+| boundaries/outcome.json | `8402a5d527e7dc088e189b26d012886106acdfb9417e3ff624401e1395bdfce2` |
+| boundaries/process-release.json (failed proof retained) | `6602a49e205f0193f9b644dc73762965208537d29843b40def553d51254f222f` |
+| fresh-process-release.json (four accepted PIDs) | `94a1840d73a35efebf4618d9591d9b4f42cc00c7adb67e57ea341ee9de174684` |
+| complete-release-record.json (all82 observed subjects) | `2651f951e667cad43f20e02ec666d4059f7bf1320327902d6aff3c79c21791eb` |
+| analysis.json | `839c6adc40ce246bb7b9785ca98db80d895fe8f602158ec16a0872ac6da4cc9b` |
+
+Post-run relevant diff checks PASS, repository file-size PASS3770 files,
+maximum external maintained source611 lines; all623 frozen inputs reauthenticated.
+Only scoped Markdown is committed. No post-run tests, Opus requests, Sifr gates,
+acceptance acquisitions, production changes, next-item code, PR or merge.
+
+## Deferred findings for owner3776; not implemented
+
+- **B24-CONT-F1 — acquisition/helper interaction:** sequence62 initially records
+  root child70233 as `(Python)`, absent in native acquisition. Its fresh round
+  contains root child70234 displayed `(ps)` and the current capture's `/bin/ps`
+  child70235.70234 is outside the original subject set and is not that capture's
+  exact probe PID, so the unchanged B38 new-descendant guard rejects. This is a
+  preserved observation, not proof of a process's historical executable or an
+  OS/security defect. Sequence63 then rejects `batch absence contradiction`;
+  cleanup's `observed_rows` raises, and sequence64 has sticky native failure.
+  A later owner must adjudicate the complete producer/monitor/acquisition and
+  release interaction with these exact receipts; no blanket helper exemption,
+  dropped subject, weakened identity or same-method live retry is authorized.
+- **B24-CONT-F2 — interval partition assumption:** actual `prepare` entry is
+  event6, constructor event16, and `prepare` return event17. The frozen analyzer
+  requires whole startup intervals to end by constructor in `accounting`, so
+  a future complete trace with this ordering would reject. The current partial
+  trace stops first on missing completion; this later defect was identified by
+  inspecting saved endpoints, not by another run. Later scoped accounting must
+  handle intervals that span the constructor with unions/intersections and
+  preserve unassigned work. No analyzer correction is made after the live failure.
+- **B24-CONT-F3 — terminal subject inventory:** the original final-release list
+  contains only accepted native subjects; rejected/unaccepted transients can
+  be omitted. The supplemental all82-subject absence record resolves actual
+  current resource retirement, while the original failed/four-PID receipts stay
+  immutable. Any future launcher inventory correction belongs to later scope.
+
+Next action: coordinator adjudication from this frozen terminal, then a new
+separately scoped owner if warranted. This owner STOPS after durable issue3776
+publication and terminal callbacks. Five unlaunched targets are not banked.
+Full B24 causation/unchanged ten-case performance/budget, B27 joint delivery,
+exact65, SQL and the original emitted-Rust phase remain OPEN.
 
 ## Authority and ownership
 
