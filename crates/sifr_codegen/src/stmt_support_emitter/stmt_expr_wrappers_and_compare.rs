@@ -365,7 +365,7 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
             };
             let collection_element_ty = collection.ty().contains_element_type();
             let union_wrapped_element = collection_element_ty.as_ref().and_then(|target_ty| {
-                let owned = $emitter.clone_owned_append_arg_expr_for_ir(
+                let owned = $emitter.materialize_reusable_value_for_ir(
                     element,
                     lowered_element.clone(),
                 );
