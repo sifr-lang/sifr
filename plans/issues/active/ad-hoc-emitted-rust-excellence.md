@@ -2,6 +2,31 @@
 
 Status: active
 
+## Item12K-B27: integrated source batch terminal (2026-09-09)
+
+Source preparation and scoped review are complete; delivery remains HELD and
+UNMERGED. Exact source `1cb9f42fbce8dc91e684b977e845a61b1dd94da1`, fresh
+base/main `4b4cc339964baeeb6641e57dc669fef700a5fa24`, branch
+`codex/item12k-b27-integration-e9E6SI`. No new PR, full gate, performance
+acquisition or merge. Complete independent
+[B27 source record](ad-hoc-emitted-rust-b27-integration-source.md).
+
+All400 input dispositions/364 changed paths/16 exact gitlinks are recorded;
+approved policy65 executable/schema/workflow bytes are preserved. Actual
+test-project runtime attachment, canonical bridge materialization/cache inputs,
+imported metadata and selected current-main reconciliation are complete.
+Current compiler264-pair NOupdate freshness and affected scoped tests PASS;
+final source Clippy/fmt/HIR/file-size/diff PASS. Original failed receipts remain
+failures; no final full-codegen/driver or full-qualification pass is claimed.
+
+ONE initial exact-SHA Opus SATISFIED, no blockers; zero remediation/provider
+errors. Raw SHA256 `5c40d0ab361dcc976303e8e6bd1e3d19afb9a6a2636df1bdc258b13f66d49982`.
+Evidence owner [issue3776](https://github.com/sifr-lang/sifr/issues/3776).
+Historical performance failures, the9-diagnostic GCQ provenance gap and every
+mandatory full-delivery edge remain OPEN. This record is independent directly
+from main and is not part of the reviewed source. Record, publish terminal and
+RETIRE; no next-item code or automatic next package.
+
 ## Item12K-B38: coherent acquisition and batch qualification (2026-09-08)
 
 **B38 MERGED / SCOPED QUALIFICATION COMPLETE; blocker none.**
