@@ -341,6 +341,41 @@ fn failed_cargo_invocation_does_not_print_success_footer() {
     assert_ne!(capture.status_code, 0);
     assert!(capture.stdout.is_empty());
     assert!(
+        capture.stderr.contains("SIFR-BUILD-0005")
+            && capture.stderr.contains("failed to run cargo build"),
+        "stderr:\n{}",
+        capture.stderr
+    );
+    assert!(!capture.stderr.contains("Finished release build"));
+    assert!(!capture.stderr.contains("Binary: "));
+}
+
+#[test]
+fn failed_rust_probe_does_not_print_success_footer() {
+    // Unlike print-only code, html.escape selects the private @rust html bridge.
+    // Its probe must fail before materialization when Cargo cannot be launched.
+    let project = TestProject::new(
+        "rust_probe_failure",
+        "from sifr.html import escape\ndef main():\n    print(escape(\"<tag>\"))\n",
+    );
+    let output_dir = project.output_dir("out");
+    let output_dir_arg = output_dir.to_string_lossy().to_string();
+    let main_arg = project.main.to_string_lossy().to_string();
+    let probe_cache = project.root.join("empty_probe_cache");
+    assert!(!probe_cache.exists());
+    let probe_cache_arg = probe_cache.to_string_lossy().to_string();
+    let capture = run_sifr_with_env(
+        &["build", &main_arg, "-o", &output_dir_arg],
+        &project.root,
+        &[
+            ("PATH", ""),
+            ("SIFR_RUST_BRIDGE_PROBE_CACHE_DIR", &probe_cache_arg),
+        ],
+    );
+
+    assert_ne!(capture.status_code, 0);
+    assert!(capture.stdout.is_empty());
+    assert!(
         capture.stderr.contains("SIFR-RUST-CARGO-0001")
             && capture.stderr.contains("failed to run Rust probe"),
         "stderr:\n{}",
