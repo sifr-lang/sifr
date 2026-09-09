@@ -8,6 +8,7 @@ mod formatting;
 #[cfg(test)]
 mod generated_rust_preview_tests;
 mod implementation;
+mod lint_diagnostics;
 pub use implementation::*;
 mod overlay_updates;
 mod python_interop;

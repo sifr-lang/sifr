@@ -384,6 +384,11 @@ New crates added as compiler and runtime needs grow:
 - Dependency-sensitive invalidation: `sifr_frontend::FrontendContext` records import/export/module signatures and reverse dependency edges so private body edits invalidate only the changed module when public/import signatures are unchanged, while public API or import graph changes invalidate reverse dependents. `internal_docs/typescript_go_architecture_transfer_module_signatures_dependency_invalidation.md` records the invalidation policy.
 - `sifr_lowering::flow_graph`: first-class data-flow nodes, edges, and effects for definitions, assignments, conditions, branches, loops, calls, mutations, moves, borrows, joins, unreachable statements, and exits. `LoweringResult` carries a snapshot-scoped `FlowGraph`, and `FlowFacts` exposes graph fingerprints and debug traces. `internal_docs/typescript_go_architecture_transfer_first_class_flow_graph.md` records graph-backed narrowing and ownership-effect behavior.
 - `sifr_frontend::cache_keys`: deterministic `CompilerFingerprint`, `CacheKeyFingerprint`, common workspace/package/query-policy context fingerprints, and typed cache-key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph cache families. `internal_docs/typescript_go_architecture_transfer_fingerprints_cache_keys.md` records cache-key identity requirements.
+- Analysis retains only the latest lint result per live file. The frontend's typed
+  lint key binds source, HIR/compiler context, semantic graph, module/path and lint
+  policy; version-only changes reuse it, edits replace it, and host/file removal
+  releases it. Misses still use the standalone lint engine's default policy,
+  independently of frontend and SQL diagnostics.
 - Snapshot reuse: `sifr_frontend` adds ref-counted, cache-key identity-keyed reuse storage for parse trees, source-map file views, lowered HIR, module diagnostics, and module symbol indexes. `WorkspaceSnapshot` stores immutable snapshot payloads behind `Arc`, and `FrontendContext::can_replace_module_in_project` gates safe one-module replacement on unchanged import/export signatures. `internal_docs/typescript_go_architecture_transfer_snapshot_reuse.md` records reuse requirements.
 - `sifr_lsp::RequestQueue`: latency-sensitive, formatting, workspace, and background requests route through explicit priority lanes with bounded fairness, while diagnostic jobs preserve captured document versions. `internal_docs/typescript_go_architecture_transfer_lsp_scheduler.md` records scheduler behavior.
 - LSP latency budgets: protocol-level LSP performance coverage is split into per-request `perf.lsp.*` budget ids, leaving `perf.lsp.request_families` as aggregate smoke only. `internal_docs/typescript_go_architecture_transfer_lsp_latency_budgets.md` records the request-family budget taxonomy and frontend query architecture relationship.
@@ -535,6 +540,11 @@ large-file check and a representative project check.
 
 This keeps CLI mode resolution as the boundary that selects the rooted entrypoint shape while preserving one internal build architecture.
 
+CLI argument schemas remain owned by their commands and are built lazily through
+Clap's deferred argument construction for every structured root command. The
+root schema, inherited globals, argument groups, parsing and help/error behavior
+remain canonical; an independent eager-schema oracle covers their equivalence.
+
 driver/package architecture decomposed `sifr_driver` into the following stable internal boundaries:
 
 - `diagnostics.rs`: compile/public result types, panic boundaries, diagnostic serialization, and stderr rendering helpers
@@ -547,6 +557,11 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
   borrows accumulated metadata and shares generic templates with emitters.
   Pending private contracts share canonical HIR, borrow loaded sources, and
   build the complete contract plan in source order before cache publication.
+  Parsed Python AST storage is released after owned lowering and before Rust
+  emission. Nested binding inference runs only when a statement descendant can
+  consume its hints or declare a function; all ordinary assignment and nested
+  signature/capture inference remains intact. Unreachable-statement checks use
+  the canonical validated CFG without constructing unused rich flow facts.
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
 - `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds

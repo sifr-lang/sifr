@@ -200,16 +200,12 @@ impl RustEmitter {
     }
 
     fn register_expression_union_types(&mut self, body: &[crate::HirStmt]) {
-        let mut types = Vec::new();
         crate::hir_analysis::traversal::walk_stmts(
             body,
             crate::hir_analysis::traversal::TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
             &mut |_| {},
-            &mut |expr| types.push(expr.ty().clone()),
+            &mut |expr| self.register_union_type(expr.ty()),
         );
-        for ty in types {
-            self.register_union_type(&ty);
-        }
     }
 
     pub(crate) fn register_union_type(&mut self, ty: &Type) {

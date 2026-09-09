@@ -42,6 +42,7 @@ impl AnalysisHost {
             session,
             file_to_module: BTreeMap::new(),
             symbol_index: None,
+            lint_cache: BTreeMap::new(),
             last_invalidation: None,
             current_revision,
             sql_editor_runtime: SqlEditorRuntime::new(profiles)

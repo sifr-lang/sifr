@@ -19,6 +19,7 @@ use super::typing_and_functions::{ast_convention_to_param, resolve_annotation_ex
 
 const MAX_INFERENCE_PASSES: usize = 8;
 
+#[derive(Default)]
 pub(in crate::lower) struct NestedFunctionInference {
     pub(in crate::lower) function_types: HashMap<String, FunctionType>,
     pub(in crate::lower) binding_hints: HashMap<String, Type>,
@@ -209,6 +210,12 @@ fn infer_function_types(
     ctx: &mut LowerCtx,
     allow_union_return_inference: bool,
 ) -> NestedFunctionInference {
+    // Only plain assignments consume binding hints; function declarations also
+    // require signature/capture inference. Inspect descendants conservatively so
+    // compound statements retain both inference and its diagnostic effects.
+    if !super::inference_demand::block_needs_inference(stmts) {
+        return NestedFunctionInference::default();
+    }
     let mut states = collect_function_states(stmts, ctx, allow_union_return_inference);
     let outer_bindings = ctx
         .scope

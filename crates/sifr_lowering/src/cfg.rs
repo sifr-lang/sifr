@@ -332,6 +332,14 @@ pub fn build_control_flow_graph(stmts: &[HirStmt]) -> Result<ControlFlowGraph, C
     builder.finish(root_entry)
 }
 
+/// Reachability-only query using the same validated CFG as full flow facts.
+/// Callers that do not consume returns or statement-flow edges need not build
+/// the separate rich statement graph or clone its return-type collection.
+pub(crate) fn block_always_exits(stmts: &[HirStmt]) -> Result<bool, CfgInvariantError> {
+    let cfg = build_control_flow_graph(stmts)?;
+    Ok(!cfg.reachable_blocks()[cfg.exit()])
+}
+
 pub fn flow_facts(stmts: &[HirStmt]) -> Result<FlowFacts, CfgInvariantError> {
     let cfg = build_control_flow_graph(stmts)?;
     let flow_graph = crate::flow_graph::build_statement_flow_graph(stmts);
@@ -399,7 +407,9 @@ mod tests {
     }
 
     fn valid_flow_facts(stmts: &[HirStmt]) -> FlowFacts {
-        flow_facts(stmts).expect("test HIR must produce valid flow facts")
+        let facts = flow_facts(stmts).expect("test HIR must produce valid flow facts");
+        assert_eq!(block_always_exits(stmts), Ok(facts.always_exits()));
+        facts
     }
 
     #[test]

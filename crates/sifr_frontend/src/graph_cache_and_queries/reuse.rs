@@ -184,6 +184,25 @@ impl FrontendContext {
         self.reuse_caches.stats()
     }
 
+    /// Typed identity for an analysis owner's lint result. Document versions do
+    /// not change source semantics; compiler, module/path, graph and policy do.
+    #[must_use]
+    pub fn lint_cache_fingerprint(
+        &self,
+        module: ModuleId,
+        lint_policy: QueryPolicyFingerprint,
+    ) -> CacheKeyFingerprint {
+        let index = self.index_for_module(module);
+        let base = crate::LintCacheKey {
+            source_hash: self.modules[index].source_hash.clone(),
+            hir_fingerprint: self.hir_key_fingerprint(index),
+            lint_policy,
+            context: self.semantic_cache_context(CacheFamily::Lint),
+        }
+        .fingerprint();
+        self.module_scoped_fingerprint("frontend-lint-entry", index, &base)
+    }
+
     #[must_use]
     pub fn parse_cache_identity(&self, module: ModuleId) -> Option<FrontendCacheEntryIdentity> {
         let index = self.index_for_module(module);

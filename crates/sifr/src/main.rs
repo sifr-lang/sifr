@@ -19,10 +19,13 @@ mod cli_model_and_entrypoint;
 pub(crate) use cli_model_and_entrypoint::main;
 mod build_output;
 mod check_and_package_commands;
+mod command_args;
 mod deferred_cli_args;
 mod diagnostic_rendering_and_run;
 #[cfg(test)]
 mod diagnostic_test_sink;
+#[cfg(test)]
+mod eager_cli_contract_tests;
 mod explain_cli;
 mod formatter_cli;
 mod formatter_discovery;

@@ -68,274 +68,45 @@ pub(crate) struct Cli {
 #[derive(Subcommand)]
 pub(crate) enum Commands {
     /// Compile a .sifr file to a native binary
-    Build {
-        /// Input .sifr file
-        file: PathBuf,
-        /// Output directory (default: current directory)
-        #[arg(short, long, default_value = ".")]
-        output: PathBuf,
-        /// Suppress build phase details
-        #[arg(long)]
-        quiet: bool,
-        /// Require Cargo.lock to be unchanged
-        #[arg(long)]
-        locked: bool,
-        /// Disable network access
-        #[arg(long)]
-        offline: bool,
-        /// Combine --locked and --offline
-        #[arg(long)]
-        frozen: bool,
-        /// Write the generated Cargo project without compiling it
-        #[arg(long, hide = true)]
-        materialize_only: bool,
-    },
+    Build(DeferredArgs<super::command_args::Build>),
     /// Compile and run a .sifr file
-    Run {
-        /// Input .sifr file, app target, or script name
-        target: Option<String>,
-        /// Select a workspace package by Cargo package name
-        #[arg(short = 'p', long = "package")]
-        packages: Vec<String>,
-        /// Select a layout-discovered app target
-        #[arg(long)]
-        bin: Option<String>,
-        /// Select a named package script
-        #[arg(long)]
-        script: Option<String>,
-        /// Require Cargo.lock to be unchanged
-        #[arg(long)]
-        locked: bool,
-        /// Disable network access
-        #[arg(long)]
-        offline: bool,
-        /// Combine --locked and --offline
-        #[arg(long)]
-        frozen: bool,
-        /// Suppress build phase details
-        #[arg(long)]
-        quiet: bool,
-        /// Arguments passed to the selected app after --
-        #[arg(last = true)]
-        args: Vec<String>,
-    },
+    Run(DeferredArgs<super::command_args::Run>),
     /// Fetch package dependencies
-    Fetch {
-        /// Require Cargo.lock to be unchanged
-        #[arg(long)]
-        locked: bool,
-        /// Disable network access
-        #[arg(long)]
-        offline: bool,
-        /// Combine --locked and --offline
-        #[arg(long)]
-        frozen: bool,
-    },
+    Fetch(DeferredArgs<super::command_args::Fetch>),
     /// Inspect the resolved Sifr sysroot and install health
-    Doctor {
-        /// Print doctor output as JSON
-        #[arg(long)]
-        json: bool,
-    },
+    Doctor(DeferredArgs<super::command_args::Doctor>),
     /// Create a new Sifr package
-    Init {
-        /// Target directory
-        #[arg(default_value = ".")]
-        path: PathBuf,
-        /// Create a library package
-        #[arg(long, conflicts_with = "bin")]
-        lib: bool,
-        /// Create an app package
-        #[arg(long)]
-        bin: bool,
-        /// Sifr package name
-        #[arg(long)]
-        name: Option<String>,
-        /// Create missing Sifr-owned files without overwriting existing files
-        #[arg(long)]
-        force: bool,
-    },
+    Init(DeferredArgs<super::command_args::Init>),
     /// Repair Sifr-managed Cargo projection drift
-    Repair {
-        /// Check projection drift without writing
-        #[arg(long)]
-        check: bool,
-    },
+    Repair(DeferredArgs<super::command_args::Repair>),
     /// Validate Rust bridge projections and interop probes for a package
-    Bridge {
-        #[command(subcommand)]
-        command: BridgeCommands,
-    },
+    Bridge(DeferredArgs<super::command_args::Bridge>),
     /// Manage declaration-first Python interop evidence
     Python(DeferredArgs<PythonArgs>),
     /// Type-check a .sifr file without compiling
-    Check {
-        /// Input .sifr file, or omit for package check
-        path: Option<PathBuf>,
-        /// Check all Sifr-capable workspace members through Cargo-compatible selection
-        #[arg(long)]
-        workspace: bool,
-        /// Select one package by Cargo package spec or unambiguous package name
-        #[arg(short = 'p', long = "package")]
-        packages: Vec<String>,
-        /// Exclude one package from workspace selection
-        #[arg(long)]
-        exclude: Vec<String>,
-        /// Cargo-compatible package message format for package checks
-        #[arg(long)]
-        message_format: Option<String>,
-        /// Require Cargo.lock to be unchanged
-        #[arg(long)]
-        locked: bool,
-        /// Disable network access
-        #[arg(long)]
-        offline: bool,
-        /// Combine --locked and --offline
-        #[arg(long)]
-        frozen: bool,
-    },
+    Check(DeferredArgs<super::command_args::Check>),
     /// Show the package dependency tree
-    Tree {
-        /// Require Cargo.lock to be unchanged
-        #[arg(long)]
-        locked: bool,
-        /// Disable network access
-        #[arg(long)]
-        offline: bool,
-        /// Combine --locked and --offline
-        #[arg(long)]
-        frozen: bool,
-        /// Cargo-compatible tree options
-        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-        args: Vec<String>,
-    },
+    Tree(DeferredArgs<super::command_args::Tree>),
     /// Assemble and verify a Cargo package archive for a Sifr package
-    Package {
-        /// Package all Sifr-capable workspace members through Cargo-compatible selection
-        #[arg(long)]
-        workspace: bool,
-        /// Select one package by Cargo package spec or unambiguous package name
-        #[arg(short = 'p', long = "package")]
-        packages: Vec<String>,
-        /// Exclude one package from workspace selection
-        #[arg(long)]
-        exclude: Vec<String>,
-        /// Print packaged files without creating an archive
-        #[arg(long)]
-        list: bool,
-        /// Skip Cargo's package verification build
-        #[arg(long)]
-        no_verify: bool,
-        /// Skip Cargo package metadata warning checks
-        #[arg(long)]
-        no_metadata: bool,
-        /// Allow dirty working tree contents
-        #[arg(long)]
-        allow_dirty: bool,
-        /// Exclude Cargo.lock from the package archive
-        #[arg(long)]
-        exclude_lockfile: bool,
-        /// Require Cargo.lock to be unchanged
-        #[arg(long)]
-        locked: bool,
-        /// Disable network access
-        #[arg(long)]
-        offline: bool,
-        /// Combine --locked and --offline
-        #[arg(long)]
-        frozen: bool,
-    },
+    Package(DeferredArgs<super::command_args::Package>),
     /// Publish a Sifr package through Cargo
-    Publish {
-        /// Validate publish without uploading
-        #[arg(long)]
-        dry_run: bool,
-        /// Publish all Sifr-capable workspace members through Cargo-compatible selection
-        #[arg(long)]
-        workspace: bool,
-        /// Select one package by Cargo package spec or unambiguous package name
-        #[arg(short = 'p', long = "package")]
-        packages: Vec<String>,
-        /// Exclude one package from workspace selection
-        #[arg(long)]
-        exclude: Vec<String>,
-        /// Skip Cargo's publish verification build
-        #[arg(long)]
-        no_verify: bool,
-        /// Allow dirty working tree contents
-        #[arg(long)]
-        allow_dirty: bool,
-        /// Require Cargo.lock to be unchanged
-        #[arg(long)]
-        locked: bool,
-        /// Disable network access
-        #[arg(long)]
-        offline: bool,
-        /// Combine --locked and --offline
-        #[arg(long)]
-        frozen: bool,
-    },
+    Publish(DeferredArgs<super::command_args::Publish>),
     /// Vendor dependency sources through Cargo
-    Vendor {
-        /// Output directory for vendored sources
-        #[arg(default_value = "vendor")]
-        path: PathBuf,
-        /// Additional manifest to sync during vendoring
-        #[arg(long)]
-        sync: Vec<PathBuf>,
-        /// Keep stale vendored sources
-        #[arg(long)]
-        no_delete: bool,
-        /// Respect existing Cargo source configuration
-        #[arg(long)]
-        respect_source_config: bool,
-        /// Use versioned vendor directory names
-        #[arg(long)]
-        versioned_dirs: bool,
-        /// Require Cargo.lock to be unchanged
-        #[arg(long)]
-        locked: bool,
-        /// Disable network access
-        #[arg(long)]
-        offline: bool,
-        /// Combine --locked and --offline
-        #[arg(long)]
-        frozen: bool,
-    },
+    Vendor(DeferredArgs<super::command_args::Vendor>),
     /// Format Sifr source files
     Fmt(DeferredArgs<FmtArgs>),
     /// Run suppressible policy diagnostics
     Lint(DeferredArgs<LintArgs>),
     /// Run the native Sifr Language Server Protocol server
-    Lsp {
-        /// Use stdio transport
-        #[arg(long)]
-        stdio: bool,
-        /// Exit the language server when the parent process is no longer alive
-        #[arg(long = "parent-pid")]
-        parent_pid: Option<u32>,
-    },
+    Lsp(DeferredArgs<super::command_args::Lsp>),
     /// Print deterministic compiler-service trace and status output
-    Trace {
-        /// Input .sifr file
-        file: PathBuf,
-    },
+    Trace(DeferredArgs<super::command_args::Trace>),
     /// Show the generated Rust source code
-    Emit {
-        /// Input .sifr file
-        file: PathBuf,
-    },
+    Emit(DeferredArgs<super::command_args::Emit>),
     /// Run tests in a directory
-    Test {
-        /// Directory containing test files (default: current directory)
-        #[arg(default_value = ".")]
-        dir: PathBuf,
-    },
+    Test(DeferredArgs<super::command_args::Test>),
     /// Manage package-provided host tools
-    Tools {
-        #[command(subcommand)]
-        command: ToolsCommands,
-    },
+    Tools(DeferredArgs<super::command_args::Tools>),
     /// Manage a standalone Sifr installation
     #[command(name = "self")]
     SelfCommand(DeferredArgs<SelfArgs>),
@@ -443,7 +214,7 @@ fn run_cli(cli: Cli) -> i32 {
     let config = cli.config;
     let isolated = cli.isolated;
     match command {
-        Commands::Build {
+        Commands::Build(crate::deferred_cli_args::DeferredArgs(crate::command_args::Build {
             file,
             output,
             quiet,
@@ -451,7 +222,7 @@ fn run_cli(cli: Cli) -> i32 {
             offline,
             frozen,
             materialize_only,
-        } => cmd_build(
+        })) => cmd_build(
             &file,
             &output,
             lock_mode_from_flags(locked, offline, frozen),
@@ -459,7 +230,7 @@ fn run_cli(cli: Cli) -> i32 {
             diagnostic_format,
             materialize_only,
         ),
-        Commands::Run {
+        Commands::Run(crate::deferred_cli_args::DeferredArgs(crate::command_args::Run {
             target,
             packages,
             bin,
@@ -469,7 +240,7 @@ fn run_cli(cli: Cli) -> i32 {
             frozen,
             quiet,
             args,
-        } => {
+        })) => {
             let options = RunCommandOptions {
                 target: target.as_deref(),
                 bin: bin.as_deref(),
@@ -482,24 +253,30 @@ fn run_cli(cli: Cli) -> i32 {
             };
             cmd_run_with_options(&options)
         }
-        Commands::Fetch {
+        Commands::Fetch(crate::deferred_cli_args::DeferredArgs(crate::command_args::Fetch {
             locked,
             offline,
             frozen,
-        } => cmd_fetch(
+        })) => cmd_fetch(
             lock_mode_from_flags(locked, offline, frozen),
             diagnostic_format,
         ),
-        Commands::Doctor { json } => cmd_doctor(json, diagnostic_format),
-        Commands::Init {
+        Commands::Doctor(crate::deferred_cli_args::DeferredArgs(crate::command_args::Doctor {
+            json,
+        })) => cmd_doctor(json, diagnostic_format),
+        Commands::Init(crate::deferred_cli_args::DeferredArgs(crate::command_args::Init {
             path,
             lib,
             bin,
             name,
             force,
-        } => cmd_init(&path, lib, bin, name.as_deref(), force, diagnostic_format),
-        Commands::Repair { check } => cmd_repair(check, diagnostic_format),
-        Commands::Bridge { command } => match command {
+        })) => cmd_init(&path, lib, bin, name.as_deref(), force, diagnostic_format),
+        Commands::Repair(crate::deferred_cli_args::DeferredArgs(crate::command_args::Repair {
+            check,
+        })) => cmd_repair(check, diagnostic_format),
+        Commands::Bridge(crate::deferred_cli_args::DeferredArgs(crate::command_args::Bridge {
+            command,
+        })) => match command {
             BridgeCommands::Check {
                 workspace,
                 packages,
@@ -523,7 +300,7 @@ fn run_cli(cli: Cli) -> i32 {
             }
         },
         Commands::Python(args) => cmd_python(args.0, diagnostic_format),
-        Commands::Check {
+        Commands::Check(crate::deferred_cli_args::DeferredArgs(crate::command_args::Check {
             path,
             workspace,
             packages,
@@ -532,7 +309,7 @@ fn run_cli(cli: Cli) -> i32 {
             locked,
             offline,
             frozen,
-        } => {
+        })) => {
             let selection = sifr_package::CargoPackageSelection {
                 workspace,
                 packages,
@@ -546,29 +323,31 @@ fn run_cli(cli: Cli) -> i32 {
                 diagnostic_format,
             )
         }
-        Commands::Tree {
+        Commands::Tree(crate::deferred_cli_args::DeferredArgs(crate::command_args::Tree {
             locked,
             offline,
             frozen,
             args,
-        } => cmd_tree(
+        })) => cmd_tree(
             lock_mode_from_flags(locked, offline, frozen),
             &args,
             diagnostic_format,
         ),
-        Commands::Package {
-            workspace,
-            packages,
-            exclude,
-            list,
-            no_verify,
-            no_metadata,
-            allow_dirty,
-            exclude_lockfile,
-            locked,
-            offline,
-            frozen,
-        } => {
+        Commands::Package(crate::deferred_cli_args::DeferredArgs(
+            crate::command_args::Package {
+                workspace,
+                packages,
+                exclude,
+                list,
+                no_verify,
+                no_metadata,
+                allow_dirty,
+                exclude_lockfile,
+                locked,
+                offline,
+                frozen,
+            },
+        )) => {
             let selection = sifr_package::CargoPackageSelection {
                 workspace,
                 packages,
@@ -588,17 +367,19 @@ fn run_cli(cli: Cli) -> i32 {
                 diagnostic_format,
             )
         }
-        Commands::Publish {
-            dry_run,
-            workspace,
-            packages,
-            exclude,
-            no_verify,
-            allow_dirty,
-            locked,
-            offline,
-            frozen,
-        } => {
+        Commands::Publish(crate::deferred_cli_args::DeferredArgs(
+            crate::command_args::Publish {
+                dry_run,
+                workspace,
+                packages,
+                exclude,
+                no_verify,
+                allow_dirty,
+                locked,
+                offline,
+                frozen,
+            },
+        )) => {
             let selection = sifr_package::CargoPackageSelection {
                 workspace,
                 packages,
@@ -616,7 +397,7 @@ fn run_cli(cli: Cli) -> i32 {
                 diagnostic_format,
             )
         }
-        Commands::Vendor {
+        Commands::Vendor(crate::deferred_cli_args::DeferredArgs(crate::command_args::Vendor {
             path,
             sync,
             no_delete,
@@ -625,7 +406,7 @@ fn run_cli(cli: Cli) -> i32 {
             locked,
             offline,
             frozen,
-        } => {
+        })) => {
             let options = sifr_package::CargoVendorOptions {
                 sync,
                 no_delete,
@@ -641,11 +422,22 @@ fn run_cli(cli: Cli) -> i32 {
         }
         Commands::Fmt(args) => cmd_fmt(&args.0, &config, isolated, diagnostic_format),
         Commands::Lint(args) => cmd_lint(&args.0, &config, isolated, diagnostic_format),
-        Commands::Lsp { stdio, parent_pid } => cmd_lsp(stdio, parent_pid),
-        Commands::Trace { file } => cmd_trace(&file, diagnostic_format),
-        Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
-        Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
-        Commands::Tools { command } => match command {
+        Commands::Lsp(crate::deferred_cli_args::DeferredArgs(crate::command_args::Lsp {
+            stdio,
+            parent_pid,
+        })) => cmd_lsp(stdio, parent_pid),
+        Commands::Trace(crate::deferred_cli_args::DeferredArgs(crate::command_args::Trace {
+            file,
+        })) => cmd_trace(&file, diagnostic_format),
+        Commands::Emit(crate::deferred_cli_args::DeferredArgs(crate::command_args::Emit {
+            file,
+        })) => cmd_emit(&file, diagnostic_format),
+        Commands::Test(crate::deferred_cli_args::DeferredArgs(crate::command_args::Test {
+            dir,
+        })) => cmd_test(&dir, diagnostic_format),
+        Commands::Tools(crate::deferred_cli_args::DeferredArgs(crate::command_args::Tools {
+            command,
+        })) => match command {
             ToolsCommands::Lock { check } => cmd_host_tools_lock(check, diagnostic_format),
         },
         Commands::SelfCommand(args) => cmd_self(&args.0, diagnostic_format),

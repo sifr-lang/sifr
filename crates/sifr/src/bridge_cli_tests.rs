@@ -16,16 +16,18 @@ fn bridge_check_cli_parses_workspace_selection_and_lock_flags() {
     ])
     .expect("bridge check cli parses");
 
-    let Some(Commands::Bridge {
-        command:
-            BridgeCommands::Check {
-                workspace,
-                packages,
-                exclude,
-                frozen,
-                ..
-            },
-    }) = cli.command
+    let Some(Commands::Bridge(crate::deferred_cli_args::DeferredArgs(
+        crate::command_args::Bridge {
+            command:
+                BridgeCommands::Check {
+                    workspace,
+                    packages,
+                    exclude,
+                    frozen,
+                    ..
+                },
+        },
+    ))) = cli.command
     else {
         panic!("expected bridge check command");
     };

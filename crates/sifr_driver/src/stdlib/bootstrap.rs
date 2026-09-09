@@ -115,6 +115,10 @@ fn compile_stdlib_sources_with_sysroot(
                 return Err(diagnostics);
             }
         };
+        // Lowering has produced owned HIR and diagnostics. The parser's AST,
+        // tokens and auxiliary indexes have no consumers during Rust emission;
+        // release them before allocating the renderer and syntax-validation IR.
+        drop(parsed);
         let private_declaration = stdlib_source.kind == LoadedStdlibSourceKind::PrivateDeclaration;
         let local_classes = result
             .module

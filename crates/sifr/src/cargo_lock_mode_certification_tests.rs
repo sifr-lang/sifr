@@ -87,13 +87,13 @@ fn build_lock_flags_parse_and_normalize_without_collapsing_frozen() {
         let mut args = vec!["sifr", "build", "main.sifr"];
         args.extend(flags);
         let cli = Cli::try_parse_from(args).expect("build lock flags should parse");
-        let Commands::Build {
+        let Commands::Build(crate::deferred_cli_args::DeferredArgs(crate::command_args::Build {
             locked,
             offline,
             frozen,
             materialize_only,
             ..
-        } = cli.command.expect("build command should be present")
+        })) = cli.command.expect("build command should be present")
         else {
             panic!("expected parsed build command");
         };
@@ -106,9 +106,10 @@ fn build_lock_flags_parse_and_normalize_without_collapsing_frozen() {
 
     let cli = Cli::try_parse_from(["sifr", "build", "main.sifr", "--materialize-only"])
         .expect("the internal source-only build mode should parse");
-    let Commands::Build {
-        materialize_only, ..
-    } = cli.command.expect("build command should be present")
+    let Commands::Build(crate::deferred_cli_args::DeferredArgs(crate::command_args::Build {
+        materialize_only,
+        ..
+    })) = cli.command.expect("build command should be present")
     else {
         panic!("expected parsed build command");
     };
