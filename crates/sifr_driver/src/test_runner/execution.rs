@@ -40,7 +40,7 @@ pub(crate) fn execute_test_runner_project(
         &cargo_plan.cargo_toml,
         &test_lib,
         &cargo_plan.dependency_plan,
-    );
+    )?;
     let mut required_files = vec![
         PathBuf::from("Cargo.toml"),
         PathBuf::from("src/lib.rs"),
@@ -195,7 +195,7 @@ fn test_runner_cache_key(
     cargo_toml: &str,
     test_lib: &str,
     dependency_plan: &SysrootDependencyPlan,
-) -> String {
+) -> Result<String, Vec<RenderedDiagnostic>> {
     let mut support_modules: Vec<(&str, &str)> = generated_project
         .support_rust_files
         .iter()
@@ -207,15 +207,20 @@ fn test_runner_cache_key(
         .map(|(name, code)| format!("{name}\n{code}"))
         .collect::<Vec<_>>()
         .join("\n===\n");
-    let bridge_files = serde_json::to_string(&generated_project.bridge_rust_files)
-        .expect("canonical UTF-8 bridge paths and source strings serialize");
-    format!(
+    let bridge_files =
+        serde_json::to_string(&generated_project.bridge_rust_files).map_err(|error| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                format!("failed to serialize test bridge cache inputs: {error}"),
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            )]
+        })?;
+    Ok(format!(
         "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[bridge-files]\n{bridge_files}\n[sysroot-dependency-inputs]\n{}[sysroot-dependency-plan]\n{}\n[interop]\n{}",
         generated_project.cache_scope.display(),
         dependency_plan.dependency_input_fingerprint(),
         dependency_plan.cache_fingerprint,
         generated_project.interop.cache_key_fragment()
-    )
+    ))
 }
 
 #[cfg(test)]
@@ -263,7 +268,8 @@ mod tests {
             "[package]\nname = \"sifr_tests\"\n",
             "#[test]\nfn test_case() {}\n",
             &dependency_plan,
-        );
+        )
+        .expect("valid cache inputs");
 
         assert!(cache_key.contains(
             "[sysroot-dependency-inputs]\n[stdlib]\nsifr.json\n[features]\nserde_json\n"
@@ -276,6 +282,7 @@ mod tests {
                 "#[test]\nfn test_case() {}\n",
                 &dependency_plan,
             )
+            .expect("valid cache inputs")
         };
         let path = PathBuf::from("sifr_generated_bridge/contract.rs");
         generated_project
@@ -283,6 +290,9 @@ mod tests {
             .insert(path.clone(), "pub struct First;".into());
         let with_bridge = identity(&generated_project);
         assert_ne!(with_bridge, cache_key);
+        assert!(with_bridge.contains(
+            "[bridge-files]\n{\"sifr_generated_bridge/contract.rs\":\"pub struct First;\"}\n"
+        ));
         generated_project
             .bridge_rust_files
             .insert(path.clone(), "pub struct Second;".into());
@@ -296,5 +306,34 @@ mod tests {
             .bridge_rust_files
             .insert(PathBuf::from("sifr_generated_bridge/renamed.rs"), content);
         assert_ne!(identity(&generated_project), changed_content);
+
+        #[cfg(unix)]
+        {
+            use std::ffi::OsString;
+            use std::os::unix::ffi::OsStringExt;
+
+            generated_project.bridge_rust_files.clear();
+            generated_project.bridge_rust_files.insert(
+                PathBuf::from(OsString::from_vec(vec![0xff])),
+                "pub struct InvalidPath;".to_string(),
+            );
+            let errors = test_runner_cache_key(
+                &generated_project,
+                "[package]\nname = \"sifr_tests\"\n",
+                "#[test]\nfn test_case() {}\n",
+                &dependency_plan,
+            )
+            .expect_err("non-UTF8 paths must fail before cache operations");
+            assert_eq!(errors.len(), 1);
+            assert_eq!(
+                errors[0].code,
+                sifr_diagnostics::DiagnosticCode::BUILD_MATERIALIZATION_FAILURE.code()
+            );
+            assert!(
+                errors[0]
+                    .message
+                    .contains("failed to serialize test bridge cache inputs")
+            );
+        }
     }
 }
