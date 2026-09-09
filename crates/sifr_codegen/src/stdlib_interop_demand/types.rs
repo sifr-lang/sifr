@@ -38,7 +38,7 @@ impl Demand<'_> {
                 }
             }
             Type::Enum { identity, name, .. } => {
-                self.local_symbol(module_name, module, identity.as_deref().unwrap_or(name))
+                self.local_symbol(module_name, module, identity.as_deref().unwrap_or(name));
             }
             Type::Newtype {
                 identity,
@@ -49,7 +49,7 @@ impl Demand<'_> {
                 self.ty(module_name, module, inner);
             }
             Type::Function(signature) | Type::AsyncFunction(signature) => {
-                self.signature(module_name, module, signature)
+                self.signature(module_name, module, signature);
             }
             Type::Callable(params, _, result) | Type::AsyncCallable(params, _, result) => {
                 for ty in params {

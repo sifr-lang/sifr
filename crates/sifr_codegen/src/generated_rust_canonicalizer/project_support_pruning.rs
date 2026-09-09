@@ -214,7 +214,7 @@ pub(crate) fn import_generated_support_in_project_nominals(
             && let Some((_, items)) = &mut module.content
         {
             let mut file = syn::parse_file("").map_err(|error| error.to_string())?;
-            file.items = items.clone();
+            file.items.clone_from(items);
             let import = crate::generated_visibility::generated_support_import(
                 &prettyplease::unparse(&file),
                 support_source,

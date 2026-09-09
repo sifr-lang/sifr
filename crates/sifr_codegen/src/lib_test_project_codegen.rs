@@ -276,19 +276,19 @@ pub fn generate_rust_test_project_with_metadata(
             "mod __sifr_generated_support {{\n{}}}\n",
             visible_support.trim_end()
         );
-        project_union_prelude = if !test_import.is_empty() {
+        project_union_prelude = if test_import.is_empty() {
+            [support_module.trim(), project_union_prelude.trim()]
+                .into_iter()
+                .filter(|source| !source.is_empty())
+                .collect::<Vec<_>>()
+                .join("\n\n")
+        } else {
             format!(
                 "{}\n\n{}\n\n{}",
                 support_module.trim_end(),
                 test_import,
                 project_union_prelude.trim()
             )
-        } else {
-            [support_module.trim(), project_union_prelude.trim()]
-                .into_iter()
-                .filter(|source| !source.is_empty())
-                .collect::<Vec<_>>()
-                .join("\n\n")
         };
     }
 

@@ -265,6 +265,7 @@ impl<'ast> Visit<'ast> for ImportReferences<'_> {
     }
 
     fn visit_block(&mut self, block: &'ast syn::Block) {
+        let depth = self.bindings.len();
         let items = Bindings::items(block.stmts.iter().filter_map(|stmt| {
             if let syn::Stmt::Item(item) = stmt {
                 Some(item)
@@ -279,14 +280,10 @@ impl<'ast> Visit<'ast> for ImportReferences<'_> {
             if let syn::Stmt::Local(local) = statement {
                 let mut scope = Bindings::default();
                 scope.pattern(&local.pat);
-                self.bindings
-                    .last_mut()
-                    .expect("block scope")
-                    .values
-                    .extend(scope.values);
+                self.bindings.push(scope);
             }
         }
-        self.bindings.pop();
+        self.bindings.truncate(depth);
         self.item_bindings.pop();
     }
 

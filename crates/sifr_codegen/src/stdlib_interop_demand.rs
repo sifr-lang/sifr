@@ -282,15 +282,15 @@ impl Demand<'_> {
     }
 
     fn function(&mut self, name: &str, module: &HirModule, function: &HirFunction) {
-        sifr_ir::visit_hir_function(function, &mut |node| self.node(name, module, node));
+        sifr_ir::visit_hir_function(function, &mut |node| self.node(name, module, &node));
     }
 
-    fn node(&mut self, name: &str, module: &HirModule, node: sifr_ir::HirNode<'_>) {
+    fn node(&mut self, name: &str, module: &HirModule, node: &sifr_ir::HirNode<'_>) {
         match node {
             sifr_ir::HirNode::Type(ty) => self.ty(name, module, ty),
             sifr_ir::HirNode::Expr(expr) => self.expr_node(name, module, expr),
             sifr_ir::HirNode::Function(function) => {
-                self.lifecycle(name, module, &function.rust_interop)
+                self.lifecycle(name, module, &function.rust_interop);
             }
         }
     }
@@ -342,7 +342,7 @@ impl Demand<'_> {
     }
 
     fn expression(&mut self, name: &str, module: &HirModule, expr: &HirExpr) {
-        sifr_ir::visit_hir_expr(expr, &mut |node| self.node(name, module, node));
+        sifr_ir::visit_hir_expr(expr, &mut |node| self.node(name, module, &node));
     }
 
     fn expr_node(&mut self, name: &str, module: &HirModule, expr: &HirExpr) {

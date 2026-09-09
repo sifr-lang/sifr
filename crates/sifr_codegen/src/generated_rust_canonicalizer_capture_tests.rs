@@ -150,6 +150,40 @@ fn implicit_format_capture_respects_lexical_binding_boundaries() {
 }
 
 #[test]
+fn implicit_format_capture_support_imports_preserve_block_binding_lifetimes() {
+    let cases = [
+        (r#"fn main() { let value = format!("{value}"); }"#, true),
+        (
+            r#"fn main() { let first = 1; let value = first; let last = value; println!("{value} {last}"); }"#,
+            false,
+        ),
+        (
+            r#"fn main() { let value = 1; { let first = value; let value = first; println!("{value}"); } println!("{value}"); }"#,
+            false,
+        ),
+        (
+            r#"fn main() { { let first = 1; let value = first; println!("{value}"); } { println!("{value}"); } }"#,
+            true,
+        ),
+        (
+            r#"fn main() { let first = 1; let value = first; fn nested() { println!("{value}"); } }"#,
+            true,
+        ),
+        (
+            r#"fn main() { let first = 1; let value = first; let capture = || format!("{value}"); }"#,
+            false,
+        ),
+    ];
+    let definitions = HashSet::from(["value".to_string()]);
+    for (source, demanded) in cases {
+        let imports =
+            crate::stdlib_filter::rust_source_unqualified_item_names(source, &definitions)
+                .expect("valid support import consumer");
+        assert_eq!(imports.contains("value"), demanded, "{source}");
+    }
+}
+
+#[test]
 fn implicit_format_capture_nested_macros_and_glob_imports_remain_live() {
     let output = canonical(
         r#"

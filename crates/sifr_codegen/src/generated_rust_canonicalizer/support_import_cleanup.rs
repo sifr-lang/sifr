@@ -1,4 +1,5 @@
 //! Resolve compiler-owned imports after all reference-removing canonicalization.
+use quote::ToTokens;
 use std::collections::BTreeMap;
 
 pub(super) fn refresh_support_imports(
@@ -74,7 +75,7 @@ fn refresh_scope(items: &mut Vec<syn::Item>, owner: &str, support: &str) -> Resu
     let original = items[index].clone();
     items.retain(|item| !support_import(item, owner));
     let mut consumer = syn::parse_file("").map_err(|error| error.to_string())?;
-    consumer.items = items.clone();
+    consumer.items.clone_from(items);
     let import = crate::generated_visibility::generated_support_import(
         &prettyplease::unparse(&consumer),
         support,
@@ -84,7 +85,6 @@ fn refresh_scope(items: &mut Vec<syn::Item>, owner: &str, support: &str) -> Resu
         return Ok(true);
     }
     let replacement: syn::Item = syn::parse_str(&import).map_err(|error| error.to_string())?;
-    use quote::ToTokens;
     changed |= original.to_token_stream().to_string() != replacement.to_token_stream().to_string();
     items.insert(index.min(items.len()), replacement);
     Ok(changed)
