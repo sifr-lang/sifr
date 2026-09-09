@@ -431,6 +431,14 @@ The single formatter core is shared by:
 - `sifr_lsp` `textDocument/formatting` and `textDocument/rangeFormatting`
 - checked-in editor integrations through `sifr lsp --stdio`
 
+CLI discovery retains ordered gitignore rules at the working-directory boundary.
+A conservative ASCII syntax proof avoids parsing rules that cannot contain a
+glob syntax error; other rules are validated eagerly with original line errors.
+Mandatory literals only exclude impossible matches. Every possible match still
+uses the pinned gitignore engine, including negation, parent precedence, aliases
+and source provenance; neither parse failures nor matching decisions are cached
+across invocations.
+
 Formatter validation is part of local validation. `verification/areas/developer_tooling/check_formatter_ast_coverage.py`
 fails when a Sifr parser or AST extension lacks both Ruff fork formatter fixture
 coverage and Sifr wrapper corpus coverage. Formatter performance budgets cover a

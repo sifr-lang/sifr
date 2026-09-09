@@ -13,9 +13,14 @@ pub(super) struct FormatterGitignore {
 }
 
 struct Rule {
-    validated: GitignoreBuilder,
+    source: RuleSource,
     compiled: OnceCell<Result<Gitignore, ignore::Error>>,
     mandatory_literals: Option<Vec<String>>,
+}
+
+enum RuleSource {
+    Validated(GitignoreBuilder),
+    Infallible(String),
 }
 
 impl FormatterGitignore {
@@ -34,28 +39,34 @@ impl FormatterGitignore {
                 ))]
             })?;
             for (index, line) in source.as_str().lines().enumerate() {
-                let mut builder = GitignoreBuilder::new(&root);
                 let line = if index == 0 {
                     line.trim_start_matches('\u{feff}')
                 } else {
                     line
                 };
-                builder
-                    .add_line(Some(path.clone()), line)
-                    .map_err(|error| {
-                        vec![formatter_cli_diagnostic(format!(
-                            "invalid formatter gitignore {}:{}: {error}",
-                            path.display(),
-                            index + 1
-                        ))]
-                    })?;
-                if !line.is_empty() && !line.starts_with('#') {
-                    rules.push(Rule {
-                        validated: builder,
-                        compiled: OnceCell::new(),
-                        mandatory_literals: mandatory_literals(line),
-                    });
+                if line.is_empty() || line.starts_with('#') {
+                    continue;
                 }
+                let rule_source = if infallible_rule_syntax(line) {
+                    RuleSource::Infallible(line.to_string())
+                } else {
+                    let mut builder = GitignoreBuilder::new(&root);
+                    builder
+                        .add_line(Some(path.clone()), line)
+                        .map_err(|error| {
+                            vec![formatter_cli_diagnostic(format!(
+                                "invalid formatter gitignore {}:{}: {error}",
+                                path.display(),
+                                index + 1
+                            ))]
+                        })?;
+                    RuleSource::Validated(builder)
+                };
+                rules.push(Rule {
+                    source: rule_source,
+                    compiled: OnceCell::new(),
+                    mandatory_literals: mandatory_literals(line),
+                });
             }
         }
         Ok(Self { root, rules })
@@ -101,7 +112,14 @@ impl FormatterGitignore {
             if could_match(rule, relative) {
                 relevant.push(
                     rule.compiled
-                        .get_or_init(|| rule.validated.build())
+                        .get_or_init(|| match &rule.source {
+                            RuleSource::Validated(builder) => builder.build(),
+                            RuleSource::Infallible(line) => {
+                                let mut builder = GitignoreBuilder::new(&self.root);
+                                builder.add_line(Some(self.root.join(".gitignore")), line)?;
+                                builder.build()
+                            }
+                        })
                         .as_ref()
                         .map_err(ignore_error)?,
                 );
@@ -129,13 +147,27 @@ impl FormatterGitignore {
     }
 }
 
+// The pinned glob engine's syntax errors require an escape, character class,
+// or alternation. This deliberately small ASCII alphabet contains none of
+// those constructs. Stars (including repeated stars), separators, question
+// marks and a leading whitelist marker are infallible in GitignoreBuilder.
+// This proves validity, not matching: every possible match still uses the
+// original engine, with the same root, original rule and source provenance.
+fn infallible_rule_syntax(rule: &str) -> bool {
+    !rule.is_empty()
+        && rule.bytes().all(|byte| {
+            byte.is_ascii_alphanumeric()
+                || matches!(byte, b'.' | b'_' | b'-' | b'/' | b'*' | b'?' | b'!')
+        })
+}
+
 fn ignore_error(error: &ignore::Error) -> Vec<RenderedDiagnostic> {
     vec![formatter_cli_diagnostic(format!(
         "could not compile formatter gitignore: {error}"
     ))]
 }
 
-// Compute only a necessary condition, after GitignoreBuilder validated the rule.
+// Compute only a necessary condition, after rule validity has been established.
 // Mirror its whitespace/directory normalization and globset's quoted literals;
 // compound syntax and every possible match remain owned by the original engine.
 fn mandatory_literals(rule: &str) -> Option<Vec<String>> {
@@ -195,6 +227,10 @@ fn normalize_path(path: &Path) -> PathBuf {
 #[cfg(test)]
 #[path = "formatter_discovery_escape_tests.rs"]
 mod escape_tests;
+
+#[cfg(test)]
+#[path = "formatter_discovery_syntax_tests.rs"]
+mod syntax_tests;
 
 #[cfg(test)]
 mod tests {
