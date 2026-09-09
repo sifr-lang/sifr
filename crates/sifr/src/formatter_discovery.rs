@@ -103,7 +103,7 @@ impl FormatterGitignore {
                     rule.compiled
                         .get_or_init(|| rule.validated.build())
                         .as_ref()
-                        .map_err(|error| ignore_error(error.clone()))?,
+                        .map_err(ignore_error)?,
                 );
             }
         }
@@ -129,7 +129,7 @@ impl FormatterGitignore {
     }
 }
 
-fn ignore_error(error: ignore::Error) -> Vec<RenderedDiagnostic> {
+fn ignore_error(error: &ignore::Error) -> Vec<RenderedDiagnostic> {
     vec![formatter_cli_diagnostic(format!(
         "could not compile formatter gitignore: {error}"
     ))]
