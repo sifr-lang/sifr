@@ -122,7 +122,11 @@ fn direct_syntax_dependencies_use_the_latest_stable_unit() {
         codegen_syn.get("workspace").and_then(toml::Value::as_bool),
         Some(true)
     );
-    assert_eq!(string_array(codegen_syn, "features"), ["visit-mut"]);
+    // Canonicalization prints Syn nodes through ToTokens and mutates the AST.
+    assert_eq!(
+        string_array(codegen_syn, "features"),
+        ["printing", "visit-mut"]
+    );
     assert_eq!(
         dependencies
             .get("prettyplease")
