@@ -22,7 +22,7 @@ pub(in crate::lower) struct NumericSentinelFact {
     domain: Option<NumericSentinelDomain>,
 }
 
-impl LowerCtx {
+impl LowerCtx<'_> {
     pub(in crate::lower) fn clear_numeric_sentinel_var(&mut self, name: &str) {
         self.numeric_sentinel_vars.remove(name);
     }

@@ -731,7 +731,7 @@ mod prescan_tests {
     use super::{LowerCtx, collect_rust_opaque_close_methods};
     use sifr_python_parser::parse_module;
 
-    fn prescan(source: &str) -> LowerCtx {
+    fn prescan(source: &str) -> LowerCtx<'static> {
         let parsed = parse_module(source).expect("source must parse");
         let mut ctx = LowerCtx::new();
         collect_rust_opaque_close_methods(parsed.suite(), &mut ctx);

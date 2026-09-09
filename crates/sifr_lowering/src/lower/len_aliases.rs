@@ -7,7 +7,7 @@ pub(in crate::lower) struct LenAliasFact {
     sequence: String,
 }
 
-impl LowerCtx {
+impl LowerCtx<'_> {
     pub(in crate::lower) fn clear_len_alias(&mut self, alias_var: &str) {
         self.len_aliases
             .retain(|fact| fact.alias_var.as_str() != alias_var);

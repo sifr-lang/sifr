@@ -17,8 +17,13 @@ use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_ir::{BindingId, CompilerIntrinsicId, FlowEffect, LoweringResult, PythonCleanupPolicy};
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, Type};
+use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use workload_annotations::WorkloadKind;
+
+#[cfg(test)]
+#[path = "external_defs_context_tests.rs"]
+mod external_defs_context_tests;
 
 #[derive(Clone)]
 pub(in crate::lower) struct LocalFunctionMetadata {
@@ -57,7 +62,7 @@ impl ModuleConstIntegerFacts {
 }
 
 /// The lowering context that tracks state during AST->HIR conversion.
-pub(in crate::lower) struct LowerCtx {
+pub(in crate::lower) struct LowerCtx<'defs> {
     /// Function signatures (name -> type)
     pub(in crate::lower) functions: HashMap<String, FunctionType>,
     /// Nested-function metadata keyed by the lexical function binding.
@@ -245,7 +250,7 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) generic_method_dependencies:
         HashMap<String, HashMap<String, HashSet<String>>>,
     pub(in crate::lower) current_module_name: Option<String>,
-    pub(in crate::lower) externals: ExternalDefs,
+    pub(in crate::lower) externals: Cow<'defs, ExternalDefs>,
     /// Local function aliases imported from compiled `_sifr.*` declarations,
     /// mapped back to the emitted private declaration name.
     pub(in crate::lower) private_import_function_sources: HashMap<String, String>,
@@ -285,7 +290,14 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) flow_effects: Vec<FlowEffect>,
 }
 
-impl LowerCtx {
+impl<'defs> LowerCtx<'defs> {
+    /// External declarations remain owned by the caller throughout lowering.
+    /// Context consumers may copy selected declarations, never the entire input.
+    pub(in crate::lower) fn with_external_defs(mut self, externals: &'defs ExternalDefs) -> Self {
+        self.externals = Cow::Borrowed(externals);
+        self
+    }
+
     pub(in crate::lower) fn new() -> Self {
         Self {
             functions: HashMap::new(),
@@ -388,7 +400,7 @@ impl LowerCtx {
             generic_method_requirements: HashMap::new(),
             generic_method_dependencies: HashMap::new(),
             current_module_name: None,
-            externals: ExternalDefs::default(),
+            externals: Cow::Owned(ExternalDefs::default()),
             private_import_function_sources: HashMap::new(),
             explicit_defaultdict_bindings: HashSet::new(),
             parallel_map_bindings: HashSet::new(),

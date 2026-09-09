@@ -1,6 +1,6 @@
 use super::LowerCtx;
 
-impl LowerCtx {
+impl LowerCtx<'_> {
     pub(in crate::lower) fn with_pushed_scope<T>(
         &mut self,
         f: impl FnOnce(&mut Self) -> Option<T>,

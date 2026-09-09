@@ -1,6 +1,6 @@
 use super::{ExternalDefs, LowerCtx};
 
-impl LowerCtx {
+impl LowerCtx<'_> {
     pub(in crate::lower) fn with_current_module(mut self, module_name: &str) -> Self {
         self.current_module_name = Some(module_name.to_string());
         self

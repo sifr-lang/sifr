@@ -12,7 +12,7 @@ pub(in crate::lower) enum SequencePointerFact {
     },
 }
 
-impl LowerCtx {
+impl LowerCtx<'_> {
     pub(in crate::lower) fn clear_sequence_pointer(&mut self, pointer_var: &str) {
         self.sequence_pointers
             .retain(|fact| fact.pointer_var() != pointer_var);

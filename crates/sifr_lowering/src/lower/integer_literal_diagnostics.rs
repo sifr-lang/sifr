@@ -13,11 +13,11 @@ pub(in crate::lower) fn validate_module_integer_literals(stmts: &[Stmt], ctx: &m
     visitor::walk_body(&mut visitor, stmts);
 }
 
-struct IntegerLiteralBudgetVisitor<'ctx> {
-    ctx: &'ctx mut LowerCtx,
+struct IntegerLiteralBudgetVisitor<'ctx, 'defs> {
+    ctx: &'ctx mut LowerCtx<'defs>,
 }
 
-impl<'a> Visitor<'a> for IntegerLiteralBudgetVisitor<'_> {
+impl<'a> Visitor<'a> for IntegerLiteralBudgetVisitor<'_, '_> {
     fn visit_expr(&mut self, expr: &'a Expr) {
         if let Expr::NumberLiteral(number_literal) = expr {
             if let Number::Int(value) = &number_literal.value {

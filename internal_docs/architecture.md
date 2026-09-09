@@ -538,7 +538,9 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
 - `stdlib/`: embedded stdlib sources, intrinsic mapping, cache lifecycle, and bootstrap compilation
 - Stdlib bootstrap publishes one immutable `Arc<StdlibCompiled>` through its
   success/error cache. CLI frontend/build plans and test assembly retain that
-  owner; mutable lowering clones only external definitions. Bootstrap emission
+  owner; mutable frontend contexts clone only external definitions. Each module's
+  lowering context borrows that complete immutable definition input for the call,
+  copying only selected declarations into its local state. Bootstrap emission
   borrows accumulated metadata and shares generic templates with emitters.
   Pending private contracts share canonical HIR, borrow loaded sources, and
   build the complete contract plan in source order before cache publication.

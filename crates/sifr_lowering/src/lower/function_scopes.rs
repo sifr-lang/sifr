@@ -7,7 +7,7 @@ pub(in crate::lower) struct FunctionScopeState {
     pub(in crate::lower) declared_nonlocals: HashSet<String>,
 }
 
-impl LowerCtx {
+impl LowerCtx<'_> {
     pub(in crate::lower) fn enter_function_scope(&mut self, declared_nonlocals: HashSet<String>) {
         self.scope.push();
         self.function_scopes.push(FunctionScopeState {

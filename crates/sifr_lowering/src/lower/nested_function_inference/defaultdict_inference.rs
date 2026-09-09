@@ -21,14 +21,14 @@ pub(super) fn defaultdict_shape_expr_is_lowering_exact(
     !visitor.found
 }
 
-struct LoweringExactExprVisitor<'env, 'source> {
+struct LoweringExactExprVisitor<'env, 'source, 'defs> {
     inexact_bindings: &'env std::collections::HashSet<String>,
     states: &'env HashMap<String, LocalFunctionState<'source>>,
-    ctx: &'env LowerCtx,
+    ctx: &'env LowerCtx<'defs>,
     found: bool,
 }
 
-impl<'ast> Visitor<'ast> for LoweringExactExprVisitor<'_, '_> {
+impl<'ast> Visitor<'ast> for LoweringExactExprVisitor<'_, '_, '_> {
     fn visit_expr(&mut self, expr: &'ast Expr) {
         if self.found {
             return;

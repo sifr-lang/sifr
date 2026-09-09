@@ -135,17 +135,42 @@ fn ignore_error(error: &ignore::Error) -> Vec<RenderedDiagnostic> {
     ))]
 }
 
-// Compute this necessary condition once, rather than rescanning every rule
-// for each selected source. Escaped or compound syntax stays with the engine.
+// Compute only a necessary condition, after GitignoreBuilder validated the rule.
+// Mirror its whitespace/directory normalization and globset's quoted literals;
+// compound syntax and every possible match remain owned by the original engine.
 fn mandatory_literal(rule: &str) -> Option<String> {
-    if rule.contains(['\\', '[', ']', '{', '}']) {
-        return None;
-    }
-    let rule = rule.trim_end();
+    let rule = if rule.ends_with("\\ ") {
+        rule
+    } else {
+        rule.trim_end()
+    };
     let rule = rule.strip_prefix('!').unwrap_or(rule);
-    rule.split(['*', '?', '/'])
-        .max_by_key(|literal| literal.len())
-        .map(str::to_string)
+    let rule = rule.strip_suffix('/').map_or(rule, |directory| {
+        directory.strip_suffix('\\').unwrap_or(directory)
+    });
+    let mut chars = rule.chars();
+    let mut literal = String::new();
+    let mut longest = String::new();
+    while let Some(character) = chars.next() {
+        let character = match character {
+            '\\' => chars.next()?,
+            '[' | ']' | '{' | '}' => return None,
+            '*' | '?' | '/' => {
+                if literal.len() > longest.len() {
+                    longest = std::mem::take(&mut literal);
+                } else {
+                    literal.clear();
+                }
+                continue;
+            }
+            character => character,
+        };
+        literal.push(character);
+    }
+    if literal.len() > longest.len() {
+        longest = literal;
+    }
+    (!longest.is_empty()).then_some(longest)
 }
 
 fn could_match(rule: &Rule, path: &Path) -> bool {
@@ -168,6 +193,10 @@ fn normalize_path(path: &Path) -> PathBuf {
     }
     normalized
 }
+
+#[cfg(test)]
+#[path = "formatter_discovery_escape_tests.rs"]
+mod escape_tests;
 
 #[cfg(test)]
 mod tests {
