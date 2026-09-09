@@ -15,7 +15,7 @@ pub(super) struct FormatterGitignore {
 struct Rule {
     validated: GitignoreBuilder,
     compiled: OnceCell<Result<Gitignore, ignore::Error>>,
-    mandatory_literal: Option<String>,
+    mandatory_literals: Option<Vec<String>>,
 }
 
 impl FormatterGitignore {
@@ -53,7 +53,7 @@ impl FormatterGitignore {
                     rules.push(Rule {
                         validated: builder,
                         compiled: OnceCell::new(),
-                        mandatory_literal: mandatory_literal(line),
+                        mandatory_literals: mandatory_literals(line),
                     });
                 }
             }
@@ -138,7 +138,7 @@ fn ignore_error(error: &ignore::Error) -> Vec<RenderedDiagnostic> {
 // Compute only a necessary condition, after GitignoreBuilder validated the rule.
 // Mirror its whitespace/directory normalization and globset's quoted literals;
 // compound syntax and every possible match remain owned by the original engine.
-fn mandatory_literal(rule: &str) -> Option<String> {
+fn mandatory_literals(rule: &str) -> Option<Vec<String>> {
     let rule = if rule.ends_with("\\ ") {
         rule
     } else {
@@ -150,16 +150,14 @@ fn mandatory_literal(rule: &str) -> Option<String> {
     });
     let mut chars = rule.chars();
     let mut literal = String::new();
-    let mut longest = String::new();
+    let mut literals = Vec::new();
     while let Some(character) = chars.next() {
         let character = match character {
             '\\' => chars.next()?,
             '[' | ']' | '{' | '}' => return None,
             '*' | '?' | '/' => {
-                if literal.len() > longest.len() {
-                    longest = std::mem::take(&mut literal);
-                } else {
-                    literal.clear();
+                if !literal.is_empty() {
+                    literals.push(std::mem::take(&mut literal));
                 }
                 continue;
             }
@@ -167,15 +165,15 @@ fn mandatory_literal(rule: &str) -> Option<String> {
         };
         literal.push(character);
     }
-    if literal.len() > longest.len() {
-        longest = literal;
+    if !literal.is_empty() {
+        literals.push(literal);
     }
-    (!longest.is_empty()).then_some(longest)
+    (!literals.is_empty()).then_some(literals)
 }
 
 fn could_match(rule: &Rule, path: &Path) -> bool {
-    match (&rule.mandatory_literal, path.to_str()) {
-        (Some(literal), Some(path)) => path.contains(literal),
+    match (&rule.mandatory_literals, path.to_str()) {
+        (Some(literals), Some(path)) => literals.iter().all(|literal| path.contains(literal)),
         _ => true,
     }
 }

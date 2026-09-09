@@ -23,8 +23,10 @@ pub(super) fn deferred_codegen_result(
     structural_layout_location: ProjectStructuralLayoutLocation,
     has_project_structural_layout: bool,
 ) -> super::ModuleCodegenResult {
-    let mut body_items = emitter.enum_items.clone();
-    body_items.extend(emitter.body_items.clone());
+    // The emitter is consumed here; transfer its complete ordered IR instead
+    // of retaining a second copy until the result has been rendered.
+    let mut body_items = std::mem::take(&mut emitter.enum_items);
+    body_items.append(&mut emitter.body_items);
     if support_demand.runtime.async_python || support_demand.runtime.native_async_cleanup {
         scope_async_main_cancellation(&mut body_items);
     }

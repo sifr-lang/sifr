@@ -20,7 +20,7 @@ fn formatter_discovery_escaped_literals_remain_uncompiled_when_impossible() {
         (r"\{literal\}.sifr", "{literal}.sifr"),
     ];
     for (rule, literal) in rules {
-        assert_eq!(mandatory_literal(rule).as_deref(), Some(literal));
+        assert_eq!(mandatory_literals(rule), Some(vec![literal.to_string()]));
         let matcher = load(dir.path(), rule);
         for path in ["main.sifr", "src/second.sifr"] {
             assert!(!matcher.matches_resolved_path(Path::new(path)).unwrap());
@@ -50,6 +50,8 @@ fn formatter_discovery_escape_oracle_matches_engine() {
         r"/literal\/",
         r"literal\/**",
         r"literal\ space/*.sifr",
+        "verification/areas/rust_interop/**/Cargo.lock",
+        "a?b*c/**/leaf.sifr",
         r"*/\!notice.sifr",
         r"literal/**/\?.sifr",
         "*.sifr\n!\\!notice.sifr",
@@ -83,6 +85,10 @@ fn formatter_discovery_escape_oracle_matches_engine() {
         "[unclosed",
         "sub/[unclosed",
         "literal.sifr",
+        "verification/areas/performance/main.sifr",
+        "verification/areas/rust_interop/fixtures/Cargo.lock",
+        "axbZZc/nested/leaf.sifr",
+        "axbZZc/nested/other.sifr",
     ];
     for source in rules {
         let matcher = load(&root, source);
@@ -107,6 +113,29 @@ fn formatter_discovery_escape_oracle_matches_engine() {
             );
         }
     }
+}
+
+#[test]
+fn formatter_discovery_requires_every_literal_before_compiling() {
+    let dir = tempfile::tempdir().unwrap();
+    let source = "!verification/areas/rust_interop/fixtures/*/Cargo.lock\n";
+    let matcher = load(dir.path(), source);
+    // The old longest-literal certificate selected `verification`, which is
+    // present in both paths. Absence of any other required literal suffices.
+    assert!(
+        !matcher
+            .matches_resolved_path(Path::new("verification/areas/performance/main.sifr"))
+            .unwrap()
+    );
+    assert!(matcher.rules[0].compiled.get().is_none());
+    assert!(
+        !matcher
+            .matches_resolved_path(Path::new(
+                "verification/areas/rust_interop/fixtures/example/Cargo.lock"
+            ))
+            .unwrap()
+    );
+    assert!(matcher.rules[0].compiled.get().is_some());
 }
 
 #[test]

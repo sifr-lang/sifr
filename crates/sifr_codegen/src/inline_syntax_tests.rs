@@ -1,5 +1,56 @@
 use super::StdlibSyntaxSession;
 
+#[test]
+fn consumed_item_boundaries_match_syn_spans_without_printing_in_production() {
+    use syn::parse::{ParseStream, Parser};
+    use syn::spanned::Spanned;
+
+    let source = "/* prefix */ use std::fmt;\n\
+        /// 🦀 documentation\n\
+        #[derive(Clone)] struct Café<T> { value: T }\n\
+        impl<T> Café<T> { fn value(self) -> T { self.value } }\n\
+        struct Tuple(u8); struct Unit; enum E { A, B(u8) }\n\
+        const TEXT: &str = r#\"é🦀\"#;\n\
+        macro_rules! m { () => { struct Hidden; } }\n\
+        m!(); fn last() { let _x = [1, 2, 3]; }";
+    let parser = |input: ParseStream<'_>| {
+        let mut count = 0;
+        while !input.is_empty() {
+            let begin = input.cursor();
+            let item: syn::Item = input.parse()?;
+            let expected = item.span().byte_range();
+            assert_eq!(begin.span().byte_range().start, expected.start);
+            assert_eq!(
+                super::consumed_item_end(begin, input.cursor()),
+                expected.end
+            );
+            count += 1;
+        }
+        assert_eq!(count, 10);
+        Ok(())
+    };
+    parser.parse_str(source).expect("full syntax grammar");
+}
+
+#[test]
+fn support_boundaries_include_attributes_unicode_and_closed_item_forms() {
+    for support in [
+        "/// 🦀 documentation\n#[derive(Clone)] struct Café { value: i32 }",
+        "#[repr(transparent)] struct Tuple(u8);",
+        "struct Unit;",
+        "#[derive(Clone)] enum Choice { A, B(u8) }",
+        "#[allow(dead_code)] fn identity(value: i32) -> i32 { value }",
+        "struct Unit; impl Unit { fn make() -> Self { Self } }",
+    ] {
+        let session = StdlibSyntaxSession::default();
+        for body in ["fn one() {}", "fn two() {}", "fn broken( {}"] {
+            assert_oracle(&session, "use std::fmt;", support, body);
+        }
+        assert!(session.validated_support.borrow().contains(support));
+        assert_eq!(session.reused.get(), 1, "{support}");
+    }
+}
+
 fn assembly(imports: &str, support: &str, body: &str) -> (String, std::ops::Range<usize>) {
     let mut source = String::new();
     if !imports.is_empty() {

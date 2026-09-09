@@ -463,6 +463,9 @@ large-file check and a representative project check.
   at proven item/token boundaries, while the full assembly is tokenized and all
   remaining file syntax is parsed. Failures are never cached, source bytes and
   module order are unchanged, and the session is dropped with bootstrap.
+  Item boundaries come from the original parse-buffer cursors, not from printing
+  parsed ASTs back into tokens. The consumed emitter transfers its ordered IR
+  into deferred rendering without retaining duplicate enum/body item trees.
 - Generated-code simplification is structural at both boundaries. Typed
   `RustItem`/`RustStmt`/`RustExpr` optimization runs before rendering. After
   project metadata, inline stdlib, and bridge fragments have been assembled,
@@ -1370,6 +1373,9 @@ supports them. This is a language rule, not an implementation detail.
   Generic calls in the prepass bind type variables from their arguments before
   substituting the return type; unresolved template variables are never
   accepted as a concrete inferred return.
+  Modules with no unannotated top-level return skip only this unused seeding
+  pass; ordinary signature checking, body lowering, and nested-function
+  inference remain authoritative and unchanged.
 - **Formatting-consumer constraint:** `print`, `str`, f-string interpolation,
   and `repr` validate the exact generated Rust `Display`/`Debug` strategy before
   accepting HIR. `repr` always requires `Debug`; the other surfaces select the

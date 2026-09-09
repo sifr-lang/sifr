@@ -1,6 +1,15 @@
 use super::{LowerCtx, Stmt, Type, nested_function_inference};
 
 pub(super) fn infer_unannotated_returns(stmts: &[Stmt], ctx: &mut LowerCtx) {
+    // Only unannotated top-level returns consume this pass's output. Parameter
+    // and nested-function inference still run with normal body lowering. Avoid
+    // analyzing the entire module when there is no signature to seed.
+    if !stmts
+        .iter()
+        .any(|stmt| matches!(stmt, Stmt::FunctionDef(function) if function.returns.is_none()))
+    {
+        return;
+    }
     // This pass only seeds mutually visible signatures. Normal body lowering remains the
     // diagnostic authority and has the precise reachability information needed to ignore dead
     // return expressions.
@@ -31,3 +40,7 @@ pub(super) fn infer_unannotated_returns(stmts: &[Stmt], ctx: &mut LowerCtx) {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "module_function_inference_tests.rs"]
+mod tests;
