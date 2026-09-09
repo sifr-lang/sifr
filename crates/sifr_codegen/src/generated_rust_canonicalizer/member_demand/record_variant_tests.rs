@@ -124,6 +124,10 @@ fn record_variant_demand_preserves_macro_initializer_effects() {
         "#,
     );
     assert!(canonical.contains("effect: i64"), "{canonical}");
-    assert!(canonical.contains("effect: next()"), "{canonical}");
+    let tokens = canonical
+        .parse::<proc_macro2::TokenStream>()
+        .expect("canonical tokens")
+        .to_string();
+    assert!(tokens.contains("effect : next ()"), "{canonical}");
     assert!(!canonical.contains("unused"), "{canonical}");
 }
