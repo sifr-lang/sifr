@@ -66,6 +66,12 @@ struct FieldInitializerEffectCollector<'candidates> {
 }
 
 impl Visit<'_> for FieldInitializerEffectCollector<'_> {
+    fn visit_macro(&mut self, rust_macro: &syn::Macro) {
+        if let Some(arguments) = super::MacroArguments::parse(rust_macro) {
+            arguments.visit(self);
+        }
+    }
+
     fn visit_item_impl(&mut self, implementation: &syn::ItemImpl) {
         let previous = self
             .impl_owner

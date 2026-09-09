@@ -4,6 +4,7 @@ use syn::visit_mut::{self, VisitMut};
 
 mod external_demand;
 mod generic_cleanup;
+mod macro_arguments;
 mod private_field_effects;
 mod wildcards;
 
@@ -13,6 +14,7 @@ mod record_variant_tests;
 use generic_cleanup::{
     prune_item_members, prune_unconstrained_impl_generics, prune_unused_aggregate_type_parameters,
 };
+use macro_arguments::MacroArguments;
 use private_field_effects::{retain_effectful_initializers, type_has_trivial_drop};
 use wildcards::rewrite_exhaustive_enum_wildcards;
 
@@ -324,12 +326,8 @@ impl<'ast> Visit<'ast> for MemberDemandCollector<'_> {
     fn visit_pat(&mut self, _pattern: &'ast syn::Pat) {}
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        if let Ok(arguments) = rust_macro.parse_body_with(
-            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-        ) {
-            for argument in &arguments {
-                self.visit_expr(argument);
-            }
+        if let Some(arguments) = MacroArguments::parse(rust_macro) {
+            arguments.visit(self);
         } else {
             self.collect_macro_token_paths(rust_macro.tokens.clone());
         }
@@ -555,6 +553,9 @@ impl<'ast> Visit<'ast> for FieldDemandCollector {
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        if let Some(arguments) = MacroArguments::parse(rust_macro) {
+            arguments.visit(self);
+        }
         self.collect_macro_tokens(rust_macro.tokens.clone());
     }
 }
@@ -565,6 +566,13 @@ struct PrivateFieldPruner<'removed> {
 }
 
 impl VisitMut for PrivateFieldPruner<'_> {
+    fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
+        if let Some(mut arguments) = MacroArguments::parse(rust_macro) {
+            arguments.visit_mut(self);
+            rust_macro.tokens = arguments.tokens();
+        }
+    }
+
     fn visit_item_mod_mut(&mut self, _module: &mut syn::ItemMod) {
         // Nested scopes compute and apply their own owner-qualified pruning.
     }

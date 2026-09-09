@@ -80,28 +80,50 @@ fn record_variant_demand_preserves_cross_scope_constructors_and_aliases() {
     let canonical = canonical_and_compile(
         r#"
         mod support {
-            pub enum Part { Direct { value: i64 }, Aliased { value: i64 }, Dead }
+            #[derive(Clone)]
+            pub enum Part {
+                Direct { value: i64 }, Aliased { value: i64 }, Repeated { value: i64 }, Dead
+            }
         }
         use support::Part as ImportedPart;
         fn main() {
             let direct = support::Part::Direct { value: 1 };
             let aliased = vec![ImportedPart::Aliased { value: 2 }];
-            std::hint::black_box((direct, aliased));
+            let repeated = vec![ImportedPart::Repeated { value: 3 }; 2];
+            std::hint::black_box((direct, aliased, repeated));
         }
         "#,
     );
     assert!(canonical.contains("Direct {"), "{canonical}");
     assert!(canonical.contains("Aliased {"), "{canonical}");
+    assert!(canonical.contains("Repeated {"), "{canonical}");
     assert!(!canonical.contains("Dead"), "{canonical}");
 }
 
 #[test]
 fn record_variant_demand_compiles_nested_template_runtime() {
-    let source = "def retain(value: Template) -> int:\n    return 1\n\ndef main():\n    precision: int = 2\n    result: int = retain(t\"score={3.5:.{precision}f}\")\n    assert result == 1\n";
+    let source = "def retain(value: Template) -> bool:\n    return True\n\ndef main():\n    precision: str = \"2\"\n    result: bool = retain(t\"score={3.5:.{precision}f}\")\n    assert result\n";
     let parsed = sifr_python_parser::parse_module(source).expect("template source parses");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("template source lowers");
     let canonical = canonical_and_compile(&crate::generate_rust(&lowered.module));
     assert!(canonical.contains("SifrGeneratedTemplateFormatSpecPart"));
     assert!(canonical.contains("Literal {"), "{canonical}");
     assert!(canonical.contains("Interpolation {"), "{canonical}");
+}
+
+#[test]
+fn record_variant_demand_preserves_macro_initializer_effects() {
+    let canonical = canonical_and_compile(
+        r#"
+        struct Carrier { effect: i64, unused: i64 }
+        fn next() -> i64 { std::hint::black_box(7) }
+        fn main() {
+            let values = vec![Carrier { effect: next(), unused: 0 }];
+            std::hint::black_box(values);
+        }
+        "#,
+    );
+    assert!(canonical.contains("effect: i64"), "{canonical}");
+    assert!(canonical.contains("effect: next()"), "{canonical}");
+    assert!(!canonical.contains("unused"), "{canonical}");
 }

@@ -271,12 +271,8 @@ impl<'ast> Visit<'ast> for ExternalVariantDemandCollector<'_> {
     fn visit_pat(&mut self, _pattern: &'ast syn::Pat) {}
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        if let Ok(arguments) = rust_macro.parse_body_with(
-            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-        ) {
-            for argument in &arguments {
-                self.visit_expr(argument);
-            }
+        if let Some(arguments) = super::MacroArguments::parse(rust_macro) {
+            arguments.visit(self);
         }
     }
 }
