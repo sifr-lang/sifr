@@ -1823,6 +1823,16 @@ cargo bench                                   # Run benchmarks (layer 6, generic
 
 Validation profile policy is defined in `verification/profiles/{create-pr,merge,nightly,release,python-interop-live}.json` and executed by `verification/runner/sifr_verify/profile_runner.py` through `uv run --project verification python -m sifr_verify profiles run --profile <profile>`. `scripts/run_all_tests.sh` is only the stable public facade over that runner. Verification areas are owned by schema-version-2 `verification/areas/*/manifest.json` files and executed through `uv run --project verification python -m sifr_verify areas run`. Stable-surface manifests declare owner, resource classes, pinned-corpus policy, skip policy, and baseline metadata policy. Representative `create-pr` and full-corpus `merge` e2e coverage are selected through profile data rather than hard-coded shell assumptions. The `python-interop-live` profile selects only the live Python interop area and explicitly opts into `container-runtime` and live-network policy for testcontainers-backed Python interop evidence. Offline profiles must not select those live suites. Its live examples build native Sifr binaries for Redis, Postgres, Kafka-compatible Redpanda, and LocalStack Pub/Sub-style SNS fanout, SNS-to-SQS delivery, and direct SQS delivery. Testcontainers owns container lifecycle and endpoint discovery only; the compiled binary's hermetic declaration bridge owns every service-client operation, and broker/cloud deliveries cross a foreign-thread typed Sifr callback. Docker absence is recorded as a structured service-execution skip only after every native binary builds. When a mostly offline area has a live subset, the area can keep top-level `network_mode: offline` while the live suite declares suite-level `network_mode: live` and its resource classes. Declarative validation-suite coverage lives in area-owned validation suite manifests under `verification/areas/{core_language,project_workspace}/data/validation_suites/`; profiles select the individual suite names, and the area adapter invokes the Rust-native `tests/validation_suites.rs` harness with that exact suite filter. Fixed bug locks and unresolved crash sentinels live under `verification/areas/regression/`.
 
+The profile's online Cargo prelude prepares the workspace lock, the registered
+workspace-excluded package fixtures consumed by its selected crate-test mode,
+and the complete generated Cargo graphs before enabling offline execution.
+Fixture selection follows the owning crate's profile membership; language-level
+negative fixtures that require successful Cargo metadata retain their complete
+locked graph, while intentionally unresolvable manifest negatives are not cache
+inputs. Fixture fetches preserve both manifest and lock bytes and fail closed
+before later preparation or offline tests if their declared inputs cannot be
+prepared.
+
 Stable incident recovery is a pure extension of the governed release-index
 state machine. Canonical request and approved plan digests authorize exactly
 one rollback or incident roll-forward generation; all prior releases and

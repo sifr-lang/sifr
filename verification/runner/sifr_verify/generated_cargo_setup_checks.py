@@ -15,6 +15,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from .cargo_setup import enable_offline_cargo, prepare_cargo_cache
+from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
+from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
 from .generated_cargo_setup import (
     GIT_SOURCE, fetch_generated_graph, portable_graph, preparation_entries, quality_module,
 )
@@ -49,8 +51,10 @@ class SetupPolicyTests(unittest.TestCase):
             prepare_cargo_cache(load_profile("merge"), env,
                                 lambda args, **kw: commands.append((args, kw["env"])))
         self.assertEqual(commands[0][0], ["cargo", "fetch", "--locked"])
-        self.assertIn("sifr_verify.generated_cargo_setup", commands[1][0])
-        self.assertEqual(commands[1][0][-1], REVISION)
+        self.assertEqual(commands[1][0], ["cargo", "fetch", "--locked", "--manifest-path",
+                                         str(locked_fixture_manifests(load_profile("merge"))[0])])
+        self.assertIn("sifr_verify.generated_cargo_setup", commands[2][0])
+        self.assertEqual(commands[2][0][-1], REVISION)
         for _, setup_env in commands:
             self.assertNotIn("CARGO_NET_OFFLINE", setup_env)
             self.assertEqual(setup_env["CARGO_HOME"], "/owned/cache")
@@ -65,6 +69,17 @@ class SetupPolicyTests(unittest.TestCase):
         with self.assertRaises(CommandFailed):
             prepare_cargo_cache(load_profile("merge"), {}, fail)
         self.assertEqual(len(calls), 1)
+
+    def test_fixture_failure_prevents_generated_setup(self):
+        calls = []
+        def fail_fixture(args, **kwargs):
+            calls.append(args)
+            if "--manifest-path" in args:
+                raise CommandFailed(101)
+        with self.assertRaises(CommandFailed):
+            prepare_cargo_cache(load_profile("merge"), {}, fail_fixture)
+        self.assertEqual(len(calls), 2)
+        self.assertNotIn("sifr_verify.generated_cargo_setup", calls[-1])
 
     def test_setup_failure_prevents_offline_switch_and_execution(self):
         with patch.dict(os.environ, {}, clear=True):
@@ -134,7 +149,9 @@ class SetupPolicyTests(unittest.TestCase):
 
 
 def policy_checks() -> None:
-    result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(SetupPolicyTests))
+    suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
+                               for case in (SetupPolicyTests, FixtureSetupPolicyTests))
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
     if not result.wasSuccessful():
         raise AssertionError("generated Cargo setup policy checks failed")
 
@@ -147,10 +164,21 @@ def clean_cache_checks() -> None:
     cargo_home.mkdir()
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True).strip()
     with patch.dict(os.environ, {"CARGO_HOME": str(cargo_home), "CARGO_NET_OFFLINE": "true"}):
-        # No manual fetch/cache population: the production prelude owns both graphs.
+        # No manual population: the production prelude owns every selected graph.
         runner = ProfileRunner("merge", [])
         runner.prepare_cargo_cache()
         enable_offline_cargo(runner.env)
+        fixture_graphs = []
+        for manifest in locked_fixture_manifests(runner.profile):
+            before = fixture_graph_hashes(manifest)
+            subprocess.run(
+                ["cargo", "metadata", "--format-version", "1", "--locked", "--offline",
+                 "--manifest-path", str(manifest)],
+                cwd=REPO_ROOT, env=runner.env, text=True, capture_output=True, check=True,
+            )
+            if fixture_graph_hashes(manifest) != before:
+                raise AssertionError("offline fixture resolution mutated its graph")
+            fixture_graphs.append({"manifest": str(manifest.relative_to(REPO_ROOT)), **before})
         report_path = REPO_ROOT / "target/verification/areas/generated-cargo-setup-merge.json"
         report = json.loads(report_path.read_text())
         if report["revision"] != revision:
@@ -223,6 +251,7 @@ def clean_cache_checks() -> None:
     evidence = {"revision": revision, "status": "pass", "prepared_graphs": len(expected),
                 "offline_graphs": len(expected), "entry_modes": ["corpus", "clippy", "demos"],
                 "runtime_and_stdlib": True, "negative_checks": ["empty-cache", "lock-drift"],
+                "fixture_graphs": fixture_graphs,
                 "cargo_home": str(cargo_home), "setup_report": str(report_path),
                 "setup_report_sha256": hashlib.sha256(report_path.read_bytes()).hexdigest()}
     destination = REPO_ROOT / "target/verification/areas/generated-cargo-clean-cache.json"

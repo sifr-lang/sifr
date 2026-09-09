@@ -9,6 +9,7 @@ import sys
 from typing import Any, Callable
 
 from .paths import REPO_ROOT
+from .cargo_fixture_setup import prepare_locked_fixture_caches
 
 CANONICAL_SETUP_COMMAND = "cargo fetch --locked"
 
@@ -34,12 +35,13 @@ def prepare_cargo_cache(
     env: dict[str, str],
     command_runner: Callable[..., None],
 ) -> None:
-    """Populate workspace and generated lock graphs before offline execution."""
+    """Populate workspace, selected fixture and generated graphs before offline execution."""
     command = cargo_setup_command(profile)
     setup_env = env.copy()
     setup_env.pop("CARGO_NET_OFFLINE", None)
     print(f"[sifr-profile-setup] command={' '.join(command)}")
     command_runner(command, env=setup_env)
+    prepare_locked_fixture_caches(profile, setup_env, command_runner)
     if any(area["area"] == "generated_code_quality" for area in profile.get("selected_areas", [])):
         revision = subprocess.check_output(
             ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=REPO_ROOT, text=True
