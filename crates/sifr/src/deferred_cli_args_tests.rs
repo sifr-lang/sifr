@@ -15,6 +15,13 @@ fn root(name: &'static str, operation: Command) -> Command {
                 .global(true)
                 .action(ArgAction::Append),
         )
+        .arg(
+            Arg::new("isolated")
+                .long("isolated")
+                .global(true)
+                .action(ArgAction::SetTrue),
+        )
+        .arg(Arg::new("sysroot").long("sysroot").global(true).hide(true))
         .subcommand(operation.name(name))
 }
 

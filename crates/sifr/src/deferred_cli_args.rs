@@ -10,12 +10,29 @@ impl<T: Args> Args for DeferredArgs<T> {
     }
 
     fn augment_args(command: Command) -> Command {
-        command.defer(T::augment_args)
+        command.defer(|command| augment_before_inherited_globals(command, T::augment_args))
     }
 
     fn augment_args_for_update(command: Command) -> Command {
-        command.defer(T::augment_args_for_update)
+        command
+            .defer(|command| augment_before_inherited_globals(command, T::augment_args_for_update))
     }
+}
+
+fn augment_before_inherited_globals(command: Command, augment: fn(Command) -> Command) -> Command {
+    // Clap propagates parent globals before invoking a deferred child builder.
+    // Eager Args are built before that propagation. Keep their declaration order
+    // for help, diagnostics, default-value indices and match introspection.
+    let inherited = command
+        .get_arguments()
+        .filter(|arg| arg.is_global_set())
+        .map(|arg| arg.get_id().clone())
+        .collect::<Vec<_>>();
+    let mut command = augment(command);
+    for id in inherited {
+        command = command.mut_arg(id, std::convert::identity);
+    }
+    command
 }
 
 impl<T: FromArgMatches> FromArgMatches for DeferredArgs<T> {
