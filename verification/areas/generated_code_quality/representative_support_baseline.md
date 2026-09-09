@@ -42,7 +42,9 @@ using only the original authenticated evidence, never a failed candidate's outpu
 5. Move each diagnostic coordinate only through matching source text. A diagnostic
    covering an entire helper declaration follows its first remaining token when
    the unnecessary `pub(crate)` prefix is removed. Record every coordinate and
-   this distinction. The codegen-output surface must remain source-identical.
+   this distinction. The original codegen-output signature reuse required
+   source identity; the authenticated B27 reconstruction below supplies its
+   coordinates when demand selection removes the unused bridge declaration.
 6. Derive the new exact signatures with the unchanged quality-policy functions.
    Counts must equal the authenticated original counts for all twenty retained
    codes. New Clippy execution must subsequently match these predictions exactly.
@@ -80,3 +82,31 @@ are in the JSON receipt. The derivation script is preserved outside Git at
 Its `--derive` mode emits an auditable patch; it does not run Clippy or change
 the existing quality checks. The original policy still rejects unknown owners,
 new debt, changed counts/signatures and stale fixed-debt records.
+
+## B27 demand-selection relocation
+
+The approved demand selector removes an unused bridge declaration from five
+of the fourteen materialized Rust files. The original demo-001 raw diagnostic
+log remains unavailable. Its nine primary coordinates were reconstructed from
+the authenticated old source, SHA256
+`8eb60fb6c9a6806cd699c831bd98e402ce58ed9733b12421c6c25c7455d69b0e`,
+before new Clippy execution. Candidate source coordinates and diagnostic messages
+were accepted only when their per-surface signatures, combined with the other
+eleven surfaces, reproduced the committed aggregate hashes exactly. Each recorded
+search domain produced one matching reconstruction. All 522 diagnostics across
+nineteen codes match the prior aggregate; counts alone were not the oracle.
+
+The reconstruction receipt is
+`/private/tmp/sifr-group1-delivery.6WVn5Z/demo-signature-reconstruction.json`,
+SHA256 `a31049a59af1b6e741f7045b5af7fb5f4cd1cafcc49ef14e0bb2f32673eef8c7`.
+Its script, candidate domains, hypotheses and matches are retained outside Git.
+These are reconstructed primary coordinates, not recovered raw diagnostics.
+
+`/private/tmp/sifr-group1-delivery.6WVn5Z/derive_current_baseline.py` authenticates
+the fourteen before/after sources from the preserved materialization proof,
+then relocates 59 coordinates only through identical source lines. The JSON
+retains the prior aggregate and changed intermediate coordinates. All nineteen
+owners and counts, other selections, original baseline identity and resolved
+private-interface records remain unchanged. Current canonical materialization
+must match these predicted source hashes before Clippy qualification. The
+derivation is not a GCQ pass or completion of the later zero-debt audit.

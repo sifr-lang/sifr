@@ -92,7 +92,7 @@
   "derived_summary": {
     "clippy::arithmetic_side_effects": {
       "count": 69,
-      "signature_sha256": "6a04d87db121f356df744d4adcfe49473536b5861265beedda93c6021b7f9de0"
+      "signature_sha256": "7265576167ad578f1f973652a93b8a8d2058aba82118f3016c7e45abf1645d83"
     },
     "clippy::assigning_clones": {
       "count": 2,
@@ -104,11 +104,11 @@
     },
     "clippy::iter_overeager_cloned": {
       "count": 1,
-      "signature_sha256": "300eaeb5a8f3f9827f83a9aa0ad951a50b73873b916c6294c4cccda1c03def9b"
+      "signature_sha256": "aaa54dd9261cbecf48fab74ddc840bb845c83867a8efb386304cf7f4ab63b887"
     },
     "clippy::needless_borrow": {
       "count": 23,
-      "signature_sha256": "d831ee1c510f0cf6d7bf1201558a29399465c8d7b7f44e7b7da4307748b6903f"
+      "signature_sha256": "ae9c67ed2aa789e112ec9ef9ed777e79368527d79c2fea1a52949efd13e82df0"
     },
     "clippy::needless_collect": {
       "count": 7,
@@ -116,15 +116,15 @@
     },
     "clippy::needless_pass_by_value": {
       "count": 67,
-      "signature_sha256": "a652776dcf43d66ff0f7e9a0539f52a8c061676b435eb14ecefb7eace62276a1"
+      "signature_sha256": "1c1fa90c1745ed25d0b72efe8b0a5f31455fa5bcda9d86751b87ec95a102f0dc"
     },
     "clippy::op_ref": {
       "count": 58,
-      "signature_sha256": "ab8d4e9da9b64f04fe70a6c374c16752c5881859f6a6420aebf8f08176baf858"
+      "signature_sha256": "e3f6e804876867758a514cc1ba4d74c5c134ef621ac9dfa9488845fc714ee878"
     },
     "clippy::redundant_clone": {
       "count": 200,
-      "signature_sha256": "3b6013a103932139d74a6501cd10d4913376844c8730b335db1ec201b3805dcd"
+      "signature_sha256": "5d454a948a122fce4a24c03fc2c21fd0232a71a91af308bc394d598f239c4385"
     },
     "clippy::ref_option": {
       "count": 4,
@@ -140,7 +140,7 @@
     },
     "clippy::unnecessary_cast": {
       "count": 9,
-      "signature_sha256": "a99be97a1aff3f5344fbadd131d2341f40ec4d18dacf1d2b7a29ab46647f3102"
+      "signature_sha256": "a9e8b73f005581f4dcea6d1d1a5bcfcfad478dcbdeb51bc0b37f9e5bf2e888a4"
     },
     "clippy::unnecessary_to_owned": {
       "count": 24,
@@ -148,19 +148,19 @@
     },
     "clippy::unused_async": {
       "count": 2,
-      "signature_sha256": "ed66174ef3783b875d79be39deb4c59b93283ec04471a0b410603bb0d3a715e8"
+      "signature_sha256": "07812afb43d9ebf7f4ecd672cc7889b364ebf067ad45c0be5620eace2f7b9ca8"
     },
     "clippy::unused_async_trait_impl": {
       "count": 1,
-      "signature_sha256": "0414d02b63973b2fc35a853bb8e9cb43ab2154b3cb0573e24aab632d7e69c89e"
+      "signature_sha256": "b27c4f9bf05c4dcca0d9ab322c5b192910e409d2a37fce8cf1dd8819a25e66b7"
     },
     "clippy::unused_self": {
       "count": 1,
-      "signature_sha256": "c684a74cf162de3fb551a142b122c2960d79784c93b1c4e475fdc862973488b0"
+      "signature_sha256": "4a90f1f676476927f2ccb626b07c13167b0df0ded7b584987c3eb8a1b83a94b2"
     },
     "clippy::use_self": {
       "count": 28,
-      "signature_sha256": "5301701f2f5fd39f177f7410b5f247cd9dc0fe58405fafceef9de680a27591e6"
+      "signature_sha256": "481c2667b7df3cda58c1b6ef9fbf112bf29e3907d48d3dadb230c407bc2d95a9"
     },
     "clippy::useless_vec": {
       "count": 3,
@@ -891,7 +891,8 @@
       "sources": {
         "src/main.rs": {
           "before_sha256": "0237a554c8234bc94f357e261af6ee2a82ba24ad4af81641ffde5b3170e720bc",
-          "after_sha256": "507b9aa4222609061ed1e1574fea852046528680d564d0dbb1c3f9a198bca982"
+          "after_sha256": "c26612c05bba0a4d96b919913c26afea7902676ae18f1c10eecc06b77a0a42ec",
+          "pre_demand_selection_sha256": "507b9aa4222609061ed1e1574fea852046528680d564d0dbb1c3f9a198bca982"
         }
       },
       "relocated_diagnostics": [
@@ -904,10 +905,15 @@
             5
           ],
           "after": [
+            140,
+            5
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             141,
             5
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::arithmetic_side_effects",
@@ -918,10 +924,15 @@
             17
           ],
           "after": [
+            131,
+            17
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             132,
             17
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::redundant_clone",
@@ -932,10 +943,15 @@
             10
           ],
           "after": [
+            133,
+            10
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             134,
             10
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::use_self",
@@ -946,10 +962,15 @@
             17
           ],
           "after": [
+            60,
+            17
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             61,
             17
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "private_interfaces",
@@ -960,10 +981,15 @@
             9
           ],
           "after": [
+            105,
+            9
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             106,
             9
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         }
       ]
     },
@@ -1286,7 +1312,8 @@
       "sources": {
         "src/main.rs": {
           "before_sha256": "6433220f951357e4d2f9507c2ff0275afbc7c1cd9b9c17888b922c18a4d929e6",
-          "after_sha256": "bf155f801e2bbe07134f7237cc5f24a471ef7e86e7dc56ccf63df18347397935"
+          "after_sha256": "3def1a5cb1d7bff4e4190c367041c647aca5950f6bae1bac0043a08d8ee5936b",
+          "pre_demand_selection_sha256": "bf155f801e2bbe07134f7237cc5f24a471ef7e86e7dc56ccf63df18347397935"
         }
       },
       "relocated_diagnostics": [
@@ -1299,10 +1326,15 @@
             65
           ],
           "after": [
+            5,
+            58
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             6,
             58
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_pass_by_value",
@@ -1313,10 +1345,15 @@
             18
           ],
           "after": [
+            257,
+            18
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             258,
             18
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::arithmetic_side_effects",
@@ -1327,10 +1364,15 @@
             5
           ],
           "after": [
+            258,
+            5
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             259,
             5
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_pass_by_value",
@@ -1341,10 +1383,15 @@
             21
           ],
           "after": [
+            260,
+            21
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             261,
             21
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::op_ref",
@@ -1355,10 +1402,15 @@
             8
           ],
           "after": [
+            261,
+            8
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             262,
             8
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_pass_by_value",
@@ -1369,10 +1421,15 @@
             18
           ],
           "after": [
+            266,
+            18
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             267,
             18
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::arithmetic_side_effects",
@@ -1383,10 +1440,15 @@
             5
           ],
           "after": [
+            267,
+            5
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             268,
             5
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         }
       ]
     },
@@ -2488,7 +2550,8 @@
       "sources": {
         "src/main.rs": {
           "before_sha256": "37de9edaa4d5f400f153b370484ff8d2854f665ee4780b2486bfb9a657fb08d2",
-          "after_sha256": "86a02939c63fff8a371b00dcc56398a2ea62575c5668f1ec7d43040266cf3fe3"
+          "after_sha256": "6af785071ec291cdc509f4e8add995dc7bd313870dd23b2dfb5cd5e520a425e8",
+          "pre_demand_selection_sha256": "86a02939c63fff8a371b00dcc56398a2ea62575c5668f1ec7d43040266cf3fe3"
         }
       },
       "relocated_diagnostics": [
@@ -2501,10 +2564,15 @@
             9
           ],
           "after": [
+            686,
+            9
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             687,
             9
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "private_interfaces",
@@ -2515,10 +2583,15 @@
             9
           ],
           "after": [
+            758,
+            9
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             759,
             9
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "private_interfaces",
@@ -2529,10 +2602,15 @@
             9
           ],
           "after": [
+            791,
+            9
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             792,
             9
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "private_interfaces",
@@ -2543,10 +2621,15 @@
             9
           ],
           "after": [
+            965,
+            9
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             966,
             9
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_pass_by_value",
@@ -2557,10 +2640,15 @@
             29
           ],
           "after": [
+            94,
+            29
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             95,
             29
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::redundant_clone",
@@ -2571,10 +2659,15 @@
             42
           ],
           "after": [
+            96,
+            42
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             97,
             42
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::use_self",
@@ -2585,10 +2678,15 @@
             17
           ],
           "after": [
+            177,
+            17
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             178,
             17
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_pass_by_value",
@@ -2599,10 +2697,15 @@
             29
           ],
           "after": [
+            633,
+            29
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             634,
             29
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::redundant_clone",
@@ -2613,10 +2716,15 @@
             24
           ],
           "after": [
+            635,
+            24
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             636,
             24
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::unused_async_trait_impl",
@@ -2627,10 +2735,15 @@
             9
           ],
           "after": [
+            644,
+            9
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             645,
             9
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::op_ref",
@@ -2641,10 +2754,15 @@
             16
           ],
           "after": [
+            650,
+            16
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             651,
             16
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::arithmetic_side_effects",
@@ -2655,10 +2773,15 @@
             32
           ],
           "after": [
+            651,
+            32
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             652,
             32
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::arithmetic_side_effects",
@@ -2669,10 +2792,15 @@
             17
           ],
           "after": [
+            735,
+            17
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             736,
             17
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::arithmetic_side_effects",
@@ -2683,10 +2811,15 @@
             21
           ],
           "after": [
+            741,
+            21
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             742,
             21
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::op_ref",
@@ -2697,10 +2830,15 @@
             20
           ],
           "after": [
+            763,
+            20
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             764,
             20
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::op_ref",
@@ -2711,10 +2849,15 @@
             24
           ],
           "after": [
+            764,
+            24
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             765,
             24
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::use_self",
@@ -2725,10 +2868,15 @@
             13
           ],
           "after": [
+            862,
+            13
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             863,
             13
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2739,10 +2887,15 @@
             17
           ],
           "after": [
+            1061,
+            17
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1062,
             17
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::unnecessary_cast",
@@ -2753,10 +2906,15 @@
             54
           ],
           "after": [
+            1063,
+            54
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1064,
             54
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2767,10 +2925,15 @@
             18
           ],
           "after": [
+            1075,
+            18
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1076,
             18
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::redundant_clone",
@@ -2781,10 +2944,15 @@
             40
           ],
           "after": [
+            1182,
+            40
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1183,
             40
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2795,10 +2963,15 @@
             19
           ],
           "after": [
+            1102,
+            19
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1103,
             19
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2809,10 +2982,15 @@
             16
           ],
           "after": [
+            1114,
+            16
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1115,
             16
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2823,10 +3001,15 @@
             43
           ],
           "after": [
+            1115,
+            43
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1116,
             43
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2837,10 +3020,15 @@
             26
           ],
           "after": [
+            1125,
+            26
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1126,
             26
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2851,10 +3039,15 @@
             27
           ],
           "after": [
+            1128,
+            27
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1129,
             27
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2865,10 +3058,15 @@
             18
           ],
           "after": [
+            1142,
+            18
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1143,
             18
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2879,10 +3077,15 @@
             5
           ],
           "after": [
+            1143,
+            5
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1144,
             5
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2893,10 +3096,15 @@
             25
           ],
           "after": [
+            1144,
+            25
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1145,
             25
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2907,10 +3115,15 @@
             20
           ],
           "after": [
+            1145,
+            20
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1146,
             20
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::unnecessary_cast",
@@ -2921,10 +3134,15 @@
             68
           ],
           "after": [
+            1159,
+            68
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1160,
             68
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2935,10 +3153,15 @@
             17
           ],
           "after": [
+            1170,
+            17
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1171,
             17
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2949,10 +3172,15 @@
             24
           ],
           "after": [
+            1185,
+            24
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1186,
             24
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2963,10 +3191,15 @@
             25
           ],
           "after": [
+            1186,
+            25
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1187,
             25
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2977,10 +3210,15 @@
             33
           ],
           "after": [
+            1187,
+            33
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1188,
             33
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::needless_borrow",
@@ -2991,10 +3229,15 @@
             34
           ],
           "after": [
+            1188,
+            34
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             1189,
             34
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::unused_async",
@@ -3005,10 +3248,15 @@
             9
           ],
           "after": [
+            644,
+            9
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             645,
             9
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         },
         {
           "code": "clippy::unused_async",
@@ -3019,10 +3267,15 @@
             9
           ],
           "after": [
+            676,
+            9
+          ],
+          "relocation": "equal source text",
+          "pre_demand_selection_after": [
             677,
             9
           ],
-          "relocation": "equal source text"
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
         }
       ]
     },
@@ -3034,14 +3287,195 @@
         "expected_command": "build",
         "evidence_category": "demo-codegen"
       },
-      "old_diagnostic_origins": "source-unchanged historical signature",
+      "old_diagnostic_origins": {
+        "kind": "source-only reconstructed primary coordinates; original raw log remains unavailable",
+        "receipt_path": "/private/tmp/sifr-group1-delivery.6WVn5Z/demo-signature-reconstruction.json",
+        "receipt_sha256": "a31049a59af1b6e741f7045b5af7fb5f4cd1cafcc49ef14e0bb2f32673eef8c7",
+        "script_path": "/private/tmp/sifr-group1-delivery.6WVn5Z/reconstruct_demo_signatures.py",
+        "script_sha256": "7515c7598d646a9911f35dd24b82815fafb7ff555811ef7c9acb3ceae833efdc",
+        "uniqueness": "one exact hash match per recorded candidate domain",
+        "authenticated_source_sha256": "8eb60fb6c9a6806cd699c831bd98e402ce58ed9733b12421c6c25c7455d69b0e"
+      },
       "sources": {
         "src/main.rs": {
           "before_sha256": "8eb60fb6c9a6806cd699c831bd98e402ce58ed9733b12421c6c25c7455d69b0e",
-          "after_sha256": "8eb60fb6c9a6806cd699c831bd98e402ce58ed9733b12421c6c25c7455d69b0e"
+          "after_sha256": "95e145d64f72a0cd8bb368882827e38a0d2dc2fd551744f2e1b5a69100d200f0",
+          "pre_demand_selection_sha256": "8eb60fb6c9a6806cd699c831bd98e402ce58ed9733b12421c6c25c7455d69b0e"
         }
       },
-      "relocated_diagnostics": []
+      "relocated_diagnostics": [
+        {
+          "code": "clippy::arithmetic_side_effects",
+          "message": "arithmetic operation that can potentially result in unexpected side-effects",
+          "file": "src/main.rs",
+          "before": [
+            99,
+            71
+          ],
+          "after": [
+            98,
+            71
+          ],
+          "relocation": "source-only reconstructed primary coordinate authenticated by existing aggregate SHA256",
+          "pre_demand_selection_after": [
+            99,
+            71
+          ],
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
+        },
+        {
+          "code": "clippy::iter_overeager_cloned",
+          "message": "unnecessarily eager cloning of iterator items",
+          "file": "src/main.rs",
+          "before": [
+            79,
+            40
+          ],
+          "after": [
+            78,
+            40
+          ],
+          "relocation": "source-only reconstructed primary coordinate authenticated by existing aggregate SHA256",
+          "pre_demand_selection_after": [
+            79,
+            40
+          ],
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
+        },
+        {
+          "code": "clippy::op_ref",
+          "message": "needlessly taken reference of both operands",
+          "file": "src/main.rs",
+          "before": [
+            82,
+            13
+          ],
+          "after": [
+            81,
+            13
+          ],
+          "relocation": "source-only reconstructed primary coordinate authenticated by existing aggregate SHA256",
+          "pre_demand_selection_after": [
+            82,
+            13
+          ],
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
+        },
+        {
+          "code": "clippy::op_ref",
+          "message": "needlessly taken reference of both operands",
+          "file": "src/main.rs",
+          "before": [
+            90,
+            16
+          ],
+          "after": [
+            89,
+            16
+          ],
+          "relocation": "source-only reconstructed primary coordinate authenticated by existing aggregate SHA256",
+          "pre_demand_selection_after": [
+            90,
+            16
+          ],
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
+        },
+        {
+          "code": "clippy::redundant_clone",
+          "message": "redundant clone",
+          "file": "src/main.rs",
+          "before": [
+            73,
+            25
+          ],
+          "after": [
+            72,
+            25
+          ],
+          "relocation": "source-only reconstructed primary coordinate authenticated by existing aggregate SHA256",
+          "pre_demand_selection_after": [
+            73,
+            25
+          ],
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
+        },
+        {
+          "code": "clippy::redundant_clone",
+          "message": "redundant clone",
+          "file": "src/main.rs",
+          "before": [
+            76,
+            25
+          ],
+          "after": [
+            75,
+            25
+          ],
+          "relocation": "source-only reconstructed primary coordinate authenticated by existing aggregate SHA256",
+          "pre_demand_selection_after": [
+            76,
+            25
+          ],
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
+        },
+        {
+          "code": "clippy::unused_self",
+          "message": "unused `self` argument",
+          "file": "src/main.rs",
+          "before": [
+            21,
+            36
+          ],
+          "after": [
+            20,
+            36
+          ],
+          "relocation": "source-only reconstructed primary coordinate authenticated by existing aggregate SHA256",
+          "pre_demand_selection_after": [
+            21,
+            36
+          ],
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
+        },
+        {
+          "code": "clippy::use_self",
+          "message": "unnecessary structure name repetition",
+          "file": "src/main.rs",
+          "before": [
+            16,
+            41
+          ],
+          "after": [
+            15,
+            41
+          ],
+          "relocation": "source-only reconstructed primary coordinate authenticated by existing aggregate SHA256",
+          "pre_demand_selection_after": [
+            16,
+            41
+          ],
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
+        },
+        {
+          "code": "clippy::use_self",
+          "message": "unnecessary structure name repetition",
+          "file": "src/main.rs",
+          "before": [
+            60,
+            9
+          ],
+          "after": [
+            59,
+            9
+          ],
+          "relocation": "source-only reconstructed primary coordinate authenticated by existing aggregate SHA256",
+          "pre_demand_selection_after": [
+            60,
+            9
+          ],
+          "demand_selection_relocation": "equal source text after removal of unused bridge declaration"
+        }
+      ]
     },
     {
       "entry": {
@@ -5047,7 +5481,8 @@
       "sources": {
         "src/main.rs": {
           "before_sha256": "1f990eda1c3251aa28da6cacdcc92bc648bfabf93bf59ec9b7313f1bbe6f2962",
-          "after_sha256": "1f990eda1c3251aa28da6cacdcc92bc648bfabf93bf59ec9b7313f1bbe6f2962"
+          "after_sha256": "39d9b894ee0eac8ef9c592024ab9f63f83e486f905703532c487893fdf66fd6e",
+          "pre_demand_selection_sha256": "1f990eda1c3251aa28da6cacdcc92bc648bfabf93bf59ec9b7313f1bbe6f2962"
         },
         "src/helper.rs": {
           "before_sha256": "5ed486f9a3ea1fec21e84f48942a905f83f323493ac07eb76ad53b78a0a33583",
@@ -7932,5 +8367,96 @@
       "reason": "Required support signature type now has public visibility inside the private support owner, matching the sibling public field/method interface."
     }
   ],
-  "fixed_debt_reconciliation_script_sha256": "7262fc6c0aa5a1225705c2661ec0dbcde8947f40829736893bdf117510b74bfe"
+  "fixed_debt_reconciliation_script_sha256": "7262fc6c0aa5a1225705c2661ec0dbcde8947f40829736893bdf117510b74bfe",
+  "pre_demand_selection_summary": {
+    "clippy::arithmetic_side_effects": {
+      "count": 69,
+      "signature_sha256": "6a04d87db121f356df744d4adcfe49473536b5861265beedda93c6021b7f9de0"
+    },
+    "clippy::assigning_clones": {
+      "count": 2,
+      "signature_sha256": "2c2f2ab7f44e88bbf743ecf87cd8fe8a0eee3a28862a8bec6c30de71ed772d90"
+    },
+    "clippy::implicit_clone": {
+      "count": 18,
+      "signature_sha256": "6d4751cc25d966a92a8ae6c279f3decc36727bdde75c166f081972138d4191a7"
+    },
+    "clippy::iter_overeager_cloned": {
+      "count": 1,
+      "signature_sha256": "300eaeb5a8f3f9827f83a9aa0ad951a50b73873b916c6294c4cccda1c03def9b"
+    },
+    "clippy::needless_borrow": {
+      "count": 23,
+      "signature_sha256": "d831ee1c510f0cf6d7bf1201558a29399465c8d7b7f44e7b7da4307748b6903f"
+    },
+    "clippy::needless_collect": {
+      "count": 7,
+      "signature_sha256": "8e7489ff1fe2bd959ca4d1b5fa80ec11c7d1d5a7fad5c98dbfd9d4ae57fd9ec9"
+    },
+    "clippy::needless_pass_by_value": {
+      "count": 67,
+      "signature_sha256": "a652776dcf43d66ff0f7e9a0539f52a8c061676b435eb14ecefb7eace62276a1"
+    },
+    "clippy::op_ref": {
+      "count": 58,
+      "signature_sha256": "ab8d4e9da9b64f04fe70a6c374c16752c5881859f6a6420aebf8f08176baf858"
+    },
+    "clippy::redundant_clone": {
+      "count": 200,
+      "signature_sha256": "3b6013a103932139d74a6501cd10d4913376844c8730b335db1ec201b3805dcd"
+    },
+    "clippy::ref_option": {
+      "count": 4,
+      "signature_sha256": "f9649199088b907ab35f5713282aaadc16a24956b8f73ddae97a238965062e0d"
+    },
+    "clippy::single_char_pattern": {
+      "count": 4,
+      "signature_sha256": "aa2cc2b9e9a82b102f0e33f6ab364778158a0b357e9cb420d2e3604cbb268997"
+    },
+    "clippy::type_complexity": {
+      "count": 1,
+      "signature_sha256": "ef08723b628d8a771e9a98819641382c4f938eb99afc1c7561f5e6a722143743"
+    },
+    "clippy::unnecessary_cast": {
+      "count": 9,
+      "signature_sha256": "a99be97a1aff3f5344fbadd131d2341f40ec4d18dacf1d2b7a29ab46647f3102"
+    },
+    "clippy::unnecessary_to_owned": {
+      "count": 24,
+      "signature_sha256": "15dd400439a97cf9d93f73e8be2d89a59ab8160207f93318f9e72646cf0909ac"
+    },
+    "clippy::unused_async": {
+      "count": 2,
+      "signature_sha256": "ed66174ef3783b875d79be39deb4c59b93283ec04471a0b410603bb0d3a715e8"
+    },
+    "clippy::unused_async_trait_impl": {
+      "count": 1,
+      "signature_sha256": "0414d02b63973b2fc35a853bb8e9cb43ab2154b3cb0573e24aab632d7e69c89e"
+    },
+    "clippy::unused_self": {
+      "count": 1,
+      "signature_sha256": "c684a74cf162de3fb551a142b122c2960d79784c93b1c4e475fdc862973488b0"
+    },
+    "clippy::use_self": {
+      "count": 28,
+      "signature_sha256": "5301701f2f5fd39f177f7410b5f247cd9dc0fe58405fafceef9de680a27591e6"
+    },
+    "clippy::useless_vec": {
+      "count": 3,
+      "signature_sha256": "a4f6a67dd5b87dfd2a1328d2e595308dbde2fa396f44579d33ba1521fdd03948"
+    }
+  },
+  "demand_selection_derivation": {
+    "item": "12K-B27 / delivery group 1",
+    "compiler_candidate": "9ffb19dd6008b9d1dbac4c8466c8f133bd2b4257",
+    "producer_commit": "93111f3426245b3ba5484195b8154d3bfc769769",
+    "source_proof_path": "/private/tmp/sifr-b27-integration.e9E6SI/evidence/baseline-mismatch-source-proof.json",
+    "source_proof_sha256": "bdf16be48f8d92258b8cc291dcd3d93226d9267af177cb1dfdf54a8f40500982",
+    "prior_baseline_sha256": "e4ca0e869690d8ccf49dbc2d603e4d000206541a4052dab9a7b9e9529b3b5167",
+    "script_path": "/private/tmp/sifr-group1-delivery.6WVn5Z/derive_current_baseline.py",
+    "script_sha256": "c8d8f58c5ae415f83196333665e5eedd05bd1132e0dd315fc6a3a9590ecc1f69",
+    "raw_log_restored": false,
+    "new_clippy_used_to_derive_expectation": false,
+    "method": "Authenticate the complete prior 522/19 aggregate using reconstructed demo coordinates, then relocate only through identical source lines. Preserve all owners, counts, original baseline identity and other selections. Require current materialization concordance before Clippy."
+  }
 }

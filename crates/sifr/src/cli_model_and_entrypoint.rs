@@ -1,6 +1,7 @@
 pub(crate) use super::bridge_cli::BridgeCommands;
 use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt, cmd_test};
 use super::cli_lock_modes::lock_mode_from_flags;
+use super::deferred_cli_args::DeferredArgs;
 use super::diagnostic_rendering_and_run::{
     RunCommandOptions, cmd_build, cmd_fetch, cmd_package, cmd_publish, cmd_run_with_options,
     cmd_tree, cmd_vendor, render_diagnostics,
@@ -166,7 +167,7 @@ pub(crate) enum Commands {
         command: BridgeCommands,
     },
     /// Manage declaration-first Python interop evidence
-    Python(PythonArgs),
+    Python(DeferredArgs<PythonArgs>),
     /// Type-check a .sifr file without compiling
     Check {
         /// Input .sifr file, or omit for package check
@@ -302,9 +303,9 @@ pub(crate) enum Commands {
         frozen: bool,
     },
     /// Format Sifr source files
-    Fmt(FmtArgs),
+    Fmt(DeferredArgs<FmtArgs>),
     /// Run suppressible policy diagnostics
-    Lint(LintArgs),
+    Lint(DeferredArgs<LintArgs>),
     /// Run the native Sifr Language Server Protocol server
     Lsp {
         /// Use stdio transport
@@ -337,7 +338,7 @@ pub(crate) enum Commands {
     },
     /// Manage a standalone Sifr installation
     #[command(name = "self")]
-    SelfCommand(SelfArgs),
+    SelfCommand(DeferredArgs<SelfArgs>),
     /// Execute a package-provided host tool namespace
     #[command(external_subcommand)]
     HostTool(Vec<String>),
@@ -521,7 +522,7 @@ fn run_cli(cli: Cli) -> i32 {
                 )
             }
         },
-        Commands::Python(args) => cmd_python(args, diagnostic_format),
+        Commands::Python(args) => cmd_python(args.0, diagnostic_format),
         Commands::Check {
             path,
             workspace,
@@ -638,8 +639,8 @@ fn run_cli(cli: Cli) -> i32 {
                 diagnostic_format,
             )
         }
-        Commands::Fmt(args) => cmd_fmt(&args, &config, isolated, diagnostic_format),
-        Commands::Lint(args) => cmd_lint(&args, &config, isolated, diagnostic_format),
+        Commands::Fmt(args) => cmd_fmt(&args.0, &config, isolated, diagnostic_format),
+        Commands::Lint(args) => cmd_lint(&args.0, &config, isolated, diagnostic_format),
         Commands::Lsp { stdio, parent_pid } => cmd_lsp(stdio, parent_pid),
         Commands::Trace { file } => cmd_trace(&file, diagnostic_format),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
@@ -647,7 +648,7 @@ fn run_cli(cli: Cli) -> i32 {
         Commands::Tools { command } => match command {
             ToolsCommands::Lock { check } => cmd_host_tools_lock(check, diagnostic_format),
         },
-        Commands::SelfCommand(args) => cmd_self(&args, diagnostic_format),
+        Commands::SelfCommand(args) => cmd_self(&args.0, diagnostic_format),
         Commands::HostTool(words) => cmd_host_tool(&words, diagnostic_format),
     }
 }
