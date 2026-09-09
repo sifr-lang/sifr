@@ -63,7 +63,14 @@ def validate(payload: Any) -> None:
         "normalization": (REPO_ROOT / "crates/sifr_sql_contract/src/normalization.rs").read_text(encoding="utf-8"),
         "profile": (REPO_ROOT / "crates/sifr_sql_contract/src/profile.rs").read_text(encoding="utf-8"),
         "generated": (REPO_ROOT / "crates/sifr_sql_contract/src/generated.rs").read_text(encoding="utf-8"),
-        "package": (REPO_ROOT / "crates/sifr_package/src/manifest/sql_profiles.rs").read_text(encoding="utf-8"),
+        "package": "\n".join(
+            (REPO_ROOT / path).read_text(encoding="utf-8")
+            for path in (
+                "crates/sifr_package/src/manifest/sql_profiles.rs",
+                "crates/sifr_package/src/manifest/sql_profiles/profile.rs",
+                "crates/sifr_package/src/manifest/sql_profiles/requirements.rs",
+            )
+        ),
         "component": (REPO_ROOT / "crates/sifr_compiler_component/src/protocol.rs").read_text(encoding="utf-8"),
         "dispatch": (REPO_ROOT / "crates/sifr_driver/src/build/sql_profiles.rs").read_text(encoding="utf-8"),
         "schema_component": (REPO_ROOT / "crates/sifr_sql_contract/src/component.rs").read_text(encoding="utf-8"),
