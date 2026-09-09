@@ -33,7 +33,7 @@ impl Drop for TestSource {
 fn stdlib_interop_test_project_materializes_selected_contracts() {
     let source = TestSource::new(
         "native",
-        "from helper import leap\nfrom sifr.math import isfinite\nfrom sifr.process import Command, ProcessError, run\n\ndef test_contract():\n    assert leap(2024)\n    assert not leap(2023)\n    assert isfinite(1.5)\n    try:\n        _ = run(Command(\"\"))\n        assert False\n    except ProcessError as error:\n        assert len(error.message) > 0\n",
+        "from helper import leap\nfrom sifr.math import isfinite\nfrom sifr.process import Command, ProcessError, Status, run\n\ndef test_contract():\n    assert leap(2024)\n    assert not leap(2023)\n    assert isfinite(1.5)\n    try:\n        status: Status = run(Command(\"\"))\n        assert False\n    except ProcessError as error:\n        assert len(error.message) > 0\n",
     );
     std::fs::write(
         source.0.join("helper.sifr"),
