@@ -2,8 +2,12 @@ from sifr.sync import Channel, ChannelSender, ClosedError
 
 
 async def main() -> Result[None, ClosedError]:
+    error = ClosedError("caller message")
+    assert error.message == "caller message"
+    assert str(error) == "caller message"
+    assert repr(error) == 'ClosedError { message: "caller message" }'
     sender: ChannelSender[int] = ChannelSender(Channel([], -1))
     sender.close()
     sent: Result[None, ClosedError] = await sender.send(1)
-    assert str(sent) == "Err(ClosedError)"
+    assert str(sent) == 'Err(ClosedError { message: "channel is closed" })'
     return None

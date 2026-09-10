@@ -194,6 +194,7 @@ pub(in crate::lower) fn is_collection_mutating_method(object_ty: &Type, method: 
         Type::Set(_) => matches!(
             method,
             "add"
+                | "pop"
                 | "remove"
                 | "discard"
                 | "clear"
@@ -309,6 +310,7 @@ mod tests {
             );
         }
         for method in [
+            "pop",
             "remove",
             "discard",
             "clear",
@@ -329,6 +331,22 @@ mod tests {
             effect(&list, "future_mutator", ReceiverConvention::MutableBorrow),
             ReceiverMutationEffect::Removal
         );
+    }
+
+    #[test]
+    fn set_pop_uses_mutable_receiver_authority_for_direct_and_alias_types() {
+        let set = Type::Set(Box::new(Type::Int));
+        let alias = Type::alias("SetAlias", set.clone());
+        for ty in [set, alias] {
+            assert!(is_collection_mutating_method(&ty, "pop"));
+            assert_eq!(
+                receiver_convention_for_non_class_method(&ty, "pop"),
+                ReceiverConvention::MutableBorrow
+            );
+            let summary = receiver_mutation_summary(&ty, "pop", ReceiverConvention::MutableBorrow);
+            assert_eq!(summary.effect, ReceiverMutationEffect::Removal);
+            assert_eq!(summary.fact_invalidation, ReceiverFactInvalidation::All);
+        }
     }
 
     #[test]

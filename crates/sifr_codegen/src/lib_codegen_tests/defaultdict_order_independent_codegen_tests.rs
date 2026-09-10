@@ -1,6 +1,27 @@
 use super::generate_rust_from_source_with_stdlib_collections;
 
 #[test]
+fn defaultdict_set_pop_uses_the_checked_bucket_without_compile_error() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef solve() -> Option[int]:\n    groups = defaultdict(set)\n    groups[1].add(7)\n    return groups[1].pop()\n",
+    );
+    assert!(!rust_code.contains("compile_error!"), "{rust_code}");
+    assert!(rust_code.contains("let __sifr_defaultdict_bucket = groups.entry(__sifr_defaultdict_key).or_insert(HashSet::new());"), "{rust_code}");
+    assert!(
+        rust_code.contains("__sifr_defaultdict_bucket.iter().next().cloned()"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains("__sifr_defaultdict_bucket.remove(__val)"),
+        "{rust_code}"
+    );
+    assert!(
+        !rust_code.contains(".or_insert(HashSet::new()).clone()"),
+        "{rust_code}"
+    );
+}
+
+#[test]
 fn read_before_write_defaultdict_set_has_concrete_declaration_codegen() {
     let rust_code = generate_rust_from_source_with_stdlib_collections(
         "from sifr.collections import defaultdict\n\ndef solve(cells: list[tuple[int, str]]) -> bool:\n    rows = defaultdict(set)\n    for row, cell in cells:\n        if cell in rows[row]:\n            return False\n        rows[row].add(cell)\n    return True\n",

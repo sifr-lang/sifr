@@ -62,6 +62,50 @@ fn defaultdict_iterable_mutators_carry_checked_backing_storage_places() {
 }
 
 #[test]
+fn defaultdict_set_pop_retains_checked_mutable_backing_storage() {
+    let source = "from sifr.collections import defaultdict\n\ndef solve() -> Option[int]:\n    groups = defaultdict(set)\n    groups[1].add(7)\n    return groups[1].pop()\n";
+    let module = lower_source_with_stdlib_collections(source).expect("source should lower");
+    let function = module
+        .functions
+        .iter()
+        .find(|f| f.name == "solve")
+        .expect("solve exists");
+    let Some(HirStmt::Return {
+        value:
+            Some(HirExpr::MethodCall {
+                method,
+                receiver_convention,
+                receiver_target,
+                ..
+            }),
+    }) = function.body.last()
+    else {
+        panic!("set pop should remain a method call");
+    };
+    assert_eq!(method, "pop");
+    assert_eq!(
+        *receiver_convention,
+        Some(sifr_type_system::ReceiverConvention::MutableBorrow)
+    );
+    assert!(matches!(
+        receiver_target,
+        Some(MutableReceiverTarget::SpecializedIndexedStorage(_))
+    ));
+}
+
+#[test]
+fn set_pop_rejects_immutable_parameter_mutation() {
+    let source = "def solve(values: set[int]) -> Option[int]:\n    return values.pop()\n";
+    let errors =
+        lower_source_with_stdlib_collections(source).expect_err("set pop mutates its receiver");
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION))
+    );
+}
+
+#[test]
 fn defaultdict_set_uses_later_add_shape_before_first_read() {
     let source = "from sifr.collections import defaultdict\n\ndef solve(cells: list[tuple[int, str]]) -> bool:\n    rows = defaultdict(set)\n    for row, cell in cells:\n        if cell in rows[row]:\n            return False\n        rows[row].add(cell)\n    return True\n";
     let expected = defaultdict_type(

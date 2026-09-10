@@ -268,3 +268,21 @@ fn error_debug_uses_the_source_class_name() {
         "{rust_code}"
     );
 }
+
+#[test]
+fn implicit_error_message_remains_visible_in_debug_and_display() {
+    let rust_code = generate_rust_from_source("class LocalError(Error):\n    pass\n");
+    assert!(rust_code.contains("message: String"), "{rust_code}");
+    assert!(
+        rust_code.contains("f.debug_struct(\"LocalError\")"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains(".field(\"message\", &self.message)"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains("write!(f, \"{}\", self.message)"),
+        "{rust_code}"
+    );
+}
