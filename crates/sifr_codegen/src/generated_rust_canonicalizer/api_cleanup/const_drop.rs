@@ -197,14 +197,18 @@ fn expression_flow(
             condition_preserves_owners(&match_.expr, state)?;
             let mut branches = Vec::new();
             for arm in &match_.arms {
+                let (pattern, guard) = match &arm.pat {
+                    syn::Pat::Guard(guard) => (guard.pat.as_ref(), Some(guard.guard.as_ref())),
+                    pattern => (pattern, None),
+                };
                 let mut branch = state.clone();
                 let mut bindings = HashSet::new();
-                collect_bindings(&arm.pat, &mut bindings);
+                collect_bindings(pattern, &mut bindings);
                 if !bindings.is_disjoint(&branch.owned) || !bindings.is_disjoint(&branch.trivial) {
                     return None;
                 }
                 branch.trivial.extend(bindings);
-                if let Some((_, guard)) = &arm.guard {
+                if let Some(guard) = guard {
                     condition_preserves_owners(guard, &branch)?;
                 }
                 let flow = expression_flow(&arm.body, &mut branch, value_use)?;
