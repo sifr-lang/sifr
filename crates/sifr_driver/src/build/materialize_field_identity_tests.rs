@@ -64,20 +64,25 @@ fn project_field_identity_materializes_bridged_records_and_errors() {
     ];
     let mut project =
         format_generated_binary_project(project).expect("complete project formatting");
-    assert!(project.bridge_modules["__sifr_bridge::left"].contains("pub name_field: i64"));
-    assert!(project.bridge_modules["__sifr_bridge::left"].contains("pub name: i64"));
-    assert!(project.bridge_modules["__sifr_bridge::right"].contains("pub name: i64"));
+    assert!(project.bridge_modules["sifr_generated_bridge::left"].contains("pub name_field: i64"));
+    assert!(project.bridge_modules["sifr_generated_bridge::left"].contains("pub name: i64"));
+    assert!(project.bridge_modules["sifr_generated_bridge::right"].contains("pub name: i64"));
     assert!(project.support_modules["consumers"].contains("right.name"));
     assert!(
         !project
             .emit_source_listing()
             .contains("// src/__sifr_bridge/")
     );
+    assert!(
+        !project
+            .emit_source_listing()
+            .contains("// src/sifr_generated_bridge/")
+    );
     let plan = test_dependency_plan("field-identity");
     let before = binary_project_cache_key("fields", &project, &plan);
     project
         .bridge_modules
-        .get_mut("__sifr_bridge::left")
+        .get_mut("sifr_generated_bridge::left")
         .expect("left module")
         .push_str("\n// cache identity\n");
     assert_ne!(before, binary_project_cache_key("fields", &project, &plan));
