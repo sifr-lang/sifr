@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use syn::visit::{self, Visit};
 
 mod const_drop;
-mod const_types;
+pub(super) mod const_types;
 
 use super::source_expectations::{
     refresh_const_expectations, refresh_function_expectations, refresh_struct_expectations,

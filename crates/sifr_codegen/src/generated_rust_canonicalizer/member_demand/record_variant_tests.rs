@@ -429,3 +429,86 @@ fn const_promotion_does_not_confuse_shadowed_containers_with_standard_types() {
         "{imported}"
     );
 }
+
+#[test]
+fn option_question_mark_requires_owned_values_and_preserves_borrowing_patterns() {
+    use syn::visit::{self, Visit};
+    let canonical = canonical_and_compile(
+        r#"
+        pub fn owned(value: Option<String>) -> Option<String> {
+            let Some(value) = value else { return None; };
+            Some(value)
+        }
+        pub fn owned_alias(value: Option<String>) -> Option<String> {
+            let alias = value;
+            let Some(value) = alias else { return None; };
+            Some(value)
+        }
+        pub fn borrowed(value: &Option<String>) -> Option<&String> {
+            let Some(value) = value else { return None; };
+            Some(value)
+        }
+        pub fn borrowed_alias(value: &Option<String>) -> Option<&String> {
+            let alias = value;
+            let Some(value) = alias else { return None; };
+            Some(value)
+        }
+        pub fn borrowed_typed(value: &Option<String>) -> Option<&String> {
+            let alias: &Option<String> = value;
+            let Some(value) = alias else { return None; };
+            Some(value)
+        }
+        pub fn block_shadow(value: Option<String>, borrowed: &Option<String>) -> Option<&String> {
+            let value = borrowed;
+            let Some(value) = value else { return None; };
+            Some(value)
+        }
+        pub fn closure_shadow<'a>(value: Option<String>, borrowed: &'a Option<String>) -> Option<&'a String> {
+            let inspect = |value: &'a Option<String>| {
+                let Some(value) = value else { return None; };
+                Some(value)
+            };
+            inspect(borrowed)
+        }
+        pub fn by_ref_pattern(value: Option<String>) -> Option<usize> {
+            let Some(ref value) = value else { return None; };
+            Some(value.len())
+        }
+        pub fn supplier(value: &Option<String>) -> &Option<String> { value }
+        pub fn borrowed_call(value: &Option<String>) -> Option<&String> {
+            let Some(value) = supplier(value) else { return None; };
+            Some(value)
+        }
+        "#,
+    );
+    struct Tries(usize);
+    impl<'ast> Visit<'ast> for Tries {
+        fn visit_expr_try(&mut self, expression: &'ast syn::ExprTry) {
+            self.0 += 1;
+            visit::visit_expr_try(self, expression);
+        }
+    }
+    let file = syn::parse_file(&canonical).expect("canonical file");
+    let mut observed = std::collections::HashMap::new();
+    for item in file.items {
+        if let syn::Item::Fn(function) = item {
+            let mut tries = Tries(0);
+            tries.visit_block(&function.block);
+            observed.insert(function.sig.ident.to_string(), tries.0);
+        }
+    }
+    for name in ["owned", "owned_alias"] {
+        assert_eq!(observed.get(name), Some(&1), "{canonical}");
+    }
+    for name in [
+        "borrowed",
+        "borrowed_alias",
+        "borrowed_typed",
+        "block_shadow",
+        "closure_shadow",
+        "by_ref_pattern",
+        "borrowed_call",
+    ] {
+        assert_eq!(observed.get(name), Some(&0), "{canonical}");
+    }
+}
