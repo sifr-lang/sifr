@@ -11,8 +11,8 @@ use crate::lib_project_codegen::{
 };
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
 use crate::project_stdlib_nominals::{
-    extract_project_stdlib_nominal_prelude, project_stdlib_nominal_plan,
-    relocate_project_stdlib_nominals,
+    RelocatedStructuralImplementations, extract_project_stdlib_nominal_prelude,
+    project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
 };
 use crate::project_union_prelude::render_project_union_prelude;
 use crate::render_project_structural_record_prelude;
@@ -86,6 +86,7 @@ pub fn generate_rust_test_project_with_metadata(
     let mut project_support_demand = ModuleSupportDemand::default();
     let mut support_module_demands = HashMap::new();
     let mut test_module_demands = HashMap::new();
+    let mut relocated_structural_impls = RelocatedStructuralImplementations::default();
 
     for (module_name, module) in support_modules {
         let mut module_code = project_code.clone();
@@ -133,6 +134,7 @@ pub fn generate_rust_test_project_with_metadata(
             &stdlib_nominal_plan,
             &crate_root_modules,
             &crate::project_stdlib_nominals::project_module_binding_names(module),
+            &mut relocated_structural_impls,
         );
         support_rust_files.insert(
             (*module_name).to_string(),
@@ -158,7 +160,15 @@ pub fn generate_rust_test_project_with_metadata(
         let module_demand = generated.support_demand.clone();
         project_support_demand.merge_project_module(&module_demand);
         test_module_demands.insert((*module_name).to_string(), module_demand);
-        test_rust_files.insert((*module_name).to_string(), generated.module_body_source);
+        let source = relocate_project_stdlib_nominals(
+            &generated.module_body_source,
+            module_name,
+            &stdlib_nominal_plan,
+            &HashSet::from([*module_name]),
+            &crate::project_stdlib_nominals::project_module_binding_names(module),
+            &mut relocated_structural_impls,
+        );
+        test_rust_files.insert((*module_name).to_string(), source);
         used_stdlib_modules.extend(generated.used_stdlib_modules);
         required_features.extend(generated.required_features);
     }
@@ -168,7 +178,7 @@ pub fn generate_rust_test_project_with_metadata(
     used_stdlib_modules.extend(rendered_support.used_stdlib_modules.iter().cloned());
     required_features.extend(rendered_support.required_features.iter().copied());
     let (nominal_prelude, remaining_support) = extract_project_stdlib_nominal_prelude(
-        &rendered_support.source,
+        &relocated_structural_impls.append_to_support(&rendered_support.source),
         &union_usage.unions,
         stdlib_code,
         &mut stdlib_nominal_plan,

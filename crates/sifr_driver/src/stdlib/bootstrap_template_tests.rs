@@ -94,3 +94,112 @@ fn stdlib_structural_templates_retain_signatures_without_bodies() {
             .all(|(_, method)| method.body.is_empty())
     );
 }
+
+#[test]
+fn recursive_json_structural_contracts_follow_the_shared_project_owner() {
+    let compiled = compile_stdlib().expect("real complete stdlib");
+    let source = include_str!(
+        "../../../../verification/areas/rust_interop/fixtures/structural_bridge_calls/examples/structural_bridge_runtime/src/main.sifr"
+    );
+    let parsed = parse_module_raw(source, None).expect("original structural fixture");
+    let lowered = sifr_lowering::lower_module_with_externals(parsed.suite(), &compiled.defs)
+        .expect("original structural fixture lowers");
+    let generated = sifr_codegen::generate_rust_multi_with_metadata(
+        &[("main", &lowered.module)],
+        &compiled.code,
+    );
+    assert_json_contract_owner(
+        &generated.project_union_prelude,
+        &generated.rust_files["main"],
+    );
+    let assembled = format!(
+        "{}\n{}",
+        generated.project_union_prelude, generated.rust_files["main"]
+    );
+    let canonical = sifr_codegen::canonicalize_generated_rust_source(&assembled)
+        .expect("complete generated assembly");
+    assert_eq!(json_contract_count(&canonical), 3, "{canonical}");
+    // The real recursive seven-field template, not the historical one-int stub.
+    for field in [
+        "kind",
+        "bool_value",
+        "int_value",
+        "float_value",
+        "str_value",
+        "array_items",
+        "object_items",
+    ] {
+        assert!(
+            canonical.contains(&format!("RecordField(\"{field}\")")),
+            "{field}"
+        );
+    }
+
+    // Two importing support modules and a root test must not create duplicate
+    // impls or silently omit the test-only imported contract.
+    let tests = sifr_codegen::generate_rust_test_project_with_metadata(
+        &[("alpha", &lowered.module), ("zeta", &lowered.module)],
+        &[("test_root", &lowered.module)],
+        &compiled.code,
+    );
+    assert_eq!(json_contract_count(&tests.project_union_prelude), 3);
+    for body in tests
+        .support_rust_files
+        .values()
+        .chain(tests.test_rust_files.values())
+    {
+        assert_eq!(
+            json_contract_count(body),
+            0,
+            "contracts belong to shared nominal"
+        );
+    }
+    let tests_only = sifr_codegen::generate_rust_test_project_with_metadata(
+        &[],
+        &[("test_root", &lowered.module)],
+        &compiled.code,
+    );
+    assert_eq!(json_contract_count(&tests_only.project_union_prelude), 3);
+}
+
+fn assert_json_contract_owner(prelude: &str, body: &str) {
+    assert_eq!(json_contract_count(prelude), 3, "{prelude}");
+    assert_eq!(json_contract_count(body), 0, "{body}");
+}
+
+fn json_contract_count(source: &str) -> usize {
+    fn count(items: &[syn::Item]) -> usize {
+        items
+            .iter()
+            .map(|item| match item {
+                syn::Item::Mod(module) => {
+                    module.content.as_ref().map_or(0, |(_, items)| count(items))
+                }
+                syn::Item::Impl(implementation) => {
+                    let syn::Type::Path(owner) = implementation.self_ty.as_ref() else {
+                        return 0;
+                    };
+                    let json =
+                        owner.path.segments.last().is_some_and(|segment| {
+                            segment.ident.to_string().ends_with("JsonValue")
+                        });
+                    let structural = implementation.trait_.as_ref().is_some_and(|(path, _)| {
+                        path.segments.last().is_some_and(|segment| {
+                            matches!(
+                                segment.ident.to_string().as_str(),
+                                "StructuralType" | "StructuralConstruct" | "StructuralProject"
+                            )
+                        })
+                    });
+                    usize::from(json && structural)
+                }
+                _ => 0,
+            })
+            .sum()
+    }
+    count(
+        &syn::parse_file(source)
+            .expect("generated Rust syntax")
+            .items,
+    )
+}

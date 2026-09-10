@@ -127,7 +127,12 @@ pub(super) fn materialize_cached_binary_project_with_report(
     )
     .map_err(|error| vec![build_error(error.boundary_message())])?;
     let sysroot = sysroot_report(&dependency_plan);
-    let cache_key = binary_project_cache_key(project_name, &generated_project, &dependency_plan);
+    let mut cache_key =
+        binary_project_cache_key(project_name, &generated_project, &dependency_plan);
+    if let Some(seed) = cargo_resolution.normal_seed_cache_fragment() {
+        cache_key.push_str("\n[normal-authority-seed]\n");
+        cache_key.push_str(&seed);
+    }
     let required_paths = [
         Path::new(project_name).join("target"),
         binary_relative_path(project_name),

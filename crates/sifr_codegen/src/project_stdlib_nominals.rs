@@ -1,7 +1,6 @@
 use crate::builtin_errors::BuiltinError;
 use crate::stdlib_filter::{
     partition_rust_items_by_name, rust_source_defined_item_names, rust_source_references_item_name,
-    strip_relocated_rust_items_by_name,
 };
 use crate::{HirModule, Renderer, RustFile, StdlibCode, publicize_generated_module_source};
 use sifr_ir::HirFunction;
@@ -11,6 +10,10 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 mod module_bindings;
 mod project_union_relocation;
 mod registry;
+mod relocation;
+#[cfg(test)]
+use relocation::relocate_project_stdlib_nominals_owned_by;
+pub(crate) use relocation::{RelocatedStructuralImplementations, relocate_project_stdlib_nominals};
 
 pub(crate) use module_bindings::project_module_binding_names;
 pub(crate) use registry::ProjectNominalRegistry;
@@ -30,65 +33,6 @@ impl ProjectStdlibNominalPlan {
             registry: ProjectNominalRegistry::default(),
         }
     }
-}
-
-pub(crate) fn relocate_project_stdlib_nominals(
-    source: &str,
-    module_name: &str,
-    plan: &ProjectStdlibNominalPlan,
-    crate_root_modules: &HashSet<&str>,
-    local_class_rust_names: &HashSet<String>,
-) -> String {
-    let names = plan
-        .registry
-        .shared_rust_names
-        .iter()
-        .chain(&plan.registry.crate_root_rust_names)
-        .cloned()
-        .collect::<HashSet<_>>();
-    relocate_project_stdlib_nominals_owned_by(
-        source,
-        module_name,
-        crate_root_modules,
-        local_class_rust_names,
-        &names,
-    )
-}
-
-pub(crate) fn relocate_project_stdlib_nominals_owned_by(
-    source: &str,
-    module_name: &str,
-    crate_root_modules: &HashSet<&str>,
-    local_class_rust_names: &HashSet<String>,
-    owned_names: &HashSet<String>,
-) -> String {
-    if owned_names.is_empty() {
-        return source.to_string();
-    }
-    let relocatable_names = owned_names
-        .iter()
-        .filter(|name| !local_class_rust_names.contains(*name))
-        .collect::<HashSet<_>>();
-    let names = relocatable_names.iter().map(|name| name.as_str()).collect();
-    let stripped = strip_relocated_rust_items_by_name(source, &names, local_class_rust_names);
-    if crate_root_modules.contains(module_name) {
-        return stripped;
-    }
-    let mut ordered_names = owned_names.iter().collect::<Vec<_>>();
-    ordered_names.sort();
-    let mut imports = String::new();
-    for name in ordered_names {
-        if local_class_rust_names.contains(name) {
-            continue;
-        }
-        if !rust_source_references_item_name(&stripped, name) {
-            continue;
-        }
-        imports.push_str("use crate::");
-        imports.push_str(name);
-        imports.push_str(";\n");
-    }
-    format!("{imports}\n{stripped}")
 }
 
 pub(crate) fn project_stdlib_nominal_plan(
@@ -782,6 +726,7 @@ mod tests {
             &HashSet::from(["main"]),
             &HashSet::from(["ValueError".to_string()]),
             &HashSet::from(["ValueError".to_string()]),
+            &mut RelocatedStructuralImplementations::default(),
         );
         assert!(relocated.contains("struct ValueError"), "{relocated}");
         assert!(relocated.contains("error.detail"), "{relocated}");
@@ -881,6 +826,7 @@ impl From<ChildFormatter> for Formatter {
             &plan,
             &HashSet::from(["main"]),
             &HashSet::from(["ChildFormatter".to_string()]),
+            &mut RelocatedStructuralImplementations::default(),
         );
 
         assert!(!relocated.contains("struct Formatter"));

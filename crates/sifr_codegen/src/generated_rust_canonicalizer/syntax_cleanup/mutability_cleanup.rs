@@ -1,6 +1,10 @@
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 
+#[cfg(test)]
+#[path = "mutability_cleanup_tests.rs"]
+mod tests;
+
 pub(super) fn collect_mutating_method_names(file: &syn::File) -> HashSet<String> {
     let mut collector = MutatingMethodCollector::default();
     collector.visit_file(file);
@@ -12,6 +16,7 @@ pub(super) struct LocalMethodFacts {
     returns_by_method: HashMap<String, HashSet<String>>,
     mutable: HashSet<(String, String)>,
     shared: HashSet<(String, String)>,
+    declared_types: HashSet<String>,
 }
 
 pub(super) fn collect_local_method_facts(file: &syn::File) -> LocalMethodFacts {
@@ -26,6 +31,46 @@ struct LocalMethodFactCollector {
 }
 
 impl<'ast> Visit<'ast> for LocalMethodFactCollector {
+    fn visit_item_use(&mut self, item: &'ast syn::ItemUse) {
+        fn collect(tree: &syn::UseTree, names: &mut HashSet<String>) {
+            match tree {
+                syn::UseTree::Path(path) => collect(&path.tree, names),
+                syn::UseTree::Name(name) => {
+                    names.insert(name.ident.to_string());
+                }
+                syn::UseTree::Rename(rename) => {
+                    names.insert(rename.rename.to_string());
+                }
+                syn::UseTree::Group(group) => {
+                    for tree in &group.items {
+                        collect(tree, names);
+                    }
+                }
+                // An unresolved external glob can shadow the prelude type.
+                syn::UseTree::Glob(_) => {
+                    names.insert("String".to_string());
+                }
+            }
+        }
+        collect(&item.tree, &mut self.facts.declared_types);
+        visit::visit_item_use(self, item);
+    }
+
+    fn visit_item_struct(&mut self, item: &'ast syn::ItemStruct) {
+        self.facts.declared_types.insert(item.ident.to_string());
+        visit::visit_item_struct(self, item);
+    }
+
+    fn visit_item_enum(&mut self, item: &'ast syn::ItemEnum) {
+        self.facts.declared_types.insert(item.ident.to_string());
+        visit::visit_item_enum(self, item);
+    }
+
+    fn visit_item_type(&mut self, item: &'ast syn::ItemType) {
+        self.facts.declared_types.insert(item.ident.to_string());
+        visit::visit_item_type(self, item);
+    }
+
     fn visit_item_impl(&mut self, implementation: &'ast syn::ItemImpl) {
         let Some(owner) = type_owner_name(&implementation.self_ty) else {
             visit::visit_item_impl(self, implementation);
@@ -76,6 +121,16 @@ pub(super) fn remove_unneeded_parameter_mutability(
     local_method_facts: &LocalMethodFacts,
 ) {
     let mut collector = MutatingUseCollector::new(mutating_methods, local_method_facts);
+    for argument in &signature.inputs {
+        if let syn::FnArg::Typed(typed) = argument
+            && let Some(name) = simple_pattern_name(&typed.pat)
+            && let Some(owner) = type_owner_name(&typed.ty)
+        {
+            collector
+                .binding_owners
+                .insert(name, HashSet::from([owner]));
+        }
+    }
     collector.visit_block(body);
     for argument in &mut signature.inputs {
         if let syn::FnArg::Typed(typed) = argument {
@@ -246,6 +301,7 @@ impl<'facts> MutatingUseCollector<'facts> {
             syn::Expr::Field(field) => self.collect_place(&field.base),
             syn::Expr::Index(index) => self.collect_place(&index.expr),
             syn::Expr::Paren(paren) => self.collect_place(&paren.expr),
+            syn::Expr::Group(group) => self.collect_place(&group.expr),
             _ => {}
         }
     }
@@ -275,15 +331,21 @@ impl<'facts> MutatingUseCollector<'facts> {
             || matches!(
                 method.to_string().as_str(),
                 "append"
+                    | "as_deref_mut"
+                    | "as_mut"
                     | "as_mut_slice"
                     | "blocking_recv"
                     | "clear"
+                    | "clone_from"
                     | "dedup"
                     | "drain"
                     | "entry"
                     | "extend"
                     | "flush"
                     | "get_mut"
+                    | "get_or_insert"
+                    | "get_or_insert_default"
+                    | "get_or_insert_with"
                     | "insert"
                     | "iter_mut"
                     | "join_next"
@@ -302,6 +364,7 @@ impl<'facts> MutatingUseCollector<'facts> {
                     | "recv"
                     | "recv_many"
                     | "remove"
+                    | "replace"
                     | "resize"
                     | "retain"
                     | "reverse"
@@ -318,6 +381,7 @@ impl<'facts> MutatingUseCollector<'facts> {
                     | "swap"
                     | "swap_remove"
                     | "take"
+                    | "take_if"
                     | "truncate"
                     | "try_recv"
                     | "values_mut"
@@ -337,6 +401,19 @@ impl<'facts> MutatingUseCollector<'facts> {
             return false;
         };
         let method = call.method.to_string();
+        // Option::replace mutates its receiver, but str::replace (also reached
+        // through String's Deref) is shared. Require an actual text owner, and
+        // do not confuse a source-declared same-name type with std's String.
+        if method == "replace"
+            && !owners.is_empty()
+            && owners.iter().all(|owner| {
+                owner == "str"
+                    || (owner == "String"
+                        && !self.local_method_facts.declared_types.contains(owner))
+            })
+        {
+            return true;
+        }
         let relevant = owners
             .iter()
             .filter(|owner| {
@@ -355,6 +432,9 @@ impl<'facts> MutatingUseCollector<'facts> {
             syn::Expr::Reference(reference) => self.expression_owner_candidates(&reference.expr),
             syn::Expr::Group(group) => self.expression_owner_candidates(&group.expr),
             syn::Expr::Paren(paren) => self.expression_owner_candidates(&paren.expr),
+            syn::Expr::Lit(literal) if matches!(literal.lit, syn::Lit::Str(_)) => {
+                HashSet::from(["str".to_string()])
+            }
             syn::Expr::Path(path) => path
                 .path
                 .get_ident()
@@ -402,6 +482,8 @@ impl<'ast> Visit<'ast> for MutatingUseCollector<'_> {
                     explicit.unwrap_or_else(|| self.expression_owner_candidates(&init.expr));
                 if !owners.is_empty() {
                     self.binding_owners.insert(name, owners);
+                } else {
+                    self.binding_owners.remove(&name);
                 }
             }
             if let Some((_, diverge)) = &init.diverge {

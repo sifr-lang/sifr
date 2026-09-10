@@ -36,6 +36,26 @@ impl CargoResolutionPolicy {
     pub(super) const fn uses_sysroot_vendor(&self) -> bool {
         matches!(self.cargo_vendor_mode, CargoVendorMode::SysrootOnly)
     }
+
+    pub(super) fn normal_seed_cache_fragment(&self) -> Option<String> {
+        if self.lock_mode != CargoLockMode::Normal || self.authoritative_locks.is_empty() {
+            return None;
+        }
+        // Keep old unconstrained/locked cache identities intact. Only normal
+        // generated workspaces with a seed have changed resolution semantics.
+        let mut input = Vec::new();
+        push_cache_bytes(&mut input, "normal-authority-seed-v1");
+        push_cache_bytes(&mut input, &format!("{:?}", self.cargo_vendor_mode));
+        // Order is significant: earlier authorities override later ones.
+        for lock in &self.authoritative_locks {
+            push_cache_bytes(&mut input, &lock.to_string_lossy());
+            push_cache_bytes(
+                &mut input,
+                &digest_file(lock).unwrap_or_else(|| "<unreadable-lock>".to_string()),
+            );
+        }
+        Some(fnv1a64_hex(&input))
+    }
 }
 
 pub(super) struct PreparedCargoResolution {
@@ -51,6 +71,17 @@ pub(super) fn prepare_cargo_resolution(
 ) -> Result<PreparedCargoResolution, Vec<RenderedDiagnostic>> {
     let lock_path = project_dir.join("Cargo.lock");
     if policy.lock_mode == CargoLockMode::Normal {
+        // A generated workspace must start from the package's resolved pins,
+        // just as Cargo does in the original workspace. Normal mode may still
+        // update the generated lock; it must not discard it and resolve anew
+        // merely because the compiler placed the probe in a temporary root.
+        if !lock_path.is_file() && !policy.authoritative_locks.is_empty() {
+            seed_lockfile_for_resolution(
+                &lock_path,
+                &policy.authoritative_locks,
+                cargo_prefix_args,
+            )?;
+        }
         return Ok(PreparedCargoResolution {
             initial_digest: digest_file(&lock_path),
             lock_path,
@@ -115,6 +146,10 @@ pub(super) fn prepare_cargo_resolution(
         lock_mode: policy.lock_mode,
     })
 }
+
+#[cfg(test)]
+#[path = "cargo_resolution_normal_tests.rs"]
+mod normal_tests;
 
 fn cache_prepared_lock(
     source_lock: &Path,

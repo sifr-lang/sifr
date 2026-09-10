@@ -92,6 +92,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
 
     // Second pass: emit the actual code
     emitter.emit_named_module(module, false, true, Some(module_name));
+    emitter.emit_imported_stdlib_structural_impls(module, project_code);
     // Expression lowering can introduce canonical intermediate error unions.
     emitter.generate_enum_definitions();
     let support_demand = ModuleSupportDemand::from_emitter(module, &emitter, Some(module_name));
