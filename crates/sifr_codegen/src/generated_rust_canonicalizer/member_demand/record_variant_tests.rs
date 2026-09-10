@@ -444,6 +444,14 @@ fn option_question_mark_requires_owned_values_and_preserves_borrowing_patterns()
             let Some(value) = alias else { return None; };
             Some(value)
         }
+        pub fn shared_view(value: Option<String>) -> Option<String> {
+            let Some(value) = value.as_ref() else { return None; };
+            Some(value.to_owned())
+        }
+        pub fn mutable_view(mut value: Option<String>) -> Option<String> {
+            let Some(value) = value.as_mut() else { return None; };
+            Some(value.to_owned())
+        }
         pub fn borrowed(value: &Option<String>) -> Option<&String> {
             let Some(value) = value else { return None; };
             Some(value)
@@ -497,7 +505,7 @@ fn option_question_mark_requires_owned_values_and_preserves_borrowing_patterns()
             observed.insert(function.sig.ident.to_string(), tries.0);
         }
     }
-    for name in ["owned", "owned_alias"] {
+    for name in ["owned", "owned_alias", "shared_view", "mutable_view"] {
         assert_eq!(observed.get(name), Some(&1), "{canonical}");
     }
     for name in [
@@ -511,4 +519,17 @@ fn option_question_mark_requires_owned_values_and_preserves_borrowing_patterns()
     ] {
         assert_eq!(observed.get(name), Some(&0), "{canonical}");
     }
+    let competing = canonical_and_compile(
+        r#"
+        pub trait View { fn as_ref(&self) -> &Option<String>; }
+        impl View for &Option<String> { fn as_ref(&self) -> &Option<String> { self } }
+        pub fn competing_view(value: &Option<String>) -> Option<&String> {
+            let Some(value) = value.as_ref() else { return None; };
+            Some(value)
+        }
+        "#,
+    );
+    let mut tries = Tries(0);
+    tries.visit_file(&syn::parse_file(&competing).expect("competing method source"));
+    assert_eq!(tries.0, 0, "{competing}");
 }
