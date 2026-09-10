@@ -13,7 +13,7 @@ const EMPTY_RUSTFMT_CONFIG: &str = "/dev/null";
 pub(crate) fn canonicalize_project_fields<'a>(
     root: &mut String,
     modules: impl IntoIterator<Item = (&'a String, &'a mut String)>,
-) -> Result<(), Vec<RenderedDiagnostic>> {
+) -> Result<std::collections::BTreeMap<String, String>, Vec<RenderedDiagnostic>> {
     let modules = modules.into_iter().collect::<Vec<_>>();
     let mut sources = std::collections::BTreeMap::from([(String::new(), root.clone())]);
     for (module, source) in &modules {
@@ -28,8 +28,8 @@ pub(crate) fn canonicalize_project_fields<'a>(
             )]);
         }
     }
-    let canonical =
-        sifr_codegen::canonicalize_generated_rust_project(&sources).map_err(|message| {
+    let (canonical, names) = sifr_codegen::canonicalize_generated_rust_project_with_names(&sources)
+        .map_err(|message| {
             vec![diagnostic_with_code(
                 format!("failed to canonicalize generated project: {message}"),
                 DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
@@ -39,7 +39,7 @@ pub(crate) fn canonicalize_project_fields<'a>(
     for (module, source) in modules {
         source.clone_from(&canonical[&module.replace('.', "::")]);
     }
-    Ok(())
+    Ok(names)
 }
 
 #[cfg(test)]

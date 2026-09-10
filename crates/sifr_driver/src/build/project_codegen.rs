@@ -84,13 +84,35 @@ pub(super) fn format_generated_binary_project(
             sifr_diagnostics::DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
         )]
     })?;
-    super::rust_formatter::canonicalize_project_fields(
+    if !generated.bridge_modules.is_empty() {
+        generated.main_rs = format!("pub mod __sifr_bridge;\n{}", generated.main_rs);
+    }
+    let names = super::rust_formatter::canonicalize_project_fields(
         &mut generated.main_rs,
         generated
             .support_modules
             .iter_mut()
             .chain(generated.bridge_modules.iter_mut()),
     )?;
+    // Physical files and synthetic namespace declarations use the very same
+    // project-wide collision map as references and explicit mod declarations.
+    for modules in [
+        &mut generated.support_modules,
+        &mut generated.bridge_modules,
+    ] {
+        *modules = std::mem::take(modules)
+            .into_iter()
+            .map(|(module, source)| {
+                let separator = if module.contains("::") { "::" } else { "." };
+                let module = module
+                    .split(separator)
+                    .map(|name| names.get(name).map_or(name, String::as_str))
+                    .collect::<Vec<_>>()
+                    .join(separator);
+                (module, source)
+            })
+            .collect();
+    }
     generated.main_rs = super::rust_formatter::format_canonical_generated_rust(
         &generated.main_rs,
         "project main.rs",
@@ -383,6 +405,49 @@ mod tests {
                 .contains("__sifr_initialize_python_runtime")
         );
         assert!(generated.python_runtime.is_some());
+    }
+
+    #[test]
+    fn assembled_bridge_files_follow_project_collision_names() {
+        let mut project = base_project();
+        project.main_rs = "fn __sifr_encoding() {} fn main() { __sifr_encoding(); }".to_string();
+        project.interop.rust.bridge_contracts.generated_types.push(
+            sifr_codegen::RustGeneratedBridgeType {
+                module_name: Some("_sifr_encoding".to_string()),
+                name: "Encoding".to_string(),
+                rust_type_path: "crate::__sifr_bridge::_sifr_encoding::Encoding".to_string(),
+                kind: sifr_codegen::RustGeneratedBridgeTypeKind::ClosedEnum,
+                supports_eq: true,
+                fields: Vec::new(),
+                variants: vec![sifr_codegen::RustGeneratedBridgeVariant {
+                    name: "Utf8".to_string(),
+                    discriminant: 0,
+                }],
+            },
+        );
+        let project =
+            format_generated_binary_project(project).expect("assembled collision-aware project");
+        let (root, source) = project
+            .bridge_modules
+            .iter()
+            .find(|(name, _)| !name.contains("::"))
+            .expect("bridge root");
+        assert!(project.main_rs.contains(&format!("pub mod {root};")));
+        let child = project
+            .bridge_modules
+            .keys()
+            .find(|name| name.contains("::"))
+            .expect("physical bridge child");
+        let (_, leaf) = child.rsplit_once("::").expect("qualified bridge child");
+        assert_ne!(
+            leaf,
+            sifr_codegen::canonicalize_generated_rust_identifier("_sifr_encoding")
+        );
+        assert!(source.contains(&format!("pub mod {leaf};")), "{source}");
+        assert_eq!(
+            project.main_rs.matches(&format!("pub mod {root};")).count(),
+            1
+        );
     }
 
     #[test]

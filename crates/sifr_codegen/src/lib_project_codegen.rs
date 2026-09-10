@@ -425,6 +425,17 @@ pub fn generate_rust_multi_with_metadata(
     .map(str::trim_end)
     .collect::<Vec<_>>()
     .join("\n\n");
+    // Extraction discovers transitive nominal owners only after all modules'
+    // demand is merged. Import those finalized root bindings in every physical
+    // consumer, including modules with no union of their own.
+    for (module_name, source) in &mut files {
+        if !crate_root_modules.contains(module_name.as_str()) {
+            *source = crate::import_project_prelude_bindings(&unpruned_project_prelude, source)
+                .unwrap_or_else(|error| {
+                    panic!("failed to import finalized project owners: {error}")
+                });
+        }
+    }
     let support_imports = Renderer::new().render_file(&RustFile {
         items: render_import_items(&rendered_support.import_needs),
     });
@@ -445,13 +456,11 @@ pub fn generate_rust_multi_with_metadata(
             .chain(body_consumers.iter().copied())
             .collect::<Vec<_>>();
         let visible_support = crate_visible_generated_support_source(&support_source, &consumers);
-        let visible_support = crate::import_project_prelude_bindings_in_generated_support(
-            &project_union_prelude,
-            &visible_support,
-        )
-        .unwrap_or_else(|error| {
-            panic!("failed to import project prelude bindings into support: {error}")
-        });
+        let visible_support =
+            crate::import_project_prelude_bindings(&project_union_prelude, &visible_support)
+                .unwrap_or_else(|error| {
+                    panic!("failed to import project prelude bindings into support: {error}")
+                });
         let support_names = rust_source_defined_item_names(&visible_support);
         let prelude_support_refs = crate::stdlib_filter::rust_source_referenced_item_names(
             &project_union_prelude,

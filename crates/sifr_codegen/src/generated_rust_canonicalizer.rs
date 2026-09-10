@@ -9,7 +9,10 @@ mod field_name_cleanup;
 mod format_capture;
 pub(crate) use format_capture::is_format_macro as is_generated_format_macro;
 pub(crate) use format_capture::names as generated_format_capture_names;
+mod external_identifiers;
 mod identifier_canonicalizer;
+#[cfg(test)]
+mod identifier_ownership_tests;
 mod identifier_policy;
 mod item_demand;
 mod item_dependencies;
@@ -18,8 +21,8 @@ mod member_demand;
 mod method_demand;
 mod project_support_pruning;
 pub(crate) use project_support_pruning::{
-    import_generated_support_in_project_nominals,
-    import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
+    import_generated_support_in_project_nominals, import_project_prelude_bindings,
+    prune_generated_project_owners,
 };
 mod source_expectations;
 mod support_import_cleanup;
@@ -64,15 +67,26 @@ pub fn canonicalize_generated_rust_source(source: &str) -> Result<String, String
 pub fn canonicalize_generated_rust_project(
     sources: &BTreeMap<String, String>,
 ) -> Result<BTreeMap<String, String>, String> {
+    canonicalize_generated_rust_project_with_names(sources).map(|(sources, _)| sources)
+}
+
+/// Return the same collision-aware spelling map used by source rewriting so
+/// materializers can resolve physical module paths without guessing names again.
+pub fn canonicalize_generated_rust_project_with_names(
+    sources: &BTreeMap<String, String>,
+) -> Result<(BTreeMap<String, String>, BTreeMap<String, String>), String> {
     let fields = field_name_cleanup::canonicalize_fields(sources)?;
-    let names = identifier_canonicalizer::project_name_map(fields.values().map(String::as_str))?;
+    let names = identifier_canonicalizer::project_name_map(&fields)?;
     let canonical = fields
         .into_iter()
         .map(|(module, source)| {
             canonicalize_source_with_names(&source, &names).map(|source| (module, source))
         })
         .collect::<Result<BTreeMap<_, _>, _>>()?;
-    support_import_cleanup::refresh_support_imports(canonical)
+    Ok((
+        support_import_cleanup::refresh_support_imports(canonical)?,
+        names,
+    ))
 }
 
 fn canonicalize_source_with_names(

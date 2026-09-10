@@ -28,19 +28,11 @@ pub(crate) fn finalize_test_runner_project(
     let (generated, context) = attach_stdlib_rust_interop(generated, None, stdlib);
     let generated = resolve_package_rust_interop_metadata(generated, context)?;
     let generated = format_generated_binary_project(generated)?;
-    let all_rust_code = if generated.bridge_modules.is_empty() {
-        generated.main_rs
-    } else {
-        format!(
-            "pub mod {};\n{}",
-            sifr_codegen::canonicalize_generated_rust_identifier("__sifr_bridge"),
-            generated.main_rs
-        )
-    };
+    let all_rust_code = generated.main_rs;
     let mut bridge_rust_files = BTreeMap::new();
     for (module, source) in generated.bridge_modules {
-        let path = if module == "__sifr_bridge" {
-            PathBuf::from("__sifr_bridge/mod.rs")
+        let path = if !module.contains("::") {
+            PathBuf::from(&module).join("mod.rs")
         } else {
             rust_module_file_path(&module.replace("::", "."))
         };
@@ -48,7 +40,7 @@ pub(crate) fn finalize_test_runner_project(
     }
     Ok(GeneratedTestRunnerProject {
         cache_scope: project.cache_scope,
-        support_module_names: project.support_module_names,
+        support_module_names: generated.support_modules.keys().cloned().collect(),
         support_rust_files: generated.support_modules.into_iter().collect(),
         bridge_rust_files,
         all_rust_code,

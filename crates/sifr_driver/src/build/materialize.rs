@@ -250,22 +250,15 @@ fn materialize_binary_project_files(
 
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
-    // Module declarations contain no fields. Keep the source-listing boundary,
-    // but declare the already-canonicalized bridge family in the native crate.
-    let main_rs = if generated_project.bridge_modules.is_empty() {
-        generated_project.main_rs
-    } else {
-        format!(
-            "pub mod {};\n{}",
-            sifr_codegen::canonicalize_generated_rust_identifier("__sifr_bridge"),
-            generated_project.main_rs
-        )
-    };
-    write_project_file(&src_dir.join("main.rs"), main_rs, "main.rs")?;
+    write_project_file(
+        &src_dir.join("main.rs"),
+        generated_project.main_rs,
+        "main.rs",
+    )?;
 
     for (module, source) in generated_project.bridge_modules {
-        let path = if module == "__sifr_bridge" {
-            PathBuf::from("__sifr_bridge/mod.rs")
+        let path = if !module.contains("::") {
+            PathBuf::from(&module).join("mod.rs")
         } else {
             rust_module_file_path(&module.replace("::", "."))
         };

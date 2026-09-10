@@ -4,11 +4,17 @@ use syn::visit::{self, Visit};
 
 use super::identifier_policy::{canonical_identifier_candidate, canonical_name_map};
 
-pub(super) fn project_name_map<'a>(
-    sources: impl IntoIterator<Item = &'a str>,
+pub(super) fn project_name_map(
+    sources: &BTreeMap<String, String>,
 ) -> Result<BTreeMap<String, String>, String> {
     let mut identifiers = IdentifierCollector::default();
-    for source in sources {
+    for (module, source) in sources {
+        identifiers.names.extend(
+            module
+                .split("::")
+                .filter(|name| !name.is_empty())
+                .map(str::to_string),
+        );
         let file = syn::parse_file(source)
             .map_err(|error| format!("failed to parse assembled generated Rust: {error}"))?;
         identifiers.visit_file(&file);
@@ -25,6 +31,7 @@ pub(super) fn canonicalize_identifiers(
         .map_err(|error| format!("failed to parse assembled generated Rust: {error}"))?;
     let before = file.to_token_stream().to_string();
     super::field_name_cleanup::expand_shorthand(&mut file, names);
+    super::external_identifiers::alias_external_imports(&mut file, names);
     let expanded;
     let source = if before == file.to_token_stream().to_string() {
         source
@@ -101,9 +108,9 @@ impl GeneratedIdentifierCanonicalizer<'_> {
     }
 
     fn collect_tokens(&mut self, tokens: TokenStream) {
-        for token in tokens {
+        for (token, external) in super::external_identifiers::classify_tokens(tokens) {
             match token {
-                TokenTree::Ident(ident) => self.collect_ident(&ident),
+                TokenTree::Ident(ident) if !external => self.collect_ident(&ident),
                 TokenTree::Group(group) => self.collect_tokens(group.stream()),
                 _ => {}
             }
@@ -153,9 +160,9 @@ struct IdentifierCollector {
 
 impl IdentifierCollector {
     fn collect_tokens(&mut self, tokens: TokenStream) {
-        for token in tokens {
+        for (token, external) in super::external_identifiers::classify_tokens(tokens) {
             match token {
-                TokenTree::Ident(ident) => {
+                TokenTree::Ident(ident) if !external => {
                     self.names.insert(ident.to_string());
                 }
                 TokenTree::Group(group) => self.collect_tokens(group.stream()),
@@ -166,6 +173,12 @@ impl IdentifierCollector {
 }
 
 impl<'ast> Visit<'ast> for IdentifierCollector {
+    fn visit_path(&mut self, path: &'ast syn::Path) {
+        super::external_identifiers::visit_path(self, path);
+    }
+    fn visit_item_use(&mut self, item: &'ast syn::ItemUse) {
+        super::external_identifiers::visit_import(self, item);
+    }
     fn visit_member(&mut self, _member: &'ast syn::Member) {}
     fn visit_field(&mut self, field: &'ast syn::Field) {
         self.visit_type(&field.ty);
@@ -194,6 +207,12 @@ impl<'ast> Visit<'ast> for IdentifierCollector {
 }
 
 impl<'ast> Visit<'ast> for GeneratedIdentifierCanonicalizer<'_> {
+    fn visit_path(&mut self, path: &'ast syn::Path) {
+        super::external_identifiers::visit_path(self, path);
+    }
+    fn visit_item_use(&mut self, item: &'ast syn::ItemUse) {
+        super::external_identifiers::visit_import(self, item);
+    }
     fn visit_member(&mut self, _member: &'ast syn::Member) {}
     fn visit_field(&mut self, field: &'ast syn::Field) {
         self.visit_type(&field.ty);
