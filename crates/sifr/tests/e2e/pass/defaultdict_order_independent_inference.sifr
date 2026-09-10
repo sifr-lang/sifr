@@ -192,6 +192,43 @@ def default_set_insertion_precedes_iterable_arguments() -> int:
     return len(groups[1])
 
 
+def record_defaultdict_value(mut log: list[str]) -> int:
+    log.append("value")
+    return 7
+
+
+def scalar_mutation_evaluation_order():
+    log: list[str] = []
+    groups = defaultdict(list)
+    groups[record_defaultdict_key(log)].insert(len(groups), record_defaultdict_value(log))
+    assert log == ["key", "value"]
+    assert groups[1] == [7]
+    groups[1].append(len(groups))
+    groups[1].insert(len(groups[1]), len(groups[1]))
+    assert groups[1] == [7, 1, 2]
+    log.clear()
+    groups[record_defaultdict_key(log)].remove(record_defaultdict_value(log))
+    assert log == ["key", "value"]
+    assert groups[1] == [1, 2]
+    log.clear()
+    removed = groups[record_defaultdict_key(log)].pop(0)
+    assert removed == 1
+    assert log == ["key"]
+    assert groups[1] == [2]
+    log.clear()
+    groups[record_defaultdict_key(log)].remove(record_defaultdict_value(log))
+    assert log == ["key", "value"]
+    assert groups[1] == [2]
+    sets = defaultdict(set)
+    sets[record_defaultdict_key(log)].add(len(sets))
+    assert 1 in sets[1]
+    log.clear()
+    popped = sets[record_defaultdict_key(log)].pop()
+    assert popped == 1
+    assert log == ["key"]
+    assert len(sets[1]) == 0
+
+
 def main():
     assert unique_rows([(0, "a"), (0, "b"), (1, "a")])
     assert not unique_rows([(0, "a"), (0, "a")])
@@ -211,3 +248,4 @@ def main():
     assert iterable_mutation_evaluation_order() == 1
     assert default_insertion_precedes_iterable_arguments() == 1
     assert default_set_insertion_precedes_iterable_arguments() == 2
+    scalar_mutation_evaluation_order()

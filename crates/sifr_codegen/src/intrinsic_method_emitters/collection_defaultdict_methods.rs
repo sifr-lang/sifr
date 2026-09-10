@@ -33,21 +33,7 @@ impl RustEmitter {
         let lowered_object = self.emit_checked_place(base_object, base_place)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let lowered_key_arg = registry_defaultdict_key_arg(index, lowered_index, key_ty);
-        let is_iterable_bucket_mutator = (alias_name == "__sifr_defaultdict_list"
-            && method == "extend")
-            || (alias_name == "__sifr_defaultdict_set"
-                && matches!(
-                    method,
-                    "update"
-                        | "intersection_update"
-                        | "difference_update"
-                        | "symmetric_difference_update"
-                ));
-        let entry_key = if is_iterable_bucket_mutator {
-            crate::RustExpr::Ident("__sifr_defaultdict_key".to_string())
-        } else {
-            lowered_key_arg.clone()
-        };
+        let entry_key = crate::RustExpr::Ident("__sifr_defaultdict_key".to_string());
         let build_entry_expr =
             |receiver: crate::RustExpr, key: crate::RustExpr| crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::MethodCall {
@@ -58,14 +44,10 @@ impl RustEmitter {
                 method: "or_insert".to_string(),
                 args: vec![registry_defaultdict_default_expr(alias_name)],
             };
-        let preinsert_entry_expr = is_iterable_bucket_mutator.then(|| {
-            build_entry_expr(
-                lowered_object.clone(),
-                crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
-                    "__sifr_defaultdict_key".to_string(),
-                ))),
-            )
-        });
+        let preinsert_entry_expr = build_entry_expr(
+            lowered_object.clone(),
+            crate::RustExpr::Clone(Box::new(entry_key.clone())),
+        );
         let entry_expr = build_entry_expr(lowered_object, entry_key);
 
         if alias_name == "__sifr_defaultdict_list" && method == "extend" {
@@ -74,7 +56,7 @@ impl RustEmitter {
             };
             return self.try_lower_defaultdict_list_extend_expr(
                 lowered_key_arg,
-                preinsert_entry_expr?,
+                preinsert_entry_expr,
                 entry_expr,
                 iterable,
                 value_ty,
@@ -92,7 +74,7 @@ impl RustEmitter {
         {
             return self.try_lower_defaultdict_set_update_expr(
                 lowered_key_arg,
-                preinsert_entry_expr?,
+                preinsert_entry_expr,
                 entry_expr,
                 method,
                 args,
@@ -100,69 +82,59 @@ impl RustEmitter {
             );
         }
 
+        // Evaluate the key once, insert the default before argument effects, and
+        // only activate the bucket borrow after all arguments are materialized.
+        // Lowerers may use their receiver repeatedly (insert, pop, remove).
+        let mut stmts = vec![crate::RustStmt::Let {
+            mutable: false,
+            name: "__sifr_defaultdict_key".to_string(),
+            ty: None,
+            value: lowered_key_arg,
+        }];
+        if !args.is_empty() {
+            stmts.push(crate::RustStmt::Expr(preinsert_entry_expr));
+        }
         let mut lowered_args = Vec::with_capacity(args.len());
-        for arg in args {
-            lowered_args.push(
-                self.try_lower_registry_expr_strict(arg)
-                    .or_else(|| self.lower_stmt_expr_for_ir(arg).ok().flatten())?,
-            );
+        for (index, arg) in args.iter().enumerate() {
+            let lowered = self
+                .try_lower_registry_expr_strict(arg)
+                .or_else(|| self.lower_stmt_expr_for_ir(arg).ok().flatten())?;
+            let name = format!("__sifr_defaultdict_arg_{index}");
+            stmts.push(crate::RustStmt::Let {
+                mutable: false,
+                name: name.clone(),
+                ty: None,
+                value: self.materialize_reusable_value_for_ir(arg, lowered),
+            });
+            lowered_args.push(crate::RustExpr::Ident(name));
         }
-
-        match (alias_name, method, args, lowered_args.as_mut_slice()) {
-            ("__sifr_defaultdict_list", "append", [value], [lowered_value]) => {
-                let owned_value =
-                    self.materialize_reusable_value_for_ir(value, lowered_value.clone());
-                Some(crate::RustExpr::Block {
-                    stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
-                        receiver: Box::new(entry_expr),
-                        method: "push".to_string(),
-                        args: vec![owned_value],
-                    })],
-                    expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
-                })
-            }
-            ("__sifr_defaultdict_set", "add", [value], [lowered_value]) => {
-                let owned_value =
-                    self.materialize_reusable_value_for_ir(value, lowered_value.clone());
-                Some(crate::RustExpr::Block {
-                    stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
-                        receiver: Box::new(entry_expr),
-                        method: "insert".to_string(),
-                        args: vec![owned_value],
-                    })],
-                    expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
-                })
-            }
-            ("__sifr_defaultdict_list", "insert", [_, value], [_, lowered_value]) => {
-                *lowered_value =
-                    self.materialize_reusable_value_for_ir(value, lowered_value.clone());
-                methods::lower_method(value_ty, method, &entry_expr, &lowered_args)
-                    .map(|lowered| lowered.expr)
-            }
-            (
-                "__sifr_defaultdict_list" | "__sifr_defaultdict_set",
-                "remove" | "discard",
-                [value],
-                [lowered_value],
-            ) => {
-                *lowered_value =
-                    self.materialize_reusable_value_for_ir(value, lowered_value.clone());
-                methods::lower_method(value_ty, method, &entry_expr, &lowered_args)
-                    .map(|lowered| lowered.expr)
-            }
-            _ => {
-                let lowered = methods::lower_method(value_ty, method, &entry_expr, &lowered_args)?;
-                Some(Self::unwrap_compiler_verified_nonempty_pop_result(
-                    value_ty,
-                    method,
-                    args,
-                    method_return_ty,
-                    entry_expr,
-                    false,
-                    lowered.expr,
-                ))
-            }
-        }
+        let bucket = crate::RustExpr::Ident("__sifr_defaultdict_bucket".to_string());
+        stmts.push(crate::RustStmt::Let {
+            mutable: false,
+            name: "__sifr_defaultdict_bucket".to_string(),
+            ty: None,
+            value: entry_expr,
+        });
+        let lowered = methods::lower_method(value_ty, method, &bucket, &lowered_args)?;
+        let result = Self::unwrap_compiler_verified_nonempty_pop_result(
+            value_ty,
+            method,
+            args,
+            method_return_ty,
+            bucket,
+            false,
+            lowered.expr,
+        );
+        let expr = if matches!(method, "append" | "add") {
+            stmts.push(crate::RustStmt::Expr(result));
+            crate::RustExpr::Literal(crate::RustLiteral::Unit)
+        } else {
+            result
+        };
+        Some(crate::RustExpr::Block {
+            stmts,
+            expr: Some(Box::new(expr)),
+        })
     }
 
     pub(crate) fn try_lower_defaultdict_index_contains_expr(

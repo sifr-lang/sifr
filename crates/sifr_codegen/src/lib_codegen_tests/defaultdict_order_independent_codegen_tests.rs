@@ -28,7 +28,8 @@ fn list_slice_append_uses_defaultdict_entry_insertion() {
         "from sifr.collections import defaultdict\n\ndef solve(values: list[int]) -> int:\n    groups = defaultdict(list)\n    groups[1].append(values[0:2])\n    return len(groups[1])\n",
     );
 
-    assert!(rust_code.contains(".entry(SifrInt::from_i64(1)).or_insert(Vec::new()).push("));
+    assert!(rust_code.contains("groups.entry(__sifr_defaultdict_key).or_insert(Vec::new())"));
+    assert!(rust_code.contains("__sifr_defaultdict_bucket.push(__sifr_defaultdict_arg_0)"));
     assert!(!rust_code.contains("groups.get_mut("));
 }
 
@@ -38,7 +39,8 @@ fn string_slice_append_uses_defaultdict_entry_insertion() {
         "from sifr.collections import defaultdict\n\ndef solve(text: str) -> int:\n    groups = defaultdict(list)\n    groups[1].append(text[0:2])\n    return len(groups[1])\n",
     );
 
-    assert!(rust_code.contains(".entry(SifrInt::from_i64(1)).or_insert(Vec::new()).push("));
+    assert!(rust_code.contains("groups.entry(__sifr_defaultdict_key).or_insert(Vec::new())"));
+    assert!(rust_code.contains("__sifr_defaultdict_bucket.push(__sifr_defaultdict_arg_0)"));
     assert!(!rust_code.contains("groups.get_mut("));
 }
 
@@ -48,7 +50,9 @@ fn borrowed_string_defaultdict_set_operations_use_owned_storage_and_direct_looku
         "from sifr.collections import defaultdict\n\ndef solve(text: str) -> int:\n    groups = defaultdict(set)\n    groups[1].add(text)\n    if text in groups[1]:\n        return 1\n    return 0\n",
     );
 
-    assert!(rust_code.contains(".or_insert(HashSet::new()).insert(text.to_owned())"));
+    assert!(rust_code.contains("let __sifr_defaultdict_arg_0 = text.to_owned();"));
+    assert!(rust_code.contains("groups.entry(__sifr_defaultdict_key).or_insert(HashSet::new())"));
+    assert!(rust_code.contains("__sifr_defaultdict_bucket.insert(__sifr_defaultdict_arg_0)"));
     assert!(rust_code.contains(
         ".get(&SifrInt::from_i64(1)).is_some_and(|__sifr_defaultdict_bucket| __sifr_defaultdict_bucket.contains(text))"
     ));
@@ -144,14 +148,16 @@ fn variadic_set_bucket_updates_never_fall_back_to_cloned_receivers() {
     let key_binding = rust_code
         .find("let __sifr_defaultdict_key = SifrInt::from_i64(1);")
         .expect("set update key should be evaluated into a temporary");
-    let preinsert = rust_code
+    let preinsert = rust_code[key_binding..]
         .find("groups.entry(__sifr_defaultdict_key.clone()).or_insert(HashSet::new());")
+        .map(|offset| key_binding + offset)
         .expect("set bucket should be inserted before arguments are evaluated");
     let items_binding = rust_code
         .find("let __sifr_defaultdict_set_items_0 =")
         .expect("first set argument should be materialized");
-    let bucket_binding = rust_code
+    let bucket_binding = rust_code[items_binding..]
         .find("let __sifr_defaultdict_bucket = groups.entry(__sifr_defaultdict_key)")
+        .map(|offset| items_binding + offset)
         .expect("set bucket should be re-borrowed after materialization");
     assert!(key_binding < preinsert);
     assert!(preinsert < items_binding);
@@ -188,4 +194,40 @@ fn iterable_mutation_evaluates_key_before_arguments_and_bucket_borrow() {
     assert!(key_binding < preinsert);
     assert!(preinsert < items_binding);
     assert!(items_binding < bucket_binding);
+}
+
+#[test]
+fn scalar_mutation_stages_key_and_arguments_before_one_bucket_borrow() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef key(mut log: list[str]) -> int:\n    log.append(\"key\")\n    return 1\n\ndef value(mut log: list[str]) -> int:\n    log.append(\"value\")\n    return 7\n\ndef solve() -> int:\n    log: list[str] = []\n    groups = defaultdict(list)\n    groups[key(log)].insert(len(groups), value(log))\n    return len(groups[1])\n",
+    );
+    let ordered = [
+        "let __sifr_defaultdict_key = key(&mut log);",
+        "groups.entry(__sifr_defaultdict_key.clone()).or_insert(Vec::new());",
+        "let __sifr_defaultdict_arg_0 =",
+        "let __sifr_defaultdict_arg_1 = value(&mut log);",
+        "let __sifr_defaultdict_bucket = groups.entry(__sifr_defaultdict_key)",
+        "__sifr_defaultdict_bucket.insert(",
+    ];
+    let mut offset = 0;
+    for fragment in ordered {
+        offset += rust_code[offset..]
+            .find(fragment)
+            .unwrap_or_else(|| panic!("missing ordered {fragment}:\n{rust_code}"))
+            + fragment.len();
+    }
+    assert_eq!(rust_code.matches("= key(&mut log)").count(), 1);
+    assert_eq!(rust_code.matches("= value(&mut log)").count(), 1);
+    assert!(rust_code.contains("clamp_slice_bound(__sifr_defaultdict_bucket.len())"));
+    assert!(!rust_code.contains(".or_insert(Vec::new()).insert("));
+}
+
+#[test]
+fn scalar_mutation_remove_evaluates_value_outside_the_search_closure() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef value(mut log: list[str]) -> int:\n    log.append(\"value\")\n    return 7\n\ndef solve() -> int:\n    log: list[str] = []\n    groups = defaultdict(list)\n    groups[1].extend([1, 7, 9])\n    groups[1].remove(value(log))\n    return len(groups[1])\n",
+    );
+    assert!(rust_code.contains("let __sifr_defaultdict_arg_0 = value(&mut log);"));
+    assert!(rust_code.contains("__x.eq(&__sifr_defaultdict_arg_0)"));
+    assert!(!rust_code.contains("__x.eq(&value("));
 }

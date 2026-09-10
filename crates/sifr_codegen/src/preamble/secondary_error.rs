@@ -30,40 +30,6 @@ impl SecondaryError {
             budget_millis: 0,
         }
     }
-
-    fn from_async_cleanup(
-        evidence: ::sifr_runtime::async_cleanup::AsyncCleanupEvidence,
-    ) -> Self {
-        match evidence {
-            ::sifr_runtime::async_cleanup::AsyncCleanupEvidence::CleanupFailed {
-                error,
-                location,
-                resource,
-                operation,
-                budget,
-            } => Self {
-                message: error,
-                kind: __SifrSecondaryErrorKind::CleanupFailed,
-                location,
-                resource,
-                operation,
-                budget_millis: u64::try_from(budget.as_millis()).unwrap_or(u64::MAX),
-            },
-            ::sifr_runtime::async_cleanup::AsyncCleanupEvidence::CleanupTimedOut {
-                location,
-                resource,
-                operation,
-                budget,
-            } => Self {
-                message: "asynchronous cleanup timed out".to_string(),
-                kind: __SifrSecondaryErrorKind::CleanupTimedOut,
-                location,
-                resource,
-                operation,
-                budget_millis: u64::try_from(budget.as_millis()).unwrap_or(u64::MAX),
-            },
-        }
-    }
 }
 
 impl std::fmt::Display for SecondaryError {
