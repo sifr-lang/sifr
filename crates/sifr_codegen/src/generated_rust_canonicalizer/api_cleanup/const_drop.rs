@@ -56,12 +56,28 @@ fn bind_owned(pattern: &syn::Pat, owned: &mut HashSet<String>) -> bool {
 }
 
 fn block_transfers(block: &syn::Block, state: &mut DropState) -> bool {
+    block_flow(block, state, ValueUse::Used).is_some()
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Flow {
+    Continues,
+    Returned,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ValueUse {
+    Used,
+    Discarded,
+}
+
+fn block_flow(block: &syn::Block, state: &mut DropState, tail_use: ValueUse) -> Option<Flow> {
+    let outer_trivial = state.trivial.clone();
+    let mut locals = HashSet::new();
     for (index, statement) in block.stmts.iter().enumerate() {
-        match statement {
+        let flow = match statement {
             syn::Stmt::Local(local) => {
-                let Some(init) = &local.init else {
-                    return false;
-                };
+                let init = local.init.as_ref()?;
                 let (pattern, trivial) = match &local.pat {
                     syn::Pat::Type(typed) => (&*typed.pat, type_has_trivial_drop(&typed.ty)),
                     pattern => (pattern, expression_is_trivial(&init.expr, &state.trivial)),
@@ -74,102 +90,191 @@ fn block_transfers(block: &syn::Block, state: &mut DropState) -> bool {
                     .iter()
                     .any(|name| state.owned.contains(name) || state.trivial.contains(name))
                     || init.diverge.is_some()
-                    || !expression_transfers(&init.expr, state)
                 {
-                    return false;
+                    return None;
                 }
+                if expression_flow(&init.expr, state, ValueUse::Used)? == Flow::Returned {
+                    state.trivial = outer_trivial;
+                    return Some(Flow::Returned);
+                }
+                locals.extend(bindings.iter().cloned());
                 if trivial {
                     state.trivial.extend(bindings);
                 } else if !bind_owned(pattern, &mut state.owned) {
-                    return false;
+                    return None;
                 }
+                Flow::Continues
             }
             syn::Stmt::Expr(expression, None) if index + 1 == block.stmts.len() => {
-                return expression_transfers(expression, state);
+                expression_flow(expression, state, tail_use)?
             }
-            syn::Stmt::Expr(syn::Expr::Return(return_), _) => {
-                return return_
-                    .expr
-                    .as_ref()
-                    .is_none_or(|value| expression_transfers(value, state));
+            syn::Stmt::Expr(expression, _) => {
+                expression_flow(expression, state, ValueUse::Discarded)?
             }
-            syn::Stmt::Item(_) => {}
-            // A discarded expression can itself create a value with Drop.
-            // Expression legality alone cannot establish that it is const-safe.
-            _ => return false,
+            syn::Stmt::Item(_) => Flow::Continues,
+            _ => return None,
+        };
+        if flow == Flow::Returned {
+            state.trivial = outer_trivial;
+            return Some(flow);
         }
     }
-    true
+    // Locals leave this lexical scope even when the enclosing function proceeds.
+    if !state.owned.is_disjoint(&locals) {
+        return None;
+    }
+    state.trivial = outer_trivial;
+    Some(Flow::Continues)
 }
 
-fn expression_transfers(expression: &syn::Expr, state: &mut DropState) -> bool {
+fn expression_flow(
+    expression: &syn::Expr,
+    state: &mut DropState,
+    value_use: ValueUse,
+) -> Option<Flow> {
+    // Control-flow branches carry their own value-use context. Other discarded
+    // expressions must prove their result cannot require destruction.
+    if value_use == ValueUse::Discarded
+        && !matches!(
+            expression,
+            syn::Expr::Return(_)
+                | syn::Expr::If(_)
+                | syn::Expr::Match(_)
+                | syn::Expr::Block(_)
+                | syn::Expr::Paren(_)
+                | syn::Expr::Group(_)
+        )
+        && !expression_is_trivial(expression, &state.trivial)
+    {
+        return None;
+    }
     match expression {
         syn::Expr::Path(path) if path.qself.is_none() && path.path.segments.len() == 1 => {
             state.owned.remove(&path.path.segments[0].ident.to_string());
-            true
+            Some(Flow::Continues)
         }
-        syn::Expr::Lit(_) | syn::Expr::Path(_) => true,
-        syn::Expr::Paren(paren) => expression_transfers(&paren.expr, state),
-        syn::Expr::Group(group) => expression_transfers(&group.expr, state),
-        syn::Expr::Tuple(tuple) => tuple
-            .elems
-            .iter()
-            .all(|value| expression_transfers(value, state)),
-        syn::Expr::Array(array) => array
-            .elems
-            .iter()
-            .all(|value| expression_transfers(value, state)),
+        syn::Expr::Lit(_) | syn::Expr::Path(_) => Some(Flow::Continues),
+        syn::Expr::Paren(paren) => expression_flow(&paren.expr, state, value_use),
+        syn::Expr::Group(group) => expression_flow(&group.expr, state, value_use),
+        syn::Expr::Tuple(tuple) => expressions_flow(tuple.elems.iter(), state),
+        syn::Expr::Array(array) => expressions_flow(array.elems.iter(), state),
         syn::Expr::Struct(struct_) => {
             // Struct update transfers only unmentioned fields. The overwritten
             // fields of its base can still need destruction at scope exit.
-            struct_.rest.is_none()
-                && struct_
-                    .fields
-                    .iter()
-                    .all(|field| expression_transfers(&field.expr, state))
+            if struct_.rest.is_some() {
+                return None;
+            }
+            expressions_flow(struct_.fields.iter().map(|field| &field.expr), state)
         }
-        syn::Expr::Call(call) => call
-            .args
-            .iter()
-            .all(|value| expression_transfers(value, state)),
-        syn::Expr::Block(block) => block_transfers(&block.block, state),
-        syn::Expr::Return(return_) => return_
-            .expr
-            .as_ref()
-            .is_none_or(|value| expression_transfers(value, state)),
+        syn::Expr::Call(call) => expressions_flow(call.args.iter(), state),
+        syn::Expr::Block(block) => block_flow(&block.block, state, value_use),
+        syn::Expr::Return(return_) => {
+            if let Some(value) = &return_.expr {
+                expression_flow(value, state, ValueUse::Used)?;
+            }
+            state.owned.is_empty().then_some(Flow::Returned)
+        }
         syn::Expr::If(if_) => {
             // The condition is borrowed for its truth value; it cannot discharge
             // ownership. Each complete branch must transfer the same inputs.
-            if !matches!(if_.cond.as_ref(), syn::Expr::Path(_))
-                && !expression_is_trivial(&if_.cond, &state.trivial)
-            {
-                return false;
-            }
+            condition_preserves_owners(&if_.cond, state)?;
             let mut then_state = state.clone();
             let mut else_state = state.clone();
-            if !block_transfers(&if_.then_branch, &mut then_state)
-                || !if_
-                    .else_branch
-                    .as_ref()
-                    .is_some_and(|(_, branch)| expression_transfers(branch, &mut else_state))
-                || then_state.owned != else_state.owned
-            {
-                return false;
+            let then_flow = block_flow(&if_.then_branch, &mut then_state, value_use)?;
+            let else_flow = if let Some((_, branch)) = &if_.else_branch {
+                expression_flow(branch, &mut else_state, value_use)?
+            } else {
+                Flow::Continues
+            };
+            merge_branches(state, [(then_state, then_flow), (else_state, else_flow)])
+        }
+        syn::Expr::Match(match_) => {
+            // Matching a scalar or reference cannot partially drop an owner.
+            // Owned destructuring remains unproven, not silently discharged.
+            if !expression_is_trivial(&match_.expr, &state.trivial) {
+                return None;
             }
-            state.owned = then_state.owned;
-            true
+            condition_preserves_owners(&match_.expr, state)?;
+            let mut branches = Vec::new();
+            for arm in &match_.arms {
+                let mut branch = state.clone();
+                let mut bindings = HashSet::new();
+                collect_bindings(&arm.pat, &mut bindings);
+                if !bindings.is_disjoint(&branch.owned) || !bindings.is_disjoint(&branch.trivial) {
+                    return None;
+                }
+                branch.trivial.extend(bindings);
+                if let Some((_, guard)) = &arm.guard {
+                    condition_preserves_owners(guard, &branch)?;
+                }
+                let flow = expression_flow(&arm.body, &mut branch, value_use)?;
+                branches.push((branch, flow));
+            }
+            merge_branches(state, branches)
         }
         // Borrows and field reads never transfer an owned parameter. The
         // independent expression checker proves whether these are const-legal.
-        syn::Expr::Reference(reference) => is_existing_place(&reference.expr, state),
+        syn::Expr::Reference(reference) => {
+            is_existing_place(&reference.expr, state).then_some(Flow::Continues)
+        }
         syn::Expr::Cast(cast) => {
             // Casting a borrowed enum discriminant is safe, but it does not
             // transfer an owned enum or dispose of an owned temporary safely.
-            is_existing_place(&cast.expr, state)
-                || expression_is_trivial(&cast.expr, &state.trivial)
+            (is_existing_place(&cast.expr, state)
+                || expression_is_trivial(&cast.expr, &state.trivial))
+            .then_some(Flow::Continues)
         }
-        syn::Expr::Field(_) | syn::Expr::Unary(_) => true,
-        _ => false,
+        syn::Expr::Field(_) | syn::Expr::Unary(_) => Some(Flow::Continues),
+        _ => None,
+    }
+}
+
+fn expressions_flow<'a>(
+    expressions: impl IntoIterator<Item = &'a syn::Expr>,
+    state: &mut DropState,
+) -> Option<Flow> {
+    for expression in expressions {
+        if expression_flow(expression, state, ValueUse::Used)? == Flow::Returned {
+            return Some(Flow::Returned);
+        }
+    }
+    Some(Flow::Continues)
+}
+
+fn condition_preserves_owners(expression: &syn::Expr, state: &DropState) -> Option<()> {
+    let mut condition = state.clone();
+    (expression_flow(expression, &mut condition, ValueUse::Used)? == Flow::Continues
+        && condition.owned == state.owned)
+        .then_some(())
+}
+
+fn merge_branches(
+    state: &mut DropState,
+    branches: impl IntoIterator<Item = (DropState, Flow)>,
+) -> Option<Flow> {
+    let mut continuing = None;
+    let mut seen = false;
+    for (branch, flow) in branches {
+        seen = true;
+        if flow == Flow::Continues {
+            if let Some(owners) = &continuing {
+                if owners != &branch.owned {
+                    return None;
+                }
+            } else {
+                continuing = Some(branch.owned);
+            }
+        }
+    }
+    if !seen {
+        return None;
+    }
+    if let Some(owners) = continuing {
+        state.owned = owners;
+        Some(Flow::Continues)
+    } else {
+        state.owned.clear();
+        Some(Flow::Returned)
     }
 }
 

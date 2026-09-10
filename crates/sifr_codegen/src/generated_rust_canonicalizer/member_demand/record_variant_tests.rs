@@ -228,3 +228,84 @@ fn const_promotion_proves_owned_inputs_and_locals_are_transferred_not_dropped() 
         );
     }
 }
+
+#[test]
+fn const_promotion_preserves_control_flow_and_checks_every_owner_exit() {
+    let canonical = canonical_and_compile(
+        r#"
+        #[derive(Clone, Copy)]
+        pub enum Direction { North, East }
+        impl Direction {
+            pub fn is_vertical(&self) -> bool {
+                match self { Direction::North => true, Direction::East => false }
+            }
+        }
+        pub fn early_scalar(flag: bool) -> i64 {
+            if flag { return 1; }
+            2
+        }
+        pub fn early_transfer(value: String, flag: bool) -> String {
+            if flag { let alias = value; return alias; }
+            value
+        }
+        pub fn nested_transfer(value: String, first: bool, second: bool) -> String {
+            if first { if second { return value; } }
+            value
+        }
+        pub fn match_transfer(value: String, flag: bool) -> String {
+            match flag { true => value, false => value }
+        }
+        pub fn guarded_transfer(value: String, first: bool, second: bool) -> String {
+            match first { true if second => return value, _ => {} }
+            value
+        }
+        pub fn borrowed_match(value: &Option<String>) -> i64 {
+            match value { Some(_) => 1, None => 0 }
+        }
+        pub fn early_discard(value: String, flag: bool) -> String {
+            if flag { return value; }
+            String::new()
+        }
+        pub fn match_discard(value: String, flag: bool) -> String {
+            match flag { true => value, false => String::new() }
+        }
+        pub fn scoped_discard(flag: bool) -> i64 {
+            if flag { let value = String::new(); }
+            3
+        }
+        pub fn statement_discard(flag: bool) -> i64 {
+            if flag { String::new(); }
+            4
+        }
+        pub fn temporary_match() -> i64 {
+            match &String::new() { _ => 5 }
+        }
+        "#,
+    );
+    for name in [
+        "is_vertical",
+        "early_scalar",
+        "early_transfer",
+        "nested_transfer",
+        "match_transfer",
+        "guarded_transfer",
+        "borrowed_match",
+    ] {
+        assert!(
+            canonical.contains(&format!("const fn {name}(")),
+            "{canonical}"
+        );
+    }
+    for name in [
+        "early_discard",
+        "match_discard",
+        "scoped_discard",
+        "statement_discard",
+        "temporary_match",
+    ] {
+        assert!(
+            !canonical.contains(&format!("const fn {name}(")),
+            "{canonical}"
+        );
+    }
+}
