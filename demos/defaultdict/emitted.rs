@@ -62,16 +62,26 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ecollectionsX2
 fn main() {
     let mut groups: HashMap<String, Vec<String>> = HashMap::new();
     {
+        let sifr_generated_defaultdict_key = "hit".to_string();
         groups
-            .entry("hit".to_string())
-            .or_insert(Vec::new())
-            .push("hot".to_string());
+            .entry(sifr_generated_defaultdict_key.clone())
+            .or_insert(Vec::new());
+        let sifr_generated_defaultdict_arg_0 = "hot".to_string();
+        let sifr_generated_defaultdict_bucket = groups
+            .entry(sifr_generated_defaultdict_key)
+            .or_insert(Vec::new());
+        sifr_generated_defaultdict_bucket.push(sifr_generated_defaultdict_arg_0);
     };
     {
+        let sifr_generated_defaultdict_key = "hit".to_string();
         groups
-            .entry("hit".to_string())
-            .or_insert(Vec::new())
-            .push("hut".to_string());
+            .entry(sifr_generated_defaultdict_key.clone())
+            .or_insert(Vec::new());
+        let sifr_generated_defaultdict_arg_0 = "hut".to_string();
+        let sifr_generated_defaultdict_bucket = groups
+            .entry(sifr_generated_defaultdict_key)
+            .or_insert(Vec::new());
+        sifr_generated_defaultdict_bucket.push(sifr_generated_defaultdict_arg_0);
     };
     assert_eq!(
         &groups.get("hit").map_or_else(
@@ -82,14 +92,24 @@ fn main() {
     );
     let mut seen: HashMap<SifrInt, HashSet<String>> = HashMap::new();
     {
-        seen.entry(SifrInt::from_i64(1))
-            .or_insert(HashSet::new())
-            .insert("a".to_string());
+        let sifr_generated_defaultdict_key = SifrInt::from_i64(1);
+        seen.entry(sifr_generated_defaultdict_key.clone())
+            .or_insert(HashSet::new());
+        let sifr_generated_defaultdict_arg_0 = "a".to_string();
+        let sifr_generated_defaultdict_bucket = seen
+            .entry(sifr_generated_defaultdict_key)
+            .or_insert(HashSet::new());
+        sifr_generated_defaultdict_bucket.insert(sifr_generated_defaultdict_arg_0);
     };
     {
-        seen.entry(SifrInt::from_i64(1))
-            .or_insert(HashSet::new())
-            .insert("b".to_string());
+        let sifr_generated_defaultdict_key = SifrInt::from_i64(1);
+        seen.entry(sifr_generated_defaultdict_key.clone())
+            .or_insert(HashSet::new());
+        let sifr_generated_defaultdict_arg_0 = "b".to_string();
+        let sifr_generated_defaultdict_bucket = seen
+            .entry(sifr_generated_defaultdict_key)
+            .or_insert(HashSet::new());
+        sifr_generated_defaultdict_bucket.insert(sifr_generated_defaultdict_arg_0);
     };
     assert!(
         seen.get(&SifrInt::from_i64(1))
