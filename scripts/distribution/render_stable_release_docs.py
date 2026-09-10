@@ -15,8 +15,8 @@ sys.path.insert(0, str(AREA_ROOT))
 from governance import GovernanceError, validate_site_release_facts  # noqa: E402
 from governance.common import load_json_strict  # noqa: E402
 
-START_MARKER = "<!-- stable-release-facts:start -->"
-END_MARKER = "<!-- stable-release-facts:end -->"
+START_MARKER = "{/* stable-release-facts:start */}"
+END_MARKER = "{/* stable-release-facts:end */}"
 
 
 class DocumentationRenderError(ValueError):

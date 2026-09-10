@@ -15,8 +15,8 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SOURCE_PATH = "verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json"
 PUBLIC_PATH = "docs/rust-interop.mdx"
-START_MARKER = "<!-- rust-interop-stable-claims:start -->"
-END_MARKER = "<!-- rust-interop-stable-claims:end -->"
+START_MARKER = "{/* rust-interop-stable-claims:start */}"
+END_MARKER = "{/* rust-interop-stable-claims:end */}"
 CLAIM_FIELDS = {"id", "category", "execution_kind", "capability"}
 RUNTIME_CLAIM_TERMS = (
     "runtime evidence",
