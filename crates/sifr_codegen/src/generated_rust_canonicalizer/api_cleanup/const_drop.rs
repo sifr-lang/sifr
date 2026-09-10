@@ -3,13 +3,20 @@
 
 use std::collections::HashSet;
 
-use super::super::member_demand::type_has_trivial_drop;
+use super::const_types::DropTypes;
 
-pub(super) fn function_has_no_implicit_drop(signature: &syn::Signature, body: &syn::Block) -> bool {
-    let mut state = DropState::default();
+pub(super) fn function_has_no_implicit_drop(
+    signature: &syn::Signature,
+    body: &syn::Block,
+    types: &DropTypes,
+) -> bool {
+    let mut state = DropState {
+        types: types.clone(),
+        ..DropState::default()
+    };
     for argument in &signature.inputs {
         match argument {
-            syn::FnArg::Typed(parameter) if !type_has_trivial_drop(&parameter.ty) => {
+            syn::FnArg::Typed(parameter) if !types.is_trivial(&parameter.ty) => {
                 if !bind_owned(&parameter.pat, &mut state.owned) {
                     return false;
                 }
@@ -30,6 +37,7 @@ pub(super) fn function_has_no_implicit_drop(signature: &syn::Signature, body: &s
 
 #[derive(Clone, Default)]
 struct DropState {
+    types: DropTypes,
     owned: HashSet<String>,
     trivial: HashSet<String>,
 }
@@ -79,25 +87,38 @@ fn block_flow(block: &syn::Block, state: &mut DropState, tail_use: ValueUse) -> 
             syn::Stmt::Local(local) => {
                 let init = local.init.as_ref()?;
                 let (pattern, trivial) = match &local.pat {
-                    syn::Pat::Type(typed) => (&*typed.pat, type_has_trivial_drop(&typed.ty)),
+                    syn::Pat::Type(typed) => (&*typed.pat, state.types.is_trivial(&typed.ty)),
                     pattern => (pattern, expression_is_trivial(&init.expr, &state.trivial)),
                 };
                 let mut bindings = HashSet::new();
                 collect_bindings(pattern, &mut bindings);
                 // A shadowed value is still alive under a distinct Rust binding.
                 // Do not let a use of the new binding discharge the old owner.
-                if bindings
-                    .iter()
-                    .any(|name| state.owned.contains(name) || state.trivial.contains(name))
-                    || init.diverge.is_some()
-                {
+                if bindings.iter().any(|name| state.owned.contains(name)) {
                     return None;
                 }
                 if expression_flow(&init.expr, state, ValueUse::Used)? == Flow::Returned {
                     state.trivial = outer_trivial;
                     return Some(Flow::Returned);
                 }
+                if let Some((_, diverge)) = &init.diverge {
+                    // Refutable destructuring is safe only for a proven trivial
+                    // value. The nonmatching path must return without leaving
+                    // any other owner behind; it does not consume continuing owners.
+                    if !trivial {
+                        return None;
+                    }
+                    let mut failed_match = state.clone();
+                    if expression_flow(diverge, &mut failed_match, ValueUse::Used)?
+                        != Flow::Returned
+                    {
+                        return None;
+                    }
+                }
                 locals.extend(bindings.iter().cloned());
+                // A trivial shadow can die freely, but its new binding must not
+                // inherit triviality when the initializer instead owns a value.
+                state.trivial.retain(|name| !bindings.contains(name));
                 if trivial {
                     state.trivial.extend(bindings);
                 } else if !bind_owned(pattern, &mut state.owned) {
@@ -204,7 +225,7 @@ fn expression_flow(
                 let mut branch = state.clone();
                 let mut bindings = HashSet::new();
                 collect_bindings(pattern, &mut bindings);
-                if !bindings.is_disjoint(&branch.owned) || !bindings.is_disjoint(&branch.trivial) {
+                if !bindings.is_disjoint(&branch.owned) {
                     return None;
                 }
                 branch.trivial.extend(bindings);

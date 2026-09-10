@@ -323,3 +323,109 @@ fn const_promotion_preserves_control_flow_and_checks_every_owner_exit() {
         );
     }
 }
+
+#[test]
+fn const_promotion_preserves_trivial_container_let_else_and_owner_exits() {
+    let canonical = canonical_and_compile(
+        r#"
+        pub fn option_bool(value: Option<bool>) -> bool {
+            let Some(value) = value else { return false; };
+            value
+        }
+        pub fn option_float(value: Option<f64>) -> f64 {
+            let Some(value) = value else { return 0.0; };
+            value
+        }
+        pub fn result_scalar(value: Result<i64, bool>) -> i64 {
+            let Ok(value) = value else { return 0; };
+            value
+        }
+        pub fn nested_container(value: Option<Result<bool, i64>>) -> bool {
+            let Some(value) = value else { return false; };
+            let Ok(value) = value else { return false; };
+            value
+        }
+        pub fn borrowed_option(value: &Option<String>) -> Option<&String> {
+            let Some(value) = value else { return None; };
+            Some(value)
+        }
+        pub fn let_else_transfer(value: String, flag: Option<bool>) -> String {
+            let Some(flag) = flag else { return value; };
+            if flag { return value; }
+            value
+        }
+        pub fn let_else_discard(value: String, flag: Option<bool>) -> String {
+            let Some(flag) = flag else { return String::new(); };
+            if flag { return value; }
+            value
+        }
+        pub fn owned_container(value: Option<String>) -> bool {
+            let Some(value) = value else { return false; };
+            false
+        }
+        pub fn generic_container<T>(_: Option<T>) -> bool { false }
+        pub fn owned_result(_: Result<bool, String>) -> bool { false }
+        pub fn shadow_with_owner(value: bool) -> i64 {
+            let value = String::new();
+            let alias = value;
+            1
+        }
+        "#,
+    );
+    for name in [
+        "option_bool",
+        "option_float",
+        "result_scalar",
+        "nested_container",
+        "borrowed_option",
+        "let_else_transfer",
+    ] {
+        assert!(
+            canonical.contains(&format!("const fn {name}(")),
+            "{canonical}"
+        );
+    }
+    for name in [
+        "let_else_discard",
+        "owned_container",
+        "generic_container",
+        "owned_result",
+        "shadow_with_owner",
+    ] {
+        assert!(
+            !canonical.contains(&format!("const fn {name}(")),
+            "{canonical}"
+        );
+        assert!(
+            !canonical.contains(&format!("const fn {name}<")),
+            "{canonical}"
+        );
+    }
+}
+
+#[test]
+fn const_promotion_does_not_confuse_shadowed_containers_with_standard_types() {
+    let local = canonical_and_compile(
+        r#"
+        pub struct Option<T>(pub T);
+        impl<T> Drop for Option<T> { fn drop(&mut self) {} }
+        pub fn local_container(_: Option<bool>) -> i64 { 0 }
+        pub fn standard_container(value: ::core::option::Option<bool>) -> bool {
+            let Some(value) = value else { return false; };
+            value
+        }
+        "#,
+    );
+    assert!(!local.contains("const fn local_container("), "{local}");
+    assert!(local.contains("const fn standard_container("), "{local}");
+    let imported = canonical_and_compile(
+        r#"
+        use std::vec::Vec as Option;
+        pub fn imported_container(_: Option<bool>) -> i64 { 0 }
+        "#,
+    );
+    assert!(
+        !imported.contains("const fn imported_container("),
+        "{imported}"
+    );
+}

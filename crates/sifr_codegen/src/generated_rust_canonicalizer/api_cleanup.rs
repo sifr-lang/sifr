@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use syn::visit::{self, Visit};
 
 mod const_drop;
+mod const_types;
 
 use super::source_expectations::{
     refresh_const_expectations, refresh_function_expectations, refresh_struct_expectations,
@@ -68,11 +69,12 @@ fn improve_generated_api_items_with_project_consts(
     source: &str,
     project_const_functions: &HashSet<String>,
 ) {
+    let drop_types = const_types::DropTypes::for_items(items);
     loop {
         let mut before_const = const_callable_paths(items);
         before_const.extend(project_const_functions.iter().cloned());
         let before_eq = derived_eq_owners(items);
-        improve_generated_api_items_once(items, &before_const, &before_eq, source);
+        improve_generated_api_items_once(items, &before_const, &before_eq, source, &drop_types);
         let mut after_const = const_callable_paths(items);
         after_const.extend(project_const_functions.iter().cloned());
         if after_const == before_const && derived_eq_owners(items) == before_eq {
@@ -86,6 +88,7 @@ fn improve_generated_api_items_once(
     const_callables: &HashSet<String>,
     eq_owners: &HashSet<String>,
     source: &str,
+    drop_types: &const_types::DropTypes,
 ) {
     let display_owners = display_implementation_owners(items);
     for item in items {
@@ -101,6 +104,7 @@ fn improve_generated_api_items_once(
                     owner_has_display: false,
                     const_callables,
                     source,
+                    drop_types,
                 },
             ),
             syn::Item::Impl(item_impl) => {
@@ -122,6 +126,7 @@ fn improve_generated_api_items_once(
                                 owner_has_display,
                                 const_callables,
                                 source,
+                                drop_types,
                             },
                         );
                     }
@@ -129,7 +134,13 @@ fn improve_generated_api_items_once(
             }
             syn::Item::Mod(module) => {
                 if let Some((_, nested)) = &mut module.content {
-                    improve_generated_api_items_once(nested, const_callables, eq_owners, source);
+                    improve_generated_api_items_once(
+                        nested,
+                        const_callables,
+                        eq_owners,
+                        source,
+                        drop_types,
+                    );
                 }
             }
             syn::Item::Struct(item_struct) => {
@@ -199,6 +210,7 @@ struct ApiContext<'context> {
     owner_has_display: bool,
     const_callables: &'context HashSet<String>,
     source: &'context str,
+    drop_types: &'context const_types::DropTypes,
 }
 
 fn improve_function_api(
@@ -229,7 +241,7 @@ fn improve_function_api(
     if context.allow_const
         && signature.constness.is_none()
         && signature.asyncness.is_none()
-        && const_drop::function_has_no_implicit_drop(signature, body)
+        && const_drop::function_has_no_implicit_drop(signature, body, context.drop_types)
         && block_is_const_compatible(
             body,
             context.owner,
