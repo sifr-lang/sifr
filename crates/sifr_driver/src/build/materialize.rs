@@ -250,11 +250,12 @@ fn materialize_binary_project_files(
 
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
-    write_project_file(
-        &src_dir.join("main.rs"),
-        generated_project.main_rs,
-        "main.rs",
-    )?;
+    let main_rs = format!(
+        "{}{}",
+        generated_project.bridge_root_declaration(),
+        generated_project.main_rs
+    );
+    write_project_file(&src_dir.join("main.rs"), main_rs, "main.rs")?;
 
     for (module, source) in generated_project.bridge_modules {
         let path = if !module.contains("::") {

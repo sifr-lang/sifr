@@ -24,6 +24,14 @@ pub(super) struct GeneratedBinaryProject {
 }
 
 impl GeneratedBinaryProject {
+    pub(super) fn bridge_root_declaration(&self) -> String {
+        self.bridge_modules
+            .keys()
+            .filter(|name| !name.contains("::"))
+            .map(|name| format!("pub mod {name};\n"))
+            .collect()
+    }
+
     pub(super) fn emit_source_listing(&self) -> String {
         let mut listing = String::new();
         listing.push_str("// src/main.rs\n");
@@ -84,9 +92,6 @@ pub(super) fn format_generated_binary_project(
             sifr_diagnostics::DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
         )]
     })?;
-    if !generated.bridge_modules.is_empty() {
-        generated.main_rs = format!("pub mod __sifr_bridge;\n{}", generated.main_rs);
-    }
     let names = super::rust_formatter::canonicalize_project_fields(
         &mut generated.main_rs,
         generated
@@ -432,7 +437,17 @@ mod tests {
             .iter()
             .find(|(name, _)| !name.contains("::"))
             .expect("bridge root");
-        assert!(project.main_rs.contains(&format!("pub mod {root};")));
+        assert_eq!(
+            project.bridge_root_declaration(),
+            format!("pub mod {root};\n")
+        );
+        // The existing source listing excludes bridge files and their root
+        // declaration; only complete native materialization declares the owner.
+        assert!(
+            !project
+                .emit_source_listing()
+                .contains(&format!("pub mod {root};"))
+        );
         let child = project
             .bridge_modules
             .keys()
@@ -445,7 +460,10 @@ mod tests {
         );
         assert!(source.contains(&format!("pub mod {leaf};")), "{source}");
         assert_eq!(
-            project.main_rs.matches(&format!("pub mod {root};")).count(),
+            project
+                .bridge_root_declaration()
+                .matches(&format!("pub mod {root};"))
+                .count(),
             1
         );
     }

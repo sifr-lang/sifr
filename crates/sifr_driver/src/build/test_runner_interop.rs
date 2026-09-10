@@ -28,7 +28,11 @@ pub(crate) fn finalize_test_runner_project(
     let (generated, context) = attach_stdlib_rust_interop(generated, None, stdlib);
     let generated = resolve_package_rust_interop_metadata(generated, context)?;
     let generated = format_generated_binary_project(generated)?;
-    let all_rust_code = generated.main_rs;
+    let all_rust_code = format!(
+        "{}{}",
+        generated.bridge_root_declaration(),
+        generated.main_rs
+    );
     let mut bridge_rust_files = BTreeMap::new();
     for (module, source) in generated.bridge_modules {
         let path = if !module.contains("::") {
