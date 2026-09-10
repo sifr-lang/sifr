@@ -91,7 +91,14 @@ Source in this directory is deployed by [Mintlify](https://mintlify.com) from `s
 
 ```bash
 cd docs
-npx mint@latest dev
+npx --yes mint@4.2.882 dev
+```
+
+Use the same exact Mint release for documentation checks:
+
+```bash
+npx --yes mint@4.2.882 validate
+npx --yes mint@4.2.882 broken-links
 ```
 
 ## Internal reference (not published)
@@ -110,6 +117,7 @@ echo "Import complete. Pages:"
 find "$DOCS_DIR" -name '*.mdx' | wc -l | xargs echo "  MDX files:"
 echo ""
 echo "Next steps:"
-echo "  1. cd docs && npx mint@latest validate"
-echo "  2. Mintlify dashboard → Git Settings → sifr-lang/sifr, subdirectory docs"
-echo "  3. git add docs/ && git commit && git push"
+echo "  1. cd docs && npx --yes mint@4.2.882 validate"
+echo "  2. npx --yes mint@4.2.882 broken-links"
+echo "  3. Mintlify dashboard → Git Settings → sifr-lang/sifr, subdirectory docs"
+echo "  4. git add docs/ && git commit && git push"

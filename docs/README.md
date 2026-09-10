@@ -19,7 +19,14 @@ Do not include a trailing slash in the documentation path. Mintlify expects `doc
 
 ```bash
 cd docs
-npx mint@latest dev
+npx --yes mint@4.2.882 dev
+```
+
+Use the same exact Mint release for documentation checks:
+
+```bash
+npx --yes mint@4.2.882 validate
+npx --yes mint@4.2.882 broken-links
 ```
 
 ## Assistant instructions
