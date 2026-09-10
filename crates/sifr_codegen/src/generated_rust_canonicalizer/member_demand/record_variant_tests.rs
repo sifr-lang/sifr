@@ -249,7 +249,11 @@ fn const_promotion_preserves_control_flow_and_checks_every_owner_exit() {
             value
         }
         pub fn nested_transfer(value: String, first: bool, second: bool) -> String {
-            if first { if second { return value; } }
+            if first {
+                if second { return value; }
+                let alias = value;
+                return alias;
+            }
             value
         }
         pub fn match_transfer(value: String, flag: bool) -> String {
@@ -259,8 +263,8 @@ fn const_promotion_preserves_control_flow_and_checks_every_owner_exit() {
             match first { true if second => return value, _ => {} }
             value
         }
-        pub fn borrowed_match(value: &Option<String>) -> i64 {
-            match value { Some(_) => 1, None => 0 }
+        pub fn borrowed_match(value: &Option<String>, flag: bool) -> i64 {
+            match value { Some(_) if flag => 1, Some(_) => 2, None => 0 }
         }
         pub fn early_discard(value: String, flag: bool) -> String {
             if flag { return value; }
@@ -279,6 +283,14 @@ fn const_promotion_preserves_control_flow_and_checks_every_owner_exit() {
         }
         pub fn temporary_match() -> i64 {
             match &String::new() { _ => 5 }
+        }
+        pub fn boolean_operator_boundary(value: String, first: bool, second: bool) -> String {
+            if first && second { return value; }
+            value
+        }
+        pub fn method_call_boundary(value: &Option<String>) -> i64 {
+            if value.is_none() { return 0; }
+            1
         }
         "#,
     );
@@ -302,6 +314,8 @@ fn const_promotion_preserves_control_flow_and_checks_every_owner_exit() {
         "scoped_discard",
         "statement_discard",
         "temporary_match",
+        "boolean_operator_boundary",
+        "method_call_boundary",
     ] {
         assert!(
             !canonical.contains(&format!("const fn {name}(")),
