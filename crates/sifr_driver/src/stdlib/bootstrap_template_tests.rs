@@ -120,7 +120,7 @@ fn recursive_json_structural_contracts_follow_the_shared_project_owner() {
         .expect("complete generated assembly");
     assert_eq!(json_contract_count(&canonical), 3, "{canonical}");
     // The real recursive seven-field template, not the historical one-int stub.
-    for field in [
+    let fields = [
         "kind",
         "bool_value",
         "int_value",
@@ -128,10 +128,12 @@ fn recursive_json_structural_contracts_follow_the_shared_project_owner() {
         "str_value",
         "array_items",
         "object_items",
-    ] {
-        assert!(
-            canonical.contains(&format!("RecordField(\"{field}\")")),
-            "{field}"
+    ];
+    let contracts = json_contract_fields(&canonical);
+    for name in ["StructuralConstruct", "StructuralProject"] {
+        assert_eq!(
+            contracts.get(name).expect("shared contract fields"),
+            &fields
         );
     }
 
@@ -160,6 +162,138 @@ fn recursive_json_structural_contracts_follow_the_shared_project_owner() {
         &compiled.code,
     );
     assert_eq!(json_contract_count(&tests_only.project_union_prelude), 3);
+}
+
+fn json_contract_fields(source: &str) -> std::collections::BTreeMap<String, Vec<String>> {
+    use syn::visit::Visit;
+
+    #[derive(Default)]
+    struct Fields(Vec<String>);
+
+    fn record_field(path: &syn::Path) -> bool {
+        path.leading_colon.is_some()
+            && path
+                .segments
+                .iter()
+                .map(|segment| segment.ident.to_string())
+                .eq([
+                    "sifr_runtime",
+                    "interop",
+                    "structural",
+                    "StructuralEdgeKind",
+                    "RecordField",
+                ])
+    }
+
+    impl<'ast> Visit<'ast> for Fields {
+        fn visit_pat_tuple_struct(&mut self, pattern: &'ast syn::PatTupleStruct) {
+            if record_field(&pattern.path) && pattern.elems.len() == 1 {
+                if let Some(syn::Pat::Lit(syn::ExprLit {
+                    lit: syn::Lit::Str(field),
+                    ..
+                })) = pattern.elems.first()
+                {
+                    self.0.push(field.value());
+                }
+            }
+            syn::visit::visit_pat_tuple_struct(self, pattern);
+        }
+
+        fn visit_expr_call(&mut self, call: &'ast syn::ExprCall) {
+            if let syn::Expr::Path(function) = call.func.as_ref() {
+                if record_field(&function.path) && call.args.len() == 1 {
+                    if let Some(syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Str(field),
+                        ..
+                    })) = call.args.first()
+                    {
+                        self.0.push(field.value());
+                    }
+                }
+            }
+            syn::visit::visit_expr_call(self, call);
+        }
+    }
+
+    #[derive(Default)]
+    struct Contracts(std::collections::BTreeMap<String, Vec<String>>);
+    impl<'ast> Visit<'ast> for Contracts {
+        fn visit_item_impl(&mut self, implementation: &'ast syn::ItemImpl) {
+            let syn::Type::Path(owner) = implementation.self_ty.as_ref() else {
+                return;
+            };
+            if !owner
+                .path
+                .segments
+                .last()
+                .is_some_and(|name| name.ident.to_string().ends_with("JsonValue"))
+            {
+                return;
+            }
+            let Some((path, _)) = &implementation.trait_ else {
+                return;
+            };
+            let Some(name) = path.segments.last() else {
+                return;
+            };
+            if !matches!(
+                name.ident.to_string().as_str(),
+                "StructuralConstruct" | "StructuralProject"
+            ) {
+                return;
+            }
+            let mut fields = Fields::default();
+            fields.visit_item_impl(implementation);
+            assert!(
+                self.0.insert(name.ident.to_string(), fields.0).is_none(),
+                "duplicate shared contract"
+            );
+        }
+    }
+    let mut contracts = Contracts::default();
+    contracts.visit_file(&syn::parse_file(source).expect("generated shared contracts"));
+    contracts.0
+}
+
+#[test]
+fn json_contract_field_inspection_preserves_wrapped_field_order_and_owner_boundaries() {
+    let fields = json_contract_fields(
+        r#"
+        mod shared {
+            impl StructuralConstruct for SifrJsonValue {
+                fn field(edge: Edge) -> usize {
+                    match edge {
+                        ::sifr_runtime::interop::structural::StructuralEdgeKind::RecordField(
+                            "first",
+                        ) => 0,
+                        ::sifr_runtime::interop::structural::StructuralEdgeKind::RecordField("second") => 1,
+                        _ => 2,
+                    }
+                }
+            }
+            impl StructuralProject for SifrJsonValue {
+                fn visit() {
+                    let _ = ::sifr_runtime::interop::structural::StructuralEdgeKind::RecordField(
+                        "first",
+                    );
+                    let _ = ::sifr_runtime::interop::structural::StructuralEdgeKind::RecordField("second");
+                    let _ = Other::RecordField("not-a-contract-edge");
+                }
+            }
+            impl StructuralProject for OtherValue {
+                fn visit() {
+                    let _ = ::sifr_runtime::interop::structural::StructuralEdgeKind::RecordField("wrong-owner");
+                }
+            }
+        }
+    "#,
+    );
+    assert_eq!(fields.len(), 2);
+    for name in ["StructuralConstruct", "StructuralProject"] {
+        assert_eq!(fields[name], ["first", "second"]);
+        assert_ne!(fields[name], ["second", "first"]);
+        assert_ne!(fields[name], ["first"]);
+    }
 }
 
 fn assert_json_contract_owner(prelude: &str, body: &str) {
