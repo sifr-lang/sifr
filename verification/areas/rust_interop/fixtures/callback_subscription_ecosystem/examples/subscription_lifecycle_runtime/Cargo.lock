@@ -760,6 +760,7 @@ version = "0.0.0"
 dependencies = [
  "encoding_rs",
  "indexmap",
+ "memchr",
  "num-bigint",
  "num-traits",
 ]

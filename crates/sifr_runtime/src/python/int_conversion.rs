@@ -99,7 +99,7 @@ pub(super) fn extract_sifr_int(
 ) -> Result<SifrInt, PythonError> {
     let integer = value
         .cast::<PyInt>()
-        .map_err(|_| conversion_error("expected Python int", context))?;
+        .map_err(|error| PythonError::from_pyerr(py, error.into(), "conversion", context))?;
     let text = integer
         .str()
         .and_then(|value| value.to_str().map(str::to_string))

@@ -2,6 +2,8 @@ use quote::{ToTokens, quote};
 use std::collections::HashSet;
 use syn::visit::{self, Visit};
 
+mod const_drop;
+
 use super::source_expectations::{
     refresh_const_expectations, refresh_function_expectations, refresh_struct_expectations,
 };
@@ -227,6 +229,7 @@ fn improve_function_api(
     if context.allow_const
         && signature.constness.is_none()
         && signature.asyncness.is_none()
+        && const_drop::function_has_no_implicit_drop(signature, body)
         && block_is_const_compatible(
             body,
             context.owner,

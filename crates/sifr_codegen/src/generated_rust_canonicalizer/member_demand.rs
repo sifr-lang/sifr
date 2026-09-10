@@ -15,7 +15,8 @@ use generic_cleanup::{
     prune_item_members, prune_unconstrained_impl_generics, prune_unused_aggregate_type_parameters,
 };
 use macro_arguments::MacroArguments;
-use private_field_effects::{retain_effectful_initializers, type_has_trivial_drop};
+use private_field_effects::retain_effectful_initializers;
+pub(super) use private_field_effects::type_has_trivial_drop;
 use wildcards::rewrite_exhaustive_enum_wildcards;
 
 pub(super) fn prune_unused_members(file: &mut syn::File) {
@@ -395,6 +396,13 @@ struct RemovedVariantPatternCleanup<'definitions> {
 }
 
 impl VisitMut for RemovedVariantPatternCleanup<'_> {
+    fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
+        if let Some(mut arguments) = MacroArguments::parse(rust_macro) {
+            arguments.visit_mut(self);
+            rust_macro.tokens = arguments.tokens();
+        }
+    }
+
     fn visit_item_impl_mut(&mut self, impl_: &mut syn::ItemImpl) {
         let previous = self.impl_owner.replace(type_name(&impl_.self_ty));
         visit_mut::visit_item_impl_mut(self, impl_);
@@ -674,6 +682,13 @@ impl ExternalRemovedVariantPatternCleanup<'_> {
 }
 
 impl VisitMut for ExternalRemovedVariantPatternCleanup<'_> {
+    fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
+        if let Some(mut arguments) = MacroArguments::parse(rust_macro) {
+            arguments.visit_mut(self);
+            rust_macro.tokens = arguments.tokens();
+        }
+    }
+
     fn visit_expr_match_mut(&mut self, match_: &mut syn::ExprMatch) {
         visit_mut::visit_expr_mut(self, &mut match_.expr);
         match_.arms.retain(|arm| {

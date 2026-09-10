@@ -157,7 +157,7 @@ fn package_rust_interop_injects_bridge_alias_into_declaring_module() {
 
     assert_eq!(
         generated.support_modules.get("app").map(String::as_str),
-        Some("use __sifr_bridge_package_sifr_app::bridges as bridge;\npub fn hash() {}\n")
+        Some("use ::__sifr_bridge_package_sifr_app::bridges as bridge;\npub fn hash() {}\n")
     );
 }
 
@@ -182,10 +182,48 @@ fn package_rust_interop_injects_one_bridge_alias_per_module() {
         .expect("support module should remain");
     assert_eq!(
         support_module
-            .matches("use __sifr_bridge_package_sifr_app::bridges as bridge;")
+            .matches("use ::__sifr_bridge_package_sifr_app::bridges as bridge;")
             .count(),
         1
     );
+}
+
+#[test]
+fn package_bridge_cargo_alias_survives_complete_project_canonicalization() {
+    let mut generated = base_project(vec![declaration_entry(
+        "bridge.hash",
+        RustInteropDecoratorKind::Function,
+    )]);
+    generated.main_rs = "mod app; fn main() { app::hash(); }\n".to_string();
+    generated.support_modules.insert(
+        "app".to_string(),
+        "pub fn hash() { bridge::hash(); }\n".to_string(),
+    );
+    let mut context = package_context(TrustPolicy::default(), Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+    let mut generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("bridge root should resolve");
+
+    super::rust_formatter::canonicalize_project_fields(
+        &mut generated.main_rs,
+        generated.support_modules.iter_mut(),
+    )
+    .expect("complete project should canonicalize");
+    let module = &generated.support_modules["app"];
+    assert!(
+        module.contains("use ::__sifr_bridge_package_sifr_app::bridges as bridge;"),
+        "{module}"
+    );
+    assert!(module.contains("bridge::hash();"), "{module}");
+    assert!(
+        !module.contains("use sifr_generated_bridge_package_"),
+        "{module}"
+    );
+    assert!(matches!(
+        &generated.interop.rust.resolved_targets[0].root,
+        sifr_codegen::RustInteropResolvedRoot::PackageBridge { dependency_name, .. }
+            if dependency_name == "__sifr_bridge_package_sifr_app"
+    ));
 }
 
 #[test]

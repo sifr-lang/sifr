@@ -77,6 +77,33 @@ fn python_integer_roundtrip_preserves_values_beyond_i64() {
 }
 
 #[test]
+fn exact_integer_type_failure_preserves_python_error_and_releases_objects() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("exact-integer-type-failure")).expect("init should succeed");
+    let text = from_str("not an integer").expect("text should be stored");
+    let error = to_int(&text).expect_err("a string is not a Python int");
+    assert_eq!(error.kind, "conversion");
+    assert_eq!(error.exception_type, "TypeError");
+    assert_eq!(
+        error.message,
+        "TypeError: 'str' object is not an instance of 'int'"
+    );
+    assert_eq!(error.context, "to_int");
+    assert!(error.traceback.contains("TypeError"), "{}", error.traceback);
+    drop(error);
+    close_object(text).expect("text should close after failed conversion");
+    assert_eq!(
+        shutdown_diagnostics().expect("diagnostics should be available"),
+        PythonRuntimeDiagnostics {
+            initialized: true,
+            live_objects: 0,
+            leaked_objects: 0,
+        }
+    );
+}
+
+#[test]
 fn explicit_container_copy_conversions_preserve_nested_paths() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();

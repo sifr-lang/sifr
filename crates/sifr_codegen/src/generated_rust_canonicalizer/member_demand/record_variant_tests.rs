@@ -131,3 +131,93 @@ fn record_variant_demand_preserves_macro_initializer_effects() {
     assert!(tokens.contains("effect : next ()"), "{canonical}");
     assert!(!canonical.contains("unused"), "{canonical}");
 }
+
+#[test]
+fn removed_union_patterns_are_rewritten_inside_local_and_external_macros() {
+    let canonical = canonical_and_compile(
+        r#"
+        mod support {
+            pub enum __SifrUnionExternal { Live(String), Dead(String) }
+        }
+        use support::__SifrUnionExternal as Imported;
+        enum __SifrUnionLocal { Live(String), Dead(String) }
+        fn main() {
+            assert_eq!(match Imported::Live(String::from("external")) {
+                Imported::Live(value) => value,
+                Imported::Dead(value) => value,
+            }, "external");
+            assert_eq!(match __SifrUnionLocal::Live(String::from("local")) {
+                __SifrUnionLocal::Live(value) => value,
+                __SifrUnionLocal::Dead(value) => value,
+            }, "local");
+        }
+        "#,
+    );
+    assert!(!canonical.contains("Dead"), "{canonical}");
+    assert_eq!(canonical.matches("assert_eq!").count(), 2, "{canonical}");
+}
+
+#[test]
+fn const_promotion_proves_owned_inputs_and_locals_are_transferred_not_dropped() {
+    let canonical = canonical_and_compile(
+        r#"
+        pub fn discard(_: String) -> i64 { 1 }
+        pub fn discard_result(_: Result<String, String>) -> i64 { 2 }
+        pub fn discard_option(_: Option<String>) -> i64 { 3 }
+        pub fn discard_generic<T>(_: T) -> i64 { 4 }
+        pub fn discard_local() -> i64 { let text = String::new(); 5 }
+        pub fn discard_alias(value: String) -> i64 { let alias = value; 6 }
+        pub fn discard_shadow(value: String) -> i64 { let value = 10; value }
+        pub fn transfer(value: String) -> String { value }
+        pub fn transfer_local(value: String) -> String { let alias = value; alias }
+        pub fn scalar(_: i64) -> i64 { 7 }
+        pub fn scalar_alias(value: i64) -> i64 { let alias = value; alias }
+        pub fn choose(value: String, flag: bool) -> String {
+            if flag { value } else { value }
+        }
+        pub fn conditional_discard(value: String, flag: bool) -> String {
+            if flag { value } else { String::new() }
+        }
+        pub fn borrowed(_: &String) -> i64 { 8 }
+        pub struct Carrier { pub value: String }
+        impl Carrier {
+            pub fn new(value: String) -> Self { Self { value } }
+            pub fn discard_self(self) -> i64 { 9 }
+        }
+        "#,
+    );
+    for name in [
+        "discard",
+        "discard_result",
+        "discard_option",
+        "discard_generic",
+        "discard_local",
+        "discard_alias",
+        "discard_shadow",
+        "discard_self",
+        "conditional_discard",
+    ] {
+        assert!(
+            !canonical.contains(&format!("const fn {name}(")),
+            "{canonical}"
+        );
+        assert!(
+            !canonical.contains(&format!("const fn {name}<")),
+            "{canonical}"
+        );
+    }
+    for name in [
+        "transfer",
+        "transfer_local",
+        "scalar",
+        "scalar_alias",
+        "borrowed",
+        "new",
+        "choose",
+    ] {
+        assert!(
+            canonical.contains(&format!("const fn {name}(")),
+            "{canonical}"
+        );
+    }
+}
