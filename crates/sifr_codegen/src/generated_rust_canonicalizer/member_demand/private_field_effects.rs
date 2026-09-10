@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use syn::visit::{self, Visit};
 
-pub(super) fn type_has_trivial_drop(ty: &syn::Type) -> bool {
+pub(in crate::generated_rust_canonicalizer) fn type_has_trivial_drop(ty: &syn::Type) -> bool {
     match ty {
         syn::Type::Array(array) => type_has_trivial_drop(&array.elem),
         syn::Type::Never(_) | syn::Type::Ptr(_) | syn::Type::Reference(_) => true,
