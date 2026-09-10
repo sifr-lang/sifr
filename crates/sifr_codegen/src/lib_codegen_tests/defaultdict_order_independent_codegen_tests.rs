@@ -199,12 +199,12 @@ fn iterable_mutation_evaluates_key_before_arguments_and_bucket_borrow() {
 #[test]
 fn scalar_mutation_stages_key_and_arguments_before_one_bucket_borrow() {
     let rust_code = generate_rust_from_source_with_stdlib_collections(
-        "from sifr.collections import defaultdict\n\ndef key(mut log: list[str]) -> int:\n    log.append(\"key\")\n    return 1\n\ndef value(mut log: list[str]) -> int:\n    log.append(\"value\")\n    return 7\n\ndef solve() -> int:\n    log: list[str] = []\n    groups = defaultdict(list)\n    groups[key(log)].insert(len(groups), value(log))\n    return len(groups[1])\n",
+        "from sifr.collections import defaultdict\n\ndef key(mut log: list[str]) -> int:\n    log.append(\"key\")\n    return 1\n\ndef position(mut log: list[str]) -> int:\n    log.append(\"index\")\n    return 0\n\ndef value(mut log: list[str]) -> int:\n    log.append(\"value\")\n    return 7\n\ndef solve() -> int:\n    log: list[str] = []\n    groups = defaultdict(list)\n    groups[key(log)].insert(position(log), value(log))\n    groups[2].append(9)\n    return len(groups[1])\n",
     );
     let ordered = [
         "let __sifr_defaultdict_key = key(&mut log);",
         "groups.entry(__sifr_defaultdict_key.clone()).or_insert(Vec::new());",
-        "let __sifr_defaultdict_arg_0 =",
+        "let __sifr_defaultdict_arg_0 = position(&mut log);",
         "let __sifr_defaultdict_arg_1 = value(&mut log);",
         "let __sifr_defaultdict_bucket = groups.entry(__sifr_defaultdict_key)",
         "__sifr_defaultdict_bucket.insert(",
@@ -217,6 +217,7 @@ fn scalar_mutation_stages_key_and_arguments_before_one_bucket_borrow() {
             + fragment.len();
     }
     assert_eq!(rust_code.matches("= key(&mut log)").count(), 1);
+    assert_eq!(rust_code.matches("= position(&mut log)").count(), 1);
     assert_eq!(rust_code.matches("= value(&mut log)").count(), 1);
     assert!(rust_code.contains("clamp_slice_bound(__sifr_defaultdict_bucket.len())"));
     assert!(!rust_code.contains(".or_insert(Vec::new()).insert("));
@@ -225,7 +226,7 @@ fn scalar_mutation_stages_key_and_arguments_before_one_bucket_borrow() {
 #[test]
 fn scalar_mutation_remove_evaluates_value_outside_the_search_closure() {
     let rust_code = generate_rust_from_source_with_stdlib_collections(
-        "from sifr.collections import defaultdict\n\ndef value(mut log: list[str]) -> int:\n    log.append(\"value\")\n    return 7\n\ndef solve() -> int:\n    log: list[str] = []\n    groups = defaultdict(list)\n    groups[1].extend([1, 7, 9])\n    groups[1].remove(value(log))\n    return len(groups[1])\n",
+        "from sifr.collections import defaultdict\n\ndef value(mut log: list[str]) -> int:\n    log.append(\"value\")\n    return 7\n\ndef solve() -> int:\n    log: list[str] = []\n    groups = defaultdict(list)\n    groups[1].extend([1, 7, 9])\n    groups[1].remove(value(log))\n    groups[2].append(9)\n    return len(groups[1])\n",
     );
     assert!(rust_code.contains("let __sifr_defaultdict_arg_0 = value(&mut log);"));
     assert!(rust_code.contains("__x.eq(&__sifr_defaultdict_arg_0)"));

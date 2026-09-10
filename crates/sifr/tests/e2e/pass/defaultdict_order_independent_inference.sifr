@@ -197,14 +197,19 @@ def record_defaultdict_value(mut log: list[str]) -> int:
     return 7
 
 
+def record_defaultdict_position(mut log: list[str]) -> int:
+    log.append("index")
+    return 0
+
+
 def scalar_mutation_evaluation_order():
     log: list[str] = []
     groups = defaultdict(list)
-    groups[record_defaultdict_key(log)].insert(len(groups), record_defaultdict_value(log))
-    assert log == ["key", "value"]
+    groups[record_defaultdict_key(log)].insert(record_defaultdict_position(log), record_defaultdict_value(log))
+    assert log == ["key", "index", "value"]
     assert groups[1] == [7]
-    groups[1].append(len(groups))
-    groups[1].insert(len(groups[1]), len(groups[1]))
+    groups[1].append(1)
+    groups[1].insert(2, 2)
     assert groups[1] == [7, 1, 2]
     log.clear()
     groups[record_defaultdict_key(log)].remove(record_defaultdict_value(log))
@@ -220,7 +225,7 @@ def scalar_mutation_evaluation_order():
     assert log == ["key", "value"]
     assert groups[1] == [2]
     sets = defaultdict(set)
-    sets[record_defaultdict_key(log)].add(len(sets))
+    sets[record_defaultdict_key(log)].add(1)
     assert 1 in sets[1]
     log.clear()
     popped = sets[record_defaultdict_key(log)].pop()
