@@ -190,7 +190,9 @@ pub(crate) fn render_support(
             .source
             .contains("__sifr_with_silent_worker_panic_hook");
 
-    let mut items = build_error_items(&referenced_error_classes);
+    let uses_task_runtime = demand.runtime.task_scope || demand.runtime.join_set;
+    let includes_cleanup_evidence = uses_task_runtime || demand.runtime.native_async_cleanup;
+    let mut items = build_error_items(&referenced_error_classes, includes_cleanup_evidence);
     if referenced_error_classes.contains("Error") {
         for &error_name in BUILTIN_ERROR_CLASSES {
             if error_name == "Error" || sifr_type_system::io_error_kind(error_name).is_some() {
@@ -209,7 +211,6 @@ pub(crate) fn render_support(
         );
     }
 
-    let uses_task_runtime = demand.runtime.task_scope || demand.runtime.join_set;
     if uses_task_runtime || demand.runtime.failure_type {
         items.extend(build_failure_type_items());
     }
@@ -240,7 +241,7 @@ pub(crate) fn render_support(
     if uses_task_runtime || demand.runtime.async_python || demand.runtime.native_async_cleanup {
         items.extend(build_task_cancellation_items(
             demand.runtime.async_python || demand.runtime.native_async_cleanup,
-            uses_task_runtime || demand.runtime.native_async_cleanup,
+            includes_cleanup_evidence,
         ));
     }
     if uses_task_runtime {
@@ -495,7 +496,10 @@ fn append_stdlib_dependencies(
     module_order.push(module_name.to_string());
 }
 
-fn build_error_items(referenced: &HashSet<String>) -> Vec<RustItem> {
+fn build_error_items(
+    referenced: &HashSet<String>,
+    includes_cleanup_evidence: bool,
+) -> Vec<RustItem> {
     let mut items = Vec::new();
     let io_error_referenced = referenced.contains("IOError")
         || sifr_type_system::IO_ERROR_KIND_CASES
@@ -509,6 +513,12 @@ fn build_error_items(referenced: &HashSet<String>) -> Vec<RustItem> {
             continue;
         }
         if !referenced.contains(error_name) {
+            continue;
+        }
+        if error_name == "SecondaryError" {
+            items.extend(crate::preamble::build_secondary_error_type_items(
+                includes_cleanup_evidence,
+            ));
             continue;
         }
         let exact_zero = || RustExpr::FnCall {
