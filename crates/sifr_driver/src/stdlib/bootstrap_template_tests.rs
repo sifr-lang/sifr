@@ -139,9 +139,17 @@ fn recursive_json_structural_contracts_follow_the_shared_project_owner() {
 
     // Two importing support modules and a root test must not create duplicate
     // impls or silently omit the test-only imported contract.
+    let named_module = |name| {
+        sifr_lowering::lower_module_with_externals_and_name(name, parsed.suite(), &compiled.defs)
+            .expect("complete fixture with its actual project module identity")
+            .module
+    };
+    let alpha = named_module("alpha");
+    let zeta = named_module("zeta");
+    let test_root = named_module("test_root");
     let tests = sifr_codegen::generate_rust_test_project_with_metadata(
-        &[("alpha", &lowered.module), ("zeta", &lowered.module)],
-        &[("test_root", &lowered.module)],
+        &[("alpha", &alpha), ("zeta", &zeta)],
+        &[("test_root", &test_root)],
         &compiled.code,
     );
     assert_eq!(json_contract_count(&tests.project_union_prelude), 3);
@@ -158,7 +166,7 @@ fn recursive_json_structural_contracts_follow_the_shared_project_owner() {
     }
     let tests_only = sifr_codegen::generate_rust_test_project_with_metadata(
         &[],
-        &[("test_root", &lowered.module)],
+        &[("test_root", &test_root)],
         &compiled.code,
     );
     assert_eq!(json_contract_count(&tests_only.project_union_prelude), 3);
