@@ -120,14 +120,13 @@ fn expression_transfers(expression: &syn::Expr, state: &mut DropState) -> bool {
             .iter()
             .all(|value| expression_transfers(value, state)),
         syn::Expr::Struct(struct_) => {
-            struct_
-                .fields
-                .iter()
-                .all(|field| expression_transfers(&field.expr, state))
+            // Struct update transfers only unmentioned fields. The overwritten
+            // fields of its base can still need destruction at scope exit.
+            struct_.rest.is_none()
                 && struct_
-                    .rest
-                    .as_ref()
-                    .is_none_or(|rest| expression_transfers(rest, state))
+                    .fields
+                    .iter()
+                    .all(|field| expression_transfers(&field.expr, state))
         }
         syn::Expr::Call(call) => call
             .args
@@ -162,7 +161,30 @@ fn expression_transfers(expression: &syn::Expr, state: &mut DropState) -> bool {
         }
         // Borrows and field reads never transfer an owned parameter. The
         // independent expression checker proves whether these are const-legal.
-        syn::Expr::Reference(_) | syn::Expr::Field(_) | syn::Expr::Unary(_) => true,
+        syn::Expr::Reference(reference) => is_existing_place(&reference.expr, state),
+        syn::Expr::Cast(cast) => {
+            // Casting a borrowed enum discriminant is safe, but it does not
+            // transfer an owned enum or dispose of an owned temporary safely.
+            is_existing_place(&cast.expr, state)
+                || expression_is_trivial(&cast.expr, &state.trivial)
+        }
+        syn::Expr::Field(_) | syn::Expr::Unary(_) => true,
+        _ => false,
+    }
+}
+
+fn is_existing_place(expression: &syn::Expr, state: &DropState) -> bool {
+    match expression {
+        syn::Expr::Path(path) if path.qself.is_none() && path.path.segments.len() == 1 => {
+            let name = path.path.segments[0].ident.to_string();
+            state.owned.contains(&name) || state.trivial.contains(&name)
+        }
+        syn::Expr::Field(field) => is_existing_place(&field.base, state),
+        syn::Expr::Paren(paren) => is_existing_place(&paren.expr, state),
+        syn::Expr::Group(group) => is_existing_place(&group.expr, state),
+        syn::Expr::Unary(unary) if matches!(unary.op, syn::UnOp::Deref(_)) => {
+            is_existing_place(&unary.expr, state)
+        }
         _ => false,
     }
 }

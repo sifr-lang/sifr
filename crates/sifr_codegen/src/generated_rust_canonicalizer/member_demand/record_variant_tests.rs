@@ -180,6 +180,11 @@ fn const_promotion_proves_owned_inputs_and_locals_are_transferred_not_dropped() 
         }
         pub fn borrowed(_: &String) -> i64 { 8 }
         pub struct Carrier { pub value: String }
+        pub fn replace_field(value: Carrier) -> Carrier {
+            Carrier { value: String::new(), ..value }
+        }
+        pub const fn length(_: &String) -> usize { 0 }
+        pub fn temporary_borrow() -> usize { length(&String::new()) }
         impl Carrier {
             pub fn new(value: String) -> Self { Self { value } }
             pub fn discard_self(self) -> i64 { 9 }
@@ -196,6 +201,8 @@ fn const_promotion_proves_owned_inputs_and_locals_are_transferred_not_dropped() 
         "discard_shadow",
         "discard_self",
         "conditional_discard",
+        "replace_field",
+        "temporary_borrow",
     ] {
         assert!(
             !canonical.contains(&format!("const fn {name}(")),
