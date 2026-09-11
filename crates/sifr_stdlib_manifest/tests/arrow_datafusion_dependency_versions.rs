@@ -4,8 +4,8 @@ use support::TestUnwrap as _;
 
 use std::collections::BTreeSet;
 
-const ARROW_VERSION: &str = "59.2.0";
-const ARROW_PACKAGE_HASH: &str = "61d285d16bce7d0be61912f7928342b673067b6b7d7ef6cc179258ba7de1fecf";
+const ARROW_VERSION: &str = "59.3.0";
+const ARROW_PACKAGE_HASH: &str = "7c14b3d39f306bc28fd639d59f06e17a0f377d0021e1b7e9054e4d6fedc98774";
 const DATAFUSION_VERSION: &str = "55.0.0";
 const DATAFUSION_PACKAGE_HASH: &str =
     "96f76f0167ed0842b29a3d1e41be3c034c0a46409a3a703cc4cc84ee8c24abf4";

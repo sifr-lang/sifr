@@ -1,17 +1,33 @@
 sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 ├── sifr_runtime v0.0.0 (<repo>/crates/sifr_runtime)
 │   ├── indexmap feature "default"
-│   │   ├── indexmap v2.14.0
+│   │   ├── indexmap v2.14.2
 │   │   │   ├── equivalent v1.0.2
 │   │   │   └── hashbrown v0.17.1
 │   │   └── indexmap feature "std"
-│   │       └── indexmap v2.14.0 (*)
+│   │       └── indexmap v2.14.2 (*)
+│   ├── memchr feature "default"
+│   │   ├── memchr v2.8.3
+│   │   └── memchr feature "std"
+│   │       ├── memchr v2.8.3
+│   │       └── memchr feature "alloc"
+│   │           └── memchr v2.8.3
 │   ├── encoding_rs feature "default"
-│   │   ├── encoding_rs v0.8.35
-│   │   │   └── cfg-if feature "default"
-│   │   │       └── cfg-if v1.0.4
+│   │   ├── encoding_rs v0.8.40
+│   │   │   ├── scopeguard v1.2.0
+│   │   │   ├── cfg-if feature "default"
+│   │   │   │   └── cfg-if v1.0.4
+│   │   │   ├── multiversion_no_op feature "default"
+│   │   │   │   └── multiversion_no_op v1.0.0 (proc-macro)
+│   │   │   ├── simdutf8 feature "aarch64_neon"
+│   │   │   │   └── simdutf8 v0.1.5
+│   │   │   └── simdutf8 feature "public_imp"
+│   │   │       └── simdutf8 v0.1.5
+│   │   │   [build-dependencies]
+│   │   │   └── rustversion feature "default"
+│   │   │       └── rustversion v1.0.22 (proc-macro)
 │   │   └── encoding_rs feature "alloc"
-│   │       └── encoding_rs v0.8.35 (*)
+│   │       └── encoding_rs v0.8.40 (*)
 │   ├── num-bigint feature "std"
 │   │   ├── num-bigint v0.5.1
 │   │   │   ├── num-integer feature "i128"
@@ -41,22 +57,22 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │           │       └── unicode-ident feature "default"
 │   │           │           └── unicode-ident v1.0.24
 │   │           ├── quote feature "proc-macro"
-│   │           │   ├── quote v1.0.45
+│   │           │   ├── quote v1.0.47
 │   │           │   │   └── proc-macro2 v1.0.107 (*)
 │   │           │   └── proc-macro2 feature "proc-macro" (*)
 │   │           ├── syn feature "clone-impls"
-│   │           │   └── syn v3.0.4
+│   │           │   └── syn v3.0.5
 │   │           │       ├── proc-macro2 v1.0.107 (*)
-│   │           │       ├── quote v1.0.45 (*)
+│   │           │       ├── quote v1.0.47 (*)
 │   │           │       └── unicode-ident feature "default" (*)
 │   │           ├── syn feature "derive"
-│   │           │   └── syn v3.0.4 (*)
+│   │           │   └── syn v3.0.5 (*)
 │   │           ├── syn feature "parsing"
-│   │           │   └── syn v3.0.4 (*)
+│   │           │   └── syn v3.0.5 (*)
 │   │           ├── syn feature "printing"
-│   │           │   └── syn v3.0.4 (*)
+│   │           │   └── syn v3.0.5 (*)
 │   │           └── syn feature "proc-macro"
-│   │               ├── syn v3.0.4 (*)
+│   │               ├── syn v3.0.5 (*)
 │   │               ├── proc-macro2 feature "proc-macro" (*)
 │   │               └── quote feature "proc-macro" (*)
 │   └── serde feature "std"
@@ -79,10 +95,7 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   └── serde_json feature "std"
 │       ├── serde_json v1.0.151 (*)
 │       ├── serde_core feature "std" (*)
-│       └── memchr feature "std"
-│           ├── memchr v2.8.3
-│           └── memchr feature "alloc"
-│               └── memchr v2.8.3
+│       └── memchr feature "std" (*)
 └── serde_json feature "preserve_order"
     ├── serde_json v1.0.151 (*)
     ├── serde_json feature "indexmap"

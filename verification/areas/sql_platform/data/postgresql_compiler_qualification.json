@@ -10,7 +10,7 @@
     "raw_transport": "json",
     "owned_adapter": "crates/sifr_sql_postgresql/src/raw_adapter.rs",
     "ffi_owner": "crates/sifr_sql_postgresql/src/ffi.rs",
-    "build_adapter": "cc@1.4.4"
+    "build_adapter": "cc@1.4.5"
   },
   "core_schema_objects": [
     "check-constraint",

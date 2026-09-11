@@ -1,554 +1,3382 @@
 {
-  "schema_version": 1,
-  "audited_at": "2026-08-26",
-  "source": "https://crates.io/api/v1/crates/{crate}",
-  "maintained_manifests": 113,
-  "direct_declarations": 168,
+  "schema_version": 2,
+  "audited_at": "2026-09-09",
+  "source": "https://index.crates.io/{prefix}/{crate}",
+  "maintained_manifests": 128,
+  "direct_declarations": 193,
   "packages": [
     {
       "name": "aho-corasick",
       "latest_stable": "1.1.5",
-      "checksum": "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba"
-    },
-    {
-      "name": "annotate-snippets",
-      "latest_stable": "0.12.16",
-      "checksum": "f211a51805bc641f3ad5b7664c77d2547af685cc33b4cd8d31964027a46f13f1"
+      "checksum": "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba",
+      "source_url": "https://index.crates.io/ah/o-/aho-corasick",
+      "response_sha256": "60e7d05b4bfb7309ee1e597142a14c90a9a21e9ab61231b751c11e2b82657baf",
+      "observed_at": "2026-09-09T07:09:39.451070+00:00",
+      "locked_releases": [
+        {
+          "version": "1.1.5",
+          "checksum": "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "aho-corasick",
+          "package": "aho-corasick",
+          "requirement": "1.1.5"
+        }
+      ]
     },
     {
       "name": "anyhow",
       "latest_stable": "1.0.104",
-      "checksum": "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
+      "checksum": "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470",
+      "source_url": "https://index.crates.io/an/yh/anyhow",
+      "response_sha256": "a8f12dc30f839cf138322e7150b62a867c19d043b8a367f4857314de182693f8",
+      "observed_at": "2026-09-09T07:09:39.508528+00:00",
+      "locked_releases": [
+        {
+          "version": "1.0.104",
+          "checksum": "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "anyhow",
+          "package": "anyhow",
+          "requirement": "1.0.104"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "anyhow",
+          "package": "anyhow",
+          "requirement": "=1.0.104"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/ecosystem_cli_certification/examples/cli_feature_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "anyhow",
+          "package": "anyhow",
+          "requirement": "=1.0.104"
+        }
+      ]
     },
     {
       "name": "arrow",
-      "latest_stable": "59.2.0",
-      "checksum": "61d285d16bce7d0be61912f7928342b673067b6b7d7ef6cc179258ba7de1fecf"
+      "latest_stable": "59.3.0",
+      "checksum": "7c14b3d39f306bc28fd639d59f06e17a0f377d0021e1b7e9054e4d6fedc98774",
+      "source_url": "https://index.crates.io/ar/ro/arrow",
+      "response_sha256": "ef96291f2b2da73bfd3182917428a2e1ea75f46658769a17c09b4613fd0d2f6e",
+      "observed_at": "2026-09-09T07:09:39.549003+00:00",
+      "locked_releases": [
+        {
+          "version": "59.3.0",
+          "checksum": "7c14b3d39f306bc28fd639d59f06e17a0f377d0021e1b7e9054e4d6fedc98774"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "arrow",
+          "package": "arrow",
+          "requirement": "=59.3.0"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "arrow",
+          "package": "arrow",
+          "requirement": "=59.3.0"
+        }
+      ]
     },
     {
       "name": "axum",
       "latest_stable": "0.8.9",
-      "checksum": "31b698c5f9a010f6573133b09e0de5408834d0c82f8d7475a89fc1867a71cd90"
+      "checksum": "31b698c5f9a010f6573133b09e0de5408834d0c82f8d7475a89fc1867a71cd90",
+      "source_url": "https://index.crates.io/ax/um/axum",
+      "response_sha256": "971d3bf798324e29bf14cdf940cadf57acc0aa635d70c52418489c8779ab49c6",
+      "observed_at": "2026-09-09T07:09:39.621044+00:00",
+      "locked_releases": [
+        {
+          "version": "0.8.9",
+          "checksum": "31b698c5f9a010f6573133b09e0de5408834d0c82f8d7475a89fc1867a71cd90"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "axum",
+          "package": "axum",
+          "requirement": "=0.8.9"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "axum",
+          "package": "axum",
+          "requirement": "=0.8.9"
+        }
+      ]
     },
     {
       "name": "base64",
       "latest_stable": "0.23.1",
-      "checksum": "ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5"
+      "checksum": "ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5",
+      "source_url": "https://index.crates.io/ba/se/base64",
+      "response_sha256": "42a061d4b29c30417df7b028aa5274a1dfe5b7304794ac05e5bce9ac44b40153",
+      "observed_at": "2026-09-09T07:09:39.620959+00:00",
+      "locked_releases": [
+        {
+          "version": "0.13.1",
+          "checksum": "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
+        },
+        {
+          "version": "0.22.1",
+          "checksum": "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+        },
+        {
+          "version": "0.23.1",
+          "checksum": "ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "base64",
+          "package": "base64",
+          "requirement": "0.23.1"
+        }
+      ]
     },
     {
       "name": "bigdecimal",
       "latest_stable": "0.4.10",
-      "checksum": "4d6867f1565b3aad85681f1015055b087fcfd840d6aeee6eee7f2da317603695"
+      "checksum": "4d6867f1565b3aad85681f1015055b087fcfd840d6aeee6eee7f2da317603695",
+      "source_url": "https://index.crates.io/bi/gd/bigdecimal",
+      "response_sha256": "4e2b0e887839171f72c8dd0d1abff4395fb74a7e82e1f2a6716ab6f71b143ae3",
+      "observed_at": "2026-09-09T07:09:40.392688+00:00",
+      "locked_releases": [
+        {
+          "version": "0.4.10",
+          "checksum": "4d6867f1565b3aad85681f1015055b087fcfd840d6aeee6eee7f2da317603695"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "bigdecimal",
+          "package": "bigdecimal",
+          "requirement": "0.4.10"
+        },
+        {
+          "path": "crates/sifr_lowering/Cargo.toml",
+          "table": "dependencies",
+          "alias": "bigdecimal",
+          "package": "bigdecimal",
+          "requirement": "0.4.10"
+        }
+      ]
     },
     {
       "name": "bindgen",
-      "latest_stable": "0.72.1",
-      "checksum": "993776b509cfb49c750f11b8f07a46fa23e0a1386ffc01fb1e7d343efc387895"
+      "latest_stable": "0.73.2",
+      "checksum": "787ef8ef523575546b106a58213d6e6b06198a05c2f757258c68a74273670cfa",
+      "source_url": "https://index.crates.io/bi/nd/bindgen",
+      "response_sha256": "84e722f01be972318a3afcd9ba03b869b00786a0ee8e1e2aeb390fd1f5e04097",
+      "observed_at": "2026-09-09T07:09:39.703638+00:00",
+      "locked_releases": [
+        {
+          "version": "0.73.2",
+          "checksum": "787ef8ef523575546b106a58213d6e6b06198a05c2f757258c68a74273670cfa"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "bindgen",
+          "package": "bindgen",
+          "requirement": "=0.73.2"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "bindgen_upstream",
+          "package": "bindgen",
+          "requirement": "=0.73.2"
+        }
+      ]
     },
     {
       "name": "bitflags",
       "latest_stable": "2.13.1",
-      "checksum": "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da"
+      "checksum": "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da",
+      "source_url": "https://index.crates.io/bi/tf/bitflags",
+      "response_sha256": "da93d35974877208e07bffb86fd0515e7b72e7c68b1c6468712d6a8b475027b7",
+      "observed_at": "2026-09-09T07:09:39.761763+00:00",
+      "locked_releases": [
+        {
+          "version": "1.3.2",
+          "checksum": "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+        },
+        {
+          "version": "2.13.1",
+          "checksum": "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "bitflags",
+          "package": "bitflags",
+          "requirement": "2.13.1"
+        }
+      ]
     },
     {
       "name": "blake2",
-      "latest_stable": "0.10.6",
-      "checksum": "46502ad458c9a52b69d4d4d32775c788b7a1b85e8bc9d482d92250fc0e3f8efe"
+      "latest_stable": "0.11.0",
+      "checksum": "5b5d4d889834ee8ecfc0f8426ad30faf7cdcb10f741a8e6d7224d95325479f6f",
+      "source_url": "https://index.crates.io/bl/ak/blake2",
+      "response_sha256": "086ec61158d62fb798917f4fd4628d43354b1ddadd9c6731ccbc4b7d571739e7",
+      "observed_at": "2026-09-09T07:09:39.812714+00:00",
+      "locked_releases": [
+        {
+          "version": "0.10.6",
+          "checksum": "46502ad458c9a52b69d4d4d32775c788b7a1b85e8bc9d482d92250fc0e3f8efe"
+        },
+        {
+          "version": "0.11.0",
+          "checksum": "5b5d4d889834ee8ecfc0f8426ad30faf7cdcb10f741a8e6d7224d95325479f6f"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "blake2",
+          "package": "blake2",
+          "requirement": "0.11.0"
+        }
+      ]
     },
     {
       "name": "blake3",
       "latest_stable": "1.8.7",
-      "checksum": "6d9e454fc11f76977dc803893aff6304ed33d6a26efae8696573bea74baa27ae"
+      "checksum": "6d9e454fc11f76977dc803893aff6304ed33d6a26efae8696573bea74baa27ae",
+      "source_url": "https://index.crates.io/bl/ak/blake3",
+      "response_sha256": "4df2accdd0981cb5778530f041d31186c94e236dc59f8be5876251dcdf5af884",
+      "observed_at": "2026-09-09T07:09:39.874165+00:00",
+      "locked_releases": [
+        {
+          "version": "1.8.7",
+          "checksum": "6d9e454fc11f76977dc803893aff6304ed33d6a26efae8696573bea74baa27ae"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "blake3",
+          "package": "blake3",
+          "requirement": "=1.8.7"
+        }
+      ]
     },
     {
       "name": "bstr",
       "latest_stable": "1.13.1",
-      "checksum": "6bb31b46c14244e20ee9984b11bf5c992b91fb6939fea616e3512c8baecdbe5f"
+      "checksum": "6bb31b46c14244e20ee9984b11bf5c992b91fb6939fea616e3512c8baecdbe5f",
+      "source_url": "https://index.crates.io/bs/tr/bstr",
+      "response_sha256": "0e8ee3144c0fd388616a0854e01cc8a16d8510c82ac5dd71b9b46fdf06a2867b",
+      "observed_at": "2026-09-09T07:09:39.931183+00:00",
+      "locked_releases": [
+        {
+          "version": "1.13.1",
+          "checksum": "6bb31b46c14244e20ee9984b11bf5c992b91fb6939fea616e3512c8baecdbe5f"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "bstr",
+          "package": "bstr",
+          "requirement": "1.13.1"
+        }
+      ]
     },
     {
       "name": "bytemuck",
       "latest_stable": "1.25.2",
-      "checksum": "95832e849adfb21180ccb6826a99da14e5d266ae5c2e668e1602cf234f153797"
+      "checksum": "95832e849adfb21180ccb6826a99da14e5d266ae5c2e668e1602cf234f153797",
+      "source_url": "https://index.crates.io/by/te/bytemuck",
+      "response_sha256": "75adb41646bbe374f95fdba25a33dfd19c2fc7cfc4e2e9f63130d238c72a1787",
+      "observed_at": "2026-09-09T07:09:39.985486+00:00",
+      "locked_releases": [
+        {
+          "version": "1.25.2",
+          "checksum": "95832e849adfb21180ccb6826a99da14e5d266ae5c2e668e1602cf234f153797"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "bytemuck",
+          "package": "bytemuck",
+          "requirement": "=1.25.2"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "bytemuck",
+          "package": "bytemuck",
+          "requirement": "=1.25.2"
+        }
+      ]
     },
     {
       "name": "bytes",
       "latest_stable": "1.12.1",
-      "checksum": "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
+      "checksum": "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04",
+      "source_url": "https://index.crates.io/by/te/bytes",
+      "response_sha256": "5e1c8945e6678b050b5b029b65cda0adc935c7f5e8548e116752097d206ad5ee",
+      "observed_at": "2026-09-09T07:09:40.038137+00:00",
+      "locked_releases": [
+        {
+          "version": "1.12.1",
+          "checksum": "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "bytes",
+          "package": "bytes",
+          "requirement": "1.12.1"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "bytes",
+          "package": "bytes",
+          "requirement": "=1.12.1"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/bridge_type_matrix/examples/bridge_type_roundtrip/Cargo.toml",
+          "table": "dependencies",
+          "alias": "bytes",
+          "package": "bytes",
+          "requirement": "=1.12.1"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "bytes",
+          "package": "bytes",
+          "requirement": "=1.12.1"
+        }
+      ]
     },
     {
       "name": "candle-core",
       "latest_stable": "0.11.0",
-      "checksum": "5ecb245093b0f791b89d3420c3df9c6d49c60ab63ba54db896bf8a3baf486706"
+      "checksum": "5ecb245093b0f791b89d3420c3df9c6d49c60ab63ba54db896bf8a3baf486706",
+      "source_url": "https://index.crates.io/ca/nd/candle-core",
+      "response_sha256": "77759aee45cff0b5f103bdb9587e2905d790dd74d761177622edf7d8936ce0ad",
+      "observed_at": "2026-09-09T07:09:40.792105+00:00",
+      "locked_releases": [
+        {
+          "version": "0.11.0",
+          "checksum": "5ecb245093b0f791b89d3420c3df9c6d49c60ab63ba54db896bf8a3baf486706"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "candle",
+          "package": "candle-core",
+          "requirement": "=0.11.0"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "candle",
+          "package": "candle-core",
+          "requirement": "=0.11.0"
+        }
+      ]
     },
     {
       "name": "cc",
-      "latest_stable": "1.4.4",
-      "checksum": "0ad534f4357a5264cce5019c989cf66a4f0dc4e0d1b1d15f8aacec0ff7360273"
+      "latest_stable": "1.4.5",
+      "checksum": "005ec2760ca554fae18df7a11195552ec576cd665632a881bc011d5bb2fd4d80",
+      "source_url": "https://index.crates.io/2/cc",
+      "response_sha256": "930949e37d9ee36364a2ed87eb347ba1f58ee6dba9677d95420d274a988e0a27",
+      "observed_at": "2026-09-09T07:09:40.465967+00:00",
+      "locked_releases": [
+        {
+          "version": "1.4.5",
+          "checksum": "005ec2760ca554fae18df7a11195552ec576cd665632a881bc011d5bb2fd4d80"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "cc",
+          "package": "cc",
+          "requirement": "=1.4.5"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "cc",
+          "package": "cc",
+          "requirement": "=1.4.5"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "cc_upstream",
+          "package": "cc",
+          "requirement": "=1.4.5"
+        }
+      ]
     },
     {
       "name": "chrono",
       "latest_stable": "0.4.45",
-      "checksum": "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327"
+      "checksum": "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327",
+      "source_url": "https://index.crates.io/ch/ro/chrono",
+      "response_sha256": "009f87c0f393189c08268461665bbfcc6eccfae1fba2f57eb22dbee89ada755e",
+      "observed_at": "2026-09-09T07:09:40.537143+00:00",
+      "locked_releases": [
+        {
+          "version": "0.4.45",
+          "checksum": "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "chrono",
+          "package": "chrono",
+          "requirement": "0.4.45"
+        }
+      ]
     },
     {
       "name": "clap",
       "latest_stable": "4.6.6",
-      "checksum": "473c7e07f409a8d772161724aa8db6a765a2532a70f9667eeb7b49d3d02fbdca"
-    },
-    {
-      "name": "cookie",
-      "latest_stable": "0.18.2",
-      "checksum": "1a373e3602691c3cdea496d2f0ee5935151e6168fe87739483c463db1b2f2f87"
+      "checksum": "473c7e07f409a8d772161724aa8db6a765a2532a70f9667eeb7b49d3d02fbdca",
+      "source_url": "https://index.crates.io/cl/ap/clap",
+      "response_sha256": "75c678e1a14088d4696933ec373616179f35df582bd9c89ab265a9a1bfbffcd2",
+      "observed_at": "2026-09-09T07:09:40.675689+00:00",
+      "locked_releases": [
+        {
+          "version": "4.6.6",
+          "checksum": "473c7e07f409a8d772161724aa8db6a765a2532a70f9667eeb7b49d3d02fbdca"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr/Cargo.toml",
+          "table": "dependencies",
+          "alias": "clap",
+          "package": "clap",
+          "requirement": "4.6.6"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "clap",
+          "package": "clap",
+          "requirement": "=4.6.6"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/ecosystem_cli_certification/examples/cli_feature_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "clap",
+          "package": "clap",
+          "requirement": "=4.6.6"
+        }
+      ]
     },
     {
       "name": "crc32fast",
       "latest_stable": "1.5.1",
-      "checksum": "8498c871161e1742aaa9d52551b2d6ebdd4c3d45a3be423e3728f33b955be550"
+      "checksum": "8498c871161e1742aaa9d52551b2d6ebdd4c3d45a3be423e3728f33b955be550",
+      "source_url": "https://index.crates.io/cr/c3/crc32fast",
+      "response_sha256": "235eba3d53c2869e9eb1249a397398cd98073b519c933d099d74fa43b096faf9",
+      "observed_at": "2026-09-09T07:09:40.799306+00:00",
+      "locked_releases": [
+        {
+          "version": "1.5.1",
+          "checksum": "8498c871161e1742aaa9d52551b2d6ebdd4c3d45a3be423e3728f33b955be550"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "crc32fast",
+          "package": "crc32fast",
+          "requirement": "=1.5.1"
+        }
+      ]
     },
     {
       "name": "cxx",
-      "latest_stable": "1.0.199",
-      "checksum": "824894a4a85dca76d4c95c2b9098c036f5a29f627b30c12780774f6654e60974"
+      "latest_stable": "1.0.200",
+      "checksum": "2d93a9baeb9798b2e8ff0de24463b9e5cf9a0dd0a88f5ea02afc9ea35e7abae7",
+      "source_url": "https://index.crates.io/3/c/cxx",
+      "response_sha256": "eb08cff1cd21f908f00da21610fbd9459fa1a1a74bafb17c8c80c6b9d0d90043",
+      "observed_at": "2026-09-09T07:09:41.066798+00:00",
+      "locked_releases": [
+        {
+          "version": "1.0.200",
+          "checksum": "2d93a9baeb9798b2e8ff0de24463b9e5cf9a0dd0a88f5ea02afc9ea35e7abae7"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "cxx",
+          "package": "cxx",
+          "requirement": "=1.0.200"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "cxx",
+          "package": "cxx",
+          "requirement": "=1.0.200"
+        }
+      ]
     },
     {
       "name": "datafusion",
       "latest_stable": "55.0.0",
-      "checksum": "96f76f0167ed0842b29a3d1e41be3c034c0a46409a3a703cc4cc84ee8c24abf4"
+      "checksum": "96f76f0167ed0842b29a3d1e41be3c034c0a46409a3a703cc4cc84ee8c24abf4",
+      "source_url": "https://index.crates.io/da/ta/datafusion",
+      "response_sha256": "806d8d0f8c1d7eecbf7b92c6ffb30737c3faa84513f30a22cbdc227f29605093",
+      "observed_at": "2026-09-09T07:09:41.608621+00:00",
+      "locked_releases": [
+        {
+          "version": "55.0.0",
+          "checksum": "96f76f0167ed0842b29a3d1e41be3c034c0a46409a3a703cc4cc84ee8c24abf4"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "datafusion",
+          "package": "datafusion",
+          "requirement": "=55.0.0"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "datafusion",
+          "package": "datafusion",
+          "requirement": "=55.0.0"
+        }
+      ]
     },
     {
       "name": "encoding_rs",
-      "latest_stable": "0.8.35",
-      "checksum": "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
+      "latest_stable": "0.8.40",
+      "checksum": "2a7a45518d2863d18aa47f4a0cf9faec2aa4304cc09df5e41299f276b3ad135e",
+      "source_url": "https://index.crates.io/en/co/encoding_rs",
+      "response_sha256": "e06e77180e097574ef74fa6d209953f6391a7406fde73c6abb3e5ab4a365fbb0",
+      "observed_at": "2026-09-09T07:09:41.133735+00:00",
+      "locked_releases": [
+        {
+          "version": "0.8.40",
+          "checksum": "2a7a45518d2863d18aa47f4a0cf9faec2aa4304cc09df5e41299f276b3ad135e"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "encoding_rs",
+          "package": "encoding_rs",
+          "requirement": "0.8.40"
+        }
+      ]
     },
     {
       "name": "flate2",
-      "latest_stable": "1.1.9",
-      "checksum": "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
+      "latest_stable": "1.1.10",
+      "checksum": "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb",
+      "source_url": "https://index.crates.io/fl/at/flate2",
+      "response_sha256": "d036228439b2c61249d694b94f5bc9f9cac4ed83b25e5ef4394c842210bcd4be",
+      "observed_at": "2026-09-09T07:09:41.198352+00:00",
+      "locked_releases": [
+        {
+          "version": "1.1.10",
+          "checksum": "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "flate2",
+          "package": "flate2",
+          "requirement": "1.1.10"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "flate2",
+          "package": "flate2",
+          "requirement": "=1.1.10"
+        }
+      ]
     },
     {
       "name": "futures",
       "latest_stable": "0.3.34",
-      "checksum": "9a31d2a3fbaaeb2af2368bbdd904aa8e812d3c04a1ee10d3171f52d556e5d0a3"
+      "checksum": "9a31d2a3fbaaeb2af2368bbdd904aa8e812d3c04a1ee10d3171f52d556e5d0a3",
+      "source_url": "https://index.crates.io/fu/tu/futures",
+      "response_sha256": "0ef0df812cd911d444c2fe2cb63776e83aa74ba41540fa9a517f16f927fe7974",
+      "observed_at": "2026-09-09T07:09:41.258759+00:00",
+      "locked_releases": [
+        {
+          "version": "0.3.34",
+          "checksum": "9a31d2a3fbaaeb2af2368bbdd904aa8e812d3c04a1ee10d3171f52d556e5d0a3"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "futures",
+          "package": "futures",
+          "requirement": "=0.3.34"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "futures",
+          "package": "futures",
+          "requirement": "=0.3.34"
+        }
+      ]
+    },
+    {
+      "name": "futures-core",
+      "latest_stable": "0.3.34",
+      "checksum": "92d699e522242e69e3003b94ecc1f960f3a5e015aa7c5d7486e65ad01dd94f5e",
+      "source_url": "https://index.crates.io/fu/tu/futures-core",
+      "response_sha256": "9b24e771005b4548343ec4b73fe3531a8cbcf6fa7c6eb923a5058e8aab093915",
+      "observed_at": "2026-09-09T07:09:41.309459+00:00",
+      "locked_releases": [
+        {
+          "version": "0.3.34",
+          "checksum": "92d699e522242e69e3003b94ecc1f960f3a5e015aa7c5d7486e65ad01dd94f5e"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "futures-core",
+          "package": "futures-core",
+          "requirement": "0.3.34"
+        }
+      ]
     },
     {
       "name": "globset",
       "latest_stable": "0.4.20",
-      "checksum": "07c34a9410465b45bd9787443bc7370f37735bad04b0f0cd57ff1a3186c98988"
+      "checksum": "07c34a9410465b45bd9787443bc7370f37735bad04b0f0cd57ff1a3186c98988",
+      "source_url": "https://index.crates.io/gl/ob/globset",
+      "response_sha256": "599cd99f5ebdf7c2222606668add413904c25edcbf40aa653fde26225b0035b0",
+      "observed_at": "2026-09-09T07:09:41.360268+00:00",
+      "locked_releases": [
+        {
+          "version": "0.4.20",
+          "checksum": "07c34a9410465b45bd9787443bc7370f37735bad04b0f0cd57ff1a3186c98988"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "globset",
+          "package": "globset",
+          "requirement": "0.4.20"
+        }
+      ]
     },
     {
       "name": "h2",
       "latest_stable": "0.4.19",
-      "checksum": "ef8e5e5a340588f4452631496976cf8636d4a7ecf600239fdc27615d2530bc16"
+      "checksum": "ef8e5e5a340588f4452631496976cf8636d4a7ecf600239fdc27615d2530bc16",
+      "source_url": "https://index.crates.io/2/h2",
+      "response_sha256": "a48afb348b8e4c7734268b266162f6d9361efc05f0347ddc7ff4f02be4f12986",
+      "observed_at": "2026-09-09T07:09:41.437830+00:00",
+      "locked_releases": [
+        {
+          "version": "0.4.19",
+          "checksum": "ef8e5e5a340588f4452631496976cf8636d4a7ecf600239fdc27615d2530bc16"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "h2",
+          "package": "h2",
+          "requirement": "0.4.19"
+        }
+      ]
     },
     {
       "name": "http",
       "latest_stable": "1.5.0",
-      "checksum": "918d3568bebf352712bc2ef3d46a8bcf1a75b373be6539de198e9105cbbf9ce0"
+      "checksum": "918d3568bebf352712bc2ef3d46a8bcf1a75b373be6539de198e9105cbbf9ce0",
+      "source_url": "https://index.crates.io/ht/tp/http",
+      "response_sha256": "e8cbb9641653cb9fdfce8fa616ab03afc3d2da6008d9877795bc0c66c7c36d73",
+      "observed_at": "2026-09-09T07:09:41.503404+00:00",
+      "locked_releases": [
+        {
+          "version": "1.5.0",
+          "checksum": "918d3568bebf352712bc2ef3d46a8bcf1a75b373be6539de198e9105cbbf9ce0"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "http",
+          "package": "http",
+          "requirement": "1.5.0"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "http",
+          "package": "http",
+          "requirement": "=1.5.0"
+        }
+      ]
     },
     {
       "name": "http-body",
       "latest_stable": "1.1.0",
-      "checksum": "ca2a8f2913ee65f60facd6a5905613afaa448497a0230cc41ce022d93290bc2c"
+      "checksum": "ca2a8f2913ee65f60facd6a5905613afaa448497a0230cc41ce022d93290bc2c",
+      "source_url": "https://index.crates.io/ht/tp/http-body",
+      "response_sha256": "0372b995175123c8b7c6e8b5496d35ca46420c9a77ba2497b685051648c260ea",
+      "observed_at": "2026-09-09T07:09:41.555904+00:00",
+      "locked_releases": [
+        {
+          "version": "1.1.0",
+          "checksum": "ca2a8f2913ee65f60facd6a5905613afaa448497a0230cc41ce022d93290bc2c"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "http-body",
+          "package": "http-body",
+          "requirement": "1.1.0"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "http-body",
+          "package": "http-body",
+          "requirement": "=1.1.0"
+        }
+      ]
     },
     {
       "name": "http-body-util",
       "latest_stable": "0.1.5",
-      "checksum": "23169fe34a5fbcdd3f3862e78fb9b6fccd5f02a6dc6f732547005d45631ce71c"
+      "checksum": "23169fe34a5fbcdd3f3862e78fb9b6fccd5f02a6dc6f732547005d45631ce71c",
+      "source_url": "https://index.crates.io/ht/tp/http-body-util",
+      "response_sha256": "93d72d5af3e0c58b98c59a905fd261d12c289d87760768a94b66c58c63da473a",
+      "observed_at": "2026-09-09T07:09:41.628534+00:00",
+      "locked_releases": [
+        {
+          "version": "0.1.5",
+          "checksum": "23169fe34a5fbcdd3f3862e78fb9b6fccd5f02a6dc6f732547005d45631ce71c"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "http-body-util",
+          "package": "http-body-util",
+          "requirement": "0.1.5"
+        }
+      ]
     },
     {
       "name": "hyper",
-      "latest_stable": "1.11.0",
-      "checksum": "d22053281f852e11534f5198498373cbb59295120a20771d90f7ed1897490a72"
+      "latest_stable": "1.11.1",
+      "checksum": "27b501faa50e7a26c3d3560ca625132f4078a17771f4810baf70475ae48cbe43",
+      "source_url": "https://index.crates.io/hy/pe/hyper",
+      "response_sha256": "9ca892d051762eedbb5c9a30f28d1e889da89e504d9fef4940dda461caacfc74",
+      "observed_at": "2026-09-09T07:09:41.732795+00:00",
+      "locked_releases": [
+        {
+          "version": "1.11.1",
+          "checksum": "27b501faa50e7a26c3d3560ca625132f4078a17771f4810baf70475ae48cbe43"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "hyper",
+          "package": "hyper",
+          "requirement": "1.11.1"
+        }
+      ]
     },
     {
       "name": "hyper-util",
       "latest_stable": "0.1.20",
-      "checksum": "96547c2556ec9d12fb1578c4eaf448b04993e7fb79cbaad930a656880a6bdfa0"
+      "checksum": "96547c2556ec9d12fb1578c4eaf448b04993e7fb79cbaad930a656880a6bdfa0",
+      "source_url": "https://index.crates.io/hy/pe/hyper-util",
+      "response_sha256": "d6987bb40aa84aff6994d2a616513523c72f8e9054cb038adc8ec7312c7276b8",
+      "observed_at": "2026-09-09T07:09:41.694719+00:00",
+      "locked_releases": [
+        {
+          "version": "0.1.20",
+          "checksum": "96547c2556ec9d12fb1578c4eaf448b04993e7fb79cbaad930a656880a6bdfa0"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "hyper-util",
+          "package": "hyper-util",
+          "requirement": "0.1.20"
+        }
+      ]
     },
     {
       "name": "icu_collator",
       "latest_stable": "2.3.1",
-      "checksum": "08984ed58ac439ebf3e13d2cf26b0c46a60afcd21721c1d14087c0b240344dda"
+      "checksum": "08984ed58ac439ebf3e13d2cf26b0c46a60afcd21721c1d14087c0b240344dda",
+      "source_url": "https://index.crates.io/ic/u_/icu_collator",
+      "response_sha256": "2c12ed9c9cb22f484a854f1c1382ce8cfabf29434fc613b112145b2f0d3f019f",
+      "observed_at": "2026-09-09T07:09:41.766578+00:00",
+      "locked_releases": [
+        {
+          "version": "2.3.1",
+          "checksum": "08984ed58ac439ebf3e13d2cf26b0c46a60afcd21721c1d14087c0b240344dda"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "icu_collator",
+          "package": "icu_collator",
+          "requirement": "2.3.1"
+        }
+      ]
     },
     {
       "name": "icu_datetime",
       "latest_stable": "2.3.0",
-      "checksum": "c44df99c4c5297b05653d1a1629f13bdc9fd4044acfbbaf30b15194a1eed4cd6"
+      "checksum": "c44df99c4c5297b05653d1a1629f13bdc9fd4044acfbbaf30b15194a1eed4cd6",
+      "source_url": "https://index.crates.io/ic/u_/icu_datetime",
+      "response_sha256": "7408e74a9d331db25a3e3cfa64bf54ae2c3f13cbdb8269e0089d7bb3b5df4d91",
+      "observed_at": "2026-09-09T07:09:41.803695+00:00",
+      "locked_releases": [
+        {
+          "version": "2.3.0",
+          "checksum": "c44df99c4c5297b05653d1a1629f13bdc9fd4044acfbbaf30b15194a1eed4cd6"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "icu_datetime",
+          "package": "icu_datetime",
+          "requirement": "2.3.0"
+        }
+      ]
     },
     {
       "name": "icu_decimal",
       "latest_stable": "2.3.0",
-      "checksum": "9eb8f655bba2d0c0459e43a5b0e6cd3cd388109898fb3d85d048165e8b0abd08"
+      "checksum": "9eb8f655bba2d0c0459e43a5b0e6cd3cd388109898fb3d85d048165e8b0abd08",
+      "source_url": "https://index.crates.io/ic/u_/icu_decimal",
+      "response_sha256": "67b78a32a98f9e7411652dda0f9d32143c7298285ef6e3eb3edcdec61b0a3734",
+      "observed_at": "2026-09-09T07:09:41.818046+00:00",
+      "locked_releases": [
+        {
+          "version": "2.3.0",
+          "checksum": "9eb8f655bba2d0c0459e43a5b0e6cd3cd388109898fb3d85d048165e8b0abd08"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "icu_decimal",
+          "package": "icu_decimal",
+          "requirement": "2.3.0"
+        }
+      ]
     },
     {
       "name": "icu_locale",
       "latest_stable": "2.3.1",
-      "checksum": "785f595c61ef57169a467eeed7b4b6936a66f6cacbb116a96ee86da983251bf4"
+      "checksum": "785f595c61ef57169a467eeed7b4b6936a66f6cacbb116a96ee86da983251bf4",
+      "source_url": "https://index.crates.io/ic/u_/icu_locale",
+      "response_sha256": "4c24fb5bade4747cebbec25369fbc1659955870d90922168a6ecd58104281b43",
+      "observed_at": "2026-09-09T07:09:41.846241+00:00",
+      "locked_releases": [
+        {
+          "version": "2.3.1",
+          "checksum": "785f595c61ef57169a467eeed7b4b6936a66f6cacbb116a96ee86da983251bf4"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "icu_locale",
+          "package": "icu_locale",
+          "requirement": "2.3.1"
+        }
+      ]
     },
     {
       "name": "icu_plurals",
       "latest_stable": "2.3.0",
-      "checksum": "e475e6766ef87b1d3c1f97be6363995b0bfaeddbc789671615df598a97ff0593"
+      "checksum": "e475e6766ef87b1d3c1f97be6363995b0bfaeddbc789671615df598a97ff0593",
+      "source_url": "https://index.crates.io/ic/u_/icu_plurals",
+      "response_sha256": "52e5528feb578ee4c123cb5be5e7981cc7a0651f9eeb2a4808272c42206c21ce",
+      "observed_at": "2026-09-09T07:09:41.864267+00:00",
+      "locked_releases": [
+        {
+          "version": "2.3.0",
+          "checksum": "e475e6766ef87b1d3c1f97be6363995b0bfaeddbc789671615df598a97ff0593"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "icu_plurals",
+          "package": "icu_plurals",
+          "requirement": "2.3.0"
+        }
+      ]
     },
     {
       "name": "ignore",
       "latest_stable": "0.4.33",
-      "checksum": "00b69833ed729dc5aa7d19541d96d6cf8e9137194207a04916d658e43168402f"
+      "checksum": "00b69833ed729dc5aa7d19541d96d6cf8e9137194207a04916d658e43168402f",
+      "source_url": "https://index.crates.io/ig/no/ignore",
+      "response_sha256": "b3242ab584f5d94a41c16c010b7e9c1eaced9d0a81ae8c7228d605356ae0117f",
+      "observed_at": "2026-09-09T07:09:41.898735+00:00",
+      "locked_releases": [
+        {
+          "version": "0.4.33",
+          "checksum": "00b69833ed729dc5aa7d19541d96d6cf8e9137194207a04916d658e43168402f"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "ignore",
+          "package": "ignore",
+          "requirement": "0.4.33"
+        }
+      ]
     },
     {
       "name": "indexmap",
-      "latest_stable": "2.14.0",
-      "checksum": "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9"
+      "latest_stable": "2.14.2",
+      "checksum": "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855",
+      "source_url": "https://index.crates.io/in/de/indexmap",
+      "response_sha256": "40c32ec5860cc3e23155cafc712892fe7b7ac3558b75115d8bb3d70b89247792",
+      "observed_at": "2026-09-09T07:09:41.925270+00:00",
+      "locked_releases": [
+        {
+          "version": "2.14.2",
+          "checksum": "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "indexmap",
+          "package": "indexmap",
+          "requirement": "2.14.2"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "indexmap",
+          "package": "indexmap",
+          "requirement": "=2.14.2"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/bridge_type_matrix/examples/bridge_type_roundtrip/Cargo.toml",
+          "table": "dependencies",
+          "alias": "indexmap",
+          "package": "indexmap",
+          "requirement": "=2.14.2"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/cargo_locked_offline/examples/locked_offline_cache/rust/locked_bridge/Cargo.toml",
+          "table": "dependencies",
+          "alias": "indexmap",
+          "package": "indexmap",
+          "requirement": "=2.14.2"
+        }
+      ]
     },
     {
       "name": "insta",
       "latest_stable": "1.48.0",
-      "checksum": "86f0f8fee8c926415c58d6ae43a08523a26faccb2323f5e6b644fe7dd4ef6b82"
+      "checksum": "86f0f8fee8c926415c58d6ae43a08523a26faccb2323f5e6b644fe7dd4ef6b82",
+      "source_url": "https://index.crates.io/in/st/insta",
+      "response_sha256": "d7c92a76d2e1636f22d6281202e138fadf22a2ff9c3dbccc08430a6e4c785920",
+      "observed_at": "2026-09-09T07:09:41.970566+00:00",
+      "locked_releases": [
+        {
+          "version": "1.48.0",
+          "checksum": "86f0f8fee8c926415c58d6ae43a08523a26faccb2323f5e6b644fe7dd4ef6b82"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "insta",
+          "package": "insta",
+          "requirement": "1.48.0"
+        }
+      ]
     },
     {
       "name": "is-macro",
       "latest_stable": "0.3.8",
-      "checksum": "8267aa6001e25494f3015f9663bbd88a18240c74483afa5f0934a1b3e4c388e9"
+      "checksum": "8267aa6001e25494f3015f9663bbd88a18240c74483afa5f0934a1b3e4c388e9",
+      "source_url": "https://index.crates.io/is/-m/is-macro",
+      "response_sha256": "eaef9f0a212003fae0b2f40a4483d4145e00b2ff5a02884cbf09c324a0a3888a",
+      "observed_at": "2026-09-09T07:09:41.989663+00:00",
+      "locked_releases": [
+        {
+          "version": "0.3.8",
+          "checksum": "8267aa6001e25494f3015f9663bbd88a18240c74483afa5f0934a1b3e4c388e9"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "is-macro",
+          "package": "is-macro",
+          "requirement": "0.3.8"
+        }
+      ]
     },
     {
       "name": "itertools",
       "latest_stable": "0.15.0",
-      "checksum": "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
+      "checksum": "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc",
+      "source_url": "https://index.crates.io/it/er/itertools",
+      "response_sha256": "84045ed05f2f5c4065b3aab9271a2c84ff03f82009c6f404235f6de8914afe84",
+      "observed_at": "2026-09-09T07:09:42.060674+00:00",
+      "locked_releases": [
+        {
+          "version": "0.14.0",
+          "checksum": "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+        },
+        {
+          "version": "0.15.0",
+          "checksum": "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "itertools",
+          "package": "itertools",
+          "requirement": "0.15.0"
+        }
+      ]
+    },
+    {
+      "name": "lalrpop",
+      "latest_stable": "0.23.1",
+      "checksum": "98a80a963123205c7157323c99611bc4abb65dcbd62ef46dc4bac74a3941bc75",
+      "source_url": "https://index.crates.io/la/lr/lalrpop",
+      "response_sha256": "f3bc3d145cef9ac9761abdc654e5d1cde803d0931b3fef1fe2d8b05ca434bbdf",
+      "observed_at": "2026-09-09T07:09:42.086083+00:00",
+      "locked_releases": [
+        {
+          "version": "0.23.1",
+          "checksum": "98a80a963123205c7157323c99611bc4abb65dcbd62ef46dc4bac74a3941bc75"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "lalrpop",
+          "package": "lalrpop",
+          "requirement": "=0.23.1"
+        }
+      ]
+    },
+    {
+      "name": "lalrpop-util",
+      "latest_stable": "0.23.1",
+      "checksum": "884f3e747ed2dcee867cda1b0c31a048f9e20de2d916a248949319921a2e666e",
+      "source_url": "https://index.crates.io/la/lr/lalrpop-util",
+      "response_sha256": "a039d4fbc5937785f4339449c2dc197d054d2e681ee3f35a164c49b9f50d096f",
+      "observed_at": "2026-09-09T07:09:42.107275+00:00",
+      "locked_releases": [
+        {
+          "version": "0.23.1",
+          "checksum": "884f3e747ed2dcee867cda1b0c31a048f9e20de2d916a248949319921a2e666e"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "lalrpop-util",
+          "package": "lalrpop-util",
+          "requirement": "=0.23.1"
+        }
+      ]
     },
     {
       "name": "libc",
       "latest_stable": "0.2.189",
-      "checksum": "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
+      "checksum": "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2",
+      "source_url": "https://index.crates.io/li/bc/libc",
+      "response_sha256": "215b24867f33861378783a11e55be902e569825727de53823f8697334b4d03f3",
+      "observed_at": "2026-09-09T07:09:42.141365+00:00",
+      "locked_releases": [
+        {
+          "version": "0.2.189",
+          "checksum": "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "libc",
+          "package": "libc",
+          "requirement": "0.2.189"
+        }
+      ]
+    },
+    {
+      "name": "libsqlite3-sys",
+      "latest_stable": "0.38.2",
+      "checksum": "f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8",
+      "source_url": "https://index.crates.io/li/bs/libsqlite3-sys",
+      "response_sha256": "84ce25ebec0a34fad336098927f4ad219d226b3aa2d5ce9795e244691d9f4afc",
+      "observed_at": "2026-09-09T07:09:42.162575+00:00",
+      "locked_releases": [
+        {
+          "version": "0.37.0",
+          "checksum": "b1f111c8c41e7c61a49cd34e44c7619462967221a6443b0ec299e0ac30cfb9b1"
+        },
+        {
+          "version": "0.38.2",
+          "checksum": "f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "libsqlite3-sys",
+          "package": "libsqlite3-sys",
+          "requirement": "=0.38.2"
+        }
+      ]
     },
     {
       "name": "lsp-server",
       "latest_stable": "0.10.0",
-      "checksum": "3ee25a31f2e571e426eef2896179450cafc7e2f5be00d8a93b1c2d21c0ff7656"
+      "checksum": "3ee25a31f2e571e426eef2896179450cafc7e2f5be00d8a93b1c2d21c0ff7656",
+      "source_url": "https://index.crates.io/ls/p-/lsp-server",
+      "response_sha256": "4b9ac846db6c8cd4aea5a4e3cc72adf9d226b04b473ad05a79fba63364a0d567",
+      "observed_at": "2026-09-09T07:09:42.891190+00:00",
+      "locked_releases": [
+        {
+          "version": "0.10.0",
+          "checksum": "3ee25a31f2e571e426eef2896179450cafc7e2f5be00d8a93b1c2d21c0ff7656"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "lsp-server",
+          "package": "lsp-server",
+          "requirement": "0.10.0"
+        }
+      ]
     },
     {
       "name": "lsp-types",
       "latest_stable": "0.97.0",
-      "checksum": "53353550a17c04ac46c585feb189c2db82154fc84b79c7a66c96c2c644f66071"
+      "checksum": "53353550a17c04ac46c585feb189c2db82154fc84b79c7a66c96c2c644f66071",
+      "source_url": "https://index.crates.io/ls/p-/lsp-types",
+      "response_sha256": "e9444e1e1df2f4f150a90fa1ed3474c3ca098ee92c1a7c0558149b80bc84f6f1",
+      "observed_at": "2026-09-09T07:09:42.878646+00:00",
+      "locked_releases": [
+        {
+          "version": "0.97.0",
+          "checksum": "53353550a17c04ac46c585feb189c2db82154fc84b79c7a66c96c2c644f66071"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "lsp-types",
+          "package": "lsp-types",
+          "requirement": "0.97.0"
+        }
+      ]
     },
     {
       "name": "md5",
       "latest_stable": "0.8.1",
-      "checksum": "7ebb8d8732c6a6df3d8f032a82911cfc747e00efb95cc46e8d0acd5b5b88570c"
+      "checksum": "7ebb8d8732c6a6df3d8f032a82911cfc747e00efb95cc46e8d0acd5b5b88570c",
+      "source_url": "https://index.crates.io/3/m/md5",
+      "response_sha256": "bfc1cb4b4d85b5a451efd97e661e6e95ac24c55c6c15ea5da81a76cc4ed9bb39",
+      "observed_at": "2026-09-09T07:09:42.933228+00:00",
+      "locked_releases": [
+        {
+          "version": "0.8.1",
+          "checksum": "7ebb8d8732c6a6df3d8f032a82911cfc747e00efb95cc46e8d0acd5b5b88570c"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "md5",
+          "package": "md5",
+          "requirement": "0.8.1"
+        }
+      ]
     },
     {
       "name": "memchr",
       "latest_stable": "2.8.3",
-      "checksum": "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
+      "checksum": "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98",
+      "source_url": "https://index.crates.io/me/mc/memchr",
+      "response_sha256": "577209be17cbaaf1a862c0e01a84d515d91bcc229476fd34e67ffd44a5a84f27",
+      "observed_at": "2026-09-09T07:09:42.939730+00:00",
+      "locked_releases": [
+        {
+          "version": "2.8.3",
+          "checksum": "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "memchr",
+          "package": "memchr",
+          "requirement": "2.8.3"
+        }
+      ]
     },
     {
       "name": "memmap2",
       "latest_stable": "0.9.11",
-      "checksum": "d1219ed1b7f229ee7104d281dd01d6802fe28bb6e95d292942c4daacdeb798c0"
+      "checksum": "d1219ed1b7f229ee7104d281dd01d6802fe28bb6e95d292942c4daacdeb798c0",
+      "source_url": "https://index.crates.io/me/mm/memmap2",
+      "response_sha256": "470ca5c2a45d15c88b0388b66c729feeda13571a47ab286b044fffad39503a6f",
+      "observed_at": "2026-09-09T07:09:42.977914+00:00",
+      "locked_releases": [
+        {
+          "version": "0.9.11",
+          "checksum": "d1219ed1b7f229ee7104d281dd01d6802fe28bb6e95d292942c4daacdeb798c0"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "memmap2",
+          "package": "memmap2",
+          "requirement": "=0.9.11"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "memmap2",
+          "package": "memmap2",
+          "requirement": "=0.9.11"
+        }
+      ]
     },
     {
       "name": "metrics",
       "latest_stable": "0.24.6",
-      "checksum": "89550ee9f79e88fef3119de263694973a8adb26c21d75322164fb8c493039fe2"
+      "checksum": "89550ee9f79e88fef3119de263694973a8adb26c21d75322164fb8c493039fe2",
+      "source_url": "https://index.crates.io/me/tr/metrics",
+      "response_sha256": "c54f2cb959515ad4fc7af7e7fc2230258b45e6fdf40c525a7f417fd87d22e121",
+      "observed_at": "2026-09-09T07:09:42.992055+00:00",
+      "locked_releases": [
+        {
+          "version": "0.24.6",
+          "checksum": "89550ee9f79e88fef3119de263694973a8adb26c21d75322164fb8c493039fe2"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "metrics",
+          "package": "metrics",
+          "requirement": "0.24.6"
+        }
+      ]
+    },
+    {
+      "name": "mysql_async",
+      "latest_stable": "0.37.1",
+      "checksum": "40d11da0e2d9fad4640c9f9198ee431c6d68444568f83ef1f10f3367270071e4",
+      "source_url": "https://index.crates.io/my/sq/mysql_async",
+      "response_sha256": "367c2c35345c39af9cf6c15164ff11de54cd2165e2577cc47e2744cf80c6dbe7",
+      "observed_at": "2026-09-09T07:09:43.055514+00:00",
+      "locked_releases": [
+        {
+          "version": "0.37.1",
+          "checksum": "40d11da0e2d9fad4640c9f9198ee431c6d68444568f83ef1f10f3367270071e4"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "mysql_async",
+          "package": "mysql_async",
+          "requirement": "=0.37.1"
+        }
+      ]
     },
     {
       "name": "ndarray",
       "latest_stable": "0.17.2",
-      "checksum": "520080814a7a6b4a6e9070823bb24b4531daac8c4627e08ba5de8c5ef2f2752d"
+      "checksum": "520080814a7a6b4a6e9070823bb24b4531daac8c4627e08ba5de8c5ef2f2752d",
+      "source_url": "https://index.crates.io/nd/ar/ndarray",
+      "response_sha256": "fc6f2c161315221458244956d2ce73322efe8a7511d88b076ceeeeb71af6cafa",
+      "observed_at": "2026-09-09T07:09:43.060434+00:00",
+      "locked_releases": [
+        {
+          "version": "0.17.2",
+          "checksum": "520080814a7a6b4a6e9070823bb24b4531daac8c4627e08ba5de8c5ef2f2752d"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "ndarray",
+          "package": "ndarray",
+          "requirement": "=0.17.2"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "ndarray",
+          "package": "ndarray",
+          "requirement": "=0.17.2"
+        }
+      ]
     },
     {
       "name": "notify",
       "latest_stable": "8.2.0",
-      "checksum": "4d3d07927151ff8575b7087f245456e549fea62edf0ec4e565a5ee50c8402bc3"
+      "checksum": "4d3d07927151ff8575b7087f245456e549fea62edf0ec4e565a5ee50c8402bc3",
+      "source_url": "https://index.crates.io/no/ti/notify",
+      "response_sha256": "55649739c29249927dade69e37b131ed8497d4d1216d5a957d5dca9073e0db0c",
+      "observed_at": "2026-09-09T07:09:43.123186+00:00",
+      "locked_releases": [
+        {
+          "version": "8.2.0",
+          "checksum": "4d3d07927151ff8575b7087f245456e549fea62edf0ec4e565a5ee50c8402bc3"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "notify",
+          "package": "notify",
+          "requirement": "=8.2.0"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "notify",
+          "package": "notify",
+          "requirement": "=8.2.0"
+        }
+      ]
     },
     {
       "name": "num-bigint",
       "latest_stable": "0.5.1",
-      "checksum": "93e7820bc0a80a0238e650327316f929ba18d5be054b647490a3a6a339f3e7c0"
+      "checksum": "93e7820bc0a80a0238e650327316f929ba18d5be054b647490a3a6a339f3e7c0",
+      "source_url": "https://index.crates.io/nu/m-/num-bigint",
+      "response_sha256": "96d8afcfa019a6c065f282a5c18888c6ddb7308f6e9dfd95da27d537d1aca848",
+      "observed_at": "2026-09-09T07:09:43.109588+00:00",
+      "locked_releases": [
+        {
+          "version": "0.4.8",
+          "checksum": "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367"
+        },
+        {
+          "version": "0.5.1",
+          "checksum": "93e7820bc0a80a0238e650327316f929ba18d5be054b647490a3a6a339f3e7c0"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "num-bigint",
+          "package": "num-bigint",
+          "requirement": "0.5.1"
+        }
+      ]
     },
     {
       "name": "num-traits",
       "latest_stable": "0.2.19",
-      "checksum": "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
+      "checksum": "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841",
+      "source_url": "https://index.crates.io/nu/m-/num-traits",
+      "response_sha256": "15b5132965f616441319773bc71cc14547a115e8f2023e93d18e02a5b23240df",
+      "observed_at": "2026-09-09T07:09:43.154554+00:00",
+      "locked_releases": [
+        {
+          "version": "0.2.19",
+          "checksum": "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "num-traits",
+          "package": "num-traits",
+          "requirement": "0.2.19"
+        }
+      ]
     },
     {
       "name": "once_cell",
       "latest_stable": "1.21.4",
-      "checksum": "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
+      "checksum": "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50",
+      "source_url": "https://index.crates.io/on/ce/once_cell",
+      "response_sha256": "01e5bf656ebaac2c7502405054837f773f6ebaa24c3be59456bc5882940f0e90",
+      "observed_at": "2026-09-09T07:09:43.172258+00:00",
+      "locked_releases": [
+        {
+          "version": "1.21.4",
+          "checksum": "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "once_cell",
+          "package": "once_cell",
+          "requirement": "1.21.4"
+        }
+      ]
     },
     {
       "name": "percent-encoding",
       "latest_stable": "2.3.2",
-      "checksum": "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
+      "checksum": "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220",
+      "source_url": "https://index.crates.io/pe/rc/percent-encoding",
+      "response_sha256": "8390718e6d360e1c2c98e0a1a83526509435d0d69af9ab6b17d2cd0c2ea3f99b",
+      "observed_at": "2026-09-09T07:09:43.205777+00:00",
+      "locked_releases": [
+        {
+          "version": "2.3.2",
+          "checksum": "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "percent-encoding",
+          "package": "percent-encoding",
+          "requirement": "2.3.2"
+        }
+      ]
     },
     {
       "name": "polars",
       "latest_stable": "0.55.2",
-      "checksum": "d52d3ed4e6b3917427f6d3c43edbd2740babe228bb4ccfa3431eac105844045d"
+      "checksum": "d52d3ed4e6b3917427f6d3c43edbd2740babe228bb4ccfa3431eac105844045d",
+      "source_url": "https://index.crates.io/po/la/polars",
+      "response_sha256": "546b8f92861db3dc248e0ea5dc97a0dfa045af5babf4c0589bfaca578a5378e6",
+      "observed_at": "2026-09-09T07:09:44.011934+00:00",
+      "locked_releases": [
+        {
+          "version": "0.55.2",
+          "checksum": "d52d3ed4e6b3917427f6d3c43edbd2740babe228bb4ccfa3431eac105844045d"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "polars",
+          "package": "polars",
+          "requirement": "=0.55.2"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "polars",
+          "package": "polars",
+          "requirement": "=0.55.2"
+        }
+      ]
     },
     {
       "name": "postcard",
       "latest_stable": "1.1.3",
-      "checksum": "6764c3b5dd454e283a30e6dfe78e9b31096d9e32036b5d1eaac7a6119ccb9a24"
+      "checksum": "6764c3b5dd454e283a30e6dfe78e9b31096d9e32036b5d1eaac7a6119ccb9a24",
+      "source_url": "https://index.crates.io/po/st/postcard",
+      "response_sha256": "e1942dbb5654a70f28993826eac542ec7ea8857d1c0a64ba15d40e5eaa61a6d4",
+      "observed_at": "2026-09-09T07:09:43.268530+00:00",
+      "locked_releases": [
+        {
+          "version": "1.1.3",
+          "checksum": "6764c3b5dd454e283a30e6dfe78e9b31096d9e32036b5d1eaac7a6119ccb9a24"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "postcard",
+          "package": "postcard",
+          "requirement": "1.1.3"
+        }
+      ]
+    },
+    {
+      "name": "postgres-types",
+      "latest_stable": "0.2.14",
+      "checksum": "851ca9db4932932d69f3ea811b1abe63087a0f740a47692619dd40d4899b68be",
+      "source_url": "https://index.crates.io/po/st/postgres-types",
+      "response_sha256": "efd284a84de1155e6056dc9af6f5bc88bc89edb4efeaf785c33f72d4989d8e08",
+      "observed_at": "2026-09-09T07:09:43.321483+00:00",
+      "locked_releases": [
+        {
+          "version": "0.2.14",
+          "checksum": "851ca9db4932932d69f3ea811b1abe63087a0f740a47692619dd40d4899b68be"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "postgres-types",
+          "package": "postgres-types",
+          "requirement": "=0.2.14"
+        }
+      ]
     },
     {
       "name": "prettyplease",
       "latest_stable": "0.3.0",
-      "checksum": "2bfe0f4c752e450fc2faf62654f1c134747922825d5b04ca717b8874f41a40c0"
+      "checksum": "2bfe0f4c752e450fc2faf62654f1c134747922825d5b04ca717b8874f41a40c0",
+      "source_url": "https://index.crates.io/pr/et/prettyplease",
+      "response_sha256": "45b426a8bf53fc00412191f6cfb20fdbfd1d046ddaf0f5605d1c453705d9ca11",
+      "observed_at": "2026-09-09T07:09:43.386277+00:00",
+      "locked_releases": [
+        {
+          "version": "0.2.37",
+          "checksum": "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
+        },
+        {
+          "version": "0.3.0",
+          "checksum": "2bfe0f4c752e450fc2faf62654f1c134747922825d5b04ca717b8874f41a40c0"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_codegen/Cargo.toml",
+          "table": "dependencies",
+          "alias": "prettyplease",
+          "package": "prettyplease",
+          "requirement": "0.3.0"
+        }
+      ]
     },
     {
       "name": "proc-macro2",
       "latest_stable": "1.0.107",
-      "checksum": "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
+      "checksum": "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9",
+      "source_url": "https://index.crates.io/pr/oc/proc-macro2",
+      "response_sha256": "955448bc91f9c490e3bdc028f9d79a561b4f43142025ec46a99bdacaa140233c",
+      "observed_at": "2026-09-09T07:09:43.449574+00:00",
+      "locked_releases": [
+        {
+          "version": "1.0.107",
+          "checksum": "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_codegen/Cargo.toml",
+          "table": "dependencies",
+          "alias": "proc-macro2",
+          "package": "proc-macro2",
+          "requirement": "1.0.107"
+        }
+      ]
     },
     {
       "name": "prost",
       "latest_stable": "0.14.4",
-      "checksum": "528ac67416ff8646872a3c02cad9cc4ee5dc9f9540c9b10771855c95cb2e5ae1"
+      "checksum": "528ac67416ff8646872a3c02cad9cc4ee5dc9f9540c9b10771855c95cb2e5ae1",
+      "source_url": "https://index.crates.io/pr/os/prost",
+      "response_sha256": "f0712b53f6c8ff82f81f62fe75c82574835834711418812f39b0fb4d1a810213",
+      "observed_at": "2026-09-09T07:09:43.507186+00:00",
+      "locked_releases": [
+        {
+          "version": "0.14.4",
+          "checksum": "528ac67416ff8646872a3c02cad9cc4ee5dc9f9540c9b10771855c95cb2e5ae1"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "verification/areas/rust_interop/fixtures/proc_macro_trust/examples/proc_macro_trust_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "prost",
+          "package": "prost",
+          "requirement": "=0.14.4"
+        }
+      ]
     },
     {
       "name": "prost-build",
       "latest_stable": "0.14.4",
-      "checksum": "03da047801ff44bb6a4d407d4860c05fd70bb81714e6b2f3812603d5b145b042"
+      "checksum": "03da047801ff44bb6a4d407d4860c05fd70bb81714e6b2f3812603d5b145b042",
+      "source_url": "https://index.crates.io/pr/os/prost-build",
+      "response_sha256": "10aa6785846de753ba77884a5ea18fe462deac44eab36a81613a747bddcc7992",
+      "observed_at": "2026-09-09T07:09:43.568579+00:00",
+      "locked_releases": [
+        {
+          "version": "0.14.4",
+          "checksum": "03da047801ff44bb6a4d407d4860c05fd70bb81714e6b2f3812603d5b145b042"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "prost-build",
+          "package": "prost-build",
+          "requirement": "=0.14.4"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/proc_macro_trust/examples/proc_macro_trust_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "prost_build_upstream",
+          "package": "prost-build",
+          "requirement": "=0.14.4"
+        }
+      ]
     },
     {
       "name": "prost-types",
       "latest_stable": "0.14.4",
-      "checksum": "f94967dc7688f3054c7fac87473ffae4cc4c3904800e2d9f5b857246d8963b0a"
+      "checksum": "f94967dc7688f3054c7fac87473ffae4cc4c3904800e2d9f5b857246d8963b0a",
+      "source_url": "https://index.crates.io/pr/os/prost-types",
+      "response_sha256": "32e61996d0544c6e8a4b39658fd18bb6ff381e0114deb4b89f2215933c624828",
+      "observed_at": "2026-09-09T07:09:43.626510+00:00",
+      "locked_releases": [
+        {
+          "version": "0.14.4",
+          "checksum": "f94967dc7688f3054c7fac87473ffae4cc4c3904800e2d9f5b857246d8963b0a"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "verification/areas/rust_interop/fixtures/proc_macro_trust/examples/proc_macro_trust_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "prost_types",
+          "package": "prost-types",
+          "requirement": "=0.14.4"
+        }
+      ]
     },
     {
       "name": "pyo3",
       "latest_stable": "0.29.2",
-      "checksum": "4688ddedf473e32662b9b067670129a8afb8c18e351482c70d62ba4a88171e8b"
+      "checksum": "4688ddedf473e32662b9b067670129a8afb8c18e351482c70d62ba4a88171e8b",
+      "source_url": "https://index.crates.io/py/o3/pyo3",
+      "response_sha256": "3b8f86dcab68ad9f9e1aca80ff5859361af6d589b6052fc7a8fb46bacd12baa4",
+      "observed_at": "2026-09-09T07:09:43.718740+00:00",
+      "locked_releases": [
+        {
+          "version": "0.29.2",
+          "checksum": "4688ddedf473e32662b9b067670129a8afb8c18e351482c70d62ba4a88171e8b"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "pyo3",
+          "package": "pyo3",
+          "requirement": "0.29.2"
+        }
+      ]
+    },
+    {
+      "name": "quote",
+      "latest_stable": "1.0.47",
+      "checksum": "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001",
+      "source_url": "https://index.crates.io/qu/ot/quote",
+      "response_sha256": "4359f39471050245ed6788ac1d3ee77f398405fb410433a755435f5ec1adb745",
+      "observed_at": "2026-09-09T07:09:43.781137+00:00",
+      "locked_releases": [
+        {
+          "version": "1.0.47",
+          "checksum": "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_codegen/Cargo.toml",
+          "table": "dependencies",
+          "alias": "quote",
+          "package": "quote",
+          "requirement": "1.0.47"
+        }
+      ]
     },
     {
       "name": "rand",
       "latest_stable": "0.10.2",
-      "checksum": "c7f5fa3a058cd35567ef9bfa5e75732bee0f9e4c55fa90477bef2dfcdbc4be80"
+      "checksum": "c7f5fa3a058cd35567ef9bfa5e75732bee0f9e4c55fa90477bef2dfcdbc4be80",
+      "source_url": "https://index.crates.io/ra/nd/rand",
+      "response_sha256": "7c9233d067ff080ad8803d38224a52a689864a371f01eab4f2442b3ec093f2bb",
+      "observed_at": "2026-09-09T07:09:43.848232+00:00",
+      "locked_releases": [
+        {
+          "version": "0.10.2",
+          "checksum": "c7f5fa3a058cd35567ef9bfa5e75732bee0f9e4c55fa90477bef2dfcdbc4be80"
+        },
+        {
+          "version": "0.8.6",
+          "checksum": "5ca0ecfa931c29007047d1bc58e623ab12e5590e8c7cc53200d5202b69266d8a"
+        },
+        {
+          "version": "0.9.5",
+          "checksum": "b9ef1d0d795eb7d84685bca4f72f3649f064e6641543d3a8c415898726a57b41"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "rand",
+          "package": "rand",
+          "requirement": "0.10.2"
+        }
+      ]
     },
     {
       "name": "rand_distr",
       "latest_stable": "0.6.0",
-      "checksum": "4d431c2703ccf129de4d45253c03f49ebb22b97d6ad79ee3ecfc7e3f4862c1d8"
+      "checksum": "4d431c2703ccf129de4d45253c03f49ebb22b97d6ad79ee3ecfc7e3f4862c1d8",
+      "source_url": "https://index.crates.io/ra/nd/rand_distr",
+      "response_sha256": "ebcdd3d233cee2270c66836f917bca05902ec6a992bf39b4041eab648326ca02",
+      "observed_at": "2026-09-09T07:09:43.911127+00:00",
+      "locked_releases": [
+        {
+          "version": "0.5.1",
+          "checksum": "6a8615d50dcf34fa31f7ab52692afec947c4dd0ab803cc87cb3b0b4570ff7463"
+        },
+        {
+          "version": "0.6.0",
+          "checksum": "4d431c2703ccf129de4d45253c03f49ebb22b97d6ad79ee3ecfc7e3f4862c1d8"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "rand_distr",
+          "package": "rand_distr",
+          "requirement": "0.6.0"
+        }
+      ]
     },
     {
       "name": "rayon",
       "latest_stable": "1.12.0",
-      "checksum": "fb39b166781f92d482534ef4b4b1b2568f42613b53e5b6c160e24cfbfa30926d"
+      "checksum": "fb39b166781f92d482534ef4b4b1b2568f42613b53e5b6c160e24cfbfa30926d",
+      "source_url": "https://index.crates.io/ra/yo/rayon",
+      "response_sha256": "62c52516e821afab163d6d2981761ca58129ae5685361b9107d478c02582df7b",
+      "observed_at": "2026-09-09T07:09:44.021751+00:00",
+      "locked_releases": [
+        {
+          "version": "1.12.0",
+          "checksum": "fb39b166781f92d482534ef4b4b1b2568f42613b53e5b6c160e24cfbfa30926d"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "rayon",
+          "package": "rayon",
+          "requirement": "1.12.0"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "rayon",
+          "package": "rayon",
+          "requirement": "=1.12.0"
+        }
+      ]
     },
     {
       "name": "rcgen",
-      "latest_stable": "0.14.9",
-      "checksum": "091e7a8e7d86e6feb87a27ce8e2cba29d49eff9507afeebefab7eeb2ca667fb4"
+      "latest_stable": "0.14.10",
+      "checksum": "8774e05a7d0de114588e6a28fe7e71694b82614ed569d86d8b389dfbc98b8ad8",
+      "source_url": "https://index.crates.io/rc/ge/rcgen",
+      "response_sha256": "a1e1ee69760a8c9aea0b3c22f5bf25b562332d4a4985dec5955a161e3d388516",
+      "observed_at": "2026-09-09T07:09:44.086276+00:00",
+      "locked_releases": [
+        {
+          "version": "0.14.10",
+          "checksum": "8774e05a7d0de114588e6a28fe7e71694b82614ed569d86d8b389dfbc98b8ad8"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "rcgen",
+          "package": "rcgen",
+          "requirement": "0.14.10"
+        }
+      ]
     },
     {
       "name": "redis",
-      "latest_stable": "1.6.0",
-      "checksum": "e37a4ca5c6ca42aa3e6df2fd32b987a65d32a4c2159a6f3fe0fd1df306a2658f"
+      "latest_stable": "1.7.0",
+      "checksum": "2acbc41a996f7652b2ddd9dfd98cc4ff602cfd742ae35382f07f608405ab50ed",
+      "source_url": "https://index.crates.io/re/di/redis",
+      "response_sha256": "d23d87f4f49504d2c62ce263a4ccc2e311810005c082a9c58c5f1826a3f643ce",
+      "observed_at": "2026-09-09T07:09:44.140225+00:00",
+      "locked_releases": [
+        {
+          "version": "1.7.0",
+          "checksum": "2acbc41a996f7652b2ddd9dfd98cc4ff602cfd742ae35382f07f608405ab50ed"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "redis",
+          "package": "redis",
+          "requirement": "=1.7.0"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "redis",
+          "package": "redis",
+          "requirement": "=1.7.0"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "redis",
+          "package": "redis",
+          "requirement": "=1.7.0"
+        }
+      ]
     },
     {
       "name": "regex",
       "latest_stable": "1.13.1",
-      "checksum": "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d"
+      "checksum": "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d",
+      "source_url": "https://index.crates.io/re/ge/regex",
+      "response_sha256": "ed50651f89c962807673849c68f6a55c18e2586f5bfc6b524c7887ffcc3af155",
+      "observed_at": "2026-09-09T07:09:44.185092+00:00",
+      "locked_releases": [
+        {
+          "version": "1.13.1",
+          "checksum": "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "regex",
+          "package": "regex",
+          "requirement": "1.13.1"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "regex",
+          "package": "regex",
+          "requirement": "=1.13.1"
+        }
+      ]
     },
     {
       "name": "reqwest",
-      "latest_stable": "0.13.4",
-      "checksum": "219c5811de6525e5416c7d5d53bb656d3afdbc6c5af816e0802bcfa42dbdc1c3"
+      "latest_stable": "0.13.5",
+      "checksum": "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029",
+      "source_url": "https://index.crates.io/re/qw/reqwest",
+      "response_sha256": "e390240bb0ed491361b485c39b5b9c1cae9598f3b296afae6194d72244abc511",
+      "observed_at": "2026-09-09T07:09:44.295229+00:00",
+      "locked_releases": [
+        {
+          "version": "0.12.28",
+          "checksum": "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
+        },
+        {
+          "version": "0.13.5",
+          "checksum": "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "reqwest",
+          "package": "reqwest",
+          "requirement": "=0.13.5"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "reqwest",
+          "package": "reqwest",
+          "requirement": "=0.13.5"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "reqwest",
+          "package": "reqwest",
+          "requirement": "=0.13.5"
+        }
+      ]
     },
     {
       "name": "rusqlite",
       "latest_stable": "0.40.2",
-      "checksum": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3"
+      "checksum": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3",
+      "source_url": "https://index.crates.io/ru/sq/rusqlite",
+      "response_sha256": "d2748c074c13d4495f8a238ad9d56701cccc7390f47de1d7f2534df1e68d90ac",
+      "observed_at": "2026-09-09T07:09:44.318884+00:00",
+      "locked_releases": [
+        {
+          "version": "0.40.2",
+          "checksum": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "rusqlite",
+          "package": "rusqlite",
+          "requirement": "=0.40.2"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "rusqlite",
+          "package": "rusqlite",
+          "requirement": "=0.40.2"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "rusqlite",
+          "package": "rusqlite",
+          "requirement": "=0.40.2"
+        }
+      ]
     },
     {
       "name": "rust_decimal",
-      "latest_stable": "1.42.1",
-      "checksum": "be2a24f50780bc85f09cc6ac299bdf1424302742d77221106859c9d8b102126a"
+      "latest_stable": "1.43.0",
+      "checksum": "7653272e75dcac41dc199fbea6f5797633994fafd339943c06c9af16bf29cd3a",
+      "source_url": "https://index.crates.io/ru/st/rust_decimal",
+      "response_sha256": "a6db6fdb378275d9fc7e26bd32935576311020c085f2b7c50e3c4ac3b1d741ee",
+      "observed_at": "2026-09-09T07:09:44.383648+00:00",
+      "locked_releases": [
+        {
+          "version": "1.43.0",
+          "checksum": "7653272e75dcac41dc199fbea6f5797633994fafd339943c06c9af16bf29cd3a"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "rust_decimal",
+          "package": "rust_decimal",
+          "requirement": "1.43.0"
+        },
+        {
+          "path": "crates/sifr_lowering/Cargo.toml",
+          "table": "dependencies",
+          "alias": "rust_decimal",
+          "package": "rust_decimal",
+          "requirement": "1.43.0"
+        }
+      ]
     },
     {
       "name": "rustc-hash",
       "latest_stable": "2.1.3",
-      "checksum": "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d"
+      "checksum": "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d",
+      "source_url": "https://index.crates.io/ru/st/rustc-hash",
+      "response_sha256": "16991d141c50649ba11ce52163be60de83f094a5d660923e321480728f1a629f",
+      "observed_at": "2026-09-09T07:09:44.366661+00:00",
+      "locked_releases": [
+        {
+          "version": "2.1.3",
+          "checksum": "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "rustc-hash",
+          "package": "rustc-hash",
+          "requirement": "2.1.3"
+        }
+      ]
     },
     {
       "name": "rustls",
-      "latest_stable": "0.23.43",
-      "checksum": "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06"
+      "latest_stable": "0.23.44",
+      "checksum": "6725596c3f2c3a0aef021139e145d4eafe314a6623e4680ca83852b2c67ab2ba",
+      "source_url": "https://index.crates.io/ru/st/rustls",
+      "response_sha256": "b94d1457c8c76be5266bd3e0034e8be29d29cfe95613896706af1c50e0a375ba",
+      "observed_at": "2026-09-09T07:09:44.441146+00:00",
+      "locked_releases": [
+        {
+          "version": "0.23.44",
+          "checksum": "6725596c3f2c3a0aef021139e145d4eafe314a6623e4680ca83852b2c67ab2ba"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "rustls",
+          "package": "rustls",
+          "requirement": "=0.23.44"
+        }
+      ]
     },
     {
       "name": "rustls-pemfile",
       "latest_stable": "2.2.0",
-      "checksum": "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50"
+      "checksum": "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50",
+      "source_url": "https://index.crates.io/ru/st/rustls-pemfile",
+      "response_sha256": "a23f85267026564fedf2d0d8b843ba38f8cbe97ecfe35d09f4a81a303201576f",
+      "observed_at": "2026-09-09T07:09:44.441060+00:00",
+      "locked_releases": [
+        {
+          "version": "2.2.0",
+          "checksum": "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "rustls-pemfile",
+          "package": "rustls-pemfile",
+          "requirement": "2.2.0"
+        }
+      ]
     },
     {
       "name": "rustls-platform-verifier",
       "latest_stable": "0.7.0",
-      "checksum": "26d1e2536ce4f35f4846aa13bff16bd0ff40157cdb14cc056c7b14ba41233ba0"
+      "checksum": "26d1e2536ce4f35f4846aa13bff16bd0ff40157cdb14cc056c7b14ba41233ba0",
+      "source_url": "https://index.crates.io/ru/st/rustls-platform-verifier",
+      "response_sha256": "6966f150b243b2694d71daa280e147946a8efd4312c30b20a883066e3657c0ea",
+      "observed_at": "2026-09-09T07:09:44.501310+00:00",
+      "locked_releases": [
+        {
+          "version": "0.7.0",
+          "checksum": "26d1e2536ce4f35f4846aa13bff16bd0ff40157cdb14cc056c7b14ba41233ba0"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "rustls-platform-verifier",
+          "package": "rustls-platform-verifier",
+          "requirement": "=0.7.0"
+        }
+      ]
     },
     {
       "name": "schemars",
       "latest_stable": "1.2.2",
-      "checksum": "687274d293b6cdc6e73e0fee520bf2049650090d7164f87672d212a3c530cf4a"
+      "checksum": "687274d293b6cdc6e73e0fee520bf2049650090d7164f87672d212a3c530cf4a",
+      "source_url": "https://index.crates.io/sc/he/schemars",
+      "response_sha256": "6301b75bf4dd1cb0f33246b08c563275440bfa7a66efcb12bab06ead21161dda",
+      "observed_at": "2026-09-09T07:09:44.518481+00:00",
+      "locked_releases": [
+        {
+          "version": "1.2.2",
+          "checksum": "687274d293b6cdc6e73e0fee520bf2049650090d7164f87672d212a3c530cf4a"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "schemars",
+          "package": "schemars",
+          "requirement": "1.2.2"
+        }
+      ]
+    },
+    {
+      "name": "semver",
+      "latest_stable": "1.0.28",
+      "checksum": "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd",
+      "source_url": "https://index.crates.io/se/mv/semver",
+      "response_sha256": "9ba964837f38bc25aed784bde55c745be4b4d48c21d1e180fb234c8dca2bf4d0",
+      "observed_at": "2026-09-09T07:09:44.548115+00:00",
+      "locked_releases": [
+        {
+          "version": "1.0.28",
+          "checksum": "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "semver",
+          "package": "semver",
+          "requirement": "1.0.28"
+        }
+      ]
     },
     {
       "name": "serde",
       "latest_stable": "1.0.229",
-      "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
+      "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba",
+      "source_url": "https://index.crates.io/se/rd/serde",
+      "response_sha256": "9eb6e78eab279f168b5787e4eb801765e1d5a2b40c50789e12166a616d73bbc5",
+      "observed_at": "2026-09-09T07:09:44.584092+00:00",
+      "locked_releases": [
+        {
+          "version": "1.0.229",
+          "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "serde",
+          "package": "serde",
+          "requirement": "1.0.229"
+        },
+        {
+          "path": "crates/sifr_compiler_component/fixtures/words_component/Cargo.toml",
+          "table": "dependencies",
+          "alias": "serde",
+          "package": "serde",
+          "requirement": "=1.0.229"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "serde",
+          "package": "serde",
+          "requirement": "=1.0.229"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/bridge_type_matrix/examples/bridge_type_roundtrip/Cargo.toml",
+          "table": "dependencies",
+          "alias": "serde",
+          "package": "serde",
+          "requirement": "=1.0.229"
+        }
+      ]
     },
     {
       "name": "serde_derive",
       "latest_stable": "1.0.229",
-      "checksum": "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
+      "checksum": "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348",
+      "source_url": "https://index.crates.io/se/rd/serde_derive",
+      "response_sha256": "9e45aa13a3855f66e4aad308ee5035a49e5690054189ce1216964d548f4d53de",
+      "observed_at": "2026-09-09T07:09:44.619121+00:00",
+      "locked_releases": [
+        {
+          "version": "1.0.229",
+          "checksum": "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "serde_derive",
+          "package": "serde_derive",
+          "requirement": "=1.0.229"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/proc_macro_trust/examples/proc_macro_trust_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "serde_derive_upstream",
+          "package": "serde_derive",
+          "requirement": "=1.0.229"
+        }
+      ]
     },
     {
       "name": "serde_json",
       "latest_stable": "1.0.151",
-      "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
+      "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14",
+      "source_url": "https://index.crates.io/se/rd/serde_json",
+      "response_sha256": "441879b8b5909e149e158309735a63b691691f4963dc4676d19e8c4c6c64b6a1",
+      "observed_at": "2026-09-09T07:09:44.660512+00:00",
+      "locked_releases": [
+        {
+          "version": "1.0.151",
+          "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "serde_json",
+          "package": "serde_json",
+          "requirement": "1.0.151"
+        },
+        {
+          "path": "crates/sifr_compiler_component/fixtures/words_component/Cargo.toml",
+          "table": "dependencies",
+          "alias": "serde_json",
+          "package": "serde_json",
+          "requirement": "=1.0.151"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "serde_json",
+          "package": "serde_json",
+          "requirement": "=1.0.151"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/bridge_type_matrix/examples/bridge_type_roundtrip/Cargo.toml",
+          "table": "dependencies",
+          "alias": "serde_json",
+          "package": "serde_json",
+          "requirement": "=1.0.151"
+        }
+      ]
     },
     {
       "name": "serde_test",
       "latest_stable": "1.0.177",
-      "checksum": "7f901ee573cab6b3060453d2d5f0bae4e6d628c23c0a962ff9b5f1d7c8d4f1ed"
+      "checksum": "7f901ee573cab6b3060453d2d5f0bae4e6d628c23c0a962ff9b5f1d7c8d4f1ed",
+      "source_url": "https://index.crates.io/se/rd/serde_test",
+      "response_sha256": "8405a4b339c5373d2ebd3a46bcae637165b6922c5d6b9effeb0c4e6c7fe0e25a",
+      "observed_at": "2026-09-09T07:09:44.681977+00:00",
+      "locked_releases": [],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "serde_test",
+          "package": "serde_test",
+          "requirement": "1.0.177"
+        }
+      ]
     },
     {
       "name": "sha1",
       "latest_stable": "0.11.0",
-      "checksum": "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214"
+      "checksum": "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214",
+      "source_url": "https://index.crates.io/sh/a1/sha1",
+      "response_sha256": "bcc68cb43ff036c7553e65b181bd1a6f9ca9c58e0669e2fdb0ec2a64be5eeec6",
+      "observed_at": "2026-09-09T07:09:44.707104+00:00",
+      "locked_releases": [
+        {
+          "version": "0.10.7",
+          "checksum": "a978451301f4db1d02937a4ab3ccce137717b81826e79b7d49ffe3244a13c3b8"
+        },
+        {
+          "version": "0.11.0",
+          "checksum": "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "sha1",
+          "package": "sha1",
+          "requirement": "0.11.0"
+        }
+      ]
     },
     {
       "name": "sha2",
       "latest_stable": "0.11.0",
-      "checksum": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4"
+      "checksum": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4",
+      "source_url": "https://index.crates.io/sh/a2/sha2",
+      "response_sha256": "6c59fd3e7b5a23db5e29cfa4adfc493161e8b090db1311421f64e15c211bbaf9",
+      "observed_at": "2026-09-09T07:09:44.732165+00:00",
+      "locked_releases": [
+        {
+          "version": "0.10.9",
+          "checksum": "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
+        },
+        {
+          "version": "0.11.0",
+          "checksum": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "sha2",
+          "package": "sha2",
+          "requirement": "0.11.0"
+        },
+        {
+          "path": "crates/sifr_compiler_component/fixtures/words_component/Cargo.toml",
+          "table": "dependencies",
+          "alias": "sha2",
+          "package": "sha2",
+          "requirement": "=0.11.0"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "sha2",
+          "package": "sha2",
+          "requirement": "=0.11.0"
+        }
+      ]
     },
     {
       "name": "sqlx",
       "latest_stable": "0.9.0",
-      "checksum": "378620ccc25c62c89d8be1c819e76a88d59bdcc3304733330788948e619bfd71"
+      "checksum": "378620ccc25c62c89d8be1c819e76a88d59bdcc3304733330788948e619bfd71",
+      "source_url": "https://index.crates.io/sq/lx/sqlx",
+      "response_sha256": "ceda56b57b72610dab8c5a25c9b4bede57eac1c542824de3ab0b509a709bab16",
+      "observed_at": "2026-09-09T07:09:44.773379+00:00",
+      "locked_releases": [
+        {
+          "version": "0.9.0",
+          "checksum": "378620ccc25c62c89d8be1c819e76a88d59bdcc3304733330788948e619bfd71"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "sqlx",
+          "package": "sqlx",
+          "requirement": "=0.9.0"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "sqlx",
+          "package": "sqlx",
+          "requirement": "=0.9.0"
+        }
+      ]
     },
     {
       "name": "static_assertions",
       "latest_stable": "1.1.0",
-      "checksum": "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+      "checksum": "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f",
+      "source_url": "https://index.crates.io/st/at/static_assertions",
+      "response_sha256": "684f5d09e9f84759af65d0cacd47935f0107b0d77c4f4bd855bc391edf30a0ac",
+      "observed_at": "2026-09-09T07:09:44.781276+00:00",
+      "locked_releases": [
+        {
+          "version": "1.1.0",
+          "checksum": "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "static_assertions",
+          "package": "static_assertions",
+          "requirement": "1.1.0"
+        }
+      ]
     },
     {
       "name": "syn",
-      "latest_stable": "3.0.4",
-      "checksum": "e6275cddf4610d1775e6d1fe9469b2e77d0f39fd98fb7450901b821e0c53649f"
+      "latest_stable": "3.0.5",
+      "checksum": "12df2e0110f65b775f769bb17ef989067a1d931b2eb822bd4346631eeada89f9",
+      "source_url": "https://index.crates.io/3/s/syn",
+      "response_sha256": "438e8709c4ca69d215c1ac3b93877e75d2d7760ab6b8e227686190bd55c8380f",
+      "observed_at": "2026-09-09T07:09:44.879020+00:00",
+      "locked_releases": [
+        {
+          "version": "2.0.117",
+          "checksum": "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99"
+        },
+        {
+          "version": "2.0.119",
+          "checksum": "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297"
+        },
+        {
+          "version": "3.0.5",
+          "checksum": "12df2e0110f65b775f769bb17ef989067a1d931b2eb822bd4346631eeada89f9"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "syn",
+          "package": "syn",
+          "requirement": "3.0.5"
+        }
+      ]
+    },
+    {
+      "name": "syntaqlite",
+      "latest_stable": "0.9.0",
+      "checksum": "89cadf7716f0ffb55450910b05310e5275991ae11f9e4492f1b93677760a8c7b",
+      "source_url": "https://index.crates.io/sy/nt/syntaqlite",
+      "response_sha256": "228eb091a7ed5e341606bc2b4d1b02d3e32cfed722178c2f32c87b2bf7966918",
+      "observed_at": "2026-09-09T07:09:45.870572+00:00",
+      "locked_releases": [
+        {
+          "version": "0.9.0",
+          "checksum": "89cadf7716f0ffb55450910b05310e5275991ae11f9e4492f1b93677760a8c7b"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "syntaqlite",
+          "package": "syntaqlite",
+          "requirement": "=0.9.0"
+        }
+      ]
     },
     {
       "name": "tempfile",
       "latest_stable": "3.27.0",
-      "checksum": "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
+      "checksum": "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd",
+      "source_url": "https://index.crates.io/te/mp/tempfile",
+      "response_sha256": "a8524b74684766e9c100e3036719ffef0dd238302352496cc99a62eab3f6ad10",
+      "observed_at": "2026-09-09T07:09:44.946349+00:00",
+      "locked_releases": [
+        {
+          "version": "3.27.0",
+          "checksum": "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr/Cargo.toml",
+          "table": "dev-dependencies",
+          "alias": "tempfile",
+          "package": "tempfile",
+          "requirement": "3.27.0"
+        },
+        {
+          "path": "crates/sifr_codegen/Cargo.toml",
+          "table": "dev-dependencies",
+          "alias": "tempfile",
+          "package": "tempfile",
+          "requirement": "3.27.0"
+        },
+        {
+          "path": "crates/sifr_lsp/Cargo.toml",
+          "table": "dev-dependencies",
+          "alias": "tempfile",
+          "package": "tempfile",
+          "requirement": "3.27.0"
+        },
+        {
+          "path": "crates/sifr_sql_mysql_tools/Cargo.toml",
+          "table": "dev-dependencies",
+          "alias": "tempfile",
+          "package": "tempfile",
+          "requirement": "3.27.0"
+        },
+        {
+          "path": "crates/sifr_sql_postgresql_tools/Cargo.toml",
+          "table": "dev-dependencies",
+          "alias": "tempfile",
+          "package": "tempfile",
+          "requirement": "3.27.0"
+        },
+        {
+          "path": "crates/sifr_sql_sqlite_runtime/Cargo.toml",
+          "table": "dev-dependencies",
+          "alias": "tempfile",
+          "package": "tempfile",
+          "requirement": "3.27.0"
+        },
+        {
+          "path": "crates/sifr_sql_sqlite_tools/Cargo.toml",
+          "table": "dev-dependencies",
+          "alias": "tempfile",
+          "package": "tempfile",
+          "requirement": "3.27.0"
+        },
+        {
+          "path": "crates/sifr_sql_tool/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tempfile",
+          "package": "tempfile",
+          "requirement": "3.27.0"
+        }
+      ]
     },
     {
       "name": "thiserror",
       "latest_stable": "2.0.20",
-      "checksum": "ec86235f5fcc2a73650310756d2ac5b138a5780bbbdfae3eeccec992c435ba4f"
+      "checksum": "ec86235f5fcc2a73650310756d2ac5b138a5780bbbdfae3eeccec992c435ba4f",
+      "source_url": "https://index.crates.io/th/is/thiserror",
+      "response_sha256": "bc23f2869b8168d7a56be72db541df6eea8d0261f9b4760b169148637e928ce0",
+      "observed_at": "2026-09-09T07:09:45.007186+00:00",
+      "locked_releases": [
+        {
+          "version": "1.0.69",
+          "checksum": "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
+        },
+        {
+          "version": "2.0.20",
+          "checksum": "ec86235f5fcc2a73650310756d2ac5b138a5780bbbdfae3eeccec992c435ba4f"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "thiserror",
+          "package": "thiserror",
+          "requirement": "=2.0.20"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/bridge_type_matrix/examples/bridge_type_roundtrip/Cargo.toml",
+          "table": "dependencies",
+          "alias": "thiserror",
+          "package": "thiserror",
+          "requirement": "=2.0.20"
+        }
+      ]
     },
     {
       "name": "tokio",
       "latest_stable": "1.53.1",
-      "checksum": "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
+      "checksum": "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed",
+      "source_url": "https://index.crates.io/to/ki/tokio",
+      "response_sha256": "8951a1079b08c19dcdbcfbbaac0a3113c2ca9175da95fc822985ef65e3720c28",
+      "observed_at": "2026-09-09T07:09:45.134625+00:00",
+      "locked_releases": [
+        {
+          "version": "1.53.1",
+          "checksum": "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "tokio",
+          "package": "tokio",
+          "requirement": "=1.53.1"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tokio",
+          "package": "tokio",
+          "requirement": "=1.53.1"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tokio",
+          "package": "tokio",
+          "requirement": "=1.53.1"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tokio",
+          "package": "tokio",
+          "requirement": "=1.53.1"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "tokio",
+          "package": "tokio",
+          "requirement": "=1.53.1"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tokio",
+          "package": "tokio",
+          "requirement": "=1.53.1"
+        }
+      ]
     },
     {
       "name": "tokio-postgres",
       "latest_stable": "0.7.18",
-      "checksum": "a528f7d280f6d5b9cd149635c8705b0dd049754bc67d81d31fa25169a93809d3"
+      "checksum": "a528f7d280f6d5b9cd149635c8705b0dd049754bc67d81d31fa25169a93809d3",
+      "source_url": "https://index.crates.io/to/ki/tokio-postgres",
+      "response_sha256": "a0c93e061c5823a6a1ca6422f170a9c5501e6cda6f360d0d277643cf7a61e217",
+      "observed_at": "2026-09-09T07:09:45.221176+00:00",
+      "locked_releases": [
+        {
+          "version": "0.7.18",
+          "checksum": "a528f7d280f6d5b9cd149635c8705b0dd049754bc67d81d31fa25169a93809d3"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "tokio-postgres",
+          "package": "tokio-postgres",
+          "requirement": "=0.7.18"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tokio-postgres",
+          "package": "tokio-postgres",
+          "requirement": "=0.7.18"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tokio-postgres",
+          "package": "tokio-postgres",
+          "requirement": "=0.7.18"
+        }
+      ]
+    },
+    {
+      "name": "tokio-postgres-rustls",
+      "latest_stable": "0.14.0",
+      "checksum": "4c2ad44aa0ae96db89c4742212ed41645b2f597311ff6e1945542a4d9fadc2fb",
+      "source_url": "https://index.crates.io/to/ki/tokio-postgres-rustls",
+      "response_sha256": "2b1cc348cc5406730d6796e3770d61da02c1effeb76597538959aca88adc7fc4",
+      "observed_at": "2026-09-09T07:09:45.278135+00:00",
+      "locked_releases": [
+        {
+          "version": "0.14.0",
+          "checksum": "4c2ad44aa0ae96db89c4742212ed41645b2f597311ff6e1945542a4d9fadc2fb"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "tokio-postgres-rustls",
+          "package": "tokio-postgres-rustls",
+          "requirement": "=0.14.0"
+        }
+      ]
     },
     {
       "name": "tokio-rustls",
-      "latest_stable": "0.26.4",
-      "checksum": "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61"
+      "latest_stable": "0.26.5",
+      "checksum": "b0c85f2c3ef0b1cd58b36682f4b17aaa995f0e5db534d85692b4903abce21f67",
+      "source_url": "https://index.crates.io/to/ki/tokio-rustls",
+      "response_sha256": "37a35d83de5bb0124de9c60e2ed5fcc5d8ee0c46618138a0b6beee9c759f0996",
+      "observed_at": "2026-09-09T07:09:45.335476+00:00",
+      "locked_releases": [
+        {
+          "version": "0.26.5",
+          "checksum": "b0c85f2c3ef0b1cd58b36682f4b17aaa995f0e5db534d85692b4903abce21f67"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "tokio-rustls",
+          "package": "tokio-rustls",
+          "requirement": "=0.26.5"
+        }
+      ]
     },
     {
       "name": "tokio-tungstenite",
       "latest_stable": "0.30.0",
-      "checksum": "17a073bfed563fa236697a068031408a93cd9522e08abf9933ead3e73411bd71"
+      "checksum": "17a073bfed563fa236697a068031408a93cd9522e08abf9933ead3e73411bd71",
+      "source_url": "https://index.crates.io/to/ki/tokio-tungstenite",
+      "response_sha256": "fd13549c9e10c18d189d6c8cecea2ddf59b88a9f46d83e152e899906b4bd0a5a",
+      "observed_at": "2026-09-09T07:09:45.394046+00:00",
+      "locked_releases": [
+        {
+          "version": "0.30.0",
+          "checksum": "17a073bfed563fa236697a068031408a93cd9522e08abf9933ead3e73411bd71"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tokio-tungstenite",
+          "package": "tokio-tungstenite",
+          "requirement": "=0.30.0"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tokio-tungstenite",
+          "package": "tokio-tungstenite",
+          "requirement": "=0.30.0"
+        }
+      ]
     },
     {
       "name": "toml",
-      "latest_stable": "1.1.4+spec-1.1.0",
-      "checksum": "3aace63f4bbcdfc2c965b059de67119c89c4017a70d633be6c104910f67056f5"
+      "latest_stable": "1.1.5+spec-1.1.0",
+      "checksum": "12c0ba9680044b4ce98d391a62094047eada0d64860b80166c39f4a6b5640785",
+      "source_url": "https://index.crates.io/to/ml/toml",
+      "response_sha256": "963a853150dffd410c7c89ddfbab50b5f02f6164b607e7499f4a957c023b91f1",
+      "observed_at": "2026-09-09T07:09:45.464845+00:00",
+      "locked_releases": [
+        {
+          "version": "1.1.5+spec-1.1.0",
+          "checksum": "12c0ba9680044b4ce98d391a62094047eada0d64860b80166c39f4a6b5640785"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "toml",
+          "package": "toml",
+          "requirement": "1.1.5"
+        }
+      ]
     },
     {
       "name": "tower",
       "latest_stable": "0.5.3",
-      "checksum": "ebe5ef63511595f1344e2d5cfa636d973292adc0eec1f0ad45fae9f0851ab1d4"
+      "checksum": "ebe5ef63511595f1344e2d5cfa636d973292adc0eec1f0ad45fae9f0851ab1d4",
+      "source_url": "https://index.crates.io/to/we/tower",
+      "response_sha256": "3710c5a1fd167bdd696e545caa059dc69bebf57fa7b8d50738e34af479ba72cd",
+      "observed_at": "2026-09-09T07:09:45.533606+00:00",
+      "locked_releases": [
+        {
+          "version": "0.5.3",
+          "checksum": "ebe5ef63511595f1344e2d5cfa636d973292adc0eec1f0ad45fae9f0851ab1d4"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tower",
+          "package": "tower",
+          "requirement": "=0.5.3"
+        }
+      ]
     },
     {
       "name": "tower-http",
-      "latest_stable": "0.7.0",
-      "checksum": "b11f75e912b0c2be01b63d8cf8057b8c3f97cf34abb3d431a3a4c8675498e233"
+      "latest_stable": "0.7.1",
+      "checksum": "08a05a66a4fdd61cbbe0a1d755ffe0ca6aba159dd4820936a0ff8a8278245b9c",
+      "source_url": "https://index.crates.io/to/we/tower-http",
+      "response_sha256": "acd77a28408e72e3a45b94171d1f5cf38be761e31e5541754787a241e8405e36",
+      "observed_at": "2026-09-09T07:09:45.617307+00:00",
+      "locked_releases": [
+        {
+          "version": "0.6.11",
+          "checksum": "4cfcf7e2740e6fc6d4d688b4ef00650406bb94adf4731e43c096c3a19fe40840"
+        },
+        {
+          "version": "0.7.1",
+          "checksum": "08a05a66a4fdd61cbbe0a1d755ffe0ca6aba159dd4820936a0ff8a8278245b9c"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tower-http",
+          "package": "tower-http",
+          "requirement": "=0.7.1"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "tower-http",
+          "package": "tower-http",
+          "requirement": "=0.7.1"
+        }
+      ]
     },
     {
       "name": "tower-service",
       "latest_stable": "0.3.3",
-      "checksum": "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
+      "checksum": "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3",
+      "source_url": "https://index.crates.io/to/we/tower-service",
+      "response_sha256": "447c2a283f854af2bb8c9f00690d8e365154875d577f8be35d24dd5ced1ec681",
+      "observed_at": "2026-09-09T07:09:45.670819+00:00",
+      "locked_releases": [
+        {
+          "version": "0.3.3",
+          "checksum": "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "tower-service",
+          "package": "tower-service",
+          "requirement": "0.3.3"
+        }
+      ]
     },
     {
       "name": "tracing",
       "latest_stable": "0.1.44",
-      "checksum": "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100"
+      "checksum": "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100",
+      "source_url": "https://index.crates.io/tr/ac/tracing",
+      "response_sha256": "cc3729d2157b49521b392d44449c33dbda73d4481335d95beb43187652f93302",
+      "observed_at": "2026-09-09T07:09:45.727278+00:00",
+      "locked_releases": [
+        {
+          "version": "0.1.44",
+          "checksum": "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "tracing",
+          "package": "tracing",
+          "requirement": "0.1.44"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tracing",
+          "package": "tracing",
+          "requirement": "=0.1.44"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/ecosystem_cli_certification/examples/cli_feature_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "tracing",
+          "package": "tracing",
+          "requirement": "=0.1.44"
+        }
+      ]
     },
     {
       "name": "tracing-subscriber",
       "latest_stable": "0.3.23",
-      "checksum": "cb7f578e5945fb242538965c2d0b04418d38ec25c79d160cd279bf0731c8d319"
+      "checksum": "cb7f578e5945fb242538965c2d0b04418d38ec25c79d160cd279bf0731c8d319",
+      "source_url": "https://index.crates.io/tr/ac/tracing-subscriber",
+      "response_sha256": "1dd5fbffcaaec4533a908744cdc130e15ca06c124c32a4a8de3d307c91cb9cfe",
+      "observed_at": "2026-09-09T07:09:45.795701+00:00",
+      "locked_releases": [
+        {
+          "version": "0.3.23",
+          "checksum": "cb7f578e5945fb242538965c2d0b04418d38ec25c79d160cd279bf0731c8d319"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "tracing-subscriber",
+          "package": "tracing-subscriber",
+          "requirement": "=0.3.23"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/ecosystem_cli_certification/examples/cli_feature_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "tracing-subscriber",
+          "package": "tracing-subscriber",
+          "requirement": "=0.3.23"
+        }
+      ]
     },
     {
       "name": "unic-ucd-category",
       "latest_stable": "0.9.0",
-      "checksum": "1b8d4591f5fcfe1bd4453baaf803c40e1b1e69ff8455c47620440b46efef91c0"
+      "checksum": "1b8d4591f5fcfe1bd4453baaf803c40e1b1e69ff8455c47620440b46efef91c0",
+      "source_url": "https://index.crates.io/un/ic/unic-ucd-category",
+      "response_sha256": "dff47f9c6cf9476e8f18c721dbea177bcdeb6e4b812a27f4c29a8331e254adcb",
+      "observed_at": "2026-09-09T07:09:46.528966+00:00",
+      "locked_releases": [],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "unic-ucd-category",
+          "package": "unic-ucd-category",
+          "requirement": "0.9"
+        }
+      ]
     },
     {
       "name": "unicode-ident",
       "latest_stable": "1.0.24",
-      "checksum": "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+      "checksum": "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75",
+      "source_url": "https://index.crates.io/un/ic/unicode-ident",
+      "response_sha256": "72fedbe0408e33b9681b8212685b53c8f6f9b5e0df66a8cad39ba7d8dcf702dd",
+      "observed_at": "2026-09-09T07:09:45.927397+00:00",
+      "locked_releases": [
+        {
+          "version": "1.0.24",
+          "checksum": "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "unicode-ident",
+          "package": "unicode-ident",
+          "requirement": "1.0.24"
+        }
+      ]
     },
     {
       "name": "unicode-normalization",
       "latest_stable": "0.1.25",
-      "checksum": "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8"
+      "checksum": "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8",
+      "source_url": "https://index.crates.io/un/ic/unicode-normalization",
+      "response_sha256": "6664f22e4c39cbccb15fc98048b1d031e8a42d444dbf2a2d34ad9a49c05a5710",
+      "observed_at": "2026-09-09T07:09:45.977427+00:00",
+      "locked_releases": [
+        {
+          "version": "0.1.25",
+          "checksum": "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "unicode-normalization",
+          "package": "unicode-normalization",
+          "requirement": "0.1.25"
+        }
+      ]
     },
     {
       "name": "unicode-segmentation",
       "latest_stable": "1.13.3",
-      "checksum": "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8"
+      "checksum": "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8",
+      "source_url": "https://index.crates.io/un/ic/unicode-segmentation",
+      "response_sha256": "63387c40c689a9c12aa47b67e2909021190deada525e17b76194cc0e669f1bc2",
+      "observed_at": "2026-09-09T07:09:46.024000+00:00",
+      "locked_releases": [
+        {
+          "version": "1.13.3",
+          "checksum": "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "unicode-segmentation",
+          "package": "unicode-segmentation",
+          "requirement": "1.13.3"
+        }
+      ]
     },
     {
       "name": "unicode_names2",
-      "latest_stable": "3.1.0",
-      "checksum": "82c3e18d850bb6ebd57735e5654f0af65e572b05c2397e7b2b1a7c6a792cc29c"
+      "latest_stable": "4.0.0",
+      "checksum": "8ba646312acace3c9ec35d7404b58214b6fbf17cbb0d040f35a88407c424447f",
+      "source_url": "https://index.crates.io/un/ic/unicode_names2",
+      "response_sha256": "a23bd43fed8bd9dd41071d8dfae0d6b9f782fc465d6a1170dd024b28d643511f",
+      "observed_at": "2026-09-09T07:09:46.076095+00:00",
+      "locked_releases": [
+        {
+          "version": "1.3.0",
+          "checksum": "d1673eca9782c84de5f81b82e4109dcfb3611c8ba0d52930ec4a9478f547b2dd"
+        },
+        {
+          "version": "4.0.0",
+          "checksum": "8ba646312acace3c9ec35d7404b58214b6fbf17cbb0d040f35a88407c424447f"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "unicode_names2",
+          "package": "unicode_names2",
+          "requirement": "4.0.0"
+        }
+      ]
     },
     {
       "name": "url",
       "latest_stable": "2.5.8",
-      "checksum": "ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed"
+      "checksum": "ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed",
+      "source_url": "https://index.crates.io/3/u/url",
+      "response_sha256": "8be67f6303f8ce1d3ce91b4e21aa94191bbd128561dc03d50ef11bb78f149c09",
+      "observed_at": "2026-09-09T07:09:46.136002+00:00",
+      "locked_releases": [
+        {
+          "version": "2.5.8",
+          "checksum": "ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "url",
+          "package": "url",
+          "requirement": "2.5.8"
+        }
+      ]
     },
     {
       "name": "uuid",
-      "latest_stable": "1.25.0",
-      "checksum": "f053576934f05a761a402421fbbe3d425d9366f75f978806a037b3ca481abecc"
+      "latest_stable": "1.26.0",
+      "checksum": "b5772d71c9be8a8a6ac2117d949c5b224c1b72241bb611d9a3012edcf8af7812",
+      "source_url": "https://index.crates.io/uu/id/uuid",
+      "response_sha256": "d8091cfcd68b55c81aff7fc849aa5569198b97885b3a95c736b063aaeb40b986",
+      "observed_at": "2026-09-09T07:09:46.206664+00:00",
+      "locked_releases": [
+        {
+          "version": "1.26.0",
+          "checksum": "b5772d71c9be8a8a6ac2117d949c5b224c1b72241bb611d9a3012edcf8af7812"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "uuid",
+          "package": "uuid",
+          "requirement": "1.26.0"
+        },
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "uuid",
+          "package": "uuid",
+          "requirement": "=1.26.0"
+        }
+      ]
     },
     {
       "name": "walkdir",
       "latest_stable": "2.5.0",
-      "checksum": "29790946404f91d9c5d06f9874efddea1dc06c5efe94541a7d6863108e3a5e4b"
+      "checksum": "29790946404f91d9c5d06f9874efddea1dc06c5efe94541a7d6863108e3a5e4b",
+      "source_url": "https://index.crates.io/wa/lk/walkdir",
+      "response_sha256": "7c6e7457834bc28c46e216f5da22ddd77af67e0ff14ece671bf13671a7238882",
+      "observed_at": "2026-09-09T07:09:46.270828+00:00",
+      "locked_releases": [
+        {
+          "version": "2.5.0",
+          "checksum": "29790946404f91d9c5d06f9874efddea1dc06c5efe94541a7d6863108e3a5e4b"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "walkdir",
+          "package": "walkdir",
+          "requirement": "2.5.0"
+        }
+      ]
+    },
+    {
+      "name": "wasmtime",
+      "latest_stable": "48.0.1",
+      "checksum": "1bd39f78fe9bc82cee4025ec9d52118269e9a1498016cc60119b14f2e1d86a8d",
+      "source_url": "https://index.crates.io/wa/sm/wasmtime",
+      "response_sha256": "0910a464005ee8b422566923748ff99a92b588646f36bfcedd1a087d03d2282f",
+      "observed_at": "2026-09-09T07:09:46.472314+00:00",
+      "locked_releases": [
+        {
+          "version": "48.0.1",
+          "checksum": "1bd39f78fe9bc82cee4025ec9d52118269e9a1498016cc60119b14f2e1d86a8d"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "wasmtime",
+          "package": "wasmtime",
+          "requirement": "=48.0.1"
+        }
+      ]
+    },
+    {
+      "name": "wat",
+      "latest_stable": "1.258.0",
+      "checksum": "7555c008cca87f2ac58d9f83ccda7e7b44611093ce28eb28f052e7c78024b9bf",
+      "source_url": "https://index.crates.io/3/w/wat",
+      "response_sha256": "3f15d12c0fbddc1e362daef8be5147f8317ca19a0fdd53646c7da4682df3425f",
+      "observed_at": "2026-09-09T07:09:46.556717+00:00",
+      "locked_releases": [
+        {
+          "version": "1.258.0",
+          "checksum": "7555c008cca87f2ac58d9f83ccda7e7b44611093ce28eb28f052e7c78024b9bf"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "wat",
+          "package": "wat",
+          "requirement": "=1.258.0"
+        }
+      ]
+    },
+    {
+      "name": "wit-bindgen",
+      "latest_stable": "0.61.1",
+      "checksum": "e473fd0095479f9689ac7d2a52c427cc96bb2b973ace50238dfcc1ab1cd52d93",
+      "source_url": "https://index.crates.io/wi/t-/wit-bindgen",
+      "response_sha256": "3e695aaf825272aafb12016a04a04a09d9f981223beff0fd3b1486dd536dd724",
+      "observed_at": "2026-09-09T07:09:46.583460+00:00",
+      "locked_releases": [
+        {
+          "version": "0.51.0",
+          "checksum": "d7249219f66ced02969388cf2bb044a09756a083d0fab1e566056b04d9fbcaa5"
+        },
+        {
+          "version": "0.57.1",
+          "checksum": "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
+        },
+        {
+          "version": "0.61.1",
+          "checksum": "e473fd0095479f9689ac7d2a52c427cc96bb2b973ace50238dfcc1ab1cd52d93"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "wit-bindgen",
+          "package": "wit-bindgen",
+          "requirement": "=0.61.1"
+        },
+        {
+          "path": "crates/sifr_compiler_component/fixtures/words_component/Cargo.toml",
+          "table": "dependencies",
+          "alias": "wit-bindgen",
+          "package": "wit-bindgen",
+          "requirement": "=0.61.1"
+        }
+      ]
+    },
+    {
+      "name": "wit-component",
+      "latest_stable": "0.258.0",
+      "checksum": "481b5c47b2ecce0389b5e08a05557d6a190c9cd761773b8880a8017ee04dc7ef",
+      "source_url": "https://index.crates.io/wi/t-/wit-component",
+      "response_sha256": "36ad97332301b159e966acb9c5fa027e12e658adeefd8ffbce2fdc38994e76ca",
+      "observed_at": "2026-09-09T07:09:46.647326+00:00",
+      "locked_releases": [
+        {
+          "version": "0.244.0",
+          "checksum": "9d66ea20e9553b30172b5e831994e35fbde2d165325bec84fc43dbf6f4eb9cb2"
+        },
+        {
+          "version": "0.254.0",
+          "checksum": "b0e65bb94c369b3c4741ce3d1d2704b1fec93db7c540df0e521a097e7ceeb5be"
+        },
+        {
+          "version": "0.258.0",
+          "checksum": "481b5c47b2ecce0389b5e08a05557d6a190c9cd761773b8880a8017ee04dc7ef"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_compiler_component/fixtures/words_component/Cargo.toml",
+          "table": "dependencies",
+          "alias": "wit-component",
+          "package": "wit-component",
+          "requirement": "=0.258.0"
+        }
+      ]
     },
     {
       "name": "zerocopy",
-      "latest_stable": "0.8.56",
-      "checksum": "556764e583adb45a9f8d413c2a147fa7e8d821e48e12b14fd560b607998b75eb"
+      "latest_stable": "0.8.57",
+      "checksum": "d35102a9f36d089ccae9e4c6802bc118be4487b80aaffc0ab4e0cf5ce92d2873",
+      "source_url": "https://index.crates.io/ze/ro/zerocopy",
+      "response_sha256": "d30e51252e58767a130e8ddebf6e5c1125ed56fd77bb5f090652f658ca30ac2c",
+      "observed_at": "2026-09-09T07:09:46.662193+00:00",
+      "locked_releases": [
+        {
+          "version": "0.8.57",
+          "checksum": "d35102a9f36d089ccae9e4c6802bc118be4487b80aaffc0ab4e0cf5ce92d2873"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "zerocopy",
+          "package": "zerocopy",
+          "requirement": "=0.8.57"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.toml",
+          "table": "dependencies",
+          "alias": "zerocopy",
+          "package": "zerocopy",
+          "requirement": "=0.8.57"
+        }
+      ]
     },
     {
       "name": "zip",
       "latest_stable": "8.6.0",
-      "checksum": "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
+      "checksum": "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b",
+      "source_url": "https://index.crates.io/3/z/zip",
+      "response_sha256": "4088f76298e48cfaae05e4c4a0b941a7a454a21e296caf0b638bc424025ec93b",
+      "observed_at": "2026-09-09T07:09:46.740156+00:00",
+      "locked_releases": [
+        {
+          "version": "8.6.0",
+          "checksum": "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "zip_8_6",
+          "package": "zip",
+          "requirement": "8.6.0"
+        }
+      ]
     },
     {
       "name": "zstd",
-      "latest_stable": "0.13.3",
-      "checksum": "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
+      "latest_stable": "0.14.0",
+      "checksum": "bf06bd8162af0734b344780deb55b42a2429ae430870d13fcc12f238e880fe6e",
+      "source_url": "https://index.crates.io/zs/td/zstd",
+      "response_sha256": "755df177bc8315ba81803a8bbcd0e9d82ebd85c18bf9480402e78fd9719a36d3",
+      "observed_at": "2026-09-09T07:09:46.738711+00:00",
+      "locked_releases": [
+        {
+          "version": "0.13.3",
+          "checksum": "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
+        },
+        {
+          "version": "0.14.0",
+          "checksum": "bf06bd8162af0734b344780deb55b42a2429ae430870d13fcc12f238e880fe6e"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "zstd",
+          "package": "zstd",
+          "requirement": "=0.14.0"
+        },
+        {
+          "path": "verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "zstd_upstream",
+          "package": "zstd",
+          "requirement": "=0.14.0"
+        }
+      ]
     }
   ]
 }

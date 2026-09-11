@@ -21,8 +21,6 @@ use diesel::{deserialize::FromSqlRow, expression::AsExpression, sql_types::Numer
 #[cfg(not(feature = "std"))]
 use num_traits::float::FloatCore;
 use num_traits::{FromPrimitive, Num, One, Signed, ToPrimitive, Zero};
-#[cfg(feature = "rkyv")]
-use rkyv::{Archive, Deserialize, Serialize};
 #[cfg(all(target_arch = "wasm32", feature = "wasm"))]
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -124,13 +122,6 @@ impl From<UnpackedDecimal> for Decimal {
     derive(borsh::BorshDeserialize, borsh::BorshSerialize, borsh::BorshSchema)
 )]
 #[cfg_attr(feature = "bytemuck", derive(bytemuck_derive::Pod, bytemuck_derive::Zeroable))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(Archive, Deserialize, Serialize),
-    archive(compare(PartialEq)),
-    archive_attr(derive(Clone, Copy, Debug))
-)]
-#[cfg_attr(feature = "rkyv-safe", archive(check_bytes))]
 #[cfg_attr(all(target_arch = "wasm32", feature = "wasm"), wasm_bindgen)]
 pub struct Decimal {
     // Bits 0-15: unused
@@ -821,12 +812,12 @@ impl Decimal {
     /// # use rust_decimal::Error;
     /// #
     /// # fn main() -> Result<(), rust_decimal::Error> {
-    /// assert_eq!(Decimal::from_str_exact("0.001")?.array_string().as_ref(), "0.001");
+    /// assert_eq!(Decimal::from_str_exact("-0.001")?.array_string().as_ref(), "-0.001");
     /// #     Ok(())
     /// # }
     /// ```
     pub fn array_string(&self) -> impl AsRef<str> {
-        let (result, _) = crate::str::to_str_internal(self, false, None);
+        let (result, _) = crate::str::to_str_internal(self, true, None);
         result
     }
 
@@ -1145,6 +1136,7 @@ impl Decimal {
     /// Returns `true` if the decimal is negative.
     #[deprecated(since = "0.6.3", note = "please use `is_sign_negative` instead")]
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)] // kept as-is for backwards compatibility only
     pub fn is_negative(&self) -> bool {
         self.is_sign_negative()
     }
@@ -1152,6 +1144,7 @@ impl Decimal {
     /// Returns `true` if the decimal is positive.
     #[deprecated(since = "0.6.3", note = "please use `is_sign_positive` instead")]
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)] // kept as-is for backwards compatibility only
     pub fn is_positive(&self) -> bool {
         self.is_sign_positive()
     }
@@ -1312,9 +1305,18 @@ impl Decimal {
             return *self;
         }
 
-        // Opportunity for optimization here
-        let floored = self.trunc();
-        if self.is_sign_negative() && !self.fract().is_zero() {
+        // Truncate once, learning at the same time whether a fractional part was discarded, so we
+        // avoid recomputing the truncation (and a full subtraction) just to test for a fraction.
+        let mut working = [self.lo, self.mid, self.hi];
+        let mut working_scale = scale;
+        let had_fraction = ops::array::truncate_internal(&mut working, &mut working_scale, 0);
+        let floored = Decimal {
+            lo: working[0],
+            mid: working[1],
+            hi: working[2],
+            flags: flags(self.is_sign_negative(), working_scale),
+        };
+        if self.is_sign_negative() && had_fraction {
             floored - ONE
         } else {
             floored
@@ -1341,11 +1343,21 @@ impl Decimal {
             return *self;
         }
 
-        // Opportunity for optimization here
-        if self.is_sign_positive() && !self.fract().is_zero() {
-            self.trunc() + ONE
+        // Truncate once, learning at the same time whether a fractional part was discarded, so we
+        // avoid recomputing the truncation (and a full subtraction) just to test for a fraction.
+        let mut working = [self.lo, self.mid, self.hi];
+        let mut working_scale = scale;
+        let had_fraction = ops::array::truncate_internal(&mut working, &mut working_scale, 0);
+        let truncated = Decimal {
+            lo: working[0],
+            mid: working[1],
+            hi: working[2],
+            flags: flags(self.is_sign_negative(), working_scale),
+        };
+        if self.is_sign_positive() && had_fraction {
+            truncated + ONE
         } else {
-            self.trunc()
+            truncated
         }
     }
 
@@ -1426,6 +1438,12 @@ impl Decimal {
 
         let mut scale = self.scale();
         if scale == 0 {
+            return;
+        }
+
+        // An odd mantissa cannot be divisible by 10, so there are no trailing zeros to strip.
+        // This is a cheap, common early-out (every other value, and every odd-valued hash key).
+        if self.lo & 1 == 1 {
             return;
         }
 
@@ -1740,7 +1758,11 @@ impl Decimal {
                 // If we're requesting a higher number of significant figures, we rescale
                 let mut array = [self.lo, self.mid, self.hi];
                 let mut value_scale = scale;
-                ops::array::rescale_internal(&mut array, &mut value_scale, scale + digits - mantissa_sf);
+                ops::array::rescale_internal(
+                    &mut array,
+                    &mut value_scale,
+                    scale.saturating_add(digits).saturating_sub(mantissa_sf),
+                );
                 Some(Decimal {
                     lo: array[0],
                     mid: array[1],
@@ -2750,6 +2772,11 @@ impl<'a> RemAssign<&'a Decimal> for &'a mut Decimal {
 impl PartialEq for Decimal {
     #[inline]
     fn eq(&self, other: &Decimal) -> bool {
+        // Identical bit patterns are always equal (same mantissa, scale and sign). This is the
+        // common case for dedup/lookup and short-circuits the full comparison.
+        if self.lo == other.lo && self.mid == other.mid && self.hi == other.hi && self.flags == other.flags {
+            return true;
+        }
         self.cmp(other) == Equal
     }
 }

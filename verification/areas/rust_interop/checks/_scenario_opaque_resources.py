@@ -69,11 +69,11 @@ def validate_opaque_resource_scenario(
     for name, version, features, default_features in (
         (
             "redis",
-            "=1.6.0",
+            "=1.7.0",
             ["connection-manager", "tokio-comp"],
             False,
         ),
-        ("reqwest", "=0.13.4", ["rustls", "json"], False),
+        ("reqwest", "=0.13.5", ["rustls", "json"], False),
         ("rusqlite", "=0.40.2", ["bundled"], False),
         ("tokio", "=1.53.1", ["io-util", "net", "rt", "sync", "time"], None),
         ("tokio-postgres", "=0.7.18", ["runtime"], False),

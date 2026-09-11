@@ -10,7 +10,7 @@
     "rusqlite": "0.40.2",
     "libsqlite3-sys": "0.38.2",
     "sqlite": "3.53.2",
-    "wasi-sdk": "33",
+    "wasi-sdk": "34",
     "wit-bindgen": "0.61.1",
     "tokio": "1.53.1"
   },

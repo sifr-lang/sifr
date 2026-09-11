@@ -498,7 +498,29 @@ fn encode_handler(label: &str) -> Result<Handler, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::decode_text;
+    use super::{decode_text, encode_bytes};
+
+    #[test]
+    fn windows1252_ascii_boundaries_preserve_extended_characters() {
+        // Exercise the encoding_rs ASCII acceleration boundary at varied alignments.
+        for offset in 0..32 {
+            for ascii_length in [0, 1, 15, 16, 17, 31, 32, 33, 63, 64, 65, 127] {
+                let mut storage = vec![b'x'; offset];
+                storage.extend(std::iter::repeat_n(b'a', ascii_length));
+                storage.extend_from_slice(&[0x80, 0x8c, 0xff]);
+                let encoded = &storage[offset..];
+                let expected = format!("{}€Œÿ", "a".repeat(ascii_length));
+                assert_eq!(
+                    decode_text(encoded, "windows-1252", "strict"),
+                    Ok(expected.clone())
+                );
+                assert_eq!(
+                    encode_bytes(&expected, "windows-1252", "strict"),
+                    Ok(encoded.to_vec())
+                );
+            }
+        }
+    }
 
     #[test]
     fn utf16_decoding_preserves_units_and_trailing_byte_handling() {

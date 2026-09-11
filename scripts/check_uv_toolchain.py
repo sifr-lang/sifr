@@ -26,13 +26,13 @@ EXCLUDED_PARTS = {
     ".venv", "plans",
 }
 # Qualified archive SHA-256 from the upstream release checksum asset:
-# https://github.com/astral-sh/uv/releases/download/0.12.5/
+# https://github.com/astral-sh/uv/releases/download/0.12.10/
 # uv-x86_64-unknown-linux-gnu.tar.gz.sha256
 # A version/platform change must add its qualified digest explicitly. Never
 # reuse an old release's digest or infer one from the workflow being checked.
 ARCHIVE_CHECKSUMS = {
-    ("0.12.5", "x86_64-unknown-linux-gnu"):
-        "68a509da24b06b4223a1c0175fb5eb5bc79342b76cbeff0cfe51ac3f5b17b6b2",
+    ("0.12.10", "x86_64-unknown-linux-gnu"):
+        "173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b",
 }
 # Only qualified hosted runner identities are accepted. Expressions, custom
 # labels, and new platforms fail clearly until their archive is qualified.

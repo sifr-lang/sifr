@@ -65,7 +65,7 @@ async fn execute_loopback(path: &str) -> Result<String, BackendErrorBridge> {
         .route("/health", get(|| async { "sifr-backend-ok" }))
         .layer(SetResponseHeaderLayer::if_not_present(
             tower_header,
-            HeaderValue::from_static("tower-http-0.7.0"),
+            HeaderValue::from_static("tower-http-0.7.1"),
         ));
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
     let server = tokio::spawn(async move {
@@ -89,7 +89,7 @@ async fn execute_loopback(path: &str) -> Result<String, BackendErrorBridge> {
     if !response.starts_with("HTTP/1.1 200 OK")
         || !response
             .to_ascii_lowercase()
-            .contains("x-sifr-tower: tower-http-0.7.0")
+            .contains("x-sifr-tower: tower-http-0.7.1")
         || !response.ends_with("sifr-backend-ok")
     {
         return Err(BackendErrorBridge {
@@ -98,7 +98,7 @@ async fn execute_loopback(path: &str) -> Result<String, BackendErrorBridge> {
     }
     let offline_value = query_compile_time()?;
     Ok(format!(
-        "axum=0.8.9;loopback=127.0.0.1:ephemeral;status=200;tower-http=0.7.0;middleware=response-header;sqlx=0.9.0;runtime=tokio;tls=rustls-ring-webpki;offline=true;query-value={offline_value};query-hash={QUERY_HASH};shutdown=clean"
+        "axum=0.8.9;loopback=127.0.0.1:ephemeral;status=200;tower-http=0.7.1;middleware=response-header;sqlx=0.9.0;runtime=tokio;tls=rustls-ring-webpki;offline=true;query-value={offline_value};query-hash={QUERY_HASH};shutdown=clean"
     ))
 }
 

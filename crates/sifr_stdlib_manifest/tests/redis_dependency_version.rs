@@ -2,8 +2,8 @@ mod support;
 
 use support::TestUnwrap as _;
 
-const REDIS_VERSION: &str = "1.6.0";
-const REDIS_PACKAGE_HASH: &str = "e37a4ca5c6ca42aa3e6df2fd32b987a65d32a4c2159a6f3fe0fd1df306a2658f";
+const REDIS_VERSION: &str = "1.7.0";
+const REDIS_PACKAGE_HASH: &str = "2acbc41a996f7652b2ddd9dfd98cc4ff602cfd742ae35382f07f608405ab50ed";
 
 const CATALOG_MANIFEST: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
 const RESOURCE_MANIFEST: &str = include_str!(
@@ -61,7 +61,7 @@ fn maintained_locks_use_current_redis_with_registry_checksum() {
 }
 
 #[test]
-fn resource_bridge_uses_redis_1_6_bounded_reconnect_attempts() {
+fn resource_bridge_uses_current_redis_bounded_reconnect_attempts() {
     assert!(RESOURCE_BRIDGE.contains("redis: Option<redis::aio::ConnectionManager>"));
     assert!(RESOURCE_BRIDGE.contains("const REDIS_RECONNECT_ATTEMPTS: usize = 2;"));
     assert!(RESOURCE_BRIDGE.contains(".set_number_of_retries(REDIS_RECONNECT_ATTEMPTS)"));
@@ -77,7 +77,7 @@ fn assert_dependency(source: &str, expected_features: &[&str]) {
     let dependency = manifest["dependencies"]
         .get("redis")
         .test_unwrap("manifest must declare Redis");
-    assert_eq!(dependency["version"].as_str(), Some("=1.6.0"));
+    assert_eq!(dependency["version"].as_str(), Some("=1.7.0"));
     assert_eq!(dependency["default-features"].as_bool(), Some(false));
     let features = dependency["features"]
         .as_array()

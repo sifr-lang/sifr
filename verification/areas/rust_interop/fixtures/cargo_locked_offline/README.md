@@ -5,7 +5,7 @@ behavior for Rust interop packages.
 
 - Positive evidence: `locked_offline_cache_hit` executes `sifr check`,
   `sifr build`, and `sifr run` in every lock mode against exact-pinned
-  `indexmap 2.14.0`, preserves the authoritative `Cargo.lock`, and observes a
+  `indexmap 2.14.2`, preserves the authoritative `Cargo.lock`, and observes a
   network-disabled frozen cache miss followed by a warm cache hit.
 - Negative evidence: `lockfile_feature_drift_rejected` independently mutates
   the lockfile's presence, version, checksum, and source plus the requested

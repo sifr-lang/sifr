@@ -10,11 +10,7 @@ import json
 import tomllib
 from pathlib import Path
 
-from wasi_virt_inputs import (
-    WASI_VIRT_COMMIT,
-    WASI_VIRT_SOURCE_SHA256,
-    WASI_VIRT_VERSION,
-)
+from component_artifact_validation import self_test as artifact_self_test, validate_manifest
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 RECORD_PATH = REPO_ROOT / "verification/areas/sql_platform/data/compiler_component_qualification.json"
@@ -154,22 +150,11 @@ def validate(payload: object, *, host_source_override: str | None = None) -> Non
             or manifest.get("protocol_major") != 1
         ):
             raise QualificationError("SQL component artifact manifest boundary has drifted")
-        virtualization = manifest.get("wasi_virtualization")
-        if virtualization is None:
-            toolchain = manifest.get("toolchain", {})
-            virtualization = {
-                "name": "wasi-virt",
-                "version": toolchain.get("wasi_virt"),
-                "commit": toolchain.get("wasi_virt_commit"),
-                "source_content_sha256": toolchain.get("wasi_virt_source_sha256"),
-            }
-        if virtualization != {
-            "name": "wasi-virt",
-            "version": WASI_VIRT_VERSION,
-            "commit": WASI_VIRT_COMMIT,
-            "source_content_sha256": WASI_VIRT_SOURCE_SHA256,
-        }:
-            raise QualificationError("SQL component WASI-Virt identity has drifted")
+        family = str(participant["crate"]).removeprefix("sifr_sql_")
+        try:
+            validate_manifest(manifest, family)
+        except ValueError as error:
+            raise QualificationError(str(error)) from error
         manifest_artifacts = manifest.get("artifacts")
         if not isinstance(manifest_artifacts, list) or not manifest_artifacts:
             raise QualificationError("SQL component artifact manifest has no artifacts")
@@ -210,19 +195,26 @@ def validate(payload: object, *, host_source_override: str | None = None) -> Non
         raise QualificationError("non-SQL fixture component artifact digest drifted")
     if fixture.get("build_tooling") != {
         "rust_target": "wasm32-unknown-unknown",
-        "wit_bindgen": "0.57.1",
-        "wit_component": "0.254.0",
+        "wit_bindgen": "0.61.1",
+        "wit_component": "0.258.0",
     }:
         raise QualificationError("non-SQL fixture build tooling is not exact")
     fixture_manifest = tomllib.loads(
         source_path.parent.parent.joinpath("Cargo.toml").read_text(encoding="utf-8")
     )
     fixture_dependencies = fixture_manifest.get("dependencies", {})
-    if fixture_dependencies.get("wit-bindgen") != "=0.57.1":
+    if fixture_dependencies.get("wit-bindgen") != {
+        "version": "=0.61.1", "default-features": False, "features": ["macros", "realloc", "std"]
+    }:
         raise QualificationError("non-SQL fixture wit-bindgen dependency drifted")
     wit_component = fixture_dependencies.get("wit-component")
-    if not isinstance(wit_component, dict) or wit_component.get("version") != "=0.254.0":
+    if not isinstance(wit_component, dict) or wit_component.get("version") != "=0.258.0":
         raise QualificationError("non-SQL fixture wit-component dependency drifted")
+    receipt = json.loads((artifact_path.parent / "component-artifacts.json").read_text())
+    try:
+        validate_manifest(receipt, "words")
+    except ValueError as error:
+        raise QualificationError(str(error)) from error
     fixture_source = source_path.read_text(encoding="utf-8")
     required_fixture_mechanisms = {
         "serde_json::from_slice(request)",
@@ -302,7 +294,8 @@ def run_self_test(payload: dict[str, object]) -> None:
     else:
         raise QualificationError("mutation did not fail: relaxed-simd")
     mutations.append(("relaxed-simd", payload))
-    print(f"compiler component qualification self-test ok: mutations={len(mutations)}")
+    count = artifact_self_test()
+    print(f"compiler component qualification self-test ok: mutations={len(mutations) + count}")
 
 
 def main() -> int:

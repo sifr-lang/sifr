@@ -5,7 +5,13 @@
     "crate": "wasmtime",
     "version": "48.0.1",
     "default_features": false,
-    "features": ["component-model", "cranelift", "gc-null", "runtime", "std"]
+    "features": [
+      "component-model",
+      "cranelift",
+      "gc-null",
+      "runtime",
+      "std"
+    ]
   },
   "wit": "crates/sifr_compiler_component/wit/compiler-component.wit",
   "host_targets": [
@@ -86,11 +92,11 @@
     "processor": "fixture.words",
     "source": "crates/sifr_compiler_component/fixtures/words_component/src/lib.rs",
     "artifact": "crates/sifr_compiler_component/fixtures/words_component/words_component.wasm",
-    "artifact_sha256": "24884d640876cb1caecb253a2ae114552a166dd0cae6a509988c184bc58cc42b",
+    "artifact_sha256": "c8466e73fe7192b5b65be406cd7ca252fb11808d33bf2100c095f752eb8350f9",
     "build_tooling": {
       "rust_target": "wasm32-unknown-unknown",
-      "wit_bindgen": "0.57.1",
-      "wit_component": "0.254.0"
+      "wit_bindgen": "0.61.1",
+      "wit_component": "0.258.0"
     },
     "contracts": {
       "cache": "sifr_compiler_component::tests::non_sql_component_parses_typed_requests_and_is_cacheless_deterministic",

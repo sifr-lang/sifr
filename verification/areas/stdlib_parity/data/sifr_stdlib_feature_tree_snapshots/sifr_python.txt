@@ -26,18 +26,34 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     │   [build-dependencies]
     │   └── pyo3-build-config feature "default" (*)
     ├── encoding_rs feature "default"
-    │   ├── encoding_rs v0.8.35
-    │   │   └── cfg-if feature "default"
-    │   │       └── cfg-if v1.0.4
+    │   ├── encoding_rs v0.8.40
+    │   │   ├── scopeguard v1.2.0
+    │   │   ├── cfg-if feature "default"
+    │   │   │   └── cfg-if v1.0.4
+    │   │   ├── multiversion_no_op feature "default"
+    │   │   │   └── multiversion_no_op v1.0.0 (proc-macro)
+    │   │   ├── simdutf8 feature "aarch64_neon"
+    │   │   │   └── simdutf8 v0.1.5
+    │   │   └── simdutf8 feature "public_imp"
+    │   │       └── simdutf8 v0.1.5
+    │   │   [build-dependencies]
+    │   │   └── rustversion feature "default"
+    │   │       └── rustversion v1.0.22 (proc-macro)
     │   └── encoding_rs feature "alloc"
-    │       └── encoding_rs v0.8.35 (*)
+    │       └── encoding_rs v0.8.40 (*)
     ├── indexmap feature "default"
-    │   ├── indexmap v2.14.0
+    │   ├── indexmap v2.14.2
     │   │   ├── equivalent v1.0.2
     │   │   └── hashbrown v0.17.1
     │   └── indexmap feature "std"
-    │       └── indexmap v2.14.0 (*)
+    │       └── indexmap v2.14.2 (*)
     ├── libc feature "default" (*)
+    ├── memchr feature "default"
+    │   ├── memchr v2.8.3
+    │   └── memchr feature "std"
+    │       ├── memchr v2.8.3
+    │       └── memchr feature "alloc"
+    │           └── memchr v2.8.3
     ├── num-bigint feature "std"
     │   ├── num-bigint v0.5.1
     │   │   ├── num-integer feature "i128"
@@ -56,66 +72,64 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     ├── num-traits feature "default"
     │   ├── num-traits v0.2.19 (*)
     │   └── num-traits feature "std" (*)
-    ├── tokio feature "default"
-    │   └── tokio v1.53.1
-    │       ├── mio v1.2.1
-    │       │   └── libc feature "default" (*)
-    │       ├── libc feature "default" (*)
-    │       ├── bytes feature "default"
-    │       │   ├── bytes v1.12.1
-    │       │   └── bytes feature "std"
-    │       │       └── bytes v1.12.1
-    │       ├── pin-project-lite feature "default"
-    │       │   └── pin-project-lite v0.2.17
-    │       ├── signal-hook-registry feature "default"
-    │       │   └── signal-hook-registry v1.4.8
-    │       │       ├── libc feature "default" (*)
-    │       │       └── errno feature "default"
-    │       │           ├── errno v0.3.14
-    │       │           │   └── libc v0.2.189
-    │       │           └── errno feature "std"
-    │       │               ├── errno v0.3.14 (*)
-    │       │               └── libc feature "std" (*)
-    │       ├── socket2 feature "all"
-    │       │   └── socket2 v0.6.4
-    │       │       └── libc feature "default" (*)
-    │       ├── socket2 feature "default"
-    │       │   └── socket2 v0.6.4 (*)
-    │       └── tokio-macros feature "default"
-    │           └── tokio-macros v2.7.0 (proc-macro)
-    │               ├── proc-macro2 feature "default"
-    │               │   ├── proc-macro2 v1.0.107
-    │               │   │   └── unicode-ident feature "default"
-    │               │   │       └── unicode-ident v1.0.24
-    │               │   └── proc-macro2 feature "proc-macro"
-    │               │       └── proc-macro2 v1.0.107 (*)
-    │               ├── quote feature "default"
-    │               │   ├── quote v1.0.45
-    │               │   │   └── proc-macro2 v1.0.107 (*)
-    │               │   └── quote feature "proc-macro"
-    │               │       ├── quote v1.0.45 (*)
-    │               │       └── proc-macro2 feature "proc-macro" (*)
-    │               ├── syn feature "default"
-    │               │   ├── syn v2.0.117
-    │               │   │   ├── proc-macro2 v1.0.107 (*)
-    │               │   │   ├── quote v1.0.45 (*)
-    │               │   │   └── unicode-ident feature "default" (*)
-    │               │   ├── syn feature "clone-impls"
-    │               │   │   └── syn v2.0.117 (*)
-    │               │   ├── syn feature "derive"
-    │               │   │   └── syn v2.0.117 (*)
-    │               │   ├── syn feature "parsing"
-    │               │   │   └── syn v2.0.117 (*)
-    │               │   ├── syn feature "printing"
-    │               │   │   └── syn v2.0.117 (*)
-    │               │   └── syn feature "proc-macro"
-    │               │       ├── syn v2.0.117 (*)
-    │               │       ├── proc-macro2 feature "proc-macro" (*)
-    │               │       └── quote feature "proc-macro" (*)
-    │               └── syn feature "full"
-    │                   └── syn v2.0.117 (*)
     ├── tokio feature "io-util"
-    │   ├── tokio v1.53.1 (*)
+    │   ├── tokio v1.53.1
+    │   │   ├── mio v1.2.1
+    │   │   │   └── libc feature "default" (*)
+    │   │   ├── libc feature "default" (*)
+    │   │   ├── bytes feature "default"
+    │   │   │   ├── bytes v1.12.1
+    │   │   │   └── bytes feature "std"
+    │   │   │       └── bytes v1.12.1
+    │   │   ├── pin-project-lite feature "default"
+    │   │   │   └── pin-project-lite v0.2.17
+    │   │   ├── signal-hook-registry feature "default"
+    │   │   │   └── signal-hook-registry v1.4.8
+    │   │   │       ├── libc feature "default" (*)
+    │   │   │       └── errno feature "default"
+    │   │   │           ├── errno v0.3.14
+    │   │   │           │   └── libc v0.2.189
+    │   │   │           └── errno feature "std"
+    │   │   │               ├── errno v0.3.14 (*)
+    │   │   │               └── libc feature "std" (*)
+    │   │   ├── socket2 feature "all"
+    │   │   │   └── socket2 v0.6.4
+    │   │   │       └── libc feature "default" (*)
+    │   │   ├── socket2 feature "default"
+    │   │   │   └── socket2 v0.6.4 (*)
+    │   │   └── tokio-macros feature "default"
+    │   │       └── tokio-macros v2.7.0 (proc-macro)
+    │   │           ├── proc-macro2 feature "default"
+    │   │           │   ├── proc-macro2 v1.0.107
+    │   │           │   │   └── unicode-ident feature "default"
+    │   │           │   │       └── unicode-ident v1.0.24
+    │   │           │   └── proc-macro2 feature "proc-macro"
+    │   │           │       └── proc-macro2 v1.0.107 (*)
+    │   │           ├── quote feature "default"
+    │   │           │   ├── quote v1.0.47
+    │   │           │   │   └── proc-macro2 v1.0.107 (*)
+    │   │           │   └── quote feature "proc-macro"
+    │   │           │       ├── quote v1.0.47 (*)
+    │   │           │       └── proc-macro2 feature "proc-macro" (*)
+    │   │           ├── syn feature "default"
+    │   │           │   ├── syn v2.0.117
+    │   │           │   │   ├── proc-macro2 v1.0.107 (*)
+    │   │           │   │   ├── quote v1.0.47 (*)
+    │   │           │   │   └── unicode-ident feature "default" (*)
+    │   │           │   ├── syn feature "clone-impls"
+    │   │           │   │   └── syn v2.0.117 (*)
+    │   │           │   ├── syn feature "derive"
+    │   │           │   │   └── syn v2.0.117 (*)
+    │   │           │   ├── syn feature "parsing"
+    │   │           │   │   └── syn v2.0.117 (*)
+    │   │           │   ├── syn feature "printing"
+    │   │           │   │   └── syn v2.0.117 (*)
+    │   │           │   └── syn feature "proc-macro"
+    │   │           │       ├── syn v2.0.117 (*)
+    │   │           │       ├── proc-macro2 feature "proc-macro" (*)
+    │   │           │       └── quote feature "proc-macro" (*)
+    │   │           └── syn feature "full"
+    │   │               └── syn v2.0.117 (*)
     │   └── tokio feature "bytes"
     │       └── tokio v1.53.1 (*)
     ├── tokio feature "macros"

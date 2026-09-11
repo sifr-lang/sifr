@@ -1,3 +1,9 @@
+#[allow(dead_code)]
+#[path = "support/cargo_edges.rs"]
+mod cargo_edges;
+#[allow(dead_code)]
+#[path = "support/cargo_inventory.rs"]
+mod cargo_inventory;
 mod support;
 
 use support::TestUnwrap as _;
@@ -106,6 +112,14 @@ fn maintained_rusqlite_dependencies_use_the_latest_stable_policy() {
 
 #[test]
 fn maintained_lock_edges_use_rusqlite_0_40_2() {
+    // Incoming ownership complements, and does not replace, Item66 feature contexts.
+    let owners = cargo_edges::first_party_edges("rusqlite", RUSQLITE_VERSION);
+    assert_eq!(owners.len(), 6);
+    assert!(
+        owners
+            .iter()
+            .any(|(_, owner)| owner == "resource-lifecycle-runtime")
+    );
     // Cargo unifies the workspace's explicit cache requests. The standalone
     // resource fixture disables defaults and requests only bundled SQLite.
     for manifest in [SQLITE_RUNTIME_MANIFEST, SQL_LOCK_MANIFEST] {
@@ -327,4 +341,23 @@ fn check_dependency_edges(package: &toml::Value, context: LockContext) -> Result
         ));
     }
     Ok(())
+}
+
+#[test]
+fn rusqlite_incoming_edge_rejects_missing_target_wrong_source_and_wrong_version() {
+    let lock: toml::Value = toml::from_str(FIXTURE_LOCK).test_unwrap("fixture lock");
+    let packages = cargo_edges::packages(&lock).test_unwrap("packages");
+    let current = cargo_edges::resolve(packages, "rusqlite").test_unwrap("Rusqlite");
+    for (field, value) in [
+        ("version", "0.39.0"),
+        ("source", "git+https://example.invalid/rusqlite"),
+    ] {
+        let mut changed = current.clone();
+        changed[field] = value.into();
+        assert!(
+            cargo_edges::current_edge(&[changed], "rusqlite", "rusqlite", RUSQLITE_VERSION)
+                .is_err()
+        );
+    }
+    assert!(cargo_edges::current_edge(&[], "rusqlite", "rusqlite", RUSQLITE_VERSION).is_err());
 }

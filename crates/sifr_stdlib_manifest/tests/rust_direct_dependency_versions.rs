@@ -1,282 +1,306 @@
 mod support;
-
 use support::TestUnwrap as _;
+#[allow(dead_code)]
+#[path = "support/cargo_edges.rs"]
+mod cargo_edges;
+#[allow(dead_code)]
+#[path = "support/cargo_inventory.rs"]
+mod cargo_inventory;
 
-use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
-use std::path::{Path, PathBuf};
+#[path = "support/registry_audit.rs"]
+mod registry_audit;
 
+use std::collections::BTreeSet;
 const AUDIT: &str = include_str!("data/rust_latest_stable_registry.json");
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
-const SKIPPED_DIRECTORIES: &[&str] = &[
-    ".git",
-    ".mypy_cache",
-    ".pytest_cache",
-    ".venv",
-    "__pycache__",
-    "node_modules",
-    "sifr_output",
-    "target",
-    "third_party",
-    "vendor",
-];
-
-#[derive(Debug)]
-struct RegistryRelease {
-    latest_stable: String,
-    checksum: String,
-}
 
 #[test]
 fn every_maintained_rust_direct_declaration_matches_the_registry_audit() {
-    let audit: serde_json::Value = serde_json::from_str(AUDIT).test_unwrap("audit JSON must parse");
-    assert_eq!(audit["schema_version"].as_u64(), Some(1));
-    assert_eq!(audit["audited_at"].as_str(), Some("2026-08-26"));
+    let audit: serde_json::Value = serde_json::from_str(AUDIT).test_unwrap("audit JSON");
+    assert_eq!(audit["schema_version"].as_u64(), Some(2));
+    assert_eq!(audit["audited_at"].as_str(), Some("2026-09-09"));
     assert_eq!(
         audit["source"].as_str(),
-        Some("https://crates.io/api/v1/crates/{crate}")
+        Some("https://index.crates.io/{prefix}/{crate}")
     );
-
-    let releases = registry_releases(&audit);
-    assert_eq!(releases.len(), 109, "audited direct package count");
-
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .canonicalize()
-        .test_unwrap("workspace root must resolve");
-    let mut manifests = Vec::new();
-    collect_manifests(&root, &root, &mut manifests);
-    manifests.sort();
+    let manifests = cargo_inventory::maintained_paths("Cargo.toml");
     assert_eq!(
-        manifests.len(),
-        usize::try_from(
-            audit["maintained_manifests"]
-                .as_u64()
-                .test_unwrap("manifest count must be an integer"),
-        )
-        .test_unwrap("manifest count must fit usize"),
-        "maintained Cargo.toml inventory drifted; refresh the official registry audit"
+        audit["maintained_manifests"].as_u64(),
+        Some(manifests.len() as u64)
     );
-
-    let mut declaration_count = 0_usize;
-    let mut declared_packages = BTreeSet::new();
-    for manifest in &manifests {
-        let source = fs::read_to_string(manifest)
-            .unwrap_or_else(|error| panic!("{}: {error}", manifest.display()));
-        let parsed: toml::Value = toml::from_str(&source)
-            .unwrap_or_else(|error| panic!("{}: {error}", manifest.display()));
-        collect_manifest_declarations(
-            manifest,
-            &parsed,
-            &releases,
-            &mut declared_packages,
-            &mut declaration_count,
+    let declarations = cargo_inventory::declarations();
+    assert_eq!(
+        audit["direct_declarations"].as_u64(),
+        Some(declarations.len() as u64)
+    );
+    registry_audit::exact_packages(&audit, &declarations).test_unwrap("exact package inventory");
+    let releases = registry_audit::releases(&audit).test_unwrap("registry releases");
+    let mut expected = Vec::new();
+    let mut stale = Vec::new();
+    for (name, release) in releases {
+        assert!(
+            release["source_url"]
+                .as_str()
+                .is_some_and(|url| url.starts_with("https://index.crates.io/"))
         );
+        assert!(
+            release["response_sha256"]
+                .as_str()
+                .is_some_and(registry_audit::checksum)
+        );
+        let latest = release["latest_stable"]
+            .as_str()
+            .test_unwrap("latest version");
+        for row in release["declarations"]
+            .as_array()
+            .test_unwrap("declaration owner array")
+        {
+            let declaration = cargo_inventory::Declaration {
+                path: row["path"].as_str().test_unwrap("owner path").into(),
+                table: row["table"].as_str().test_unwrap("owner table").into(),
+                alias: row["alias"].as_str().test_unwrap("owner alias").into(),
+                package: row["package"].as_str().test_unwrap("owner package").into(),
+                requirement: row["requirement"]
+                    .as_str()
+                    .test_unwrap("owner requirement")
+                    .into(),
+            };
+            assert_eq!(declaration.package, name, "audit owner identity");
+            if !registry_audit::requirement_matches_latest(&declaration.requirement, latest) {
+                stale.push(format!(
+                    "{} {} {}: {} selects {:?}; official latest is {latest}",
+                    declaration.path,
+                    declaration.table,
+                    declaration.alias,
+                    name,
+                    declaration.requirement
+                ));
+            }
+            expected.push(declaration);
+        }
     }
-
+    expected.sort();
     assert_eq!(
-        declaration_count,
-        usize::try_from(
-            audit["direct_declarations"]
-                .as_u64()
-                .test_unwrap("declaration count must be an integer"),
-        )
-        .test_unwrap("declaration count must fit usize"),
-        "direct declaration inventory drifted; refresh the official registry audit"
+        declarations, expected,
+        "exact path/table/alias/package/requirement inventory"
     );
-    assert_eq!(
-        declared_packages,
-        releases.keys().cloned().collect(),
-        "the registry audit and maintained direct package set must be exact"
+    assert!(
+        stale.is_empty(),
+        "release-owner updates required:\n{}",
+        stale.join("\n")
     );
 }
 
 #[test]
-fn audited_checksums_match_the_workspace_lock_when_present() {
-    let audit: serde_json::Value = serde_json::from_str(AUDIT).test_unwrap("audit JSON must parse");
-    let releases = registry_releases(&audit);
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
-    let packages = lock["package"]
-        .as_array()
-        .test_unwrap("workspace lock packages must be an array");
-
-    for (name, release) in releases {
-        let matching = packages.iter().find(|package| {
-            package["name"].as_str() == Some(&name)
-                && stable_core(package["version"].as_str().unwrap_or_default())
-                    == stable_core(&release.latest_stable)
-        });
-        let Some(package) = matching else {
-            continue;
-        };
-        assert_eq!(
-            package["checksum"].as_str(),
-            Some(release.checksum.as_str()),
-            "{name} registry checksum"
-        );
+fn audited_checksums_match_every_maintained_lock_identity() {
+    let audit: serde_json::Value = serde_json::from_str(AUDIT).test_unwrap("audit JSON");
+    for path in cargo_inventory::maintained_paths("Cargo.lock") {
+        let lock = cargo_inventory::read_toml(&cargo_inventory::root().join(&path));
+        let packages = cargo_edges::packages(&lock).test_unwrap("lock identities");
+        registry_audit::lock_checksums(&audit, packages)
+            .unwrap_or_else(|error| panic!("{path}: {error}"));
     }
 }
 
-fn registry_releases(audit: &serde_json::Value) -> BTreeMap<String, RegistryRelease> {
-    audit["packages"]
-        .as_array()
-        .test_unwrap("audit packages must be an array")
-        .iter()
-        .map(|package| {
-            let name = package["name"]
-                .as_str()
-                .test_unwrap("audit package name")
-                .to_string();
-            let latest_stable = package["latest_stable"]
-                .as_str()
-                .test_unwrap("audit stable version")
-                .to_string();
-            let checksum = package["checksum"]
-                .as_str()
-                .test_unwrap("audit checksum")
-                .to_string();
-            assert_eq!(checksum.len(), 64, "{name} checksum length");
+#[test]
+fn tracked_inventory_rejects_removed_manifest_lock_and_core_fixture() {
+    let inventory = cargo_inventory::inventory();
+    for key in ["manifests", "locks"] {
+        let paths = inventory[key]
+            .as_array()
+            .test_unwrap("path inventory")
+            .iter()
+            .map(|path| path.as_str().test_unwrap("path").to_owned())
+            .collect::<BTreeSet<_>>();
+        for removed in &paths {
+            let mut changed = paths.clone();
+            changed.remove(removed);
             assert!(
-                checksum.bytes().all(|byte| byte.is_ascii_hexdigit()),
-                "{name} checksum format"
+                cargo_inventory::check_inventory(&changed, &inventory[key]).is_err(),
+                "{removed}"
             );
-            (
-                name,
-                RegistryRelease {
-                    latest_stable,
-                    checksum,
-                },
-            )
-        })
-        .collect()
-}
-
-fn collect_manifests(root: &Path, directory: &Path, manifests: &mut Vec<PathBuf>) {
-    if directory != root && directory.join(".git").exists() {
-        return;
-    }
-    let entries =
-        fs::read_dir(directory).unwrap_or_else(|error| panic!("{}: {error}", directory.display()));
-    for entry in entries {
-        let entry = entry.test_unwrap("directory entry must be readable");
-        let path = entry.path();
-        let file_type = entry.file_type().test_unwrap("entry type must be readable");
-        if file_type.is_symlink() {
-            continue;
-        }
-        if file_type.is_dir() {
-            let name = entry.file_name();
-            if !SKIPPED_DIRECTORIES.contains(&name.to_string_lossy().as_ref()) {
-                collect_manifests(root, &path, manifests);
-            }
-        } else if entry.file_name() == "Cargo.toml" {
-            manifests.push(path);
         }
     }
 }
 
-fn collect_manifest_declarations(
-    path: &Path,
-    manifest: &toml::Value,
-    releases: &BTreeMap<String, RegistryRelease>,
-    declared_packages: &mut BTreeSet<String>,
-    declaration_count: &mut usize,
-) {
-    collect_dependency_tables(
-        path,
-        manifest,
-        releases,
-        declared_packages,
-        declaration_count,
+#[test]
+fn tracked_discovery_excludes_untracked_vendor_and_gitlink_inputs() {
+    // The supplied index contains no entry for the extra on-disk Cargo.toml.
+    let index = b"100644 abc 0\tCargo.toml\0100644 abc 0\tverification/areas/core_language/fixture/Cargo.toml\0100644 abc 0\tvendor/crate/Cargo.toml\0100644 abc 0\tthird_party/crate/Cargo.toml\0160000 abc 0\texternal\0";
+    let actual =
+        cargo_inventory::select_tracked_paths(index, "Cargo.toml").test_unwrap("tracked listing");
+    assert_eq!(
+        actual,
+        [
+            "Cargo.toml".to_owned(),
+            "verification/areas/core_language/fixture/Cargo.toml".to_owned()
+        ]
+        .into()
     );
-    if let Some(workspace) = manifest.get("workspace") {
-        collect_dependency_tables(
-            path,
-            workspace,
-            releases,
-            declared_packages,
-            declaration_count,
+    assert!(!actual.contains("untracked/Cargo.toml"));
+    assert!(
+        cargo_inventory::select_tracked_paths(b"120000 abc 0\tCargo.toml\0", "Cargo.toml").is_err()
+    );
+    assert!(
+        cargo_inventory::select_tracked_paths(b"100644 abc 2\tCargo.toml\0", "Cargo.toml").is_err()
+    );
+}
+
+#[test]
+fn an_extra_untracked_manifest_does_not_enter_live_git_discovery() {
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .test_unwrap("clock")
+        .as_nanos();
+    let directory =
+        std::env::temp_dir().join(format!("sifr-item49-index-{}-{nonce}", std::process::id()));
+    std::fs::create_dir(&directory).test_unwrap("isolated index fixture");
+    std::fs::write(directory.join("Cargo.toml"), "[workspace]\n").test_unwrap("tracked manifest");
+    for args in [vec!["init", "--quiet"], vec!["add", "--", "Cargo.toml"]] {
+        let output = std::process::Command::new("git")
+            .args(args)
+            .current_dir(&directory)
+            .output()
+            .test_unwrap("fixture git");
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
         );
     }
-    if let Some(targets) = manifest.get("target").and_then(toml::Value::as_table) {
-        for target in targets.values() {
-            collect_dependency_tables(path, target, releases, declared_packages, declaration_count);
-        }
+    let before =
+        cargo_inventory::tracked_paths(&directory, "Cargo.toml").test_unwrap("initial index");
+    std::fs::create_dir(directory.join("untracked")).test_unwrap("untracked directory");
+    std::fs::write(directory.join("untracked/Cargo.toml"), "[workspace]\n")
+        .test_unwrap("untracked manifest");
+    let after =
+        cargo_inventory::tracked_paths(&directory, "Cargo.toml").test_unwrap("unchanged index");
+    std::fs::remove_dir_all(&directory).test_unwrap("remove owned index fixture");
+    assert_eq!(before, ["Cargo.toml".to_owned()].into());
+    assert_eq!(after, before);
+}
+
+#[test]
+fn registry_rows_reject_missing_extra_duplicate_and_malformed_releases() {
+    let audit: serde_json::Value = serde_json::from_str(AUDIT).test_unwrap("audit JSON");
+    let declarations = cargo_inventory::declarations();
+    let mut missing = audit.clone();
+    missing["packages"]
+        .as_array_mut()
+        .test_unwrap("rows")
+        .remove(0);
+    assert!(registry_audit::exact_packages(&missing, &declarations).is_err());
+    let mut extra = audit.clone();
+    let mut row = extra["packages"][0].clone();
+    row["name"] = "not-a-declared-package".into();
+    extra["packages"]
+        .as_array_mut()
+        .test_unwrap("rows")
+        .push(row);
+    assert!(registry_audit::exact_packages(&extra, &declarations).is_err());
+    let mut duplicate = audit.clone();
+    let row = duplicate["packages"][0].clone();
+    duplicate["packages"]
+        .as_array_mut()
+        .test_unwrap("rows")
+        .push(row);
+    assert!(registry_audit::releases(&duplicate).is_err());
+    for (field, value) in [
+        ("latest_stable", "1.0.0-rc.1"),
+        ("latest_stable", "01.0.0"),
+        ("checksum", "bad"),
+    ] {
+        let mut invalid = audit.clone();
+        invalid["packages"][0][field] = value.into();
+        assert!(registry_audit::releases(&invalid).is_err());
     }
 }
 
-fn collect_dependency_tables(
-    path: &Path,
-    owner: &toml::Value,
-    releases: &BTreeMap<String, RegistryRelease>,
-    declared_packages: &mut BTreeSet<String>,
-    declaration_count: &mut usize,
-) {
-    for table_name in ["dependencies", "dev-dependencies", "build-dependencies"] {
-        let Some(dependencies) = owner.get(table_name).and_then(toml::Value::as_table) else {
-            continue;
-        };
-        for (alias, specification) in dependencies {
-            let Some((name, requirement)) = registry_requirement(alias, specification) else {
-                continue;
-            };
-            let release = releases.get(name).unwrap_or_else(|| {
-                panic!(
-                    "{}: {name} is absent from the official registry audit",
-                    path.display()
-                )
-            });
-            assert!(
-                requirement_matches_latest(requirement, &release.latest_stable),
-                "{}: {name} requirement {requirement:?} does not name latest stable {}",
-                path.display(),
-                release.latest_stable
-            );
-            declared_packages.insert(name.to_string());
-            *declaration_count += 1;
-        }
-    }
+#[test]
+fn registry_aliases_preserve_package_identity_and_source_boundary() {
+    let registry: toml::Value = toml::from_str(
+        r#"renamed = { package = "zip", version = "=8.6.0" }
+local_probe = { package = "bindgen", path = "rust/bindgen" }
+inherited = { workspace = true }"#,
+    )
+    .test_unwrap("alias manifest");
+    assert_eq!(
+        cargo_inventory::registry_requirement("renamed", &registry["renamed"]),
+        Ok(Some(("zip".into(), "=8.6.0".into())))
+    );
+    assert_eq!(
+        cargo_inventory::registry_requirement("local_probe", &registry["local_probe"]),
+        Ok(None)
+    );
+    assert_eq!(
+        cargo_inventory::registry_requirement("inherited", &registry["inherited"]),
+        Ok(None)
+    );
+    let mut changed = registry["renamed"].clone();
+    changed["package"] = "different".into();
+    assert_ne!(
+        cargo_inventory::registry_requirement("renamed", &changed),
+        cargo_inventory::registry_requirement("renamed", &registry["renamed"])
+    );
 }
 
-fn registry_requirement<'a>(
-    alias: &'a str,
-    specification: &'a toml::Value,
-) -> Option<(&'a str, &'a str)> {
-    if let Some(requirement) = specification.as_str() {
-        return Some((alias, requirement));
+#[test]
+fn lock_identity_resolver_rejects_missing_ambiguous_duplicate_and_wrong_sources() {
+    let lock: toml::Value = toml::from_str(
+        r#"[[package]]
+name = "syn"
+version = "3.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+[[package]]
+name = "syn"
+version = "2.0.117"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+"#,
+    )
+    .test_unwrap("lock fixture");
+    let packages = cargo_edges::packages(&lock).test_unwrap("packages");
+    assert!(cargo_edges::current_edge(packages, "syn 3.0.5", "syn", "3.0.5").is_ok());
+    for edge in [
+        "syn",
+        "syn 3.0.4",
+        "syn 3.0.5 (git+https://example.invalid/syn)",
+        "syn 3.0.5 extra",
+        "",
+    ] {
+        assert!(cargo_edges::resolve(packages, edge).is_err(), "{edge}");
     }
-    let table = specification.as_table()?;
-    if table.get("workspace").and_then(toml::Value::as_bool) == Some(true)
-        || table.contains_key("git")
-        || table.contains_key("path")
-    {
-        return None;
-    }
-    let requirement = table.get("version")?.as_str()?;
-    let name = table
-        .get("package")
-        .and_then(toml::Value::as_str)
-        .unwrap_or(alias);
-    Some((name, requirement))
+    let mut changed = lock.clone();
+    let duplicate = changed["package"][0].clone();
+    changed["package"]
+        .as_array_mut()
+        .test_unwrap("packages")
+        .push(duplicate);
+    assert!(cargo_edges::packages(&changed).is_err());
+    let mut source = packages[0].clone();
+    source["source"] = "git+https://example.invalid/syn".into();
+    assert!(cargo_edges::current_edge(&[source], "syn", "syn", "3.0.5").is_err());
 }
 
-fn requirement_matches_latest(requirement: &str, latest: &str) -> bool {
-    let requirement = requirement.trim_start_matches(['=', '^', '~']);
-    if requirement.contains(['*', '<', '>', ',']) {
-        return false;
+#[test]
+fn checksum_audit_rejects_full_version_source_and_checksum_drift() {
+    let audit: serde_json::Value = serde_json::from_str(AUDIT).test_unwrap("audit");
+    let lock = cargo_inventory::read_toml(&cargo_inventory::root().join("Cargo.lock"));
+    let package = cargo_edges::packages(&lock)
+        .test_unwrap("packages")
+        .iter()
+        .find(|package| {
+            package["name"].as_str() == Some("syn") && package["version"].as_str() == Some("3.0.5")
+        })
+        .test_unwrap("selected Syn");
+    for (field, value) in [
+        ("version", "3.0.5+different"),
+        ("source", "git+https://example.invalid/syn"),
+        ("checksum", "bad"),
+    ] {
+        let mut changed = package.clone();
+        changed[field] = value.into();
+        assert!(
+            registry_audit::lock_checksums(&audit, &[changed]).is_err(),
+            "{field}"
+        );
     }
-    let required_parts = requirement.split('.').collect::<Vec<_>>();
-    let latest_parts = stable_core(latest).split('.').collect::<Vec<_>>();
-    required_parts.len() <= latest_parts.len()
-        && required_parts
-            .iter()
-            .zip(&latest_parts)
-            .all(|(required, stable)| required == stable)
-        && latest_parts[required_parts.len()..]
-            .iter()
-            .all(|part| *part == "0")
-}
-
-fn stable_core(version: &str) -> &str {
-    version.split_once('+').map_or(version, |(core, _)| core)
 }

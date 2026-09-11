@@ -1,28 +1,20 @@
 # Words compiler-component fixture
 
 This crate builds the non-SQL qualification component. The guest parses the
-compiler-owned JSON request. It derives the typed plan, source map, dependency,
-diagnostic, and stable plan fingerprint inside the sandbox.
+compiler-owned JSON request and derives the typed plan, source map, dependency,
+diagnostic and stable plan fingerprint inside the sandbox.
 
-Use the locked toolchain to rebuild the artifact:
+Install the `wasm32-unknown-unknown` target for the repository's pinned Rust
+toolchain, then regenerate the artifact and its actual producer receipt:
 
 ```bash
-rustup target add wasm32-unknown-unknown
-cargo build \
-  --manifest-path crates/sifr_compiler_component/fixtures/words_component/Cargo.toml \
-  --target wasm32-unknown-unknown \
-  --release \
-  --locked
-cargo run \
-  --manifest-path crates/sifr_compiler_component/fixtures/words_component/Cargo.toml \
-  --features componentize \
-  --bin componentize \
-  --locked \
-  -- \
-  crates/sifr_compiler_component/fixtures/words_component/target/wasm32-unknown-unknown/release/sifr_component_fixture_words.wasm \
-  crates/sifr_compiler_component/fixtures/words_component/words_component.wasm
+python3 verification/areas/sql_platform/tools/build_words_component.py
 ```
 
-Update the artifact digest in
-`verification/areas/sql_platform/data/compiler_component_qualification.json`
-only when the source or locked build tooling changes.
+The build uses locked offline dependencies, wit-bindgen 0.61.1 with explicit
+macros/realloc/std features for the closed synchronous WIT interface, and
+wit-component 0.258.0 with output validation. `component-artifacts.json` records
+source, compiler, target-library, componentizer and output digests. The builder
+updates the qualification artifact digest only after a successful rebuild.
+See [compiler component builds](../../../../internal_docs/compiler_component_builds.md)
+for the shared source and tool provenance contract.

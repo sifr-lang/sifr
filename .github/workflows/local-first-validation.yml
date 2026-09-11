@@ -8,6 +8,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  uv-toolchain-invariant:
+    name: uv-toolchain-invariant
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+      - name: Verify canonical uv pins and platform checksums
+        run: |
+          python3 scripts/check_uv_toolchain.py --self-test
+          python3 scripts/check_uv_toolchain.py
+
   lint-and-format:
     name: lint-and-format
     runs-on: ubuntu-24.04
@@ -16,7 +28,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0 # Rust 1.98.0
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       # Advisory until legacy workspace lint debt is burned down by a dedicated cleanup.
       - name: Rustfmt check (advisory)
         continue-on-error: true
@@ -39,11 +51,11 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0 # Rust 1.98.0
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version-file: verification/pyproject.toml
-          checksum: 68a509da24b06b4223a1c0175fb5eb5bc79342b76cbeff0cfe51ac3f5b17b6b2
+          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
       - name: Install canonical Python interpreter
         run: uv python install 3.14.7
       - name: Provision Linux host-tool confinement
@@ -63,11 +75,11 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0 # Rust 1.98.0
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version-file: verification/pyproject.toml
-          checksum: 68a509da24b06b4223a1c0175fb5eb5bc79342b76cbeff0cfe51ac3f5b17b6b2
+          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
       - name: Run smoke fuzz/property checks
         run: uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
 
@@ -91,7 +103,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0 # Rust 1.98.0
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
         with:
           targets: ${{ matrix.target }}
       - name: Run native compiler component qualification
@@ -107,7 +119,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0 # Rust 1.98.0
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
         with:
           targets: wasm32-wasip2
       - name: Run WASI SQL build qualification
@@ -122,10 +134,10 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0 # Rust 1.98.0
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version-file: verification/pyproject.toml
-          checksum: 68a509da24b06b4223a1c0175fb5eb5bc79342b76cbeff0cfe51ac3f5b17b6b2
+          checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
       - name: Verify deterministic report signature
         run: bash verification/runner/e2e/check_report_determinism.sh --profile merge

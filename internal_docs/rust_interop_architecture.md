@@ -1503,8 +1503,8 @@ remain contract-only and cannot satisfy a crate-backed runtime exchange claim.
 `native_build_script` is the tier-3 `cargo-probe` claim for build-script and
 native-link trust. Its locked scenario uses four direct wrapper crates whose
 Cargo metadata exposes build scripts before execution. Those wrappers compile
-the exact root-lock `cc = 1.2.63`, `bindgen = 0.72.1`, `cxx = 1.0.198`, and
-`zstd = 0.13.3` graph, keep generated evidence under `OUT_DIR`, and expose the
+the exact root-lock `cc = 1.4.5`, `bindgen = 0.73.2`, `cxx = 1.0.200`, and
+`zstd = 0.14.0` graph, keep generated evidence under `OUT_DIR`, and expose the
 versioned artifacts through safe Rust functions. Two fresh
 `--locked --offline --frozen` builds must produce byte-identical evidence,
 and generated Sifr package glue must observe every artifact plus a real zstd

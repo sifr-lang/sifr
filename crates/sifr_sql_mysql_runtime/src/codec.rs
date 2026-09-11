@@ -1,4 +1,4 @@
-use mysql_common::{Row, Value};
+use mysql_async::{Row, Value};
 use sifr_sql_runtime::{OwnedSqlValue, RuntimeLimits, SqlError, SqlErrorKind};
 use std::sync::Arc;
 
@@ -105,5 +105,58 @@ mod tests {
     fn malformed_nonfinite_values_fail_without_panicking() {
         assert!(decode_value(&Value::Double(f64::NAN)).is_err());
         assert!(decode_value(&Value::Float(f32::INFINITY)).is_err());
+    }
+
+    #[test]
+    fn codecs_use_the_raw_drivers_exact_parameter_and_row_types() {
+        let encode: fn(
+            sifr_sql_runtime::BoundParameters,
+        ) -> Result<Vec<mysql_async::Value>, SqlError> = encode_parameters;
+        let _: fn(&mysql_async::Row, RuntimeLimits) -> Result<(Vec<OwnedSqlValue>, u64), SqlError> =
+            decode_row;
+        let values = encode(sifr_sql_runtime::BoundParameters::default())
+            .unwrap_or_else(|error| panic!("empty parameters must encode: {error:?}"));
+        assert_eq!(
+            mysql_async::Params::Positional(values),
+            mysql_async::Params::Positional(vec![])
+        );
+    }
+
+    #[test]
+    fn driver_values_preserve_integer_limits_and_binary_payloads() {
+        assert!(matches!(
+            encode_value(OwnedSqlValue::Unsigned(u64::MAX)),
+            Ok(Value::UInt(u64::MAX))
+        ));
+        assert!(matches!(
+            decode_value(&Value::Int(i64::MIN)),
+            Ok(OwnedSqlValue::Signed(i64::MIN))
+        ));
+        let bytes = vec![0xff, 0, 0x80];
+        assert!(
+            matches!(decode_value(&Value::Bytes(bytes.clone())), Ok(OwnedSqlValue::Bytes(value)) if value.as_ref() == bytes)
+        );
+        assert_eq!(
+            encode_value(OwnedSqlValue::Bytes(Arc::from(bytes.clone()))).ok(),
+            Some(Value::Bytes(bytes))
+        );
+        assert!(matches!(
+            decode_value(&Value::NULL),
+            Ok(OwnedSqlValue::Null)
+        ));
+        assert!(
+            matches!(decode_value(&Value::Bytes(b"text".to_vec())), Ok(OwnedSqlValue::Text(value)) if value == "text")
+        );
+    }
+
+    #[test]
+    fn unsupported_parameters_remain_typed_errors() {
+        for value in [
+            OwnedSqlValue::Float(f64::NAN),
+            OwnedSqlValue::Float(f64::INFINITY),
+            OwnedSqlValue::Sequence(vec![]),
+        ] {
+            assert!(encode_value(value).is_err());
+        }
     }
 }

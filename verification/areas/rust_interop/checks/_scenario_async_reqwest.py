@@ -20,7 +20,16 @@ def validate_async_reqwest_scenario(
     rust: dict[str, Any],
     dependencies: dict[str, Any],
     trust: dict[str, Any],
+    example_dir: Path,
 ) -> None:
+    bridge_path = example_dir / "src/bridges/http.rs"
+    if not bridge_path.is_file():
+        failures.append(f"{fixture_id}: {raw_path}/src/bridges/http.rs is required")
+    elif ".no_proxy()" not in bridge_path.read_text(encoding="utf-8"):
+        failures.append(
+            f"{fixture_id}: {raw_path}/src/bridges/http.rs "
+            "missing scenario token '.no_proxy()'"
+        )
     if rust.get("bridges") != ["src/bridges"]:
         failures.append(
             f"{fixture_id}: {raw_path}/sifr.toml must declare "
@@ -40,7 +49,7 @@ def validate_async_reqwest_scenario(
         raw_path,
         dependencies,
         "reqwest",
-        "=0.13.4",
+        "=0.13.5",
         ["rustls", "json"],
         default_features=False,
     )
@@ -104,13 +113,18 @@ def run_async_reqwest_self_test(
             return cases, f"async reqwest baseline failed: {baseline_failures}"
         cases += 1
 
+        # An unrelated test token must not satisfy the production bridge policy.
+        decoy_path = fixture_dir / "examples/reqwest_loopback_runtime/tests/proxy_token_decoy.rs"
+        decoy_path.parent.mkdir(exist_ok=True)
+        decoy_path.write_text('const DECOY: &str = ".no_proxy()";\n', encoding="utf-8")
+
         mutation_cases = (
             (
                 "reqwest pin drift",
                 "examples/reqwest_loopback_runtime/Cargo.toml",
-                'version = "=0.13.4"',
-                'version = "0.13.4"',
-                "must pin version =0.13.4",
+                'version = "=0.13.5"',
+                'version = "0.13.5"',
+                "must pin version =0.13.5",
             ),
             (
                 "tokio feature drift",
@@ -134,7 +148,7 @@ def run_async_reqwest_self_test(
                 "trust.native-links",
             ),
             (
-                "proxy bypass drift",
+                "proxy bypass drift despite unrelated test token",
                 "examples/reqwest_loopback_runtime/src/bridges/http.rs",
                 ".no_proxy()",
                 ".proxy_defaults()",

@@ -16,7 +16,6 @@ cancellation = "bounded-kill-query-then-discard"
 [dependencies]
 futures-core = { workspace = true }
 mysql_async = { workspace = true, features = ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"] }
-mysql_common = { workspace = true }
 rustls = { workspace = true }
 sifr_runtime = { workspace = true }
 sifr_sql_runtime = { workspace = true }

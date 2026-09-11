@@ -1,8 +1,14 @@
 mod support;
 
-use std::collections::BTreeSet;
-use std::fs;
-use std::path::Path;
+#[allow(dead_code)]
+#[path = "support/cargo_edges.rs"]
+mod cargo_edges;
+#[allow(dead_code)]
+#[path = "support/cargo_inventory.rs"]
+mod cargo_inventory;
+#[allow(dead_code)]
+#[path = "support/cargo_vendor.rs"]
+mod cargo_vendor;
 
 use support::TestUnwrap as _;
 
@@ -46,59 +52,27 @@ fn num_bigint_direct_dependencies_use_the_latest_stable_release() {
 
 #[test]
 fn maintained_first_party_lock_edges_use_num_bigint_0_5_1() {
-    let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let mut lock_paths = Vec::new();
-    collect_lock_paths(&workspace_root, &mut lock_paths);
-    lock_paths.sort();
+    cargo_edges::first_party_edges("num-bigint", "0.5.1");
+}
 
-    let mut checked_edges = 0;
-    for lock_path in lock_paths {
-        let lock_source =
-            fs::read_to_string(&lock_path).test_unwrap("maintained Cargo.lock must be readable");
-        let lock: toml::Value =
-            toml::from_str(&lock_source).test_unwrap("maintained Cargo.lock must parse");
-        let packages = lock
-            .get("package")
-            .and_then(toml::Value::as_array)
-            .test_unwrap("maintained Cargo.lock packages must be an array");
-        let first_party_edges = packages
-            .iter()
-            .filter(|package| is_first_party(package))
-            .flat_map(dependencies)
-            .filter(|dependency| dependency.starts_with("num-bigint"))
-            .collect::<Vec<_>>();
-        if first_party_edges.is_empty() {
-            continue;
-        }
-        let versions = num_bigint_versions(packages);
-        assert!(
-            versions
-                .iter()
-                .all(|version| *version == "0.4.8" || *version == "0.5.1"),
-            "{} contains an unsupported num-bigint line: {versions:?}",
-            lock_path.display()
+#[test]
+fn sole_num_bigint_target_must_resolve_to_the_current_registry_identity() {
+    for version in ["0.4.8", "0.5.1"] {
+        let source = format!(
+            r#"[[package]]
+name = "num-bigint"
+version = "{version}"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+"#
         );
-        let expected_edge = if versions.len() == 1 {
-            "num-bigint"
-        } else {
-            "num-bigint 0.5.1"
-        };
-
-        for dependency in first_party_edges {
-            checked_edges += 1;
-            assert_eq!(
-                dependency,
-                expected_edge,
-                "{} gives a first-party package the wrong num-bigint line",
-                lock_path.display()
-            );
-        }
+        let lock: toml::Value = toml::from_str(&source).test_unwrap("lock");
+        let packages = cargo_edges::packages(&lock).test_unwrap("packages");
+        assert_eq!(
+            cargo_edges::current_edge(packages, "num-bigint", "num-bigint", "0.5.1").is_ok(),
+            version == "0.5.1"
+        );
     }
-
-    assert!(
-        checked_edges > 0,
-        "the maintained locks must contain first-party num-bigint edges"
-    );
+    assert!(cargo_edges::current_edge(&[], "num-bigint", "num-bigint", "0.5.1").is_err());
 }
 
 #[test]
@@ -131,28 +105,6 @@ fn bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines() {
     );
 }
 
-fn collect_lock_paths(directory: &Path, lock_paths: &mut Vec<std::path::PathBuf>) {
-    for entry in fs::read_dir(directory).test_unwrap("workspace directory must be readable") {
-        let entry = entry.test_unwrap("workspace entry must be readable");
-        let path = entry.path();
-        let name = entry.file_name();
-        if path.is_dir() {
-            if !matches!(name.to_str(), Some(".git" | "target" | "vendor")) {
-                collect_lock_paths(&path, lock_paths);
-            }
-        } else if name == "Cargo.lock" {
-            lock_paths.push(path);
-        }
-    }
-}
-
-fn is_first_party(package: &toml::Value) -> bool {
-    package
-        .get("name")
-        .and_then(toml::Value::as_str)
-        .is_some_and(|name| name == "sifr" || name.starts_with("sifr_"))
-}
-
 fn dependencies(package: &toml::Value) -> impl Iterator<Item = &str> {
     package
         .get("dependencies")
@@ -160,14 +112,6 @@ fn dependencies(package: &toml::Value) -> impl Iterator<Item = &str> {
         .into_iter()
         .flatten()
         .filter_map(toml::Value::as_str)
-}
-
-fn num_bigint_versions(packages: &[toml::Value]) -> BTreeSet<&str> {
-    packages
-        .iter()
-        .filter(|package| package.get("name").and_then(toml::Value::as_str) == Some("num-bigint"))
-        .filter_map(|package| package.get("version").and_then(toml::Value::as_str))
-        .collect()
 }
 
 fn assert_vendored_release(
@@ -201,4 +145,16 @@ fn assert_vendored_release(
         checksum.get("package").and_then(serde_json::Value::as_str),
         Some(lock_checksum)
     );
+}
+
+#[test]
+fn num_bigint_vendor_files_and_exact_selected_versions_are_authenticated() {
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("lock");
+    cargo_vendor::family(
+        &cargo_inventory::root(),
+        "num-bigint",
+        &["0.4.8", "0.5.1"],
+        cargo_edges::packages(&lock).test_unwrap("packages"),
+    )
+    .test_unwrap("Num BigInt vendor closure");
 }

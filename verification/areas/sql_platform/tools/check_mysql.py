@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the closed MySQL provider qualification record."""
+"""Validate the historical MySQL record and current root dependency declarations."""
 
 from __future__ import annotations
 
@@ -9,6 +9,8 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+
+import check_mysql_dependencies
 
 ROOT = Path(__file__).resolve().parents[4]
 RECORD = ROOT / "verification/areas/sql_platform/data/mysql_qualification.json"
@@ -25,7 +27,7 @@ def validate(data: dict[str, Any]) -> list[str]:
         errors.append("MySQL supported series must be exactly 8.4, 9.7, and 26.7")
     if any(not str(item.get("image", "")).startswith("mysql:") for item in series):
         errors.append("every MySQL series needs an official image")
-    expected_tools = {
+    expected_record_tools = {
         "lalrpop": "0.23.1",
         "lalrpop-util": "0.23.1",
         "mysql_async": "0.37.0",
@@ -33,10 +35,12 @@ def validate(data: dict[str, Any]) -> list[str]:
         "tokio": "1.53.1",
         "rustls": "0.23.43",
     }
-    if data.get("toolchain") != expected_tools:
-        errors.append("MySQL toolchain does not match the stable dependency baseline")
+    if data.get("toolchain") != expected_record_tools:
+        errors.append("MySQL recorded producer toolchain does not match the historical baseline")
+    expected_root_tools = {"lalrpop": "0.23.1", "lalrpop-util": "0.23.1", "tokio": "1.53.1", "rustls": "0.23.44"}
+    errors.extend(check_mysql_dependencies.validate(check_mysql_dependencies.load_inputs()))
     root_cargo = ROOT_CARGO.read_text(encoding="utf-8")
-    for crate, version in expected_tools.items():
+    for crate, version in expected_root_tools.items():
         keys = {crate, crate.replace("-", "_")}
         if not any(
             f'{key} = {{ version = "={version}"' in root_cargo
@@ -94,6 +98,9 @@ def self_test(data: dict[str, Any]) -> int:
     wrong_version = copy.deepcopy(data)
     wrong_version["toolchain"]["mysql_async"] = "0.36.0"
     mutations.append(wrong_version)
+    relabeled_producer = copy.deepcopy(data)
+    relabeled_producer["toolchain"]["mysql_async"] = "0.37.1"
+    mutations.append(relabeled_producer)
     missing_evidence = copy.deepcopy(data)
     missing_evidence["surfaces"][0]["evidence"] = ["missing"]
     mutations.append(missing_evidence)
@@ -102,7 +109,8 @@ def self_test(data: dict[str, Any]) -> int:
     mutations.append(missing_contract)
     if any(not validate(mutation) for mutation in mutations):
         raise SystemExit("MySQL checker accepted a required mutation")
-    print(f"MySQL qualification mutations rejected: {len(mutations)}")
+    print(f"Historical MySQL record mutations rejected: {len(mutations)}")
+    print(f"Current MySQL dependency mutations rejected: {check_mysql_dependencies.self_test()}")
     return 0
 
 
@@ -116,7 +124,7 @@ def main() -> int:
     errors = validate(data)
     if errors:
         raise SystemExit("\n".join(errors))
-    print("MySQL provider qualification ok")
+    print("Historical MySQL record and current dependency declarations ok")
     return 0
 
 

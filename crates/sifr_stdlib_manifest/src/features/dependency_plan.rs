@@ -277,7 +277,7 @@ fn retained_dependency_specs(feature: StdlibFeature) -> &'static [&'static str] 
         StdlibFeature::NumTraits => &["num-traits = \"=0.2.19\""],
         StdlibFeature::Rayon => &["rayon = \"=1.12.0\""],
         StdlibFeature::RustDecimal => &[
-            "rust_decimal = { version = \"=1.42.1\", features = [\"maths\", \"serde-with-str\"] }",
+            "rust_decimal = { version = \"=1.43.0\", features = [\"maths\", \"serde-with-str\"] }",
         ],
         StdlibFeature::Tokio => &[
             "tokio = { version = \"=1.53.1\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",

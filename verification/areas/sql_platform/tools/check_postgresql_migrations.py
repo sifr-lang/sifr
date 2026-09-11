@@ -108,7 +108,7 @@ def validate_sources(payload: dict[str, Any]) -> None:
     root = load_toml(REPO_ROOT / "Cargo.toml")
     dependencies = root["workspace"]["dependencies"]
     exact_versions = {
-        "rustls": "=0.23.43",
+        "rustls": "=0.23.44",
         "rustls-platform-verifier": "=0.7.0",
         "semver": "1.0.28",
         "sha2": "0.11.0",

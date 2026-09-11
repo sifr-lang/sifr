@@ -1,17 +1,33 @@
 sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 ├── sifr_runtime v0.0.0 (<repo>/crates/sifr_runtime)
+│   ├── memchr feature "default"
+│   │   ├── memchr v2.8.3
+│   │   └── memchr feature "std"
+│   │       ├── memchr v2.8.3
+│   │       └── memchr feature "alloc"
+│   │           └── memchr v2.8.3
 │   ├── encoding_rs feature "default"
-│   │   ├── encoding_rs v0.8.35
-│   │   │   └── cfg-if feature "default"
-│   │   │       └── cfg-if v1.0.4
+│   │   ├── encoding_rs v0.8.40
+│   │   │   ├── scopeguard v1.2.0
+│   │   │   ├── cfg-if feature "default"
+│   │   │   │   └── cfg-if v1.0.4
+│   │   │   ├── multiversion_no_op feature "default"
+│   │   │   │   └── multiversion_no_op v1.0.0 (proc-macro)
+│   │   │   ├── simdutf8 feature "aarch64_neon"
+│   │   │   │   └── simdutf8 v0.1.5
+│   │   │   └── simdutf8 feature "public_imp"
+│   │   │       └── simdutf8 v0.1.5
+│   │   │   [build-dependencies]
+│   │   │   └── rustversion feature "default"
+│   │   │       └── rustversion v1.0.22 (proc-macro)
 │   │   └── encoding_rs feature "alloc"
-│   │       └── encoding_rs v0.8.35 (*)
+│   │       └── encoding_rs v0.8.40 (*)
 │   ├── indexmap feature "default"
-│   │   ├── indexmap v2.14.0
+│   │   ├── indexmap v2.14.2
 │   │   │   ├── equivalent v1.0.2
 │   │   │   └── hashbrown v0.17.1
 │   │   └── indexmap feature "std"
-│   │       └── indexmap v2.14.0 (*)
+│   │       └── indexmap v2.14.2 (*)
 │   ├── num-bigint feature "std"
 │   │   ├── num-bigint v0.5.1
 │   │   │   ├── num-integer feature "i128"
@@ -91,10 +107,7 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     │   ├── regex v1.13.1 (*)
     │   ├── aho-corasick feature "std"
     │   │   ├── aho-corasick v1.1.5 (*)
-    │   │   └── memchr feature "std"
-    │   │       ├── memchr v2.8.3
-    │   │       └── memchr feature "alloc"
-    │   │           └── memchr v2.8.3
+    │   │   └── memchr feature "std" (*)
     │   ├── memchr feature "std" (*)
     │   ├── regex-automata feature "std"
     │   │   ├── regex-automata v0.4.18 (*)

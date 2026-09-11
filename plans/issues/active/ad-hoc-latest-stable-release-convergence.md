@@ -1,5 +1,80 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Item 48 — native SQLite convergence blocked on upstream bundling (2026-09-09)
+
+Status: `BLOCKED_EXTERNAL`. The approved SQLite 3.53.4 target is not qualified;
+the existing 3.53.2 implementation and its truthful evidence remain unchanged.
+This is the explicit upstream-bundling disposition allowed by Item 48, not
+completion, a waiver, or permission to proceed with dependent integration.
+
+- Sole transferred checkout: `/private/tmp/sifr-item47.GksHLc/codebase`, new
+  `codex/latest-stable-item48` branch from reviewed, unmerged Item 47 commit
+  `43b755f1f3f96889f20761cd68fc3ad343858a1b`. The old
+  `codex/latest-stable-item47` branch and all Item 47 evidence are preserved.
+- Read-only main comparison remains
+  `4b4cc339964baeeb6641e57dc669fef700a5fa24`; it is not this item's base.
+- Official [SQLite downloads](https://sqlite.org/download.html) and the
+  [3.53.4 release](https://sqlite.org/releaselog/3_53_4.html) still select the
+  approved target, released 2026-07-24. Its source ID is
+  `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`.
+  The official amalgamation archive SHA3-256 is
+  `628a44cfe82c66aed1ccbbe85a562d2e33ebe64b3288981ed76285612227934e`;
+  the `sqlite3.c` SHA3-256 is
+  `67f423e9ebbbdc473cbc4772c872ee6b89f31fde4ed0279a5c25d5f65c043a16`.
+  These are upstream published identities, not locally acquired artifacts.
+- Official registry indices still select Syntaqlite 0.9.0, Rusqlite 0.40.2,
+  and libsqlite3-sys 0.38.2 as their latest non-yanked stable packages.
+  Rusqlite's native dependency is `libsqlite3-sys ^0.38.2`; its `bundled`
+  feature selects that crate's bundled implementation.
+- The authenticated libsqlite3-sys 0.38.2 archive has SHA256
+  `f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8`.
+  Its actual `sqlite3/sqlite3.h:149` defines SQLite 3.53.2 / 3053002 and
+  source ID `2026-06-03 19:12:13 d6e03d8c777cfa2d35e3b60d8ec3e0187f3e9f99d8e2ee9cac695fd6fcdf1a24`.
+  The package's `build.rs` bundled branch compiles its own
+  `sqlite3/sqlite3.c` and copies its bundled bindings. Its flags configure
+  that source; they do not replace it. The authenticated Rusqlite README
+  explicitly documents the same 3.53.2 bundle at these package versions.
+- Syntaqlite's `pin-version` build feature defines the numeric version while
+  compiling its packaged parser/tokenizer C files. Changing
+  `SYNTAQLITE_SQLITE_VERSION` cannot upgrade the native runtime amalgamation.
+  Sifr's runtime additionally rejects a library other than 3053002 in
+  `crates/sifr_sql_sqlite_runtime/src/worker.rs`; its configuration and
+  compiler series agree. No label-only change, custom binding, vendor fork,
+  system-library path, compatibility lane, or fallback was introduced.
+
+Minimum resumption condition: the Rusqlite/libsqlite3-sys upstream owner must
+publish a compatible stable bundled-source release containing authentic SQLite
+3.53.4 C/header/binding inputs, with the existing required compile options.
+Then a fresh Item 48 implementation can select that legal graph, establish
+Syntaqlite grammar coherence, regenerate the SQLite component with the already
+authenticated SDK 34 / Rust 1.98.1 toolchain, and run all named Item 48 tests.
+A package number, changed grammar pin, or upstream source availability alone
+does not satisfy this condition. Item 49 cannot waive this prerequisite.
+
+Read-only proof: `/private/tmp/sifr-item47.GksHLc/item48/evidence/source-proof.json`,
+SHA256 `fc5f26b0017aa6af08d65c9290ebe8c1090b69b078715a654009b3c23305e7da`.
+It authenticates 258 files across the five existing canonical SQLite/parser
+crate archives, records 144 first-party input paths and all four producer
+maps, and verifies unchanged Item 47 locks, eleven WASM binaries, artifact
+receipts, review and terminal evidence. SDK archive/every installed SDK file,
+Rust compiler/Cargo/target libraries and canonical host LLVM also match their
+retained identities. No archive was acquired or extracted.
+
+The metadata allowance was twelve requests plus one explicitly released
+Rusqlite index request; all thirteen are accounted, including three web-open
+errors, three HTTP 403 responses and the first Rusqlite output truncation.
+No counter was reset. Source authentication passed in 8.578476958 seconds.
+The four named SQL suites and `rusqlite_dependency_version` were not run:
+the target-source prerequisite is externally blocked and native work was held.
+No current-candidate native test pass is inferred from Item 47 evidence.
+Reviews: zero initial, zero remediation. Gates/PR/push/merge/publication: none.
+Only this blocked record changes in the owned Git tree. Final light checks,
+resource closure, storage and exact record-commit identity are retained in the
+external Item 48 terminal, outside the commit it describes.
+
+Worker stops and retires after handing off that terminal. Resumption belongs
+to the orchestrator after the exact upstream condition changes.
+
 Status: active on 2026-09-08. Items 0–30, 36–39, 53–55, 58, 60, 66–67 and 69–70 are complete. Item 39 closed
 the runner dependency/API invariants; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.

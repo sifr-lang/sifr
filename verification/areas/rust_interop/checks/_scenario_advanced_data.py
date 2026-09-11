@@ -93,7 +93,7 @@ def validate_advanced_data_scenario(
         raw_path,
         workspace_dependencies,
         "arrow",
-        {"version": "=59.2.0", "default-features": True},
+        {"version": "=59.3.0", "default-features": True},
     )
     _require_dependency_entry(
         failures,
@@ -221,8 +221,8 @@ def run_advanced_data_self_test(
             (
                 "Arrow pin drift",
                 "examples/advanced_data_runtime/Cargo.toml",
-                'arrow = { version = "=59.2.0", default-features = true }',
-                'arrow = { version = "59.2.0", default-features = true }',
+                'arrow = { version = "=59.3.0", default-features = true }',
+                'arrow = { version = "59.3.0", default-features = true }',
                 "workspace dependency arrow",
             ),
             (

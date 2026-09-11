@@ -26,7 +26,7 @@ def validate(data: dict[str, Any]) -> list[str]:
         "rusqlite": "0.40.2",
         "libsqlite3-sys": "0.38.2",
         "sqlite": "3.53.2",
-        "wasi-sdk": "33",
+        "wasi-sdk": "34",
         "wit-bindgen": "0.61.1",
         "tokio": "1.53.1",
     }
@@ -134,6 +134,9 @@ def self_test(data: dict[str, Any]) -> int:
     wrong_version = copy.deepcopy(data)
     wrong_version["toolchain"]["rusqlite"] = "0.39.0"
     mutations.append(wrong_version)
+    wrong_sdk = copy.deepcopy(data)
+    wrong_sdk["toolchain"]["wasi-sdk"] = "33"
+    mutations.append(wrong_sdk)
     wrong_library = copy.deepcopy(data)
     wrong_library["supported_libraries"][0]["version_number"] = 3052000
     mutations.append(wrong_library)

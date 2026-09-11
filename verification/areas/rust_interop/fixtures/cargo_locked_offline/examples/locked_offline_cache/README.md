@@ -3,7 +3,7 @@
 
 This scenario certifies `--locked`, `--offline`, and `--frozen` Cargo behavior
 through a real exact-pinned registry dependency:
-`indexmap = { version = "=2.14.0", default-features = false }`. The wrapper
+`indexmap = { version = "=2.14.2", default-features = false }`. The wrapper
 executes
 `indexmap::IndexMap::<String, u32, RandomState>::with_hasher(RandomState::default())`
 with the wrapper's `std::collections::hash_map::RandomState`. This is the same

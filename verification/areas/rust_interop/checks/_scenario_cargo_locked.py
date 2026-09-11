@@ -15,7 +15,7 @@ INDEXMAP_CONSTRUCTOR = (
 )
 
 CARGO_LOCKED_SCENARIO_TOKENS = (
-    'indexmap = { version = "=2.14.0", default-features = false }',
+    'indexmap = { version = "=2.14.2", default-features = false }',
     INDEXMAP_CONSTRUCTOR,
     "--locked",
     "--offline",
@@ -50,7 +50,7 @@ def validate_cargo_locked_scenario(
         if isinstance(wrapper, dict)
         else None
     )
-    expected_indexmap = {"version": "=2.14.0", "default-features": False}
+    expected_indexmap = {"version": "=2.14.2", "default-features": False}
     if indexmap != expected_indexmap:
         failures.append(
             f"{fixture_id}: {raw_path}/rust/locked_bridge/Cargo.toml dependency "
@@ -127,7 +127,7 @@ def run_cargo_locked_self_test(
             (
                 "registry version drift",
                 "examples/locked_offline_cache/rust/locked_bridge/Cargo.toml",
-                'version = "=2.14.0"',
+                'version = "=2.14.2"',
                 'version = "=2.13.0"',
                 "indexmap must equal",
             ),
@@ -148,8 +148,8 @@ def run_cargo_locked_self_test(
             (
                 "lock checksum drift",
                 "examples/locked_offline_cache/Cargo.lock",
-                "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9",
-                "0466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9",
+                "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855",
+                "0c4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855",
                 "checksum",
             ),
             (

@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.67.1"
 name = "rust_decimal"
-version = "1.42.1"
+version = "1.43.0"
 authors = ["Paul Mason <paul@form1.co.nz>"]
 build = "build.rs"
 exclude = ["tests/generated/*"]
@@ -94,8 +94,7 @@ maths-nopanic = ["maths"]
 ndarray = ["dep:ndarray"]
 proptest = ["dep:proptest"]
 rand = ["dep:rand"]
-rkyv = ["dep:rkyv"]
-rkyv-safe = ["rkyv/validation"]
+rand-0_9 = ["dep:rand-0_9"]
 rocket-traits = [
     "dep:rocket",
     "std",
@@ -123,7 +122,7 @@ std = [
     "borsh?/std",
     "bytes?/std",
     "rand?/std",
-    "rkyv?/std",
+    "rand-0_9?/std",
     "serde?/std",
     "serde_json?/std",
 ]
@@ -163,6 +162,11 @@ harness = false
 [[bench]]
 name = "lib_benches"
 path = "benches/lib_benches.rs"
+
+[[bench]]
+name = "perf_ops"
+path = "benches/perf_ops.rs"
+harness = false
 
 [dependencies.arbitrary]
 version = "1.0"
@@ -224,7 +228,7 @@ optional = true
 default-features = false
 
 [dependencies.rand]
-version = "0.8"
+version = "0.8.6"
 optional = true
 default-features = false
 
@@ -234,22 +238,13 @@ optional = true
 default-features = false
 package = "rand"
 
-[dependencies.rkyv]
-version = "0.7.46"
-features = [
-    "size_32",
-    "std",
-]
-optional = true
-default-features = false
-
 [dependencies.rocket]
 version = "0.5.0-rc.3"
 optional = true
 default-features = false
 
 [dependencies.rust_decimal_macros]
-version = "1"
+version = "1.37.0"
 optional = true
 default-features = false
 
@@ -321,7 +316,7 @@ version = "0.19"
 default-features = false
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies.rand]
-version = "0.8"
+version = "0.8.6"
 features = ["getrandom"]
 default-features = false
 

@@ -6,7 +6,7 @@ members = [
 resolver = "3"
 
 [workspace.dependencies]
-arrow = { version = "=59.2.0", default-features = true }
+arrow = { version = "=59.3.0", default-features = true }
 candle = { package = "candle-core", version = "=0.11.0", default-features = false }
 datafusion = { version = "=55.0.0", default-features = true }
 ndarray = { version = "=0.17.2", default-features = true }

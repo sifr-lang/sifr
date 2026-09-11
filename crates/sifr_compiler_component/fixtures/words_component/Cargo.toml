@@ -12,8 +12,8 @@ crate-type = ["cdylib"]
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
 sha2 = "=0.11.0"
-wit-bindgen = "=0.57.1"
-wit-component = { version = "=0.254.0", optional = true }
+wit-bindgen = { version = "=0.61.1", default-features = false, features = ["macros", "realloc", "std"] }
+wit-component = { version = "=0.258.0", optional = true }
 
 [features]
 componentize = ["dep:wit-component"]

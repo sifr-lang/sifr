@@ -1,3 +1,12 @@
+#[allow(dead_code)]
+#[path = "support/cargo_edges.rs"]
+mod cargo_edges;
+#[allow(dead_code)]
+#[path = "support/cargo_inventory.rs"]
+mod cargo_inventory;
+#[allow(dead_code)]
+#[path = "support/cargo_vendor.rs"]
+mod cargo_vendor;
 mod support;
 
 use std::collections::BTreeSet;
@@ -75,49 +84,7 @@ fn base64_direct_dependency_uses_latest_stable_safe_features() {
 
 #[test]
 fn first_party_lock_edges_use_base64_0_23_1() {
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
-    let packages = lock
-        .get("package")
-        .and_then(toml::Value::as_array)
-        .test_unwrap("workspace lock packages must be an array");
-
-    let locked_versions = packages
-        .iter()
-        .filter(|package| package.get("name").and_then(toml::Value::as_str) == Some("base64"))
-        .filter_map(|package| package.get("version").and_then(toml::Value::as_str))
-        .collect::<Vec<_>>();
-    assert!(
-        locked_versions.contains(&"0.23.1"),
-        "Cargo.lock must contain base64 0.23.1: {locked_versions:?}"
-    );
-
-    let mut first_party_edges = packages
-        .iter()
-        .filter(|package| {
-            package
-                .get("name")
-                .and_then(toml::Value::as_str)
-                .is_some_and(|name| name == "sifr" || name.starts_with("sifr_"))
-        })
-        .flat_map(|package| {
-            package
-                .get("dependencies")
-                .and_then(toml::Value::as_array)
-                .into_iter()
-                .flatten()
-        })
-        .filter_map(toml::Value::as_str)
-        .filter(|dependency| dependency.starts_with("base64"))
-        .collect::<Vec<_>>();
-    first_party_edges.sort_unstable();
-
-    assert!(!first_party_edges.is_empty());
-    assert!(
-        first_party_edges
-            .iter()
-            .all(|dependency| *dependency == "base64 0.23.1"),
-        "all first-party Base64 edges must use 0.23.1: {first_party_edges:?}"
-    );
+    cargo_edges::first_party_edges("base64", "0.23.1");
 }
 
 #[test]
@@ -127,12 +94,6 @@ fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
         .get("package")
         .and_then(toml::Value::as_array)
         .test_unwrap("workspace lock packages must be an array");
-    let locked_base64_versions = packages
-        .iter()
-        .filter(|package| package.get("name").and_then(toml::Value::as_str) == Some("base64"))
-        .filter_map(|package| package.get("version").and_then(toml::Value::as_str))
-        .collect::<BTreeSet<_>>();
-
     let vendor_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../vendor");
     let mut vendored_packages = BTreeSet::new();
     for entry in fs::read_dir(&vendor_root).test_unwrap("vendor directory must be readable") {
@@ -174,6 +135,7 @@ fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
         vendored_packages.insert((name.to_string(), version.to_string()));
     }
 
+    let owners = cargo_inventory::local_owners();
     let mut required_base64_versions = BTreeSet::new();
     for package in packages {
         let Some(name) = package.get("name").and_then(toml::Value::as_str) else {
@@ -182,7 +144,8 @@ fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
         let Some(version) = package.get("version").and_then(toml::Value::as_str) else {
             continue;
         };
-        let is_owned_package = name == "sifr" || name.starts_with("sifr_");
+        let is_owned_package = package.get("source").is_none()
+            && owners.contains_key(&(name.to_owned(), version.to_owned()));
         let is_vendored_package =
             vendored_packages.contains(&(name.to_string(), version.to_string()));
         if !is_owned_package && !is_vendored_package {
@@ -200,17 +163,10 @@ fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
             if components.next() != Some("base64") {
                 continue;
             }
-            let dependency_version = components.next().unwrap_or_else(|| {
-                assert_eq!(
-                    locked_base64_versions.len(),
-                    1,
-                    "an unqualified Base64 lock edge requires one locked version"
-                );
-                locked_base64_versions
-                    .first()
-                    .copied()
-                    .test_unwrap("the Base64 lock version must exist")
-            });
+            let selected =
+                cargo_edges::resolve(packages, dependency).test_unwrap("Base64 target identity");
+            assert_eq!(selected["source"].as_str(), Some(cargo_inventory::REGISTRY));
+            let dependency_version = selected["version"].as_str().test_unwrap("Base64 version");
             required_base64_versions.insert(dependency_version);
         }
     }
@@ -222,4 +178,34 @@ fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
             "vendor must contain the Base64 {version} package required by a vendored or first-party lock edge"
         );
     }
+}
+
+#[test]
+fn base64_vendor_rejects_extra_versioned_directories_and_authenticates_files() {
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("lock");
+    let packages = cargo_edges::packages(&lock).test_unwrap("packages");
+    cargo_vendor::family(
+        &cargo_inventory::root(),
+        "base64",
+        &["0.22.1", "0.23.1"],
+        packages,
+    )
+    .test_unwrap("Base64 vendor closure");
+
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .test_unwrap("clock")
+        .as_nanos();
+    let temporary =
+        std::env::temp_dir().join(format!("sifr-item49-vendor-{}-{nonce}", std::process::id()));
+    let stale = temporary.join("vendor/base64-0.1.0");
+    fs::create_dir_all(&stale).test_unwrap("isolated vendor fixture");
+    fs::write(
+        stale.join("Cargo.toml"),
+        "[package]\nname = \"base64\"\nversion = \"0.1.0\"\n",
+    )
+    .test_unwrap("stale manifest");
+    let result = cargo_vendor::family(&temporary, "base64", &["0.22.1", "0.23.1"], packages);
+    fs::remove_dir_all(&temporary).test_unwrap("remove owned synthetic fixture");
+    assert!(result.is_err_and(|error| error.contains("stale or duplicate vendor identity")));
 }

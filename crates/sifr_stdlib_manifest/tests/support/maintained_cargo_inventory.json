@@ -1,0 +1,402 @@
+{
+  "manifests": [
+    "Cargo.toml",
+    "crates/sifr/Cargo.toml",
+    "crates/sifr_analysis/Cargo.toml",
+    "crates/sifr_codegen/Cargo.toml",
+    "crates/sifr_compiler_component/Cargo.toml",
+    "crates/sifr_compiler_component/fixtures/words_component/Cargo.toml",
+    "crates/sifr_diagnostics/Cargo.toml",
+    "crates/sifr_driver/Cargo.toml",
+    "crates/sifr_format/Cargo.toml",
+    "crates/sifr_frontend/Cargo.toml",
+    "crates/sifr_ipc/Cargo.toml",
+    "crates/sifr_ir/Cargo.toml",
+    "crates/sifr_lint/Cargo.toml",
+    "crates/sifr_lowering/Cargo.toml",
+    "crates/sifr_lsp/Cargo.toml",
+    "crates/sifr_package/Cargo.toml",
+    "crates/sifr_runtime/Cargo.toml",
+    "crates/sifr_rust_interop_catalog/Cargo.toml",
+    "crates/sifr_source/Cargo.toml",
+    "crates/sifr_sql_contract/Cargo.toml",
+    "crates/sifr_sql_dependency_lock/Cargo.toml",
+    "crates/sifr_sql_mysql/Cargo.toml",
+    "crates/sifr_sql_mysql_runtime/Cargo.toml",
+    "crates/sifr_sql_mysql_tools/Cargo.toml",
+    "crates/sifr_sql_postgresql/Cargo.toml",
+    "crates/sifr_sql_postgresql_runtime/Cargo.toml",
+    "crates/sifr_sql_postgresql_tools/Cargo.toml",
+    "crates/sifr_sql_runtime/Cargo.toml",
+    "crates/sifr_sql_sqlite/Cargo.toml",
+    "crates/sifr_sql_sqlite_runtime/Cargo.toml",
+    "crates/sifr_sql_sqlite_tools/Cargo.toml",
+    "crates/sifr_sql_tool/Cargo.toml",
+    "crates/sifr_stdlib/Cargo.toml",
+    "crates/sifr_stdlib_imports/Cargo.toml",
+    "crates/sifr_stdlib_manifest/Cargo.toml",
+    "crates/sifr_structural_identity/Cargo.toml",
+    "crates/sifr_syntax/Cargo.toml",
+    "crates/sifr_sysroot/Cargo.toml",
+    "crates/sifr_type_system/Cargo.toml",
+    "demos/python_binding_authoring/Cargo.toml",
+    "demos/python_dlpack/Cargo.toml",
+    "demos/python_environment_checks/Cargo.toml",
+    "demos/python_raw_api/Cargo.toml",
+    "verification/areas/core_language/fixtures/static_class_adapter/Cargo.toml",
+    "verification/areas/core_language/fixtures/static_class_adapter/negative/non_string_leaf_rejected/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_ambiguous_direct_import_root/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_ambiguous_direct_import_root/app/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_ambiguous_direct_import_root/math-v1/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_ambiguous_direct_import_root/math-v2/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_archive_missing_sifr_source/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_archive_omits_required_source/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_duplicate_public_api_symbol/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_explicit_file_outside_source_root/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_misplaced_cargo_sifr_metadata/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_missing_sifr_manifest/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_non_trivial_pure_marker/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_private_dependency_module/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_private_dependency_module/app/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_private_dependency_module/math/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_projection_manifest_pointer_drift/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_projection_pure_marker_missing/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_run_invalid_app_target/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_run_target_ambiguous/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_rust_only_depends_on_sifr/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_rust_only_depends_on_sifr/rust-helper/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_rust_only_depends_on_sifr/sifr-lib/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_script_recursion/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_selected_rust_only/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_selected_rust_only/rust-helper/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_selector_invalid/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_selector_invalid/app-one/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_selector_invalid/app-two/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_stale_trust_entry/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_transitive_dependency_import/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_transitive_dependency_import/app/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_transitive_dependency_import/image/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_transitive_dependency_import/math/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_untrusted_backend/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_untrusted_backend/rust-helper/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_workspace_duplicate_import_root/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_workspace_duplicate_import_root/alpha/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_workspace_duplicate_import_root/beta/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_workspace_duplicate_sifr_name/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_workspace_duplicate_sifr_name/alpha/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/package_workspace_duplicate_sifr_name/beta/Cargo.toml",
+    "verification/areas/diagnostics/fixtures/diagnostics/source_import_ambiguous_module/Cargo.toml",
+    "verification/areas/package_management/corpora/demo_repositories/sifr-demo-json-v2/Cargo.toml",
+    "verification/areas/package_management/fixtures/package/package_ambiguous_import_canonical/Cargo.toml",
+    "verification/areas/package_management/fixtures/package/package_bare_stdlib_import_canonical/Cargo.toml",
+    "verification/areas/package_management/fixtures/package/package_diagnostic_help_preserved/Cargo.toml",
+    "verification/areas/package_management/fixtures/package/package_fatal_source_map_no_import_ambiguity/Cargo.toml",
+    "verification/areas/package_management/fixtures/package/package_missing_import_canonical/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/rust/sifr_arrow_bridge/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/rust/sifr_tensor_bridge/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/bridge_type_matrix/examples/bridge_type_roundtrip/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/callbacks_call_scoped/examples/call_scoped_callback_runtime/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/cargo_locked_offline/examples/locked_offline_cache/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/cargo_locked_offline/examples/locked_offline_cache/rust/locked_bridge/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/ecosystem_cli_certification/examples/cli_feature_package/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/ecosystem_cli_certification/examples/cli_feature_package/rust/anyhow_surface/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/local_bridge_blake3/examples/local_blake3_bridge/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/local_bridge_blake3/examples/local_blake3_bridge/rust/blake3_backend/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/method_slot_table/examples/method_slot_runtime/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/rust/bindgen/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/rust/cc/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/rust/cxx/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/rust/zstd/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/opaque_resource_package_core/examples/package_resource_runtime/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/panic_abort_profile/examples/abort_profile_package/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/panic_abort_profile/examples/abort_profile_package/rust/legacy_backend/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/panic_boundary_wrapper_emission/examples/panic_wrapper_runtime/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/proc_macro_trust/examples/proc_macro_trust_package/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/proc_macro_trust/examples/proc_macro_trust_package/rust/prost_build/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/proc_macro_trust/examples/proc_macro_trust_package/rust/serde_derive/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/same_workspace_crate/examples/workspace_hash_crate/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/same_workspace_crate/examples/workspace_hash_crate/rust/workspace_hash/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/same_workspace_crate/negative/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/shared_bridge_crate/examples/shared_hash_bridge/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/shared_bridge_crate/examples/shared_hash_bridge/rust/sifr_shared_hash_bridge/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/static_program_arena_bridge/examples/static_program_runtime/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/structural_bridge_calls/examples/structural_bridge_runtime/Cargo.toml",
+    "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.toml"
+  ],
+  "locks": [
+    "Cargo.lock",
+    "crates/sifr_compiler_component/fixtures/words_component/Cargo.lock",
+    "demos/python_environment_checks/Cargo.lock",
+    "verification/areas/core_language/fixtures/static_class_adapter/negative/non_string_leaf_rejected/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/bridge_type_matrix/examples/bridge_type_roundtrip/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/callbacks_call_scoped/examples/call_scoped_callback_runtime/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/cargo_locked_offline/examples/locked_offline_cache/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/ecosystem_cli_certification/examples/cli_feature_package/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/local_bridge_blake3/examples/local_blake3_bridge/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/method_slot_table/examples/method_slot_runtime/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/opaque_resource_package_core/examples/package_resource_runtime/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/panic_abort_profile/examples/abort_profile_package/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/panic_boundary_wrapper_emission/examples/panic_wrapper_runtime/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/proc_macro_trust/examples/proc_macro_trust_package/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/same_workspace_crate/examples/workspace_hash_crate/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/same_workspace_crate/negative/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/shared_bridge_crate/examples/shared_hash_bridge/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/static_program_arena_bridge/examples/static_program_runtime/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/structural_bridge_calls/examples/structural_bridge_runtime/Cargo.lock",
+    "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.lock"
+  ],
+  "edges": [
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_codegen",
+      "package": "prettyplease",
+      "manifests": [
+        "crates/sifr_codegen/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_codegen",
+      "package": "syn",
+      "manifests": [
+        "crates/sifr_codegen/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_driver",
+      "package": "syn",
+      "manifests": [
+        "crates/sifr_driver/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_frontend",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_frontend/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_ir",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_ir/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_lowering",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_lowering/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_rust_interop_catalog",
+      "package": "rusqlite",
+      "manifests": [
+        "crates/sifr_rust_interop_catalog/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_sql_dependency_lock",
+      "package": "rusqlite",
+      "manifests": [
+        "crates/sifr_sql_dependency_lock/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_sql_sqlite",
+      "package": "rusqlite",
+      "manifests": [
+        "crates/sifr_sql_sqlite/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_sql_sqlite_runtime",
+      "package": "rusqlite",
+      "manifests": [
+        "crates/sifr_sql_sqlite_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_sql_sqlite_tools",
+      "package": "rusqlite",
+      "manifests": [
+        "crates/sifr_sql_sqlite_tools/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_stdlib",
+      "package": "base64",
+      "manifests": [
+        "crates/sifr_stdlib/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_stdlib",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_stdlib/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_stdlib_manifest",
+      "package": "itertools",
+      "manifests": [
+        "crates/sifr_stdlib_manifest/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/core_language/fixtures/static_class_adapter/negative/non_string_leaf_rejected/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/callbacks_call_scoped/examples/call_scoped_callback_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/ecosystem_cli_certification/examples/cli_feature_package/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/method_slot_table/examples/method_slot_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.lock",
+      "owner": "resource-lifecycle-runtime",
+      "package": "rusqlite",
+      "manifests": [
+        "verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/opaque_resource_package_core/examples/package_resource_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/panic_boundary_wrapper_emission/examples/panic_wrapper_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/static_program_arena_bridge/examples/static_program_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/structural_bridge_calls/examples/structural_bridge_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "verification/areas/rust_interop/fixtures/zero_copy_runtime_matrix/examples/crate_backed_view_runtime/Cargo.lock",
+      "owner": "sifr_runtime",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_runtime/Cargo.toml"
+      ]
+    }
+  ]
+}

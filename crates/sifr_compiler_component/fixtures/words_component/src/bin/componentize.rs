@@ -18,7 +18,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Err("componentize accepts exactly two paths".into());
     }
     let module = fs::read(input)?;
-    let component = ComponentEncoder::default().module(&module)?.encode()?;
+    let component = ComponentEncoder::default()
+        .module(&module)?
+        .validate(true)
+        .encode()?;
     fs::write(output, component)?;
     Ok(())
 }

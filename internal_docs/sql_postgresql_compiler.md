@@ -40,10 +40,11 @@ exact source commit for each supported PostgreSQL major.
 checksum, and source path. Qualification hashes each tracked path and file
 content. The result does not depend on a Git archive implementation.
 
-The build uses `cc` `1.4.4`, `wit-bindgen` `0.61.1`, WASI SDK `33`, and
-WASI-Virt `0.2.0`. The workspace and qualification records pin these latest
-stable tools. WASI SDK provides the C headers and Clang target for the checked
-`wasm32-wasip2` build. WASI-Virt is pinned at source commit
+The checked-in components were regenerated with the current workspace's `cc`
+`1.4.5`; the component qualification records that actual build adapter. The
+recorded build also uses `wit-bindgen` `0.61.1`, WASI SDK
+`34`, and WASI-Virt `0.2.0`. WASI SDK provides the C headers and Clang target for
+the checked `wasm32-wasip2` build. WASI-Virt is pinned at source commit
 `448f6df8f688cee5d6995e96b1ffc31f9bf00742` with a tracked-content checksum.
 
 `build_postgresql_components.py` builds all six component artifacts. Each guest
@@ -66,9 +67,13 @@ environment:
 
 ```bash
 git submodule update --init third_party/wasi-virt
-export WASI_SDK_PATH=/absolute/path/to/wasi-sdk-33.0
+export WASI_SDK_ARCHIVE=/absolute/path/to/wasi-sdk-34.0-arm64-macos.tar.gz
+export WASI_SDK_PATH=/absolute/path/to/wasi-sdk-34.0-arm64-macos
 python3 verification/areas/sql_platform/tools/build_postgresql_components.py
 ```
+
+The [component build contract](compiler_component_builds.md) defines archive
+authentication, complete source and producer receipts, and host-specific inputs.
 
 The WASI compatibility layer supplies only facilities required by extracted
 PostgreSQL parser code. It uses compiler atomics for spinlocks. It uses WASI

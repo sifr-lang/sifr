@@ -6,4 +6,4 @@ dependencies = ["numpy>=2.5.2,<3", "torch>=2.5,<3"]
 
 [tool.uv]
 package = false
-required-version = "==0.12.5"
+required-version = "==0.12.10"

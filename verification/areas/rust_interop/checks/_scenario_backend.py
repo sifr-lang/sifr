@@ -33,7 +33,7 @@ EXPECTED_WORKSPACE_DEPENDENCIES = {
         ],
     },
     "tower-http": {
-        "version": "=0.7.0",
+        "version": "=0.7.1",
         "default-features": False,
         "features": ["set-header"],
     },
@@ -106,7 +106,7 @@ def validate_backend_scenario(
             f'const QUERY_HASH: &str = "{QUERY_HASH}"',
             'TcpListener::bind("127.0.0.1:0")',
             "SetResponseHeaderLayer::if_not_present",
-            'HeaderValue::from_static("tower-http-0.7.0")',
+            'HeaderValue::from_static("tower-http-0.7.1")',
             'sqlx::query!("SELECT 13::INT4 AS value")',
             "query.sql() != QUERY",
             "with_graceful_shutdown",
@@ -142,7 +142,7 @@ def run_backend_self_test(
         mutations = (
             ("axum pin", "Cargo.toml", '"=0.8.9"', '"0.8.9"', "exact-pin"),
             ("sqlx pin", "Cargo.toml", '"=0.9.0"', '"0.9.0"', "exact-pin"),
-            ("tower pin", "Cargo.toml", '"=0.7.0"', '"0.7.0"', "exact-pin"),
+            ("tower pin", "Cargo.toml", '"=0.7.1"', '"0.7.1"', "exact-pin"),
             ("tokio pin", "Cargo.toml", '"=1.53.1"', '"1.53.1"', "exact-pin"),
             (
                 "inactive SQLx driver lock identity",

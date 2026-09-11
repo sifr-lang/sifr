@@ -324,7 +324,7 @@ flowchart LR
 
 **Hybrid dependency approach:** Infrastructure crates, parser, AST crates, and
 the formatter are referenced from the Ruff fork submodule, currently based on
-Ruff 0.16.4. Parser and AST crates include Sifr-specific syntax extensions and
+Ruff 0.16.6. Parser and AST crates include Sifr-specific syntax extensions and
 are imported through Cargo aliases as `sifr_python_ast` and
 `sifr_python_parser`. The Ruff fork formatter is Sifr-aware for parameter
 conventions, Sifr type syntax, generics, match/case, ownership-aware
@@ -332,8 +332,8 @@ collections, formatter pragmas, and Sifr-tagged docstring snippets. The root
 workspace pins Sifr's direct and generated-runtime support crates to the latest
 stable releases independently from the excluded Ruff fork, which keeps its own
 sub-workspace dependency pins. Sifr is latest-stable-only: the root
-`rust-toolchain.toml` and CI select Rust 1.98.0 exactly, while workspace
-manifests declare Rust 1.98 as the required compiler line.
+`rust-toolchain.toml` and CI select Rust 1.98.1 exactly, while workspace
+manifests declare Rust 1.98.1 as the required compiler.
 
 ```
 sifr/
@@ -363,7 +363,7 @@ sifr/
   #   ruff_python_formatter   -- Sifr-aware Ruff formatter rules and range formatting
 
   third_party/
-    ruff/                    (sifr-lang/ruff submodule, branch sifr/0.16.4-maintenance)
+    ruff/                    (sifr-lang/ruff submodule, branch sifr/0.16.6-maintenance)
       crates/
         ruff_python_ast/      (imported as Cargo dependency alias sifr_python_ast)
         ruff_python_parser/   (imported as Cargo dependency alias sifr_python_parser)

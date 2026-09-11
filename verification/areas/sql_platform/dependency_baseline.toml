@@ -55,25 +55,25 @@ yanked = false
 [[crate]]
 name = "rustls"
 display_name = "Rustls"
-version = "0.23.43"
+version = "0.23.44"
 policy = "latest-stable"
-release_authority = "https://crates.io/crates/rustls/0.23.43"
+release_authority = "https://crates.io/crates/rustls/0.23.44"
 api_authority = "https://crates.io/api/v1/crates/rustls"
-checksum = "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06"
+checksum = "6725596c3f2c3a0aef021139e145d4eafe314a6623e4680ca83852b2c67ab2ba"
 license = "Apache-2.0 OR ISC OR MIT"
-published_at = "2026-07-29T16:14:13.433091Z"
+published_at = "2026-09-07T09:17:42Z"
 yanked = false
 
 [[crate]]
 name = "tokio-rustls"
 display_name = "Tokio Rustls"
-version = "0.26.4"
+version = "0.26.5"
 policy = "latest-stable"
-release_authority = "https://crates.io/crates/tokio-rustls/0.26.4"
+release_authority = "https://crates.io/crates/tokio-rustls/0.26.5"
 api_authority = "https://crates.io/api/v1/crates/tokio-rustls"
-checksum = "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61"
+checksum = "b0c85f2c3ef0b1cd58b36682f4b17aaa995f0e5db534d85692b4903abce21f67"
 license = "MIT OR Apache-2.0"
-published_at = "2025-09-26T15:31:04.364599Z"
+published_at = "2026-09-04T08:52:06Z"
 yanked = false
 
 [[crate]]
@@ -153,28 +153,13 @@ yanked = false
 [[crate]]
 name = "mysql_async"
 display_name = "MySQL async client"
-version = "0.37.0"
+version = "0.37.1"
 policy = "latest-stable"
-release_authority = "https://crates.io/crates/mysql_async/0.37.0"
+release_authority = "https://crates.io/crates/mysql_async/0.37.1"
 api_authority = "https://crates.io/api/v1/crates/mysql_async"
-checksum = "3519e91b0d254ac1ffa495bc42053286cb2172ad7241d5b3b1b9f8a891f21ee2"
+checksum = "40d11da0e2d9fad4640c9f9198ee431c6d68444568f83ef1f10f3367270071e4"
 license = "MIT OR Apache-2.0"
-published_at = "2026-05-25T15:00:45.500490Z"
-yanked = false
-
-[[crate]]
-name = "mysql_common"
-display_name = "MySQL protocol primitives"
-version = "0.37.3"
-policy = "latest-compatible"
-compatible_min = "0.37.1"
-compatible_max = "0.38.0"
-compatibility_owner = "mysql_async@0.37.0"
-release_authority = "https://crates.io/crates/mysql_common/0.37.3"
-api_authority = "https://crates.io/api/v1/crates/mysql_common"
-checksum = "0f27695f286b461da077b8c2f72f47feaa04ce3c3f9c0976257410e90e21208a"
-license = "MIT OR Apache-2.0"
-published_at = "2026-06-17T09:22:13.781763Z"
+published_at = "2026-09-01T09:12:26Z"
 yanked = false
 
 [[crate]]
@@ -193,13 +178,13 @@ yanked = false
 [[crate]]
 name = "cc"
 display_name = "CC build adapter"
-version = "1.4.4"
+version = "1.4.5"
 policy = "latest-stable"
-release_authority = "https://crates.io/crates/cc/1.4.4"
+release_authority = "https://crates.io/crates/cc/1.4.5"
 api_authority = "https://crates.io/api/v1/crates/cc"
-checksum = "0ad534f4357a5264cce5019c989cf66a4f0dc4e0d1b1d15f8aacec0ff7360273"
+checksum = "005ec2760ca554fae18df7a11195552ec576cd665632a881bc011d5bb2fd4d80"
 license = "MIT OR Apache-2.0"
-published_at = "2026-08-21T08:20:10.205770Z"
+published_at = "2026-09-04T09:28:57Z"
 yanked = false
 
 [[crate]]

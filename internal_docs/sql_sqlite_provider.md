@@ -32,10 +32,15 @@ provider uses this exact stable set:
 | SQLite driver | `rusqlite` | 0.40.2 | `bundled`, `cache`, `hooks`, `limits`, and `unlock_notify` |
 | Native SQLite binding | `libsqlite3-sys` | 0.38.2 | `bundled` |
 | Bundled SQLite | SQLite amalgamation | 3.53.2 | default bundled compile flags |
-| Component C toolchain | WASI SDK | 33 | WASI Preview 2 target |
+| Component C toolchain | WASI SDK | 34 | WASI Preview 2 target |
 | Component ABI generator | `wit-bindgen` | 0.61.1 | macros, reallocation, and standard support |
 | Component capability virtualizer | WASI-Virt | 0.2.0 at `448f6df8f688cee5d6995e96b1ffc31f9bf00742` | deny-by-default WASI composition |
 | Async coordination | Tokio | 1.53.1 | macros, runtime, synchronization, and time |
+
+The regenerated component uses the authenticated [WASI SDK 34 release](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-34).
+Its actual compiler, sysroot, source, and artifact digests are recorded by the
+[component build workflow](compiler_component_builds.md). This does not replace
+the historical native library-matrix evidence or change SQLite's source selection.
 
 Cargo sets `SYNTAQLITE_SQLITE_VERSION=3053002` for all repository builds. No
 `SYNTAQLITE_CFLAG_*` value is set. Therefore, the parser grammar and the bundled

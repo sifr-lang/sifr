@@ -1,3 +1,12 @@
+#[allow(dead_code)]
+#[path = "support/cargo_edges.rs"]
+mod cargo_edges;
+#[allow(dead_code)]
+#[path = "support/cargo_inventory.rs"]
+mod cargo_inventory;
+#[allow(dead_code)]
+#[path = "support/cargo_vendor.rs"]
+mod cargo_vendor;
 mod support;
 
 use support::TestUnwrap as _;
@@ -5,58 +14,6 @@ use support::TestUnwrap as _;
 const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
 const CODEGEN_MANIFEST: &str = include_str!("../../sifr_codegen/Cargo.toml");
 const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
-
-const MAINTAINED_LOCKS: &[(&str, &str)] = &[
-    ("Cargo.lock", WORKSPACE_LOCK),
-    (
-        "advanced_data_runtime",
-        include_str!(
-            "../../../verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.lock"
-        ),
-    ),
-    (
-        "async_runtime_reqwest",
-        include_str!(
-            "../../../verification/areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/Cargo.lock"
-        ),
-    ),
-    (
-        "bridge_type_matrix",
-        include_str!(
-            "../../../verification/areas/rust_interop/fixtures/bridge_type_matrix/examples/bridge_type_roundtrip/Cargo.lock"
-        ),
-    ),
-    (
-        "callback_subscription_ecosystem",
-        include_str!(
-            "../../../verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.lock"
-        ),
-    ),
-    (
-        "ecosystem_backend_certification",
-        include_str!(
-            "../../../verification/areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.lock"
-        ),
-    ),
-    (
-        "native_build_script",
-        include_str!(
-            "../../../verification/areas/rust_interop/fixtures/native_build_script/examples/native_trust_package/Cargo.lock"
-        ),
-    ),
-    (
-        "opaque_resource_matrix",
-        include_str!(
-            "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.lock"
-        ),
-    ),
-    (
-        "proc_macro_trust",
-        include_str!(
-            "../../../verification/areas/rust_interop/fixtures/proc_macro_trust/examples/proc_macro_trust_package/Cargo.lock"
-        ),
-    ),
-];
 
 const VENDORED_RELEASES: &[(&str, &str, &str, &str)] = &[
     (
@@ -73,7 +30,7 @@ const VENDORED_RELEASES: &[(&str, &str, &str, &str)] = &[
     ),
     (
         "syn",
-        "3.0.4",
+        "3.0.5",
         include_str!("../../../vendor/syn/Cargo.toml"),
         include_str!("../../../vendor/syn/.cargo-checksum.json"),
     ),
@@ -96,7 +53,7 @@ fn direct_syntax_dependencies_use_the_latest_stable_unit() {
         .test_unwrap("workspace must declare Syn");
     assert_eq!(
         syn.get("version").and_then(toml::Value::as_str),
-        Some("3.0.4")
+        Some("3.0.5")
     );
     assert_eq!(
         string_array(syn, "features"),
@@ -128,6 +85,20 @@ fn direct_syntax_dependencies_use_the_latest_stable_unit() {
         ["printing", "visit-mut"]
     );
     assert_eq!(
+        dependencies.get("quote").and_then(toml::Value::as_str),
+        Some("1.0.47")
+    );
+    let lock = parse_lock(WORKSPACE_LOCK);
+    let quote = lock_packages(&lock)
+        .iter()
+        .find(|package| package_name(package) == Some("quote"))
+        .test_unwrap("workspace must lock Quote");
+    assert_eq!(package_version(quote), Some("1.0.47"));
+    assert_eq!(
+        quote.get("checksum").and_then(toml::Value::as_str),
+        Some("1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001")
+    );
+    assert_eq!(
         dependencies
             .get("prettyplease")
             .and_then(toml::Value::as_str),
@@ -136,36 +107,9 @@ fn direct_syntax_dependencies_use_the_latest_stable_unit() {
 }
 
 #[test]
-fn first_party_edges_and_maintained_locks_use_syn_3_0_4() {
-    let lock = parse_lock(WORKSPACE_LOCK);
-    let packages = lock_packages(&lock);
-    assert_package_edges(
-        packages,
-        "sifr_codegen",
-        &["prettyplease 0.3.0", "syn 3.0.4"],
-    );
-    assert_package_edges(packages, "sifr_driver", &["syn 3.0.4"]);
-
-    let mut checked = 0;
-    for (name, source) in MAINTAINED_LOCKS {
-        let lock = parse_lock(source);
-        let syn_3_versions = lock_packages(&lock)
-            .iter()
-            .filter(|package| package_name(package) == Some("syn"))
-            .filter_map(package_version)
-            .filter(|version| version.starts_with("3."))
-            .collect::<Vec<_>>();
-        if syn_3_versions.is_empty() {
-            continue;
-        }
-        checked += 1;
-        assert_eq!(
-            syn_3_versions,
-            ["3.0.4"],
-            "{name} must contain only the current Syn 3 release"
-        );
-    }
-    assert_eq!(checked, MAINTAINED_LOCKS.len());
+fn first_party_edges_and_maintained_locks_use_current_syn_3() {
+    cargo_edges::first_party_edges("syn", "3.0.5");
+    cargo_edges::first_party_edges("prettyplease", "0.3.0");
 }
 
 #[test]
@@ -236,22 +180,47 @@ fn package_version(package: &toml::Value) -> Option<&str> {
     package.get("version").and_then(toml::Value::as_str)
 }
 
-fn assert_package_edges(packages: &[toml::Value], name: &str, expected: &[&str]) {
-    let package = packages
-        .iter()
-        .find(|package| package_name(package) == Some(name))
-        .test_unwrap("first-party package must exist in Cargo.lock");
-    let dependencies = package
-        .get("dependencies")
-        .and_then(toml::Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(toml::Value::as_str)
-        .collect::<Vec<_>>();
-    for edge in expected {
-        assert!(
-            dependencies.contains(edge),
-            "{name} must contain lock edge {edge}: {dependencies:?}"
-        );
+#[test]
+fn syntax_vendor_files_and_exact_selected_versions_are_authenticated() {
+    let lock = parse_lock(WORKSPACE_LOCK);
+    for (name, versions) in [
+        ("syn", ["2.0.117", "3.0.5"]),
+        ("prettyplease", ["0.2.37", "0.3.0"]),
+    ] {
+        cargo_vendor::family(
+            &cargo_inventory::root(),
+            name,
+            &versions,
+            lock_packages(&lock),
+        )
+        .test_unwrap("syntax vendor closure");
     }
+}
+
+#[test]
+fn syntax_owner_rejects_an_extra_old_direct_edge() {
+    let mut lock = parse_lock(WORKSPACE_LOCK);
+    let package = lock["package"]
+        .as_array_mut()
+        .test_unwrap("packages")
+        .iter_mut()
+        .find(|package| package_name(package) == Some("sifr_codegen"))
+        .test_unwrap("codegen");
+    package["dependencies"]
+        .as_array_mut()
+        .test_unwrap("dependencies")
+        .push(toml::Value::String("prettyplease 0.2.37".into()));
+    let packages = lock_packages(&lock);
+    let owner = packages
+        .iter()
+        .find(|package| package_name(package) == Some("sifr_codegen"))
+        .test_unwrap("owner");
+    let results = cargo_edges::edges(owner)
+        .test_unwrap("edges")
+        .into_iter()
+        .filter(|edge| edge.split_whitespace().next() == Some("prettyplease"))
+        .map(|edge| cargo_edges::current_edge(packages, edge, "prettyplease", "0.3.0"))
+        .collect::<Vec<_>>();
+    assert_eq!(results.len(), 2);
+    assert!(results.iter().any(Result::is_err));
 }

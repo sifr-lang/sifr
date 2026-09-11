@@ -11,10 +11,10 @@ from typing import Any, Callable
 ScenarioValidator = Callable[[list[str], str, Path, dict[str, Any]], int]
 
 NATIVE_BUILD_SCENARIO_TOKENS = (
-    'bindgen_upstream = { package = "bindgen", version = "=0.72.1"',
-    'cc_upstream = { package = "cc", version = "=1.4.4"',
-    'cxx = { version = "=1.0.199"',
-    'zstd_upstream = { package = "zstd", version = "=0.13.3"',
+    'bindgen_upstream = { package = "bindgen", version = "=0.73.2"',
+    'cc_upstream = { package = "cc", version = "=1.4.5"',
+    'cxx = { version = "=1.0.200"',
+    'zstd_upstream = { package = "zstd", version = "=0.14.0"',
     "cc_upstream::Build::new()",
     '.compile("sifr_cc_probe")',
     "bindgen_upstream::Builder::default()",
@@ -94,18 +94,18 @@ def validate_native_build_scenario(
     expected_workspace_dependencies = {
         "bindgen_upstream": {
             "package": "bindgen",
-            "version": "=0.72.1",
+            "version": "=0.73.2",
             "default-features": True,
         },
         "cc_upstream": {
             "package": "cc",
-            "version": "=1.4.4",
+            "version": "=1.4.5",
             "default-features": True,
         },
-        "cxx": {"version": "=1.0.199", "default-features": True},
+        "cxx": {"version": "=1.0.200", "default-features": True},
         "zstd_upstream": {
             "package": "zstd",
-            "version": "=0.13.3",
+            "version": "=0.14.0",
             "default-features": True,
         },
     }
@@ -188,8 +188,8 @@ def run_native_build_self_test(
             (
                 "cc pin drift",
                 "examples/native_trust_package/Cargo.toml",
-                'version = "=1.4.4"',
-                'version = "1.4.4"',
+                'version = "=1.4.5"',
+                'version = "1.4.5"',
                 "workspace dependencies must exact-pin",
             ),
             (
@@ -265,9 +265,9 @@ def run_native_build_self_test(
             (
                 "artifact version drift",
                 "examples/native_trust_package/rust/cc/build.rs",
-                "cc=1.4.4;compiled=sifr_cc_probe",
+                "cc=1.4.5;compiled=sifr_cc_probe",
                 "cc=0.0.0;compiled=sifr_cc_probe",
-                "must contain cc=1.4.4;compiled=sifr_cc_probe",
+                "must contain cc=1.4.5;compiled=sifr_cc_probe",
             ),
             (
                 "source-tree artifact drift",
@@ -349,23 +349,23 @@ def _validate_build_sources(
             "cc_upstream::Build::new()",
             '.compile("sifr_cc_probe")',
             "sifr-cc-evidence.txt",
-            "cc=1.4.4;compiled=sifr_cc_probe",
+            "cc=1.4.5;compiled=sifr_cc_probe",
         ),
         "rust/bindgen/build.rs": (
             "bindgen_upstream::Builder::default()",
             '.allowlist_function("sifr_bindgen_probe")',
             "sifr-bindgen-bindings.rs",
             "sifr-bindgen-evidence.txt",
-            "bindgen=0.72.1;function=sifr_bindgen_probe",
+            "bindgen=0.73.2;function=sifr_bindgen_probe",
         ),
         "rust/cxx/build.rs": (
             "sifr-cxx-evidence.txt",
-            "cxx=1.0.199;bridge=sifr_cxx_probe",
+            "cxx=1.0.200;bridge=sifr_cxx_probe",
         ),
         "rust/cxx/src/lib.rs": ("#[cxx::bridge]", "sifr_cxx_probe_value"),
         "rust/zstd/build.rs": (
             "sifr-zstd-evidence.txt",
-            "zstd=0.13.3;level=3",
+            "zstd=0.14.0;level=3",
         ),
         "rust/zstd/src/lib.rs": (
             "zstd_upstream::stream::encode_all",

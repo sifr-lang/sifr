@@ -11,7 +11,7 @@ bytemuck = { version = "=1.25.2" }
 bytes = { version = "=1.12.1" }
 memmap2 = { version = "=0.9.11" }
 sifr_runtime = { path = "../../../../../../../crates/sifr_runtime" }
-zerocopy = { version = "=0.8.56", features = ["derive"] }
+zerocopy = { version = "=0.8.57", features = ["derive"] }
 
 [package.metadata.sifr]
 manifest = "sifr.toml"
