@@ -43,6 +43,8 @@ use member_demand::prune_unused_members;
 use method_demand::{demanded_inherent_method_names, prune_inherent_methods};
 use syntax_cleanup::canonicalize_syntax;
 
+type CanonicalProjectWithNames = (BTreeMap<String, String>, BTreeMap<String, String>);
+
 /// Canonicalize compiler-owned identifiers after every generated source fragment
 /// has been assembled into one Rust file.
 ///
@@ -74,7 +76,7 @@ pub fn canonicalize_generated_rust_project(
 /// materializers can resolve physical module paths without guessing names again.
 pub fn canonicalize_generated_rust_project_with_names(
     sources: &BTreeMap<String, String>,
-) -> Result<(BTreeMap<String, String>, BTreeMap<String, String>), String> {
+) -> Result<CanonicalProjectWithNames, String> {
     let fields = field_name_cleanup::canonicalize_fields(sources)?;
     let names = identifier_canonicalizer::project_name_map(&fields)?;
     let canonical = fields

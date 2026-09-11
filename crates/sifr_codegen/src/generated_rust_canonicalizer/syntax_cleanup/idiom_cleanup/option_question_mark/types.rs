@@ -40,7 +40,7 @@ pub(super) struct Types {
     generic_names: HashSet<String>,
     ambiguous_bindings: HashSet<String>,
     external_shadows: HashSet<String>,
-    opaque_types: bool,
+    opaque_definitions: bool,
     pub(super) ambiguous_methods: HashSet<String>,
 }
 
@@ -81,8 +81,6 @@ fn standard_value(name: &str, path: &syn::Path) -> Value {
 
 impl Types {
     pub(super) fn collect(file: &syn::File) -> Self {
-        let mut types = Self::default();
-        types.items("", &file.items);
         struct Boundaries<'a>(&'a mut Types);
         impl<'ast> Visit<'ast> for Boundaries<'_> {
             fn visit_type_param(&mut self, parameter: &'ast syn::TypeParam) {
@@ -108,12 +106,14 @@ impl Types {
                 visit::visit_item_trait(self, item);
             }
             fn visit_item_macro(&mut self, _: &'ast syn::ItemMacro) {
-                self.0.opaque_types = true;
+                self.0.opaque_definitions = true;
                 self.0
                     .ambiguous_methods
                     .extend(METHODS.iter().map(|s| (*s).to_owned()));
             }
         }
+        let mut types = Self::default();
+        types.items("", &file.items);
         Boundaries(&mut types).visit_file(file);
         let imports_closed = types.imports.values().all(|(scope, path, absolute)| {
             types
@@ -347,7 +347,7 @@ impl Types {
             syn::Type::Group(group) => self.ty_at(scope, &group.elem, owner, depth + 1),
             syn::Type::Slice(_) | syn::Type::Array(_) => Value::Sequence,
             syn::Type::Path(path) if path.qself.is_none() => {
-                if self.opaque_types {
+                if self.opaque_definitions {
                     return Value::Unknown;
                 }
                 let parts: Vec<_> = path

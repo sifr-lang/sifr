@@ -133,7 +133,7 @@ fn block_flow(block: &syn::Block, state: &mut DropState, tail_use: ValueUse) -> 
                 expression_flow(expression, state, ValueUse::Discarded)?
             }
             syn::Stmt::Item(_) => Flow::Continues,
-            _ => return None,
+            syn::Stmt::Macro(_) => return None,
         };
         if flow == Flow::Returned {
             state.trivial = outer_trivial;

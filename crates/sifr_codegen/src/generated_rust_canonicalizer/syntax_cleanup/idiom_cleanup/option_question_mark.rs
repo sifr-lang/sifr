@@ -30,7 +30,7 @@ struct Rewriter {
 }
 
 impl Rewriter {
-    fn bind(&mut self, pattern: &syn::Pat, kind: Value) {
+    fn bind(&mut self, pattern: &syn::Pat, kind: &Value) {
         struct Names(Vec<String>);
         impl<'ast> Visit<'ast> for Names {
             fn visit_pat_ident(&mut self, binding: &'ast syn::PatIdent) {
@@ -127,7 +127,7 @@ impl Rewriter {
         let previous = std::mem::take(&mut self.bindings);
         for argument in &signature.inputs {
             if let syn::FnArg::Typed(argument) = argument {
-                self.bind(&argument.pat, self.type_kind(&argument.ty));
+                self.bind(&argument.pat, &self.type_kind(&argument.ty));
             } else if let syn::FnArg::Receiver(receiver) = argument {
                 let value = self
                     .owner
@@ -198,7 +198,6 @@ impl VisitMut for Rewriter {
                 self.local_types.insert(name.to_string());
             }
             if let syn::Item::Use(item) = item {
-                self.local_imports = true;
                 struct Imports<'a>(&'a mut HashSet<String>);
                 impl<'ast> Visit<'ast> for Imports<'_> {
                     fn visit_use_name(&mut self, name: &'ast syn::UseName) {
@@ -208,6 +207,7 @@ impl VisitMut for Rewriter {
                         self.0.insert(name.rename.to_string());
                     }
                 }
+                self.local_imports = true;
                 Imports(&mut self.local_types).visit_use_tree(&item.tree);
                 // Unknown block globs can introduce any type spelling.
                 if matches!(&item.tree, syn::UseTree::Glob(_)) {
@@ -239,7 +239,7 @@ impl VisitMut for Rewriter {
                 .as_ref()
                 .map_or(Value::Unknown, |init| self.expression_kind(&init.expr)),
         };
-        self.bind(&local.pat, owned);
+        self.bind(&local.pat, &owned);
     }
 
     fn visit_expr_closure_mut(&mut self, closure: &mut syn::ExprClosure) {
@@ -249,7 +249,7 @@ impl VisitMut for Rewriter {
                 syn::Pat::Type(typed) => self.type_kind(&typed.ty),
                 _ => Value::Unknown,
             };
-            self.bind(pattern, owned);
+            self.bind(pattern, &owned);
         }
         self.visit_expr_mut(&mut closure.body);
         self.bindings = previous;
@@ -257,7 +257,7 @@ impl VisitMut for Rewriter {
 
     fn visit_arm_mut(&mut self, arm: &mut syn::Arm) {
         let previous = self.bindings.clone();
-        self.bind(&arm.pat, Value::Unknown);
+        self.bind(&arm.pat, &Value::Unknown);
         visit_mut::visit_arm_mut(self, arm);
         self.bindings = previous;
     }
@@ -265,14 +265,14 @@ impl VisitMut for Rewriter {
     fn visit_expr_for_loop_mut(&mut self, loop_: &mut syn::ExprForLoop) {
         self.visit_expr_mut(&mut loop_.expr);
         let previous = self.bindings.clone();
-        self.bind(&loop_.pat, Value::Unknown);
+        self.bind(&loop_.pat, &Value::Unknown);
         self.visit_block_mut(&mut loop_.body);
         self.bindings = previous;
     }
 
     fn visit_expr_let_mut(&mut self, let_: &mut syn::ExprLet) {
         self.visit_expr_mut(&mut let_.expr);
-        self.bind(&let_.pat, Value::Unknown);
+        self.bind(&let_.pat, &Value::Unknown);
     }
 
     fn visit_expr_if_mut(&mut self, if_: &mut syn::ExprIf) {

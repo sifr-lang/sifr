@@ -17,10 +17,6 @@ pub(super) fn visit_path<'ast, V: Visit<'ast>>(visitor: &mut V, path: &'ast syn:
 }
 
 pub(super) fn visit_import<'ast, V: Visit<'ast>>(visitor: &mut V, item: &'ast syn::ItemUse) {
-    if item.leading_colon.is_none() {
-        visit::visit_item_use(visitor, item);
-        return;
-    }
     fn bindings<'ast, V: Visit<'ast>>(visitor: &mut V, tree: &'ast syn::UseTree) {
         match tree {
             syn::UseTree::Path(path) => bindings(visitor, &path.tree),
@@ -33,6 +29,10 @@ pub(super) fn visit_import<'ast, V: Visit<'ast>>(visitor: &mut V, item: &'ast sy
             syn::UseTree::Rename(rename) => visitor.visit_ident(&rename.rename),
             syn::UseTree::Glob(_) => {}
         }
+    }
+    if item.leading_colon.is_none() {
+        visit::visit_item_use(visitor, item);
+        return;
     }
     for attribute in &item.attrs {
         visitor.visit_attribute(attribute);

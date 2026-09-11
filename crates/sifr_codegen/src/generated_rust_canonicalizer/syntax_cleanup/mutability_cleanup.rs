@@ -480,10 +480,10 @@ impl<'ast> Visit<'ast> for MutatingUseCollector<'_> {
                 let explicit = pattern_type_owner(&local.pat).map(|owner| HashSet::from([owner]));
                 let owners =
                     explicit.unwrap_or_else(|| self.expression_owner_candidates(&init.expr));
-                if !owners.is_empty() {
-                    self.binding_owners.insert(name, owners);
-                } else {
+                if owners.is_empty() {
                     self.binding_owners.remove(&name);
+                } else {
+                    self.binding_owners.insert(name, owners);
                 }
             }
             if let Some((_, diverge)) = &init.diverge {
