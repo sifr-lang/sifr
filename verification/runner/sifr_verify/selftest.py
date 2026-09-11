@@ -37,6 +37,7 @@ from .release_evidence_selftest import (
     release_report_production_self_test,
 )
 from .reports import parse_log
+from .runtime_sanitizer_checks import policy_checks as runtime_sanitizer_policy_checks
 from .results import build_result
 from .schemas import (
     load_schema,
@@ -52,6 +53,7 @@ GOVERNANCE_SCHEMA_COUNT = 20
 def run_all() -> list[str]:
     checks = [
         ("generated Cargo setup policy checks", generated_cargo_setup_policy_checks),
+        ("runtime sanitizer target checks", runtime_sanitizer_policy_checks),
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
         ("cache-aware step budget self-test", step_budget_self_test),
