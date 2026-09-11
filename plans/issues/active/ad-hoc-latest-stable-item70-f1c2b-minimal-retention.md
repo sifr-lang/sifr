@@ -1,5 +1,34 @@
 # Item 70-F1C2B: minimal supported-release retention
 
+COMPLETE via [PR #3825](https://github.com/sifr-lang/sifr/pull/3825), merged
+`4faa48b76044ef742a95bc22eeaac85ad0e404bf` on2026-09-11T21:38:30Z.
+Final candidate `a5a5e042239573c42ee7c76945287a383a06a1ab`, tree
+`70ecf14f8df00ef221f108b6ac0a50b70fe8e8af`, exact merge base
+`81f73f4170da26df1606449d413ff6e7fc082328`.
+Eight named offline tests PASS in5.468s on Python3.14.7, diff PASS and
+file-size PASS (3767files). [Validation/review identities](https://github.com/sifr-lang/sifr/pull/3825#issuecomment-5640931669)
+and [final raw Opus response](https://github.com/sifr-lang/sifr/pull/3825#issuecomment-5640931829)
+are outside the reviewed tree. Final review SATISFIED/no blockers, raw SHA256
+`cf9588d254f391e76320c4f30bf758bf1bdbda101b2fd8d6b8af5aa7e4533181`.
+
+Counters: initial1, remediation1, Sifr gates0. Initial review of `fcde021980`
+also passed, but the worker independently found the actual stable publisher
+retains separate sysroots while the nine-asset verifier covers alpha/beta.
+The correction restored those required stable assets and received the sole
+final review; no historical counter reset. Source/test-source/docs only,
+unchanged schema shape/publication primitives and no gate-bearing inputs.
+
+Nonblocking observations remain observations, not new phase requirements:
+retired-ZIP metadata digests are recorded claims without retained ZIP-byte
+authentication; retained asset digests and their index/producer links remain
+fully checked. Existing manual-suite enrollment and minor mapping/old-summary
+wording suggestions do not add work. No third review or further source edits.
+No qualification, live upload, credential/configuration operation, historical
+artifact deletion or heavy capacity reservation occurred. Stop this item;
+prospective qualification remains with its existing owners and prerequisites.
+
+The following registration and consumer policy describe the completed scope.
+
 Registration, 2026-09-11. Owner: `/root/minimal_release_retention`, private
 clone `/private/tmp/sifr-item70-f1c2b.mWcinY/codebase`, branch
 `codex/item70-f1c2b-minimal-retention`, base

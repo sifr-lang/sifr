@@ -2,6 +2,15 @@
 
 ## Current retention supersession — Item70-F1C2B, 2026-09-11
 
+F1C2B minimal retention cleanup is COMPLETE via [PR #3825](https://github.com/sifr-lang/sifr/pull/3825),
+candidate `a5a5e042239573c42ee7c76945287a383a06a1ab`, merged
+`4faa48b76044ef742a95bc22eeaac85ad0e404bf`. Eight focused tests and shared
+guards PASS; final Opus SATISFIED/no blockers; counters initial1/remediation1/
+gates0. [Exact evidence](https://github.com/sifr-lang/sifr/pull/3825#issuecomment-5640931669).
+All20 existing stable assets remain required, including separate sysroots:
+the nine-file verifier is alpha/beta only. No live qualification/publication
+or historical deletion. Record-only closure requires no further review/gate.
+
 The user's explicit minimal retention direction supersedes historical blanket
 all-byte archival, R2 provisioning and independently administered copy
 requirements in Item70/F1A/F1B/F1C0/F1C1/F1C2B/F1D. The bounded implementation and frozen
