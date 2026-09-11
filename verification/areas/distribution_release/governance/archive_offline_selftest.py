@@ -160,9 +160,6 @@ def synthetic_bundle():
         "rust_interop": {"stable_support_claims_sha256": rows["support-claims"]["sha256"]},
         "release_notes_sha256": rows["release-notes"]["sha256"],
     })
-    for target in TARGETS:
-        removed = rows.pop(f"sysroot-{target}")
-        del payloads[removed["path"]]
     return {"schema_version": 1, "identity": identity, "matrix": matrix, "artifacts": list(rows.values())}, payloads
 
 
@@ -319,8 +316,9 @@ class ArchiveOfflineTests(unittest.TestCase):
         manifest = construct_manifest(inventory)
         verify_payloads(manifest, self.read)
         roles = {row["role"] for row in manifest["artifacts"]}
-        self.assertFalse(any(role.startswith(("transport-zip:", "sysroot-")) for role in roles))
-        self.assertTrue({"vsix", "installer", *(f"binary-archive-{target}" for target in TARGETS)} <= roles)
+        self.assertFalse(any(role.startswith("transport-zip:") for role in roles))
+        self.assertTrue({"vsix", "installer", *(f"binary-archive-{target}" for target in TARGETS),
+                         *(f"sysroot-{target}" for target in TARGETS)} <= roles)
         for bad_role in ("step-log:never-executed", "case-log:new_area:extra:unknown"):
             changed = copy.deepcopy(self.inventory)
             row = next(row for row in changed["artifacts"] if row["role"].startswith("step-log:"))

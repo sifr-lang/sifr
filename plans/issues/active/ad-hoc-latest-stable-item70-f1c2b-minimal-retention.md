@@ -30,10 +30,12 @@ One exact candidate Opus review, at most one remediation; counters start at zero
 
 Retain supported shipped compiler archives, checksum sidecars and version
 installer, plus the shipped Marketplace VSIX. `verify_release_publication_assets.sh`
-checks the nine compiler distribution files. Archives include compiler, sysroot,
-runtime libraries and vendor inputs consumed by `generate_version_installer.sh`.
-The stable publication contract additionally retains its release plan and
-governed publication records; its actual inventory is authoritative.
+checks nine alpha/beta distribution files; it is not the stable inventory.
+Archives include compiler, sysroot, runtime libraries and vendor inputs consumed
+by `generate_version_installer.sh`. The actual stable publication contract
+(`stable_prepare.py` and `stable_publish.py`) publishes all20 governed indexed
+artifacts, including separate sysroots and qualification reports, plus its
+release plan. Retain this existing supported asset set without changing it.
 `publish_stable_release.py` authenticates GitHub asset readback against local
 bytes and records digests. `stable_prepare.py` pins the VSIX digest and
 `stable_publish.py` checks Marketplace readback. Reuse these existing paths;
@@ -43,12 +45,17 @@ Retain compact exact source/submodule/toolchain/lock/profile/run/attempt/checksu
 provenance, qualification index and reports, essential structured results,
 review/failure/disposition and publication records. Git preserves source and
 lockfiles; the retained manifest binds their identities without duplicate
-source/toolchain inventory files. Separate sysroot tarballs are qualification
-staging, already described by digest in the original index/report, and are not
-required retained bytes. Actions transport ZIPs, workflow/step/case success logs,
+source/toolchain inventory files. Although separate sysroot tarballs originate
+in qualification staging and duplicate installation content, the actual stable
+publisher includes them: they remain required retained bytes. Additional local
+copies beyond that release/evidence set are not mandatory archives.
+Actions transport ZIPs, workflow/step/case success logs,
 unpacked copies, caches and reproducible intermediates are not blanket retention
 requirements. Any voluntarily retained known log still receives full byte and
-identity verification. Unique necessary failure evidence remains protected.
+identity verification. ZIP/source-inventory/toolchain-inventory/lockfile archive
+roles are deliberately removed from this contract, not a compatibility lane;
+source and lockfile bytes remain in Git. Unique necessary failure evidence
+remains protected.
 
 GitHub Release assets are the prospective supported-deliverable destination;
 compact records remain in the existing versioned evidence/PR/issue records.

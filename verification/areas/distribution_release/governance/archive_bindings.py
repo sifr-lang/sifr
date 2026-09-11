@@ -21,7 +21,7 @@ SINGLETON_ROLES = {
     "candidate-plan", "release-notes", "review-evidence", "review-log",
 }
 REQUIRED_ROLES = (
-    SINGLETON_ROLES | (EXPECTED_ARTIFACT_IDS - {f"sysroot-{target}" for target in TARGETS})
+    SINGLETON_ROLES | EXPECTED_ARTIFACT_IDS
     | {f"structured-skip:{target}" for target in SKIP_TARGETS}
 )
 
@@ -74,10 +74,6 @@ def verify_bindings(manifest: dict[str, Any], read: Callable[[dict[str, Any]], b
     equal(run.get("repository", {}).get("full_name"), identity["repository"], "run repository")
     equal(run.get("event"), "workflow_dispatch", "run event")
     for artifact in index["artifacts"]:
-        # Qualification staging sysroots keep their original indexed provenance;
-        # shipped compiler archives already contain the installation sysroot.
-        if artifact["id"] not in records:
-            continue
         record = records[artifact["id"]]
         equal(record["sha256"], artifact["sha256"], f"{artifact['id']} digest")
         equal(record["size_bytes"], artifact["size_bytes"], f"{artifact['id']} size")
@@ -149,8 +145,6 @@ def verify_uploads(index: dict[str, Any], records: dict[str, Any], metadata: dic
         for artifact in index["artifacts"]:
             if artifact["workflow_artifact_id"] == upload_id:
                 equal(artifact["workflow_artifact_name"], name, "index upload name")
-                if artifact["id"] not in records:
-                    continue
                 equal(records[artifact["id"]]["producer"]["job"], job, "payload producer job")
                 equal(records[artifact["id"]]["producer"]["execution"], "workflow", "payload execution")
         if (log := records.get(f"workflow-log:{job}")) is not None:
@@ -218,11 +212,9 @@ def verify_platforms(manifest: dict[str, Any], records: dict[str, Any],
             for key, value in (("source_commit", identity["source_commit"]), ("target", target),
                                ("builder", BUILDERS[target]), ("smoke_status", "pass")):
                 equal(report.get(key), value, f"target report {key}")
-            for field, role in (("archive_sha256", "binary-archive"), ("checksum_sha256", "checksum")):
+            for field, role in (("archive_sha256", "binary-archive"), ("checksum_sha256", "checksum"),
+                                ("sysroot_bundle_sha256", "sysroot")):
                 equal(report.get(field), records[f"{role}-{target}"]["sha256"], f"target {field}")
-            index = document("qualification-index")
-            sysroot = next(item for item in index["artifacts"] if item["id"] == f"sysroot-{target}")
-            equal(report.get("sysroot_bundle_sha256"), sysroot["sha256"], "staging sysroot provenance")
         else:
             equal(row["reasons"], sorted(declared.get("allowed_skips", [])), "declared skip reasons")
             skip = document(f"structured-skip:{target}")

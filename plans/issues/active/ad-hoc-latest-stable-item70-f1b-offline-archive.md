@@ -2,8 +2,9 @@
 
 Current supersession, 2026-09-11: [Item70-F1C2B](ad-hoc-latest-stable-item70-f1c2b-minimal-retention.md)
 narrows retained bytes to shipped deliverables and essential structured evidence.
-Transport ZIPs, separate staging sysroots, duplicate source/toolchain inventories
-and every raw success log are no longer mandatory. Full digest/source/run
+Transport ZIPs, duplicate source/toolchain inventories and every raw success
+log are no longer mandatory; the stable publisher's separate sysroot assets
+remain required. Full digest/source/run
 verification still applies to retained records. The optional synthetic copy
 test proves byte verification only; independent custody is not a release
 prerequisite. Original review and validation below remain historical evidence.

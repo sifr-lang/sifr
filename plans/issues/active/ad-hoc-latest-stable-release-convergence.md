@@ -4,7 +4,7 @@
 
 The user's explicit minimal retention direction supersedes historical blanket
 all-byte archival, R2 provisioning and independently administered copy
-requirements in Item70/F1A/F1C0/F1C2B/F1D. The bounded implementation and frozen
+requirements in Item70/F1A/F1B/F1C0/F1C1/F1C2B/F1D. The bounded implementation and frozen
 checks are in [the existing evidence item](ad-hoc-latest-stable-item70-f1c2b-minimal-retention.md).
 Retain supported shipped deliverables through existing GitHub Release and
 Marketplace publication/readback paths, compact source/toolchain/run/digest
@@ -31,6 +31,9 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 ## Objective
 
 ### Item 70-F1C1 — offline R2 adapter and admission contract
+
+2026-09-11 supersession: F1C2B removes the three unused R2 modules and their
+synthetic test; paths and commands below record the original reviewed delivery.
 
 COMPLETE via [PR #3818](https://github.com/sifr-lang/sifr/pull/3818), merged
 2026-09-08T09:22:26Z. Exact tested/reviewed candidate
