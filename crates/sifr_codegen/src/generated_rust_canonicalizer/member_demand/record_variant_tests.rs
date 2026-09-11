@@ -533,3 +533,147 @@ fn option_question_mark_requires_owned_values_and_preserves_borrowing_patterns()
     tries.visit_file(&syn::parse_file(&competing).expect("competing method source"));
     assert_eq!(tries.0, 0, "{competing}");
 }
+
+#[test]
+fn option_question_mark_preserves_clone_and_declared_lookup_ownership() {
+    use syn::visit::{self, Visit};
+    let canonical = canonical_and_compile(
+        r#"
+        mod data {
+            use ::std::collections::HashMap as Table;
+            pub struct Registry { pub values: Table<String, String> }
+            impl Registry {
+                pub fn lookup(&self, key: &str) -> Option<String> {
+                    let Some(value) = self.values.get(key) else { return None; };
+                    Some(value.clone())
+                }
+            }
+        }
+        pub use data::Registry as RegistryAlias;
+        pub fn alias_lookup(value: &RegistryAlias, key: &str) -> Option<String> {
+            let Some(found) = value.values.get(key) else { return None; };
+            Some(found.clone())
+        }
+        pub fn clone_owned(value: Option<String>) -> Option<String> {
+            let Some(found) = value.clone() else { return None; };
+            Some(found)
+        }
+        pub fn clone_alias(value: Option<String>) -> Option<String> {
+            let alias = value;
+            let Some(found) = alias.clone() else { return None; };
+            Some(found)
+        }
+        pub fn sequence_lookup(value: &[String], index: usize) -> Option<&String> {
+            let Some(found) = value.get(index) else { return None; };
+            Some(found)
+        }
+        pub fn mutable_lookup<'a>(value: &'a mut ::std::collections::BTreeMap<String, String>, key: &str) -> Option<&'a mut String> {
+            let Some(found) = value.get_mut(key) else { return None; };
+            Some(found)
+        }
+        pub struct NotClone(pub String);
+        pub fn cloned_reference(value: &Option<NotClone>) -> Option<&NotClone> {
+            let Some(found) = value.clone() else { return None; };
+            Some(found)
+        }
+        pub type Borrowed<'a> = &'a Option<NotClone>;
+        pub fn reference_alias(value: Borrowed<'_>) -> Option<&NotClone> {
+            let Some(found) = value else { return None; };
+            Some(found)
+        }
+        use ::std::collections::HashMap;
+        pub fn local_lookup_shadow(value: &Option<String>) -> Option<&String> {
+            struct HashMap<'a>(&'a Option<String>);
+            impl<'a> HashMap<'a> {
+                fn get(&self, _: usize) -> &'a Option<String> { self.0 }
+            }
+            let map: HashMap<'_> = HashMap(value);
+            let Some(found) = map.get(0) else { return None; };
+            Some(found)
+        }
+        "#,
+    );
+    #[derive(Default)]
+    struct Tries(usize);
+    impl<'ast> Visit<'ast> for Tries {
+        fn visit_expr_try(&mut self, expression: &'ast syn::ExprTry) {
+            self.0 += 1;
+            visit::visit_expr_try(self, expression);
+        }
+    }
+    #[derive(Default)]
+    struct Functions(std::collections::HashMap<String, usize>);
+    impl<'ast> Visit<'ast> for Functions {
+        fn visit_item_fn(&mut self, function: &'ast syn::ItemFn) {
+            let mut count = Tries::default();
+            count.visit_block(&function.block);
+            self.0.insert(function.sig.ident.to_string(), count.0);
+            visit::visit_item_fn(self, function);
+        }
+        fn visit_impl_item_fn(&mut self, function: &'ast syn::ImplItemFn) {
+            let mut count = Tries::default();
+            count.visit_block(&function.block);
+            self.0.insert(function.sig.ident.to_string(), count.0);
+            visit::visit_impl_item_fn(self, function);
+        }
+    }
+    let mut functions = Functions::default();
+    functions.visit_file(&syn::parse_file(&canonical).expect("canonical source"));
+    for name in [
+        "lookup",
+        "alias_lookup",
+        "clone_owned",
+        "clone_alias",
+        "sequence_lookup",
+        "mutable_lookup",
+    ] {
+        assert_eq!(functions.0.get(name), Some(&1), "{name}: {canonical}");
+    }
+    for name in ["cloned_reference", "reference_alias", "local_lookup_shadow"] {
+        assert_eq!(functions.0.get(name), Some(&0), "{name}: {canonical}");
+    }
+}
+
+#[test]
+fn option_question_mark_rejects_competing_clone_and_opaque_imports() {
+    use syn::visit::{self, Visit};
+    let canonical = canonical_and_compile(
+        r#"
+        pub struct NotClone(pub String);
+        pub trait BorrowingClone { fn clone(&self) -> &Option<NotClone>; }
+        impl BorrowingClone for Option<NotClone> {
+            fn clone(&self) -> &Option<NotClone> { self }
+        }
+        pub fn clone_returns_reference(value: Option<NotClone>) -> Option<usize> {
+            let Some(found) = value.clone() else { return None; };
+            Some(found.0.len())
+        }
+        "#,
+    );
+    #[derive(Default)]
+    struct Tries(usize);
+    impl<'ast> Visit<'ast> for Tries {
+        fn visit_expr_try(&mut self, expression: &'ast syn::ExprTry) {
+            self.0 += 1;
+            visit::visit_expr_try(self, expression);
+        }
+    }
+    let mut count = Tries::default();
+    count.visit_file(&syn::parse_file(&canonical).expect("canonical source"));
+    assert_eq!(count.0, 0, "{canonical}");
+    // An unavailable external trait cannot supply receiver ownership evidence.
+    // This checks the fail-closed syntax decision, not an invented native package.
+    let opaque = canonicalize_generated_rust_source(
+        r#"
+        use unknown_external::Extension;
+        pub fn inspect(value: Option<String>) -> Option<String> {
+            let Some(found) = value.clone() else { return None; };
+            Some(found)
+        }
+        "#,
+    )
+    .expect("opaque-import syntax");
+    let mut count = Tries::default();
+    count.visit_file(&syn::parse_file(&opaque).expect("opaque syntax"));
+    assert_eq!(count.0, 0, "{opaque}");
+}

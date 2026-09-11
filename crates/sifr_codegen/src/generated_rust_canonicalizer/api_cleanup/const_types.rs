@@ -22,21 +22,6 @@ impl DropTypes {
         types
     }
 
-    pub(in crate::generated_rust_canonicalizer) fn is_owned_option(&self, ty: &syn::Type) -> bool {
-        match ty {
-            syn::Type::Group(group) => self.is_owned_option(&group.elem),
-            syn::Type::Paren(paren) => self.is_owned_option(&paren.elem),
-            syn::Type::Path(path) => {
-                path.path
-                    .segments
-                    .last()
-                    .is_some_and(|s| s.ident == "Option")
-                    && self.standard_payloads(path).is_some()
-            }
-            _ => false,
-        }
-    }
-
     fn standard_payloads<'a>(&self, path: &'a syn::TypePath) -> Option<Vec<&'a syn::Type>> {
         if path.qself.is_some() {
             return None;
