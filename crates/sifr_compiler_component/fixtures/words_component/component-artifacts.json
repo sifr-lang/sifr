@@ -1,0 +1,45 @@
+{
+  "artifact": "words_component.wasm",
+  "core_sha256": "c1301a4b0f7c8e2cc41d30aaaa9e8ea502d824702190ccbf4cf52a5596a2ad89",
+  "provenance": {
+    "build_environment": {
+      "CARGO_BUILD_JOBS": "1",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_PROFILE_TEST_DEBUG": "0"
+    },
+    "family": "words",
+    "rust": {
+      "cargo_sha256": "6e17e865f3a20dd55a1d212f849f58b77124179f0de7c52973096d84ba34118d",
+      "cargo_version": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+      "rustc_sha256": "766eda9d8f53afd6fc7f27b3cd2e444dd22afacb5afa710a5625fc8e45b8c941",
+      "rustc_verbose": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8",
+      "rustc_version": "rustc 1.98.1 (48a229cea 2026-09-01)",
+      "target": "wasm32-unknown-unknown",
+      "target_std_sha256": "5469bc235858f2d95a68094bf532ff521eee1ea12cf39aaa5d0e56735543066c"
+    },
+    "rustflags": "--remap-path-prefix=<repository>=/sifr",
+    "schema_version": 1,
+    "source_inputs": {
+      "crates/sifr_compiler_component/fixtures/words_component/Cargo.lock": "293a5431c6a5846add7cb4b332f46e20589ea77f00fa51cfa2cb169cac6f6237",
+      "crates/sifr_compiler_component/fixtures/words_component/Cargo.toml": "9e24e04b1da949233a61d2e716b028b68c0c0928a08c08b142a5496e86b3d46b",
+      "crates/sifr_compiler_component/fixtures/words_component/src/bin/componentize.rs": "9aa408860a540e93492e01e5d14c109ff1a0862a7ca2db977b2a9f81935a9bb2",
+      "crates/sifr_compiler_component/fixtures/words_component/src/lib.rs": "41e46806cedec340df6f37203acde90c90eed9a925d70f879ef0dc62482e401e",
+      "crates/sifr_compiler_component/wit/compiler-component.wit": "782c579c390c73463ea739f1a4777a4629d598ab29737fcce719bbdc7deea30f",
+      "rust-toolchain.toml": "85db324345b7937c49ea2ac8b962d741f710719f4f751cab809985cbe6afbe3c",
+      "verification/areas/sql_platform/tools/build_words_component.py": "50b416efa62ea39732c9f436c080e11ad5863208d889f793df4214d82fce708e",
+      "verification/areas/sql_platform/tools/component_provenance.py": "9bb1552524e82cfbb0bab877edc3d9d13e1852e845d35f0665ec87c39b3ed16e",
+      "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd"
+    },
+    "source_sha256": "31010f9b99f25a110e1559106dfc823def6e6085253319f7b9ee27ae9ed9081a",
+    "tools": {
+      "componentizer_sha256": "b812ae7176cdffe3dd0d0a13025f1cd55be3ef6e7c0585d315853c6f735b0235",
+      "wit_bindgen": "0.61.1",
+      "wit_component": "0.258.0"
+    }
+  },
+  "schema_version": 1,
+  "sha256": "c8466e73fe7192b5b65be406cd7ca252fb11808d33bf2100c095f752eb8350f9",
+  "size_bytes": 272496,
+  "target": "wasm32-unknown-unknown"
+}
