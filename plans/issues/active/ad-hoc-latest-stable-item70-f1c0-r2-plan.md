@@ -1,5 +1,11 @@
 # Item 70-F1C0: selected R2 contract and offline implementation plan
 
+Current supersession, 2026-09-11: [Item70-F1C2B](ad-hoc-latest-stable-item70-f1c2b-minimal-retention.md)
+retires this R2 selection and independent-copy prerequisite under the user's
+minimal retention direction. This reviewed plan remains historical evidence;
+its unused adapter is removed, not retained as a live legacy/fallback lane.
+Existing GitHub Release publication/readback is the supported-deliverable path.
+
 COMPLETE via [PR #3816](https://github.com/sifr-lang/sifr/pull/3816), merged
 2026-09-08T09:01:45Z. Exact tested/reviewed candidate
 `cae41b5aaf98f132d6eebe39f761d4a514293e38`, merge

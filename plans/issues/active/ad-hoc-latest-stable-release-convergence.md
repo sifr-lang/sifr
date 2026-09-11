@@ -1,5 +1,29 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Current retention supersession — Item70-F1C2B, 2026-09-11
+
+The user's explicit minimal retention direction supersedes historical blanket
+all-byte archival, R2 provisioning and independently administered copy
+requirements in Item70/F1A/F1B/F1C0/F1C1/F1C2B/F1D. The bounded implementation and frozen
+checks are in [the existing evidence item](ad-hoc-latest-stable-item70-f1c2b-minimal-retention.md).
+Retain supported shipped deliverables through existing GitHub Release and
+Marketplace publication/readback paths, compact source/toolchain/run/digest
+provenance, essential validation and honest failure/disposition records.
+No new provider, archive adapter or publication authority is introduced.
+
+Item64's exhausted recovery and Item59's historical full-byte custody closure
+obligations are retired. The missing20 original payloads/four results remain
+INCOMPLETE/UNRECOVERED, never retrospectively passed or rebuilt-as-original.
+Current retained-record integrity remains required. F1D still requires actual
+prospective software qualification on delivered compiler/policy inputs, new
+identities and four native/two structured-skip coverage; it no longer requires
+R2, independent custody or duplicate intermediates. Human publication approval
+and final62/35 truthful reconciliation remain outstanding. The phase is active.
+PR #3821's reviewed/withheld R2 runtime remains historical work, not a prerequisite
+or an authorized merge/closure here. All predecessor reviews and failed gates
+retain their original accounting. Older contradictory policy below is history.
+
+
 Status: active on 2026-09-08. Items 0–30, 36–39, 53–55, 58, 60, 66–67 and 69–70 are complete. Item 39 closed
 the runner dependency/API invariants; independent work can proceed under the continuation
 ledger while Kafka and gate-bearing items retain explicit prerequisites.
@@ -7,6 +31,9 @@ ledger while Kafka and gate-bearing items retain explicit prerequisites.
 ## Objective
 
 ### Item 70-F1C1 — offline R2 adapter and admission contract
+
+2026-09-11 supersession: F1C2B removes the three unused R2 modules and their
+synthetic test; paths and commands below record the original reviewed delivery.
 
 COMPLETE via [PR #3818](https://github.com/sifr-lang/sifr/pull/3818), merged
 2026-09-08T09:22:26Z. Exact tested/reviewed candidate

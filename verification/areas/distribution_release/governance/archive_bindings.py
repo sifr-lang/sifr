@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import io
-import zipfile
 from pathlib import PurePosixPath
 from typing import Any, Callable
 
@@ -11,21 +9,19 @@ from .archive_manifest import SKIP_TARGETS, safe_path
 from .artifact_index import EXPECTED_ARTIFACT_IDS, validate_qualification_artifact_index
 from .common import (
     BUILDERS, TARGETS, GovernanceError, canonical_json_bytes,
-    load_json_bytes_strict, require_object, sha256_bytes,
+    load_json_bytes_strict, require_object, require_sha256, sha256_bytes,
 )
 from .release_report import validate_release_profile_report
 
 UPLOAD_JOBS = (*TARGETS, "editor", "assemble", "index")
 SINGLETON_ROLES = {
     "qualification-index", "run-metadata", "upload-metadata", "release-profile-report",
-    "documentation-result", "documentation-summary", "source-inventory", "lockfile",
-    "toolchain-inventory", "profile-manifest", "platform-policy", "support-claims",
+    "documentation-result", "documentation-summary",
+    "profile-manifest", "platform-policy", "support-claims",
     "candidate-plan", "release-notes", "review-evidence", "review-log",
 }
 REQUIRED_ROLES = (
     SINGLETON_ROLES | EXPECTED_ARTIFACT_IDS
-    | {f"transport-zip:{job}" for job in UPLOAD_JOBS}
-    | {f"workflow-log:{job}" for job in UPLOAD_JOBS}
     | {f"structured-skip:{target}" for target in SKIP_TARGETS}
 )
 
@@ -42,7 +38,9 @@ def validate_required_roles(manifest: dict[str, Any]) -> None:
         raise GovernanceError(f"missing required producer classes: {sorted(missing)}")
     # Later protected approval/publication needs a separately scoped additive manifest.
     for role in roles - REQUIRED_ROLES:
-        if not role.startswith(("result:", "step-log:", "case-log:")):
+        if not role.startswith(("result:", "step-log:", "case-log:")) and role not in {
+            f"workflow-log:{job}" for job in UPLOAD_JOBS
+        }:
             raise GovernanceError(f"unregistered archive role: {role}")
     matrix = manifest["matrix"]
     equal([row["target"] for row in matrix], sorted((*TARGETS, *SKIP_TARGETS)), "complete platform matrix")
@@ -75,17 +73,13 @@ def verify_bindings(manifest: dict[str, Any], read: Callable[[dict[str, Any]], b
         equal(run.get(key), identity[field], f"run {key}")
     equal(run.get("repository", {}).get("full_name"), identity["repository"], "run repository")
     equal(run.get("event"), "workflow_dispatch", "run event")
-    equal(document("source-inventory"), identity, "source inventory")
-    equal(document("toolchain-inventory"), identity["toolchain"], "toolchain inventory")
-    equal(records["lockfile"]["sha256"], identity["lock_sha256"], "lockfile")
-
     for artifact in index["artifacts"]:
         record = records[artifact["id"]]
         equal(record["sha256"], artifact["sha256"], f"{artifact['id']} digest")
         equal(record["size_bytes"], artifact["size_bytes"], f"{artifact['id']} size")
         equal(PurePosixPath(record["path"]).name, artifact["name"], "transported filename")
         equal(record["producer"].get("artifact_id"), artifact["workflow_artifact_id"], "upload identity")
-    verify_uploads(index, records, document("upload-metadata"), identity, read)
+    verify_uploads(index, records, document("upload-metadata"), identity)
     verify_report(records, document, identity)
     verify_platforms(manifest, records, document, identity)
     docs = document("documentation-summary")
@@ -113,10 +107,10 @@ def verify_bindings(manifest: dict[str, Any], read: Callable[[dict[str, Any]], b
 
 
 def verify_uploads(index: dict[str, Any], records: dict[str, Any], metadata: dict[str, Any],
-                   identity: dict[str, Any], read: Callable[[dict[str, Any]], bytes]) -> None:
+                   identity: dict[str, Any]) -> None:
     uploads = metadata.get("artifacts")
     if not isinstance(uploads, list) or len(uploads) != len(UPLOAD_JOBS):
-        raise GovernanceError("must retain metadata for all seven original transport ZIPs")
+        raise GovernanceError("must retain compact metadata for all seven producer uploads")
     ids: set[int] = set()
     by_job: dict[str, Any] = {}
     prefix = f"sifr-stable-candidate-{index['candidate_version']}-{identity['source_commit']}-"
@@ -134,10 +128,11 @@ def verify_uploads(index: dict[str, Any], records: dict[str, Any], metadata: dic
             raise GovernanceError("duplicate or unknown upload job")
         by_job[job] = upload
         equal(upload.get("workflow_run", {}).get("id"), identity["run_id"], "upload run")
-        transport = records[f"transport-zip:{job}"]
-        equal(transport["producer"].get("artifact_id"), upload_id, "ZIP upload identity")
-        equal(upload.get("digest"), "sha256:" + transport["sha256"], "original ZIP digest")
-        expected = {item["name"]: records[item["id"]] for item in index["artifacts"]
+        digest = upload.get("digest")
+        if not isinstance(digest, str) or not digest.startswith("sha256:"):
+            raise GovernanceError("invalid recorded upload digest")
+        require_sha256(digest.removeprefix("sha256:"), "recorded upload digest")
+        expected = {item["name"]: item for item in index["artifacts"]
                     if item["workflow_artifact_id"] == upload_id}
         if job == "index":
             expected = {"qualification-artifact-index.json": records["qualification-index"]}
@@ -146,31 +141,15 @@ def verify_uploads(index: dict[str, Any], records: dict[str, Any], metadata: dic
             equal(owner["job"], job, "index producer job")
             equal(owner["execution"], "workflow", "index producer execution")
         if not expected:
-            raise GovernanceError("ZIP does not bind any indexed payload")
+            raise GovernanceError("upload does not bind any indexed payload")
         for artifact in index["artifacts"]:
             if artifact["workflow_artifact_id"] == upload_id:
                 equal(artifact["workflow_artifact_name"], name, "index upload name")
                 equal(records[artifact["id"]]["producer"]["job"], job, "payload producer job")
                 equal(records[artifact["id"]]["producer"]["execution"], "workflow", "payload execution")
-        equal(transport["producer"]["job"], job, "ZIP producer job")
-        equal(transport["producer"]["execution"], "workflow", "ZIP execution")
-        log = records[f"workflow-log:{job}"]
-        equal(log["producer"]["job"], job, "workflow log job")
-        equal(log["producer"]["execution"], "workflow", "workflow log execution")
-        try:
-            with zipfile.ZipFile(io.BytesIO(read(transport))) as archive:
-                entries = archive.infolist()
-                names = [safe_path(entry.filename) for entry in entries]
-                if len(names) != len(set(names)) or set(names) != set(expected):
-                    raise GovernanceError("ZIP must contain exactly its original payload inventory")
-                for entry in entries:
-                    if (entry.external_attr >> 16) & 0o170000 == 0o120000:
-                        raise GovernanceError("ZIP symlinks are forbidden")
-                    record = expected[entry.filename]
-                    equal(entry.file_size, record["size_bytes"], "ZIP entry size")
-                    equal(sha256_bytes(archive.read(entry)), record["sha256"], "ZIP entry digest")
-        except (OSError, RuntimeError, zipfile.BadZipFile) as exc:
-            raise GovernanceError(f"invalid original ZIP: {exc}") from exc
+        if (log := records.get(f"workflow-log:{job}")) is not None:
+            equal(log["producer"]["job"], job, "workflow log job")
+            equal(log["producer"]["execution"], "workflow", "workflow log execution")
 
 
 def verify_report(records: dict[str, Any], document: Callable[[str], dict[str, Any]],
@@ -212,8 +191,9 @@ def verify_report(records: dict[str, Any], document: Callable[[str], dict[str, A
                 log_roles.add(f"case-log:{suite['area']}:{suite['suite']}:{case}")
     equal(observed, expected, "every selected suite executed")
     equal({role for role in records if role.startswith("result:")}, result_roles, "exact bound results")
-    equal({role for role in records if role.startswith(("step-log:", "case-log:"))}, log_roles,
-          "complete raw step/case logs")
+    retained_logs = {role for role in records if role.startswith(("step-log:", "case-log:"))}
+    if not retained_logs <= log_roles:
+        raise GovernanceError("retained step/case log has no recorded execution")
 
 
 def verify_platforms(manifest: dict[str, Any], records: dict[str, Any],
