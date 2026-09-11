@@ -9,7 +9,6 @@ import io
 import json
 import tempfile
 import unittest
-import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
@@ -115,24 +114,13 @@ def synthetic_bundle():
     for job in UPLOAD_JOBS:
         artifacts = [artifact for artifact in index["artifacts"] if artifact["workflow_artifact_name"] == prefix + job]
         upload_id = 12 if job == "index" else artifacts[0]["workflow_artifact_id"]
-        content = {artifact["name"]: payloads[rows[artifact["id"]]["path"]] for artifact in artifacts}
-        if job == "index":
-            content = {"qualification-artifact-index.json": payloads[rows["qualification-index"]["path"]]}
-        buffer = io.BytesIO()
-        with zipfile.ZipFile(buffer, "w") as archive:
-            for name, raw in sorted(content.items()):
-                archive.writestr(zipfile.ZipInfo(name, date_time=(2000, 1, 1, 0, 0, 0)), raw)
-        add(f"transport-zip:{job}", buffer.getvalue(), job=job, execution="workflow", artifact_id=upload_id)
         uploads.append({"id": upload_id, "name": prefix + job, "workflow_run": {"id": RUN},
-                        "digest": "sha256:" + rows[f"transport-zip:{job}"]["sha256"]})
+                        "digest": "sha256:" + "a" * 64})
         add(f"workflow-log:{job}", f"synthetic workflow log {job}\n".encode(), job=job, execution="workflow")
     add("upload-metadata", {"artifacts": uploads})
     add("run-metadata", {"id": RUN, "run_attempt": ATTEMPT, "head_sha": SOURCE, "path": WORKFLOW,
                          "event": "workflow_dispatch", "repository": {"full_name": "sifr-lang/sifr"}})
     add("profile-manifest", profile)
-    add("lockfile", b"synthetic lock\n")
-    add("toolchain-inventory", identity["toolchain"])
-    add("source-inventory", identity)
     report["profile"]["manifest_sha256"] = identity["profile_sha256"]
     report["result_artifacts"] = []
     for step in report["steps"]:
@@ -172,6 +160,9 @@ def synthetic_bundle():
         "rust_interop": {"stable_support_claims_sha256": rows["support-claims"]["sha256"]},
         "release_notes_sha256": rows["release-notes"]["sha256"],
     })
+    for target in TARGETS:
+        removed = rows.pop(f"sysroot-{target}")
+        del payloads[removed["path"]]
     return {"schema_version": 1, "identity": identity, "matrix": matrix, "artifacts": list(rows.values())}, payloads
 
 
@@ -213,15 +204,6 @@ class ArchiveOfflineTests(unittest.TestCase):
         target = next(row for row in inventory["artifacts"] if row["role"] == role)
         target.update(sha256=sha256_bytes(raw), size_bytes=len(raw))
         self.manifest = construct_manifest(inventory)
-
-    def replace_zip(self, raw):
-        role = f"transport-zip:{TARGETS[0]}"
-        inventory = inventory_of(self.manifest)
-        row = next(row for row in inventory["artifacts"] if row["role"] == role)
-        row.update(sha256=sha256_bytes(raw), size_bytes=len(raw))
-        self.payloads[row["path"]] = raw
-        self.manifest = construct_manifest(inventory)
-        self.rewrite("upload-metadata", lambda doc: doc["artifacts"][0].update(digest="sha256:" + sha256_bytes(raw)))
 
     def test_complete_all_class_roundtrip(self):
         from verification.json_schema_202012 import validate_instance
@@ -312,40 +294,44 @@ class ArchiveOfflineTests(unittest.TestCase):
         for role in ("step-log:area_rust_interop", "case-log:new_area:extra:fresh-case"):
             inventory = copy.deepcopy(self.inventory)
             inventory["artifacts"] = [row for row in inventory["artifacts"] if row["role"] != role]
-            with self.assertRaisesRegex(GovernanceError, "raw step/case logs"):
-                verify_payloads(construct_manifest(inventory), self.read)
+            verify_payloads(construct_manifest(inventory), self.read)
         for role, update in (
             ("release-profile-report", lambda doc: doc["result_artifacts"][0].update(sha256="b" * 64)),
             ("release-profile-report", lambda doc: doc["profile"]["expanded_selected_areas"].pop()),
             ("documentation-summary", lambda doc: doc.update(result_sha256="b" * 64)),
             ("candidate-plan", lambda doc: doc.update(cargo_lock_sha256="b" * 64)),
             ("review-evidence", lambda doc: doc.update(log_sha256="b" * 64)),
-            ("upload-metadata", lambda doc: doc["artifacts"][0].update(digest="sha256:" + "b" * 64)),
+            ("upload-metadata", lambda doc: doc["artifacts"][0].update(id=999999)),
+            ("upload-metadata", lambda doc: doc["artifacts"][0].update(id=doc["artifacts"][1]["id"])),
+            ("upload-metadata", lambda doc: doc["artifacts"][0].update(digest="not-a-digest")),
+            (f"qualification-report-{TARGETS[0]}", lambda doc: doc.update(sysroot_bundle_sha256="b" * 64)),
         ):
             with self.subTest(rehashed_cross_link=role):
                 self.setUp()
                 self.rewrite(role, update)
                 with self.assertRaises(GovernanceError):
                     self.verify()
-        # Rehash a syntactically valid ZIP and its API digest to reach entry checks.
-        for change in ("duplicate", "mutated-entry", "symlink"):
-            self.setUp()
-            row = next(row for row in self.manifest["artifacts"] if row["role"] == f"transport-zip:{TARGETS[0]}")
-            output = io.BytesIO()
-            with zipfile.ZipFile(io.BytesIO(self.read(row))) as original, zipfile.ZipFile(output, "w") as changed:
-                for number, entry in enumerate(original.infolist()):
-                    content = original.read(entry)
-                    if number == 0 and change == "mutated-entry":
-                        content = b"X" * len(content)
-                    if number == 0 and change == "symlink":
-                        entry.external_attr = 0o120777 << 16
-                    changed.writestr(entry, content)
-                    if number == 0 and change == "duplicate":
-                        with self.assertWarns(UserWarning):
-                            changed.writestr(entry, content)
-            self.replace_zip(output.getvalue())
-            with self.subTest(zip=change), self.assertRaises(GovernanceError):
-                self.verify()
+
+    def test_minimal_retention_and_optional_log_bindings(self):
+        inventory = copy.deepcopy(self.inventory)
+        inventory["artifacts"] = [row for row in inventory["artifacts"]
+                                  if not row["role"].startswith(("step-log:", "case-log:", "workflow-log:"))]
+        manifest = construct_manifest(inventory)
+        verify_payloads(manifest, self.read)
+        roles = {row["role"] for row in manifest["artifacts"]}
+        self.assertFalse(any(role.startswith(("transport-zip:", "sysroot-")) for role in roles))
+        self.assertTrue({"vsix", "installer", *(f"binary-archive-{target}" for target in TARGETS)} <= roles)
+        for bad_role in ("step-log:never-executed", "case-log:new_area:extra:unknown"):
+            changed = copy.deepcopy(self.inventory)
+            row = next(row for row in changed["artifacts"] if row["role"].startswith("step-log:"))
+            row["role"] = bad_role
+            with self.subTest(role=bad_role), self.assertRaisesRegex(GovernanceError, "no recorded execution"):
+                verify_payloads(construct_manifest(changed), self.read)
+        changed = copy.deepcopy(self.inventory)
+        row = next(row for row in changed["artifacts"] if row["role"].startswith("workflow-log:"))
+        row["producer"]["job"] = "wrong-job"
+        with self.assertRaisesRegex(GovernanceError, "workflow log job"):
+            verify_payloads(construct_manifest(changed), self.read)
 
     def test_duplicate_logical_records_and_wrong_source_run_attempt(self):
         duplicate = copy.deepcopy(self.inventory)

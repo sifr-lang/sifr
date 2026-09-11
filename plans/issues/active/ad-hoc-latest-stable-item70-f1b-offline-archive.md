@@ -1,5 +1,13 @@
 # Item 70-F1B: offline release evidence archive contract
 
+Current supersession, 2026-09-11: [Item70-F1C2B](ad-hoc-latest-stable-item70-f1c2b-minimal-retention.md)
+narrows retained bytes to shipped deliverables and essential structured evidence.
+Transport ZIPs, separate staging sysroots, duplicate source/toolchain inventories
+and every raw success log are no longer mandatory. Full digest/source/run
+verification still applies to retained records. The optional synthetic copy
+test proves byte verification only; independent custody is not a release
+prerequisite. Original review and validation below remain historical evidence.
+
 COMPLETE via [PR #3814](https://github.com/sifr-lang/sifr/pull/3814), merged
 `7b2c25707e012c66893de5eb631fef7270384dfa` on 2026-09-08T08:42:37Z.
 Final tested/reviewed candidate `d85d2008572090f62e7d6d8d900a8bb42e92e5b9`.
