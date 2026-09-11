@@ -25,11 +25,17 @@ pub(super) struct GeneratedBinaryProject {
 
 impl GeneratedBinaryProject {
     pub(super) fn bridge_root_declaration(&self) -> String {
-        self.bridge_modules
+        let mut declarations = String::new();
+        for name in self
+            .bridge_modules
             .keys()
             .filter(|name| !name.contains("::"))
-            .map(|name| format!("pub mod {name};\n"))
-            .collect()
+        {
+            declarations.push_str("pub mod ");
+            declarations.push_str(name);
+            declarations.push_str(";\n");
+        }
+        declarations
     }
 
     pub(super) fn emit_source_listing(&self) -> String {

@@ -35,10 +35,10 @@ pub(crate) fn finalize_test_runner_project(
     );
     let mut bridge_rust_files = BTreeMap::new();
     for (module, source) in generated.bridge_modules {
-        let path = if !module.contains("::") {
-            PathBuf::from(&module).join("mod.rs")
-        } else {
+        let path = if module.contains("::") {
             rust_module_file_path(&module.replace("::", "."))
+        } else {
+            PathBuf::from(&module).join("mod.rs")
         };
         bridge_rust_files.insert(canonical_rust_module_path(&path)?, source);
     }

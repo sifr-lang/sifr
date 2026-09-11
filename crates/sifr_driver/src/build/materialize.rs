@@ -263,10 +263,10 @@ fn materialize_binary_project_files(
     write_project_file(&src_dir.join("main.rs"), main_rs, "main.rs")?;
 
     for (module, source) in generated_project.bridge_modules {
-        let path = if !module.contains("::") {
-            PathBuf::from(&module).join("mod.rs")
-        } else {
+        let path = if module.contains("::") {
             rust_module_file_path(&module.replace("::", "."))
+        } else {
+            PathBuf::from(&module).join("mod.rs")
         };
         let canonical_path = canonical_rust_module_path(&path)?;
         write_project_file(
