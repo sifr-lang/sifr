@@ -24,6 +24,47 @@ The existing scope freeze, predecessor evidence and outstanding SQLite,
 policy delivery and downstream integration obligations remain in force.
 
 
+## Remote qualification checkpoint — 2026-09-12
+
+Compiler candidate `4f1b33cd1579cb7a29a21b9e53acc3c5b3ea63a5` passed the
+Linux compiler build, generated Cargo setup92, and the original Python30
+selection: zero failures, complete compiled certification (seven capabilities,
+nine evidence entries). The five compiled suite report hashes were verified.
+Existing formatting, file-size, HIR and readiness results remain recorded.
+
+Two host setup requirements were established through retained failures:
+explicitly load the selected uv CPython 3.14.7 library, and use a private
+disk-backed `TMPDIR` instead of the quota-limited `/tmp` tmpfs. The exact
+settings are in the external continuation `environment.sh`. The first Python
+attempt timed out; the second hit temporary-storage quota. Neither is relabeled
+as a pass. The final original30 run passed without a partial-certification
+exception. No compiler runtime source, global library configuration or quota
+was changed to obtain that result.
+
+The authoritative performance invocation identity is in the retained JSON.
+The benchmark report is `bench-1789236129-184155.json`. All ten benchmark cases
+completed, but the unchanged budget checker rejected four measurements:
+
+| Case | Metric | Measured | Limit |
+| --- | --- | ---: | ---: |
+| check-project-004-project-graph | median_ms | 2747.294 | 1357.524 |
+| check-single-file-001-arithmetic | median_ms | 2744.606 | 1334.139 |
+| diagnostic-non-regression-002-json-diagnostic-schema | median_ms | 2763.506 | 1335.954 |
+| lsp-query-003-diagnostics | peak_rss_bytes | 159563776 | 83886080 |
+
+Status: **qualification blocked by performance budgets; not merge-ready**.
+The cause of these failures is not yet attributed. No waiver, baseline change,
+unchanged rerun, new review allowance, full merge gate, PR or merge is claimed.
+The next compiler task is bounded diagnosis of these recorded failures using
+the existing scope and review/gate history. SQLite48 and the other recorded
+phase dependencies retain their existing dispositions. The transferred
+prepared Python/editor/dependency candidates remain separate and unmerged.
+
+Exact logs, source/environment registrations, report snapshots and the earlier
+failed runs are retained under
+`/home/yaser5/projects/sifr/continuation-evidence/20260912-transfer` and indexed by
+`CONTINUATION.md`.
+
 ## Current retention supersession — Item70-F1C2B, 2026-09-11
 
 F1C2B minimal retention cleanup is COMPLETE via [PR #3825](https://github.com/sifr-lang/sifr/pull/3825),
