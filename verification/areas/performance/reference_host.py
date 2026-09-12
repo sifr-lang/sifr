@@ -122,6 +122,7 @@ def execution_details(repo_root: Path, manifest_path: Path, mode: str) -> dict[s
         "python": platform.python_version(),
         "build_profile": "dev",
         "control_mode": mode,
+        "cache_policy": "manifest per-case warmups",
         "cargo_jobs": os.environ.get("CARGO_BUILD_JOBS", "cargo-default"),
         "rust_test_threads": os.environ.get("RUST_TEST_THREADS", "default"),
         "build_environment": {
@@ -157,7 +158,7 @@ def comparison_mismatches(expected: dict[str, Any], actual: dict[str, Any]) -> l
             mismatches.append(f"host.{key}")
     for key in (
         "rustc", "cargo", "python", "build_profile", "control_mode", "cargo_jobs",
-        "rust_test_threads", "build_environment", "benchmark_inputs_sha256",
+        "rust_test_threads", "build_environment", "benchmark_inputs_sha256", "cache_policy",
         "target_storage", "temporary_storage", "cargo_config_sha256",
         "user_cargo_config_sha256",
     ):
