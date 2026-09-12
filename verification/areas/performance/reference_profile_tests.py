@@ -259,6 +259,19 @@ class NamedReferenceTests(unittest.TestCase):
                 validate_manifest_binding(profile, path)
 
 
+    def test_checked_in_corpus_has_derivation_for_every_policy(self):
+        data = Path(__file__).resolve().parent / "data"
+        original = json.loads((data / "budgets.json").read_text())
+        measured = json.loads((data / "baselines.json").read_text())
+        derived = derive_budgets(original, measured)
+        self.assertEqual(len(derived["budgets"]), len(original["budgets"]))
+        for before, after in zip(original["budgets"], derived["budgets"], strict=True):
+            self.assertEqual(before["thresholds"]["timeout_ms"], after["thresholds"]["timeout_ms"])
+            if before["policy"] in {"lsp-query", "formatter-command-default"}:
+                self.assertLessEqual(after["thresholds"]["median_ms"], before["thresholds"]["median_ms"])
+                self.assertLessEqual(after["thresholds"]["p95_ms"], before["thresholds"]["p95_ms"])
+
+
 def run_self_test():
     result = unittest.TestResult()
     unittest.defaultTestLoader.loadTestsFromTestCase(NamedReferenceTests).run(result)

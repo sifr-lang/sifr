@@ -104,6 +104,9 @@ def derive_budgets(template: dict[str, Any], baseline: dict[str, Any]) -> dict[s
         if policy == "command-default":
             thresholds["median_ms"] = max(median * 1.10, median + 25)
             thresholds["p95_ms"] = max(p95 * 1.15, p95 + 50)
+        elif policy == "formatter-command-default":
+            thresholds["median_ms"] = min(thresholds["median_ms"], max(median * 1.10, median + 25))
+            thresholds["p95_ms"] = min(thresholds["p95_ms"], max(p95 * 1.15, p95 + 50))
         elif policy == "frontend-query-edit-loop":
             thresholds["median_ms"] = max(median * 1.05, median + 2)
             thresholds["p95_ms"] = max(p95 * 1.10, p95 + 5)
