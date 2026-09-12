@@ -211,6 +211,9 @@ def main() -> int:
             repo_root=REPO_ROOT,
         )
 
+        source_at_start = command_output(["git", "rev-parse", "HEAD"])
+        if reference is not None and command_output(["git", "status", "--porcelain"]):
+            raise ReferenceProfileError("named qualification requires a clean producer worktree")
         invocation_id = (
             args.invocation_id or f"standalone-{int(time.time())}-{os.getpid()}"
         )
@@ -223,6 +226,9 @@ def main() -> int:
             control_mode=args.controlled_host_mode,
             controlled_host_timeout_seconds=args.controlled_host_timeout_seconds,
         )
+        if reference is not None and source_at_start != command_output(["git", "rev-parse", "HEAD"]):
+            raise ReferenceProfileError("compiler source changed during named measurement")
+        run_report["metadata"]["source_commit_at_start"] = source_at_start
         identity_after = None
         if identity is not None:
             identity_after = reference_identity(REPO_ROOT, Path(args.manifest), args.controlled_host_mode)
