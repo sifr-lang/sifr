@@ -34,8 +34,31 @@ def run_controlled_case(
                 )
             retry_admission = retry_admission_fn()
         attempt_root = run_root / "attempts" / str(attempt_index)
-        with monitor_factory(control_mode=control_mode) as monitor:
-            result = run_case_fn(case, attempt_root, sample_scale)
+        monitor = monitor_factory(control_mode=control_mode)
+        try:
+            with monitor:
+                result = run_case_fn(case, attempt_root, sample_scale)
+        except Exception as error:
+            # Keep a failed warmup's available receipts and host observations
+            # before propagating the original error. No further attempt runs.
+            attempt_evidence = {
+                "attempt": attempt_index,
+                "control_mode": control_mode,
+                "status": "error",
+                "error": {"type": type(error).__name__, "message": str(error)},
+                "host_snapshots": monitor.snapshots,
+                "sample_receipts": sample_receipts(attempt_root, case.id),
+            }
+            if retry_admission is not None:
+                attempt_evidence["retry_admission"] = retry_admission
+            attempts.append(attempt_evidence)
+            write_json(attempt_root / "results" / f"{case.id}.json", attempt_evidence)
+            write_json(
+                run_root / "control-failures" / f"{case.id}.json",
+                {"schema_version": 1, "runner_version": RUNNER_VERSION,
+                 "case_id": case.id, "status": "error", "attempts": attempts},
+            )
+            raise
         rejection_reasons = (
             monitor.rejection_reasons() if require_controlled_host else []
         )
@@ -78,12 +101,16 @@ def run_controlled_case(
             "stability_limit": stability_limit,
             "host_snapshots": monitor.snapshots,
             "rejection_reasons": rejection_reasons,
+            # Copy before result gains its control record to avoid a JSON cycle.
+            "result": result.copy(),
+            "sample_receipts": sample_receipts(attempt_root, case.id),
         }
         if advisory_reasons:
             attempt_evidence["advisory_reasons"] = sorted(set(advisory_reasons))
         if retry_admission is not None:
             attempt_evidence["retry_admission"] = retry_admission
         attempts.append(attempt_evidence)
+        write_json(attempt_root / "results" / f"{case.id}.json", attempt_evidence)
         if not rejection_reasons:
             result["control"] = {
                 "status": "controlled" if require_controlled_host else "record-only",
@@ -112,6 +139,10 @@ def run_controlled_case(
         f"benchmark {case.id} did not produce a stable controlled sample after 3 attempts: "
         f"{', '.join(reasons)}; evidence={failure_display}"
     )
+
+
+def sample_receipts(attempt_root: Path, case_id: str) -> list[str]:
+    return [str(path) for path in sorted((attempt_root / "samples" / case_id).glob("*.json"))]
 
 
 def run_self_test(output_root: Path) -> None:
@@ -162,6 +193,13 @@ def run_self_test(output_root: Path) -> None:
         raise BenchmarkError(
             "controlled retry self-test did not record retry admission evidence"
         )
+    if [entry["result"]["metrics"]["coefficient_variation"] for entry in
+            accepted["control"]["attempts"]] != [0.20, 0.05]:
+        raise BenchmarkError("controlled retry lost rejected or accepted measurements")
+    json.dumps(accepted)
+    for index in (1, 2):
+        saved = json.loads((output_root / f"attempts/{index}/results/{case.id}.json").read_text())
+        assert saved == accepted["control"]["attempts"][index - 1]
 
     def stable_work_run(
         _case: BenchmarkCase, _root: Path, _scale: str
@@ -237,6 +275,18 @@ def run_self_test(output_root: Path) -> None:
         raise BenchmarkError(
             "controlled retry self-test did not persist failure evidence"
         )
+    failure = json.loads(
+        output_root.joinpath("control-failures", f"{case.id}.json").read_text()
+    )
+    if len(failure["attempts"]) != 3 or any(
+        attempt["result"]["metrics"]["coefficient_variation"] != 0.20
+        for attempt in failure["attempts"]
+    ):
+        raise BenchmarkError("controlled retry exhaustion lost measurements")
+    for index in (1, 2, 3):
+        saved = json.loads((output_root / f"attempts/{index}/results/{case.id}.json").read_text())
+        assert saved == failure["attempts"][index - 1]
+    print("controlled sampling: accepted/rejected/exhausted attempt results and acyclic JSON passed")
 
 
 def assert_fails(action: Any, expected: str) -> None:
