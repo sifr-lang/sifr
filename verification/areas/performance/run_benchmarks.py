@@ -240,6 +240,11 @@ def main() -> int:
         run_report["metadata"]["reference_compiler_commit"] = compiler_reference
         if identity is not None:
             run_report["metadata"]["host_cpu"] = ", ".join(identity["host"]["cpu_models"])
+        if identity is not None:
+            identity["cache_observations"] = {
+                "before": run_report["metadata"]["cache_state_before"],
+                "after": run_report["metadata"]["cache_state_after"],
+            }
         run_report["metadata"]["reference_identity"] = identity
         run_report["metadata"]["reference_identity_after"] = identity_after
         run_report["metadata"]["reference_profile"] = args.reference_profile or args.capture_reference_profile or None

@@ -38,6 +38,7 @@ def identity():
         "execution": {
             "rustc": "rustc 1.98.1", "cargo": "cargo 1.98.1", "python": "3.14.7",
             "build_profile": "dev", "control_mode": "latency", "cargo_jobs": "2",
+            "cache_policy": "manifest per-case warmups",
             "rust_test_threads": "default", "build_environment": {},
             "benchmark_inputs_sha256": "a" * 64,
             "target_storage": {"filesystem": "ext4", "source": "disk"},
