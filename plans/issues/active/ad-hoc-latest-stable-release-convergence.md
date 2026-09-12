@@ -24,6 +24,35 @@ The existing scope freeze, predecessor evidence and outstanding SQLite,
 policy delivery and downstream integration obligations remain in force.
 
 
+## Required development-host target — 2026-09-12
+
+The user explicitly requires continuation to work on the existing 12 GB RAM
+machine. Its CPU is an Intel Core i7-4720HQ at 2.60 GHz: four physical cores,
+eight logical CPUs. Treat this machine as the development/qualification target;
+do not make a larger machine a prerequisite for completing the existing work.
+
+The demonstrated configuration uses `CARGO_BUILD_JOBS=2`, sequential heavy
+qualification suites, the selected uv Python embedding library, and a private
+disk-backed `TMPDIR`. These settings are recorded in the continuation environment
+file. Generated native builds must not exhaust the shared quota-limited `/tmp`
+tmpfs. The original Python30 selection already passes under this configuration;
+this does not certify every remaining merge/release gate.
+
+The retained representative measurement reports warm LSP diagnostics at
+4.133 ms median / 4.351 ms p95 and 159,563,776 bytes (152.17 MiB) peak RSS.
+The three failed fresh-check/diagnostic medians are about 2.75 seconds. Neither
+observation demonstrates exhaustion of the 12 GB machine. The checked-in latency
+baseline records macOS ARM64 and Rust 1.94.0, whereas this run uses Linux x86_64
+and Rust 1.98.1. The existing budget failures remain failures; cross-host,
+cross-toolchain differences alone do not establish a compiler regression.
+
+Next: diagnose the fresh-process startup cost and LSP memory attribution, and
+use equivalent compiler/build inputs on this host for regression comparisons.
+Preserve functional assertions and resource controls. This hardware requirement
+does not authorize automatically inflating thresholds, replacing the baseline
+with the failed candidate, waiving a gate, or declaring release qualification
+complete. The earlier failure and review/gate accounting remain intact.
+
 ## Remote qualification checkpoint — 2026-09-12
 
 Compiler candidate `4f1b33cd1579cb7a29a21b9e53acc3c5b3ea63a5` passed the
