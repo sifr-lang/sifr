@@ -2922,6 +2922,15 @@ mod sifr_generated_project_nominals {
             Self::new(err.message)
         }
     }
+    impl From<
+        crate::sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2econfigparserX2eParsingError,
+    > for Error {
+        fn from(
+            err: crate::sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2econfigparserX2eParsingError,
+        ) -> Self {
+            Self::new(err.message)
+        }
+    }
 }
 pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::IOError;

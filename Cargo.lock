@@ -7723,6 +7723,7 @@ name = "sifr_lowering"
 version = "0.0.0"
 dependencies = [
  "bigdecimal",
+ "insta",
  "num-bigint 0.5.1",
  "ruff_python_ast",
  "ruff_python_parser",
