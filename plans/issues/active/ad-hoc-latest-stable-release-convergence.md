@@ -1,5 +1,69 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Named performance reference checkpoint — 2026-09-13
+
+The user approved named host references after the Linux startup checkpoint.
+This supersedes that checkpoint's unanswered baseline-policy question. The
+approved design keeps historical Mac evidence and creates an independent Linux
+reference from merged compiler source; it does not use the continuation compiler
+as its own baseline.
+
+Implementation candidate `cd667af14be58bc4b002f8b3d6b8f1bdddd6819c` adds
+explicit named-profile capture and selection, host/configuration matching,
+immutable profile data, shared budget derivation, source/receipt binding and
+incomparable-trend rejection. Historical unprofiled commands remain available.
+Unknown named profiles fail without falling back to historical limits.
+The profile records OS/kernel/architecture, CPU model and topology, available
+CPUs, usable RAM, toolchains, two Cargo build jobs, build overrides, filesystem
+identity, benchmark-input identity and cache/host telemetry.
+
+The isolated reference worktree is
+`/home/yaser5/projects/sifr/worktrees/linux-performance-reference`, branch
+`codex/linux-performance-reference`, tooling SHA
+`3c0dbd789f0dc2e83161e54ec3682b9dcfa1a7cd`. Compiler source is unchanged from
+merged main `ca7a6d60e266beccce21d4c16e08667086578277`. Its complete performance
+harness matches the continuation candidate. Python 3.14.7, Rust/Cargo 1.98.1,
+Ubuntu 26.04.1, i7-4720HQ (4 physical / 8 logical CPUs) and usable RAM
+11,880,697,856 bytes were recorded before the approved capture.
+
+Validation: all 24 named-profile test methods, benchmark-runner self-tests,
+budget/trend self-tests and the file-size guard passed. Unknown-profile CLI
+negative checks and historical budget policy passed. The full 65-case smoke
+warmup passed before capture, and is cache preparation only. The initial
+cold-build/warmup failures remain in the evidence history.
+
+**Blocker: no named Linux baseline was published.** The approved full capture
+`bench-1789253120-317075` passed 59 cases, then rejected
+`lsp-query-013-selection-range` after all three controlled attempts. Their
+latency coefficients of variation were 0.361507, 0.458248 and 0.391576 against
+the existing 0.10 limit. Five later cases did not run. Host evidence reported
+low external CPU pressure; the failure was unstable samples, not a timeout.
+
+A separate short client profile and 60-iteration diagnostic reproduced a
+transient rise in request latency. Samples 40–59 were stable (CV 0.023766),
+whereas the original measured window remained unstable. The client profile
+was dominated by waiting for server responses. The exact server mechanism is
+not yet proven. These are diagnostic observations, not approved performance
+evidence and not permission to discard samples or weaken stability limits.
+
+Evidence is retained outside Git at
+`/home/yaser5/projects/sifr/continuation-evidence/20260912-reference-profiles`:
+`reference-capture.log`, `reference-capture.exit`,
+`reference-capture-failure-summary.json`,
+`reference-capture-failed-evidence.tar.gz`,
+`selection-range-client.prof`, and both selection-range diagnostic JSONs.
+The control-failure receipt SHA-256 is
+`8b57ca4223af2ed5ee03b5fd41e665a942d2fb712a01ff1037d753d2b818740b`.
+
+Next: resolve the selection-range measurement transient with an explicitly
+bounded correction to the benchmark contract or independently merged reference
+compiler. Keep reference and candidate harnesses identical, then obtain a new
+complete controlled reference and qualify the continuation's representative
+suite against it. Do not rerun the unchanged failing capture. No named
+candidate qualification, PR, new external review, merge gate or merge is claimed.
+Existing phase scope, historical failures and gate/review accounting remain
+unchanged.
+
 ## Linux startup improvement checkpoint — 2026-09-12
 
 Implementation candidate `cdaefc6fdd3cc97dc8e60151f50be45b1bdcc6fa` on
