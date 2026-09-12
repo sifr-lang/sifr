@@ -22,7 +22,7 @@ TLS capability implements the Sifr-native TLS substrate over the async-network c
 
 ## Current Dependency Preparation
 
-The 2026-09-08 Item 44 preparation selects Rustls 0.23.44, Tokio-Rustls
+The 2026-09-08 dependency selection uses Rustls 0.23.44, Tokio-Rustls
 0.26.5 and development-only rcgen 0.14.10. The table above records these current
 inputs and existing coverage. Final batch vendor, dependency and compatibility
 checks are pending; the historical results below do not qualify these versions.

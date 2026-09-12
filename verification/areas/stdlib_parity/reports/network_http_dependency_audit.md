@@ -1,6 +1,6 @@
 # Network HTTP Dependency Audit
 
-Status: the original network/HTTP readiness implementation is closed. The table records current dependency selections, refreshed on 2026-09-08; its conformance descriptions identify existing coverage, not new-version PASS evidence. The Item 44 dependency refresh is prepared pending final batch validation. Generated dependency snapshots are resolver-backed by `crates/sifr_stdlib_manifest/tests/network_http_dependency_snapshots.rs`.
+Status: the original network/HTTP readiness implementation is closed. The table records current dependency selections, refreshed on 2026-09-08; its conformance descriptions identify existing coverage, not new-version PASS evidence. Qualification of the refreshed dependency versions remains incomplete. Generated dependency snapshots are resolver-backed by `crates/sifr_stdlib_manifest/tests/network_http_dependency_snapshots.rs`.
 
 | Crate family | Accepted features | Sifr abstraction hiding crate | Typed error mapping | Panic/unsafe audit | License/MSRV/binary/platform impact | Deterministic tests and conformance | Maintenance signal |
 | --- | --- | --- | --- | --- | --- | --- | --- |

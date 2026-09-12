@@ -197,7 +197,7 @@ fn base64_vendor_rejects_extra_versioned_directories_and_authenticates_files() {
         .test_unwrap("clock")
         .as_nanos();
     let temporary =
-        std::env::temp_dir().join(format!("sifr-item49-vendor-{}-{nonce}", std::process::id()));
+        std::env::temp_dir().join(format!("sifr-base64-vendor-{}-{nonce}", std::process::id()));
     let stale = temporary.join("vendor/base64-0.1.0");
     fs::create_dir_all(&stale).test_unwrap("isolated vendor fixture");
     fs::write(

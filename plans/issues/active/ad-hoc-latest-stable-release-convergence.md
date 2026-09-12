@@ -1,5 +1,29 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Remote continuation — 2026-09-12
+
+The user transferred continuation to the isolated Linux worktree
+`/home/yaser5/projects/sifr/worktrees/latest-stable-continuation`, branch
+`codex/latest-stable-remote-continuation`. Compiler candidate `dba2b2572` was
+reconciled with main `ca7a6d60e` in `b5fd57181`; both existing phase records
+were preserved. Eight additional prepared repositories and 13,101 selected
+compact evidence files were transferred and verified outside the Git tree at
+`/home/yaser5/projects/sifr/continuation-evidence/20260912-transfer`.
+`CONTINUATION.md`, `source-manifest.json`, `evidence-manifest.json`, and
+`transfer-verification.json` bind the source identities, exclusions and next work.
+Original Mac candidates and uncommitted records remain untouched.
+
+Linux readiness passed its coverage, profile-assignment and negative cases;
+its taxonomy check rejected five delivery-item labels in the integrated
+reports, comments and temporary names. Those labels were replaced with their
+compiler/dependency responsibilities; the unchanged taxonomy check then passed.
+The failed result is retained. No dependency, runtime behavior or assertion was
+weakened. File-size and HIR checks passed. Native qualification remains in
+progress; no full gate, final review, performance or merge pass is claimed.
+The existing scope freeze, predecessor evidence and outstanding SQLite,
+policy delivery and downstream integration obligations remain in force.
+
+
 ## Current retention supersession — Item70-F1C2B, 2026-09-11
 
 F1C2B minimal retention cleanup is COMPLETE via [PR #3825](https://github.com/sifr-lang/sifr/pull/3825),

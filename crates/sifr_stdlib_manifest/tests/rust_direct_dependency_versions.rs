@@ -151,8 +151,10 @@ fn an_extra_untracked_manifest_does_not_enter_live_git_discovery() {
         .duration_since(std::time::UNIX_EPOCH)
         .test_unwrap("clock")
         .as_nanos();
-    let directory =
-        std::env::temp_dir().join(format!("sifr-item49-index-{}-{nonce}", std::process::id()));
+    let directory = std::env::temp_dir().join(format!(
+        "sifr-dependency-index-{}-{nonce}",
+        std::process::id()
+    ));
     std::fs::create_dir(&directory).test_unwrap("isolated index fixture");
     std::fs::write(directory.join("Cargo.toml"), "[workspace]\n").test_unwrap("tracked manifest");
     for args in [vec!["init", "--quiet"], vec!["add", "--", "Cargo.toml"]] {

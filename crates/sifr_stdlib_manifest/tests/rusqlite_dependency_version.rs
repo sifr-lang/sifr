@@ -112,7 +112,7 @@ fn maintained_rusqlite_dependencies_use_the_latest_stable_policy() {
 
 #[test]
 fn maintained_lock_edges_use_rusqlite_0_40_2() {
-    // Incoming ownership complements, and does not replace, Item66 feature contexts.
+    // Incoming dependency ownership complements the existing feature-context checks.
     let owners = cargo_edges::first_party_edges("rusqlite", RUSQLITE_VERSION);
     assert_eq!(owners.len(), 6);
     assert!(
