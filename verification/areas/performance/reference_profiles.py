@@ -65,7 +65,11 @@ def validate_result_profile(profile: dict[str, Any], report: dict[str, Any]) -> 
     assert_comparable(profile, metadata.get("reference_identity", {}))
     if metadata.get("source_dirty") is not False:
         raise ReferenceProfileError("named qualification requires a clean producer worktree")
+    if metadata.get("sample_scale") != "manifest":
+        raise ReferenceProfileError("named qualification requires manifest sample counts")
     baseline = profile["baseline"]
+    if metadata.get("host_control", {}).get("policy") != baseline["reference_capture"].get("host_control_policy"):
+        raise ReferenceProfileError("host-control policy differs from the approved reference")
     if report.get("runner_version") != baseline.get("runner_version"):
         raise ReferenceProfileError("result and reference runner versions differ")
     if metadata.get("host_control", {}).get("status") != "controlled":
@@ -178,3 +182,9 @@ def validate_compiler_reference(repo_root: Path, commit: str) -> str:
             + ", ".join(forbidden)
         )
     return commit
+
+
+def validate_manifest_binding(profile: dict[str, Any], manifest_path: Path) -> None:
+    actual = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    if profile["baseline"].get("manifest_sha256") != actual:
+        raise ReferenceProfileError("checker manifest differs from the approved reference")
