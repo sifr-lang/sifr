@@ -47,14 +47,13 @@
         "label": "Blog",
         "href": "https://sifr.sh/blog",
         "icon": "newspaper"
-      },
-      {
-        "label": "Install Sifr",
-        "href": "/installation",
-        "icon": "download",
-        "primary": true
       }
-    ]
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Install Sifr",
+      "href": "/installation"
+    }
   },
   "navigation": {
     "tabs": [

@@ -28,8 +28,8 @@ RUST_CLAIMS_CHECK = (
     / "checks"
     / "check_stable_support_claims.py"
 )
-START_MARKER = "<!-- stable-release-facts:start -->"
-END_MARKER = "<!-- stable-release-facts:end -->"
+START_MARKER = "{/* stable-release-facts:start */}"
+END_MARKER = "{/* stable-release-facts:end */}"
 RENDERER_PATH = (
     REPO_ROOT / "scripts" / "distribution" / "render_stable_release_docs.py"
 )
@@ -139,8 +139,8 @@ REQUIRED_BY_DOCUMENT = {
     ),
     "rust-interop": (
         "stable_support_claims.json",
-        "<!-- rust-interop-stable-claims:start -->",
-        "<!-- rust-interop-stable-claims:end -->",
+        "{/* rust-interop-stable-claims:start */}",
+        "{/* rust-interop-stable-claims:end */}",
     ),
 }
 FORBIDDEN_CLAIMS = (

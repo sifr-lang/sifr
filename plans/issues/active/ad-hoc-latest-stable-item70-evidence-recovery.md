@@ -1,5 +1,12 @@
 # Item 70: original-evidence recovery and prospective disposition
 
+Current supersession, 2026-09-11: [Item70-F1C2B](ad-hoc-latest-stable-item70-f1c2b-minimal-retention.md)
+implements the user's minimal historical retention direction. Blanket all-byte
+recovery/retention and independent-copy prerequisites below are retired.
+The20 missing payloads/four results remain INCOMPLETE/UNRECOVERED; preserve
+these original findings and compact provenance. Current software qualification
+and human publication approval remain required, without retrospective passes.
+
 State: bounded recovery assessment complete and merged, 2026-09-08, via
 [PR #3810](https://github.com/sifr-lang/sifr/pull/3810). This is the authorized
 current disposition, not qualification.

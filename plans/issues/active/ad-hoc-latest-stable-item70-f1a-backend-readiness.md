@@ -1,5 +1,11 @@
 # Item 70-F1A: durable backend capability and implementation readiness
 
+Current supersession, 2026-09-11: [Item70-F1C2B](ad-hoc-latest-stable-item70-f1c2b-minimal-retention.md)
+replaces the all-byte/R2/independent-administrator policy with existing GitHub
+Release assets and compact evidence retention under explicit user direction.
+Account/bucket/copy availability below is historical assessment, not a live
+prerequisite. No old missing evidence is thereby recovered or qualified.
+
 Assessment complete and merged, 2026-09-08, via
 [PR #3812](https://github.com/sifr-lang/sifr/pull/3812). Owner: release/distribution,
 [issue #3775](https://github.com/sifr-lang/sifr/issues/3775).
