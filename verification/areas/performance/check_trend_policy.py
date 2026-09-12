@@ -7,11 +7,14 @@ import argparse
 import copy
 import hashlib
 import json
+import os
 import sys
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+
+from reference_profiles import ReferenceProfileError, load_profile
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
@@ -34,6 +37,7 @@ def main() -> int:
     parser.add_argument("--trend-baselines", default=str(DEFAULT_TREND_BASELINES))
     parser.add_argument("--policy", default=str(DEFAULT_POLICY))
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--reference-profile", default=os.environ.get("SIFR_PERFORMANCE_REFERENCE", ""))
     args = parser.parse_args()
 
     try:
@@ -43,14 +47,15 @@ def main() -> int:
             return 0
 
         manifest = load_json(Path(args.manifest))
-        trend_baselines = load_json(Path(args.trend_baselines))
+        reference = load_profile(args.reference_profile) if args.reference_profile else None
+        trend_baselines = reference["baseline"] if reference else load_json(Path(args.trend_baselines))
         policy = load_json(Path(args.policy))
         validate_trend_policy(
             manifest, trend_baselines, policy, manifest_path=Path(args.manifest)
         )
         print("performance trend policy check passed")
         return 0
-    except TrendPolicyError as error:
+    except (TrendPolicyError, ReferenceProfileError) as error:
         print(f"performance trend policy error: {error}", file=sys.stderr)
         return 1
 

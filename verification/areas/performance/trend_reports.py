@@ -24,6 +24,29 @@ def build_trend_report(
         raise TrendReportError("trend baselines schema_version must be 1")
     if trend_baselines.get("runner_version") != runner_version:
         raise TrendReportError(f"trend baselines runner_version must be {runner_version}")
+    run_identity = run_report.get("metadata", {}).get("reference_identity")
+    baseline_identity = trend_baselines.get("metadata", {}).get("reference_identity")
+    if "reference_profile" in run_report.get("metadata", {}):
+        from reference_host import comparison_mismatches
+
+        mismatches = ["missing named reference identity"]
+        if run_identity and baseline_identity:
+            try:
+                mismatches = comparison_mismatches(baseline_identity, run_identity)
+            except (KeyError, TypeError):
+                mismatches = ["incomplete named reference identity"]
+        if mismatches:
+            return {
+                "schema_version": 1, "runner_version": runner_version,
+                "run_id": run_report["run_id"], "generated_at_unix": int(time.time()),
+                "comparison_status": "incomparable", "reasons": mismatches,
+                "local_trend_delta_blocking": False,
+                "metadata": run_report["metadata"],
+                "baseline_metadata": trend_baselines.get("metadata", {}),
+                "summary": {"benchmarks_compared": 0, "reference_review_required": 0,
+                            "reference_review_benchmark_ids": []},
+                "results": [],
+            }
     baseline_results = trend_baselines.get("results")
     if not isinstance(baseline_results, list):
         raise TrendReportError("trend baselines results must be a list")

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -16,6 +17,7 @@ if str(AREA_ROOT) not in sys.path:
     sys.path.insert(0, str(AREA_ROOT))
 
 from host_control import profile_control_mode  # noqa: E402
+from reference_profiles import ReferenceProfileError, load_profile  # noqa: E402
 
 DATA_ROOT = AREA_ROOT / "data"
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
@@ -60,6 +62,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    if os.environ.get("SIFR_PERFORMANCE_REFERENCE"):
+        try:
+            load_profile(os.environ["SIFR_PERFORMANCE_REFERENCE"])
+        except ReferenceProfileError as error:
+            raise SystemExit(str(error)) from error
     if args.bless:
         raise SystemExit("performance area does not support --bless")
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
@@ -207,7 +214,8 @@ def run_profile_variants(suite_name: str) -> list[dict[str, Any]]:
         invocation_id,
         "--require-controlled-host",
         "--controlled-host-mode",
-        profile_control_mode(),
+        (load_profile(os.environ["SIFR_PERFORMANCE_REFERENCE"])["identity"]["execution"]["control_mode"]
+         if os.environ.get("SIFR_PERFORMANCE_REFERENCE") else profile_control_mode()),
     ]
     for case_id in REPRESENTATIVE_CASES:
         run_argv.extend(["--case", case_id])
