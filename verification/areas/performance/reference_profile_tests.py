@@ -190,6 +190,7 @@ class NamedReferenceTests(unittest.TestCase):
         return {"runner_version": 1, "metadata": {
             "reference_profile": profile["name"], "reference_identity": identity(),
             "source_dirty": False, "sample_scale": "manifest",
+            "source_commit_at_start": "a" * 40, "compiler_fingerprint": "a" * 40,
             "reference_profile_sha256": profile_digest(profile),
             "host_control": {"status": "controlled"},
         }}
@@ -201,6 +202,8 @@ class NamedReferenceTests(unittest.TestCase):
             ("reference_profile", "other"),
             ("reference_profile_sha256", "stale"),
             ("source_dirty", True),
+            ("compiler_fingerprint", "b" * 40),
+            ("source_commit_at_start", ""),
             ("sample_scale", "smoke"),
             ("host_control", {"status": "controlled", "policy": {"changed": True}}),
             ("host_control", {"status": "record-only"}),
