@@ -265,7 +265,7 @@ Expired waivers, ownerless waivers, issue-less waivers, unknown benchmark/budget
 
 ## Named reference machines
 
-New benchmark qualification selects a named reference with
+Named benchmark qualification selects a reference with
 `SIFR_PERFORMANCE_REFERENCE` or `--reference-profile`. The profile captures
 OS/kernel, exact CPU model and topology, usable RAM and capacity class,
 available CPUs, Rust/Cargo/Python versions, dev build mode, Cargo jobs, test
@@ -280,6 +280,9 @@ or a reference artifact changed between production and checking. Compiler
 source and dependency/optimization changes remain recorded candidate changes;
 they do not automatically create a new baseline. Historical Mac files remain
 unchanged and cannot supply missing CPU/RAM details for a new named capture.
+Existing unnamed historical-policy commands remain available; they do not
+provide the new full host-identity qualification. Selecting an unknown or
+mismatched named reference never falls back to those commands.
 
 Capture a new reference from a clean isolated worktree containing a merged
 compiler plus the benchmark tooling. Initialize submodules, build the compiler

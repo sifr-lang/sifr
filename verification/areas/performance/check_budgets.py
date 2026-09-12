@@ -81,7 +81,7 @@ def main() -> int:
                 load_json(Path(args.budgets)), load_json(Path(args.work_budgets))
             )
             results = load_json(Path(args.results))
-            if "reference_profile" in results.get("metadata", {}):
+            if results.get("metadata", {}).get("reference_profile"):
                 raise ReferenceProfileError("select a named reference profile for qualification")
         waivers = load_json(Path(args.waivers))
         check_budgets(
