@@ -41,14 +41,19 @@ pub(crate) struct ModuleSupportDemand {
     suppressed_union_definitions: HashSet<String>,
     locally_shadowed_error_classes: HashSet<String>,
     referenced_error_classes: HashSet<String>,
-    python_error_rust_types: BTreeSet<String>,
+    error_conversions: crate::error_refs::ErrorConversionDemand,
+    error_conversion_paths: HashMap<String, String>,
     required_features: HashSet<StdlibFeature>,
     needs_file_handle_struct: bool,
     structural_interop_enabled: bool,
 }
 
 impl ModuleSupportDemand {
-    pub(crate) fn from_emitter(module: &HirModule, emitter: &RustEmitter) -> Self {
+    pub(crate) fn from_emitter(
+        module: &HirModule,
+        emitter: &RustEmitter,
+        module_name: Option<&str>,
+    ) -> Self {
         let runtime = RuntimeSupportDemand::for_module(module);
         let needs_file_handles = emitter.runtime_needs.file_handles();
         let user_defined_error_classes = module
@@ -79,9 +84,11 @@ impl ModuleSupportDemand {
                 .map(str::to_string)
                 .collect(),
             referenced_error_classes,
-            python_error_rust_types: crate::python_interop_common::python_error_contract_rust_types(
+            error_conversions: crate::error_refs::collect_error_conversion_demand(
                 module,
+                module_name,
             ),
+            error_conversion_paths: HashMap::new(),
             required_features: emitter.intrinsic_registry_features.clone(),
             needs_file_handle_struct: needs_file_handles
                 && !module
@@ -118,12 +125,15 @@ impl ModuleSupportDemand {
             .extend(other.suppressed_union_definitions.iter().cloned());
         self.referenced_error_classes
             .extend(other.referenced_error_classes.iter().cloned());
-        self.python_error_rust_types
-            .extend(other.python_error_rust_types.iter().cloned());
+        self.error_conversions.merge(&other.error_conversions);
         self.required_features
             .extend(other.required_features.iter().copied());
         self.needs_file_handle_struct |= other.needs_file_handle_struct;
         self.structural_interop_enabled |= other.structural_interop_enabled;
+    }
+
+    pub(crate) fn set_error_conversion_paths(&mut self, paths: &HashMap<String, String>) {
+        self.error_conversion_paths.clone_from(paths);
     }
 
     pub(crate) fn needs_support(&self) -> bool {
@@ -131,7 +141,7 @@ impl ModuleSupportDemand {
             || self.runtime_needs.file_handles()
             || !self.directly_used_stdlib_modules.is_empty()
             || !self.referenced_error_classes.is_empty()
-            || !self.python_error_rust_types.is_empty()
+            || !self.error_conversions.is_empty()
     }
 
     pub(crate) fn directly_used_stdlib_modules(&self) -> HashSet<String> {
@@ -191,12 +201,11 @@ pub(crate) fn render_support(
             }
         }
     }
-    if demand.runtime.async_python && referenced_error_classes.contains("Error") {
+    if referenced_error_classes.contains("Error") {
         items.extend(
             demand
-                .python_error_rust_types
-                .iter()
-                .map(|rust_type| build_error_into_error_impl(rust_type)),
+                .error_conversions
+                .render(&demand.error_conversion_paths),
         );
     }
 

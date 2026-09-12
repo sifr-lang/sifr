@@ -191,7 +191,7 @@ impl RustEmitter {
                             name: class.name.clone(),
                             fields: class.fields.clone(),
                             methods: Vec::new(),
-                            parent_class: class.parent_class.clone(),
+                            parent_class: class.semantic_parent_chain(),
                         },
                     ),
                 );

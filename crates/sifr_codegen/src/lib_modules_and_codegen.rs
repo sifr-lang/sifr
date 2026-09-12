@@ -245,7 +245,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         );
     }
     emitter.generate_enum_definitions();
-    let support_demand = ModuleSupportDemand::from_emitter(module, &emitter);
+    let support_demand = ModuleSupportDemand::from_emitter(module, &emitter, module_name);
     if support_emission == SupportEmission::Deferred {
         return deferred_codegen_result(
             module,

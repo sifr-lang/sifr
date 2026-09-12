@@ -306,7 +306,7 @@ pub(in crate::lower) fn collect_class_type(
     // Inherit parent fields and methods for single inheritance
     let parent_class_name =
         crate::lower::descriptor_declarations::data_parent_name(&class_name, ctx);
-    let mut parent_class_chain: Option<String> = None;
+    let mut parent_class_chain = is_error.then(|| "Error".to_string());
     let mut inherited_field_defaults = Vec::new();
     if let Some(ref parent_name) = parent_class_name {
         if let Some(parent_ty) =
