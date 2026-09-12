@@ -238,8 +238,15 @@ opt-level = 3
 [profile.dev.package.ruff_python_parser]
 opt-level = 1
 [profile.dev.package.sifr_lowering]
-opt-level = 1
+opt-level = 2
 [profile.dev.package.sifr_type_system]
-opt-level = 1
+opt-level = 2
 [profile.dev.package.sifr_codegen]
-opt-level = 1
+opt-level = 2
+
+# These syntax libraries execute on every development-compiler bootstrap.
+# Optimize them alongside the lowering and code-generation hot paths.
+[profile.dev.package.syn]
+opt-level = 2
+[profile.dev.package.proc-macro2]
+opt-level = 2

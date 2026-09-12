@@ -1,7 +1,7 @@
+use crate::graph::derive::derive_package_graph_from_normalized;
 use crate::{
     CargoCommandPlan, CargoLockMode, NormalizedCargoMetadata, PackageDiagnostic, PackageSourceMap,
-    SifrPackageGraph, derive_package_graph, map_cargo_failure, parse_metadata_json,
-    record_cargo_invocation,
+    SifrPackageGraph, map_cargo_failure, parse_metadata_json, record_cargo_invocation,
 };
 use sifr_frontend::SourceProvider;
 use std::path::Path;
@@ -94,16 +94,17 @@ pub fn load_package_graph_snapshot(
                 },
             }
         })?;
-    let normalized = metadata.clone().normalize();
-    let graph = derive_package_graph(metadata, provider).map_err(|diagnostics| {
-        PackageGraphLoadFailure {
-            plan: plan.clone(),
-            kind: PackageGraphLoadFailureKind::Package {
-                diagnostics,
-                usage_error: false,
-            },
-        }
-    })?;
+    let normalized = metadata.normalize();
+    let graph =
+        derive_package_graph_from_normalized(&normalized, provider).map_err(|diagnostics| {
+            PackageGraphLoadFailure {
+                plan: plan.clone(),
+                kind: PackageGraphLoadFailureKind::Package {
+                    diagnostics,
+                    usage_error: false,
+                },
+            }
+        })?;
     let source_map = PackageSourceMap::build(&graph, provider).map_err(|diagnostics| {
         PackageGraphLoadFailure {
             plan,
