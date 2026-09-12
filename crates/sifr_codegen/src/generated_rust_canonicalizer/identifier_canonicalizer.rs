@@ -4,15 +4,39 @@ use syn::visit::{self, Visit};
 
 use super::identifier_policy::{canonical_identifier_candidate, canonical_name_map};
 
-pub(super) fn canonicalize_identifiers(source: &str) -> Result<String, String> {
-    let file = syn::parse_file(source)
-        .map_err(|error| format!("failed to parse assembled generated Rust: {error}"))?;
+pub(super) fn project_name_map<'a>(
+    sources: impl IntoIterator<Item = &'a str>,
+) -> Result<BTreeMap<String, String>, String> {
     let mut identifiers = IdentifierCollector::default();
-    identifiers.visit_file(&file);
+    for source in sources {
+        let file = syn::parse_file(source)
+            .map_err(|error| format!("failed to parse assembled generated Rust: {error}"))?;
+        identifiers.visit_file(&file);
+    }
+    Ok(canonical_name_map(&identifiers.names))
+}
+
+pub(super) fn canonicalize_identifiers(
+    source: &str,
+    names: &BTreeMap<String, String>,
+) -> Result<String, String> {
+    use quote::ToTokens;
+    let mut file = syn::parse_file(source)
+        .map_err(|error| format!("failed to parse assembled generated Rust: {error}"))?;
+    let before = file.to_token_stream().to_string();
+    super::field_name_cleanup::expand_shorthand(&mut file, names);
+    let expanded;
+    let source = if before == file.to_token_stream().to_string() {
+        source
+    } else {
+        expanded = prettyplease::unparse(&file);
+        &expanded
+    };
+    let file = syn::parse_file(source).map_err(|error| error.to_string())?;
     let mut canonicalizer = GeneratedIdentifierCanonicalizer {
         source,
         line_starts: line_starts(source),
-        names: canonical_name_map(&identifiers.names),
+        names: names.clone(),
         replacements: Vec::new(),
         error: None,
     };
@@ -142,13 +166,25 @@ impl IdentifierCollector {
 }
 
 impl<'ast> Visit<'ast> for IdentifierCollector {
+    fn visit_member(&mut self, _member: &'ast syn::Member) {}
+    fn visit_field(&mut self, field: &'ast syn::Field) {
+        self.visit_type(&field.ty);
+    }
     fn visit_ident(&mut self, ident: &'ast Ident) {
         self.names.insert(ident.to_string());
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
         visit::visit_macro(self, rust_macro);
-        self.collect_tokens(rust_macro.tokens.clone());
+        if let Ok(arguments) = rust_macro.parse_body_with(
+            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+        ) {
+            for argument in &arguments {
+                self.visit_expr(argument);
+            }
+        } else {
+            self.collect_tokens(rust_macro.tokens.clone());
+        }
     }
 
     fn visit_meta_list(&mut self, meta: &'ast syn::MetaList) {
@@ -158,13 +194,25 @@ impl<'ast> Visit<'ast> for IdentifierCollector {
 }
 
 impl<'ast> Visit<'ast> for GeneratedIdentifierCanonicalizer<'_> {
+    fn visit_member(&mut self, _member: &'ast syn::Member) {}
+    fn visit_field(&mut self, field: &'ast syn::Field) {
+        self.visit_type(&field.ty);
+    }
     fn visit_ident(&mut self, ident: &'ast Ident) {
         self.collect_ident(ident);
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
         visit::visit_macro(self, rust_macro);
-        self.collect_tokens(rust_macro.tokens.clone());
+        if let Ok(arguments) = rust_macro.parse_body_with(
+            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+        ) {
+            for argument in &arguments {
+                self.visit_expr(argument);
+            }
+        } else {
+            self.collect_tokens(rust_macro.tokens.clone());
+        }
     }
 
     fn visit_meta_list(&mut self, meta: &'ast syn::MetaList) {

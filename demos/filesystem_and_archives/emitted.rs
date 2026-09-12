@@ -468,32 +468,32 @@ mod sifr_generated_project_nominals {
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2epathlibX2ePath {
-        pub path_field: String,
+        pub path: String,
     }
     impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
         #[must_use]
         pub const fn new(path: String) -> Self {
             let sifr_generated_field_value_0e74a76ec4f48c05_5f70617468: String = path;
             Self {
-                path_field: sifr_generated_field_value_0e74a76ec4f48c05_5f70617468,
+                path: sifr_generated_field_value_0e74a76ec4f48c05_5f70617468,
             }
         }
     }
     impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
         #[must_use]
         pub fn stem(&self) -> String {
-            stem(&self.path_field)
+            stem(&self.path)
         }
     }
     impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
         #[must_use]
         pub fn exists(&self) -> bool {
-            exists(&self.path_field)
+            exists(&self.path)
         }
     }
     impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2epathlibX2ePath {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            write!(f, "Path(_path={})", self.path_field)
+            write!(f, "Path(_path={})", self.path)
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
