@@ -1,5 +1,59 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Linux startup improvement checkpoint — 2026-09-12
+
+Implementation candidate `cdaefc6fdd3cc97dc8e60151f50be45b1bdcc6fa` on
+`codex/latest-stable-remote-continuation` improves development-compiler startup
+on the required 12 GB Linux host. Development opt-level 2 now covers the existing
+lowering/type-system/code-generation hot paths and their syn/proc-macro2 syntax
+libraries. Release settings and dependency locks are unchanged. Package graph
+loading now normalizes Cargo metadata once and borrows it through the existing
+graph derivation API, removing a full metadata clone and duplicate normalization.
+
+All 1,513 code-generation tests and 160 package tests passed. The final CLI
+build, formatting, HIR, file-size and diff checks passed. Two Cargo jobs and
+the private disk-backed temporary directory remain in effect. Idle private
+targets exceeding 20 GiB were cleaned before subsequent long validation;
+no shared or main-worktree target was cleaned.
+
+The canonical four-case remeasurement is `bench-1789249483-256726`,
+invocation `linux-startup-final-20260912`. All cases completed under latency
+host controls; the unchanged budget checker exited 1:
+
+| Case | Previous median | Current median | Limit |
+| --- | ---: | ---: | ---: |
+| arithmetic check | 2744.606 ms | 1498.335 ms | 1334.139 ms |
+| project graph check | 2747.294 ms | 1496.407 ms | 1357.524 ms |
+| JSON diagnostics | 2763.506 ms | 1495.983 ms | 1335.954 ms |
+
+Startup is approximately 45% faster on the same Linux host. Warm LSP diagnostics
+remain within their latency limit at 4.524 ms median / 4.548 ms p95, but peak RSS
+is 161,611,776 bytes (154.125 MiB), exceeding the unchanged 83,886,080-byte limit.
+The same four budget failures remain; no memory reduction or qualification
+pass is claimed. These are four targeted cases, not a full representative rerun.
+
+Profiling attributed much of the original startup cost to stdlib lowering,
+emission and Rust syntax validation. Native-position comparisons, extra
+driver/frontend/IR optimization, and scoped syntax/module workers were tested
+and rejected. No instrumentation or worker code remains. A main-process LSP
+smaps snapshot disproved the hypothesis that the memory peak was merely a Cargo
+child: anonymous PSS was 98,884 KiB and file PSS was 54,330 KiB.
+
+Evidence, rejected patches, test/build logs, exact source and binary hashes,
+and both successful measurements and failed budget checks are retained at
+`/home/yaser5/projects/sifr/continuation-evidence/20260912-startup-profile`.
+The earlier qualification failures remain intact. No PR, new external review,
+merge gate, waiver, baseline adjustment or phase closure was performed.
+
+Status: **tested startup improvement; performance qualification still blocked**.
+The user was asked whether to retain the cross-host limits or establish a
+separate Linux baseline from an approved reference compiler. No answer was
+received at this checkpoint, so existing limits remain unchanged. Next action:
+resolve that acceptance-target question before any reference-baseline work;
+if existing limits remain the target, continue diagnosis of the remaining
+startup and main-process memory costs. Preserve the existing scope and all
+review/gate accounting; other phase items remain separate.
+
 ## Remote continuation — 2026-09-12
 
 The user transferred continuation to the isolated Linux worktree
