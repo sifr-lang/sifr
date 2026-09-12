@@ -262,3 +262,65 @@ results, cache errors, diagnostic drift, split-brain semantics, or panic-safety
 errors.
 
 Expired waivers, ownerless waivers, issue-less waivers, unknown benchmark/budget references, and non-performance overrides fail `check_budgets.py`.
+
+## Named reference machines
+
+New benchmark qualification selects a named reference with
+`SIFR_PERFORMANCE_REFERENCE` or `--reference-profile`. The profile captures
+OS/kernel, exact CPU model and topology, usable RAM and capacity class,
+available CPUs, Rust/Cargo/Python versions, dev build mode, Cargo jobs, test
+workers, build environment, Cargo configuration hashes, benchmark input hash,
+and target/temporary storage. Available memory and swap counters are telemetry,
+not separate reference identities. Existing controlled-host admission continues
+to govern load, temperature, power and cache behavior.
+
+Qualification rejects an unknown profile, changed machine or execution
+configuration, changed benchmark inputs, uncontrolled evidence, dirty producer,
+or a reference artifact changed between production and checking. Compiler
+source and dependency/optimization changes remain recorded candidate changes;
+they do not automatically create a new baseline. Historical Mac files remain
+unchanged and cannot supply missing CPU/RAM details for a new named capture.
+
+Capture a new reference from a clean isolated worktree containing a merged
+compiler plus the benchmark tooling. Initialize submodules, build the compiler
+and helper, and warm caches before the approved full-corpus invocation:
+
+```bash
+RUSTUP_TOOLCHAIN=1.98.1 \
+CARGO_BUILD_JOBS=2 \
+SIFR_VALIDATION_PROFILE=approved-reference \
+SIFR_THERMAL_POLICY=controlled-host \
+python3 verification/areas/performance/run_benchmarks.py \
+  --capture-reference-profile linux-i7-4720hq-12gb-dev-v1 \
+  --reference-compiler-commit <full-merged-compiler-sha> \
+  --require-controlled-host --controlled-host-mode latency \
+  --reference-approval compiler/performance
+```
+
+The compiler reference must be an ancestor of `origin/main`; differences from
+it may touch only performance tooling and this document. All manifest cases
+and manifest sample counts are mandatory. The single named-capture command
+explicitly authorizes its bundled baseline and derived regression budgets;
+the older separate budget/trend capture commands retain their existing rules.
+A complete approved receipt and results are published atomically in
+`data/references/<name>.json`. An existing profile is never overwritten.
+
+Command/frontend latency and RSS budgets use the shared formulas above, applied
+to that host's measured reference. Existing LSP editor-latency ceilings,
+timeouts, correctness, stability and cache obligations are preserved. RSS uses
+the documented 10% / 32 MiB rule on the measured host; installed RAM alone does
+not set a process-memory allowance. Capturing a reference does not certify that
+either the reference or a candidate meets every usability or release criterion.
+Earlier failed runs retain their original result and baseline identity.
+
+After installing the measured profile in the candidate worktree:
+
+```bash
+export SIFR_PERFORMANCE_REFERENCE=linux-i7-4720hq-12gb-dev-v1
+python3 verification/areas/performance/runner.py --suite representative
+```
+
+The area adapter passes the selected profile to policy checks, benchmark
+production and budget checking through that environment setting. Named trend
+comparisons use the same reference, while incompatible or historical captures
+produce an explicit incomparable report without numerical regression claims.

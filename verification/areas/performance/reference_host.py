@@ -1,0 +1,168 @@
+"""Measured host and execution identity for named performance references."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import os
+import platform
+import subprocess
+from pathlib import Path
+from typing import Any
+
+
+def output(argv: list[str]) -> str:
+    result = subprocess.run(argv, capture_output=True, text=True, check=True, timeout=30)
+    return result.stdout.strip()
+
+
+def file_hash(path: Path) -> str | None:
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+def linux_memory() -> dict[str, int]:
+    values = {}
+    for line in Path("/proc/meminfo").read_text().splitlines():
+        key, value = line.split(":", 1)
+        values[key] = int(value.split()[0]) * 1024
+    swaps = {}
+    for line in Path("/proc/vmstat").read_text().splitlines():
+        key, value = line.split()
+        if key in {"pswpin", "pswpout"}:
+            swaps[key] = int(value)
+    return {
+        "total_bytes": values["MemTotal"],
+        "available_bytes": values["MemAvailable"],
+        "swap_used_bytes": values["SwapTotal"] - values["SwapFree"],
+        **swaps,
+    }
+
+
+def host_details() -> dict[str, Any]:
+    system = platform.system()
+    if system == "Linux":
+        records = [
+            dict(
+                (key.strip(), value.strip())
+                for line in block.splitlines() if ":" in line
+                for key, value in [line.split(":", 1)]
+            )
+            for block in Path("/proc/cpuinfo").read_text().strip().split("\n\n")
+        ]
+        models = sorted({record["model name"] for record in records})
+        cores = {(record.get("physical id"), record.get("core id")) for record in records}
+        if any(None in core for core in cores):
+            raise ValueError("reference host does not expose physical CPU topology")
+        memory = linux_memory()
+        physical_cores = len(cores)
+        available_cpus = len(os.sched_getaffinity(0))
+        os_release = platform.freedesktop_os_release()
+        os_version = os_release.get("PRETTY_NAME", "")
+    elif system == "Darwin":
+        models = [output(["sysctl", "-n", "machdep.cpu.brand_string"])]
+        physical_cores = int(output(["sysctl", "-n", "hw.physicalcpu"]))
+        available_cpus = int(output(["sysctl", "-n", "hw.logicalcpu"]))
+        memory = {"total_bytes": int(output(["sysctl", "-n", "hw.memsize"]))}
+        os_version = output(["sw_vers", "-productVersion"])
+    else:
+        raise ValueError(f"named reference capture is unsupported on {system}")
+    return {
+        "system": system,
+        "os_version": os_version,
+        "kernel": platform.release(),
+        "architecture": platform.machine(),
+        "cpu_models": models,
+        "physical_cores": physical_cores,
+        "logical_cpus": os.cpu_count(),
+        "available_cpus": available_cpus,
+        "memory_capacity_gib": math.ceil(memory["total_bytes"] / (1024 ** 3)),
+        "memory": memory,
+    }
+
+
+def storage_details(path: Path) -> dict[str, str]:
+    path = path.resolve()
+    while not path.exists():
+        path = path.parent
+    if platform.system() == "Linux":
+        mounts = json.loads(output(["findmnt", "-J", "-T", str(path), "-o", "FSTYPE,SOURCE"]))
+        mount = mounts["filesystems"][0]
+        return {"filesystem": mount["fstype"], "source": mount["source"]}
+    return {
+        "filesystem": output(["stat", "-f", "%T", str(path)]),
+        "source": output(["df", "-P", str(path)]).splitlines()[-1].split()[0],
+    }
+
+
+def input_hash(repo_root: Path, manifest_path: Path) -> str:
+    manifest = json.loads(manifest_path.read_text())
+    paths = sorted({
+        str(case[field])
+        for case in manifest["cases"]
+        for field in ("source_path", "project_root")
+        if case.get(field)
+    })
+    tracked = output(["git", "-C", str(repo_root), "ls-files", "--", *paths]).splitlines()
+    digest = hashlib.sha256(manifest_path.read_bytes())
+    for name in sorted(tracked):
+        digest.update(name.encode() + b"\0")
+        digest.update((repo_root / name).read_bytes())
+    return digest.hexdigest()
+
+
+def execution_details(repo_root: Path, manifest_path: Path, mode: str) -> dict[str, Any]:
+    target = Path(os.environ.get("CARGO_TARGET_DIR", str(repo_root / "target")))
+    if not target.is_absolute():
+        target = repo_root / target
+    temporary = Path(os.environ.get("TMPDIR", "/tmp"))
+    return {
+        "rustc": output(["rustc", "--version"]),
+        "cargo": output(["cargo", "--version"]),
+        "python": platform.python_version(),
+        "build_profile": "dev",
+        "control_mode": mode,
+        "cargo_jobs": os.environ.get("CARGO_BUILD_JOBS", "cargo-default"),
+        "rust_test_threads": os.environ.get("RUST_TEST_THREADS", "default"),
+        "build_environment": {
+            key: value for key, value in sorted(os.environ.items())
+            if key.startswith("CARGO_PROFILE_")
+            or key in {"RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "RUSTC_WRAPPER"}
+        },
+        "benchmark_inputs_sha256": input_hash(repo_root, manifest_path),
+        "target_storage": storage_details(target),
+        "temporary_storage": storage_details(temporary),
+        "cargo_manifest_sha256": file_hash(repo_root / "Cargo.toml"),
+        "cargo_config_sha256": file_hash(repo_root / ".cargo/config.toml"),
+        "user_cargo_config_sha256": file_hash(
+            Path(os.environ.get("CARGO_HOME", str(Path.home() / ".cargo"))) / "config.toml"
+        ),
+    }
+
+
+def reference_identity(repo_root: Path, manifest_path: Path, mode: str) -> dict[str, Any]:
+    return {
+        "host": host_details(),
+        "execution": execution_details(repo_root, manifest_path, mode),
+    }
+
+
+def comparison_mismatches(expected: dict[str, Any], actual: dict[str, Any]) -> list[str]:
+    mismatches = []
+    for key in (
+        "system", "os_version", "kernel", "architecture", "cpu_models",
+        "physical_cores", "logical_cpus", "available_cpus", "memory_capacity_gib",
+    ):
+        if expected["host"][key] != actual["host"][key]:
+            mismatches.append(f"host.{key}")
+    for key in (
+        "rustc", "cargo", "python", "build_profile", "control_mode", "cargo_jobs",
+        "rust_test_threads", "build_environment", "benchmark_inputs_sha256",
+        "target_storage", "temporary_storage", "cargo_config_sha256",
+        "user_cargo_config_sha256",
+    ):
+        if expected["execution"][key] != actual["execution"][key]:
+            mismatches.append(f"execution.{key}")
+    # Compiler source, Cargo.lock and per-package optimization are candidate
+    # changes to measure, not reasons to silently create a new reference.
+    return mismatches

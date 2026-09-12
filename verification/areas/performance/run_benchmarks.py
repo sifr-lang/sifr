@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import argparse
 import hashlib
 import json
 import os
@@ -15,6 +14,13 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
+
+from benchmark_cli import parse_args
+from reference_host import reference_identity
+from reference_profiles import (
+    ReferenceProfileError, assert_comparable, capture_profile, load_profile, profile_digest,
+    validate_compiler_reference, profile_path,
+)
 
 from benchmark_baseline import (
     baseline_from_run,
@@ -133,36 +139,7 @@ def sifr_binary() -> Path:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
-    parser.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT))
-    parser.add_argument("--groups", default="")
-    parser.add_argument("--case", action="append", default=[])
-    parser.add_argument("--case-limit", type=int, default=0)
-    parser.add_argument(
-        "--sample-scale", choices=["manifest", "smoke"], default="manifest"
-    )
-    parser.add_argument("--validate-only", action="store_true")
-    parser.add_argument("--capture-baseline", action="store_true")
-    parser.add_argument("--capture-work-baseline", action="store_true")
-    parser.add_argument("--baseline-output", default="")
-    parser.add_argument("--work-budget-output", default="")
-    parser.add_argument("--capture-trend-baseline", action="store_true")
-    parser.add_argument("--trend-baseline-output", default="")
-    parser.add_argument("--reference-approval", default="")
-    parser.add_argument("--trend-baselines", default=str(DEFAULT_TREND_BASELINES))
-    parser.add_argument("--trend-json-out", default="")
-    parser.add_argument("--json-out", default="")
-    parser.add_argument("--invocation-id", default="")
-    parser.add_argument("--require-controlled-host", action="store_true")
-    parser.add_argument(
-        "--controlled-host-mode",
-        choices=["latency", "work"],
-        default="latency",
-    )
-    parser.add_argument("--controlled-host-timeout-seconds", type=float, default=180.0)
-    parser.add_argument("--self-test", action="store_true")
-    args = parser.parse_args()
+    args = parse_args(DEFAULT_MANIFEST, DEFAULT_OUTPUT_ROOT, DEFAULT_TREND_BASELINES)
 
     try:
         if args.self_test:
@@ -188,8 +165,26 @@ def main() -> int:
         )
         if not selected:
             raise BenchmarkError("no benchmark cases selected")
+        if args.capture_reference_profile and (
+            args.reference_profile or args.capture_baseline
+            or args.capture_work_baseline or args.capture_trend_baseline
+        ):
+            raise ReferenceProfileError("named capture must be a separate approved invocation")
+        if args.capture_reference_profile and profile_path(args.capture_reference_profile).exists():
+            raise ReferenceProfileError("reference profile already exists; choose a versioned name")
+        reference = load_profile(args.reference_profile) if args.reference_profile else None
+        compiler_reference = (
+            validate_compiler_reference(REPO_ROOT, args.reference_compiler_commit)
+            if args.capture_reference_profile else None
+        )
+        identity = (
+            reference_identity(REPO_ROOT, Path(args.manifest), args.controlled_host_mode)
+            if reference or args.capture_reference_profile else None
+        )
+        if reference is not None:
+            assert_comparable(reference, identity)
         reference_source_commit = validate_capture_request(
-            capture_requested=args.capture_trend_baseline,
+            capture_requested=bool(args.capture_trend_baseline or args.capture_reference_profile),
             capture_budget_baseline=args.capture_baseline,
             require_controlled_host=args.require_controlled_host,
             sample_scale=args.sample_scale,
@@ -231,6 +226,18 @@ def main() -> int:
             control_mode=args.controlled_host_mode,
             controlled_host_timeout_seconds=args.controlled_host_timeout_seconds,
         )
+        identity_after = None
+        if identity is not None:
+            identity_after = reference_identity(REPO_ROOT, Path(args.manifest), args.controlled_host_mode)
+            assert_comparable({"name": "run-start", "identity": identity}, identity_after)
+        run_report["metadata"]["reference_compiler_commit"] = compiler_reference
+        if identity is not None:
+            run_report["metadata"]["host_cpu"] = ", ".join(identity["host"]["cpu_models"])
+        run_report["metadata"]["reference_identity"] = identity
+        run_report["metadata"]["reference_identity_after"] = identity_after
+        run_report["metadata"]["reference_profile"] = args.reference_profile or args.capture_reference_profile or None
+        if reference is not None:
+            run_report["metadata"]["reference_profile_sha256"] = profile_digest(reference)
         if work_source_commit is not None:
             validate_work_source_unchanged(work_source_commit, REPO_ROOT)
             run_report["metadata"]["work_baseline_source_commit"] = (
@@ -238,7 +245,7 @@ def main() -> int:
             )
         evidence_path = write_run_report(run_report, Path(args.output_root))
         trend_report = build_trend_report(
-            run_report, load_json(Path(args.trend_baselines)), RUNNER_VERSION
+            run_report, reference["baseline"] if reference else load_json(Path(args.trend_baselines)), RUNNER_VERSION
         )
         if args.trend_json_out:
             trend_path = (REPO_ROOT / args.trend_json_out).resolve()
@@ -247,6 +254,17 @@ def main() -> int:
             trend_path = write_trend_report(trend_report, Path(args.output_root))
         if json_out is not None:
             write_json(json_out, run_report)
+        if args.capture_reference_profile:
+            if reference_source_commit is None:
+                raise ReferenceProfileError("named capture did not bind a source commit")
+            validate_baseline_capture(run_report, {case.id: case for case in cases})
+            baseline = baseline_from_reference_run(
+                run_report, Path(args.manifest), evidence_path, repo_root=REPO_ROOT,
+                approval_owner=args.reference_approval,
+                expected_source_commit=reference_source_commit,
+            )
+            captured = capture_profile(args.capture_reference_profile, baseline, load_json(DEFAULT_BUDGETS))
+            print(f"named reference captured: {captured}")
         if args.capture_work_baseline:
             validate_baseline_capture(run_report, {case.id: case for case in cases})
             work_budgets = work_budgets_from_run(
@@ -306,6 +324,7 @@ def main() -> int:
         TrendBaselineError,
         TrendReportError,
         WorkBaselineError,
+        ReferenceProfileError,
     ) as error:
         print(f"performance benchmark error: {error}", file=sys.stderr)
         return 1
@@ -658,9 +677,8 @@ def host_metadata() -> dict[str, Any]:
         "profile": os.environ.get("SIFR_VALIDATION_PROFILE", "standalone"),
         "thermal_policy": os.environ.get("SIFR_THERMAL_POLICY", "unspecified"),
         "cargo_lock_sha256": sha256(REPO_ROOT / "Cargo.lock"),
-        "compiler_fingerprint": command_output(
-            ["cargo", "metadata", "--no-deps", "--format-version", "1"]
-        )[:64],
+        "compiler_fingerprint": command_output(["git", "rev-parse", "HEAD"]),
+        "source_dirty": bool(command_output(["git", "status", "--porcelain"])),
     }
 
 
@@ -707,6 +725,9 @@ def invalidate_output(path: Path) -> None:
 
 
 def run_self_test() -> None:
+    from reference_profile_tests import run_self_test as run_reference_tests
+
+    run_reference_tests()
     run_benchmark_process_self_test(run_subprocess)
     run_benchmark_case_self_test(sys.modules[__name__])
     run_sample_evidence_self_test()
