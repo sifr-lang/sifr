@@ -22,6 +22,7 @@ from reference_profiles import (
     profile_path,
     validate_result_profile,
     validate_compiler_reference,
+    validate_manifest_binding,
 )
 
 
@@ -188,7 +189,7 @@ class NamedReferenceTests(unittest.TestCase):
     def report(self, profile):
         return {"runner_version": 1, "metadata": {
             "reference_profile": profile["name"], "reference_identity": identity(),
-            "source_dirty": False,
+            "source_dirty": False, "sample_scale": "manifest",
             "reference_profile_sha256": profile_digest(profile),
             "host_control": {"status": "controlled"},
         }}
@@ -200,6 +201,8 @@ class NamedReferenceTests(unittest.TestCase):
             ("reference_profile", "other"),
             ("reference_profile_sha256", "stale"),
             ("source_dirty", True),
+            ("sample_scale", "smoke"),
+            ("host_control", {"status": "controlled", "policy": {"changed": True}}),
             ("host_control", {"status": "record-only"}),
         ):
             report = self.report(profile)
@@ -241,6 +244,16 @@ class NamedReferenceTests(unittest.TestCase):
         report = build_trend_report(run, old, 1)
         self.assertEqual(report["comparison_status"], "incomparable")
         self.assertEqual(report["results"], [])
+
+
+    def test_checker_manifest_cannot_weaken_reference(self):
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "manifest.json"
+            path.write_text("{}")
+            profile = self.profile()
+            profile["baseline"]["manifest_sha256"] = "different"
+            with self.assertRaisesRegex(ReferenceProfileError, "checker manifest"):
+                validate_manifest_binding(profile, path)
 
 
 def run_self_test():

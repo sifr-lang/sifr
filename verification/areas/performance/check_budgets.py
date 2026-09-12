@@ -13,7 +13,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from reference_profiles import ReferenceProfileError, load_profile, validate_result_profile
+from reference_profiles import ReferenceProfileError, load_profile, validate_result_profile, validate_manifest_binding
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
@@ -69,6 +69,7 @@ def main() -> int:
         manifest = load_json(Path(args.manifest))
         reference = load_profile(args.reference_profile) if args.reference_profile else None
         if reference is not None:
+            validate_manifest_binding(reference, Path(args.manifest))
             if args.budgets != str(DEFAULT_BUDGETS) or args.work_budgets != str(DEFAULT_WORK_BUDGETS):
                 raise ReferenceProfileError("named qualification cannot override reference budgets")
             budgets = reference["budgets"]
