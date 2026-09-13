@@ -105,15 +105,23 @@ def prepare_tooling_test_binaries(profile, env, command_runner) -> None:
 
 def prepare_performance_binaries(profile, env, command_runner) -> None:
     """Build the exact compiler and query-helper graphs before timed benchmarks."""
-    if not any(area["area"] == "performance"
-               and set(area["suites"]).intersection({"smoke", "representative", "full"})
-               for area in profile.get("selected_areas", [])):
-        return
-    for arguments in (["-p", "sifr"],
-                      ["-p", "sifr_frontend", "--bin", "frontend_query_bench"]):
-        command = ["cargo", "build", "--locked", "--offline", *arguments]
+    suites = {suite for area in profile.get("selected_areas", [])
+              if area["area"] == "performance" for suite in area["suites"]}
+    commands = []
+    if suites.intersection({"smoke", "representative", "full"}):
+        commands.extend([
+            ["cargo", "build", "--locked", "--offline", "-p", "sifr"],
+            ["cargo", "build", "--locked", "--offline", "-p", "sifr_frontend",
+             "--bin", "frontend_query_bench"],
+        ])
+    if "frontend-syntax-guardrails" in suites:
+        for package in ("sifr_syntax", "sifr_frontend"):
+            commands.append(["cargo", "test", "--locked", "--offline", "--no-run",
+                             "-p", package, "--lib"])
+    for command in commands:
         print(f"[sifr-profile-setup] performance-build={' '.join(command)}", flush=True)
         command_runner(command, env=env)
+
 
 def prepare_maintained_demo_cache(profile, env, command_runner) -> None:
     """Prepare the same complete demo graph before its bounded execution area."""

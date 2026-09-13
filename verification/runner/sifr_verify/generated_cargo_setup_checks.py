@@ -213,7 +213,6 @@ class SetupPolicyTests(unittest.TestCase):
             return {"selected_areas": [{"area": "performance", "suites": suites}]}
         runner = lambda args, **kw: calls.append(args)
         prepare_performance_binaries({"selected_areas": []}, {}, runner)
-        prepare_performance_binaries(profile(["frontend-syntax-guardrails"]), {}, runner)
         self.assertEqual(calls, [])
         expected = [
             ["cargo", "build", "--locked", "--offline", "-p", "sifr"],
@@ -224,10 +223,22 @@ class SetupPolicyTests(unittest.TestCase):
             calls.clear()
             prepare_performance_binaries(profile(suites), {}, runner)
             self.assertEqual(calls, expected)
+        guards = [
+            ["cargo", "test", "--locked", "--offline", "--no-run", "-p", package, "--lib"]
+            for package in ("sifr_syntax", "sifr_frontend")
+        ]
+        for suites, wanted in [
+            (["frontend-syntax-guardrails"], guards),
+            (["smoke", "frontend-syntax-guardrails"], expected + guards),
+        ]:
+            calls.clear()
+            prepare_performance_binaries(profile(suites), {}, runner)
+            self.assertEqual(calls, wanted)
         def fail(*args, **kw):
             raise CommandFailed(101)
-        with self.assertRaises(CommandFailed):
-            prepare_performance_binaries(profile(["smoke"]), {}, fail)
+        for suites in (["smoke"], ["frontend-syntax-guardrails"]):
+            with self.assertRaises(CommandFailed):
+                prepare_performance_binaries(profile(suites), {}, fail)
 
     def test_demo_preparation_selection_and_failure(self):
         calls = []

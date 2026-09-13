@@ -4736,3 +4736,26 @@ All 28 reference-profile tests, benchmark-runner self-tests and file-size
 guard pass. Evidence is retained in reference-config-policy-tests.log and
 reference-config-runner-selftest.log. This is a validation-policy correction,
 not a performance qualification or merge.
+
+## Selected Ruff fixture replay and performance setup — 2026-09-13
+
+Targeted performance at f5a9d131a7 completed all cache tests and benchmark
+smoke cases, but the Ruff revision guard rejected five fixture records still
+bound to f19957111640fdee8055bfe5b6aa854259344473. The selected fork is
+0f7e9ce63515fb45859f884452e5741eb19741c1. Cold frontend test compilation also
+consumed 356.239 seconds inside the area. The failed area and warmup receipts
+remain in 20260913-final-integration/remaining-performance-config-*.
+
+The five fixture sources now actually parse and replay their complete lexer
+token streams, including EndOfFile, against unchanged expectations. A
+deliberately corrupted expected token fails the test; original fixture bytes
+were restored. Revision records advance only after this replay. The initial
+test-harness mismatch (parsed tokens omit EOF) is retained in
+ruff-token-revalidation.log; the corrected positive and mutation logs are
+ruff-token-lexer-revalidation.log and ruff-token-mutation.log.
+
+Selected frontend/syntax guard test binaries are now explicitly compiled
+with --no-run during Cargo setup. Actual tests remain in the timed area;
+all budgets and benchmark samples remain unchanged. All 24 setup-policy
+tests and the file-size guard pass. This is targeted validation, not a
+complete profile pass, review or merge.

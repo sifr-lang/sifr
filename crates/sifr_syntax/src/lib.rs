@@ -7,6 +7,8 @@
 
 #[cfg(test)]
 mod template_string_tests;
+#[cfg(test)]
+mod token_fixture_tests;
 
 use ruff_text_size::{Ranged as _, TextRange};
 use sifr_diagnostics::{
