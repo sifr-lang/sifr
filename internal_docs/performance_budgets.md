@@ -345,3 +345,12 @@ a benchmark host control: it does not change the compiler's runtime requirements
 or the user's normal power settings. Record both policies and restoration in
 external run evidence. Do not increase warmups, discard samples or loosen
 stability thresholds to conceal frequency transitions.
+
+
+With a named profile and no `--results`, `check_budgets.py` validates the
+reference schema, complete case coverage, budget declarations and waiver policy.
+It does not claim that the older reference compiler meets the retained editor
+targets. Passing `--results` qualifies the candidate against every numeric limit.
+Trend policy still verifies reference provenance and freshness. The compact trend
+baseline is joined to budget IDs from its hash-bound manifest in memory; its
+saved measurements and immutable profile bytes are unchanged.

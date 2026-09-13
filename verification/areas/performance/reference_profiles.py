@@ -194,3 +194,17 @@ def validate_manifest_binding(profile: dict[str, Any], manifest_path: Path) -> N
     actual = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
     if profile["baseline"].get("manifest_sha256") != actual:
         raise ReferenceProfileError("checker manifest differs from the approved reference")
+
+
+def reference_budget_results(profile: dict[str, Any], manifest: dict[str, Any]) -> dict[str, Any]:
+    """Join declared budget identities to the compact, governed trend baseline."""
+    cases = {case["id"]: case for case in manifest["cases"]}
+    result = copy.deepcopy(profile["baseline"])
+    for row in result["results"]:
+        case = cases.get(row["id"])
+        if case is None:
+            raise ReferenceProfileError(f"reference contains unknown benchmark {row['id']}")
+        # budget_id is manifest metadata, not a measured value. CLI verifies the
+        # manifest digest before this join; measurements and receipt stay intact.
+        row["budget_id"] = case["budget_id"]
+    return result
