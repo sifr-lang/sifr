@@ -1,0 +1,4165 @@
+{
+  "baseline": {
+    "deferrals": [],
+    "manifest_sha256": "d6994b8c7343310e33d980a84a1a843aedaf6326d11fde0dbfdc819006ed64a2",
+    "metadata": {
+      "architecture": "x86_64",
+      "captured_at_unix": 1789289037,
+      "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+      "cargo_lock_sha256": "21e7d7ea0b397059753a8f0c1c6796d77a5eb2522aed26f36fd77b8b7522fd52",
+      "compiler_fingerprint": "cb915177f5a6b6f7afb979305b07c68612200a4b",
+      "host_cpu": "Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz",
+      "host_os": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+      "profile": "approved-reference",
+      "python": "3.14.7",
+      "reference_compiler_commit": "ca7a6d60e266beccce21d4c16e08667086578277",
+      "reference_identity": {
+        "cache_observations": {
+          "after": {
+            "cargo_debug_dir": "/home/yaser5/projects/sifr/worktrees/linux-performance-reference/target/debug",
+            "cargo_lock_present": true,
+            "generated_artifact_cache_root": "/home/yaser5/projects/sifr/continuation-evidence/20260912-transfer/tmp/sifr_generated_artifact_cache",
+            "generated_artifact_entries": 160,
+            "helper_binaries": {
+              "frontend_query_bench": true,
+              "sifr": true
+            },
+            "helper_cache": "warm"
+          },
+          "before": {
+            "cargo_debug_dir": "/home/yaser5/projects/sifr/worktrees/linux-performance-reference/target/debug",
+            "cargo_lock_present": true,
+            "generated_artifact_cache_root": "/home/yaser5/projects/sifr/continuation-evidence/20260912-transfer/tmp/sifr_generated_artifact_cache",
+            "generated_artifact_entries": 160,
+            "helper_binaries": {
+              "frontend_query_bench": true,
+              "sifr": true
+            },
+            "helper_cache": "warm"
+          }
+        },
+        "execution": {
+          "benchmark_inputs_sha256": "dcf7572b0181a9f577bfaec736e40dae5d25354bc476d0ade6cc365f77f6e364",
+          "build_environment": {},
+          "build_profile": "dev",
+          "cache_policy": "manifest per-case warmups",
+          "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+          "cargo_config_sha256": "6de721168ee30393ad5f8fd394c49deae30c3570f552a5d8afcf2a4cde7daf6b",
+          "cargo_jobs": "2",
+          "cargo_manifest_sha256": "d5b4eb9801fd73520b81e57a9c0fc9ba7e9ad6fd18da0d91db65925d1922f8d3",
+          "control_mode": "latency",
+          "python": "3.14.7",
+          "rust_test_threads": "default",
+          "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+          "target_storage": {
+            "filesystem": "ext4",
+            "source": "/dev/mapper/ubuntu--vg-ubuntu--lv"
+          },
+          "temporary_storage": {
+            "filesystem": "ext4",
+            "source": "/dev/mapper/ubuntu--vg-ubuntu--lv"
+          },
+          "user_cargo_config_sha256": null
+        },
+        "host": {
+          "architecture": "x86_64",
+          "available_cpus": 8,
+          "cpu_models": [
+            "Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz"
+          ],
+          "cpu_power_policy": {
+            "boost_controls": {
+              "/sys/devices/system/cpu/intel_pstate/no_turbo": "0"
+            },
+            "policies": [
+              {
+                "affected_cpus": "0",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "1",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "2",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "3",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "4",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "5",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "6",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "7",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              }
+            ],
+            "source": "sysfs"
+          },
+          "kernel": "7.0.0-31-generic",
+          "logical_cpus": 8,
+          "memory": {
+            "available_bytes": 10981564416,
+            "pswpin": 1011728,
+            "pswpout": 2184281,
+            "swap_used_bytes": 4716257280,
+            "total_bytes": 11880697856
+          },
+          "memory_capacity_gib": 12,
+          "os_version": "Ubuntu 26.04.1 LTS",
+          "physical_cores": 4,
+          "system": "Linux"
+        }
+      },
+      "reference_identity_after": {
+        "execution": {
+          "benchmark_inputs_sha256": "dcf7572b0181a9f577bfaec736e40dae5d25354bc476d0ade6cc365f77f6e364",
+          "build_environment": {},
+          "build_profile": "dev",
+          "cache_policy": "manifest per-case warmups",
+          "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+          "cargo_config_sha256": "6de721168ee30393ad5f8fd394c49deae30c3570f552a5d8afcf2a4cde7daf6b",
+          "cargo_jobs": "2",
+          "cargo_manifest_sha256": "d5b4eb9801fd73520b81e57a9c0fc9ba7e9ad6fd18da0d91db65925d1922f8d3",
+          "control_mode": "latency",
+          "python": "3.14.7",
+          "rust_test_threads": "default",
+          "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+          "target_storage": {
+            "filesystem": "ext4",
+            "source": "/dev/mapper/ubuntu--vg-ubuntu--lv"
+          },
+          "temporary_storage": {
+            "filesystem": "ext4",
+            "source": "/dev/mapper/ubuntu--vg-ubuntu--lv"
+          },
+          "user_cargo_config_sha256": null
+        },
+        "host": {
+          "architecture": "x86_64",
+          "available_cpus": 8,
+          "cpu_models": [
+            "Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz"
+          ],
+          "cpu_power_policy": {
+            "boost_controls": {
+              "/sys/devices/system/cpu/intel_pstate/no_turbo": "0"
+            },
+            "policies": [
+              {
+                "affected_cpus": "0",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "1",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "2",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "3",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "4",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "5",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "6",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              },
+              {
+                "affected_cpus": "7",
+                "scaling_driver": "intel_cpufreq",
+                "scaling_governor": "performance",
+                "scaling_max_freq": "3600000",
+                "scaling_min_freq": "800000"
+              }
+            ],
+            "source": "sysfs"
+          },
+          "kernel": "7.0.0-31-generic",
+          "logical_cpus": 8,
+          "memory": {
+            "available_bytes": 10895581184,
+            "pswpin": 1011730,
+            "pswpout": 2184281,
+            "swap_used_bytes": 4716249088,
+            "total_bytes": 11880697856
+          },
+          "memory_capacity_gib": 12,
+          "os_version": "Ubuntu 26.04.1 LTS",
+          "physical_cores": 4,
+          "system": "Linux"
+        }
+      },
+      "reference_profile": "linux-i7-4720hq-12gb-dev-v1",
+      "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+      "sample_scale": "manifest",
+      "source_commit_at_start": "cb915177f5a6b6f7afb979305b07c68612200a4b",
+      "source_dirty": false,
+      "thermal_policy": "controlled-host",
+      "uv": "uv 0.12.10 (x86_64-unknown-linux-gnu)"
+    },
+    "reference_capture": {
+      "approval_owner": "compiler/performance",
+      "controlled_host": true,
+      "evidence_sha256": "89956527eec43606cacef48847c3a4bd70f9f2dabbcfe34b7154b02e10f406cf",
+      "host_control_policy": {
+        "external_cpu_limit_applied": true,
+        "in_attempt_external_cpu_policy": "blocking",
+        "load_limit_applied": true,
+        "max_external_cpu_percent": 50.0,
+        "max_frequency_proxy_cv": 0.12,
+        "max_one_minute_load_per_logical_cpu": 0.85,
+        "mode": "latency",
+        "quiet_interval_seconds": 1.0,
+        "quiet_snapshots": 3,
+        "rejects_competing_build_processes": true,
+        "rejects_thermal_pressure": true,
+        "requires_ac_power_on_macos": true,
+        "requires_retired_instructions": false,
+        "wall_latency_qualified": true,
+        "work_reserved_logical_cpu_fraction": null
+      },
+      "invocation_id": "linux-reference-stable-governor-20260913",
+      "observation_count": 3,
+      "profile": "approved-reference",
+      "rejected_observations": 0,
+      "run_id": "bench-1789285860-384268",
+      "source_commit": "cb915177f5a6b6f7afb979305b07c68612200a4b",
+      "thermal_policy": "controlled-host"
+    },
+    "renames": [],
+    "results": [
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-project-001-additional-modules",
+        "metrics": {
+          "coefficient_variation": 0.002983,
+          "emitted_rust_bytes": 58324,
+          "emitted_rust_lines": 1418,
+          "generated_binary_bytes": 1369952,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 13.775,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 16084.828,
+          "p95_instructions": null,
+          "p95_ms": 16161.185,
+          "peak_rss_bytes": 274894848
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          16084.82789000118,
+          16010.991543000273,
+          16161.185468998156,
+          16071.052450002753,
+          16091.055707998748
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-project-002-branch-paths",
+        "metrics": {
+          "coefficient_variation": 0.005265,
+          "emitted_rust_bytes": 3925,
+          "emitted_rust_lines": 151,
+          "generated_binary_bytes": 573448,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 21.161,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7422.58,
+          "p95_instructions": null,
+          "p95_ms": 7502.867,
+          "peak_rss_bytes": 225935360
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7401.418278001074,
+          7422.579573001713,
+          7502.866751005058,
+          7423.476666997885,
+          7392.109954998887
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-project-003-cargo-manifest",
+        "metrics": {
+          "coefficient_variation": 0.004756,
+          "emitted_rust_bytes": 3724,
+          "emitted_rust_lines": 144,
+          "generated_binary_bytes": 564864,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 38.511,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7476.904,
+          "p95_instructions": null,
+          "p95_ms": 7515.415,
+          "peak_rss_bytes": 226058240
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7476.903802002198,
+          7515.415109002788,
+          7427.815761002421,
+          7483.064838001155,
+          7421.286015000078
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-project-004-dependency-manifest",
+        "metrics": {
+          "coefficient_variation": 0.004673,
+          "emitted_rust_bytes": 27163,
+          "emitted_rust_lines": 643,
+          "generated_binary_bytes": 948088,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 55.328,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 9973.107,
+          "p95_instructions": null,
+          "p95_ms": 10028.435,
+          "peak_rss_bytes": 257138688
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          9910.454329001368,
+          9973.106577999715,
+          9904.437172001053,
+          10028.434788997401,
+          9980.809606997354
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-project-005-project-graph",
+        "metrics": {
+          "coefficient_variation": 0.001114,
+          "emitted_rust_bytes": 3895,
+          "emitted_rust_lines": 151,
+          "generated_binary_bytes": 576016,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 5.936,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7530.003,
+          "p95_instructions": null,
+          "p95_ms": 7546.82,
+          "peak_rss_bytes": 224399360
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7540.53785999713,
+          7528.502296001534,
+          7530.002915998921,
+          7524.066928999673,
+          7546.820318995742
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-single-file-001-break-continue",
+        "metrics": {
+          "coefficient_variation": 0.00436,
+          "emitted_rust_bytes": 3801,
+          "emitted_rust_lines": 146,
+          "generated_binary_bytes": 570520,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 17.979,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7402.27,
+          "p95_instructions": null,
+          "p95_ms": 7420.249,
+          "peak_rss_bytes": 223772672
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7347.187953993853,
+          7415.334003999305,
+          7348.776461003581,
+          7402.269926998997,
+          7420.248716996866
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-single-file-002-builtin-any-all",
+        "metrics": {
+          "coefficient_variation": 0.004137,
+          "emitted_rust_bytes": 3797,
+          "emitted_rust_lines": 141,
+          "generated_binary_bytes": 452464,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 16.632,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7388.382,
+          "p95_instructions": null,
+          "p95_ms": 7449.496,
+          "peak_rss_bytes": 224854016
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7371.750523998344,
+          7373.258389001421,
+          7424.514935002662,
+          7388.382201999775,
+          7449.496354995063
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-single-file-003-builtin-enumerate-zip",
+        "metrics": {
+          "coefficient_variation": 0.004672,
+          "emitted_rust_bytes": 3997,
+          "emitted_rust_lines": 151,
+          "generated_binary_bytes": 573336,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 41.648,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7451.976,
+          "p95_instructions": null,
+          "p95_ms": 7498.741,
+          "peak_rss_bytes": 228511744
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7497.41230699874,
+          7498.740855000506,
+          7434.541171001911,
+          7451.975730000413,
+          7410.328003999894
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-single-file-004-bytes-constructors",
+        "metrics": {
+          "coefficient_variation": 0.004555,
+          "emitted_rust_bytes": 10932,
+          "emitted_rust_lines": 330,
+          "generated_binary_bytes": 879448,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 23.243,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 8353.904,
+          "p95_instructions": null,
+          "p95_ms": 8434.179,
+          "peak_rss_bytes": 232873984
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          8330.590409997967,
+          8434.178941999562,
+          8330.661592000979,
+          8353.904423995118,
+          8366.1103570048
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-single-file-005-class-methods",
+        "metrics": {
+          "coefficient_variation": 0.002299,
+          "emitted_rust_bytes": 4426,
+          "emitted_rust_lines": 165,
+          "generated_binary_bytes": 480448,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 9.843,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7393.278,
+          "p95_instructions": null,
+          "p95_ms": 7423.23,
+          "peak_rss_bytes": 226021376
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7403.121483002906,
+          7423.229707004793,
+          7386.736362001102,
+          7393.278202995134,
+          7372.316597997269
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-single-file-006-collection-len",
+        "metrics": {
+          "coefficient_variation": 0.003816,
+          "emitted_rust_bytes": 3518,
+          "emitted_rust_lines": 135,
+          "generated_binary_bytes": 559808,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 22.732,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7394.314,
+          "p95_instructions": null,
+          "p95_ms": 7417.045,
+          "peak_rss_bytes": 224874496
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7394.313878998219,
+          7395.955654996214,
+          7344.661510003789,
+          7417.045483001857,
+          7350.235960999271
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-single-file-007-comp-set",
+        "metrics": {
+          "coefficient_variation": 0.003181,
+          "emitted_rust_bytes": 3878,
+          "emitted_rust_lines": 147,
+          "generated_binary_bytes": 609696,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 11.273,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7501.811,
+          "p95_instructions": null,
+          "p95_ms": 7545.335,
+          "peak_rss_bytes": 233975808
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7513.0843029983225,
+          7501.811275004002,
+          7499.827070001629,
+          7545.334934002312,
+          7471.3783460028935
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-single-file-008-decimal-conversions",
+        "metrics": {
+          "coefficient_variation": 0.006351,
+          "emitted_rust_bytes": 17703,
+          "emitted_rust_lines": 420,
+          "generated_binary_bytes": 902080,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 9.565,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 9582.911,
+          "p95_instructions": null,
+          "p95_ms": 9729.952,
+          "peak_rss_bytes": 260112384
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          9729.952172005142,
+          9582.910660006746,
+          9573.345428994799,
+          9588.589851999131,
+          9568.734179003513
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-single-file-009-dict-get-option",
+        "metrics": {
+          "coefficient_variation": 0.003558,
+          "emitted_rust_bytes": 4042,
+          "emitted_rust_lines": 148,
+          "generated_binary_bytes": 581912,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 17.476,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7574.247,
+          "p95_instructions": null,
+          "p95_ms": 7622.159,
+          "peak_rss_bytes": 235089920
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7622.159300000931,
+          7558.819001998927,
+          7610.7714399986435,
+          7556.770574003167,
+          7574.246534000849
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "build-single-file-010-generic-identity",
+        "metrics": {
+          "coefficient_variation": 0.004438,
+          "emitted_rust_bytes": 3650,
+          "emitted_rust_lines": 140,
+          "generated_binary_bytes": 559168,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 17.847,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 7412.837,
+          "p95_instructions": null,
+          "p95_ms": 7437.367,
+          "peak_rss_bytes": 225206272
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          7340.679301996715,
+          7417.0060960022965,
+          7412.837477000721,
+          7394.990597000287,
+          7437.3672579968115
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-project-001-imports",
+        "metrics": {
+          "coefficient_variation": 0.007206,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 20.034,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4011.753,
+          "p95_instructions": null,
+          "p95_ms": 4068.729,
+          "peak_rss_bytes": 159891456
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          3991.7188320032437,
+          4068.7290179994307,
+          4011.7528190021403,
+          4007.848811997974,
+          4052.0025360019645
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-project-002-mode-consistency",
+        "metrics": {
+          "coefficient_variation": 0.011058,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 36.466,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4032.817,
+          "p95_instructions": null,
+          "p95_ms": 4106.647,
+          "peak_rss_bytes": 159797248
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4017.244597998797,
+          3996.3513760012574,
+          4100.79238400067,
+          4106.647042994155,
+          4032.817333994899
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-project-003-project-build",
+        "metrics": {
+          "coefficient_variation": 0.002332,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 6.844,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4013.792,
+          "p95_instructions": null,
+          "p95_ms": 4032.414,
+          "peak_rss_bytes": 159518720
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4006.0138140033814,
+          4009.345962993393,
+          4020.635991997551,
+          4013.792221994663,
+          4032.4135039991233
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-project-004-project-graph",
+        "metrics": {
+          "coefficient_variation": 0.006499,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 11.951,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4038.121,
+          "p95_instructions": null,
+          "p95_ms": 4070.649,
+          "peak_rss_bytes": 159588352
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          3989.742412995838,
+          4026.1698920003255,
+          4070.6494369951542,
+          4041.5944650012534,
+          4038.120990000607
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-project-005-rooted-entrypoint",
+        "metrics": {
+          "coefficient_variation": 0.005814,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 8.726,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4019.046,
+          "p95_instructions": null,
+          "p95_ms": 4072.826,
+          "peak_rss_bytes": 159764480
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4044.3586139954277,
+          4019.0462050013593,
+          4010.320680004952,
+          4072.8255580033874,
+          4014.94380600343
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-single-file-001-arithmetic",
+        "metrics": {
+          "coefficient_variation": 0.004168,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 11.007,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4016.904,
+          "p95_instructions": null,
+          "p95_ms": 4032.133,
+          "peak_rss_bytes": 159621120
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          3984.3782469979487,
+          4016.903857998841,
+          4032.132558997546,
+          4025.1571990011143,
+          4005.8973109989893
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-single-file-002-break-continue",
+        "metrics": {
+          "coefficient_variation": 0.00421,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 7.782,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4034.486,
+          "p95_instructions": null,
+          "p95_ms": 4042.268,
+          "peak_rss_bytes": 159862784
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4008.68595099746,
+          4038.6053310066927,
+          4000.5880120006623,
+          4042.2679600014817,
+          4034.4858409953304
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-single-file-003-builtin-any-all",
+        "metrics": {
+          "coefficient_variation": 0.003176,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 15.216,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4005.782,
+          "p95_instructions": null,
+          "p95_ms": 4023.571,
+          "peak_rss_bytes": 159887360
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          3998.5203700052807,
+          4021.003178000683,
+          4005.781827996543,
+          3990.5658239949844,
+          4023.5706940002274
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-single-file-004-builtin-enumerate-zip",
+        "metrics": {
+          "coefficient_variation": 0.00381,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 15.702,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4027.954,
+          "p95_instructions": null,
+          "p95_ms": 4053.372,
+          "peak_rss_bytes": 159805440
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4045.866988999478,
+          4020.8360469987383,
+          4027.953765995335,
+          4053.372167996713,
+          4012.252015003469
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-single-file-005-bytes-constructors",
+        "metrics": {
+          "coefficient_variation": 0.008181,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 14.128,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4008.057,
+          "p95_instructions": null,
+          "p95_ms": 4084.43,
+          "peak_rss_bytes": 159612928
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4002.815025000018,
+          4022.1851379974396,
+          4008.056785001827,
+          3991.126554996299,
+          4084.4300879980437
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-single-file-006-class-methods",
+        "metrics": {
+          "coefficient_variation": 0.002198,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 6.395,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 3997.586,
+          "p95_instructions": null,
+          "p95_ms": 4008.413,
+          "peak_rss_bytes": 159649792
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          3997.58588700206,
+          3991.9692170005874,
+          4008.413442999881,
+          3983.5277809979743,
+          4003.9808279980207
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-single-file-007-collection-len",
+        "metrics": {
+          "coefficient_variation": 0.003368,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 13.552,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4014.324,
+          "p95_instructions": null,
+          "p95_ms": 4036.089,
+          "peak_rss_bytes": 159539200
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4014.3243839993374,
+          4011.5570510024554,
+          4036.088633001782,
+          4027.8759189968696,
+          3997.0825410055113
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-single-file-008-comp-set",
+        "metrics": {
+          "coefficient_variation": 0.003909,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 11.787,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4014.508,
+          "p95_instructions": null,
+          "p95_ms": 4044.903,
+          "peak_rss_bytes": 159559680
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4005.6220999977086,
+          4014.507769003103,
+          4001.3544040048146,
+          4026.2947090013768,
+          4044.9032120013726
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-single-file-009-decimal-conversions",
+        "metrics": {
+          "coefficient_variation": 0.013987,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 35.865,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4030.302,
+          "p95_instructions": null,
+          "p95_ms": 4143.715,
+          "peak_rss_bytes": 166506496
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4059.5911540003726,
+          4143.7153199949535,
+          3987.754181995115,
+          4030.3022079970106,
+          3994.437283996376
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "check-single-file-010-dict-get-option",
+        "metrics": {
+          "coefficient_variation": 0.008112,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 10.19,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4009.302,
+          "p95_instructions": null,
+          "p95_ms": 4080.651,
+          "peak_rss_bytes": 159866880
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4007.7303840007517,
+          4009.3022849978297,
+          3982.9429160017753,
+          4080.650659998355,
+          4019.4924980023643
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "diagnostic-non-regression-001-human-success-exit",
+        "metrics": {
+          "coefficient_variation": 0.004511,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 7.225,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4014.203,
+          "p95_instructions": null,
+          "p95_ms": 4054.889,
+          "peak_rss_bytes": 159920128
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4002.854357997421,
+          4054.889008999453,
+          4009.990803002438,
+          4014.203382997948,
+          4021.4280529980897
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "diagnostic-non-regression-002-json-diagnostic-schema",
+        "metrics": {
+          "coefficient_variation": 0.003145,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 8.662,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4015.009,
+          "p95_instructions": null,
+          "p95_ms": 4040.366,
+          "peak_rss_bytes": 159432704
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4005.734268001106,
+          4040.3663589968346,
+          4015.008536996902,
+          4020.0055809982587,
+          4006.34613600414
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "diagnostic-non-regression-003-compact-diagnostic-schema",
+        "metrics": {
+          "coefficient_variation": 0.003501,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 16.481,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4015.475,
+          "p95_instructions": null,
+          "p95_ms": 4032.287,
+          "peak_rss_bytes": 159670272
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          3995.2235789969563,
+          4022.8346360017895,
+          4015.475162996154,
+          4032.2874980047345,
+          3998.993891997088
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "diagnostic-non-regression-004-recovery-limit",
+        "metrics": {
+          "coefficient_variation": 0.0057,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 12.335,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 4025.659,
+          "p95_instructions": null,
+          "p95_ms": 4066.734,
+          "peak_rss_bytes": 159907840
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          4013.3236850015237,
+          4025.6587519979803,
+          4033.3927530009532,
+          4066.733945001033,
+          3998.2282989949454
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "diagnostic-non-regression-005-project-error-exit",
+        "metrics": {
+          "coefficient_variation": 0.004726,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 10.909,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 3992.338,
+          "p95_instructions": null,
+          "p95_ms": 4031.405,
+          "peak_rss_bytes": 159694848
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          3992.337743002281,
+          3982.6148040010594,
+          3978.690342999471,
+          4031.4049160006107,
+          4003.2466359989485
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "formatter-corpus-001-project-check",
+        "metrics": {
+          "coefficient_variation": 0.020982,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.19,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 8.965,
+          "p95_instructions": null,
+          "p95_ms": 9.155,
+          "peak_rss_bytes": 31379456
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          8.965196000644937,
+          9.154865001619328,
+          9.151944999757688,
+          8.753941998293158,
+          8.71578199439682
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "formatter-large-file-001-check",
+        "metrics": {
+          "coefficient_variation": 0.022163,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.214,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 13.471,
+          "p95_instructions": null,
+          "p95_ms": 13.878,
+          "peak_rss_bytes": 31604736
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          13.342392005142756,
+          13.878122997994069,
+          13.685697005712427,
+          13.004319000174291,
+          13.471216996549629
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 2300,
+          "misses": 2300
+        },
+        "id": "incremental-local-loop-001-unchanged-file-update",
+        "metrics": {
+          "coefficient_variation": 0.003867,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.0,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 0.287,
+          "p95_instructions": null,
+          "p95_ms": 0.29,
+          "peak_rss_bytes": 10473472
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          0.28693970999999996,
+          0.2871247,
+          0.28748479,
+          0.28711017,
+          0.29070111,
+          0.28834591,
+          0.28775114,
+          0.29022756,
+          0.28649564,
+          0.28672081,
+          0.28655877,
+          0.28689183,
+          0.28718869999999996,
+          0.28802738,
+          0.28677602999999996,
+          0.28660768999999997,
+          0.28692103,
+          0.28717926000000005,
+          0.28687955000000004,
+          0.28800411
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 2300
+        },
+        "id": "incremental-local-loop-002-leaf-module-change",
+        "metrics": {
+          "coefficient_variation": 0.002294,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.0,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 0.237,
+          "p95_instructions": null,
+          "p95_ms": 0.238,
+          "peak_rss_bytes": 10948608
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          0.23731025,
+          0.23814565,
+          0.23958319,
+          0.23703137,
+          0.2376568,
+          0.23754054,
+          0.23748563,
+          0.23722002,
+          0.23713985,
+          0.23797376,
+          0.23734212,
+          0.23717683999999997,
+          0.23737371,
+          0.23720167,
+          0.23743863,
+          0.23791645,
+          0.23741099999999998,
+          0.23744398999999997,
+          0.237321,
+          0.23787209999999998
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 2300
+        },
+        "id": "incremental-local-loop-003-imported-module-change",
+        "metrics": {
+          "coefficient_variation": 0.001238,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.001,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 1.749,
+          "p95_instructions": null,
+          "p95_ms": 1.753,
+          "peak_rss_bytes": 15364096
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          1.7496937700000001,
+          1.7467980399999998,
+          1.75253724,
+          1.74816563,
+          1.7476223,
+          1.75213405,
+          1.74719987,
+          1.74760088,
+          1.74954742,
+          1.749563,
+          1.7541847799999999,
+          1.7526233499999997,
+          1.7462845499999997,
+          1.74803699,
+          1.74903144,
+          1.748011,
+          1.74817734,
+          1.7512527900000001,
+          1.7473734199999997,
+          1.75039325
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 2300
+        },
+        "id": "incremental-local-loop-004-public-api-change",
+        "metrics": {
+          "coefficient_variation": 0.001328,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.001,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 1.885,
+          "p95_instructions": null,
+          "p95_ms": 1.89,
+          "peak_rss_bytes": 14946304
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          1.8836635600000002,
+          1.88551907,
+          1.88953316,
+          1.88515699,
+          1.88574479,
+          1.88406548,
+          1.8832416900000002,
+          1.8860817,
+          1.8860694599999999,
+          1.8896448099999998,
+          1.8846622299999998,
+          1.8835134,
+          1.8842862899999997,
+          1.8846391400000002,
+          1.89314222,
+          1.88297916,
+          1.8841767999999999,
+          1.8842305400000001,
+          1.8853484800000002,
+          1.88312504
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 4600
+        },
+        "id": "incremental-local-loop-005-failure-recovery",
+        "metrics": {
+          "coefficient_variation": 0.001498,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.002,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 1.941,
+          "p95_instructions": null,
+          "p95_ms": 1.946,
+          "peak_rss_bytes": 14934016
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          1.9429584,
+          1.94089519,
+          1.94043986,
+          1.93707486,
+          1.94083571,
+          1.94324467,
+          1.93753283,
+          1.9435951900000001,
+          1.93735455,
+          1.9430765600000002,
+          1.9424999400000003,
+          1.93938307,
+          1.93848678,
+          1.93798432,
+          1.9386901600000002,
+          1.94774738,
+          1.9434885499999999,
+          1.93820097,
+          1.9455909399999998,
+          1.93960154
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 2300
+        },
+        "id": "interactive-tooling-foundation-001-cold-context-load",
+        "metrics": {
+          "coefficient_variation": 0.003386,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.0,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 0.154,
+          "p95_instructions": null,
+          "p95_ms": 0.156,
+          "peak_rss_bytes": 10715136
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          0.15424513,
+          0.15433461,
+          0.15512634,
+          0.15457222,
+          0.15406946,
+          0.15419766,
+          0.15468069,
+          0.15441737,
+          0.1551719,
+          0.15536274,
+          0.15590044,
+          0.15429609,
+          0.1544666,
+          0.15424321,
+          0.15409131,
+          0.15427774,
+          0.15402343,
+          0.15438551,
+          0.15556917,
+          0.15452352000000003
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 2300,
+          "misses": 2300
+        },
+        "id": "interactive-tooling-foundation-002-warm-diagnostics-query",
+        "metrics": {
+          "coefficient_variation": 0.001676,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.001,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 0.658,
+          "p95_instructions": null,
+          "p95_ms": 0.66,
+          "peak_rss_bytes": 14733312
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          0.65881112,
+          0.6596323799999999,
+          0.6570370699999999,
+          0.65698439,
+          0.6602789699999999,
+          0.6586899599999999,
+          0.65711906,
+          0.65760238,
+          0.65945698,
+          0.65934402,
+          0.6574102,
+          0.65751957,
+          0.65793965,
+          0.65700633,
+          0.6577661100000001,
+          0.65665678,
+          0.6582318400000001,
+          0.65711804,
+          0.65624827,
+          0.65908491
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 2300,
+          "misses": 2300
+        },
+        "id": "interactive-tooling-foundation-003-unchanged-file-update",
+        "metrics": {
+          "coefficient_variation": 0.003005,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.0,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 0.225,
+          "p95_instructions": null,
+          "p95_ms": 0.226,
+          "peak_rss_bytes": 10690560
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          0.22548755,
+          0.2268252,
+          0.22445503,
+          0.22430382,
+          0.22424585,
+          0.22632344,
+          0.22484110000000002,
+          0.22519767999999998,
+          0.22501047,
+          0.22468433999999998,
+          0.22440437,
+          0.22444816,
+          0.22447043,
+          0.22473502999999997,
+          0.22446055999999998,
+          0.22462073,
+          0.22477026000000003,
+          0.22414297000000002,
+          0.22439457999999998,
+          0.22532447
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 4600
+        },
+        "id": "interactive-tooling-foundation-004-changed-file-invalidation",
+        "metrics": {
+          "coefficient_variation": 0.00321,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.001,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 1.216,
+          "p95_instructions": null,
+          "p95_ms": 1.221,
+          "peak_rss_bytes": 15261696
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          1.21837821,
+          1.21531554,
+          1.21466396,
+          1.21492351,
+          1.21513711,
+          1.21554461,
+          1.21377757,
+          1.2157945700000001,
+          1.2186167,
+          1.21561772,
+          1.21375163,
+          1.21513527,
+          1.2149397300000002,
+          1.2184267,
+          1.21706465,
+          1.23170522,
+          1.22097335,
+          1.22085131,
+          1.21574619,
+          1.2162830900000001
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 0
+        },
+        "id": "interactive-tooling-foundation-005-source-map-lookup",
+        "metrics": {
+          "coefficient_variation": 0.00988,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.0,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 0.089,
+          "p95_instructions": null,
+          "p95_ms": 0.09,
+          "peak_rss_bytes": 10727424
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          0.09198638,
+          0.09017479,
+          0.08839855999999999,
+          0.08836814999999999,
+          0.08830393,
+          0.08851054000000001,
+          0.08826739,
+          0.08830238000000001,
+          0.08916795000000001,
+          0.08855928,
+          0.08832429,
+          0.08930769,
+          0.08870832000000001,
+          0.08815268,
+          0.08837500999999999,
+          0.08855269,
+          0.08859622,
+          0.08959484999999999,
+          0.08924156,
+          0.08855801999999999
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 6
+        },
+        "id": "lsp-query-001-request-families",
+        "metrics": {
+          "coefficient_variation": 0.012946,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.317,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 91.733,
+          "p95_instructions": null,
+          "p95_ms": 92.259,
+          "peak_rss_bytes": 145272832
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          91.64256499934709,
+          92.25929799868027,
+          89.01727299962658,
+          92.0505480025895,
+          91.73310200276319
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 6
+        },
+        "id": "lsp-query-002-cold-start",
+        "metrics": {
+          "coefficient_variation": 0.009368,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.03,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 6.155,
+          "p95_instructions": null,
+          "p95_ms": 6.191,
+          "peak_rss_bytes": 23691264
+        },
+        "sample_count": 5,
+        "samples_ms": [
+          6.185078003909439,
+          6.032005003362428,
+          6.155199000204448,
+          6.191139000293333,
+          6.13801900180988
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-003-diagnostics",
+        "metrics": {
+          "coefficient_variation": 0.009892,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.028,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 12.871,
+          "p95_instructions": null,
+          "p95_ms": 12.938,
+          "peak_rss_bytes": 114425856
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          12.886771400008001,
+          12.957433499832405,
+          12.885135950273252,
+          12.813195700073265,
+          12.862187899736455,
+          12.89809875015635,
+          12.904761300160317,
+          12.845873200058122,
+          12.859310749990982,
+          12.843084450287279,
+          12.938112349729636,
+          12.882681849805522,
+          12.890732700179797,
+          12.890945849721902,
+          12.879667250308557,
+          12.82583584979875,
+          12.782651700035785,
+          12.668127849974553,
+          12.442629550059792,
+          12.539727200055495
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-004-workspace-diagnostics",
+        "metrics": {
+          "coefficient_variation": 0.012812,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.018,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 2.682,
+          "p95_instructions": null,
+          "p95_ms": 2.729,
+          "peak_rss_bytes": 114651136
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          2.7109873000881635,
+          2.6892892998148454,
+          2.712050600166549,
+          2.729139149960247,
+          2.7021867499570362,
+          2.6831170998775633,
+          2.6457738000317477,
+          2.6542928000708343,
+          2.687334149959497,
+          2.6696883000113303,
+          2.6700016500399215,
+          2.6807400998222874,
+          2.6601449000736466,
+          2.688953849792597,
+          2.673013549792813,
+          2.654729200003203,
+          2.6657166999939363,
+          2.6585529998556012,
+          2.683587150022504,
+          2.8046417002769886
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-005-completion",
+        "metrics": {
+          "coefficient_variation": 0.002585,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.01,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 21.359,
+          "p95_instructions": null,
+          "p95_ms": 21.429,
+          "peak_rss_bytes": 116170752
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          21.295373150132946,
+          21.30965489996015,
+          21.3201268499688,
+          21.353920200272114,
+          21.353529350017197,
+          21.34974399996281,
+          21.429167699898244,
+          21.35524865007028,
+          21.359544349979842,
+          21.36263134998444,
+          21.36390615014534,
+          21.57152940017113,
+          21.365187400078867,
+          21.370944950103876,
+          21.347072350181406,
+          21.357768699817825,
+          21.38457005021337,
+          21.383637899998575,
+          21.4214682499005,
+          21.357966250070604
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-006-hover",
+        "metrics": {
+          "coefficient_variation": 0.005415,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.009,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 1.997,
+          "p95_instructions": null,
+          "p95_ms": 2.01,
+          "peak_rss_bytes": 114130944
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          1.996463349860278,
+          2.009886049927445,
+          2.0006832000944996,
+          1.9957546002842719,
+          2.006071600044379,
+          1.9906475998141104,
+          2.0124379501794465,
+          2.008891749937902,
+          1.982339450114523,
+          1.9943345498177223,
+          1.9722259501577355,
+          1.979910999943968,
+          2.0050931998412125,
+          1.9927287998143584,
+          2.0090865498787025,
+          1.9971082499978365,
+          1.9936336502723861,
+          2.0101405498280656,
+          1.9921926999813877,
+          2.007324350051931
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-007-signature-help",
+        "metrics": {
+          "coefficient_variation": 0.029839,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.006,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 0.373,
+          "p95_instructions": null,
+          "p95_ms": 0.391,
+          "peak_rss_bytes": 114823168
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          0.39824794985179324,
+          0.3906144000211498,
+          0.37378295019152574,
+          0.3480193998257164,
+          0.3535137999278959,
+          0.36631830007536337,
+          0.36400050012161955,
+          0.37197089986875653,
+          0.3773435499169864,
+          0.38054645010561217,
+          0.3840784000203712,
+          0.37057889967400115,
+          0.379704000079073,
+          0.3686358999402728,
+          0.38027654991310555,
+          0.370346999989124,
+          0.3789649999816902,
+          0.37185590008448344,
+          0.379198950031423,
+          0.3685560001031263
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-008-navigation",
+        "metrics": {
+          "coefficient_variation": 0.029826,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.164,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 6.394,
+          "p95_instructions": null,
+          "p95_ms": 6.568,
+          "peak_rss_bytes": 114761728
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          6.655667500308482,
+          6.4705076001700945,
+          6.39837679991615,
+          6.389987349757575,
+          6.40920530022413,
+          6.1701504499069415,
+          6.410564000179875,
+          6.567679900035728,
+          6.548497849871637,
+          6.547674499961431,
+          6.520976100000553,
+          6.522137099818792,
+          6.32846829976188,
+          6.125034599972423,
+          6.129645100008929,
+          6.1375744498946005,
+          6.113722949885414,
+          6.098523099717568,
+          6.129080100072315,
+          6.087691900029313
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-009-references",
+        "metrics": {
+          "coefficient_variation": 0.012047,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.011,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 1.382,
+          "p95_instructions": null,
+          "p95_ms": 1.395,
+          "peak_rss_bytes": 113430528
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          1.3544207999075297,
+          1.3496185500116553,
+          1.3623179496789817,
+          1.3611241502076155,
+          1.389638399996329,
+          1.3746153501415392,
+          1.3824777000991162,
+          1.385327649768442,
+          1.3941650500782998,
+          1.363879600103246,
+          1.38129859988112,
+          1.3472878497850616,
+          1.3841918000252917,
+          1.3896677002776414,
+          1.3910307498008478,
+          1.3656261999130948,
+          1.3755680000031134,
+          1.3950051499705296,
+          1.4118871000391664,
+          1.385013499748311
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-010-rename",
+        "metrics": {
+          "coefficient_variation": 0.019863,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.027,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 2.126,
+          "p95_instructions": null,
+          "p95_ms": 2.182,
+          "peak_rss_bytes": 116109312
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          2.133860449976055,
+          2.1043163498688955,
+          2.1811078000609996,
+          2.182498050024151,
+          2.1823905499331886,
+          2.1570347002125345,
+          2.1731684002588736,
+          2.184637800019118,
+          2.15603025026212,
+          2.1223972998996032,
+          2.108888699876843,
+          2.1028703999036225,
+          2.1081250997667667,
+          2.1230404501693556,
+          2.077762200133293,
+          2.1041470998170553,
+          2.128578049814678,
+          2.1477956499438733,
+          2.0525197996903444,
+          2.0337126501544844
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-011-semantic-tokens",
+        "metrics": {
+          "coefficient_variation": 0.085412,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.006,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 1.561,
+          "p95_instructions": null,
+          "p95_ms": 1.594,
+          "peak_rss_bytes": 114311168
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          1.5735220502392622,
+          1.5738609999971231,
+          1.5856231497309636,
+          1.5912932001810987,
+          1.61129015032202,
+          1.5938106997055002,
+          1.2515572001575492,
+          1.1335709499689983,
+          1.2599055000464432,
+          1.5589851500408258,
+          1.561222550299135,
+          1.5556087000732077,
+          1.55665445017803,
+          1.5552266999293352,
+          1.56059870023455,
+          1.5610208498401335,
+          1.5679595002438873,
+          1.5653923499485245,
+          1.555994150112383,
+          1.563045799775864
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-012-inlay-hints",
+        "metrics": {
+          "coefficient_variation": 0.019887,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.007,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 0.716,
+          "p95_instructions": null,
+          "p95_ms": 0.724,
+          "peak_rss_bytes": 114679808
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          0.6745627000782406,
+          0.6868717500765342,
+          0.6910701999004232,
+          0.693787150157732,
+          0.6976356999075506,
+          0.7006060503044864,
+          0.7075900000927504,
+          0.7110623999324162,
+          0.7147702999645844,
+          0.7189441999798873,
+          0.7223658500151942,
+          0.7189452000602614,
+          0.7209375500679016,
+          0.7194557998445816,
+          0.7239154998387676,
+          0.7227480498841032,
+          0.7256667497131275,
+          0.7207593000202905,
+          0.7145447500079172,
+          0.7168321499193553
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-013-selection-range",
+        "metrics": {
+          "coefficient_variation": 0.022176,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.002,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 0.599,
+          "p95_instructions": null,
+          "p95_ms": 0.6,
+          "peak_rss_bytes": 114839552
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          0.5559124001592863,
+          0.5684197996743023,
+          0.5746241498854943,
+          0.5729867498303065,
+          0.5787069498182973,
+          0.5842618502356345,
+          0.5882124500203645,
+          0.595810699815047,
+          0.5942402000073344,
+          0.5989719997160137,
+          0.5997917502099881,
+          0.598892999914824,
+          0.5999530498229433,
+          0.5987543998344336,
+          0.5991310998069821,
+          0.6004993501846911,
+          0.6026325499988161,
+          0.6002114001603331,
+          0.5997388001560466,
+          0.5991358000756009
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-014-type-hierarchy",
+        "metrics": {
+          "coefficient_variation": 0.010948,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.007,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 1.117,
+          "p95_instructions": null,
+          "p95_ms": 1.127,
+          "peak_rss_bytes": 114270208
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          1.096827549918089,
+          1.0886557000048924,
+          1.084517650087946,
+          1.1041454497899394,
+          1.0993702999257948,
+          1.1166379998030607,
+          1.108525850213482,
+          1.1136311000882415,
+          1.112678500066977,
+          1.1178303000633605,
+          1.120889000230818,
+          1.1069460000726394,
+          1.1231261498323875,
+          1.1238440998567967,
+          1.121715800036327,
+          1.1267781497735996,
+          1.1269195001659682,
+          1.1222691999137169,
+          1.1164368002937408,
+          1.1233288500079652
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-015-code-actions",
+        "metrics": {
+          "coefficient_variation": 0.008851,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.01,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 2.007,
+          "p95_instructions": null,
+          "p95_ms": 2.04,
+          "peak_rss_bytes": 115380224
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          1.9997342500573723,
+          2.0029197501571616,
+          2.0018770501337713,
+          1.9976798997959122,
+          1.9991220997326309,
+          2.0103280498005915,
+          2.028259749931749,
+          2.0003986999654444,
+          1.9919659000152024,
+          2.037482350351638,
+          2.0188356498692883,
+          1.9971071502368432,
+          2.003893499932019,
+          2.002762349729892,
+          2.050411550226272,
+          2.0396883501234697,
+          2.0339308997790795,
+          2.03877210005885,
+          2.03513144988392,
+          2.0115827497647842
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-016-formatting",
+        "metrics": {
+          "coefficient_variation": 0.009402,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.003,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 1.998,
+          "p95_instructions": null,
+          "p95_ms": 2.004,
+          "peak_rss_bytes": 114921472
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          1.935741049965145,
+          1.954694549931446,
+          1.9903235999663593,
+          2.001831050074543,
+          1.9959413999458775,
+          2.0002035998913925,
+          1.9980524499260355,
+          1.9963804501458071,
+          2.0012033499369863,
+          1.9990085500467103,
+          1.9995363996713422,
+          1.9990185501228552,
+          2.001997150000534,
+          1.9986810999398585,
+          1.953381950079347,
+          2.0052313502674224,
+          1.9917591002013069,
+          1.9962502497946844,
+          2.0043280001118546,
+          1.9957758002419723
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-017-generated-rust-preview",
+        "metrics": {
+          "coefficient_variation": 0.020873,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.507,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 40.757,
+          "p95_instructions": null,
+          "p95_ms": 42.083,
+          "peak_rss_bytes": 145772544
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          39.220604300135165,
+          39.53437115014822,
+          39.748327549750684,
+          39.83023910004704,
+          41.20161419996293,
+          42.57950230021379,
+          41.9137918503111,
+          40.34429870007443,
+          40.261541349900654,
+          40.506105849999585,
+          40.58410004981852,
+          40.71652040001936,
+          40.73506534987246,
+          40.77898289979203,
+          41.0523390997696,
+          41.11581545002991,
+          41.325609699924826,
+          41.2746544003312,
+          41.73580930000753,
+          42.082724799911375
+        ]
+      },
+      {
+        "baseline_captured_at_unix": 1789289037,
+        "cache": {
+          "hits": 0,
+          "misses": 23
+        },
+        "id": "lsp-query-018-did-open-diagnostics",
+        "metrics": {
+          "coefficient_variation": 0.002258,
+          "emitted_rust_bytes": null,
+          "emitted_rust_lines": null,
+          "generated_binary_bytes": null,
+          "instructions_coefficient_variation": null,
+          "instructions_mad": null,
+          "mad_ms": 0.117,
+          "median_cycles_per_instruction": null,
+          "median_instructions": null,
+          "median_ms": 99.725,
+          "p95_instructions": null,
+          "p95_ms": 99.95,
+          "peak_rss_bytes": 4118073344
+        },
+        "sample_count": 20,
+        "samples_ms": [
+          99.37677979978616,
+          99.11810000048717,
+          99.27241080004023,
+          99.75674329980393,
+          99.7253379005997,
+          99.8696689006465,
+          99.73052429995732,
+          99.94917439980782,
+          100.07523149979534,
+          99.63260389995412,
+          99.55910799981211,
+          99.64583179971669,
+          99.61551850065007,
+          99.95048500059056,
+          99.72577859953162,
+          99.59975919991848,
+          99.76928959949873,
+          99.72464210004546,
+          99.89604129950749,
+          99.61690810014261
+        ]
+      }
+    ],
+    "runner_version": 1,
+    "schema_version": 1,
+    "source_baseline": "approved-reference-run"
+  },
+  "budgets": {
+    "budgets": [
+      {
+        "baseline": {
+          "coefficient_variation": 0.002983,
+          "median_ms": 16084.828,
+          "p95_ms": 16161.185,
+          "peak_rss_bytes": 274894848
+        },
+        "benchmark_id": "build-project-001-additional-modules",
+        "budget_id": "perf.build.project.additional_modules",
+        "cache": {},
+        "group": "build-project",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 17693.311,
+          "p95_ms": 18585.363,
+          "peak_rss_bytes": 308449280,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.005265,
+          "median_ms": 7422.58,
+          "p95_ms": 7502.867,
+          "peak_rss_bytes": 225935360
+        },
+        "benchmark_id": "build-project-002-branch-paths",
+        "budget_id": "perf.build.project.branch_paths",
+        "cache": {},
+        "group": "build-project",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8164.838,
+          "p95_ms": 8628.297,
+          "peak_rss_bytes": 259489792,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.004756,
+          "median_ms": 7476.904,
+          "p95_ms": 7515.415,
+          "peak_rss_bytes": 226058240
+        },
+        "benchmark_id": "build-project-003-cargo-manifest",
+        "budget_id": "perf.build.project.cargo_manifest",
+        "cache": {},
+        "group": "build-project",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8224.594,
+          "p95_ms": 8642.727,
+          "peak_rss_bytes": 259612672,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.004673,
+          "median_ms": 9973.107,
+          "p95_ms": 10028.435,
+          "peak_rss_bytes": 257138688
+        },
+        "benchmark_id": "build-project-004-dependency-manifest",
+        "budget_id": "perf.build.project.dependency_manifest",
+        "cache": {},
+        "group": "build-project",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 10970.418,
+          "p95_ms": 11532.7,
+          "peak_rss_bytes": 290693120,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.001114,
+          "median_ms": 7530.003,
+          "p95_ms": 7546.82,
+          "peak_rss_bytes": 224399360
+        },
+        "benchmark_id": "build-project-005-project-graph",
+        "budget_id": "perf.build.project.project_graph",
+        "cache": {},
+        "group": "build-project",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8283.003,
+          "p95_ms": 8678.843,
+          "peak_rss_bytes": 257953792,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.00436,
+          "median_ms": 7402.27,
+          "p95_ms": 7420.249,
+          "peak_rss_bytes": 223772672
+        },
+        "benchmark_id": "build-single-file-001-break-continue",
+        "budget_id": "perf.build.single.break_continue",
+        "cache": {},
+        "group": "build-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8142.497,
+          "p95_ms": 8533.286,
+          "peak_rss_bytes": 257327104,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.004137,
+          "median_ms": 7388.382,
+          "p95_ms": 7449.496,
+          "peak_rss_bytes": 224854016
+        },
+        "benchmark_id": "build-single-file-002-builtin-any-all",
+        "budget_id": "perf.build.single.builtin_any_all",
+        "cache": {},
+        "group": "build-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8127.22,
+          "p95_ms": 8566.92,
+          "peak_rss_bytes": 258408448,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.004672,
+          "median_ms": 7451.976,
+          "p95_ms": 7498.741,
+          "peak_rss_bytes": 228511744
+        },
+        "benchmark_id": "build-single-file-003-builtin-enumerate-zip",
+        "budget_id": "perf.build.single.builtin_enumerate_zip",
+        "cache": {},
+        "group": "build-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8197.174,
+          "p95_ms": 8623.552,
+          "peak_rss_bytes": 262066176,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.004555,
+          "median_ms": 8353.904,
+          "p95_ms": 8434.179,
+          "peak_rss_bytes": 232873984
+        },
+        "benchmark_id": "build-single-file-004-bytes-constructors",
+        "budget_id": "perf.build.single.bytes_constructors",
+        "cache": {},
+        "group": "build-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 9189.294,
+          "p95_ms": 9699.306,
+          "peak_rss_bytes": 266428416,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.002299,
+          "median_ms": 7393.278,
+          "p95_ms": 7423.23,
+          "peak_rss_bytes": 226021376
+        },
+        "benchmark_id": "build-single-file-005-class-methods",
+        "budget_id": "perf.build.single.class_methods",
+        "cache": {},
+        "group": "build-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8132.606,
+          "p95_ms": 8536.714,
+          "peak_rss_bytes": 259575808,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003816,
+          "median_ms": 7394.314,
+          "p95_ms": 7417.045,
+          "peak_rss_bytes": 224874496
+        },
+        "benchmark_id": "build-single-file-006-collection-len",
+        "budget_id": "perf.build.single.collection_len",
+        "cache": {},
+        "group": "build-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8133.745,
+          "p95_ms": 8529.602,
+          "peak_rss_bytes": 258428928,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003181,
+          "median_ms": 7501.811,
+          "p95_ms": 7545.335,
+          "peak_rss_bytes": 233975808
+        },
+        "benchmark_id": "build-single-file-007-comp-set",
+        "budget_id": "perf.build.single.comp_set",
+        "cache": {},
+        "group": "build-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8251.992,
+          "p95_ms": 8677.135,
+          "peak_rss_bytes": 267530240,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.006351,
+          "median_ms": 9582.911,
+          "p95_ms": 9729.952,
+          "peak_rss_bytes": 260112384
+        },
+        "benchmark_id": "build-single-file-008-decimal-conversions",
+        "budget_id": "perf.build.single.decimal_conversions",
+        "cache": {},
+        "group": "build-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 10541.202,
+          "p95_ms": 11189.445,
+          "peak_rss_bytes": 293666816,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003558,
+          "median_ms": 7574.247,
+          "p95_ms": 7622.159,
+          "peak_rss_bytes": 235089920
+        },
+        "benchmark_id": "build-single-file-009-dict-get-option",
+        "budget_id": "perf.build.single.dict_get_option",
+        "cache": {},
+        "group": "build-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8331.672,
+          "p95_ms": 8765.483,
+          "peak_rss_bytes": 268644352,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.004438,
+          "median_ms": 7412.837,
+          "p95_ms": 7437.367,
+          "peak_rss_bytes": 225206272
+        },
+        "benchmark_id": "build-single-file-010-generic-identity",
+        "budget_id": "perf.build.single.generic_identity",
+        "cache": {},
+        "group": "build-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 8154.121,
+          "p95_ms": 8552.972,
+          "peak_rss_bytes": 258760704,
+          "timeout_ms": 120000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.007206,
+          "median_ms": 4011.753,
+          "p95_ms": 4068.729,
+          "peak_rss_bytes": 159891456
+        },
+        "benchmark_id": "check-project-001-imports",
+        "budget_id": "perf.check.project.imports",
+        "cache": {},
+        "group": "check-project",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4412.928,
+          "p95_ms": 4679.038,
+          "peak_rss_bytes": 193445888,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.011058,
+          "median_ms": 4032.817,
+          "p95_ms": 4106.647,
+          "peak_rss_bytes": 159797248
+        },
+        "benchmark_id": "check-project-002-mode-consistency",
+        "budget_id": "perf.check.project.mode_consistency",
+        "cache": {},
+        "group": "check-project",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4436.099,
+          "p95_ms": 4722.644,
+          "peak_rss_bytes": 193351680,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.002332,
+          "median_ms": 4013.792,
+          "p95_ms": 4032.414,
+          "peak_rss_bytes": 159518720
+        },
+        "benchmark_id": "check-project-003-project-build",
+        "budget_id": "perf.check.project.project_build",
+        "cache": {},
+        "group": "check-project",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4415.171,
+          "p95_ms": 4637.276,
+          "peak_rss_bytes": 193073152,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.006499,
+          "median_ms": 4038.121,
+          "p95_ms": 4070.649,
+          "peak_rss_bytes": 159588352
+        },
+        "benchmark_id": "check-project-004-project-graph",
+        "budget_id": "perf.check.project.project_graph",
+        "cache": {},
+        "group": "check-project",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4441.933,
+          "p95_ms": 4681.246,
+          "peak_rss_bytes": 193142784,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.005814,
+          "median_ms": 4019.046,
+          "p95_ms": 4072.826,
+          "peak_rss_bytes": 159764480
+        },
+        "benchmark_id": "check-project-005-rooted-entrypoint",
+        "budget_id": "perf.check.project.rooted_entrypoint",
+        "cache": {},
+        "group": "check-project",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4420.951,
+          "p95_ms": 4683.75,
+          "peak_rss_bytes": 193318912,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.004168,
+          "median_ms": 4016.904,
+          "p95_ms": 4032.133,
+          "peak_rss_bytes": 159621120
+        },
+        "benchmark_id": "check-single-file-001-arithmetic",
+        "budget_id": "perf.check.single.arithmetic",
+        "cache": {},
+        "group": "check-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4418.594,
+          "p95_ms": 4636.953,
+          "peak_rss_bytes": 193175552,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.00421,
+          "median_ms": 4034.486,
+          "p95_ms": 4042.268,
+          "peak_rss_bytes": 159862784
+        },
+        "benchmark_id": "check-single-file-002-break-continue",
+        "budget_id": "perf.check.single.break_continue",
+        "cache": {},
+        "group": "check-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4437.935,
+          "p95_ms": 4648.608,
+          "peak_rss_bytes": 193417216,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003176,
+          "median_ms": 4005.782,
+          "p95_ms": 4023.571,
+          "peak_rss_bytes": 159887360
+        },
+        "benchmark_id": "check-single-file-003-builtin-any-all",
+        "budget_id": "perf.check.single.builtin_any_all",
+        "cache": {},
+        "group": "check-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4406.36,
+          "p95_ms": 4627.107,
+          "peak_rss_bytes": 193441792,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.00381,
+          "median_ms": 4027.954,
+          "p95_ms": 4053.372,
+          "peak_rss_bytes": 159805440
+        },
+        "benchmark_id": "check-single-file-004-builtin-enumerate-zip",
+        "budget_id": "perf.check.single.builtin_enumerate_zip",
+        "cache": {},
+        "group": "check-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4430.749,
+          "p95_ms": 4661.378,
+          "peak_rss_bytes": 193359872,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.008181,
+          "median_ms": 4008.057,
+          "p95_ms": 4084.43,
+          "peak_rss_bytes": 159612928
+        },
+        "benchmark_id": "check-single-file-005-bytes-constructors",
+        "budget_id": "perf.check.single.bytes_constructors",
+        "cache": {},
+        "group": "check-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4408.863,
+          "p95_ms": 4697.094,
+          "peak_rss_bytes": 193167360,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.002198,
+          "median_ms": 3997.586,
+          "p95_ms": 4008.413,
+          "peak_rss_bytes": 159649792
+        },
+        "benchmark_id": "check-single-file-006-class-methods",
+        "budget_id": "perf.check.single.class_methods",
+        "cache": {},
+        "group": "check-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4397.345,
+          "p95_ms": 4609.675,
+          "peak_rss_bytes": 193204224,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003368,
+          "median_ms": 4014.324,
+          "p95_ms": 4036.089,
+          "peak_rss_bytes": 159539200
+        },
+        "benchmark_id": "check-single-file-007-collection-len",
+        "budget_id": "perf.check.single.collection_len",
+        "cache": {},
+        "group": "check-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4415.756,
+          "p95_ms": 4641.502,
+          "peak_rss_bytes": 193093632,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003909,
+          "median_ms": 4014.508,
+          "p95_ms": 4044.903,
+          "peak_rss_bytes": 159559680
+        },
+        "benchmark_id": "check-single-file-008-comp-set",
+        "budget_id": "perf.check.single.comp_set",
+        "cache": {},
+        "group": "check-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4415.959,
+          "p95_ms": 4651.638,
+          "peak_rss_bytes": 193114112,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.013987,
+          "median_ms": 4030.302,
+          "p95_ms": 4143.715,
+          "peak_rss_bytes": 166506496
+        },
+        "benchmark_id": "check-single-file-009-decimal-conversions",
+        "budget_id": "perf.check.single.decimal_conversions",
+        "cache": {},
+        "group": "check-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4433.332,
+          "p95_ms": 4765.272,
+          "peak_rss_bytes": 200060928,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.008112,
+          "median_ms": 4009.302,
+          "p95_ms": 4080.651,
+          "peak_rss_bytes": 159866880
+        },
+        "benchmark_id": "check-single-file-010-dict-get-option",
+        "budget_id": "perf.check.single.dict_get_option",
+        "cache": {},
+        "group": "check-single-file",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4410.232,
+          "p95_ms": 4692.749,
+          "peak_rss_bytes": 193421312,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.004511,
+          "median_ms": 4014.203,
+          "p95_ms": 4054.889,
+          "peak_rss_bytes": 159920128
+        },
+        "benchmark_id": "diagnostic-non-regression-001-human-success-exit",
+        "budget_id": "perf.diagnostic.human_success_exit",
+        "cache": {},
+        "group": "diagnostic-non-regression",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4415.623,
+          "p95_ms": 4663.122,
+          "peak_rss_bytes": 193474560,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003145,
+          "median_ms": 4015.009,
+          "p95_ms": 4040.366,
+          "peak_rss_bytes": 159432704
+        },
+        "benchmark_id": "diagnostic-non-regression-002-json-diagnostic-schema",
+        "budget_id": "perf.diagnostic.json_diagnostic_schema",
+        "cache": {},
+        "group": "diagnostic-non-regression",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4416.51,
+          "p95_ms": 4646.421,
+          "peak_rss_bytes": 192987136,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003501,
+          "median_ms": 4015.475,
+          "p95_ms": 4032.287,
+          "peak_rss_bytes": 159670272
+        },
+        "benchmark_id": "diagnostic-non-regression-003-compact-diagnostic-schema",
+        "budget_id": "perf.diagnostic.compact_diagnostic_schema",
+        "cache": {},
+        "group": "diagnostic-non-regression",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4417.023,
+          "p95_ms": 4637.13,
+          "peak_rss_bytes": 193224704,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.0057,
+          "median_ms": 4025.659,
+          "p95_ms": 4066.734,
+          "peak_rss_bytes": 159907840
+        },
+        "benchmark_id": "diagnostic-non-regression-004-recovery-limit",
+        "budget_id": "perf.diagnostic.recovery_limit",
+        "cache": {},
+        "group": "diagnostic-non-regression",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4428.225,
+          "p95_ms": 4676.744,
+          "peak_rss_bytes": 193462272,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.004726,
+          "median_ms": 3992.338,
+          "p95_ms": 4031.405,
+          "peak_rss_bytes": 159694848
+        },
+        "benchmark_id": "diagnostic-non-regression-005-project-error-exit",
+        "budget_id": "perf.diagnostic.project_error_exit",
+        "cache": {},
+        "group": "diagnostic-non-regression",
+        "policy": "command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 4391.572,
+          "p95_ms": 4636.116,
+          "peak_rss_bytes": 193249280,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.020982,
+          "median_ms": 8.965,
+          "p95_ms": 9.155,
+          "peak_rss_bytes": 31379456
+        },
+        "benchmark_id": "formatter-corpus-001-project-check",
+        "budget_id": "perf.formatter.corpus.project_check",
+        "cache": {},
+        "group": "formatter",
+        "policy": "formatter-command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 33.965,
+          "p95_ms": 59.155,
+          "peak_rss_bytes": 64933888,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.022163,
+          "median_ms": 13.471,
+          "p95_ms": 13.878,
+          "peak_rss_bytes": 31604736
+        },
+        "benchmark_id": "formatter-large-file-001-check",
+        "budget_id": "perf.formatter.large_file.check",
+        "cache": {},
+        "group": "formatter",
+        "policy": "formatter-command-default",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 38.471,
+          "p95_ms": 63.878,
+          "peak_rss_bytes": 65159168,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003867,
+          "median_ms": 0.287,
+          "p95_ms": 0.29,
+          "peak_rss_bytes": 10473472
+        },
+        "benchmark_id": "incremental-local-loop-001-unchanged-file-update",
+        "budget_id": "perf.incremental.unchanged_file_update",
+        "cache": {
+          "min_hits": 2300
+        },
+        "group": "incremental-local-loop",
+        "policy": "frontend-query-edit-loop",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 2.287,
+          "p95_ms": 5.29,
+          "peak_rss_bytes": 44027904,
+          "timeout_ms": 30000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.002294,
+          "median_ms": 0.237,
+          "p95_ms": 0.238,
+          "peak_rss_bytes": 10948608
+        },
+        "benchmark_id": "incremental-local-loop-002-leaf-module-change",
+        "budget_id": "perf.incremental.leaf_module_change",
+        "cache": {},
+        "group": "incremental-local-loop",
+        "policy": "frontend-query-edit-loop",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 2.237,
+          "p95_ms": 5.238,
+          "peak_rss_bytes": 44503040,
+          "timeout_ms": 30000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.001238,
+          "median_ms": 1.749,
+          "p95_ms": 1.753,
+          "peak_rss_bytes": 15364096
+        },
+        "benchmark_id": "incremental-local-loop-003-imported-module-change",
+        "budget_id": "perf.incremental.imported_module_change",
+        "cache": {},
+        "group": "incremental-local-loop",
+        "policy": "frontend-query-edit-loop",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 3.749,
+          "p95_ms": 6.753,
+          "peak_rss_bytes": 48918528,
+          "timeout_ms": 30000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.001328,
+          "median_ms": 1.885,
+          "p95_ms": 1.89,
+          "peak_rss_bytes": 14946304
+        },
+        "benchmark_id": "incremental-local-loop-004-public-api-change",
+        "budget_id": "perf.incremental.public_api_change",
+        "cache": {},
+        "group": "incremental-local-loop",
+        "policy": "frontend-query-edit-loop",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 3.885,
+          "p95_ms": 6.89,
+          "peak_rss_bytes": 48500736,
+          "timeout_ms": 30000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.001498,
+          "median_ms": 1.941,
+          "p95_ms": 1.946,
+          "peak_rss_bytes": 14934016
+        },
+        "benchmark_id": "incremental-local-loop-005-failure-recovery",
+        "budget_id": "perf.incremental.failure_recovery",
+        "cache": {},
+        "group": "incremental-local-loop",
+        "policy": "frontend-query-edit-loop",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 3.941,
+          "p95_ms": 6.946,
+          "peak_rss_bytes": 48488448,
+          "timeout_ms": 30000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003386,
+          "median_ms": 0.154,
+          "p95_ms": 0.156,
+          "peak_rss_bytes": 10715136
+        },
+        "benchmark_id": "interactive-tooling-foundation-001-cold-context-load",
+        "budget_id": "perf.interactive.cold_context_load",
+        "cache": {},
+        "group": "interactive-tooling-foundation",
+        "policy": "frontend-query-edit-loop",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 2.154,
+          "p95_ms": 5.156,
+          "peak_rss_bytes": 44269568,
+          "timeout_ms": 30000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.001676,
+          "median_ms": 0.658,
+          "p95_ms": 0.66,
+          "peak_rss_bytes": 14733312
+        },
+        "benchmark_id": "interactive-tooling-foundation-002-warm-diagnostics-query",
+        "budget_id": "perf.interactive.warm_diagnostics_query",
+        "cache": {
+          "min_hits": 2300
+        },
+        "group": "interactive-tooling-foundation",
+        "policy": "frontend-query-edit-loop",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 2.658,
+          "p95_ms": 5.66,
+          "peak_rss_bytes": 48287744,
+          "timeout_ms": 30000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.003005,
+          "median_ms": 0.225,
+          "p95_ms": 0.226,
+          "peak_rss_bytes": 10690560
+        },
+        "benchmark_id": "interactive-tooling-foundation-003-unchanged-file-update",
+        "budget_id": "perf.interactive.unchanged_file_update",
+        "cache": {
+          "min_hits": 2300
+        },
+        "group": "interactive-tooling-foundation",
+        "policy": "frontend-query-edit-loop",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 2.225,
+          "p95_ms": 5.226,
+          "peak_rss_bytes": 44244992,
+          "timeout_ms": 30000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.00321,
+          "median_ms": 1.216,
+          "p95_ms": 1.221,
+          "peak_rss_bytes": 15261696
+        },
+        "benchmark_id": "interactive-tooling-foundation-004-changed-file-invalidation",
+        "budget_id": "perf.interactive.changed_file_invalidation",
+        "cache": {},
+        "group": "interactive-tooling-foundation",
+        "policy": "frontend-query-edit-loop",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 3.216,
+          "p95_ms": 6.221,
+          "peak_rss_bytes": 48816128,
+          "timeout_ms": 30000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.00988,
+          "median_ms": 0.089,
+          "p95_ms": 0.09,
+          "peak_rss_bytes": 10727424
+        },
+        "benchmark_id": "interactive-tooling-foundation-005-source-map-lookup",
+        "budget_id": "perf.interactive.source_map_lookup",
+        "cache": {},
+        "group": "interactive-tooling-foundation",
+        "policy": "frontend-query-edit-loop",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 2.089,
+          "p95_ms": 5.09,
+          "peak_rss_bytes": 44281856,
+          "timeout_ms": 30000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.012946,
+          "median_ms": 91.733,
+          "p95_ms": 92.259,
+          "peak_rss_bytes": 145272832
+        },
+        "benchmark_id": "lsp-query-001-request-families",
+        "budget_id": "perf.lsp.request_families",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 50,
+          "p95_ms": 100,
+          "peak_rss_bytes": 178827264,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.009368,
+          "median_ms": 6.155,
+          "p95_ms": 6.191,
+          "peak_rss_bytes": 23691264
+        },
+        "benchmark_id": "lsp-query-002-cold-start",
+        "budget_id": "perf.lsp.cold_start.workspace",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 13.488,
+          "p95_ms": 18.552,
+          "peak_rss_bytes": 57245696,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.009892,
+          "median_ms": 12.871,
+          "p95_ms": 12.938,
+          "peak_rss_bytes": 114425856
+        },
+        "benchmark_id": "lsp-query-003-diagnostics",
+        "budget_id": "perf.lsp.diagnostics.document",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.91,
+          "p95_ms": 10.933,
+          "peak_rss_bytes": 147980288,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.012812,
+          "median_ms": 2.682,
+          "p95_ms": 2.729,
+          "peak_rss_bytes": 114651136
+        },
+        "benchmark_id": "lsp-query-004-workspace-diagnostics",
+        "budget_id": "perf.lsp.diagnostics.workspace",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.324,
+          "p95_ms": 10.345,
+          "peak_rss_bytes": 148205568,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.002585,
+          "median_ms": 21.359,
+          "p95_ms": 21.429,
+          "peak_rss_bytes": 116170752
+        },
+        "benchmark_id": "lsp-query-005-completion",
+        "budget_id": "perf.lsp.completion.local_scope",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.12,
+          "p95_ms": 10.127,
+          "peak_rss_bytes": 149725184,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.005415,
+          "median_ms": 1.997,
+          "p95_ms": 2.01,
+          "peak_rss_bytes": 114130944
+        },
+        "benchmark_id": "lsp-query-006-hover",
+        "budget_id": "perf.lsp.hover.symbol",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.088,
+          "p95_ms": 10.092,
+          "peak_rss_bytes": 147685376,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.029839,
+          "median_ms": 0.373,
+          "p95_ms": 0.391,
+          "peak_rss_bytes": 114823168
+        },
+        "benchmark_id": "lsp-query-007-signature-help",
+        "budget_id": "perf.lsp.signature_help.call",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.091,
+          "p95_ms": 10.096,
+          "peak_rss_bytes": 148377600,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.029826,
+          "median_ms": 6.394,
+          "p95_ms": 6.568,
+          "peak_rss_bytes": 114761728
+        },
+        "benchmark_id": "lsp-query-008-navigation",
+        "budget_id": "perf.lsp.navigation.symbol",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.864,
+          "p95_ms": 10.954,
+          "peak_rss_bytes": 148316160,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.012047,
+          "median_ms": 1.382,
+          "p95_ms": 1.395,
+          "peak_rss_bytes": 113430528
+        },
+        "benchmark_id": "lsp-query-009-references",
+        "budget_id": "perf.lsp.references.workspace_symbol",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.152,
+          "p95_ms": 10.161,
+          "peak_rss_bytes": 146984960,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.019863,
+          "median_ms": 2.126,
+          "p95_ms": 2.182,
+          "peak_rss_bytes": 116109312
+        },
+        "benchmark_id": "lsp-query-010-rename",
+        "budget_id": "perf.lsp.rename.workspace_edit",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.258,
+          "p95_ms": 10.277,
+          "peak_rss_bytes": 149663744,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.085412,
+          "median_ms": 1.561,
+          "p95_ms": 1.594,
+          "peak_rss_bytes": 114311168
+        },
+        "benchmark_id": "lsp-query-011-semantic-tokens",
+        "budget_id": "perf.lsp.semantic_tokens.full",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.302,
+          "p95_ms": 10.339,
+          "peak_rss_bytes": 147865600,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.019887,
+          "median_ms": 0.716,
+          "p95_ms": 0.724,
+          "peak_rss_bytes": 114679808
+        },
+        "benchmark_id": "lsp-query-012-inlay-hints",
+        "budget_id": "perf.lsp.inlay_hints.module",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.125,
+          "p95_ms": 10.131,
+          "peak_rss_bytes": 148234240,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.022176,
+          "median_ms": 0.599,
+          "p95_ms": 0.6,
+          "peak_rss_bytes": 114839552
+        },
+        "benchmark_id": "lsp-query-013-selection-range",
+        "budget_id": "perf.lsp.selection_ranges.nested",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.173,
+          "p95_ms": 10.178,
+          "peak_rss_bytes": 148393984,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.010948,
+          "median_ms": 1.117,
+          "p95_ms": 1.127,
+          "peak_rss_bytes": 114270208
+        },
+        "benchmark_id": "lsp-query-014-type-hierarchy",
+        "budget_id": "perf.lsp.type_hierarchy.symbol",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.077,
+          "p95_ms": 10.085,
+          "peak_rss_bytes": 147824640,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.008851,
+          "median_ms": 2.007,
+          "p95_ms": 2.04,
+          "peak_rss_bytes": 115380224
+        },
+        "benchmark_id": "lsp-query-015-code-actions",
+        "budget_id": "perf.lsp.code_action.diagnostic",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.323,
+          "p95_ms": 10.336,
+          "peak_rss_bytes": 148934656,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.009402,
+          "median_ms": 1.998,
+          "p95_ms": 2.004,
+          "peak_rss_bytes": 114921472
+        },
+        "benchmark_id": "lsp-query-016-formatting",
+        "budget_id": "perf.lsp.formatting.document",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.52,
+          "p95_ms": 10.541,
+          "peak_rss_bytes": 148475904,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.020873,
+          "median_ms": 40.757,
+          "p95_ms": 42.083,
+          "peak_rss_bytes": 145772544
+        },
+        "benchmark_id": "lsp-query-017-generated-rust-preview",
+        "budget_id": "perf.lsp.generated_rust_preview.document",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 23.946,
+          "p95_ms": 33.804,
+          "peak_rss_bytes": 179326976,
+          "timeout_ms": 60000
+        }
+      },
+      {
+        "baseline": {
+          "coefficient_variation": 0.002258,
+          "median_ms": 99.725,
+          "p95_ms": 99.95,
+          "peak_rss_bytes": 4118073344
+        },
+        "benchmark_id": "lsp-query-018-did-open-diagnostics",
+        "budget_id": "perf.lsp.document_sync.did_open",
+        "cache": {},
+        "group": "lsp-query",
+        "policy": "lsp-query",
+        "rationale": "Derived from this named reference using the shared regression rules.",
+        "thresholds": {
+          "median_ms": 5.737,
+          "p95_ms": 10.754,
+          "peak_rss_bytes": 4529880678.4,
+          "timeout_ms": 60000
+        }
+      }
+    ],
+    "derivation": {
+      "cache_hits": "frontend-query cases with baseline hits require at least the baseline hit count",
+      "command_median_ms": "max(baseline_median * 1.10, baseline_median + 25ms)",
+      "command_p95_ms": "max(baseline_p95 * 1.15, baseline_p95 + 50ms)",
+      "frontend_query_median_ms": "max(baseline_median * 1.05, baseline_median + 2ms)",
+      "frontend_query_p95_ms": "max(baseline_p95 * 1.10, baseline_p95 + 5ms)",
+      "lsp_query_cache": "not enforced until LSP exports stable per-request cache counters",
+      "lsp_query_median_ms": "smoke fixed broad; otherwise min(slo_median, max(baseline_median * 3, baseline_median + 5ms))",
+      "lsp_query_p95_ms": "smoke fixed broad; otherwise min(slo_p95, max(baseline_p95 * 4, baseline_p95 + 10ms))",
+      "peak_rss_bytes": "max(baseline_peak_rss * 1.10, baseline_peak_rss + 32MiB)"
+    },
+    "description": "Named-host regression budgets; existing editor latency ceilings and timeouts preserved.",
+    "version": 1
+  },
+  "identity": {
+    "cache_observations": {
+      "after": {
+        "cargo_debug_dir": "/home/yaser5/projects/sifr/worktrees/linux-performance-reference/target/debug",
+        "cargo_lock_present": true,
+        "generated_artifact_cache_root": "/home/yaser5/projects/sifr/continuation-evidence/20260912-transfer/tmp/sifr_generated_artifact_cache",
+        "generated_artifact_entries": 160,
+        "helper_binaries": {
+          "frontend_query_bench": true,
+          "sifr": true
+        },
+        "helper_cache": "warm"
+      },
+      "before": {
+        "cargo_debug_dir": "/home/yaser5/projects/sifr/worktrees/linux-performance-reference/target/debug",
+        "cargo_lock_present": true,
+        "generated_artifact_cache_root": "/home/yaser5/projects/sifr/continuation-evidence/20260912-transfer/tmp/sifr_generated_artifact_cache",
+        "generated_artifact_entries": 160,
+        "helper_binaries": {
+          "frontend_query_bench": true,
+          "sifr": true
+        },
+        "helper_cache": "warm"
+      }
+    },
+    "execution": {
+      "benchmark_inputs_sha256": "dcf7572b0181a9f577bfaec736e40dae5d25354bc476d0ade6cc365f77f6e364",
+      "build_environment": {},
+      "build_profile": "dev",
+      "cache_policy": "manifest per-case warmups",
+      "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+      "cargo_config_sha256": "6de721168ee30393ad5f8fd394c49deae30c3570f552a5d8afcf2a4cde7daf6b",
+      "cargo_jobs": "2",
+      "cargo_manifest_sha256": "d5b4eb9801fd73520b81e57a9c0fc9ba7e9ad6fd18da0d91db65925d1922f8d3",
+      "control_mode": "latency",
+      "python": "3.14.7",
+      "rust_test_threads": "default",
+      "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+      "target_storage": {
+        "filesystem": "ext4",
+        "source": "/dev/mapper/ubuntu--vg-ubuntu--lv"
+      },
+      "temporary_storage": {
+        "filesystem": "ext4",
+        "source": "/dev/mapper/ubuntu--vg-ubuntu--lv"
+      },
+      "user_cargo_config_sha256": null
+    },
+    "host": {
+      "architecture": "x86_64",
+      "available_cpus": 8,
+      "cpu_models": [
+        "Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz"
+      ],
+      "cpu_power_policy": {
+        "boost_controls": {
+          "/sys/devices/system/cpu/intel_pstate/no_turbo": "0"
+        },
+        "policies": [
+          {
+            "affected_cpus": "0",
+            "scaling_driver": "intel_cpufreq",
+            "scaling_governor": "performance",
+            "scaling_max_freq": "3600000",
+            "scaling_min_freq": "800000"
+          },
+          {
+            "affected_cpus": "1",
+            "scaling_driver": "intel_cpufreq",
+            "scaling_governor": "performance",
+            "scaling_max_freq": "3600000",
+            "scaling_min_freq": "800000"
+          },
+          {
+            "affected_cpus": "2",
+            "scaling_driver": "intel_cpufreq",
+            "scaling_governor": "performance",
+            "scaling_max_freq": "3600000",
+            "scaling_min_freq": "800000"
+          },
+          {
+            "affected_cpus": "3",
+            "scaling_driver": "intel_cpufreq",
+            "scaling_governor": "performance",
+            "scaling_max_freq": "3600000",
+            "scaling_min_freq": "800000"
+          },
+          {
+            "affected_cpus": "4",
+            "scaling_driver": "intel_cpufreq",
+            "scaling_governor": "performance",
+            "scaling_max_freq": "3600000",
+            "scaling_min_freq": "800000"
+          },
+          {
+            "affected_cpus": "5",
+            "scaling_driver": "intel_cpufreq",
+            "scaling_governor": "performance",
+            "scaling_max_freq": "3600000",
+            "scaling_min_freq": "800000"
+          },
+          {
+            "affected_cpus": "6",
+            "scaling_driver": "intel_cpufreq",
+            "scaling_governor": "performance",
+            "scaling_max_freq": "3600000",
+            "scaling_min_freq": "800000"
+          },
+          {
+            "affected_cpus": "7",
+            "scaling_driver": "intel_cpufreq",
+            "scaling_governor": "performance",
+            "scaling_max_freq": "3600000",
+            "scaling_min_freq": "800000"
+          }
+        ],
+        "source": "sysfs"
+      },
+      "kernel": "7.0.0-31-generic",
+      "logical_cpus": 8,
+      "memory": {
+        "available_bytes": 10981564416,
+        "pswpin": 1011728,
+        "pswpout": 2184281,
+        "swap_used_bytes": 4716257280,
+        "total_bytes": 11880697856
+      },
+      "memory_capacity_gib": 12,
+      "os_version": "Ubuntu 26.04.1 LTS",
+      "physical_cores": 4,
+      "system": "Linux"
+    }
+  },
+  "name": "linux-i7-4720hq-12gb-dev-v1",
+  "schema_version": 1
+}
