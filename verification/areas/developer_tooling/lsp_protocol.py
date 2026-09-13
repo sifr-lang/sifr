@@ -24,7 +24,8 @@ class LspProtocolError(RuntimeError):
 class LspClient:
     def __init__(self, timeout: float = 90.0, extra_args: list[str] | None = None) -> None:
         command = os.environ.get("SIFR_LSP_COMMAND")
-        binary = REPO_ROOT / "target" / "debug" / "sifr"
+        target = Path(os.environ.get("CARGO_TARGET_DIR", "target"))
+        binary = REPO_ROOT / target / "debug" / "sifr"
         args = (
             shlex.split(command)
             if command

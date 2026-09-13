@@ -14,7 +14,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from .cargo_setup import enable_offline_cargo, prepare_cargo_cache
+from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_authoring_test_binaries
 from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
 from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
 from .generated_cargo_setup import (
@@ -135,6 +135,50 @@ class SetupPolicyTests(unittest.TestCase):
         self.lock.write_text(self.lock.read_text().replace(REVISION, "b" * 40))
         with self.assertRaisesRegex(ValueError, "nonportable or stale"):
             portable_graph(self.root, REVISION)
+
+    def test_sqlite_patch_and_lock_are_exact(self):
+        manifest = self.manifest.read_text()
+        lock = self.lock.read_text()
+        patch_text = ('\n[patch.crates-io]\n'
+                      f'libsqlite3-sys = {{ git = "{GIT_SOURCE}", rev = "{REVISION}" }}\n')
+        native_lock = ('\n[[package]]\nname = "libsqlite3-sys"\nversion = "0.38.2"\n'
+                       f'source = "git+{GIT_SOURCE}?rev={REVISION}#{REVISION}"\n')
+        self.manifest.write_text(manifest + patch_text)
+        self.lock.write_text(lock + native_lock)
+        portable_graph(self.root, REVISION)
+        for invalid in ("", patch_text.replace(REVISION, "b" * 40),
+                        patch_text.replace('git =', 'path ='),
+                        patch_text + 'extra = "1"\n',
+                        patch_text + '[replace]\n"foo:1.0.0" = { path = "/local" }\n'):
+            with self.subTest(manifest=invalid):
+                self.manifest.write_text(manifest + invalid)
+                with self.assertRaises(ValueError):
+                    portable_graph(self.root, REVISION)
+        self.manifest.write_text(manifest + patch_text)
+        for source in ("registry+https://github.com/rust-lang/crates.io-index",
+                       f"git+{GIT_SOURCE}?rev={'b' * 40}#{'b' * 40}", ""):
+            with self.subTest(source=source):
+                self.lock.write_text(lock + native_lock.replace(
+                    f"git+{GIT_SOURCE}?rev={REVISION}#{REVISION}", source))
+                with self.assertRaisesRegex(ValueError, "nonportable or stale"):
+                    portable_graph(self.root, REVISION)
+
+    def test_authoring_test_prebuild_selection_and_failure(self):
+        calls = []
+        runner = lambda args, **kw: calls.append(args)
+        prepare_authoring_test_binaries({"selected_areas": []}, {}, runner)
+        self.assertEqual(calls, [])
+        profile = {"selected_areas": [{"area": "python_interop",
+                                      "suites": ["lsp-declaration-authoring"]}]}
+        prepare_authoring_test_binaries(profile, {}, runner)
+        self.assertEqual(calls, [
+            ["cargo", "test", "--locked", "--offline", "--no-run", "-p", package]
+            for package in ("sifr_lsp", "sifr_driver", "sifr_analysis")
+        ])
+        def fail(*args, **kw):
+            raise CommandFailed(101)
+        with self.assertRaises(CommandFailed):
+            prepare_authoring_test_binaries(profile, {}, fail)
 
     def test_missing_lock_rejected_before_fetch(self):
         self.lock.unlink()

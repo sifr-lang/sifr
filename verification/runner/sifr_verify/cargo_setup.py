@@ -56,6 +56,24 @@ def prepare_cargo_cache(
             env=setup_env,
         )
 
+    prepare_authoring_test_binaries(profile, setup_env, command_runner)
+
+
+def prepare_authoring_test_binaries(profile, env, command_runner) -> None:
+    """Charge cold Rust test compilation to the explicit setup step."""
+    selected = any(
+        area["area"] == "python_interop"
+        and "lsp-declaration-authoring" in area["suites"]
+        for area in profile.get("selected_areas", [])
+    )
+    if not selected:
+        return
+    # Separate invocations match each execution command's feature resolution.
+    for package in ("sifr_lsp", "sifr_driver", "sifr_analysis"):
+        command = ["cargo", "test", "--locked", "--offline", "--no-run", "-p", package]
+        print(f"[sifr-profile-setup] authoring-test-build={' '.join(command)}", flush=True)
+        command_runner(command, env=env)
+
 
 def enable_offline_cargo(env: dict[str, str]) -> None:
     """Force profile execution to use the prepared Cargo cache."""

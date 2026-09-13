@@ -4,13 +4,34 @@
 from __future__ import annotations
 
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+import os
+from pathlib import Path
+import lsp_protocol
 
 from lsp_protocol import LspClient, LspProtocolError
 
 
 def response(request_id: int | str, result: object = None) -> dict:
     return {"jsonrpc": "2.0", "id": request_id, "result": result}
+
+
+class CompilerSelectionTests(unittest.TestCase):
+    def test_cargo_target_directory_and_override(self):
+        for target in (None, "target/private", "/owned/target"):
+            with self.subTest(target=target):
+                env = {} if target is None else {"CARGO_TARGET_DIR": target}
+                with patch.dict(os.environ, env, clear=True), \
+                     patch.object(Path, "exists", return_value=True), \
+                     patch.object(lsp_protocol.subprocess, "Popen") as spawn:
+                    client = LspClient()
+                    expected = lsp_protocol.REPO_ROOT / (target or "target") / "debug/sifr"
+                    self.assertEqual(client.args, [str(expected), "lsp", "--stdio"])
+                    self.assertEqual(spawn.call_args.kwargs["cwd"], lsp_protocol.REPO_ROOT)
+        with patch.dict(os.environ, {"SIFR_LSP_COMMAND": 'custom "--with spaces"',
+                                     "CARGO_TARGET_DIR": "/unused"}, clear=True), \
+             patch.object(lsp_protocol.subprocess, "Popen"):
+            self.assertEqual(LspClient().args, ["custom", "--with spaces"])
 
 
 class ResponseOwnershipTests(unittest.TestCase):

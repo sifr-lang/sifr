@@ -1,5 +1,42 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Remote final integration preparation corrections — 2026-09-13
+
+Create-PR attempt2 on349966457cd15e3225e3cfb1ba757575f7074e48
+failed the Python area timing gate: functional checks passed in1500.561s,
+over its unchanged cold1200s limit. LSP declaration-authoring spent851.202s
+on cold Rust test compilation. Total1914.91s is not a successful profile.
+
+The continuation now prebuilds those same three packages separately with
+locked/offline/no-run during reported Cargo setup, preserving individual
+feature resolution and all four actual test commands inside the Python area.
+The setup advisory and area budgets are unchanged; preparation time remains visible.
+
+LSP protocol clients now honor absolute or repository-relative CARGO_TARGET_DIR
+and retain explicit command precedence. The former default-path CLI was preserved
+outside discovery and the current compiler staged during attempt2; the staging
+receipt records both hashes. The permanent resolver correction removes that
+artifact-path mismatch.
+
+Portable generated Cargo preparation now accepts only the exact approved
+libsqlite3-sys Git patch at the candidate revision. Missing patches for selected
+native SQLite, stale/registry lock sources, arbitrary/path/extra overrides and
+replacement tables remain rejected. This integrates the authorized SQLite48
+source mechanism; it is not a new dependency upgrade.
+
+Targeted setup policy21 tests, protocol15 tests, file-size guard3873 files,
+lowering guard and diff whitespace checks pass.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/.
+Create-PR attempts1/2 failed; full merge gates0 and Opus reviews0 remain recorded.
+
+Fresh native qualification34763414201 passed every job on the actual source
+e8e202bdc6bc6c6332d5afa4705caf8e50cee364 (attempt1). All20 indexed files
+were retained and verified against the authenticated index locally and remotely.
+Receipt identities are unchanged and do not certify later source revisions.
+No publication, historical artifact recovery or phase closure is claimed.
+Remote evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-qualification-34763414201/.
+
+
 ## Named performance reference checkpoint — 2026-09-13
 
 The user approved named host references after the Linux startup checkpoint.
