@@ -4202,3 +4202,53 @@ A fresh GitHub environment read still shows only the current maintainer as
 required reviewer and `prevent_self_review: false`. Resolve that external
 prerequisite before attempting the blocked merge gate; do not extend the
 expired waiver. Subsequent prepared groups remain pending.
+
+## Remote group4 continuation checkpoint — 2026-09-13
+
+Items 57 and 63 are integrated and functionally validated on the remote
+continuation branch; neither item is merged. Item57 commit
+`1cd3af11d514be8f7625ac21c6a027c237f5ea23`; Item63 final source commit
+`1e0950006c1ba3b701c1dfcf2b9650c96de1e81d`. The source imports preserve the approved
+dated versions and all previously integrated Group3/Item72 corrections.
+
+- Item57: all four immutable image pins pulled successfully by digest.
+  Canonical dependency audit passed 24 contract tests, six projects/locks,
+  27 packages, four images and 42 mutations. Runner self-tests, live policy,
+  schema-profile source contract and maintainability guards passed.
+  All six compiled live cases passed against the pinned images. Existing
+  Group3 binaries were reused only after exact binary hashes and copied
+  fixture/bridge bytes were verified; actual services and binary executions
+  were fresh. PostgreSQL's SQL multi-major provider matrix is unchanged.
+- Item63: both cardinality calls now derive numkeys from their shared key list.
+  Actual Redis8.10.1 checks passed with normal two-key and AST-varied three-key
+  inputs, including both command arguments, marker and client close.
+  The maintained live runner then rebuilt and executed the changed Redis
+  fixture successfully (150ms binary execution). The Redis feature suite
+  passed with Fakeredis2.38.0 and the selected dependency graph.
+- The compiler cold build passed with two Cargo jobs in 16m00s.
+  This is build evidence, not a latency baseline. Private target is 9.8GiB;
+  its cache is retained. No source optimization, timeout, lockfile,
+  performance budget/profile, or SQL provider change was introduced.
+- Final file-size guard passed for 3,868 files at the 900-line limit.
+  Unaffected full 32-suite Group3 Python evidence and representative
+  performance evidence remain applicable to unchanged inputs. This checkpoint
+  does not claim a new full Python-area run or full candidate performance sweep.
+
+Evidence and exact six-file input hashes:
+`/home/yaser5/projects/sifr/continuation-evidence/20260913-python-group4/`,
+including `item57-live-results.json`, `item63-compiled-results.json`,
+`validated-inputs.json`, and `FINAL.json`.
+The prior failed/partial receipts remain preserved in their original envelopes.
+
+Item61 retains its prior integration, prerequisite-delivery and consumed-gate
+boundary; no Kafka client integration, old gate retry or review reset occurred.
+The active distinct-release-reviewer issue remains unresolved as recorded in
+the preceding remote recheck. Group4 initial review0/remediation0,
+create-PR gate0/merge gate0/PR0/merge0 remain unchanged. Historical Item31
+and Item40 review/gate consumption remains unchanged.
+
+Next prepared Node73 source is `a3fd2d3eff2b66876d478e26abfabb60806169bc`;
+its authenticated handoff requires the held Item40/33 editor prerequisites
+and an ordered extension → editor-integrations → root delivery. It is not an
+independent root-only patch. Preserve that boundary before starting its
+integration. Release-governance resolution remains necessary for merge.
