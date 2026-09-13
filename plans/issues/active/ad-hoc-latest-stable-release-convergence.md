@@ -1,5 +1,30 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Remote generated-code inventory correction — 2026-09-13
+
+Create-PR7 at eccf183f9e59a3ef71478592d02c024d64aa3981 passed setup,
+all guards, Rust14.501s, coverage26.602s, diagnostics30.826s,
+Python181.740s, runtime-platform16.483s and developer-tooling37.976s.
+All29 tooling variants pass; lint0.710s and completion0.465s confirm their
+cold compilation is now prepared. Setup1735.381s exceeds its300s advisory.
+
+The generated-code area failed its inventory because the new executed
+nested-assignment fixture changes the e2e surface from726 to727 sources.
+All five other smoke variants passed. Total2191.23s remains a failed profile;
+performance, subsequent areas and toolchain steps were not reached.
+create-pr7.json and generated-code-quality-create-pr7.json preserve the result.
+
+The surface count/hash now includes the regression fixture. Removing only
+nested_assignment_storage_regression.sifr from discovery reproduces the exact
+previous726-file digest, proving no unrelated inventory drift was accepted.
+The corrected full inventory and its negative self-tests pass in19.671s.
+File-size3874 and diff guards pass. Evidence: inventory-corrected.log and
+target/sifr_generated_code_quality/evidence/inventory-1789325003-1125936.json.
+Remaining areas will be checked directly before restarting the canonical gate;
+these checks will not be represented as a complete profile pass.
+Integration Opus reviews and full merge gates remain0.
+
+
 ## Remote editor CI bootstrap ordering correction — 2026-09-13
 
 Draft extension PR15 (sifr-lang/sifr-vscode) and editor pointer PR13
