@@ -14,7 +14,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_authoring_test_binaries, prepare_maintained_demo_cache
+from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_authoring_test_binaries, prepare_maintained_demo_cache, prepare_tooling_test_binaries
 from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
 from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
 from .generated_cargo_setup import (
@@ -179,6 +179,33 @@ class SetupPolicyTests(unittest.TestCase):
             raise CommandFailed(101)
         with self.assertRaises(CommandFailed):
             prepare_authoring_test_binaries(profile, {}, fail)
+
+    def test_tooling_preparation_matches_selected_execution_environments(self):
+        calls = []
+        def run(args, **kw):
+            calls.append((args[-1], kw["env"].copy()))
+        def profile(suites):
+            return {"selected_areas": [{"area": "developer_tooling", "suites": suites}]}
+        prepare_tooling_test_binaries(profile(["lsp-smoke"]), {}, run)
+        self.assertEqual(calls, [])
+        original = {"CARGO_BUILD_JOBS": "2"}
+        prepare_tooling_test_binaries(profile(["static"]), original, run)
+        self.assertEqual(calls, [
+            ("sifr_lint", original),
+            ("sifr_analysis", {**original, "CARGO_INCREMENTAL": "0"})])
+        self.assertNotIn("CARGO_INCREMENTAL", original)
+        calls.clear()
+        explicit = {"CARGO_INCREMENTAL": "1"}
+        prepare_tooling_test_binaries(profile(["full", "static"]), explicit, run)
+        self.assertEqual(calls, [(name, explicit) for name in
+                                ("sifr_lint", "sifr_analysis", "sifr_format", "sifr_analysis")])
+        calls.clear()
+        prepare_tooling_test_binaries(profile(["formatter", "analysis"]), {}, run)
+        self.assertEqual(calls, [("sifr_format", {}), ("sifr_analysis", {})])
+        def fail(*args, **kw):
+            raise CommandFailed(101)
+        with self.assertRaises(CommandFailed):
+            prepare_tooling_test_binaries(profile(["static"]), {}, fail)
 
     def test_demo_preparation_selection_and_failure(self):
         calls = []

@@ -1,5 +1,34 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Remote tooling preparation and ownership correction — 2026-09-13
+
+Create-PR attempt5 at a05542de9d74f658f95ff7f7b1902902f36caa78 failed:
+developer tooling661.372s, including475.459s completion test compilation and
+149.760s lint test compilation. One functional guard also found the missing
+host-tool fingerprint filesystem ownership record. Earlier Rust14.032s,
+Python183.058s and runtime-platform16.431s areas passed; subsequent areas
+were not executed. Setup537.788s exceeded its300s advisory. The failed
+profile1595.93s and all actual results remain in create-pr5.json and
+developer-tooling-create-pr5.json.
+
+Setup now prepares the selected lint, completion, formatter and analysis test
+graphs. Completion's default CARGO_INCREMENTAL=0 and any explicit caller
+override are preserved; ordinary analysis keeps its execution environment.
+Separate packages preserve feature resolution. The filesystem inventory now
+records bounded physical host-tool package hashing, symlink rejection and
+excluded generated paths as a package-management identity boundary.
+
+All23 setup policy tests pass, including suite selection, full/static overlap,
+environment isolation, explicit incremental override and error propagation.
+Actual selected static prebuilds complete in0.32s/0.34s. All29 selected tooling
+variants pass in28.807s with completion0.453s; no budgets or checks changed.
+File-size3874 and diff guards pass. A misspelled guard command failed to start;
+the corrected canonical file-size command subsequently passed.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/
+tooling-preparation-policy.log, tooling-prepared.log and tooling-prepared.json.
+No integration review, full merge gate or release-profile pass is claimed.
+
+
 ## Remote maintained-demo preparation qualified — 2026-09-13
 
 Create-PR attempt4 on5d686a4ee3616f7df583cc0a350c955976da7d82
