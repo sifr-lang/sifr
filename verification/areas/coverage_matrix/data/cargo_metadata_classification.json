@@ -2,6 +2,30 @@
   "schema_version": 1,
   "packages": [
     {
+      "name": "sifr-demo-csv",
+      "classification": "test_fixture",
+      "targets": [{"name": "sifr-demo-csv", "kind": "bin", "classification": "test_fixture", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr-demo-parse-safety",
+      "classification": "test_fixture",
+      "targets": [{"name": "sifr-demo-parse-safety", "kind": "bin", "classification": "test_fixture", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr-demo-shutil",
+      "classification": "test_fixture",
+      "targets": [{"name": "sifr-demo-shutil", "kind": "bin", "classification": "test_fixture", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr-demo-stdlib-intrinsics",
+      "classification": "test_fixture",
+      "targets": [{"name": "sifr-demo-stdlib-intrinsics", "kind": "bin", "classification": "test_fixture", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
       "name": "sifr",
       "classification": "first_party_tooling",
       "targets": [

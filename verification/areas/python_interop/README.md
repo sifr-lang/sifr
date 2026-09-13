@@ -175,9 +175,9 @@ default; live suites must declare their own `network_mode` and resource classes.
 - `env`: interpreter, venv, ABI, platform, lock/env freshness, and probe rejection fixture coverage.
 - `dependency-versions`: exact PyPI stable versions and audited artifact hashes
   for every discovered maintained Python project and lock, including empty demo
-  owners and the verification build backend. Selected versions and current
-  official versions are recorded separately; Kafka retains explicit Item61
-  convergence ownership. All locked direct-package artifacts must match official
+  owners and the verification build backend. Selected versions and official
+  artifact identities are audited for every direct package, including Kafka.
+  All locked direct-package artifacts must match official
   PyPI files. Public Packaging APIs validate requirements, extras, markers,
   Requires-Python, resolved direct edges and the complete pinned build closure.
   Mutation tests reject omitted owners, declarations, extras, artifacts and

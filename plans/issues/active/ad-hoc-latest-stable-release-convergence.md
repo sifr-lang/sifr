@@ -245,6 +245,24 @@ or an authorized merge/closure here. All predecessor reviews and failed gates
 retain their original accounting. Older contradictory policy below is history.
 
 
+## Create-PR readiness correction — 2026-09-13
+
+The first create-pr gate on e8e202bdc6bc6c6332d5afa4705caf8e50cee364 stopped
+at coverage readiness. Its four newly enrolled demo packages lacked taxonomy
+classification, and the Python verification README contained an internal item
+label. Add the four actual binary targets as merge-profile test fixtures and
+describe Kafka's public audit behavior without delivery-plan terminology.
+The corrected readiness selection passes all4 variants,58 negative cases and
+31 Python delivery mutations. Shared file-size and diff checks pass.
+
+The first gate's Rust area passed in14.151s under its unchanged20s budget.
+Its92 generated-project preparations passed; their374.020s setup exceeded the
+advisory300s target. Preserve the539.69s failed gate report and warm-time advisory
+without claiming the stopped later suites ran. This is create-pr attempt1,
+not a full merge-gate attempt or an Opus review. Evidence is in
+/home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration;
+create-pr-initial.json and create-pr.log are retained.
+
 ## Final integration preflight and62B batching correction — 2026-09-13
 
 All registered implementation batches have now been integrated on the owned
