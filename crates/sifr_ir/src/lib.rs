@@ -52,6 +52,13 @@ mod tests {
     use sifr_type_system::{ReceiverConvention, Type};
 
     #[test]
+    #[cfg(target_pointer_width = "64")]
+    fn statement_layout_bounds_full_inventory_residency() {
+        // Rare nested assignments must not inflate every retained statement.
+        assert!(std::mem::size_of::<super::HirStmt>() <= 1280);
+    }
+
+    #[test]
     fn cfg_reachability_and_fingerprint_are_stable() {
         let cfg = ControlFlowGraph::new(
             vec![

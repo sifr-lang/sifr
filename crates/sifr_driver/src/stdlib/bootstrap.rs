@@ -729,15 +729,54 @@ fn collect_public_constant_integer_value_exports<'a, T: Clone>(
 }
 
 fn stdlib_class_template(module_name: &str, class: &sifr_ir::HirClass) -> sifr_ir::HirClass {
-    let mut template = class.clone();
-    template.identity = Some(format!("{module_name}.{}", class.name));
-    for method in &mut template.methods {
-        method.body.clear();
+    // Structural emission needs every declaration field but never method
+    // statements. Project directly so bootstrap does not clone and discard
+    // entire bodies or retain their empty allocation in its lifetime cache.
+    sifr_ir::HirClass {
+        name: class.name.clone(),
+        identity: Some(format!("{module_name}.{}", class.name)),
+        fields: class.fields.clone(),
+        field_defaults: class.field_defaults.clone(),
+        field_default_identities: class.field_default_identities.clone(),
+        declaration_metadata: class.declaration_metadata.clone(),
+        methods: class
+            .methods
+            .iter()
+            .map(structural_method_template)
+            .collect(),
+        is_hashable: class.is_hashable,
+        is_error_type: class.is_error_type,
+        kind: class.kind.clone(),
+        operator_impls: class
+            .operator_impls
+            .iter()
+            .map(|(name, method)| (name.clone(), structural_method_template(method)))
+            .collect(),
+        newtype_inner: class.newtype_inner.clone(),
+        implements_protocols: class.implements_protocols.clone(),
+        parent_class: class.parent_class.clone(),
+        parent_type: class.parent_type.clone(),
+        type_params: class.type_params.clone(),
+        enum_variants: class.enum_variants.clone(),
+        rust_interop: class.rust_interop.clone(),
     }
-    for (_, method) in &mut template.operator_impls {
-        method.body.clear();
+}
+
+fn structural_method_template(method: &sifr_ir::HirFunction) -> sifr_ir::HirFunction {
+    sifr_ir::HirFunction {
+        name: method.name.clone(),
+        params: method.params.clone(),
+        return_type: method.return_type.clone(),
+        body: Vec::new(),
+        is_async: method.is_async,
+        method_kind: method.method_kind,
+        receiver: method.receiver,
+        decorators: method.decorators.clone(),
+        rust_interop: method.rust_interop.clone(),
+        python_interop: method.python_interop.clone(),
+        compiler_intrinsic: method.compiler_intrinsic,
+        type_params: method.type_params.clone(),
     }
-    template
 }
 
 #[cfg(test)]

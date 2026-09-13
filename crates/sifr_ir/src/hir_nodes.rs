@@ -474,7 +474,7 @@ pub enum HirStmt {
     NestedSubscriptAssign {
         object: String,
         outer_index: HirExpr,
-        inner_index: HirExpr,
+        inner_index: Box<HirExpr>,
         value: HirExpr,
         object_ty: Type,
         outer_failure: Option<Type>,
@@ -486,7 +486,7 @@ pub enum HirStmt {
         object: String,
         field: String,
         outer_index: HirExpr,
-        inner_index: HirExpr,
+        inner_index: Box<HirExpr>,
         value: HirExpr,
         field_ty: Type,
         outer_failure: Option<Type>,

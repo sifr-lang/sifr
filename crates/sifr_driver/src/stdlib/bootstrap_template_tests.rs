@@ -79,6 +79,46 @@ fn stdlib_structural_templates_retain_signatures_without_bodies() {
         .and_then(|classes| classes.get("JsonValue"))
         .expect("sifr.json.JsonValue should retain a structural template");
 
+    for (name, module) in compiled.code.hir_modules.iter() {
+        for class in &module.classes {
+            let mut oracle = class.clone();
+            oracle.identity = Some(format!("{name}.{}", class.name));
+            for method in &mut oracle.methods {
+                method.body.clear();
+            }
+            for (_, method) in &mut oracle.operator_impls {
+                method.body.clear();
+            }
+            let projected = stdlib_class_template(name, class);
+            assert_eq!(format!("{projected:?}"), format!("{oracle:?}"), "{name}");
+        }
+    }
+    let retained_body_bytes = compiled
+        .code
+        .module_class_templates
+        .values()
+        .flat_map(|classes| classes.values())
+        .flat_map(|class| {
+            class
+                .methods
+                .iter()
+                .chain(class.operator_impls.iter().map(|(_, method)| method))
+        })
+        .map(|method| method.body.capacity() * std::mem::size_of::<sifr_ir::HirStmt>())
+        .sum::<usize>();
+    assert_eq!(
+        retained_body_bytes, 0,
+        "signature-only templates retain empty body buffers"
+    );
+    let full_json = &compiled.code.hir_modules["sifr.json"];
+    assert!(
+        full_json
+            .classes
+            .iter()
+            .any(|class| class.name == "JsonValue"
+                && class.methods.iter().any(|method| !method.body.is_empty()))
+    );
+
     assert_eq!(json_value.identity.as_deref(), Some("sifr.json.JsonValue"));
     assert!(!json_value.methods.is_empty());
     assert!(

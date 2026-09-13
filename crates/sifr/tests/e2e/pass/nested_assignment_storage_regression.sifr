@@ -1,0 +1,42 @@
+class Grid:
+    rows: list[list[int]]
+
+
+def mark(mut visits: list[int], index: int) -> int:
+    visits.append(index)
+    return index
+
+
+def main():
+    visits: list[int] = []
+    grid = Grid([[1, 2], [3, 4]])
+    try:
+        grid.rows[mark(visits, 0)][mark(visits, 1)] = 7
+        grid.rows[mark(visits, 1)][mark(visits, 0)] += 5
+    except IndexError:
+        assert False
+    assert visits == [0, 1, 1, 0]
+    assert grid.rows == [[1, 7], [8, 4]]
+
+    outer_failed = False
+    try:
+        grid.rows[9][0] = 100
+    except IndexError:
+        outer_failed = True
+    assert outer_failed
+
+    inner_failed = False
+    try:
+        grid.rows[0][9] += 100
+    except IndexError:
+        inner_failed = True
+    assert inner_failed
+    assert grid.rows == [[1, 7], [8, 4]]
+
+    rows: list[list[int]] = [[1, 2]]
+    try:
+        rows[0][-1] = 10
+        rows[0][0] += 20
+    except IndexError:
+        assert False
+    assert rows == [[21, 10]]

@@ -35,3 +35,39 @@ Evidence includes corrected-target.json, corrected-target-execution.log,
 smaps-diagnostic.json and peak-smaps.txt in the existing evidence directory.
 An initial unsupported --output-root invocation did not execute the workload;
 it is preserved separately. No failed performance result is relabeled.
+
+
+## Remote LSP memory follow-up qualified — 2026-09-13
+
+The required release stress dependency is now implemented and locally qualified
+within the existing low-resource performance work. No stress cap or workload was changed.
+
+A focused negative test found2635776 bytes retained by empty structural-template
+body vectors. Signature templates now project declaration fields directly, avoiding
+full-body cloning and retained empty buffers. A full-inventory oracle compares
+every projected class with the previous clone/clear semantics; complete checked
+HIR bodies remain present. Buffer-only and direct-projection-only RSS attempts
+still failed and remain recorded.
+
+The dominant HIR statement layout was1584 bytes because rare nested writes kept
+three expressions inline. Boxing their inner index in both nested-write variants
+reduces every statement to1232 bytes on the measured64-bit host. All typed content,
+visitation and evaluation order are retained. Four lowering constructors change;
+a64-bit layout guard bounds future statement inflation.
+
+Validation: IR5, lowering96, codegen138 and stdlib97 tests pass (two explicitly
+ignored stdlib tests stay ignored). The new nested_assignment_storage_regression
+and existing checked_place_collection_semantics programs build and execute;
+they cover plain/augmented and attribute-backed writes, evaluation order,
+outer/inner failures, negative indexes and unchanged contents after errors.
+A first outside-package fixture invocation was rejected before execution;
+the subsequent owned e2e fixture run passes and is the retained execution proof.
+Format, file-size3874, lowering maintainability and diff guards pass.
+
+After the required idle private-target cleanup and cold build, an explicit
+large-session warmup is kept separate. The controlled qualifying smoke passes:
+42operations, p95=21.895ms, peakRSS132091904 bytes against134217728,
+zero measured RSS slope. It uses the complete unchanged stress corpus.
+This is targeted qualification, not a create-PR/full merge/release-profile pass.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-lsp-memory/.
+The source/binary receipt is retained outside Git after this commit.

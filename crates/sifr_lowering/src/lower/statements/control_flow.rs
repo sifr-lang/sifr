@@ -143,7 +143,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
                     object: obj_name,
                     field,
                     outer_index,
-                    inner_index,
+                    inner_index: Box::new(inner_index),
                     value,
                     field_ty: obj_ty,
                     outer_failure,
@@ -154,7 +154,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             return Some(HirStmt::NestedSubscriptAssign {
                 object: obj_name,
                 outer_index,
-                inner_index,
+                inner_index: Box::new(inner_index),
                 value,
                 object_ty: obj_ty,
                 outer_failure,
