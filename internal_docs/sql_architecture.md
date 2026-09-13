@@ -1673,7 +1673,7 @@ current TLS selection is not new SQL runtime qualification evidence.
 | MySQL async client | `0.37.1` | [`mysql_async` releases](https://crates.io/crates/mysql_async/0.37.1) |
 | Syntaqlite | `0.9.0` | [`syntaqlite` releases](https://crates.io/crates/syntaqlite/0.9.0) |
 | Rusqlite | `0.40.2` | [`rusqlite` releases](https://crates.io/crates/rusqlite/0.40.2) |
-| SQLite system bindings | `0.38.2` with SQLite `3.53.2` | [`libsqlite3-sys` releases](https://crates.io/crates/libsqlite3-sys/0.38.2) |
+| SQLite system bindings | `0.38.2` with the qualified SQLite `3.53.4` source patch | [Patch provenance](../crates/sifr_runtime/third_party/libsqlite3-sys/SIFR-PATCH.md) |
 
 Crates.io is the Syntaqlite release authority. Its
 [`LalitMaganti/syntaqlite`](https://github.com/LalitMaganti/syntaqlite) repository
@@ -1705,10 +1705,10 @@ stable parser tag for every PostgreSQL major that the capability matrix supports
 | 13 | `13-2.2.0` | [`13-2.2.0`](https://github.com/pganalyze/libpg_query/releases/tag/13-2.2.0) |
 
 The SQLite component enables syntaqlite `pin-version` and `pin-cflags`. Its
-parser target must match SQLite `3.53.2` and the qualified amalgamation flags.
+parser target must match SQLite `3.53.4` and the qualified amalgamation flags.
 The dependency qualification process updates these values as one compatible unit.
 
-The component build sets `SYNTAQLITE_SQLITE_VERSION=3053002`. It selects no
+The component build sets `SYNTAQLITE_SQLITE_VERSION=3053004`. It selects no
 grammar-changing `SYNTAQLITE_CFLAG_*` value for the default bundled SQLite
 configuration. The qualification record owns both build inputs.
 

@@ -3,7 +3,7 @@ verified_at = "2026-08-30"
 generated_by = "verification/areas/sql_platform/tools/resolve_dependency_baseline.py"
 root_lock_package = "sifr_sql_dependency_lock"
 rust_version = "1.98"
-sqlite_amalgamation = "3.53.2"
+sqlite_amalgamation = "3.53.4"
 
 [[tool]]
 name = "wasi-virt"

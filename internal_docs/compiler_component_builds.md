@@ -40,7 +40,7 @@ python3 verification/areas/sql_platform/tools/build_words_component.py
 
 The builders use Cargo's actual target directory, including an explicitly
 selected private `CARGO_TARGET_DIR`. PostgreSQL builds all majors 13–18; MySQL
-builds series 8.4, 9.7 and 26.7; SQLite retains the selected 3.53.2 grammar.
+builds series 8.4, 9.7 and 26.7; SQLite retains the selected 3.53.4 grammar.
 SQLite's native-source upgrade is a separate qualification item.
 
 Each SQL `component-artifacts.json` records the source-file digest map, exact

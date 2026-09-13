@@ -347,7 +347,19 @@ def validate_cargo(baseline: dict[str, Any], qualification: dict[str, Any]) -> N
     for row in baseline["crate"]:
         matches = [item for item in packages if item.get("name") == row["name"] and item.get("version") == row["version"]]
         require(len(matches) == 1, f"Cargo.lock does not resolve {row['name']} {row['version']} exactly once")
-        require(matches[0].get("checksum") == row["checksum"], f"Cargo.lock checksum differs for {row['name']}")
+        if row["name"] == "libsqlite3-sys":
+            patch_path = "crates/sifr_runtime/third_party/libsqlite3-sys"
+            patch = root.get("patch", {}).get("crates-io", {}).get("libsqlite3-sys")
+            require(patch == {"path": patch_path}, "native SQLite patch selection differs")
+            require("source" not in matches[0] and "checksum" not in matches[0],
+                    "native SQLite must resolve the authenticated local source patch")
+            receipt = read_json(REPO_ROOT / patch_path / "sifr-source.json")
+            require(receipt.get("crate_sha256") == row["checksum"],
+                    "native SQLite base archive identity differs")
+            require(qualified[row["name"]].get("source_patch") == patch_path + "/sifr-source.json",
+                    "native SQLite qualification omits its source patch")
+        else:
+            require(matches[0].get("checksum") == row["checksum"], f"Cargo.lock checksum differs for {row['name']}")
 
 
 def validate_architecture_baseline(baseline: dict[str, Any]) -> None:
@@ -422,6 +434,9 @@ def self_test() -> None:
         ("empty-gate", "inventory", lambda value: value["invariants"][0].__setitem__("evidence_types", [])),
         ("invalid-evidence", "inventory", lambda value: value["invariants"][0].__setitem__("evidence_types", ["snapshot"])),
         ("missing-qualification", "qualification", lambda value: value["dependencies"].pop()),
+        ("missing-native-source-patch", "qualification",
+         lambda value: next(row for row in value["dependencies"]
+                            if row["crate"] == "libsqlite3-sys").pop("source_patch")),
         ("missing-dependency-constraint", "qualification", lambda value: value["constraints"].pop()),
         (
             "missing-profile-suite",

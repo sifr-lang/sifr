@@ -125,6 +125,17 @@ edition = "2024"
         }
     }
 
+    if !interop_deps.is_empty() {
+        let native = dependency_plan
+            .sysroot_root
+            .join("crates/sifr_runtime/third_party/libsqlite3-sys");
+        let path = toml_quote_string(&native.display().to_string());
+        let _ = write!(
+            cargo_toml,
+            "\n[patch.crates-io]\nlibsqlite3-sys = {{ path = {path} }}\n"
+        );
+    }
+
     cargo_toml
 }
 
@@ -162,6 +173,12 @@ edition = "2024"
             cargo_toml.push_str(&dependency);
             cargo_toml.push('\n');
         }
+    }
+    if !rust_interop_path_dependencies(interop).is_empty() {
+        let _ = write!(
+            cargo_toml,
+            "\n[patch.crates-io]\nlibsqlite3-sys = {{ git = \"{SIFR_GIT_SOURCE}\", rev = \"{sifr_revision}\" }}\n"
+        );
     }
     Ok(cargo_toml)
 }
@@ -611,6 +628,35 @@ mod tests {
         assert!(cargo_toml.contains(
             "[patch.\"https://github.com/sifr-lang/sifr.git\"]\nsifr_runtime = { path = \"/opt/sifr/crates/sifr_runtime\" }"
         ));
+        let parsed: toml::Value = toml::from_str(&cargo_toml).expect("generated manifest");
+        assert_eq!(
+            parsed["patch"]["crates-io"]["libsqlite3-sys"]["path"].as_str(),
+            Some("/opt/sifr/crates/sifr_runtime/third_party/libsqlite3-sys")
+        );
+        if let RustInteropResolvedRoot::PackageBridge { cargo_source, .. } =
+            &mut interop.rust.resolved_targets[0].root
+        {
+            *cargo_source =
+                Some("registry+https://github.com/rust-lang/crates.io-index".to_string());
+        }
+        let revision = "0123456789abcdef0123456789abcdef01234567";
+        let portable = generate_portable_dependency_cargo_toml_with_interop(
+            "sifr_output",
+            &dependency_plan,
+            &interop,
+            revision,
+        )
+        .expect("portable interop manifest");
+        let parsed: toml::Value = toml::from_str(&portable).expect("portable manifest");
+        assert_eq!(
+            parsed["patch"]["crates-io"]["libsqlite3-sys"]["rev"].as_str(),
+            Some(revision)
+        );
+        assert_eq!(
+            parsed["patch"]["crates-io"]["libsqlite3-sys"]["git"].as_str(),
+            Some(SIFR_GIT_SOURCE)
+        );
+        assert!(!portable.contains("/opt/") && !portable.contains("/ws/"));
     }
 
     #[test]

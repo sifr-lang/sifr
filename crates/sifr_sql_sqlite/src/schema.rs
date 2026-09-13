@@ -268,7 +268,7 @@ fn metadata_document(options: &SqliteSchemaOptions) -> SchemaDocument {
             ),
             (
                 "minimum-version".to_string(),
-                SemanticValue::Text("3.53.2".to_string()),
+                SemanticValue::Text("3.53.4".to_string()),
             ),
         ]),
         dependencies: BTreeSet::new(),

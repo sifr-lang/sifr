@@ -32,7 +32,7 @@ impl SqliteServerSeries {
     }
 }
 
-pub const SUPPORTED_SQLITE_SERIES: [SqliteServerSeries; 1] = [SqliteServerSeries::new(3, 53, 2)];
+pub const SUPPORTED_SQLITE_SERIES: [SqliteServerSeries; 1] = [SqliteServerSeries::new(3, 53, 4)];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

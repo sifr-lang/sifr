@@ -12,7 +12,7 @@ path = "src/main.rs"
 
 [package.metadata.sifr_sql]
 artifact-role = "sqlite-host-tools"
-supported-servers = ["3.53.2"]
+supported-servers = ["3.53.4"]
 connection-manifest-version = 1
 
 [dependencies]

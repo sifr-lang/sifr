@@ -79,8 +79,8 @@ def build(family: str) -> int:
         if family == "mysql":
             manifest["parser_generator"] = {"name": "lalrpop", "version": "0.23.1"}
         elif family == "sqlite":
-            manifest["parser"] = {"name": "syntaqlite", "version": "0.9.0", "sqlite_version": "3.53.2",
-                                  "sqlite_version_number": 3053002, "compile_flags": []}
+            manifest["parser"] = {"name": "syntaqlite", "version": "0.9.0", "sqlite_version": "3.53.4",
+                                  "sqlite_version_number": 3053004, "compile_flags": []}
         (crate / "components").mkdir(exist_ok=True)
         for artifact in artifacts:
             destination = crate / artifact["path"]

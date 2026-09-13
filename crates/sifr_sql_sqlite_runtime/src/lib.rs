@@ -19,5 +19,5 @@ pub use stream::{SqliteRowStream, SqliteTransactionRowStream};
 pub use transaction::{SqliteSavepoint, SqliteTransaction};
 pub use worker::{SqliteExecutionMetadata, SqliteRow};
 
-pub const BUNDLED_SQLITE_VERSION: &str = "3.53.2";
-pub const BUNDLED_SQLITE_VERSION_NUMBER: i32 = 3_053_002;
+pub const BUNDLED_SQLITE_VERSION: &str = "3.53.4";
+pub const BUNDLED_SQLITE_VERSION_NUMBER: i32 = 3_053_004;

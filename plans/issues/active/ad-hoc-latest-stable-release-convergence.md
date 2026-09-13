@@ -245,6 +245,34 @@ or an authorized merge/closure here. All predecessor reviews and failed gates
 retain their original accounting. Older contradictory policy below is history.
 
 
+## Item48 resumption — user-directed SQLite update (2026-09-13)
+
+The user explicitly authorized updating SQLite and completing the remaining
+batches, superseding the historical requirement below to wait for a new
+Rusqlite release. Item48 is IN_PROGRESS, not externally blocked.
+
+The approved SQLite3.53.4 amalgamation is available in upstream Rusqlite
+commit 901f9946efdaaa289e6b1c5bd56dc67f4b651e51 and matches SQLite's official
+SHA3-256. Preserve selected Rusqlite0.40.2/libsqlite3-sys0.38.2 APIs; carry the
+four exact upstream C/header/binding replacements with explicit provenance
+inside the packaged runtime's third_party directory. The original registry
+archive and the source patch are distinct identities. Cargo patch selection
+must cover workspace, fixture, generated application and probe roots.
+
+SQLite3.53.4 is implemented and targeted qualification passed: the actual
+SDK34/Rust1.98.1 component producer, all six canonical SQLite-provider variants
+including the actual native library matrix (51 compile options), ten native
+runtime tests including exact source ID, nine generated-manifest tests,
+one backend probe test, five package-profile tests and seven dependency audits.
+Original failures and their corrections remain in FINAL.json and logs.
+The SQL platform-wide contract exposed pre-existing Rustls/Tokio Rustls
+qualification drift; Item49 below owns that reconciliation. It does not reinstate
+an external SQLite blocker. Reviews initial0/remediation0, full gates0; final
+grouped validation and delivery remain. Evidence:
+ /home/yaser5/projects/sifr/continuation-evidence/20260913-sqlite48/.
+Continue the remaining approved batches after SQLite qualification; no new
+second-person approval or resumption question is needed.
+
 ## Item 48 — native SQLite convergence blocked on upstream bundling (2026-09-09)
 
 Status: `BLOCKED_EXTERNAL`. The approved SQLite 3.53.4 target is not qualified;

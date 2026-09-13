@@ -122,6 +122,11 @@ fn structural_backend_probe_enables_the_sysroot_runtime_feature() {
     assert!(manifest.contains(
         "[patch.\"https://github.com/sifr-lang/sifr.git\"]\nsifr_runtime = { path = \"/opt/sifr/crates/sifr_runtime\" }"
     ));
+    let parsed: toml::Value = toml::from_str(&manifest).expect("probe manifest");
+    assert_eq!(
+        parsed["patch"]["crates-io"]["libsqlite3-sys"]["path"].as_str(),
+        Some("/opt/sifr/crates/sifr_runtime/third_party/libsqlite3-sys")
+    );
 }
 
 #[test]

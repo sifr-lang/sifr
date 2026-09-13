@@ -48,6 +48,13 @@ pub(super) fn probe_cargo_toml(
             source = toml_quote_string(SIFR_GIT_SOURCE),
         );
     }
+    if !matches!(dependency_name, "sifr_runtime" | "sifr_stdlib") {
+        let native = toml_quote_path(&sysroot_runtime_crate.join("third_party/libsqlite3-sys"));
+        let _ = writeln!(
+            cargo_toml,
+            "\n[patch.crates-io]\nlibsqlite3-sys = {{ path = {native} }}"
+        );
+    }
     cargo_toml
 }
 

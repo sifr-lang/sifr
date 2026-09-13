@@ -1,0 +1,15 @@
+{
+  "upstream_crate": "libsqlite3-sys",
+  "version": "0.38.2",
+  "crate_sha256": "f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8",
+  "patch_source": "https://github.com/rusqlite/rusqlite",
+  "patch_revision": "901f9946efdaaa289e6b1c5bd56dc67f4b651e51",
+  "sqlite_version": "3.53.4",
+  "sqlite3_c_sha3_256": "67f423e9ebbbdc473cbc4772c872ee6b89f31fde4ed0279a5c25d5f65c043a16",
+  "patched_files": {
+    "sqlite3.c": "b1dd5d74ec7f29055a6684fa06fb3c2f6821c87dd38f9a458dfd2e8a1db28189",
+    "sqlite3.h": "919e7f2e8ed1d8f56ac17b412b8971c76aa5d1a879752cc6058f75e7d5910e1d",
+    "bindgen_bundled_version.rs": "59b073d337482286fb0e1b009e2800b70e6ce84b839c089b5cfa5e8059d44e4e",
+    "bindgen_bundled_version_ext.rs": "08c67370ccbc5050789ba6915b07c6c401e0b829db0cf22244eeaa8e87ec3c41"
+  }
+}

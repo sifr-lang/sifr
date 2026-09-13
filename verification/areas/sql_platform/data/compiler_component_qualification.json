@@ -80,7 +80,7 @@
     {
       "crate": "sifr_sql_sqlite",
       "artifacts": [
-        "crates/sifr_sql_sqlite/components/sqlite-3.53.2.wasm"
+        "crates/sifr_sql_sqlite/components/sqlite-3.53.4.wasm"
       ],
       "manifest": "crates/sifr_sql_sqlite/component-artifacts.json",
       "evidence": "crates/sifr_sql_sqlite/tests/sqlite_compiler.rs::checked_in_sqlite_component_executes_in_the_capability_free_host"

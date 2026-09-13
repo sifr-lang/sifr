@@ -2,9 +2,9 @@
   "schema_version": 1,
   "rust_version": "1.98",
   "root_lock_package": "sifr_sql_dependency_lock",
-  "sqlite_amalgamation": "3.53.2",
+  "sqlite_amalgamation": "3.53.4",
   "build_environment": {
-    "SYNTAQLITE_SQLITE_VERSION": "3053002",
+    "SYNTAQLITE_SQLITE_VERSION": "3053004",
     "SYNTAQLITE_CFLAG_*": []
   },
   "required_audits": [
@@ -255,6 +255,7 @@
     {
       "crate": "libsqlite3-sys",
       "version": "0.38.2",
+      "source_patch": "crates/sifr_runtime/third_party/libsqlite3-sys/sifr-source.json",
       "checksum": "f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8",
       "license": "MIT",
       "default_features": false,

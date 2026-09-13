@@ -16,3 +16,6 @@ tokio-postgres = { version = "=0.7.18", default-features = false, features = ["r
 
 [package.metadata.sifr]
 manifest = "sifr.toml"
+
+[patch.crates-io]
+libsqlite3-sys = { path = "../../../../../../../crates/sifr_runtime/third_party/libsqlite3-sys" }

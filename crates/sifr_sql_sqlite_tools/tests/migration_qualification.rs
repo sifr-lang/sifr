@@ -288,7 +288,7 @@ fn rebuild_plan(
                 parents: BTreeSet::from([baseline_id.clone()]),
                 provider: MigrationRuntimeConstraint {
                     family: "sqlite".to_string(),
-                    minimum_server_version: Some("3.53.2".to_string()),
+                    minimum_server_version: Some("3.53.4".to_string()),
                     required_capabilities: BTreeSet::new(),
                 },
                 transaction_requirement: MigrationTransactionRequirement::Optional,
@@ -371,7 +371,7 @@ fn provider() -> ProviderIdentity {
 fn dialect() -> DialectIdentity {
     DialectIdentity {
         family: "sqlite".to_string(),
-        server_version: "3.53.2".to_string(),
+        server_version: "3.53.4".to_string(),
         modes: BTreeSet::new(),
         features: BTreeSet::new(),
     }

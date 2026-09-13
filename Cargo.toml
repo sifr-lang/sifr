@@ -38,7 +38,7 @@ members = [
     "crates/sifr_rust_interop_catalog",
     "crates/sifr_sql_dependency_lock",
 ]
-exclude = ["tmp", "sifr_output", "third_party/ruff"]
+exclude = ["tmp", "sifr_output", "third_party/ruff", "crates/sifr_runtime/third_party/libsqlite3-sys"]
 resolver = "3"
 
 [workspace.package]
@@ -254,3 +254,7 @@ opt-level = 2
 opt-level = 2
 [profile.dev.package.proc-macro2]
 opt-level = 2
+
+# Preserve the selected Rust API while using the verified SQLite 3.53.4 bundle.
+[patch.crates-io]
+libsqlite3-sys = { path = "crates/sifr_runtime/third_party/libsqlite3-sys" }

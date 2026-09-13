@@ -23,7 +23,7 @@ FAMILIES = {
     "sqlite": "crates/sifr_sql_sqlite",
     "words": WORDS,
 }
-SERIES = {"postgresql": [13, 14, 15, 16, 17, 18], "mysql": ["8.4", "9.7", "26.7"], "sqlite": ["3.53.2"]}
+SERIES = {"postgresql": [13, 14, 15, 16, 17, 18], "mysql": ["8.4", "9.7", "26.7"], "sqlite": ["3.53.4"]}
 TOOLS = Path("verification/areas/sql_platform/tools")
 
 
