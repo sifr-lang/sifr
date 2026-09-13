@@ -1,5 +1,33 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Remote runtime probe preparation correction — 2026-09-13
+
+Create-PR attempt3 on c6dea2af1d41d66a7dda261583fcbe786e37614e
+passed Cargo setup220.986s, Rust14.057s, coverage26.355s and Python178.847s.
+It failed the platform installation probe's300s timeout during a redundant
+Cargo CLI rebuild. The completed diagnostic build produced the identical
+2a5e635f13d52abfef269c46b9a86e7dc89994df7e30cdb0ae08410c748e644d compiler.
+Cargo reported dependency timestamp invalidation; no failing CLI behavior was observed.
+Total972.04s is a failed create-PR profile, not merge evidence.
+
+The probe now uses the profile's already prepared SIFR_RUNTIME_PLATFORM_BIN.
+An invalid explicit path fails; standalone invocation retains its source Cargo
+command. Tests cover exact command selection, no rebuild for a missing explicit
+binary, and standalone behavior. All12 actual platform evidence probes pass;
+installation help takes3ms. The first external report-path invocation completed
+all probes then failed path rendering; its JSON remains separate from the
+successful repository-local report/copy. No timing limit changed.
+
+The corrected-target large-session smoke still fails the fixed128MiB RSS cap
+(138489856 bytes). A diagnostic smaps capture attributes98444KiB to heap and
+35012KiB to compiler mappings. The owning memory issue is now a required
+release-profile dependency, because full developer-tooling includes lsp-stress.
+It remains outside the frozen package upgrade batches; resolve its resource
+mechanism before62/35 rather than claiming release closure. The measured
+failure and earlier independent reference remain intact. No cap increase,
+qualification receipt rebinding or historical recovery is authorized by this record.
+
+
 ## Remote final integration preparation corrections — 2026-09-13
 
 Create-PR attempt2 on349966457cd15e3225e3cfb1ba757575f7074e48

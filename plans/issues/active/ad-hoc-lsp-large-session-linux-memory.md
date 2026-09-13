@@ -19,3 +19,19 @@ Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-lsp-memory
 and ../20260913-lsp62d/remote-lsp62d-settled.json. Assess the candidate's additional
 resident memory and qualify the stress workload under the approved named-host
 policy in this owner. Preserve the original fixed-cap failure.
+
+
+## Release-profile dependency — 2026-09-13
+
+Full release developer-tooling includes lsp-stress. Therefore this issue must
+be resolved before fresh release-profile/phase closure even though create-pr
+and merge do not select it. It is not an external dependency or an upstream wait.
+
+After fixing Cargo target selection, the current compiler still recorded
+138489856-byte peak RSS. A separate smaps diagnostic measured heap98444KiB
+and executable mappings35012KiB. Both runs preserve the fixed128MiB cap.
+Compiler SHA256:2a5e635f13d52abfef269c46b9a86e7dc89994df7e30cdb0ae08410c748e644d.
+Evidence includes corrected-target.json, corrected-target-execution.log,
+smaps-diagnostic.json and peak-smaps.txt in the existing evidence directory.
+An initial unsupported --output-root invocation did not execute the workload;
+it is preserved separately. No failed performance result is relabeled.
