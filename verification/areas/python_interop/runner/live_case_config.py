@@ -19,8 +19,14 @@ LIVE_IMAGES = {
         "redis:8.10.1-alpine@"
         "sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576"
     ),
-    "postgres": "postgres:16-alpine",
-    "kafka": "docker.redpanda.com/redpandadata/redpanda:v23.1.13",
+    "postgres": (
+        "postgres:18.6-alpine@"
+        "sha256:d3e1620b530c944afa6e887d22eb899824da68e19c52024bf98f5220c88a65b2"
+    ),
+    "kafka": (
+        "docker.redpanda.com/redpandadata/redpanda:v26.2.2@"
+        "sha256:468bd13a9f2bd24794cb7fddc867c767fb1008b9a07b297b89fde48c564d7d96"
+    ),
     "localstack": (
         "localstack/localstack:4.14.0@"
         "sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a"

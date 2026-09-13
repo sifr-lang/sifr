@@ -68,6 +68,52 @@ class DependencyProjectPathsTests(unittest.TestCase):
             audit_runner.validate_repository(self.audit)
 
 
+class ServiceImageAuthorityTests(unittest.TestCase):
+    def setUp(self):
+        self.audit = json.loads(audit_runner.AUDIT_PATH.read_text())
+
+    def test_all_live_owners_match_immutable_release_tags(self):
+        self.assertEqual(audit_runner.validate_service_images(self.audit), [])
+        self.assertEqual(
+            {image["name"] for image in self.audit["service_images"]},
+            {"kafka", "localstack", "postgres", "redis"},
+        )
+
+    def test_each_owner_omission_and_duplicate_are_rejected(self):
+        for image in self.audit["service_images"]:
+            for duplicate in (False, True):
+                audit = copy.deepcopy(self.audit)
+                if duplicate:
+                    audit["service_images"].append(image)
+                else:
+                    audit["service_images"].remove(image)
+                with self.subTest(owner=image["name"], duplicate=duplicate):
+                    self.assertTrue(audit_runner.validate_service_images(audit))
+
+    def test_new_live_owner_cannot_escape_inventory(self):
+        live = audit_runner.load_literal_assignment(audit_runner.LIVE_CASE_CONFIG_PATH, "LIVE_IMAGES")
+        live["new-service"] = "example:1.0@sha256:" + "0" * 64
+        with patch.object(audit_runner, "load_literal_assignment", return_value=live):
+            self.assertTrue(audit_runner.validate_service_images(self.audit))
+
+    def test_release_identity_cannot_include_alpine_variant(self):
+        redis = next(image for image in self.audit["service_images"] if image["name"] == "redis")
+        redis["latest_stable"] = redis["image_tag"]
+        self.assertIn("redis: stable release must exclude image tag variants",
+                      audit_runner.validate_service_images(self.audit))
+
+    def test_each_tag_and_digest_is_checked(self):
+        for index, image in enumerate(self.audit["service_images"]):
+            for field, value in (("image_tag", "latest"),
+                                 ("image_tag", "0.0-alpine"),
+                                 ("manifest_digest", "sha256:" + "g" * 64),
+                                 ("manifest_digest", "sha256:" + "0" * 64)):
+                audit = copy.deepcopy(self.audit)
+                audit["service_images"][index][field] = value
+                with self.subTest(owner=image["name"], field=field, value=value):
+                    self.assertTrue(audit_runner.validate_service_images(audit))
+
+
 class RequirementAuthorityTests(unittest.TestCase):
     def setUp(self):
         self.audit = json.loads(audit_runner.AUDIT_PATH.read_text())

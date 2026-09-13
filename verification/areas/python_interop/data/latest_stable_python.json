@@ -340,19 +340,43 @@
   ],
   "service_images": [
     {
+      "name": "kafka",
+      "image": "docker.redpanda.com/redpandadata/redpanda",
+      "latest_stable": "26.2.2",
+      "image_tag": "v26.2.2",
+      "released_at": "2026-08-22T00:45:06Z",
+      "official_release": "https://github.com/redpanda-data/redpanda/releases/tag/v26.2.2",
+      "registry_metadata": "https://hub.docker.com/v2/repositories/redpandadata/redpanda/tags/v26.2.2",
+      "manifest_digest": "sha256:468bd13a9f2bd24794cb7fddc867c767fb1008b9a07b297b89fde48c564d7d96"
+    },
+    {
       "name": "localstack",
       "image": "localstack/localstack",
       "latest_stable": "4.14.0",
+      "image_tag": "4.14.0",
       "released_at": "2026-02-26T16:57:42Z",
       "official_release": "https://github.com/localstack/localstack/releases/tag/v4.14.0",
+      "registry_metadata": "https://registry-1.docker.io/v2/localstack/localstack/manifests/4.14.0",
       "manifest_digest": "sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a"
+    },
+    {
+      "name": "postgres",
+      "image": "postgres",
+      "latest_stable": "18.6",
+      "image_tag": "18.6-alpine",
+      "released_at": "2026-08-13",
+      "official_release": "https://www.postgresql.org/docs/release/18.6/",
+      "registry_metadata": "https://registry-1.docker.io/v2/library/postgres/manifests/18.6-alpine",
+      "manifest_digest": "sha256:d3e1620b530c944afa6e887d22eb899824da68e19c52024bf98f5220c88a65b2"
     },
     {
       "name": "redis",
       "image": "redis",
-      "latest_stable": "8.10.1-alpine",
+      "latest_stable": "8.10.1",
+      "image_tag": "8.10.1-alpine",
       "released_at": "2026-08-17T16:44:04Z",
       "official_release": "https://github.com/redis/redis/releases/tag/8.10.1",
+      "registry_metadata": "https://registry-1.docker.io/v2/library/redis/manifests/8.10.1-alpine",
       "manifest_digest": "sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576"
     }
   ],

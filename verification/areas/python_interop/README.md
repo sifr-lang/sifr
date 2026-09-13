@@ -150,7 +150,11 @@ bridge to own every service-client operation. Kafka, Pub/Sub-style, SNS, and
 SQS deliveries cross a foreign-thread typed Sifr callback and must return a
 typed acknowledgement before the binary can report `live-passed`.
 The runner uses Testcontainers 4.15 community imports and structured wait
-strategies. Redis runs from the audited Redis 8.10.1 Alpine image digest.
+strategies. Every live image is audited and pinned by digest: Redis 8.10.1
+Alpine, PostgreSQL 18.6 Alpine, Redpanda 26.2.2, and LocalStack 4.14.0.
+The image audit records the upstream release separately from the image tag
+and its variant. PostgreSQL's single Python live fixture does not change the
+SQL platform's intentionally supported PostgreSQL multi-major provider matrix.
 Declaration-first callback evidence is also compiled offline with
 `runner/run.py --callback-examples`: separate real CFFI caller-thread and
 worker-thread fixtures for current and foreign dispatch, kafka-python

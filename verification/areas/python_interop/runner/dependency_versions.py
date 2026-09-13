@@ -24,7 +24,6 @@ LIVE_CASE_CONFIG_PATH = (
 )
 NORMALIZED_NAME = re.compile(r"[-_.]+")
 RETIRED_DISTRIBUTIONS = frozenset({"httpcore", "httpx"})
-EXPECTED_SERVICE_IMAGES = frozenset({"localstack", "redis"})
 
 
 def normalize_name(name: str) -> str:
@@ -290,23 +289,31 @@ def validate_service_images(audit: dict[str, object]) -> list[str]:
         for image in images
         if isinstance(image, dict) and isinstance(image.get("name"), str)
     }
-    if len(mapped) != len(images) or mapped.keys() != EXPECTED_SERVICE_IMAGES:
-        return ["audit service image set differs from the maintained image set"]
     live_images = load_literal_assignment(LIVE_CASE_CONFIG_PATH, "LIVE_IMAGES")
     if not isinstance(live_images, dict):
         return ["live service image mapping must be a dictionary"]
+    if len(mapped) != len(images) or mapped.keys() != live_images.keys():
+        return ["audit service image set differs from the maintained image set"]
     errors = []
     for name, image in mapped.items():
         repository = image.get("image")
         version = image.get("latest_stable")
+        tag = image.get("image_tag")
         digest = image.get("manifest_digest")
-        if not all(isinstance(value, str) for value in (repository, version, digest)):
+        if not all(isinstance(value, str) for value in (repository, version, tag, digest)):
             errors.append(f"{name}: image audit fields must be strings")
             continue
-        if not digest.startswith("sha256:") or len(digest) != 71:
+        if re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,2}", version) is None:
+            errors.append(f"{name}: stable release must exclude image tag variants")
+            continue
+        release_tag = tag.removeprefix("v")
+        if release_tag != version and not release_tag.startswith(version + "-"):
+            errors.append(f"{name}: image tag does not select the audited stable release")
+            continue
+        if re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None:
             errors.append(f"{name}: manifest digest must be a SHA-256 value")
             continue
-        expected = f"{repository}:{version}@{digest}"
+        expected = f"{repository}:{tag}@{digest}"
         if live_images.get(name) != expected:
             errors.append(
                 f"{name}: live image pin does not match audited stable image {expected}"
@@ -418,10 +425,12 @@ def main() -> int:
     mutation_count = run_self_tests(audit) if args.self_test else 0
     if args.self_test:
         import unittest
-        from test_dependency_versions import DependencyProjectPathsTests, RequirementAuthorityTests
+        from test_dependency_versions import (
+            DependencyProjectPathsTests, RequirementAuthorityTests, ServiceImageAuthorityTests,
+        )
         suite = unittest.TestSuite(
             unittest.defaultTestLoader.loadTestsFromTestCase(case)
-            for case in (DependencyProjectPathsTests, RequirementAuthorityTests)
+            for case in (DependencyProjectPathsTests, RequirementAuthorityTests, ServiceImageAuthorityTests)
         )
         result = unittest.TextTestRunner().run(suite)
         if not result.wasSuccessful():
