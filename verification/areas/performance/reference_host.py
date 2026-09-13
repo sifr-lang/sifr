@@ -39,6 +39,34 @@ def linux_memory() -> dict[str, int]:
     }
 
 
+def cpu_power_policy() -> dict[str, Any]:
+    if platform.system() == "Darwin":
+        return {"source": "pmset", "configuration": output(["pmset", "-g", "custom"])}
+    root = Path("/sys/devices/system/cpu/cpufreq")
+    policies = []
+    for policy in sorted(root.glob("policy*")):
+        policies.append({
+            field: (policy / field).read_text().strip()
+            for field in (
+                "affected_cpus", "scaling_driver", "scaling_governor",
+                "scaling_min_freq", "scaling_max_freq",
+            )
+        })
+    if not policies:
+        raise ValueError("named reference requires measurable CPU frequency policy")
+    boost_paths = (
+        root / "boost",
+        Path("/sys/devices/system/cpu/intel_pstate/no_turbo"),
+    )
+    return {
+        "source": "sysfs",
+        "policies": policies,
+        "boost_controls": {
+            str(path): path.read_text().strip() for path in boost_paths if path.is_file()
+        },
+    }
+
+
 def host_details() -> dict[str, Any]:
     system = platform.system()
     if system == "Linux":
@@ -78,6 +106,7 @@ def host_details() -> dict[str, Any]:
         "available_cpus": available_cpus,
         "memory_capacity_gib": math.ceil(memory["total_bytes"] / (1024 ** 3)),
         "memory": memory,
+        "cpu_power_policy": cpu_power_policy(),
     }
 
 
@@ -153,6 +182,7 @@ def comparison_mismatches(expected: dict[str, Any], actual: dict[str, Any]) -> l
     for key in (
         "system", "os_version", "kernel", "architecture", "cpu_models",
         "physical_cores", "logical_cpus", "available_cpus", "memory_capacity_gib",
+        "cpu_power_policy",
     ):
         if expected["host"][key] != actual["host"][key]:
             mismatches.append(f"host.{key}")
