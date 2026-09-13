@@ -1,5 +1,33 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Remote performance preparation correction — 2026-09-13
+
+The remaining selected source-analysis areas pass separately at045ec537904387d2af9919d5b2a6ad2853e07370:
+stdlib5.647s, core-language9.134s and project-workspace1.450s.
+These are targeted checks, not a complete create-PR profile.
+
+The idle private Cargo target exceeded20GiB. Cargo's dry run identified3.4GiB
+in the analysis/LSP packages; package-scoped cargo clean --locked --offline
+-p sifr_analysis -p sifr_lsp reduced it from23756084314 to20143647021 bytes.
+No shared/other-worktree target was cleaned. The compiler rebuilt in34.18s
+with expensive dependency artifacts retained.
+
+The separately selected frontend_query_bench cold graph took2m02s to build,
+exceeding the entire120s performance-area limit before measurement. Setup now
+prepares both exact Cargo build commands whenever smoke/representative/full
+performance is selected. Guard-only selections do not build them. No samples,
+warmups, host controls, reference identity or performance budget is changed.
+All24 setup policy tests pass, including selection and failure propagation.
+Actual selected prepared commands pass in0.42s/0.32s; file-size3874 and diff
+guards pass. Runtime measurements still follow separately.
+
+Evidence in /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/:
+remaining-source-areas.json, remaining-package-clean-dry-run.log,
+remaining-package-clean.log, remaining-performance-prebuild.log,
+performance-preparation-policy.log and performance-preparation-selected.log.
+No new full-profile pass, Opus review, full merge gate or publication is claimed.
+
+
 ## Remote generated-code inventory correction — 2026-09-13
 
 Create-PR7 at eccf183f9e59a3ef71478592d02c024d64aa3981 passed setup,

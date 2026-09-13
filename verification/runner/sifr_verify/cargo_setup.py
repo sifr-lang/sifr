@@ -60,6 +60,7 @@ def prepare_cargo_cache(
 
     prepare_authoring_test_binaries(profile, setup_env, command_runner)
     prepare_tooling_test_binaries(profile, setup_env, command_runner)
+    prepare_performance_binaries(profile, setup_env, command_runner)
     prepare_maintained_demo_cache(profile, setup_env, command_runner)
 
 
@@ -100,6 +101,19 @@ def prepare_tooling_test_binaries(profile, env, command_runner) -> None:
         print(f"[sifr-profile-setup] tooling-test-build={' '.join(command)} "
               f"incremental={incremental}", flush=True)
         command_runner(command, env=build_env)
+
+
+def prepare_performance_binaries(profile, env, command_runner) -> None:
+    """Build the exact compiler and query-helper graphs before timed benchmarks."""
+    if not any(area["area"] == "performance"
+               and set(area["suites"]).intersection({"smoke", "representative", "full"})
+               for area in profile.get("selected_areas", [])):
+        return
+    for arguments in (["-p", "sifr"],
+                      ["-p", "sifr_frontend", "--bin", "frontend_query_bench"]):
+        command = ["cargo", "build", "--locked", "--offline", *arguments]
+        print(f"[sifr-profile-setup] performance-build={' '.join(command)}", flush=True)
+        command_runner(command, env=env)
 
 def prepare_maintained_demo_cache(profile, env, command_runner) -> None:
     """Prepare the same complete demo graph before its bounded execution area."""

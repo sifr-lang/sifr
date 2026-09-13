@@ -14,7 +14,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_authoring_test_binaries, prepare_maintained_demo_cache, prepare_tooling_test_binaries
+from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_authoring_test_binaries, prepare_maintained_demo_cache, prepare_tooling_test_binaries, prepare_performance_binaries
 from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
 from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
 from .generated_cargo_setup import (
@@ -206,6 +206,28 @@ class SetupPolicyTests(unittest.TestCase):
             raise CommandFailed(101)
         with self.assertRaises(CommandFailed):
             prepare_tooling_test_binaries(profile(["static"]), {}, fail)
+
+    def test_performance_preparation_selects_benchmarks_and_propagates_failure(self):
+        calls = []
+        def profile(suites):
+            return {"selected_areas": [{"area": "performance", "suites": suites}]}
+        runner = lambda args, **kw: calls.append(args)
+        prepare_performance_binaries({"selected_areas": []}, {}, runner)
+        prepare_performance_binaries(profile(["frontend-syntax-guardrails"]), {}, runner)
+        self.assertEqual(calls, [])
+        expected = [
+            ["cargo", "build", "--locked", "--offline", "-p", "sifr"],
+            ["cargo", "build", "--locked", "--offline", "-p", "sifr_frontend",
+             "--bin", "frontend_query_bench"],
+        ]
+        for suites in (["smoke"], ["representative"], ["full"], ["smoke", "full"]):
+            calls.clear()
+            prepare_performance_binaries(profile(suites), {}, runner)
+            self.assertEqual(calls, expected)
+        def fail(*args, **kw):
+            raise CommandFailed(101)
+        with self.assertRaises(CommandFailed):
+            prepare_performance_binaries(profile(["smoke"]), {}, fail)
 
     def test_demo_preparation_selection_and_failure(self):
         calls = []
