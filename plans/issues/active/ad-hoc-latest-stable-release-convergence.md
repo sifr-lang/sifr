@@ -245,6 +245,32 @@ or an authorized merge/closure here. All predecessor reviews and failed gates
 retain their original accounting. Older contradictory policy below is history.
 
 
+## Remote LSP62D integration — 2026-09-13
+
+The verification client now owns every issued request, rejects unknown/duplicate
+responses and unsolicited server requests, and retains valid responses received
+during notification waits. Explicit -32800 coverage exercises real command
+cancellation. No outbound request feature was added.
+
+Named validation passed: sifr_lsp 82 tests, lsp_server_dependency_version 3 tests,
+and all7 canonical lsp-smoke variants including14 response/cleanup regression
+tests. Formatting, file-size, maintainability and diff checks passed.
+
+The required LSP tests exposed a Unix parent-cancellation defect: kill could
+narrow u32::MAX to process-group -1. The parent PID guard now rejects zero and
+values outside positive signed PID range, retaining real current-PID coverage.
+A test-client shutdown race now tolerates an already-closed pipe while still
+checking failed exit status. The failed initial runs remain preserved. A
+concurrent test-owned CLI rebuild briefly removed the selected binary; the
+settled sequential run passed, without treating that failed attempt as evidence.
+
+Additional optional stress coverage passed protocol cancellation and corpus
+checks but the large-session smoke hit139534336 bytes versus its hardcoded
+134217728-byte cap. This separate host-sensitive budget is assigned to the
+performance-reference owner below; do not call the13-variant run an all-pass.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-lsp62d.
+No review or merge-gate allowance has been consumed by these focused checks.
+
 ## Remote compiler coverage62C — 2026-09-13
 
 Completed the registered negative-fixture coverage in the owning modules: the

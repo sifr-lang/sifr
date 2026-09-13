@@ -62,6 +62,11 @@ impl ParentWatchdog {
 
 #[cfg(unix)]
 fn parent_is_alive(parent_pid: u32) -> bool {
+    // Unix PIDs are positive signed integers. Otherwise kill may interpret an
+    // overflowing value as a process group (notably u32::MAX as -1).
+    if parent_pid == 0 || i32::try_from(parent_pid).is_err() {
+        return false;
+    }
     std::process::Command::new("kill")
         .arg("-0")
         .arg(parent_pid.to_string())
@@ -95,6 +100,14 @@ mod tests {
         ParentWatchdog::new(Some(pid))
             .check()
             .expect("current process should be alive");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn process_group_identifiers_are_not_parent_processes() {
+        assert!(!parent_is_alive(0));
+        assert!(!parent_is_alive(i32::MAX as u32 + 1));
+        assert!(!parent_is_alive(u32::MAX));
     }
 
     #[cfg(unix)]

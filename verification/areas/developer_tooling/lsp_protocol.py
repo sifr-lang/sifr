@@ -46,13 +46,13 @@ class LspClient:
         self.next_id = 1
         self.notifications: list[dict[str, Any]] = []
         self.responses: dict[int | str, dict[str, Any]] = {}
+        self.pending_requests: set[int | str] = set()
         self.events: list[dict[str, Any]] = []
         self._record_event("spawn", {"pid": self.process.pid, "args": args})
 
     def request(self, method: str, params: dict[str, Any] | None = None) -> Any:
         request_id = self.next_id
-        self.next_id += 1
-        self._send({"jsonrpc": "2.0", "id": request_id, "method": method, "params": params or {}})
+        self.send_request(request_id, method, params)
         response = self._wait_for_response(request_id)
         if "error" in response:
             raise LspProtocolError(f"{method} returned error: {response['error']}")
@@ -60,8 +60,7 @@ class LspClient:
 
     def request_error(self, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         request_id = self.next_id
-        self.next_id += 1
-        self._send({"jsonrpc": "2.0", "id": request_id, "method": method, "params": params or {}})
+        self.send_request(request_id, method, params)
         response = self._wait_for_response(request_id)
         error = response.get("error")
         if not isinstance(error, dict):
@@ -69,6 +68,11 @@ class LspClient:
         return error
 
     def send_request(self, request_id: int | str, method: str, params: dict[str, Any] | None = None) -> None:
+        if type(request_id) not in (int, str):
+            raise LspProtocolError(f"invalid request id: {request_id!r}")
+        if request_id in self.pending_requests or request_id in self.responses:
+            raise LspProtocolError(f"request id already outstanding: {request_id!r}")
+        self.pending_requests.add(request_id)
         if isinstance(request_id, int):
             self.next_id = max(self.next_id, request_id + 1)
         self._send({"jsonrpc": "2.0", "id": request_id, "method": method, "params": params or {}})
@@ -85,9 +89,7 @@ class LspClient:
             for index, notification in enumerate(self.notifications):
                 if notification.get("method") == method:
                     return self.notifications.pop(index)
-            message = self._read_message(deadline)
-            if "method" in message and "id" not in message:
-                self.notifications.append(message)
+            self._accept_message(self._read_message(deadline))
         raise LspProtocolError(f"timed out waiting for notification {method}")
 
     def close(self) -> None:
@@ -96,7 +98,12 @@ class LspClient:
         except Exception:
             pass
         if self.process.stdin is not None:
-            self.process.stdin.close()
+            try:
+                self.process.stdin.close()
+            except BrokenPipeError:
+                # shutdown may already have consumed exit and closed its pipe.
+                # Still inspect the process status below.
+                pass
         try:
             self.process.wait(timeout=10)
         except subprocess.TimeoutExpired:
@@ -109,18 +116,34 @@ class LspClient:
             raise LspProtocolError(self._diagnostic_context(f"LSP exited {self.process.returncode}", stderr))
 
     def _wait_for_response(self, request_id: int | str) -> dict[str, Any]:
+        if type(request_id) not in (int, str) or (
+            request_id not in self.pending_requests and request_id not in self.responses
+        ):
+            raise LspProtocolError(f"request was not issued: {request_id!r}")
         deadline = time.monotonic() + self.timeout
         while time.monotonic() < deadline:
             if request_id in self.responses:
                 return self.responses.pop(request_id)
-            message = self._read_message(deadline)
-            if message.get("id") == request_id:
-                return message
-            if "method" in message and "id" not in message:
-                self.notifications.append(message)
-            elif "id" in message and "method" not in message:
-                self.responses[message["id"]] = message
+            self._accept_message(self._read_message(deadline))
         raise LspProtocolError(f"timed out waiting for response {request_id}")
+
+    def _accept_message(self, message: dict[str, Any]) -> None:
+        if not isinstance(message, dict) or message.get("jsonrpc") != "2.0":
+            raise LspProtocolError(f"invalid JSON-RPC message: {message!r}")
+        if "method" in message:
+            if "id" in message:
+                raise LspProtocolError(f"unexpected server request: {message!r}")
+            self.notifications.append(message)
+            return
+        request_id = message.get("id")
+        if type(request_id) not in (int, str):
+            raise LspProtocolError(f"invalid response id: {request_id!r}")
+        if ("result" in message) == ("error" in message):
+            raise LspProtocolError(f"response must contain exactly one of result/error: {message!r}")
+        if request_id not in self.pending_requests:
+            raise LspProtocolError(f"unexpected or duplicate response: {request_id!r}")
+        self.pending_requests.remove(request_id)
+        self.responses[request_id] = message
 
     def _send(self, payload: dict[str, Any]) -> None:
         if self.process.stdin is None:
