@@ -61,6 +61,14 @@ fn read_manifest() -> Result<Value, Box<dyn Error>> {
 fn compile_libpg_query(source: &Path) -> Result<(), Box<dyn Error>> {
     let mut build = cc::Build::new();
     configure_wasi_compiler(&mut build)?;
+    // The retained PostgreSQL sources use pre-C23 callback declarations.
+    // Select their C dialect explicitly instead of inheriting host defaults.
+    let c_standard = if build.get_compiler().is_like_msvc() {
+        "c17"
+    } else {
+        "gnu17"
+    };
+    build.std(c_standard);
     if is_wasm_target() {
         build.include(wasi_compatibility_headers()?);
     }
@@ -72,9 +80,13 @@ fn compile_libpg_query(source: &Path) -> Result<(), Box<dyn Error>> {
         .flag_if_supported("-fno-strict-aliasing")
         .flag_if_supported("-fwrapv")
         .warnings(false);
-    if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
-        // Current macOS SDKs provide strchrnul. Older libpg_query tags only
-        // detect that function on FreeBSD in their generated pg_config.h.
+    let target_os = env::var("CARGO_CFG_TARGET_OS");
+    let target_env = env::var("CARGO_CFG_TARGET_ENV");
+    if target_os.as_deref() == Ok("macos")
+        || (target_os.as_deref() == Ok("linux") && target_env.as_deref() == Ok("gnu"))
+    {
+        // Supported macOS SDKs and glibc provide strchrnul. Older libpg_query
+        // generated headers only detect it on FreeBSD and otherwise redeclare it.
         build.define("HAVE_STRCHRNUL", "1");
     }
     if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {

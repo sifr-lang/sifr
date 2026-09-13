@@ -110,6 +110,12 @@ project writes, network access, home-directory credential reads, and subprocess
 execution. The runner provides the sorted grants, package checksum, Cargo lock
 fingerprint, and executable hash as audit variables.
 
+On Linux, an ungranted network is isolated in Bubblewrap's private network
+namespace. That namespace may have its own loopback sockets, but cannot reach
+listeners in the host namespace or external networks. The network grant shares
+the host network namespace. The CLI regression test checks a real host listener
+with both denied and granted probes.
+
 The closed capability vocabulary is:
 
 - `credentials`

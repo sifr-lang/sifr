@@ -64,7 +64,7 @@
   "protocol_major": 1,
   "provenance": {
     "build_environment": {
-      "CARGO_BUILD_JOBS": "1"
+      "CARGO_BUILD_JOBS": "2"
     },
     "family": "postgresql",
     "rust": {
@@ -158,7 +158,7 @@
       "crates/sifr_sql_contract/src/slice.rs": "8679b0e44f1524392d187b6188d2ccd573a19fb178f95dec9a54633f634c71e6",
       "crates/sifr_sql_contract/src/sql_type.rs": "025f5694825ffa8d94695cbee9fe09bfde9b1279cbee9a5b47a9aab5ffaea673",
       "crates/sifr_sql_postgresql/Cargo.toml": "ff62508e0ba7da272d222fe1166f66c44b36d23b3ce6739b77749e58b36d4c56",
-      "crates/sifr_sql_postgresql/build.rs": "7269c79de2f91ad01e604619717bad7a31a6326b2b43f009e8edb21d4d9b30b2",
+      "crates/sifr_sql_postgresql/build.rs": "40c489c89b23ed09ca32c2cc4c22e825cb36ff10c6a9035a9702d58e8fbce94c",
       "crates/sifr_sql_postgresql/component-sources.json": "1b44aba53e6f5c65dcb684e98206f2275564ba5a3092b32f5ae888f7e73639b4",
       "crates/sifr_sql_postgresql/src/analysis.rs": "2a1721ac5a5f5a026506d75bb01972dcb11cfdb9d48bb3cb0676234a342af21f",
       "crates/sifr_sql_postgresql/src/analysis_types.rs": "4ba420c0facadb98025b10babee98d2d7188854582c5c102e40ee581b83eadc1",
@@ -218,7 +218,7 @@
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "940c87acb35a19a41bbaf11eaba40234d158797e510473febf1363cb6b767794",
+    "source_sha256": "4d5e4dbc814702091f11232ea784bbd4fe3d6c613dbe4352d3d5d0276676f048",
     "tools": {
       "sdk": {
         "archive": "wasi-sdk-34.0-x86_64-linux.tar.gz",

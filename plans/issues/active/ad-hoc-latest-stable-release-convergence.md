@@ -1,5 +1,55 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Remote remaining SQL corrections — 2026-09-13
+
+At71793aa6d97cf9b71df02afa765bb44947911e6a, selected performance passes
+all11 variants in9.453s against the unchanged120s limit; package-management
+passes in0.347s. The selected19-suite SQL area completes66 variants in
+4697.778s:64 pass and2 fail. This remains a failed targeted area, not a
+profile pass. SQLite3.53.4/3053004 with51 compile options passes every surface.
+
+The PostgreSQL13 native build inherited GCC15's new C23 default, changing
+empty callback parameter lists into void prototypes. The build now explicitly
+selects C17 (GNU C17 on GCC/Clang, C17 on MSVC). Older generated configuration
+also redeclared glibc's strchrnul; the existing platform-function configuration
+now marks it present on Linux GNU as well as supported macOS. Imported parser
+sources and selected versions are untouched. All six PostgreSQL13–18 parser
+matrices and capability-free component execution pass after correction.
+The initial C17-only run's strchrnul failure remains retained.
+
+The host-tool fixture incorrectly assumed a private network namespace cannot
+bind its own loopback socket. Bubblewrap intentionally supplies private
+loopback. The corrected test uses a real host-namespace listener: an ungranted
+tool must not reach it, while a network-granted tool must connect. Existing
+credential, filesystem, subprocess, drift and output-limit checks remain.
+The complete CLI fixture passes in1.35s. No production sandbox grants changed.
+The documented Linux boundary now matches the tested isolation contract.
+
+All six PostgreSQL WASI components were rebuilt using authenticated SDK34 and
+the maintained producer. Their binary hashes are unchanged. The provenance
+records the new build-script hash and actual two-job producer environment.
+Component qualification and31 mutation checks pass; actual rebuilt-component
+execution passes35.88s. File-size3875 and diff guards pass.
+
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/,
+remaining-71793aa6d9-performance-results.json,
+remaining-71793aa6d9-package_management-sql_platform-summary.json,
+remaining-71793aa6d9-sql-platform-results.json,
+host-tool-network-boundary.log, postgresql-c17-parser-matrix.log (failed),
+postgresql-c17-glibc-matrix.log, postgresql-c17-components.log,
+postgresql-c17-component-check.log and postgresql-c17-component-execution.log.
+Official explanations: https://gcc.gnu.org/gcc-15/porting_to.html and
+https://github.com/containers/bubblewrap.
+
+Idle private Cargo cleanup before the parser matrix removed2.7GiB of analysis
+and LSP artifacts. Before component rebuilding, Cargo removed25.3GiB of owned
+SQL tool artifacts;220GiB+ disk remained available. Expensive dependencies were
+retained, and no other worktree target was touched. Cleanup logs are retained.
+
+Next: complete selected crate/E2E checks, then the canonical PR gate, exact-source
+integration review and full merge gate. No integration Opus review, full merge
+gate, root implementation PR or publication has occurred.
+
 ## Remote performance preparation correction — 2026-09-13
 
 The remaining selected source-analysis areas pass separately at045ec537904387d2af9919d5b2a6ad2853e07370:
