@@ -4837,3 +4837,36 @@ with --no-run during Cargo setup. Actual tests remain in the timed area;
 all budgets and benchmark samples remain unchanged. All 24 setup-policy
 tests and the file-size guard pass. This is targeted validation, not a
 complete profile pass, review or merge.
+
+
+## Rust bridge probe artifact identity — 2026-09-13
+
+The final integration crate step at a8b0d02c9991263609cc106fd645a8cf820eb894
+completed in 240.569 seconds after exact selected graph preparation (600-second
+limit), but failed two existing Python stdlib signature-corruption tests.
+The driver result was 617 passed, two failed and 77 ignored; E2E was not reached.
+The original failure and all cache entries remain retained under the remote
+20260913-final-integration evidence directory.
+
+Isolated execution succeeded with the default probe cache and failed with the
+profile cache. A traced invalid-signature success entry and an independent
+real-Cargo reproduction established the cause: different temporary roots with
+the same package name and shared target can reuse root-package freshness
+metadata. Precreating a valid and invalid source before the first check caused
+Cargo to report the invalid root as Fresh with exit zero.
+
+Probe package names now bind the complete manifest and contract source with
+SHA-256. Dependencies still share the target directory; different contracts
+have different root artifacts. The bound manifest also changes the persistent
+probe cache key, so existing incorrect receipts cannot validate the new probe.
+The original rejection assertions and sysroot trust policy are unchanged.
+
+The new deterministic real-Cargo regression passes and requires E0308 from the
+invalid root. Identity sensitivity covers source and manifest changes. All 16
+selected stdlib interop tests pass against the existing profile cache, including
+both original failures (18.75 seconds). File-size guardrails pass for 3,878 files;
+driver and HIR maintainability checks pass. Evidence:
+probe-identity-targeted.log, probe-identity-stdlib-contracts.log,
+driver-profile-cache.strace and cargo-probe-identity-repro/.
+These are targeted results; final PR, merge and release qualification remain
+separate required steps.

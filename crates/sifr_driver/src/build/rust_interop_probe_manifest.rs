@@ -125,3 +125,22 @@ pub(super) fn toml_quote_string(value: &str) -> String {
     quoted.push('"');
     quoted
 }
+
+// Root packages with the same Cargo name can share freshness metadata even when
+// their temporary source directories differ. Bind both contract and dependency
+// inputs so concurrent probes cannot reuse another contract's successful check.
+pub(super) fn bind_probe_package_identity(manifest: &str, source: &str) -> String {
+    let mut input = Vec::new();
+    super::rust_interop_digest::push_cache_bytes(&mut input, manifest);
+    super::rust_interop_digest::push_cache_bytes(&mut input, source);
+    let identity = sifr_sysroot::sha256_hex(&input);
+    manifest.replacen(
+        "name = \"sifr-rust-probe\"",
+        &format!("name = \"sifr-rust-probe-{identity}\""),
+        1,
+    )
+}
+
+#[cfg(test)]
+#[path = "rust_interop_probe_identity_tests.rs"]
+mod identity_tests;
