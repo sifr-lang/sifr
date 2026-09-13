@@ -1415,7 +1415,7 @@ transferred into this phase:
 
 | ID | Owner and current state | Required evidence / consumers |
 | --- | --- | --- |
-| E1 | [Distinct release reviewer restoration](ad-hoc-distinct-release-reviewer-restoration.md), blocked on a human | GitHub currently requires only `yaseralnajjar`, self-review is allowed, admin bypass is disabled, and invitations are empty. Wait for the required distinct human approval/access and protected-environment restoration. Preserve expiring-waiver and human-review mechanisms; never renew the waiver. This owner also must separate historical waiver validation from new-use expiry in `verification/areas/distribution_release/governance/approval_waiver_selftest.py`, whose real-waiver self-test currently requires it to be unexpired. Named qualification: distribution_release suites `epoch-bootstrap`, `qualification`, `evidence-custody`, `protected-drill`, `stable-prepare`, `stable-publication`, plus `bash verification/areas/distribution_release/cases/stable_publication_workflow_contract.sh`. The owner's existing rules govern external work. Blocks any candidate whose required merge gate would encounter the recorded expiry failure. |
+| E1 | Permanent solo-maintainer approval, Item65 | The user superseded the distinct-person requirement on 2026-09-08. The approved implementation is integrated in the remote continuation; no second-person invitation or renewed policy approval is required. Preserve exact protected-run approval and historical waiver evidence, plus consumed Item65 review/gate history. See the 2026-09-13 correction in the owning issue. |
 | E2 | PR #3717 / issue #3744 and the Python qualification issue, externally owned and unmerged | Require an actual merged implementation SHA and its attributable qualification, not a draft or body claim. Named affected suites from that owner: python_interop `binding-authoring`, `callback-examples`, `async-declaration-examples`, `async-context-examples`, and coverage_matrix `readiness`. Blocks dependent compiled Python integration and a full merge gate while those known prerequisite failures remain on main. No repair, merge, gate retry, or reset of their histories is authorized here. |
 
 E1/E2 are **merge-readiness prerequisites** for gate-bearing rows, not technical
@@ -4252,3 +4252,17 @@ its authenticated handoff requires the held Item40/33 editor prerequisites
 and an ordered extension → editor-integrations → root delivery. It is not an
 independent root-only patch. Preserve that boundary before starting its
 integration. Release-governance resolution remains necessary for merge.
+
+## Superseded reviewer-blocker correction — 2026-09-13
+
+The distinct-reviewer blocking conclusions in the earlier remote performance,
+Python Group3 and Group4 checkpoints were incorrect and are withdrawn.
+The authoritative transferred ledger records the user's permanent solo policy
+and Item65 implementation. The implementation was already integrated;
+the stale issue document caused the continuation error.
+
+Current GitHub environment settings are consistent with that policy.
+Continue approved preparation, integration, review and applicable gates without
+requesting another policy approval or second human. Preserve historical
+review/gate consumption and actual per-publication protected-run approval.
+This correction does not claim a merge or publication.
