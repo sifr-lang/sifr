@@ -245,6 +245,43 @@ or an authorized merge/closure here. All predecessor reviews and failed gates
 retain their original accounting. Older contradictory policy below is history.
 
 
+## Final integration preflight and62B batching correction — 2026-09-13
+
+All registered implementation batches have now been integrated on the owned
+remote continuation. This is not yet a merge or phase-closure claim.
+
+Final audit preflight passed:126 selected Rust registry records and27 Python
+records retain official checksums and non-yanked artifacts;17 tool/npm/Mint/action
+selections and17 recursive submodule commits were verified against official
+sources. Five editor direct-package lock integrities match npm. Rust inventory
+9 tests, Python dependency audit (6projects/locks,27packages,4images,42mutations),
+documentation structure, current evidence custody and9 qualification self-tests
+passed. All4 component source/provenance records remain current. Later registry
+observations are recorded separately, preserving the user's frozen dated cut
+and original observation hashes. No new upgrade wave was opened.
+
+Preflight identified a62B enrollment cost:271 positive demos introduced542 Cargo
+invocations, taking31.451s and making the Rust area44.436s against its existing20s
+profile budget. The checker now groups only identical complete dependency
+policies and target kinds into27 isolated Cargo roots, preserving271 distinct
+targets and the same root-lock seed/checksum checks. Metadata proves exact
+positive-source enrollment; a deliberate compile_error in one member of the
+220-target group fails the real Cargo check. All271 positives pass;45 intentional
+negative demos remain excluded. The complete13-variant Rust area now passes in
+14.359s (demo check2.664s) under controlled CPU policy. No budget was increased.
+A separate run warmed and passed the actual final gate Cargo cache.
+
+The be9e240296 qualification attempt34762571651 was cancelled after this source
+correction became necessary; it is not a completed qualification or a final
+candidate receipt. Start a fresh exact-SHA run for the corrected candidate.
+No integration review or full merge gate has run yet, and no predecessor
+review/gate histories are reset. Preserve Item75 initial1/remediation0,
+Item40 initial1/remediation1, Item65 initial1/failed-gate1 and Item61's single
+registered new integration review/gate. The optional nightly large-session
+memory failure remains in its own issue and is not hidden by the named checks.
+
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration.
+
 ## Remote LSP62D integration — 2026-09-13
 
 The verification client now owns every issued request, rejects unknown/duplicate

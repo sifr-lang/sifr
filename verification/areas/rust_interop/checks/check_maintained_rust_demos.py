@@ -117,6 +117,11 @@ def cargo_commands(cargo: str, manifest: Path, section: str) -> list[list[str]]:
              "--tests" if section == "test" else "--bins"]]
 
 
+
+def dependency_group_key(dependencies: dict, section: str) -> str:
+    return json.dumps([section, dependencies], sort_keys=True, separators=(",", ":"))
+
+
 def compile_demos(cargo: str, destination: Path) -> int:
     positive, negative, source_hashes = tracked_sources()
     workspace = tomllib.loads((ROOT / "Cargo.toml").read_text())["workspace"]["dependencies"]
@@ -131,6 +136,7 @@ def compile_demos(cargo: str, destination: Path) -> int:
               "qualification": "Cargo check only; no execution or runtime/parity claim",
               "results": [], "status": "FAIL"}
     try:
+        groups = {}
         for index, relative in enumerate(positive):
             source = ROOT / relative
             row = {"path": relative, "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
@@ -140,7 +146,16 @@ def compile_demos(cargo: str, destination: Path) -> int:
             except ValueError as error:
                 row.update(status="BLOCKED_INPUT", error=str(error))
                 return 1
-            project = destination / f"demo-{index:03d}"
+            section = "test" if relative in TEST_REFERENCES else "bin"
+            key = dependency_group_key(dependencies, section)
+            group = groups.setdefault(key, {"selected_dependencies": dependencies,
+                                            "section": section, "members": []})
+            group["members"].append((index, row))
+        report["groups"] = []
+        for group_index, group in enumerate(groups.values()):
+            dependencies, section = group["selected_dependencies"], group["section"]
+            members = group["members"]
+            project = destination / f"group-{group_index:03d}"
             project.mkdir()
             manifest = ('[package]\nname = "sifr-idiomatic-demo"\nversion = "0.0.0"\nedition = "2024"\n'
                         '[workspace]\nresolver = "3"\n[dependencies]\n' +
@@ -149,32 +164,42 @@ def compile_demos(cargo: str, destination: Path) -> int:
                 native = ROOT / "crates/sifr_runtime/third_party/libsqlite3-sys"
                 manifest += ('[patch.crates-io]\nlibsqlite3-sys = { path = '
                              + json.dumps(str(native)) + ' }\n')
-            section = "test" if relative in TEST_REFERENCES else "bin"
-            manifest += f'[[{section}]]\nname = "idiomatic"\npath = {json.dumps(str(source))}\n'
+            for index, row in members:
+                manifest += (f'[[{section}]]\nname = "idiomatic_{index:03d}"\n'
+                             f'path = {json.dumps(str(ROOT / row["path"]))}\n')
+                row.update(group=group_index, selected_dependencies=dependencies)
             (project / "Cargo.toml").write_text(manifest)
-            # Preserve existing package choices through Cargo's own selection;
-            # no package rows or edges are spliced by this runner.
+            # Only identical complete dependency policies share a Cargo root.
+            # Every source remains a separate target; test-only references stay
+            # separate from binaries. No feature union crosses policy groups.
             shutil.copyfile(ROOT / "Cargo.lock", project / "Cargo.lock")
-            # Genuine resolution is a separately reported preparation step.
             commands = cargo_commands(cargo, project / "Cargo.toml", section)
-            row.update(selected_dependencies=dependencies, manifest_sha256=hashlib.sha256(manifest.encode()).hexdigest(), root_lock_seed_sha256=root_inputs["Cargo.lock"], commands=[])
+            receipt = {"members": [row["path"] for _, row in members],
+                       "selected_dependencies": dependencies, "section": section,
+                       "manifest_sha256": hashlib.sha256(manifest.encode()).hexdigest(),
+                       "root_lock_seed_sha256": root_inputs["Cargo.lock"], "commands": []}
+            report["groups"].append(receipt)
             for argv in commands:
                 output = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True, timeout=180, check=False)
-                row["commands"].append({"argv": argv, "exit": output.returncode, "stdout": output.stdout, "stderr": output.stderr})
+                receipt["commands"].append({"argv": argv, "exit": output.returncode,
+                                            "stdout": output.stdout, "stderr": output.stderr})
                 if output.returncode:
-                    row["status"] = "FAIL"
+                    for _, row in members:
+                        row["status"] = "FAIL"
                     return 1
                 lock = project / "Cargo.lock"
                 actual = registry_identities(tomllib.loads(lock.read_text())["package"])
                 drift = actual - registry_identities(packages)
                 if drift:
-                    row.update(status="BLOCKED_INPUT", unexpected_registry_identities=sorted(drift))
+                    receipt.update(status="BLOCKED_INPUT", unexpected_registry_identities=sorted(drift))
                     return 1
                 digest = hashlib.sha256(lock.read_bytes()).hexdigest()
-                if "prepared_lock_sha256" in row and row["prepared_lock_sha256"] != digest:
+                if "prepared_lock_sha256" in receipt and receipt["prepared_lock_sha256"] != digest:
                     raise ValueError(f"locked demo check changed {lock}")
-                row["prepared_lock_sha256"] = digest
-            row["status"] = "PASS"
+                receipt["prepared_lock_sha256"] = digest
+            receipt["status"] = "PASS"
+            for _, row in members:
+                row["status"] = "PASS"
         report["status"] = "PASS"
         return 0
     finally:
@@ -193,6 +218,17 @@ def compile_demos(cargo: str, destination: Path) -> int:
 
 
 def self_test() -> None:
+    policy = {"dep": {"version": "1", "default-features": False, "features": ["one"]}}
+    same_policy = {"dep": {"features": ["one"], "version": "1", "default-features": False}}
+    assert dependency_group_key(policy, "bin") == dependency_group_key(same_policy, "bin")
+    assert dependency_group_key(policy, "bin") != dependency_group_key(policy, "test")
+    for changed in (
+        {"dep": {"version": "2", "default-features": False, "features": ["one"]}},
+        {"dep": {"version": "1", "default-features": True, "features": ["one"]}},
+        {"dep": {"version": "1", "default-features": False, "features": ["two"]}},
+        {"alias": {"package": "dep", "version": "1", "default-features": False, "features": ["one"]}},
+    ):
+        assert dependency_group_key(policy, "bin") != dependency_group_key(changed, "bin")
     positive, negative = discover(b"demos/a/idiomatic.rs\0demos/a/negative_cases/x/idiomatic.rs\0demos/a/emitted.rs\0")
     assert positive == ["demos/a/idiomatic.rs"] and len(negative) == 1
     assert select_dependencies("use itertools::Itertools;", {"itertools": {"version": "0.15.0", "default-features": False}}, []) == {"itertools": {"version": "0.15.0", "default-features": False}}
