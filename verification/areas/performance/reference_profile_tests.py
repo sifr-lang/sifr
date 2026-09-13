@@ -33,6 +33,7 @@ def identity():
             "architecture": "x86_64", "cpu_models": ["Intel Core i7-4720HQ"],
             "physical_cores": 4, "logical_cpus": 8, "available_cpus": 8,
             "memory_capacity_gib": 12,
+            "cpu_power_policy": {"source": "sysfs", "policies": [{"scaling_governor": "performance"}]},
             "memory": {"total_bytes": 12 * 1024**3, "available_bytes": 8 * 1024**3},
         },
         "execution": {

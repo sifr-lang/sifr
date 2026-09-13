@@ -327,3 +327,21 @@ The area adapter passes the selected profile to policy checks, benchmark
 production and budget checking through that environment setting. Named trend
 comparisons use the same reference, while incompatible or historical captures
 produce an explicit incomparable report without numerical regression claims.
+
+
+### Linux frequency policy for named references
+
+Named profiles bind the measured CPU frequency driver, governor, frequency
+bounds and available boost controls. macOS profiles record the power configuration
+from `pmset -g custom`. Missing Linux frequency-policy metadata prevents named
+capture. The settings must match before and after capture and candidate runs.
+
+On the i7-4720HQ reference host, `schedutil` reduced the active request core from
+approximately 2.6 GHz to 0.8 GHz during short LSP requests. This caused the
+selection-range measured window to violate its existing 10% stability limit.
+Use the `performance` governor for the controlled reference and matching
+candidate qualification, and restore the original governors afterward. This is
+a benchmark host control: it does not change the compiler's runtime requirements
+or the user's normal power settings. Record both policies and restoration in
+external run evidence. Do not increase warmups, discard samples or loosen
+stability thresholds to conceal frequency transitions.
