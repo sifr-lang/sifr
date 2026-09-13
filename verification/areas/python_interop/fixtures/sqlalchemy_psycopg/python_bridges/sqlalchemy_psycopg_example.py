@@ -1,7 +1,7 @@
 from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
 import psycopg
-from psycopg.conninfo import make_conninfo
+from psycopg.conninfo import conninfo_to_dict, make_conninfo
 import sqlalchemy
 
 
@@ -25,11 +25,16 @@ def run() -> str:
             sqlalchemy.Column("balance", sqlalchemy.Integer),
             sqlalchemy.CheckConstraint("balance >= 0", name="ck_account_balance"),
         )
-        context = MigrationContext.configure(connection)
+        context = MigrationContext.configure(connection, opts={
+            "autogenerate_plugins": [
+                "alembic.autogenerate.*", "alembic.ext.checkconstraint_byname",
+            ],
+        })
         dialect_name = context.dialect.name
         differences = compare_metadata(context, target)
     engine.dispose()
-    conninfo = make_conninfo(host="localhost", dbname="postgres")
+    conninfo = make_conninfo(host="localhost", dbname="sifr verification")
+    parsed_conninfo = conninfo_to_dict(conninfo)
     named_check_added = any(
         difference[0] == "add_constraint" and difference[1].name == "ck_account_balance"
         for difference in differences
@@ -39,7 +44,7 @@ def run() -> str:
         or dialect_name != "sqlite"
         or not named_check_added
         or not psycopg.__version__
-        or not conninfo
+        or parsed_conninfo != {"host": "localhost", "dbname": "sifr verification"}
     ):
         raise RuntimeError("SQLAlchemy/psycopg full example failed")
     return (

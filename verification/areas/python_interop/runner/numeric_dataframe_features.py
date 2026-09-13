@@ -2,18 +2,37 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import torch
 
 from dependency_versions import runtime_version_marker
 
 
 def main() -> int:
-    versions = runtime_version_marker("numpy", "pandas")
+    versions = runtime_version_marker("numpy", "pandas", "torch")
 
     values = np.array([3, 1, 2], dtype=np.int64)
     if np.sort(values, descending=True).tolist() != [3, 2, 1]:
         raise RuntimeError("NumPy descending sort behavior drifted")
     if np.argsort(values, descending=True).tolist() != [0, 2, 1]:
         raise RuntimeError("NumPy descending argsort behavior drifted")
+
+    # NumPy2.5.3 rejects invalid UTF-8 at conversion instead of retaining it.
+    try:
+        np.array([b"\xff"], dtype="S1").astype(np.dtypes.StringDType())
+    except TypeError:
+        pass
+    else:
+        raise RuntimeError("NumPy accepted invalid UTF-8 in StringDType conversion")
+
+    source = torch.tensor([3, 1, 2], dtype=torch.int64)
+    capsule = torch.utils.dlpack.to_dlpack(source)
+    imported = torch.utils.dlpack.from_dlpack(capsule)
+    if imported.data_ptr() != source.data_ptr():
+        raise RuntimeError("Torch DLPack import copied the owned CPU storage")
+    shared = np.from_dlpack(imported, copy=False)
+    source[0] = 7
+    if shared.tolist() != [7, 1, 2] or shared.__array_interface__["data"][0] != source.data_ptr():
+        raise RuntimeError("NumPy/Torch DLPack storage sharing drifted")
 
     frame = pd.DataFrame({"city": ["oslo", None, "paris"], "value": [2, 3, 5]})
     if type(frame).__module__ != "pandas":
@@ -33,7 +52,8 @@ def main() -> int:
     print(
         f"python numeric/dataframe features ok: {versions} "
         "descending-sort=ok string-dtype=ok copy-on-write=ok pd-col=ok "
-        "dataframe-producer=pandas"
+        "dataframe-producer=pandas invalid-utf8=rejected dlpack-storage=shared "
+        "compiled-affine-evidence=false"
     )
     return 0
 

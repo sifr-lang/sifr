@@ -5,6 +5,7 @@ import random
 from schwifty import BBAN
 
 from dependency_versions import runtime_version_marker
+from service_model_features import check_service_model_features
 
 
 def main() -> int:
@@ -18,9 +19,11 @@ def main() -> int:
         raise RuntimeError(
             "Schwifty generated a BBAN with an invalid national checksum"
         )
+    service_versions = check_service_model_features()
     print(
         f"python minor train features ok: {versions} "
-        f"countries={len(country_codes)} schwifty-bban-checksums={len(generated)}"
+        f"countries={len(country_codes)} schwifty-bban-checksums={len(generated)} "
+        f"{service_versions}"
     )
     return 0
 

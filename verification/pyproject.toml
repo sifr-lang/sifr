@@ -3,11 +3,14 @@ name = "sifr-verification"
 version = "0.0.0"
 description = "Sifr verification runner and profile tooling"
 requires-python = "==3.14.7"
-dependencies = []
+dependencies = ["packaging>=26.3,<27"]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling==1.32.0"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+build = ["hatchling==1.32.0"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["runner/sifr_verify"]
@@ -15,3 +18,11 @@ packages = ["runner/sifr_verify"]
 [tool.uv]
 package = true
 required-version = "==0.12.10"
+build-constraint-dependencies = [
+    "hatchling==1.32.0",
+    "packaging==26.3",
+    "pathspec==1.1.1",
+    "pluggy==1.6.0",
+    "tomlkit==0.15.1",
+    "trove-classifiers==2026.6.1.19",
+]

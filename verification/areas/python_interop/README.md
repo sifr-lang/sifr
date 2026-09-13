@@ -170,13 +170,22 @@ default; live suites must declare their own `network_mode` and resource classes.
   report output.
 - `env`: interpreter, venv, ABI, platform, lock/env freshness, and probe rejection fixture coverage.
 - `dependency-versions`: exact PyPI stable versions and audited artifact hashes
-  for the maintained Python lock owners. Mutations cover stale versions in
-  both locks, a missing artifact, a missing declaration, retired HTTP client
-  packages, a stale service image, installed runtime drift, and markers following
-  changed audited versions.
+  for every discovered maintained Python project and lock, including empty demo
+  owners and the verification build backend. Selected versions and current
+  official versions are recorded separately; Kafka retains explicit Item61
+  convergence ownership. All locked direct-package artifacts must match official
+  PyPI files. Public Packaging APIs validate requirements, extras, markers,
+  Requires-Python, resolved direct edges and the complete pinned build closure.
+  Mutation tests reject omitted owners, declarations, extras, artifacts and
+  backend constraints, as well as stale versions and retired HTTP clients.
 - `minor-train-features`: direct runtime coverage for the new Schwifty 2026.7
   checksum-solving `BBAN.random` implementation, with generated counts and an
   installed-version marker checked against `data/latest_stable_python.json`.
+  It also directly exercises the maintained Alembic/Psycopg, Boto3 and Pydantic
+  bridges. Alembic1.19.2's named CHECK plugin is explicitly enabled using
+  `alembic.ext.checkconstraint_byname`; Pydantic2.13 computed-field `exclude_if`
+  is checked for both zero and nonzero values. Direct bridge execution is not
+  compiled Sifr or live-service evidence.
 - `crypto-abi-features`: CFFI 2.1 source generation through `cffi.gen_src`.
 - `redis-service-features`: Redis 8.1 commands, Fakeredis RESP3 behavior,
   Hiredis RESP3 parsing, and Testcontainers 4.15 community APIs.
@@ -187,6 +196,10 @@ default; live suites must declare their own `network_mode` and resource classes.
   The Redis runner treats deprecations as errors only around Testcontainers
   imports and API checks, then restores the caller's warning policy. It does
   not suppress warnings; the numeric/dataframe runner installs no warning filter.
+  The numeric suite also checks NumPy2.5.3's invalid UTF-8 rejection and shared
+  Torch/NumPy CPU DLPack storage with an explicit no-copy import. The capsule is
+  consumed once. Compiler-owned affine certification remains in
+  `dlpack-examples` and `dlpack-runtime`; numerical tolerances are unchanged.
 - `imports`: root imports and native extension load diagnostics.
 - `native`: trusted native Python package load/use smoke.
 - `async`: Python event-loop/client behavior under Sifr blocking semantics.
