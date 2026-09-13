@@ -23,6 +23,7 @@ from reference_profiles import (
     validate_result_profile,
     validate_compiler_reference,
     validate_manifest_binding,
+    reference_budget_results,
 )
 
 
@@ -76,6 +77,48 @@ def template():
 class NamedReferenceTests(unittest.TestCase):
     def profile(self):
         return {"name": "linux-reference", "identity": identity(), "baseline": baseline()}
+
+    def test_governed_reference_consumes_budget_checker_without_mutating_capture(self):
+        from check_budgets import check_budgets
+        from trend_baseline import baseline_result
+        root = Path(__file__).resolve().parent / "data"
+        manifest = json.loads((root / "benchmark_manifest.json").read_text())
+        raw = json.loads((root / "baselines.json").read_text())
+        governed = copy.deepcopy(raw)
+        governed["results"] = [baseline_result(row, 1) for row in raw["results"]]
+        profile = {"baseline": governed}
+        before = copy.deepcopy(profile)
+        report = reference_budget_results(profile, manifest)
+        budgets = derive_budgets(json.loads((root / "budgets.json").read_text()), governed)
+        check_budgets(manifest, budgets, {"version": 1, "waivers": []}, report)
+        self.assertEqual(profile, before)
+        for original, converted in zip(governed["results"], report["results"]):
+            self.assertEqual(converted, {**original, "budget_id": next(
+                case["budget_id"] for case in manifest["cases"] if case["id"] == original["id"]
+            )})
+        with self.assertRaisesRegex(ReferenceProfileError, "unknown benchmark"):
+            reference_budget_results(profile, {"cases": []})
+
+    def test_policy_validation_does_not_qualify_an_over_budget_reference(self):
+        from check_budgets import BudgetError, check_budgets, check_reference_policy
+        from trend_baseline import baseline_result
+        root = Path(__file__).resolve().parent / "data"
+        manifest = json.loads((root / "benchmark_manifest.json").read_text())
+        raw = json.loads((root / "baselines.json").read_text())
+        raw["results"] = [baseline_result(row, 1) for row in raw["results"]]
+        budgets = derive_budgets(json.loads((root / "budgets.json").read_text()), raw)
+        row = raw["results"][0]
+        row["samples_ms"] = [1_000_000] * row["sample_count"]
+        row["metrics"].update(median_ms=1_000_000, p95_ms=1_000_000, mad_ms=0, coefficient_variation=0)
+        profile = {"baseline": raw, "budgets": budgets}
+        waivers = {"version": 1, "waivers": []}
+        check_reference_policy(manifest, profile, waivers)
+        with self.assertRaisesRegex(BudgetError, "regression"):
+            check_budgets(manifest, budgets, waivers, reference_budget_results(profile, manifest))
+        broken = copy.deepcopy(profile)
+        broken["baseline"]["results"].pop()
+        with self.assertRaisesRegex(BudgetError, "missing benchmark"):
+            check_reference_policy(manifest, broken, waivers)
 
     def test_matching_host(self):
         assert_comparable(self.profile(), identity())
