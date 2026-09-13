@@ -231,6 +231,10 @@ codegen-units = 1
 [profile.release.package.ruff_python_ast]
 codegen-units = 1
 
+# Keep development compiler code compact while preserving debug information.
+[profile.dev]
+opt-level = 1
+
 [profile.dev.package.insta]
 opt-level = 3
 [profile.dev.package.similar]
