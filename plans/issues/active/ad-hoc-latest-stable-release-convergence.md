@@ -245,6 +245,29 @@ or an authorized merge/closure here. All predecessor reviews and failed gates
 retain their original accounting. Older contradictory policy below is history.
 
 
+## Remote Rust batch49/56/62A/62B and75 integration — 2026-09-13
+
+Targeted qualification PASS. The canonical Rust interop area passed13 variants;
+all271 positive idiomatic Rust demos compiled, with45 intentional negative
+fixtures separately excluded. Prepared Item75 modules, the existing digest
+consumer correction, four prepared demo manifests and five exact dependency
+policies are integrated. The later narrow intentional-invalid-regex Clippy
+annotation and import-order correction are recorded separately; four enrolled
+demo crates pass Clippy.31 codegen tests and final dependency/inventory audits pass.
+
+The actual SQLx clean-cache experiment passed against final locks: root fetch
+alone was insufficient; a separately recorded fixture fetch enabled frozen offline
+resolution with both locks unchanged. SQLite1/PostgreSQL6/MySQL3/words1 artifacts
+were genuinely rebuilt; qualification and31 mutations pass. The real compiled
+opaque-resource package ran successfully through HTTP/SQLite/Redis/PostgreSQL,
+negative protocols, poison and closure checks. Its generated root selects the
+authenticated native SQLite path patch. The cold build took471.2s on this host.
+
+Evidence and failures: /home/yaser5/projects/sifr/continuation-evidence/20260913-rust-batch/FINAL.json.
+No full gate or new Opus call consumed. Preserve all predecessor review counts,
+including Item75 initial1/remediation0. This checkpoint is not a merge or whole-phase
+closure. Continue the authorized remaining batches; no external SQLite hold remains.
+
 ## Item48 resumption — user-directed SQLite update (2026-09-13)
 
 The user explicitly authorized updating SQLite and completing the remaining

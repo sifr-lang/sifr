@@ -365,6 +365,7 @@ trait Marker {}
 
 impl Marker for Item {}
 impl !Marker for Item {}
+unsafe impl Marker for Item {}
 "#;
     let mut emitted = RustItemDeduper::default();
 
@@ -372,6 +373,67 @@ impl !Marker for Item {}
 
     assert!(deduplicated.contains("impl Marker for Item"));
     assert!(deduplicated.contains("impl !Marker for Item"));
+    assert!(deduplicated.contains("unsafe impl Marker for Item"));
+    let parsed = syn::parse_file(&deduplicated).expect("deduplicated impls parse");
+    assert_eq!(
+        parsed
+            .items
+            .iter()
+            .filter(|item| matches!(item, syn::Item::Impl(_)))
+            .count(),
+        3
+    );
+}
+
+#[test]
+fn analytical_observations_use_exact_fallible_expression_trees() {
+    use quote::ToTokens as _;
+    const SOURCE: &str = include_str!(
+        "../../../../verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/rust/sifr_arrow_bridge/src/record_batch.rs"
+    );
+    fn initializer(source: &str, binding: &str) -> String {
+        let file = syn::parse_file(source).expect("bridge source parses");
+        let function = file
+            .items
+            .iter()
+            .find_map(|item| match item {
+                syn::Item::Fn(item) if item.sig.ident == "observe_state" => Some(item),
+                _ => None,
+            })
+            .expect("actual observation function");
+        function.block.stmts.iter().find_map(|statement| match statement {
+            syn::Stmt::Local(local) if matches!(&local.pat, syn::Pat::Ident(pat) if pat.ident == binding) =>
+                Some(local.init.as_ref().expect("initialized observation").expr.to_token_stream().to_string()),
+            _ => None,
+        }).expect("actual observation binding")
+    }
+    for (binding, expression) in [
+        (
+            "datafusion_registered",
+            "state.datafusion.table_exist(\"input\").map_err(display_error)?",
+        ),
+        (
+            "polars_sorted",
+            "state.polars.is_sorted(&[\"value\".into()], &[false], &[false]).map_err(display_error)?",
+        ),
+    ] {
+        let expected = syn::parse_str::<syn::Expr>(expression)
+            .expect("expected expression")
+            .to_token_stream()
+            .to_string();
+        assert_eq!(initializer(SOURCE, binding), expected);
+        let actual = initializer(SOURCE, binding);
+        let parsed = syn::parse_str::<syn::Expr>(&actual).expect("actual expression");
+        assert!(matches!(parsed, syn::Expr::Try(_)));
+        let broken = SOURCE.replace(
+            &format!("let {binding} = state"),
+            &format!("let {binding} = true; let unrelated = state"),
+        );
+        assert_ne!(broken, SOURCE);
+        assert_ne!(initializer(&broken, binding), expected);
+        let decoy = format!("// {expression}\n{broken}");
+        assert_ne!(initializer(&decoy, binding), expected);
+    }
 }
 
 #[test]

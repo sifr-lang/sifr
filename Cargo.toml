@@ -37,6 +37,10 @@ members = [
     "crates/sifr",
     "crates/sifr_rust_interop_catalog",
     "crates/sifr_sql_dependency_lock",
+    "demos/csv",
+    "demos/parse_safety",
+    "demos/shutil",
+    "demos/stdlib_intrinsics",
 ]
 exclude = ["tmp", "sifr_output", "third_party/ruff", "crates/sifr_runtime/third_party/libsqlite3-sys"]
 resolver = "3"
@@ -51,6 +55,11 @@ authors = ["Yaser Al-Najjar"]
 license = "MIT"
 
 [workspace.dependencies]
+csv = { package = "csv", version = "=1.4.0", default-features = false, features = [] }
+data-encoding = { package = "data-encoding", version = "=2.11.1", default-features = false, features = ["alloc"] }
+fs2 = { package = "fs2", version = "=0.4.3", default-features = false, features = [] }
+hex = { package = "hex", version = "=0.4.3", default-features = false, features = ["alloc"] }
+libm = { package = "libm", version = "=0.2.16", default-features = false, features = [] }
 # Infrastructure crates -- unmodified, referenced from the Ruff fork submodule.
 ruff_text_size = { path = "third_party/ruff/crates/ruff_text_size" }
 ruff_source_file = { path = "third_party/ruff/crates/ruff_source_file" }

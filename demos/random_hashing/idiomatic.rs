@@ -81,7 +81,7 @@ struct Sha256Object {
 impl Sha256Object {
     fn hexdigest(&self) -> String {
         let digest = Sha256::digest(&self.input);
-        format!("{digest:x}")
+        digest.iter().map(|byte| format!("{byte:02x}")).collect()
     }
 }
 

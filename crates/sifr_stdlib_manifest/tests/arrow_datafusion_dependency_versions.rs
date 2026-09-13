@@ -145,9 +145,25 @@ fn maintained_locks_use_one_current_arrow_and_datafusion_family() {
 #[test]
 fn runtime_bridge_uses_datafusion_55_nan_fill_and_propagates_catalog_errors() {
     assert!(BRIDGE_SOURCE.contains("fill_nan(&ScalarValue::from(0.0), &[\"value\"])"));
-    assert!(BRIDGE_SOURCE.contains(".table_exist(\"input\")"));
-    assert!(BRIDGE_SOURCE.contains(".map_err(display_error)?"));
-    assert!(!BRIDGE_SOURCE.contains("unwrap_or(false)"));
+    assert!(catalog_error_chain(BRIDGE_SOURCE));
+}
+
+fn catalog_error_chain(source: &str) -> bool {
+    let compact: String = source.chars().filter(|c| !c.is_whitespace()).collect();
+    compact.contains(
+        "letdatafusion_registered=state.datafusion.table_exist(\"input\").map_err(display_error)?;",
+    )
+}
+
+#[test]
+fn catalog_error_chain_rejects_swallowed_error_despite_unrelated_propagation() {
+    let broken = BRIDGE_SOURCE.replace(
+        ".table_exist(\"input\")\n        .map_err(display_error)?",
+        ".table_exist(\"input\").unwrap_or(false)",
+    );
+    assert_ne!(broken, BRIDGE_SOURCE);
+    assert!(broken.contains(".map_err(display_error)?"));
+    assert!(!catalog_error_chain(&broken));
 }
 
 fn assert_dependency(

@@ -1,0 +1,14 @@
+[package]
+name = "sifr-demo-shutil"
+version = "0.0.0"
+publish = false
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "sifr-demo-shutil"
+path = "idiomatic.rs"
+
+[dependencies]
+fs2.workspace = true

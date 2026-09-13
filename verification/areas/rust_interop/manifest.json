@@ -17,6 +17,20 @@
       "kind": "adapter",
       "cases": [
         {
+          "id": "maintained-rust-demo-compile",
+          "entry": "verification/areas/rust_interop/checks/check_maintained_rust_demos.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "maintained-rust-demo-enrollment-self-test",
+          "entry": "verification/areas/rust_interop/checks/check_maintained_rust_demos.py",
+          "command": "area-check-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
           "id": "rust-interop-matrix",
           "entry": "verification/areas/rust_interop/checks/check_fixture_matrix.py",
           "command": "area-check",
@@ -56,6 +70,13 @@
       "name": "compatibility-matrix",
       "kind": "adapter",
       "cases": [
+        {
+          "id": "sqlx-clean-cache-contract-self-test",
+          "entry": "verification/areas/rust_interop/checks/check_sqlx_clean_cache.py",
+          "command": "area-check-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
         {
           "id": "rust-interop-compatibility-matrix",
           "entry": "verification/areas/rust_interop/checks/check_compatibility_matrix.py",

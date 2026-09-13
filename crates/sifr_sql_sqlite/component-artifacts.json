@@ -18,7 +18,7 @@
   "protocol_major": 1,
   "provenance": {
     "build_environment": {
-      "CARGO_BUILD_JOBS": "2"
+      "CARGO_BUILD_JOBS": "1"
     },
     "family": "sqlite",
     "rust": {
@@ -34,8 +34,8 @@
     "schema_version": 1,
     "source_inputs": {
       ".cargo/config.toml": "d4c924aa9aef68df597f232d9d301a62ea6e12c497c17154cccf875a66c4bbf5",
-      "Cargo.lock": "73f8184159e0ed411eaeb0247b02872ef94fd3fbf17d6e90de2621770bde3dea",
-      "Cargo.toml": "daef5e65b6274348cd7d0cfe50071caee85584e53624cbdcfd99c427e0e18895",
+      "Cargo.lock": "bfb757e5be7f6b87e3e9f058a191171e370e00ed4aec7680521d994490679d18",
+      "Cargo.toml": "e4b037c9fc50b7f203a7ee9713da349c5dad3c6a7007f15381258a30bd517ca1",
       "crates/sifr_compiler_component/Cargo.toml": "ee0e4534217e3a7398b0dd940fc88b6e632bbe18df8628edec27e4a21841b44e",
       "crates/sifr_compiler_component/src/cache.rs": "24760870764d218a011d2e05a3e275366775f553dc092b6bde4b10be78d13c77",
       "crates/sifr_compiler_component/src/diagnostics.rs": "26929ebdcab63a7329060a17f0b4263f4a5f98363b92b93831d8858e3ae05190",
@@ -144,7 +144,7 @@
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "200bae3919f83127320754727e3d89574b432160a680116e8f78d30a5ea56635",
+    "source_sha256": "a04bd8568c9e57150b011f3b741987c7f6d5cef17f0c5b3bfdc1fb271454652d",
     "tools": {
       "sdk": {
         "archive": "wasi-sdk-34.0-x86_64-linux.tar.gz",

@@ -125,7 +125,7 @@ fn tracked_inventory_rejects_removed_manifest_lock_and_core_fixture() {
 #[test]
 fn tracked_discovery_excludes_untracked_vendor_and_gitlink_inputs() {
     // The supplied index contains no entry for the extra on-disk Cargo.toml.
-    let index = b"100644 abc 0\tCargo.toml\0100644 abc 0\tverification/areas/core_language/fixture/Cargo.toml\0100644 abc 0\tvendor/crate/Cargo.toml\0100644 abc 0\tthird_party/crate/Cargo.toml\0160000 abc 0\texternal\0";
+    let index = b"100644 abc 0\tCargo.toml\0100644 abc 0\tverification/areas/core_language/fixture/Cargo.toml\0100644 abc 0\tvendor/crate/Cargo.toml\0100644 abc 0\tthird_party/crate/Cargo.toml\0100644 abc 0\tcrates/sifr_runtime/third_party/libsqlite3-sys/Cargo.toml\0160000 abc 0\texternal\0";
     let actual =
         cargo_inventory::select_tracked_paths(index, "Cargo.toml").test_unwrap("tracked listing");
     assert_eq!(

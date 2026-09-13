@@ -2,8 +2,8 @@
   "schema_version": 2,
   "audited_at": "2026-09-09",
   "source": "https://index.crates.io/{prefix}/{crate}",
-  "maintained_manifests": 128,
-  "direct_declarations": 193,
+  "maintained_manifests": 132,
+  "direct_declarations": 198,
   "packages": [
     {
       "name": "aho-corasick",
@@ -541,6 +541,29 @@
       ]
     },
     {
+      "name": "csv",
+      "latest_stable": "1.4.0",
+      "checksum": "52cd9d68cf7efc6ddfaaee42e7288d3a99d613d4b50f76ce9827ae0c6e14f938",
+      "source_url": "https://index.crates.io/3/c/csv",
+      "response_sha256": "628a1ec8e1cebeff70f2baa9d20b5d593b60a8e2ff3f1037e9e6ff7f6d5d2dba",
+      "observed_at": "2026-09-10T04:13:32.195917+00:00",
+      "locked_releases": [
+        {
+          "version": "1.4.0",
+          "checksum": "52cd9d68cf7efc6ddfaaee42e7288d3a99d613d4b50f76ce9827ae0c6e14f938"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "csv",
+          "package": "csv",
+          "requirement": "=1.4.0"
+        }
+      ]
+    },
+    {
       "name": "cxx",
       "latest_stable": "1.0.200",
       "checksum": "2d93a9baeb9798b2e8ff0de24463b9e5cf9a0dd0a88f5ea02afc9ea35e7abae7",
@@ -567,6 +590,29 @@
           "alias": "cxx",
           "package": "cxx",
           "requirement": "=1.0.200"
+        }
+      ]
+    },
+    {
+      "name": "data-encoding",
+      "latest_stable": "2.11.1",
+      "checksum": "4583a4551df46e2792f82ceeac45e850d2e2d5debba0b91f102385cda5b11f06",
+      "source_url": "https://index.crates.io/da/ta/data-encoding",
+      "response_sha256": "fb8202345c08fbe1ebe2f3fd6306c9ac38345196675cfa15bd4e763bb459a58a",
+      "observed_at": "2026-09-10T04:13:32.505705+00:00",
+      "locked_releases": [
+        {
+          "version": "2.11.1",
+          "checksum": "4583a4551df46e2792f82ceeac45e850d2e2d5debba0b91f102385cda5b11f06"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "data-encoding",
+          "package": "data-encoding",
+          "requirement": "=2.11.1"
         }
       ]
     },
@@ -650,6 +696,29 @@
           "alias": "flate2",
           "package": "flate2",
           "requirement": "=1.1.10"
+        }
+      ]
+    },
+    {
+      "name": "fs2",
+      "latest_stable": "0.4.3",
+      "checksum": "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213",
+      "source_url": "https://index.crates.io/3/f/fs2",
+      "response_sha256": "1b433da5d0c3fe4f515854a00b363ea472f771e0504c50f94494337fecb4c1ef",
+      "observed_at": "2026-09-10T04:13:32.399599+00:00",
+      "locked_releases": [
+        {
+          "version": "0.4.3",
+          "checksum": "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "fs2",
+          "package": "fs2",
+          "requirement": "=0.4.3"
         }
       ]
     },
@@ -749,6 +818,29 @@
           "alias": "h2",
           "package": "h2",
           "requirement": "0.4.19"
+        }
+      ]
+    },
+    {
+      "name": "hex",
+      "latest_stable": "0.4.3",
+      "checksum": "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70",
+      "source_url": "https://index.crates.io/3/h/hex",
+      "response_sha256": "a50a23097976ac09763e2829a7abd813182e881d497da735c49634294d96704f",
+      "observed_at": "2026-09-10T04:13:32.289330+00:00",
+      "locked_releases": [
+        {
+          "version": "0.4.3",
+          "checksum": "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "hex",
+          "package": "hex",
+          "requirement": "=0.4.3"
         }
       ]
     },
@@ -1202,6 +1294,29 @@
           "alias": "libc",
           "package": "libc",
           "requirement": "0.2.189"
+        }
+      ]
+    },
+    {
+      "name": "libm",
+      "latest_stable": "0.2.16",
+      "checksum": "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981",
+      "source_url": "https://index.crates.io/li/bm/libm",
+      "response_sha256": "16d3903238abf2b92dc66c4a026132d491d21abe77678eeb465f005038b9517a",
+      "observed_at": "2026-09-10T04:13:32.655837+00:00",
+      "locked_releases": [
+        {
+          "version": "0.2.16",
+          "checksum": "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "Cargo.toml",
+          "table": "workspace.dependencies",
+          "alias": "libm",
+          "package": "libm",
+          "requirement": "=0.2.16"
         }
       ]
     },

@@ -1,4 +1,4 @@
-use base64::{engine::general_purpose::STANDARD, Engine as _};
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use regex::Regex;
 use serde_json::Value as JsonValue;
 
@@ -51,6 +51,10 @@ fn main() {
     }
     let split_count = "a,b,c".split(',').count();
     println!("split count: {}", split_count);
+    #[allow(
+        clippy::invalid_regex,
+        reason = "This demo verifies structured rejection of an intentionally invalid pattern."
+    )]
     match Regex::new("[unclosed") {
         Ok(_) => println!("should not reach here"),
         Err(error) => println!("caught RegexError: {}", error),

@@ -46,7 +46,11 @@ pub(crate) fn select_tracked_paths(
         {
             return Err(format!("non-relative tracked path: {path}"));
         }
-        if fields[0] == "160000" || path.starts_with("vendor/") || path.starts_with("third_party/")
+        if fields[0] == "160000"
+            || path.starts_with("vendor/")
+            || path_value
+                .components()
+                .any(|part| part.as_os_str() == "third_party")
         {
             continue;
         }
