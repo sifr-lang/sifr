@@ -1,5 +1,28 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Remote maintained-demo preparation qualified — 2026-09-13
+
+Create-PR attempt4 on5d686a4ee3616f7df583cc0a350c955976da7d82
+passed all Rust demo semantics but failed the unchanged Rust area20s limit:
+area31.968s, maintained demo compilation20.632s. Setup517.113s also exceeded
+its300s advisory; total/profile failure remains recorded in create-pr4.json.
+
+The complete271-demo/27-policy-group checker now also prepares its Cargo
+metadata during the visible setup prelude, after authoring test prebuilds.
+The timed Rust area still executes every original check. No timeout, area
+limit, dependency policy, lock/source check or target membership is weakened.
+Each preparation has a fresh owned directory and retained command report.
+
+All22 setup policy tests pass, including selected/absent demo preparation and
+failure propagation. Actual cold preparation passes271/271 in41.741s.
+The complete timed Rust area then passes all13 variants in13.949s against20s.
+File-size3874 and diff guards pass.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/
+demo-preparation.json, demo-preparation-policy.log, rust-area-prepared.json
+and rust-area-prepared.log. These are targeted results; no new create-PR,
+full merge or release pass is claimed yet. Integration Opus reviews remain0.
+
+
 ## Remote LSP memory follow-up qualified — 2026-09-13
 
 The required release stress dependency is now implemented and locally qualified

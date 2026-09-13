@@ -6,6 +6,8 @@ import os
 import shlex
 import subprocess
 import sys
+import tempfile
+from pathlib import Path
 from typing import Any, Callable
 
 from .paths import REPO_ROOT
@@ -57,6 +59,7 @@ def prepare_cargo_cache(
         )
 
     prepare_authoring_test_binaries(profile, setup_env, command_runner)
+    prepare_maintained_demo_cache(profile, setup_env, command_runner)
 
 
 def prepare_authoring_test_binaries(profile, env, command_runner) -> None:
@@ -73,6 +76,22 @@ def prepare_authoring_test_binaries(profile, env, command_runner) -> None:
         command = ["cargo", "test", "--locked", "--offline", "--no-run", "-p", package]
         print(f"[sifr-profile-setup] authoring-test-build={' '.join(command)}", flush=True)
         command_runner(command, env=env)
+
+
+def prepare_maintained_demo_cache(profile, env, command_runner) -> None:
+    """Prepare the same complete demo graph before its bounded execution area."""
+    if not any(area["area"] == "rust_interop" and "matrix" in area["suites"]
+               for area in profile.get("selected_areas", [])):
+        return
+    target = REPO_ROOT / "target"
+    target.mkdir(parents=True, exist_ok=True)
+    output = Path(tempfile.mkdtemp(
+        prefix=f"{profile['name']}-rust-demo-setup-", dir=target)) / "compile"
+    command = [sys.executable, str(REPO_ROOT / "verification/areas/rust_interop/checks/"
+                                   "check_maintained_rust_demos.py"),
+               "--output", str(output)]
+    print(f"[sifr-profile-setup] maintained-demo-preparation={output}", flush=True)
+    command_runner(command, env=env)
 
 
 def enable_offline_cargo(env: dict[str, str]) -> None:
