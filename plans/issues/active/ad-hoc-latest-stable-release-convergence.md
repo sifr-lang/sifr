@@ -4150,3 +4150,55 @@ distinct human release reviewer must accept repository access, and the
 protected `stable-release` environment must require that reviewer. Do not
 extend the expired waiver or add a fallback. Item 31 cannot consume a second
 merge gate under the current phase rules.
+
+## Remote continuation checkpoint — 2026-09-13
+
+The remote worktree `latest-stable-continuation` owns branch
+`codex/latest-stable-remote-continuation`. This is a prepared continuation,
+not a merged closure. The transferred phase ledger and its prior review/gate
+counts remain authoritative; no allowance is reset by this checkpoint.
+
+Performance candidate `803c54e8a` passes canonical representative run
+`bench-1789292414-481426`: ten measured cases, eight verification variants,
+zero failures. LSP diagnostics median/p95 are 1.846/2.036 ms; peak RSS is
+137072640 bytes against the unchanged 147980288-byte limit. The seven
+five-sample native/formatter cases do not qualify p95 under the existing rule.
+This is representative candidate evidence, not a full 65-case candidate gate.
+
+The independently captured Linux reference uses merged compiler
+`ca7a6d60e266beccce21d4c16e08667086578277`; all 65 reference cases passed.
+Named profile `linux-i7-4720hq-12gb-dev-v1` has immutable SHA256
+`f6c5b4421ab7ce520a504316a4162d1fb9458f8ced2e45a3577cd9d76cda80eb`.
+CPU power policy is part of comparison identity. Qualification temporarily
+used the performance governor and restored schedutil afterwards. Development
+optimization retains debug information and existing package overrides.
+The original RSS failure, unsuccessful diagnostics, and cold helper-build
+timeout remain recorded; explicit helper warming preceded the passing run.
+
+Prepared Python group3 source
+`ed84cf74127f6e189d95b24701a8ad34c73553c8..2482355cdbefc670903c76ee51ceafbf38e560aa`
+and the three dependency-file corrections from Item72 through
+`83531fb1e70017850948a1be83415419558f807f` are integrated as
+`81d3818ded38666ca6ac70848471ac943ad4c0f4`. Group4 and Node work were not
+imported. All 17 source-input hashes were checked unchanged after validation.
+
+Validation passes: 19 dependency contract tests; all six maintained uv locks;
+byte-identical wheel and sdist from two independent output directories; full
+Python area with 32 suites and zero failures, including compiled libraries,
+live services, dataframes, ML, callbacks, buffer/Arrow/DLPack runtimes, and
+four focused editor-integration Cargo commands. The earlier filtered compiled
+run passed its selected cases but correctly failed complete-certification
+coverage; the subsequent unfiltered run supplies complete area certification.
+File-size guard passes for 3868 files. The initial auxiliary lock-discovery
+command mistakenly included a vendored project; the correction used canonical
+maintained-project discovery, preserving that original command failure.
+
+Evidence lives under
+`/home/yaser5/projects/sifr/continuation-evidence/20260913-selection-range`
+and `/home/yaser5/projects/sifr/continuation-evidence/20260913-python-group3`.
+No new PR, external review, create-PR gate or merge gate ran. Delivery remains
+blocked by the separately owned distinct-release-reviewer restoration issue.
+A fresh GitHub environment read still shows only the current maintainer as
+required reviewer and `prevent_self_review: false`. Resolve that external
+prerequisite before attempting the blocked merge gate; do not extend the
+expired waiver. Subsequent prepared groups remain pending.
