@@ -17,6 +17,7 @@ from unittest.mock import patch
 from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_authoring_test_binaries, prepare_maintained_demo_cache, prepare_tooling_test_binaries, prepare_performance_binaries
 from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
 from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
+from .cargo_crate_setup_checks import CrateSetupPolicyTests
 from .generated_cargo_setup import (
     GIT_SOURCE, fetch_generated_graph, portable_graph, preparation_entries, quality_module,
 )

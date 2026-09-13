@@ -12,6 +12,7 @@ from typing import Any, Callable
 
 from .paths import REPO_ROOT
 from .cargo_fixture_setup import prepare_locked_fixture_caches
+from .cargo_crate_setup import prepare_crate_test_binaries
 
 CANONICAL_SETUP_COMMAND = "cargo fetch --locked"
 
@@ -58,6 +59,7 @@ def prepare_cargo_cache(
             env=setup_env,
         )
 
+    prepare_crate_test_binaries(profile, setup_env, command_runner)
     prepare_authoring_test_binaries(profile, setup_env, command_runner)
     prepare_tooling_test_binaries(profile, setup_env, command_runner)
     prepare_performance_binaries(profile, setup_env, command_runner)

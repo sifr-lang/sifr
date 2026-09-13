@@ -1,5 +1,33 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Canonical crate preparation and demo edge inventory — 2026-09-13
+
+The selected crate step at3e7e7e4d14d4ae83e7d0f1070a33d1c6d8ef8c39
+passed compiler-component, SQL providers, diagnostics, lowering, syntax,
+frontend, analysis61, LSP82, package, IPC and stdlib-import tests before a
+stdlib-manifest inventory failure. The new maintained parse-safety demo has a
+valid Base640.23.1 edge, but the exact owner/lock inventory omitted it.
+A complete --no-fail-fast run of sifr_stdlib_manifest found only this failure.
+The inventory now includes exactly Cargo.lock/sifr-demo-parse-safety/base64,
+backed by demos/parse_safety/Cargo.toml. The full package then passes.
+
+Cold compilation also consumed the628.322s step before its functional failure,
+already exceeding600s. The canonical crate selection now receives separate
+locked/offline --no-run builds in the reported Cargo setup stage. Test-program
+arguments after -- are excluded only from setup; execution commands are
+unchanged. Features, target selectors, smoke/full membership and planned
+non-executed red blockers retain their exact selection. No package feature
+union, test removal or budget change was introduced.
+
+All28 setup-policy tests pass, including mode selection, separate feature
+graphs, test-filter handling, source-profile immutability and failure stopping.
+File-size3877 and diff guards pass. Evidence in20260913-final-integration:
+remaining-3e7e7e4d-toolchain.log, remaining-3e7e7e4d14-toolchain-summary.json,
+manifest-dependency-inventory-audit.log (failed), manifest-dependency-inventory-corrected.log
+and canonical-crate-preparation-tests.log.
+The E2E step was not reached. Continue actual selected preparation and both
+toolchain steps, then the canonical PR gate before review/merge.
+
 ## Remote remaining SQL corrections — 2026-09-13
 
 At71793aa6d97cf9b71df02afa765bb44947911e6a, selected performance passes
