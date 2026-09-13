@@ -1,5 +1,38 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Remote editor CI bootstrap ordering correction — 2026-09-13
+
+Draft extension PR15 (sifr-lang/sifr-vscode) and editor pointer PR13
+(sifr-lang/editor-integrations) are open. Their final exact-source review and
+ordered extension → editor → root merges remain pending.
+
+The extension CI run34772570369 failed before npm provisioning:
+actions/setup-node's npm cache discovery invoked bundled npm11.19.1 inside
+the strict extension package and correctly received EBADDEVENGINES because
+npm12.0.2 is required. This is an owned workflow-order defect, not an external
+package or reviewer blocker. The pinned action source confirms explicit cache
+takes precedence and automatic package-manager caching defaults to enabled.
+The extension now omits explicit caching and sets package-manager-cache:false,
+allowing the existing exact-npm bootstrap to execute before project npm commands.
+No engine policy, version, dependency lock or extension application source changes.
+
+Local reproduction preserves bundled cache-probe exit1, followed by successful
+private npm12.0.2 bootstrap and the same cache probe passing. Node contract and
+all5 selector/runtime self-tests pass. Original CI log and exact pinned action
+source are retained in
+/home/yaser5/projects/sifr/continuation-evidence/20260913-editor-cache-order/.
+Extension5930dc1a0ccc52d9f382553156e98294a95420d9 and
+editor d6fde7111800349428f63db05a34ca9a32acd576 contain the correction.
+
+Create-PR6 at dbe23d2fb7e34e1032533933ac704a43148bbc2b was deliberately
+aborted during Cargo setup after the completed cold compiler rebuild, before
+any guard/area execution, to apply this newly discovered candidate correction.
+Its1049.315s setup failure and38 prepared generated entries remain preserved in
+create-pr6.log and create-pr6-aborted.json. This is not a gate pass.
+The owned process tree was stopped and the CPU governor restored to schedutil.
+No full merge gate or integration Opus review has been consumed.
+
+
 ## Remote tooling preparation and ownership correction — 2026-09-13
 
 Create-PR attempt5 at a05542de9d74f658f95ff7f7b1902902f36caa78 failed:
