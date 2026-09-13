@@ -177,7 +177,7 @@
           "section": "project.dependencies",
           "name": "kafka-python",
           "extras": [],
-          "specifier": "<3,>=2.0",
+          "specifier": "<4,>=3.0.11",
           "marker": null,
           "url": null
         },
@@ -2549,39 +2549,39 @@
     },
     {
       "name": "kafka-python",
-      "selected_version": "2.3.2",
+      "selected_version": "3.0.11",
       "latest_stable": "3.0.11",
-      "requires_python": null,
+      "requires_python": ">=3.8",
       "provides_extra": [
-        "benchmarks",
         "crc32c",
         "lz4",
         "snappy",
+        "zstd",
         "testing",
-        "zstd"
+        "benchmarks"
       ],
-      "official_release": "https://pypi.org/project/kafka-python/2.3.2/",
-      "metadata_source": "https://pypi.org/pypi/kafka-python/2.3.2/json",
-      "metadata_sha256": "bb623dca9bcc65a3e35be1be0a0481e6dfc1d98f23db082906609fc1fd7f58a6",
+      "official_release": "https://pypi.org/project/kafka-python/3.0.11/",
+      "metadata_source": "https://pypi.org/pypi/kafka-python/3.0.11/json",
+      "metadata_sha256": "3000cea1e5f81fa57c5dedf645b851048b01dd5289f82e9f384324cd0eef7f56",
       "latest_metadata_sha256": "4405b476d70cbd1fba5cd9d98d0e94cf18a2de696d681d3576451d1e6b3c9b66",
       "artifact": {
-        "filename": "kafka_python-2.3.2-py2.py3-none-any.whl",
-        "sha256": "e8a5e6f2c4ce13a8041669337038d5125e0e09e6d6f0911902ae5939e5b9595e"
+        "filename": "kafka_python-3.0.11-py3-none-any.whl",
+        "sha256": "9d10cab4e11e02545d82c7e5af5702da5aa46dd4eccd11ad92a50bf6dbbecd14"
       },
       "artifacts": [
         {
-          "filename": "kafka_python-2.3.2-py2.py3-none-any.whl",
-          "url": "https://files.pythonhosted.org/packages/4f/db/cfe23cfacc9aabeef59e349aa6c2738d195df1d56ccf8c31362abdd68ddb/kafka_python-2.3.2-py2.py3-none-any.whl",
-          "sha256": "e8a5e6f2c4ce13a8041669337038d5125e0e09e6d6f0911902ae5939e5b9595e",
+          "filename": "kafka_python-3.0.11-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/d7/9a/191343fd96564cbbed51bd33a53c08144e1ce285e2f10fb1578899e86c28/kafka_python-3.0.11-py3-none-any.whl",
+          "sha256": "9d10cab4e11e02545d82c7e5af5702da5aa46dd4eccd11ad92a50bf6dbbecd14",
           "yanked": false,
-          "requires_python": null
+          "requires_python": ">=3.8"
         },
         {
-          "filename": "kafka_python-2.3.2.tar.gz",
-          "url": "https://files.pythonhosted.org/packages/c6/7e/9eb4363e5018b71edf77de3d2fbd687f1e3a55d43101138a5b7f2ca56d97/kafka_python-2.3.2.tar.gz",
-          "sha256": "2d2469bcabc2551be7eaf7fb512e1241484d358800f2665b90e7e24fea84259d",
+          "filename": "kafka_python-3.0.11.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/d5/6a/8a3bfb819b5350652dfa5365409b7c611eed8ae0b37c84f53d0a26ae9513/kafka_python-3.0.11.tar.gz",
+          "sha256": "a003d927e79c801d6cfd1e59ceaaf78807351e75cdb5b8ee9ce4262586f9780f",
           "yanked": false,
-          "requires_python": null
+          "requires_python": ">=3.8"
         }
       ]
     },
@@ -4901,7 +4901,5 @@
     }
   ],
   "generated_by": "official PyPI metadata and discovered maintained manifests/locks",
-  "deferred_packages": {
-    "kafka-python": "61"
-  }
+  "deferred_packages": {}
 }

@@ -245,6 +245,28 @@ or an authorized merge/closure here. All predecessor reviews and failed gates
 retain their original accounting. Older contradictory policy below is history.
 
 
+## Remote Kafka61 integration checkpoint — 2026-09-13
+
+Kafka Python 3.0.11 is integrated from the preserved #3551 mechanism, including
+DescribeClusterRequest-v2 round-trip coverage, bounded foreign callback error
+propagation and the current live producer configuration. The official wheel
+matches the preserved SHA256. Only Kafka changed in the Python lock graph;
+the version audit now has no deferred package selection.
+
+Validation passed: 24 dependency contract tests and 42 mutations across six
+projects/locks, compiled callback examples, live policy and all six real service
+cases. The first live attempt hit the 900-second Redis build limit while
+bootstrapping the cold compiler and did not execute services. Preserve that
+failure. After compiler cache preparation, the live suite passed in 248.236s.
+Filtered reports explicitly remain non-promotable partial certification; this
+does not claim another full 32-suite Python run.
+
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-kafka61/FINAL.json.
+No new integration review or full gate ran. Preserve original Item31 history
+and the separately registered single Item61 integration review/gate allowance.
+This is a prepared checkpoint, not a merge. Continue the authorized compiler
+coverage and evidence closure items.
+
 ## Remote Rust batch49/56/62A/62B and75 integration — 2026-09-13
 
 Targeted qualification PASS. The canonical Rust interop area passed13 variants;

@@ -6,7 +6,7 @@ from sifr.python import PythonError
 def kafka_poll(
     handler: Callable[[int], int],
     partition: int,
-) -> Result[int, PythonError]: ...
+) -> Result[str, PythonError]: ...
 
 
 def acknowledge(partition: int) -> int:
@@ -15,7 +15,7 @@ def acknowledge(partition: int) -> int:
 
 def main() -> Result[None, PythonError]:
     try:
-        result: int = kafka_poll(acknowledge, 2)
+        result: str = kafka_poll(acknowledge, 2)
         print("sifr-python-interop:callback:kafka=" + str(result))
     except PythonError as error:
         raise error

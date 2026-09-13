@@ -257,10 +257,10 @@ def validate_repository(audit: dict[str, object]) -> list[str]:
     if {pyproject: lock for pyproject, lock, _ in projects.values()} != discovered:
         raise ValueError("audited projects/locks differ from actual maintained discovery")
     errors: list[str] = []
-    if audit.get("deferred_packages") != {"kafka-python": "61"}:
-        raise ValueError("Kafka convergence must retain explicit Item61 ownership")
+    if audit.get("deferred_packages") != {}:
+        raise ValueError("Completed Python convergence must not defer packages")
     for name, release in releases.items():
-        if release["selected_version"] != release["latest_stable"] and name not in audit["deferred_packages"]:
+        if release["selected_version"] != release["latest_stable"]:
             errors.append(f"{name}: selected {release['selected_version']} is behind official latest stable {release['latest_stable']}")
     for name, (pyproject_path, lock_path, expected) in projects.items():
         project = load_toml(REPO_ROOT / pyproject_path)

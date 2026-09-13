@@ -177,7 +177,7 @@
           "report": "target/verification/areas/python_interop/callback-examples.latest.json",
           "case": "kafka-foreign",
           "sifr_source": "kafka/declaration_callback.sifr",
-          "stdout_marker": "sifr-python-interop:callback:kafka=42",
+          "stdout_marker": "sifr-python-interop:callback:kafka=version=3.0.11:schema=DescribeClusterRequest-v2:fields=3:ack=42",
           "requires_resource_zero": false,
           "minimum_certification_commands": 0
         }
