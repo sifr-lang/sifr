@@ -4715,3 +4715,24 @@ Item33/73 initial reviews remain unused. No new PR/merge gate or Opus review
 was run here. These are integrated and validated checkpoints, not merged items.
 Continue the remaining integration and final qualification under the approved
 policy; do not reinstate the superseded second-person requirement.
+
+## Candidate Cargo configuration identity — 2026-09-13
+
+The pre-measurement warmup at acdb309728b8fab668d6af3864e63c47e6bb204e
+rejected the approved SQLite grammar change (3053002 to 3053004) because
+tracked project Cargo configuration was incorrectly classified as host
+identity. No samples were taken. The rejected log is retained under
+20260913-final-integration/remaining-performance-config-rejected.log.
+
+Tracked Cargo manifest and project configuration are candidate inputs;
+user Cargo configuration, host, toolchain, workload and external build
+settings remain strict cross-candidate identities. Both tracked hashes must
+remain fixed within a measurement, and the result checker rejects missing
+or changed end identities. Named measurements also require a clean tree at
+completion. The existing reference and all limits remain unchanged; reference
+SHA256 is f6c5b4421ab7ce520a504316a4162d1fb9458f8ced2e45a3577cd9d76cda80eb.
+
+All 28 reference-profile tests, benchmark-runner self-tests and file-size
+guard pass. Evidence is retained in reference-config-policy-tests.log and
+reference-config-runner-selftest.log. This is a validation-policy correction,
+not a performance qualification or merge.

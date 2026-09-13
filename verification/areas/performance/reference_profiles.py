@@ -58,11 +58,30 @@ def assert_comparable(profile: dict[str, Any], identity: dict[str, Any]) -> None
         )
 
 
+def assert_producer_unchanged(before: dict[str, Any], after: dict[str, Any]) -> None:
+    """Hold host settings and candidate-owned build inputs fixed within a run."""
+    assert_comparable({"name": "run-start", "identity": before}, after)
+    try:
+        changed = [
+            key for key in ("cargo_manifest_sha256", "cargo_config_sha256")
+            if before["execution"][key] != after["execution"][key]
+        ]
+    except (KeyError, TypeError) as error:
+        raise ReferenceProfileError("producer build identity is incomplete") from error
+    if changed:
+        raise ReferenceProfileError(
+            "candidate build inputs changed during measurement: " + ", ".join(changed)
+        )
+
+
 def validate_result_profile(profile: dict[str, Any], report: dict[str, Any]) -> None:
     metadata = report.get("metadata", {})
     if metadata.get("reference_profile") != profile["name"]:
         raise ReferenceProfileError("result reference profile does not match selected profile")
     assert_comparable(profile, metadata.get("reference_identity", {}))
+    assert_producer_unchanged(
+        metadata.get("reference_identity", {}), metadata.get("reference_identity_after", {})
+    )
     source = metadata.get("source_commit_at_start", "")
     if not re.fullmatch(r"[0-9a-f]{40}", source) or source != metadata.get("compiler_fingerprint"):
         raise ReferenceProfileError("compiler source identity changed or is missing")

@@ -278,7 +278,11 @@ Qualification rejects an unknown profile, changed machine or execution
 configuration, changed benchmark inputs, uncontrolled evidence, dirty producer,
 or a reference artifact changed between production and checking. Compiler
 source and dependency/optimization changes remain recorded candidate changes;
-they do not automatically create a new baseline. Historical Mac files remain
+they do not automatically create a new baseline. Tracked project Cargo configuration
+(such as the bundled SQLite grammar version) is also a recorded candidate input,
+while user Cargo configuration and external build flags must match the reference.
+The producer and result checker require both the project manifest and Cargo
+configuration hashes to remain fixed between the beginning and end of a run. Historical Mac files remain
 unchanged and cannot supply missing CPU/RAM details for a new named capture.
 Existing unnamed historical-policy commands remain available; they do not
 provide the new full host-identity qualification. Selecting an unknown or

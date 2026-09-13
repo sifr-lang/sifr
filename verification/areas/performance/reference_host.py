@@ -189,11 +189,13 @@ def comparison_mismatches(expected: dict[str, Any], actual: dict[str, Any]) -> l
     for key in (
         "rustc", "cargo", "python", "build_profile", "control_mode", "cargo_jobs",
         "rust_test_threads", "build_environment", "benchmark_inputs_sha256", "cache_policy",
-        "target_storage", "temporary_storage", "cargo_config_sha256",
+        "target_storage", "temporary_storage",
         "user_cargo_config_sha256",
     ):
         if expected["execution"][key] != actual["execution"][key]:
             mismatches.append(f"execution.{key}")
-    # Compiler source, Cargo.lock and per-package optimization are candidate
-    # changes to measure, not reasons to silently create a new reference.
+    # Tracked compiler inputs, including project Cargo config (for example a
+    # native grammar version), are candidate changes to measure. User Cargo
+    # config and external build flags remain host configuration. Both project
+    # hashes must still stay fixed within one producer invocation.
     return mismatches

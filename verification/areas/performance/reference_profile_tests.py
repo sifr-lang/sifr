@@ -15,6 +15,7 @@ from trend_reports import build_trend_report
 from reference_profiles import (
     ReferenceProfileError,
     assert_comparable,
+    assert_producer_unchanged,
     capture_profile,
     derive_budgets,
     load_profile,
@@ -135,7 +136,7 @@ class NamedReferenceTests(unittest.TestCase):
 
     def test_rejects_each_execution_mismatch(self):
         for key in identity()["execution"]:
-            if key == "cargo_manifest_sha256":
+            if key in {"cargo_manifest_sha256", "cargo_config_sha256"}:
                 continue
             with self.subTest(key=key):
                 observed = identity()
@@ -145,8 +146,42 @@ class NamedReferenceTests(unittest.TestCase):
 
     def test_candidate_source_change_is_recorded_not_rebaselined(self):
         observed = identity()
-        observed["execution"]["cargo_manifest_sha256"] = "c" * 64
-        assert_comparable(self.profile(), observed)
+        profile = self.profile()
+        original = copy.deepcopy(profile)
+        for key in ("cargo_manifest_sha256", "cargo_config_sha256"):
+            observed["execution"][key] = "c" * 64
+        assert_comparable(profile, observed)
+        self.assertEqual(profile, original)
+
+    def test_candidate_build_inputs_must_remain_fixed_within_producer(self):
+        assert_producer_unchanged(identity(), identity())
+        for key in ("cargo_manifest_sha256", "cargo_config_sha256"):
+            after = identity()
+            after["execution"][key] = "c" * 64
+            with self.subTest(key=key), self.assertRaisesRegex(
+                    ReferenceProfileError, "candidate build inputs changed"):
+                assert_producer_unchanged(identity(), after)
+            before = identity()
+            before["execution"].pop(key)
+            with self.assertRaisesRegex(ReferenceProfileError, "incomplete"):
+                assert_producer_unchanged(before, before)
+
+    def test_result_checker_rejects_missing_or_changed_end_identity(self):
+        profile = self.profile()
+        for replacement in ({}, None):
+            report = self.report(profile)
+            report["metadata"]["reference_identity_after"] = replacement
+            with self.assertRaises(ReferenceProfileError):
+                validate_result_profile(profile, report)
+        for key in ("cargo_manifest_sha256", "cargo_config_sha256", "user_cargo_config_sha256"):
+            report = self.report(profile)
+            report["metadata"]["reference_identity_after"]["execution"][key] = "c" * 64
+            with self.subTest(key=key), self.assertRaises(ReferenceProfileError):
+                validate_result_profile(profile, report)
+        report = self.report(profile)
+        for field in ("reference_identity", "reference_identity_after"):
+            report["metadata"][field]["execution"]["cargo_config_sha256"] = "c" * 64
+        validate_result_profile(profile, report)
 
     def test_available_memory_is_telemetry_not_a_different_machine(self):
         observed = identity()
@@ -234,6 +269,7 @@ class NamedReferenceTests(unittest.TestCase):
     def report(self, profile):
         return {"runner_version": 1, "metadata": {
             "reference_profile": profile["name"], "reference_identity": identity(),
+            "reference_identity_after": identity(),
             "source_dirty": False, "sample_scale": "manifest",
             "source_commit_at_start": "a" * 40, "compiler_fingerprint": "a" * 40,
             "reference_profile_sha256": profile_digest(profile),

@@ -18,7 +18,7 @@ from typing import Any
 from benchmark_cli import parse_args
 from reference_host import reference_identity
 from reference_profiles import (
-    ReferenceProfileError, assert_comparable, capture_profile, load_profile, profile_digest,
+    ReferenceProfileError, assert_comparable, assert_producer_unchanged, capture_profile, load_profile, profile_digest,
     validate_compiler_reference, profile_path,
 )
 
@@ -231,11 +231,13 @@ def main() -> int:
         )
         if reference is not None and source_at_start != command_output(["git", "rev-parse", "HEAD"]):
             raise ReferenceProfileError("compiler source changed during named measurement")
+        if reference is not None and command_output(["git", "status", "--porcelain"]):
+            raise ReferenceProfileError("compiler source became dirty during named measurement")
         run_report["metadata"]["source_commit_at_start"] = source_at_start
         identity_after = None
         if identity is not None:
             identity_after = reference_identity(REPO_ROOT, Path(args.manifest), args.controlled_host_mode)
-            assert_comparable({"name": "run-start", "identity": identity}, identity_after)
+            assert_producer_unchanged(identity, identity_after)
         run_report["metadata"]["sample_scale"] = args.sample_scale
         run_report["metadata"]["reference_compiler_commit"] = compiler_reference
         if identity is not None:
