@@ -172,7 +172,7 @@ def run_self_test() -> None:
     package_json = {
         "name": "sifr-vscode",
         "publisher": "sifr",
-        "engines": {"vscode": "^1.91.0"},
+        "engines": {"vscode": rules["extension"]["minimum_vscode_engine"]},
         "sifrCompilerCompatibility": ">=0.1.0,<0.2.0",
         "contributes": {
             "languages": [{"id": "sifr", "extensions": [".sifr"]}],
@@ -187,6 +187,9 @@ def run_self_test() -> None:
         failures = validate_package_json(rules, read_json(path))
     if not any("sifr.runCheck" in failure for failure in failures):
         raise SystemExit("VS Code rules self-test failed: missing command passed")
+    engine_drift = {**package_json, "engines": {"vscode": "^1.0.0"}}
+    if not any("VS Code engine" in failure for failure in validate_package_json(rules, engine_drift)):
+        raise SystemExit("VS Code rules self-test failed: engine drift passed")
     drifted = {**package_json, "sifrCompilerCompatibility": ">=0.1.1,<0.2.0"}
     if not any(
         "compiler compatibility" in failure

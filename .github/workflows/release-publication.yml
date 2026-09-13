@@ -197,7 +197,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ""
-        run: npm ci --ignore-scripts --include=dev --prefix stable-source/editor_integrations/vscode
+        run: bash stable-source/scripts/distribution/provision_marketplace_toolchain.sh
       - name: Revalidate prepare summary and protected approver
         if: env.STABLE_MUTATION_OPERATION != 'true'
         id: approval

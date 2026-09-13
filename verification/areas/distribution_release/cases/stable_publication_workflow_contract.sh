@@ -46,7 +46,7 @@ for fragment in (
     "submodules: recursive",
     "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
     "node-version-file: stable-source/editor_integrations/vscode/.node-version",
-    "npm ci --ignore-scripts --include=dev --prefix stable-source/editor_integrations/vscode",
+    "bash stable-source/scripts/distribution/provision_marketplace_toolchain.sh",
     "node_modules/.bin/vsce",
     "Run exact protected stable publication",
     "scripts/distribution/run_stable_publication.sh",

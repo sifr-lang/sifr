@@ -16,6 +16,8 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RULES_PATH = REPO_ROOT / "verification" / "areas" / "developer_tooling" / "vscode_extension_rules.json"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from check_node_toolchain import ToolchainError, validate as validate_node_toolchain
 
 REQUIRED_SCRIPTS = ["lint", "typecheck", "test", "test:extension", "package"]
 REQUIRED_COMMANDS = {
@@ -142,6 +144,11 @@ def validate(require_commands: bool = True) -> list[str]:
     failures = validate_package_json(repo_path, package_json)
     if failures or not require_commands:
         return failures
+
+    try:
+        validate_node_toolchain(repo_path)
+    except ToolchainError as error:
+        return [str(error)]
 
     if not (repo_path / "node_modules").exists():
         failure = run_command(
