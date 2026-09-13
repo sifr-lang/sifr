@@ -686,6 +686,12 @@ def broken() -> int:
     )
     .expect_err("build_project should fail with same frontend error");
 
+    assert!(
+        check_errors
+            .iter()
+            .any(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code()),
+        "parity must compare the intended return type error: {check_errors:?}"
+    );
     let check_messages = render_compact_diagnostics(&check_errors);
     let build_messages = render_compact_diagnostics(&build_errors);
     assert_eq!(check_messages, build_messages);

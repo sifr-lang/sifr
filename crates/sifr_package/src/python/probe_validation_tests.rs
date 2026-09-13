@@ -7,11 +7,24 @@ use std::path::PathBuf;
 
 #[test]
 fn probe_rejects_missing_interpreter_with_pyenv_0004() {
-    let request = request();
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .test_unwrap("test clock")
+        .as_nanos();
+    let temporary = std::env::temp_dir().join(format!(
+        "sifr-missing-python-{}-{nonce}",
+        std::process::id()
+    ));
+    std::fs::create_dir(&temporary).test_unwrap("isolated missing interpreter fixture");
+    let mut request = request();
+    request.venv_root = temporary.join("missing-venv");
+    request.interpreter = request.venv_root.join("bin/python");
+    assert!(!request.interpreter.exists());
     let diagnostic =
         probe_python_environment(&request).test_expect_err("missing interpreter must fail");
 
     assert_eq!(diagnostic.code, DiagnosticCode::PYENV_PROBE_FAILED);
+    std::fs::remove_dir(temporary).test_unwrap("remove empty interpreter fixture");
 }
 
 #[test]
