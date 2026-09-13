@@ -4266,3 +4266,43 @@ Continue approved preparation, integration, review and applicable gates without
 requesting another policy approval or second human. Preserve historical
 review/gate consumption and actual per-publication protected-run approval.
 This correction does not claim a merge or publication.
+
+## Remote editor and Node continuation — 2026-09-13
+
+Continued under the already-approved permanent solo-maintainer policy.
+The stale second-person blocker was corrected in 2e02bf86d. Item65's
+live implementation was already integrated; fresh actual-environment and
+historical/live approval checks pass. No duplicate implementation, renewed
+policy approval, invitation, waiver extension or publication occurred.
+
+Integrated the prepared Item40 → Item33 → Item73 source sequence in root
+0a0b953d0df1a621f08921a22a6869019c81fffe. Exact unchanged prepared extension source
+cfcfe0de403002a109542624f69973f50e8c04be and intermediate source
+2eff47f9a464699360a608b12779d351e77fa459 are retained on owned remote
+continuation branches. The root patch applies only the 14 scoped prepared
+files plus its actual editor gitlink, preserving the current solo policy,
+Python locks and compiler work.
+
+Remote Linux qualification:
+- Private official-checksum-verified Node26.8.2 and independently provisioned
+  npm12.0.2; selectors and actual runtime match.
+- Extension npm ci, lint, compiled unit tests, extension smoke tests, package
+  and audit pass. Audit reports zero vulnerabilities. npm's default blocked
+  optional install scripts were not overridden.
+- Node contract and all five invariant self-tests pass.
+- Canonical editor-release passes all six variants.
+- Canonical distribution qualification passes its nine fixture tests
+  (one adapter variant); publication workflow contract passes.
+- File-size guard passes 3,870 files; exact source hashes and clean nested
+  worktrees verified. No lock refresh or unrelated source correction needed.
+- Existing actual VS Code1.137.0 application activation evidence on Darwin
+  is retained for the exact unchanged extension source. No new Linux GUI
+  activation run or full native/release qualification is claimed.
+
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-editor-node/.
+The source tuple, input hashes, logs and results are retained there.
+Item40 initial1/remediation1 and its prior histories remain consumed;
+Item33/73 initial reviews remain unused. No new PR/merge gate or Opus review
+was run here. These are integrated and validated checkpoints, not merged items.
+Continue the remaining integration and final qualification under the approved
+policy; do not reinstate the superseded second-person requirement.
