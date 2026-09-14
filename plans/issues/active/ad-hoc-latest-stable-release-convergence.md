@@ -5155,3 +5155,46 @@ Rust-probe failure test is unchanged and passes. The initial formatting check
 reported one multiline assertion layout; it was formatted, and cargo fmt check,
 file-size3880, lowering-maintainability and diff guards then passed.
 Remaining full crate/E2E validation and the scoped review are pending.
+
+
+## Combined known-failure repair, Items 80–84 — 2026-09-14
+
+The user explicitly requested fixing all known failures together, running their
+focused tests as one batch, then running the full suite. This instruction supersedes
+the one-item-at-a-time sequencing for this bounded repair. No prior review or gate
+counter is reset, and no new dependency-version wave is opened.
+
+Base: `4d296990011dbdb9ccc970ac73b964eca0741fbe`. Item 79 initial review passed
+with no blockers; response SHA256
+`e63ccc12668dfbccd31dff65cf263058d1dbb4936715c463dc1d53e9fd5cb50e`.
+The selected toolchain explicitly includes rustfmt.
+
+The targeted previously unreached checks recorded 72 passing and five failing
+driver generated-build tests (3805.13 s), 1517 passing codegen tests, and passing
+ordinary driver/CLI generated-build selections. The separate CLI portability
+failure was caused by the external targeted invocation omitting the exact new Git
+graph fetch before offline execution; this prerequisite will be prepared normally.
+Full E2E was intentionally interrupted at the user's request to repair first. Its
+SIGTERM and interruption receipt remain retained; it is neither a completed
+product failure nor a pass. Evidence: `20260914-cli-failure-stage/`.
+
+- Item 80: give the archived-bridge test's Cargo packaging command its explicit
+  fixture-owned target directory. Preserve checkout removal, archive execution,
+  read-only runtime directory and no-extraction assertions.
+- Item 81: update the backend test's two strict tower-http expectations to the
+  already-selected 0.7.1 fixture and lock graph. No dependency changes.
+- Item 82: inspect the final generated static-program identifier and compare all
+  32 identity bytes, preserving cache identity, output stability and real execution.
+- Item 83: constrain callback String transport when adapting to the handler's
+  shared string borrow, preventing Rust from inferring an unsized str argument.
+  No ABI, callback policy, ownership or lifecycle changes.
+- Item 84: report direct mutated captures from the actual capture set; retain
+  qualified transitive-helper checks without duplicate Unknown reports. Handle the
+  negative fixture's unrelated IndexError through its declared SubscriptionError.
+  Preserve the 17 expected ownership/callback diagnostics and their assertions.
+
+Acceptance: all five previously failing driver tests, the CLI portability test
+and affected callback unit/lowering tests pass on the combined candidate; run
+formatting, diff and file-size/maintainability checks, one scoped review of this
+combined repair, then full merge gate 3. Final release and native qualification
+remain pending. No merge or publication is claimed here.
