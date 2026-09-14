@@ -4948,3 +4948,76 @@ seeded failure is retained as mutation evidence, not a product test failure.
 File-size guardrails pass for all 3,878 files, and diff whitespace checks pass.
 Evidence: crate-policy-wiring.log and crate-policy-wiring-mutation.log in
 the external integration evidence directory. No compiler or runtime input changed.
+
+## Item 76: verification preparation and release-log isolation — 2026-09-14
+
+This bounded verification-runner follow-up is registered from the first actual
+integration merge gate. It blocks final qualification and Items 62/35. It does
+not reopen the frozen dependency/version selections or reset earlier review
+and gate counters.
+
+The initial integration review and its one remediation review are complete.
+The remediation at a6b18685e73ea1706bb1c48b8471e79ae4c4cac5 was SATISFIED;
+its external review SHA-256 is
+5aa185b2bab7f58f558fecdeaf864aa01573fcb1ee1af36b345327b790929012.
+The first merge gate at that clean source failed in sysroot boundary
+certification, after 10,272.64 seconds. All earlier areas passed, including
+Python interop (700.965 seconds), developer tooling (47.480 seconds),
+performance (131.386 seconds), and distribution release (1,052.208 seconds).
+Its cold setup passed in 5,609.495 seconds, exceeding the unchanged advisory.
+The gate stopped before subsequent areas and the crate/E2E execution steps.
+This remains a failed merge gate, not a full pass.
+
+Owned findings and correction scope:
+
+- A simulated setup-failure test printed a failed cargo_cache_setup lane marker
+  into the outer successful test log. The strict release step parser rejects
+  that duplicate/failed record. Capture the simulated runner's output at the
+  test boundary; retain all original failure-propagation assertions and the
+  parser's rejection rules. A standalone regression also exposed test-order
+  dependence on profile metadata caching under a cleared environment; validate
+  the profile before isolating the mocked runner environment.
+- Sysroot boundary certification cold-built its separate source compiler
+  inside an unchanged 900-second execution limit. The build timed out.
+  Prepare that same private, locked/offline source graph in the canonical
+  setup stage, selected only for boundary-equivalence. Share the command,
+  environment and binary-path definition with actual execution.
+- TimeoutExpired returns captured byte streams despite text=True. The runner
+  attempted to join/write them as strings and hid the timeout with TypeError.
+  Decode partial streams for diagnostic use and always include the timeout
+  reason. Do not increase time limits or weaken certification assertions.
+
+The log regression first failed in the real release parser, then passed after
+output isolation. All 36 policy tests and the complete runner foundation
+self-tests pass. The complete foundation output also passes the strict release
+step parser when enclosed by a real successful step. An actual subprocess
+timeout preserves both output streams and the explicit timeout reason.
+File-size guardrails pass for 3,880 files; diff whitespace checks pass.
+The first standalone log regression's environment-order failure and all red
+test results remain retained.
+
+Evidence lives in the external 20260913-final-integration directory:
+merge1.log/json/exit/source/source-status.log, release-step-log-isolation-repro.json,
+log-isolation-red.log, log-isolation-red-parser.log, log-isolation-green.log,
+sysroot-timeout-red.log, sysroot-setup-policy-green.log,
+runner-isolation-foundation.log and runner-isolation-production-parser.log.
+The actual source-compiler preparation and remaining targeted validation,
+bounded follow-up review, final candidate gate and fresh qualification are
+still pending. No Item 76 review or final revised-candidate gate has run.
+
+Targeted execution completed with the six recorded Item 76 input hashes
+unchanged. Source preparation passed in 29.36 seconds and the unchanged
+900-second execution build then passed in 0.427 seconds. Installed standard
+library boundary execution passed; host-installed-smoke passed in 21.549 seconds,
+including negative missing-asset diagnostics and path-leakage checks.
+
+The two-suite invocation nevertheless FAILED: the installed attached API fixture
+produced 27 Rust errors (E0425/E0277), including missing relocated meta nominal
+bindings, structural construction/projection implementations, and a shorthand
+field value named descriptions after local renaming. Its boundary case took
+148.394 seconds. This compiler finding is separate from Item 76 setup/reporting;
+neither this targeted run nor merge1 is a pass. Retained evidence:
+sysroot-item76-targeted.log, sysroot-item76-targeted-results.json,
+item76-source-inputs.json, sysroot-source-preparation.log, and
+sysroot-source-prepared-execution.json. Compiler ownership and regression scope
+must be resolved before the revised final integration gate and qualification.

@@ -63,7 +63,17 @@ def prepare_cargo_cache(
     prepare_authoring_test_binaries(profile, setup_env, command_runner)
     prepare_tooling_test_binaries(profile, setup_env, command_runner)
     prepare_performance_binaries(profile, setup_env, command_runner)
+    prepare_sysroot_source_binary(profile, setup_env, command_runner)
     prepare_maintained_demo_cache(profile, setup_env, command_runner)
+
+
+def prepare_sysroot_source_binary(profile, env, command_runner) -> None:
+    """Prepare the boundary check's private source graph before timed execution."""
+    if not any(area["area"] == "sysroot_release" and "boundary-equivalence" in area["suites"]
+               for area in profile.get("selected_areas", [])):
+        return
+    command_runner([sys.executable, str(REPO_ROOT /
+        "verification/areas/sysroot_release/source_build.py")], env=env)
 
 
 def prepare_authoring_test_binaries(profile, env, command_runner) -> None:

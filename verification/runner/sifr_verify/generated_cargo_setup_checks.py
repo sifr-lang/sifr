@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import os
 import shutil
@@ -11,6 +12,7 @@ import subprocess
 import tempfile
 import tomllib
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
@@ -18,6 +20,7 @@ from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_auth
 from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
 from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
 from .cargo_crate_setup_checks import CrateSetupPolicyTests
+from .cargo_sysroot_setup_checks import SysrootSetupPolicyTests
 from .generated_cargo_setup import (
     GIT_SOURCE, fetch_generated_graph, portable_graph, preparation_entries, quality_module,
 )
@@ -83,15 +86,38 @@ class SetupPolicyTests(unittest.TestCase):
         self.assertNotIn("sifr_verify.generated_cargo_setup", calls[-1])
 
     def test_setup_failure_prevents_offline_switch_and_execution(self):
-        with patch.dict(os.environ, {}, clear=True):
+        profile = load_profile("merge")
+        with patch.dict(os.environ, {}, clear=True), \
+             patch("sifr_verify.profile_runner.load_profile", return_value=profile):
             runner = ProfileRunner("merge", [])
             with patch.object(runner, "prepare_step_budget", return_value=None), \
                  patch.object(runner, "prepare_cargo_cache", side_effect=CommandFailed(101)), \
                  patch.object(runner, "run_guardrail") as guard, \
                  patch("sifr_verify.profile_runner.enable_profile_offline_cargo") as offline:
-                self.assertEqual(runner.run(), 101)
+                with redirect_stdout(io.StringIO()):
+                    self.assertEqual(runner.run(), 101)
                 offline.assert_not_called()
                 guard.assert_not_called()
+
+    def test_simulated_runner_output_preserves_release_step_evidence(self):
+        from .release_evidence import build_steps
+
+        output = io.StringIO()
+        case = SetupPolicyTests("test_setup_failure_prevents_offline_switch_and_execution")
+        with redirect_stdout(output):
+            result = case.run(unittest.TestResult())
+        self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
+        with tempfile.TemporaryDirectory() as directory:
+            log = Path(directory) / "profile.log"
+            log.write_text(
+                "[sifr-lane-step] name=cargo_cache_setup elapsed_ms=1 status=pass\n"
+                + output.getvalue(),
+                encoding="utf-8",
+            )
+            self.assertEqual(build_steps(log), [{
+                "name": "cargo_cache_setup", "status": "pass",
+                "elapsed_ms": 1, "suite_results": [],
+            }])
 
     def test_constructor_does_not_build_before_preparation(self):
         with patch("sifr_verify.profile_runner.resolve_sifr_binary") as resolve:
@@ -274,7 +300,7 @@ class SetupPolicyTests(unittest.TestCase):
 
 def policy_checks() -> None:
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
-                               for case in (SetupPolicyTests, FixtureSetupPolicyTests, CrateSetupPolicyTests))
+                               for case in (SetupPolicyTests, FixtureSetupPolicyTests, CrateSetupPolicyTests, SysrootSetupPolicyTests))
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     if not result.wasSuccessful():
         raise AssertionError("generated Cargo setup policy checks failed")

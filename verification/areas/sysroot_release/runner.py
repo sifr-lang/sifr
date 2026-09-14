@@ -26,6 +26,7 @@ from self_update_certification import (  # noqa: E402
     write_self_update_metadata_fixture,
 )
 from attached_api_certification import run_attached_api_certification  # noqa: E402
+from source_build import source_build_configuration  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
@@ -271,17 +272,14 @@ def run_boundary_equivalence() -> tuple[int, list[str]]:
 
 
 def build_source_sifr() -> Path:
-    target = REPO_ROOT / "target" / "sysroot_release" / "source-cargo-target"
-    env = base_env()
-    env["CARGO_TARGET_DIR"] = str(target)
+    command, env, binary = source_build_configuration(REPO_ROOT, base_env())
     run_checked(
-        ["cargo", "build", "-p", "sifr"],
+        command,
         cwd=REPO_ROOT,
         env=env,
         label="build source-tree compiler",
         timeout=900,
     )
-    binary = target / "debug" / "sifr"
     if not binary.is_file():
         raise CertificationError(f"source-tree compiler was not produced: {binary}")
     return binary
@@ -826,7 +824,11 @@ def run_command(
             check=False,
         )
     except subprocess.TimeoutExpired as error:
-        return CommandResult(command, 124, error.stdout or "", error.stderr or f"timeout after {timeout}s")
+        # TimeoutExpired keeps captured streams as bytes even with text=True.
+        stdout = (error.stdout or b"").decode("utf-8", errors="replace")
+        stderr = (error.stderr or b"").decode("utf-8", errors="replace")
+        diagnostic = f"timeout after {timeout}s"
+        return CommandResult(command, 124, stdout, f"{stderr}\n{diagnostic}".strip())
     if echo_output and completed.stdout:
         sys.stdout.write(completed.stdout)
     if echo_output and completed.stderr:
