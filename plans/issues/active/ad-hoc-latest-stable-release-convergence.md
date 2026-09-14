@@ -4910,3 +4910,41 @@ create-pr8.json/log, post-pr8-*-fingerprint.log,
 pr8-invalidation-single-probe.log,
 post-single-probe-harness-fingerprint.log,
 probe-storage-targeted.log and probe-storage-targeted-corrected.log.
+
+
+## Initial integration review and policy-test registration — 2026-09-14
+
+The canonical create-PR gate passes at
+`7d3c4198585352504a2d0c82267d6a0824df50cf` with exit zero and clean source.
+All blocking step budgets pass, including 66 SQL variants, 623 driver tests
+(77 intentional ignores), and 143 E2E fixtures. Total duration 1,884.56 seconds
+exceeds the unchanged overall warm wall-time advisory. The report SHA-256 is
+`d30bc299b05a149d67a2bc7325853149cb19fe76377b043206dc129df8693769`;
+the log SHA-256 is
+`e043bb7eaee8d3a5c3d95c56fccddd46e93a221ba8e02f602709d78e4159d988`.
+Earlier failures remain failures: create-PR9 passed all functional checks but
+exceeded the E2E step budget after rebuilding all 46 native groups. The
+unchanged-source warm check passed all 143 fixtures with 46 cache hits in
+11.575 seconds; the final full gate passed E2E in 27.170 seconds.
+
+Root draft PR: https://github.com/sifr-lang/sifr/pull/3827.
+The initial exact-source Opus integration review returned NOT SATISFIED for
+one in-scope omission: `CrateSetupPolicyTests` was imported but absent from
+the tuple assembled by `policy_checks()`. Its four tests had passed directly
+but were not executed through the canonical policy entry point. The correction
+registers that existing class alongside the existing two policy test classes.
+
+The four non-blocking observations are assigned in the separate
+[review follow-up issue](ad-hoc-latest-stable-review-followups.md).
+Review artifacts remain outside the reviewed Git tree, keyed by the original
+candidate. Integration counters: initial review completed once; one remediation
+review remains available; the final merge gate has not been run.
+The affected policy checks and remediation review must pass before that gate.
+
+Remediation validation: the canonical policy entry point now runs all 28 tests,
+including the four crate-preparation tests, successfully. A temporary in-memory
+failure injected into one crate test makes the canonical entry point fail; the
+seeded failure is retained as mutation evidence, not a product test failure.
+File-size guardrails pass for all 3,878 files, and diff whitespace checks pass.
+Evidence: crate-policy-wiring.log and crate-policy-wiring-mutation.log in
+the external integration evidence directory. No compiler or runtime input changed.

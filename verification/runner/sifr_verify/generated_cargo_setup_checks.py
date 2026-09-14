@@ -274,7 +274,7 @@ class SetupPolicyTests(unittest.TestCase):
 
 def policy_checks() -> None:
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
-                               for case in (SetupPolicyTests, FixtureSetupPolicyTests))
+                               for case in (SetupPolicyTests, FixtureSetupPolicyTests, CrateSetupPolicyTests))
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     if not result.wasSuccessful():
         raise AssertionError("generated Cargo setup policy checks failed")
