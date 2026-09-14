@@ -5081,3 +5081,39 @@ for 3,880 files, maintainability checks pass, and diff whitespace checks pass.
 The compiler implementation is ready for a frozen-commit boundary check and
 scoped review. The separate dependency snapshot follow-up still blocks the
 complete boundary area and final integration gate.
+
+Item 77 scoped review at b9a23066373762e0ea2a91913e326e94f64ee186 is
+SATISFIED with no blocking findings. External response SHA-256:
+86485e48f9a66083dbee2b12a5e4a0f369b71702004660d487e0a767e59dced5.
+At that exact clean commit, both installed and source-tree compilers passed
+the byte-boundary program, attached-API program, and API-edit/cache rebuild.
+The boundary area still failed only at its final stale-snapshot comparison
+(679.740 seconds). Production codegen Clippy passed with -D warnings in
+18.93 seconds. An additional all-targets Clippy check found nine existing
+test-only style warnings in four files unchanged by Item 77; those and the
+review's optional observations are assigned to the separate follow-up issue.
+This is compiler-item approval, not a full integration gate or merge claim.
+
+## Item 78: byte boundary dependency snapshot recertification — 2026-09-14
+
+Owner: final integration verification dependency baselines.
+
+The built-in byte migration in 3d34ad6289096f7588a75dda8689eb19b4f1ad62
+removed the fixture's sifr.bytes helper import and the snapshot's bytes feature,
+but left an empty sifr_stdlib dependency entry. Both actual compiler modes now
+agree on a runtime-only generated application. Correct this single expected
+dependency map to match the maintained fixture and current dependency planner.
+The fixture, strict source/installed equality check, strict snapshot comparison,
+compiler behavior, frozen versions and performance reference remain unchanged.
+
+Acceptance: run the canonical boundary-equivalence and host-installed-smoke
+suites against the frozen candidate; both must pass. Review the small snapshot
+delta with the historical migration and exact-source runtime evidence. Carry
+the already approved Item 77 compiler implementation unchanged. Then run the
+final revised integration merge gate once on that final candidate, preserving
+merge1 as FAILED and all prior review/gate counters. Merges, fresh release/native
+qualification, final dependency audit and Item 35 closure remain pending.
+
+External Item 78 evidence: 20260914-boundary-snapshot/source-migration.patch,
+previous-snapshot.json and snapshot-change.json. The strict validation and
+scoped review are pending; no Item 78 pass or new full gate is claimed.

@@ -65,3 +65,29 @@ These are nonblocking suggestions outside the qualified POSIX runner repair.
 - Owner: verification setup logging. Consider whether the source preparation
   marker should be printed by the parent, matching sibling preparers; the
   child currently emits the equivalent marker.
+
+## Item 77 compiler maintenance observations
+
+Source: scoped SATISFIED review of b9a23066373762e0ea2a91913e326e94f64ee186,
+external response SHA-256
+86485e48f9a66083dbee2b12a5e4a0f369b71702004660d487e0a767e59dced5.
+These are nonblocking follow-ups; the stale byte dependency snapshot is owned
+separately by Item 78 in the convergence phase.
+
+- Owner: codegen test lint maintenance. The optional all-targets Clippy check
+  reports eight items-after-statements warnings and one needless generic
+  argument borrow in four files unchanged by Item 77:
+  generated_rust_canonicalizer/member_demand/record_variant_tests.rs,
+  generated_rust_canonicalizer/syntax_cleanup/mutability_cleanup_tests.rs,
+  generated_rust_canonicalizer_capture_tests.rs, and
+  lib_codegen_tests/corpus_repair_codegen_tests.rs. All are under
+  crates/sifr_codegen/src. Production codegen Clippy passes.
+- Owner: stdlib metadata invariants. Document that the imported structural
+  closure requires canonical identities. Production stdlib templates always
+  have them; any future non-stdlib caller must uphold that contract.
+- Owner: shared structural ownership. Consider narrowing import-only shared
+  registration to declarations with emitted contracts. Current non-opaque
+  registration is correct for the reviewed fixture and existing source model.
+- Owner: compiler invariant diagnostics. If per-consumer structural rendering
+  ever stops being module-independent, replace the existing conflicting-body
+  assertion with a diagnostic. No divergence is present in current rendering.
