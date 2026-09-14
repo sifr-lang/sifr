@@ -5117,3 +5117,41 @@ qualification, final dependency audit and Item 35 closure remain pending.
 External Item 78 evidence: 20260914-boundary-snapshot/source-migration.patch,
 previous-snapshot.json and snapshot-change.json. The strict validation and
 scoped review are pending; no Item 78 pass or new full gate is claimed.
+
+## Item 79: CLI Cargo-failure test stage isolation — 2026-09-14
+
+Merge2 at exact clean 6c3685a47e5ec3f2f9674b3c413a1f473593a4bb FAILED
+(exit101,11566.46s). All selected validation areas passed, including SQL66/0,
+distribution and sysroot certification. Full crate execution stopped in
+failed_cargo_invocation_does_not_print_success_footer: clearing PATH also hid
+the required rustfmt executable, so materialization failed before Cargo launch.
+The expected Cargo-failure assertion was never reached. E2E was not reached.
+Merge1 and merge2 retain their original failed outcomes and counters.
+
+Item79 owns only that CLI test's dependency isolation and its delivery records.
+Resolve the selected toolchain's real formatter before clearing the child PATH,
+then pass it through the existing RUSTFMT contract. Preserve the missing-Cargo
+failure, diagnostic code/message, empty stdout and absent success-footer checks.
+Do not change compiler behavior, toolchain/version selections, budgets, reference
+data or the separate earlier Rust-probe-failure test.
+
+Acceptance: the isolated formatter remains executable, Cargo launch fails at
+the intended stage, and all existing output assertions pass. Run the complete
+build-output test module and remaining canonical crate/E2E selection before the
+next final gate so late checks are not left undiscovered. A new full merge run
+will retain its actual counter; neither prior failure is reset or relabeled.
+Fresh native qualification34864517647 remains a successful record for6c3685a47e,
+with20 locally/remotely verified indexed files; it is not rebound to a new SHA.
+The local release profile and final phase closure are still pending.
+
+Evidence:20260913-final-integration/merge2.log,json,exit,source and source-status
+(clean), plus20260914-cli-failure-stage for the scoped correction and validation.
+
+Item79 targeted result: all13 build_output_behavior tests pass in14.71s,
+including the exact Cargo-launch diagnostic and both failure-footer assertions.
+The formatter is resolved from rustc --print sysroot before the child PATH is
+cleared, using the existing RUSTFMT environment contract. The separate earlier
+Rust-probe failure test is unchanged and passes. The initial formatting check
+reported one multiline assertion layout; it was formatted, and cargo fmt check,
+file-size3880, lowering-maintainability and diff guards then passed.
+Remaining full crate/E2E validation and the scoped review are pending.

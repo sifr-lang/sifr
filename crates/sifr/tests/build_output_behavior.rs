@@ -332,10 +332,27 @@ fn failed_cargo_invocation_does_not_print_success_footer() {
     let output_dir_arg = output_dir.to_string_lossy().to_string();
     let main_arg = project.main.to_string_lossy().to_string();
 
+    // Formatting precedes Cargo launch. Keep the selected real formatter
+    // available while making Cargo unavailable to this child process.
+    let sysroot = Command::new("rustc")
+        .args(["--print", "sysroot"])
+        .output()
+        .expect("selected rustc should report its sysroot");
+    assert!(sysroot.status.success(), "rustc sysroot lookup failed");
+    let sysroot = String::from_utf8(sysroot.stdout).expect("sysroot path should be UTF-8");
+    let rustfmt = Path::new(sysroot.trim())
+        .join("bin")
+        .join(format!("rustfmt{}", std::env::consts::EXE_SUFFIX));
+    assert!(
+        rustfmt.is_file(),
+        "selected toolchain should contain rustfmt"
+    );
+    let rustfmt_arg = rustfmt.to_string_lossy().to_string();
+
     let capture = run_sifr_with_env(
         &["build", &main_arg, "-o", &output_dir_arg],
         &project.root,
-        &[("PATH", "")],
+        &[("PATH", ""), ("RUSTFMT", &rustfmt_arg)],
     );
 
     assert_ne!(capture.status_code, 0);
