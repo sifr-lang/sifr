@@ -127,6 +127,37 @@ pub(crate) fn project_stdlib_nominal_plan(
     ProjectStdlibNominalPlan { registry }
 }
 
+/// Establish ownership before per-module structural implementations relocate.
+/// Some imported static APIs do not occur in an ordinary HIR value signature.
+pub(crate) fn register_imported_structural_nominals(
+    modules: &[(&str, &HirModule)],
+    stdlib: &crate::StdlibEmissionCode,
+    plan: &mut ProjectStdlibNominalPlan,
+) {
+    let mut declarations = BTreeMap::new();
+    for (_, module) in modules {
+        for class in crate::structural_impl_codegen::imported_stdlib_classes(module, stdlib) {
+            // Opaque declarations belong to their runtime provider, not to a
+            // generated shared module. They emit no local structural contract.
+            if class.python_opaque_declaration().is_some()
+                || class.rust_interop.iter().any(|declaration| {
+                    declaration.kind == sifr_ir::RustInteropDecoratorKind::Opaque
+                })
+            {
+                continue;
+            }
+            collect_nominal_identity(class.identity.as_deref(), &mut declarations);
+        }
+    }
+    for (module, names) in declarations {
+        for name in names {
+            let identity = format!("{module}.{name}");
+            let rust_name = class_rust_name(Some(&identity), &name);
+            plan.registry.register_shared(identity, rust_name);
+        }
+    }
+}
+
 pub(crate) fn extract_project_stdlib_nominal_prelude(
     support_source: &str,
     unions: &HashMap<String, Vec<Type>>,

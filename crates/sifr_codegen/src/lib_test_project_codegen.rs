@@ -56,6 +56,13 @@ pub fn generate_rust_test_project_with_metadata(
         HashSet::new()
     };
     let mut stdlib_nominal_plan = project_stdlib_nominal_plan(&union_usage.unions, &all_modules);
+    if structural_interop_enabled {
+        crate::project_stdlib_nominals::register_imported_structural_nominals(
+            &all_modules,
+            &stdlib_code.emission_view(),
+            &mut stdlib_nominal_plan,
+        );
+    }
     let crate_root_modules = test_modules
         .iter()
         .map(|(module_name, _)| *module_name)

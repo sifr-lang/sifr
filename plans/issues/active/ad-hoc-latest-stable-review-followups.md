@@ -49,3 +49,19 @@ distinct from continuous whole-tree enforcement by the maintained checker.
 Consider extending that enforcement to unchanged base inputs, including the
 SQLCipher source and bindings. The selected maintained feature graph does not
 enable `bundled-sqlcipher`; enabling it requires separate qualification.
+
+## Item 76 optional runner follow-ups
+
+Source: scoped SATISFIED review of 20dbb1e4579b7dd25139b13853f3ccb0f057b9f0,
+external response SHA-256
+a170a81b556a38c9a0f1167ad6b41cd6b72ff28048da0502b4903c424dc90d59.
+These are nonblocking suggestions outside the qualified POSIX runner repair.
+
+- Owner: sysroot verification portability. If these gates gain a Windows host,
+  handle text-mode TimeoutExpired streams that may already be strings there.
+  Current required sysroot hosts are POSIX.
+- Owner: sysroot diagnostic presentation. Consider preserving leading stderr
+  indentation when appending the timeout diagnostic.
+- Owner: verification setup logging. Consider whether the source preparation
+  marker should be printed by the parent, matching sibling preparers; the
+  child currently emits the equivalent marker.

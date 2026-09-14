@@ -9,6 +9,7 @@ mod generic_representation_tests;
 use crate::structural_record_fields::structural_record_fields;
 
 mod stdlib_implementations;
+pub(crate) use stdlib_implementations::imported_classes as imported_stdlib_classes;
 
 const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
@@ -21,38 +22,24 @@ impl RustEmitter {
         if !self.structural_interop_enabled {
             return;
         }
-        let mut emitted_targets = HashSet::new();
-        for import in &module.imports {
-            let Some(templates) = stdlib_code.module_class_templates.get(&import.module) else {
-                continue;
-            };
-            if !import.names.iter().any(|name| templates.contains_key(name)) {
-                continue;
-            }
-            let support_module = HirModule {
-                functions: Vec::new(),
-                classes: templates.values().cloned().collect(),
-                imports: Vec::new(),
-                constants: Vec::new(),
-                generic_functions: std::collections::HashMap::new(),
-                type_param_bounds: std::collections::HashMap::new(),
-            };
-            for name in &import.names {
-                let Some(class) = templates.get(name) else {
-                    continue;
-                };
-                let target = stdlib_implementations::target(class);
-                if !emitted_targets.insert(target.clone()) {
-                    continue;
-                }
-                self.emit_structural_record_impls_for_target(
-                    class,
-                    &support_module,
-                    &target,
-                    StructuralRecordOrigin::Stdlib,
-                );
-                self.emit_structural_enum_impls_for_target(class, &target);
-            }
+        let classes = imported_stdlib_classes(module, stdlib_code);
+        let support_module = HirModule {
+            functions: Vec::new(),
+            classes: classes.iter().map(|class| (*class).clone()).collect(),
+            imports: Vec::new(),
+            constants: Vec::new(),
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
+        };
+        for class in classes {
+            let target = stdlib_implementations::target(class);
+            self.emit_structural_record_impls_for_target(
+                class,
+                &support_module,
+                &target,
+                StructuralRecordOrigin::Stdlib,
+            );
+            self.emit_structural_enum_impls_for_target(class, &target);
         }
     }
 

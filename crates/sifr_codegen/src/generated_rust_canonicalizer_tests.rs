@@ -835,3 +835,44 @@ fn measures_function_line_budget_after_structured_rendering() {
 
     assert!(canonical.contains("clippy::too_many_lines"), "{canonical}");
 }
+
+#[test]
+fn similar_parameter_renaming_preserves_shorthand_field_values() {
+    let source = r#"
+        struct Defaults { description: String, descriptions: Vec<String> }
+        fn build(description: String, descriptions: Vec<String>) -> Defaults {
+            Defaults { description, descriptions }
+        }
+    "#;
+    let canonical = canonicalize_generated_rust_source(source).expect("valid Rust");
+    let parsed = syn::parse_file(&canonical).expect("parse canonical Rust");
+    let function = parsed
+        .items
+        .iter()
+        .find_map(|item| match item {
+            syn::Item::Fn(function) => Some(function),
+            _ => None,
+        })
+        .expect("builder");
+    let syn::FnArg::Typed(argument) = &function.sig.inputs[1] else {
+        panic!("second argument");
+    };
+    let syn::Pat::Ident(binding) = argument.pat.as_ref() else {
+        panic!("used descriptions argument was erased: {canonical}");
+    };
+    let syn::Stmt::Expr(syn::Expr::Struct(value), None) =
+        function.block.stmts.last().expect("return")
+    else {
+        panic!("struct return: {canonical}");
+    };
+    let field = value
+        .fields
+        .iter()
+        .find(|field| matches!(&field.member, syn::Member::Named(name) if name == "descriptions"))
+        .expect("unchanged field identity");
+    let syn::Expr::Path(reference) = &field.expr else {
+        panic!("field value");
+    };
+    assert!(reference.path.is_ident(&binding.ident), "{canonical}");
+    assert!(field.colon_token.is_some(), "{canonical}");
+}

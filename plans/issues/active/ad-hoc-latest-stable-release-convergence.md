@@ -5021,3 +5021,63 @@ sysroot-item76-targeted.log, sysroot-item76-targeted-results.json,
 item76-source-inputs.json, sysroot-source-preparation.log, and
 sysroot-source-prepared-execution.json. Compiler ownership and regression scope
 must be resolved before the revised final integration gate and qualification.
+
+Item 76 scoped review at 20dbb1e457 is SATISFIED with no blocking findings.
+External response SHA-256:
+a170a81b556a38c9a0f1167ad6b41cd6b72ff28048da0502b4903c424dc90d59.
+The review does not claim full integration qualification. It records optional
+POSIX/Windows timeout normalization portability and cosmetic logging suggestions;
+current required sysroot hosts are POSIX. No implementation change follows these
+suggestions. Final integration delivery is still blocked by the compiler finding.
+
+## Item 77: attached-API compiler regression repair — 2026-09-14
+
+Own the newly reproduced attached-API codegen failures separately from Item 76.
+This is a follow-up to the integrated compiler contract/canonicalization batches,
+not a dependency version change. Both installed and source-tree compilers produce
+the same E0425/E0277 failures in the maintained static_class_adapter fixture.
+Source reproduction uses the maintained certification helper, explicit source
+sysroot, isolated installed environment, and a retained external output directory.
+Earlier direct relative-path invocations failed import resolution and are retained
+as unsuccessful reproductions; they are not the decisive evidence.
+
+Scope: preserve renamed local values in Rust shorthand fields; preserve one
+shared owner and required structural contracts for stdlib nominal dependencies
+used by attached APIs. Acceptance: targeted regressions and actual source/installed
+fixture execution, including its API-edit cache invalidation check, pass without
+weakening the fixture or certification. Preserve negative identity/shadowing and
+generic representation constraints. Final integration review/gate counters remain
+unchanged. External evidence: 20260914-attached-codegen/source-cert-red.log and
+source-output; final integration/sysroot-item76-targeted.log/results.json.
+
+Item 77 implementation validation: the new shorthand regression first failed
+with an erased descriptions parameter and dangling shorthand value. After the
+repair, all 1,516 codegen tests passed. The first repaired test invocation had
+two synthetic structural test failures because unused fake APIs were correctly
+pruned; those tests now check unused-contract pruning and direct required
+contract emission. The source compiler then passed the actual attached fixture
+and API-edit/cache rebuild. Both source and installed compilers subsequently
+passed the boundary fixture, attached fixture, and API-edit/cache rebuild.
+Installed smoke passed in 21.489 seconds. All 3,880 file-size guardrails passed.
+
+That two-suite invocation is still a FAIL: its final dependency snapshot expects
+sifr_stdlib, but both compilers agree on a runtime-only generated application.
+The fixture stopped importing sifr.bytes helpers in
+3d34ad6289096f7588a75dda8689eb19b4f1ad62 (2026-08-18), while the older dependency
+snapshot retained sifr_stdlib. This is a separate verification-baseline follow-up
+for final integration, not evidence of a compiler execution failure. Preserve
+sysroot-item77-targeted.log/exit and sysroot-release-item77-targeted-results.json
+as failed area evidence. Do not disable the strict comparison.
+
+Before finalizing Item 77, self-review preserves the existing foreign-ownership
+boundary: the new import-only registration must not relocate opaque runtime
+types, including raw Python handles. A scoped negative ownership test accompanies
+that guard. Earlier installed/source evidence remains bound to
+item77-source-inputs.json; final guard validation is pending.
+
+The final opaque-ownership guard passes the full 1,517-test codegen suite
+(codegen-item77-final.log, zero failures/ignores). File-size guardrails pass
+for 3,880 files, maintainability checks pass, and diff whitespace checks pass.
+The compiler implementation is ready for a frozen-commit boundary check and
+scoped review. The separate dependency snapshot follow-up still blocks the
+complete boundary area and final integration gate.

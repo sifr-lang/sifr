@@ -323,6 +323,13 @@ pub fn generate_rust_multi_with_metadata(
         HashSet::new()
     };
     let mut stdlib_nominal_plan = project_stdlib_nominal_plan(&union_usage.unions, modules);
+    if structural_interop_enabled {
+        crate::project_stdlib_nominals::register_imported_structural_nominals(
+            modules,
+            &stdlib_code.emission_view(),
+            &mut stdlib_nominal_plan,
+        );
+    }
     let mut nominal_type_paths = project_nominal_type_paths(modules, &crate_root_modules);
     let structural_identity_expressions = if structural_interop_enabled {
         crate::structural_identity_codegen::class_identity_expressions_for_project(
