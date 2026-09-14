@@ -5198,3 +5198,22 @@ and affected callback unit/lowering tests pass on the combined candidate; run
 formatting, diff and file-size/maintainability checks, one scoped review of this
 combined repair, then full merge gate 3. Final release and native qualification
 remain pending. No merge or publication is claimed here.
+
+
+Combined repair focused run 1 at
+`0f62dd98fdc86fce0832f026921e6312b0ed09b2` is retained as FAIL. Archive,
+backend, callback lifecycle, callback capture rejection (the original 17
+diagnostics), portable relocation and all 17 focused lowering tests pass.
+Codegen callback tests pass 19/20; one additional output assertion still expected
+the old borrowing expression. Static identity and cache assertions pass, exposing
+a later fixture runtime error: its Sifr int arena nodes and observer still used
+SignedInteger instead of the maintained ExactInteger contract.
+
+The second correction stays within this user-approved combined repair: update
+that callback assertion and make the static-program fixture construct/project
+ExactInteger values through SifrInt. Fixed uint32, bytes, strings and containers
+retain their existing representations. No runtime fallback, compiler integer
+semantics, dependency version or lockfile change is introduced. Rerun the affected
+callback tests and both static-program runtime cases; reuse the passing focused
+cases whose implementation and inputs are unchanged. Full merge gate 3 follows
+after focused success and the scoped combined review.

@@ -70,11 +70,8 @@ fn edge(kind: StructuralEdgeKind<'static>, node: u32) -> StructuralNodeEdge<'sta
 
 fn integer(value: i64) -> ArenaNode {
     ArenaNode::scalar(
-        StructuralKind::SignedInteger,
-        StructuralScalar::SignedInteger {
-            value: i128::from(value),
-            width: 64,
-        },
+        StructuralKind::ExactInteger,
+        StructuralScalar::ExactInteger(sifr_runtime::SifrInt::from(value)),
     )
 }
 
@@ -314,7 +311,7 @@ impl<'value> StructuralVisitor<'value> for Observation {
 
     fn scalar(&mut self, value: StructuralScalarRef<'value>) -> Result<(), Self::Error> {
         match value {
-            StructuralScalarRef::SignedInteger { value, width: 64 } => {
+            StructuralScalarRef::ExactInteger(value) => {
                 self.integers.push(value.to_string());
             }
             StructuralScalarRef::UnsignedInteger { value, width: 32 } => {

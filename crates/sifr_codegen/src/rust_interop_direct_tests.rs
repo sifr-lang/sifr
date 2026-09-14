@@ -95,7 +95,7 @@ fn rust_interop_function_body_emits_owned_threadsafe_callback_policy() {
     assert!(rendered.contains("CallbackBackpressure::Bounded(2usize)"));
     assert!(rendered.contains("CallbackOverflow::Error"));
     assert!(rendered.contains("CallbackShutdown::Drain"));
-    assert!(rendered.contains("handler(&__sifr_callback_arg_0)"));
+    assert!(rendered.contains("handler(::std::string::String::as_str(&__sifr_callback_arg_0))"));
     assert!(rendered.contains("Err(__sifr_callback_error) => Err("));
 }
 
