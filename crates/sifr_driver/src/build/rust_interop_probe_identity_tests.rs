@@ -78,3 +78,96 @@ fn shared_cargo_target_rejects_a_different_probe_contract() {
         }
     }
 }
+
+fn copy_vendor_tree(source: &std::path::Path, destination: &std::path::Path) {
+    fs::create_dir_all(destination).expect("create test vendor directory");
+    for entry in fs::read_dir(source).expect("read test vendor source") {
+        let entry = entry.expect("read vendor entry");
+        let target = destination.join(entry.file_name());
+        if entry.file_type().expect("vendor entry type").is_dir() {
+            copy_vendor_tree(&entry.path(), &target);
+        } else {
+            fs::copy(entry.path(), target).expect("copy vendor file");
+        }
+    }
+}
+
+#[test]
+fn vendored_probe_preserves_compiler_dependency_freshness() {
+    use super::super::rust_interop_probe_paths::probe_cargo_target_dir_with_env;
+    use super::probe_cargo_vendor_args;
+    use std::path::Path;
+
+    let projects = ProbeProjects(std::env::temp_dir().join(format!(
+        "sifr_probe_storage_{}_{}",
+        std::process::id(),
+        super::super::rust_interop_probe_nonce::unique_probe_nonce()
+    )));
+    let original_vendor = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../vendor")
+        .canonicalize()
+        .expect("workspace vendor");
+    let probe_vendor = projects.0.join("probe-vendor");
+    copy_vendor_tree(
+        &original_vendor.join("unicode-ident"),
+        &probe_vendor.join("unicode-ident"),
+    );
+    let compiler = projects.0.join("compiler");
+    let probe = projects.0.join("probe");
+    for (root, name, dependency_kind) in [
+        (&compiler, "compiler-storage-fixture", "dependencies"),
+        (&probe, "probe-storage-fixture", "build-dependencies"),
+    ] {
+        fs::create_dir_all(root.join("src")).expect("create source");
+        fs::write(root.join("Cargo.toml"), format!(
+            "[package]\nname = \"{name}\"\nversion = \"0.0.0\"\nedition = \"2024\"\n[{dependency_kind}]\nunicode-ident = \"=1.0.24\"\n"
+        )).expect("write storage fixture manifest");
+        fs::write(root.join("src/lib.rs"), "").expect("write storage fixture");
+    }
+    fs::write(
+        compiler.join("src/lib.rs"),
+        "pub fn is_identifier(c: char) -> bool { unicode_ident::is_xid_start(c) }",
+    )
+    .expect("write compiler dependency use");
+    fs::write(
+        probe.join("build.rs"),
+        "fn main() { assert!(unicode_ident::is_xid_start('a')); }",
+    )
+    .expect("write host dependency probe");
+    let target = projects.0.join("target");
+    let probe_target =
+        probe_cargo_target_dir_with_env(Some(target.clone().into_os_string()), &projects.0);
+    for (root, vendor, target, command, must_be_fresh) in [
+        (&compiler, &original_vendor, &target, "build", false),
+        (&probe, &probe_vendor, &probe_target, "check", false),
+        (&compiler, &original_vendor, &target, "build", true),
+    ] {
+        let output = Command::new("cargo")
+            .args(probe_cargo_vendor_args(Some(vendor)))
+            .args([command, "--offline", "--message-format=json"])
+            .current_dir(root)
+            .env("CARGO_TARGET_DIR", target)
+            .output()
+            .expect("run storage regression Cargo");
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        if must_be_fresh {
+            let artifacts: Vec<serde_json::Value> = String::from_utf8_lossy(&output.stdout)
+                .lines()
+                .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+                .filter(|value| value["reason"] == "compiler-artifact")
+                .collect();
+            assert!(
+                artifacts.len() >= 2,
+                "compiler and dependency artifacts missing"
+            );
+            assert!(
+                artifacts.iter().all(|value| value["fresh"] == true),
+                "probe invalidated compiler artifacts: {artifacts:?}"
+            );
+        }
+    }
+}

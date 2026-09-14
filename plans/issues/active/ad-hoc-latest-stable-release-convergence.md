@@ -4870,3 +4870,43 @@ probe-identity-targeted.log, probe-identity-stdlib-contracts.log,
 driver-profile-cache.strace and cargo-probe-identity-repro/.
 These are targeted results; final PR, merge and release qualification remain
 separate required steps.
+
+
+## Probe and compiler artifact separation — 2026-09-14
+
+Create-PR8 at 96f079f8c822322103ca01c747827c4ef9c8daa9 failed its
+developer-tooling step budget: all 29 variants passed, but 1,105.061 seconds
+exceeded the unchanged 180-second limit. Diagnostic source canonicalization
+took 577.003 seconds and completion quality took 479.481 seconds, including
+recompilation. The complete run took 3,856.03 seconds; setup's 2,354.824 seconds
+also exceeded its advisory 300-second budget. Later areas were not reached.
+The functional passes do not turn the failed profile into a pass.
+
+Immediately afterwards, the CLI, diagnostic harness and completion graph each
+reused their artifacts in under a second. A single uncached existing Python
+signature test then reproduced the invalidation. Cargo reported
+PathToSourceChanged for dependencies such as rustversion, followed by
+StaleDependency/StaleDepFingerprint throughout the compiler graph. Vendored
+probes and registry compiler builds used the same target storage and Cargo
+replacement sources retained registry package identities.
+
+Probe dependency artifacts now use a rust_bridge_probe_target child beneath
+the configured Cargo target, anchored to the invocation directory when the
+configuration is relative. The default artifact-cache location is unchanged.
+Probes still share dependencies with other probes. Source-bound package
+identity, persistent success-cache validity, rejection assertions and time
+budgets are unchanged.
+
+All 35 targeted probe tests pass. A new real-Cargo regression builds a compiler
+fixture, checks a probe against a second authenticated copy of its dependency,
+and requires all compiler artifacts to remain fresh afterwards. Absolute and
+relative storage boundaries are covered. The initial run passed 34 tests and
+failed a mistakenly edited normalization expectation; that expectation was
+corrected and the failure retained. Full integration gates and exact-source
+qualification remain pending.
+
+Evidence is retained in the session's 20260913-final-integration directory:
+create-pr8.json/log, post-pr8-*-fingerprint.log,
+pr8-invalidation-single-probe.log,
+post-single-probe-harness-fingerprint.log,
+probe-storage-targeted.log and probe-storage-targeted-corrected.log.

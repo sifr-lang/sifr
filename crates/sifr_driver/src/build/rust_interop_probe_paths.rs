@@ -14,7 +14,12 @@ pub(super) fn probe_cargo_target_dir_with_env(
 ) -> PathBuf {
     configured.map_or_else(
         || artifact_cache_root().join(RUST_BRIDGE_PROBE_TARGET_DIR),
-        |target_dir| normalize_cargo_target_dir(invocation_cwd, PathBuf::from(target_dir)),
+        |target_dir| {
+            // Cargo replacement sources retain registry package identities. Sharing
+            // compiler artifacts lets vendored probes invalidate registry builds.
+            normalize_cargo_target_dir(invocation_cwd, PathBuf::from(target_dir))
+                .join(RUST_BRIDGE_PROBE_TARGET_DIR)
+        },
     )
 }
 
