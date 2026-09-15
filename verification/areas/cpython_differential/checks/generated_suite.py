@@ -121,7 +121,11 @@ def build_release_binary(
     build_command = [str(part) for part in release["build_command"]]
     timeout = int(release["build_timeout_seconds"])
     env = os.environ.copy()
-    env.pop("CARGO_TARGET_DIR", None)
+    target_dir = Path(env.get("CARGO_TARGET_DIR", "target"))
+    if not target_dir.is_absolute():
+        target_dir = REPO_ROOT / target_dir
+    # The manifest names Cargo's default location; honor its configured root.
+    binary = (target_dir / Path(str(release["path"])).relative_to("target")).resolve()
     started = time.perf_counter()
     try:
         completed = subprocess.run(
@@ -142,7 +146,7 @@ def build_release_binary(
         if stderr:
             sys.stderr.write(stderr)
         return {
-            "binary": str(Path(str(release["path"]))),
+            "binary": str(binary),
             "binary_sha256": "timeout",
             "source_digest": source_digest(release["source_digest_inputs"]),
         }
@@ -153,29 +157,24 @@ def build_release_binary(
         sys.stderr.write(completed.stderr)
     if completed.returncode != 0:
         failures.append(f"release binary build failed with exit {completed.returncode}")
-    binary = REPO_ROOT / str(release["path"])
     if not binary.is_file():
         failures.append(
-            f"release binary missing after build: {binary.relative_to(REPO_ROOT)}"
+            f"release binary missing after build: {binary}"
         )
         binary_sha = "missing"
     else:
         binary_sha = sha256_file(binary)
     print(f"[cpython-generated] release_build_ms={duration_ms:.0f}")
     return {
-        "binary": str(binary.relative_to(REPO_ROOT)),
+        "binary": str(binary),
         "binary_sha256": binary_sha,
         "source_digest": source_digest(release["source_digest_inputs"]),
     }
 
 
-def run_case(
-    suite_name: str,
-    case: dict[str, Any],
-    suite: dict[str, Any],
-    build_info: dict[str, str],
-    suite_actual_root: Path,
-) -> list[str]:
+def materialize_case(
+    case: dict[str, Any], build_info: dict[str, str], suite_actual_root: Path,
+) -> tuple[Path, Path]:
     case_id = str(case["id"])
     program = generate_program(case)
     case_root = suite_actual_root / case_id
@@ -199,11 +198,23 @@ def run_case(
         ),
         encoding="utf-8",
     )
+    return python_path, sifr_path
+
+
+def run_case(
+    suite_name: str,
+    case: dict[str, Any],
+    suite: dict[str, Any],
+    build_info: dict[str, str],
+    suite_actual_root: Path,
+) -> list[str]:
+    case_id = str(case["id"])
+    python_path, sifr_path = materialize_case(case, build_info, suite_actual_root)
     timeout = int(suite["per_program_timeout_seconds"])
     cpython = run_command([sys.executable, str(python_path)], timeout)
     sifr = run_command(
         [
-            str(REPO_ROOT / "target" / "release" / "sifr"),
+            build_info["binary"],
             "--sysroot",
             str(REPO_ROOT),
             "run",
