@@ -1,16 +1,13 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-## Current qualification status — Item 86
+## Current qualification status — Item 86 delivered; Item 87 next
 
-Item 85 and its records are delivered through PRs 3829/3830. The subsequent
-release2 run at exact clean `5d7c6eeeded8e18d18d113aa4493a12f076e719c`
-passed all 356 materializations, including the three prior decimal failures,
-all guards, both E2E determinism checks, Rust interop, coverage, core language
-and diagnostics. It failed before executing generated CPython comparisons:
-their runner discarded the configured Cargo target and timed out rebuilding
-the compiler in the default directory. Item 86 owns this runner-only repair.
-The original full merge4/native qualification remain passing at their actual
-candidate. Final release qualification, Item 62 and Item 35 remain pending.
+Item 86 is merged through [PR 3831](https://github.com/sifr-lang/sifr/pull/3831),
+merge `0124ca3e8021be586817ea0397eacf146a2768a6`. Its focused checks, scoped review, native qualification
+and full-run CPython differential area pass. Full release3 at `26ae861e9f26f83fb6c052551c726cbb2cfb768f`
+then fails generated-code quality in two completed variants. The appended
+Item 87 owns those generated-Rust repairs as one focused batch. Final release
+qualification, Item 62 and Item 35 remain pending. No publication has occurred.
 
 ## Historical implementation delivery checkpoint — 2026-09-15
 
@@ -5541,3 +5538,112 @@ The subsequent oracle still reruns all programs with unchanged 20-second
 limits and all original CPython comparisons; source paths and generation are
 shared so cache identity matches without fallback or stale artifact selection.
 No full-suite rerun or Item86 review occurred between these focused findings.
+
+## Item 86 delivery and final generated differential qualification
+
+Item 86 is delivered by [PR 3831](https://github.com/sifr-lang/sifr/pull/3831),
+reviewed candidate `26ae861e9f26f83fb6c052551c726cbb2cfb768f`, base
+`163e8e9b49f0b5267a13cc5938cdcac75d973db5`, merge `0124ca3e8021be586817ea0397eacf146a2768a6`.
+The bounded runner batch fixes configured compiler target selection and keeps
+the build, recorded hash and executable consistent. The canonical profile
+setup prepares the release compiler and every selected deterministic native
+program through its normal run cache before timed CPython comparisons.
+
+Exact-candidate focused3 passed with a clean source before and after:
+39 setup-policy tests, five artifact-selection tests, three program-preparation
+tests, all area manifests, documentation structure/GA mutations and the
+3,883-file size guard. Both complete generated suites passed: four minimized
+seeds in 7.978 seconds and six broader cases in 11.021 seconds. Each Sifr run
+took 1.654–1.734 seconds within its unchanged 20-second limit. Compiler build
+verification took 519/370 milliseconds within the unchanged 300-second limit.
+Every cold native preparation passed in approximately 29 seconds, with actual
+stdout, stderr, status and duration retained separately before comparison.
+Suite deadlines, selected cases, comparison semantics, promotion criteria,
+dependencies, locks and performance references remain unchanged.
+
+Focused report SHA256:
+`88a4971e27e79869fdbd4acfc2bc5970abdd0d0d70d9eed04f590ce1d7f72046`.
+Focused log SHA256:
+`c96352935747e57b077a7529976998cd5d51a37204527b8b1139ff2bd6e20e5d`.
+All ten seed/preparation records match the actual configured release compiler
+SHA256 `801bc0a988153d21e8552a8ba0c645bbbbfabb73063bf5b68f1bbfc2b014b6c1`
+and Rust source digest
+`f41b15f2b72cff368317a6e425f4e430c4110ddeecfb9879ca9c6fe8a0e73b97`.
+Evidence owner: `20260915-generated-differential/focused3.*` and
+`focused3-generated/`. The corresponding local review evidence is retained.
+
+Initial scoped Opus review 1 was **SATISFIED**, with no blocking findings and
+zero remediation reviews. Response SHA256:
+`d4a3657b39e7706717a98680bb06a80f49258c908033747fa3ec8ebbbc48b727`.
+The response, prompt and receipt are retained outside Git under
+`20260913-final-integration/reviews/26ae861e9f26f83fb6c052551c726cbb2cfb768f/`.
+The three nonblocking observations are assigned to the separate review
+follow-up owner; they do not reopen this bounded implementation.
+
+The runner-only validation rule applies: no repeated Sifr create-pr/merge gate.
+The passing compiler full merge4 stays bound to its actual source
+`5d7c6eeeded8e18d18d113aa4493a12f076e719c`; no Rust/Cargo/lock changes follow it.
+Final native qualification [34975304864](https://github.com/sifr-lang/sifr/actions/runs/34975304864)
+passes at this exact candidate. All four native targets, VSIX, installer/checksums
+and the immutable index pass. All seven archive digests and 20 indexed payloads
+were verified locally; all 20 payloads were verified again on the remote host.
+Index SHA256: `cee6213d3d823cfae5900c9d694daa22a95b9992377c2be561fce703fed04032`.
+
+Full release3 fails later in generated-code quality; it is not a release pass.
+Setup, all 14 guards and every preceding area pass. This includes all 727 E2E
+cases twice with identical signatures, sequential/parallel equivalence,
+the complete selected Python interoperability area and large-session LSP stress.
+The repaired CPython differential area passes in 21.127 seconds; all six generated
+programs run in 1.670–1.724 seconds and compiler verification takes 703ms.
+The failed generated-code area completes all ten variants, with two failures:
+authoritative companions and strict Clippy. Item 87 below owns the repair.
+The full performance selection and subsequent areas did not run.
+
+`release3.json` SHA256: `f9a8065e34e3af81818b07f6d747733dae6a8e47a287686d91edd90bec936310`.
+`release3.log` SHA256: `3d32369959f9c5817cc0daf8955812f80bb472db7fd515c93280bf1b8f7ff05e`.
+Actual exit is 1 and source status is clean. The 5,926.606-second setup passes
+functionally while exceeding its 300-second advisory; that overrun is retained.
+Reports, summaries and original Rust diagnostics remain outside Git. No failed
+run, artifact identity or advisory is relabeled.
+
+Failure history remains intact. Release2 at the prior compiler candidate failed
+before generated comparisons. Focused1 at `e0034ce9bd` timed out both compiler
+builds at 300 seconds; its external result-json path was rejected after
+execution, so no normalized area JSON is claimed. Focused2 at `bf64186c51`
+passed clean release preparation in 12m31s and compiler checks in 407/403ms,
+then failed all ten cold native builds at their 20-second program limit.
+Its failed report/log and original generated/minimization files remain under
+`20260915-generated-differential/focused2.*` and `focused2-failure/`.
+The intermediate native run 34972342369 belongs only to `bf64186c51`; it is not
+rebound to the final candidate. Its CI jobs passed; optional artifact download was stopped once this runner candidate was superseded, to prioritize final-candidate collection. API metadata and the explicit partial-retention disposition are retained; no full payload readback is claimed for that interim run.
+
+## Item 87: generated-Rust release quality repair batch
+
+State: registered; implementation pending. Base is the delivered Item 86 plus
+its documentation records. This batch follows the user's instruction to repair
+related failing tests together before another full qualification run.
+
+Release3 on `26ae861e9f26f83fb6c052551c726cbb2cfb768f` identifies two failed
+generated-code suites. The authoritative-companion summary includes 18 E0432
+unresolved imports of Rust `String`/`f64` from generated support, one E0425 missing
+float-error union type, and new `unnecessary_mut_passed`, `dead_code`,
+`unused_imports` and `or_fun_call` diagnostics. The corpus Clippy summary shares
+the mutable-receiver and unused regex-trait findings. Per-case collection status
+does not mean the later exact-debt gate passed.
+
+Scope: correct support-module binding/nominal demand, opaque regex method demand
+and receiver emission, and the eager generated default identified above. Add
+focused regressions for these mechanisms, refresh only affected generated
+companions and reconcile legitimate output changes with existing exact lint
+ownership. Compiler errors must not become accepted lint debt; no blanket lint
+suppression, weakened gate, fallback, dependency upgrade or workload reduction.
+Preserve the complete failed summaries and original diagnostics for comparison.
+
+Validation: run focused codegen/support/opaque receiver tests and all affected
+generated companion and corpus Clippy cases as a batch. Check generated freshness,
+format, relevant maintainability and file-size guards. Once focused checks pass,
+run the required full compiler merge gate once on the final reviewed candidate,
+then complete release/native qualification on that source. Preserve the active
+candidate's cache; the user's disk-pressure workflow governs cleanup decisions.
+Use one initial scoped Opus review and only valid in-scope remediation reviews.
+Item 62 and Item 35 remain blocked on the actual final qualification result.

@@ -92,3 +92,21 @@ Full merge4 passes at `5d7c6eeeded8e18d18d113aa4493a12f076e719c`, including the 
 implementation and representative performance selection. Release2 is now
 running at that same clean candidate. This issue remains pending its actual
 large-session result; earlier targeted results retain their original identities.
+
+## Release-profile large-session result — 2026-09-15
+
+The actual large-session smoke in release3 passes at `26ae861e9f26f83fb6c052551c726cbb2cfb768f`:
+42 operations, p95 21.691ms, peak RSS 130625536 bytes below the unchanged
+134217728-byte cap, and measured RSS slope 0.0 MiB/min. The complete developer-
+tooling area passes. Corpus SHA256 remains
+`fc027cae829cb1d7ec9b50d9d87b97cbf873c854694cec1f9c3e0a0ab0024008`.
+This closes the observed large-session memory failure on this candidate.
+
+The exact report is retained locally and remotely as
+`20260913-final-integration/release3-lsp-large-session.json`, SHA256
+`a4a911ac9c1eca242cc842a23f2f7cbb361cd9f0f3cd8531712a0b1b51c825b7`.
+Release3 subsequently fails generated-code quality before the full performance
+area. That failure belongs to latest-stable Item 87; this record does not claim
+a complete release-profile pass or a 65-case performance result. A later changed
+compiler candidate must retain its own qualification identity. Earlier failed
+and targeted measurements remain unchanged.
