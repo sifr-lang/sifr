@@ -1,6 +1,19 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-## Current delivery status — 2026-09-15
+## Current qualification status — Item 85, 2026-09-15
+
+The implementation and delivery records are merged as documented below. The
+subsequent release profile failed during preparation on the unchanged qualified
+candidate, before any release test or performance measurement. A complete
+356-case materialization scan found exactly three related decimal-demo failures.
+Item 85 owns the portable lockfile correction below. The current repair branch
+is `codex/latest-stable-release-preparation`, based on record merge
+`cf05cd9a31490111eae8dea8099391b1c7f72024` in the primary owned remote worktree.
+Full merge3 and native34895961655 remain passing evidence for the original
+`d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea`; they are not rebound to this repair.
+Items62/35, full release qualification and phase archive remain pending.
+
+## Implementation delivery checkpoint — 2026-09-15
 
 This section supersedes the historical pending/blocker statements below. The
 frozen implementation batches, including the user-authorized combined repair
@@ -5349,3 +5362,40 @@ merge `81f73f4170da26df1606449d413ff6e7fc082328`. Candidate
 Its one initial/zero remediation review is SATISFIED; response SHA256
 `b65f13fa02dddb5d290b96d7ec0de6358d242b2b59194b7ef6a841314017a932`.
 The importer README observation remains a separate nonblocking follow-up.
+
+
+## Item 85: portable lockfiles for optional sysroot runtime dependencies
+
+Release1 at exact clean d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea failed
+in preparation after 146 passing materializations, before any release test or
+performance selection. Its exit 1 and 1427.16-second result remain retained.
+The decimal-arithmetic demo resolves the numeric-only sifr_stdlib feature set,
+which does not enable its optional sifr_runtime dependency. Portable lock source
+rewriting incorrectly requires runtime whenever stdlib is selected.
+
+Owner: crates/sifr_driver/src/build/portable_project.rs and directly owned tests.
+Use the actual resolved stdlib dependency edge to decide whether the transitive
+runtime package requires source rewriting. Keep all direct sysroot requirements,
+exact package version/source checks, registry checksum authority, and failures
+for missing genuinely required local packages. No feature union, new fallback,
+version/lock update, dependency invention, or threshold change.
+
+Follow the user's batch-first workflow: scan the complete 356-case release
+materialization selection without fail-fast, fix the known related failure set,
+then run the corrected focused graph tests and real demo materializations,
+locked/offline Cargo checks and executions. Repeat the complete materialization
+selection to check this graph correction, then use the full profile to discover
+any remaining release failures. Scoped exact-source Opus review and required
+final gates follow focused success.
+Full merge3 and native34895961655 stay successful evidence for d2bc; they are not
+rebound to this later compiler correction. Subsequent full gate counters remain
+merge4/release2, with no reset of earlier failures.
+
+Release1 report SHA256:
+1bd1b6309407b94aa9a2821563dffc40bc911469bf453fb4e284578d75a87903.
+Release1 log SHA256:
+fba2f5779d1a321e3cec5f12159db7705fcc00f06e1918ac6a06427d013af81c.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260915-release-preparation/,
+plus release1.* in 20260913-final-integration. The complete scan passed 353 of 356 cases. Only decimal_arithmetic,
+decimal_diagnostics and decimal_types failed, all for the same missing optional
+runtime requirement. Final Items62/35 remain open.
