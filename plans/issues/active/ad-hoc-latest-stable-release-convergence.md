@@ -1,5 +1,80 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Current delivery status — 2026-09-15
+
+This section supersedes the historical pending/blocker statements below. The
+frozen implementation batches, including the user-authorized combined repair
+of Items 80–84, are delivered. Final release qualification and the documentation
+closer remain pending; no stable release or Marketplace publication has occurred.
+
+The final implementation candidate is
+`d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea`. The three repositories merged in
+order after exact-source review and the successful local full merge gate:
+
+| Repository | PR | Qualified head | Merge commit |
+| --- | --- | --- | --- |
+| sifr-vscode | [15](https://github.com/sifr-lang/sifr-vscode/pull/15) | `5930dc1a0ccc52d9f382553156e98294a95420d9` | `d2204cdc41bc7dc004bd84774829fcf830b92a76` |
+| editor-integrations | [13](https://github.com/sifr-lang/editor-integrations/pull/13) | `d6fde7111800349428f63db05a34ca9a32acd576` | `d1cb6ac24a09d7c7922c302d4340b3d05c380388` |
+| sifr | [3827](https://github.com/sifr-lang/sifr/pull/3827) | `d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea` | `33639f4ee3b7079ec4da889834cae0d55d763786` |
+
+All merges used ordinary repository policy. The approved solo-maintainer policy
+is delivered; there is no distinct-human-reviewer blocker. The current compiled
+Python, Kafka and readiness implementation is delivered by PR 3827. Historical
+PRs 3717 and 3551 are not claimed merged, and their consumed histories remain
+unchanged. The root merge tree equals the qualified candidate tree; the qualified
+nested gitlinks remain unchanged.
+
+Full merge gate 3 passed on the exact clean candidate in 17,501.80 seconds:
+all selected areas, 66 SQL variants, 623 ordinary driver tests, 77 explicitly
+selected generated-build tests, 1,517 codegen tests and 727 E2E fixtures. The
+77 ordinary-driver ignores are separately executed by the generated-build step.
+The E2E run rebuilt all 185 groups with no cache hits; its signature is
+`ca4467fa7af12bd4`. Cold setup, total warm-time and group-skew advisories remain
+reported. No timeout, threshold, workload or performance reference was relaxed.
+
+Evidence directory:
+`/home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/`.
+`merge3.json` SHA256:
+`d68948682a2f0b52b75be8fa131b9f2370bd7b6f4e89a6615395820f0043c153`.
+`merge3.log` SHA256:
+`3d32aadecf26613ee35ebb1e5e1ba84a95c76f58ae8e33ca6df19319f699836e`.
+`merge3.source` is the candidate above, `merge3.exit` is 0, and the final source
+status is clean. `merges-d2bc1e0c3/` retains fresh heads, bases, rules and API
+merge/readback receipts. Failed merge gates 1 and 2, failed focused run 1, and
+the user-requested incomplete E2E interruption remain retained as such.
+
+The representative merge performance selection passes against the immutable
+`linux-i7-4720hq-12gb-dev-v1` reference: LSP diagnostics median 2.013 ms,
+p95 2.042 ms, 20 samples, RSS 129,478,656 bytes, first accepted attempt.
+Benchmark SHA256:
+`c3edd743412841dc3aa6c49fd11bf54a2a0b4156f2ea427f4f050261d135fbd6`.
+This does not substitute for release's full 65-case and large-session selection.
+The host has four physical cores/eight logical CPUs and approximately 12 GB RAM.
+
+Native qualification [34895961655, attempt 1](https://github.com/sifr-lang/sifr/actions/runs/34895961655)
+passed at the same candidate for all four native targets, editor VSIX 0.2.0,
+installer/checksums and the immutable artifact index. All seven transport archive
+digests and all 20 indexed payloads were verified locally; all 20 were verified
+again remotely. Index SHA256:
+`0cac32714b6d4d3e689103bec6cf25d59ef851608382485cd65459e317497c5c`.
+Retained payloads and remote proof:
+`/home/yaser5/projects/sifr/continuation-evidence/20260914-qualification-34895961655/`.
+The earlier native runs remain bound to their original source SHAs.
+
+The full release profile is running as release1 at the unchanged clean candidate.
+Closure records use a separate owned remote worktree based on the root merge.
+The remaining actions are actual release-profile completion, fresh first-GA/site
+preflight, maintained support/documentation/release-plan validation with those
+same-source artifacts, final Item 62 audit disposition, and Item 35's exact-SHA
+whole-phase review/archive/roadmap update. Publication is outside this request.
+
+The retained official audit has been reconciled against final candidate inputs:
+126 Rust and 27 Python identities, with 700 selected artifact digests, pass.
+The 17 tool/action identities and submodule audit are retained separately.
+Thirteen later Rust releases remain observations outside the frozen upgrade
+wave. Item 62 is not closed until the remaining qualification records are ready.
+
+
 ## Canonical crate preparation and demo edge inventory — 2026-09-13
 
 The selected crate step at3e7e7e4d14d4ae83e7d0f1070a33d1c6d8ef8c39
@@ -1811,10 +1886,10 @@ is not a technical dependency.
 | 28 | complete | Python Redis services | Redis advances before its fake/client/container companions; compiled live-service certification passes or records only the pre-approved structured Docker skip. |
 | 29 | complete | NumPy and Pandas | NumPy 2.5.2 and Pandas 3.0.5 are exact, and their new stable APIs and breaking behavior pass. |
 | 30 | complete | PyArrow 25 | The maintained Python 3.14 lane and affine Arrow transfer/certification pass. |
-| 31 | blocked | Kafka Python 3 | Kafka bridge and compiled service-client evidence pass. |
-| 32 | pending | Packaging and Hatchling | Packaging is current, Hatchling is explicitly pinned, and builds/locks are reproducible. |
-| 33 | pending | VS Code extension toolchain | Node types, VS Code types/engine, TypeScript, package locks, VSIX qualification, and the three-repository pointer chain merge in order. |
-| 34 | pending | Mint exact pin | Documentation tooling uses a tested exact latest-stable Mint release and documentation checks pass. |
+| 31 | complete; see current delivery status | Kafka Python 3 | Kafka bridge and compiled service-client evidence pass. |
+| 32 | complete; see current delivery status | Packaging and Hatchling | Packaging is current, Hatchling is explicitly pinned, and builds/locks are reproducible. |
+| 33 | complete; see current delivery status | VS Code extension toolchain | Node types, VS Code types/engine, TypeScript, package locks, VSIX qualification, and the three-repository pointer chain merge in order. |
+| 34 | complete; see current delivery status | Mint exact pin | Documentation tooling uses a tested exact latest-stable Mint release and documentation checks pass. |
 | 35 | pending; final only | Documentation-only phase closure | After Items 31–34 and 36–63, reuse item evidence and Item 62's official audit; one exact-SHA whole-phase Opus review; archive the phase and update roadmap. Implementation findings require separate items before this closer. |
 | 36 | complete | Execution inventory reconciliation | The continuation ledger, named tests, prerequisites, and every historical deferral owner merged in PR #3758; exact-SHA Opus review satisfied and documentation checks passed. |
 
@@ -1903,7 +1978,7 @@ transferred into this phase:
 | ID | Owner and current state | Required evidence / consumers |
 | --- | --- | --- |
 | E1 | Permanent solo-maintainer approval, Item65 | The user superseded the distinct-person requirement on 2026-09-08. The approved implementation is integrated in the remote continuation; no second-person invitation or renewed policy approval is required. Preserve exact protected-run approval and historical waiver evidence, plus consumed Item65 review/gate history. See the 2026-09-13 correction in the owning issue. |
-| E2 | PR #3717 / issue #3744 and the Python qualification issue, externally owned and unmerged | Require an actual merged implementation SHA and its attributable qualification, not a draft or body claim. Named affected suites from that owner: python_interop `binding-authoring`, `callback-examples`, `async-declaration-examples`, `async-context-examples`, and coverage_matrix `readiness`. Blocks dependent compiled Python integration and a full merge gate while those known prerequisite failures remain on main. No repair, merge, gate retry, or reset of their histories is authorized here. |
+| E2 | Cleared by the user-authorized integration PR #3827; original PR #3717 remains historical | Current evidence is root merge 33639f4ee3b7079ec4da889834cae0d55d763786 and passing full merge3 at d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea. Originally affected suites: python_interop `binding-authoring`, `callback-examples`, `async-declaration-examples`, `async-context-examples`, and coverage_matrix `readiness`. These suites and readiness now pass in the delivered integration. The separate historical owner/PR and consumed gate history remain unchanged. |
 
 E1/E2 are **merge-readiness prerequisites** for gate-bearing rows, not technical
 dependencies of every edit. Runner/document-only rows with passing named checks
@@ -1993,7 +2068,7 @@ ordered inventory and inherit the same per-item review/gate rules:
 | 62A | 49; before 62 | SQLx clean-cache experiment in SQLx lock qualification and Rust interop runner: a fresh private CARGO_HOME, record whether root fetch caches the five inactive fixture summaries, certify separately locked offline fixture resolution without ambient cache. Add the smallest maintained regression if absent. No clean of another worktree/cache. | `manifest sqlx_dependency_version`; `area rust_interop: compatibility-matrix`, with a new private `CARGO_HOME` for the named SQLx offline scenario; record warm-up/fetch and frozen-offline outcome separately |
 | 62B | 49; before 62 | Maintained Rust demo compile enrollment in Rust interop verification; tracked demo discovery and manifest selection, no demo algorithm rewrite. Relax exact Itertools edge set only when a real maintained consumer requires it. | `manifest itertools_dependency_version`; `area rust_interop: matrix, compatibility-matrix` |
 | 62C | E2; before 62 | `crates/sifr_driver` sysroot/environment tests and their owned fixtures: negative resolver-2/absent-resolver, explicit missing ambient Python setup, meaningful parity assertion. Preserve historical environment-mutation records. | `cargo test -p sifr_driver sysroot`; `area python_interop: env, readonly-check-doctor` |
-| 62D | none technically; E1/E2 merge-readiness; schedule immediately after 39 when ready | **Blocked on E1/E2 merge-readiness.** LSP request-cancelled -32800 and strict unexpected-response handling in `crates/sifr_lsp` tests and developer-tooling protocol checks; no outbound request feature. | `cargo test -p sifr_lsp`; `manifest lsp_server_dependency_version`; `area developer_tooling: lsp-smoke` |
+| 62D | none technically; E1/E2 merge-readiness; schedule immediately after 39 when ready | **Complete through PR 3827; E1/E2 cleared.** LSP request-cancelled -32800 and strict unexpected-response handling in `crates/sifr_lsp` tests and developer-tooling protocol checks; no outbound request feature. | `cargo test -p sifr_lsp`; `manifest lsp_server_dependency_version`; `area developer_tooling: lsp-smoke` |
 
 Item 56 is scheduled immediately after Item 49. Items 62A/62B/62C are scheduled
 after Item 61 and before Item 62, skipping any that remain blocked. Item 62
@@ -2012,7 +2087,7 @@ Item 54 is now complete, with its separate closure evidence below.
 
 | ID | Technical dependencies and scheduling position | Owned scope and acceptance | Exact named focused tests |
 | --- | --- | --- | --- |
-| 63 | 39; E1/E2 merge-readiness; schedule after 57 and before 62 | **Blocked on E1/E2.** Item 39 found that the Redis numkeys literals live in `verification/areas/python_interop/fixtures/live_services/python_bridges/redis_live.py`, not a runner. Derive each call's numkeys from its actual keys in this fixture-owned item; preserve the canonical Redis API and do not add compatibility or fallback paths. This explicitly discharges the conflicting Redis clause in Item 39, without expanding its runner-only scope. | `area python_interop: redis-service-features, live-policy, live-examples`; shared diff/file-size guards; exactly one merge-profile gate on the reviewed SHA when prerequisites clear |
+| 63 | 39; E1/E2 merge-readiness; schedule after 57 and before 62 | **Complete through PR 3827; E1/E2 cleared.** Item 39 found that the Redis numkeys literals live in `verification/areas/python_interop/fixtures/live_services/python_bridges/redis_live.py`, not a runner. Derive each call's numkeys from its actual keys in this fixture-owned item; preserve the canonical Redis API and do not add compatibility or fallback paths. This explicitly discharges the conflicting Redis clause in Item 39, without expanding its runner-only scope. | `area python_interop: redis-service-features, live-policy, live-examples`; shared diff/file-size guards; exactly one merge-profile gate on the reviewed SHA when prerequisites clear |
 
 Item 63 was registered from Item 39's read-only scope discovery before its
 review. No fixture edit or gate was authorized in Item 39. Its separate owner
@@ -4595,7 +4670,7 @@ The phase closes only when:
 - the Item 35 whole-phase exact-SHA agent review returns `SATISFIED` with no
   blocking finding.
 
-## Current Handoff
+## Historical handoff — superseded by current delivery status
 
 Item 54 is complete via PR #3769, candidate
 `d2292f65182c38191ae717e5b1e16475edd518b9`, merge
@@ -5217,3 +5292,60 @@ semantics, dependency version or lockfile change is introduced. Rerun the affect
 callback tests and both static-program runtime cases; reuse the passing focused
 cases whose implementation and inputs are unchanged. Full merge gate 3 follows
 after focused success and the scoped combined review.
+
+## Merged repair and tooling dispositions — 2026-09-15
+
+Items 76–84 are complete through root PR 3827 and merge
+`33639f4ee3b7079ec4da889834cae0d55d763786`. Full merge gate 3 at final candidate
+`d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea` confirms the combined implementation.
+Scoped review receipts remain external under the full candidate SHA in
+`20260913-final-integration/reviews/`; they are not rewritten to claim review
+of a later commit. The review sequence and earlier failures are preserved.
+
+| Item | Scoped candidate | Review response SHA256 | Disposition |
+| --- | --- | --- | --- |
+| 76 | `20dbb1e4579b7dd25139b13853f3ccb0f057b9f0` | `a170a81b556a38c9a0f1167ad6b41cd6b72ff28048da0502b4903c424dc90d59` | SATISFIED; runner/source preparation repaired; final sysroot area passes. |
+| 77 | `b9a23066373762e0ea2a91913e326e94f64ee186` | `86485e48f9a66083dbee2b12a5e4a0f369b71702004660d487e0a767e59dced5` | SATISFIED; attached structural API ownership preserved; all 1,517 codegen tests pass. |
+| 78 | `6c3685a47e5ec3f2f9674b3c413a1f473593a4bb` | `2f82eec69c373b08f7ff3a4e308e1447fbe395d733081740a0414256157738cd` | SATISFIED; strict corrected dependency snapshot, installed smoke and boundary equivalence pass. |
+| 79 | `4d296990011dbdb9ccc970ac73b964eca0741fbe` | `e63ccc12668dfbccd31dff65cf263058d1dbb4936715c463dc1d53e9fd5cb50e` | SATISFIED; all 13 build-output tests pass, including the intended missing-Cargo stage. |
+| 80–84 | `d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea` | `53e0e0233131beb578eccdbeed6252581e3435996d62b9956adebb3570de21bb` | SATISFIED; focused correction and all exact-source full-suite cases pass. |
+
+Each scoped review above consumed one initial review and zero remediation
+reviews. The earlier integration review retains its one initial NOT SATISFIED
+result and one SATISFIED remediation for missing setup-policy test registration.
+The full merge gate condition in the final scoped review is now satisfied by
+merge3, without changing that original review response.
+
+Items 80–84 focused run 2 passes all 20 callback codegen tests and both static
+program runtime cases. It reuses the unaffected run-1 archive/backend/callback/
+capture/portable/lowering passes after comparing the exact three-file delta.
+The subsequent full gate executes the final candidate directly and passes all
+77 generated-build cases, eliminating any final-source inference. Production
+Clippy for the changed libraries, formatting, 3,880 source file-size checks,
+lowering maintainability and diff checks pass. Optional observations belong to
+[the review follow-ups](ad-hoc-latest-stable-review-followups.md).
+
+Items 31/61 (Kafka), 32 (Packaging/Hatchling), 33/40 (editor/Node), 48 (SQLite),
+49/56/62A/62B/75 (Rust inventories/demos), 50–52/57/63 (Python and services),
+and 62C/62D (compiler/environment/LSP mechanisms) are delivered by the same
+integration merge with the item-level evidence above and the full final gate.
+The SQLite update is an owned completed implementation, not an upstream blocker.
+Original performance and historical artifact-custody failures are not relabeled.
+The user-approved minimal-retention disposition of Items 59/64/70 remains in
+force; the missing historical 20 payloads/four records remain unrecovered.
+
+Mint prerequisite Item 74 is complete in [PR 3823](https://github.com/sifr-lang/sifr/pull/3823),
+merge `5a77ce8958e4090b72c10fd50ae945ffe6f09976`. Candidate
+`30e4be9ea04ab9e0bcc082da2886fb8ef720a3c8` retains its successful Mint 4.2.882
+validation, broken links, stable documentation and mutation checks. Its one
+initial/one remediation review is SATISFIED; response SHA256
+`63fd0eedcca46f81edf4aa594dc7ec9e031abdd77a1a142a00d607e4e86a3925`.
+The wrapper cleanup exit 1 after the completed review remains recorded separately.
+
+Item 34 is complete in [PR 3824](https://github.com/sifr-lang/sifr/pull/3824),
+merge `81f73f4170da26df1606449d413ff6e7fc082328`. Candidate
+`caa2174f0f4681710ec1459e8d3d0110153bbafb` passes exact Mint 4.2.882 checks,
+287 path checks, documentation schema/structure, shell syntax and guards.
+Its one initial/zero remediation review is SATISFIED; response SHA256
+`b65f13fa02dddb5d290b96d7ec0de6358d242b2b59194b7ef6a841314017a932`.
+The importer README observation remains a separate nonblocking follow-up.

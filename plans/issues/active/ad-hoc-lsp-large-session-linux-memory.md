@@ -71,3 +71,14 @@ zero measured RSS slope. It uses the complete unchanged stress corpus.
 This is targeted qualification, not a create-PR/full merge/release-profile pass.
 Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-lsp-memory/.
 The source/binary receipt is retained outside Git after this commit.
+
+
+## Integration delivery — 2026-09-15
+
+The implementation is merged through PR 3827, merge
+`33639f4ee3b7079ec4da889834cae0d55d763786`. Full merge gate 3 passes at
+`d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea`, including both nested-write E2E
+regressions and the representative performance selection. The actual release
+profile, including large-session stress, is running at that same unchanged
+candidate. This issue remains open for that final qualification result; the
+earlier focused PASS is not relabeled as a release-profile result.
