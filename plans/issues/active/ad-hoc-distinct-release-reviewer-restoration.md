@@ -2,6 +2,13 @@
 
 ## Status
 
+Policy implementation delivered in [PR 3827](https://github.com/sifr-lang/sifr/pull/3827),
+merge `33639f4ee3b7079ec4da889834cae0d55d763786` (2026-09-15). Exact-candidate
+full merge gate 3 at `d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea` passes,
+including distribution qualification. The earlier distinct-reviewer blocker
+is closed. Prospective release qualification is tracked in the phase; an actual
+publication still requires approval of its exact protected run.
+
 Implementation owned by latest-stable convergence Item 65. On 2026-09-08 the
 user permanently superseded the distinct-person requirement: `stable-release`
 requires explicit GitHub-recorded approval by `yaseralnajjar`, permits self-review,
@@ -11,7 +18,7 @@ run or publication. No second-person invitation is a prerequisite.
 Historical waiver, report, and signoff bytes and digests remain immutable.
 The expiry failure below is retained evidence, not a reason to renew the waiver.
 
-## Blocking Evidence
+## Historical blocking evidence
 
 On 2026-08-27, latest-stable Item 31 candidate
 `dbdbd42915dd45fe0255681c224266dd08f453ea` ran its one authorized merge gate.

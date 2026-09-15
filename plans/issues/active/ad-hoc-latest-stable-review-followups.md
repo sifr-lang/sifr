@@ -91,3 +91,36 @@ separately by Item 78 in the convergence phase.
 - Owner: compiler invariant diagnostics. If per-consumer structural rendering
   ever stops being module-independent, replace the existing conflicting-body
   assertion with a diagnostic. No divergence is present in current rendering.
+
+## Items 78–84 review observations
+
+These suggestions do not block the merged repair or reopen frozen selections.
+The exact response hashes and candidates are in the phase's merged-item record.
+
+- Owner: sysroot snapshot maintenance. Keep the byte-boundary dependency map
+  synchronized with maintained imports while preserving the strict comparison.
+- Owner: CLI failure-test maintenance. Document the intended failure stage when
+  isolating Cargo from rustfmt, so a future prerequisite cannot mask that stage.
+- Owner: phase record editing. Improve missing word spacing in historical prose
+  when that prose is next edited; preserve the dated evidence and outcomes.
+- Owner: callback codegen coverage. Add shared-borrow byte/list transport cases
+  in a separate coverage item if useful. The review suggested coverage; it did
+  not demonstrate a current defect in these unmodified paths.
+- Owner: callback validation speed. Consider enrolling the negative capture
+  fixture in a faster targeted selection without removing full integration checks.
+
+## Mint importer README preservation
+
+Origin: Item 34 SATISFIED review, candidate
+`caa2174f0f4681710ec1459e8d3d0110153bbafb`.
+Owner: documentation importer maintenance.
+The existing README heredoc omits the unrelated Deployment and Assistant
+Instructions sections. A future importer run could remove those sections.
+Preserving them is a separate bounded follow-up, not part of exact Mint pinning.
+
+## VSIX package size
+
+Origin: native qualification 34895961655 at the final implementation candidate.
+Owner: editor packaging maintenance.
+The package succeeds with an advisory about 370 files/188 JavaScript files.
+Consider bundling in a separate packaging task; no package policy was relaxed.
