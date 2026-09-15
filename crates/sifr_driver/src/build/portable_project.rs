@@ -184,6 +184,14 @@ fn rewrite_lock_sources(
             "failed to parse resolved generated Cargo lockfile: {error}"
         ))]
     })?;
+    let packages = lock
+        .get_mut("package")
+        .and_then(toml::Value::as_array_mut)
+        .ok_or_else(|| {
+            vec![portable_error(
+                "generated Cargo lockfile has no package array",
+            )]
+        })?;
     let mut requirements = dependency_plan
         .crates
         .iter()
@@ -199,6 +207,7 @@ fn rewrite_lock_sources(
         .crates
         .iter()
         .any(|dependency| dependency.krate == SysrootCrate::SifrStdlib)
+        && local_stdlib_uses_runtime(packages)
         && !requirements
             .iter()
             .any(|requirement| requirement.name == "sifr_runtime")
@@ -214,14 +223,6 @@ fn rewrite_lock_sources(
     requirements.extend(interop_sources(interop)?);
 
     let authority = authority_packages(&cargo_resolution.authoritative_locks)?;
-    let packages = lock
-        .get_mut("package")
-        .and_then(toml::Value::as_array_mut)
-        .ok_or_else(|| {
-            vec![portable_error(
-                "generated Cargo lockfile has no package array",
-            )]
-        })?;
     for requirement in requirements {
         let package = packages
             .iter_mut()
@@ -271,6 +272,27 @@ fn rewrite_lock_sources(
             "failed to write portable generated Cargo lockfile: {error}"
         ))]
     })
+}
+
+// sifr_stdlib's runtime dependency is optional. Numeric-only feature sets do
+// not resolve it; use the resolved edge instead of inventing a runtime package.
+fn local_stdlib_uses_runtime(packages: &[toml::Value]) -> bool {
+    packages
+        .iter()
+        .filter_map(toml::Value::as_table)
+        .find(|package| {
+            package.get("name").and_then(toml::Value::as_str) == Some("sifr_stdlib")
+                && package.get("version").and_then(toml::Value::as_str) == Some("0.0.0")
+                && !package.contains_key("source")
+        })
+        .and_then(|package| package.get("dependencies"))
+        .and_then(toml::Value::as_array)
+        .is_some_and(|dependencies| {
+            dependencies
+                .iter()
+                .filter_map(toml::Value::as_str)
+                .any(|dependency| dependency.split_whitespace().next() == Some("sifr_runtime"))
+        })
 }
 
 fn interop_sources(
@@ -393,24 +415,20 @@ mod tests {
     use sifr_stdlib_manifest::{CargoVendorMode, SysrootCrateDependency};
     use std::collections::BTreeSet;
 
-    #[test]
-    fn portable_lock_rewrites_local_sysroot_packages_to_exact_git_sources() {
+    const TEST_REVISION: &str = "0123456789abcdef0123456789abcdef01234567";
+
+    fn rewrite_test_lock(
+        source: &str,
+        crates: Vec<SysrootCrate>,
+    ) -> Result<toml::Table, Vec<RenderedDiagnostic>> {
         let root = std::env::temp_dir().join(format!(
             "sifr_portable_lock_{}_{}",
             std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("time should move forward")
-                .as_nanos()
+            LOCAL_RESOLUTION_NONCE.fetch_add(1, Ordering::Relaxed),
         ));
         std::fs::create_dir_all(&root).expect("test root should be created");
         let lock_path = root.join("Cargo.lock");
-        std::fs::write(
-            &lock_path,
-            "version = 4\n\n[[package]]\nname = \"sifr_runtime\"\nversion = \"0.0.0\"\n",
-        )
-        .expect("test lock should be written");
-        let revision = "0123456789abcdef0123456789abcdef01234567";
+        std::fs::write(&lock_path, source).expect("test lock should be written");
         let plan = SysrootDependencyPlan {
             stdlib_modules: BTreeSet::new(),
             required_features: BTreeSet::new(),
@@ -419,11 +437,14 @@ mod tests {
             sysroot_content_sha256: "content".to_string(),
             cargo_config: PathBuf::from("/private/host/sysroot/.cargo/config.toml"),
             vendor_dir: PathBuf::from("/private/host/sysroot/vendor"),
-            crates: vec![SysrootCrateDependency {
-                krate: SysrootCrate::SifrRuntime,
-                path: PathBuf::from("/private/host/sysroot/crates/sifr_runtime"),
-                features: BTreeSet::new(),
-            }],
+            crates: crates
+                .into_iter()
+                .map(|krate| SysrootCrateDependency {
+                    path: PathBuf::from("/private/host/sysroot/crates").join(krate.package_name()),
+                    krate,
+                    features: BTreeSet::new(),
+                })
+                .collect(),
             retained_direct_dependencies: Vec::new(),
             cargo_vendor_mode: CargoVendorMode::SysrootOnly,
             cache_fingerprint: "test".to_string(),
@@ -434,22 +455,118 @@ mod tests {
             authoritative_locks: Vec::new(),
             trusted_vendor_dirs: Vec::new(),
         };
-
-        rewrite_lock_sources(
+        let result = rewrite_lock_sources(
             &lock_path,
             &plan,
             &InteropBuildPlan::default(),
             &policy,
-            revision,
+            TEST_REVISION,
         )
-        .expect("portable lock should render");
-        let lock = std::fs::read_to_string(&lock_path).expect("portable lock should be readable");
-        assert!(!lock.contains("/private/host"), "{lock}");
-        assert!(lock.contains(&format!(
-            "source = \"git+https://github.com/sifr-lang/sifr.git?rev={revision}#{revision}\""
-        )));
+        .map(|()| {
+            std::fs::read_to_string(&lock_path)
+                .expect("portable lock should be readable")
+                .parse::<toml::Table>()
+                .expect("portable lock should parse")
+        });
+        std::fs::remove_dir_all(root).expect("test root should be removed");
+        result
+    }
 
-        let _ = std::fs::remove_dir_all(root);
+    fn assert_exact_sysroot_sources(lock: &toml::Table, expected: &[&str]) {
+        let packages = lock["package"].as_array().expect("package array");
+        assert_eq!(packages.len(), expected.len());
+        let expected_source = format!(
+            "git+https://github.com/sifr-lang/sifr.git?rev={TEST_REVISION}#{TEST_REVISION}"
+        );
+        for (package, name) in packages.iter().zip(expected) {
+            assert_eq!(package["name"].as_str(), Some(*name));
+            assert_eq!(package["version"].as_str(), Some("0.0.0"));
+            assert_eq!(package["source"].as_str(), Some(expected_source.as_str()));
+        }
+        assert!(
+            !toml::to_string(lock)
+                .expect("render lock")
+                .contains("/private/host")
+        );
+    }
+
+    #[test]
+    fn portable_lock_rewrites_local_sysroot_packages_to_exact_git_sources() {
+        let lock = rewrite_test_lock(
+            "version = 4\n[[package]]\nname = \"sifr_runtime\"\nversion = \"0.0.0\"\n",
+            vec![SysrootCrate::SifrRuntime],
+        )
+        .expect("portable runtime lock should render");
+        assert_exact_sysroot_sources(&lock, &["sifr_runtime"]);
+    }
+
+    #[test]
+    fn portable_lock_preserves_stdlib_without_optional_runtime() {
+        let lock = rewrite_test_lock(
+            "version = 4\n[[package]]\nname = \"sifr_stdlib\"\nversion = \"0.0.0\"\n",
+            vec![SysrootCrate::SifrStdlib],
+        )
+        .expect("stdlib without a runtime edge should remain portable");
+        assert_exact_sysroot_sources(&lock, &["sifr_stdlib"]);
+        assert!(
+            !lock["package"][0]
+                .as_table()
+                .expect("stdlib package")
+                .contains_key("dependencies")
+        );
+    }
+
+    #[test]
+    fn portable_lock_rewrites_resolved_transitive_runtime() {
+        for edge in ["sifr_runtime", "sifr_runtime 0.0.0"] {
+            let lock = rewrite_test_lock(
+                &format!("version = 4\n[[package]]\nname = \"sifr_stdlib\"\nversion = \"0.0.0\"\ndependencies = [\"{edge}\"]\n[[package]]\nname = \"sifr_runtime\"\nversion = \"0.0.0\"\n"),
+                vec![SysrootCrate::SifrStdlib],
+            ).expect("resolved transitive runtime should be portable");
+            assert_exact_sysroot_sources(&lock, &["sifr_stdlib", "sifr_runtime"]);
+            assert_eq!(lock["package"][0]["dependencies"][0].as_str(), Some(edge));
+        }
+    }
+
+    #[test]
+    fn portable_lock_rejects_missing_required_sysroot_packages() {
+        let stdlib_only = "version = 4\n[[package]]\nname = \"sifr_stdlib\"\nversion = \"0.0.0\"\n";
+        let transitive_runtime = format!("{stdlib_only}dependencies = [\"sifr_runtime\"]\n");
+        let wrong_source = format!(
+            "{transitive_runtime}[[package]]\nname = \"sifr_runtime\"\nversion = \"0.0.0\"\nsource = \"git+https://example.com/wrong-runtime\"\n"
+        );
+        for (source, crates, missing) in [
+            (
+                stdlib_only,
+                vec![SysrootCrate::SifrStdlib, SysrootCrate::SifrRuntime],
+                "sifr_runtime",
+            ),
+            (
+                transitive_runtime.as_str(),
+                vec![SysrootCrate::SifrStdlib],
+                "sifr_runtime",
+            ),
+            (
+                wrong_source.as_str(),
+                vec![SysrootCrate::SifrStdlib],
+                "sifr_runtime",
+            ),
+            (
+                "version = 4\npackage = []\n",
+                vec![SysrootCrate::SifrStdlib],
+                "sifr_stdlib",
+            ),
+        ] {
+            let errors =
+                rewrite_test_lock(source, crates).expect_err("required local package must exist");
+            assert_eq!(errors.len(), 1);
+            assert_eq!(errors[0].code, "SIFR-BUILD-0002");
+            assert!(
+                errors[0]
+                    .message
+                    .contains(&format!("missing local package {missing} 0.0.0"))
+            );
+        }
     }
 
     #[test]
