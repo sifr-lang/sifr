@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shlex
 import subprocess
@@ -63,8 +64,22 @@ def prepare_cargo_cache(
     prepare_authoring_test_binaries(profile, setup_env, command_runner)
     prepare_tooling_test_binaries(profile, setup_env, command_runner)
     prepare_performance_binaries(profile, setup_env, command_runner)
+    prepare_generated_oracle_binary(profile, setup_env, command_runner)
     prepare_sysroot_source_binary(profile, setup_env, command_runner)
     prepare_maintained_demo_cache(profile, setup_env, command_runner)
+
+
+def prepare_generated_oracle_binary(profile, env, command_runner) -> None:
+    """Charge cold release compilation to setup for selected generated oracles."""
+    suites = {suite for area in profile.get("selected_areas", [])
+              if area["area"] == "cpython_differential" for suite in area["suites"]}
+    if not suites.intersection({"generated_broader", "generated_minimized_seeds"}):
+        return
+    manifest = json.loads((REPO_ROOT / "verification/areas/cpython_differential/"
+                           "data/generated_seed_manifest.json").read_text())
+    command = [*manifest["release_binary"]["build_command"], "--locked", "--offline"]
+    print(f"[sifr-profile-setup] generated-oracle-build={' '.join(command)}", flush=True)
+    command_runner(command, env=env)
 
 
 def prepare_sysroot_source_binary(profile, env, command_runner) -> None:

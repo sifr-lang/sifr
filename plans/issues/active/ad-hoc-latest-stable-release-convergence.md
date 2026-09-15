@@ -5477,7 +5477,7 @@ Release2 remains failed at exact clean
 The generated broader check used its unchanged 300-second build timeout before
 any oracle program executed. The shared runner explicitly removed
 `CARGO_TARGET_DIR` and later hardcoded the default executable independently of
-its recorded build metadata. The prepared private-target compiler was unused.
+its recorded build metadata. The prepared private-target debug compiler was unused. Focused execution additionally confirmed that profile setup did not prepare the required release graph; this same item now prepares that graph before bounded comparisons.
 
 Owner: CPython differential generated-suite runner, its policy and focused
 regression checks. Both broader and minimized suites share this mechanism.
@@ -5511,3 +5511,14 @@ Setup passed in 5,924.829 seconds; its cold timing advisory remains failed.
 All 356 generated materializations passed. Determinism checks DET-0001 and
 DET-0002 passed in 1,264.919 and 270.776 seconds respectively. No later release
 area or full performance/large-session result is claimed.
+
+
+Item 86 focused investigation corrected the initial preparation assumption:
+profile setup built the debug compiler, not the generated oracles' release
+compiler. Merely honoring the target still left cold release dependencies in
+the timed build. Prepare the selected generated suite's exact release graph
+once in the explicit setup step, preserving the configured target, job count,
+locked offline dependency policy, and all comparison/build timeout limits.
+Two setup-policy regressions cover suite selection, environment preservation,
+failure propagation and enrollment in the actual nightly/release profiles;
+ordinary merge/create-pr profiles do not acquire a new release build.

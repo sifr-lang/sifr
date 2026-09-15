@@ -16,7 +16,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_authoring_test_binaries, prepare_maintained_demo_cache, prepare_tooling_test_binaries, prepare_performance_binaries
+from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_authoring_test_binaries, prepare_maintained_demo_cache, prepare_tooling_test_binaries, prepare_performance_binaries, prepare_generated_oracle_binary
 from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
 from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
 from .cargo_crate_setup_checks import CrateSetupPolicyTests
@@ -266,6 +266,42 @@ class SetupPolicyTests(unittest.TestCase):
         for suites in (["smoke"], ["frontend-syntax-guardrails"]):
             with self.assertRaises(CommandFailed):
                 prepare_performance_binaries(profile(suites), {}, fail)
+
+    def test_generated_oracle_preparation_selection_environment_and_failure(self):
+        calls = []
+        env = {"CARGO_TARGET_DIR": "/owned/target", "CARGO_BUILD_JOBS": "2"}
+        def profile(suites):
+            return {"selected_areas": [{"area": "cpython_differential", "suites": suites}]}
+        def run(args, **kw):
+            calls.append((args, kw["env"]))
+        for suites in ([], ["policy"], ["hand_seeded_merge"]):
+            prepare_generated_oracle_binary(profile(suites), env, run)
+        self.assertEqual(calls, [])
+        command = ["cargo", "build", "--release", "-p", "sifr", "--locked", "--offline"]
+        for suites in (["generated_broader"], ["generated_minimized_seeds"],
+                       ["generated_broader", "generated_minimized_seeds"]):
+            calls.clear()
+            prepare_generated_oracle_binary(profile(suites), env, run)
+            self.assertEqual(calls, [(command, env)])
+            self.assertIs(calls[0][1], env)
+        def fail(*args, **kw):
+            raise CommandFailed(101)
+        with self.assertRaises(CommandFailed):
+            prepare_generated_oracle_binary(profile(["generated_broader"]), env, fail)
+
+    def test_generated_oracle_preparation_is_enrolled_in_profile_setup(self):
+        for name, expected in (("create-pr", False), ("merge", False),
+                               ("nightly", True), ("release", True)):
+            with self.subTest(profile=name):
+                calls = []
+                with patch("sifr_verify.cargo_setup.subprocess.check_output", return_value=REVISION):
+                    prepare_cargo_cache(load_profile(name), {"CARGO_TARGET_DIR": "/owned/target"},
+                                        lambda args, **kw: calls.append((args, kw["env"])))
+                release_builds = [(args, env) for args, env in calls
+                                  if args[:3] == ["cargo", "build", "--release"]]
+                self.assertEqual(len(release_builds), int(expected))
+                if expected:
+                    self.assertEqual(release_builds[0][1]["CARGO_TARGET_DIR"], "/owned/target")
 
     def test_demo_preparation_selection_and_failure(self):
         calls = []
