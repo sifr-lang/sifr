@@ -222,7 +222,6 @@ mod sifr_generated_generated_support {
         let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
         sifr_generated_sift_up(heap, pos.clone());
     }
-    #[must_use]
     pub fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
         "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
             .to_string();

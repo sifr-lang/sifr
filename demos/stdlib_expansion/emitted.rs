@@ -917,7 +917,6 @@ mod sifr_generated_generated_support {
         let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
         sifr_generated_sift_up(heap, pos.clone());
     }
-    #[must_use]
     pub fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
         "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
             .to_string();
@@ -1075,10 +1074,6 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    trait SifrGeneratedAdd: Sized {}
-    impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
-    impl SifrGeneratedAdd for f64 {}
-    impl SifrGeneratedAdd for String {}
     #[must_use]
     pub fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
         let iterables = iterables.to_vec();
@@ -1617,7 +1612,7 @@ mod sifr_generated_generated_support {
 }
 mod sifr_generated_project_nominals {
     use crate::sifr_generated_generated_support::{
-        String, sifr_generated_const_51554f54455f4e4f4e45, sifr_generated_validate_char,
+        sifr_generated_const_51554f54455f4e4f4e45, sifr_generated_validate_char,
     };
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1767,10 +1762,9 @@ mod sifr_generated_project_nominals {
     impl ::std::error::Error for FloatPrecisionLossError {}
 }
 use crate::sifr_generated_generated_support::{
-    String, bisect_left, chain, f64, fill, fnmatch, format_row, heappop, heappush, mean, nsmallest,
-    parse_flag, parse_option, parse_row, reduce,
-    sifr_generated_const_61736369695f6c6f77657263617365, sifr_generated_const_646967697473, take,
-    token_hex,
+    bisect_left, chain, fill, fnmatch, format_row, heappop, heappush, mean, nsmallest, parse_flag,
+    parse_option, parse_row, reduce, sifr_generated_const_61736369695f6c6f77657263617365,
+    sifr_generated_const_646967697473, take, token_hex,
 };
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::FloatOverflowError;

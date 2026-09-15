@@ -392,7 +392,7 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::{String, sifr_generated_iterdir_to_iter};
+    use crate::sifr_generated_generated_support::sifr_generated_iterdir_to_iter;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2epathlibX2ePath {
         pub path: String,
@@ -508,7 +508,7 @@ mod sifr_generated_project_unions {
     }
 }
 use crate::sifr_generated_generated_support::{
-    String, accumulate, compress, getpid, islice, run_command, takewhile, write_text,
+    accumulate, compress, getpid, islice, run_command, takewhile, write_text,
 };
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0;

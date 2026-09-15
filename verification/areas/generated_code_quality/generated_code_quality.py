@@ -46,7 +46,7 @@ from quality_policy import (  # noqa: E402
     violation_summary,
 )
 from source_quality_checks import (
-    assert_negative_clippy,
+    check_clippy_gate_controls,
     assert_negative_determinism,
     assert_negative_rustfmt,
     compare_bytes,
@@ -615,31 +615,16 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
     cargo_target_dir = run_root / "cargo-target"
     records = []
     try:
-        negative_seeds = {
-            "clippy::arithmetic_side_effects": "forbidden_arithmetic.rs",
-            "clippy::cast_sign_loss": "forbidden_allocation_width.rs",
-            "clippy::needless_return": "clippy_warning.rs",
-        }
-        for lint, filename in negative_seeds.items():
-            timed_case(
-                "generated_code_quality",
-                f"clippy/negative-{lint.removeprefix('clippy::')}",
-                lambda lint=lint, filename=filename: assert_negative_clippy(
-                    GCQ_ROOT / "negative_seeds" / filename,
-                    run_root,
-                    lint,
-                    run_command,
-                    STRICT_CLIPPY_ARGS,
-                    parse_clippy_diagnostics,
-                    cargo_target_dir,
-                ),
-            )
+        check_clippy_gate_controls(
+            run_root, timed_case, run_command, STRICT_CLIPPY_ARGS,
+            parse_clippy_diagnostics, cargo_target_dir,
+        )
         debt = load_debt(QUALITY_DEBT)
         validate_debt_owners(debt)
         selected = selected_positive_entries(entries, args.group)
         summaries = []
         for entry in selected:
-            def clippy_entry() -> Path:
+            def clippy_entry() -> tuple[Path, dict[str, Any]]:
                 crate_root_inner = materialize_entry(entry, run_root)
                 result = run_strict_clippy(
                     crate_root_inner,
@@ -654,10 +639,12 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
                         f"{result.stderr}"
                     )
                 summaries.append((entry.id, actual))
-                return crate_root_inner
+                return crate_root_inner, actual
 
-            crate_root = timed_case("generated_code_quality", f"clippy/{entry.id}", clippy_entry)
-            records.append(record_for_entry(entry, crate_root, "passed"))
+            crate_root, actual = timed_case("generated_code_quality", f"clippy/{entry.id}", clippy_entry)
+            record = record_for_entry(entry, crate_root, "passed")
+            record["clippy_summary"] = actual
+            records.append(record)
         merged = merge_signature_summaries(summaries)
         lint_counts = ", ".join(
             f"{lint}={signature['count']}" for lint, signature in merged.items()
@@ -673,6 +660,7 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
             encoding="utf-8",
         )
         print(f"generated-code clippy summary={summary_path.relative_to(REPO_ROOT)}")
+        evidence = record_evidence("clippy", run, records)
         full_selection = not args.group and not explicit_entry_ids() and not os.environ.get(
             "SIFR_GCQ_MAX_ENTRIES"
         )
@@ -683,7 +671,6 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
             actual=merged,
             debt=debt,
         )
-        evidence = record_evidence("clippy", run, records)
         print(f"generated-code clippy passed; evidence={evidence.relative_to(REPO_ROOT)}")
     except Exception:
         print(f"generated-code clippy failed; preserved={run_root}", file=sys.stderr)

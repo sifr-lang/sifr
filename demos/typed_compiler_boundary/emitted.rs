@@ -153,7 +153,7 @@ mod sifr_generated_generated_support {
         SifrGeneratedStdlibSifrX2etaskX2eContext::new(
             SIFR_GENERATED_SIFR_TASK_CONTEXT_LABEL
                 .try_with(Clone::clone)
-                .unwrap_or("Context".to_string()),
+                .unwrap_or_else(|_| "Context".to_string()),
         )
     }
 }

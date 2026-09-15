@@ -5619,7 +5619,7 @@ rebound to the final candidate. Its CI jobs passed; optional artifact download w
 
 ## Item 87: generated-Rust release quality repair batch
 
-State: registered; implementation pending. Base is the delivered Item 86 plus
+State: implementation and focused validation in progress. Base is the delivered Item 86 plus
 its documentation records. This batch follows the user's instruction to repair
 related failing tests together before another full qualification run.
 
@@ -5647,3 +5647,75 @@ then complete release/native qualification on that source. Preserve the active
 candidate's cache; the user's disk-pressure workflow governs cleanup decisions.
 Use one initial scoped Opus review and only valid in-scope remediation reviews.
 Item 62 and Item 35 remain blocked on the actual final qualification result.
+
+### Item 87 scope refinement before initial review — 2026-09-15
+
+The first complete focused run collected all 264 authoritative companions and
+92 corpus entries. No E-category compiler diagnostic remains. It exposed
+remaining opaque-method demand through ordinary `pattern`/`flags` bindings,
+unused empty generated arithmetic traits, a discarded must-use heap mutator
+return, and a non-const borrowed tuple-field getter. These are included in this
+generated-Rust repair batch, with focused regression coverage.
+
+A separate two-crate experiment confirmed a diagnostic-integrity defect:
+pre-materialized crates with the same package name and shared target can reuse
+a preceding crate's Clippy result. A deliberately erroneous second crate
+returned status 0 with no diagnostics. Invalidating only its generated root
+package removed 20.1 KiB and produced the expected status 101 and must-use
+diagnostic. The gate must isolate each root-package check while retaining its
+private dependency cache; the active compiler cache and materialized source
+bytes remain intact. Preserve per-case corpus diagnostics before exact-debt
+validation so a failed aggregate remains auditable.
+
+Scope therefore also includes this per-case Clippy validation correction and
+the verified support/API/const findings above. No lint suppression or new
+accepted error category is authorized. Existing owned diagnostic fingerprints
+may be reconciled only against complete, correctly isolated checks. Prior
+cached generated-quality observations remain historical and are not used as
+evidence of complete per-case lint coverage. Full qualification stays pending.
+
+
+### Item 87 focused validation and exact-debt reconciliation — 2026-09-15
+
+The corrected compiler passes all 1,533 codegen unit tests. The two focused
+file-handle receiver tests pass; production component Clippy, three real/mocked
+cache-isolation regressions, all four Clippy gate controls, formatting, lowering
+maintainability and the 3,889-file size guard pass. The Boolean-only compiler-lint
+cleanup follows the recorded codegen unit run; final-candidate gates remain
+required.
+
+Quality2 collected all 264 authoritative companions and all 92 corpus projects
+with root-package invalidation and retained per-case process streams. No
+compiler error or unowned lint category remains. Both original aggregate
+results are failures because their exact diagnostic baselines changed; those
+results are preserved, not relabeled as successful gate runs. The complete
+archive is retained locally as
+review-evidence/generated-support/quality2.tar.gz, SHA-256
+d3b8493afec50c53d682ac72b80470b130070edb0173ed7d04e5cac663d6a3d9.
+
+The existing three selections are reconciled from the complete isolated
+diagnostics, including the representative twelve as the exact subset of the
+92-case collection. All raw streams reproduce their recorded per-case and
+aggregate signatures. Companion counts change from 11,001 to 11,000; corpus
+counts change from 4,184 to 4,236; the representative count remains 522.
+The cache correction and newly compilable support expose existing diagnostics,
+so a lower aggregate count alone is not the acceptance argument. All 686
+diagnostic spans in increasing companion categories already occur in M6's
+authoritative source. Of 1,736 spans in increasing corpus categories, 1,734
+occur in retained C-source projects. The other two are unchanged borrowed
+byte-vector arguments whose file-handle receiver syntax was corrected by this
+item. The source audit establishes pre-existing text, not previously complete
+diagnostic coverage or identical control flow.
+
+No new lint category, blanket allowance, changed workload, or weakened
+comparison is introduced. The now-absent box_collection and
+struct_field_names owner entries are removed. The source audits, before
+baseline, raw-diagnostic replay and strict policy self-tests are retained under
+20260915-generated-support/quality2-*; policy replay passes independently of
+the preserved failed Quality2 gate result. Original baseline provenance stays
+recorded. Final PR/merge/release and native qualification, exact-candidate
+review, merge and records remain pending.
+
+The Clippy control checks are grouped with source-quality validation helpers
+to keep the main gate module below the repository source-size limit. This
+does not change the user-selected disk-pressure cleanup workflow or rules.

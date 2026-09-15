@@ -369,7 +369,6 @@ mod sifr_generated_generated_support {
             i = &i - &SifrInt::from_i64(1);
         }
     }
-    #[must_use]
     pub fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
         "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
             .to_string();
@@ -509,10 +508,6 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    trait SifrGeneratedAdd: Sized {}
-    impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
-    impl SifrGeneratedAdd for f64 {}
-    impl SifrGeneratedAdd for String {}
     #[must_use]
     pub fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
         let iterables = iterables.to_vec();
@@ -1983,7 +1978,7 @@ mod sifr_generated_generated_support {
 mod sifr_generated_project_nominals {
     use crate::sifr_generated_generated_support::{
         SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
-        String, dumps, f64,
+        dumps,
     };
     use ::sifr_runtime::SifrInt;
     use ::std::collections::HashMap;
@@ -2496,10 +2491,10 @@ mod sifr_generated_project_nominals {
 use crate::sifr_generated_generated_support::{
     PI,
     SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
-    String, basename, bisect_left, bisect_right, capwords, chain, comb, cos, dirname, dumps,
-    extension, f64, factorial, fill, filter, findall, fnmatch, from_list, gcd, heapify, heappop,
-    isclose, lcm, loads, mean, median, repeat, search,
-    sifr_generated_const_61736369695f6c6f77657263617365, sin, sqrt, stdev, sub, take, wrap,
+    basename, bisect_left, bisect_right, capwords, chain, comb, cos, dirname, dumps, extension,
+    factorial, fill, filter, findall, fnmatch, from_list, gcd, heapify, heappop, isclose, lcm,
+    loads, mean, median, repeat, search, sifr_generated_const_61736369695f6c6f77657263617365, sin,
+    sqrt, stdev, sub, take, wrap,
 };
 use ::sifr_runtime::SifrInt;
 use ::std::collections::HashSet;

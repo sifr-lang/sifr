@@ -372,7 +372,7 @@ fn main() {
                 sifr_generated_mode.to_string(),
             ))
         })()?;
-        (&mut writer).write_bytes(&payload)?;
+        writer.write_bytes(&payload)?;
         (&mut writer).close();
         let mut reader: SifrGeneratedIoFileHandle = (|| {
             let sifr_generated_path = path.to_string();

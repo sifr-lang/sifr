@@ -51,10 +51,6 @@ mod sifr_generated_generated_support {
         }
         left.clone()
     }
-    trait SifrGeneratedAdd: Sized {}
-    impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
-    impl SifrGeneratedAdd for f64 {}
-    impl SifrGeneratedAdd for String {}
     #[must_use]
     pub fn pairwise<T: Clone + 'static>(data: &[T]) -> Vec<Vec<T>> {
         let mut result: Vec<Vec<T>> = Vec::new();
@@ -631,7 +627,6 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::String;
     #[derive(Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError {
         pub message: String,
@@ -705,8 +700,8 @@ mod sifr_generated_project_nominals {
     impl ::std::error::Error for FloatPrecisionLossError {}
 }
 use crate::sifr_generated_generated_support::{
-    String, batched, bisect_left, capwords, comb, exp, f64, factorial, gcd, harmonic_mean,
-    is_absolute, isfinite, lcm, median_high, median_low, pairwise, perm, prod, stem,
+    batched, bisect_left, capwords, comb, exp, factorial, gcd, harmonic_mean, is_absolute,
+    isfinite, lcm, median_high, median_low, pairwise, perm, prod, stem,
 };
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::FloatOverflowError;

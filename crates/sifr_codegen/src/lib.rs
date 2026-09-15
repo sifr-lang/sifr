@@ -20,7 +20,7 @@ pub use generated_rust_canonicalizer::{
 };
 pub(crate) use generated_rust_canonicalizer::{
     import_generated_support_in_project_nominals, import_project_prelude_bindings,
-    prune_generated_project_owners,
+    import_root_bindings_in_project_nominals, prune_generated_project_owners,
 };
 mod lib_async_main_cancellation;
 mod lib_runtime_needs;
@@ -224,3 +224,6 @@ mod union_type_helpers;
 mod lib_codegen_tests;
 #[cfg(test)]
 mod type_conversion_tests;
+
+#[cfg(test)]
+mod generated_support_regression_tests;

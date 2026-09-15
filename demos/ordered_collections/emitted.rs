@@ -351,7 +351,6 @@ mod sifr_generated_generated_support {
         }
         top
     }
-    #[must_use]
     pub fn heapreplace<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: T) -> Option<T> {
         if &SifrInt::from(heap.len()) == &SifrInt::from_i64(0) {
             return None;
@@ -380,7 +379,6 @@ mod sifr_generated_generated_support {
         sifr_generated_sift_down(heap, SifrInt::from_i64(0), heap_len.clone());
         top
     }
-    #[must_use]
     pub fn heappushpop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) -> Option<T> {
         heappush(heap, item);
         heappop(heap)

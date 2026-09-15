@@ -27,8 +27,10 @@ pub(super) fn refresh_support_imports(
 fn refresh_once(sources: BTreeMap<String, String>) -> Result<BTreeMap<String, String>, String> {
     let owner = super::canonicalize_generated_rust_identifier("__sifr_generated_support");
     let mut support = None;
+    let mut inherent = crate::stdlib_filter::InherentMethods::new();
     for source in sources.values() {
         let file = syn::parse_file(source).map_err(|error| error.to_string())?;
+        crate::stdlib_filter::collect_inherent_methods(&file, &mut inherent);
         for item in file.items {
             if let syn::Item::Mod(module) = item
                 && module.ident == owner
@@ -47,7 +49,7 @@ fn refresh_once(sources: BTreeMap<String, String>) -> Result<BTreeMap<String, St
         .into_iter()
         .map(|(module, source)| {
             let mut file = syn::parse_file(&source).map_err(|error| error.to_string())?;
-            if refresh_scope(&mut file.items, &owner, &support)? {
+            if refresh_scope(&mut file.items, &owner, &support, &inherent)? {
                 Ok((module, prettyplease::unparse(&file)))
             } else {
                 Ok((module, source))
@@ -56,7 +58,12 @@ fn refresh_once(sources: BTreeMap<String, String>) -> Result<BTreeMap<String, St
         .collect()
 }
 
-fn refresh_scope(items: &mut Vec<syn::Item>, owner: &str, support: &str) -> Result<bool, String> {
+fn refresh_scope(
+    items: &mut Vec<syn::Item>,
+    owner: &str,
+    support: &str,
+    inherent: &crate::stdlib_filter::InherentMethods,
+) -> Result<bool, String> {
     let mut changed = false;
     for item in items.iter_mut() {
         if let syn::Item::Mod(module) = item
@@ -65,7 +72,7 @@ fn refresh_scope(items: &mut Vec<syn::Item>, owner: &str, support: &str) -> Resu
             if module.ident == owner {
                 changed |= refresh_support_root_imports(nested)?;
             } else {
-                changed |= refresh_scope(nested, owner, support)?;
+                changed |= refresh_scope(nested, owner, support, inherent)?;
             }
         }
     }
@@ -76,9 +83,10 @@ fn refresh_scope(items: &mut Vec<syn::Item>, owner: &str, support: &str) -> Resu
     items.retain(|item| !support_import(item, owner));
     let mut consumer = syn::parse_file("").map_err(|error| error.to_string())?;
     consumer.items.clone_from(items);
-    let import = crate::generated_visibility::generated_support_import(
+    let import = crate::generated_visibility::generated_support_import_with_inherent(
         &prettyplease::unparse(&consumer),
         support,
+        inherent,
     )
     .replace("__sifr_generated_support", owner);
     if import.is_empty() {

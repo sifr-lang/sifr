@@ -136,7 +136,6 @@ mod sifr_generated_generated_support {
             i = &i - &SifrInt::from_i64(1);
         }
     }
-    #[must_use]
     pub fn sifr_generated_heappop_max<T: Clone + 'static + PartialOrd>(
         heap: &mut Vec<T>,
     ) -> Option<T> {
@@ -186,7 +185,6 @@ mod sifr_generated_generated_support {
         }
         top
     }
-    #[must_use]
     pub fn sifr_generated_heapreplace_max<T: Clone + 'static + PartialOrd>(
         heap: &mut Vec<T>,
         item: T,

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 import shutil
+import sys
+import tomllib
 from pathlib import Path
 from typing import Any, Callable, Sequence
 
@@ -153,10 +155,19 @@ def run_strict_clippy(
     cargo_target_dir: Path,
 ) -> Any:
     manifest = crate_root / "Cargo.toml"
-    # Each gate invocation owns a fresh target. Cargo therefore emits the same
-    # diagnostics on every run without cleaning artifacts from another process
-    # that happens to share the materialization cache.
-    return run_command(
+    package = tomllib.loads(manifest.read_text(encoding="utf-8")).get("package", {})
+    name = package.get("name")
+    if not isinstance(name, str) or not name:
+        raise ValueError(f"generated Clippy manifest has no package name: {manifest}")
+    # The target is private to this gate, but its dependencies are shared between
+    # cases. Same-named pre-materialized roots can otherwise reuse another case's
+    # successful check. Invalidate only the previous root package, never the
+    # compiler cache, dependency artifacts, or shared materialized source files.
+    run_command(
+        ["cargo", "clean", "--manifest-path", str(manifest), "--locked", "--package", name],
+        cargo_target_dir=cargo_target_dir,
+    )
+    result = run_command(
         [
             "cargo",
             "clippy",
@@ -171,6 +182,12 @@ def run_strict_clippy(
         cargo_target_dir=cargo_target_dir,
     )
 
+    # Root-package invalidation replaces Cargo fingerprint diagnostics on the next
+    # case. Retain the actual process streams beside this case's generated source.
+    (crate_root / "clippy.stdout.jsonl").write_text(result.stdout, encoding="utf-8")
+    (crate_root / "clippy.stderr.log").write_text(result.stderr, encoding="utf-8")
+    return result
+
 
 def assert_negative_determinism(a: Path, b: Path) -> None:
     if compare_bytes(a.read_bytes(), b.read_bytes()):
@@ -179,3 +196,37 @@ def assert_negative_determinism(a: Path, b: Path) -> None:
 
 def compare_bytes(left: bytes, right: bytes) -> bool:
     return left == right
+
+
+def check_clippy_gate_controls(
+    run_root: Path,
+    timed_case: Callable[..., Any],
+    run_command: Callable[..., Any],
+    strict_clippy_args: Sequence[str],
+    parse_diagnostics: Callable[[str, Path], dict[str, Any]],
+    cargo_target_dir: Path,
+) -> None:
+    """Verify cache isolation and deliberate lint failures before positive cases."""
+    timed_case(
+        "generated_code_quality", "clippy/root-cache-isolation",
+        lambda: run_command([sys.executable, str(Path(__file__).parent / "test_source_quality_checks.py")]),
+    )
+    negative_seeds = {
+        "clippy::arithmetic_side_effects": "forbidden_arithmetic.rs",
+        "clippy::cast_sign_loss": "forbidden_allocation_width.rs",
+        "clippy::needless_return": "clippy_warning.rs",
+    }
+    for lint, filename in negative_seeds.items():
+        timed_case(
+            "generated_code_quality",
+            f"clippy/negative-{lint.removeprefix('clippy::')}",
+            lambda lint=lint, filename=filename: assert_negative_clippy(
+                Path(__file__).parent / "negative_seeds" / filename,
+                run_root,
+                lint,
+                run_command,
+                strict_clippy_args,
+                parse_diagnostics,
+                cargo_target_dir,
+            ),
+        )

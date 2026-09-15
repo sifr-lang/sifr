@@ -436,7 +436,6 @@ mod sifr_generated_project_nominals {
         }
     }
     impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
-        #[must_use]
         pub fn pop(&mut self) -> Option<T> {
             if &SifrInt::from(self.data.len()) == &SifrInt::from_i64(0) {
                 return None;
@@ -452,7 +451,6 @@ mod sifr_generated_project_nominals {
         }
     }
     impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
-        #[must_use]
         pub fn popleft(&mut self) -> Option<T> {
             if &SifrInt::from(self.data.len()) == &SifrInt::from_i64(0) {
                 return None;

@@ -1,4 +1,5 @@
 use super::implementation::{collect_macro_token_refs_rec, collect_use_paths};
+use super::inherent_trait_demand::{InherentMethods, MethodCallCollector};
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 
@@ -70,6 +71,18 @@ pub(crate) fn rust_source_required_trait_names(
     consumer_source: &str,
     support_source: &str,
 ) -> Result<HashSet<String>, String> {
+    rust_source_required_trait_names_with_inherent(
+        consumer_source,
+        support_source,
+        &InherentMethods::new(),
+    )
+}
+
+pub(crate) fn rust_source_required_trait_names_with_inherent(
+    consumer_source: &str,
+    support_source: &str,
+    inherent: &InherentMethods,
+) -> Result<HashSet<String>, String> {
     let consumer = syn::parse_file(consumer_source)
         .map_err(|error| format!("failed to parse generated support consumer: {error}"))?;
     let support = syn::parse_file(support_source).map_err(|error| {
@@ -105,6 +118,8 @@ pub(crate) fn rust_source_required_trait_names(
     }
     let mut collector = MethodCallCollector {
         method_traits: &method_traits,
+        inherent,
+        bindings: HashMap::new(),
         required_traits: HashSet::new(),
     };
     collector.visit_file(&consumer);
@@ -125,20 +140,6 @@ fn nested_trait_name(module: &syn::ItemMod) -> Option<String> {
         }
     }
     None
-}
-
-struct MethodCallCollector<'a> {
-    method_traits: &'a HashMap<String, HashSet<String>>,
-    required_traits: HashSet<String>,
-}
-
-impl<'ast> Visit<'ast> for MethodCallCollector<'_> {
-    fn visit_expr_method_call(&mut self, call: &'ast syn::ExprMethodCall) {
-        if let Some(traits) = self.method_traits.get(&call.method.to_string()) {
-            self.required_traits.extend(traits.iter().cloned());
-        }
-        visit::visit_expr_method_call(self, call);
-    }
 }
 
 #[cfg(test)]

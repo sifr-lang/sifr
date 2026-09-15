@@ -283,7 +283,7 @@ fn main() {
                 sifr_generated_mode.to_string(),
             ))
         })()?;
-        (&mut wb).write_bytes(&vec![
+        wb.write_bytes(&vec![
             114_u8, 97_u8, 119_u8, 45_u8, 98_u8, 121_u8, 116_u8, 101_u8, 115_u8,
         ])?;
         (&mut wb).close();

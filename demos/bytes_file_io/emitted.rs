@@ -224,7 +224,7 @@ fn main() {
                 sifr_generated_mode.to_string(),
             ))
         })()?;
-        (&mut writer).write_bytes(&vec![
+        writer.write_bytes(&vec![
             98_u8, 121_u8, 116_u8, 101_u8, 115_u8, 95_u8, 102_u8, 105_u8, 108_u8, 101_u8, 95_u8,
             105_u8, 111_u8,
         ])?;

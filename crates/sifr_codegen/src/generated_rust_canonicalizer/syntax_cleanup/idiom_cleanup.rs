@@ -11,9 +11,7 @@ mod residual_cleanup;
 mod result_control_cleanup;
 mod structured_control_cleanup;
 
-use assignment_cleanup::{
-    expression_is_pure_initializer, expression_uses_identifier, fold_assignment_conditionals,
-};
+use assignment_cleanup::{expression_uses_identifier, fold_assignment_conditionals};
 use lint_cleanup::{
     flatten_infallible_result_scaffolding, fold_delayed_initializations, fold_initial_assignments,
     fold_literal_result_bindings, fold_tail_bindings, fold_vec_push_sequences,
@@ -590,7 +588,7 @@ fn make_constant_unwrap_default_eager(expression: &mut syn::Expr) {
     let Some(syn::Expr::Closure(closure)) = call.args.first() else {
         return;
     };
-    if closure.inputs.len() > 1 || !expression_is_pure_initializer(&closure.body) {
+    if closure.inputs.len() > 1 || !expression_is_cheap_default(&closure.body) {
         return;
     }
     if closure.inputs.iter().any(|input| match input {
@@ -606,6 +604,26 @@ fn make_constant_unwrap_default_eager(expression: &mut syn::Expr) {
     call.method = syn::Ident::new("unwrap_or", call.method.span());
     call.args.clear();
     call.args.push(default);
+}
+
+// Purity alone does not justify eager evaluation: allocating defaults must stay lazy.
+fn expression_is_cheap_default(expression: &syn::Expr) -> bool {
+    match expression {
+        syn::Expr::Lit(_) | syn::Expr::Path(_) => true,
+        syn::Expr::Paren(inner) => expression_is_cheap_default(&inner.expr),
+        syn::Expr::Group(inner) => expression_is_cheap_default(&inner.expr),
+        syn::Expr::Unary(inner) => expression_is_cheap_default(&inner.expr),
+        syn::Expr::Tuple(tuple) => tuple.elems.iter().all(expression_is_cheap_default),
+        syn::Expr::Call(call) if call.args.len() == 1 => {
+            matches!(call.func.as_ref(), syn::Expr::Path(path)
+                if path.qself.is_none()
+                    && path.path.segments.len() == 2
+                    && path.path.segments[0].ident == "SifrInt"
+                    && path.path.segments[1].ident == "from_i64")
+                && call.args.iter().all(expression_is_cheap_default)
+        }
+        _ => false,
+    }
 }
 
 fn expression_may_have_effects(expression: &syn::Expr) -> bool {

@@ -2,9 +2,11 @@ use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
 
+mod empty_traits;
 mod external_demand;
 mod generic_cleanup;
 mod macro_arguments;
+mod opaque_methods;
 mod private_field_effects;
 mod wildcards;
 
@@ -20,7 +22,9 @@ pub(super) use private_field_effects::type_has_trivial_drop;
 use wildcards::rewrite_exhaustive_enum_wildcards;
 
 pub(super) fn prune_unused_members(file: &mut syn::File) {
+    opaque_methods::prune(file);
     prune_unused_members_in_scope(&mut file.items, &HashSet::new(), &HashSet::new());
+    empty_traits::prune(file);
 }
 
 fn prune_unused_members_in_scope(
