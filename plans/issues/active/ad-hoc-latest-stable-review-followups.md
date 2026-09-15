@@ -142,3 +142,22 @@ Origin: SATISFIED scoped review of
   seconds with all 46 cache hits. Preserve both results and investigate cold
   build preparation separately; do not relax thresholds or count the warm
   subset as a substitute for the canonical full merge gate.
+
+## Item 86 — generated differential preparation follow-ups
+
+Source: scoped Opus review of `26ae861e9f26f83fb6c052551c726cbb2cfb768f`,
+response SHA256 `d4a3657b39e7706717a98680bb06a80f49258c908033747fa3ec8ebbbc48b727`.
+Verdict SATISFIED, no blockers, initial review 1/remediation 0. These are
+nonblocking future verification-runner work, outside the frozen convergence
+batch and its final closure criteria.
+
+- Infrastructure: give selected native-program preparation an aggregate
+  deadline or fail-fast policy. Each case is bounded by 300 seconds, but the
+  current loop can consume that limit for every selected case after failures.
+- Suggestion: keep compiler verification within preparation uniformly locked
+  and offline, or pass the already verified compiler record to the preparation
+  helper. The current second verification follows a successful locked/offline
+  build on an unchanged graph and takes approximately 0.4 seconds.
+- Suggestion: preserve the oracle minimization artifact path when a behavioral
+  regression is detected by preparation. Actual preparation output/status/time
+  is retained, but preparation failure currently stops before oracle shrinking.
