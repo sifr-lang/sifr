@@ -19,6 +19,13 @@
           "command": "area-check",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "generated_compiler_selection",
+          "entry": "verification/areas/cpython_differential/checks/test_generated_suite.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },

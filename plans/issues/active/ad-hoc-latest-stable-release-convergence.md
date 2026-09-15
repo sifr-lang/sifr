@@ -1,18 +1,16 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-## Current qualification status — Item 85 delivered
+## Current qualification status — Item 86
 
-Item 85 is merged through [PR 3829](https://github.com/sifr-lang/sifr/pull/3829),
-merge `7cde28a1fcb799255d8f2820ab2410f4e241b0df`. Its implementation candidate is
-`5d7c6eeeded8e18d18d113aa4493a12f076e719c`. Focused tests, all 356 corrected materializations,
-scoped review, full merge4 and native qualification 34926666255 pass.
-The complete delivery record is appended below.
-
-Release2 is running on that unchanged candidate. Final Item 62 qualification
-and Item 35 review/archive remain pending. Original release1 failed during
-preparation on d2bc, before release tests or performance measurements; that
-failure and the original 353-pass/three-failure scan remain retained. Older
-full merge3/native results stay bound to d2bc. No publication has occurred.
+Item 85 and its records are delivered through PRs 3829/3830. The subsequent
+release2 run at exact clean `5d7c6eeeded8e18d18d113aa4493a12f076e719c`
+passed all 356 materializations, including the three prior decimal failures,
+all guards, both E2E determinism checks, Rust interop, coverage, core language
+and diagnostics. It failed before executing generated CPython comparisons:
+their runner discarded the configured Cargo target and timed out rebuilding
+the compiler in the default directory. Item 86 owns this runner-only repair.
+The original full merge4/native qualification remain passing at their actual
+candidate. Final release qualification, Item 62 and Item 35 remain pending.
 
 ## Historical implementation delivery checkpoint — 2026-09-15
 
@@ -5470,3 +5468,46 @@ verified locally; all 20 payloads are also verified remotely. Index SHA256
 `fc1655957bb409d84eeb81e6cf7c2c1790dccae91570508ef65ff8d8b27c9cbf`.
 The older candidate's merge3, native qualification and failed release1 retain
 their original source identities and outcomes.
+
+
+## Item 86: generated differential compiler target selection
+
+Release2 remains failed at exact clean
+`5d7c6eeeded8e18d18d113aa4493a12f076e719c`: exit 1, 8,269.84 seconds.
+The generated broader check used its unchanged 300-second build timeout before
+any oracle program executed. The shared runner explicitly removed
+`CARGO_TARGET_DIR` and later hardcoded the default executable independently of
+its recorded build metadata. The prepared private-target compiler was unused.
+
+Owner: CPython differential generated-suite runner, its policy and focused
+regression checks. Both broader and minimized suites share this mechanism.
+Build with the configured Cargo environment and resolve its release artifact
+for default, relative and absolute target directories. Hash, record and execute
+that same artifact. Preserve source digest inputs, canonical Python checks,
+all case selections/comparisons, the 300-second build timeout, existing suite
+and per-program timeouts, and the 20-green-run promotion policy. A missing
+configured artifact or failed build must fail without selecting another binary.
+No compiler, dependency, lock, workload, baseline or budget changes are in scope.
+
+The related release-runner audit found no other instance that both discards
+the configured compiler target and hardcodes the generated-oracle executable.
+Other explicit targets belong to isolated provider, sysroot or sanitizer builds;
+they are not automatically folded into this item.
+
+Named validation: focused target/build/record/execution regression tests;
+canonical CPython policy plus both complete generated suites; relevant Python
+syntax, manifest, diff and file-size guards. Run exact-source scoped review,
+then continue the required full release qualification after focused success.
+The phase's runner-only validation rule applies; retain the compiler's existing
+full merge4 evidence without rebinding it to a later source SHA. Fresh final
+qualification artifacts must use their actual source identity.
+
+Release2 report SHA256:
+`d936409c1f85a11b3fecdae19794ad91745d377eab36a9b68cddda5b02ab99d2`.
+Release2 log SHA256:
+`7e832128514c0425a020d07f8a694fe941c029d83b92c47171b9ff05cd7e207a`.
+Evidence: `20260913-final-integration/release2.*`.
+Setup passed in 5,924.829 seconds; its cold timing advisory remains failed.
+All 356 generated materializations passed. Determinism checks DET-0001 and
+DET-0002 passed in 1,264.919 and 270.776 seconds respectively. No later release
+area or full performance/large-session result is claimed.
