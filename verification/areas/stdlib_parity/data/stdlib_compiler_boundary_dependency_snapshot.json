@@ -5,10 +5,6 @@
     "sifr_runtime": {
       "default-features": false,
       "sysroot-crate": "sifr_runtime"
-    },
-    "sifr_stdlib": {
-      "default-features": false,
-      "sysroot-crate": "sifr_stdlib"
     }
   }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "toml"
-version = "1.1.4+spec-1.1.0"
+version = "1.1.5+spec-1.1.0"
 description = """
 A native Rust encoder and decoder of TOML-formatted files and streams. Provides
 implementations of the standard Serialize/Deserialize traits for TOML data to
@@ -63,8 +63,8 @@ foldhash = { version = "0.2.0", default-features = false, optional = true }
 [dev-dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-toml-test-harness = { version = "1.13.0", features = ["snapshot"] }
-toml-test-data = "2.13.0"
+toml-test-harness = { version = "1.14.0", features = ["snapshot"] }
+toml-test-data = "2.14.0"
 snapbox = "1.1.0"
 walkdir = "2.5.0"
 itertools = "0.14.0"

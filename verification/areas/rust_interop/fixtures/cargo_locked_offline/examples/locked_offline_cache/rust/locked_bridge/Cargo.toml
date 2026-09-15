@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-indexmap = { version = "=2.14.0", default-features = false }
+indexmap = { version = "=2.14.2", default-features = false }
 
 [lib]
 path = "src/lib.rs"

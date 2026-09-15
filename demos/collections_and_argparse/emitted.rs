@@ -1,8 +1,9 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::{ParseError, SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec};
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn sifr_generated_split_inline_option(token: &str) -> (bool, String, String) {
+    use ::sifr_runtime::SifrInt;
+    #[must_use]
+    pub fn sifr_generated_split_inline_option(token: &str) -> (bool, String, String) {
         let sifr_generated_chars_token: Vec<char> = token.chars().collect::<Vec<char>>();
         let mut key: String = String::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
@@ -52,7 +53,8 @@ mod sifr_generated_generated_support {
             String::new(),
         )
     }
-    pub(crate) fn sifr_generated_is_digit_string(value: &str) -> bool {
+    #[must_use]
+    pub fn sifr_generated_is_digit_string(value: &str) -> bool {
         if value.is_empty() {
             return false;
         }
@@ -63,7 +65,8 @@ mod sifr_generated_generated_support {
         }
         true
     }
-    pub(crate) fn sifr_generated_normalize_nargs(nargs: &str) -> String {
+    #[must_use]
+    pub fn sifr_generated_normalize_nargs(nargs: &str) -> String {
         if nargs.is_empty() {
             return "1".to_string();
         }
@@ -100,7 +103,8 @@ mod sifr_generated_generated_support {
         }
         "1".to_string()
     }
-    pub(crate) fn sifr_generated_nargs_is_multi(nargs: &str) -> bool {
+    #[must_use]
+    pub fn sifr_generated_nargs_is_multi(nargs: &str) -> bool {
         let normalized: String = sifr_generated_normalize_nargs(nargs);
         if normalized == "*" || normalized == "+" {
             return true;
@@ -126,7 +130,8 @@ mod sifr_generated_generated_support {
         }
         false
     }
-    pub(crate) fn sifr_generated_coerce_bool(raw: &str) -> Option<String> {
+    #[must_use]
+    pub fn sifr_generated_coerce_bool(raw: &str) -> Option<String> {
         let normalized: String = raw.to_lowercase();
         if normalized == "1" || normalized == "true" || normalized == "yes" || normalized == "on" {
             return Some("true".to_string());
@@ -136,7 +141,8 @@ mod sifr_generated_generated_support {
         }
         None
     }
-    pub(crate) fn sifr_generated_copy_token(value: &Option<String>) -> String {
+    #[must_use]
+    pub fn sifr_generated_copy_token(value: &Option<String>) -> String {
         let Some(value) = value.as_ref() else {
             return String::new();
         };
@@ -147,7 +153,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn sifr_generated_derive_dest(name: &str) -> String {
+    #[must_use]
+    pub fn sifr_generated_derive_dest(name: &str) -> String {
         let sifr_generated_chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
         if name.starts_with("--") {
             return {
@@ -190,7 +197,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn sifr_generated_is_option_like_token(
+    #[must_use]
+    pub fn sifr_generated_is_option_like_token(
         specs: &[SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec],
         token: &str,
     ) -> bool {
@@ -230,7 +238,12 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        sifr_generated_coerce_bool, sifr_generated_copy_token, sifr_generated_derive_dest,
+        sifr_generated_is_digit_string, sifr_generated_is_option_like_token,
+        sifr_generated_nargs_is_multi, sifr_generated_normalize_nargs,
+        sifr_generated_split_inline_option,
+    };
     use ::sifr_runtime::SifrInt;
     use ::std::collections::HashMap;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -755,7 +768,7 @@ mod sifr_generated_project_nominals {
                         message: e.to_string(),
                     })?;
                     if &parsed_count > &SifrInt::from_i64(0) {
-                        exact = parsed_count;
+                        exact = parsed_count.clone();
                     }
                     Ok(())
                 })();
@@ -875,7 +888,7 @@ mod sifr_generated_project_nominals {
                         message: e.to_string(),
                     })?;
                     if &parsed_count > &SifrInt::from_i64(0) {
-                        exact = parsed_count;
+                        exact = parsed_count.clone();
                     }
                     Ok(())
                 })();
@@ -1196,7 +1209,7 @@ mod sifr_generated_project_nominals {
                                 }
                             }
                         }
-                        i = next_i2;
+                        i = next_i2.clone();
                         positional_index = &positional_index + &SifrInt::from_i64(1);
                         continue;
                     }
@@ -1464,10 +1477,10 @@ fn main() {
     );
     let mut parser: SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser =
         SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("sifr".to_string());
-    parser.add_subparsers(&"cmd".to_string());
+    (&mut parser).add_subparsers(&"cmd".to_string());
     let mut run_parser: SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser =
         SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("run".to_string());
-    run_parser.add_argument_typed(
+    (&mut run_parser).add_argument_typed(
         &"--strict".to_string(),
         &"strict".to_string(),
         &"store_true".to_string(),
@@ -1475,7 +1488,7 @@ fn main() {
         &"1".to_string(),
         &"str".to_string(),
     );
-    run_parser.add_argument_typed(
+    (&mut run_parser).add_argument_typed(
         &"--level".to_string(),
         &"level".to_string(),
         &"store".to_string(),
@@ -1483,7 +1496,7 @@ fn main() {
         &"1".to_string(),
         &"int".to_string(),
     );
-    run_parser.add_argument_typed(
+    (&mut run_parser).add_argument_typed(
         &"--custom-level".to_string(),
         &"custom_level".to_string(),
         &"store".to_string(),
@@ -1491,7 +1504,7 @@ fn main() {
         &"1".to_string(),
         &"int".to_string(),
     );
-    run_parser.add_argument_typed(
+    (&mut run_parser).add_argument_typed(
         &"targets".to_string(),
         &"targets".to_string(),
         &"store".to_string(),
@@ -1499,7 +1512,7 @@ fn main() {
         &"+".to_string(),
         &"str".to_string(),
     );
-    parser.add_parser(&"run".to_string(), run_parser);
+    (&mut parser).add_parser(&"run".to_string(), run_parser);
     let parsed_value_e06e69d836b17138: SifrGeneratedStdlibSifrX2eargparseX2eNamespace = parser
         .parse_args(&vec![
             "run".to_string(),

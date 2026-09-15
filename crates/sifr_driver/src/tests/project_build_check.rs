@@ -686,6 +686,12 @@ def broken() -> int:
     )
     .expect_err("build_project should fail with same frontend error");
 
+    assert!(
+        check_errors
+            .iter()
+            .any(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code()),
+        "parity must compare the intended return type error: {check_errors:?}"
+    );
     let check_messages = render_compact_diagnostics(&check_errors);
     let build_messages = render_compact_diagnostics(&build_errors);
     assert_eq!(check_messages, build_messages);
@@ -768,7 +774,7 @@ def unused() -> str:\n    try:\n        parsed: str = loads(\"name = \\\"unused\
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
         .expect("cargo manifest should be written");
     assert!(
-        !cargo_toml.contains("toml = { version = \"1.1.4\", features = [\"preserve_order\"] }")
+        !cargo_toml.contains("toml = { version = \"1.1.5\", features = [\"preserve_order\"] }")
     );
 
     let _ = std::fs::remove_dir_all(dir);

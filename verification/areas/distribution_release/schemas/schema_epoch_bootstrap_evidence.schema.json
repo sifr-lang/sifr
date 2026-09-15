@@ -152,7 +152,7 @@
           "additionalProperties": false,
           "required": ["mode", "waiver_sha256"],
           "properties": {
-            "mode": {"const": "distinct-reviewer"},
+            "mode": {"enum": ["distinct-reviewer", "solo-maintainer"]},
             "waiver_sha256": {"const": "none"}
           }
         },

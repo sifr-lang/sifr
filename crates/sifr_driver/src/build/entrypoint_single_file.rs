@@ -6,7 +6,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::LoweringResult;
 
 pub(super) fn into_frontend(
-    stdlib: StdlibCompiled,
+    stdlib: std::sync::Arc<StdlibCompiled>,
     mut project_lowering: ProjectLowering,
 ) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
     let main_module = project_lowering.hir_modules.remove("main").ok_or_else(|| {

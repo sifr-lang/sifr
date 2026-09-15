@@ -1,15 +1,19 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) fn log(x: f64) -> f64 {
+    #[must_use]
+    pub fn log(x: f64) -> f64 {
         ::sifr_stdlib::math::log(x)
     }
-    pub(crate) fn sin(x: f64) -> f64 {
+    #[must_use]
+    pub fn sin(x: f64) -> f64 {
         ::sifr_stdlib::math::sin(x)
     }
-    pub(crate) fn cos(x: f64) -> f64 {
+    #[must_use]
+    pub fn cos(x: f64) -> f64 {
         ::sifr_stdlib::math::cos(x)
     }
-    pub(crate) fn fabs(x: f64) -> f64 {
+    #[must_use]
+    pub fn fabs(x: f64) -> f64 {
         ::sifr_stdlib::math::fabs(x)
     }
 }
@@ -25,7 +29,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{cos, fabs, log, sin};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ValueError;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

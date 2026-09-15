@@ -7,6 +7,115 @@ use std::path::PathBuf;
 const STDLIB_IMPORT_SAMPLE: &str = "from sifr.random import randint\n\n\
 def main() -> int:\n    value = randint(0, 100)\n    mismatch: int = \"not int\"\n    return mismatch\n";
 
+#[test]
+fn stdlib_interop_startup_editor_retained_snapshot_after_defs_projection() {
+    use sifr_frontend::DocumentVersion;
+    let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../verification/areas/performance/query_projects/lsp")
+        .canonicalize()
+        .unwrap();
+    let path = root_path.join("src/main.sifr");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let root = ProjectRoot {
+        root: SourcePath::new(&root_path),
+        entrypoint: SourcePath::new(&path),
+    };
+    let mut host = AnalysisHost::open_project_with_overlays(
+        &root,
+        vec![(
+            SourcePath::new(&path),
+            None,
+            DocumentVersion::new(1),
+            SourceText::new(&source),
+        )],
+    )
+    .unwrap();
+    let file = host.document_file_for_path(&path).unwrap();
+    let old = host.snapshot();
+    let old_answers = old.diagnostics(&mut host, file).unwrap();
+    assert!(old_answers.value().is_empty());
+    let weak = std::sync::Arc::downgrade(old.workspace().source_map.as_ref().unwrap());
+    let defs = sifr_driver::stdlib_external_defs().unwrap();
+    assert!(defs.functions.contains_key("sifr.calendar"));
+    let changed = source.replace("return result", "return \"wrong\"");
+    assert_ne!(changed, source);
+    host.update_document(file, DocumentVersion::new(2), SourceText::new(changed))
+        .unwrap();
+    let current = host.snapshot();
+    let diagnostics = current.diagnostics(&mut host, file).unwrap();
+    assert!(
+        diagnostics
+            .value()
+            .iter()
+            .any(|d| d.code == "SIFR-TYPE-0002")
+    );
+    assert_ne!(
+        diagnostics.metadata().revision,
+        old_answers.metadata().revision
+    );
+    assert_eq!(
+        host.context().unwrap().document_version_for_file(file),
+        Some(DocumentVersion::new(2))
+    );
+    assert_eq!(old.workspace().overlays[0].version, DocumentVersion::new(1));
+    assert_eq!(
+        old.workspace()
+            .source_map
+            .as_ref()
+            .unwrap()
+            .source_for_file(file)
+            .unwrap()
+            .as_str(),
+        source
+    );
+    assert!(
+        current
+            .workspace()
+            .source_map
+            .as_ref()
+            .unwrap()
+            .source_for_file(file)
+            .unwrap()
+            .as_str()
+            .contains("return \"wrong\"")
+    );
+    assert!(old_answers.value().is_empty());
+    assert!(
+        old.diagnostics(&mut host, file).is_err(),
+        "stale request identity is rejected"
+    );
+    drop(old);
+    assert!(
+        weak.upgrade().is_none(),
+        "released immutable snapshot is not retained by projection"
+    );
+    host.update_document(file, DocumentVersion::new(3), SourceText::new(source))
+        .unwrap();
+    let final_snapshot = host.snapshot();
+    assert_eq!(
+        host.context().unwrap().document_version_for_file(file),
+        Some(DocumentVersion::new(3))
+    );
+    assert!(
+        final_snapshot
+            .diagnostics(&mut host, file)
+            .unwrap()
+            .value()
+            .is_empty()
+    );
+    assert!(
+        current
+            .workspace()
+            .source_map
+            .as_ref()
+            .unwrap()
+            .source_for_file(file)
+            .unwrap()
+            .as_str()
+            .contains("return \"wrong\"")
+    );
+}
+
 fn single_file_input(source: &str) -> FrontendInput {
     FrontendInput {
         path: SourcePath::new("main.sifr"),

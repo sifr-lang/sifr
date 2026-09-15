@@ -144,7 +144,7 @@ The implementation uses the workspace's current stable selections:
 
 - Tokio `1.53.1` for bounded asynchronous I/O;
 - tokio-postgres `0.7.18` for the PostgreSQL protocol and typed catalog rows;
-- tokio-postgres-rustls `0.14.0` with Rustls `0.23.43` for TLS;
+- tokio-postgres-rustls `0.14.0` with Rustls `0.23.44` for TLS;
 - rustls-platform-verifier `0.7.0` for the operating system trust store;
 - Serde `1.0.229` and serde_json `1.0.151` for closed artifacts;
 - SHA-2 `0.11.0` for content identities; and

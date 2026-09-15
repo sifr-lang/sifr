@@ -46,7 +46,7 @@ for fragment in (
     "submodules: recursive",
     "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
     "node-version-file: stable-source/editor_integrations/vscode/.node-version",
-    "npm ci --ignore-scripts --include=dev --prefix stable-source/editor_integrations/vscode",
+    "bash stable-source/scripts/distribution/provision_marketplace_toolchain.sh",
     "node_modules/.bin/vsce",
     "Run exact protected stable publication",
     "scripts/distribution/run_stable_publication.sh",
@@ -81,10 +81,12 @@ assert orchestrator.count("--clobber") == 1
 assert "channels.json" in orchestrator
 assert "resolve-publication-approvers" in orchestrator
 assert "--environment stable-release" in orchestrator
-assert "--single-maintainer-waiver" in orchestrator
-assert 'if [[ "${operation}" == "ga-activation" ]]; then' in orchestrator
-assert 'elif [[ -n "${approval_waiver}" ]]; then' in orchestrator
-assert "--expected-waiver-sha256" in orchestrator
+assert "--single-maintainer-waiver" not in orchestrator
+assert "--approval-waiver)" not in orchestrator
+assert "--expected-waiver-sha256" not in orchestrator
+assert '--run-id "${run_id}" --run-attempt "${run_attempt}"' in orchestrator
+assert '--evidence "${prepare_summary}"' in orchestrator
+assert '--expected-evidence-sha256 "${expected_summary_sha256}"' in orchestrator
 assert "--include-policy" in orchestrator
 assert "'.approval_policy.mode'" in orchestrator
 assert "--approval-mode" in orchestrator

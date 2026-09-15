@@ -1,6 +1,6 @@
 use super::{ModuleSupportDemand, RustEmitter};
 use crate::StdlibCode;
-use crate::stdlib_import_signatures::register_imported_stdlib_signature;
+use crate::stdlib_import_signatures::register_imported_stdlib_metadata;
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
 use sifr_type_system::{ParamConvention, Type};
@@ -40,7 +40,7 @@ pub(crate) struct NestedFnCapture {
 }
 
 /// Result of code generation, including the Rust source and metadata.
-pub struct CodegenResult {
+pub struct CodegenResult<I = crate::InteropBuildPlan> {
     pub rust_source: String,
     /// The module body without compiler-owned runtime or stdlib support.
     pub(crate) module_body_source: String,
@@ -53,13 +53,34 @@ pub struct CodegenResult {
     /// Required stdlib/runtime features discovered during structured lowering/codegen.
     pub required_features: HashSet<StdlibFeature>,
     /// Structured interop metadata required before generated project materialization.
-    pub interop: crate::InteropBuildPlan,
+    pub interop: I,
     /// Map of `constant_name` -> (type, `rust_name`) for module-level constants
     pub constant_mappings: HashMap<String, (Type, String)>,
     /// Counters for structured lowering usage during emission.
     pub lowering_stats: LoweringStats,
     /// Canonical support demand retained for project-level single-owner assembly.
     pub(crate) support_demand: ModuleSupportDemand,
+}
+
+/// A module body cannot carry an application interop plan.
+pub type ModuleCodegenResult = CodegenResult<()>;
+
+impl ModuleCodegenResult {
+    pub(crate) fn into_application(self, interop: crate::InteropBuildPlan) -> CodegenResult {
+        CodegenResult {
+            rust_source: self.rust_source,
+            module_body_source: self.module_body_source,
+            static_programs: self.static_programs,
+            static_program_structural_owners: self.static_program_structural_owners,
+            used_stdlib_modules: self.used_stdlib_modules,
+            used_intrinsic_modules: self.used_intrinsic_modules,
+            required_features: self.required_features,
+            interop,
+            constant_mappings: self.constant_mappings,
+            lowering_stats: self.lowering_stats,
+            support_demand: self.support_demand,
+        }
+    }
 }
 
 /// Result of multi-module code generation, including aggregate dependency metadata.
@@ -99,18 +120,51 @@ pub fn generate_rust_with_stdlib_for_module(
     stdlib_code: &StdlibCode,
     module_name: Option<&str>,
 ) -> CodegenResult {
-    generate_rust_with_stdlib_for_module_with_structural_policy(
+    let body = generate_rust_with_stdlib_for_module_with_structural_policy(
         module,
-        stdlib_code,
+        &stdlib_code.emission_view(),
         module_name,
         crate::rust_interop_plan::module_uses_structural_interop(module),
-    )
+    );
+    body.into_application(crate::stdlib_interop_demand::application_plan(
+        stdlib_code,
+        &[(None, module)],
+    ))
+}
+
+/// Emit a bootstrap module using only emission metadata, without selecting an application.
+pub fn generate_stdlib_module_body(
+    module: &HirModule,
+    metadata: &crate::StdlibEmissionCode,
+    name: &str,
+) -> ModuleCodegenResult {
+    crate::StdlibSyntaxSession::default().generate_module(module, metadata, name)
+}
+
+impl crate::StdlibSyntaxSession {
+    /// Emit every bootstrap module in source order through one syntax owner.
+    pub fn generate_module(
+        &self,
+        module: &HirModule,
+        metadata: &crate::StdlibEmissionCode,
+        name: &str,
+    ) -> ModuleCodegenResult {
+        let sources = HashMap::new();
+        let mut view = metadata.bootstrap_view(&sources);
+        view.syntax_session = Some(self);
+        generate_rust_with_stdlib_for_module_with_structural_policy(
+            module,
+            &view,
+            Some(name),
+            crate::rust_interop_plan::module_uses_structural_interop(module),
+        )
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     module: &HirModule,
-    stdlib_code: &StdlibCode,
+    stdlib_code: &crate::StdlibEmissionView<'_>,
     module_name: Option<&str>,
     structural_identity_module_name: Option<&str>,
     structural_interop_enabled: bool,
@@ -121,80 +175,14 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     project_structural_layout_location: ProjectStructuralLayoutLocation,
     project_structural_identity_expressions: Option<&HashMap<String, String>>,
     support_emission: SupportEmission,
-) -> CodegenResult {
+) -> ModuleCodegenResult {
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
     emitter.project_structural_record_identities = project_structural_record_identities.cloned();
     emitter.project_structural_identity_expressions =
         project_structural_identity_expressions.cloned();
     emitter.structural_identity_module_name = structural_identity_module_name.map(str::to_string);
-    // Register stdlib generic classes so user code skips explicit type annotations
-    emitter
-        .generic_classes
-        .extend(stdlib_code.generic_classes.iter().cloned());
-    emitter
-        .generic_class_params
-        .extend(stdlib_code.generic_class_params.clone());
-    emitter
-        .generic_class_templates
-        .extend(stdlib_code.generic_class_templates.clone());
-
-    // Pre-register imported constants and function signatures so user code can reference them correctly.
-    crate::project_constants::register_imported_constants(&mut emitter, module, stdlib_code);
-    for import in &module.imports {
-        if let Some(sig_map) = stdlib_code.func_signatures.get(&import.module) {
-            for name in &import.names {
-                register_imported_stdlib_signature(&mut emitter, stdlib_code, import, name);
-                // Also load class method signatures (ClassName::method entries)
-                let prefix = format!("{name}::");
-                for (key, sig) in sig_map {
-                    if let Some(method) = key.strip_prefix(&prefix) {
-                        let local_name = import
-                            .aliases
-                            .iter()
-                            .find(|(original, _)| original == name)
-                            .map_or(name.as_str(), |(_, alias)| alias.as_str());
-                        emitter
-                            .func_signatures
-                            .insert(format!("{local_name}::{method}"), sig.clone());
-                    }
-                }
-            }
-            // Load class method signatures for classes returned by imported functions.
-            // This handles cases like `compile_flags` returning `Pattern` - we need
-            // `Pattern::search` etc. to be available for correct borrow prefix emission.
-            for (key, sig) in sig_map {
-                if key.contains("::") && !emitter.func_signatures.contains_key(key) {
-                    emitter.func_signatures.insert(key.clone(), sig.clone());
-                }
-            }
-        } else {
-            for name in &import.names {
-                register_imported_stdlib_signature(&mut emitter, stdlib_code, import, name);
-            }
-        }
-        if let Some(class_fields) = stdlib_code.module_class_fields.get(&import.module) {
-            for name in &import.names {
-                if let Some(fields) = class_fields.get(name) {
-                    let local_name = import
-                        .aliases
-                        .iter()
-                        .find(|(original, _)| original == name)
-                        .map(|(_, alias)| alias.as_str())
-                        .unwrap_or(name);
-                    emitter.register_external_class_fields(local_name, name, fields);
-                }
-            }
-        }
-        // Pre-register stdlib generator functions so .collect() is emitted at call sites
-        if let Some(gen_set) = stdlib_code.generator_functions.get(&import.module) {
-            for name in &import.names {
-                if gen_set.contains(name) {
-                    emitter.generator_functions.insert(name.clone());
-                }
-            }
-        }
-    }
+    register_imported_stdlib_metadata(&mut emitter, module, stdlib_code);
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
@@ -245,7 +233,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         );
     }
     emitter.generate_enum_definitions();
-    let support_demand = ModuleSupportDemand::from_emitter(module, &emitter);
+    let support_demand = ModuleSupportDemand::from_emitter(module, &emitter, module_name);
     if support_emission == SupportEmission::Deferred {
         return deferred_codegen_result(
             module,

@@ -458,19 +458,11 @@ impl RustEmitter {
     }
 
     pub(crate) fn build_display_impl_for_error(class: &HirClass) -> RustItem {
-        let display_expr = if class.fields.iter().any(|(name, _)| name == "message") {
-            RustExpr::Field {
-                expr: Box::new(RustExpr::Ident("self".to_string())),
-                field: "message".to_string(),
-            }
-        } else {
-            RustExpr::Ident("self".to_string())
+        let display_expr = RustExpr::Field {
+            expr: Box::new(RustExpr::Ident("self".to_string())),
+            field: "message".to_string(),
         };
-        let format_spec = if class.fields.iter().any(|(name, _)| name == "message") {
-            "{}"
-        } else {
-            "{:?}"
-        };
+        let format_spec = "{}";
 
         RustItem::Impl {
             target: Self::class_impl_target(class),

@@ -365,7 +365,7 @@ macro_rules! stmt_expr_literals_and_calls {
                     continue;
                 }
                 lowered_element = $emitter
-                    .clone_owned_append_arg_expr_for_ir(element, lowered_element);
+                    .materialize_reusable_value_for_ir(element, lowered_element);
                 lowered_elements.push(lowered_element);
             }
             return Ok(Some(crate::RustExpr::Vec(lowered_elements)));
@@ -455,7 +455,7 @@ macro_rules! stmt_expr_literals_and_calls {
                     return Ok(None);
                 };
                 lowered_elements.push(
-                    $emitter.clone_owned_append_arg_expr_for_ir(element, lowered_element),
+                    $emitter.materialize_reusable_value_for_ir(element, lowered_element),
                 );
             }
             if crate::homogeneous_large_tuple_backing_array(ty).is_some() {
@@ -500,9 +500,9 @@ macro_rules! stmt_expr_literals_and_calls {
                     );
                 }
                 lowered_key =
-                    $emitter.clone_owned_append_arg_expr_for_ir(key, lowered_key);
+                    $emitter.materialize_reusable_value_for_ir(key, lowered_key);
                 lowered_value =
-                    $emitter.clone_owned_append_arg_expr_for_ir(value, lowered_value);
+                    $emitter.materialize_reusable_value_for_ir(value, lowered_value);
                 stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Ident("__dict".to_string())),
                     method: "insert".to_string(),
@@ -540,7 +540,7 @@ macro_rules! stmt_expr_literals_and_calls {
                     );
                 }
                 lowered_element =
-                    $emitter.clone_owned_append_arg_expr_for_ir(element, lowered_element);
+                    $emitter.materialize_reusable_value_for_ir(element, lowered_element);
                 stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Ident("__set".to_string())),
                     method: "insert".to_string(),

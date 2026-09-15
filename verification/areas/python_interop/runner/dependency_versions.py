@@ -11,6 +11,10 @@ from importlib.metadata import version
 from pathlib import Path
 from urllib.parse import urlparse
 
+from dependency_requirements import (
+    discover_projects, requirements, validate_requirements,
+)
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 AUDIT_PATH = (
     REPO_ROOT / "verification/areas/python_interop/data/latest_stable_python.json"
@@ -18,47 +22,8 @@ AUDIT_PATH = (
 LIVE_CASE_CONFIG_PATH = (
     REPO_ROOT / "verification/areas/python_interop/runner/live_case_config.py"
 )
-EXPECTED_PROJECTS = {
-    "python-interop": frozenset(
-        {
-            "alembic",
-            "boto3",
-            "certifi",
-            "cffi",
-            "cryptography",
-            "fakeredis",
-            "fastapi",
-            "hiredis",
-            "httpx2",
-            "numpy",
-            "pandas",
-            "polars",
-            "pyarrow",
-            "redis",
-            "schwifty",
-            "sqlalchemy",
-            "starlette",
-            "testcontainers",
-            "torch",
-        }
-    ),
-    "dlpack-demo": frozenset({"numpy", "torch"}),
-}
-DLPACK_PROJECT_ROOT = Path("demos/python_dlpack")
-PROJECT_PATHS = {
-    "python-interop": (
-        "verification/areas/python_interop/pyproject.toml",
-        "verification/areas/python_interop/uv.lock",
-    ),
-    "dlpack-demo": (
-        str(DLPACK_PROJECT_ROOT / "pyproject.toml"),
-        str(DLPACK_PROJECT_ROOT / "uv.lock"),
-    ),
-}
 NORMALIZED_NAME = re.compile(r"[-_.]+")
-REQUIREMENT_NAME = re.compile(r"^[A-Za-z0-9._-]+")
 RETIRED_DISTRIBUTIONS = frozenset({"httpcore", "httpx"})
-EXPECTED_SERVICE_IMAGES = frozenset({"localstack", "redis"})
 
 
 def normalize_name(name: str) -> str:
@@ -103,7 +68,7 @@ def release_map(audit: dict[str, object]) -> dict[str, dict[str, object]]:
         if any(character not in "0123456789abcdef" for character in digest):
             raise ValueError(f"{name}: artifact SHA-256 must be lowercase hexadecimal")
         releases[name] = package
-    expected = frozenset().union(*EXPECTED_PROJECTS.values())
+    expected = frozenset().union(*(frozenset(p["packages"]) for p in audit["projects"]))
     if releases.keys() != expected:
         raise ValueError("audited package set differs from the maintained package set")
     return releases
@@ -115,7 +80,7 @@ def runtime_version_marker(*names: str) -> str:
     releases = release_map(audit)
     markers = []
     for name in names:
-        expected = releases[name]["latest_stable"]
+        expected = releases[name]["selected_version"]
         installed = version(name)
         if installed != expected:
             raise RuntimeError(
@@ -132,7 +97,7 @@ def run_runtime_version_self_tests(audit: dict[str, object]) -> int:
         "schwifty", "numpy", "pandas", "redis", "fakeredis", "hiredis", "testcontainers"
     )
     releases = release_map(audit)
-    installed = {name: releases[name]["latest_stable"] for name in names}
+    installed = {name: releases[name]["selected_version"] for name in names}
     with patch(f"{__name__}.version", side_effect=installed.__getitem__):
         expected = " ".join(f"{name}={installed[name]}" for name in names)
         if runtime_version_marker(*names) != expected:
@@ -157,7 +122,7 @@ def run_runtime_version_self_tests(audit: dict[str, object]) -> int:
         changed = copy.deepcopy(audit)
         for package in changed["packages"]:
             if package["name"] in names:
-                package["latest_stable"] = installed[package["name"]] = "99.0.1"
+                package["selected_version"] = installed[package["name"]] = "99.0.1"
         with patch(f"{__name__}.AUDIT_PATH") as audit_path:
             audit_path.read_text.return_value = json.dumps(changed)
             expected_changed = " ".join(f"{name}=99.0.1" for name in names)
@@ -186,37 +151,20 @@ def project_map(
             raise ValueError(f"{name}: packages must be strings")
         if name in mapped:
             raise ValueError(f"duplicate audited project: {name}")
-        if name not in PROJECT_PATHS:
-            raise ValueError(f"unknown audited project: {name}")
-        pyproject, lock = PROJECT_PATHS[name]
+        pyproject, lock = project["pyproject"], project["lock"]
         mapped[name] = (
             pyproject,
             lock,
             frozenset(normalize_name(package) for package in packages),
         )
-    if mapped.keys() != EXPECTED_PROJECTS.keys():
-        raise ValueError("audited project set differs from the maintained project set")
-    for name, expected in EXPECTED_PROJECTS.items():
-        if mapped[name][2] != expected:
-            raise ValueError(f"{name}: audited package ownership drifted")
+    paths = [entry[0] for entry in mapped.values()]
+    if len(paths) != len(set(paths)):
+        raise ValueError("multiple audited owners claim the same project")
     return mapped
 
 
 def direct_dependency_names(project: dict[str, object]) -> frozenset[str]:
-    metadata = project.get("project")
-    if not isinstance(metadata, dict):
-        return frozenset()
-    dependencies = metadata.get("dependencies")
-    if not isinstance(dependencies, list):
-        return frozenset()
-    names = set()
-    for requirement in dependencies:
-        if not isinstance(requirement, str):
-            continue
-        match = REQUIREMENT_NAME.match(requirement)
-        if match is not None:
-            names.add(normalize_name(match.group()))
-    return frozenset(names)
+    return frozenset(normalize_name(req.name) for _, req in requirements(project))
 
 
 def validate_project(
@@ -232,6 +180,8 @@ def validate_project(
         errors.append(f"{label}: retired direct dependency: {name}")
     for name in sorted(expected.difference(direct)):
         errors.append(f"{label}: missing direct dependency {name}")
+    for name in sorted(direct.difference(expected).difference(RETIRED_DISTRIBUTIONS)):
+        errors.append(f"{label}: unaudited direct dependency {name}")
 
     locked_packages = lock.get("package")
     if not isinstance(locked_packages, list):
@@ -257,10 +207,10 @@ def validate_project(
             continue
         package = matching[0]
         release = releases[name]
-        if package.get("version") != release.get("latest_stable"):
+        if package.get("version") != release["selected_version"]:
             errors.append(
                 f"{label}: {name} lock version {package.get('version')!r} is not "
-                f"latest stable {release.get('latest_stable')!r}"
+                f"audited selection {release['selected_version']!r}"
             )
         artifact = release["artifact"]
         assert isinstance(artifact, dict)
@@ -279,11 +229,16 @@ def validate_project(
             for candidate in candidates
         ):
             errors.append(f"{label}: {name} lock lacks audited artifact {filename}")
+        official = {entry["url"]: entry for entry in release["artifacts"]}
+        for candidate in candidates:
+            entry = official.get(candidate.get("url"))
+            if entry is None or candidate.get("hash") != "sha256:" + entry["sha256"] or entry["yanked"]:
+                errors.append(f"{label}: {name} locked artifact is not an authenticated nonyanked PyPI file")
     return errors
 
 
 def validate_repository(audit: dict[str, object]) -> list[str]:
-    if audit.get("schema_version") != 3:
+    if audit.get("schema_version") != 4:
         raise ValueError("unsupported stable-release audit schema")
     audited_at = audit.get("audited_at")
     if not isinstance(audited_at, str):
@@ -298,17 +253,29 @@ def validate_repository(audit: dict[str, object]) -> list[str]:
         raise ValueError("stable-release audit must target Python 3.14.7")
     releases = release_map(audit)
     projects = project_map(audit)
+    discovered = discover_projects(REPO_ROOT)
+    if {pyproject: lock for pyproject, lock, _ in projects.values()} != discovered:
+        raise ValueError("audited projects/locks differ from actual maintained discovery")
     errors: list[str] = []
+    if audit.get("deferred_packages") != {}:
+        raise ValueError("Completed Python convergence must not defer packages")
+    for name, release in releases.items():
+        if release["selected_version"] != release["latest_stable"]:
+            errors.append(f"{name}: selected {release['selected_version']} is behind official latest stable {release['latest_stable']}")
     for name, (pyproject_path, lock_path, expected) in projects.items():
+        project = load_toml(REPO_ROOT / pyproject_path)
+        lock = load_toml(REPO_ROOT / lock_path)
         errors.extend(
             validate_project(
                 name,
                 expected,
                 releases,
-                load_toml(REPO_ROOT / pyproject_path),
-                load_toml(REPO_ROOT / lock_path),
+                project,
+                lock,
             )
         )
+        owner = next(owner for owner in audit["projects"] if owner["name"] == name)
+        errors.extend(validate_requirements(name, project, lock, releases, owner["requirements"]))
     errors.extend(validate_service_images(audit))
     return errors
 
@@ -322,23 +289,31 @@ def validate_service_images(audit: dict[str, object]) -> list[str]:
         for image in images
         if isinstance(image, dict) and isinstance(image.get("name"), str)
     }
-    if len(mapped) != len(images) or mapped.keys() != EXPECTED_SERVICE_IMAGES:
-        return ["audit service image set differs from the maintained image set"]
     live_images = load_literal_assignment(LIVE_CASE_CONFIG_PATH, "LIVE_IMAGES")
     if not isinstance(live_images, dict):
         return ["live service image mapping must be a dictionary"]
+    if len(mapped) != len(images) or mapped.keys() != live_images.keys():
+        return ["audit service image set differs from the maintained image set"]
     errors = []
     for name, image in mapped.items():
         repository = image.get("image")
         version = image.get("latest_stable")
+        tag = image.get("image_tag")
         digest = image.get("manifest_digest")
-        if not all(isinstance(value, str) for value in (repository, version, digest)):
+        if not all(isinstance(value, str) for value in (repository, version, tag, digest)):
             errors.append(f"{name}: image audit fields must be strings")
             continue
-        if not digest.startswith("sha256:") or len(digest) != 71:
+        if re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,2}", version) is None:
+            errors.append(f"{name}: stable release must exclude image tag variants")
+            continue
+        release_tag = tag.removeprefix("v")
+        if release_tag != version and not release_tag.startswith(version + "-"):
+            errors.append(f"{name}: image tag does not select the audited stable release")
+            continue
+        if re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None:
             errors.append(f"{name}: manifest digest must be a SHA-256 value")
             continue
-        expected = f"{repository}:{version}@{digest}"
+        expected = f"{repository}:{tag}@{digest}"
         if live_images.get(name) != expected:
             errors.append(
                 f"{name}: live image pin does not match audited stable image {expected}"
@@ -447,11 +422,24 @@ def main() -> int:
     args = parser.parse_args()
     audit = json.loads(AUDIT_PATH.read_text(encoding="utf-8"))
     errors = validate_repository(audit)
+    mutation_count = run_self_tests(audit) if args.self_test else 0
+    if args.self_test:
+        import unittest
+        from test_dependency_versions import (
+            DependencyProjectPathsTests, RequirementAuthorityTests, ServiceImageAuthorityTests,
+        )
+        suite = unittest.TestSuite(
+            unittest.defaultTestLoader.loadTestsFromTestCase(case)
+            for case in (DependencyProjectPathsTests, RequirementAuthorityTests, ServiceImageAuthorityTests)
+        )
+        result = unittest.TextTestRunner().run(suite)
+        if not result.wasSuccessful():
+            errors.append("dependency requirement authority regression tests failed")
     if errors:
+        print(f"python dependency audit mutations={mutation_count}; convergence remains unsatisfied")
         for error in errors:
             print(f"python dependency audit error: {error}")
         return 1
-    mutation_count = run_self_tests(audit) if args.self_test else 0
     releases = release_map(audit)
     projects = project_map(audit)
     lock_count = len({lock for _, lock, _ in projects.values()})

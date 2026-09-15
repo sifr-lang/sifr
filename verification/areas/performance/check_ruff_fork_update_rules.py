@@ -52,6 +52,11 @@ def main() -> int:
         for failure in failures:
             print(f"  - {failure}", file=sys.stderr)
         return 1
+    subprocess.run(
+        ["cargo", "test", "--locked", "--offline", "-p", "sifr_syntax", "--lib",
+         "selected_ruff_token_fixtures_match_parser"],
+        cwd=REPO_ROOT, check=True,
+    )
     print("ruff fork update rules: PASS")
     return 0
 

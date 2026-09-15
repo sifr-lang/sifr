@@ -78,7 +78,10 @@ def invalid():
     value = config()
 "#,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let errors = match collect_project_hir_modules(&modules, stdlib_defs) {
         Ok(_) => panic!("descriptor call in a runtime function must be rejected"),
         Err(errors) => errors,
@@ -101,7 +104,10 @@ class Invalid:
     value: int = broken()
 "#,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let errors = match collect_project_hir_modules(&modules, stdlib_defs) {
         Ok(_) => panic!("failing descriptor const evaluation must be rejected"),
         Err(errors) => errors,
@@ -122,7 +128,10 @@ class Invalid:
     value: int = forever()
 "#,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let errors = match collect_project_hir_modules(&modules, stdlib_defs) {
         Ok(_) => panic!("descriptor evaluation must enforce the const step budget"),
         Err(errors) => errors,
@@ -174,7 +183,10 @@ def other_field() -> OtherDescriptor:
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let errors = match collect_project_hir_modules(&modules, stdlib_defs) {
         Ok(_) => panic!("mixed providers on one declaration must be rejected"),
         Err(errors) => errors,
@@ -210,7 +222,10 @@ class Contract:
         return value
 "#,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let project = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("typed descriptor project should compile");
 
@@ -280,7 +295,10 @@ class Contract:
     value: Annotated[Annotated[int, bounded(1)], bounded(2)] | None = option(3, [], None)
 "#,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let project = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("nested Annotated descriptor project should compile");
     let descriptors = project
@@ -323,7 +341,10 @@ def bounded(value: int) -> int:
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let project = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("an unrelated same-basename call should remain ordinary annotation metadata");
     assert!(
@@ -353,7 +374,10 @@ class Model:
     callback: int = option(None, [], Callbacks.normalize)
 "#,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let project = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("checked constructors and static methods should be callable identities");
     let uses = project
@@ -397,7 +421,10 @@ class Invalid:
     value = ordinary()
 "#,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let errors = match collect_project_hir_modules(&modules, stdlib_defs) {
         Ok(_) => panic!("ordinary class assignments remain unsupported"),
         Err(errors) => errors,
@@ -457,7 +484,10 @@ class Model:
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let project = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("provider union members should remain typed descriptor results");
     let uses = project
@@ -493,7 +523,10 @@ def wrong() -> int:
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let errors = match collect_project_hir_modules(&modules, stdlib_defs) {
         Ok(_) => panic!("descriptor return type must match the provider descriptor type"),
         Err(errors) => errors,

@@ -1,9 +1,9 @@
-use super::{HirModule, StdlibCode};
+use super::HirModule;
 
 pub(crate) fn register_imported_union_types(
     emitter: &mut crate::RustEmitter,
     module: &HirModule,
-    project_code: &StdlibCode,
+    project_code: &crate::StdlibEmissionCode,
 ) {
     for import in &module.imports {
         if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {

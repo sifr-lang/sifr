@@ -3,11 +3,10 @@ use sifr_codegen::{
 };
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
-use std::path::PathBuf;
 
 pub(super) fn generated_bridge_sources(
     bridge_types: &[RustGeneratedBridgeType],
-) -> Result<BTreeMap<PathBuf, String>, String> {
+) -> Result<BTreeMap<String, String>, String> {
     let mut canonical_modules = BTreeMap::<String, Option<String>>::new();
     let mut unique_types = BTreeMap::<(String, String), &RustGeneratedBridgeType>::new();
     let mut modules: BTreeMap<String, Vec<&RustGeneratedBridgeType>> = BTreeMap::new();
@@ -60,12 +59,9 @@ pub(super) fn generated_bridge_sources(
             }
             module_source.push_str(&render_bridge_type(bridge_type));
         }
-        sources.insert(
-            PathBuf::from("__sifr_bridge").join(format!("{module_name}.rs")),
-            module_source,
-        );
+        sources.insert(format!("__sifr_bridge::{module_name}"), module_source);
     }
-    sources.insert(PathBuf::from("__sifr_bridge/mod.rs"), root);
+    sources.insert("__sifr_bridge".to_string(), root);
     Ok(sources)
 }
 
@@ -175,13 +171,11 @@ mod tests {
         .expect("bridge sources should be canonical");
 
         assert_eq!(
-            sources
-                .get(&PathBuf::from("__sifr_bridge/mod.rs"))
-                .map(String::as_str),
+            sources.get("__sifr_bridge").map(String::as_str),
             Some("pub mod app;\n")
         );
         let app_source = sources
-            .get(&PathBuf::from("__sifr_bridge/app.rs"))
+            .get("__sifr_bridge::app")
             .expect("app bridge source");
         assert!(app_source.contains("pub struct TokenBridge"));
         assert!(app_source.contains("pub text: String"));
@@ -209,7 +203,7 @@ mod tests {
         };
         let sources = generated_bridge_sources(&[bridge_type.clone(), bridge_type])
             .expect("identical bridge demand should deduplicate");
-        let source = &sources[&PathBuf::from("__sifr_bridge/app.rs")];
+        let source = &sources["__sifr_bridge::app"];
         assert_eq!(source.matches("pub struct TokenBridge").count(), 1);
     }
 

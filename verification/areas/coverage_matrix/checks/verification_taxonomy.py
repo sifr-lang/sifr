@@ -330,48 +330,54 @@ def main() -> int:
     return 0
 
 
-def collect_failures(roots: tuple[Path, ...]) -> list[Failure]:
+def collect_failures(
+    roots: tuple[Path, ...], *, audit_root: Path = REPO_ROOT
+) -> list[Failure]:
+    """Audit selected paths within one owning tree, excluding caller ancestors."""
     failures: list[Failure] = []
     seen: set[Path] = set()
     for root in roots:
+        root.relative_to(audit_root)
         if not root.exists():
             continue
         if root.is_file():
-            if root not in seen and not should_skip(root):
+            if root not in seen and not should_skip(root, audit_root=audit_root):
                 seen.add(root)
-                failures.extend(validate_filename(root))
-                failures.extend(validate_text(root))
+                failures.extend(validate_filename(root, audit_root=audit_root))
+                failures.extend(validate_text(root, audit_root=audit_root))
             continue
-        for path in walk_text_candidates(root):
+        for path in walk_text_candidates(root, audit_root=audit_root):
             if path in seen:
                 continue
             seen.add(path)
-            failures.extend(validate_filename(path))
-            failures.extend(validate_text(path))
+            failures.extend(validate_filename(path, audit_root=audit_root))
+            failures.extend(validate_text(path, audit_root=audit_root))
     return failures
 
 
-def walk_text_candidates(root: Path) -> list[Path]:
+def walk_text_candidates(root: Path, *, audit_root: Path = REPO_ROOT) -> list[Path]:
     candidates: list[Path] = []
+    if should_skip(root, audit_root=audit_root):
+        return candidates
     for current_root, dirnames, filenames in os.walk(root):
         dirnames[:] = [dirname for dirname in dirnames if dirname not in SKIP_DIR_NAMES]
         current = Path(current_root)
         for filename in filenames:
             path = current / filename
-            if not should_skip(path):
+            if not should_skip(path, audit_root=audit_root):
                 candidates.append(path)
     return candidates
 
 
-def should_skip(path: Path) -> bool:
-    parts = set(path.relative_to(REPO_ROOT).parts) if path.is_relative_to(REPO_ROOT) else set(path.parts)
+def should_skip(path: Path, *, audit_root: Path = REPO_ROOT) -> bool:
+    parts = set(path.relative_to(audit_root).parts)
     if parts & SKIP_DIR_NAMES:
         return True
     return path.is_file() and path.suffix not in TEXT_EXTENSIONS
 
 
-def validate_filename(path: Path) -> list[Failure]:
-    name = path.relative_to(REPO_ROOT).as_posix() if path.is_relative_to(REPO_ROOT) else path.as_posix()
+def validate_filename(path: Path, *, audit_root: Path = REPO_ROOT) -> list[Failure]:
+    name = path.relative_to(audit_root).as_posix()
     return [
         Failure(path, None, f"filename contains delivery-plan taxonomy: {name}")
         for pattern in FILENAME_PATTERNS
@@ -379,7 +385,8 @@ def validate_filename(path: Path) -> list[Failure]:
     ]
 
 
-def validate_text(path: Path) -> list[Failure]:
+def validate_text(path: Path, *, audit_root: Path = REPO_ROOT) -> list[Failure]:
+    relative_path = path.relative_to(audit_root)
     if path == Path(__file__).resolve():
         return []
     try:
@@ -387,7 +394,7 @@ def validate_text(path: Path) -> list[Failure]:
     except UnicodeDecodeError:
         return []
     failures: list[Failure] = []
-    if path.is_relative_to(REPO_ROOT / "demos") and path.suffix in {".sifr", ".rs"}:
+    if relative_path.is_relative_to("demos") and path.suffix in {".sifr", ".rs"}:
         failures.extend(validate_demo_variables(path, text))
     for line_number, line in enumerate(text.splitlines(), start=1):
         if not has_taxonomy_trigger(line):
@@ -606,7 +613,7 @@ def run_self_test(*, quiet: bool = False) -> int:
         bad_path_marker_label = "/m" + "4/http1"
         bad_path_marker.write_text(f'assert request[1] == "{bad_path_marker_label}"\n', encoding="utf-8")
         check_numbered_labels(root)
-        failures = collect_failures((root,))
+        failures = collect_failures((root,), audit_root=root)
     rendered = "\n".join(failure.render() for failure in failures)
     if (
         bad_label not in rendered
@@ -701,7 +708,7 @@ def check_numbered_labels(root: Path) -> None:
         '// PostgreSQL DDL and capability evidence\n',
         encoding="utf-8",
     )
-    if validate_text(good) or validate_filename(good):
+    if validate_text(good, audit_root=root) or validate_filename(good, audit_root=root):
         raise AssertionError("technical terminology was rejected")
     for label in (
         "item8", "item_10h", "part6", "phase40", "wave_2", "sprint3",
@@ -711,7 +718,7 @@ def check_numbered_labels(root: Path) -> None:
         directory.mkdir()
         source = directory / "main.sifr"
         source.write_text("def main(): pass\n", encoding="utf-8")
-        if not validate_filename(source):
+        if not validate_filename(source, audit_root=root):
             raise AssertionError(f"numbered directory label was accepted: {label}")
     for suffix in (".rs", ".sifr", ".json", ".mdx", ".sh"):
         source = root / ("numbered_label" + suffix)
@@ -731,15 +738,15 @@ def check_numbered_labels(root: Path) -> None:
             'let p95_ms = 5; // p1: captures',
         ):
             source.write_text(line + "\n", encoding="utf-8")
-            if should_skip(source) or not validate_text(source):
+            if should_skip(source, audit_root=root) or not validate_text(source, audit_root=root):
                 raise AssertionError(f"numbered delivery label was accepted: {line}")
     for name in ("budget_p95_regression_result.json", "p50_latency.rs", "p99_latency.rs"):
-        if validate_filename(root / name):
+        if validate_filename(root / name, audit_root=root):
             raise AssertionError(f"percentile filename was rejected: {name}")
     skipped = root / "skills" / "example"
     skipped.mkdir(parents=True)
     (skipped / "SKILL.md").write_text("Phase 99\n", encoding="utf-8")
-    if collect_failures((root / "skills",)):
+    if collect_failures((root / "skills",), audit_root=root):
         raise AssertionError("skill files entered the codebase scan")
 
 

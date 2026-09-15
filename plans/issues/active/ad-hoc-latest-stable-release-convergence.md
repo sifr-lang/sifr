@@ -1,5 +1,534 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Canonical crate preparation and demo edge inventory — 2026-09-13
+
+The selected crate step at3e7e7e4d14d4ae83e7d0f1070a33d1c6d8ef8c39
+passed compiler-component, SQL providers, diagnostics, lowering, syntax,
+frontend, analysis61, LSP82, package, IPC and stdlib-import tests before a
+stdlib-manifest inventory failure. The new maintained parse-safety demo has a
+valid Base640.23.1 edge, but the exact owner/lock inventory omitted it.
+A complete --no-fail-fast run of sifr_stdlib_manifest found only this failure.
+The inventory now includes exactly Cargo.lock/sifr-demo-parse-safety/base64,
+backed by demos/parse_safety/Cargo.toml. The full package then passes.
+
+Cold compilation also consumed the628.322s step before its functional failure,
+already exceeding600s. The canonical crate selection now receives separate
+locked/offline --no-run builds in the reported Cargo setup stage. Test-program
+arguments after -- are excluded only from setup; execution commands are
+unchanged. Features, target selectors, smoke/full membership and planned
+non-executed red blockers retain their exact selection. No package feature
+union, test removal or budget change was introduced.
+
+All28 setup-policy tests pass, including mode selection, separate feature
+graphs, test-filter handling, source-profile immutability and failure stopping.
+File-size3877 and diff guards pass. Evidence in20260913-final-integration:
+remaining-3e7e7e4d-toolchain.log, remaining-3e7e7e4d14-toolchain-summary.json,
+manifest-dependency-inventory-audit.log (failed), manifest-dependency-inventory-corrected.log
+and canonical-crate-preparation-tests.log.
+The E2E step was not reached. Continue actual selected preparation and both
+toolchain steps, then the canonical PR gate before review/merge.
+
+## Remote remaining SQL corrections — 2026-09-13
+
+At71793aa6d97cf9b71df02afa765bb44947911e6a, selected performance passes
+all11 variants in9.453s against the unchanged120s limit; package-management
+passes in0.347s. The selected19-suite SQL area completes66 variants in
+4697.778s:64 pass and2 fail. This remains a failed targeted area, not a
+profile pass. SQLite3.53.4/3053004 with51 compile options passes every surface.
+
+The PostgreSQL13 native build inherited GCC15's new C23 default, changing
+empty callback parameter lists into void prototypes. The build now explicitly
+selects C17 (GNU C17 on GCC/Clang, C17 on MSVC). Older generated configuration
+also redeclared glibc's strchrnul; the existing platform-function configuration
+now marks it present on Linux GNU as well as supported macOS. Imported parser
+sources and selected versions are untouched. All six PostgreSQL13–18 parser
+matrices and capability-free component execution pass after correction.
+The initial C17-only run's strchrnul failure remains retained.
+
+The host-tool fixture incorrectly assumed a private network namespace cannot
+bind its own loopback socket. Bubblewrap intentionally supplies private
+loopback. The corrected test uses a real host-namespace listener: an ungranted
+tool must not reach it, while a network-granted tool must connect. Existing
+credential, filesystem, subprocess, drift and output-limit checks remain.
+The complete CLI fixture passes in1.35s. No production sandbox grants changed.
+The documented Linux boundary now matches the tested isolation contract.
+
+All six PostgreSQL WASI components were rebuilt using authenticated SDK34 and
+the maintained producer. Their binary hashes are unchanged. The provenance
+records the new build-script hash and actual two-job producer environment.
+Component qualification and31 mutation checks pass; actual rebuilt-component
+execution passes35.88s. File-size3875 and diff guards pass.
+
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/,
+remaining-71793aa6d9-performance-results.json,
+remaining-71793aa6d9-package_management-sql_platform-summary.json,
+remaining-71793aa6d9-sql-platform-results.json,
+host-tool-network-boundary.log, postgresql-c17-parser-matrix.log (failed),
+postgresql-c17-glibc-matrix.log, postgresql-c17-components.log,
+postgresql-c17-component-check.log and postgresql-c17-component-execution.log.
+Official explanations: https://gcc.gnu.org/gcc-15/porting_to.html and
+https://github.com/containers/bubblewrap.
+
+Idle private Cargo cleanup before the parser matrix removed2.7GiB of analysis
+and LSP artifacts. Before component rebuilding, Cargo removed25.3GiB of owned
+SQL tool artifacts;220GiB+ disk remained available. Expensive dependencies were
+retained, and no other worktree target was touched. Cleanup logs are retained.
+
+Next: complete selected crate/E2E checks, then the canonical PR gate, exact-source
+integration review and full merge gate. No integration Opus review, full merge
+gate, root implementation PR or publication has occurred.
+
+## Remote performance preparation correction — 2026-09-13
+
+The remaining selected source-analysis areas pass separately at045ec537904387d2af9919d5b2a6ad2853e07370:
+stdlib5.647s, core-language9.134s and project-workspace1.450s.
+These are targeted checks, not a complete create-PR profile.
+
+The idle private Cargo target exceeded20GiB. Cargo's dry run identified3.4GiB
+in the analysis/LSP packages; package-scoped cargo clean --locked --offline
+-p sifr_analysis -p sifr_lsp reduced it from23756084314 to20143647021 bytes.
+No shared/other-worktree target was cleaned. The compiler rebuilt in34.18s
+with expensive dependency artifacts retained.
+
+The separately selected frontend_query_bench cold graph took2m02s to build,
+exceeding the entire120s performance-area limit before measurement. Setup now
+prepares both exact Cargo build commands whenever smoke/representative/full
+performance is selected. Guard-only selections do not build them. No samples,
+warmups, host controls, reference identity or performance budget is changed.
+All24 setup policy tests pass, including selection and failure propagation.
+Actual selected prepared commands pass in0.42s/0.32s; file-size3874 and diff
+guards pass. Runtime measurements still follow separately.
+
+Evidence in /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/:
+remaining-source-areas.json, remaining-package-clean-dry-run.log,
+remaining-package-clean.log, remaining-performance-prebuild.log,
+performance-preparation-policy.log and performance-preparation-selected.log.
+No new full-profile pass, Opus review, full merge gate or publication is claimed.
+
+
+## Remote generated-code inventory correction — 2026-09-13
+
+Create-PR7 at eccf183f9e59a3ef71478592d02c024d64aa3981 passed setup,
+all guards, Rust14.501s, coverage26.602s, diagnostics30.826s,
+Python181.740s, runtime-platform16.483s and developer-tooling37.976s.
+All29 tooling variants pass; lint0.710s and completion0.465s confirm their
+cold compilation is now prepared. Setup1735.381s exceeds its300s advisory.
+
+The generated-code area failed its inventory because the new executed
+nested-assignment fixture changes the e2e surface from726 to727 sources.
+All five other smoke variants passed. Total2191.23s remains a failed profile;
+performance, subsequent areas and toolchain steps were not reached.
+create-pr7.json and generated-code-quality-create-pr7.json preserve the result.
+
+The surface count/hash now includes the regression fixture. Removing only
+nested_assignment_storage_regression.sifr from discovery reproduces the exact
+previous726-file digest, proving no unrelated inventory drift was accepted.
+The corrected full inventory and its negative self-tests pass in19.671s.
+File-size3874 and diff guards pass. Evidence: inventory-corrected.log and
+target/sifr_generated_code_quality/evidence/inventory-1789325003-1125936.json.
+Remaining areas will be checked directly before restarting the canonical gate;
+these checks will not be represented as a complete profile pass.
+Integration Opus reviews and full merge gates remain0.
+
+
+## Remote editor CI bootstrap ordering correction — 2026-09-13
+
+Draft extension PR15 (sifr-lang/sifr-vscode) and editor pointer PR13
+(sifr-lang/editor-integrations) are open. Their final exact-source review and
+ordered extension → editor → root merges remain pending.
+
+The extension CI run34772570369 failed before npm provisioning:
+actions/setup-node's npm cache discovery invoked bundled npm11.19.1 inside
+the strict extension package and correctly received EBADDEVENGINES because
+npm12.0.2 is required. This is an owned workflow-order defect, not an external
+package or reviewer blocker. The pinned action source confirms explicit cache
+takes precedence and automatic package-manager caching defaults to enabled.
+The extension now omits explicit caching and sets package-manager-cache:false,
+allowing the existing exact-npm bootstrap to execute before project npm commands.
+No engine policy, version, dependency lock or extension application source changes.
+
+Local reproduction preserves bundled cache-probe exit1, followed by successful
+private npm12.0.2 bootstrap and the same cache probe passing. Node contract and
+all5 selector/runtime self-tests pass. Original CI log and exact pinned action
+source are retained in
+/home/yaser5/projects/sifr/continuation-evidence/20260913-editor-cache-order/.
+Extension5930dc1a0ccc52d9f382553156e98294a95420d9 and
+editor d6fde7111800349428f63db05a34ca9a32acd576 contain the correction.
+
+Create-PR6 at dbe23d2fb7e34e1032533933ac704a43148bbc2b was deliberately
+aborted during Cargo setup after the completed cold compiler rebuild, before
+any guard/area execution, to apply this newly discovered candidate correction.
+Its1049.315s setup failure and38 prepared generated entries remain preserved in
+create-pr6.log and create-pr6-aborted.json. This is not a gate pass.
+The owned process tree was stopped and the CPU governor restored to schedutil.
+No full merge gate or integration Opus review has been consumed.
+
+
+## Remote tooling preparation and ownership correction — 2026-09-13
+
+Create-PR attempt5 at a05542de9d74f658f95ff7f7b1902902f36caa78 failed:
+developer tooling661.372s, including475.459s completion test compilation and
+149.760s lint test compilation. One functional guard also found the missing
+host-tool fingerprint filesystem ownership record. Earlier Rust14.032s,
+Python183.058s and runtime-platform16.431s areas passed; subsequent areas
+were not executed. Setup537.788s exceeded its300s advisory. The failed
+profile1595.93s and all actual results remain in create-pr5.json and
+developer-tooling-create-pr5.json.
+
+Setup now prepares the selected lint, completion, formatter and analysis test
+graphs. Completion's default CARGO_INCREMENTAL=0 and any explicit caller
+override are preserved; ordinary analysis keeps its execution environment.
+Separate packages preserve feature resolution. The filesystem inventory now
+records bounded physical host-tool package hashing, symlink rejection and
+excluded generated paths as a package-management identity boundary.
+
+All23 setup policy tests pass, including suite selection, full/static overlap,
+environment isolation, explicit incremental override and error propagation.
+Actual selected static prebuilds complete in0.32s/0.34s. All29 selected tooling
+variants pass in28.807s with completion0.453s; no budgets or checks changed.
+File-size3874 and diff guards pass. A misspelled guard command failed to start;
+the corrected canonical file-size command subsequently passed.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/
+tooling-preparation-policy.log, tooling-prepared.log and tooling-prepared.json.
+No integration review, full merge gate or release-profile pass is claimed.
+
+
+## Remote maintained-demo preparation qualified — 2026-09-13
+
+Create-PR attempt4 on5d686a4ee3616f7df583cc0a350c955976da7d82
+passed all Rust demo semantics but failed the unchanged Rust area20s limit:
+area31.968s, maintained demo compilation20.632s. Setup517.113s also exceeded
+its300s advisory; total/profile failure remains recorded in create-pr4.json.
+
+The complete271-demo/27-policy-group checker now also prepares its Cargo
+metadata during the visible setup prelude, after authoring test prebuilds.
+The timed Rust area still executes every original check. No timeout, area
+limit, dependency policy, lock/source check or target membership is weakened.
+Each preparation has a fresh owned directory and retained command report.
+
+All22 setup policy tests pass, including selected/absent demo preparation and
+failure propagation. Actual cold preparation passes271/271 in41.741s.
+The complete timed Rust area then passes all13 variants in13.949s against20s.
+File-size3874 and diff guards pass.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/
+demo-preparation.json, demo-preparation-policy.log, rust-area-prepared.json
+and rust-area-prepared.log. These are targeted results; no new create-PR,
+full merge or release pass is claimed yet. Integration Opus reviews remain0.
+
+
+## Remote LSP memory follow-up qualified — 2026-09-13
+
+The required release stress dependency is now implemented and locally qualified
+within the existing low-resource performance work. No stress cap or workload was changed.
+
+A focused negative test found2635776 bytes retained by empty structural-template
+body vectors. Signature templates now project declaration fields directly, avoiding
+full-body cloning and retained empty buffers. A full-inventory oracle compares
+every projected class with the previous clone/clear semantics; complete checked
+HIR bodies remain present. Buffer-only and direct-projection-only RSS attempts
+still failed and remain recorded.
+
+The dominant HIR statement layout was1584 bytes because rare nested writes kept
+three expressions inline. Boxing their inner index in both nested-write variants
+reduces every statement to1232 bytes on the measured64-bit host. All typed content,
+visitation and evaluation order are retained. Four lowering constructors change;
+a64-bit layout guard bounds future statement inflation.
+
+Validation: IR5, lowering96, codegen138 and stdlib97 tests pass (two explicitly
+ignored stdlib tests stay ignored). The new nested_assignment_storage_regression
+and existing checked_place_collection_semantics programs build and execute;
+they cover plain/augmented and attribute-backed writes, evaluation order,
+outer/inner failures, negative indexes and unchanged contents after errors.
+A first outside-package fixture invocation was rejected before execution;
+the subsequent owned e2e fixture run passes and is the retained execution proof.
+Format, file-size3874, lowering maintainability and diff guards pass.
+
+After the required idle private-target cleanup and cold build, an explicit
+large-session warmup is kept separate. The controlled qualifying smoke passes:
+42operations, p95=21.895ms, peakRSS132091904 bytes against134217728,
+zero measured RSS slope. It uses the complete unchanged stress corpus.
+This is targeted qualification, not a create-PR/full merge/release-profile pass.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-lsp-memory/.
+The source/binary receipt is retained outside Git after this commit.
+
+
+## Remote runtime probe preparation correction — 2026-09-13
+
+Create-PR attempt3 on c6dea2af1d41d66a7dda261583fcbe786e37614e
+passed Cargo setup220.986s, Rust14.057s, coverage26.355s and Python178.847s.
+It failed the platform installation probe's300s timeout during a redundant
+Cargo CLI rebuild. The completed diagnostic build produced the identical
+2a5e635f13d52abfef269c46b9a86e7dc89994df7e30cdb0ae08410c748e644d compiler.
+Cargo reported dependency timestamp invalidation; no failing CLI behavior was observed.
+Total972.04s is a failed create-PR profile, not merge evidence.
+
+The probe now uses the profile's already prepared SIFR_RUNTIME_PLATFORM_BIN.
+An invalid explicit path fails; standalone invocation retains its source Cargo
+command. Tests cover exact command selection, no rebuild for a missing explicit
+binary, and standalone behavior. All12 actual platform evidence probes pass;
+installation help takes3ms. The first external report-path invocation completed
+all probes then failed path rendering; its JSON remains separate from the
+successful repository-local report/copy. No timing limit changed.
+
+The corrected-target large-session smoke still fails the fixed128MiB RSS cap
+(138489856 bytes). A diagnostic smaps capture attributes98444KiB to heap and
+35012KiB to compiler mappings. The owning memory issue is now a required
+release-profile dependency, because full developer-tooling includes lsp-stress.
+It remains outside the frozen package upgrade batches; resolve its resource
+mechanism before62/35 rather than claiming release closure. The measured
+failure and earlier independent reference remain intact. No cap increase,
+qualification receipt rebinding or historical recovery is authorized by this record.
+
+
+## Remote final integration preparation corrections — 2026-09-13
+
+Create-PR attempt2 on349966457cd15e3225e3cfb1ba757575f7074e48
+failed the Python area timing gate: functional checks passed in1500.561s,
+over its unchanged cold1200s limit. LSP declaration-authoring spent851.202s
+on cold Rust test compilation. Total1914.91s is not a successful profile.
+
+The continuation now prebuilds those same three packages separately with
+locked/offline/no-run during reported Cargo setup, preserving individual
+feature resolution and all four actual test commands inside the Python area.
+The setup advisory and area budgets are unchanged; preparation time remains visible.
+
+LSP protocol clients now honor absolute or repository-relative CARGO_TARGET_DIR
+and retain explicit command precedence. The former default-path CLI was preserved
+outside discovery and the current compiler staged during attempt2; the staging
+receipt records both hashes. The permanent resolver correction removes that
+artifact-path mismatch.
+
+Portable generated Cargo preparation now accepts only the exact approved
+libsqlite3-sys Git patch at the candidate revision. Missing patches for selected
+native SQLite, stale/registry lock sources, arbitrary/path/extra overrides and
+replacement tables remain rejected. This integrates the authorized SQLite48
+source mechanism; it is not a new dependency upgrade.
+
+Targeted setup policy21 tests, protocol15 tests, file-size guard3873 files,
+lowering guard and diff whitespace checks pass.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration/.
+Create-PR attempts1/2 failed; full merge gates0 and Opus reviews0 remain recorded.
+
+Fresh native qualification34763414201 passed every job on the actual source
+e8e202bdc6bc6c6332d5afa4705caf8e50cee364 (attempt1). All20 indexed files
+were retained and verified against the authenticated index locally and remotely.
+Receipt identities are unchanged and do not certify later source revisions.
+No publication, historical artifact recovery or phase closure is claimed.
+Remote evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-qualification-34763414201/.
+
+
+## Named performance reference checkpoint — 2026-09-13
+
+The user approved named host references after the Linux startup checkpoint.
+This supersedes that checkpoint's unanswered baseline-policy question. The
+approved design keeps historical Mac evidence and creates an independent Linux
+reference from merged compiler source; it does not use the continuation compiler
+as its own baseline.
+
+Implementation candidate `cd667af14be58bc4b002f8b3d6b8f1bdddd6819c` adds
+explicit named-profile capture and selection, host/configuration matching,
+immutable profile data, shared budget derivation, source/receipt binding and
+incomparable-trend rejection. Historical unprofiled commands remain available.
+Unknown named profiles fail without falling back to historical limits.
+The profile records OS/kernel/architecture, CPU model and topology, available
+CPUs, usable RAM, toolchains, two Cargo build jobs, build overrides, filesystem
+identity, benchmark-input identity and cache/host telemetry.
+
+The isolated reference worktree is
+`/home/yaser5/projects/sifr/worktrees/linux-performance-reference`, branch
+`codex/linux-performance-reference`, tooling SHA
+`3c0dbd789f0dc2e83161e54ec3682b9dcfa1a7cd`. Compiler source is unchanged from
+merged main `ca7a6d60e266beccce21d4c16e08667086578277`. Its complete performance
+harness matches the continuation candidate. Python 3.14.7, Rust/Cargo 1.98.1,
+Ubuntu 26.04.1, i7-4720HQ (4 physical / 8 logical CPUs) and usable RAM
+11,880,697,856 bytes were recorded before the approved capture.
+
+Validation: all 24 named-profile test methods, benchmark-runner self-tests,
+budget/trend self-tests and the file-size guard passed. Unknown-profile CLI
+negative checks and historical budget policy passed. The full 65-case smoke
+warmup passed before capture, and is cache preparation only. The initial
+cold-build/warmup failures remain in the evidence history.
+
+**Blocker: no named Linux baseline was published.** The approved full capture
+`bench-1789253120-317075` passed 59 cases, then rejected
+`lsp-query-013-selection-range` after all three controlled attempts. Their
+latency coefficients of variation were 0.361507, 0.458248 and 0.391576 against
+the existing 0.10 limit. Five later cases did not run. Host evidence reported
+low external CPU pressure; the failure was unstable samples, not a timeout.
+
+A separate short client profile and 60-iteration diagnostic reproduced a
+transient rise in request latency. Samples 40–59 were stable (CV 0.023766),
+whereas the original measured window remained unstable. The client profile
+was dominated by waiting for server responses. The exact server mechanism is
+not yet proven. These are diagnostic observations, not approved performance
+evidence and not permission to discard samples or weaken stability limits.
+
+Evidence is retained outside Git at
+`/home/yaser5/projects/sifr/continuation-evidence/20260912-reference-profiles`:
+`reference-capture.log`, `reference-capture.exit`,
+`reference-capture-failure-summary.json`,
+`reference-capture-failed-evidence.tar.gz`,
+`selection-range-client.prof`, and both selection-range diagnostic JSONs.
+The control-failure receipt SHA-256 is
+`8b57ca4223af2ed5ee03b5fd41e665a942d2fb712a01ff1037d753d2b818740b`.
+
+Next: resolve the selection-range measurement transient with an explicitly
+bounded correction to the benchmark contract or independently merged reference
+compiler. Keep reference and candidate harnesses identical, then obtain a new
+complete controlled reference and qualify the continuation's representative
+suite against it. Do not rerun the unchanged failing capture. No named
+candidate qualification, PR, new external review, merge gate or merge is claimed.
+Existing phase scope, historical failures and gate/review accounting remain
+unchanged.
+
+## Linux startup improvement checkpoint — 2026-09-12
+
+Implementation candidate `cdaefc6fdd3cc97dc8e60151f50be45b1bdcc6fa` on
+`codex/latest-stable-remote-continuation` improves development-compiler startup
+on the required 12 GB Linux host. Development opt-level 2 now covers the existing
+lowering/type-system/code-generation hot paths and their syn/proc-macro2 syntax
+libraries. Release settings and dependency locks are unchanged. Package graph
+loading now normalizes Cargo metadata once and borrows it through the existing
+graph derivation API, removing a full metadata clone and duplicate normalization.
+
+All 1,513 code-generation tests and 160 package tests passed. The final CLI
+build, formatting, HIR, file-size and diff checks passed. Two Cargo jobs and
+the private disk-backed temporary directory remain in effect. Idle private
+targets exceeding 20 GiB were cleaned before subsequent long validation;
+no shared or main-worktree target was cleaned.
+
+The canonical four-case remeasurement is `bench-1789249483-256726`,
+invocation `linux-startup-final-20260912`. All cases completed under latency
+host controls; the unchanged budget checker exited 1:
+
+| Case | Previous median | Current median | Limit |
+| --- | ---: | ---: | ---: |
+| arithmetic check | 2744.606 ms | 1498.335 ms | 1334.139 ms |
+| project graph check | 2747.294 ms | 1496.407 ms | 1357.524 ms |
+| JSON diagnostics | 2763.506 ms | 1495.983 ms | 1335.954 ms |
+
+Startup is approximately 45% faster on the same Linux host. Warm LSP diagnostics
+remain within their latency limit at 4.524 ms median / 4.548 ms p95, but peak RSS
+is 161,611,776 bytes (154.125 MiB), exceeding the unchanged 83,886,080-byte limit.
+The same four budget failures remain; no memory reduction or qualification
+pass is claimed. These are four targeted cases, not a full representative rerun.
+
+Profiling attributed much of the original startup cost to stdlib lowering,
+emission and Rust syntax validation. Native-position comparisons, extra
+driver/frontend/IR optimization, and scoped syntax/module workers were tested
+and rejected. No instrumentation or worker code remains. A main-process LSP
+smaps snapshot disproved the hypothesis that the memory peak was merely a Cargo
+child: anonymous PSS was 98,884 KiB and file PSS was 54,330 KiB.
+
+Evidence, rejected patches, test/build logs, exact source and binary hashes,
+and both successful measurements and failed budget checks are retained at
+`/home/yaser5/projects/sifr/continuation-evidence/20260912-startup-profile`.
+The earlier qualification failures remain intact. No PR, new external review,
+merge gate, waiver, baseline adjustment or phase closure was performed.
+
+Status: **tested startup improvement; performance qualification still blocked**.
+The user was asked whether to retain the cross-host limits or establish a
+separate Linux baseline from an approved reference compiler. No answer was
+received at this checkpoint, so existing limits remain unchanged. Next action:
+resolve that acceptance-target question before any reference-baseline work;
+if existing limits remain the target, continue diagnosis of the remaining
+startup and main-process memory costs. Preserve the existing scope and all
+review/gate accounting; other phase items remain separate.
+
+## Remote continuation — 2026-09-12
+
+The user transferred continuation to the isolated Linux worktree
+`/home/yaser5/projects/sifr/worktrees/latest-stable-continuation`, branch
+`codex/latest-stable-remote-continuation`. Compiler candidate `dba2b2572` was
+reconciled with main `ca7a6d60e` in `b5fd57181`; both existing phase records
+were preserved. Eight additional prepared repositories and 13,101 selected
+compact evidence files were transferred and verified outside the Git tree at
+`/home/yaser5/projects/sifr/continuation-evidence/20260912-transfer`.
+`CONTINUATION.md`, `source-manifest.json`, `evidence-manifest.json`, and
+`transfer-verification.json` bind the source identities, exclusions and next work.
+Original Mac candidates and uncommitted records remain untouched.
+
+Linux readiness passed its coverage, profile-assignment and negative cases;
+its taxonomy check rejected five delivery-item labels in the integrated
+reports, comments and temporary names. Those labels were replaced with their
+compiler/dependency responsibilities; the unchanged taxonomy check then passed.
+The failed result is retained. No dependency, runtime behavior or assertion was
+weakened. File-size and HIR checks passed. Native qualification remains in
+progress; no full gate, final review, performance or merge pass is claimed.
+The existing scope freeze, predecessor evidence and outstanding SQLite,
+policy delivery and downstream integration obligations remain in force.
+
+
+## Required development-host target — 2026-09-12
+
+The user explicitly requires continuation to work on the existing 12 GB RAM
+machine. Its CPU is an Intel Core i7-4720HQ at 2.60 GHz: four physical cores,
+eight logical CPUs. Treat this machine as the development/qualification target;
+do not make a larger machine a prerequisite for completing the existing work.
+
+The demonstrated configuration uses `CARGO_BUILD_JOBS=2`, sequential heavy
+qualification suites, the selected uv Python embedding library, and a private
+disk-backed `TMPDIR`. These settings are recorded in the continuation environment
+file. Generated native builds must not exhaust the shared quota-limited `/tmp`
+tmpfs. The original Python30 selection already passes under this configuration;
+this does not certify every remaining merge/release gate.
+
+The retained representative measurement reports warm LSP diagnostics at
+4.133 ms median / 4.351 ms p95 and 159,563,776 bytes (152.17 MiB) peak RSS.
+The three failed fresh-check/diagnostic medians are about 2.75 seconds. Neither
+observation demonstrates exhaustion of the 12 GB machine. The checked-in latency
+baseline records macOS ARM64 and Rust 1.94.0, whereas this run uses Linux x86_64
+and Rust 1.98.1. The existing budget failures remain failures; cross-host,
+cross-toolchain differences alone do not establish a compiler regression.
+
+Next: diagnose the fresh-process startup cost and LSP memory attribution, and
+use equivalent compiler/build inputs on this host for regression comparisons.
+Preserve functional assertions and resource controls. This hardware requirement
+does not authorize automatically inflating thresholds, replacing the baseline
+with the failed candidate, waiving a gate, or declaring release qualification
+complete. The earlier failure and review/gate accounting remain intact.
+
+## Remote qualification checkpoint — 2026-09-12
+
+Compiler candidate `4f1b33cd1579cb7a29a21b9e53acc3c5b3ea63a5` passed the
+Linux compiler build, generated Cargo setup92, and the original Python30
+selection: zero failures, complete compiled certification (seven capabilities,
+nine evidence entries). The five compiled suite report hashes were verified.
+Existing formatting, file-size, HIR and readiness results remain recorded.
+
+Two host setup requirements were established through retained failures:
+explicitly load the selected uv CPython 3.14.7 library, and use a private
+disk-backed `TMPDIR` instead of the quota-limited `/tmp` tmpfs. The exact
+settings are in the external continuation `environment.sh`. The first Python
+attempt timed out; the second hit temporary-storage quota. Neither is relabeled
+as a pass. The final original30 run passed without a partial-certification
+exception. No compiler runtime source, global library configuration or quota
+was changed to obtain that result.
+
+The authoritative performance invocation identity is in the retained JSON.
+The benchmark report is `bench-1789236129-184155.json`. All ten benchmark cases
+completed, but the unchanged budget checker rejected four measurements:
+
+| Case | Metric | Measured | Limit |
+| --- | --- | ---: | ---: |
+| check-project-004-project-graph | median_ms | 2747.294 | 1357.524 |
+| check-single-file-001-arithmetic | median_ms | 2744.606 | 1334.139 |
+| diagnostic-non-regression-002-json-diagnostic-schema | median_ms | 2763.506 | 1335.954 |
+| lsp-query-003-diagnostics | peak_rss_bytes | 159563776 | 83886080 |
+
+Status: **qualification blocked by performance budgets; not merge-ready**.
+The cause of these failures is not yet attributed. No waiver, baseline change,
+unchanged rerun, new review allowance, full merge gate, PR or merge is claimed.
+The next compiler task is bounded diagnosis of these recorded failures using
+the existing scope and review/gate history. SQLite48 and the other recorded
+phase dependencies retain their existing dispositions. The transferred
+prepared Python/editor/dependency candidates remain separate and unmerged.
+
+Exact logs, source/environment registrations, report snapshots and the earlier
+failed runs are retained under
+`/home/yaser5/projects/sifr/continuation-evidence/20260912-transfer` and indexed by
+`CONTINUATION.md`.
+
 ## Current retention supersession — Item70-F1C2B, 2026-09-11
 
 F1C2B minimal retention cleanup is COMPLETE via [PR #3825](https://github.com/sifr-lang/sifr/pull/3825),
@@ -32,6 +561,251 @@ PR #3821's reviewed/withheld R2 runtime remains historical work, not a prerequis
 or an authorized merge/closure here. All predecessor reviews and failed gates
 retain their original accounting. Older contradictory policy below is history.
 
+
+## Create-PR readiness correction — 2026-09-13
+
+The first create-pr gate on e8e202bdc6bc6c6332d5afa4705caf8e50cee364 stopped
+at coverage readiness. Its four newly enrolled demo packages lacked taxonomy
+classification, and the Python verification README contained an internal item
+label. Add the four actual binary targets as merge-profile test fixtures and
+describe Kafka's public audit behavior without delivery-plan terminology.
+The corrected readiness selection passes all4 variants,58 negative cases and
+31 Python delivery mutations. Shared file-size and diff checks pass.
+
+The first gate's Rust area passed in14.151s under its unchanged20s budget.
+Its92 generated-project preparations passed; their374.020s setup exceeded the
+advisory300s target. Preserve the539.69s failed gate report and warm-time advisory
+without claiming the stopped later suites ran. This is create-pr attempt1,
+not a full merge-gate attempt or an Opus review. Evidence is in
+/home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration;
+create-pr-initial.json and create-pr.log are retained.
+
+## Final integration preflight and62B batching correction — 2026-09-13
+
+All registered implementation batches have now been integrated on the owned
+remote continuation. This is not yet a merge or phase-closure claim.
+
+Final audit preflight passed:126 selected Rust registry records and27 Python
+records retain official checksums and non-yanked artifacts;17 tool/npm/Mint/action
+selections and17 recursive submodule commits were verified against official
+sources. Five editor direct-package lock integrities match npm. Rust inventory
+9 tests, Python dependency audit (6projects/locks,27packages,4images,42mutations),
+documentation structure, current evidence custody and9 qualification self-tests
+passed. All4 component source/provenance records remain current. Later registry
+observations are recorded separately, preserving the user's frozen dated cut
+and original observation hashes. No new upgrade wave was opened.
+
+Preflight identified a62B enrollment cost:271 positive demos introduced542 Cargo
+invocations, taking31.451s and making the Rust area44.436s against its existing20s
+profile budget. The checker now groups only identical complete dependency
+policies and target kinds into27 isolated Cargo roots, preserving271 distinct
+targets and the same root-lock seed/checksum checks. Metadata proves exact
+positive-source enrollment; a deliberate compile_error in one member of the
+220-target group fails the real Cargo check. All271 positives pass;45 intentional
+negative demos remain excluded. The complete13-variant Rust area now passes in
+14.359s (demo check2.664s) under controlled CPU policy. No budget was increased.
+A separate run warmed and passed the actual final gate Cargo cache.
+
+The be9e240296 qualification attempt34762571651 was cancelled after this source
+correction became necessary; it is not a completed qualification or a final
+candidate receipt. Start a fresh exact-SHA run for the corrected candidate.
+No integration review or full merge gate has run yet, and no predecessor
+review/gate histories are reset. Preserve Item75 initial1/remediation0,
+Item40 initial1/remediation1, Item65 initial1/failed-gate1 and Item61's single
+registered new integration review/gate. The optional nightly large-session
+memory failure remains in its own issue and is not hidden by the named checks.
+
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-final-integration.
+
+## Remote LSP62D integration — 2026-09-13
+
+The verification client now owns every issued request, rejects unknown/duplicate
+responses and unsolicited server requests, and retains valid responses received
+during notification waits. Explicit -32800 coverage exercises real command
+cancellation. No outbound request feature was added.
+
+Named validation passed: sifr_lsp 82 tests, lsp_server_dependency_version 3 tests,
+and all7 canonical lsp-smoke variants including14 response/cleanup regression
+tests. Formatting, file-size, maintainability and diff checks passed.
+
+The required LSP tests exposed a Unix parent-cancellation defect: kill could
+narrow u32::MAX to process-group -1. The parent PID guard now rejects zero and
+values outside positive signed PID range, retaining real current-PID coverage.
+A test-client shutdown race now tolerates an already-closed pipe while still
+checking failed exit status. The failed initial runs remain preserved. A
+concurrent test-owned CLI rebuild briefly removed the selected binary; the
+settled sequential run passed, without treating that failed attempt as evidence.
+
+Additional optional stress coverage passed protocol cancellation and corpus
+checks but the large-session smoke hit139534336 bytes versus its hardcoded
+134217728-byte cap. This separate host-sensitive budget is assigned to the
+performance-reference owner below; do not call the13-variant run an all-pass.
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-lsp62d.
+No review or merge-gate allowance has been consumed by these focused checks.
+
+## Remote compiler coverage62C — 2026-09-13
+
+Completed the registered negative-fixture coverage in the owning modules: the
+sysroot resolver rejects resolver2 and absent resolver after a valid control;
+the missing-Python probe uses an exclusively created temporary parent and an
+explicitly absent interpreter; check/build parity asserts TYPE_MISMATCH before
+comparing rendered diagnostics. Historical environment-mutation records remain.
+
+Validation: sysroot workspace validation 3 tests, missing interpreter 1, driver
+parity 1, driver sysroot 35, and Python env/read-only check-doctor 2 canonical
+variants all passed. Cargo formatting, maintainability guard and diff checks
+passed. Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-compiler-coverage.
+This records implementation qualification; final integration review, gates and
+merge remain outstanding. Continue sequentially to62D under the existing
+authorization; obsolete E1/E2 and distinct-reviewer blockers are superseded.
+
+## Remote Kafka61 integration checkpoint — 2026-09-13
+
+Kafka Python 3.0.11 is integrated from the preserved #3551 mechanism, including
+DescribeClusterRequest-v2 round-trip coverage, bounded foreign callback error
+propagation and the current live producer configuration. The official wheel
+matches the preserved SHA256. Only Kafka changed in the Python lock graph;
+the version audit now has no deferred package selection.
+
+Validation passed: 24 dependency contract tests and 42 mutations across six
+projects/locks, compiled callback examples, live policy and all six real service
+cases. The first live attempt hit the 900-second Redis build limit while
+bootstrapping the cold compiler and did not execute services. Preserve that
+failure. After compiler cache preparation, the live suite passed in 248.236s.
+Filtered reports explicitly remain non-promotable partial certification; this
+does not claim another full 32-suite Python run.
+
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-kafka61/FINAL.json.
+No new integration review or full gate ran. Preserve original Item31 history
+and the separately registered single Item61 integration review/gate allowance.
+This is a prepared checkpoint, not a merge. Continue the authorized compiler
+coverage and evidence closure items.
+
+## Remote Rust batch49/56/62A/62B and75 integration — 2026-09-13
+
+Targeted qualification PASS. The canonical Rust interop area passed13 variants;
+all271 positive idiomatic Rust demos compiled, with45 intentional negative
+fixtures separately excluded. Prepared Item75 modules, the existing digest
+consumer correction, four prepared demo manifests and five exact dependency
+policies are integrated. The later narrow intentional-invalid-regex Clippy
+annotation and import-order correction are recorded separately; four enrolled
+demo crates pass Clippy.31 codegen tests and final dependency/inventory audits pass.
+
+The actual SQLx clean-cache experiment passed against final locks: root fetch
+alone was insufficient; a separately recorded fixture fetch enabled frozen offline
+resolution with both locks unchanged. SQLite1/PostgreSQL6/MySQL3/words1 artifacts
+were genuinely rebuilt; qualification and31 mutations pass. The real compiled
+opaque-resource package ran successfully through HTTP/SQLite/Redis/PostgreSQL,
+negative protocols, poison and closure checks. Its generated root selects the
+authenticated native SQLite path patch. The cold build took471.2s on this host.
+
+Evidence and failures: /home/yaser5/projects/sifr/continuation-evidence/20260913-rust-batch/FINAL.json.
+No full gate or new Opus call consumed. Preserve all predecessor review counts,
+including Item75 initial1/remediation0. This checkpoint is not a merge or whole-phase
+closure. Continue the authorized remaining batches; no external SQLite hold remains.
+
+## Item48 resumption — user-directed SQLite update (2026-09-13)
+
+The user explicitly authorized updating SQLite and completing the remaining
+batches, superseding the historical requirement below to wait for a new
+Rusqlite release. Item48 is IN_PROGRESS, not externally blocked.
+
+The approved SQLite3.53.4 amalgamation is available in upstream Rusqlite
+commit 901f9946efdaaa289e6b1c5bd56dc67f4b651e51 and matches SQLite's official
+SHA3-256. Preserve selected Rusqlite0.40.2/libsqlite3-sys0.38.2 APIs; carry the
+four exact upstream C/header/binding replacements with explicit provenance
+inside the packaged runtime's third_party directory. The original registry
+archive and the source patch are distinct identities. Cargo patch selection
+must cover workspace, fixture, generated application and probe roots.
+
+SQLite3.53.4 is implemented and targeted qualification passed: the actual
+SDK34/Rust1.98.1 component producer, all six canonical SQLite-provider variants
+including the actual native library matrix (51 compile options), ten native
+runtime tests including exact source ID, nine generated-manifest tests,
+one backend probe test, five package-profile tests and seven dependency audits.
+Original failures and their corrections remain in FINAL.json and logs.
+The SQL platform-wide contract exposed pre-existing Rustls/Tokio Rustls
+qualification drift; Item49 below owns that reconciliation. It does not reinstate
+an external SQLite blocker. Reviews initial0/remediation0, full gates0; final
+grouped validation and delivery remain. Evidence:
+ /home/yaser5/projects/sifr/continuation-evidence/20260913-sqlite48/.
+Continue the remaining approved batches after SQLite qualification; no new
+second-person approval or resumption question is needed.
+
+## Item 48 — native SQLite convergence blocked on upstream bundling (2026-09-09)
+
+Status: `BLOCKED_EXTERNAL`. The approved SQLite 3.53.4 target is not qualified;
+the existing 3.53.2 implementation and its truthful evidence remain unchanged.
+This is the explicit upstream-bundling disposition allowed by Item 48, not
+completion, a waiver, or permission to proceed with dependent integration.
+
+- Sole transferred checkout: `/private/tmp/sifr-item47.GksHLc/codebase`, new
+  `codex/latest-stable-item48` branch from reviewed, unmerged Item 47 commit
+  `43b755f1f3f96889f20761cd68fc3ad343858a1b`. The old
+  `codex/latest-stable-item47` branch and all Item 47 evidence are preserved.
+- Read-only main comparison remains
+  `4b4cc339964baeeb6641e57dc669fef700a5fa24`; it is not this item's base.
+- Official [SQLite downloads](https://sqlite.org/download.html) and the
+  [3.53.4 release](https://sqlite.org/releaselog/3_53_4.html) still select the
+  approved target, released 2026-07-24. Its source ID is
+  `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`.
+  The official amalgamation archive SHA3-256 is
+  `628a44cfe82c66aed1ccbbe85a562d2e33ebe64b3288981ed76285612227934e`;
+  the `sqlite3.c` SHA3-256 is
+  `67f423e9ebbbdc473cbc4772c872ee6b89f31fde4ed0279a5c25d5f65c043a16`.
+  These are upstream published identities, not locally acquired artifacts.
+- Official registry indices still select Syntaqlite 0.9.0, Rusqlite 0.40.2,
+  and libsqlite3-sys 0.38.2 as their latest non-yanked stable packages.
+  Rusqlite's native dependency is `libsqlite3-sys ^0.38.2`; its `bundled`
+  feature selects that crate's bundled implementation.
+- The authenticated libsqlite3-sys 0.38.2 archive has SHA256
+  `f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8`.
+  Its actual `sqlite3/sqlite3.h:149` defines SQLite 3.53.2 / 3053002 and
+  source ID `2026-06-03 19:12:13 d6e03d8c777cfa2d35e3b60d8ec3e0187f3e9f99d8e2ee9cac695fd6fcdf1a24`.
+  The package's `build.rs` bundled branch compiles its own
+  `sqlite3/sqlite3.c` and copies its bundled bindings. Its flags configure
+  that source; they do not replace it. The authenticated Rusqlite README
+  explicitly documents the same 3.53.2 bundle at these package versions.
+- Syntaqlite's `pin-version` build feature defines the numeric version while
+  compiling its packaged parser/tokenizer C files. Changing
+  `SYNTAQLITE_SQLITE_VERSION` cannot upgrade the native runtime amalgamation.
+  Sifr's runtime additionally rejects a library other than 3053002 in
+  `crates/sifr_sql_sqlite_runtime/src/worker.rs`; its configuration and
+  compiler series agree. No label-only change, custom binding, vendor fork,
+  system-library path, compatibility lane, or fallback was introduced.
+
+Minimum resumption condition: the Rusqlite/libsqlite3-sys upstream owner must
+publish a compatible stable bundled-source release containing authentic SQLite
+3.53.4 C/header/binding inputs, with the existing required compile options.
+Then a fresh Item 48 implementation can select that legal graph, establish
+Syntaqlite grammar coherence, regenerate the SQLite component with the already
+authenticated SDK 34 / Rust 1.98.1 toolchain, and run all named Item 48 tests.
+A package number, changed grammar pin, or upstream source availability alone
+does not satisfy this condition. Item 49 cannot waive this prerequisite.
+
+Read-only proof: `/private/tmp/sifr-item47.GksHLc/item48/evidence/source-proof.json`,
+SHA256 `fc5f26b0017aa6af08d65c9290ebe8c1090b69b078715a654009b3c23305e7da`.
+It authenticates 258 files across the five existing canonical SQLite/parser
+crate archives, records 144 first-party input paths and all four producer
+maps, and verifies unchanged Item 47 locks, eleven WASM binaries, artifact
+receipts, review and terminal evidence. SDK archive/every installed SDK file,
+Rust compiler/Cargo/target libraries and canonical host LLVM also match their
+retained identities. No archive was acquired or extracted.
+
+The metadata allowance was twelve requests plus one explicitly released
+Rusqlite index request; all thirteen are accounted, including three web-open
+errors, three HTTP 403 responses and the first Rusqlite output truncation.
+No counter was reset. Source authentication passed in 8.578476958 seconds.
+The four named SQL suites and `rusqlite_dependency_version` were not run:
+the target-source prerequisite is externally blocked and native work was held.
+No current-candidate native test pass is inferred from Item 47 evidence.
+Reviews: zero initial, zero remediation. Gates/PR/push/merge/publication: none.
+Only this blocked record changes in the owned Git tree. Final light checks,
+resource closure, storage and exact record-commit identity are retained in the
+external Item 48 terminal, outside the commit it describes.
+
+Worker stops and retires after handing off that terminal. Resumption belongs
+to the orchestrator after the exact upstream condition changes.
 
 Status: active on 2026-09-08. Items 0–30, 36–39, 53–55, 58, 60, 66–67 and 69–70 are complete. Item 39 closed
 the runner dependency/API invariants; independent work can proceed under the continuation
@@ -1128,7 +1902,7 @@ transferred into this phase:
 
 | ID | Owner and current state | Required evidence / consumers |
 | --- | --- | --- |
-| E1 | [Distinct release reviewer restoration](ad-hoc-distinct-release-reviewer-restoration.md), blocked on a human | GitHub currently requires only `yaseralnajjar`, self-review is allowed, admin bypass is disabled, and invitations are empty. Wait for the required distinct human approval/access and protected-environment restoration. Preserve expiring-waiver and human-review mechanisms; never renew the waiver. This owner also must separate historical waiver validation from new-use expiry in `verification/areas/distribution_release/governance/approval_waiver_selftest.py`, whose real-waiver self-test currently requires it to be unexpired. Named qualification: distribution_release suites `epoch-bootstrap`, `qualification`, `evidence-custody`, `protected-drill`, `stable-prepare`, `stable-publication`, plus `bash verification/areas/distribution_release/cases/stable_publication_workflow_contract.sh`. The owner's existing rules govern external work. Blocks any candidate whose required merge gate would encounter the recorded expiry failure. |
+| E1 | Permanent solo-maintainer approval, Item65 | The user superseded the distinct-person requirement on 2026-09-08. The approved implementation is integrated in the remote continuation; no second-person invitation or renewed policy approval is required. Preserve exact protected-run approval and historical waiver evidence, plus consumed Item65 review/gate history. See the 2026-09-13 correction in the owning issue. |
 | E2 | PR #3717 / issue #3744 and the Python qualification issue, externally owned and unmerged | Require an actual merged implementation SHA and its attributable qualification, not a draft or body claim. Named affected suites from that owner: python_interop `binding-authoring`, `callback-examples`, `async-declaration-examples`, `async-context-examples`, and coverage_matrix `readiness`. Blocks dependent compiled Python integration and a full merge gate while those known prerequisite failures remain on main. No repair, merge, gate retry, or reset of their histories is authorized here. |
 
 E1/E2 are **merge-readiness prerequisites** for gate-bearing rows, not technical
@@ -3863,3 +4637,583 @@ distinct human release reviewer must accept repository access, and the
 protected `stable-release` environment must require that reviewer. Do not
 extend the expired waiver or add a fallback. Item 31 cannot consume a second
 merge gate under the current phase rules.
+
+## Remote continuation checkpoint — 2026-09-13
+
+The remote worktree `latest-stable-continuation` owns branch
+`codex/latest-stable-remote-continuation`. This is a prepared continuation,
+not a merged closure. The transferred phase ledger and its prior review/gate
+counts remain authoritative; no allowance is reset by this checkpoint.
+
+Performance candidate `803c54e8a` passes canonical representative run
+`bench-1789292414-481426`: ten measured cases, eight verification variants,
+zero failures. LSP diagnostics median/p95 are 1.846/2.036 ms; peak RSS is
+137072640 bytes against the unchanged 147980288-byte limit. The seven
+five-sample native/formatter cases do not qualify p95 under the existing rule.
+This is representative candidate evidence, not a full 65-case candidate gate.
+
+The independently captured Linux reference uses merged compiler
+`ca7a6d60e266beccce21d4c16e08667086578277`; all 65 reference cases passed.
+Named profile `linux-i7-4720hq-12gb-dev-v1` has immutable SHA256
+`f6c5b4421ab7ce520a504316a4162d1fb9458f8ced2e45a3577cd9d76cda80eb`.
+CPU power policy is part of comparison identity. Qualification temporarily
+used the performance governor and restored schedutil afterwards. Development
+optimization retains debug information and existing package overrides.
+The original RSS failure, unsuccessful diagnostics, and cold helper-build
+timeout remain recorded; explicit helper warming preceded the passing run.
+
+Prepared Python group3 source
+`ed84cf74127f6e189d95b24701a8ad34c73553c8..2482355cdbefc670903c76ee51ceafbf38e560aa`
+and the three dependency-file corrections from Item72 through
+`83531fb1e70017850948a1be83415419558f807f` are integrated as
+`81d3818ded38666ca6ac70848471ac943ad4c0f4`. Group4 and Node work were not
+imported. All 17 source-input hashes were checked unchanged after validation.
+
+Validation passes: 19 dependency contract tests; all six maintained uv locks;
+byte-identical wheel and sdist from two independent output directories; full
+Python area with 32 suites and zero failures, including compiled libraries,
+live services, dataframes, ML, callbacks, buffer/Arrow/DLPack runtimes, and
+four focused editor-integration Cargo commands. The earlier filtered compiled
+run passed its selected cases but correctly failed complete-certification
+coverage; the subsequent unfiltered run supplies complete area certification.
+File-size guard passes for 3868 files. The initial auxiliary lock-discovery
+command mistakenly included a vendored project; the correction used canonical
+maintained-project discovery, preserving that original command failure.
+
+Evidence lives under
+`/home/yaser5/projects/sifr/continuation-evidence/20260913-selection-range`
+and `/home/yaser5/projects/sifr/continuation-evidence/20260913-python-group3`.
+No new PR, external review, create-PR gate or merge gate ran. Delivery remains
+blocked by the separately owned distinct-release-reviewer restoration issue.
+A fresh GitHub environment read still shows only the current maintainer as
+required reviewer and `prevent_self_review: false`. Resolve that external
+prerequisite before attempting the blocked merge gate; do not extend the
+expired waiver. Subsequent prepared groups remain pending.
+
+## Remote group4 continuation checkpoint — 2026-09-13
+
+Items 57 and 63 are integrated and functionally validated on the remote
+continuation branch; neither item is merged. Item57 commit
+`1cd3af11d514be8f7625ac21c6a027c237f5ea23`; Item63 final source commit
+`1e0950006c1ba3b701c1dfcf2b9650c96de1e81d`. The source imports preserve the approved
+dated versions and all previously integrated Group3/Item72 corrections.
+
+- Item57: all four immutable image pins pulled successfully by digest.
+  Canonical dependency audit passed 24 contract tests, six projects/locks,
+  27 packages, four images and 42 mutations. Runner self-tests, live policy,
+  schema-profile source contract and maintainability guards passed.
+  All six compiled live cases passed against the pinned images. Existing
+  Group3 binaries were reused only after exact binary hashes and copied
+  fixture/bridge bytes were verified; actual services and binary executions
+  were fresh. PostgreSQL's SQL multi-major provider matrix is unchanged.
+- Item63: both cardinality calls now derive numkeys from their shared key list.
+  Actual Redis8.10.1 checks passed with normal two-key and AST-varied three-key
+  inputs, including both command arguments, marker and client close.
+  The maintained live runner then rebuilt and executed the changed Redis
+  fixture successfully (150ms binary execution). The Redis feature suite
+  passed with Fakeredis2.38.0 and the selected dependency graph.
+- The compiler cold build passed with two Cargo jobs in 16m00s.
+  This is build evidence, not a latency baseline. Private target is 9.8GiB;
+  its cache is retained. No source optimization, timeout, lockfile,
+  performance budget/profile, or SQL provider change was introduced.
+- Final file-size guard passed for 3,868 files at the 900-line limit.
+  Unaffected full 32-suite Group3 Python evidence and representative
+  performance evidence remain applicable to unchanged inputs. This checkpoint
+  does not claim a new full Python-area run or full candidate performance sweep.
+
+Evidence and exact six-file input hashes:
+`/home/yaser5/projects/sifr/continuation-evidence/20260913-python-group4/`,
+including `item57-live-results.json`, `item63-compiled-results.json`,
+`validated-inputs.json`, and `FINAL.json`.
+The prior failed/partial receipts remain preserved in their original envelopes.
+
+Item61 retains its prior integration, prerequisite-delivery and consumed-gate
+boundary; no Kafka client integration, old gate retry or review reset occurred.
+The active distinct-release-reviewer issue remains unresolved as recorded in
+the preceding remote recheck. Group4 initial review0/remediation0,
+create-PR gate0/merge gate0/PR0/merge0 remain unchanged. Historical Item31
+and Item40 review/gate consumption remains unchanged.
+
+Next prepared Node73 source is `a3fd2d3eff2b66876d478e26abfabb60806169bc`;
+its authenticated handoff requires the held Item40/33 editor prerequisites
+and an ordered extension → editor-integrations → root delivery. It is not an
+independent root-only patch. Preserve that boundary before starting its
+integration. Release-governance resolution remains necessary for merge.
+
+## Superseded reviewer-blocker correction — 2026-09-13
+
+The distinct-reviewer blocking conclusions in the earlier remote performance,
+Python Group3 and Group4 checkpoints were incorrect and are withdrawn.
+The authoritative transferred ledger records the user's permanent solo policy
+and Item65 implementation. The implementation was already integrated;
+the stale issue document caused the continuation error.
+
+Current GitHub environment settings are consistent with that policy.
+Continue approved preparation, integration, review and applicable gates without
+requesting another policy approval or second human. Preserve historical
+review/gate consumption and actual per-publication protected-run approval.
+This correction does not claim a merge or publication.
+
+## Remote editor and Node continuation — 2026-09-13
+
+Continued under the already-approved permanent solo-maintainer policy.
+The stale second-person blocker was corrected in 2e02bf86d. Item65's
+live implementation was already integrated; fresh actual-environment and
+historical/live approval checks pass. No duplicate implementation, renewed
+policy approval, invitation, waiver extension or publication occurred.
+
+Integrated the prepared Item40 → Item33 → Item73 source sequence in root
+0a0b953d0df1a621f08921a22a6869019c81fffe. Exact unchanged prepared extension source
+cfcfe0de403002a109542624f69973f50e8c04be and intermediate source
+2eff47f9a464699360a608b12779d351e77fa459 are retained on owned remote
+continuation branches. The root patch applies only the 14 scoped prepared
+files plus its actual editor gitlink, preserving the current solo policy,
+Python locks and compiler work.
+
+Remote Linux qualification:
+- Private official-checksum-verified Node26.8.2 and independently provisioned
+  npm12.0.2; selectors and actual runtime match.
+- Extension npm ci, lint, compiled unit tests, extension smoke tests, package
+  and audit pass. Audit reports zero vulnerabilities. npm's default blocked
+  optional install scripts were not overridden.
+- Node contract and all five invariant self-tests pass.
+- Canonical editor-release passes all six variants.
+- Canonical distribution qualification passes its nine fixture tests
+  (one adapter variant); publication workflow contract passes.
+- File-size guard passes 3,870 files; exact source hashes and clean nested
+  worktrees verified. No lock refresh or unrelated source correction needed.
+- Existing actual VS Code1.137.0 application activation evidence on Darwin
+  is retained for the exact unchanged extension source. No new Linux GUI
+  activation run or full native/release qualification is claimed.
+
+Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260913-editor-node/.
+The source tuple, input hashes, logs and results are retained there.
+Item40 initial1/remediation1 and its prior histories remain consumed;
+Item33/73 initial reviews remain unused. No new PR/merge gate or Opus review
+was run here. These are integrated and validated checkpoints, not merged items.
+Continue the remaining integration and final qualification under the approved
+policy; do not reinstate the superseded second-person requirement.
+
+## Candidate Cargo configuration identity — 2026-09-13
+
+The pre-measurement warmup at acdb309728b8fab668d6af3864e63c47e6bb204e
+rejected the approved SQLite grammar change (3053002 to 3053004) because
+tracked project Cargo configuration was incorrectly classified as host
+identity. No samples were taken. The rejected log is retained under
+20260913-final-integration/remaining-performance-config-rejected.log.
+
+Tracked Cargo manifest and project configuration are candidate inputs;
+user Cargo configuration, host, toolchain, workload and external build
+settings remain strict cross-candidate identities. Both tracked hashes must
+remain fixed within a measurement, and the result checker rejects missing
+or changed end identities. Named measurements also require a clean tree at
+completion. The existing reference and all limits remain unchanged; reference
+SHA256 is f6c5b4421ab7ce520a504316a4162d1fb9458f8ced2e45a3577cd9d76cda80eb.
+
+All 28 reference-profile tests, benchmark-runner self-tests and file-size
+guard pass. Evidence is retained in reference-config-policy-tests.log and
+reference-config-runner-selftest.log. This is a validation-policy correction,
+not a performance qualification or merge.
+
+## Selected Ruff fixture replay and performance setup — 2026-09-13
+
+Targeted performance at f5a9d131a7 completed all cache tests and benchmark
+smoke cases, but the Ruff revision guard rejected five fixture records still
+bound to f19957111640fdee8055bfe5b6aa854259344473. The selected fork is
+0f7e9ce63515fb45859f884452e5741eb19741c1. Cold frontend test compilation also
+consumed 356.239 seconds inside the area. The failed area and warmup receipts
+remain in 20260913-final-integration/remaining-performance-config-*.
+
+The five fixture sources now actually parse and replay their complete lexer
+token streams, including EndOfFile, against unchanged expectations. A
+deliberately corrupted expected token fails the test; original fixture bytes
+were restored. Revision records advance only after this replay. The initial
+test-harness mismatch (parsed tokens omit EOF) is retained in
+ruff-token-revalidation.log; the corrected positive and mutation logs are
+ruff-token-lexer-revalidation.log and ruff-token-mutation.log.
+
+Selected frontend/syntax guard test binaries are now explicitly compiled
+with --no-run during Cargo setup. Actual tests remain in the timed area;
+all budgets and benchmark samples remain unchanged. All 24 setup-policy
+tests and the file-size guard pass. This is targeted validation, not a
+complete profile pass, review or merge.
+
+
+## Rust bridge probe artifact identity — 2026-09-13
+
+The final integration crate step at a8b0d02c9991263609cc106fd645a8cf820eb894
+completed in 240.569 seconds after exact selected graph preparation (600-second
+limit), but failed two existing Python stdlib signature-corruption tests.
+The driver result was 617 passed, two failed and 77 ignored; E2E was not reached.
+The original failure and all cache entries remain retained under the remote
+20260913-final-integration evidence directory.
+
+Isolated execution succeeded with the default probe cache and failed with the
+profile cache. A traced invalid-signature success entry and an independent
+real-Cargo reproduction established the cause: different temporary roots with
+the same package name and shared target can reuse root-package freshness
+metadata. Precreating a valid and invalid source before the first check caused
+Cargo to report the invalid root as Fresh with exit zero.
+
+Probe package names now bind the complete manifest and contract source with
+SHA-256. Dependencies still share the target directory; different contracts
+have different root artifacts. The bound manifest also changes the persistent
+probe cache key, so existing incorrect receipts cannot validate the new probe.
+The original rejection assertions and sysroot trust policy are unchanged.
+
+The new deterministic real-Cargo regression passes and requires E0308 from the
+invalid root. Identity sensitivity covers source and manifest changes. All 16
+selected stdlib interop tests pass against the existing profile cache, including
+both original failures (18.75 seconds). File-size guardrails pass for 3,878 files;
+driver and HIR maintainability checks pass. Evidence:
+probe-identity-targeted.log, probe-identity-stdlib-contracts.log,
+driver-profile-cache.strace and cargo-probe-identity-repro/.
+These are targeted results; final PR, merge and release qualification remain
+separate required steps.
+
+
+## Probe and compiler artifact separation — 2026-09-14
+
+Create-PR8 at 96f079f8c822322103ca01c747827c4ef9c8daa9 failed its
+developer-tooling step budget: all 29 variants passed, but 1,105.061 seconds
+exceeded the unchanged 180-second limit. Diagnostic source canonicalization
+took 577.003 seconds and completion quality took 479.481 seconds, including
+recompilation. The complete run took 3,856.03 seconds; setup's 2,354.824 seconds
+also exceeded its advisory 300-second budget. Later areas were not reached.
+The functional passes do not turn the failed profile into a pass.
+
+Immediately afterwards, the CLI, diagnostic harness and completion graph each
+reused their artifacts in under a second. A single uncached existing Python
+signature test then reproduced the invalidation. Cargo reported
+PathToSourceChanged for dependencies such as rustversion, followed by
+StaleDependency/StaleDepFingerprint throughout the compiler graph. Vendored
+probes and registry compiler builds used the same target storage and Cargo
+replacement sources retained registry package identities.
+
+Probe dependency artifacts now use a rust_bridge_probe_target child beneath
+the configured Cargo target, anchored to the invocation directory when the
+configuration is relative. The default artifact-cache location is unchanged.
+Probes still share dependencies with other probes. Source-bound package
+identity, persistent success-cache validity, rejection assertions and time
+budgets are unchanged.
+
+All 35 targeted probe tests pass. A new real-Cargo regression builds a compiler
+fixture, checks a probe against a second authenticated copy of its dependency,
+and requires all compiler artifacts to remain fresh afterwards. Absolute and
+relative storage boundaries are covered. The initial run passed 34 tests and
+failed a mistakenly edited normalization expectation; that expectation was
+corrected and the failure retained. Full integration gates and exact-source
+qualification remain pending.
+
+Evidence is retained in the session's 20260913-final-integration directory:
+create-pr8.json/log, post-pr8-*-fingerprint.log,
+pr8-invalidation-single-probe.log,
+post-single-probe-harness-fingerprint.log,
+probe-storage-targeted.log and probe-storage-targeted-corrected.log.
+
+
+## Initial integration review and policy-test registration — 2026-09-14
+
+The canonical create-PR gate passes at
+`7d3c4198585352504a2d0c82267d6a0824df50cf` with exit zero and clean source.
+All blocking step budgets pass, including 66 SQL variants, 623 driver tests
+(77 intentional ignores), and 143 E2E fixtures. Total duration 1,884.56 seconds
+exceeds the unchanged overall warm wall-time advisory. The report SHA-256 is
+`d30bc299b05a149d67a2bc7325853149cb19fe76377b043206dc129df8693769`;
+the log SHA-256 is
+`e043bb7eaee8d3a5c3d95c56fccddd46e93a221ba8e02f602709d78e4159d988`.
+Earlier failures remain failures: create-PR9 passed all functional checks but
+exceeded the E2E step budget after rebuilding all 46 native groups. The
+unchanged-source warm check passed all 143 fixtures with 46 cache hits in
+11.575 seconds; the final full gate passed E2E in 27.170 seconds.
+
+Root draft PR: https://github.com/sifr-lang/sifr/pull/3827.
+The initial exact-source Opus integration review returned NOT SATISFIED for
+one in-scope omission: `CrateSetupPolicyTests` was imported but absent from
+the tuple assembled by `policy_checks()`. Its four tests had passed directly
+but were not executed through the canonical policy entry point. The correction
+registers that existing class alongside the existing two policy test classes.
+
+The four non-blocking observations are assigned in the separate
+[review follow-up issue](ad-hoc-latest-stable-review-followups.md).
+Review artifacts remain outside the reviewed Git tree, keyed by the original
+candidate. Integration counters: initial review completed once; one remediation
+review remains available; the final merge gate has not been run.
+The affected policy checks and remediation review must pass before that gate.
+
+Remediation validation: the canonical policy entry point now runs all 28 tests,
+including the four crate-preparation tests, successfully. A temporary in-memory
+failure injected into one crate test makes the canonical entry point fail; the
+seeded failure is retained as mutation evidence, not a product test failure.
+File-size guardrails pass for all 3,878 files, and diff whitespace checks pass.
+Evidence: crate-policy-wiring.log and crate-policy-wiring-mutation.log in
+the external integration evidence directory. No compiler or runtime input changed.
+
+## Item 76: verification preparation and release-log isolation — 2026-09-14
+
+This bounded verification-runner follow-up is registered from the first actual
+integration merge gate. It blocks final qualification and Items 62/35. It does
+not reopen the frozen dependency/version selections or reset earlier review
+and gate counters.
+
+The initial integration review and its one remediation review are complete.
+The remediation at a6b18685e73ea1706bb1c48b8471e79ae4c4cac5 was SATISFIED;
+its external review SHA-256 is
+5aa185b2bab7f58f558fecdeaf864aa01573fcb1ee1af36b345327b790929012.
+The first merge gate at that clean source failed in sysroot boundary
+certification, after 10,272.64 seconds. All earlier areas passed, including
+Python interop (700.965 seconds), developer tooling (47.480 seconds),
+performance (131.386 seconds), and distribution release (1,052.208 seconds).
+Its cold setup passed in 5,609.495 seconds, exceeding the unchanged advisory.
+The gate stopped before subsequent areas and the crate/E2E execution steps.
+This remains a failed merge gate, not a full pass.
+
+Owned findings and correction scope:
+
+- A simulated setup-failure test printed a failed cargo_cache_setup lane marker
+  into the outer successful test log. The strict release step parser rejects
+  that duplicate/failed record. Capture the simulated runner's output at the
+  test boundary; retain all original failure-propagation assertions and the
+  parser's rejection rules. A standalone regression also exposed test-order
+  dependence on profile metadata caching under a cleared environment; validate
+  the profile before isolating the mocked runner environment.
+- Sysroot boundary certification cold-built its separate source compiler
+  inside an unchanged 900-second execution limit. The build timed out.
+  Prepare that same private, locked/offline source graph in the canonical
+  setup stage, selected only for boundary-equivalence. Share the command,
+  environment and binary-path definition with actual execution.
+- TimeoutExpired returns captured byte streams despite text=True. The runner
+  attempted to join/write them as strings and hid the timeout with TypeError.
+  Decode partial streams for diagnostic use and always include the timeout
+  reason. Do not increase time limits or weaken certification assertions.
+
+The log regression first failed in the real release parser, then passed after
+output isolation. All 36 policy tests and the complete runner foundation
+self-tests pass. The complete foundation output also passes the strict release
+step parser when enclosed by a real successful step. An actual subprocess
+timeout preserves both output streams and the explicit timeout reason.
+File-size guardrails pass for 3,880 files; diff whitespace checks pass.
+The first standalone log regression's environment-order failure and all red
+test results remain retained.
+
+Evidence lives in the external 20260913-final-integration directory:
+merge1.log/json/exit/source/source-status.log, release-step-log-isolation-repro.json,
+log-isolation-red.log, log-isolation-red-parser.log, log-isolation-green.log,
+sysroot-timeout-red.log, sysroot-setup-policy-green.log,
+runner-isolation-foundation.log and runner-isolation-production-parser.log.
+The actual source-compiler preparation and remaining targeted validation,
+bounded follow-up review, final candidate gate and fresh qualification are
+still pending. No Item 76 review or final revised-candidate gate has run.
+
+Targeted execution completed with the six recorded Item 76 input hashes
+unchanged. Source preparation passed in 29.36 seconds and the unchanged
+900-second execution build then passed in 0.427 seconds. Installed standard
+library boundary execution passed; host-installed-smoke passed in 21.549 seconds,
+including negative missing-asset diagnostics and path-leakage checks.
+
+The two-suite invocation nevertheless FAILED: the installed attached API fixture
+produced 27 Rust errors (E0425/E0277), including missing relocated meta nominal
+bindings, structural construction/projection implementations, and a shorthand
+field value named descriptions after local renaming. Its boundary case took
+148.394 seconds. This compiler finding is separate from Item 76 setup/reporting;
+neither this targeted run nor merge1 is a pass. Retained evidence:
+sysroot-item76-targeted.log, sysroot-item76-targeted-results.json,
+item76-source-inputs.json, sysroot-source-preparation.log, and
+sysroot-source-prepared-execution.json. Compiler ownership and regression scope
+must be resolved before the revised final integration gate and qualification.
+
+Item 76 scoped review at 20dbb1e457 is SATISFIED with no blocking findings.
+External response SHA-256:
+a170a81b556a38c9a0f1167ad6b41cd6b72ff28048da0502b4903c424dc90d59.
+The review does not claim full integration qualification. It records optional
+POSIX/Windows timeout normalization portability and cosmetic logging suggestions;
+current required sysroot hosts are POSIX. No implementation change follows these
+suggestions. Final integration delivery is still blocked by the compiler finding.
+
+## Item 77: attached-API compiler regression repair — 2026-09-14
+
+Own the newly reproduced attached-API codegen failures separately from Item 76.
+This is a follow-up to the integrated compiler contract/canonicalization batches,
+not a dependency version change. Both installed and source-tree compilers produce
+the same E0425/E0277 failures in the maintained static_class_adapter fixture.
+Source reproduction uses the maintained certification helper, explicit source
+sysroot, isolated installed environment, and a retained external output directory.
+Earlier direct relative-path invocations failed import resolution and are retained
+as unsuccessful reproductions; they are not the decisive evidence.
+
+Scope: preserve renamed local values in Rust shorthand fields; preserve one
+shared owner and required structural contracts for stdlib nominal dependencies
+used by attached APIs. Acceptance: targeted regressions and actual source/installed
+fixture execution, including its API-edit cache invalidation check, pass without
+weakening the fixture or certification. Preserve negative identity/shadowing and
+generic representation constraints. Final integration review/gate counters remain
+unchanged. External evidence: 20260914-attached-codegen/source-cert-red.log and
+source-output; final integration/sysroot-item76-targeted.log/results.json.
+
+Item 77 implementation validation: the new shorthand regression first failed
+with an erased descriptions parameter and dangling shorthand value. After the
+repair, all 1,516 codegen tests passed. The first repaired test invocation had
+two synthetic structural test failures because unused fake APIs were correctly
+pruned; those tests now check unused-contract pruning and direct required
+contract emission. The source compiler then passed the actual attached fixture
+and API-edit/cache rebuild. Both source and installed compilers subsequently
+passed the boundary fixture, attached fixture, and API-edit/cache rebuild.
+Installed smoke passed in 21.489 seconds. All 3,880 file-size guardrails passed.
+
+That two-suite invocation is still a FAIL: its final dependency snapshot expects
+sifr_stdlib, but both compilers agree on a runtime-only generated application.
+The fixture stopped importing sifr.bytes helpers in
+3d34ad6289096f7588a75dda8689eb19b4f1ad62 (2026-08-18), while the older dependency
+snapshot retained sifr_stdlib. This is a separate verification-baseline follow-up
+for final integration, not evidence of a compiler execution failure. Preserve
+sysroot-item77-targeted.log/exit and sysroot-release-item77-targeted-results.json
+as failed area evidence. Do not disable the strict comparison.
+
+Before finalizing Item 77, self-review preserves the existing foreign-ownership
+boundary: the new import-only registration must not relocate opaque runtime
+types, including raw Python handles. A scoped negative ownership test accompanies
+that guard. Earlier installed/source evidence remains bound to
+item77-source-inputs.json; final guard validation is pending.
+
+The final opaque-ownership guard passes the full 1,517-test codegen suite
+(codegen-item77-final.log, zero failures/ignores). File-size guardrails pass
+for 3,880 files, maintainability checks pass, and diff whitespace checks pass.
+The compiler implementation is ready for a frozen-commit boundary check and
+scoped review. The separate dependency snapshot follow-up still blocks the
+complete boundary area and final integration gate.
+
+Item 77 scoped review at b9a23066373762e0ea2a91913e326e94f64ee186 is
+SATISFIED with no blocking findings. External response SHA-256:
+86485e48f9a66083dbee2b12a5e4a0f369b71702004660d487e0a767e59dced5.
+At that exact clean commit, both installed and source-tree compilers passed
+the byte-boundary program, attached-API program, and API-edit/cache rebuild.
+The boundary area still failed only at its final stale-snapshot comparison
+(679.740 seconds). Production codegen Clippy passed with -D warnings in
+18.93 seconds. An additional all-targets Clippy check found nine existing
+test-only style warnings in four files unchanged by Item 77; those and the
+review's optional observations are assigned to the separate follow-up issue.
+This is compiler-item approval, not a full integration gate or merge claim.
+
+## Item 78: byte boundary dependency snapshot recertification — 2026-09-14
+
+Owner: final integration verification dependency baselines.
+
+The built-in byte migration in 3d34ad6289096f7588a75dda8689eb19b4f1ad62
+removed the fixture's sifr.bytes helper import and the snapshot's bytes feature,
+but left an empty sifr_stdlib dependency entry. Both actual compiler modes now
+agree on a runtime-only generated application. Correct this single expected
+dependency map to match the maintained fixture and current dependency planner.
+The fixture, strict source/installed equality check, strict snapshot comparison,
+compiler behavior, frozen versions and performance reference remain unchanged.
+
+Acceptance: run the canonical boundary-equivalence and host-installed-smoke
+suites against the frozen candidate; both must pass. Review the small snapshot
+delta with the historical migration and exact-source runtime evidence. Carry
+the already approved Item 77 compiler implementation unchanged. Then run the
+final revised integration merge gate once on that final candidate, preserving
+merge1 as FAILED and all prior review/gate counters. Merges, fresh release/native
+qualification, final dependency audit and Item 35 closure remain pending.
+
+External Item 78 evidence: 20260914-boundary-snapshot/source-migration.patch,
+previous-snapshot.json and snapshot-change.json. The strict validation and
+scoped review are pending; no Item 78 pass or new full gate is claimed.
+
+## Item 79: CLI Cargo-failure test stage isolation — 2026-09-14
+
+Merge2 at exact clean 6c3685a47e5ec3f2f9674b3c413a1f473593a4bb FAILED
+(exit101,11566.46s). All selected validation areas passed, including SQL66/0,
+distribution and sysroot certification. Full crate execution stopped in
+failed_cargo_invocation_does_not_print_success_footer: clearing PATH also hid
+the required rustfmt executable, so materialization failed before Cargo launch.
+The expected Cargo-failure assertion was never reached. E2E was not reached.
+Merge1 and merge2 retain their original failed outcomes and counters.
+
+Item79 owns only that CLI test's dependency isolation and its delivery records.
+Resolve the selected toolchain's real formatter before clearing the child PATH,
+then pass it through the existing RUSTFMT contract. Preserve the missing-Cargo
+failure, diagnostic code/message, empty stdout and absent success-footer checks.
+Do not change compiler behavior, toolchain/version selections, budgets, reference
+data or the separate earlier Rust-probe-failure test.
+
+Acceptance: the isolated formatter remains executable, Cargo launch fails at
+the intended stage, and all existing output assertions pass. Run the complete
+build-output test module and remaining canonical crate/E2E selection before the
+next final gate so late checks are not left undiscovered. A new full merge run
+will retain its actual counter; neither prior failure is reset or relabeled.
+Fresh native qualification34864517647 remains a successful record for6c3685a47e,
+with20 locally/remotely verified indexed files; it is not rebound to a new SHA.
+The local release profile and final phase closure are still pending.
+
+Evidence:20260913-final-integration/merge2.log,json,exit,source and source-status
+(clean), plus20260914-cli-failure-stage for the scoped correction and validation.
+
+Item79 targeted result: all13 build_output_behavior tests pass in14.71s,
+including the exact Cargo-launch diagnostic and both failure-footer assertions.
+The formatter is resolved from rustc --print sysroot before the child PATH is
+cleared, using the existing RUSTFMT environment contract. The separate earlier
+Rust-probe failure test is unchanged and passes. The initial formatting check
+reported one multiline assertion layout; it was formatted, and cargo fmt check,
+file-size3880, lowering-maintainability and diff guards then passed.
+Remaining full crate/E2E validation and the scoped review are pending.
+
+
+## Combined known-failure repair, Items 80–84 — 2026-09-14
+
+The user explicitly requested fixing all known failures together, running their
+focused tests as one batch, then running the full suite. This instruction supersedes
+the one-item-at-a-time sequencing for this bounded repair. No prior review or gate
+counter is reset, and no new dependency-version wave is opened.
+
+Base: `4d296990011dbdb9ccc970ac73b964eca0741fbe`. Item 79 initial review passed
+with no blockers; response SHA256
+`e63ccc12668dfbccd31dff65cf263058d1dbb4936715c463dc1d53e9fd5cb50e`.
+The selected toolchain explicitly includes rustfmt.
+
+The targeted previously unreached checks recorded 72 passing and five failing
+driver generated-build tests (3805.13 s), 1517 passing codegen tests, and passing
+ordinary driver/CLI generated-build selections. The separate CLI portability
+failure was caused by the external targeted invocation omitting the exact new Git
+graph fetch before offline execution; this prerequisite will be prepared normally.
+Full E2E was intentionally interrupted at the user's request to repair first. Its
+SIGTERM and interruption receipt remain retained; it is neither a completed
+product failure nor a pass. Evidence: `20260914-cli-failure-stage/`.
+
+- Item 80: give the archived-bridge test's Cargo packaging command its explicit
+  fixture-owned target directory. Preserve checkout removal, archive execution,
+  read-only runtime directory and no-extraction assertions.
+- Item 81: update the backend test's two strict tower-http expectations to the
+  already-selected 0.7.1 fixture and lock graph. No dependency changes.
+- Item 82: inspect the final generated static-program identifier and compare all
+  32 identity bytes, preserving cache identity, output stability and real execution.
+- Item 83: constrain callback String transport when adapting to the handler's
+  shared string borrow, preventing Rust from inferring an unsized str argument.
+  No ABI, callback policy, ownership or lifecycle changes.
+- Item 84: report direct mutated captures from the actual capture set; retain
+  qualified transitive-helper checks without duplicate Unknown reports. Handle the
+  negative fixture's unrelated IndexError through its declared SubscriptionError.
+  Preserve the 17 expected ownership/callback diagnostics and their assertions.
+
+Acceptance: all five previously failing driver tests, the CLI portability test
+and affected callback unit/lowering tests pass on the combined candidate; run
+formatting, diff and file-size/maintainability checks, one scoped review of this
+combined repair, then full merge gate 3. Final release and native qualification
+remain pending. No merge or publication is claimed here.
+
+
+Combined repair focused run 1 at
+`0f62dd98fdc86fce0832f026921e6312b0ed09b2` is retained as FAIL. Archive,
+backend, callback lifecycle, callback capture rejection (the original 17
+diagnostics), portable relocation and all 17 focused lowering tests pass.
+Codegen callback tests pass 19/20; one additional output assertion still expected
+the old borrowing expression. Static identity and cache assertions pass, exposing
+a later fixture runtime error: its Sifr int arena nodes and observer still used
+SignedInteger instead of the maintained ExactInteger contract.
+
+The second correction stays within this user-approved combined repair: update
+that callback assertion and make the static-program fixture construct/project
+ExactInteger values through SifrInt. Fixed uint32, bytes, strings and containers
+retain their existing representations. No runtime fallback, compiler integer
+semantics, dependency version or lockfile change is introduced. Rerun the affected
+callback tests and both static-program runtime cases; reuse the passing focused
+cases whose implementation and inputs are unchanged. Full merge gate 3 follows
+after focused success and the scoped combined review.

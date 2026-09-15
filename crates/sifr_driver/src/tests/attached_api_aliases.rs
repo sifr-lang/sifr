@@ -21,7 +21,10 @@ def main():
 "#,
         &contract,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("a local generic type alias should forward attached type calls");
     let main = compiled

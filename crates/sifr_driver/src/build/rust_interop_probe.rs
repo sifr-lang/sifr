@@ -9,7 +9,9 @@ use super::rust_interop_probe_diagnostics::{
     classify_probe_failure, probe_cargo_resolution_failure, probe_resolution_diagnostics,
 };
 use super::rust_interop_probe_features::dependency_features;
-use super::rust_interop_probe_manifest::{probe_cargo_toml, probe_cargo_vendor_args};
+use super::rust_interop_probe_manifest::{
+    bind_probe_package_identity, probe_cargo_toml, probe_cargo_vendor_args,
+};
 use super::rust_interop_probe_nonce::unique_probe_nonce;
 use super::rust_interop_probe_paths::probe_cargo_target_dir;
 use super::rust_interop_sqlx_offline::{
@@ -92,6 +94,7 @@ pub(super) fn execute_direct_cargo_probe(
         requires_structural_runtime,
     );
     let probe_source = probe_source(probe);
+    let probe_manifest = bind_probe_package_identity(&probe_manifest, &probe_source);
     let invocation_cwd = env::current_dir()
         .map_err(|error| probe_io_failure(format!("failed to resolve Rust probe cwd: {error}")))?;
     let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source, cache);

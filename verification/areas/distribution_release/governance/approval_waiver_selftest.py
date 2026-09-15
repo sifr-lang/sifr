@@ -12,6 +12,7 @@ from typing import Any
 
 from verification.json_schema_202012 import validate_instance
 
+from .approval_policy_selftest import test_live_approval
 from .approval_waiver import (
     CANONICAL_WAIVER_EXPIRY,
     WAIVED_OPERATIONS,
@@ -54,7 +55,10 @@ def validate_repository_waiver() -> None:
     assert waiver["owner_login"] == "yaseralnajjar"
     assert set(waiver["allowed_operations"]) == WAIVED_OPERATIONS
     assert waiver["expires_at"] == CANONICAL_WAIVER_EXPIRY
-    validate_repository_approval_waiver(waiver, require_unexpired=True)
+    validate_repository_approval_waiver(
+        waiver, require_unexpired=True,
+        now=datetime(2026, 7, 29, tzinfo=timezone.utc),
+    )
     for operation in sorted(WAIVED_OPERATIONS):
         validate_single_maintainer_waiver(
             waiver,
@@ -63,9 +67,10 @@ def validate_repository_waiver() -> None:
             operation=operation,
             initiator="yaseralnajjar",
             require_unexpired=True,
-            now=datetime.now(timezone.utc),
+            now=datetime(2026, 7, 29, tzinfo=timezone.utc),
         )
     validate_approval_cli(waiver)
+    test_live_approval()
 
 
 def validate_approval_cli(waiver: dict[str, Any]) -> None:
@@ -81,12 +86,18 @@ def validate_approval_cli(waiver: dict[str, Any]) -> None:
     }
     with tempfile.TemporaryDirectory() as raw:
         root = Path(raw)
+        original_run = root / "original-run.json"
+        write_canonical_json(original_run, {
+            "status": "completed", "updated_at": "2026-07-29T12:00:00Z",
+            "triggering_actor": {"login": waiver["owner_login"]},
+        }, refuse_existing=True)
         approvals = root / "approvals.json"
         write_canonical_json(approvals, [owner_approval], refuse_existing=True)
         base = [
             sys.executable,
             str(GOVERNANCE_CLI),
-            "resolve-publication-approvers",
+            "inspect-historical-publication-approval",
+            "--original-run", str(original_run),
             "--approvals",
             str(approvals),
             "--initiator",
@@ -163,6 +174,14 @@ def validate_approval_cli(waiver: dict[str, Any]) -> None:
             text=True,
             capture_output=True,
             check=False,
+        ).returncode == 2
+        original_run.write_text(json.dumps({
+            "status": "completed", "updated_at": "2026-09-08T12:00:00Z",
+            "triggering_actor": {"login": waiver["owner_login"]},
+        }))
+        assert subprocess.run(
+            [*base, "--operation", "bootstrap-index"], cwd=REPO_ROOT,
+            capture_output=True, check=False,
         ).returncode == 2
         subprocess.run(
             [

@@ -133,6 +133,13 @@ def main() -> int:
     assert validate_bootstrap_evidence(waived_evidence) == waived_evidence
     test_single_maintainer_waiver()
     validate_repository_waiver()
+    solo_evidence = valid_evidence()
+    solo_evidence["initiator"] = "yaseralnajjar"
+    solo_evidence["approvers"] = ["yaseralnajjar"]
+    solo_evidence["approval_policy"] = {"mode": "solo-maintainer", "waiver_sha256": "none"}
+    assert validate_bootstrap_evidence(solo_evidence) == solo_evidence
+    solo_evidence["approvers"] = ["other"]
+    expect_failure(lambda: validate_bootstrap_evidence(solo_evidence), "non-designated solo reviewer")
     expect_failure(
         lambda: build_preview_epoch(
             legacy_index_sha256="f" * 64,

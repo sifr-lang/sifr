@@ -16,9 +16,10 @@ def run(endpoint: str, token: str) -> str:
             raise RuntimeError("Redis counter did not round-trip")
         client.sadd(left_set, "alpha", "shared")
         client.sadd(right_set, "shared", "omega")
-        if client.sdiffcard(2, [left_set, right_set]) != 1:
+        set_keys = [left_set, right_set]
+        if client.sdiffcard(len(set_keys), set_keys) != 1:
             raise RuntimeError("Redis SDIFFCARD returned the wrong cardinality")
-        if client.sunioncard(2, [left_set, right_set]) != 3:
+        if client.sunioncard(len(set_keys), set_keys) != 3:
             raise RuntimeError("Redis SUNIONCARD returned the wrong cardinality")
         client.delete(key, counter, left_set, right_set)
     finally:

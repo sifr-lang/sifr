@@ -263,15 +263,16 @@ impl<'ast> Visit<'ast> for ExternalVariantDemandCollector<'_> {
         visit::visit_expr_path(self, expression);
     }
 
+    fn visit_expr_struct(&mut self, expression: &'ast syn::ExprStruct) {
+        self.collect_path(&expression.path);
+        visit::visit_expr_struct(self, expression);
+    }
+
     fn visit_pat(&mut self, _pattern: &'ast syn::Pat) {}
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        if let Ok(arguments) = rust_macro.parse_body_with(
-            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-        ) {
-            for argument in &arguments {
-                self.visit_expr(argument);
-            }
+        if let Some(arguments) = super::MacroArguments::parse(rust_macro) {
+            arguments.visit(self);
         }
     }
 }

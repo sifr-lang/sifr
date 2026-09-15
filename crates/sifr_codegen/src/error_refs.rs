@@ -3,6 +3,24 @@ use sifr_type_system::Type;
 use std::collections::HashSet;
 
 mod checked_places;
+mod conversions;
+pub(crate) use conversions::ErrorConversionDemand;
+
+#[derive(Default)]
+struct ErrorReferences {
+    builtins: HashSet<String>,
+    conversions: ErrorConversionDemand,
+}
+
+pub(crate) fn collect_error_conversion_demand(
+    module: &HirModule,
+    module_name: Option<&str>,
+) -> ErrorConversionDemand {
+    let mut conversions =
+        collect_error_references(module, "", &HashSet::new(), false, &[]).conversions;
+    conversions.record_classes(module, module_name);
+    conversions
+}
 
 pub(crate) fn collect_referenced_builtin_error_classes(
     module: &HirModule,
@@ -11,7 +29,24 @@ pub(crate) fn collect_referenced_builtin_error_classes(
     needs_file_handles: bool,
     builtin_error_classes: &[&str],
 ) -> HashSet<String> {
-    let mut referenced = HashSet::new();
+    collect_error_references(
+        module,
+        stdlib_preamble,
+        intrinsic_functions,
+        needs_file_handles,
+        builtin_error_classes,
+    )
+    .builtins
+}
+
+fn collect_error_references(
+    module: &HirModule,
+    stdlib_preamble: &str,
+    intrinsic_functions: &HashSet<String>,
+    needs_file_handles: bool,
+    builtin_error_classes: &[&str],
+) -> ErrorReferences {
+    let mut referenced = ErrorReferences::default();
 
     for func in &module.functions {
         for param in &func.params {
@@ -51,7 +86,7 @@ pub(crate) fn collect_referenced_builtin_error_classes(
     collect_text_error_refs(stdlib_preamble, &mut referenced, builtin_error_classes);
 
     if needs_file_handles {
-        referenced.insert("IOError".to_string());
+        referenced.builtins.insert("IOError".to_string());
     }
 
     // Intrinsics can produce these builtin errors through generated helper code.
@@ -68,7 +103,7 @@ pub(crate) fn collect_referenced_builtin_error_classes(
             "TimeoutError",
             "ScopeFailure",
         ] {
-            referenced.insert(error_name.to_string());
+            referenced.builtins.insert(error_name.to_string());
         }
     }
 
@@ -135,13 +170,14 @@ pub(crate) fn collect_module_intrinsic_function_names(module: &HirModule) -> Has
 
 fn collect_type_error_refs(
     ty: &Type,
-    referenced: &mut HashSet<String>,
+    referenced: &mut ErrorReferences,
     builtin_error_classes: &[&str],
 ) {
+    referenced.conversions.record_type(ty);
     match ty {
         Type::Class { name, .. } | Type::Protocol { name, .. } | Type::Enum { name, .. } => {
             if builtin_error_classes.contains(&name.as_str()) {
-                referenced.insert(name.clone());
+                referenced.builtins.insert(name.clone());
             }
         }
         Type::List(inner)
@@ -177,7 +213,7 @@ fn collect_type_error_refs(
         Type::Failure(err) => {
             collect_type_error_refs(err, referenced, builtin_error_classes);
             if builtin_error_classes.contains(&"SecondaryError") {
-                referenced.insert("SecondaryError".to_string());
+                referenced.builtins.insert("SecondaryError".to_string());
             }
         }
         Type::TimeoutResult(err) => {
@@ -233,7 +269,7 @@ fn collect_type_error_refs(
 
 fn collect_stmt_error_refs(
     stmts: &[HirStmt],
-    referenced: &mut HashSet<String>,
+    referenced: &mut ErrorReferences,
     builtin_error_classes: &[&str],
 ) {
     for stmt in stmts {
@@ -337,7 +373,7 @@ fn collect_stmt_error_refs(
                 for handler in handlers {
                     if let Some(error_type) = &handler.error_type {
                         if builtin_error_classes.contains(&error_type.as_str()) {
-                            referenced.insert(error_type.clone());
+                            referenced.builtins.insert(error_type.clone());
                         }
                     }
                     collect_stmt_error_refs(&handler.body, referenced, builtin_error_classes);
@@ -356,7 +392,7 @@ fn collect_stmt_error_refs(
             HirStmt::AsyncWith { kind, body, .. } => {
                 match kind {
                     sifr_ir::HirAsyncWithKind::TaskTimeout { duration } => {
-                        referenced.insert("TimeoutError".to_string());
+                        referenced.builtins.insert("TimeoutError".to_string());
                         collect_expr_error_refs(duration, referenced, builtin_error_classes);
                     }
                     sifr_ir::HirAsyncWithKind::UserDefined { context, .. }
@@ -366,12 +402,12 @@ fn collect_stmt_error_refs(
                     sifr_ir::HirAsyncWithKind::TaskGroup {
                         context: Some(context),
                     } => {
-                        referenced.insert("ScopeFailure".to_string());
+                        referenced.builtins.insert("ScopeFailure".to_string());
                         collect_expr_error_refs(context, referenced, builtin_error_classes);
                     }
                     sifr_ir::HirAsyncWithKind::TaskScope
                     | sifr_ir::HirAsyncWithKind::TaskGroup { context: None } => {
-                        referenced.insert("ScopeFailure".to_string());
+                        referenced.builtins.insert("ScopeFailure".to_string());
                     }
                 }
                 collect_stmt_error_refs(body, referenced, builtin_error_classes);
@@ -395,7 +431,7 @@ fn collect_stmt_error_refs(
 
 fn collect_expr_error_refs(
     expr: &HirExpr,
-    referenced: &mut HashSet<String>,
+    referenced: &mut ErrorReferences,
     builtin_error_classes: &[&str],
 ) {
     collect_type_error_refs(expr.ty(), referenced, builtin_error_classes);
@@ -405,7 +441,7 @@ fn collect_expr_error_refs(
         | HirExpr::GenericCall { func, args, .. }
         | HirExpr::PythonCall { func, args, .. } => {
             if builtin_error_classes.contains(&func.as_str()) {
-                referenced.insert(func.clone());
+                referenced.builtins.insert(func.clone());
             }
             for arg in args {
                 collect_expr_error_refs(arg, referenced, builtin_error_classes);
@@ -420,7 +456,7 @@ fn collect_expr_error_refs(
             class_name, args, ..
         } => {
             if builtin_error_classes.contains(&class_name.as_str()) {
-                referenced.insert(class_name.clone());
+                referenced.builtins.insert(class_name.clone());
             }
             for arg in args {
                 collect_expr_error_refs(arg, referenced, builtin_error_classes);
@@ -501,6 +537,19 @@ fn collect_expr_error_refs(
         } => {
             collect_expr_error_refs(object, referenced, builtin_error_classes);
             collect_expr_error_refs(index, referenced, builtin_error_classes);
+            if let HirExpr::Index { ty, .. } = expr
+                && !crate::helpers::is_option_type(ty)
+            {
+                match object.ty().resolve_alias() {
+                    Type::List(_) | Type::Bytes | Type::Str => {
+                        referenced.builtins.insert("IndexError".to_string());
+                    }
+                    Type::Dict(_, _) => {
+                        referenced.builtins.insert("KeyError".to_string());
+                    }
+                    _ => {}
+                }
+            }
         }
         HirExpr::MethodCall { object, args, .. } => {
             collect_expr_error_refs(object, referenced, builtin_error_classes);
@@ -595,7 +644,7 @@ fn collect_expr_error_refs(
 
 fn collect_text_error_refs(
     text: &str,
-    referenced: &mut HashSet<String>,
+    referenced: &mut ErrorReferences,
     builtin_error_classes: &[&str],
 ) {
     let mut token = String::new();
@@ -606,13 +655,13 @@ fn collect_text_error_refs(
         }
         if !token.is_empty() {
             if builtin_error_classes.contains(&token.as_str()) {
-                referenced.insert(token.clone());
+                referenced.builtins.insert(token.clone());
             }
             token.clear();
         }
     }
     if !token.is_empty() && builtin_error_classes.contains(&token.as_str()) {
-        referenced.insert(token);
+        referenced.builtins.insert(token);
     }
 }
 
@@ -620,9 +669,9 @@ pub(crate) fn collect_source_builtin_error_classes(
     source: &str,
     builtin_error_classes: &[&str],
 ) -> HashSet<String> {
-    let mut referenced = HashSet::new();
+    let mut referenced = ErrorReferences::default();
     collect_text_error_refs(source, &mut referenced, builtin_error_classes);
-    referenced
+    referenced.builtins
 }
 
 #[cfg(test)]

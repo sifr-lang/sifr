@@ -1,11 +1,11 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
+    use ::sifr_runtime::SifrInt;
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn sifr_generated_sift_down<T: Clone + 'static + PartialOrd>(
+    fn sifr_generated_sift_down<T: Clone + 'static + PartialOrd>(
         data: &mut Vec<T>,
         mut pos: SifrInt,
         n: SifrInt,
@@ -127,7 +127,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn sifr_generated_sift_up<T: Clone + 'static + PartialOrd>(
+    fn sifr_generated_sift_up<T: Clone + 'static + PartialOrd>(
         heap: &mut Vec<T>,
         mut pos: SifrInt,
     ) {
@@ -206,13 +206,14 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
+    pub fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
         "Push item onto the heap in-place. O(log n) time.".to_string();
         heap.push(item.clone());
         let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
         sifr_generated_sift_up(heap, pos.clone());
     }
-    pub(crate) fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
+    #[must_use]
+    pub fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
         "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
             .to_string();
         let n: SifrInt = SifrInt::from(heap.len());
@@ -260,7 +261,7 @@ mod sifr_generated_generated_support {
         top
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{heappop, heappush};
 use ::sifr_runtime::SifrInt;
 fn drain_sorted(values: &[SifrInt]) -> Vec<SifrInt> {
     let mut heap: Vec<SifrInt> = Vec::new();

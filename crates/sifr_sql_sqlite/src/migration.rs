@@ -32,7 +32,7 @@ impl MigrationDialect for SqliteMigrationDialect {
             self.parser.series().minor,
             self.parser.series().patch,
         ) {
-            (3, 53, 2) => "3.53.2",
+            (3, 53, 4) => "3.53.4",
             _ => "unsupported",
         }
     }

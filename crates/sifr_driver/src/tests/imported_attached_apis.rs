@@ -44,7 +44,10 @@ def main():
         &contract,
     );
     modules.insert("fixture.models".to_string(), parse_suite(MODELS));
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("imported selected attached APIs should lower through aliases");
     let main = compiled
@@ -90,7 +93,10 @@ def main():
         "fixture.facade".to_string(),
         parse_suite("type Adapter[T] = T\n"),
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("an imported generic type alias should forward attached type calls");
     let main = compiled

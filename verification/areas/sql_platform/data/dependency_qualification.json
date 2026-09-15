@@ -2,9 +2,9 @@
   "schema_version": 1,
   "rust_version": "1.98",
   "root_lock_package": "sifr_sql_dependency_lock",
-  "sqlite_amalgamation": "3.53.2",
+  "sqlite_amalgamation": "3.53.4",
   "build_environment": {
-    "SYNTAQLITE_SQLITE_VERSION": "3053002",
+    "SYNTAQLITE_SQLITE_VERSION": "3053004",
     "SYNTAQLITE_CFLAG_*": []
   },
   "required_audits": [
@@ -98,8 +98,8 @@
     },
     {
       "crate": "rustls",
-      "version": "0.23.43",
-      "checksum": "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06",
+      "version": "0.23.44",
+      "checksum": "6725596c3f2c3a0aef021139e145d4eafe314a6623e4680ca83852b2c67ab2ba",
       "license": "Apache-2.0 OR ISC OR MIT",
       "default_features": false,
       "features": ["aws_lc_rs", "logging", "prefer-post-quantum", "std", "tls12"],
@@ -110,8 +110,8 @@
     },
     {
       "crate": "tokio-rustls",
-      "version": "0.26.4",
-      "checksum": "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61",
+      "version": "0.26.5",
+      "checksum": "b0c85f2c3ef0b1cd58b36682f4b17aaa995f0e5db534d85692b4903abce21f67",
       "license": "MIT OR Apache-2.0",
       "default_features": false,
       "features": ["aws_lc_rs", "logging", "tls12"],
@@ -194,23 +194,11 @@
     },
     {
       "crate": "mysql_async",
-      "version": "0.37.0",
-      "checksum": "3519e91b0d254ac1ffa495bc42053286cb2172ad7241d5b3b1b9f8a891f21ee2",
+      "version": "0.37.1",
+      "checksum": "40d11da0e2d9fad4640c9f9198ee431c6d68444568f83ef1f10f3367270071e4",
       "license": "MIT OR Apache-2.0",
       "default_features": false,
       "features": ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"],
-      "artifacts": ["mysql-runtime"],
-      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "platform_part": "mysql_provider",
-      "audit_owner": "sifr-sql-mysql/runtime"
-    },
-    {
-      "crate": "mysql_common",
-      "version": "0.37.3",
-      "checksum": "0f27695f286b461da077b8c2f72f47feaa04ce3c3f9c0976257410e90e21208a",
-      "license": "MIT OR Apache-2.0",
-      "default_features": false,
-      "features": ["derive"],
       "artifacts": ["mysql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
       "platform_part": "mysql_provider",
@@ -230,8 +218,8 @@
     },
     {
       "crate": "cc",
-      "version": "1.4.4",
-      "checksum": "0ad534f4357a5264cce5019c989cf66a4f0dc4e0d1b1d15f8aacec0ff7360273",
+      "version": "1.4.5",
+      "checksum": "005ec2760ca554fae18df7a11195552ec576cd665632a881bc011d5bb2fd4d80",
       "license": "MIT OR Apache-2.0",
       "default_features": false,
       "features": [],
@@ -267,6 +255,7 @@
     {
       "crate": "libsqlite3-sys",
       "version": "0.38.2",
+      "source_patch": "crates/sifr_runtime/third_party/libsqlite3-sys/sifr-source.json",
       "checksum": "f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8",
       "license": "MIT",
       "default_features": false,

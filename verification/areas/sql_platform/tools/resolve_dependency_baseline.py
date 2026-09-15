@@ -386,7 +386,7 @@ def self_test() -> None:
         ("prerelease", lambda data: data["crate"][0].__setitem__("version", "1.53.2-rc.1")),
         ("yanked", lambda data: data["crate"][0].__setitem__("yanked", True)),
         ("broad-range", lambda data: data["crate"][0].__setitem__("version", "1")),
-        ("incompatible-family", lambda data: mutate_crate(data, "mysql_common", "version", "0.38.2")),
+        ("incompatible-family", lambda data: data["crate"][0].update(policy="latest-compatible", compatible_min="0.0.0", compatible_max="0.0.1", compatibility_owner="test-upstream")),
         ("unlocked-source", lambda data: data["source"][0].__setitem__("tag", "main")),
         ("missing-commit", lambda data: data["source"][0].__setitem__("commit", "pending")),
         ("missing-source-authority", lambda data: find_crate(data, "syntaqlite").pop("source_authority")),

@@ -4,8 +4,8 @@
   "surface": "all",
   "libraries": [
     {
-      "version": "3.53.2",
-      "version_number": 3053002,
+      "version": "3.53.4",
+      "version_number": 3053004,
       "compile_flags": [],
       "runtime_compile_options": [
         "ATOMIC_INTRINSICS=1",

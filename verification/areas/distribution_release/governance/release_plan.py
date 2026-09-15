@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .approval_waiver import validate_approval_policy
+from .approval_policy import MAINTAINER, SOLO_MAINTAINER
 from .common import (
     BUILDERS,
     TARGETS,
@@ -346,7 +347,9 @@ def validate_release_signoff(payload: Any) -> dict[str, Any]:
     for index, attempt in enumerate(signoff["attempts"]):
         approver = attempt["approver"]
         is_self = approver.casefold() == initiator.casefold()
-        if is_self != (policy["mode"] == "single-maintainer-waiver"):
+        accepted = (approver == MAINTAINER if policy["mode"] == SOLO_MAINTAINER
+                    else is_self == (policy["mode"] == "single-maintainer-waiver"))
+        if not accepted:
             fail(
                 f"$.attempts[{index}].approver",
                 "does not match the retained approval policy",

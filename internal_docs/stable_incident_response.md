@@ -10,9 +10,10 @@ release-publication workflow.
 
 - Release owner: `release/distribution`.
 - Incident owner: `release/distribution`.
-- Approval authority: a protected `stable-release` environment approval from
-  `release/distribution` for a run not initiated by the same person. Initial
-  and resume attempts require distinct recorded approvals.
+- Approval authority: explicit GitHub-recorded `stable-release` approval by
+  `yaseralnajjar` for the exact run, attempt, and release evidence. Self-review
+  is allowed; admin bypass is disabled. Initial and resume attempts each
+  require approval. Chat authorization and agent review are not release approval.
 - Acknowledgement target: 30 minutes from a qualifying trigger. This is
   deliberately longer than the bounded 20-minute site-deployment wait, so a
   terminal site timeout can release the metadata lease and be included in the

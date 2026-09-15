@@ -35,6 +35,7 @@ pub struct AnalysisHost {
     pub(super) last_invalidation: Option<InvalidationReport>,
     pub(super) current_revision: AnalysisRevision,
     pub(super) sql_editor_runtime: SqlEditorRuntime,
+    pub(super) lint_cache: BTreeMap<FileId, super::lint_diagnostics::LintCacheEntry>,
 }
 
 impl AnalysisHost {
@@ -673,12 +674,6 @@ impl AnalysisHost {
         Ok(())
     }
 
-    fn lint_diagnostics(&self, file: FileId) -> Result<Vec<RenderedDiagnostic>, AnalysisError> {
-        let source = self.source_text(file)?;
-        let path = self.context()?.path_for_file(file);
-        Ok(sifr_lint::lint_source(&source, path, &sifr_lint::LintOptions::default()).diagnostics)
-    }
-
     fn locations_for_identifier_at(
         &mut self,
         file: FileId,
@@ -787,6 +782,8 @@ impl AnalysisHost {
                 .map(|module| (module.file, module.id))
                 .collect();
         }
+        self.lint_cache
+            .retain(|file, _| self.file_to_module.contains_key(file));
     }
 
     pub(super) fn refresh_current_revision(&mut self) {

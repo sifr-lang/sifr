@@ -1,7 +1,7 @@
 {
   "id": "basic-module",
   "source_path": "inline",
-  "ruff_fork_revision": "f19957111640fdee8055bfe5b6aa854259344473",
+  "ruff_fork_revision": "0f7e9ce63515fb45859f884452e5741eb19741c1",
   "source": "from helper import value\n\ndef main():\n    reveal_type(value)\n",
   "expected_token_kinds": [
     "From",

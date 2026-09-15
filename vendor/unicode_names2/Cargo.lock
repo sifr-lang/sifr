@@ -255,22 +255,22 @@ checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
 
 [[package]]
 name = "unicode_names2"
-version = "3.0.0"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb5bb8edb7403096f075c7d4ae3fcfc675861d1c31de5cfd47795a10a644d166"
+checksum = "82c3e18d850bb6ebd57735e5654f0af65e572b05c2397e7b2b1a7c6a792cc29c"
 dependencies = [
  "phf",
- "unicode_names2_generator",
+ "unicode_names2_generator 3.1.0",
 ]
 
 [[package]]
 name = "unicode_names2"
-version = "3.1.0"
+version = "4.0.0"
 dependencies = [
  "phf",
  "rand",
  "rand_xorshift",
- "unicode_names2_generator",
+ "unicode_names2_generator 4.0.0",
  "unicode_names2_macros",
 ]
 
@@ -282,18 +282,28 @@ checksum = "849744a58c479122ff24910d7ca57f312b62613ef0412dc327776ae6b235d16a"
 dependencies = [
  "phf_codegen",
  "rand",
+]
+
+[[package]]
+name = "unicode_names2_generator"
+version = "4.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3afbb72a8cff40859641ae4e56679215a15764e5c155a46f0f534611bdc08e0e"
+dependencies = [
+ "phf_codegen",
+ "rand",
  "time",
 ]
 
 [[package]]
 name = "unicode_names2_macros"
-version = "3.0.0"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31eb622985a3b93320bf78a7aefde30ede2cee20cd29207c5b487fed341f03b9"
+checksum = "a6e24d1fa0c43978d7e4e95e8685acc8a199cc8ae623676329b94db527d4a9c8"
 dependencies = [
  "regex",
  "syn",
- "unicode_names2 3.0.0",
+ "unicode_names2 3.1.0",
 ]
 
 [[package]]

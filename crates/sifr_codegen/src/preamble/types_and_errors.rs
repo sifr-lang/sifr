@@ -362,7 +362,7 @@ pub fn build_error_type_items(
     constructor_defaults: &[(String, RustExpr)],
 ) -> Vec<RustItem> {
     if name == "SecondaryError" {
-        return super::secondary_error::build_secondary_error_type_items();
+        return super::secondary_error::build_secondary_error_type_items(false);
     }
     let mut fields = vec![("message".to_string(), RustType::String_)];
     fields.extend(extra_fields.iter().cloned());

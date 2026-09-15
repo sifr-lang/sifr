@@ -185,7 +185,7 @@ mod tests {
             provider,
             dialect: DialectIdentity {
                 family: "sqlite".to_string(),
-                server_version: "3.53.2".to_string(),
+                server_version: "3.53.4".to_string(),
                 modes: BTreeSet::new(),
                 features: BTreeSet::from(["json".to_string()]),
             },

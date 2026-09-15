@@ -8,21 +8,26 @@ pub(crate) fn strip_relocated_rust_items_by_name(
     names: &HashSet<&str>,
     local_conversion_sources: &HashSet<String>,
 ) -> String {
+    partition_relocated_rust_items_by_name(rust_code, names, local_conversion_sources).0
+}
+
+/// Preserve removed items for the owner receiving late-generated contracts.
+pub(crate) fn partition_relocated_rust_items_by_name(
+    rust_code: &str,
+    names: &HashSet<&str>,
+    local_conversion_sources: &HashSet<String>,
+) -> (String, Vec<Item>) {
     let Ok(parsed) = syn::parse_file(rust_code) else {
-        return rust_code.to_string();
+        return (rust_code.to_string(), Vec::new());
     };
-    let kept_items = parsed
-        .items
-        .into_iter()
-        .filter(|item| {
-            let Some(name) = super::parse_item_name(item) else {
-                return true;
-            };
-            !names.contains(name.as_str())
-                || is_local_child_into_relocated_parent(item, local_conversion_sources, names)
-        })
-        .collect::<Vec<_>>();
-    super::render_items(&kept_items)
+    let (kept_items, relocated): (Vec<_>, Vec<_>) = parsed.items.into_iter().partition(|item| {
+        let Some(name) = super::parse_item_name(item) else {
+            return true;
+        };
+        !names.contains(name.as_str())
+            || is_local_child_into_relocated_parent(item, local_conversion_sources, names)
+    });
+    (super::render_items(&kept_items), relocated)
 }
 
 fn is_local_child_into_relocated_parent(

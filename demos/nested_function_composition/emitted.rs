@@ -79,7 +79,7 @@ fn collect_value_groups(items: &[SifrInt], limit: SifrInt) -> Vec<Vec<SifrInt>> 
         dfs(
             i.clone(),
             cur,
-            &total + sifr_generated_checked_value_1.clone(),
+            &total + &sifr_generated_checked_value_1.clone(),
             items,
             limit.clone(),
             res,

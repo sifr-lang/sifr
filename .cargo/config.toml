@@ -2,5 +2,5 @@
 # invocation-scoped vendor configuration with `cargo --config`.
 
 [env]
-# Syntaqlite compiles the exact grammar shipped by bundled SQLite 3.53.2.
-SYNTAQLITE_SQLITE_VERSION = { value = "3053002", force = true }
+# Syntaqlite compiles the exact grammar shipped by bundled SQLite 3.53.4.
+SYNTAQLITE_SQLITE_VERSION = { value = "3053004", force = true }

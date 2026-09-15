@@ -262,3 +262,99 @@ results, cache errors, diagnostic drift, split-brain semantics, or panic-safety
 errors.
 
 Expired waivers, ownerless waivers, issue-less waivers, unknown benchmark/budget references, and non-performance overrides fail `check_budgets.py`.
+
+## Named reference machines
+
+Named benchmark qualification selects a reference with
+`SIFR_PERFORMANCE_REFERENCE` or `--reference-profile`. The profile captures
+OS/kernel, exact CPU model and topology, usable RAM and capacity class,
+available CPUs, Rust/Cargo/Python versions, dev build mode, Cargo jobs, test
+workers, build environment, Cargo configuration hashes, benchmark input hash,
+and target/temporary storage. Available memory and swap counters are telemetry,
+not separate reference identities. Existing controlled-host admission continues
+to govern load, temperature, power and cache behavior.
+
+Qualification rejects an unknown profile, changed machine or execution
+configuration, changed benchmark inputs, uncontrolled evidence, dirty producer,
+or a reference artifact changed between production and checking. Compiler
+source and dependency/optimization changes remain recorded candidate changes;
+they do not automatically create a new baseline. Tracked project Cargo configuration
+(such as the bundled SQLite grammar version) is also a recorded candidate input,
+while user Cargo configuration and external build flags must match the reference.
+The producer and result checker require both the project manifest and Cargo
+configuration hashes to remain fixed between the beginning and end of a run. Historical Mac files remain
+unchanged and cannot supply missing CPU/RAM details for a new named capture.
+Existing unnamed historical-policy commands remain available; they do not
+provide the new full host-identity qualification. Selecting an unknown or
+mismatched named reference never falls back to those commands.
+
+Capture a new reference from a clean isolated worktree containing a merged
+compiler plus the benchmark tooling. Initialize submodules, build the compiler
+and helper, and warm caches before the approved full-corpus invocation:
+
+```bash
+RUSTUP_TOOLCHAIN=1.98.1 \
+CARGO_BUILD_JOBS=2 \
+SIFR_VALIDATION_PROFILE=approved-reference \
+SIFR_THERMAL_POLICY=controlled-host \
+python3 verification/areas/performance/run_benchmarks.py \
+  --capture-reference-profile linux-i7-4720hq-12gb-dev-v1 \
+  --reference-compiler-commit <full-merged-compiler-sha> \
+  --require-controlled-host --controlled-host-mode latency \
+  --reference-approval compiler/performance
+```
+
+The compiler reference must be an ancestor of `origin/main`; differences from
+it may touch only performance tooling and this document. All manifest cases
+and manifest sample counts are mandatory. The single named-capture command
+explicitly authorizes its bundled baseline and derived regression budgets;
+the older separate budget/trend capture commands retain their existing rules.
+A complete approved receipt and results are published atomically in
+`data/references/<name>.json`. An existing profile is never overwritten.
+
+Command/frontend latency and RSS budgets use the shared formulas above, applied
+to that host's measured reference. Existing LSP editor-latency ceilings,
+timeouts, correctness, stability and cache obligations are preserved. RSS uses
+the documented 10% / 32 MiB rule on the measured host; installed RAM alone does
+not set a process-memory allowance. Capturing a reference does not certify that
+either the reference or a candidate meets every usability or release criterion.
+Earlier failed runs retain their original result and baseline identity.
+
+After installing the measured profile in the candidate worktree:
+
+```bash
+export SIFR_PERFORMANCE_REFERENCE=linux-i7-4720hq-12gb-dev-v1
+python3 verification/areas/performance/runner.py --suite representative
+```
+
+The area adapter passes the selected profile to policy checks, benchmark
+production and budget checking through that environment setting. Named trend
+comparisons use the same reference, while incompatible or historical captures
+produce an explicit incomparable report without numerical regression claims.
+
+
+### Linux frequency policy for named references
+
+Named profiles bind the measured CPU frequency driver, governor, frequency
+bounds and available boost controls. macOS profiles record the power configuration
+from `pmset -g custom`. Missing Linux frequency-policy metadata prevents named
+capture. The settings must match before and after capture and candidate runs.
+
+On the i7-4720HQ reference host, `schedutil` reduced the active request core from
+approximately 2.6 GHz to 0.8 GHz during short LSP requests. This caused the
+selection-range measured window to violate its existing 10% stability limit.
+Use the `performance` governor for the controlled reference and matching
+candidate qualification, and restore the original governors afterward. This is
+a benchmark host control: it does not change the compiler's runtime requirements
+or the user's normal power settings. Record both policies and restoration in
+external run evidence. Do not increase warmups, discard samples or loosen
+stability thresholds to conceal frequency transitions.
+
+
+With a named profile and no `--results`, `check_budgets.py` validates the
+reference schema, complete case coverage, budget declarations and waiver policy.
+It does not claim that the older reference compiler meets the retained editor
+targets. Passing `--results` qualifies the candidate against every numeric limit.
+Trend policy still verifies reference provenance and freshness. The compact trend
+baseline is joined to budget IDs from its hash-bound manifest in memory; its
+saved measurements and immutable profile bytes are unchanged.

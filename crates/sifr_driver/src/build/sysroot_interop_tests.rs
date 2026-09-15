@@ -5,7 +5,6 @@ use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
     PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
-use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot, RustInteropTrustRequirementKind};
 use sifr_package::{
@@ -20,6 +19,17 @@ use sifr_sysroot::{
 };
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
+
+// These resolution tests supply their exact declaration demand explicitly;
+// production selection has separate behavioral coverage over checked HIR.
+fn attach_stdlib_rust_interop(
+    mut generated: GeneratedBinaryProject,
+    context: Option<PackageRustInteropContext>,
+    stdlib: &StdlibRustInterop,
+) -> (GeneratedBinaryProject, Option<PackageRustInteropContext>) {
+    generated.interop.stdlib_demand = stdlib.plan.rust.clone();
+    super::sysroot_interop::attach_stdlib_rust_interop(generated, context, stdlib)
+}
 
 #[test]
 fn private_stdlib_interop_resolves_sysroot_crate_target() {
@@ -330,6 +340,7 @@ fn base_project() -> GeneratedBinaryProject {
         required_features: HashSet::new(),
         interop: InteropBuildPlan::default(),
         cache_key_fragment: None,
+        bridge_modules: Default::default(),
         python_runtime: None,
     }
 }

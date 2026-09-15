@@ -303,7 +303,7 @@ fn schema_identity_contains_version_flags_features_and_attached_scope() {
         )],
     )
     .expect("normalized SQLite schema");
-    assert_eq!(output.dialect.server_version, "3.53.2");
+    assert_eq!(output.dialect.server_version, "3.53.4");
     assert!(output.dialect.features.contains("json"));
     assert!(
         output.documents[1]
@@ -428,7 +428,7 @@ fn embedded_normalization_keeps_metadata_separate_and_builds_a_requirement() {
         &registration,
         "0.0.0",
         "portable::embedded::sqlite",
-        "3.53.2",
+        "3.53.4",
         &SessionContract {
             search_path: vec!["main".to_string()],
             ..SessionContract::default()

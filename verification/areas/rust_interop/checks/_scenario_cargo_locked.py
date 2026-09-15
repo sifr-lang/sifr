@@ -10,9 +10,13 @@ from typing import Any, Callable
 
 ScenarioValidator = Callable[[list[str], str, Path, dict[str, Any]], int]
 
+INDEXMAP_CONSTRUCTOR = (
+    "indexmap::IndexMap::<String, u32, RandomState>::with_hasher(RandomState::default())"
+)
+
 CARGO_LOCKED_SCENARIO_TOKENS = (
-    'indexmap = { version = "=2.14.0", default-features = false }',
-    "IndexMap::<String, u32>::new()",
+    'indexmap = { version = "=2.14.2", default-features = false }',
+    INDEXMAP_CONSTRUCTOR,
     "--locked",
     "--offline",
     "--frozen",
@@ -46,12 +50,32 @@ def validate_cargo_locked_scenario(
         if isinstance(wrapper, dict)
         else None
     )
-    expected_indexmap = {"version": "=2.14.0", "default-features": False}
+    expected_indexmap = {"version": "=2.14.2", "default-features": False}
     if indexmap != expected_indexmap:
         failures.append(
             f"{fixture_id}: {raw_path}/rust/locked_bridge/Cargo.toml dependency "
             f"indexmap must equal {expected_indexmap!r}"
         )
+
+    source_path = example_dir / "rust/locked_bridge/src/lib.rs"
+    try:
+        source = source_path.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"{fixture_id}: {raw_path} cannot read wrapper source: {error}")
+    else:
+        # Bind the dependency-use proof to Rust, not the combined README text.
+        for token in (
+            "use std::collections::hash_map::RandomState;",
+            INDEXMAP_CONSTRUCTOR,
+            "indexed.insert(offset.to_string(), u32::from(byte));",
+            "indexed.values().fold(0x811c_9dc5, |state, byte|",
+            "(state ^ *byte).wrapping_mul(0x0100_0193)",
+        ):
+            if token not in source:
+                failures.append(
+                    f"{fixture_id}: {raw_path}/rust/locked_bridge/src/lib.rs "
+                    f"missing executable dependency use {token!r}"
+                )
 
     actual_trust = trust.get("rust-no-panic") if isinstance(trust, dict) else None
     if actual_trust != EXPECTED_TRUST_TARGETS:
@@ -80,9 +104,30 @@ def run_cargo_locked_self_test(
 
         mutation_cases = (
             (
+                "constructor source drift despite README token",
+                "examples/locked_offline_cache/rust/locked_bridge/src/lib.rs",
+                INDEXMAP_CONSTRUCTOR,
+                "indexmap::IndexMap::<String, u32>::new()",
+                "missing executable dependency use",
+            ),
+            (
+                "dependency insertion removed",
+                "examples/locked_offline_cache/rust/locked_bridge/src/lib.rs",
+                "indexed.insert(offset.to_string(), u32::from(byte));",
+                "let _ = (offset, byte);",
+                "missing executable dependency use",
+            ),
+            (
+                "dependency ordered fold removed",
+                "examples/locked_offline_cache/rust/locked_bridge/src/lib.rs",
+                "indexed.values().fold(0x811c_9dc5, |state, byte|",
+                "input.iter().map(|byte| u32::from(*byte)).fold(0x811c_9dc5, |state, byte|",
+                "missing executable dependency use",
+            ),
+            (
                 "registry version drift",
                 "examples/locked_offline_cache/rust/locked_bridge/Cargo.toml",
-                'version = "=2.14.0"',
+                'version = "=2.14.2"',
                 'version = "=2.13.0"',
                 "indexmap must equal",
             ),
@@ -103,8 +148,8 @@ def run_cargo_locked_self_test(
             (
                 "lock checksum drift",
                 "examples/locked_offline_cache/Cargo.lock",
-                "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9",
-                "0466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9",
+                "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855",
+                "0c4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855",
                 "checksum",
             ),
             (

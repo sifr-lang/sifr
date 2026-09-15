@@ -73,8 +73,8 @@ pub(in crate::lower) fn lower_stmts(
 
     let mut result = Vec::new();
     for stmt in stmts {
-        match crate::cfg::flow_facts(&result) {
-            Ok(facts) if facts.always_exits() => {
+        match crate::cfg::block_always_exits(&result) {
+            Ok(true) => {
                 ctx.warn_unreachable_statement(stmt.range());
                 continue;
             }

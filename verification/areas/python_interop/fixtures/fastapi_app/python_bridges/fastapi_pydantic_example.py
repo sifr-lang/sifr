@@ -2,7 +2,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Response
-from pydantic import TypeAdapter
+from pydantic import BaseModel, TypeAdapter, computed_field
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
@@ -54,6 +54,24 @@ def _verify_body_limit() -> None:
         raise RuntimeError("Starlette did not enforce the configured body limit")
 
 
+def _verify_computed_field_serialization() -> None:
+    class Totals(BaseModel):
+        received: int
+        refunded: int
+
+        @computed_field(exclude_if=lambda value: value == 0)
+        @property
+        def balance(self) -> int:
+            return self.received - self.refunded
+
+    zero = Totals(received=3, refunded=3).model_dump()
+    positive = Totals(received=5, refunded=3).model_dump()
+    if zero != {"received": 3, "refunded": 3}:
+        raise RuntimeError("Pydantic did not exclude a zero computed field")
+    if positive != {"received": 5, "refunded": 3, "balance": 2}:
+        raise RuntimeError("Pydantic excluded a nonzero computed field")
+
+
 def run() -> str:
     app = FastAPI(title="Sifr API")
     value = TypeAdapter(int).validate_python("42")
@@ -66,6 +84,7 @@ def run() -> str:
         raise RuntimeError("FastAPI response body did not match")
     _verify_frontend()
     _verify_body_limit()
+    _verify_computed_field_serialization()
     return (
         "sifr-python-interop:fastapi-pydantic:value=42:title=Sifr API:status=201:"
         "frontend=served:dependency=applied:max-body=413"

@@ -53,12 +53,10 @@ for fragment in (
     "uses: ./.github/workflows/release-publication-prepare.yml",
     "name: ${{ needs.prepare.outputs.summary_artifact_name }}",
     "name: ${{ inputs.governance_mode == 'preview' && 'preview-release' || 'stable-release' }}",
-    "actions/runs/${GITHUB_RUN_ID}/approvals",
     "--initiator \"${GITHUB_TRIGGERING_ACTOR}\"",
-    "--single-maintainer-waiver \"${SINGLE_MAINTAINER_APPROVAL_WAIVER}\"",
-    "SINGLE_MAINTAINER_APPROVAL_WAIVER_SHA256: b9630cc060ca281946da76a9cb9bc67564759c8d5446b6a33157a7d138080008",
-    'test "${waiver_sha256}" = "${SINGLE_MAINTAINER_APPROVAL_WAIVER_SHA256}"',
-    "--expected-waiver-sha256 \"${SINGLE_MAINTAINER_APPROVAL_WAIVER_SHA256}\"",
+    "resolve-publication-approvers",
+    '--evidence protected-prepare/summary.json',
+    '--run-id "${GITHUB_RUN_ID}" --run-attempt "${GITHUB_RUN_ATTEMPT}"',
     "--include-policy",
     "jq -r '.approval_policy.mode'",
     "--approval-mode \"${APPROVAL_MODE}\"",
@@ -102,6 +100,9 @@ assert publication.index("Run protected public schema-bootstrap smoke") < public
     "Retain final protected schema-bootstrap evidence"
 )
 assert publication.count("--clobber") == 1
+assert "SINGLE_MAINTAINER_APPROVAL_WAIVER" not in publication
+assert "--single-maintainer-waiver" not in publication
+assert '--expected-evidence-sha256 "${EXPECTED_RECOVERY_SUMMARY_SHA256}"' in recovery
 assert "contents: write" not in prepare
 assert "environment:" not in prepare
 for fragment in (
@@ -123,8 +124,11 @@ for fragment in (
     "name: stable-release",
     "plans/releases/schema-bootstrap-recovery/prepare-summary-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}.json",
     "actions/runs/${ORIGINAL_RUN_ID}/approvals",
-    "actions/runs/${GITHUB_RUN_ID}/approvals",
+    "resolve-publication-approvers",
     "--operation bootstrap-index",
+    "inspect-historical-publication-approval",
+    "--original-run original-run.json",
+    "--operation bootstrap-recovery",
     "--expected-waiver-sha256 \"${WAIVER_SHA256}\"",
     "failed site run identity/status drifted",
     'gh run view "${FAILED_SITE_RUN_ID}"',

@@ -1,5 +1,6 @@
 {
   "git": {
-    "sha1": "98a0339f99ecfe0467b2829c329bd8b7525a1c21"
-  }
+    "sha1": "96f8df65ee6b4368d91a006f9c5b4a8050abae49"
+  },
+  "path_in_vcs": "rand_chacha"
 }

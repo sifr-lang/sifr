@@ -60,7 +60,10 @@ fn project(main: &str) -> HashMap<String, Suite> {
 }
 
 fn compile_errors(main: &str) -> Vec<sifr_diagnostics::RenderedDiagnostic> {
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     match collect_project_hir_modules(&project(main), stdlib_defs) {
         Ok(_) => panic!("handler fixture must fail"),
         Err(errors) => errors,
@@ -99,7 +102,10 @@ class Model(HandlerContract):
         return self
 "#,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("non-Pydantic handler pipeline should compile");
     let selection = compiled
@@ -289,7 +295,10 @@ class Child(Parent):
         return value
 "#,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("inherited handlers should compile");
     let child = compiled
@@ -362,7 +371,10 @@ class Parent(HandlerContract):
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("imported inherited handler should compile");
     let output = compiled
@@ -426,7 +438,10 @@ class Model(HandlerContract):
         return value
 "#
         );
-        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let stdlib_defs = compile_stdlib()
+            .expect("stdlib should compile")
+            .defs
+            .clone();
         let compiled = collect_project_hir_modules(&project(&main), stdlib_defs)
             .expect("handler identity fixture compiles");
         compiled
@@ -476,7 +491,10 @@ class Box[T]:
         return self
 "#,
     );
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("generic Self annotation should compile");
     let method = compiled

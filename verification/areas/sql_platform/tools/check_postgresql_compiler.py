@@ -13,7 +13,8 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-from postgresql_component_inputs import guest_source_sha256
+from component_artifact_validation import validate_manifest
+from wasi_virt_inputs import validate_wasi_virt
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 RECORD = REPO_ROOT / "verification/areas/sql_platform/data/postgresql_compiler_qualification.json"
@@ -35,6 +36,12 @@ def validate(payload: Any) -> None:
         "artifact manifest authority has drifted",
     )
     require(payload.get("supported_server_majors") == MAJORS, "supported PostgreSQL majors have drifted")
+    cargo = tomllib.loads((REPO_ROOT / "Cargo.toml").read_text(encoding="utf-8"))
+    adapter = cargo["workspace"]["dependencies"]["cc"]["version"].removeprefix("=")
+    require(
+        payload.get("parser_boundary", {}).get("build_adapter") == f"cc@{adapter}",
+        "PostgreSQL component build adapter differs from its current producer",
+    )
     source_path = REPO_ROOT / str(payload.get("source_manifest"))
     sources = json.loads(source_path.read_text(encoding="utf-8"))
     require(sources.get("target") == "wasm32-wasip2", "component target has drifted")
@@ -77,49 +84,8 @@ def validate_source(row: dict[str, Any], baseline: dict[int, tuple[str, str]]) -
 
 def validate_artifacts(sources: list[dict[str, Any]]) -> None:
     manifest = json.loads(ARTIFACT_MANIFEST.read_text(encoding="utf-8"))
-    require(manifest.get("schema_version") == 1, "artifact manifest schema has drifted")
-    require(manifest.get("target") == "wasm32-wasip2", "artifact target has drifted")
-    require(manifest.get("wit_world") == "embedded-language-provider", "WIT world has drifted")
-    require(manifest.get("protocol_major") == 1, "component protocol has drifted")
-    require(
-        manifest.get("guest_source_sha256") == guest_source_sha256(REPO_ROOT),
-        "component guest source checksum has drifted",
-    )
-    toolchain = manifest.get("toolchain")
-    require(isinstance(toolchain, dict), "component toolchain is missing")
-    require(toolchain.get("wasi_sdk") == "33.0", "wasi-sdk pin has drifted")
-    require(toolchain.get("wasi_virt") == "0.2.0", "WASI-Virt pin has drifted")
-    require(
-        toolchain.get("wasi_virt_commit") == "448f6df8f688cee5d6995e96b1ffc31f9bf00742",
-        "WASI-Virt commit has drifted",
-    )
-    require(
-        toolchain.get("wasi_virt_source_sha256")
-        == "47c1ca1cc80df330c93c4797f6748d5330c2804001bdcff0342c4001920d1d2e",
-        "WASI-Virt source checksum has drifted",
-    )
-    require(toolchain.get("wit_bindgen") == "0.61.1", "wit-bindgen pin has drifted")
-    require(
-        HEX64.fullmatch(str(toolchain.get("wasi_sdk_asset_sha256"))) is not None,
-        "wasi-sdk asset checksum is invalid",
-    )
-    virt = REPO_ROOT / "third_party/wasi-virt"
-    require(virt.is_dir(), "WASI-Virt source is not initialized")
-    require(
-        git_output(virt, ["rev-parse", "HEAD"]).decode().strip()
-        == toolchain["wasi_virt_commit"],
-        "WASI-Virt source commit has drifted",
-    )
-    digest = hashlib.sha256()
-    for raw_path in git_output(virt, ["ls-files", "-z"]).split(b"\0"):
-        if raw_path:
-            digest.update(raw_path)
-            digest.update(b"\0")
-            digest.update(hashlib.sha256((virt / raw_path.decode()).read_bytes()).digest())
-    require(
-        digest.hexdigest() == toolchain["wasi_virt_source_sha256"],
-        "WASI-Virt source content has drifted",
-    )
+    validate_manifest(manifest, "postgresql")
+    validate_wasi_virt(REPO_ROOT / "third_party/wasi-virt")
     rows = manifest.get("artifacts")
     require(isinstance(rows, list) and [row.get("server_major") for row in rows] == MAJORS, "artifact matrix is incomplete")
     source_by_major = {int(row["server_major"]): row for row in sources}
@@ -135,6 +101,7 @@ def validate_artifacts(sources: list[dict[str, Any]]) -> None:
         source = source_by_major[major]
         require(row.get("parser_tag") == source.get("tag"), f"PostgreSQL {major} artifact tag has drifted")
         require(row.get("parser_commit") == source.get("commit"), f"PostgreSQL {major} artifact commit has drifted")
+        require(row.get("parser_source_sha256") == source.get("source_content_sha256"), f"PostgreSQL {major} artifact source digest has drifted")
 
 
 def validate_implementation(payload: dict[str, Any]) -> None:
@@ -204,6 +171,9 @@ def self_test(payload: dict[str, Any]) -> None:
     bad_target = copy.deepcopy(payload)
     bad_target["component_crate"] = "sifr_sql_contract"
     mutations.append(("component-owner", bad_target))
+    wrong_adapter = copy.deepcopy(payload)
+    wrong_adapter["parser_boundary"]["build_adapter"] = "cc@1.4.4"
+    mutations.append(("build-adapter", wrong_adapter))
     missing_evidence = copy.deepcopy(payload)
     missing_evidence["evidence"]["architecture"] = "internal_docs/missing.md"
     mutations.append(("evidence", missing_evidence))

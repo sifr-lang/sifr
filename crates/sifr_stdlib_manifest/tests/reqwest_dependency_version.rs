@@ -27,21 +27,21 @@ const DEMO_APP_LOCK: &str = include_str!(
     "../../../verification/areas/package_management/corpora/demo_repositories/sifr-demo-app/Cargo.lock"
 );
 
-const VENDOR_MANIFEST: &str = include_str!("../../../vendor/reqwest-0.13.4/Cargo.toml");
-const VENDOR_CHECKSUM: &str = include_str!("../../../vendor/reqwest-0.13.4/.cargo-checksum.json");
-const VENDOR_VCS_INFO: &str = include_str!("../../../vendor/reqwest-0.13.4/.cargo_vcs_info.json");
+const VENDOR_MANIFEST: &str = include_str!("../../../vendor/reqwest-0.13.5/Cargo.toml");
+const VENDOR_CHECKSUM: &str = include_str!("../../../vendor/reqwest-0.13.5/.cargo-checksum.json");
+const VENDOR_VCS_INFO: &str = include_str!("../../../vendor/reqwest-0.13.5/.cargo_vcs_info.json");
 
-const REQWEST_VERSION: &str = "0.13.4";
+const REQWEST_VERSION: &str = "0.13.5";
 const REQWEST_PACKAGE_HASH: &str =
-    "219c5811de6525e5416c7d5d53bb656d3afdbc6c5af816e0802bcfa42dbdc1c3";
-const REQWEST_RELEASE_COMMIT: &str = "11489b34eda6d32b15ad4033e62beba2ee401350";
+    "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029";
+const REQWEST_RELEASE_COMMIT: &str = "de55373434f07f42926599dbb5a88550d8e55112";
 
 #[test]
 fn maintained_reqwest_dependencies_use_the_latest_stable_policy() {
     for (label, source, expected_version) in [
-        ("catalog", CATALOG_MANIFEST, "=0.13.4"),
-        ("async runtime", ASYNC_MANIFEST, "=0.13.4"),
-        ("opaque resources", OPAQUE_MANIFEST, "=0.13.4"),
+        ("catalog", CATALOG_MANIFEST, "=0.13.5"),
+        ("async runtime", ASYNC_MANIFEST, "=0.13.5"),
+        ("opaque resources", OPAQUE_MANIFEST, "=0.13.5"),
         ("HTTP demo", DEMO_HTTP_MANIFEST, "0.13"),
     ] {
         let manifest: toml::Value =
@@ -86,7 +86,7 @@ fn maintained_reqwest_dependencies_use_the_latest_stable_policy() {
 }
 
 #[test]
-fn maintained_lock_edges_select_reqwest_0_13_4() {
+fn maintained_lock_edges_select_reqwest_0_13_5() {
     let workspace: toml::Value =
         toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let packages = lock_packages(&workspace);
@@ -103,7 +103,7 @@ fn maintained_lock_edges_select_reqwest_0_13_4() {
         for edge in dependency_edges(first_party).filter(|edge| edge.starts_with("reqwest")) {
             assert_eq!(
                 edge,
-                "reqwest 0.13.4",
+                "reqwest 0.13.5",
                 "{} must use the maintained reqwest line",
                 package_name(first_party).test_unwrap("first-party package name")
             );
@@ -191,6 +191,54 @@ fn vendor_contains_the_official_reqwest_release_and_provider_policy() {
             .and_then(|git| git.get("sha1"))
             .and_then(serde_json::Value::as_str),
         Some(REQWEST_RELEASE_COMMIT)
+    );
+}
+
+#[test]
+fn approved_transitive_base64_feature_keeps_authenticated_basic_auth_scalar() {
+    // This approval is specific to authentic Reqwest 0.13.5 + Base64 0.23.1.
+    // It does not assert that the unified graph disables simd-unsafe.
+    let manifest: toml::Value = toml::from_str(VENDOR_MANIFEST).test_unwrap("Reqwest manifest");
+    let dependency = &manifest["dependencies"]["base64"];
+    assert_eq!(dependency["version"].as_str(), Some("0.23"));
+    assert!(dependency.get("default-features").is_none());
+
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    for (path, expected) in [
+        (
+            "vendor/reqwest-0.13.5/src/util.rs",
+            "427379213bb803187023327eba8d15aed7ac9d42a0a9e874966fd0278eb948a8",
+        ),
+        (
+            "vendor/base64/Cargo.toml",
+            "3951a99756ac9b339501a149c547ce0e24248287a10830298ea319c006090790",
+        ),
+        (
+            "vendor/base64/src/prelude.rs",
+            "78cdbae61663dad4b9bbd201ab57b751e8a27daefe20f6363721226d44c4f401",
+        ),
+        (
+            "vendor/base64/src/engine/general_purpose/mod.rs",
+            "5cf527f5fe331553c373fbd1d9ddb598de319d831cffe60aa91e41c669b270f9",
+        ),
+    ] {
+        assert_eq!(
+            sifr_sysroot::sha256_file(&root.join(path)).test_unwrap("scalar source hash"),
+            expected,
+            "{path}: re-evaluate the bounded transitive feature approval"
+        );
+    }
+    let base64: toml::Value = toml::from_str(include_str!("../../../vendor/base64/Cargo.toml"))
+        .test_unwrap("Base64 manifest");
+    let defaults = base64["features"]["default"]
+        .as_array()
+        .test_unwrap("Base64 defaults");
+    assert_eq!(
+        defaults
+            .iter()
+            .filter_map(toml::Value::as_str)
+            .collect::<Vec<_>>(),
+        ["std", "simd-unsafe"]
     );
 }
 

@@ -102,8 +102,8 @@ fn network_http_tls_versions_match_latest_stable_locks() {
         .test_unwrap("workspace lock packages must be an array");
 
     for (package, manifest_version, locked_version) in [
-        ("rustls", "=0.23.43", "0.23.43"),
-        ("rcgen", "0.14.9", "0.14.9"),
+        ("rustls", "=0.23.44", "0.23.44"),
+        ("rcgen", "0.14.10", "0.14.10"),
     ] {
         assert_eq!(
             dependencies

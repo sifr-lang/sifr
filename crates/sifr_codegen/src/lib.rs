@@ -10,15 +10,17 @@ mod discardability;
 mod generated_dependency_metadata;
 mod generated_rust_canonicalizer;
 mod generated_visibility;
+mod task_local_support;
 pub(crate) use generated_dependency_metadata::retain_generated_dependency_metadata;
 pub use generated_rust_canonicalizer::{
-    canonicalize_generated_rust_identifier, canonicalize_generated_rust_source,
+    canonicalize_generated_rust_identifier, canonicalize_generated_rust_project,
+    canonicalize_generated_rust_project_with_names, canonicalize_generated_rust_source,
     discover_project_const_function_names, finalize_formatted_generated_rust_source,
     finalize_formatted_generated_rust_source_with_project_consts,
 };
 pub(crate) use generated_rust_canonicalizer::{
-    import_generated_support_in_project_nominals,
-    import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
+    import_generated_support_in_project_nominals, import_project_prelude_bindings,
+    prune_generated_project_owners,
 };
 mod lib_async_main_cancellation;
 mod lib_runtime_needs;
@@ -190,9 +192,14 @@ pub use rust_interop_plan::{
 };
 mod rust_ir;
 pub use rust_ir::*;
+mod inline_syntax;
 mod stdlib_codegen_metadata;
+pub use inline_syntax::StdlibSyntaxSession;
 mod stdlib_filter;
-pub use stdlib_codegen_metadata::StdlibCode;
+mod stdlib_interop_demand;
+pub use stdlib_codegen_metadata::{StdlibCode, StdlibEmissionCode, StdlibEmissionView};
+#[doc(hidden)]
+pub use stdlib_interop_demand::observe_stdlib_interop_selection;
 mod stdlib_import_signatures;
 mod stdlib_rust_source;
 pub use stdlib_rust_source::StdlibRustSource;

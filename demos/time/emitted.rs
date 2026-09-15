@@ -5,8 +5,8 @@ mod sifr_generated_generated_support {
         SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0,
         ValueError,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    use ::sifr_runtime::SifrInt;
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -33,34 +33,38 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(crate) fn time_now() -> f64 {
+    fn time_now() -> f64 {
         ::sifr_stdlib::time::time_now()
     }
-    pub(crate) fn time_format(epoch: f64, fmt: &str) -> String {
+    fn time_format(epoch: f64, fmt: &str) -> String {
         ::sifr_stdlib::time::time_format(epoch, fmt)
     }
-    pub(crate) fn perf_counter() -> f64 {
+    #[must_use]
+    pub fn perf_counter() -> f64 {
         ::sifr_stdlib::time::perf_counter()
     }
-    pub(crate) fn sleep(seconds: f64) {
+    pub fn sleep(seconds: f64) {
         ::sifr_stdlib::time::sleep(seconds);
     }
-    pub(crate) fn monotonic() -> f64 {
+    #[must_use]
+    pub fn monotonic() -> f64 {
         ::sifr_stdlib::time::monotonic()
     }
-    pub(crate) fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
         ::sifr_stdlib::time::strptime(s, fmt).map_err(|sifr_generated_bridge_error| ValueError {
             message: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(crate) fn sifr_generated_gmtime_intrinsic(epoch: f64) -> String {
+    fn sifr_generated_gmtime_intrinsic(epoch: f64) -> String {
         ::sifr_stdlib::time::gmtime(epoch)
     }
-    pub(crate) fn sifr_generated_localtime_intrinsic(epoch: f64) -> String {
+    fn sifr_generated_localtime_intrinsic(epoch: f64) -> String {
         ::sifr_stdlib::time::localtime(epoch)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
         SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
@@ -80,18 +84,18 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn sifr_generated_is_leap_year(year: SifrInt) -> bool {
+    fn sifr_generated_is_leap_year(year: SifrInt) -> bool {
         &year.floor_mod_known_nonzero(&SifrInt::from_i64(4)) == &SifrInt::from_i64(0)
             && &year.floor_mod_known_nonzero(&SifrInt::from_i64(100)) != &SifrInt::from_i64(0)
             || &year.floor_mod_known_nonzero(&SifrInt::from_i64(400)) == &SifrInt::from_i64(0)
     }
-    pub(crate) fn sifr_generated_days_in_year(year: SifrInt) -> SifrInt {
+    fn sifr_generated_days_in_year(year: SifrInt) -> SifrInt {
         if sifr_generated_is_leap_year(year.clone()) {
             return SifrInt::from_i64(366);
         }
         SifrInt::from_i64(365)
     }
-    pub(crate) fn sifr_generated_days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
+    fn sifr_generated_days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
         let month_days: Vec<SifrInt> = vec![
             SifrInt::from_i64(31),
             SifrInt::from_i64(28),
@@ -124,7 +128,7 @@ mod sifr_generated_generated_support {
         };
         d
     }
-    pub(crate) fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
+    fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
         let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let mut result: String = String::new();
         let mut i: SifrInt = start.clone();
@@ -145,7 +149,7 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(crate) fn sifr_generated_digit_value(ch: &str) -> Option<SifrInt> {
+    fn sifr_generated_digit_value(ch: &str) -> Option<SifrInt> {
         if ch == "0" {
             return Some(SifrInt::from_i64(0));
         }
@@ -178,7 +182,7 @@ mod sifr_generated_generated_support {
         }
         None
     }
-    pub(crate) fn sifr_generated_parse_decimal(text: &str) -> Option<SifrInt> {
+    fn sifr_generated_parse_decimal(text: &str) -> Option<SifrInt> {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         if &SifrInt::from(sifr_generated_chars_text.len()) == &SifrInt::from_i64(0) {
             return None;
@@ -205,17 +209,13 @@ mod sifr_generated_generated_support {
         }
         Some(out)
     }
-    pub(crate) fn sifr_generated_int_or_negative_one(value: Option<SifrInt>) -> SifrInt {
+    fn sifr_generated_int_or_negative_one(value: Option<SifrInt>) -> SifrInt {
         let Some(value) = value.clone() else {
             return -&SifrInt::from_i64(1);
         };
         value.clone()
     }
-    pub(crate) fn sifr_generated_day_of_year(
-        year: SifrInt,
-        month: SifrInt,
-        day: SifrInt,
-    ) -> SifrInt {
+    fn sifr_generated_day_of_year(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
         let mut yday: SifrInt = SifrInt::from_i64(0);
         let mut m: SifrInt = SifrInt::from_i64(1);
         while &m < &month {
@@ -224,7 +224,7 @@ mod sifr_generated_generated_support {
         }
         &yday + &day
     }
-    pub(crate) fn sifr_generated_weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
+    fn sifr_generated_weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
         let mut days_since_epoch: SifrInt = SifrInt::from_i64(0);
         if &year >= &SifrInt::from_i64(1970) {
             let mut y: SifrInt = SifrInt::from_i64(1970);
@@ -253,7 +253,7 @@ mod sifr_generated_generated_support {
         }
         wd.clone()
     }
-    pub(crate) fn sifr_generated_valid_date(year: SifrInt, month: SifrInt, day: SifrInt) -> bool {
+    fn sifr_generated_valid_date(year: SifrInt, month: SifrInt, day: SifrInt) -> bool {
         if &year <= &SifrInt::from_i64(0) {
             return false;
         }
@@ -263,8 +263,7 @@ mod sifr_generated_generated_support {
         let max_day: SifrInt = sifr_generated_days_in_month(year.clone(), month.clone());
         &day >= &SifrInt::from_i64(1) && &day <= &max_day
     }
-    pub(crate) fn sifr_generated_invalid_struct_time() -> SifrGeneratedStdlibSifrX2etimeX2estructTime
-    {
+    fn sifr_generated_invalid_struct_time() -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         SifrGeneratedStdlibSifrX2etimeX2estructTime::new(
             SifrInt::from_i64(0),
             SifrInt::from_i64(0),
@@ -281,7 +280,7 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn sifr_generated_to_struct_time(
+    fn sifr_generated_to_struct_time(
         rendered: &str,
     ) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let sifr_generated_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
@@ -438,21 +437,27 @@ mod sifr_generated_generated_support {
             SifrInt::from_i64(0),
         )
     }
-    pub(crate) fn time() -> f64 {
+    #[must_use]
+    pub fn time() -> f64 {
         time_now()
     }
-    pub(crate) fn strftime(fmt: &str, epoch: f64) -> String {
+    #[must_use]
+    pub fn strftime(fmt: &str, epoch: f64) -> String {
         time_format(epoch, fmt)
     }
-    pub(crate) fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+    #[must_use]
+    pub fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_gmtime_intrinsic(epoch);
         sifr_generated_to_struct_time(&rendered)
     }
-    pub(crate) fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+    #[must_use]
+    pub fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
         let rendered: String = sifr_generated_localtime_intrinsic(epoch);
         sifr_generated_to_struct_time(&rendered)
     }
-    pub(crate) fn mktime(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mktime(
         t: &SifrGeneratedStdlibSifrX2etimeX2estructTime,
     ) -> Result<
         f64,
@@ -894,7 +899,10 @@ mod sifr_generated_project_unions {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, gmtime_struct, localtime_struct, mktime, monotonic, perf_counter, sleep,
+    strftime, strptime, time,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a323X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a423X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0;

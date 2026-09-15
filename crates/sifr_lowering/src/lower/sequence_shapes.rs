@@ -17,7 +17,7 @@ pub(in crate::lower) enum SequenceShapeFact {
     },
 }
 
-impl LowerCtx {
+impl LowerCtx<'_> {
     pub(in crate::lower) fn clear_sequence_shape_fact(&mut self, name: &str) {
         self.sequence_shapes.retain(|fact| fact.var_name() != name);
     }

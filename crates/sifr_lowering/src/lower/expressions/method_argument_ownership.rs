@@ -74,6 +74,43 @@ pub(super) fn try_lower_super_method_call(
         return None;
     }
     let method_name = attr.attr.to_string();
+    if method_name == "__init__"
+        && ctx.current_parent_class.is_none()
+        && ctx
+            .current_class
+            .as_ref()
+            .is_some_and(|class| ctx.error_types.contains(class))
+    {
+        let parent_type = super::super::classes::root_error_type();
+        let signature = FunctionType::new(
+            vec![("message".to_string(), Type::Str)],
+            parent_type.clone(),
+        );
+        let Some(args) = lower_signature_call_args(call, "Error", &signature, None, ctx) else {
+            return Some(None);
+        };
+        if !matches!(
+            args[0].ty().resolve_alias(),
+            Type::Str | Type::LiteralStr(_)
+        ) {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "Error.__init__(): expected 'str' message, got '{}'",
+                    args[0].ty().display_name()
+                ),
+                call.range(),
+            );
+            return Some(None);
+        }
+        return Some(Some(HirExpr::SuperCall {
+            parent_class: "Error".to_string(),
+            parent_type: parent_type.clone(),
+            method: "new".to_string(),
+            args,
+            ty: parent_type,
+        }));
+    }
     let (Some(parent_name), Some(parent_type)) = (
         ctx.current_parent_class.clone(),
         ctx.current_parent_type.clone(),
@@ -130,6 +167,27 @@ pub(super) fn try_lower_super_method_call(
         return Some(None);
     };
     consume_owned_method_arguments(&args, call, &function_type, ctx);
+    if method_name == "__init__"
+        && ctx
+            .current_class
+            .as_ref()
+            .is_some_and(|class| ctx.error_types.contains(class))
+    {
+        for (arg, (name, expected, _)) in args.iter().zip(&function_type.params) {
+            if !arg.ty().is_assignable_to(expected) {
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "{parent_name}.__init__(): argument '{name}' expected '{}', got '{}'",
+                        expected.display_name(),
+                        arg.ty().display_name()
+                    ),
+                    call.range(),
+                );
+                return Some(None);
+            }
+        }
+    }
     super::super::sequence_guards::invalidate_mutable_call_sequence_guards(
         ctx,
         &args,

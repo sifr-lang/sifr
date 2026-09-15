@@ -24,7 +24,8 @@ capability-free WebAssembly host.
 ## Locked tooling
 
 The root Cargo manifest and `Cargo.lock` are the implementation authority. The
-provider uses this exact stable compatible set, verified on 2026-08-30:
+provider uses this set. MySQL dependency ownership was rechecked on 2026-09-09;
+the checked-in live producer records retain their original toolchain identities.
 
 | Purpose | Tool | Exact version | Selected features |
 | --- | --- | ---: | --- |
@@ -32,14 +33,20 @@ provider uses this exact stable compatible set, verified on 2026-08-30:
 | Parser runtime | `lalrpop-util` | 0.23.1 | standard library and Unicode |
 | Component ABI generator | `wit-bindgen` | 0.61.1 | macros, reallocation, and standard support |
 | Component capability virtualizer | WASI-Virt | 0.2.0 at `448f6df8f688cee5d6995e96b1ffc31f9bf00742` | deny-by-default WASI composition |
-| Async MySQL client | `mysql_async` | 0.37.0 | `aws-lc-rs`, `minimal-rust`, `rustls-tls`, and `tls12` |
-| Protocol values | `mysql_common` | 0.37.3 | no default features |
+| Async MySQL client | `mysql_async` | 0.37.1 | `aws-lc-rs`, `minimal-rust`, `rustls-tls`, and `tls12` |
+| Protocol values, through the driver | `mysql_common` | 0.37.3 | transitive; no default features or derive anchor |
 | Async runtime | Tokio | 1.53.1 | macros, network, runtime, synchronization, and time |
-| TLS | Rustls | 0.23.43 | AWS-LC-RS, standard library, and TLS 1.2 |
+| TLS | Rustls | 0.23.44 | AWS-LC-RS, standard library, and TLS 1.2 |
 
-`mysql_common` 0.37.3 is the newest release in the family accepted by
-`mysql_async` 0.37.0. The provider does not force the newer incompatible
-`mysql_common` family.
+`mysql_async` 0.37.1 is the latest non-yanked stable driver. Its published
+manifest requires `mysql_common ^0.37.1` with default features disabled.
+Cargo selects 0.37.3 for that upstream edge; common's latest stable 0.38.2
+is outside the driver's accepted family. Sifr has no direct common dependency
+or derive feature anchor. All row and value consumers use `mysql_async::Row`
+and `mysql_async::Value`, the driver's exact re-exported types. Moving the
+transitive edge to common 0.38 requires an upstream driver release accepting it.
+The driver patch synchronizes cached statement-column metadata; Sifr continues
+to use raw connections and its existing bounded statement cache.
 
 The driver disables default features. The provider does not enable its
 `tracing` feature because upstream events can contain statements or values.

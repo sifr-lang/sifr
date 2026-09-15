@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from .approval_policy import MAINTAINER, SOLO_MAINTAINER
 from .approval_waiver import (
     SINGLE_MAINTAINER_WAIVER,
     validate_approval_policy,
@@ -300,7 +301,7 @@ def _validate_approvers(
         normalized = approver.casefold()
         if (
             normalized == normalized_initiator
-            and approval_policy["mode"] != SINGLE_MAINTAINER_WAIVER
+            and approval_policy["mode"] not in {SINGLE_MAINTAINER_WAIVER, SOLO_MAINTAINER}
         ):
             fail(f"{location}[{index}]", "must differ from the workflow initiator")
         if normalized in seen:
@@ -311,6 +312,8 @@ def _validate_approvers(
         len(approvers) != 1 or approvers[0].casefold() != normalized_initiator
     ):
         fail(location, "single-maintainer waiver requires only the initiating owner")
+    if approval_policy["mode"] == SOLO_MAINTAINER and approvers != [MAINTAINER]:
+        fail(location, "solo-maintainer policy requires only yaseralnajjar")
     return approvers
 
 

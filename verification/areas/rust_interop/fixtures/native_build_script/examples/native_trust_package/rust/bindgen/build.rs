@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     std::fs::write(out_dir.join("sifr-bindgen-bindings.rs"), generated)?;
     std::fs::write(
         out_dir.join("sifr-bindgen-evidence.txt"),
-        "bindgen=0.72.1;function=sifr_bindgen_probe",
+        "bindgen=0.73.2;function=sifr_bindgen_probe",
     )?;
     Ok(())
 }

@@ -17,6 +17,8 @@
   - Ordinary fixed-width scalar arithmetic promotes to exact `int`; fixed-width array/tensor/dataframe arithmetic preserves dtype and exposes checked/wrapping/saturating/overflowing policies explicitly.
   - The compiler now uses `SifrInt` as the single emitted representation for source `int` values across storage, calls, aggregates, unions, Rust/Python bridges, and lazy `SifrRange` iteration. Exact floor/modulo, bounded power/shift, integer-to-float conversion, and true division lower through checked runtime operations with typed source errors when static proof is unavailable.
 - Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.
+- Rust bridge probes bind their temporary Cargo package identity to the complete probe manifest and generated contract source. Distinct contracts cannot share Cargo root-package freshness metadata when concurrent probes reuse a target directory; dependency artifacts remain shared. The bound manifest is also part of the persistent successful-probe cache key. Probe dependencies use a dedicated `rust_bridge_probe_target` child of the configured Cargo target (or the artifact cache by default), so replacement-source probes cannot invalidate compiler artifacts built from registry sources.
+- The SQLite native bundle is selected by an explicit Cargo source patch stored under the packaged runtime's third_party/libsqlite3-sys directory. It preserves the selected Rust binding API while applying authenticated SQLite 3.53.4 C/header and generated-binding inputs. Workspace and fixture roots, generated application manifests, and bridge probes select the same patch; portable manifests bind it to the exact Sifr Git revision. The sifr-source.json receipt distinguishes the upstream crate archive from the four patched inputs, and runtime qualification checks the native version, binding version, and SQLite source ID.
 - Embedded CPython interop is production-grade complete as a separate lane from Rust-backed packages, raw C ABI interop, and CPython source-parity adaptation. The declaration-first continuation now includes synchronous declarations, opaque lifecycle, synchronous and asynchronous contexts, hermetic package-local bridges, one application-owned asyncio loop, typed coroutine declarations with terminally ordered native cancellation, consuming async close, typed current-thread, foreign-thread, and asyncio callbacks with retained-owner shutdown, the compiler-known affine non-send `python.Buffer[T]` contract with exclusive writable borrowing and exact-once release, five certified affine Arrow C Data Interface resources with structural capsule validation and owned transfer, and affine `python.DlpackTensor[T]`/`python.DlpackStream` resources with versioned one-shot acquisition, exact device/stream matching, no-copy enforcement, and exact-once deleter cleanup. Symbol-selective `sifr python bind` authors checked-in typed declarations from deterministic override/stub/inline/introspection precedence and rejects untyped boundaries; frozen `bind --check` and ordinary package operations validate environment, typing-source, and generated-source fingerprints. General `sifr python certify` authoring and read-only rechecks cover both Arrow and DLPack executable evidence. The analysis host exposes the compiler-owned Python interop plan to the language server, whose completion, hover, navigation, diagnostics, target status, protocol help, cancellation, and cache invalidation reuse compiler/driver queries and package-selected inputs. Editor attribution uses exact declaration file/symbol identity; diagnostics retain declaration spans and package-wide failures have one deterministic document owner. LSP environment status goes through the same Cargo package graph, root trust, final-application deferral, live environment digest, binding/certification, and protocol-certification decisions as package checking. Source edits retain cached raw inspections for unchanged targets, while watcher/external-input invalidation clears environment and target caches; cancellation is checked between target probes. The raw API exposes typed `from_value`, `to_value`, and `kwarg` conversion through the same declaration conversion authority, plus compiler-known checked `Object.get_attr`, `get_item`, `call`, and `call_method` operations on the canonical sealed object. Raw objects use ordinary automatic release, and raw coroutine execution submits to the same application-owned loop rather than creating a per-call loop. The raw Python handle is selected by its canonical stdlib declaration identity rather than the `Object` basename, and every declaration family validates the exact five-field `PythonError` runtime contract before code generation. Package metadata records Python environment selection, inferred and manual import roots, and root-owned Python trust; the package layer resolves one environment and validates canonical CPython probe JSON before runtime embedding consumes it. Ordinary package checking and `sifr python check` consume that same typed environment decision, while `sifr python doctor` reports deterministic manifest patches without mutating source, trust, locks, or environments; build and run remain strict at final application resolution. Runtime lifecycle, GIL/refcount ownership, blocking/offload, callbacks, resources, and zero-copy rules are documented in [`python_interop_architecture.md`](./python_interop_architecture.md), with verification under [`verification/areas/python_interop/`](../verification/areas/python_interop/).
 - Rust interop is designed as declaration-level Cargo integration, not a runtime `dlopen` layer or Rust ABI FFI surface. Rust-backed Sifr packages expose normal Sifr declarations annotated with `@rust(...)`, direct Cargo bindings are allowed only for checked bridge-compatible signatures, and package-local/shared bridge crates own adaptation. The source of truth is [`rust_interop_architecture.md`](./rust_interop_architecture.md). <!-- rust-interop-rejected -->
 - The sysroot and stdlib toolchain migration is tracked in [`sifr_sysroot_and_stdlib_architecture.md`](./sifr_sysroot_and_stdlib_architecture.md). The final stdlib boundary is checked Sifr source plus trusted sysroot Rust interop: public APIs live in `stdlib/sifr`, sysroot-private declaration source lives in `stdlib/_sifr`, stdlib behavior lives in `crates/sifr_stdlib`, and reusable runtime substrate lives in `crates/sifr_runtime`. The compiler may emit language scaffolding, Rust interop bridge glue, panic wrappers, exact-int conversions, entrypoint machinery, and runtime call glue; it must not implement stdlib behavior through intrinsic dispatch, pasted preambles, or handwritten Rust literals. Existing compiler-native stdlib glue survives only as exhaustive retained-by-design exceptions in `stdlib_retained_compiler_intrinsics.toml`.
@@ -28,7 +30,7 @@
   The query substrate adds stable reusable-template identities, top-level `RowOf`, typed fragments, static hygienic aliases, explicit cardinality adapters, and audited unsafe syntax. The frontend lowers accepted provider analysis to closed SQL HIR with normal Sifr parameter and structural-row types. The driver supplies one production profile-module registry. Generated schema names use one injective and reversible codec. [`sql_query_fragments.md`](./sql_query_fragments.md) records these contracts.
   The PostgreSQL compiler embeds exact `libpg_query` sources for PostgreSQL 13 through 18. Its owned adapter, catalog, analyzer, diagnostics, and server matrix are defined in [`sql_postgresql_compiler.md`](./sql_postgresql_compiler.md).
   The PostgreSQL runtime uses a verified and bounded raw-driver bridge. It owns typed session reset, explicit fetch contracts, consuming transactions, streams, cancellation cleanup, and live PostgreSQL 13 through 18 qualification. [`sql_postgresql_runtime.md`](./sql_postgresql_runtime.md) records the implemented boundary.
-  Incremental SQL analysis uses frontend-owned semantic keys and bounded values, plus an analysis-owned dependency index. The language server uses lossless virtual SQL documents, exact bidirectional maps, schema-aware editor facts, structured fixes, cancellation checkpoints, and named latency budgets. [`sql_incremental_editor.md`](./sql_incremental_editor.md) records this boundary. Provider-neutral schema lifecycle rules and the PostgreSQL live catalog adapter are host-only crates. They write one deterministic, atomic artifact generation and never enter the standard library or application graph. [`sql_schema_tools.md`](./sql_schema_tools.md) records this boundary.
+  Incremental SQL analysis uses frontend-owned semantic keys and bounded values, plus an analysis-owned dependency index. The language server uses lossless virtual SQL documents, exact bidirectional maps, schema-aware editor facts, structured fixes, cancellation checkpoints, and named latency budgets. [`sql_incremental_editor.md`](./sql_incremental_editor.md) records this boundary. The editor retains a component host only while prepared SQL profiles exist; enabling profiles initializes the host before publishing them, configured reloads retain it, and disabling profiles releases it. Profile-load diagnostics and cancellation remain available without a component host. Provider-neutral schema lifecycle rules and the PostgreSQL live catalog adapter are host-only crates. They write one deterministic, atomic artifact generation and never enter the standard library or application graph. [`sql_schema_tools.md`](./sql_schema_tools.md) records this boundary.
   The migration compiler checks every baseline path and creates one nominal state
   for each step. The runtime records exact recovery evidence and never creates a
   rollback plan. [`sql_migrations.md`](./sql_migrations.md) records this boundary.
@@ -324,7 +326,7 @@ flowchart LR
 
 **Hybrid dependency approach:** Infrastructure crates, parser, AST crates, and
 the formatter are referenced from the Ruff fork submodule, currently based on
-Ruff 0.16.4. Parser and AST crates include Sifr-specific syntax extensions and
+Ruff 0.16.6. Parser and AST crates include Sifr-specific syntax extensions and
 are imported through Cargo aliases as `sifr_python_ast` and
 `sifr_python_parser`. The Ruff fork formatter is Sifr-aware for parameter
 conventions, Sifr type syntax, generics, match/case, ownership-aware
@@ -332,8 +334,8 @@ collections, formatter pragmas, and Sifr-tagged docstring snippets. The root
 workspace pins Sifr's direct and generated-runtime support crates to the latest
 stable releases independently from the excluded Ruff fork, which keeps its own
 sub-workspace dependency pins. Sifr is latest-stable-only: the root
-`rust-toolchain.toml` and CI select Rust 1.98.0 exactly, while workspace
-manifests declare Rust 1.98 as the required compiler line.
+`rust-toolchain.toml` and CI select Rust 1.98.1 exactly, while workspace
+manifests declare Rust 1.98.1 as the required compiler.
 
 ```
 sifr/
@@ -363,7 +365,7 @@ sifr/
   #   ruff_python_formatter   -- Sifr-aware Ruff formatter rules and range formatting
 
   third_party/
-    ruff/                    (sifr-lang/ruff submodule, branch sifr/0.16.4-maintenance)
+    ruff/                    (sifr-lang/ruff submodule, branch sifr/0.16.6-maintenance)
       crates/
         ruff_python_ast/      (imported as Cargo dependency alias sifr_python_ast)
         ruff_python_parser/   (imported as Cargo dependency alias sifr_python_parser)
@@ -384,6 +386,11 @@ New crates added as compiler and runtime needs grow:
 - Dependency-sensitive invalidation: `sifr_frontend::FrontendContext` records import/export/module signatures and reverse dependency edges so private body edits invalidate only the changed module when public/import signatures are unchanged, while public API or import graph changes invalidate reverse dependents. `internal_docs/typescript_go_architecture_transfer_module_signatures_dependency_invalidation.md` records the invalidation policy.
 - `sifr_lowering::flow_graph`: first-class data-flow nodes, edges, and effects for definitions, assignments, conditions, branches, loops, calls, mutations, moves, borrows, joins, unreachable statements, and exits. `LoweringResult` carries a snapshot-scoped `FlowGraph`, and `FlowFacts` exposes graph fingerprints and debug traces. `internal_docs/typescript_go_architecture_transfer_first_class_flow_graph.md` records graph-backed narrowing and ownership-effect behavior.
 - `sifr_frontend::cache_keys`: deterministic `CompilerFingerprint`, `CacheKeyFingerprint`, common workspace/package/query-policy context fingerprints, and typed cache-key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph cache families. `internal_docs/typescript_go_architecture_transfer_fingerprints_cache_keys.md` records cache-key identity requirements.
+- Analysis retains only the latest lint result per live file. The frontend's typed
+  lint key binds source, HIR/compiler context, semantic graph, module/path and lint
+  policy; version-only changes reuse it, edits replace it, and host/file removal
+  releases it. Misses still use the standalone lint engine's default policy,
+  independently of frontend and SQL diagnostics.
 - Snapshot reuse: `sifr_frontend` adds ref-counted, cache-key identity-keyed reuse storage for parse trees, source-map file views, lowered HIR, module diagnostics, and module symbol indexes. `WorkspaceSnapshot` stores immutable snapshot payloads behind `Arc`, and `FrontendContext::can_replace_module_in_project` gates safe one-module replacement on unchanged import/export signatures. `internal_docs/typescript_go_architecture_transfer_snapshot_reuse.md` records reuse requirements.
 - `sifr_lsp::RequestQueue`: latency-sensitive, formatting, workspace, and background requests route through explicit priority lanes with bounded fairness, while diagnostic jobs preserve captured document versions. `internal_docs/typescript_go_architecture_transfer_lsp_scheduler.md` records scheduler behavior.
 - LSP latency budgets: protocol-level LSP performance coverage is split into per-request `perf.lsp.*` budget ids, leaving `perf.lsp.request_families` as aggregate smoke only. `internal_docs/typescript_go_architecture_transfer_lsp_latency_budgets.md` records the request-family budget taxonomy and frontend query architecture relationship.
@@ -398,6 +405,17 @@ New crates added as compiler and runtime needs grow:
 - ecosystem: `sifr_registry` (package registry client)
 
 ## Formatter Architecture
+
+Generated Rust field cleanup runs before identifier and layout cleanup. One
+registry resolves module-qualified nominal declarations, imports and re-exports,
+and typed field receivers across the complete generated project. Field spelling
+and collisions belong to that nominal owner; shorthand pattern/value bindings
+retain their separate local identities. Binary bridge sources are generated and
+registered alongside main and support modules before this pass; their finalized
+sources also participate in the artifact cache identity. Binary and test-project
+materialization use the same registry and do not repeat field canonicalization
+while formatting individual files. External fields are not renamed, and an unresolved
+generated-field receiver is a code-generation diagnostic.
 
 The production Sifr formatter is Ruff-backed and in-process. `.sifr` source
 flows through `sifr_syntax` into the Sifr Ruff fork parser, AST, comments,
@@ -414,6 +432,14 @@ The single formatter core is shared by:
 - `sifr_analysis` document and range formatting queries
 - `sifr_lsp` `textDocument/formatting` and `textDocument/rangeFormatting`
 - checked-in editor integrations through `sifr lsp --stdio`
+
+CLI discovery retains ordered gitignore rules at the working-directory boundary.
+A conservative ASCII syntax proof avoids parsing rules that cannot contain a
+glob syntax error; other rules are validated eagerly with original line errors.
+Mandatory literals only exclude impossible matches. Every possible match still
+uses the pinned gitignore engine, including negation, parent precedence, aliases
+and source provenance; neither parse failures nor matching decisions are cached
+across invocations.
 
 Formatter validation is part of local validation. `verification/areas/developer_tooling/check_formatter_ast_coverage.py`
 fails when a Sifr parser or AST extension lacks both Ruff fork formatter fixture
@@ -442,6 +468,19 @@ large-file check and a representative project check.
   only inside the generated crate. Canonical item fingerprints reject conflicting
   support bodies instead of silently selecting one, and Rust interop bridge types
   use the same exact-deduplication/fail-closed ownership rule.
+  Compiler-owned `tokio::task_local!` statics share one declaration parser for
+  visibility, symbol discovery, and dependency pruning. Each declaration is a
+  separate demand owner; project relocation grants crate visibility while
+  preserving its name, type, attributes, and Tokio cancellation behavior.
+- Stdlib bootstrap owns one short-lived syntax-validation session for its source
+  inventory. Successful complete-file parsing can establish exact support text
+  as complete Rust items. Later inline assemblies reuse only that syntax identity
+  at proven item/token boundaries, while the full assembly is tokenized and all
+  remaining file syntax is parsed. Failures are never cached, source bytes and
+  module order are unchanged, and the session is dropped with bootstrap.
+  Item boundaries come from the original parse-buffer cursors, not from printing
+  parsed ASTs back into tokens. The consumed emitter transfers its ordered IR
+  into deferred rendering without retaining duplicate enum/body item trees.
 - Generated-code simplification is structural at both boundaries. Typed
   `RustItem`/`RustStmt`/`RustExpr` optimization runs before rendering. After
   project metadata, inline stdlib, and bridge fragments have been assembled,
@@ -479,14 +518,60 @@ large-file check and a representative project check.
   analysis, Rust project generation, Cargo project materialization, and release
   native Cargo build.
 - Dependency metadata for both shapes comes from codegen outputs (`used_stdlib_modules` and `required_crates`), never from emitted Rust text scans.
+- Test projects resolve their selected stdlib interop demand through the same
+  trusted resolver and shared field/bridge finalization as native binaries.
+  The resolved plan feeds Cargo dependencies and cache identity; generated
+  bridge files are materialized with the support modules before Cargo tests run.
+- Stdlib bootstrap retains the complete checked HIR and interop inventory.
+  Completed bootstrap HIR moves into shared immutable storage after module
+  emission. `StdlibEmissionCode` exposes only emission metadata; bootstrap
+  and deferred module results cannot construct an application interop plan.
+  Final single-file, project and test-project assembly select that plan once
+  over all application modules. Demand uses the IR-owned immutable visitor
+  for expressions, statement types, defaults and nested functions, then projects
+  selected declarations through the existing contract builder. Definitions-only
+  editor lookups project from the same success/error cache without copying the
+  compiled code bundle; the global checked inventory remains retained.
+  Test-project assembly retains its selected metadata, but the existing test
+  runner Cargo consumer still uses an empty interop plan; executing those
+  contracts remains a separate integration obligation.
+  Code generation selects application interop demand by canonical module and
+  declaration identity, following reexports, private calls, signatures and
+  nominal/structural types. A required class owns its complete methods,
+  operators and cleanup contracts. This typed closure is selected before
+  attachment and resolution; emitted Rust text and feature sets do not select
+  interop contracts. Native project and single-file consumers attach that same
+  selected plan with the separately validated sysroot trust context. Emit keeps
+  its trusted-sysroot probe deferral. The single-file resolved-plan cache binds
+  selected contracts and sysroot identity; package-owned contexts bypass that
+  stdlib-only cache. Whole-sysroot certification remains a toolchain
+  qualification responsibility.
 - Workspace design details and deferred package-management semantics are tracked in [`sifr_workspace_design.md`](./sifr_workspace_design.md).
 
 This keeps CLI mode resolution as the boundary that selects the rooted entrypoint shape while preserving one internal build architecture.
+
+CLI argument schemas remain owned by their commands and are built lazily through
+Clap's deferred argument construction for every structured root command. The
+root schema, inherited globals, argument groups, parsing and help/error behavior
+remain canonical; an independent eager-schema oracle covers their equivalence.
 
 driver/package architecture decomposed `sifr_driver` into the following stable internal boundaries:
 
 - `diagnostics.rs`: compile/public result types, panic boundaries, diagnostic serialization, and stderr rendering helpers
 - `stdlib/`: embedded stdlib sources, intrinsic mapping, cache lifecycle, and bootstrap compilation
+- Stdlib bootstrap publishes one immutable `Arc<StdlibCompiled>` through its
+  success/error cache. CLI frontend/build plans and test assembly retain that
+  owner; mutable frontend contexts clone only external definitions. Each module's
+  lowering context borrows that complete immutable definition input for the call,
+  copying only selected declarations into its local state. Bootstrap emission
+  borrows accumulated metadata and shares generic templates with emitters.
+  Pending private contracts share canonical HIR, borrow loaded sources, and
+  build the complete contract plan in source order before cache publication.
+  Parsed Python AST storage is released after owned lowering and before Rust
+  emission. Nested binding inference runs only when a statement descendant can
+  consume its hints or declare a function; all ordinary assignment and nested
+  signature/capture inference remains intact. Unreachable-statement checks use
+  the canonical validated CFG without constructing unused rich flow facts.
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
 - `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
 - `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds
@@ -827,6 +912,20 @@ except IOError as e:
 - `except IOError` catches all variants (no guard)
 
 **User-defined error classes:** User-defined error classes inherit `message: str` from `Error`. The constructor accepts a message string, and `print(e)` formats it via `Display`. Users can add additional fields as needed.
+
+The inherited message is required constructor storage. An auto-generated
+constructor takes `message: str` before additional fields when the class does
+not declare its own message. Explicit string declarations retain their field
+order, including the five-field PythonError contract. A message field cannot
+have an incompatible type or a field default. Custom constructors must
+initialize the string (directly, from a matching required parameter, or through
+`super().__init__`); construction cannot finish with missing storage. A
+custom constructor requires a caller-supplied string parameter; a zero-argument
+constructor or a defaulted-only message input cannot satisfy this contract. A child
+without new fields or an explicit constructor forwards the parent's constructor
+signature and initialization. An inherited message is stored only in its data
+parent. Consuming root conversions move that parent or the owned message;
+they never derive a message from formatting or substitute missing text.
 
 ```python
 # Simple user-defined error — inherits message from Error
@@ -1299,6 +1398,9 @@ supports them. This is a language rule, not an implementation detail.
   Generic calls in the prepass bind type variables from their arguments before
   substituting the return type; unresolved template variables are never
   accepted as a concrete inferred return.
+  Modules with no unannotated top-level return skip only this unused seeding
+  pass; ordinary signature checking, body lowering, and nested-function
+  inference remain authoritative and unchanged.
 - **Formatting-consumer constraint:** `print`, `str`, f-string interpolation,
   and `repr` validate the exact generated Rust `Display`/`Debug` strategy before
   accepting HIR. `repr` always requires `Debug`; the other surfaces select the
@@ -1752,6 +1854,16 @@ cargo bench                                   # Run benchmarks (layer 6, generic
 
 Validation profile policy is defined in `verification/profiles/{create-pr,merge,nightly,release,python-interop-live}.json` and executed by `verification/runner/sifr_verify/profile_runner.py` through `uv run --project verification python -m sifr_verify profiles run --profile <profile>`. `scripts/run_all_tests.sh` is only the stable public facade over that runner. Verification areas are owned by schema-version-2 `verification/areas/*/manifest.json` files and executed through `uv run --project verification python -m sifr_verify areas run`. Stable-surface manifests declare owner, resource classes, pinned-corpus policy, skip policy, and baseline metadata policy. Representative `create-pr` and full-corpus `merge` e2e coverage are selected through profile data rather than hard-coded shell assumptions. The `python-interop-live` profile selects only the live Python interop area and explicitly opts into `container-runtime` and live-network policy for testcontainers-backed Python interop evidence. Offline profiles must not select those live suites. Its live examples build native Sifr binaries for Redis, Postgres, Kafka-compatible Redpanda, and LocalStack Pub/Sub-style SNS fanout, SNS-to-SQS delivery, and direct SQS delivery. Testcontainers owns container lifecycle and endpoint discovery only; the compiled binary's hermetic declaration bridge owns every service-client operation, and broker/cloud deliveries cross a foreign-thread typed Sifr callback. Docker absence is recorded as a structured service-execution skip only after every native binary builds. When a mostly offline area has a live subset, the area can keep top-level `network_mode: offline` while the live suite declares suite-level `network_mode: live` and its resource classes. Declarative validation-suite coverage lives in area-owned validation suite manifests under `verification/areas/{core_language,project_workspace}/data/validation_suites/`; profiles select the individual suite names, and the area adapter invokes the Rust-native `tests/validation_suites.rs` harness with that exact suite filter. Fixed bug locks and unresolved crash sentinels live under `verification/areas/regression/`.
 
+The profile's online Cargo prelude prepares the workspace lock, the registered
+workspace-excluded package fixtures consumed by its selected crate-test mode,
+and the complete generated Cargo graphs before enabling offline execution.
+Fixture selection follows the owning crate's profile membership; language-level
+negative fixtures that require successful Cargo metadata retain their complete
+locked graph, while intentionally unresolvable manifest negatives are not cache
+inputs. Fixture fetches preserve both manifest and lock bytes and fail closed
+before later preparation or offline tests if their declared inputs cannot be
+prepared.
+
 Stable incident recovery is a pure extension of the governed release-index
 state machine. Canonical request and approved plan digests authorize exactly
 one rollback or incident roll-forward generation; all prior releases and
@@ -1765,12 +1877,14 @@ Generation reservation, exact resume, site reconciliation, public
 install/update/recovery smoke, Marketplace verification, and release/incident
 sign-off remain fail-closed. The one-time schema-epoch bootstrap is separately
 bound to the exact opaque pre-epoch asset identity and protected approval. The
-user-directed single-maintainer exception for that bootstrap and first GA is
-itself a canonical, expiring governance artifact. It permits only the named
-owner and those three operations, requires a real `stable-release` approval,
-is pinned by digest, prefers a distinct approval when one is available, and binds
-the selected approval policy plus initiator into retained evidence; normal and
-incident operations require distinct approval. The
+permanent live `solo-maintainer` policy requires explicit GitHub-recorded
+`stable-release` approval by `yaseralnajjar` for each exact run/attempt and
+prepare-summary evidence, including normal, rollback, incident, and recovery
+operations. Self-review is allowed and admin bypass is disabled. Governance
+executes from the workflow revision and checks the designated reviewer and
+current run before publication. Old waiver/report/signoff bytes remain immutable
+historical evidence; historical inspection evaluates the original event time
+and cannot authorize a new run. The
 post-index bootstrap recovery path revalidates the failed mutation and site
 attempts, both protected approvals, the already-live generation-1 bytes, and
 the reproducible site inputs before retrying only site publication and public

@@ -11,5 +11,5 @@ def sender_after_receiver_drop() -> ChannelSender[int]:
 async def main() -> Result[None, ClosedError]:
     sender: ChannelSender[int] = sender_after_receiver_drop()
     sent: Result[None, ClosedError] = await sender.send(9)
-    assert str(sent) == "Err(ClosedError)"
+    assert str(sent) == 'Err(ClosedError { message: "channel is closed" })'
     return None

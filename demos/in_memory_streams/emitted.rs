@@ -1,17 +1,18 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::{IOError, SifrGeneratedIoBinaryFileHandle, SifrGeneratedIoNativeFileHandle};
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn exists(path: &str) -> bool {
+    use ::sifr_runtime::SifrInt;
+    #[must_use]
+    pub fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
-    pub(crate) fn sifr_generated_open_file(path: &str, mode: &str) -> Result<String, IOError> {
+    fn sifr_generated_open_file(path: &str, mode: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::open_file(path, mode).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn sifr_generated_file_close(handle: &str) {
+    fn sifr_generated_file_close(handle: &str) {
         ::sifr_stdlib::fs::file_close(handle);
     }
-    pub(crate) fn sifr_generated_file_read_bytes(
+    fn sifr_generated_file_read_bytes(
         handle: &str,
         size: Option<SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
@@ -21,16 +22,10 @@ mod sifr_generated_generated_support {
         )
         .map_err(sifr_generated_io_err)
     }
-    pub(crate) fn sifr_generated_file_write_bytes(
-        handle: &str,
-        data: &[u8],
-    ) -> Result<(), IOError> {
+    fn sifr_generated_file_write_bytes(handle: &str, data: &[u8]) -> Result<(), IOError> {
         ::sifr_stdlib::fs::file_write_bytes(handle, data).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn open_file(
-        path: &str,
-        mode: &str,
-    ) -> Result<SifrGeneratedIoNativeFileHandle, IOError> {
+    fn open_file(path: &str, mode: &str) -> Result<SifrGeneratedIoNativeFileHandle, IOError> {
         let sifr_generated_try_res: Result<
             Result<SifrGeneratedIoNativeFileHandle, IOError>,
             IOError,
@@ -43,28 +38,36 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(crate) fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
+    pub fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
         sifr_generated_file_close(&handle.id.clone());
     }
-    pub(crate) fn file_read_bytes(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn file_read_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
         size: Option<SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
         sifr_generated_file_read_bytes(&handle.id.clone(), size.clone())
     }
-    pub(crate) fn file_write_bytes(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn file_write_bytes(
         handle: &SifrGeneratedIoNativeFileHandle,
         data: &[u8],
     ) -> Result<(), IOError> {
         sifr_generated_file_write_bytes(&handle.id.clone(), data)
     }
-    pub(crate) fn remove_file(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn sifr_generated_closed_stream_error() -> String {
+    #[must_use]
+    pub fn sifr_generated_closed_stream_error() -> String {
         "I/O operation on closed stream".to_string()
     }
-    pub(crate) fn sifr_generated_invalid_whence_error(whence: SifrInt) -> String {
+    #[must_use]
+    pub fn sifr_generated_invalid_whence_error(whence: SifrInt) -> String {
         {
             let mut sifr_generated_concat: String = String::with_capacity(16usize);
             sifr_generated_concat.push_str("invalid whence: ");
@@ -72,7 +75,8 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn sifr_generated_negative_seek_error(offset: SifrInt) -> String {
+    #[must_use]
+    pub fn sifr_generated_negative_seek_error(offset: SifrInt) -> String {
         {
             let mut sifr_generated_concat: String = String::with_capacity(24usize);
             sifr_generated_concat.push_str("negative seek position: ");
@@ -80,18 +84,19 @@ mod sifr_generated_generated_support {
             sifr_generated_concat
         }
     }
-    pub(crate) fn sifr_generated_mode_is_readable(mode: &str) -> bool {
+    #[must_use]
+    pub fn sifr_generated_mode_is_readable(mode: &str) -> bool {
         mode.contains(&"r".to_string()) || mode.contains(&"+".to_string())
     }
-    pub(crate) fn sifr_generated_mode_is_writable(mode: &str) -> bool {
+    #[must_use]
+    pub fn sifr_generated_mode_is_writable(mode: &str) -> bool {
         mode.contains(&"w".to_string())
             || mode.contains(&"a".to_string())
             || mode.contains(&"+".to_string())
     }
-    pub(crate) fn open_binary(
-        path: &str,
-        mode: &str,
-    ) -> Result<SifrGeneratedIoBinaryFileHandle, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn open_binary(path: &str, mode: &str) -> Result<SifrGeneratedIoBinaryFileHandle, IOError> {
         if !mode.contains(&"b".to_string()) {
             return Err(IOError::new("open_binary requires binary mode".to_string()));
         }
@@ -110,7 +115,7 @@ mod sifr_generated_generated_support {
             Err(e)
         })
     }
-    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+    fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
         let kind = {
             let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
@@ -149,7 +154,11 @@ impl ::std::fmt::Display for SifrGeneratedIoNativeFileHandle {
 }
 mod sifr_generated_project_nominals {
     use crate::SifrGeneratedIoNativeFileHandle;
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        file_close, file_read_bytes, file_write_bytes, sifr_generated_closed_stream_error,
+        sifr_generated_invalid_whence_error, sifr_generated_mode_is_readable,
+        sifr_generated_mode_is_writable, sifr_generated_negative_seek_error,
+    };
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedIoBinaryFileHandle {
@@ -265,7 +274,7 @@ mod sifr_generated_project_nominals {
                 if &maybe_size >= &SifrInt::from_i64(0) {
                     let requested: SifrInt = &start + &maybe_size;
                     if &requested < &end {
-                        end = requested;
+                        end = requested.clone();
                     }
                 }
             }
@@ -419,7 +428,7 @@ mod sifr_generated_project_nominals {
                 if &maybe_size >= &SifrInt::from_i64(0) {
                     let requested: SifrInt = &start + &maybe_size;
                     if &requested < &end {
-                        end = requested;
+                        end = requested.clone();
                     }
                 }
             }
@@ -561,7 +570,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for IOError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{exists, open_binary, remove_file};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedIoBinaryFileHandle;
@@ -578,13 +587,13 @@ fn main() {
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let mut sio: SifrGeneratedStdlibSifrX2eioX2eStringIO =
             SifrGeneratedStdlibSifrX2eioX2eStringIO::new("sample".to_string());
-        sio.write(&"1".to_string())?;
-        let _seek: SifrInt = sio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
-        let text_value: String = sio.read(&None)?;
+        (&mut sio).write(&"1".to_string())?;
+        let _seek: SifrInt = (&mut sio).seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
+        let text_value: String = (&mut sio).read(&None)?;
         stringio_ok = text_value == "1ample";
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             let sifr_generated_bad_seek: SifrInt =
-                sio.seek(&-SifrInt::from_i64(1), &SifrInt::from_i64(0))?;
+                (&mut sio).seek(&-SifrInt::from_i64(1), &SifrInt::from_i64(0))?;
             let _ = sifr_generated_bad_seek;
             Ok(())
         })();
@@ -596,14 +605,14 @@ fn main() {
         let mut bio: SifrGeneratedStdlibSifrX2eioX2eBytesIO =
             SifrGeneratedStdlibSifrX2eioX2eBytesIO::new(vec![97_u8, 98_u8, 99_u8]);
         let _seek_b_value_78f19d0c500eec0b: SifrInt =
-            bio.seek(&SifrInt::from_i64(3), &SifrInt::from_i64(0))?;
-        bio.write_bytes(&vec![100_u8])?;
-        let _seek_b0: SifrInt = bio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
-        let bytes_value: Vec<u8> = bio.read_bytes(&None)?;
+            (&mut bio).seek(&SifrInt::from_i64(3), &SifrInt::from_i64(0))?;
+        (&mut bio).write_bytes(&vec![100_u8])?;
+        let _seek_b0: SifrInt = (&mut bio).seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
+        let bytes_value: Vec<u8> = (&mut bio).read_bytes(&None)?;
         bytesio_ok = bytes_value == vec![97_u8, 98_u8, 99_u8, 100_u8];
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             let sifr_generated_bad_seek_b: SifrInt =
-                bio.seek(&-SifrInt::from_i64(1), &SifrInt::from_i64(0))?;
+                (&mut bio).seek(&-SifrInt::from_i64(1), &SifrInt::from_i64(0))?;
             let _ = sifr_generated_bad_seek_b;
             Ok(())
         })();
@@ -618,10 +627,10 @@ fn main() {
             109_u8, 101_u8, 109_u8, 111_u8, 114_u8, 121_u8, 95_u8, 115_u8, 116_u8, 114_u8, 101_u8,
             97_u8, 109_u8, 115_u8,
         ])?;
-        writer.close();
+        (&mut writer).close();
         let mut reader: SifrGeneratedIoBinaryFileHandle = open_binary(&path, &"rb".to_string())?;
         let loaded: Vec<u8> = reader.read_bytes(&None)?;
-        reader.close();
+        (&mut reader).close();
         binary_file_ok = loaded
             == vec![
                 114_u8, 117_u8, 110_u8, 116_u8, 105_u8, 109_u8, 101_u8, 45_u8, 105_u8, 110_u8,

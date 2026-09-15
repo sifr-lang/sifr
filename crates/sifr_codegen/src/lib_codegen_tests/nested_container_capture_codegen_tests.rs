@@ -6,7 +6,7 @@ fn nested_capture_call_result_refines_outer_list_codegen() {
         "def solve() -> list[str]:\n    called = []\n    def add(value: str):\n        called.append(\"\".join([value]))\n    add(\"x\")\n    return called\n",
     );
     assert!(
-        generated.contains("let mut called: Vec<String> = {"),
+        generated.contains("let mut called: Vec<String> = Vec::<String>::new();"),
         "{generated}"
     );
     assert!(
@@ -25,7 +25,7 @@ fn multilevel_nested_capture_refines_outer_list_codegen() {
         "def solve() -> list[str]:\n    called = []\n    def middle():\n        def add(value: str):\n            called.append(\"\".join([value]))\n        add(\"x\")\n    middle()\n    return called\n",
     );
     assert!(
-        generated.contains("let mut called: Vec<String> = {"),
+        generated.contains("let mut called: Vec<String> = Vec::<String>::new();"),
         "{generated}"
     );
     assert!(
@@ -44,7 +44,7 @@ fn nested_same_named_lists_keep_independent_codegen_types() {
         "{generated}"
     );
     assert!(
-        generated.contains("let mut values: Vec<String> = {"),
+        generated.contains("let mut values: Vec<String> = Vec::<String>::new();"),
         "{generated}"
     );
 }

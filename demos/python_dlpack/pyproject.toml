@@ -2,8 +2,8 @@
 name = "sifr-dlpack-one-shot-demo-python"
 version = "0.0.0"
 requires-python = "==3.14.7"
-dependencies = ["numpy>=2.5.2,<3", "torch>=2.5,<3"]
+dependencies = ["numpy>=2.5.3,<3", "torch>=2.14.0,<3"]
 
 [tool.uv]
 package = false
-required-version = "==0.12.5"
+required-version = "==0.12.10"

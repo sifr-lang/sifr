@@ -421,6 +421,18 @@ def required_string(payload: dict[str, Any], key: str) -> str:
     return value
 
 
+def sanitizer_command(case: dict[str, Any], host_triple: str) -> list[str]:
+    command = list(case["command"])
+    if case["tool"] in {"asan", "lsan", "tsan"}:
+        # Keep sanitizer instrumentation on the runtime target. Instrumenting
+        # host proc macros would require an instrumented rustc to load them.
+        # Use an outer Cargo argument, not an inherited CARGO_BUILD_TARGET that
+        # could change generated-program artifact paths in nested Cargo builds.
+        boundary = command.index("--") if "--" in command else len(command)
+        command[boundary:boundary] = ["--target", host_triple]
+    return command
+
+
 def run_sanitizer_case(suite_name: str, case: dict[str, Any], host_triple: str) -> dict[str, Any]:
     case_id = str(case["id"])
     command = list(case["command"])
@@ -446,6 +458,7 @@ def run_sanitizer_case(suite_name: str, case: dict[str, Any], host_triple: str) 
             "finding_promotion": str(case.get("finding_promotion", "")),
         }
 
+    command = sanitizer_command(case, host_triple)
     timeout_seconds = int(case["timeout_seconds"])
     env = os.environ.copy()
     env.update({str(key): str(value) for key, value in case.get("env", {}).items()})

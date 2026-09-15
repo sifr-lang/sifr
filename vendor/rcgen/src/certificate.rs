@@ -437,6 +437,17 @@ impl CertificateParams {
 		pub_key: &K,
 		issuer: &Issuer<'_, impl SigningKey>,
 	) -> Result<CertificateDer<'static>, Error> {
+		// An empty distribution point would be encoded as an empty fullName,
+		// violating GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
+		// (RFC 5280 §4.2.1.13).
+		if self
+			.crl_distribution_points
+			.iter()
+			.any(|dp| dp.uris.is_empty())
+		{
+			return Err(Error::EmptyCrlDistributionPointUris);
+		}
+
 		let der = sign_der(&issuer.signing_key, |writer| {
 			let pub_key_spki = pub_key.subject_public_key_info();
 			// Write version
@@ -482,8 +493,10 @@ impl CertificateParams {
 			// write extensions
 			let should_write_exts = self.use_authority_key_identifier_extension
 				|| !self.subject_alt_names.is_empty()
+				|| !self.key_usages.is_empty()
 				|| !self.extended_key_usages.is_empty()
 				|| self.name_constraints.iter().any(|c| !c.is_empty())
+				|| !self.crl_distribution_points.is_empty()
 				|| matches!(self.is_ca, IsCa::ExplicitNoCa)
 				|| matches!(self.is_ca, IsCa::Ca(_))
 				|| !self.custom_extensions.is_empty();
@@ -1188,6 +1201,66 @@ mod tests {
 		}
 
 		assert!(found);
+	}
+
+	#[cfg(feature = "crypto")]
+	#[test]
+	fn test_empty_crl_distribution_point_uris_rejected() {
+		let params = CertificateParams {
+			crl_distribution_points: vec![CrlDistributionPoint { uris: Vec::new() }],
+			..CertificateParams::default()
+		};
+
+		// A distribution point with no URIs would be encoded as an empty
+		// fullName, violating GeneralNames ::= SEQUENCE SIZE (1..MAX) OF
+		// GeneralName (RFC 5280 §4.2.1.13), so it must be rejected.
+		let key_pair = KeyPair::generate().unwrap();
+		assert_eq!(
+			params.self_signed(&key_pair).unwrap_err(),
+			Error::EmptyCrlDistributionPointUris
+		);
+	}
+
+	#[cfg(feature = "crypto")]
+	#[test]
+	fn test_with_key_usages_only() {
+		// The KeyUsage extension must be present even when it is the only
+		// extension requested by the params.
+		let params = CertificateParams {
+			key_usages: vec![
+				KeyUsagePurpose::DigitalSignature,
+				KeyUsagePurpose::KeyEncipherment,
+			],
+			..CertificateParams::default()
+		};
+
+		let key_pair = KeyPair::generate().unwrap();
+		let cert = params.self_signed(&key_pair).unwrap();
+
+		let (_rem, cert) = x509_parser::parse_x509_certificate(cert.der()).unwrap();
+		assert!(cert.key_usage().unwrap().is_some());
+	}
+
+	#[cfg(feature = "crypto")]
+	#[test]
+	fn test_with_crl_distribution_points_only() {
+		// The CRL distribution points extension must be present even when it
+		// is the only extension requested by the params.
+		let params = CertificateParams {
+			crl_distribution_points: vec![CrlDistributionPoint {
+				uris: vec!["http://crl.example.com".to_string()],
+			}],
+			..CertificateParams::default()
+		};
+
+		let key_pair = KeyPair::generate().unwrap();
+		let cert = params.self_signed(&key_pair).unwrap();
+
+		let (_rem, cert) = x509_parser::parse_x509_certificate(cert.der()).unwrap();
+		assert!(cert.iter_extensions().any(|ext| matches!(
+			ext.parsed_extension(),
+			x509_parser::extensions::ParsedExtension::CRLDistributionPoints(_)
+		)));
 	}
 
 	#[cfg(feature = "crypto")]

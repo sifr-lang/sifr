@@ -276,6 +276,36 @@ resolver = "3"
 }
 
 #[test]
+fn workspace_validation_rejects_legacy_and_absent_resolver() {
+    for resolver in [Some("2"), None] {
+        let root = complete_sysroot("invalid_resolver", COMPILER_SIFR_VERSION);
+        let input = SysrootResolutionInput {
+            explicit_sysroot: Some(root.path.clone()),
+            env_sysroot: None,
+            current_exe: PathBuf::from("/tool/bin/sifr"),
+            current_dir: root.path.clone(),
+            allow_source_tree_development: false,
+        };
+        resolve_sysroot_with(&input).expect("complete resolver-3 sysroot should resolve");
+        let manifest = root.path.join("Cargo.toml");
+        let original = fs::read_to_string(&manifest).expect("workspace manifest");
+        let replacement = resolver.map_or(String::new(), |value| format!("resolver = \"{value}\""));
+        fs::write(
+            &manifest,
+            original.replace("resolver = \"3\"", &replacement),
+        )
+        .expect("invalid resolver manifest");
+
+        let error = resolve_sysroot_with(&input).expect_err("invalid resolver must fail");
+        assert_eq!(error.kind, SysrootErrorKind::InvalidWorkspace);
+        assert!(
+            error.message.contains("workspace resolver \"3\""),
+            "{error:?}"
+        );
+    }
+}
+
+#[test]
 fn installed_layout_workspace_supports_offline_cargo_metadata() {
     let root = complete_sysroot("offline_metadata", COMPILER_SIFR_VERSION);
 

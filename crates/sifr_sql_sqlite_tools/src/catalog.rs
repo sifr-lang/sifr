@@ -42,9 +42,9 @@ pub fn pull_live_catalog_from_connection(
     provider: ProviderIdentity,
     dialect: DialectIdentity,
 ) -> Result<SchemaIr, SqliteCatalogError> {
-    if dialect.family != "sqlite" || dialect.server_version != "3.53.2" {
+    if dialect.family != "sqlite" || dialect.server_version != "3.53.4" {
         return Err(error(
-            "catalog reflection requires the qualified SQLite 3.53.2 dialect",
+            "catalog reflection requires the qualified SQLite 3.53.4 dialect",
         ));
     }
     connection

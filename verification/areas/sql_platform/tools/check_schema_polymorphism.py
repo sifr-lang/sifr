@@ -17,6 +17,7 @@ PROVIDER = REPO_ROOT / "crates/sifr_sql_contract/src/provider.rs"
 FRONTEND = REPO_ROOT / "crates/sifr_frontend/src/sql_schema_polymorphism.rs"
 QUERY = REPO_ROOT / "crates/sifr_frontend/src/sql_queries.rs"
 MANIFEST = REPO_ROOT / "crates/sifr_package/src/manifest/sql_profiles.rs"
+MANIFEST_REQUIREMENTS = REPO_ROOT / "crates/sifr_package/src/manifest/sql_profiles/requirements.rs"
 RESOLVER = REPO_ROOT / "crates/sifr_package/src/sql_requirements.rs"
 DRIVER = REPO_ROOT / "crates/sifr_driver/src/build/sql_profiles.rs"
 POSTGRESQL = REPO_ROOT / "crates/sifr_sql_postgresql/src/component.rs"
@@ -116,6 +117,8 @@ def validate_sources() -> None:
     ))
     contains(MANIFEST, (
         "pub struct SqlRequirementConfig", "pub struct SqlRequirementProviderConfig",
+    ))
+    contains(MANIFEST_REQUIREMENTS, (
         '"capabilities", "providers"',
     ))
     contains(RESOLVER, (

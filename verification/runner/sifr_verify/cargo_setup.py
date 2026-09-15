@@ -6,9 +6,13 @@ import os
 import shlex
 import subprocess
 import sys
+import tempfile
+from pathlib import Path
 from typing import Any, Callable
 
 from .paths import REPO_ROOT
+from .cargo_fixture_setup import prepare_locked_fixture_caches
+from .cargo_crate_setup import prepare_crate_test_binaries
 
 CANONICAL_SETUP_COMMAND = "cargo fetch --locked"
 
@@ -34,12 +38,13 @@ def prepare_cargo_cache(
     env: dict[str, str],
     command_runner: Callable[..., None],
 ) -> None:
-    """Populate workspace and generated lock graphs before offline execution."""
+    """Populate workspace, selected fixture and generated graphs before offline execution."""
     command = cargo_setup_command(profile)
     setup_env = env.copy()
     setup_env.pop("CARGO_NET_OFFLINE", None)
     print(f"[sifr-profile-setup] command={' '.join(command)}")
     command_runner(command, env=setup_env)
+    prepare_locked_fixture_caches(profile, setup_env, command_runner)
     if any(area["area"] == "generated_code_quality" for area in profile.get("selected_areas", [])):
         revision = subprocess.check_output(
             ["git", "rev-parse", "--verify", "HEAD^{commit}"], cwd=REPO_ROOT, text=True
@@ -53,6 +58,97 @@ def prepare_cargo_cache(
              "--profile", str(profile["name"]), "--revision", revision],
             env=setup_env,
         )
+
+    prepare_crate_test_binaries(profile, setup_env, command_runner)
+    prepare_authoring_test_binaries(profile, setup_env, command_runner)
+    prepare_tooling_test_binaries(profile, setup_env, command_runner)
+    prepare_performance_binaries(profile, setup_env, command_runner)
+    prepare_sysroot_source_binary(profile, setup_env, command_runner)
+    prepare_maintained_demo_cache(profile, setup_env, command_runner)
+
+
+def prepare_sysroot_source_binary(profile, env, command_runner) -> None:
+    """Prepare the boundary check's private source graph before timed execution."""
+    if not any(area["area"] == "sysroot_release" and "boundary-equivalence" in area["suites"]
+               for area in profile.get("selected_areas", [])):
+        return
+    command_runner([sys.executable, str(REPO_ROOT /
+        "verification/areas/sysroot_release/source_build.py")], env=env)
+
+
+def prepare_authoring_test_binaries(profile, env, command_runner) -> None:
+    """Charge cold Rust test compilation to the explicit setup step."""
+    selected = any(
+        area["area"] == "python_interop"
+        and "lsp-declaration-authoring" in area["suites"]
+        for area in profile.get("selected_areas", [])
+    )
+    if not selected:
+        return
+    # Separate invocations match each execution command's feature resolution.
+    for package in ("sifr_lsp", "sifr_driver", "sifr_analysis"):
+        command = ["cargo", "test", "--locked", "--offline", "--no-run", "-p", package]
+        print(f"[sifr-profile-setup] authoring-test-build={' '.join(command)}", flush=True)
+        command_runner(command, env=env)
+
+
+
+def prepare_tooling_test_binaries(profile, env, command_runner) -> None:
+    """Match selected tooling test graphs, including completion's incremental policy."""
+    suites = {suite for area in profile.get("selected_areas", [])
+              if area["area"] == "developer_tooling" for suite in area["suites"]}
+    builds = []
+    if suites.intersection({"static", "full"}):
+        builds.append(("sifr_lint", env))
+        completion_env = env.copy()
+        completion_env.setdefault("CARGO_INCREMENTAL", "0")
+        builds.append(("sifr_analysis", completion_env))
+    if suites.intersection({"formatter", "full"}):
+        builds.append(("sifr_format", env))
+    if suites.intersection({"analysis", "full"}):
+        builds.append(("sifr_analysis", env))
+    for package, build_env in builds:
+        command = ["cargo", "test", "--locked", "--offline", "--no-run", "-p", package]
+        incremental = build_env.get("CARGO_INCREMENTAL", "default")
+        print(f"[sifr-profile-setup] tooling-test-build={' '.join(command)} "
+              f"incremental={incremental}", flush=True)
+        command_runner(command, env=build_env)
+
+
+def prepare_performance_binaries(profile, env, command_runner) -> None:
+    """Build the exact compiler and query-helper graphs before timed benchmarks."""
+    suites = {suite for area in profile.get("selected_areas", [])
+              if area["area"] == "performance" for suite in area["suites"]}
+    commands = []
+    if suites.intersection({"smoke", "representative", "full"}):
+        commands.extend([
+            ["cargo", "build", "--locked", "--offline", "-p", "sifr"],
+            ["cargo", "build", "--locked", "--offline", "-p", "sifr_frontend",
+             "--bin", "frontend_query_bench"],
+        ])
+    if "frontend-syntax-guardrails" in suites:
+        for package in ("sifr_syntax", "sifr_frontend"):
+            commands.append(["cargo", "test", "--locked", "--offline", "--no-run",
+                             "-p", package, "--lib"])
+    for command in commands:
+        print(f"[sifr-profile-setup] performance-build={' '.join(command)}", flush=True)
+        command_runner(command, env=env)
+
+
+def prepare_maintained_demo_cache(profile, env, command_runner) -> None:
+    """Prepare the same complete demo graph before its bounded execution area."""
+    if not any(area["area"] == "rust_interop" and "matrix" in area["suites"]
+               for area in profile.get("selected_areas", [])):
+        return
+    target = REPO_ROOT / "target"
+    target.mkdir(parents=True, exist_ok=True)
+    output = Path(tempfile.mkdtemp(
+        prefix=f"{profile['name']}-rust-demo-setup-", dir=target)) / "compile"
+    command = [sys.executable, str(REPO_ROOT / "verification/areas/rust_interop/checks/"
+                                   "check_maintained_rust_demos.py"),
+               "--output", str(output)]
+    print(f"[sifr-profile-setup] maintained-demo-preparation={output}", flush=True)
+    command_runner(command, env=env)
 
 
 def enable_offline_cargo(env: dict[str, str]) -> None:

@@ -1,19 +1,24 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn sqrt(x: f64) -> f64 {
+    use ::sifr_runtime::SifrInt;
+    #[must_use]
+    pub fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
-    pub(crate) fn floor(x: f64) -> SifrInt {
+    #[must_use]
+    pub fn floor(x: f64) -> SifrInt {
         ::sifr_stdlib::math::floor(x).into_sifr_int()
     }
-    pub(crate) fn ceil(x: f64) -> SifrInt {
+    #[must_use]
+    pub fn ceil(x: f64) -> SifrInt {
         ::sifr_stdlib::math::ceil(x).into_sifr_int()
     }
-    pub(crate) fn atan2(y: f64, x: f64) -> f64 {
+    #[must_use]
+    pub fn atan2(y: f64, x: f64) -> f64 {
         ::sifr_stdlib::math::atan2(y, x)
     }
-    pub(crate) const fn isfinite(x: f64) -> bool {
+    #[must_use]
+    pub const fn isfinite(x: f64) -> bool {
         ::sifr_stdlib::math::isfinite(x)
     }
 }
@@ -29,7 +34,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{atan2, ceil, floor, isfinite, sqrt};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ValueError;
 #[expect(

@@ -239,6 +239,21 @@ mod tests {
     }
 
     #[test]
+    fn resolves_normalized_spaced_aliases_without_changing_name_errors() {
+        for (alias, expected) in [
+            ("CARRIAGE RETURN", "\r"),
+            ("carriage_return", "\r"),
+            ("FORM FEED", "\u{c}"),
+            ("CHARACTER TABULATION WITH JUSTIFICATION", "\u{89}"),
+        ] {
+            assert_eq!(lookup(alias).as_deref(), Ok(expected));
+        }
+        assert!(lookup("NOT A UNICODE CHARACTER NAME").is_err());
+        assert!(name("").is_err());
+        assert!(name("ab").is_err());
+    }
+
+    #[test]
     fn normalizes_and_queries_properties() {
         assert_eq!(normalize("NFC", "e\u{301}").unwrap(), "\u{E9}");
         assert_eq!(name("\u{2603}").unwrap(), "SNOWMAN");

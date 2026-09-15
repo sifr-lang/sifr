@@ -6,6 +6,7 @@ use syn::visit_mut::{self, VisitMut};
 
 mod assignment_cleanup;
 mod lint_cleanup;
+mod option_question_mark;
 mod residual_cleanup;
 mod result_control_cleanup;
 mod structured_control_cleanup;
@@ -33,6 +34,7 @@ use structured_control_cleanup::{
 };
 
 pub(super) fn canonicalize_idioms(file: &mut syn::File, mutating_methods: &HashSet<String>) {
+    option_question_mark::rewrite(file);
     IdiomCleanup { mutating_methods }.visit_file_mut(file);
 }
 
@@ -104,7 +106,6 @@ impl VisitMut for IdiomCleanup<'_> {
     fn visit_local_mut(&mut self, local: &mut syn::Local) {
         rewrite_result_match_with_let_else(local);
         visit_mut::visit_local_mut(self, local);
-        rewrite_option_let_else_with_question_mark(local);
         rewrite_result_match_with_let_else(local);
     }
 
@@ -338,6 +339,10 @@ fn rewrite_option_let_else_with_question_mark(local: &mut syn::Local) {
     let Some(inner) = pattern.elems.first().cloned() else {
         return;
     };
+    if !matches!(&inner, syn::Pat::Ident(binding) if binding.by_ref.is_none() && binding.subpat.is_none())
+    {
+        return;
+    }
     local.pat = inner;
     let tested = init.expr.clone();
     *init.expr = syn::parse_quote!((#tested)?);

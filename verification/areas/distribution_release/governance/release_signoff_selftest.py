@@ -19,6 +19,13 @@ COMMIT = "e" * 40
 def test_release_signoff_mutations() -> None:
     signoff = valid_release_signoff()
     validate_release_signoff(signoff)
+    solo = copy.deepcopy(signoff)
+    solo["initiator"] = "yaseralnajjar"
+    solo["attempts"][0]["approver"] = "yaseralnajjar"
+    solo["approval_policy"] = {"mode": "solo-maintainer", "waiver_sha256": "none"}
+    validate_release_signoff(solo)
+    expect_rejected(mutate(solo, lambda item: item["attempts"][0].update(approver="other")))
+    expect_rejected(mutate(solo, lambda item: item["approval_policy"].update(waiver_sha256=SHA_A)))
     waived = mutate(
         signoff,
         lambda item: (

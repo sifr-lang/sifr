@@ -70,8 +70,8 @@ def validate_sources(payload: dict[str, Any]) -> None:
     dependencies = root.get("workspace", {}).get("dependencies", {})
     exact = {
         "tokio": "=1.53.1",
-        "rustls": "=0.23.43",
-        "tokio-rustls": "=0.26.4",
+        "rustls": "=0.23.44",
+        "tokio-rustls": "=0.26.5",
         "postgres-types": "=0.2.14",
         "tokio-postgres": "=0.7.18",
         "tokio-postgres-rustls": "=0.14.0",

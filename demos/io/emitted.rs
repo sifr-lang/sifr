@@ -1,23 +1,32 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::IOError;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn read_text(path: &str) -> Result<String, IOError> {
+    use ::sifr_runtime::SifrInt;
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn read_text(path: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::read_text(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn exists(path: &str) -> bool {
+    #[must_use]
+    pub fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
-    pub(crate) fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::read_lines(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn append_text(path: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn append_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::append_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -44,7 +53,8 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+    #[must_use]
+    pub fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
         let kind = {
             let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
@@ -230,7 +240,10 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for IOError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    append_text, assert_bool_vector_eq, exists, read_lines, read_text, sifr_generated_io_err,
+    write_text,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedIoBinaryFileHandle;

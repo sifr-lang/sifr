@@ -90,7 +90,7 @@ pub struct PackageEntrypoint {
 
 pub(crate) struct RootedEntrypointPlan {
     shape: RootedEntrypointShape,
-    stdlib: StdlibCompiled,
+    stdlib: std::sync::Arc<StdlibCompiled>,
     project_lowering: ProjectLowering,
     python_runtime: Option<PackagePythonRuntime>,
     python_bridges: Option<sifr_package::ResolvedPythonBridgeGraph>,
@@ -129,9 +129,9 @@ pub(crate) fn compile_single_file_entrypoint_with_metadata_and_options(
     })?;
     plan.emit_frontend_diagnostics();
     let rust_interop_context = plan.rust_interop_context.clone();
-    let stdlib_interop = plan.stdlib.interop.clone();
+    let stdlib = std::sync::Arc::clone(&plan.stdlib);
     let codegen_result = plan.into_single_file_codegen_result()?;
-    resolve_single_file_metadata(codegen_result, rust_interop_context, &stdlib_interop)
+    resolve_single_file_metadata(codegen_result, rust_interop_context, &stdlib.interop)
 }
 
 pub(crate) fn check_single_file_entrypoint(
@@ -668,7 +668,7 @@ impl RootedEntrypointPlan {
         let rust_interop_context = self.rust_interop_context.clone();
         let cargo_resolution = self.cargo_resolution.clone();
         let sql_profile_cache_fragment = self.sql_profiles.cache_fragment()?;
-        let stdlib_interop = self.stdlib.interop.clone();
+        let stdlib = std::sync::Arc::clone(&self.stdlib);
         let mut generated = match self.shape {
             RootedEntrypointShape::SingleFile => {
                 let codegen_result = self.into_single_file_codegen_result()?;
@@ -686,7 +686,7 @@ impl RootedEntrypointPlan {
             );
         }
         let (generated, rust_interop_context) =
-            attach_stdlib_rust_interop(generated, rust_interop_context, &stdlib_interop);
+            attach_stdlib_rust_interop(generated, rust_interop_context, &stdlib.interop);
         let generated = super::rust_interop::apply_package_rust_interop_metadata_with_resolution(
             generated,
             rust_interop_context,

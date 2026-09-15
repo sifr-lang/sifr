@@ -16,7 +16,7 @@ pub fn generate_rust(module: &HirModule) -> String {
 
 /// Generate Rust source code for a test module (with #[test] attributes).
 pub fn generate_rust_test(module: &HirModule, module_name: &str) -> CodegenResult {
-    generate_rust_test_with_project_policy(
+    let body = generate_rust_test_with_project_policy(
         module,
         module_name,
         &StdlibCode::default(),
@@ -27,14 +27,18 @@ pub fn generate_rust_test(module: &HirModule, module_name: &str) -> CodegenResul
         None,
         None,
         SupportEmission::Inline,
-    )
+    );
+    body.into_application(crate::stdlib_interop_demand::application_plan(
+        &StdlibCode::default(),
+        &[(None, module)],
+    ))
 }
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_rust_test_with_project_policy(
     module: &HirModule,
     module_name: &str,
-    project_code: &StdlibCode,
+    project_code: &crate::StdlibEmissionCode,
     project_union_enums: Option<&HashSet<String>>,
     project_ordinary_union_enums: Option<&HashSet<String>>,
     project_try_error_carrier_enums: Option<&HashSet<String>>,
@@ -42,14 +46,18 @@ pub(crate) fn generate_rust_test_with_project_policy(
     project_structural_record_identities: Option<&HashSet<String>>,
     project_structural_identity_expressions: Option<&super::HashMap<String, String>>,
     support_emission: SupportEmission,
-) -> CodegenResult {
+) -> crate::lib_modules_and_codegen::ModuleCodegenResult {
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
     emitter.project_structural_record_identities = project_structural_record_identities.cloned();
     emitter.project_structural_identity_expressions =
         project_structural_identity_expressions.cloned();
     emitter.structural_identity_module_name = Some(module_name.to_string());
-    crate::project_constants::register_imported_constants(&mut emitter, module, project_code);
+    crate::stdlib_import_signatures::register_imported_stdlib_metadata(
+        &mut emitter,
+        module,
+        project_code,
+    );
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
@@ -84,9 +92,10 @@ pub(crate) fn generate_rust_test_with_project_policy(
 
     // Second pass: emit the actual code
     emitter.emit_named_module(module, false, true, Some(module_name));
+    emitter.emit_imported_stdlib_structural_impls(module, project_code);
     // Expression lowering can introduce canonical intermediate error unions.
     emitter.generate_enum_definitions();
-    let support_demand = ModuleSupportDemand::from_emitter(module, &emitter);
+    let support_demand = ModuleSupportDemand::from_emitter(module, &emitter, Some(module_name));
 
     let mut module_import_items: Vec<RustItem> = Vec::new();
     for import in &module.imports {
@@ -331,7 +340,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
             }
             features
         },
-        interop: crate::rust_interop_plan::interop_build_plan_for_module(module),
+        interop: (),
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,
         support_demand,
@@ -339,11 +348,11 @@ pub(crate) fn generate_rust_test_with_project_policy(
 }
 
 fn deferred_test_codegen_result(
-    module: &HirModule,
+    _module: &HirModule,
     mut emitter: RustEmitter,
     support_demand: ModuleSupportDemand,
     mut module_import_items: Vec<RustItem>,
-) -> CodegenResult {
+) -> crate::lib_modules_and_codegen::ModuleCodegenResult {
     let mut body_items = emitter.enum_items.clone();
     body_items.extend(emitter.body_items.clone());
     remove_trivial_clones_in_items(&mut body_items);
@@ -385,7 +394,7 @@ fn deferred_test_codegen_result(
         used_stdlib_modules: support_demand.directly_used_stdlib_modules(),
         used_intrinsic_modules: std::mem::take(&mut emitter.used_stdlib_modules),
         required_features,
-        interop: crate::rust_interop_plan::interop_build_plan_for_module(module),
+        interop: (),
         constant_mappings: std::mem::take(&mut emitter.module_constants),
         lowering_stats: emitter.lowering_stats,
         support_demand,

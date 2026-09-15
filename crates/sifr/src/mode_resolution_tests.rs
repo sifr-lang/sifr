@@ -380,13 +380,13 @@ pub(super) fn test_package_cli_parses_run_script_bin_and_app_args() {
     ])
     .expect("run script cli parses");
 
-    let Some(Commands::Run {
+    let Some(Commands::Run(crate::deferred_cli_args::DeferredArgs(crate::command_args::Run {
         packages,
         script,
         locked,
         args,
         ..
-    }) = cli.command
+    }))) = cli.command
     else {
         panic!("expected run command");
     };
@@ -396,7 +396,11 @@ pub(super) fn test_package_cli_parses_run_script_bin_and_app_args() {
     assert_eq!(args, ["--port", "8080"]);
 
     let cli = Cli::try_parse_from(["sifr", "run", "--bin", "admin"]).expect("run bin cli parses");
-    let Some(Commands::Run { bin, .. }) = cli.command else {
+    let Some(Commands::Run(crate::deferred_cli_args::DeferredArgs(crate::command_args::Run {
+        bin,
+        ..
+    }))) = cli.command
+    else {
         panic!("expected run command");
     };
     assert_eq!(bin.as_deref(), Some("admin"));
@@ -554,14 +558,14 @@ pub(super) fn test_package_cli_parses_check_message_format_and_tree_args() {
         "json",
     ])
     .expect("check cli parses");
-    let Some(Commands::Check {
+    let Some(Commands::Check(crate::deferred_cli_args::DeferredArgs(crate::command_args::Check {
         message_format,
         locked,
         workspace,
         packages,
         exclude,
         ..
-    }) = cli.command
+    }))) = cli.command
     else {
         panic!("expected check command");
     };
@@ -573,7 +577,12 @@ pub(super) fn test_package_cli_parses_check_message_format_and_tree_args() {
 
     let cli = Cli::try_parse_from(["sifr", "tree", "--offline", "--depth", "1"])
         .expect("tree cli parses");
-    let Some(Commands::Tree { offline, args, .. }) = cli.command else {
+    let Some(Commands::Tree(crate::deferred_cli_args::DeferredArgs(crate::command_args::Tree {
+        offline,
+        args,
+        ..
+    }))) = cli.command
+    else {
         panic!("expected tree command");
     };
     assert!(offline);
@@ -595,18 +604,20 @@ pub(super) fn test_package_cli_parses_check_message_format_and_tree_args() {
         "--frozen",
     ])
     .expect("package cli parses");
-    let Some(Commands::Package {
-        workspace,
-        packages,
-        exclude,
-        list,
-        no_verify,
-        no_metadata,
-        allow_dirty,
-        exclude_lockfile,
-        frozen,
-        ..
-    }) = cli.command
+    let Some(Commands::Package(crate::deferred_cli_args::DeferredArgs(
+        crate::command_args::Package {
+            workspace,
+            packages,
+            exclude,
+            list,
+            no_verify,
+            no_metadata,
+            allow_dirty,
+            exclude_lockfile,
+            frozen,
+            ..
+        },
+    ))) = cli.command
     else {
         panic!("expected package command");
     };
@@ -631,14 +642,16 @@ pub(super) fn test_package_cli_parses_check_message_format_and_tree_args() {
         "--locked",
     ])
     .expect("publish cli parses");
-    let Some(Commands::Publish {
-        dry_run,
-        packages,
-        no_verify,
-        allow_dirty,
-        locked,
-        ..
-    }) = cli.command
+    let Some(Commands::Publish(crate::deferred_cli_args::DeferredArgs(
+        crate::command_args::Publish {
+            dry_run,
+            packages,
+            no_verify,
+            allow_dirty,
+            locked,
+            ..
+        },
+    ))) = cli.command
     else {
         panic!("expected publish command");
     };
@@ -660,15 +673,17 @@ pub(super) fn test_package_cli_parses_check_message_format_and_tree_args() {
         "--offline",
     ])
     .expect("vendor cli parses");
-    let Some(Commands::Vendor {
-        path,
-        sync,
-        no_delete,
-        respect_source_config,
-        versioned_dirs,
-        offline,
-        ..
-    }) = cli.command
+    let Some(Commands::Vendor(crate::deferred_cli_args::DeferredArgs(
+        crate::command_args::Vendor {
+            path,
+            sync,
+            no_delete,
+            respect_source_config,
+            versioned_dirs,
+            offline,
+            ..
+        },
+    ))) = cli.command
     else {
         panic!("expected vendor command");
     };

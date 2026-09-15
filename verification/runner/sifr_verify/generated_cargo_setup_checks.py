@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import os
 import shutil
@@ -11,10 +12,15 @@ import subprocess
 import tempfile
 import tomllib
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from .cargo_setup import enable_offline_cargo, prepare_cargo_cache
+from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_authoring_test_binaries, prepare_maintained_demo_cache, prepare_tooling_test_binaries, prepare_performance_binaries
+from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
+from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
+from .cargo_crate_setup_checks import CrateSetupPolicyTests
+from .cargo_sysroot_setup_checks import SysrootSetupPolicyTests
 from .generated_cargo_setup import (
     GIT_SOURCE, fetch_generated_graph, portable_graph, preparation_entries, quality_module,
 )
@@ -49,8 +55,10 @@ class SetupPolicyTests(unittest.TestCase):
             prepare_cargo_cache(load_profile("merge"), env,
                                 lambda args, **kw: commands.append((args, kw["env"])))
         self.assertEqual(commands[0][0], ["cargo", "fetch", "--locked"])
-        self.assertIn("sifr_verify.generated_cargo_setup", commands[1][0])
-        self.assertEqual(commands[1][0][-1], REVISION)
+        self.assertEqual(commands[1][0], ["cargo", "fetch", "--locked", "--manifest-path",
+                                         str(locked_fixture_manifests(load_profile("merge"))[0])])
+        self.assertIn("sifr_verify.generated_cargo_setup", commands[2][0])
+        self.assertEqual(commands[2][0][-1], REVISION)
         for _, setup_env in commands:
             self.assertNotIn("CARGO_NET_OFFLINE", setup_env)
             self.assertEqual(setup_env["CARGO_HOME"], "/owned/cache")
@@ -66,16 +74,50 @@ class SetupPolicyTests(unittest.TestCase):
             prepare_cargo_cache(load_profile("merge"), {}, fail)
         self.assertEqual(len(calls), 1)
 
+    def test_fixture_failure_prevents_generated_setup(self):
+        calls = []
+        def fail_fixture(args, **kwargs):
+            calls.append(args)
+            if "--manifest-path" in args:
+                raise CommandFailed(101)
+        with self.assertRaises(CommandFailed):
+            prepare_cargo_cache(load_profile("merge"), {}, fail_fixture)
+        self.assertEqual(len(calls), 2)
+        self.assertNotIn("sifr_verify.generated_cargo_setup", calls[-1])
+
     def test_setup_failure_prevents_offline_switch_and_execution(self):
-        with patch.dict(os.environ, {}, clear=True):
+        profile = load_profile("merge")
+        with patch.dict(os.environ, {}, clear=True), \
+             patch("sifr_verify.profile_runner.load_profile", return_value=profile):
             runner = ProfileRunner("merge", [])
             with patch.object(runner, "prepare_step_budget", return_value=None), \
                  patch.object(runner, "prepare_cargo_cache", side_effect=CommandFailed(101)), \
                  patch.object(runner, "run_guardrail") as guard, \
                  patch("sifr_verify.profile_runner.enable_profile_offline_cargo") as offline:
-                self.assertEqual(runner.run(), 101)
+                with redirect_stdout(io.StringIO()):
+                    self.assertEqual(runner.run(), 101)
                 offline.assert_not_called()
                 guard.assert_not_called()
+
+    def test_simulated_runner_output_preserves_release_step_evidence(self):
+        from .release_evidence import build_steps
+
+        output = io.StringIO()
+        case = SetupPolicyTests("test_setup_failure_prevents_offline_switch_and_execution")
+        with redirect_stdout(output):
+            result = case.run(unittest.TestResult())
+        self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
+        with tempfile.TemporaryDirectory() as directory:
+            log = Path(directory) / "profile.log"
+            log.write_text(
+                "[sifr-lane-step] name=cargo_cache_setup elapsed_ms=1 status=pass\n"
+                + output.getvalue(),
+                encoding="utf-8",
+            )
+            self.assertEqual(build_steps(log), [{
+                "name": "cargo_cache_setup", "status": "pass",
+                "elapsed_ms": 1, "suite_results": [],
+            }])
 
     def test_constructor_does_not_build_before_preparation(self):
         with patch("sifr_verify.profile_runner.resolve_sifr_binary") as resolve:
@@ -121,6 +163,129 @@ class SetupPolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "nonportable or stale"):
             portable_graph(self.root, REVISION)
 
+    def test_sqlite_patch_and_lock_are_exact(self):
+        manifest = self.manifest.read_text()
+        lock = self.lock.read_text()
+        patch_text = ('\n[patch.crates-io]\n'
+                      f'libsqlite3-sys = {{ git = "{GIT_SOURCE}", rev = "{REVISION}" }}\n')
+        native_lock = ('\n[[package]]\nname = "libsqlite3-sys"\nversion = "0.38.2"\n'
+                       f'source = "git+{GIT_SOURCE}?rev={REVISION}#{REVISION}"\n')
+        self.manifest.write_text(manifest + patch_text)
+        self.lock.write_text(lock + native_lock)
+        portable_graph(self.root, REVISION)
+        for invalid in ("", patch_text.replace(REVISION, "b" * 40),
+                        patch_text.replace('git =', 'path ='),
+                        patch_text + 'extra = "1"\n',
+                        patch_text + '[replace]\n"foo:1.0.0" = { path = "/local" }\n'):
+            with self.subTest(manifest=invalid):
+                self.manifest.write_text(manifest + invalid)
+                with self.assertRaises(ValueError):
+                    portable_graph(self.root, REVISION)
+        self.manifest.write_text(manifest + patch_text)
+        for source in ("registry+https://github.com/rust-lang/crates.io-index",
+                       f"git+{GIT_SOURCE}?rev={'b' * 40}#{'b' * 40}", ""):
+            with self.subTest(source=source):
+                self.lock.write_text(lock + native_lock.replace(
+                    f"git+{GIT_SOURCE}?rev={REVISION}#{REVISION}", source))
+                with self.assertRaisesRegex(ValueError, "nonportable or stale"):
+                    portable_graph(self.root, REVISION)
+
+    def test_authoring_test_prebuild_selection_and_failure(self):
+        calls = []
+        runner = lambda args, **kw: calls.append(args)
+        prepare_authoring_test_binaries({"selected_areas": []}, {}, runner)
+        self.assertEqual(calls, [])
+        profile = {"selected_areas": [{"area": "python_interop",
+                                      "suites": ["lsp-declaration-authoring"]}]}
+        prepare_authoring_test_binaries(profile, {}, runner)
+        self.assertEqual(calls, [
+            ["cargo", "test", "--locked", "--offline", "--no-run", "-p", package]
+            for package in ("sifr_lsp", "sifr_driver", "sifr_analysis")
+        ])
+        def fail(*args, **kw):
+            raise CommandFailed(101)
+        with self.assertRaises(CommandFailed):
+            prepare_authoring_test_binaries(profile, {}, fail)
+
+    def test_tooling_preparation_matches_selected_execution_environments(self):
+        calls = []
+        def run(args, **kw):
+            calls.append((args[-1], kw["env"].copy()))
+        def profile(suites):
+            return {"selected_areas": [{"area": "developer_tooling", "suites": suites}]}
+        prepare_tooling_test_binaries(profile(["lsp-smoke"]), {}, run)
+        self.assertEqual(calls, [])
+        original = {"CARGO_BUILD_JOBS": "2"}
+        prepare_tooling_test_binaries(profile(["static"]), original, run)
+        self.assertEqual(calls, [
+            ("sifr_lint", original),
+            ("sifr_analysis", {**original, "CARGO_INCREMENTAL": "0"})])
+        self.assertNotIn("CARGO_INCREMENTAL", original)
+        calls.clear()
+        explicit = {"CARGO_INCREMENTAL": "1"}
+        prepare_tooling_test_binaries(profile(["full", "static"]), explicit, run)
+        self.assertEqual(calls, [(name, explicit) for name in
+                                ("sifr_lint", "sifr_analysis", "sifr_format", "sifr_analysis")])
+        calls.clear()
+        prepare_tooling_test_binaries(profile(["formatter", "analysis"]), {}, run)
+        self.assertEqual(calls, [("sifr_format", {}), ("sifr_analysis", {})])
+        def fail(*args, **kw):
+            raise CommandFailed(101)
+        with self.assertRaises(CommandFailed):
+            prepare_tooling_test_binaries(profile(["static"]), {}, fail)
+
+    def test_performance_preparation_selects_benchmarks_and_propagates_failure(self):
+        calls = []
+        def profile(suites):
+            return {"selected_areas": [{"area": "performance", "suites": suites}]}
+        runner = lambda args, **kw: calls.append(args)
+        prepare_performance_binaries({"selected_areas": []}, {}, runner)
+        self.assertEqual(calls, [])
+        expected = [
+            ["cargo", "build", "--locked", "--offline", "-p", "sifr"],
+            ["cargo", "build", "--locked", "--offline", "-p", "sifr_frontend",
+             "--bin", "frontend_query_bench"],
+        ]
+        for suites in (["smoke"], ["representative"], ["full"], ["smoke", "full"]):
+            calls.clear()
+            prepare_performance_binaries(profile(suites), {}, runner)
+            self.assertEqual(calls, expected)
+        guards = [
+            ["cargo", "test", "--locked", "--offline", "--no-run", "-p", package, "--lib"]
+            for package in ("sifr_syntax", "sifr_frontend")
+        ]
+        for suites, wanted in [
+            (["frontend-syntax-guardrails"], guards),
+            (["smoke", "frontend-syntax-guardrails"], expected + guards),
+        ]:
+            calls.clear()
+            prepare_performance_binaries(profile(suites), {}, runner)
+            self.assertEqual(calls, wanted)
+        def fail(*args, **kw):
+            raise CommandFailed(101)
+        for suites in (["smoke"], ["frontend-syntax-guardrails"]):
+            with self.assertRaises(CommandFailed):
+                prepare_performance_binaries(profile(suites), {}, fail)
+
+    def test_demo_preparation_selection_and_failure(self):
+        calls = []
+        runner = lambda args, **kw: calls.append(args)
+        prepare_maintained_demo_cache({"selected_areas": []}, {}, runner)
+        prepare_maintained_demo_cache({"selected_areas": [
+            {"area": "rust_interop", "suites": ["tiers"]}]}, {}, runner)
+        self.assertEqual(calls, [])
+        profile = {"name": "create-pr", "selected_areas": [
+            {"area": "rust_interop", "suites": ["matrix"]}]}
+        prepare_maintained_demo_cache(profile, {}, runner)
+        self.assertEqual(len(calls), 1)
+        self.assertTrue(calls[0][1].endswith("/check_maintained_rust_demos.py"))
+        self.assertEqual(calls[0][2], "--output")
+        self.assertTrue(Path(calls[0][3]).is_relative_to(REPO_ROOT / "target"))
+        def fail(*args, **kw):
+            raise CommandFailed(101)
+        with self.assertRaises(CommandFailed):
+            prepare_maintained_demo_cache(profile, {}, fail)
+
     def test_missing_lock_rejected_before_fetch(self):
         self.lock.unlink()
         with self.assertRaises(FileNotFoundError):
@@ -134,7 +299,9 @@ class SetupPolicyTests(unittest.TestCase):
 
 
 def policy_checks() -> None:
-    result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(SetupPolicyTests))
+    suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
+                               for case in (SetupPolicyTests, FixtureSetupPolicyTests, CrateSetupPolicyTests, SysrootSetupPolicyTests))
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
     if not result.wasSuccessful():
         raise AssertionError("generated Cargo setup policy checks failed")
 
@@ -147,10 +314,21 @@ def clean_cache_checks() -> None:
     cargo_home.mkdir()
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True).strip()
     with patch.dict(os.environ, {"CARGO_HOME": str(cargo_home), "CARGO_NET_OFFLINE": "true"}):
-        # No manual fetch/cache population: the production prelude owns both graphs.
+        # No manual population: the production prelude owns every selected graph.
         runner = ProfileRunner("merge", [])
         runner.prepare_cargo_cache()
         enable_offline_cargo(runner.env)
+        fixture_graphs = []
+        for manifest in locked_fixture_manifests(runner.profile):
+            before = fixture_graph_hashes(manifest)
+            subprocess.run(
+                ["cargo", "metadata", "--format-version", "1", "--locked", "--offline",
+                 "--manifest-path", str(manifest)],
+                cwd=REPO_ROOT, env=runner.env, text=True, capture_output=True, check=True,
+            )
+            if fixture_graph_hashes(manifest) != before:
+                raise AssertionError("offline fixture resolution mutated its graph")
+            fixture_graphs.append({"manifest": str(manifest.relative_to(REPO_ROOT)), **before})
         report_path = REPO_ROOT / "target/verification/areas/generated-cargo-setup-merge.json"
         report = json.loads(report_path.read_text())
         if report["revision"] != revision:
@@ -223,6 +401,7 @@ def clean_cache_checks() -> None:
     evidence = {"revision": revision, "status": "pass", "prepared_graphs": len(expected),
                 "offline_graphs": len(expected), "entry_modes": ["corpus", "clippy", "demos"],
                 "runtime_and_stdlib": True, "negative_checks": ["empty-cache", "lock-drift"],
+                "fixture_graphs": fixture_graphs,
                 "cargo_home": str(cargo_home), "setup_report": str(report_path),
                 "setup_report_sha256": hashlib.sha256(report_path.read_bytes()).hexdigest()}
     destination = REPO_ROOT / "target/verification/areas/generated-cargo-clean-cache.json"

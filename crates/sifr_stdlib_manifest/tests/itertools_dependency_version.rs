@@ -1,3 +1,12 @@
+#[allow(dead_code)]
+#[path = "support/cargo_edges.rs"]
+mod cargo_edges;
+#[allow(dead_code)]
+#[path = "support/cargo_inventory.rs"]
+mod cargo_inventory;
+#[allow(dead_code)]
+#[path = "support/cargo_vendor.rs"]
+mod cargo_vendor;
 mod support;
 
 use support::TestUnwrap as _;
@@ -129,6 +138,7 @@ fn itertools_0_15_apis_compile_with_the_canonical_iterator_contracts() {
 
 #[test]
 fn first_party_lock_edges_use_itertools_0_15() {
+    cargo_edges::first_party_edges("itertools", ITERTOOLS_VERSION);
     let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("Cargo.lock must parse");
     let packages = lock_packages(&lock);
     let current = packages
@@ -143,10 +153,16 @@ fn first_party_lock_edges_use_itertools_0_15() {
         Some(ITERTOOLS_PACKAGE_HASH)
     );
 
+    let owned = cargo_inventory::local_owners();
     let first_party_edges = packages
         .iter()
         .filter(|package| {
-            package_name(package).is_some_and(|name| name == "sifr" || name.starts_with("sifr_"))
+            package.get("source").is_none()
+                && package_name(package)
+                    .zip(package_version(package))
+                    .is_some_and(|(name, version)| {
+                        owned.contains_key(&(name.into(), version.into()))
+                    })
         })
         .flat_map(|package| {
             package
@@ -274,4 +290,50 @@ fn package_name(package: &toml::Value) -> Option<&str> {
 
 fn package_version(package: &toml::Value) -> Option<&str> {
     package.get("version").and_then(toml::Value::as_str)
+}
+
+#[test]
+fn itertools_vendor_files_and_external_0_13_owners_are_authenticated() {
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("lock");
+    cargo_vendor::family(
+        &cargo_inventory::root(),
+        "itertools",
+        &["0.14.0", "0.15.0"],
+        cargo_edges::packages(&lock).test_unwrap("packages"),
+    )
+    .test_unwrap("Itertools vendor closure");
+    let ruff =
+        cargo_inventory::read_toml(&cargo_inventory::root().join("third_party/ruff/Cargo.lock"));
+    let packages = cargo_edges::packages(&ruff).test_unwrap("Ruff packages");
+    let mut old_owners = std::collections::BTreeSet::new();
+    for package in packages {
+        for edge in cargo_edges::edges(package).test_unwrap("Ruff edges") {
+            if edge.split_whitespace().next() != Some("itertools") {
+                continue;
+            }
+            let target = cargo_edges::identity(
+                cargo_edges::resolve(packages, edge).test_unwrap("Itertools identity"),
+            )
+            .test_unwrap("identity");
+            if target.version == "0.13.0" {
+                assert_eq!(target.source.as_deref(), Some(cargo_inventory::REGISTRY));
+                old_owners.insert(package_name(package).test_unwrap("owner"));
+            }
+        }
+    }
+    assert_eq!(
+        old_owners,
+        ["criterion", "criterion-plot", "pep508_rs"].into()
+    );
+    let bindgen = cargo_edges::packages(&lock)
+        .test_unwrap("packages")
+        .iter()
+        .find(|package| package_name(package) == Some("bindgen"))
+        .test_unwrap("Bindgen");
+    assert!(
+        cargo_edges::edges(bindgen)
+            .test_unwrap("Bindgen edges")
+            .iter()
+            .all(|edge| edge.split_whitespace().next() != Some("itertools"))
+    );
 }

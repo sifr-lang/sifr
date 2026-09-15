@@ -534,7 +534,7 @@ def _validate_scenario_manifests(
             )
         for dependency, version in (
             ("bytes", "=1.12.1"),
-            ("indexmap", "=2.14.0"),
+            ("indexmap", "=2.14.2"),
             ("serde", "=1.0.229"),
             ("serde_json", "=1.0.151"),
             ("thiserror", "=2.0.20"),
@@ -593,7 +593,7 @@ def _validate_scenario_manifests(
             )
     elif fixture_id == "async_runtime_reqwest":
         validate_async_reqwest_scenario(
-            failures, fixture_id, raw_path, rust, dependencies, trust
+            failures, fixture_id, raw_path, rust, dependencies, trust, example_dir
         )
     elif fixture_id == "opaque_resource_matrix":
         validate_opaque_resource_scenario(

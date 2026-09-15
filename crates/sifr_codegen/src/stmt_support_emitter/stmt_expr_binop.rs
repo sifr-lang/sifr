@@ -59,16 +59,15 @@ macro_rules! stmt_expr_binop {
             }
 
             if op == "*" && matches!(resolved_result_ty, Type::Str) {
-                let (string_expr, count_expr) = match (
+                let (string_expr, count_source, count_expr) = match (
                     matches!(resolved_left_ty, Type::Str),
                     matches!(resolved_right_ty, Type::Str),
                 ) {
-                    (true, false) => (lowered_left.clone(), lowered_right.clone()),
-                    (false, true) => (lowered_right.clone(), lowered_left.clone()),
+                    (true, false) => (lowered_left.clone(), right.as_ref(), lowered_right.clone()),
+                    (false, true) => (lowered_right.clone(), left.as_ref(), lowered_left.clone()),
                     _ => return Ok(None),
                 };
-                return Ok(Some(crate::RustExpr::Block {
-                    stmts: vec![
+                let mut operand_stmts = vec![
                         crate::RustStmt::Let {
                             mutable: false,
                             name: "__sifr_repeat_src".to_string(),
@@ -82,9 +81,14 @@ macro_rules! stmt_expr_binop {
                             mutable: false,
                             name: "__n".to_string(),
                             ty: None,
-                            value: count_expr,
+                            value: $emitter.materialize_reusable_value_for_ir(count_source, count_expr),
                         },
-                    ],
+                    ];
+                if !matches!(resolved_left_ty, Type::Str) {
+                    operand_stmts.swap(0, 1);
+                }
+                return Ok(Some(crate::RustExpr::Block {
+                    stmts: operand_stmts,
                     expr: Some(Box::new(crate::RustExpr::If {
                         cond: Box::new(crate::RustExpr::BinOp {
                             left: Box::new(crate::RustExpr::Ident("__n".to_string())),
@@ -187,7 +191,7 @@ macro_rules! stmt_expr_binop {
                 };
                 let is_count_like =
                     |candidate: &Type| matches!(candidate, Type::Int | Type::LiteralInt(_));
-                let (collection_expr, count_expr) = match (
+                let (collection_expr, count_source, count_expr) = match (
                     (
                         is_collection_like(resolved_left_ty),
                         is_count_like(resolved_right_ty),
@@ -197,12 +201,21 @@ macro_rules! stmt_expr_binop {
                         is_count_like(resolved_left_ty),
                     ),
                 ) {
-                    ((true, true), _) => (lowered_left.clone(), lowered_right.clone()),
-                    (_, (true, true)) => (lowered_right.clone(), lowered_left.clone()),
+                    ((true, true), _) => (lowered_left.clone(), right.as_ref(), lowered_right.clone()),
+                    (_, (true, true)) => (lowered_right.clone(), left.as_ref(), lowered_left.clone()),
                     _ => return Ok(None),
                 };
-                return Ok(Some(crate::RustExpr::Block {
-                    stmts: vec![
+                if let crate::RustExpr::Vec(elements) = &collection_expr {
+                    if let [element] = elements.as_slice() {
+                        return Ok(Some($emitter.lower_singleton_repeat_for_ir(
+                            element.clone(),
+                            count_source,
+                            count_expr,
+                            is_count_like(resolved_left_ty),
+                        )));
+                    }
+                }
+                let mut operand_stmts = vec![
                         crate::RustStmt::Let {
                             mutable: false,
                             name: "__sifr_repeat_src".to_string(),
@@ -215,9 +228,14 @@ macro_rules! stmt_expr_binop {
                             mutable: false,
                             name: "__sifr_repeat_n".to_string(),
                             ty: None,
-                            value: count_expr,
+                            value: $emitter.materialize_reusable_value_for_ir(count_source, count_expr),
                         },
-                    ],
+                    ];
+                if is_count_like(resolved_left_ty) {
+                    operand_stmts.swap(0, 1);
+                }
+                return Ok(Some(crate::RustExpr::Block {
+                    stmts: operand_stmts,
                     expr: Some(Box::new(crate::RustExpr::If {
                         cond: Box::new(crate::RustExpr::BinOp {
                             left: Box::new(crate::RustExpr::Ident("__sifr_repeat_n".to_string())),

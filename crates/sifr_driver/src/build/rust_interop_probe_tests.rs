@@ -122,6 +122,11 @@ fn structural_backend_probe_enables_the_sysroot_runtime_feature() {
     assert!(manifest.contains(
         "[patch.\"https://github.com/sifr-lang/sifr.git\"]\nsifr_runtime = { path = \"/opt/sifr/crates/sifr_runtime\" }"
     ));
+    let parsed: toml::Value = toml::from_str(&manifest).expect("probe manifest");
+    assert_eq!(
+        parsed["patch"]["crates-io"]["libsqlite3-sys"]["path"].as_str(),
+        Some("/opt/sifr/crates/sifr_runtime/third_party/libsqlite3-sys")
+    );
 }
 
 #[test]
@@ -410,6 +415,17 @@ fn probe_target_dir_honors_relative_env_override() {
             Some(std::ffi::OsString::from("target/create-pr")),
             Path::new("/workspace/sifr")
         ),
-        Path::new("/workspace/sifr/target/create-pr")
+        Path::new("/workspace/sifr/target/create-pr/rust_bridge_probe_target")
+    );
+}
+
+#[test]
+fn configured_probe_storage_is_separate_from_compiler_artifacts() {
+    assert_eq!(
+        probe_cargo_target_dir_with_env(
+            Some(std::ffi::OsString::from("/tmp/compiler-target")),
+            Path::new("/workspace/sifr")
+        ),
+        Path::new("/tmp/compiler-target/rust_bridge_probe_target")
     );
 }

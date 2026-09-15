@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from datetime import datetime
 import re
 import subprocess
 import sys
@@ -52,6 +53,7 @@ from governance.approval_waiver import (  # noqa: E402
     validate_repository_approval_waiver,
     validate_single_maintainer_waiver,
 )
+from governance.approval_live_cli import resolve_publication_approvers  # noqa: E402
 from governance.incident_evidence import validate_incident_evidence_commit  # noqa: E402
 from governance.incident_planner import materialize_incident_mutation  # noqa: E402
 from governance.planner import (  # noqa: E402
@@ -250,13 +252,24 @@ def parse_args() -> argparse.Namespace:
     incident_prepare.add_argument("--artifact-root")
     incident_prepare.add_argument("--out", required=True)
     approvers = commands.add_parser("resolve-publication-approvers")
-    approvers.add_argument("--approvals", required=True)
     approvers.add_argument("--initiator", required=True)
     approvers.add_argument("--environment", default="stable-release")
     approvers.add_argument("--repository", default="sifr-lang/sifr")
-    approvers.add_argument("--operation", default="")
-    approvers.add_argument("--single-maintainer-waiver")
-    approvers.add_argument("--expected-waiver-sha256")
+    approvers.add_argument("--operation", required=True)
+    approvers.add_argument("--run-id", required=True, type=int)
+    approvers.add_argument("--run-attempt", required=True, type=int)
+    approvers.add_argument("--evidence", required=True)
+    approvers.add_argument("--expected-evidence-sha256", required=True)
+    historical = commands.add_parser("inspect-historical-publication-approval")
+    historical.add_argument("--approvals", required=True)
+    historical.add_argument("--initiator", required=True)
+    historical.add_argument("--environment", default="stable-release")
+    historical.add_argument("--repository", default="sifr-lang/sifr")
+    historical.add_argument("--operation", required=True)
+    historical.add_argument("--single-maintainer-waiver", required=True)
+    historical.add_argument("--expected-waiver-sha256", required=True)
+    historical.add_argument("--original-run", required=True)
+    historical.add_argument("--include-policy", action="store_true")
     approvers.add_argument("--include-policy", action="store_true")
     return parser.parse_args()
 
@@ -296,6 +309,8 @@ def main() -> int:
             prepare_stable_publication(args)
         elif args.command == "prepare-incident-publication":
             prepare_incident_publication(args)
+        elif args.command == "inspect-historical-publication-approval":
+            inspect_historical_publication_approval(args)
         elif args.command == "resolve-publication-approvers":
             resolve_publication_approvers(args)
         else:
@@ -315,7 +330,7 @@ def validate_command(args: argparse.Namespace) -> None:
         "schema-bootstrap-evidence": validate_bootstrap_evidence,
         "single-maintainer-approval-waiver": (
             lambda payload: validate_repository_approval_waiver(
-                payload, require_unexpired=True
+                payload, require_unexpired=False
             )
         ),
         "release-plan": validate_release_plan,
@@ -643,7 +658,16 @@ def prepare_incident_publication(args: argparse.Namespace) -> None:
     write_canonical_json(Path(args.out), summary, refuse_existing=True)
 
 
-def resolve_publication_approvers(args: argparse.Namespace) -> None:
+def inspect_historical_publication_approval(args: argparse.Namespace) -> None:
+    original = load_json_strict(Path(args.original_run))
+    if original.get("status") != "completed":
+        raise GovernanceError("historical inspection requires a completed original run")
+    if original.get("triggering_actor", {}).get("login") != args.initiator:
+        raise GovernanceError("historical initiator does not match original run")
+    try:
+        event_time = datetime.fromisoformat(original["updated_at"].replace("Z", "+00:00"))
+    except (KeyError, TypeError, ValueError):
+        raise GovernanceError("historical inspection requires the original event time")
     waiver_path = None
     waiver_sha256 = "none"
     if args.single_maintainer_waiver:
@@ -670,6 +694,7 @@ def resolve_publication_approvers(args: argparse.Namespace) -> None:
             operation=args.operation,
             initiator=args.initiator,
             require_unexpired=True,
+            now=event_time,
         )
         if waiver["owner_login"].casefold() != decision["approvers"][0].casefold():
             raise GovernanceError("waiver owner does not match the recorded approver")

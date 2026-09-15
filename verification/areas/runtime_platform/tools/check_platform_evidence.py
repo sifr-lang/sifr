@@ -538,10 +538,20 @@ def check_locale_unicode_assumptions(_timeout_seconds: int) -> None:
 
 
 def check_install_distribution_smoke(timeout_seconds: int) -> None:
-    if shutil.which("cargo") is None:
-        raise EvidenceFailure("cargo is not available")
+    configured = os.environ.get("SIFR_RUNTIME_PLATFORM_BIN")
+    if configured:
+        binary = Path(configured)
+        if not binary.is_absolute():
+            binary = REPO_ROOT / binary
+        if not binary.is_file():
+            raise EvidenceFailure(f"configured Sifr compiler is missing: {binary}")
+        command = [str(binary), "--help"]
+    else:
+        if shutil.which("cargo") is None:
+            raise EvidenceFailure("cargo is not available")
+        command = ["cargo", "run", "--locked", "-q", "-p", "sifr", "--", "--help"]
     result = subprocess.run(
-        ["cargo", "run", "--locked", "-q", "-p", "sifr", "--", "--help"],
+        command,
         cwd=REPO_ROOT,
         text=True,
         stdout=subprocess.PIPE,
@@ -680,6 +690,33 @@ def timing_token(value: object) -> str:
 
 
 def run_self_test() -> None:
+    from unittest.mock import patch
+    from types import SimpleNamespace
+
+    with tempfile.TemporaryDirectory() as directory:
+        binary = Path(directory) / "prepared compiler"
+        binary.touch()
+        with patch.dict(os.environ, {"SIFR_RUNTIME_PLATFORM_BIN": str(binary)}), \
+             patch("subprocess.run", return_value=SimpleNamespace(
+                 returncode=0, stdout="Usage: sifr", stderr="")) as run:
+            check_install_distribution_smoke(1)
+            assert run.call_args.args[0] == [str(binary), "--help"]
+            binary.unlink()
+            try:
+                check_install_distribution_smoke(1)
+            except EvidenceFailure:
+                pass
+            else:
+                raise AssertionError("missing configured compiler silently rebuilt")
+            assert run.call_count == 1
+        with patch.dict(os.environ, {}, clear=True), \
+             patch("shutil.which", return_value="/tools/cargo"), \
+             patch("subprocess.run", return_value=SimpleNamespace(
+                 returncode=0, stdout="Commands:", stderr="")) as run:
+            check_install_distribution_smoke(1)
+            assert run.call_args.args[0] == [
+                "cargo", "run", "--locked", "-q", "-p", "sifr", "--", "--help"]
+    print("[platform-evidence-self-test] pass prepared compiler selection")
     support = load_supported_platforms()
     evidence = load_evidence_manifest()
     mutations: list[tuple[str, Callable[[], None]]] = [

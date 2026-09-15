@@ -7,4 +7,4 @@ def main() -> None:
     drained: Result[int, ClosedError] = channel.pop()
     exhausted: Result[int, ClosedError] = channel.pop()
     assert str(drained) == "Ok(7)"
-    assert str(exhausted) == "Err(ClosedError)"
+    assert str(exhausted) == 'Err(ClosedError { message: "channel is closed" })'

@@ -35,7 +35,7 @@ pub fn connect_migration_runtime(
     let ledger_identity = ledger_identity.into();
     if ledger_identity.is_empty()
         || dialect.family != "sqlite"
-        || dialect.server_version != "3.53.2"
+        || dialect.server_version != "3.53.4"
     {
         return Err("SQLite migration profile identity is invalid".to_string());
     }
@@ -50,7 +50,7 @@ pub fn connect_migration_runtime(
     connection
         .pragma_update(None, "foreign_keys", true)
         .map_err(|_| "cannot enable SQLite foreign keys".to_string())?;
-    if rusqlite::version_number() != 3_053_002 {
+    if rusqlite::version_number() != 3_053_004 {
         return Err("SQLite migration library does not match the profile".to_string());
     }
     let capabilities = dialect

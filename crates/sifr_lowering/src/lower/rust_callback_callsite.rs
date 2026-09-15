@@ -80,7 +80,14 @@ pub(in crate::lower) fn validate_threadsafe_callback_captures(
             .cloned()
             .unwrap_or_default();
         for capture_name in &mutated_captures {
-            let capture_ty = nested_capture_type(name, capture_name, ctx);
+            // Mutation summaries also include names reached through captured helpers.
+            // Those are checked below through their qualified capture paths.
+            let Some((_, capture_ty)) = captures
+                .iter()
+                .find(|(captured, _)| captured == capture_name)
+            else {
+                continue;
+            };
             ctx.error_with_code_at(
                 DiagnosticCode::RUST_CALLBACK_CONTRACT,
                 format!(

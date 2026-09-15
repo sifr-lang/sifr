@@ -43,7 +43,9 @@ def portable_graph(crate_root: Path, revision: str) -> dict[str, str]:
     lock_path = crate_root / "Cargo.lock"
     manifest = tomllib.loads(manifest_path.read_text())
     lock = tomllib.loads(lock_path.read_text())
-    if manifest.get("patch") or manifest.get("replace"):
+    native_patch = {"crates-io": {"libsqlite3-sys": {"git": GIT_SOURCE, "rev": revision}}}
+    patches = manifest.get("patch", {})
+    if manifest.get("replace") or (patches and patches != native_patch):
         raise ValueError(f"{manifest_path}: portable graph must not override sources")
     sections = [manifest, *manifest.get("target", {}).values()]
     for section in sections:
@@ -57,7 +59,9 @@ def portable_graph(crate_root: Path, revision: str) -> dict[str, str]:
                     raise ValueError(f"{manifest_path}: stale Sifr revision for {name}")
     expected_source = f"git+{GIT_SOURCE}?rev={revision}#{revision}"
     for package in lock.get("package", []):
-        if package["name"] in {"sifr_runtime", "sifr_stdlib"}:
+        if package["name"] == "libsqlite3-sys" and patches != native_patch:
+            raise ValueError(f"{manifest_path}: missing qualified SQLite patch")
+        if package["name"] in {"sifr_runtime", "sifr_stdlib", "libsqlite3-sys"}:
             if package.get("source") != expected_source:
                 raise ValueError(f"{lock_path}: nonportable or stale {package['name']}")
     return {name: hashlib.sha256((crate_root / name).read_bytes()).hexdigest()

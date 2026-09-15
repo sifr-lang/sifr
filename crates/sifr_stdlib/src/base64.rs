@@ -1,4 +1,5 @@
 use base64::prelude::{BASE64_STANDARD, BASE64_URL_SAFE, Engine as _};
+
 use sifr_runtime::interop::SifrIntBridge;
 use std::collections::HashSet;
 
@@ -212,4 +213,20 @@ fn decode_base32(
         }
     }
     String::from_utf8(out).map_err(|error| error.to_string())
+}
+
+#[cfg(test)]
+mod release_policy_tests {
+    use super::*;
+
+    #[test]
+    fn standard_and_url_safe_presets_remain_scalar_with_transitive_features() {
+        fn scalar(_: &base64::engine::general_purpose::GeneralPurpose) {}
+        scalar(&BASE64_STANDARD);
+        scalar(&BASE64_URL_SAFE);
+        assert_eq!(base64_encode("user:pass"), "dXNlcjpwYXNz");
+        assert_eq!(base64_decode("dXNlcjpwYXNz").as_deref(), Ok("user:pass"));
+        assert!(base64_decode("Zh==").is_err());
+        assert!(base64_decode("Zg=").is_err());
+    }
 }

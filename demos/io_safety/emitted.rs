@@ -1,43 +1,63 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::IOError;
-    pub(crate) fn read_text(path: &str) -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn read_text(path: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::read_text(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::read_lines(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn append_text(path: &str, content: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn append_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::append_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn getcwd() -> Result<String, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn getcwd() -> Result<String, IOError> {
         ::sifr_stdlib::fs::getcwd().map_err(sifr_generated_io_err)
     }
-    pub(crate) fn listdir(path: &str) -> Result<Vec<String>, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn listdir(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::listdir(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn mkdir(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn mkdir(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn remove_file(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
+    fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::copy_file(src, dst).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn rmdir_all(path: &str) -> Result<(), IOError> {
+    fn rmdir_all(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::rmdir_all(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn copy(src: &str, dst: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn copy(src: &str, dst: &str) -> Result<(), IOError> {
         copy_file(src, dst)
     }
-    pub(crate) fn rmtree(path: &str) -> Result<(), IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn rmtree(path: &str) -> Result<(), IOError> {
         rmdir_all(path)
     }
-    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+    fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
         let kind = {
             let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
@@ -69,7 +89,10 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for IOError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    append_text, copy, getcwd, listdir, mkdir, read_lines, read_text, remove_file, rmtree,
+    write_text,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 fn demo_safe_read_write() {

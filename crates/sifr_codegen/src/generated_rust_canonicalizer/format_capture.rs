@@ -9,15 +9,29 @@ struct Capture {
     range: Range<usize>,
 }
 
-pub(super) fn names(rust_macro: &syn::Macro) -> HashSet<String> {
-    format_string(rust_macro)
+pub(crate) fn names(rust_macro: &syn::Macro) -> HashSet<String> {
+    let mut names: HashSet<String> = format_string(rust_macro)
         .map(|format| {
             captures(&format)
                 .into_iter()
                 .map(|capture| capture.name)
                 .collect()
         })
-        .unwrap_or_default()
+        .unwrap_or_default();
+    // Explicit named arguments occupy their format slots without a lexical capture.
+    if let Ok(arguments) = rust_macro
+        .parse_body_with(syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated)
+    {
+        for argument in arguments {
+            if let syn::Expr::Assign(argument) = argument
+                && let syn::Expr::Path(path) = argument.left.as_ref()
+                && let Some(name) = path.path.get_ident()
+            {
+                names.remove(&name.to_string());
+            }
+        }
+    }
+    names
 }
 
 pub(super) fn rename(rust_macro: &mut syn::Macro, from: &str, to: &str) -> bool {
@@ -75,6 +89,10 @@ fn format_argument_index(rust_macro: &syn::Macro) -> Option<usize> {
         "assert_eq" | "assert_ne" => Some(2),
         _ => None,
     }
+}
+
+pub(crate) fn is_format_macro(rust_macro: &syn::Macro) -> bool {
+    format_argument_index(rust_macro).is_some()
 }
 
 fn captures(format: &str) -> Vec<Capture> {

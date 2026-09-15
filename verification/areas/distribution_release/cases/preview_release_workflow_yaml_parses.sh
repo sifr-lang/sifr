@@ -62,7 +62,7 @@ publication_required = (
     "'sifr-release-drill' || 'sifr-release-index'",
     "uses: ./.github/workflows/release-publication-prepare.yml",
     "name: ${{ inputs.governance_mode == 'preview' && 'preview-release' || 'stable-release' }}",
-    "actions/runs/${GITHUB_RUN_ID}/approvals",
+    '--run-id "${GITHUB_RUN_ID}" --run-attempt "${GITHUB_RUN_ATTEMPT}"',
     "resolve-publication-approvers",
     "--initiator \"${GITHUB_TRIGGERING_ACTOR}\"",
     "generate-schema-bootstrap-index",

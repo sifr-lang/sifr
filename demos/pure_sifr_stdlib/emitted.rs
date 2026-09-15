@@ -1,46 +1,49 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::{ParseError, SifrGeneratedStdlibSifrX2ehashlibX2eHashObject};
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn base64_encode(s: &str) -> String {
+    use ::sifr_runtime::SifrInt;
+    fn base64_encode(s: &str) -> String {
         ::sifr_stdlib::base64::base64_encode(s)
     }
-    pub(crate) fn base64_decode(s: &str) -> Result<String, ParseError> {
+    fn base64_decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::base64_decode(s).map_err(|sifr_generated_bridge_error| ParseError {
             message: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(crate) fn sha256_bytes(data: &[u8]) -> Vec<u8> {
+    fn sha256_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha256_bytes(data)
     }
-    pub(crate) fn md5_bytes(data: &[u8]) -> Vec<u8> {
+    fn md5_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::md5_bytes(data)
     }
-    pub(crate) fn sha1_bytes(data: &[u8]) -> Vec<u8> {
+    fn sha1_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha1_bytes(data)
     }
-    pub(crate) fn sha224_bytes(data: &[u8]) -> Vec<u8> {
+    fn sha224_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha224_bytes(data)
     }
-    pub(crate) fn sha384_bytes(data: &[u8]) -> Vec<u8> {
+    fn sha384_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha384_bytes(data)
     }
-    pub(crate) fn sha512_bytes(data: &[u8]) -> Vec<u8> {
+    fn sha512_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha512_bytes(data)
     }
-    pub(crate) fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
+    fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2b_bytes(data)
     }
-    pub(crate) fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
+    fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2s_bytes(data)
     }
-    pub(crate) fn b64encode(s: &str) -> String {
+    #[must_use]
+    pub fn b64encode(s: &str) -> String {
         base64_encode(s)
     }
-    pub(crate) fn b64decode(s: &str) -> Result<String, ParseError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn b64decode(s: &str) -> Result<String, ParseError> {
         base64_decode(s)
     }
-    pub(crate) fn sifr_generated_build_hash(
+    fn sifr_generated_build_hash(
         algorithm: &str,
         data: &[u8],
     ) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
@@ -118,7 +121,7 @@ mod sifr_generated_generated_support {
             SifrInt::from_i64(0),
         )
     }
-    pub(crate) fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
+    fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
         if algorithm == "md5" {
             return md5_bytes(data);
         } else if algorithm == "sha1" {
@@ -138,7 +141,8 @@ mod sifr_generated_generated_support {
         }
         Vec::new()
     }
-    pub(crate) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
+    #[must_use]
+    pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
             let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
@@ -152,20 +156,22 @@ mod sifr_generated_generated_support {
             sifr_generated_hex
         }
     }
-    pub(crate) fn sha256(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+    #[must_use]
+    pub fn sha256(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         sifr_generated_build_hash(&"sha256".to_string(), data)
     }
     #[expect(
         clippy::approx_constant,
         reason = "generated Rust preserves this exact typed Sifr source contract"
     )]
-    pub(crate) const PI: f64 = 3.141_592_653_589_793_f64;
-    pub(crate) fn sqrt(x: f64) -> f64 {
+    pub const PI: f64 = 3.141_592_653_589_793_f64;
+    #[must_use]
+    pub fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::sifr_generated_hash_hex;
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
@@ -218,7 +224,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ParseError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{PI, b64decode, b64encode, sha256, sqrt};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ParseError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ehashlibX2eHashObject;

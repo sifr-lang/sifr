@@ -78,7 +78,10 @@ fn compile_with_contract(main: &str, contract: &str) -> ProjectLowering {
         ("fixture.defaults".to_string(), parse_suite(contract)),
         ("main".to_string(), parse_suite(main)),
     ]);
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     collect_project_hir_modules(&modules, stdlib_defs)
         .expect("adapted defaults project should compile")
 }
@@ -204,7 +207,10 @@ class Model(Contract):
             ),
         ),
     ]);
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("re-exported const descriptor arguments should compile");
     let selection = compiled
@@ -384,7 +390,10 @@ class Child(Parent[int]):
             ),
         ),
     ]);
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("imported generic adapted parent should compile");
     let selection = compiled
@@ -417,7 +426,10 @@ class Child(Parent):
             ),
         ),
     ]);
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let errors = match collect_project_hir_modules(&modules, stdlib_defs) {
         Ok(_) => panic!("an incompatible inherited field override must fail"),
         Err(errors) => errors,
@@ -493,7 +505,10 @@ class Model(Contract):
             ),
         ),
     ]);
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("reexported default descriptors should compile");
     let defaults = compiled
@@ -603,7 +618,10 @@ def build() -> Result[Model, ContractError | RustPanicError]:
             ),
         ),
     ]);
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("adapted factory model should specialize");
     let outputs = compiled
@@ -652,7 +670,10 @@ class Invalid(Contract):
             ("fixture.defaults".to_string(), parse_suite(CONTRACT)),
             ("main".to_string(), parse_suite(&source)),
         ]);
-        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let stdlib_defs = compile_stdlib()
+            .expect("stdlib should compile")
+            .defs
+            .clone();
         let errors = match collect_project_hir_modules(&modules, stdlib_defs) {
             Ok(_) => panic!("invalid adapter default should fail"),
             Err(errors) => errors,

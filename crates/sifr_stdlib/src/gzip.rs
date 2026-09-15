@@ -38,4 +38,20 @@ mod tests {
         let err = gzip_decompress_bytes(&[]).expect_err("empty gzip payload should fail");
         assert!(!err.to_string().is_empty());
     }
+
+    #[test]
+    fn gzip_adapter_rejects_every_truncated_prefix() {
+        let compressed = gzip_compress_bytes("sifr gzip incomplete-stream contract");
+        assert!(!compressed.is_empty());
+        for length in 0..compressed.len() {
+            assert!(
+                gzip_decompress_bytes(&compressed[..length]).is_err(),
+                "truncated gzip prefix of {length} bytes must report an error"
+            );
+        }
+        assert_eq!(
+            gzip_decompress_bytes(&compressed).expect("complete gzip stream should decompress"),
+            "sifr gzip incomplete-stream contract"
+        );
+    }
 }

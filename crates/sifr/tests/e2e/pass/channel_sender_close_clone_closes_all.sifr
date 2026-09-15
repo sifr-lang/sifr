@@ -13,5 +13,5 @@ async def main() -> Result[None, ClosedError]:
 
     assert str(sent_before_close) == "Ok(())"
     assert str(received) == "Ok(11)"
-    assert str(sent_after_close) == "Err(ClosedError)"
+    assert str(sent_after_close) == 'Err(ClosedError { message: "channel is closed" })'
     return None

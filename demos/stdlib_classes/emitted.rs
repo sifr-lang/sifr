@@ -1,9 +1,10 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) use ::std::collections::HashMap;
-    pub(crate) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    use ::sifr_runtime::SifrInt;
+    use ::std::collections::HashMap;
+    #[must_use]
+    pub fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
         items: &[T],
     ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
@@ -382,7 +383,7 @@ mod sifr_generated_project_nominals {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::from_list;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
 fn main() {
@@ -401,11 +402,11 @@ fn main() {
     println!("{}", c.get(&"missing".to_string(), &SifrInt::from_i64(0)));
     println!("{}", c.total());
     println!("{:?}", c.most_common(&Some(SifrInt::from_i64(2).clone())));
-    c.increment(&"banana".to_string());
-    c.increment(&"banana".to_string());
+    (&mut c).increment(&"banana".to_string());
+    (&mut c).increment(&"banana".to_string());
     println!("{}", c.get(&"banana".to_string(), &SifrInt::from_i64(0)));
     println!("{}", c.total());
-    c.increment(&"date".to_string());
+    (&mut c).increment(&"date".to_string());
     println!("{}", c.get(&"date".to_string(), &SifrInt::from_i64(0)));
     println!("{}", c.total());
     let c2: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =

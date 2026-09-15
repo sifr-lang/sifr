@@ -1,6 +1,25 @@
 use super::{HirExpr, RustEmitter, RustExpr, Type};
 
 impl RustEmitter {
+    /// Mapping defaults cross an owned value boundary, including nested calls
+    /// dispatched directly through the builtin method registry.
+    pub(crate) fn adapt_owned_mapping_default(
+        &mut self,
+        object_ty: &Type,
+        method: &str,
+        args: &[HirExpr],
+        lowered_args: &mut [crate::RustExpr],
+    ) {
+        if let Type::Dict(_, value_ty) = object_ty.resolve_alias()
+            && matches!(method, "get" | "pop" | "remove")
+            && let ([_, argument], [_, lowered]) = (args, lowered_args)
+        {
+            *lowered =
+                self.coerce_collection_element_for_registry(value_ty, argument, lowered.clone());
+            *lowered = self.materialize_reusable_value_for_ir(argument, lowered.clone());
+        }
+    }
+
     pub(crate) fn coerce_collection_element_for_registry(
         &self,
         target_ty: &Type,

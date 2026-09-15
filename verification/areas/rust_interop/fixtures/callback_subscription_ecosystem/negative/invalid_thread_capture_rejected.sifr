@@ -112,7 +112,10 @@ def verify_mixed_capture_mutation_rejected() -> Result[Subscription, Subscriptio
 
     def mixed_handler(event: str) -> Result[None, SubscriptionError]:
         assert label == "mixed"
-        seen[0] = event
+        try:
+            seen[0] = event
+        except IndexError:
+            raise SubscriptionError("unexpected fixture index")
         return None
 
     return subscribe(mixed_handler)

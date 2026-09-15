@@ -443,10 +443,38 @@ pub(crate) fn collect_reassigned_vars(stmts: &[HirStmt]) -> HashSet<String> {
 }
 
 pub(crate) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(String, Type)> {
+    // Handler bindings exist only in their handler. Exclude those exact uses,
+    // not all uses of the spelling: an enclosing capture can share the name.
+    let mut handler_local_uses = HashSet::new();
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut |stmt| {
+            if let HirStmt::TryExcept { handlers, .. } = stmt {
+                for handler in handlers {
+                    if let Some(binding) = &handler.name {
+                        traversal::walk_stmts(
+                            &handler.body,
+                            TraversalConfig::LOCAL_SCOPE_ONLY,
+                            &mut |_| {},
+                            &mut |expr| {
+                                if matches!(expr, HirExpr::Name { name, .. } if name == binding) {
+                                    handler_local_uses.insert(crate::body_analysis::expr_key(expr));
+                                }
+                            },
+                        );
+                    }
+                }
+            }
+        },
+        &mut |_| {},
+    );
     let mut refs: HashMap<String, Type> = HashMap::new();
     let mut on_stmt = |_stmt: &HirStmt| {};
     let mut on_expr = |expr: &HirExpr| {
-        if let HirExpr::Name { name, ty, .. } = expr {
+        if let HirExpr::Name { name, ty, .. } = expr
+            && !handler_local_uses.contains(&crate::body_analysis::expr_key(expr))
+        {
             refs.entry(name.clone()).or_insert_with(|| ty.clone());
         }
     };

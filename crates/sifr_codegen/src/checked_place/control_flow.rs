@@ -1,6 +1,6 @@
 use super::{
-    CheckedDictReadGuard, RustEmitter, RustStmt, Type, checked_place_expr_token,
-    checked_place_read_key, condition_excludes_checked_sequence_read,
+    CheckedDictReadGuard, CheckedPlaceFailureKind, RustEmitter, RustStmt, Type,
+    checked_place_expr_token, checked_place_read_key, condition_excludes_checked_sequence_read,
     condition_only_excludes_checked_sequence_read, condition_supports_checked_sequence_read,
     expr_mentions_name,
 };
@@ -440,7 +440,11 @@ impl RustEmitter {
         elif_clauses: &[(crate::HirExpr, Vec<crate::HirStmt>)],
         else_body: Option<&[crate::HirStmt]>,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        if !elif_clauses.is_empty() {
+        if self
+            .checked_read_failure_type(CheckedPlaceFailureKind::Key)
+            .is_some()
+            || !elif_clauses.is_empty()
+        {
             return Ok(None);
         }
         let Some(guard) = self.checked_dict_read_guard_for_ir(condition)? else {
@@ -485,7 +489,11 @@ impl RustEmitter {
         elif_clauses: &[(crate::HirExpr, Vec<crate::HirStmt>)],
         else_body: Option<&[crate::HirStmt]>,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        if !elif_clauses.is_empty() {
+        if self
+            .checked_read_failure_type(CheckedPlaceFailureKind::Index)
+            .is_some()
+            || !elif_clauses.is_empty()
+        {
             return Ok(None);
         }
         let negated = matches!(condition, crate::HirExpr::UnaryOp { op, .. } if op == "not");
@@ -551,6 +559,12 @@ impl RustEmitter {
         condition: &crate::HirExpr,
         body: &[crate::HirStmt],
     ) -> Result<Vec<CheckedDictReadGuard>, crate::CodegenError> {
+        if self
+            .checked_read_failure_type(CheckedPlaceFailureKind::Index)
+            .is_some()
+        {
+            return Ok(Vec::new());
+        }
         let mut guards = Vec::new();
         for read in self.body_analysis.proven_reads_in(body) {
             let crate::HirExpr::Index { object, index, .. } = &read else {
@@ -678,6 +692,12 @@ impl RustEmitter {
         iter: &crate::HirExpr,
         body: &[crate::HirStmt],
     ) -> Result<Vec<CheckedDictReadGuard>, crate::CodegenError> {
+        if self
+            .checked_read_failure_type(CheckedPlaceFailureKind::Index)
+            .is_some()
+        {
+            return Ok(Vec::new());
+        }
         let iter = match iter {
             crate::HirExpr::IteratorCall { op, args, .. }
                 if matches!(op, sifr_ir::HirIteratorOp::Iter) && args.len() == 1 =>
@@ -733,6 +753,12 @@ impl RustEmitter {
         &mut self,
         stmt: &crate::HirStmt,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        if self
+            .checked_read_failure_type(CheckedPlaceFailureKind::Key)
+            .is_some()
+        {
+            return Ok(None);
+        }
         let crate::HirStmt::If {
             condition,
             then_body,
@@ -771,6 +797,12 @@ impl RustEmitter {
         stmt: &crate::HirStmt,
         following_stmts: Option<&[crate::HirStmt]>,
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        if self
+            .checked_read_failure_type(CheckedPlaceFailureKind::Index)
+            .is_some()
+        {
+            return Ok(None);
+        }
         let Some(following_stmts) = following_stmts else {
             return Ok(None);
         };

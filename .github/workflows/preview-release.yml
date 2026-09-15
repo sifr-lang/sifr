@@ -156,7 +156,7 @@ jobs:
           submodules: recursive
           persist-credentials: false
 
-      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0 # Rust 1.98.0
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
         with:
           targets: ${{ matrix.target }}
 

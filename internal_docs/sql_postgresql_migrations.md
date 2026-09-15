@@ -28,7 +28,7 @@ The PostgreSQL migration path uses these workspace dependencies:
 | --- | --- | --- |
 | Server protocol | `tokio-postgres` | 0.7.18 |
 | TLS bridge | `tokio-postgres-rustls` | 0.14.0 |
-| TLS | `rustls` | 0.23.43 |
+| TLS | `rustls` | 0.23.44 |
 | Platform trust | `rustls-platform-verifier` | 0.7.0 |
 | Async I/O | `tokio` | 1.53.1 |
 | Provider-version checks | `semver` | 1.0.28 |

@@ -41,25 +41,25 @@ fn test_build_native_build_script_trusted_artifacts() {
         first_artifacts
             .get("sifr-cc-evidence.txt")
             .map(Vec::as_slice),
-        Some(b"cc=1.4.4;compiled=sifr_cc_probe".as_slice())
+        Some(b"cc=1.4.5;compiled=sifr_cc_probe".as_slice())
     );
     assert_eq!(
         first_artifacts
             .get("sifr-bindgen-evidence.txt")
             .map(Vec::as_slice),
-        Some(b"bindgen=0.72.1;function=sifr_bindgen_probe".as_slice())
+        Some(b"bindgen=0.73.2;function=sifr_bindgen_probe".as_slice())
     );
     assert_eq!(
         first_artifacts
             .get("sifr-cxx-evidence.txt")
             .map(Vec::as_slice),
-        Some(b"cxx=1.0.199;bridge=sifr_cxx_probe".as_slice())
+        Some(b"cxx=1.0.200;bridge=sifr_cxx_probe".as_slice())
     );
     assert_eq!(
         first_artifacts
             .get("sifr-zstd-evidence.txt")
             .map(Vec::as_slice),
-        Some(b"zstd=0.13.3;level=3".as_slice())
+        Some(b"zstd=0.14.0;level=3".as_slice())
     );
     assert!(
         first_artifacts["sifr-bindgen-bindings.rs"]
@@ -77,7 +77,7 @@ fn test_build_native_build_script_trusted_artifacts() {
     let output = built_package_output(&entrypoint);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
-        "Ok(\"cc=1.4.4;compiled=sifr_cc_probe|bindgen=0.72.1;function=sifr_bindgen_probe|cxx=1.0.199;bridge=sifr_cxx_probe;value=1000198|zstd=0.13.3;level=3|compressed=zstd-roundtrip\")"
+        "Ok(\"cc=1.4.5;compiled=sifr_cc_probe|bindgen=0.73.2;function=sifr_bindgen_probe|cxx=1.0.200;bridge=sifr_cxx_probe;value=1000198|zstd=0.14.0;level=3|compressed=zstd-roundtrip\")"
     );
     assert!(
         output.stderr.is_empty(),

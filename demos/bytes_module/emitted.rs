@@ -1,7 +1,7 @@
 // src/main.rs
 mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+    use ::sifr_runtime::SifrInt;
+    pub fn assert_vector_eq(actual: &[String], expected: &[String]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -28,7 +28,7 @@ mod sifr_generated_generated_support {
             i = &i + &SifrInt::from_i64(1);
         }
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &SifrInt::from(actual.len()) {
@@ -68,7 +68,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ParseError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{assert_bool_vector_eq, assert_vector_eq};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ParseError;
 fn render_opt_int(value: Option<SifrInt>) -> String {

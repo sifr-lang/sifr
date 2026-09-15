@@ -235,7 +235,7 @@ sentinel can execute. No `protoc` installation is required.
 
 The `cargo_locked_offline` evidence executes package `sifr check`, `sifr build`,
 and `sifr run` as a `cargo-probe`. The scenario uses exact-pinned
-`indexmap 2.14.0` with default features disabled under `--locked`, `--offline`,
+`indexmap 2.14.2` with default features disabled under `--locked`, `--offline`,
 and `--frozen`, preserves the authoritative package lock, and observes a cold
 probe cache miss followed by a warm cache hit. Generated lock preparation
 admits only exact package identities and checksums found in authoritative locks

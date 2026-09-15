@@ -132,6 +132,9 @@ impl RustEmitter {
             let unadapted_option_arg = lowered_arg.clone();
             let mut consuming_value_adapted = false;
             if convention.is_owned() {
+                if crate::helpers::is_logically_copy_rust_move_type(&effective_arg_ty) {
+                    lowered_arg = self.materialize_reusable_value_for_ir(arg, lowered_arg);
+                }
                 (lowered_arg, consuming_value_adapted) = self.adapt_consuming_call_argument_for_ir(
                     param_ty,
                     &effective_arg_ty,

@@ -14,6 +14,17 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
     );
 
     assert!(result.rust_source.contains("struct __SifrTaskScope"));
+    assert!(result.rust_source.contains("fn from_async_cleanup("));
+    assert!(
+        result
+            .rust_source
+            .contains("AsyncCleanupEvidence::CleanupFailed")
+    );
+    assert!(
+        result
+            .rust_source
+            .contains("AsyncCleanupEvidence::CleanupTimedOut")
+    );
     assert!(
         result
             .rust_source
@@ -570,6 +581,9 @@ fn test_failure_cancellation_error_annotation_lowers_to_private_evidence_type() 
 
     assert!(result.rust_source.contains("struct __SifrFailure<E>"));
     assert!(result.rust_source.contains("struct CancellationError"));
+    assert!(!result.rust_source.contains("from_async_cleanup"));
+    assert!(!result.rust_source.contains("::sifr_runtime"));
+    assert!(result.required_features.is_empty());
     assert!(
         result
             .rust_source
@@ -590,6 +604,9 @@ fn test_failure_annotation_lowers_to_private_failure_type() {
     );
 
     assert!(result.rust_source.contains("struct __SifrFailure<E>"));
+    assert!(!result.rust_source.contains("from_async_cleanup"));
+    assert!(!result.rust_source.contains("::sifr_runtime"));
+    assert!(result.required_features.is_empty());
     assert!(result.rust_source.contains("primary: E"));
     assert!(
         result

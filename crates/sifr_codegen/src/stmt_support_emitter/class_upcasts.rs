@@ -229,6 +229,18 @@ impl RustEmitter {
         else {
             return lowered;
         };
+        // Root Error has a direct consuming conversion from each concrete error.
+        // A data ancestor need not itself be an error (an explicit Error marker
+        // may be introduced by the child), so never discard the child's message
+        // by first converting it to that data ancestor.
+        if target_ty.is_builtin_error_base() {
+            return crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "::std::convert::Into::<Error>::into".to_string(),
+                ])),
+                args: vec![lowered],
+            };
+        }
         for (index, ancestor) in ancestors.iter().take(target_index + 1).enumerate() {
             let rendered_target = if index == target_index {
                 self.render_rust_type_with_generics(target_ty)

@@ -135,6 +135,8 @@ pub(super) fn try_lower_simple_list_comp_expr(
 
     let result_ident = "__sifr_list_comp".to_string();
     let lowered_expr = try_lower_leaf_or_name_expr(expr)?;
+    let lowered_expr =
+        crate::ownership_plan::materialize_comprehension_value(expr, lowered_expr, generators);
     let lowered_expr = match resolve_alias_type(ty) {
         Type::List(element_ty) => crate::helpers::adapt_collection_value_for_target(
             element_ty.as_ref(),
@@ -721,6 +723,12 @@ pub(super) fn try_lower_none_identity_compare_expr(
     } else {
         return None;
     };
+    if !matches!(other, HirExpr::Name { .. } | HirExpr::NoneLiteral)
+        && !is_option_like_simple(other.ty())
+    {
+        // The structured path preserves effects before folding a typed comparison.
+        return None;
+    }
     if matches!(other, HirExpr::NoneLiteral) || matches!(resolve_alias_type(other.ty()), Type::None)
     {
         return Some(RustExpr::Literal(RustLiteral::Bool(is_equal_op)));
@@ -780,11 +788,10 @@ pub(super) fn try_lower_guarded_option_compare_expr(
     };
     let mut lowered_other = try_lower_simple_compare_operand_expr(other_side)?;
     if !crate::helpers::is_copy_type_for_codegen(other_side.ty()) {
-        lowered_other = RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Paren(Box::new(lowered_other))),
-            method: "clone".to_string(),
-            args: vec![],
-        };
+        lowered_other = crate::ownership_plan::materialize_owned_value(
+            other_side.ty(),
+            RustExpr::Paren(Box::new(lowered_other)),
+        );
     }
     let lowered_some = RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Some".to_string()])),

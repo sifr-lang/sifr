@@ -116,10 +116,24 @@ fn maintained_locks_use_one_current_polars_family() {
 #[test]
 fn runtime_bridge_uses_polars_0_55_dataframe_sortedness() {
     assert!(BRIDGE_SOURCE.contains("DataFrameIsSorted"));
-    assert!(BRIDGE_SOURCE.contains(".is_sorted(&[\"value\".into()], &[false], &[false])"));
+    assert!(sortedness_error_chain(BRIDGE_SOURCE));
     assert!(BRIDGE_SOURCE.contains("|| !polars_sorted"));
-    assert!(BRIDGE_SOURCE.contains(".map_err(display_error)?"));
-    assert!(!BRIDGE_SOURCE.contains("unwrap_or"));
+}
+
+fn sortedness_error_chain(source: &str) -> bool {
+    let compact: String = source.chars().filter(|c| !c.is_whitespace()).collect();
+    compact.contains("letpolars_sorted=state.polars.is_sorted(&[\"value\".into()],&[false],&[false]).map_err(display_error)?;")
+}
+
+#[test]
+fn sortedness_rejects_fallback_despite_unrelated_error_propagation() {
+    let broken = BRIDGE_SOURCE.replace(
+        ".is_sorted(&[\"value\".into()], &[false], &[false])\n        .map_err(display_error)?",
+        ".is_sorted(&[\"value\".into()], &[false], &[false]).unwrap_or(true)",
+    );
+    assert_ne!(broken, BRIDGE_SOURCE);
+    assert!(broken.contains(".map_err(display_error)?"));
+    assert!(!sortedness_error_chain(&broken));
 }
 
 fn assert_dependency(dependencies: &toml::Value, optional: Option<bool>) {

@@ -3,6 +3,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
+python3 "${repo_root}/scripts/check_node_toolchain.py"
 work_root="$(mktemp -d "${TMPDIR:-/tmp}/sifr-stable-editor.XXXXXX")"
 trap 'rm -rf "${work_root}"' EXIT
 

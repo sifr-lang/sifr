@@ -30,16 +30,21 @@ provider uses this exact stable set:
 | --- | --- | ---: | --- |
 | SQLite grammar and AST | Syntaqlite | 0.9.0 | `analysis`, `fmt`, `pin-cflags`, `pin-version`, `serde`, and `sqlite` |
 | SQLite driver | `rusqlite` | 0.40.2 | `bundled`, `cache`, `hooks`, `limits`, and `unlock_notify` |
-| Native SQLite binding | `libsqlite3-sys` | 0.38.2 | `bundled` |
-| Bundled SQLite | SQLite amalgamation | 3.53.2 | default bundled compile flags |
-| Component C toolchain | WASI SDK | 33 | WASI Preview 2 target |
+| Native SQLite binding | `libsqlite3-sys` | 0.38.2 plus authenticated source patch | `bundled` |
+| Bundled SQLite | SQLite amalgamation | 3.53.4 | default bundled compile flags |
+| Component C toolchain | WASI SDK | 34 | WASI Preview 2 target |
 | Component ABI generator | `wit-bindgen` | 0.61.1 | macros, reallocation, and standard support |
 | Component capability virtualizer | WASI-Virt | 0.2.0 at `448f6df8f688cee5d6995e96b1ffc31f9bf00742` | deny-by-default WASI composition |
 | Async coordination | Tokio | 1.53.1 | macros, runtime, synchronization, and time |
 
-Cargo sets `SYNTAQLITE_SQLITE_VERSION=3053002` for all repository builds. No
+The regenerated component uses the authenticated [WASI SDK 34 release](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-34).
+Its actual compiler, sysroot, source, and artifact digests are recorded by the
+[component build workflow](compiler_component_builds.md). This does not replace
+the historical native library-matrix evidence or change SQLite's source selection.
+
+Cargo sets `SYNTAQLITE_SQLITE_VERSION=3053004` for all repository builds. No
 `SYNTAQLITE_CFLAG_*` value is set. Therefore, the parser grammar and the bundled
-runtime use SQLite 3.53.2 with the same selected compile-flag set. The library
+runtime use SQLite 3.53.4 with the same selected compile-flag set. The library
 matrix executes the bundled library, reads `sqlite3_libversion_number()`, and
 records `PRAGMA compile_options`. Compiler-identification strings are observed
 but are not portable qualification inputs.
@@ -55,7 +60,7 @@ the artifact, so the host grants no WASI capability.
 
 ## Supported library
 
-The provider supports bundled SQLite 3.53.2. A profile must select this exact
+The provider supports bundled SQLite 3.53.4. A profile must select this exact
 version. A component, schema, cache, or runtime from another version is an
 error.
 
@@ -64,7 +69,7 @@ error.
 provider = "sifr_sql_sqlite"
 family = "sqlite"
 source = "db/schema.sql"
-server-version = "3.53.2"
+server-version = "3.53.4"
 search-path = ["main"]
 compile-flags = []
 required-features = ["json"]
@@ -314,3 +319,9 @@ locking, corruption, catalog parity, common-engine rebuilds, drift, checksums,
 explicit rollback, provisioning, portable requirements, editor behavior,
 properties, malformed input, and a warmed statement-cache performance budget.
 It records the observed library number and runtime compile options.
+
+The native source patch preserves the registry wrapper API and replaces only the
+four upstream SQLite C/header/binding files. Its base archive checksum and exact
+upstream revision are recorded in
+[the packaged source receipt](../crates/sifr_runtime/third_party/libsqlite3-sys/sifr-source.json).
+The patched package is not the unchanged libsqlite3-sys registry archive.

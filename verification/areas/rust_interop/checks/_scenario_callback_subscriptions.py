@@ -62,7 +62,7 @@ def validate_callback_subscription_scenario(
         ("notify", "=8.2.0", None, None),
         (
             "redis",
-            "=1.6.0",
+            "=1.7.0",
             ["connection-manager", "tokio-comp"],
             False,
         ),

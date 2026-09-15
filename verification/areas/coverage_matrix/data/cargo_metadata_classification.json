@@ -2,12 +2,37 @@
   "schema_version": 1,
   "packages": [
     {
+      "name": "sifr-demo-csv",
+      "classification": "test_fixture",
+      "targets": [{"name": "sifr-demo-csv", "kind": "bin", "classification": "test_fixture", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr-demo-parse-safety",
+      "classification": "test_fixture",
+      "targets": [{"name": "sifr-demo-parse-safety", "kind": "bin", "classification": "test_fixture", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr-demo-shutil",
+      "classification": "test_fixture",
+      "targets": [{"name": "sifr-demo-shutil", "kind": "bin", "classification": "test_fixture", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
+      "name": "sifr-demo-stdlib-intrinsics",
+      "classification": "test_fixture",
+      "targets": [{"name": "sifr-demo-stdlib-intrinsics", "kind": "bin", "classification": "test_fixture", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
       "name": "sifr",
       "classification": "first_party_tooling",
       "targets": [
         {"name": "sifr", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "build_output_behavior", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "e2e", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "formatter_discovery", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "host_tool_cli", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "python_read_only_cli", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "runtime_observability_boundary", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},

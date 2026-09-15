@@ -77,7 +77,7 @@ def validate_zero_copy_scenario(
         ("bytemuck", "=1.25.2", None),
         ("bytes", "=1.12.1", None),
         ("memmap2", "=0.9.11", None),
-        ("zerocopy", "=0.8.56", ["derive"]),
+        ("zerocopy", "=0.8.57", ["derive"]),
     ):
         if features is None:
             entry = dependencies.get(name)

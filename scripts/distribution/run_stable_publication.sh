@@ -12,7 +12,6 @@ Usage: scripts/distribution/run_stable_publication.sh \
   --prepare-summary PATH --expected-summary-sha256 SHA256 \
   --workflow-ref REF --workflow-commit COMMIT \
   --run-id ID --run-attempt N --initiator LOGIN \
-  [--approval-waiver PATH --expected-approval-waiver-sha256 SHA256] \
   --site-repository OWNER/REPO --site-workflow FILE --site-workflow-ref REF \
   --site-ruleset-id ID --site-ruleset-updated-at TIMESTAMP \
   --site-workflow-sha256 SHA256
@@ -35,8 +34,6 @@ workflow_commit=""
 run_id=""
 run_attempt=""
 initiator=""
-approval_waiver=""
-expected_approval_waiver_sha256=""
 site_repository=""
 site_workflow=""
 site_workflow_ref=""
@@ -60,9 +57,6 @@ while [[ $# -gt 0 ]]; do
     --run-id) run_id="${2:-}"; shift 2 ;;
     --run-attempt) run_attempt="${2:-}"; shift 2 ;;
     --initiator) initiator="${2:-}"; shift 2 ;;
-    --approval-waiver) approval_waiver="${2:-}"; shift 2 ;;
-    --expected-approval-waiver-sha256)
-      expected_approval_waiver_sha256="${2:-}"; shift 2 ;;
     --site-repository) site_repository="${2:-}"; shift 2 ;;
     --site-workflow) site_workflow="${2:-}"; shift 2 ;;
     --site-workflow-ref) site_workflow_ref="${2:-}"; shift 2 ;;
@@ -94,12 +88,6 @@ done
 for path in "${evidence_root}" "${source_root}"; do
   [[ -d "${path}" && ! -L "${path}" ]] || usage
 done
-if [[ "${operation}" == "ga-activation" ]]; then
-  [[ -f "${approval_waiver}" && ! -L "${approval_waiver}" &&
-    "${expected_approval_waiver_sha256}" =~ ^[0-9a-f]{64}$ ]] || usage
-elif [[ -n "${approval_waiver}" ]]; then
-  usage
-fi
 [[ -f "${prepare_summary}" && ! -L "${prepare_summary}" ]] || usage
 [[ -n "${SITE_TOKEN:-}" ]] || {
   echo "stable-publication: SITE_TOKEN is required" >&2
@@ -226,24 +214,15 @@ python3 scripts/distribution/fetch_qualification_artifacts.py \
 fetch_governance "${work}/governance-initial"
 revalidate "${work}/governance-initial"
 
-gh api "repos/${repository}/actions/runs/${run_id}/approvals" \
-  >"${work}/approvals.json"
-approval_waiver_args=()
-if [[ "${operation}" == "ga-activation" ]]; then
-  approval_waiver_args=(
-    --repository "${repository}"
-    --operation "${operation}"
-    --single-maintainer-waiver "${approval_waiver}"
-    --expected-waiver-sha256 "${expected_approval_waiver_sha256}"
-  )
-fi
 approval="$(
   scripts/distribution/release_governance.py resolve-publication-approvers \
-    --approvals "${work}/approvals.json" \
     --initiator "${initiator}" \
     --environment stable-release \
-    --include-policy \
-    "${approval_waiver_args[@]}"
+    --repository "${repository}" --operation "${operation}" \
+    --run-id "${run_id}" --run-attempt "${run_attempt}" \
+    --evidence "${prepare_summary}" \
+    --expected-evidence-sha256 "${expected_summary_sha256}" \
+    --include-policy
 )"
 approver="$(jq -er '.approvers[0]' <<<"${approval}")"
 approval_mode="$(jq -er '.approval_policy.mode' <<<"${approval}")"

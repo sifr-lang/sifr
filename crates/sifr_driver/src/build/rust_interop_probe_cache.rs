@@ -96,6 +96,10 @@ pub(super) fn probe_cache_key(
     ] {
         push_cache_bytes(&mut input, value);
     }
+    if let Some(seed) = probe.cargo_resolution.normal_seed_cache_fragment() {
+        push_cache_bytes(&mut input, "normal-authority-seed");
+        push_cache_bytes(&mut input, &seed);
+    }
     if let Some(metadata_digest) = cache.sqlx_metadata_digest(backend_root) {
         push_cache_bytes(&mut input, "sqlx-offline-metadata");
         push_cache_bytes(&mut input, &metadata_digest);

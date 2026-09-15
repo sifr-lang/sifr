@@ -5,7 +5,7 @@ use sifr_type_system::Type;
 
 use super::LowerCtx;
 
-impl LowerCtx {
+impl LowerCtx<'_> {
     pub(in crate::lower) fn add_proven_nonzero_integer_binding(&mut self, name: String) {
         self.proven_nonzero_integer_bindings.insert(name);
     }

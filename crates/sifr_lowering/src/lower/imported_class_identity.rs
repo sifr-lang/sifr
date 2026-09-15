@@ -480,6 +480,11 @@ fn set_canonical_identities(ty: &mut Type, local_classes: &HashMap<String, Strin
                         .map(|parent| {
                             local_classes
                                 .get(parent)
+                                // A same-named base refers to the prior declaration
+                                // (notably builtin Error), never the class itself.
+                                .filter(|parent_identity| {
+                                    parent != "Error" && Some(*parent_identity) != identity.as_ref()
+                                })
                                 .map_or_else(|| parent.to_string(), Clone::clone)
                         })
                         .collect::<Vec<_>>()

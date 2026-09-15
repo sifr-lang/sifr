@@ -6,11 +6,14 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import os
 import statistics
 import sys
 from datetime import date
 from pathlib import Path
 from typing import Any
+
+from reference_profiles import ReferenceProfileError, load_profile, validate_result_profile, validate_manifest_binding, reference_budget_results
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
@@ -54,6 +57,7 @@ def main() -> int:
     parser.add_argument("--allow-subset", action="store_true")
     parser.add_argument("--expected-invocation-id", default="")
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--reference-profile", default=os.environ.get("SIFR_PERFORMANCE_REFERENCE", ""))
     args = parser.parse_args()
 
     try:
@@ -63,11 +67,27 @@ def main() -> int:
             return 0
 
         manifest = load_json(Path(args.manifest))
-        budgets = apply_work_budgets(
-            load_json(Path(args.budgets)), load_json(Path(args.work_budgets))
-        )
+        reference = load_profile(args.reference_profile) if args.reference_profile else None
+        if reference is not None:
+            validate_manifest_binding(reference, Path(args.manifest))
+            if args.budgets != str(DEFAULT_BUDGETS) or args.work_budgets != str(DEFAULT_WORK_BUDGETS):
+                raise ReferenceProfileError("named qualification cannot override reference budgets")
+            budgets = reference["budgets"]
+            results = reference_budget_results(reference, manifest) if args.results == str(DEFAULT_BASELINES) else load_json(Path(args.results))
+            if args.results != str(DEFAULT_BASELINES):
+                validate_result_profile(reference, results)
+        else:
+            budgets = apply_work_budgets(
+                load_json(Path(args.budgets)), load_json(Path(args.work_budgets))
+            )
+            results = load_json(Path(args.results))
+            if results.get("metadata", {}).get("reference_profile"):
+                raise ReferenceProfileError("select a named reference profile for qualification")
         waivers = load_json(Path(args.waivers))
-        results = load_json(Path(args.results))
+        if reference is not None and args.results == str(DEFAULT_BASELINES):
+            check_reference_policy(manifest, reference, waivers)
+            print("named reference budget policy validated; candidate measurements not evaluated")
+            return 0
         check_budgets(
             manifest,
             budgets,
@@ -79,9 +99,20 @@ def main() -> int:
         )
         print("performance budget check passed")
         return 0
-    except BudgetError as error:
+    except (BudgetError, ReferenceProfileError) as error:
         print(f"performance budget error: {error}", file=sys.stderr)
         return 1
+
+
+def check_reference_policy(
+    manifest: dict[str, Any], reference: dict[str, Any], waivers: dict[str, Any]
+) -> None:
+    # An independent older compiler may exceed the retained editor targets.
+    # Validate its schema and policy here; only candidate results are qualified.
+    cases = validate_manifest(manifest)
+    budgets = validate_budgets(reference["budgets"], cases)
+    validate_waivers(waivers, cases, budgets)
+    validate_results_shape(reference_budget_results(reference, manifest), cases)
 
 
 def check_budgets(

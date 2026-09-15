@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.88"
 name = "rcgen"
-version = "0.14.9"
+version = "0.14.10"
 build = false
 autolib = false
 autobins = false
@@ -58,11 +58,7 @@ aws_lc_rs = [
     "aws-lc-rs/aws-lc-sys",
     "x509-parser?/verify-aws",
 ]
-aws_lc_rs_unstable = [
-    "aws_lc_rs",
-    "aws-lc-rs/unstable",
-    "x509-parser?/verify-aws",
-]
+aws_lc_rs_unstable = ["aws_lc_rs"]
 crypto = []
 default = [
     "crypto",
@@ -114,12 +110,12 @@ required-features = [
 ]
 
 [dependencies.aws-lc-rs]
-version = "1.13.3"
+version = "1.18"
 optional = true
 default-features = false
 
 [dependencies.pem]
-version = "3.0.2"
+version = "4"
 optional = true
 
 [dependencies.pki-types]

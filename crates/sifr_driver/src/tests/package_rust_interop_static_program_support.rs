@@ -33,7 +33,7 @@ fn test_static_program_constructs_and_projects_arena() {
     )
     .expect("source-layout static program scenario should build");
     let pristine_source = generated_main_source(pristine_artifact.binary_path());
-    let pristine_identity = static_program_identity_declaration(&pristine_source);
+    let pristine_identity = static_program_identity(&pristine_source);
 
     install_evidence_source(
         &package_root,
@@ -47,7 +47,7 @@ fn test_static_program_constructs_and_projects_arena() {
             .expect("installed evidence should build");
     let evidence_source = generated_main_source(evidence_artifact.binary_path());
     assert_eq!(
-        static_program_identity_declaration(&evidence_source),
+        static_program_identity(&evidence_source),
         pristine_identity,
         "source-layout and installed evidence must retain one static-program identity"
     );
@@ -89,11 +89,49 @@ fn generated_main_source(binary_path: &Path) -> String {
         .expect("generated main source should be retained")
 }
 
-fn static_program_identity_declaration(source: &str) -> &str {
-    source
-        .lines()
-        .find(|line| line.contains("__SIFR_STATIC_PROGRAM_IDENTITY_"))
-        .expect("generated source should contain a static-program identity")
+fn static_program_identity(source: &str) -> [u8; 32] {
+    let parsed = syn::parse_file(source).expect("generated source should parse");
+    let identities = parsed
+        .items
+        .iter()
+        .filter_map(|item| match item {
+            syn::Item::Const(item)
+                if item
+                    .ident
+                    .to_string()
+                    .starts_with("SIFR_GENERATED_SIFR_STATIC_PROGRAM_IDENTITY_") =>
+            {
+                Some(item)
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        identities.len(),
+        1,
+        "generated source must contain exactly one static-program identity"
+    );
+    let syn::Expr::Array(array) = identities[0].expr.as_ref() else {
+        panic!("static-program identity must be an array");
+    };
+    array
+        .elems
+        .iter()
+        .map(|element| {
+            let syn::Expr::Lit(syn::ExprLit {
+                lit: syn::Lit::Int(value),
+                ..
+            }) = element
+            else {
+                panic!("static-program identity must contain integer bytes");
+            };
+            value
+                .base10_parse::<u8>()
+                .expect("static-program identity bytes must fit u8")
+        })
+        .collect::<Vec<_>>()
+        .try_into()
+        .expect("static-program identity must contain 32 bytes")
 }
 
 #[test]

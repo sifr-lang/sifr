@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--approval-mode",
         required=True,
-        choices=("distinct-reviewer", "single-maintainer-waiver"),
+        choices=("distinct-reviewer", "single-maintainer-waiver", "solo-maintainer"),
     )
     parser.add_argument("--approval-waiver-sha256", required=True)
     parser.add_argument("--approvers-json", required=True)

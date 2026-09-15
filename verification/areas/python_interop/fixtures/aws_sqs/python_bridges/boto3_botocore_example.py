@@ -19,6 +19,8 @@ def run() -> str:
             {"QueueName": "sifr-queue"},
         )
         queue_url = client.create_queue(QueueName="sifr-queue")["QueueUrl"]
+        stubber.assert_no_pending_responses()
+    client.close()
     if queue_url != QUEUE_URL:
         raise RuntimeError("boto3/botocore SQS stub returned an unexpected URL")
     return f"sifr-python-interop:boto3-botocore:queue={queue_url}"

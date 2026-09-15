@@ -6,6 +6,7 @@ use sifr_type_system::{FunctionType, Type, type_check_binary_op};
 use std::collections::HashMap;
 
 mod call_effects;
+mod inference_demand;
 mod state_collection;
 pub(in crate::lower) use state_collection::*;
 mod expression_inference;

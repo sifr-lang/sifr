@@ -19,14 +19,14 @@ def validate(data: dict[str, Any]) -> list[str]:
     if data.get("schema_version") != 2 or data.get("provider") != "sqlite":
         errors.append("SQLite qualification identity is invalid")
     libraries = data.get("supported_libraries", [])
-    if libraries != [{"version": "3.53.2", "version_number": 3053002, "compile_flags": []}]:
-        errors.append("SQLite supported library must be exactly the qualified 3.53.2 build")
+    if libraries != [{"version": "3.53.4", "version_number": 3053004, "compile_flags": []}]:
+        errors.append("SQLite supported library must be exactly the qualified 3.53.4 build")
     expected_tools = {
         "syntaqlite": "0.9.0",
         "rusqlite": "0.40.2",
         "libsqlite3-sys": "0.38.2",
-        "sqlite": "3.53.2",
-        "wasi-sdk": "33",
+        "sqlite": "3.53.4",
+        "wasi-sdk": "34",
         "wit-bindgen": "0.61.1",
         "tokio": "1.53.1",
     }
@@ -45,8 +45,8 @@ def validate(data: dict[str, Any]) -> list[str]:
         ):
             errors.append(f"root Cargo manifest does not lock {crate} {version}")
     cargo_config = (ROOT / ".cargo/config.toml").read_text(encoding="utf-8")
-    if 'SYNTAQLITE_SQLITE_VERSION = { value = "3053002", force = true }' not in cargo_config:
-        errors.append("Cargo does not pin Syntaqlite to SQLite 3.53.2")
+    if 'SYNTAQLITE_SQLITE_VERSION = { value = "3053004", force = true }' not in cargo_config:
+        errors.append("Cargo does not pin Syntaqlite to SQLite 3.53.4")
     compiler = (ROOT / "crates/sifr_sql_sqlite/Cargo.toml").read_text(encoding="utf-8")
     runtime = (ROOT / "crates/sifr_sql_sqlite_runtime/Cargo.toml").read_text(encoding="utf-8")
     for feature in ["analysis", "fmt", "pin-cflags", "pin-version", "serde", "sqlite"]:
@@ -81,8 +81,8 @@ def validate(data: dict[str, Any]) -> list[str]:
         rows = evidence.get("libraries", [])
         if evidence.get("surface") != "all" or len(rows) != 1:
             errors.append("SQLite library evidence must cover every surface")
-        elif rows[0].get("version_number") != 3053002 or rows[0].get("status") != "passed":
-            errors.append("SQLite 3.53.2 library evidence is not passing")
+        elif rows[0].get("version_number") != 3053004 or rows[0].get("status") != "passed":
+            errors.append("SQLite 3.53.4 library evidence is not passing")
         else:
             options = set(rows[0].get("runtime_compile_options", []))
             required_options = {
@@ -108,8 +108,8 @@ def validate(data: dict[str, Any]) -> list[str]:
         if parser != {
             "compile_flags": [],
             "name": "syntaqlite",
-            "sqlite_version": "3.53.2",
-            "sqlite_version_number": 3053002,
+            "sqlite_version": "3.53.4",
+            "sqlite_version_number": 3053004,
             "version": "0.9.0",
         }:
             errors.append("SQLite component parser identity is invalid")
@@ -126,6 +126,26 @@ def validate(data: dict[str, Any]) -> list[str]:
                     errors.append("SQLite component artifact size is stale")
                 if artifact.get("sha256") != hashlib.sha256(payload).hexdigest():
                     errors.append("SQLite component artifact digest is stale")
+    source = ROOT / "crates/sifr_runtime/third_party/libsqlite3-sys"
+    receipt_path = source / "sifr-source.json"
+    if not receipt_path.is_file():
+        errors.append("SQLite patched source receipt is missing")
+    else:
+        receipt = json.loads(receipt_path.read_text())
+        if receipt.get("sqlite_version") != "3.53.4":
+            errors.append("SQLite source patch selects the wrong version")
+        expected = "67f423e9ebbbdc473cbc4772c872ee6b89f31fde4ed0279a5c25d5f65c043a16"
+        amalgamation = source / "sqlite3/sqlite3.c"
+        if not amalgamation.is_file() or hashlib.sha3_256(amalgamation.read_bytes()).hexdigest() != expected:
+            errors.append("SQLite amalgamation differs from the official 3.53.4 release")
+        files = receipt.get("patched_files", {})
+        if set(files) != {"sqlite3.c", "sqlite3.h", "bindgen_bundled_version.rs",
+                          "bindgen_bundled_version_ext.rs"}:
+            errors.append("SQLite source patch inventory is incomplete")
+        for name, digest in files.items():
+            path = source / "sqlite3" / name
+            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+                errors.append(f"SQLite patched input differs: {name}")
     return errors
 
 
@@ -134,6 +154,9 @@ def self_test(data: dict[str, Any]) -> int:
     wrong_version = copy.deepcopy(data)
     wrong_version["toolchain"]["rusqlite"] = "0.39.0"
     mutations.append(wrong_version)
+    wrong_sdk = copy.deepcopy(data)
+    wrong_sdk["toolchain"]["wasi-sdk"] = "33"
+    mutations.append(wrong_sdk)
     wrong_library = copy.deepcopy(data)
     wrong_library["supported_libraries"][0]["version_number"] = 3052000
     mutations.append(wrong_library)

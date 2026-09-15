@@ -1,14 +1,14 @@
 // src/main.rs
 mod sifr_generated_generated_support {
     use crate::SifrGeneratedStdlibSifrX2ejsonX2eJsonValue;
-    pub(crate) use ::bigdecimal::BigDecimal;
-    pub(crate) use ::rust_decimal::Decimal;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn json_dump_tokens(tokens: &[String]) -> String {
+    use ::bigdecimal::BigDecimal;
+    use ::rust_decimal::Decimal;
+    use ::sifr_runtime::SifrInt;
+    fn json_dump_tokens(tokens: &[String]) -> String {
         ::sifr_stdlib::json::json_dump_tokens(tokens)
     }
     #[derive(Debug, Clone, PartialEq)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0(
             SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
@@ -32,7 +32,7 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub(crate) fn from_str(value: &str) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
+    fn from_str(value: &str) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         let str_value: Option<String> = Some({
             let mut sifr_generated_concat: String = String::with_capacity(value.len());
             sifr_generated_concat.push_str(value);
@@ -47,7 +47,7 @@ mod sifr_generated_generated_support {
             str_value,
         )
     }
-    pub(crate) fn sifr_generated_json_append_tokens(
+    fn sifr_generated_json_append_tokens(
         mut tokens: Vec<String>,
         value: &SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     ) -> Vec<String> {
@@ -94,13 +94,14 @@ mod sifr_generated_generated_support {
         }
         tokens
     }
-    pub(crate) fn sifr_generated_json_bridge_tokens(
+    fn sifr_generated_json_bridge_tokens(
         value: &SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     ) -> Vec<String> {
         let tokens: Vec<String> = Vec::new();
         sifr_generated_json_append_tokens(tokens, value)
     }
-    pub(crate) fn dumps(
+    #[must_use]
+    pub fn dumps(
         value: &SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
     ) -> String {
         match value {
@@ -116,7 +117,10 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
+        dumps,
+    };
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq)]
     pub struct SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
@@ -189,7 +193,10 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for DecimalConversionError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
+    dumps,
+};
 use ::bigdecimal::BigDecimal;
 use ::num_bigint::BigInt;
 use ::rust_decimal::Decimal;

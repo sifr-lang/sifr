@@ -30,9 +30,9 @@ impl RustEmitter {
 
         for (key, value) in keys.iter().zip(values.iter()) {
             let lowered_key = self.try_lower_registry_expr_strict(key)?;
-            let lowered_key = self.clone_owned_append_arg_expr_for_ir(key, lowered_key);
+            let lowered_key = self.materialize_reusable_value_for_ir(key, lowered_key);
             let lowered_value = self.try_lower_registry_expr_strict(value)?;
-            let lowered_value = self.clone_owned_append_arg_expr_for_ir(value, lowered_value);
+            let lowered_value = self.materialize_reusable_value_for_ir(value, lowered_value);
             let (lowered_key, lowered_value) = match ty.resolve_alias() {
                 Type::Dict(key_ty, value_ty) => (
                     crate::helpers::adapt_collection_value_for_target(
@@ -95,7 +95,7 @@ impl RustEmitter {
             stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::Ident(set_ident.clone())),
                 method: "insert".to_string(),
-                args: vec![self.clone_owned_append_arg_expr_for_ir(element, lowered)],
+                args: vec![self.materialize_reusable_value_for_ir(element, lowered)],
             }));
         }
 

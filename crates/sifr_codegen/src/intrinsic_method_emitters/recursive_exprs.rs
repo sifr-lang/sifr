@@ -145,6 +145,12 @@ impl RustEmitter {
                     )?;
                 let method_params =
                     self.resolve_registry_method_params(&effective_object_ty, method);
+                self.adapt_owned_mapping_default(
+                    &effective_object_ty,
+                    method,
+                    args,
+                    &mut arg_exprs,
+                );
                 if matches!(
                     crate::resolve_alias_type_for_plain_call(&effective_object_ty),
                     Type::Decimal | Type::BigDecimal
@@ -192,7 +198,7 @@ impl RustEmitter {
                                 };
                             }
                         }
-                        arg_exprs[0] = self.clone_owned_append_arg_expr_for_ir(&args[0], adjusted);
+                        arg_exprs[0] = self.materialize_reusable_value_for_ir(&args[0], adjusted);
                     }
                 }
                 if effective_object_ty.callable_field_type(method).is_some() {
@@ -744,14 +750,21 @@ impl RustEmitter {
                 }
                 let left_expr = self.try_lower_registry_expr_strict(left)?;
                 let right_expr = self.try_lower_registry_expr_strict(right)?;
+                let borrow_integer = |value| {
+                    if matches!(ty.resolve_alias(), Type::Int | Type::LiteralInt(_)) {
+                        self.coerce_expr_to_sifr_int_comparison_operand(value)
+                    } else {
+                        value
+                    }
+                };
                 Some(crate::RustExpr::BinOp {
-                    left: Box::new(left_expr),
+                    left: Box::new(borrow_integer(left_expr)),
                     op: if op == "//" {
                         "/".to_string()
                     } else {
                         op.clone()
                     },
-                    right: Box::new(right_expr),
+                    right: Box::new(borrow_integer(right_expr)),
                 })
             }
             HirExpr::Slice {
@@ -795,7 +808,7 @@ impl RustEmitter {
                         } else {
                             lowered
                         };
-                        Some(self.clone_owned_append_arg_expr_for_ir(element, lowered))
+                        Some(self.materialize_reusable_value_for_ir(element, lowered))
                     })
                     .collect::<Option<Vec<_>>>()?;
                 if matches!(list_ty, Type::Bytes) {
@@ -814,7 +827,7 @@ impl RustEmitter {
                     .iter()
                     .map(|element| {
                         let lowered = self.try_lower_registry_expr_strict(element)?;
-                        Some(self.clone_owned_append_arg_expr_for_ir(element, lowered))
+                        Some(self.materialize_reusable_value_for_ir(element, lowered))
                     })
                     .collect::<Option<Vec<_>>>()?;
                 if crate::homogeneous_large_tuple_backing_array(ty).is_some() {

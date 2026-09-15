@@ -170,7 +170,7 @@ pub(in crate::lower) fn lower_aug_assign(
                     object: obj_name,
                     field: field_name,
                     outer_index,
-                    inner_index,
+                    inner_index: Box::new(inner_index),
                     value,
                     field_ty: obj_ty,
                     outer_failure,
@@ -181,7 +181,7 @@ pub(in crate::lower) fn lower_aug_assign(
             return Some(HirStmt::NestedSubscriptAssign {
                 object: obj_name,
                 outer_index,
-                inner_index,
+                inner_index: Box::new(inner_index),
                 value,
                 object_ty: obj_ty,
                 outer_failure,

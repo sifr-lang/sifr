@@ -1,7 +1,6 @@
 use super::impl_self_type_name;
 use super::method_demand::{demanded_inherent_method_names, prune_inherent_methods};
 use std::collections::HashSet;
-use syn::visit::{self, Visit};
 
 pub(crate) fn prune_generated_project_owners(
     prelude_source: &str,
@@ -204,25 +203,34 @@ fn nominal_reexport_name(item: &syn::Item) -> Option<String> {
 
 pub(crate) fn import_generated_support_in_project_nominals(
     prelude_source: &str,
+    support_source: &str,
 ) -> Result<String, String> {
     let mut prelude = syn::parse_file(prelude_source)
         .map_err(|error| format!("failed to parse generated project prelude: {error}"))?;
-    let support_import: syn::Item = syn::parse_quote! {
-        use crate::__sifr_generated_support::*;
-    };
     for item in &mut prelude.items {
         if let syn::Item::Mod(module) = item
             && module.ident == "__sifr_project_nominals"
             && let Some((_, items)) = &mut module.content
         {
-            items.insert(0, support_import);
+            let mut file = syn::parse_file("").map_err(|error| error.to_string())?;
+            file.items.clone_from(items);
+            let import = crate::generated_visibility::generated_support_import(
+                &prettyplease::unparse(&file),
+                support_source,
+            );
+            if !import.is_empty() {
+                items.insert(
+                    0,
+                    syn::parse_str(&import).map_err(|error| error.to_string())?,
+                );
+            }
             break;
         }
     }
     Ok(prettyplease::unparse(&prelude))
 }
 
-pub(crate) fn import_project_prelude_bindings_in_generated_support(
+pub(crate) fn import_project_prelude_bindings(
     prelude_source: &str,
     support_source: &str,
 ) -> Result<String, String> {
@@ -246,16 +254,13 @@ pub(crate) fn import_project_prelude_bindings_in_generated_support(
         .map_err(|error| format!("failed to parse generated project support: {error}"))?;
     let support_names = crate::stdlib_filter::rust_source_defined_item_names(support_source);
     root_bindings.retain(|name| !support_names.contains(name));
-    let mut collector = UnqualifiedRootBindingCollector {
-        candidates: &root_bindings,
-        referenced: HashSet::new(),
-    };
-    collector.visit_file(&support);
-    if collector.referenced.is_empty() {
+    let referenced =
+        crate::stdlib_filter::rust_source_unqualified_item_names(support_source, &root_bindings)?;
+    if referenced.is_empty() {
         return Ok(support_source.to_string());
     }
 
-    let mut referenced = collector.referenced.into_iter().collect::<Vec<_>>();
+    let mut referenced = referenced.into_iter().collect::<Vec<_>>();
     referenced.sort();
     let import =
         syn::parse_str::<syn::ItemUse>(&format!("use crate::{{{}}};", referenced.join(",")))
@@ -279,25 +284,6 @@ fn collect_use_binding_names(tree: &syn::UseTree, names: &mut HashSet<String>) {
             }
         }
         syn::UseTree::Glob(_) => {}
-    }
-}
-
-struct UnqualifiedRootBindingCollector<'a> {
-    candidates: &'a HashSet<String>,
-    referenced: HashSet<String>,
-}
-
-impl<'ast> Visit<'ast> for UnqualifiedRootBindingCollector<'_> {
-    fn visit_path(&mut self, path: &'ast syn::Path) {
-        if path.leading_colon.is_none()
-            && let Some(first) = path.segments.first()
-        {
-            let name = first.ident.to_string();
-            if self.candidates.contains(&name) {
-                self.referenced.insert(name);
-            }
-        }
-        visit::visit_path(self, path);
     }
 }
 
@@ -329,9 +315,7 @@ fn support_item_name(item: &syn::Item) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
-    };
+    use super::{import_project_prelude_bindings, prune_generated_project_owners};
 
     #[test]
     fn project_nominal_methods_retain_their_transitive_support_helpers() {
@@ -394,7 +378,7 @@ mod tests {
         let prelude = "mod nominals { pub struct ParseError; pub struct Other; } pub use nominals::{ParseError, Other};";
         let support = "pub(crate) fn parse() -> ParseError { ParseError }";
 
-        let imported = import_project_prelude_bindings_in_generated_support(prelude, support)
+        let imported = import_project_prelude_bindings(prelude, support)
             .expect("generated owners should parse");
 
         assert!(imported.contains("use crate::ParseError;"));
@@ -406,9 +390,42 @@ mod tests {
         let prelude = "mod nominals { pub struct ParseError; } pub use nominals::ParseError;";
         let support = "pub(crate) fn parse() -> crate::ParseError { crate::ParseError }";
 
-        let imported = import_project_prelude_bindings_in_generated_support(prelude, support)
+        let imported = import_project_prelude_bindings(prelude, support)
             .expect("generated owners should parse");
 
         assert_eq!(imported, support);
+    }
+
+    #[test]
+    fn finalized_prelude_imports_include_transitive_types_in_non_union_consumers() {
+        let prelude = "pub struct BinaryHandle; mod nominals { pub struct Encoding; pub struct Unused; } pub use nominals::{Encoding, Unused};";
+        let body = "pub fn open() { let value = BinaryHandle; let encoding = Encoding; sink(value, encoding); }";
+        let imported = import_project_prelude_bindings(prelude, body).expect("final owner imports");
+        assert!(
+            imported.contains("use crate::{BinaryHandle, Encoding};"),
+            "{imported}"
+        );
+        assert!(!imported.contains("Unused"));
+        assert_eq!(
+            import_project_prelude_bindings(prelude, &imported).expect("idempotent imports"),
+            imported
+        );
+    }
+
+    #[test]
+    fn finalized_prelude_imports_respect_local_declarations_imports_and_type_parameters() {
+        let prelude = "pub struct Encoding; pub struct BinaryHandle;";
+        for body in [
+            "struct Encoding; pub fn read(value: Encoding) { sink(value); }",
+            "use dependency::Encoding; pub fn read(value: Encoding) { sink(value); }",
+            "pub fn read<Encoding>(value: Encoding) { sink(value); }",
+            "pub fn read() { let BinaryHandle = 1; sink(BinaryHandle); }",
+            "mod child { pub fn read(value: Encoding) { sink(value); } }",
+        ] {
+            assert_eq!(
+                import_project_prelude_bindings(prelude, body).expect("lexical ownership"),
+                body
+            );
+        }
     }
 }

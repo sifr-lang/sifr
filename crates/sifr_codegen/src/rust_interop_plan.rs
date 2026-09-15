@@ -12,12 +12,26 @@ use sifr_ir::{
 pub struct InteropBuildPlan {
     pub rust: RustInteropPlan,
     pub python: PythonInteropPlan,
+    /// Checked application-required sysroot contracts, not user package declarations.
+    /// The driver attaches this plan only with the separately validated sysroot context.
+    pub stdlib_demand: RustInteropPlan,
 }
 
 impl InteropBuildPlan {
     #[must_use]
     pub fn cache_key_fragment(&self) -> String {
         let mut out = String::new();
+        if self.stdlib_demand != RustInteropPlan::default() {
+            out.push_str("[stdlib-demand]\n");
+            out.push_str(
+                &Self {
+                    rust: self.stdlib_demand.clone(),
+                    ..Self::default()
+                }
+                .cache_key_fragment(),
+            );
+            out.push_str("[/stdlib-demand]\n");
+        }
         push_python_plan_cache_key(&mut out, &self.python);
         out.push_str("rust.declarations=");
         out.push_str(&self.rust.declarations.len().to_string());
@@ -289,7 +303,11 @@ pub fn interop_build_plan_for_named_modules<'a>(
     }
     rust.bridge_contracts =
         bridge_contract_plan_for_named_modules(module_entries, &rust.declarations);
-    InteropBuildPlan { rust, python }
+    InteropBuildPlan {
+        rust,
+        python,
+        ..InteropBuildPlan::default()
+    }
 }
 
 pub(crate) fn module_uses_structural_interop(module: &HirModule) -> bool {

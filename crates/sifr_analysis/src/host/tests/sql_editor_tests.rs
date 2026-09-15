@@ -1,6 +1,42 @@
 use super::*;
 
 #[test]
+fn no_profile_sql_editor_preserves_snapshot_queries_after_update() {
+    let mut host =
+        AnalysisHost::open_single_file(single_file_input("def answer() -> int:\n    return 1\n"))
+            .expect("empty-profile host");
+    let file = host.files()[0];
+    let snapshot = host.snapshot();
+    assert!(
+        snapshot
+            .diagnostics(&mut host, file)
+            .expect("snapshot diagnostics")
+            .into_value()
+            .is_empty()
+    );
+    host.update_document(
+        file,
+        DocumentVersion::new(1),
+        SourceText::new("def renamed() -> int:\n    return 2\n"),
+    )
+    .expect("update");
+    assert_eq!(
+        snapshot
+            .diagnostics(&mut host, file)
+            .expect_err("stale snapshot")
+            .kind,
+        AnalysisErrorKind::StaleSnapshot
+    );
+    assert!(
+        host.document_symbols(file)
+            .expect("updated symbols")
+            .into_value()
+            .iter()
+            .any(|symbol| symbol.name == "renamed")
+    );
+}
+
+#[test]
 fn sql_templates_route_through_virtual_document_editor_queries() {
     let source = "@app.query\ndef query(user_id: int) -> Template:\n    return t\"SELECT users.name FROM users WHERE users.id = {user_id} LIMIT 1\"\n";
     let mut host =

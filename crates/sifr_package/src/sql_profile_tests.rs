@@ -44,7 +44,7 @@ fn manifest_parses_complete_offline_profile_contract() {
 #[test]
 fn sqlite_profile_aliases_compile_flags_and_required_features_into_identity_inputs() {
     let source = app_manifest("sifr_sql_sqlite")
-        .replace("server-version = \"18\"", "server-version = \"3.53.2\"")
+        .replace("server-version = \"18\"", "server-version = \"3.53.4\"")
         .replace(
             "search-path = [\"app\", \"public\"]",
             "search-path = [\"main\", \"analytics\"]",
@@ -59,7 +59,7 @@ fn sqlite_profile_aliases_compile_flags_and_required_features_into_identity_inpu
         );
     let manifest = parse(&source);
     let profile = &manifest.sql.profiles["app"];
-    assert_eq!(profile.server_version, "3.53.2");
+    assert_eq!(profile.server_version, "3.53.4");
     assert_eq!(
         profile.extensions,
         BTreeSet::from(["fts5".to_string(), "json".to_string()])

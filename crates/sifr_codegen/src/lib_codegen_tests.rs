@@ -67,6 +67,8 @@ mod collections_and_stdlib_codegen_tests;
 #[cfg(test)]
 mod control_flow_codegen_tests;
 #[cfg(test)]
+mod corpus_repair_codegen_tests;
+#[cfg(test)]
 mod defaultdict_augassign_codegen_tests;
 #[cfg(test)]
 mod defaultdict_order_independent_codegen_tests;
@@ -106,6 +108,8 @@ mod receiver_codegen_tests;
 mod recursive_node_codegen_tests;
 #[cfg(test)]
 mod resumable_generator_codegen_tests;
+#[cfg(test)]
+mod reusable_value_codegen_tests;
 #[cfg(test)]
 mod sequential_try_binding_codegen_tests;
 #[cfg(test)]

@@ -11,10 +11,10 @@ crate-type = ["rlib", "cdylib"]
 
 [package.metadata.sifr_sql]
 artifact-role = "sqlite-compiler-component"
-grammar = "syntaqlite@0.9.0/sqlite-3.53.2"
+grammar = "syntaqlite@0.9.0/sqlite-3.53.4"
 artifact-manifest = "component-artifacts.json"
-supported-servers = ["3.53.2"]
-sqlite-version-number = 3053002
+supported-servers = ["3.53.4"]
+sqlite-version-number = 3053004
 compile-flags = []
 
 [dependencies]

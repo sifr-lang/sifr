@@ -1,6 +1,6 @@
 {
-  "ruff_fork_revision": "f19957111640fdee8055bfe5b6aa854259344473",
+  "ruff_fork_revision": "0f7e9ce63515fb45859f884452e5741eb19741c1",
   "validated_by": "verification/areas/performance/check_ruff_fork_update_rules.py",
   "fixture_directory": "verification/areas/performance/sifr_syntax_token_fixtures",
-  "rationale": "Parser and formatter revalidation for the Sifr extensions replayed on Ruff 0.16.4. The complete Ruff parser and formatter suites pass on Rust 1.98, and representative Sifr token fixture expectations remain unchanged."
+  "rationale": "The five representative Sifr token fixtures are replayed through sifr_syntax against the selected Ruff fork. Their expected token kinds are unchanged; the maintained guard executes the fixture comparison."
 }

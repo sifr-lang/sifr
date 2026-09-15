@@ -35,7 +35,7 @@ fn profile_with_attached(
         SchemaStrictness::Exact,
         attached_files,
         vec!["json".to_string()],
-        (3, 53, 2),
+        (3, 53, 4),
         RuntimeLimits {
             statement_timeout: Duration::from_secs(2),
             acquire_timeout: Duration::from_secs(2),
@@ -527,4 +527,18 @@ async fn write_lock_timeout_is_structured_and_rollback_recovers_the_pool() {
     )
     .await
     .expect("recovered write");
+}
+
+#[test]
+fn bundled_sqlite_source_matches_qualified_release() {
+    assert_eq!(rusqlite::version_number(), 3_053_004);
+    assert_eq!(rusqlite::ffi::SQLITE_VERSION_NUMBER, 3_053_004);
+    let connection = rusqlite::Connection::open_in_memory().expect("open source identity probe");
+    let source: String = connection
+        .query_row("SELECT sqlite_source_id()", [], |row| row.get(0))
+        .expect("SQLite must expose its source identity");
+    assert_eq!(
+        source,
+        "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
+    );
 }

@@ -53,7 +53,9 @@ pub(super) fn inject_package_bridge_aliases(generated: &mut GeneratedBinaryProje
 fn bridge_alias_prefix(dependencies: &BTreeSet<String>) -> String {
     let mut prefix = String::new();
     for dependency in dependencies {
-        prefix.push_str("use ");
+        // This is a Cargo dependency, not a generated module. Absolute paths
+        // preserve its external identity through project canonicalization.
+        prefix.push_str("use ::");
         prefix.push_str(dependency);
         prefix.push_str("::bridges as bridge;\n");
     }

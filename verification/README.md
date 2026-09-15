@@ -18,7 +18,7 @@ All maintained first-party Python projects require the canonical GIL-enabled
 CPython 3.14.7 interpreter exactly. Install it with `uv python install 3.14.7`;
 `uv run` selects it from each project's exact `requires-python` pin.
 
-Required `uv` version: `0.12.5`. Every maintained uv project carries the exact
+Required `uv` version: `0.12.10`. Every maintained uv project carries the exact
 native `required-version` pin, and CI reads the same pin from this project's
 `pyproject.toml`.
 

@@ -126,6 +126,11 @@ fn callback_handler_arg(name: &str, ty: &Type, convention: ParamConvention) -> S
         name.to_string()
     };
     if convention.is_shared_borrow() && !crate::helpers::is_copy_type_for_codegen(ty) {
+        if ty.resolve_alias() == &Type::Str {
+            // Callback transport owns String; constrain it before borrowing for &str.
+            // A plain &arg lets closure inference incorrectly choose unsized str.
+            return format!("::std::string::String::as_str(&{converted})");
+        }
         format!("&{converted}")
     } else {
         converted
@@ -189,7 +194,9 @@ mod tests {
         let rendered = render_expr(&call_scoped_callback_adapter_expr(&param));
 
         assert!(rendered.contains("CallScopedCallbackBridge::new"));
-        assert!(rendered.contains("handler(&__sifr_callback_arg_0)"));
+        assert!(
+            rendered.contains("handler(::std::string::String::as_str(&__sifr_callback_arg_0))")
+        );
         assert!(rendered.contains("Ok(__sifr_callback_ok) => Ok(())"));
         assert!(rendered.contains("__sifr_callback_error.to_string()"));
     }

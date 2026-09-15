@@ -161,7 +161,10 @@ def main() -> uint8:
         ),
     );
 
-    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let stdlib_defs = compile_stdlib()
+        .expect("stdlib should compile")
+        .defs
+        .clone();
     let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .expect("project lowering should fit imported stdlib integer constants");
     let main_module = result

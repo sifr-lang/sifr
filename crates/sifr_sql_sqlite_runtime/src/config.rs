@@ -135,7 +135,7 @@ impl SqliteProfile {
         let profile_fingerprint = profile_fingerprint.into();
         if path.as_os_str().is_empty()
             || !valid_fingerprint(&profile_fingerprint)
-            || minimum_version != (3, 53, 2)
+            || minimum_version != (3, 53, 4)
             || busy_timeout_ms == 0
             || required_features
                 .iter()

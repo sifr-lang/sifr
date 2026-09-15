@@ -1,3 +1,9 @@
+#[allow(dead_code)]
+#[path = "support/cargo_edges.rs"]
+mod cargo_edges;
+#[allow(dead_code)]
+#[path = "support/cargo_inventory.rs"]
+mod cargo_inventory;
 mod support;
 
 use support::TestUnwrap as _;
@@ -29,8 +35,6 @@ const RUSQLITE_VERSION: &str = "0.40.2";
 const RUSQLITE_PACKAGE_HASH: &str =
     "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3";
 const LIBSQLITE_VERSION: &str = "0.38.2";
-const LIBSQLITE_PACKAGE_HASH: &str =
-    "f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8";
 
 #[test]
 fn maintained_rusqlite_dependencies_use_the_latest_stable_policy() {
@@ -106,6 +110,14 @@ fn maintained_rusqlite_dependencies_use_the_latest_stable_policy() {
 
 #[test]
 fn maintained_lock_edges_use_rusqlite_0_40_2() {
+    // Incoming dependency ownership complements the existing feature-context checks.
+    let owners = cargo_edges::first_party_edges("rusqlite", RUSQLITE_VERSION);
+    assert_eq!(owners.len(), 6);
+    assert!(
+        owners
+            .iter()
+            .any(|(_, owner)| owner == "resource-lifecycle-runtime")
+    );
     // Cargo unifies the workspace's explicit cache requests. The standalone
     // resource fixture disables defaults and requests only bundled SQLite.
     for manifest in [SQLITE_RUNTIME_MANIFEST, SQL_LOCK_MANIFEST] {
@@ -136,9 +148,19 @@ fn maintained_lock_edges_use_rusqlite_0_40_2() {
             .unwrap_or_else(|error| panic!("{label}: {error}"));
 
         let libsqlite = package(packages, "libsqlite3-sys", LIBSQLITE_VERSION);
+        assert!(
+            libsqlite.get("source").is_none(),
+            "SQLite must resolve the source patch, not the registry bundle"
+        );
+        assert!(
+            libsqlite.get("checksum").is_none(),
+            "a patched path package must not claim the upstream archive checksum"
+        );
+        let root: toml::Value =
+            toml::from_str(include_str!("../../../Cargo.toml")).test_unwrap("root Cargo manifest");
         assert_eq!(
-            libsqlite.get("checksum").and_then(toml::Value::as_str),
-            Some(LIBSQLITE_PACKAGE_HASH)
+            root["patch"]["crates-io"]["libsqlite3-sys"]["path"].as_str(),
+            Some("crates/sifr_runtime/third_party/libsqlite3-sys")
         );
     }
 }
@@ -327,4 +349,23 @@ fn check_dependency_edges(package: &toml::Value, context: LockContext) -> Result
         ));
     }
     Ok(())
+}
+
+#[test]
+fn rusqlite_incoming_edge_rejects_missing_target_wrong_source_and_wrong_version() {
+    let lock: toml::Value = toml::from_str(FIXTURE_LOCK).test_unwrap("fixture lock");
+    let packages = cargo_edges::packages(&lock).test_unwrap("packages");
+    let current = cargo_edges::resolve(packages, "rusqlite").test_unwrap("Rusqlite");
+    for (field, value) in [
+        ("version", "0.39.0"),
+        ("source", "git+https://example.invalid/rusqlite"),
+    ] {
+        let mut changed = current.clone();
+        changed[field] = value.into();
+        assert!(
+            cargo_edges::current_edge(&[changed], "rusqlite", "rusqlite", RUSQLITE_VERSION)
+                .is_err()
+        );
+    }
+    assert!(cargo_edges::current_edge(&[], "rusqlite", "rusqlite", RUSQLITE_VERSION).is_err());
 }

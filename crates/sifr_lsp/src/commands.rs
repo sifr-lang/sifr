@@ -100,6 +100,7 @@ mod tests {
         .expect_err("cancelled preview must stop before document analysis");
 
         assert_eq!(error.code(), ErrorCode::RequestCanceled as i32);
+        assert_eq!(error.code(), -32800);
         session.finish_request(&id);
     }
 }

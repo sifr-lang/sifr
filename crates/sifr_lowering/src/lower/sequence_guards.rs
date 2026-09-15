@@ -38,7 +38,7 @@ pub(in crate::lower) enum SequenceGuard {
     },
 }
 
-impl LowerCtx {
+impl LowerCtx<'_> {
     pub(in crate::lower) fn add_sequence_guard(&mut self, guard: SequenceGuard) {
         match guard {
             SequenceGuard::MinLength { sequence, min_len } => {

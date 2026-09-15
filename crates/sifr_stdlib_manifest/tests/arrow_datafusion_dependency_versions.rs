@@ -4,8 +4,8 @@ use support::TestUnwrap as _;
 
 use std::collections::BTreeSet;
 
-const ARROW_VERSION: &str = "59.2.0";
-const ARROW_PACKAGE_HASH: &str = "61d285d16bce7d0be61912f7928342b673067b6b7d7ef6cc179258ba7de1fecf";
+const ARROW_VERSION: &str = "59.3.0";
+const ARROW_PACKAGE_HASH: &str = "7c14b3d39f306bc28fd639d59f06e17a0f377d0021e1b7e9054e4d6fedc98774";
 const DATAFUSION_VERSION: &str = "55.0.0";
 const DATAFUSION_PACKAGE_HASH: &str =
     "96f76f0167ed0842b29a3d1e41be3c034c0a46409a3a703cc4cc84ee8c24abf4";
@@ -145,9 +145,25 @@ fn maintained_locks_use_one_current_arrow_and_datafusion_family() {
 #[test]
 fn runtime_bridge_uses_datafusion_55_nan_fill_and_propagates_catalog_errors() {
     assert!(BRIDGE_SOURCE.contains("fill_nan(&ScalarValue::from(0.0), &[\"value\"])"));
-    assert!(BRIDGE_SOURCE.contains(".table_exist(\"input\")"));
-    assert!(BRIDGE_SOURCE.contains(".map_err(display_error)?"));
-    assert!(!BRIDGE_SOURCE.contains("unwrap_or(false)"));
+    assert!(catalog_error_chain(BRIDGE_SOURCE));
+}
+
+fn catalog_error_chain(source: &str) -> bool {
+    let compact: String = source.chars().filter(|c| !c.is_whitespace()).collect();
+    compact.contains(
+        "letdatafusion_registered=state.datafusion.table_exist(\"input\").map_err(display_error)?;",
+    )
+}
+
+#[test]
+fn catalog_error_chain_rejects_swallowed_error_despite_unrelated_propagation() {
+    let broken = BRIDGE_SOURCE.replace(
+        ".table_exist(\"input\")\n        .map_err(display_error)?",
+        ".table_exist(\"input\").unwrap_or(false)",
+    );
+    assert_ne!(broken, BRIDGE_SOURCE);
+    assert!(broken.contains(".map_err(display_error)?"));
+    assert!(!catalog_error_chain(&broken));
 }
 
 fn assert_dependency(

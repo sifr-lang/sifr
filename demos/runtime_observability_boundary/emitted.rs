@@ -5,7 +5,7 @@ mod sifr_generated_generated_support {
         SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticEvent,
         SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel,
     };
-    pub(crate) fn runtime_emit_diagnostic(
+    fn runtime_emit_diagnostic(
         level: &str,
         target: &str,
         name: &str,
@@ -17,11 +17,12 @@ mod sifr_generated_generated_support {
             },
         )
     }
-    pub(crate) fn sifr_generated_const_494e464f()
-    -> SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel {
+    #[must_use]
+    pub fn sifr_generated_const_494e464f() -> SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel {
         SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel::new("info".to_string())
     }
-    pub(crate) fn diagnostic_event(
+    #[must_use]
+    pub fn diagnostic_event(
         level: &SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel,
         target: &str,
         name: &str,
@@ -34,7 +35,9 @@ mod sifr_generated_generated_support {
             message.to_owned(),
         )
     }
-    pub(crate) fn emit_diagnostic(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn emit_diagnostic(
         event: &SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticEvent,
     ) -> Result<(), SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticError> {
         runtime_emit_diagnostic(
@@ -118,7 +121,9 @@ mod sifr_generated_project_nominals {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    diagnostic_event, emit_diagnostic, sifr_generated_const_494e464f,
+};
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticEvent;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eruntimeX2eDiagnosticLevel;

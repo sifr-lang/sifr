@@ -6,7 +6,12 @@ use test_support::TestUnwrap as _;
 #[test]
 fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
     let workspace = tempfile::tempdir().test_unwrap("workspace");
-    write_fixture(workspace.path());
+    let host_listener =
+        std::net::TcpListener::bind("127.0.0.1:0").test_unwrap("host network listener");
+    let host_address = host_listener
+        .local_addr()
+        .test_unwrap("host listener address");
+    write_fixture(workspace.path(), host_address);
     let lock = Command::new("cargo")
         .arg("generate-lockfile")
         .current_dir(workspace.path())
@@ -85,6 +90,19 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
     );
     assert_eq!(String::from_utf8_lossy(&probe.stdout).trim(), "confined");
 
+    let network = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .args(["network-probe", "network"])
+        .current_dir(workspace.path())
+        .output()
+        .test_unwrap("run network-granted probe");
+    assert!(
+        network.status.success(),
+        "network grant must reach the host listener: status={:?} stderr={}",
+        network.status,
+        String::from_utf8_lossy(&network.stderr)
+    );
+    assert_eq!(String::from_utf8_lossy(&network.stdout).trim(), "connected");
+
     let legal_near_name = Command::new(env!("CARGO_BIN_EXE_sifr"))
         .arg("biuld")
         .current_dir(workspace.path())
@@ -134,7 +152,7 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
     assert!(String::from_utf8_lossy(&drift.stderr).contains("does not match"));
 }
 
-fn write_fixture(root: &std::path::Path) {
+fn write_fixture(root: &std::path::Path, host_address: std::net::SocketAddr) {
     std::fs::create_dir_all(root.join("tools/src")).test_unwrap("tools source");
     std::fs::create_dir_all(root.join("provider/src")).test_unwrap("provider source");
     std::fs::write(
@@ -151,7 +169,7 @@ fn write_fixture(root: &std::path::Path) {
         .test_unwrap("tools marker");
     std::fs::write(
         root.join("tools/sifr.toml"),
-        "[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = [\"credentials\", \"network\", \"project-write\"]\n\n[tools.probe]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = []\n\n[tools.biuld]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = []\n",
+        "[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = [\"credentials\", \"network\", \"project-write\"]\n\n[tools.probe]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = []\n\n[tools.network-probe]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = [\"network\"]\n\n[tools.biuld]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = []\n",
     )
     .test_unwrap("tools Sifr manifest");
     std::fs::write(
@@ -188,6 +206,13 @@ fn write_fixture(root: &std::path::Path) {
             r#"fn main() {{
     let mode = std::env::args().nth(1);
     if mode.as_deref() == Some("child") {{ return; }}
+    let host_address: std::net::SocketAddr = "{host_address}".parse().unwrap();
+    if mode.as_deref() == Some("network") {{
+        std::net::TcpStream::connect_timeout(&host_address, std::time::Duration::from_secs(1))
+            .expect("network grant must reach the host listener");
+        println!("connected");
+        return;
+    }}
     if mode.as_deref() == Some("flood") {{
         use std::io::Write as _;
         let bytes = vec![b'x'; 6 * 1024 * 1024];
@@ -198,7 +223,10 @@ fn write_fixture(root: &std::path::Path) {
     if std::env::var_os("SIFR_TEST_SECRET_TOKEN").is_some() {{ std::process::exit(10); }}
     if std::fs::read_to_string("{workspace_secret_literal}").is_ok() {{ std::process::exit(11); }}
     if std::process::Command::new("/usr/bin/true").status().is_ok() {{ std::process::exit(12); }}
-    if std::net::TcpListener::bind("127.0.0.1:0").is_ok() {{ std::process::exit(13); }}
+    if std::net::TcpStream::connect_timeout(&host_address, std::time::Duration::from_secs(1)).is_ok() {{
+        eprintln!("ungranted network access reached the host listener");
+        std::process::exit(13);
+    }}
     if std::env::current_exe().ok().and_then(|path| std::process::Command::new(path).arg("child").status().ok()).is_some() {{ std::process::exit(14); }}
     println!("confined");
 }}

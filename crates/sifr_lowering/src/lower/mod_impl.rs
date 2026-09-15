@@ -12,12 +12,12 @@ use super::{
 use sifr_ir::LoweringResult;
 #[path = "mod_impl_result.rs"]
 mod module_result;
-pub(in crate::lower) fn lower_module_impl(
+pub(in crate::lower) fn lower_module_impl<'defs>(
     stmts: &[Stmt],
-    externals: &ExternalDefs,
-    mut ctx: LowerCtx,
+    externals: &'defs ExternalDefs,
+    ctx: LowerCtx<'defs>,
 ) -> Result<LoweringResult, Vec<HirDiagnostic>> {
-    ctx.externals = externals.clone();
+    let mut ctx = ctx.with_external_defs(externals);
     // Register built-in functions
     register_builtins(&mut ctx);
     integer_literal_diagnostics::validate_module_integer_literals(stmts, &mut ctx);

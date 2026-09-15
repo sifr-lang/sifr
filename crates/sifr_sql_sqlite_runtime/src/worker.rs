@@ -348,7 +348,7 @@ fn open_connection(
     required_features: &[String],
     attached_files: &std::collections::BTreeMap<String, std::path::PathBuf>,
 ) -> Result<Connection, SqlError> {
-    if rusqlite::version_number() != 3_053_002 {
+    if rusqlite::version_number() != 3_053_004 {
         return Err(SqlError::new(SqlErrorKind::Configuration));
     }
     let connection = Connection::open_with_flags(
@@ -698,7 +698,7 @@ fn execute(
         statement_cache_hit: was_cached,
         last_insert_rowid: connection.last_insert_rowid(),
         changes: u64::try_from(changes).unwrap_or(u64::MAX),
-        sqlite_version: (3, 53, 2),
+        sqlite_version: (3, 53, 4),
     })
 }
 

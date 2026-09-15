@@ -87,13 +87,13 @@ fn build_lock_flags_parse_and_normalize_without_collapsing_frozen() {
         let mut args = vec!["sifr", "build", "main.sifr"];
         args.extend(flags);
         let cli = Cli::try_parse_from(args).expect("build lock flags should parse");
-        let Commands::Build {
+        let Commands::Build(crate::deferred_cli_args::DeferredArgs(crate::command_args::Build {
             locked,
             offline,
             frozen,
             materialize_only,
             ..
-        } = cli.command.expect("build command should be present")
+        })) = cli.command.expect("build command should be present")
         else {
             panic!("expected parsed build command");
         };
@@ -106,9 +106,10 @@ fn build_lock_flags_parse_and_normalize_without_collapsing_frozen() {
 
     let cli = Cli::try_parse_from(["sifr", "build", "main.sifr", "--materialize-only"])
         .expect("the internal source-only build mode should parse");
-    let Commands::Build {
-        materialize_only, ..
-    } = cli.command.expect("build command should be present")
+    let Commands::Build(crate::deferred_cli_args::DeferredArgs(crate::command_args::Build {
+        materialize_only,
+        ..
+    })) = cli.command.expect("build command should be present")
     else {
         panic!("expected parsed build command");
     };
@@ -407,12 +408,12 @@ fn assert_drift_rejected(case: DriftCase) {
             std::fs::remove_file(&lock_path).expect("negative case should remove copied lock");
         }
         DriftCase::StaleVersion => {
-            replace_file(&lock_path, "version = \"2.14.0\"", "version = \"2.99.0\"");
+            replace_file(&lock_path, "version = \"2.14.2\"", "version = \"2.99.0\"");
         }
         DriftCase::Checksum => replace_file(
             &lock_path,
-            "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9",
-            "0466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9",
+            "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855",
+            "0c4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855",
         ),
         DriftCase::Source => replace_file(
             &lock_path,
@@ -421,8 +422,8 @@ fn assert_drift_rejected(case: DriftCase) {
         ),
         DriftCase::Feature => replace_file(
             &manifest_path,
-            "indexmap = { version = \"=2.14.0\", default-features = false }",
-            "indexmap = { version = \"=2.14.0\", default-features = false, features = [\"serde\"] }",
+            "indexmap = { version = \"=2.14.2\", default-features = false }",
+            "indexmap = { version = \"=2.14.2\", default-features = false, features = [\"serde\"] }",
         ),
     }
     let lock_before = std::fs::read(&lock_path).ok();

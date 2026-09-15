@@ -356,6 +356,18 @@ impl LocalReferenceRenamer<'_> {
 }
 
 impl VisitMut for LocalReferenceRenamer<'_> {
+    fn visit_field_value_mut(&mut self, field: &mut syn::FieldValue) {
+        // Shorthand prints the member token, so expand it before changing only
+        // the value binding. The field's nominal identity must stay unchanged.
+        if field.colon_token.is_none()
+            && matches!(&field.expr, syn::Expr::Path(path)
+                if path.qself.is_none() && path.path.is_ident(self.from))
+        {
+            field.colon_token = Some(Default::default());
+        }
+        visit_mut::visit_field_value_mut(self, field);
+    }
+
     fn visit_block_mut(&mut self, block: &mut syn::Block) {
         for statement in &mut block.stmts {
             self.visit_stmt_mut(statement);

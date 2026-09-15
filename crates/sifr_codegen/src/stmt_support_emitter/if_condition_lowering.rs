@@ -216,24 +216,22 @@ impl RustEmitter {
         );
 
         if left_is_option && !right_is_option && !right_none_like {
-            if right_borrowed && !crate::helpers::is_copy_type_for_codegen(&right_ty) {
-                lowered_right = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_right))),
-                    method: "clone".to_string(),
-                    args: vec![],
-                };
+            if !crate::helpers::is_copy_type_for_codegen(&right_ty) {
+                lowered_right = crate::ownership_plan::materialize_owned_value(
+                    &right_ty,
+                    crate::RustExpr::Paren(Box::new(lowered_right)),
+                );
             }
             lowered_right = crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
                 args: vec![lowered_right],
             };
         } else if !left_is_option && right_is_option && !left_none_like {
-            if left_borrowed && !crate::helpers::is_copy_type_for_codegen(&left_ty) {
-                lowered_left = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
-                    method: "clone".to_string(),
-                    args: vec![],
-                };
+            if !crate::helpers::is_copy_type_for_codegen(&left_ty) {
+                lowered_left = crate::ownership_plan::materialize_owned_value(
+                    &left_ty,
+                    crate::RustExpr::Paren(Box::new(lowered_left)),
+                );
             }
             lowered_left = crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),

@@ -33,7 +33,10 @@ pub(crate) fn resolve_single_file_metadata(
     let used_stdlib_modules = codegen_result.used_stdlib_modules.clone();
     let required_features = codegen_result.required_features.clone();
 
-    let interop = if codegen_result.interop == InteropBuildPlan::default() {
+    let interop = if rust_interop_context.is_none()
+        && codegen_result.interop.rust == sifr_codegen::RustInteropPlan::default()
+        && codegen_result.interop.python == InteropBuildPlan::default().python
+    {
         resolve_cached_stdlib_interop(codegen_result, rust_interop_context, stdlib_interop)?
     } else {
         resolve_interop(codegen_result, rust_interop_context, stdlib_interop)?
@@ -53,7 +56,7 @@ fn resolve_cached_stdlib_interop(
     rust_interop_context: Option<PackageRustInteropContext>,
     stdlib_interop: &StdlibRustInterop,
 ) -> ResolvedInterop {
-    let key = stdlib_interop_cache_key(stdlib_interop);
+    let key = stdlib_interop_cache_key(stdlib_interop, &codegen_result.interop);
     let cell = {
         let cache = RESOLVED_STDLIB_INTEROP.get_or_init(|| Mutex::new(HashMap::new()));
         let mut entries = cache
@@ -81,7 +84,10 @@ fn resolve_interop(
         .map(|generated: GeneratedBinaryProject| generated.interop)
 }
 
-fn stdlib_interop_cache_key(stdlib_interop: &StdlibRustInterop) -> String {
+pub(super) fn stdlib_interop_cache_key(
+    stdlib_interop: &StdlibRustInterop,
+    selected: &InteropBuildPlan,
+) -> String {
     let sysroot_identity = stdlib_interop.sysroot.as_ref().map_or_else(
         || "<no-sysroot>".to_string(),
         |sysroot| {
@@ -93,8 +99,5 @@ fn stdlib_interop_cache_key(stdlib_interop: &StdlibRustInterop) -> String {
             )
         },
     );
-    format!(
-        "{sysroot_identity}\n{}",
-        stdlib_interop.plan.cache_key_fragment()
-    )
+    format!("{sysroot_identity}\n{}", selected.cache_key_fragment())
 }

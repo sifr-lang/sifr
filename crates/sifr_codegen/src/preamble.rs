@@ -9,6 +9,7 @@ pub use generator_runtime::*;
 mod error_conversion;
 mod secondary_error;
 pub use error_conversion::*;
+pub(crate) use secondary_error::build_secondary_error_type_items;
 mod task_context_runtime;
 mod template_runtime;
 mod type_validation;

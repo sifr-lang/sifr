@@ -180,6 +180,8 @@ fn package_and_unpack(workspace: &Path, app: &TestPackage) -> TestPackage {
     let packaged = std::process::Command::new("cargo")
         .args(["package", "--allow-dirty", "--no-verify", "--manifest-path"])
         .arg(app.root.join("Cargo.toml"))
+        .arg("--target-dir")
+        .arg(app.root.join("target"))
         .output()
         .expect("cargo package should run");
     assert!(

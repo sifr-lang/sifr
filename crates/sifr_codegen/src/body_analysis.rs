@@ -336,6 +336,8 @@ impl BodyAnalysis {
                     continue;
                 };
                 if defined.contains(&name)
+                    && stmt_referenced.get(&name).copied() == Some(expressions.len())
+                    && !matches!(stmt, HirStmt::While { .. })
                     && !borrowed.contains(&name)
                     && remaining.get(&name).copied().unwrap_or(0) == 0
                     && !outer_live.contains(&name)
@@ -470,6 +472,11 @@ fn direct_stmt_summary(
 ) -> BodySummary {
     let mut summary = BodySummary::default();
     direct_stmt_mutations(stmt, &mut summary.mutated);
+    // Augmented assignment reads its existing value through the target name,
+    // which is not represented by a Name expression in the RHS traversal.
+    if let HirStmt::AugAssign { name, .. } = stmt {
+        *summary.referenced.entry(name.clone()).or_default() += 1;
+    }
     let excluded_optional_read = match stmt {
         HirStmt::Let { ty, value, .. } if ty.optional_member_type().is_some() => {
             Some(std::ptr::from_ref(value))
