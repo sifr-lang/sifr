@@ -124,3 +124,21 @@ Origin: native qualification 34895961655 at the final implementation candidate.
 Owner: editor packaging maintenance.
 The package succeeds with an advisory about 370 files/188 JavaScript files.
 Consider bundling in a separate packaging task; no package policy was relaxed.
+
+## Item 85 portable lockfile review observations
+
+Origin: SATISFIED scoped review of
+`5d7c6eeeded8e18d18d113aa4493a12f076e719c`, response SHA256
+`13d5765f0fa0e7cd5a1ab67314f0ecb085bf27e3e0c7841a045f357d894ea17d`.
+
+- Owner: portable sysroot dependency identity. If a published nonlocal runtime
+  package is introduced in a future supported graph, consider tightening the
+  optional-edge identity discriminator. The reviewed graph cannot reach that
+  case and current missing-required-package checks fail closed. This suggestion
+  does not authorize a compatibility path or a newly published runtime.
+- Owner: verification build timing and storage lifecycle. Create-PR gate 11
+  retained exit 124 for cold E2E compilation at 667.118/600 seconds despite all
+  functional cases passing. The unchanged warm selection passed in 12.206
+  seconds with all 46 cache hits. Preserve both results and investigate cold
+  build preparation separately; do not relax thresholds or count the warm
+  subset as a substitute for the canonical full merge gate.
