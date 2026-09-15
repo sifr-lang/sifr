@@ -82,3 +82,13 @@ regressions and the representative performance selection. The actual release
 profile, including large-session stress, is running at that same unchanged
 candidate. This issue remains open for that final qualification result; the
 earlier focused PASS is not relabeled as a release-profile result.
+
+## Current release qualification — Item 85 delivered
+
+The earlier release1 failed in portable lockfile preparation before any release
+test or large-session measurement. Item 85 corrects that optional-runtime edge
+and is delivered through PR 3829, merge `7cde28a1fcb799255d8f2820ab2410f4e241b0df`.
+Full merge4 passes at `5d7c6eeeded8e18d18d113aa4493a12f076e719c`, including the unchanged memory
+implementation and representative performance selection. Release2 is now
+running at that same clean candidate. This issue remains pending its actual
+large-session result; earlier targeted results retain their original identities.

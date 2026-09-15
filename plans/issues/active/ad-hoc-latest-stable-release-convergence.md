@@ -1,19 +1,20 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-## Current qualification status — Item 85, 2026-09-15
+## Current qualification status — Item 85 delivered
 
-The implementation and delivery records are merged as documented below. The
-subsequent release profile failed during preparation on the unchanged qualified
-candidate, before any release test or performance measurement. A complete
-356-case materialization scan found exactly three related decimal-demo failures.
-Item 85 owns the portable lockfile correction below. The current repair branch
-is `codex/latest-stable-release-preparation`, based on record merge
-`cf05cd9a31490111eae8dea8099391b1c7f72024` in the primary owned remote worktree.
-Full merge3 and native34895961655 remain passing evidence for the original
-`d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea`; they are not rebound to this repair.
-Items62/35, full release qualification and phase archive remain pending.
+Item 85 is merged through [PR 3829](https://github.com/sifr-lang/sifr/pull/3829),
+merge `7cde28a1fcb799255d8f2820ab2410f4e241b0df`. Its implementation candidate is
+`5d7c6eeeded8e18d18d113aa4493a12f076e719c`. Focused tests, all 356 corrected materializations,
+scoped review, full merge4 and native qualification 34926666255 pass.
+The complete delivery record is appended below.
 
-## Implementation delivery checkpoint — 2026-09-15
+Release2 is running on that unchanged candidate. Final Item 62 qualification
+and Item 35 review/archive remain pending. Original release1 failed during
+preparation on d2bc, before release tests or performance measurements; that
+failure and the original 353-pass/three-failure scan remain retained. Older
+full merge3/native results stay bound to d2bc. No publication has occurred.
+
+## Historical implementation delivery checkpoint — 2026-09-15
 
 This section supersedes the historical pending/blocker statements below. The
 frozen implementation batches, including the user-authorized combined repair
@@ -74,8 +75,9 @@ Retained payloads and remote proof:
 `/home/yaser5/projects/sifr/continuation-evidence/20260914-qualification-34895961655/`.
 The earlier native runs remain bound to their original source SHAs.
 
-The full release profile is running as release1 at the unchanged clean candidate.
-Closure records use a separate owned remote worktree based on the root merge.
+The later release1 failed during preparation on this historical candidate.
+Item 85's appended record and the current status above supersede its pending
+qualification state. Closure records use a separate owned remote worktree.
 The remaining actions are actual release-profile completion, fresh first-GA/site
 preflight, maintained support/documentation/release-plan validation with those
 same-source artifacts, final Item 62 audit disposition, and Item 35's exact-SHA
@@ -5399,3 +5401,72 @@ Evidence: /home/yaser5/projects/sifr/continuation-evidence/20260915-release-prep
 plus release1.* in 20260913-final-integration. The complete scan passed 353 of 356 cases. Only decimal_arithmetic,
 decimal_diagnostics and decimal_types failed, all for the same missing optional
 runtime requirement. Final Items62/35 remain open.
+
+## Item 85 delivery and validation
+
+Candidate `5d7c6eeeded8e18d18d113aa4493a12f076e719c` corrects portable lockfile
+rewriting using the actual resolved optional runtime edge. Direct requirements,
+exact local package identities and registry checksum checks remain enforced.
+Delivered through [PR 3829](https://github.com/sifr-lang/sifr/pull/3829),
+merge `7cde28a1fcb799255d8f2820ab2410f4e241b0df`, under ordinary repository policy.
+
+The complete original materialization scan retained 353 passes and three
+failures. All three decimal demos failed for the same optional-runtime cause.
+After the correction, a fresh scan of the same 356 cases passes with zero
+failures. Five focused unit tests and real locked/offline executions of the
+three decimal demos plus the runtime-enabled Base64 control pass. Every
+generated portable graph uses the exact candidate; manifests and lockfiles
+remain unchanged through fetch and execution. Production driver Clippy,
+format, maintainability and the 3,880-file guardrail pass.
+
+Corrected materialization report SHA256:
+`2d6bfe13de971f0eb425238d344151a45bf52bdae94acc12eab7561fa482174b`.
+Focused compiler binary SHA256:
+`657526c11303118f07cd4c6c7811fb999d76085a6cc20ff0170459952ea52ed6`.
+Evidence: `20260915-release-preparation/`, including
+`focused-5d7c6eeeded8/focused.json` and
+`all-materializations-5d7c6eeeded8/all-materializations.json`.
+
+Create-PR gate 11 completed all 30 functional steps successfully, including
+66 SQL variants, 626 ordinary driver tests and 143 E2E cases. Its actual exit
+remains 124: cold E2E compilation took 667.118 seconds against the unchanged
+600-second budget, with zero cache hits across 46 groups. Setup's cold timing
+overrun is advisory. The same exact-source E2E selection then passed warm in
+12.206 seconds, with 143/143 cases and 46/46 cache hits. This scoped warm
+measurement corroborates performance; it does not replace the full merge gate
+or change the retained failed PR-gate result.
+
+PR-gate report SHA256:
+`3a9496ed0e17014eac1e6ada3eef585a26f9ba99d86c00e31fdc9b639c552735`.
+PR-gate log SHA256:
+`c856dbd4cd4c62b2e7356c7bd069a7376b861a28002be785e326efca0f05cb04`.
+Warm E2E log SHA256:
+`437695c0a55dc259d9a882a9fb3f21626d2ec1bcbd0359c305786813ea0a9d94`.
+
+The exact-source scoped Opus review returned SATISFIED with no blocking
+finding: one initial review, zero remediation reviews. Response SHA256
+`13d5765f0fa0e7cd5a1ab67314f0ecb085bf27e3e0c7841a045f357d894ea17d`.
+Its prompt, response and receipt are outside the reviewed tree under
+`20260913-final-integration/reviews/5d7c6eeeded8e18d18d113aa4493a12f076e719c/`.
+Optional future published-runtime identity tightening and the retained cold
+PR-gate timing observation are recorded in the follow-up owner.
+
+Full merge gate 4 passes on this exact clean candidate in
+17,398.66 seconds. All selected areas pass, including
+66 SQL cases, 626 ordinary driver tests, all 77 separately executed generated
+build tests, 1,517 codegen tests and 727 E2E cases. The E2E selection has
+185 groups and 0 cache hits. All advisories in the original report
+remain reported; no threshold, workload or reference was changed.
+
+`merge4.json` SHA256: `5d76daf392363d83f775dbfbdb1da1225f0c2959cb936e8ffc1dee6c7281c35a`.
+`merge4.log` SHA256: `bd19e20603a5b36373e71250aa6fcfd775577d0d0248662150eddf170bd1e91a`.
+Evidence remains in `20260913-final-integration/`; source status is clean,
+source identity is the candidate above and the actual exit is 0.
+
+Native qualification [34926666255, attempt 1](https://github.com/sifr-lang/sifr/actions/runs/34926666255)
+passes all four native platforms, installer, editor package and index at this
+exact candidate. Seven transport archives and all 20 indexed payloads are
+verified locally; all 20 payloads are also verified remotely. Index SHA256
+`fc1655957bb409d84eeb81e6cf7c2c1790dccae91570508ef65ff8d8b27c9cbf`.
+The older candidate's merge3, native qualification and failed release1 retain
+their original source identities and outcomes.
