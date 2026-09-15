@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import tomllib
 import unittest
@@ -282,12 +283,26 @@ class SetupPolicyTests(unittest.TestCase):
                        ["generated_broader", "generated_minimized_seeds"]):
             calls.clear()
             prepare_generated_oracle_binary(profile(suites), env, run)
-            self.assertEqual(calls, [(command, env)])
+            prepare = [sys.executable, str(REPO_ROOT / "verification/areas/cpython_differential/"
+                                           "checks/prepare_generated.py")]
+            for suite in sorted(suites):
+                prepare.extend(["--suite", suite])
+            self.assertEqual(calls, [(command, env), (prepare, env)])
             self.assertIs(calls[0][1], env)
+            self.assertIs(calls[1][1], env)
         def fail(*args, **kw):
             raise CommandFailed(101)
         with self.assertRaises(CommandFailed):
             prepare_generated_oracle_binary(profile(["generated_broader"]), env, fail)
+
+    def test_generated_program_preparation_failure_propagates(self):
+        def fail_programs(args, **kw):
+            if args[0] == sys.executable:
+                raise CommandFailed(101)
+        profile = {"selected_areas": [{"area": "cpython_differential",
+                                       "suites": ["generated_broader"]}]}
+        with self.assertRaises(CommandFailed):
+            prepare_generated_oracle_binary(profile, {}, fail_programs)
 
     def test_generated_oracle_preparation_is_enrolled_in_profile_setup(self):
         for name, expected in (("create-pr", False), ("merge", False),

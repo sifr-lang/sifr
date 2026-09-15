@@ -5522,3 +5522,22 @@ locked offline dependency policy, and all comparison/build timeout limits.
 Two setup-policy regressions cover suite selection, environment preservation,
 failure propagation and enrollment in the actual nightly/release profiles;
 ordinary merge/create-pr profiles do not acquire a new release build.
+
+
+Item 86 focused2 at `bf64186c5191e23a0bfbe1713e0151154e1035ea`
+retains a failed result: clean release compilation passed in 12m31s, both
+bounded compiler verifications passed in 407/403ms, but all ten generated
+programs timed out during their cold native builds at the unchanged 20-second
+program limit. Report SHA256
+`b388884c9bb115019e82c707932350d558295a360d1676f41a186c93f1964751`;
+log SHA256 `1af6a494d3f2cde73a7842ea36e248b6be126971a25d10f2240faa38607597ce`.
+The 39 setup-policy checks and five artifact checks plus three program-cache
+preparation checks now cover the complete selected preparation boundary.
+Extend this same runner-owned setup to populate the normal CLI run cache for
+every selected deterministic generated program. Use the existing 300-second
+build deadline for that explicit compilation/cache preparation, retain actual
+output/status/duration, and fail on unexpected execution status or timeout.
+The subsequent oracle still reruns all programs with unchanged 20-second
+limits and all original CPython comparisons; source paths and generation are
+shared so cache identity matches without fallback or stale artifact selection.
+No full-suite rerun or Item86 review occurred between these focused findings.

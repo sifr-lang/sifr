@@ -80,6 +80,11 @@ def prepare_generated_oracle_binary(profile, env, command_runner) -> None:
     command = [*manifest["release_binary"]["build_command"], "--locked", "--offline"]
     print(f"[sifr-profile-setup] generated-oracle-build={' '.join(command)}", flush=True)
     command_runner(command, env=env)
+    prepare = [sys.executable, str(REPO_ROOT / "verification/areas/cpython_differential/"
+                                   "checks/prepare_generated.py")]
+    for suite in sorted(suites.intersection({"generated_broader", "generated_minimized_seeds"})):
+        prepare.extend(["--suite", suite])
+    command_runner(prepare, env=env)
 
 
 def prepare_sysroot_source_binary(profile, env, command_runner) -> None:

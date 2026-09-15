@@ -172,13 +172,9 @@ def build_release_binary(
     }
 
 
-def run_case(
-    suite_name: str,
-    case: dict[str, Any],
-    suite: dict[str, Any],
-    build_info: dict[str, str],
-    suite_actual_root: Path,
-) -> list[str]:
+def materialize_case(
+    case: dict[str, Any], build_info: dict[str, str], suite_actual_root: Path,
+) -> tuple[Path, Path]:
     case_id = str(case["id"])
     program = generate_program(case)
     case_root = suite_actual_root / case_id
@@ -202,6 +198,18 @@ def run_case(
         ),
         encoding="utf-8",
     )
+    return python_path, sifr_path
+
+
+def run_case(
+    suite_name: str,
+    case: dict[str, Any],
+    suite: dict[str, Any],
+    build_info: dict[str, str],
+    suite_actual_root: Path,
+) -> list[str]:
+    case_id = str(case["id"])
+    python_path, sifr_path = materialize_case(case, build_info, suite_actual_root)
     timeout = int(suite["per_program_timeout_seconds"])
     cpython = run_command([sys.executable, str(python_path)], timeout)
     sifr = run_command(

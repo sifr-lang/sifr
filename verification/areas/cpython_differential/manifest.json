@@ -26,6 +26,13 @@
           "command": "area-check",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "generated_program_preparation",
+          "entry": "verification/areas/cpython_differential/checks/test_generated_preparation.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },
