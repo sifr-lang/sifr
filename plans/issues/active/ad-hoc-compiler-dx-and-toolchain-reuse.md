@@ -524,11 +524,11 @@ All canonical acceptance cases in architecture section 16 are covered. The final
 
 ## Execution Status
 
-DX.1 implementation is saved; the user authorized correcting the canonical LSP test-client transport dependency within this batch before resuming baseline validation. Remote Claude and both compiler artifacts are available. No milestone is complete; DX.2–DX.16 remain dependency-blocked behind DX.1.
+DX.1 is complete and merged, including the required canonical LSP measurement transport correction. DX.2–DX.16 are not started; DX.2 is the next eligible item in a new session.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
-| DX.1 | Blocked during baseline validation; unreviewed/unmerged | Implementation `28605fd6da80d8eaf877cd6a992e1e8ab4b6d69f`; draft [PR #3840](https://github.com/sifr-lang/sifr/pull/3840); later commits are handoff records | Named schema/policy seeds pass; both compiler receipts verified; partial product baseline below; complete LSP/contributor baselines blocked | Not requested: item acceptance incomplete |
+| DX.1 | Complete / merged | Candidate `5c7502f7aea3cd887a217c2fb3e289c7a1f2c653`; [PR #3840](https://github.com/sifr-lang/sifr/pull/3840); merge `de41ced4d65a3c511617219238f26052227fd6e8` | Product and contributor baselines validated; Q07/Q08, transport regressions, schema and guardrail pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3840#issuecomment-5705061104) |
 | DX.2 | Not started | — | — | — |
 | DX.3 | Not started | — | — | — |
 | DX.4 | Not started | — | — | — |
@@ -547,83 +547,77 @@ DX.1 implementation is saved; the user authorized correcting the canonical LSP t
 
 ## Current Handoff — DX.1 (2026-09-16)
 
-- **State:** blocked, not reviewed or merged. Owned remote checkout:
+- **State:** complete and merged. Owned checkout:
   `yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/compiler-dx-orchestration`;
-  branch `codex/compiler-dx-toolchain-reuse`; draft PR #3840. Base:
-  `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`; latest implementation candidate:
-  `28605fd6da80d8eaf877cd6a992e1e8ab4b6d69f`. Subsequent changes only record this handoff.
-- **Blocking owner:** [LSP buffered-reader transport](ad-hoc-lsp-protocol-buffered-reader.md).
-  The canonical Python LSP client times out with a complete next frame already
-  in its buffer. A compiler-independent two-frame reproduction leaves 88 buffered
-  bytes after the timeout. Cleanup also masks the original timeout with exit 1.
-  No alternate client, timeout increase, protocol omission or compiler fix was added.
-- **Saved implementation:** artifact-bound product/contributor compiler lanes;
-  Cargo profile/executable/sysroot checks; default contributor LSP binding;
-  separate compiler/application/verification profile reporting; actual budget
-  boundary mismatch rejection and Q07/Q08 seeds; immutable legacy-budget mapping;
-  fixed Q09 workload/noise inputs; baseline capture/validation and authority-inventory
-  adapters; prospective Phase 35 persistence, cleanup policy, architecture and
-  roadmap/index adoption. These changes remain unreviewed and do not close DX.1.
-- **Completed checks:** 65-case benchmark manifest validation; benchmark runner
-  self-test including Q07/Q08 and existing numerical budget failures; Python syntax;
-  `git diff --check`; file-size guardrail (3893 source files, 900-line limit).
-  Full logged self-test/guardrail cover `b740113bf0e20bb7fc3752c3b5e2e55911ea8625`;
-  the only later implementation change explicitly records baseline-row profile
-  fields in `dx_capture.py`, syntax-checked and exercised by the partial capture.
-  Unchanged tests are reused rather than represented as new executions.
-- **Preparation:** pinned Ruff, PostgreSQL 18, WASI-Virt and large-LSP corpus
-  submodules initialized without gitlink changes. Rust/Cargo 1.98.1, uv 0.12.5,
-  12 GB Linux host, two Cargo jobs. Initial free disk was 370 GiB with no private
-  target. Cold optimized build succeeded in 12m43s and dev in 16m53s; these are
-  preparation costs, not controlled latency evidence. Both final candidate
-  artifact receipts pass; product package verification and installed doctor pass.
-- **Runtime/toolchain correction requested by user:** remote default was
-  `1.98.0-x86_64-unknown-linux-gnu` while 1.98.1 was already installed. Ran
-  `rustup default 1.98.1-x86_64-unknown-linux-gnu`. From `/tmp`, active default now
-  reports Rust `1.98.1 (48a229cea 2026-09-01)` and Cargo
-  `1.98.1 (797e8a9bc 2026-08-05)`. No runtime source or rust-version was changed.
-  Original native failure under ambient 1.98.0 stays failed and preserved.
-  The subsequent baseline explicitly selected `RUSTUP_TOOLCHAIN=1.98.1-x86_64-unknown-linux-gnu`;
-  its 21 checks and native first/no-op/semantic-edit stages passed before LSP failed.
-  Replacing internal ambient selection remains DX.2, not code in this batch.
-- **Missing acceptance:** complete and validate the demanded-stdlib LSP baseline
-  (no valid steady/peak/allocation comparison is claimed); contributor capture,
-  including unchanged/edited sessions and bare Cargo tests; remaining fixed
-  corpus/profile baseline coverage; complete baseline report validation and
-  externally reviewed fixture/assertion-depth/application-profile inventory;
-  scoped Opus review, merge, and post-merge phase record. Q07/Q08 seeds pass but
-  overall DX.1 acceptance is incomplete. No optimized target or improvement is claimed.
-- **Gate/review policy:** no broad create-PR/merge gate because compiler Rust,
-  lockfile, actual fixture and workflow files were unchanged. Only docs,
-  performance measurement/validation Python and contract data changed. Claude's
-  required remote invocation returned READY, but no review request or approval
-  is claimed. An external baseline dependency blocks review/merge.
-- **Resumption authorization:** the user explicitly includes the required LSP transport correction in this DX.1 batch. The earlier separate-owner stop boundary is superseded.
-- **Exact next action:** correct the canonical LSP transport in this batch; resume
-  DX.1 with the repaired canonical client, revalidate affected evidence, complete
-  the missing named baseline/checks, review and merge. Do not implement DX.2–DX.16.
-  Local checkout modifications were pre-existing and remain untouched.
+  branch `codex/compiler-dx-toolchain-reuse`. Implementation [PR #3840](https://github.com/sifr-lang/sifr/pull/3840),
+  final candidate `5c7502f7aea3cd887a217c2fb3e289c7a1f2c653`, merge
+  `de41ced4d65a3c511617219238f26052227fd6e8`; phase base
+  `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`.
+- **Scope completed:** actual installed optimized/contributor artifact lanes;
+  compiler/application/verification profile separation; prospective cleanup/cache
+  policy; immutable legacy-budget mapping and Q07/Q08 seeds; frozen fixture
+  assertion authorities and Q09 inputs; current baseline capture. The user
+  explicitly included the required LSP transport correction in this batch.
+  Canonical reads now handle coalesced/fragmented frames within one deadline,
+  and cleanup retains the primary error. External report paths also work.
+- **Validation:** seven independent transport regressions pass; benchmark runner
+  self-test (Q07/Q08 and seeded numerical budget failures) passes on the final
+  candidate. The 65-case manifest/schema and file-size guardrail evidence remain
+  valid with unchanged inputs; final path-display changes preserve line counts.
+  Final `git diff --check` passes. No compiler, lockfile, actual fixture or
+  workflow files changed, so no broad gate was run under the user's batch rule.
+- **Baselines:** product capture passes 21 checks, native first/no-op/edit, and
+  21 demanded-stdlib LSP samples (one warmup); CV is 0.0059124324. Steady/peak/
+  post-close RSS are recorded; unavailable allocation/decoder counters stay null
+  with reasons. Contributor completion covers checks/native, unchanged/edited
+  sessions and the two matching bare Cargo stdlib-cache tests. It explicitly
+  consolidates provenance-bound successful original rows with the repaired
+  prepared-session run; it is not a new timing claim for reused rows.
+  No optimized performance target or improvement is claimed.
+- **Preserved failures/preparation:** original ambient-toolchain and LSP failures
+  remain failed. Contributor cold helper preparation hit its existing 180-second
+  deadline; explicit helper preparation was then recorded, without changing
+  deadlines. The prepared attempt exposed an outside-tree report-display error;
+  that failed report is retained, and only the affected session selection was
+  rerun after correction. Rust/Cargo 1.98.1 and two Cargo jobs were explicit;
+  useful owned artifacts were reused. Bare Cargo's 661-second cold test build is
+  retained in workflow cost, not hidden as free preparation.
+- **Review:** Claude Opus 5 returned SATISFIED, no blocking findings, for the
+  final candidate. [Published review](https://github.com/sifr-lang/sifr/pull/3840#issuecomment-5705061104).
+  Review evidence lives outside the reviewed tree keyed by candidate SHA.
+- **Follow-ups:** [separate review observations](ad-hoc-dx-baseline-review-followups.md)
+  retain optional contract-driven capture and future product-policy migration,
+  ambient-sysroot ownership, runner size, and direct-read diagnostic context.
+  They are not DX.1 blockers or authorization for this session to implement them.
+- **Blocker:** none.
+- **Exact next action:** stop this session after this record update. DX.2 requires
+  a new bounded session; no DX.2–DX.16 code was written. Local unrelated
+  modifications remain untouched.
 
 ### Evidence retained outside the reviewed tree
 
 Host/root: `yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx1-evidence/`.
-Raw stderr/stdout receipts remain beside each baseline. The two failed reports
-remain failures; a later configured invocation does not overwrite them.
+Raw command receipts remain beside reports. The checked-in capture/preparation
+commands are documented in `internal_docs/performance_budgets.md`; the exact
+consolidation script is saved below, including artifact/lock/toolchain equality
+assertions and per-row source paths, hashes and original row indices.
 
 | Artifact | SHA-256 / result |
 | --- | --- |
-| `fixture-inventory.json` | 3215 frozen authority/fixture records; `201476d3bf5d1abd3912967a06e156ab630203cb50cd3a0a9878ace55ff2197a` |
-| `selftest-b740113.log` | PASS; `2d15e391d0fa19411c20b70eb34107c39698a8954b0814bd04b030f4b1e71056` |
-| `product-28605fd/receipt.json` | verified installed optimized artifact; `6e64bbd509d581434f2934ef1c5c84fbbd290ef2113114eb75b3a2260339b1b0` |
-| `dev-6772895/receipt.json` | verified dev artifact for final candidate 28605fd (directory name reflects preparation start); `93deb6cf7f2a2849ff6e41581ca1683ff24915de811cc7b868c2b32b0947d136` |
-| `product-baseline-28605fd/baseline.json` | FAILED at ambient-toolchain native stage; `4c34e566c5b50084c8f319caac2be9f2fbf9659af3cc0a60abdae369ba39f01c` |
-| `product-baseline-explicit-toolchain-28605fd/baseline.json` | FAILED at LSP transport after CLI/native passes; `b27c216248e0d757723fb603c739c6deffed40385bbcfd2d63ca0177e105ec7f` |
-| `product-baseline-explicit-toolchain-28605fd.log` | original timeout and cleanup traceback/events; `436c3c521e321c44b92d1f5090103512cde84ffa3bde948f935b559191d83f3b` |
-| `lsp-buffer-repro.txt` | independent existing-client failure; `b191722bfb56b49277c809e68898dcdb23192cfe2902a0ecc8115dd77add9299` |
-
-Commands are documented in `internal_docs/performance_budgets.md` and the owner
-issue. Use fresh owned output directories when relevant inputs are repaired;
-never overwrite the failed artifacts or reuse a stale receipt as current evidence.
+| `fixture-inventory.json` | 3215 frozen authorities/fixtures; `201476d3bf5d1abd3912967a06e156ab630203cb50cd3a0a9878ace55ff2197a` |
+| `selftest-external-path.log` | PASS final candidate; `2d15e391d0fa19411c20b70eb34107c39698a8954b0814bd04b030f4b1e71056` |
+| `transport-e1bbacdf4.log` | 7 PASS, unchanged transport; `3d8774e265a9d03b69052039dc0e913b74282c43ab8b5ef0d4bf33b07a837324` |
+| `guardrail-e1bbacdf4.log` | PASS, final change preserves source line counts; `0371f7ff0407b48ec3c2b827e55899ed48ef9f856b1b3562c29558d86f65f945` |
+| `product-5c7502f7a/receipt.json`, `dev-5c7502f7a/receipt.json` | Validated final-candidate artifact/profile/sysroot/toolchain receipts |
+| `product-baseline-5c7502f7a/baseline.json` | PASS; `63630af41872a6592af2a242336b99b0228ad938a1adad76e389d730d03e7994` |
+| `dev-completed-5c7502f7a/baseline.json` | Consolidated completion PASS; `13d1ae567054848ec6329dc24ad6b58daab7f0db80b068961919661858fb9393` |
+| `consolidate-5c7502f7a.py` | Exact consolidation command; `73a8eaa7d97af1d2ee9d6fcdd7d9a7aa2a51492b936cce040381dca4fbf07d03` |
+| `reviews/5c7502f7aea3cd887a217c2fb3e289c7a1f2c653/response.md` | SATISFIED; `07b875ef13e13e8f1964e960b179732a975541ccaaf8c5177d5344ded41eda35` |
+| `product-baseline-28605fd/baseline.json` | Preserved FAILED ambient-toolchain run; `4c34e566c5b50084c8f319caac2be9f2fbf9659af3cc0a60abdae369ba39f01c` |
+| `product-baseline-explicit-toolchain-28605fd/baseline.json` | Preserved FAILED transport run; `b27c216248e0d757723fb603c739c6deffed40385bbcfd2d63ca0177e105ec7f` |
+| `dev-baseline-e1bbacdf4/baseline.json` | Preserved FAILED cold helper build; successful rows are explicitly reused |
+| `dev-completed-e1bbacdf4/baseline.json` | Preserved FAILED outside-tree report display |
+| `frontend-helper-e1bbacdf4.log` | Explicit preparation cost after cold timeout; hash bound from completed contributor report |
 
 ## Handoff Format
 
