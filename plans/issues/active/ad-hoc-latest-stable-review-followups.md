@@ -161,3 +161,36 @@ batch and its final closure criteria.
 - Suggestion: preserve the oracle minimization artifact path when a behavioral
   regression is detected by preparation. Actual preparation output/status/time
   is retained, but preparation failure currently stops before oracle shrinking.
+
+## Item 87 scoped review follow-ups
+
+Review of 106bceb4813cdf7a847faace17308bf132cfa376 for PR 3833: initial 1, remediation 0, SATISFIED with no blockers. Response SHA256 85a6dfebf0205a058483975074a41c8734e1eea28902dc13bf3ad35b9e5fdf55.
+
+- Negative Clippy controls reuse a fixed-name root outside positive-case invalidation. Each control asserts its own lint; consider applying uniform root invalidation in a separate verification-maintenance item.
+- Document the definition-only invariant of rust_source_defined_item_names and separately assess the existing impl-only empty-residue early return.
+- Consider preserving inner module attributes in root-binding import round trips and stopping after the unique compiler-owned nominal module. These were suggestions, not identified regressions.
+- Preserve PRgate2 cold E2E budget failure (665.160 s, 0/46 cache hits, all 143 functional passes) and exact-source warm pass (11.783 s, 46/46 hits). Do not relax budgets or relabel the cold result.
+- Track the 14 pre-existing optional all-targets Clippy test-style findings under their separate test-maintenance owner. Canonical production component Clippy passes.
+
+Full merge1 and native qualification35021268957 pass at this source. Release1 passes generated quality then fails on stale package demo lockfile digests; Item88 owns that repair.
+
+## Item 87 — optional test-target Clippy observations
+
+An additional `cargo clippy -p sifr_codegen -p sifr_lowering --all-targets -- -D warnings`
+check reported 14 pre-existing test-only diagnostics in unchanged source on the
+Item 87 M6 working candidate. The canonical workspace lint step uses
+`cargo clippy --workspace -- -D warnings`, without `--all-targets`; this extra
+check is not a release/merge gate requirement and is not an external blocker.
+
+Owner: compiler test maintainability. Follow up separately on five `borrow_as_ptr`
+findings in `crates/sifr_lowering/src/lower/external_defs_context_tests.rs`,
+eight `items_after_statements` findings across codegen record-variant,
+mutability-cleanup and corpus-repair tests, and one
+`needless_borrows_for_generic_args` finding in the codegen capture tests.
+No Item 87 implementation or new regression-test path was diagnosed.
+
+Preserve the failed extra check at
+`20260915-generated-support/compiler-clippy1.log` and `.exit` (101),
+without relabeling it as a pass or expanding the current generated-Rust repair
+scope. Record the required compiler lint result separately at its actual final
+source.

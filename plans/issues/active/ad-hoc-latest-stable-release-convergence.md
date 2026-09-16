@@ -1,13 +1,13 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-## Current qualification status — Item 86 delivered; Item 87 next
+## Current qualification status — Item 87 delivered; Item 88 next
 
-Item 86 is merged through [PR 3831](https://github.com/sifr-lang/sifr/pull/3831),
-merge `0124ca3e8021be586817ea0397eacf146a2768a6`. Its focused checks, scoped review, native qualification
-and full-run CPython differential area pass. Full release3 at `26ae861e9f26f83fb6c052551c726cbb2cfb768f`
-then fails generated-code quality in two completed variants. The appended
-Item 87 owns those generated-Rust repairs as one focused batch. Final release
-qualification, Item 62 and Item 35 remain pending. No publication has occurred.
+Item87 is merged through [PR3833](https://github.com/sifr-lang/sifr/pull/3833).
+Its exact-source review, full merge gate, native qualification and full generated-
+quality release area pass. Release1 then fails two stale package demo lockfile
+hash expectations. Item88 below owns their reconciliation with already-approved
+pinned submodules. Overall release qualification, Item62 and Item35 remain
+pending. No stable or Marketplace publication has occurred.
 
 ## Historical implementation delivery checkpoint — 2026-09-15
 
@@ -5719,3 +5719,84 @@ review, merge and records remain pending.
 The Clippy control checks are grouped with source-quality validation helpers
 to keep the main gate module below the repository source-size limit. This
 does not change the user-selected disk-pressure cleanup workflow or rules.
+
+## Item 87 delivery and qualification record — 2026-09-16
+
+Delivered by [PR 3833](https://github.com/sifr-lang/sifr/pull/3833), candidate
+`106bceb4813cdf7a847faace17308bf132cfa376`, merge
+`e27a1a8243f6da5c2c0e752233d5efe4b3645214`. The merge tree equals the reviewed
+candidate tree. Initial scoped Opus review 1, remediation 0: SATISFIED, no
+blockers. Response SHA256
+`85a6dfebf0205a058483975074a41c8734e1eea28902dc13bf3ad35b9e5fdf55`.
+Review and receipt are outside Git under 20260915-generated-support/reviews.
+
+Full merge1 passes all 36 steps in 10400.51 seconds at the exact candidate:
+626 ordinary driver tests, all 77 generated-build integration tests, all 1533
+codegen tests, and 727 E2E fixtures across 185 rebuilt groups with zero cache
+hits. SQL, generated-quality representative checks and representative performance
+pass. Report SHA256 `0db5cd18e50dd4fe060e0216fbc8d7cdedf09365d9901b3908ea53fe855b2fce`;
+log SHA256 `f2aef21c5c4c11f29c4f1e2e33ec4fe50e715052c6934c25f9f7e41e9a208852`.
+Setup and wall-time advisories remain recorded. PRgate2 remains exit 124 for
+cold E2E 665.160 seconds exceeding 600 seconds, despite all 143 fixtures passing.
+The exact-source focused warm check passes in 11.783 seconds, 46/46 cache hits,
+under the unchanged limit. Neither the cold gate nor Quality2 was relabeled.
+
+Native qualification [35021268957](https://github.com/sifr-lang/sifr/actions/runs/35021268957)
+at the candidate passes all four targets, VS Code package, installer/checksums
+and index. Seven transport archives and 20 indexed payloads are retained locally;
+all payload hashes pass locally and again remotely. Index SHA256
+`19a47df2894d9785a986f18c6386cae2db1e194d62714f83ecc45d8d0a23a77f`.
+Input audit at this source passes against the retained dated selection:
+126 Rust/27 Python identities, 700 artifact metadata comparisons, 17 tool/action
+responses and 17 unchanged submodule pins. Audit SHA256
+`6c02798343759536ccbb1f910cd7a72590b1e29b12fe659d1f93894062967185`.
+This is not a new latest-version sweep or a publication.
+
+Full release1 at this candidate exits 1 after 5707.89 seconds in package
+management. All preceding steps pass, including release determinism hardening,
+generated differential checks, all 10 full generated-quality variants, all
+264 companions and 92 Clippy corpus cases, developer tooling (59 variants),
+the configured full performance area (12 variants), distribution, documentation,
+sysroot and workspace checks. Large-session LSP smoke passes at 42 operations,
+p95 21.603 ms and peak RSS 124.2 MiB. The performance runner selected seven
+benchmarks with five samples each; its policy explicitly skips p95 evaluation
+below 20 samples. This record does not claim a 65-benchmark qualification.
+
+The two package-management failures are stale expected Cargo.lock hashes for
+sifr-demo-app and sifr-demo-http. They still describe the former Reqwest 0.13.4
+commits while the approved pinned submodules contain Reqwest 0.13.5 and its
+base64 0.23.1 dependency. The other three hashes and all required package
+identities pass. Item 88 owns this bounded record repair. Subsequent release
+areas/toolchain steps did not execute; full release qualification remains open.
+Release report SHA256 `64da1191306c5305a983f08ffc3a04fdc5f524401e55e39f8975868aa3c981ec`;
+log SHA256 `599f6fab85151e9a44125c722cda5ef13ee7a62b79b48fdd7d00a6da19319d2a`.
+Detailed reports, generated source and per-case raw Clippy streams are retained
+in release1-detail.tar.gz, SHA256
+`91b23c22d6bab97775d22db6ba2bb3689b1b2cb02f005f7a37071f6292ca53b4`.
+
+The user's disk-pressure cleanup override was applied without changing rules.
+Only obsolete previous-candidate release targets and unused targets with old
+toolchain signatures were removed; source inputs and active candidate caches
+were retained. Cleanup ledgers remain outside Git. Review suggestions and the
+optional pre-existing all-targets Clippy diagnostics have separate follow-up
+ownership. Items 62 and 35 remain pending successful final qualification.
+
+## Item 88: reconcile approved demo lockfile digest expectations
+
+State: registered; implementation pending. Base is delivered Item 87 plus its
+records. Owner: latest-stable package-management integration.
+
+Scope: update only the two stale hashes in
+verification/areas/package_management/data/offline_demo_lockfile_digests.json
+from the already-approved pinned demo lockfile bytes. Prove the old expectations
+match the historical commits and the new hashes match the pinned commits;
+retain the exact package identity checks and the other three lockfile digests.
+No dependency, lockfile, gitlink, checker behavior or compiler change.
+
+Validation: run all three existing offline smoke modes and the package-management
+area, plus focused negative hash mutations to prove the checker still rejects
+drift. Run relevant documentation/file-size checks and the required PR gate.
+Use one scoped initial Opus review. Reuse Item 87's compiler merge evidence
+only while compiler/runtime/dependency inputs remain unchanged. Final release
+and native artifacts must have their actual candidate identity. Do not rebind
+Item 87's artifacts or failed release result to the new source.
