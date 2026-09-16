@@ -7,19 +7,32 @@ use std::{
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
-struct Fixture(PathBuf);
+// Serialize executable fixture publication with child spawning. Concurrent
+// forks can briefly inherit another test's writable script descriptor and
+// make Linux reject execution with ETXTBSY even after the writer closes it.
+static EXECUTABLE_FIXTURES: std::sync::Mutex<()> = std::sync::Mutex::new(());
+struct Fixture {
+    root: PathBuf,
+    _guard: std::sync::MutexGuard<'static, ()>,
+}
 impl Fixture {
     fn new() -> Self {
+        let guard = EXECUTABLE_FIXTURES
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let root = std::env::temp_dir().join(format!(
             "sifr-dx2-native-{}-{}",
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));
         fs::create_dir_all(&root).unwrap();
-        Self(root)
+        Self {
+            root,
+            _guard: guard,
+        }
     }
     fn tool(&self, name: &str, body: &str) -> PathBuf {
-        let path = self.0.join(name);
+        let path = self.root.join(name);
         if path.exists() {
             return path;
         }
@@ -44,13 +57,13 @@ impl Fixture {
             "rustc",
             "printf 'rustc fixture\\nhost: x86_64-fixture-linux\\n'",
         );
-        NativeToolchain::from_executables(&self.0, cargo, rustc, Some("fixture-explicit".into()))
+        NativeToolchain::from_executables(&self.root, cargo, rustc, Some("fixture-explicit".into()))
             .unwrap()
     }
 }
 impl Drop for Fixture {
     fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
+        let _ = fs::remove_dir_all(&self.root);
     }
 }
 
@@ -58,7 +71,7 @@ impl Drop for Fixture {
 fn native_context_pins_tools_across_temporary_project_selection() {
     let fixture = Fixture::new();
     let tools = fixture.tools();
-    let temporary = fixture.0.join("temporary");
+    let temporary = fixture.root.join("temporary");
     fs::create_dir(&temporary).unwrap();
     fs::write(
         temporary.join("rust-toolchain.toml"),
@@ -76,7 +89,7 @@ channel = "unavailable"
     assert!(result.status.success());
     assert_eq!(
         String::from_utf8(result.stdout).unwrap(),
-        fixture.0.join("rustc").to_str().unwrap()
+        fixture.root.join("rustc").to_str().unwrap()
     );
 }
 #[test]
@@ -84,9 +97,9 @@ fn native_context_rejects_unavailable_selected_tools() {
     let fixture = Fixture::new();
     assert!(
         NativeToolchain::from_executables(
-            &fixture.0,
-            fixture.0.join("missing-cargo"),
-            fixture.0.join("missing-rustc"),
+            &fixture.root,
+            fixture.root.join("missing-cargo"),
+            fixture.root.join("missing-rustc"),
             None
         )
         .is_err()
@@ -95,9 +108,9 @@ fn native_context_rejects_unavailable_selected_tools() {
 #[test]
 fn native_context_identity_is_deterministic_and_config_secrets_are_redacted() {
     let fixture = Fixture::new();
-    fs::create_dir(fixture.0.join(".cargo")).unwrap();
+    fs::create_dir(fixture.root.join(".cargo")).unwrap();
     fs::write(
-        fixture.0.join(".cargo/config.toml"),
+        fixture.root.join(".cargo/config.toml"),
         r#"[env]
 DX_SECRET = "private-test-secret"
 "#,
@@ -108,7 +121,7 @@ DX_SECRET = "private-test-secret"
     assert_eq!(first.identity(), second.identity());
     assert!(!format!("{first:?}").contains("private-test-secret"));
     fs::write(
-        fixture.0.join(".cargo/config.toml"),
+        fixture.root.join(".cargo/config.toml"),
         r#"[build]
 rustflags = ["--cfg=changed"]
 "#,
@@ -122,9 +135,9 @@ rustflags = ["--cfg=changed"]
 fn native_context_records_effective_target_and_rejects_new_configuration() {
     let fixture = Fixture::new();
     let original = fixture.tools();
-    fs::create_dir(fixture.0.join(".cargo")).unwrap();
+    fs::create_dir(fixture.root.join(".cargo")).unwrap();
     fs::write(
-        fixture.0.join(".cargo/config.toml"),
+        fixture.root.join(".cargo/config.toml"),
         "[build]\ntarget = \"aarch64-fixture-linux\"\n",
     )
     .unwrap();
@@ -137,14 +150,14 @@ fn native_context_records_effective_target_and_rejects_new_configuration() {
 fn native_context_digests_executable_content_not_only_version_text() {
     let fixture = Fixture::new();
     let original = fixture.tools();
-    let cargo = fixture.0.join("cargo");
+    let cargo = fixture.root.join("cargo");
     let mut bytes = fs::read(&cargo).unwrap();
     bytes.extend_from_slice(b"\n# behaviorally distinct implementation\n");
     fs::write(&cargo, bytes).unwrap();
     let changed = NativeToolchain::from_executables(
-        &fixture.0,
+        &fixture.root,
         cargo,
-        fixture.0.join("rustc"),
+        fixture.root.join("rustc"),
         Some("fixture-explicit".into()),
     )
     .unwrap();
