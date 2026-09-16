@@ -88,7 +88,11 @@ def main():
     rows = []
     report = {
         "schema_version": 1, "runner_version": runner.RUNNER_VERSION,
-        "metadata": runner.host_metadata(),
+        "metadata": runner.host_metadata() | {
+            "reference_identity": runner.reference_identity(ROOT, runner.DEFAULT_MANIFEST, "latency"),
+            "dx_contract_sha256": compiler_lanes.digest(ROOT / "verification/areas/performance/data/dx_contract.json"),
+            "capture_runner_sha256": compiler_lanes.digest(Path(__file__)),
+        },
         "cache_conditions": {"filesystem_pages": "warm after explicit warmup",
             "project_state": "not implemented at baseline", "stdlib": "source-built before metadata migration",
             "native_cache": "fresh output root then repeated output root", "cargo_registry": "prepared"},
