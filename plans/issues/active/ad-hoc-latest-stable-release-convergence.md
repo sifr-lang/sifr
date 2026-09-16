@@ -1,13 +1,12 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-## Current qualification status — Item 87 delivered; Item 88 next
+## Current qualification status — Item 88 delivered; Item 89 next
 
-Item87 is merged through [PR3833](https://github.com/sifr-lang/sifr/pull/3833).
-Its exact-source review, full merge gate, native qualification and full generated-
-quality release area pass. Release1 then fails two stale package demo lockfile
-hash expectations. Item88 below owns their reconciliation with already-approved
-pinned submodules. Overall release qualification, Item62 and Item35 remain
-pending. No stable or Marketplace publication has occurred.
+Item 88 is merged through [PR 3835](https://github.com/sifr-lang/sifr/pull/3835).
+All 40 release validation steps and native qualification pass at its candidate.
+Final canonical report construction fails because it flattens case-local variant
+labels into suite-wide identities. Item 89 owns this reporting repair. Items 62
+and 35 remain pending. No stable or Marketplace publication has occurred.
 
 ## Historical implementation delivery checkpoint — 2026-09-15
 
@@ -5758,8 +5757,8 @@ generated differential checks, all 10 full generated-quality variants, all
 264 companions and 92 Clippy corpus cases, developer tooling (59 variants),
 the configured full performance area (12 variants), distribution, documentation,
 sysroot and workspace checks. Large-session LSP smoke passes at 42 operations,
-p95 21.603 ms and peak RSS 124.2 MiB. The performance runner selected seven
-benchmarks with five samples each; its policy explicitly skips p95 evaluation
+p95 21.603 ms and peak RSS 124.2 MiB. The performance runner selected ten
+benchmarks; seven had five samples each and three were warm-query cases; its policy explicitly skips p95 evaluation
 below 20 samples. This record does not claim a 65-benchmark qualification.
 
 The two package-management failures are stale expected Cargo.lock hashes for
@@ -5783,8 +5782,8 @@ ownership. Items 62 and 35 remain pending successful final qualification.
 
 ## Item 88: reconcile approved demo lockfile digest expectations
 
-State: registered; implementation pending. Base is delivered Item 87 plus its
-records. Owner: latest-stable package-management integration.
+State: delivered through PR 3835; see the appended qualification record.
+Base is delivered Item 87 plus its records. Owner: latest-stable package-management integration.
 
 Scope: update only the two stale hashes in
 verification/areas/package_management/data/offline_demo_lockfile_digests.json
@@ -5800,3 +5799,67 @@ Use one scoped initial Opus review. Reuse Item 87's compiler merge evidence
 only while compiler/runtime/dependency inputs remain unchanged. Final release
 and native artifacts must have their actual candidate identity. Do not rebind
 Item 87's artifacts or failed release result to the new source.
+
+## Item 88 delivery and qualification record — 2026-09-16
+
+[PR 3835](https://github.com/sifr-lang/sifr/pull/3835) delivers candidate
+`700105f938be8202171bd0e7f8b9d0b292d2eb28`, merged as
+`2fb4af9dca6716fa488cc98b6a8010fe74aed93b`. Only two approved demo lockfile
+hash expectations change. Three smoke modes, all four package area cases and
+five deliberate hash mutations pass. Initial scoped Opus review 1, remediation
+0: SATISFIED, no blockers; response SHA256
+`2bd4ec269e84f3ec9e9cd775be67b1d8b666e7982cc28dc2dd54a5ae192be1b8`.
+
+The PR gate retains its original cold E2E budget failure: 648.612 seconds over
+600 seconds, all 143 fixtures pass, zero of 46 cache hits. Exact-source focused
+warm validation passes in 12.013 seconds with 46/46 cache hits. Limits are
+unchanged. Item 87 full compiler merge evidence remains at its actual source;
+compiler, runtime and dependency inputs did not change.
+
+Release1 runs all 40 validation steps successfully in 12838.16 seconds, including
+full generated quality, performance, SQL, 77 generated-build integrations, full
+E2E and both determinism/equivalence checks. Final report construction then
+exits 2 with duplicate case evidence. The original failure is preserved, not
+relabeled: lane report SHA256
+`76293ae405e1c79453222865a98ce8ee4aee44e30ceb156b7da3c617ecae589b`,
+log SHA256 `eb0be05a8d7f2e5de6f4caa116353af1a10106879b583f7a62f2b292476e9fb2`.
+Complete retained area/source/Clippy evidence archive SHA256
+`9240e74895cc367ba1b0c56de325b883055ff17d8c9a6039aa80108688989739`.
+Wall-time/cache-skew advisories remain recorded.
+
+[Native run 35047896353](https://github.com/sifr-lang/sifr/actions/runs/35047896353)
+passes four native targets, VSIX, installer and index. All 20 payloads are hash
+verified locally and remotely; index SHA256
+`98b7301251ea626d1d10e039da671f713085456dba7f4832e37f1388880b2d8b`.
+Frozen-input audit SHA256
+`2ac4ce5c458facf8da6967e6dcc2cad0c45647832348dc34d6fde9868dc353ab`
+preserves the dated 126 Rust / 27 Python selection and 700 metadata comparisons,
+17 tool/action responses and 17 unchanged submodule pins. No new upgrade wave.
+
+Disk-pressure cleanup removed only unused older revision quality build targets;
+current and preceding compiler caches and all generated inputs were retained.
+The review's inference that the cache belonged to another worktree was incorrect:
+it belongs to this session's remote worktree. Its disk-pressure concern was valid.
+Cleanup ledger3 records 9776721920 to 17323700224 free bytes.
+
+## Item 89: preserve case identity in canonical release evidence
+
+State: registered; implementation in progress. Owner: verification release
+reporting. Base: Item 88 merge `2fb4af9dca6716fa488cc98b6a8010fe74aed93b`.
+
+Scope: retain both case ID and variant label when building suite case evidence,
+so identical local labels in distinct cases remain distinct. Continue rejecting
+true duplicate or missing identities and retain editor-release classification.
+Add production-shaped multi-case regression and negative identity controls.
+No compiler, dependency, thresholds, release eligibility or validation-schema
+weakening. All related identity failures are repaired together before testing.
+
+Validation: focused runner/governance checks, real retained critical-result
+replay, file-size guard and required PR gate; one scoped initial Opus review.
+Reuse unchanged full compiler and release execution evidence only at its actual
+700105f938 source. Any reconstructed report must explicitly retain that source,
+its original artifact hashes and a separate record of the corrected builder;
+never attribute old executions or native binaries to a new source SHA. Keep the
+original exit2 failure. Final qualification/closure remains pending a valid
+source-bound report and review. Do not rerun the full compiler suite merely to
+reformat the completed evidence.

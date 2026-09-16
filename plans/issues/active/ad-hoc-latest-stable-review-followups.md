@@ -194,3 +194,13 @@ Preserve the failed extra check at
 without relabeling it as a pass or expanding the current generated-Rust repair
 scope. Record the required compiler lint result separately at its actual final
 source.
+
+## Item 88 scoped review follow-ups
+
+Initial 1/remediation 0 review of 700105f938 is SATISFIED, no blockers.
+Preserve the cold PR E2E budget failure and warm pass separately. Disk pressure
+was real; the review's inference that the target belonged to another worktree
+was incorrect. This session owns it. Unused older revision artifacts were
+removed after process-use checks, preserving current caches and generated inputs.
+The registered Item 88 state is now reconciled with PR 3835 delivery. The final
+release report identity failure is separately owned by Item 89.

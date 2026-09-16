@@ -12,6 +12,7 @@ from .release_evidence import (
     GovernanceError,
     build_release_profile_payload,
     canonicalize_custodied_results,
+    case_ids_for_suite,
     load_json_strict,
     prepare_release_report_output,
     sha256_file,
@@ -92,7 +93,10 @@ def release_report_production_self_test() -> None:
                 suites.append(
                     {
                         "name": suite_name,
-                        "cases": [{"variants": [{"label": label} for label in labels]}],
+                        "cases": [
+                            {"id": case_id, "variants": [{"label": label} for label in labels]}
+                            for case_id in ("first-case", "second-case")
+                        ],
                     }
                 )
             (result_root / filename).write_text(
@@ -177,6 +181,18 @@ def release_report_production_self_test() -> None:
             canonical_bytes=output_path.read_bytes(),
             expected_profile_sha256="a" * 64,
         )
+        rust_suite = payload["steps"][0]["suite_results"][0]
+        if rust_suite["case_ids"] != ["matrix:case:first-case", "matrix:case:second-case"]:
+            raise AssertionError("release report lost repeated case-local label evidence")
+        editor_suite = next(
+            row for row in payload["steps"][1]["suite_results"]
+            if row["suite"] == "editor-release"
+        )
+        if editor_suite["case_ids"] != [
+            "editor-release:package:first-case", "editor-release:package:second-case"
+        ]:
+            raise AssertionError("release report lost editor-release classification")
+        _assert_case_identity_rejections()
         _assert_canonicalization_rejections(root)
 
 
@@ -225,3 +241,28 @@ def _require_governance_rejection(
             raise AssertionError(f"unexpected governance rejection: {exc}") from exc
         return
     raise AssertionError(f"release custody mutation passed: {expected}")
+
+
+def _assert_case_identity_rejections() -> None:
+    def case(case_id: object, *labels: object) -> dict:
+        return {"id": case_id, "variants": [{"label": label} for label in labels]}
+
+    for cases, expected in (
+        ([case("same", "a"), case("same", "b")], "duplicate case identity"),
+        ([case("one", "a", "a")], "duplicate case evidence"),
+        ([case(None, "a")], "missing case identity"),
+        ([case("", "a")], "missing case identity"),
+        ([case(1, "a")], "missing case identity"),
+        ([case("one", None)], "missing variant identity"),
+        ([case("one", "")], "missing variant identity"),
+        ([case("one", 1)], "missing variant identity"),
+        ([case("one")], "no variants"),
+    ):
+        _require_governance_rejection(
+            lambda cases=cases: case_ids_for_suite({"cases": cases}), expected
+        )
+    encoded = case_ids_for_suite({"cases": [
+        case("b:c", "a"), case("c", "a:b"), case("b%3Ac", "a")
+    ]})
+    if encoded != ["a:b%3Ac", "a:b:c", "a:b%253Ac"]:
+        raise AssertionError("case identity encoding is ambiguous or unstable")
