@@ -52,7 +52,7 @@ remains draft and cannot consume a second merge gate under its current rules.
   (at most one remediation), and one final-candidate merge gate.
 
 Completion and exact evidence are recorded in
-[latest-stable convergence](ad-hoc-latest-stable-release-convergence.md).
+[latest-stable convergence](../archive/ad-hoc-latest-stable-release-convergence.md).
 
 ## Remote continuation correction — 2026-09-13
 
