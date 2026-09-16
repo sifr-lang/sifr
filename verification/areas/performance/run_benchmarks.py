@@ -296,7 +296,7 @@ def main() -> int:
             write_json(work_budget_output, work_budgets)
             print(
                 "performance work budgets captured: "
-                f"{work_budget_output.relative_to(REPO_ROOT)}"
+                f"{work_budget_output}"
             )
         if args.capture_baseline:
             validate_baseline_capture(run_report, {case.id: case for case in cases})
@@ -308,7 +308,7 @@ def main() -> int:
             )
             write_json(baseline_output, baseline)
             print(
-                f"performance baseline captured: {baseline_output.relative_to(REPO_ROOT)}"
+                f"performance baseline captured: {baseline_output}"
             )
         if args.capture_trend_baseline:
             if reference_source_commit is None:
@@ -331,10 +331,10 @@ def main() -> int:
             )
             write_json(trend_baseline_output, trend_baseline)
             print(
-                f"performance trend baseline captured: {trend_baseline_output.relative_to(REPO_ROOT)}"
+                f"performance trend baseline captured: {trend_baseline_output}"
             )
-        print(f"performance benchmarks passed: {evidence_path.relative_to(REPO_ROOT)}")
-        print(f"performance trend report: {trend_path.relative_to(REPO_ROOT)}")
+        print(f"performance benchmarks passed: {evidence_path}")
+        print(f"performance trend report: {trend_path}")
         return 0
     except (
         BenchmarkError,
