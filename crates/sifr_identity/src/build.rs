@@ -124,7 +124,7 @@ pub fn emit_product_identity() -> io::Result<()> {
         "rust-toolchain.toml",
         ".cargo",
         "crates",
-        "third_party/ruff",
+        "third_party",
     ] {
         visit(root, &root.join(input), &mut hash)?;
     }

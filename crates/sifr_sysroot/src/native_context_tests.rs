@@ -80,10 +80,11 @@ channel = "unavailable"
 "#,
     )
     .unwrap();
-    let result = tools
-        .cargo_command()
-        .unwrap()
-        .current_dir(temporary)
+    let mut command = tools.cargo_command().unwrap();
+    assert_eq!(command.get_current_dir(), Some(fixture.root.as_path()));
+    let result = command
+        .arg("--manifest-path")
+        .arg(temporary.join("Cargo.toml"))
         .output()
         .unwrap();
     assert!(result.status.success());
@@ -118,6 +119,11 @@ DX_SECRET = "private-test-secret"
     .unwrap();
     let first = fixture.tools();
     let second = fixture.tools();
+    assert_eq!(
+        first.cargo_command().unwrap().get_args().count(),
+        0,
+        "implicit config must not be merged twice"
+    );
     assert_eq!(first.identity(), second.identity());
     assert!(!format!("{first:?}").contains("private-test-secret"));
     fs::write(

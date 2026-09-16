@@ -385,9 +385,8 @@ impl NativeToolchain {
         command
             .env_clear()
             .envs(self.execution_environment.iter().cloned());
-        for (path, _) in self.configuration.iter().rev() {
-            command.arg("--config").arg(path);
-        }
+        // Cargo loads these validated configurations from the pinned root.
+        // Passing them again with --config would concatenate array settings twice.
         command.env("RUSTC", &self.rustc);
         if let Some(selection) = &self.selection {
             command.env("RUSTUP_TOOLCHAIN", selection);
