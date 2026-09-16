@@ -5,7 +5,7 @@ Status: open follow-ups, non-blocking for the frozen implementation phase.
 Origin: initial read-only Opus review of root candidate
 `7d3c4198585352504a2d0c82267d6a0824df50cf`, PR #3827, 2026-09-14.
 The blocking policy-test registration omission is handled in the
-[phase record](ad-hoc-latest-stable-release-convergence.md).
+[phase record](../archive/ad-hoc-latest-stable-release-convergence.md).
 These four observations were classified as suggestions, infrastructure, or
 pre-existing coverage; they do not reopen the frozen version selections.
 

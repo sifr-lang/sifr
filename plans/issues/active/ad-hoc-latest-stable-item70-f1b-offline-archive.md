@@ -182,6 +182,6 @@ SHA-256 `56a3255816233e49bdcd2a88fdf8a5dbdc6499e12ed4e6e18e8c2d1025aa79ab`.
 Zero Sifr gates; no further review for this record-only closure. The initial
 reviewer's two unauthorized extra read-only guard executions and outcomes,
 plus deferred nonblocking 70-F1B-M1/M2 suggestions, are recorded in the
-[phase record](ad-hoc-latest-stable-release-convergence.md). The remediation
+[phase record](../archive/ad-hoc-latest-stable-release-convergence.md). The remediation
 review obeyed source-inspection-only limits. Blocker: none; after record
 merge, stop.

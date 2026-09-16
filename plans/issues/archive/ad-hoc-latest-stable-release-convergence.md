@@ -1,5 +1,15 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
+## Phase closure
+
+The frozen implementation batches and final Item 62 qualification are complete.
+This documentation closer archives the phase, repairs its Markdown links and
+updates the roadmap. The appended final audit and delivery records supersede
+historical pending statements; their original failures and source identities
+remain preserved. Item 35 closes on a satisfied exact-candidate review and
+ordinary merge; those final receipts belong outside this Git tree. No release
+or Marketplace publication is performed.
+
 ## Current qualification status — implementation and Item 62 complete
 
 All registered implementation batches through Item89 are merged. Final frozen-
@@ -629,7 +639,7 @@ or historical deletion. Record-only closure requires no further review/gate.
 The user's explicit minimal retention direction supersedes historical blanket
 all-byte archival, R2 provisioning and independently administered copy
 requirements in Item70/F1A/F1B/F1C0/F1C1/F1C2B/F1D. The bounded implementation and frozen
-checks are in [the existing evidence item](ad-hoc-latest-stable-item70-f1c2b-minimal-retention.md).
+checks are in [the existing evidence item](../active/ad-hoc-latest-stable-item70-f1c2b-minimal-retention.md).
 Retain supported shipped deliverables through existing GitHub Release and
 Marketplace publication/readback paths, compact source/toolchain/run/digest
 provenance, essential validation and honest failure/disposition records.
@@ -908,7 +918,7 @@ COMPLETE via [PR #3818](https://github.com/sifr-lang/sifr/pull/3818), merged
 2026-09-08T09:22:26Z. Exact tested/reviewed candidate
 `29a1f965ebfdfb7c40261d903a993e74507fdc13`, merge
 `c1d91d5df93ac289270941473ce3c5c89c2666c6`. Implemented under the merged
-[F1C0 scope and nine-test table](ad-hoc-latest-stable-item70-f1c0-r2-plan.md).
+[F1C0 scope and nine-test table](../active/ad-hoc-latest-stable-item70-f1c0-r2-plan.md).
 Only the registered `archive_r2_store.py`, `archive_r2_config.py` and
 `archive_r2_selftest.py` source modules plus plan/phase records change.
 Immutable manifest-bound target, canonical endpoint/location/key checks,
@@ -982,7 +992,7 @@ Documentation-only planning item under release/distribution, after completed
 F1A/F1B. The coordinator selected R2 Standard, indefinite bucket locks,
 segregated configuration/producer credentials and separately controlled
 full-byte copy. Account/access/copy identities are still not established.
-The [R2 plan](ad-hoc-latest-stable-item70-f1c0-r2-plan.md) specifies the exact
+The [R2 plan](../active/ad-hoc-latest-stable-item70-f1c0-r2-plan.md) specifies the exact
 ArchiveStore adapter/configuration boundary, official current API evidence,
 conditional-create and fresh-read failures, no-expiry admission, credential
 and receipt-writer separation, and real custody limits. It registers ready
@@ -1010,7 +1020,7 @@ COMPLETE via [PR #3814](https://github.com/sifr-lang/sifr/pull/3814), merged
 `d85d2008572090f62e7d6d8d900a8bb42e92e5b9`, merge
 `7b2c25707e012c66893de5eb631fef7270384dfa`. Base
 `579770185d7c14c62e1b60bee7f740b077cac84e`. The
-[offline contract](ad-hoc-latest-stable-item70-f1b-offline-archive.md) implements
+[offline contract](../active/ad-hoc-latest-stable-item70-f1b-offline-archive.md) implements
 the F1A registration: canonical independent archive v1, complete immutable
 inventory and byte/cross-link checks, create-only store interface/sealing,
 separate append-only copy/readback receipts, offline CLI and synthetic tests.
@@ -1075,7 +1085,7 @@ Assessment COMPLETE via [PR #3812](https://github.com/sifr-lang/sifr/pull/3812).
 Reviewed candidate `e74ea1dc366edea5d324b25da4a52be571337bc5`, merge
 `546c0f3b22438aeaf2d6b012264744356777032f`. The coordinator
 authorized this read-only metadata/docs unit independently of compiler/policy
-delivery. The [assessment](ad-hoc-latest-stable-item70-f1a-backend-readiness.md)
+delivery. The [assessment](../active/ad-hoc-latest-stable-item70-f1a-backend-readiness.md)
 records scoped repository/org/four-environment API identities, secret names
 only, and AWS's unavailable current identity. No suitable existing durable
 backend or independent retained copy was verified. This is a coverage-limited
@@ -1119,7 +1129,7 @@ The current historical evidence disposition is INCOMPLETE/UNRECOVERED.
 The user-authorized direction is a prospective replacement qualification
 under NEW source/run/evidence identity after separately owned delivery.
 No historical digest, waiver or qualification identity changes.
-The [Item 70 assessment](ad-hoc-latest-stable-item70-evidence-recovery.md)
+The [Item 70 assessment](../active/ad-hoc-latest-stable-item70-evidence-recovery.md)
 records exact retained/missing bytes, bounded local/GitHub recovery, the
 complete matrix, durable-custody proposal and completed bounded Git search.
 
@@ -1300,7 +1310,7 @@ Only four Markdown files and comments in `packages/tier2.toml` changed.
 No compiler, runtime, dependency declaration, lockfile, fixture, workflow,
 checker behavior, generated report, upstream source, or historical performance
 record changed. Historical HTTPX descriptions remain provenance, including
-the archived [declaration-first record](../archive/ad-hoc-declaration-first-python-interop.md).
+the archived [declaration-first record](ad-hoc-declaration-first-python-interop.md).
 The coordinator's current row superseded the obsolete blanket E2 prerequisite:
 Items 67 and 53 were merged and the actual named readiness suite passed.
 External Item 65/68 qualification and Item 64 custody failures remain owned
@@ -1901,7 +1911,7 @@ is not a technical dependency.
 | 32 | complete; see current delivery status | Packaging and Hatchling | Packaging is current, Hatchling is explicitly pinned, and builds/locks are reproducible. |
 | 33 | complete; see current delivery status | VS Code extension toolchain | Node types, VS Code types/engine, TypeScript, package locks, VSIX qualification, and the three-repository pointer chain merge in order. |
 | 34 | complete; see current delivery status | Mint exact pin | Documentation tooling uses a tested exact latest-stable Mint release and documentation checks pass. |
-| 35 | pending; final only | Documentation-only phase closure | After Items 31–34 and 36–63, reuse item evidence and Item 62's official audit; one exact-SHA whole-phase Opus review; archive the phase and update roadmap. Implementation findings require separate items before this closer. |
+| 35 | complete in this documentation closer | Documentation-only phase closure | After Items 31–34 and 36–63, reuse item evidence and Item 62's official audit; one exact-SHA whole-phase Opus review; archive the phase and update roadmap. Implementation findings require separate items before this closer. |
 | 36 | complete | Execution inventory reconciliation | The continuation ledger, named tests, prerequisites, and every historical deferral owner merged in PR #3758; exact-SHA Opus review satisfied and documentation checks passed. |
 
 ## Item 36 — reconciled continuation ledger
@@ -1939,7 +1949,7 @@ release URL/checksum, and take the newest non-prerelease release then available.
   while its terminal body refers to reviewed candidate `be0849a905f105d1733d24aafe880c93b7643438`
   and failed gate. Neither reference is a merged qualification. Its current
   owner [#3744](https://github.com/sifr-lang/sifr/issues/3744) and
-  [Python qualification issue](ad-hoc-python-interop-qualification-dependencies.md)
+  [Python qualification issue](../active/ad-hoc-python-interop-qualification-dependencies.md)
   retain all implementation and exhausted-evidence decisions.
 - `crates/sifr_codegen/src/stdlib_filter/dedup_keys.rs` already uses the full
   impl header, including safety. Existing tests distinguish modifiers and
@@ -2068,7 +2078,7 @@ not hand-edit transitive packages or claim old evidence used new releases.
 | 56 | 45, 49 | Rust audit regression assertions: existing Syn impl header/safety coverage; exact DataFusion `table_exist` error-propagation chain and mutation; structural Polars sortedness assertion and mutation; remove redundant `nanvl` check only when covered. Own `crates/sifr_stdlib_manifest/tests` and `crates/sifr_codegen/src/stdlib_filter/tests.rs`, not fresh runtime features. | `manifest syn_prettyplease_dependency_versions`; `manifest arrow_datafusion_dependency_versions`; `manifest polars_dependency_version`; `cargo test -p sifr_codegen stdlib_filter::tests` |
 | 61 | E1, E2, 50, 51, 52, 57 | New Kafka/main integration scope, completing original Item 31 only after approval prerequisites: select latest kafka-python (3.0.11 supplied baseline), compare preserved #3551 mechanism against final main, integrate owned callback/live bridges and audit/locks, validate current compiler inputs. Preserve original consumed gates; exactly one new integration review and one gate for this separately registered scope, with no blanket retry of old candidate. | `area python_interop: dependency-versions, callbacks, callback-examples, live-policy, live-examples`; `uv lock --check --project verification/areas/python_interop` |
 | 62 | complete; final audit below | **Complete.** Final audit and qualification evidence, before closer: official Rust/Python/toolchain/npm/Mint/action/fork/submodule queries; compare tracked inventories, checksum provenance and all deferred dispositions; clean-CARGO_HOME SQLx inactive-fixture sparse-index/offline experiment, idiomatic Rust demo compile coverage, explicit absent-environment fixture and resolver-2/absent-resolver negative tests, replace vacuous parity assertion, strict LSP response policy and -32800 cancellation assertion. **This is an audit coordinator, not an implementation catch-all:** the concrete implementation owners below must finish before it runs; any new stale release/mechanism becomes a newly numbered item and blocks 62/35. | `manifest rust_direct_dependency_versions`; `area python_interop: dependency-versions`; `area documentation: structure`; local link/path checks and official-source audit queries. Reuse completed implementation evidence; no broad gate for this docs-only audit result. |
-| 35 | 62 and every registered implementation item merged | One docs-only closer: this phase record, roadmap status and archive move only. Reuse exact-SHA item evidence; one whole-phase Opus review of closure SHA. No package upgrades, code, fixtures, workflows, locks or qualification implementation here. If audit finds work, register it and stop closure. | `git diff --check`; local link/path checks; `python3 scripts/check_file_size_guardrails.py` only; no Sifr gates |
+| 35 | prerequisites complete; final documentation closer | One docs-only closer: this phase record, roadmap status and archive move only. Reuse exact-SHA item evidence; one whole-phase Opus review of closure SHA. No package upgrades, code, fixtures, workflows, locks or qualification implementation here. If audit finds work, register it and stop closure. | `git diff --check`; local link/path checks; `python3 scripts/check_file_size_guardrails.py` only; no Sifr gates |
 
 Item 62's inherited implementation concerns are assigned separate bounded
 subitems now, rather than being left for the closer. They are part of the
@@ -5021,7 +5031,7 @@ but were not executed through the canonical policy entry point. The correction
 registers that existing class alongside the existing two policy test classes.
 
 The four non-blocking observations are assigned in the separate
-[review follow-up issue](ad-hoc-latest-stable-review-followups.md).
+[review follow-up issue](../active/ad-hoc-latest-stable-review-followups.md).
 Review artifacts remain outside the reviewed Git tree, keyed by the original
 candidate. Integration counters: initial review completed once; one remediation
 review remains available; the final merge gate has not been run.
@@ -5334,7 +5344,7 @@ The subsequent full gate executes the final candidate directly and passes all
 77 generated-build cases, eliminating any final-source inference. Production
 Clippy for the changed libraries, formatting, 3,880 source file-size checks,
 lowering maintainability and diff checks pass. Optional observations belong to
-[the review follow-ups](ad-hoc-latest-stable-review-followups.md).
+[the review follow-ups](../active/ad-hoc-latest-stable-review-followups.md).
 
 Items 31/61 (Kafka), 32 (Packaging/Hatchling), 33/40 (editor/Node), 48 (SQLite),
 49/56/62A/62B/75 (Rust inventories/demos), 50–52/57/63 (Python and services),
