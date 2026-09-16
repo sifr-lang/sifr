@@ -110,3 +110,20 @@ area. That failure belongs to latest-stable Item 87; this record does not claim
 a complete release-profile pass or a 65-case performance result. A later changed
 compiler candidate must retain its own qualification identity. Earlier failed
 and targeted measurements remain unchanged.
+
+## Final release qualification — 2026-09-16
+
+Resolved on qualified compiler source`700105f938be8202171bd0e7f8b9d0b292d2eb28`.
+The actual release large-session smoke passes42operations, p95=21.763ms,
+peakRSS130719744bytes below the unchanged134217728-byte cap, and RSS slope
+0.0MiB/min. All59developer-tooling variants and all12configured performance
+variants pass. The named12GBhost selects10benchmarks, including seven command
+cases with five samples and three warm-query cases; no65-case claim is made.
+
+Exact smoke report retained locally in demo-digests/release1-lsp_large_session.json,
+SHA256`ef0279d91bccccdfaca6bb3d2518aee76959407b25841504a094e786326c3290`.
+All40release execution steps pass. Final serialization initially failed on
+case-ID collisions; Item89 repairs reporting and reconstructs a validated
+report at the same7001source without repeating or relabeling the measurements.
+Original failure and separate report-builder provenance remain retained.
+This closes this memory qualification owner; it does not authorize publication.

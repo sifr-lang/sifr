@@ -204,3 +204,12 @@ was incorrect. This session owns it. Unused older revision artifacts were
 removed after process-use checks, preserving current caches and generated inputs.
 The registered Item 88 state is now reconciled with PR 3835 delivery. The final
 release report identity failure is separately owned by Item 89.
+
+## Item 89 scoped review follow-ups
+
+Initial1/remediation0 review of c774224648 is SATISFIED with no blockers.
+
+- Verification-maintenance suggestion: normalize errors from malformed non-dict case/variant inputs to GovernanceError. The existing shape assumption predates this repair; valid retained reports and strict identity checks pass.
+- Cosmetic benchmark sentence wrapping is addressed in final records without another implementation review.
+- Retention hygiene: the failed first collector produced an empty demo-digests/release1-detail.tar.gz. Its failure disposition now points to authoritative release1-detail-complete.tar.gz (9240e748...). The separately retained Item87 generated-support/release1-detail.tar.gz (91b23c22...) is a different path and remains valid; the reviewer conflated those basenames. No failed collection is credited as evidence.
+- Warm E2E was pending during review; it subsequently passed at exactc774 in12.154seconds,143/143fixtures,46/46cache hits. The original cold exit124 remains preserved. Corrected canonical report also passes at original7001 with separate builder provenance.
