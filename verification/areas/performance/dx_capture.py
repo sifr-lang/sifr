@@ -24,6 +24,9 @@ def observed(command, output, case, number, timeout=300000):
     record_command_sample(output, case, number, False, command, result)
     return {
         "id": case, "sample": number, "command": command,
+        "compiler_build_profile": compiler_lanes.selection()["compiler_build_profile"],
+        "application_profile": "release" if case.startswith("dx-native-") else "not-applicable",
+        "verification_selection": case,
         "elapsed_ms": (time.monotonic() - started) * 1000,
         "functional_status": "pass" if result["exit_code"] == 0 and not result["timed_out"] else "fail",
         "process": {k: v for k, v in result.items() if k not in ("stdout", "stderr")},
