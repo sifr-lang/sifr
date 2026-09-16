@@ -5,7 +5,7 @@
     {
       "repository": "sifr-demo-app",
       "path": "verification/areas/package_management/corpora/demo_repositories/sifr-demo-app/Cargo.lock",
-      "sha256": "c66a092dfc77c5f08a7c42770f4f2bb93fcfd5a3bf28b3caf9361362dc9b1fa7",
+      "sha256": "4835410ba83f459a757d8b61a2d3c4bcafdc7e1ae75368d01a60b78fdc33e93e",
       "expected_packages_present": [
         "sifr-demo-app@0.1.0",
         "sifr-demo-http@0.1.0",
@@ -25,7 +25,7 @@
     {
       "repository": "sifr-demo-http",
       "path": "verification/areas/package_management/corpora/demo_repositories/sifr-demo-http/Cargo.lock",
-      "sha256": "7cb18d6a7fbb0d0fba2305bec06b7df9020fb0eb3818de8481147a1b799ca00c",
+      "sha256": "c6025d9b2d502206418af990565e96c0dbe7ccd44077b032a37766db9613c75e",
       "expected_packages_present": [
         "sifr-demo-http@0.1.0"
       ]
