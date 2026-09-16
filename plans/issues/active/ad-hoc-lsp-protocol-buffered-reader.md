@@ -1,14 +1,14 @@
 # LSP verification client: buffered-frame timeout and failure preservation
 
-status: open
+status: completed
 owner: developer-tooling verification / protocol transport
-blocks: DX.1 demanded-stdlib LSP baseline and therefore DX.2–DX.16 sequencing
+blocks: none; required DX.1 baseline resumed and completed
 discovered: 2026-09-16, draft PR #3840
-implementation candidate: `28605fd6da80d8eaf877cd6a992e1e8ab4b6d69f`
+discovery candidate: `28605fd6da80d8eaf877cd6a992e1e8ab4b6d69f`
 
 ## Problem and ownership
 
-The existing `verification/areas/developer_tooling/lsp_protocol.py` creates a
+At discovery, `verification/areas/developer_tooling/lsp_protocol.py` created a
 buffered subprocess stdout reader (line 42), waits on the underlying file
 descriptor with `select.select` (line 170), then uses buffered `read` calls
 (lines 175 and 186). One read can buffer a second complete LSP frame. A later
@@ -93,3 +93,17 @@ missing baselines and scoped review, and only then merge. DX.1 is not closed by
 this issue record. No DX.2–DX.16 implementation is authorized by this handoff.
 
 Named regression command: `python3 verification/areas/developer_tooling/test_lsp_protocol_transport.py`. Covers coalesced frames, fragmented headers/bodies, partial-frame deadlines, EOF, queued frames after exit, and primary failure preservation through cleanup.
+
+## Completion — 2026-09-16
+
+The required correction and resumption boundary is complete in
+[PR #3840](https://github.com/sifr-lang/sifr/pull/3840), candidate
+`5c7502f7aea3cd887a217c2fb3e289c7a1f2c653`, merge
+`de41ced4d65a3c511617219238f26052227fd6e8`.
+All seven independent transport tests pass; the repaired canonical client
+completed the demanded-stdlib baseline (21 samples including warmup).
+Contributor baselines also completed. No timeout or protocol requirement was
+relaxed. Opus review returned
+[SATISFIED](https://github.com/sifr-lang/sifr/pull/3840#issuecomment-5705061104).
+The [DX.1 record](ad-hoc-compiler-dx-and-toolchain-reuse.md#current-handoff--dx1-2026-09-16)
+owns final evidence digests and the completed resumption record.
