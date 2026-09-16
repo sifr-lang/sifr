@@ -39,7 +39,8 @@ fn visit(root: &Path, path: &Path, hash: &mut IdentityEncoder) -> io::Result<()>
 }
 
 fn configuration(hash: &mut IdentityEncoder) -> io::Result<()> {
-    let mut settings: Vec<_> = env::vars()
+    let mut settings: Vec<_> = env::vars_os()
+        .filter_map(|(name, value)| name.into_string().ok().map(|name| (name, value)))
         .filter(|(name, _)| {
             name.starts_with("CARGO_FEATURE_")
                 || name.starts_with("CARGO_CFG_")
@@ -59,7 +60,7 @@ fn configuration(hash: &mut IdentityEncoder) -> io::Result<()> {
     settings.sort();
     for (name, value) in settings {
         println!("cargo:rerun-if-env-changed={name}");
-        hash.field(&name, value.as_bytes());
+        hash.field(&name, value.as_encoded_bytes());
     }
     println!("cargo:rerun-if-env-changed=RUSTC");
     let rustc =
@@ -134,11 +135,12 @@ pub fn emit_product_identity() -> io::Result<()> {
 }
 
 fn dependency_tokens(hash: &mut IdentityEncoder) {
-    let mut tokens: Vec<_> = env::vars()
+    let mut tokens: Vec<_> = env::vars_os()
+        .filter_map(|(name, value)| name.into_string().ok().map(|name| (name, value)))
         .filter(|(key, _)| key.starts_with("DEP_") && key.ends_with("_COMPILED_IDENTITY"))
         .collect();
     tokens.sort();
     for (name, token) in tokens {
-        hash.field(&name, token.as_bytes());
+        hash.field(&name, token.as_encoded_bytes());
     }
 }

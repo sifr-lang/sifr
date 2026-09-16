@@ -90,9 +90,12 @@ fn executable(name: &str, cwd: &Path) -> Result<PathBuf, String> {
     })
 }
 fn output(command: &mut Command) -> Result<String, String> {
-    let result = command
-        .output()
-        .map_err(|_| "selected native tool could not be executed".to_string())?;
+    let result = command.output().map_err(|error| {
+        format!(
+            "selected native tool could not be executed ({:?})",
+            error.kind()
+        )
+    })?;
     if !result.status.success() {
         return Err("selected native tool returned failure".into());
     }

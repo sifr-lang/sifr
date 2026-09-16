@@ -20,6 +20,9 @@ impl Fixture {
     }
     fn tool(&self, name: &str, body: &str) -> PathBuf {
         let path = self.0.join(name);
+        if path.exists() {
+            return path;
+        }
         fs::write(
             &path,
             format!(
