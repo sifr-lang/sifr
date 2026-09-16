@@ -28,6 +28,8 @@ def run_self_test():
     assert contract["historical_budgets_sha256"] == compiler_lanes.digest(root / "data/budgets.json")
     assert (root.parents[2] / contract["q09"]["source"]).is_file()
     rejected(lambda: compiler_lanes.configure(Path("."), "product-installed-optimized", ""), "missing product artifact")
+    with patch.dict("os.environ", {"SIFR_LSP_COMMAND": "/wrong/optimized/sifr lsp --stdio"}):
+        rejected(lambda: compiler_lanes.configure(Path("."), "contributor-dev", ""), "unreceipted LSP override")
     with TemporaryDirectory() as directory:
         root = Path(directory)
         binary = root / "sifr"

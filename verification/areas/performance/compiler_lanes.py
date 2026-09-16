@@ -33,6 +33,13 @@ def configure(repo: Path, lane: str, receipt_path: str) -> None:
     if not receipt_path:
         if lane != "contributor-dev":
             raise BenchmarkError("product lane requires a prepared artifact receipt")
+        target = Path(os.environ.get("CARGO_TARGET_DIR", str(repo / "target")))
+        if not target.is_absolute():
+            target = repo / target
+        command = shlex.join([str(target / "debug/sifr"), "lsp", "--stdio"])
+        if os.environ.get("SIFR_LSP_COMMAND") not in (None, command):
+            raise BenchmarkError("unreceipted LSP override cannot define the contributor compiler")
+        os.environ["SIFR_LSP_COMMAND"] = command
         _SELECTION = {
             "lane": lane, "compiler_build_profile": "dev",
             "artifact": None, "preparation": "existing source-tree Cargo builder",
@@ -139,3 +146,19 @@ def validate_measurement_rows(manifest, report):
             "application_profile": row.get("application_profile"),
             "verification_selection": row.get("verification_selection"),
         })
+
+
+def record_dev_artifact(stdout: str, binary: Path) -> None:
+    global _SELECTION
+    records = [
+        row for line in stdout.splitlines()
+        if (row := json.loads(line)).get("reason") == "compiler-artifact"
+        and row.get("target", {}).get("name") == "sifr" and row.get("executable")
+    ]
+    if len(records) != 1 or Path(records[0]["executable"]).resolve() != binary.resolve():
+        raise BenchmarkError("Cargo did not identify the selected development compiler")
+    _SELECTION = selection() | {
+        "artifact": {"path": str(binary.resolve()), "sha256": digest(binary)},
+        "cargo_artifact_profile": records[0]["profile"],
+        "cargo_features": records[0]["features"],
+    }

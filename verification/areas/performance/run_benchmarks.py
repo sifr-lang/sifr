@@ -592,7 +592,7 @@ def ensure_sifr_binary() -> None:
         return
     if _SIFR_BINARY_READY and binary.exists():
         return
-    result = run_subprocess(["cargo", "build", "-q", "-p", "sifr"], 180000)
+    result = run_subprocess(["cargo", "build", "-q", "-p", "sifr", "--message-format=json-render-diagnostics"], 180000)
     if result["timed_out"]:
         raise BenchmarkError("building sifr benchmark binary timed out")
     if result["exit_code"] != 0:
@@ -601,6 +601,7 @@ def ensure_sifr_binary() -> None:
         )
     if not binary.exists():
         raise BenchmarkError(f"sifr benchmark binary was not built at {binary}")
+    compiler_lanes.record_dev_artifact(result["stdout"], binary)
     _SIFR_BINARY_READY = True
 
 
