@@ -18,3 +18,9 @@ additional implementation in its closure session or add new acceptance criteria.
 The review's record-update suggestion was addressed by the DX.1 post-merge
 phase, roadmap, index and transport issue updates. No follow-up is a claim that
 future DX.2–DX.16 functionality has been implemented.
+
+A closure-only broad Markdown-link diagnostic also found the pre-existing roadmap
+link to `verification/areas/stdlib_parity/reports/milestone_psp_7_parity_governance_inventory.md`
+missing in this checkout. The unchanged link belongs to stdlib-parity roadmap
+records and is not modified here. The scoped check of added/changed record links
+passes.
