@@ -69,4 +69,4 @@ successor and is summarized here.
 
 | Phase | Status | Architecture | Release checkpoints |
 | --- | --- | --- | --- |
-| [DX](../issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md) | DX.1 in progress; DX.2–DX.16 not started | [Compiler DX architecture](../../internal_docs/compiler_dx_architecture.md) | DX.8 and DX.11 require their own existing package qualification; neither closes DX |
+| [DX](../issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md) | DX.1 blocked on LSP verification transport; DX.2–DX.16 not started | [Compiler DX architecture](../../internal_docs/compiler_dx_architecture.md) | DX.8 and DX.11 require their own existing package qualification; neither closes DX |
