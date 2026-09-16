@@ -1,12 +1,14 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-## Current qualification status — Item 88 delivered; Item 89 next
+## Current qualification status — implementation and Item 62 complete
 
-Item 88 is merged through [PR 3835](https://github.com/sifr-lang/sifr/pull/3835).
-All 40 release validation steps and native qualification pass at its candidate.
-Final canonical report construction fails because it flattens case-local variant
-labels into suite-wide identities. Item 89 owns this reporting repair. Items 62
-and 35 remain pending. No stable or Marketplace publication has occurred.
+All registered implementation batches through Item89 are merged. Final frozen-
+input audit, same-source compiler/native qualification and reconstructed release
+report are complete, with their original failures and actual source identities
+preserved below. Item35 remains only the documentation archive/roadmap closer
+and its one exact-SHA whole-phase review. No stable or Marketplace publication
+has occurred. Historical pending statements below are superseded by the final
+Item62 audit and Item89 delivery records.
 
 ## Historical implementation delivery checkpoint — 2026-09-15
 
@@ -2065,7 +2067,7 @@ not hand-edit transitive packages or claim old evidence used new releases.
 | --- | --- | --- | --- |
 | 56 | 45, 49 | Rust audit regression assertions: existing Syn impl header/safety coverage; exact DataFusion `table_exist` error-propagation chain and mutation; structural Polars sortedness assertion and mutation; remove redundant `nanvl` check only when covered. Own `crates/sifr_stdlib_manifest/tests` and `crates/sifr_codegen/src/stdlib_filter/tests.rs`, not fresh runtime features. | `manifest syn_prettyplease_dependency_versions`; `manifest arrow_datafusion_dependency_versions`; `manifest polars_dependency_version`; `cargo test -p sifr_codegen stdlib_filter::tests` |
 | 61 | E1, E2, 50, 51, 52, 57 | New Kafka/main integration scope, completing original Item 31 only after approval prerequisites: select latest kafka-python (3.0.11 supplied baseline), compare preserved #3551 mechanism against final main, integrate owned callback/live bridges and audit/locks, validate current compiler inputs. Preserve original consumed gates; exactly one new integration review and one gate for this separately registered scope, with no blanket retry of old candidate. | `area python_interop: dependency-versions, callbacks, callback-examples, live-policy, live-examples`; `uv lock --check --project verification/areas/python_interop` |
-| 62 | 31–34 complete, 36–61 complete, E1, E2 | Final audit and qualification evidence, before closer: official Rust/Python/toolchain/npm/Mint/action/fork/submodule queries; compare tracked inventories, checksum provenance and all deferred dispositions; clean-CARGO_HOME SQLx inactive-fixture sparse-index/offline experiment, idiomatic Rust demo compile coverage, explicit absent-environment fixture and resolver-2/absent-resolver negative tests, replace vacuous parity assertion, strict LSP response policy and -32800 cancellation assertion. **This is an audit coordinator, not an implementation catch-all:** the concrete implementation owners below must finish before it runs; any new stale release/mechanism becomes a newly numbered item and blocks 62/35. | `manifest rust_direct_dependency_versions`; `area python_interop: dependency-versions`; `area documentation: structure`; local link/path checks and official-source audit queries. Reuse completed implementation evidence; no broad gate for this docs-only audit result. |
+| 62 | complete; final audit below | **Complete.** Final audit and qualification evidence, before closer: official Rust/Python/toolchain/npm/Mint/action/fork/submodule queries; compare tracked inventories, checksum provenance and all deferred dispositions; clean-CARGO_HOME SQLx inactive-fixture sparse-index/offline experiment, idiomatic Rust demo compile coverage, explicit absent-environment fixture and resolver-2/absent-resolver negative tests, replace vacuous parity assertion, strict LSP response policy and -32800 cancellation assertion. **This is an audit coordinator, not an implementation catch-all:** the concrete implementation owners below must finish before it runs; any new stale release/mechanism becomes a newly numbered item and blocks 62/35. | `manifest rust_direct_dependency_versions`; `area python_interop: dependency-versions`; `area documentation: structure`; local link/path checks and official-source audit queries. Reuse completed implementation evidence; no broad gate for this docs-only audit result. |
 | 35 | 62 and every registered implementation item merged | One docs-only closer: this phase record, roadmap status and archive move only. Reuse exact-SHA item evidence; one whole-phase Opus review of closure SHA. No package upgrades, code, fixtures, workflows, locks or qualification implementation here. If audit finds work, register it and stop closure. | `git diff --check`; local link/path checks; `python3 scripts/check_file_size_guardrails.py` only; no Sifr gates |
 
 Item 62's inherited implementation concerns are assigned separate bounded
@@ -5758,7 +5760,8 @@ generated differential checks, all 10 full generated-quality variants, all
 the configured full performance area (12 variants), distribution, documentation,
 sysroot and workspace checks. Large-session LSP smoke passes at 42 operations,
 p95 21.603 ms and peak RSS 124.2 MiB. The performance runner selected ten
-benchmarks; seven had five samples each and three were warm-query cases; its policy explicitly skips p95 evaluation
+benchmarks; seven had five samples each and three were warm-query cases. Its policy
+explicitly skips p95 evaluation
 below 20 samples. This record does not claim a 65-benchmark qualification.
 
 The two package-management failures are stale expected Cargo.lock hashes for
@@ -5844,8 +5847,8 @@ Cleanup ledger3 records 9776721920 to 17323700224 free bytes.
 
 ## Item 89: preserve case identity in canonical release evidence
 
-State: registered; implementation in progress. Owner: verification release
-reporting. Base: Item 88 merge `2fb4af9dca6716fa488cc98b6a8010fe74aed93b`.
+State: delivered through PR3836; see final record below. Owner: verification
+release reporting. Base: Item 88 merge `2fb4af9dca6716fa488cc98b6a8010fe74aed93b`.
 
 Scope: retain both case ID and variant label when building suite case evidence,
 so identical local labels in distinct cases remain distinct. Continue rejecting
@@ -5863,3 +5866,177 @@ never attribute old executions or native binaries to a new source SHA. Keep the
 original exit2 failure. Final qualification/closure remains pending a valid
 source-bound report and review. Do not rerun the full compiler suite merely to
 reformat the completed evidence.
+
+## Item 89 delivery and final report reconstruction — 2026-09-16
+
+[PR3836](https://github.com/sifr-lang/sifr/pull/3836) delivers reviewed builder
+`c774224648510f09059d8c4908bb968772d226bb`, merge
+`380a4764fe2f48dd7a90f0e3bf25bdeebf4f1623`. Both case ID and variant label are
+retained; genuine duplicates and missing identities are rejected. All16runner
+check groups, nine invalid-identity controls, delimiter/percent collision control
+and replay of1018real area variants pass. The reconstructed40-step/20-critical-
+suite report passes strict governance validation at its original7001execution
+source. File-size, diff,12local links and documentation checks pass. Initial
+worktree documentation setup lacked submodules; initialized pins, reran only
+that documentation check, PASS.
+
+Initial Opus review1/remediation0 SATISFIED, no blockers, response SHA256
+`b92fdd1458d4b19eac97b1d025d3c52f4d7483fdc55512836421c266464c8a52`.
+The review explicitly approves retaining execution source7001 and identifying
+builderc774 separately; no broad compiler/release rerun for report formatting.
+The required PR gate preserves exit124: allfunctional checks pass, coldE2E
+650.563seconds exceeds600seconds,143/143fixtures and0/46cache hits. Exact-source
+warm selection passes12.154seconds,143/143 and46/46cache hits under the unchanged
+limit. Cold reportSHA256
+`460c996fec9df5d35dac384e89af257c4a196fa0f4f9576a6ba74c1007596ca0`;
+warm logSHA256 `5887b360f6725e67d61b8c6a39d46513a94fd5d992a49bc5f6e43468f8311edc`.
+
+The original40 release steps and native artifacts remain bound to
+`700105f938be8202171bd0e7f8b9d0b292d2eb28`, never to c774. Canonical reconstructed
+report SHA256 `e215008e5afcd634e7fa8fa4eeeb236ff3b4f2245b183414c6f5948ba700d8ce`.
+Source, submodule pins, toolchain, profile digest and all four original critical
+artifact hashes pass validation. Original exit2 remains unchanged. The separate
+reconstruction receipt and final candidate envelope are retained locally and
+remotely outside Git. Follow-up suggestions have separate ownership below.
+
+Disk-pressure cleanup4 removed185obsolete previous compiler merge E2E target
+directories after process-use checks. Current release, PR and compiler caches
+were retained; inputs were archived locally and remain remotely. Free space
+increased10933755904to45713473536bytes; no rules were changed.
+
+## Item 62: final frozen-input audit and qualification
+
+Qualified compiler/artifact source: `700105f938be8202171bd0e7f8b9d0b292d2eb28`.
+Item87 compiler repairs were delivered through PR3833, merge
+`e27a1a8243f6da5c2c0e752233d5efe4b3645214`; Item88 digest-only repair through
+PR3835, merge `2fb4af9dca6716fa488cc98b6a8010fe74aed93b`.
+Item89 changes only final report identity handling and associated self-tests,
+with documentation records. Its reviewed builder source is
+`c774224648510f09059d8c4908bb968772d226bb`, delivered through [PR3836](https://github.com/sifr-lang/sifr/pull/3836), merge
+`380a4764fe2f48dd7a90f0e3bf25bdeebf4f1623`.
+The compiler/native execution source remains7001; report reconstruction does
+not attribute those executions to the reporting-only builder commit.
+
+Full compiler merge1 at106bceb4813cdf7a847faace17308bf132cfa376 passes36steps
+in10400.51seconds, report SHA256
+`0db5cd18e50dd4fe060e0216fbc8d7cdedf09365d9901b3908ea53fe855b2fce`.
+All40release validation steps subsequently pass at7001 in12838.16seconds.
+Original exit2 from canonical report construction remains preserved; see the
+separate reconstruction provenance below. The audit closes the approved dated
+selection, not an unbounded upgrade wave. Historical failures and custody
+limitations remain intact.
+
+The final source is reconciled against retained official registry responses:
+126 Rust identities/148 archive digests and 27 Python identities/552 artifact
+URL and SHA256 pairs pass. All selected artifacts remain non-yanked in that
+retained audit. Four later PyPI metadata responses differ from historical bytes
+(alembic, boto3, pydantic, scikit-learn); every selected immutable artifact still
+matches. Both metadata response identities remain retained. Whole-response
+inequality was not concealed or mistaken for a package artifact mismatch.
+
+The 17 official tool/action response hashes pass (seven npm packages, four
+toolchains and six root actions). All 17 submodule identities match the final
+native qualification index and remain unchanged since the preceding audit.
+The earlier editor bootstrap and parent gitlink changes retain their original
+delivery records; this audit does not claim another editor change.
+WASI SDK 34 and SQLite 3.53.4 retain their authenticated build/source receipts.
+Fork-local action and parser replay evidence stays with its Item 42 owner.
+
+Final input receipt: `20260916-demo-digests/audit-inputs-final-7001.json`,
+SHA256 `2ac4ce5c458facf8da6967e6dcc2cad0c45647832348dc34d6fde9868dc353ab`.
+The selected registry reconciliation is `selected-inputs-700105f938.json` in
+that directory, SHA256
+`33ddfe68b0c48e6620a725c7c6c70f58f736c81548963abc473f35389d28a5bf`.
+These are 700 artifact metadata provenance comparisons, not 700 newly
+downloaded package payloads. Its Rust inventory SHA256 is
+`07d63f9b3a2814f5a23311ce51ee38a99b51cbd195a3c4fe28fcfb8fb0e5c05a`;
+its Python inventory SHA256 is
+`01c271011393a91faa7ae8f85753e5fe13333264bf3054e8b66ead6fef307ea2`.
+
+The retained later-release observations below do not reopen the frozen phase.
+They remain visible for a separately authorized future upgrade wave; this
+record does not claim the selected releases are still the newest today.
+
+| Package | Frozen selection | Later observed release |
+| --- | --- | --- |
+| bitflags | `2.13.1` | [2.13.2](https://crates.io/api/v1/crates/bitflags/2.13.2) |
+| cc | `1.4.5` | [1.4.6](https://crates.io/api/v1/crates/cc/1.4.6) |
+| crc32fast | `1.5.1` | [1.5.2](https://crates.io/api/v1/crates/crc32fast/1.5.2) |
+| cxx | `1.0.200` | [1.0.202](https://crates.io/api/v1/crates/cxx/1.0.202) |
+| datafusion | `55.0.0` | [55.1.0](https://crates.io/api/v1/crates/datafusion/55.1.0) |
+| encoding_rs | `0.8.40` | [0.8.41](https://crates.io/api/v1/crates/encoding_rs/0.8.41) |
+| syntaqlite | `0.9.0` | [0.10.0](https://crates.io/api/v1/crates/syntaqlite/0.10.0) |
+| toml | `1.1.5+spec-1.1.0` | [1.1.6+spec-1.1.0](https://crates.io/api/v1/crates/toml/1.1.6+spec-1.1.0) |
+| uuid | `1.26.0` | [1.26.1](https://crates.io/api/v1/crates/uuid/1.26.1) |
+| wasmtime | `48.0.1` | [48.0.2](https://crates.io/api/v1/crates/wasmtime/48.0.2) |
+| wat | `1.258.0` | [1.259.0](https://crates.io/api/v1/crates/wat/1.259.0) |
+| wit-bindgen | `0.61.1` | [0.62.0](https://crates.io/api/v1/crates/wit-bindgen/0.62.0) |
+| wit-component | `0.258.0` | [0.259.0](https://crates.io/api/v1/crates/wit-component/0.259.0) |
+
+The historical Item 35 deferral table remains the ownership map. Its required
+implementation owners are delivered: 37/38/39/53/54/55/58/60/66/67/69 through
+their recorded PRs; toolchain, graph, SQLite, component, Python, Kafka and LSP
+owners through the final integration; Mint 74/34 through PRs 3823/3824.
+Items 62A–D provide the clean-cache SQLx experiment, maintained idiomatic demos,
+non-vacuous environment/resolver/parity cases, and strict response/cancellation
+assertions. The earlier full merge3 gate corroborates those unchanged mechanisms;
+Item87 full merge1 additionally confirms all selected areas, 66 SQL cases, 626
+ordinary driver tests, all 77 generated-build tests, 1,533 codegen tests and
+727 E2E cases across 185 rebuilt groups with zero cache hits.
+Cosmetic and optional test-maintenance observations remain separate follow-ups,
+not silently claimed as implemented compiler changes.
+
+Historical full-byte recovery in 59/64/70 was superseded by the user-approved
+minimal-retention disposition. The old 20 payloads/four records remain
+INCOMPLETE/UNRECOVERED. Fresh native and release evidence is attributable to
+this candidate only. R2 PR 3821 and the older Kafka/Python PRs are not required
+merges and are not claimed merged. No publication approval is implied.
+
+Native qualification [run 35047896353](https://github.com/sifr-lang/sifr/actions/runs/35047896353),
+at the exact current candidate, passes all four native targets, installer, editor
+package and qualification index. All seven transport archives and 20 actual
+indexed payloads were verified locally; all 20 payloads were verified again
+after transfer to `20260916-qualification-35047896353/` at
+2026-09-16T03:15:28Z. Index SHA256
+`98b7301251ea626d1d10e039da671f713085456dba7f4832e37f1388880b2d8b`.
+This creates candidate artifacts only and does not publish a release.
+
+The corrected canonical release report is SHA256
+`e215008e5afcd634e7fa8fa4eeeb236ff3b4f2245b183414c6f5948ba700d8ce`.
+It passes strict artifact and source validation against actual7001, preserving
+all40completed steps and four critical area artifact hashes. The corrected
+builder sourcec774 has one satisfied Opus review, initial1/remediation0,
+response SHA256 `b92fdd1458d4b19eac97b1d025d3c52f4d7483fdc55512836421c266464c8a52`.
+Reconstruction provenance is retained outside Git in
+20260916-release-evidence/release-report-reconstruction.json, and locally in
+the final-envelope archive. Original release1.exit remains2; no compiler or
+release executions were repeated to reconstruct the report. The paired native
+index and report both retain the same7001source.
+
+The release performance area passes all12configured variants on
+linux-i7-4720hq-12gb-dev-v1. Its controlled subset selects10benchmarks;
+seven have5samples and retain the unchanged policy skip for p95 below20samples.
+Three warm-query cases are also selected. This does not claim65benchmarks.
+The release large-session LSP smoke passes42operations, p95 21.763ms,
+peakRSS130719744bytes (124.7MiB), slope0.0MiB/min, under the unchanged128MiBcap.
+Cold full-suite wall-time and cache-skew advisories are retained; these are
+not warm-host performance evidence.
+
+The source-bound stable candidate plan passes governance validation, SHA256
+`f286ed06bcfaffe1b4ef33adaeb1f41f62ac54c1c3ab08f5c6cc96416b8fd163`.
+Stable-support claims, documentation report, Rust validation, release report,
+20indexed payloads, checksums, installer and VSIX are bound in this envelope.
+Fresh read-only preflight at2026-09-16T07:32:43UTC confirms preview channels
+generation2, no stable channel or0.1.0publication, channel digest
+`2f4274b2236219b1e737a8864ca672da3eaca627520afabe5ea4dcfb235da445`,
+website base`ff472f2af59255c8031b1a6f9b9b294c4b820496`.
+The external materialization helper's first attempt used a flat retained-file
+layout and failed before planning; arranging the same verified bytes by their
+indexed workflow artifact names passes. Both logs are retained; payload and
+index bytes are unchanged. This is candidate preparation, not publication.
+
+Final records pass local Markdown link checks, documentation structure,
+file-size guard and diff validation. No broad gate or additional implementation
+review is repeated for these records. All registered implementation work is
+delivered; Item35 remains the documentation-only archive/roadmap closer and
+requires its one exact-SHA whole-phase review before merge.
