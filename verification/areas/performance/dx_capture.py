@@ -113,7 +113,7 @@ def main():
             for number, label in enumerate(("first", "noop", "edited")):
                 if label == "edited":
                     path = project / "main.sifr"
-                    path.write_text(path.read_text() + "\n# DX.1 fixed nonsemantic source edit\n")
+                    path.write_text(path.read_text().replace("Sifr stdlib gzip compression!", "DX.1 edited native rebuild!"))
                 rows.append(observed([compiler, "build", str(project / "main.sifr"), "--output", str(destination)],
                                      output, f"dx-native-{label}", number))
                 save()
