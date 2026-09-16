@@ -213,3 +213,16 @@ Initial1/remediation0 review of c774224648 is SATISFIED with no blockers.
 - Cosmetic benchmark sentence wrapping is addressed in final records without another implementation review.
 - Retention hygiene: the failed first collector produced an empty demo-digests/release1-detail.tar.gz. Its failure disposition now points to authoritative release1-detail-complete.tar.gz (9240e748...). The separately retained Item87 generated-support/release1-detail.tar.gz (91b23c22...) is a different path and remains valid; the reviewer conflated those basenames. No failed collection is credited as evidence.
 - Warm E2E was pending during review; it subsequently passed at exactc774 in12.154seconds,143/143fixtures,46/46cache hits. The original cold exit124 remains preserved. Corrected canonical report also passes at original7001 with separate builder provenance.
+
+## Item 35 closure review follow-ups
+
+Closure PR3838, candidate `f8e4b60f0b0d2acf11d03016816b73f9456bd580`,
+merged as `7fea9b7e65f807e3297071afe29404bff5690cf7`. Whole-phase review:
+initial 1/remediation 0, SATISFIED, no blocking findings. Response SHA256:
+`8d31fcbf21699c12828fcaf86e3bdd919851a0b24501b00edd2f0a7dcdf06854`.
+
+- Records-hygiene owner: consider applying the optional explicit status header consistently to archived phase documents. This closer records completion in prose; the reviewer classified the existing convention gap as cosmetic.
+- Issue-discoverability owner: independently assess the remaining child issues in active/, including historical custody records, preparation issues, LSP memory and reviewer-policy records. Their separate dispositions are preserved; archival of the parent does not imply that every child is a roadmap entry or silently complete.
+
+These are separate follow-up suggestions, not undisclosed blockers or remaining
+implementation work in the frozen latest-stable phase.
