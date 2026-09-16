@@ -25,8 +25,8 @@ that protocol timing result; the trace alone does not establish a compiler stall
 
 Cleanup raised `LSP exited 1` over the original timeout. The full traceback keeps
 both, but future protocol handling must preserve the primary failure explicitly.
-Fix this in the developer-tooling transport owner, separately from DX.1 lane/policy
-work. Do not remove the retention operation, increase timeouts, weaken outcomes,
+The user authorized correcting this required measurement dependency in the
+DX.1 batch, under the same owned checkout and review. Do not remove the retention operation, increase timeouts, weaken outcomes,
 substitute an alternate client, or call the failed run a performance pass.
 
 ## Minimal independent reproduction
@@ -83,7 +83,7 @@ RUSTUP_TOOLCHAIN=1.98.1-x86_64-unknown-linux-gnu CARGO_BUILD_JOBS=2 \
 
 ## Required correction and resumption boundary
 
-The owner should implement deadline-aware framing that handles queued/buffered,
+This DX.1 batch must implement deadline-aware framing that handles queued/buffered,
 coalesced and fragmented messages without waiting on an empty OS descriptor or
 blocking indefinitely on a partial frame. Add independent transport regression
 coverage for those cases and preserve the primary error through cleanup.
@@ -91,3 +91,5 @@ Then resume the [DX.1 handoff](ad-hoc-compiler-dx-and-toolchain-reuse.md): reval
 the affected protocol workload with the repaired canonical client, complete the
 missing baselines and scoped review, and only then merge. DX.1 is not closed by
 this issue record. No DX.2–DX.16 implementation is authorized by this handoff.
+
+Named regression command: `python3 verification/areas/developer_tooling/test_lsp_protocol_transport.py`. Covers coalesced frames, fragmented headers/bodies, partial-frame deadlines, EOF, queued frames after exit, and primary failure preservation through cleanup.

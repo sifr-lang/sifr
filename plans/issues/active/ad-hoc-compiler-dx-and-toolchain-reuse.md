@@ -524,7 +524,7 @@ All canonical acceptance cases in architecture section 16 are covered. The final
 
 ## Execution Status
 
-DX.1 implementation is saved but blocked during baseline validation by the pre-existing canonical LSP test-client transport. Remote Claude and both compiler artifacts are available. No milestone is complete; DX.2–DX.16 remain dependency-blocked behind DX.1.
+DX.1 implementation is saved; the user authorized correcting the canonical LSP test-client transport dependency within this batch before resuming baseline validation. Remote Claude and both compiler artifacts are available. No milestone is complete; DX.2–DX.16 remain dependency-blocked behind DX.1.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -598,7 +598,8 @@ DX.1 implementation is saved but blocked during baseline validation by the pre-e
   performance measurement/validation Python and contract data changed. Claude's
   required remote invocation returned READY, but no review request or approval
   is claimed. An external baseline dependency blocks review/merge.
-- **Exact next action:** resolve the separate LSP transport owner issue; resume
+- **Resumption authorization:** the user explicitly includes the required LSP transport correction in this DX.1 batch. The earlier separate-owner stop boundary is superseded.
+- **Exact next action:** correct the canonical LSP transport in this batch; resume
   DX.1 with the repaired canonical client, revalidate affected evidence, complete
   the missing named baseline/checks, review and merge. Do not implement DX.2–DX.16.
   Local checkout modifications were pre-existing and remain untouched.
