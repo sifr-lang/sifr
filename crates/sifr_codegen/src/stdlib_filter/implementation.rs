@@ -455,6 +455,8 @@ pub(crate) fn rust_source_defined_item_names(rust_code: &str) -> HashSet<String>
                 .items
                 .into_iter()
                 .flat_map(crate::task_local_support::split_declarations)
+                // An impl references its self type; it does not define an importable binding.
+                .filter(|item| !matches!(item, syn::Item::Impl(_)))
                 .filter_map(|item| parse_item_name(&item))
                 .collect()
         },

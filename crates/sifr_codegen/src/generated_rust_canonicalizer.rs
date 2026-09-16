@@ -22,7 +22,7 @@ mod method_demand;
 mod project_support_pruning;
 pub(crate) use project_support_pruning::{
     import_generated_support_in_project_nominals, import_project_prelude_bindings,
-    prune_generated_project_owners,
+    import_root_bindings_in_project_nominals, prune_generated_project_owners,
 };
 mod source_expectations;
 mod support_import_cleanup;

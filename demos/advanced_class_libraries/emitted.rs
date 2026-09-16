@@ -1067,11 +1067,7 @@ mod sifr_generated_generated_support {
     pub trait SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods {
         fn search(&self, text: &str) -> Result<Option<String>, RegexError>;
         fn is_match(&self, text: &str) -> Result<bool, RegexError>;
-        fn sub(&self, replacement: &str, text: &str) -> Result<String, RegexError>;
         fn findall(&self, text: &str) -> Result<Vec<String>, RegexError>;
-        fn split(&self, text: &str) -> Result<Vec<String>, RegexError>;
-        fn pattern(&self) -> Result<String, RegexError>;
-        fn flags(&self) -> Result<SifrInt, RegexError>;
     }
     fn compile_pattern(
         pattern: &str,
@@ -1236,7 +1232,6 @@ mod sifr_generated_project_nominals {
         }
     }
     impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
-        #[must_use]
         pub fn popleft(&mut self) -> Option<T> {
             if &SifrInt::from(self.data.len()) == &SifrInt::from_i64(0) {
                 return None;
@@ -2620,14 +2615,6 @@ mod sifr_generated_project_nominals {
                 },
             )
         }
-        fn sub(&self, replacement: &str, text: &str) -> Result<String, RegexError> {
-            ::sifr_stdlib::regex::compiled_pattern_replace(self, replacement, text).map_err(
-                |sifr_generated_bridge_error| RegexError {
-                    message: sifr_generated_bridge_error.to_string(),
-                    detail: sifr_generated_bridge_error.to_string(),
-                },
-            )
-        }
         fn findall(&self, text: &str) -> Result<Vec<String>, RegexError> {
             ::sifr_stdlib::regex::compiled_pattern_findall(self, text).map_err(
                 |sifr_generated_bridge_error| RegexError {
@@ -2635,30 +2622,6 @@ mod sifr_generated_project_nominals {
                     detail: sifr_generated_bridge_error.to_string(),
                 },
             )
-        }
-        fn split(&self, text: &str) -> Result<Vec<String>, RegexError> {
-            ::sifr_stdlib::regex::compiled_pattern_split(self, text).map_err(
-                |sifr_generated_bridge_error| RegexError {
-                    message: sifr_generated_bridge_error.to_string(),
-                    detail: sifr_generated_bridge_error.to_string(),
-                },
-            )
-        }
-        fn pattern(&self) -> Result<String, RegexError> {
-            ::sifr_stdlib::regex::compiled_pattern_source(self).map_err(
-                |sifr_generated_bridge_error| RegexError {
-                    message: sifr_generated_bridge_error.to_string(),
-                    detail: sifr_generated_bridge_error.to_string(),
-                },
-            )
-        }
-        fn flags(&self) -> Result<SifrInt, RegexError> {
-            ::sifr_stdlib::regex::compiled_pattern_flags(self)
-                .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
-                .map_err(|sifr_generated_bridge_error| RegexError {
-                    message: sifr_generated_bridge_error.to_string(),
-                    detail: sifr_generated_bridge_error.to_string(),
-                })
         }
     }
     pub struct SifrGeneratedStdlibSifrX2ereX2ePattern {
@@ -2756,8 +2719,7 @@ mod sifr_generated_project_nominals {
     impl ::std::error::Error for RegexError {}
 }
 use crate::sifr_generated_generated_support::{
-    SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods, compile, fullmatch,
-    getLogger, sifr_generated_const_4445425547,
+    compile, fullmatch, getLogger, sifr_generated_const_4445425547,
 };
 use ::sifr_runtime::SifrInt;
 use ::std::collections::HashMap;

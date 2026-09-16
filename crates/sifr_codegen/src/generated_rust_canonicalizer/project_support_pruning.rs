@@ -201,6 +201,28 @@ fn nominal_reexport_name(item: &syn::Item) -> Option<String> {
     }
 }
 
+pub(crate) fn import_root_bindings_in_project_nominals(
+    prelude_source: &str,
+) -> Result<String, String> {
+    let mut prelude = syn::parse_file(prelude_source)
+        .map_err(|error| format!("failed to parse generated project prelude: {error}"))?;
+    for item in &mut prelude.items {
+        if let syn::Item::Mod(module) = item
+            && module.ident == "__sifr_project_nominals"
+            && let Some((_, items)) = &mut module.content
+        {
+            let mut file = syn::parse_file("").map_err(|error| error.to_string())?;
+            file.items.clone_from(items);
+            let source =
+                import_project_prelude_bindings(prelude_source, &prettyplease::unparse(&file))?;
+            *items = syn::parse_file(&source)
+                .map_err(|error| error.to_string())?
+                .items;
+        }
+    }
+    Ok(prettyplease::unparse(&prelude))
+}
+
 pub(crate) fn import_generated_support_in_project_nominals(
     prelude_source: &str,
     support_source: &str,

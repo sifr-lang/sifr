@@ -103,12 +103,6 @@ mod sifr_generated_generated_support {
             self + rhs
         }
     }
-    impl SifrGeneratedAdd for String {
-        fn sifr_generated_add(mut self, rhs: Self) -> Self {
-            self.push_str(&rhs);
-            self
-        }
-    }
     fn sifr_generated_collect_iterator<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
     ) -> Vec<T> {
@@ -1171,7 +1165,6 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::String;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IndexError {
         pub message: String,

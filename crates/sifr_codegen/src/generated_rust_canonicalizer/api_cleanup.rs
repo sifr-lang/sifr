@@ -1,8 +1,9 @@
 use quote::{ToTokens, quote};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 
 mod const_drop;
+mod const_tuple_parameters;
 pub(super) mod const_types;
 
 use super::source_expectations::{
@@ -227,6 +228,7 @@ fn improve_function_api(
     if matches!(visibility, syn::Visibility::Public(_)) {
         if !matches!(signature.output, syn::ReturnType::Default)
             && !returns_result(signature)
+            && !signature.inputs.iter().any(input_is_mutable_reference)
             && !attrs.iter().any(|attr| attr.path().is_ident("must_use"))
         {
             attrs.push(syn::parse_quote!(#[must_use]));
@@ -238,6 +240,7 @@ fn improve_function_api(
             );
         }
     }
+    let borrowed_tuples = const_tuple_parameters::borrowed_tuples(signature, body);
     if context.allow_const
         && signature.constness.is_none()
         && signature.asyncness.is_none()
@@ -249,6 +252,7 @@ fn improve_function_api(
             signature.inputs.iter().any(
                 |argument| matches!(argument, syn::FnArg::Receiver(receiver) if matches!(receiver.kind, syn::ReceiverKind::Reference(..))),
             ),
+            &borrowed_tuples,
         )
     {
         signature.constness = Some(syn::token::Const::default());
@@ -472,17 +476,30 @@ fn returns_result(signature: &syn::Signature) -> bool {
     matches!(ty.as_ref(), syn::Type::Path(path) if path.path.segments.last().is_some_and(|segment| segment.ident == "Result"))
 }
 
+fn input_is_mutable_reference(argument: &syn::FnArg) -> bool {
+    match argument {
+        syn::FnArg::Receiver(receiver) => {
+            matches!(receiver.kind, syn::ReceiverKind::Reference(_, _, Some(_)))
+        }
+        syn::FnArg::Typed(argument) => {
+            matches!(argument.ty.as_ref(), syn::Type::Reference(reference) if reference.mutability.is_some())
+        }
+    }
+}
+
 fn block_is_const_compatible(
     block: &syn::Block,
     owner: Option<&str>,
     const_callables: &HashSet<String>,
     has_borrowed_self: bool,
+    borrowed_tuples: &HashMap<String, syn::Type>,
 ) -> bool {
     let mut checker = ConstCompatibilityChecker {
         compatible: true,
         owner,
         const_callables,
         has_borrowed_self,
+        borrowed_tuples,
     };
     checker.visit_block(block);
     checker.compatible
@@ -493,6 +510,7 @@ struct ConstCompatibilityChecker<'scope> {
     owner: Option<&'scope str>,
     const_callables: &'scope HashSet<String>,
     has_borrowed_self: bool,
+    borrowed_tuples: &'scope HashMap<String, syn::Type>,
 }
 
 impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
@@ -520,7 +538,9 @@ impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
     }
 
     fn visit_expr_field(&mut self, expression: &'ast syn::ExprField) {
-        if !self.has_borrowed_self || !expression_is_rooted_in_self(&expression.base) {
+        if !(const_tuple_parameters::field_is_builtin(expression, self.borrowed_tuples)
+            || self.has_borrowed_self && expression_is_rooted_in_self(&expression.base))
+        {
             self.compatible = false;
             return;
         }

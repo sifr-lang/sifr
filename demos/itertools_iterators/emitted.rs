@@ -94,9 +94,6 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    trait SifrGeneratedAdd: Sized {}
-    impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
-    impl SifrGeneratedAdd for String {}
     #[must_use]
     pub fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
         let iterables = iterables.to_vec();
@@ -229,7 +226,6 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::String;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ValueError {
         pub message: String,
@@ -247,7 +243,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-use crate::sifr_generated_generated_support::{String, chain, count, islice, repeat};
+use crate::sifr_generated_generated_support::{chain, count, islice, repeat};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ValueError;
 fn main() {

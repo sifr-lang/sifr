@@ -460,6 +460,10 @@ pub fn generate_rust_multi_with_metadata(
         &body_consumers,
     )
     .unwrap_or_else(|error| panic!("failed to prune generated project owners: {error}"));
+    project_union_prelude = crate::import_root_bindings_in_project_nominals(&project_union_prelude)
+        .unwrap_or_else(|error| {
+            panic!("failed to import project root bindings into nominals: {error}")
+        });
     if !support_source.trim().is_empty() {
         let consumers = std::iter::once(project_union_prelude.as_str())
             .chain(body_consumers.iter().copied())

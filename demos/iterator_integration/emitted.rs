@@ -105,9 +105,6 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    trait SifrGeneratedAdd: Sized {}
-    impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
-    impl SifrGeneratedAdd for String {}
     fn sifr_generated_islice_impl<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
         start: SifrInt,
@@ -447,7 +444,7 @@ mod sifr_generated_generated_support {
 }
 mod sifr_generated_project_nominals {
     use crate::sifr_generated_generated_support::{
-        String, sifr_generated_iterdir_to_iter, sifr_generated_rglob_to_iter,
+        sifr_generated_iterdir_to_iter, sifr_generated_rglob_to_iter,
     };
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -610,9 +607,7 @@ mod sifr_generated_project_unions {
         }
     }
 }
-use crate::sifr_generated_generated_support::{
-    String, finditer, getpid, islice, run_command, write_text,
-};
+use crate::sifr_generated_generated_support::{finditer, getpid, islice, run_command, write_text};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0;
 fn adapt_to_iterable(it: Box<dyn Iterator<Item = SifrInt>>) -> Vec<SifrInt> {

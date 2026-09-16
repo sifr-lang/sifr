@@ -1525,7 +1525,6 @@ mod sifr_generated_project_nominals {
         }
     }
     impl SifrGeneratedStdlibSifrX2ecsvX2eDialectRegistry {
-        #[must_use]
         pub fn unregister(&mut self, name: &str) -> bool {
             if self.dialects.contains_key(name) {
                 let _ = self.dialects.remove(name);

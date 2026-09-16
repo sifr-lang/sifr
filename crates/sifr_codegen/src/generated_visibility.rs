@@ -210,6 +210,18 @@ fn extend_visible_interface_types(
 }
 
 pub(crate) fn generated_support_import(source: &str, support: &str) -> String {
+    generated_support_import_with_inherent(
+        source,
+        support,
+        &crate::stdlib_filter::InherentMethods::new(),
+    )
+}
+
+pub(crate) fn generated_support_import_with_inherent(
+    source: &str,
+    support: &str,
+    inherent: &crate::stdlib_filter::InherentMethods,
+) -> String {
     let names = crate::stdlib_filter::rust_source_defined_item_names(support);
     let mut required = crate::stdlib_filter::rust_source_unqualified_item_names(source, &names)
         .unwrap_or_else(|error| panic!("invalid generated support import: {error}"));
@@ -219,9 +231,10 @@ pub(crate) fn generated_support_import(source: &str, support: &str) -> String {
         .items
         .retain(|item| !matches!(item, syn::Item::Mod(_)));
     required.extend(
-        crate::stdlib_filter::rust_source_required_trait_names(
+        crate::stdlib_filter::rust_source_required_trait_names_with_inherent(
             &prettyplease::unparse(&scope),
             support,
+            inherent,
         )
         .unwrap_or_else(|error| panic!("invalid generated support trait import: {error}")),
     );

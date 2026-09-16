@@ -151,12 +151,6 @@ mod sifr_generated_generated_support {
             self + rhs
         }
     }
-    impl SifrGeneratedAdd for String {
-        fn sifr_generated_add(mut self, rhs: Self) -> Self {
-            self.push_str(&rhs);
-            self
-        }
-    }
     #[must_use]
     pub fn count(start: SifrInt, step: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
         Box::new(SifrGeneratedGenerator::new(
@@ -1576,7 +1570,7 @@ mod sifr_generated_generated_support {
 }
 mod sifr_generated_project_nominals {
     use crate::sifr_generated_generated_support::{
-        PI, String, cos, f64, log, random_word_to_unit_float, sifr_generated_clone_words,
+        PI, cos, log, random_word_to_unit_float, sifr_generated_clone_words,
         sifr_generated_const_5f4d545f4c4f5745525f4d41534b, sifr_generated_const_5f4d545f4d,
         sifr_generated_const_5f4d545f4d41545249585f41, sifr_generated_const_5f4d545f4e,
         sifr_generated_const_5f4d545f574f52445f4d41534b,
@@ -1987,7 +1981,6 @@ mod sifr_generated_project_nominals {
         }
     }
     impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
-        #[must_use]
         pub fn sifr_generated_next_u32(&mut self) -> SifrInt {
             if &self.index.clone() >= &sifr_generated_const_5f4d545f4e() {
                 self.sifr_generated_twist();
@@ -2003,7 +1996,6 @@ mod sifr_generated_project_nominals {
         }
     }
     impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
-        #[must_use]
         pub fn random(&mut self) -> f64 {
             random_word_to_unit_float(self.sifr_generated_next_u32())
         }
@@ -2065,7 +2057,6 @@ mod sifr_generated_project_nominals {
         }
     }
     impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
-        #[must_use]
         pub fn gauss(&mut self, mu: f64, sigma: f64) -> f64 {
             let cached: Option<f64> = self.gauss_next;
             if let Some(cached) = cached {
@@ -2223,10 +2214,10 @@ mod sifr_generated_project_nominals {
     impl ::std::error::Error for IndexError {}
 }
 use crate::sifr_generated_generated_support::{
-    String, accumulate, acosh, asinh, atanh, compress, correlation, count, count_from, covariance,
-    cycle, dist, dropwhile, f64, filterfalse, from_list, fsum, gauss, isqrt, linear_regression,
-    mean, median, mode, multimode, quantiles, randrange, reduce, sample, shuffle, stdev, takewhile,
-    variance, zip_longest,
+    accumulate, acosh, asinh, atanh, compress, correlation, count, count_from, covariance, cycle,
+    dist, dropwhile, filterfalse, from_list, fsum, gauss, isqrt, linear_regression, mean, median,
+    mode, multimode, quantiles, randrange, reduce, sample, shuffle, stdev, takewhile, variance,
+    zip_longest,
 };
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::FloatOverflowError;

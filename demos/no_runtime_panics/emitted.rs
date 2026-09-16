@@ -1400,7 +1400,6 @@ mod sifr_generated_project_nominals {
         }
     }
     impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
-        #[must_use]
         pub fn sifr_generated_next_u32(&mut self) -> SifrInt {
             if &self.index.clone() >= &sifr_generated_const_5f4d545f4e() {
                 self.sifr_generated_twist();

@@ -1505,6 +1505,7 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
+    use crate::SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0;
     use crate::sifr_generated_generated_support::{
         sifr_generated_apply_max_lines, sifr_generated_apply_sentence_endings_lines,
         sifr_generated_formatter_format_impl, sifr_generated_month_name_lookup,

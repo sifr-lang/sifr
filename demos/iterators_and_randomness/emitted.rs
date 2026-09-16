@@ -97,10 +97,6 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    trait SifrGeneratedAdd: Sized {}
-    impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
-    impl SifrGeneratedAdd for f64 {}
-    impl SifrGeneratedAdd for String {}
     fn sifr_generated_collect_iterator<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
     ) -> Vec<T> {
@@ -1262,7 +1258,7 @@ mod sifr_generated_generated_support {
 }
 mod sifr_generated_project_nominals {
     use crate::sifr_generated_generated_support::{
-        String, f64, sifr_generated_clone_words, sifr_generated_const_5f4d545f4c4f5745525f4d41534b,
+        sifr_generated_clone_words, sifr_generated_const_5f4d545f4c4f5745525f4d41534b,
         sifr_generated_const_5f4d545f4d, sifr_generated_const_5f4d545f4d41545249585f41,
         sifr_generated_const_5f4d545f4e, sifr_generated_const_5f4d545f574f52445f4d41534b,
         sifr_generated_const_5f4d545f55505045525f4d41534b, sifr_generated_normalize_seed_input,
@@ -1362,7 +1358,6 @@ mod sifr_generated_project_nominals {
         }
     }
     impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
-        #[must_use]
         pub fn sifr_generated_next_u32(&mut self) -> SifrInt {
             if &self.index.clone() >= &sifr_generated_const_5f4d545f4e() {
                 self.sifr_generated_twist();
@@ -1515,8 +1510,8 @@ mod sifr_generated_project_nominals {
     impl ::std::error::Error for IndexError {}
 }
 use crate::sifr_generated_generated_support::{
-    String, chain, choice, choices, combinations, compare_digest, islice, permutations, product,
-    randbits, randrange, shuffle, starmap, token_hex,
+    chain, choice, choices, combinations, compare_digest, islice, permutations, product, randbits,
+    randrange, shuffle, starmap, token_hex,
 };
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IndexError;
