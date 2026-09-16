@@ -7,6 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from . import reports
 from .paths import REPO_ROOT
@@ -290,12 +291,26 @@ def suite_evidence(
 
 
 def case_ids_for_suite(suite: Any) -> list[str]:
+    """Keep case-local labels distinct without erasing their editor category."""
     ids: list[str] = []
+    case_ids: set[str] = set()
     for case in suite.get("cases", []):
-        for variant in case.get("variants", []):
+        case_id = case.get("id")
+        if not isinstance(case_id, str) or not case_id:
+            raise GovernanceError("suite result contains missing case identity")
+        if case_id in case_ids:
+            raise GovernanceError(f"suite result contains duplicate case identity: {case_id}")
+        case_ids.add(case_id)
+        variants = case.get("variants", [])
+        if not variants:
+            raise GovernanceError(f"suite result contains no variants: {case_id}")
+        for variant in variants:
             label = variant.get("label")
-            if isinstance(label, str) and label:
-                ids.append(label)
+            if not isinstance(label, str) or not label:
+                raise GovernanceError(f"suite result contains missing variant identity: {case_id}")
+            # The final colon separates a percent-encoded case ID from its label.
+            # Encoding prevents delimiter collisions while retaining label prefixes.
+            ids.append(f"{label}:{quote(case_id, safe='')}")
     if len(ids) != len(set(ids)):
         raise GovernanceError(f"suite result contains duplicate case evidence: {ids}")
     return ids
