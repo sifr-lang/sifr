@@ -99,7 +99,7 @@ Do not wait for CI instead of local validation.
 ## Cargo build storage
 
 - Before a long Cargo gate, inspect free disk space and the current worktree's target size.
-- If its private target exceeds **20 GiB** and no process uses it, run `cargo clean` in that worktree.
+- Phase DX adopts pressure-based cleanup: do not clean solely because a target exceeds 20 GiB. Inspect free space and the planned operation reserve; reclaim only inactive, obsolete artifacts owned by this session when space is insufficient. See `internal_docs/compiler_dx_architecture.md` section 7. Automated entry pruning is implemented in DX.3.
 - Do not clean a shared target or a target from another worktree.
 - Do not use the first cold-cache run as host-sensitive performance evidence.
 - If safe cleanup does not provide enough space, record the resource blocker and stop.

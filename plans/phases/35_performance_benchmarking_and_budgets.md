@@ -706,3 +706,7 @@ Performance budget checks must run in `scripts/run_all_tests.sh --profile merge`
 ## Exit Gate
 
 Performance regressions are systematically detected and controlled by checked-in local-first benchmark, budget, and waiver infrastructure; the canonical `sifr_frontend` analysis/query foundation is established and consumed by CLI frontend flows; module-level query caching has deterministic invalidation and stale-result regression coverage; and Phase 27 non-regression guarantees remain green: panic-free user paths, no emitted data-dependent unwrap/expect/panic, stable diagnostics/renderer behavior, and stable exit-code behavior.
+
+## Prospective Phase DX adoption
+
+[Phase DX](../issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md) supersedes the process-local-only deferral prospectively. DX.12–DX.14 add optional module-level persistent result families through the existing frontend owner; historical Phase 35 evidence and semantics remain unchanged. A missing/incompatible optional project record is a cache miss. Installed stdlib metadata is required once DX.7–DX.8 migrate production consumers; source-tree production is explicit. See the [architecture](../../internal_docs/compiler_dx_architecture.md).

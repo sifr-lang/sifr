@@ -141,3 +141,9 @@ flowchart LR
 - [ad-hoc-embedded-python-interop.md](./issues/archive/ad-hoc-embedded-python-interop.md) (complete historical embedded CPython/uv lane; py0-py12 merged through PR #2677 and its authoring/trust contract is superseded by declaration-first interop)
 - [python-interop-verification-production.md](./issues/active/python-interop-verification-production.md) (complete follow-up: first-class area wiring, explicit live/container policy, testcontainers-backed Redis/Postgres/Kafka-compatible/LocalStack SNS-SQS examples, and final status evidence)
 - [ad-hoc-declaration-first-python-interop.md](./issues/archive/ad-hoc-declaration-first-python-interop.md) (complete through PR #3000: M0-M17 shipped declaration-first calls, opaque/context/async/callback protocols, affine buffer/Arrow/DLPack transfer, check/doctor/bind/certify/LSP authoring, shared raw ergonomics, typed ecosystem migrations, compiled live-service clients, and the current-run ecosystem certification ledger; repeated agent High whole-phase review is satisfied and the authoritative closure gate passed Python interop 25/25, E2E 674/674, and 261 hardening variants with zero failures)
+
+## Ad hoc compiler DX phase
+
+| Phase | Status | Architecture | Release checkpoints |
+| --- | --- | --- | --- |
+| [DX](issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md) | DX.1 blocked on LSP verification transport; DX.2–DX.16 not started | [Compiler DX architecture](../internal_docs/compiler_dx_architecture.md) | DX.8 and DX.11 require their own existing package qualification; neither closes DX |

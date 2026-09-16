@@ -42,6 +42,7 @@ class LspClient:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
+        self._receive_buffer = bytearray()
         self.args = args
         self.timeout = timeout
         self.next_id = 1
@@ -94,6 +95,16 @@ class LspClient:
         raise LspProtocolError(f"timed out waiting for notification {method}")
 
     def close(self) -> None:
+        # A finally-block cleanup must not replace the failure that led here.
+        primary = sys.exception()
+        try:
+            self._close_process()
+        except Exception as error:
+            if primary is None:
+                raise
+            primary.add_note(f"LSP cleanup also failed: {error}")
+
+    def _close_process(self) -> None:
         try:
             self.notify("exit")
         except Exception:
@@ -158,37 +169,41 @@ class LspClient:
     def _read_message(self, deadline: float) -> dict[str, Any]:
         if self.process.stdout is None:
             raise LspProtocolError("LSP stdout is closed")
-        while True:
-            if self.process.poll() is not None:
-                stderr = self.process.stderr.read().decode("utf-8", errors="replace") if self.process.stderr else ""
-                raise LspProtocolError(
-                    self._diagnostic_context(f"LSP exited before response: {self.process.returncode}", stderr)
-                )
-            remaining = max(deadline - time.monotonic(), 0.0)
-            if remaining == 0:
-                raise LspProtocolError("timed out waiting for LSP output")
-            ready, _, _ = select.select([self.process.stdout], [], [], remaining)
-            if ready:
-                break
-        header = b""
-        while b"\r\n\r\n" not in header:
-            chunk = self.process.stdout.read(1)
-            if not chunk:
-                raise LspProtocolError("LSP closed stdout while reading header")
-            header += chunk
+        while b"\r\n\r\n" not in self._receive_buffer:
+            self._read_chunk(deadline, "header")
+        boundary = self._receive_buffer.index(b"\r\n\r\n") + 4
+        header = bytes(self._receive_buffer[:boundary])
         length = None
         for line in header.decode("ascii", errors="replace").split("\r\n"):
             if line.lower().startswith("content-length:"):
-                length = int(line.split(":", 1)[1].strip())
+                try:
+                    length = int(line.split(":", 1)[1].strip())
+                except ValueError as error:
+                    raise LspProtocolError(f"invalid Content-Length header: {header!r}") from error
                 break
-        if length is None:
-            raise LspProtocolError(f"missing Content-Length header: {header!r}")
-        body = self.process.stdout.read(length)
-        if len(body) != length:
-            raise LspProtocolError("LSP closed stdout while reading body")
+        if length is None or length < 0:
+            raise LspProtocolError(f"missing or invalid Content-Length header: {header!r}")
+        while len(self._receive_buffer) < boundary + length:
+            self._read_chunk(deadline, "body")
+        body = bytes(self._receive_buffer[boundary:boundary + length])
+        del self._receive_buffer[:boundary + length]
         message = json.loads(body.decode("utf-8"))
         self._record_event("recv", message)
         return message
+
+    def _read_chunk(self, deadline: float, stage: str) -> None:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise LspProtocolError("timed out waiting for LSP output")
+        ready, _, _ = select.select([self.process.stdout], [], [], remaining)
+        if not ready:
+            raise LspProtocolError("timed out waiting for LSP output")
+        # Never use BufferedReader.read here: it can hide queued frames from
+        # select or wait past the deadline to fill a partial body.
+        chunk = os.read(self.process.stdout.fileno(), 65536)
+        if not chunk:
+            raise LspProtocolError(f"LSP closed stdout while reading {stage}")
+        self._receive_buffer.extend(chunk)
 
     def _record_event(self, kind: str, payload: dict[str, Any]) -> None:
         event = {

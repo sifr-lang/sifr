@@ -11,6 +11,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from compiler_lanes import selection
+
 
 def output(argv: list[str]) -> str:
     result = subprocess.run(argv, capture_output=True, text=True, check=True, timeout=30)
@@ -149,7 +151,8 @@ def execution_details(repo_root: Path, manifest_path: Path, mode: str) -> dict[s
         "rustc": output(["rustc", "--version"]),
         "cargo": output(["cargo", "--version"]),
         "python": platform.python_version(),
-        "build_profile": "dev",
+        "build_profile": selection()["compiler_build_profile"],
+        "compiler_measurement_lane": selection()["lane"],
         "control_mode": mode,
         "cache_policy": "manifest per-case warmups",
         "cargo_jobs": os.environ.get("CARGO_BUILD_JOBS", "cargo-default"),
@@ -194,6 +197,10 @@ def comparison_mismatches(expected: dict[str, Any], actual: dict[str, Any]) -> l
     ):
         if expected["execution"][key] != actual["execution"][key]:
             mismatches.append(f"execution.{key}")
+    expected_lane = expected["execution"].get("compiler_measurement_lane", "contributor-dev")
+    actual_lane = actual["execution"].get("compiler_measurement_lane", "contributor-dev")
+    if expected_lane != actual_lane:
+        mismatches.append("execution.compiler_measurement_lane")
     # Tracked compiler inputs, including project Cargo config (for example a
     # native grammar version), are candidate changes to measure. User Cargo
     # config and external build flags remain host configuration. Both project

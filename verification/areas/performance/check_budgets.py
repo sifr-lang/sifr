@@ -13,6 +13,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from compiler_lanes import validate_measurement_rows
+from benchmark_manifest import BenchmarkError
 from reference_profiles import ReferenceProfileError, load_profile, validate_result_profile, validate_manifest_binding, reference_budget_results
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -83,6 +85,16 @@ def main() -> int:
             results = load_json(Path(args.results))
             if results.get("metadata", {}).get("reference_profile"):
                 raise ReferenceProfileError("select a named reference profile for qualification")
+        if args.results != str(DEFAULT_BASELINES):
+            validate_measurement_rows(manifest, results)
+        if reference is None and args.results != str(DEFAULT_BASELINES):
+            validate_legacy_measurement_scope(results)
+        measurement = results.get("metadata", {}).get("compiler_measurement", {})
+        if measurement.get("lane") == "product-installed-optimized":
+            raise ReferenceProfileError(
+                "legacy contributor budgets cannot qualify product-installed-optimized; "
+                "select a qualified product contract with comparable evidence"
+            )
         waivers = load_json(Path(args.waivers))
         if reference is not None and args.results == str(DEFAULT_BASELINES):
             check_reference_policy(manifest, reference, waivers)
@@ -99,10 +111,22 @@ def main() -> int:
         )
         print("performance budget check passed")
         return 0
-    except (BudgetError, ReferenceProfileError) as error:
+    except (BudgetError, ReferenceProfileError, BenchmarkError) as error:
         print(f"performance budget error: {error}", file=sys.stderr)
         return 1
 
+
+
+def validate_legacy_measurement_scope(results):
+    """Historical Mac/dev anchors cannot qualify a different live lane."""
+    metadata = results.get("metadata", {})
+    measurement = metadata.get("compiler_measurement", {})
+    if measurement.get("lane") != "contributor-dev" or measurement.get("compiler_build_profile") != "dev":
+        raise ReferenceProfileError("legacy budget measurement is missing a comparable contributor-dev identity")
+    baseline = load_json(DEFAULT_BASELINES)["metadata"]
+    if (metadata.get("host_os") != baseline["host_os"]
+            or metadata.get("architecture") != baseline["architecture"]):
+        raise ReferenceProfileError("legacy Mac/dev budget is incomparable; select a qualified named host reference")
 
 def check_reference_policy(
     manifest: dict[str, Any], reference: dict[str, Any], waivers: dict[str, Any]
