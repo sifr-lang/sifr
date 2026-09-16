@@ -56,6 +56,17 @@ def run_self_test():
             binary.write_text("changed")
             rejected(lambda: compiler_lanes.validate_receipt(root, "contributor-dev", receipt), "stale binary")
 
+    from check_budgets import validate_legacy_measurement_scope
+    from reference_profiles import ReferenceProfileError
+    try:
+        validate_legacy_measurement_scope({"metadata": {
+            "compiler_measurement": {"lane": "contributor-dev", "compiler_build_profile": "dev"},
+            "host_os": "Linux", "architecture": "x86_64",
+        }})
+    except ReferenceProfileError:
+        pass
+    else:
+        raise AssertionError("Q08 applied historical Mac/dev budgets to Linux")
     identity = load_profile("linux-i7-4720hq-12gb-dev-v1")["identity"]
     for section, key, value in (
         ("host", "system", "Darwin"), ("execution", "build_profile", "release"),
