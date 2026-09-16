@@ -358,3 +358,55 @@ targets. Passing `--results` qualifies the candidate against every numeric limit
 Trend policy still verifies reference provenance and freshness. The compact trend
 baseline is joined to budget IDs from its hash-bound manifest in memory; its
 saved measurements and immutable profile bytes are unchanged.
+
+## DX.1 compiler measurement lanes
+
+The [DX architecture](compiler_dx_architecture.md) adopts two separate lanes:
+`product-installed-optimized` selects a packaged optimized compiler and matching
+installed sysroot; `contributor-dev` measures the development compiler and
+contributor work. Compiler build settings, generated-application profile and
+verification selection are separate report fields. The ordinary existing dev
+builder remains the contributor entrypoint; a product measurement requires a
+Cargo-produced artifact receipt. A path or profile label alone cannot select it.
+
+Prepare a clean committed candidate before measuring. Preparation is explicit,
+uses the existing package builder, and records actual Cargo profile, executable
+digest, Rust toolchain, source commit, lock and installed sysroot identities:
+
+```bash
+CARGO_BUILD_JOBS=2 python3 verification/areas/performance/prepare_compiler_lane.py   --lane product-installed-optimized --output /absolute/owned/product-preparation
+python3 verification/areas/performance/run_benchmarks.py   --compiler-lane product-installed-optimized   --compiler-receipt /absolute/owned/product-preparation/receipt.json   --case check-single-file-001-arithmetic --json-out /absolute/owned/check.json
+python3 verification/areas/performance/dx_capture.py   --lane product-installed-optimized   --receipt /absolute/owned/product-preparation/receipt.json   --output /absolute/owned/product-baseline
+```
+
+Repeat preparation/capture with `contributor-dev` and distinct output paths for
+the development compiler. The capture records fresh/unchanged checks, first,
+no-op and edited native builds. Its contributor selection includes direct Cargo
+stdlib-cache tests; the product selection records demanded-stdlib LSP steady,
+peak and post-close RSS. Fixed inputs/noise policy live in
+`verification/areas/performance/data/dx_contract.json`. Missing allocation and
+decoder counters are explicitly unavailable on the pre-migration compiler.
+DX.2 supplies the stronger embedded compatibility identity; DX.1 records this
+absence alongside the actual artifact digest rather than inventing one.
+
+Freeze the complete original fixture/profile/assertion authorities outside the
+reviewed tree with `dx_baseline_inventory.py --output /absolute/owned/inventory.json`.
+Its source is the exact phase baseline; full declarative assertions and pinned
+imperative consumers preserve link/runtime versus check/snapshot obligations.
+A later migration must compare against those authorities, not infer depth from
+a filename or verification-profile label.
+
+The contract maps every legacy budget to its original Mac/dev host, application
+profile, warmup state and authority. Those immutable values remain historical
+anchors for replacement lanes. Existing comparable Mac/dev budgets and named
+Linux/dev guards remain active. Product measurements cannot pass or fail against
+legacy contributor budgets. Missing product comparator qualification stays
+unavailable; the 300 ms/50 ms CLI and scoped 250 ms editor/128 MiB smoke limits
+remain required phase targets. No target is claimed met by baseline capture.
+Functional results, performance observations and safety deadlines stay distinct;
+historical failed results are never rewritten.
+
+DX.1 validation uses manifest/schema and baseline report checks, the benchmark
+runner self-test (including Q07/Q08), the existing seeded budget failures,
+`git diff --check`, and the file-size guardrail. Performance sampling with noise
+over the frozen bound is inconclusive and is retained without retrying to green.

@@ -15,6 +15,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+import compiler_lanes
 from benchmark_cli import parse_args
 from reference_host import reference_identity
 from reference_profiles import (
@@ -135,7 +136,7 @@ def frontend_bench_binary() -> Path:
 
 
 def sifr_binary() -> Path:
-    return cargo_debug_dir() / executable_name("sifr")
+    return compiler_lanes.selected_binary(cargo_debug_dir() / executable_name("sifr"))
 
 
 def main() -> int:
@@ -157,12 +158,15 @@ def main() -> int:
             print(f"performance manifest valid: {len(cases)} cases")
             return 0
 
+        compiler_lanes.configure(REPO_ROOT, args.compiler_lane, args.compiler_receipt)
         selected = select_cases(
             cases,
             groups=parse_csv(args.groups),
             case_ids=set(args.case),
             case_limit=args.case_limit,
         )
+        if args.compiler_lane == "product-installed-optimized" and any(case.kind == "frontend-query" for case in selected):
+            raise BenchmarkError("frontend helper is a contributor workload; select installed CLI/LSP cases for product")
         if not selected:
             raise BenchmarkError("no benchmark cases selected")
         if args.capture_reference_profile and (
@@ -427,6 +431,10 @@ def run_cases(
                 f"[sifr-case-timing] bucket=performance case={case.id} "
                 f"elapsed_ms={elapsed_ms} status={status}"
             )
+        result["compiler_measurement_lane"] = compiler_lanes.selection()["lane"]
+        result["compiler_build_profile"] = compiler_lanes.selection()["compiler_build_profile"]
+        result["application_profile"] = "release" if case.raw.get("mode") == "build" else "not-applicable"
+        result["verification_selection"] = case.id
         results.append(result)
     return {
         "schema_version": 1,
@@ -529,6 +537,7 @@ def run_frontend_query_case(case: BenchmarkCase, measured: int, run_root: Path) 
 
 
 def run_lsp_query_case(case: BenchmarkCase, measured: int, run_root: Path) -> dict[str, Any]:
+    ensure_sifr_binary()
     return run_query_processes(
         case,
         measured,
@@ -579,6 +588,8 @@ def ensure_frontend_query_bench() -> None:
 def ensure_sifr_binary() -> None:
     global _SIFR_BINARY_READY
     binary = sifr_binary()
+    if compiler_lanes.prepared():
+        return
     if _SIFR_BINARY_READY and binary.exists():
         return
     result = run_subprocess(["cargo", "build", "-q", "-p", "sifr"], 180000)
@@ -689,6 +700,7 @@ def host_metadata() -> dict[str, Any]:
         "rustc": command_output(["rustc", "--version"]),
         "cargo": command_output(["cargo", "--version"]),
         "profile": os.environ.get("SIFR_VALIDATION_PROFILE", "standalone"),
+        "compiler_measurement": compiler_lanes.selection(),
         "thermal_policy": os.environ.get("SIFR_THERMAL_POLICY", "unspecified"),
         "cargo_lock_sha256": sha256(REPO_ROOT / "Cargo.lock"),
         "compiler_fingerprint": command_output(["git", "rev-parse", "HEAD"]),
@@ -741,6 +753,9 @@ def invalidate_output(path: Path) -> None:
 def run_self_test() -> None:
     from reference_profile_tests import run_self_test as run_reference_tests
 
+    from compiler_lane_tests import run_self_test as run_lane_tests
+
+    run_lane_tests()
     run_reference_tests()
     run_benchmark_process_self_test(run_subprocess)
     run_benchmark_case_self_test(sys.modules[__name__])

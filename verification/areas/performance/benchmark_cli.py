@@ -6,6 +6,8 @@ import os
 
 def parse_args(default_manifest, default_output_root, default_trend_baselines):
     parser = argparse.ArgumentParser(description="local benchmark runner.")
+    parser.add_argument("--compiler-lane", choices=["contributor-dev", "product-installed-optimized"], default="contributor-dev")
+    parser.add_argument("--compiler-receipt", default="")
     parser.add_argument("--manifest", default=str(default_manifest))
     parser.add_argument("--output-root", default=str(default_output_root))
     parser.add_argument("--groups", default="")

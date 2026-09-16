@@ -83,6 +83,12 @@ def main() -> int:
             results = load_json(Path(args.results))
             if results.get("metadata", {}).get("reference_profile"):
                 raise ReferenceProfileError("select a named reference profile for qualification")
+        measurement = results.get("metadata", {}).get("compiler_measurement", {})
+        if measurement.get("lane") == "product-installed-optimized":
+            raise ReferenceProfileError(
+                "legacy contributor budgets cannot qualify product-installed-optimized; "
+                "select a qualified product contract with comparable evidence"
+            )
         waivers = load_json(Path(args.waivers))
         if reference is not None and args.results == str(DEFAULT_BASELINES):
             check_reference_policy(manifest, reference, waivers)

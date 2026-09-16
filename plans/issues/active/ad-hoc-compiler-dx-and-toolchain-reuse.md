@@ -524,11 +524,11 @@ All canonical acceptance cases in architecture section 16 are covered. The final
 
 ## Execution Status
 
-Implementation has not started. DX.1 prerequisite inspection is blocked by the unavailable remote review tool; no milestone is complete. Resume DX.1 only after the prerequisite below is restored.
+DX.1 implementation is in progress on the owned remote worktree. Remote Claude invocation is now available; baseline preparation and named validation are pending. No milestone is complete.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
-| DX.1 | Blocked before implementation | Draft [PR #3840](https://github.com/sifr-lang/sifr/pull/3840); planning candidate `bfb614b73d041d2daf48c7548b48ed7a76047a10` | Prerequisite inspection only; no implementation or performance qualification | Not run: required remote Claude executable unavailable |
+| DX.1 | Implementation in progress | Draft [PR #3840](https://github.com/sifr-lang/sifr/pull/3840); planning candidate `bfb614b73d041d2daf48c7548b48ed7a76047a10` | Prerequisite inspection only; no implementation or performance qualification | Not run: required remote Claude executable unavailable |
 | DX.2 | Not started | — | — | — |
 | DX.3 | Not started | — | — | — |
 | DX.4 | Not started | — | — | — |
@@ -547,12 +547,10 @@ Implementation has not started. DX.1 prerequisite inspection is blocked by the u
 
 ## Current Handoff — DX.1 (2026-09-16)
 
-- Owned remote checkout: `yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/compiler-dx-orchestration`; branch `codex/compiler-dx-toolchain-reuse`. Base: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`. Planning candidate: `bfb614b73d041d2daf48c7548b48ed7a76047a10`. Draft PR #3840 is unmerged.
-- Blocker: the required `talk-to-claude-opus` review cannot run on the mandated remote host. A remote `bash -lc 'type -a claude'` reports `claude: not found`; standard runtime searches under `/usr/local/bin`, `/usr/bin`, `/opt`, `~/.local`, `~/.npm-global`, `~/.nvm`, `~/.volta` and `~/.bun` find no Claude executable. No review request was submitted, so no retry or reviewer approval is claimed.
-- Prerequisite observations: remote worktree was clean; Rust `1.98.1-x86_64-unknown-linux-gnu` is selected; Cargo and uv exist; private target is absent; 371 GiB free disk was reported. Submodules are uninitialized and require explicit preparation before compiler measurement. Local checkout modifications predate this work and were untouched.
-- Record-only checks passed on the remote host: `git diff --check` and `python3 scripts/check_file_size_guardrails.py` (3889 files, 900-line limit).
-- No compiler, lockfile, fixture, workflow or harness changes were made. No baseline, Q07/Q08 acceptance, performance target, or implementation test is claimed; broad gates are not applicable to this record-only change.
-- Exact next action: provision an authenticated Claude CLI on the remote host that supports the skill's `claude-opus-5` invocation, then resume DX.1 prerequisite preparation, implementation, named validation and scoped review. All DX.1 deliverables remain pending. DX.2–DX.16 remain untouched and must not start before their dependencies close.
+- Owned remote checkout: `yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/compiler-dx-orchestration`; branch `codex/compiler-dx-toolchain-reuse`; draft PR #3840. Exact compiler baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`.
+- Required remote Claude Opus invocation now succeeds. Rust/Cargo 1.98.1 and uv 0.12.5 are selected; the 12 GB Linux host has an owned private target, initially absent, and 370 GiB free. Preparation uses two Cargo jobs. Pinned Ruff, PostgreSQL 18, WASI-Virt and large-LSP corpus submodules are initialized without changing their commits.
+- DX.1 changes bind compiler lanes to actual artifacts, adopt prospective policy and freeze baseline authorities. Preparation/capture receipts and review evidence belong outside the reviewed tree.
+- No optimized target, Q07/Q08 pass, baseline qualification, merge or closure is claimed yet. Complete DX.1 named validation and scoped review before merge. DX.2–DX.16 remain untouched.
 
 ## Handoff Format
 

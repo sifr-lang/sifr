@@ -1,0 +1,1542 @@
+{
+  "schema_version": 1,
+  "baseline_source": "0f819c2f04bf5b2891074c55ba26369ddf4f13bd",
+  "historical_budgets_sha256": "134b6da29af85fc288bbe4b828adaa77c539f8fa050fedef7ae80495f3a542d5",
+  "legacy_budget_mapping": [
+    {
+      "budget_id": "perf.build.project.additional_modules",
+      "benchmark_id": "build-project-001-additional-modules",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.project.branch_paths",
+      "benchmark_id": "build-project-002-branch-paths",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.project.cargo_manifest",
+      "benchmark_id": "build-project-003-cargo-manifest",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.project.dependency_manifest",
+      "benchmark_id": "build-project-004-dependency-manifest",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.project.project_graph",
+      "benchmark_id": "build-project-005-project-graph",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.single.break_continue",
+      "benchmark_id": "build-single-file-001-break-continue",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.single.builtin_any_all",
+      "benchmark_id": "build-single-file-002-builtin-any-all",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.single.builtin_enumerate_zip",
+      "benchmark_id": "build-single-file-003-builtin-enumerate-zip",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.single.bytes_constructors",
+      "benchmark_id": "build-single-file-004-bytes-constructors",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.single.class_methods",
+      "benchmark_id": "build-single-file-005-class-methods",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.single.collection_len",
+      "benchmark_id": "build-single-file-006-collection-len",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.single.comp_set",
+      "benchmark_id": "build-single-file-007-comp-set",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.single.decimal_conversions",
+      "benchmark_id": "build-single-file-008-decimal-conversions",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.single.dict_get_option",
+      "benchmark_id": "build-single-file-009-dict-get-option",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.build.single.generic_identity",
+      "benchmark_id": "build-single-file-010-generic-identity",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "release",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.project.imports",
+      "benchmark_id": "check-project-001-imports",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.project.mode_consistency",
+      "benchmark_id": "check-project-002-mode-consistency",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.project.project_build",
+      "benchmark_id": "check-project-003-project-build",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.project.project_graph",
+      "benchmark_id": "check-project-004-project-graph",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.project.rooted_entrypoint",
+      "benchmark_id": "check-project-005-rooted-entrypoint",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.single.arithmetic",
+      "benchmark_id": "check-single-file-001-arithmetic",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.single.break_continue",
+      "benchmark_id": "check-single-file-002-break-continue",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.single.builtin_any_all",
+      "benchmark_id": "check-single-file-003-builtin-any-all",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.single.builtin_enumerate_zip",
+      "benchmark_id": "check-single-file-004-builtin-enumerate-zip",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.single.bytes_constructors",
+      "benchmark_id": "check-single-file-005-bytes-constructors",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.single.class_methods",
+      "benchmark_id": "check-single-file-006-class-methods",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.single.collection_len",
+      "benchmark_id": "check-single-file-007-collection-len",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.single.comp_set",
+      "benchmark_id": "check-single-file-008-comp-set",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.single.decimal_conversions",
+      "benchmark_id": "check-single-file-009-decimal-conversions",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.check.single.dict_get_option",
+      "benchmark_id": "check-single-file-010-dict-get-option",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.diagnostic.human_success_exit",
+      "benchmark_id": "diagnostic-non-regression-001-human-success-exit",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.diagnostic.json_diagnostic_schema",
+      "benchmark_id": "diagnostic-non-regression-002-json-diagnostic-schema",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.diagnostic.compact_diagnostic_schema",
+      "benchmark_id": "diagnostic-non-regression-003-compact-diagnostic-schema",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.diagnostic.recovery_limit",
+      "benchmark_id": "diagnostic-non-regression-004-recovery-limit",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.diagnostic.project_error_exit",
+      "benchmark_id": "diagnostic-non-regression-005-project-error-exit",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "command-default"
+    },
+    {
+      "budget_id": "perf.formatter.corpus.project_check",
+      "benchmark_id": "formatter-corpus-001-project-check",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "formatter-command-default"
+    },
+    {
+      "budget_id": "perf.formatter.large_file.check",
+      "benchmark_id": "formatter-large-file-001-check",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "formatter-command-default"
+    },
+    {
+      "budget_id": "perf.incremental.unchanged_file_update",
+      "benchmark_id": "incremental-local-loop-001-unchanged-file-update",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "frontend-query-edit-loop"
+    },
+    {
+      "budget_id": "perf.incremental.leaf_module_change",
+      "benchmark_id": "incremental-local-loop-002-leaf-module-change",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "frontend-query-edit-loop"
+    },
+    {
+      "budget_id": "perf.incremental.imported_module_change",
+      "benchmark_id": "incremental-local-loop-003-imported-module-change",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "frontend-query-edit-loop"
+    },
+    {
+      "budget_id": "perf.incremental.public_api_change",
+      "benchmark_id": "incremental-local-loop-004-public-api-change",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "frontend-query-edit-loop"
+    },
+    {
+      "budget_id": "perf.incremental.failure_recovery",
+      "benchmark_id": "incremental-local-loop-005-failure-recovery",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "frontend-query-edit-loop"
+    },
+    {
+      "budget_id": "perf.interactive.cold_context_load",
+      "benchmark_id": "interactive-tooling-foundation-001-cold-context-load",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "frontend-query-edit-loop"
+    },
+    {
+      "budget_id": "perf.interactive.warm_diagnostics_query",
+      "benchmark_id": "interactive-tooling-foundation-002-warm-diagnostics-query",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "frontend-query-edit-loop"
+    },
+    {
+      "budget_id": "perf.interactive.unchanged_file_update",
+      "benchmark_id": "interactive-tooling-foundation-003-unchanged-file-update",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "frontend-query-edit-loop"
+    },
+    {
+      "budget_id": "perf.interactive.changed_file_invalidation",
+      "benchmark_id": "interactive-tooling-foundation-004-changed-file-invalidation",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "frontend-query-edit-loop"
+    },
+    {
+      "budget_id": "perf.interactive.source_map_lookup",
+      "benchmark_id": "interactive-tooling-foundation-005-source-map-lookup",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "frontend-query-edit-loop"
+    },
+    {
+      "budget_id": "perf.lsp.request_families",
+      "benchmark_id": "lsp-query-001-request-families",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.cold_start.workspace",
+      "benchmark_id": "lsp-query-002-cold-start",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.diagnostics.document",
+      "benchmark_id": "lsp-query-003-diagnostics",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.diagnostics.workspace",
+      "benchmark_id": "lsp-query-004-workspace-diagnostics",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.completion.local_scope",
+      "benchmark_id": "lsp-query-005-completion",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.hover.symbol",
+      "benchmark_id": "lsp-query-006-hover",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.signature_help.call",
+      "benchmark_id": "lsp-query-007-signature-help",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.navigation.symbol",
+      "benchmark_id": "lsp-query-008-navigation",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.references.workspace_symbol",
+      "benchmark_id": "lsp-query-009-references",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.rename.workspace_edit",
+      "benchmark_id": "lsp-query-010-rename",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.semantic_tokens.full",
+      "benchmark_id": "lsp-query-011-semantic-tokens",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.inlay_hints.module",
+      "benchmark_id": "lsp-query-012-inlay-hints",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.selection_ranges.nested",
+      "benchmark_id": "lsp-query-013-selection-range",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.type_hierarchy.symbol",
+      "benchmark_id": "lsp-query-014-type-hierarchy",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.code_action.diagnostic",
+      "benchmark_id": "lsp-query-015-code-actions",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.formatting.document",
+      "benchmark_id": "lsp-query-016-formatting",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.generated_rust_preview.document",
+      "benchmark_id": "lsp-query-017-generated-rust-preview",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    },
+    {
+      "budget_id": "perf.lsp.document_sync.did_open",
+      "benchmark_id": "lsp-query-018-did-open-diagnostics",
+      "historical_anchor": "data/budgets.json",
+      "host": "macOS-26.4.1-arm64",
+      "compiler_lane": "contributor-dev",
+      "application_profile": "not-applicable",
+      "cache_policy": "benchmark manifest warmups; first preparation excluded",
+      "metrics": [
+        "median_ms",
+        "p95_ms",
+        "peak_rss_bytes",
+        "timeout_ms"
+      ],
+      "replacement_lanes": [
+        "contributor-dev",
+        "product-installed-optimized"
+      ],
+      "replacement_status": "historical/non-gating for incomparable replacement lanes",
+      "active_scope": "original comparable Mac/dev; named Linux dev profile retains its own guards",
+      "source_authority": "data/baselines.json and existing compiler/performance review",
+      "purpose": "lsp-query"
+    }
+  ],
+  "supported_floor": {
+    "host": "Linux i7-4720HQ",
+    "memory_gib": 12,
+    "cargo_jobs": 2
+  },
+  "product_targets": {
+    "fresh_check_p95_ms": 300,
+    "unchanged_check_p95_ms": 50,
+    "editor_latency_ms": 250,
+    "large_session_smoke_rss_bytes": 134217728
+  },
+  "qualification": "Targets are unmeasured design outcomes; missing or incomparable evidence is not a pass.",
+  "q09": {
+    "lane": "product-installed-optimized",
+    "source": "demos/stdlib_intrinsics/main.sifr",
+    "operations": [
+      "initialize",
+      "didOpen",
+      "textDocument/diagnostic",
+      "workspace/diagnostic",
+      "didClose",
+      "shutdown"
+    ],
+    "iterations": 20,
+    "warmups": 1,
+    "rss_poll_seconds": 0.01,
+    "measurements": [
+      "steady_rss_bytes",
+      "peak_rss_bytes",
+      "allocation_delta_bytes",
+      "decoded_counts"
+    ],
+    "unavailable_counters": "Record null with reason before production decoder/allocation instrumentation exists; never substitute RSS for allocations.",
+    "noise_policy": {
+      "coefficient_variation_max": 0.1,
+      "attempts": 1,
+      "failure": "inconclusive; preserve raw data, no rerun until green"
+    },
+    "paired_policy": "same fixed source, host, compiler build settings, installed sysroot kind and cache state; source-built pre-migration behavior remains explicitly labeled"
+  }
+}

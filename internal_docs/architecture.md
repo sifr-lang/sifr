@@ -1961,3 +1961,7 @@ Mojo (`/Users/yaseralnajjar/work/sifr/modular/mojo`) was evaluated as a referenc
 
 - **Mojo ownership design:** `/Users/yaseralnajjar/work/sifr/modular/mojo/proposals/value-ownership.md`
 - **Mojo lifetimes design:** `/Users/yaseralnajjar/work/sifr/modular/mojo/proposals/lifetimes-and-provenance.md`
+
+## Compiler DX migration contract
+
+[Phase DX](../plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md) owns the sequential migration to [prebuilt stdlib and toolchain reuse](compiler_dx_architecture.md). Installed execution requires matching metadata after its consumer migration; source-tree production remains explicit. Optional project persistence restores existing frontend result families or misses without changing correctness. Cleanup follows owned storage pressure and obsolescence rather than target size. Functional outcomes, named performance contracts and safety deadlines remain separate. These are prospective contracts, not claims that later DX milestones have shipped.

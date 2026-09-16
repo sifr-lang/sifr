@@ -123,6 +123,7 @@ def run_self_test(runner: ModuleType) -> None:
             case_root = root / kind
             with (
                 patch.object(runner, "ensure_frontend_query_bench"),
+                patch.object(runner, "ensure_sifr_binary"),
                 patch.object(runner, "run_subprocess", side_effect=results) as launch,
             ):
                 report = runner.run_case(case, case_root, "manifest")
@@ -137,6 +138,7 @@ def run_self_test(runner: ModuleType) -> None:
                 assert saved["warmup"] is False
             with (
                 patch.object(runner, "ensure_frontend_query_bench"),
+                patch.object(runner, "ensure_sifr_binary"),
                 patch.object(runner, "run_subprocess", return_value=bad_timeout) as launch,
             ):
                 failed_root = root / f"{kind}-failure"
@@ -151,6 +153,7 @@ def run_self_test(runner: ModuleType) -> None:
             malformed = {**valid, "stdout": "{malformed"}
             with (
                 patch.object(runner, "ensure_frontend_query_bench"),
+                patch.object(runner, "ensure_sifr_binary"),
                 patch.object(runner, "run_subprocess", return_value=malformed) as launch,
             ):
                 invalid_root = root / f"{kind}-invalid-json"
