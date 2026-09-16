@@ -10,8 +10,8 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 use url::Url;
 
-#[derive(Default)]
 pub(crate) struct LspAnalysisWorkspace {
+    pub(crate) compiler: sifr_driver::CompilerContext,
     documents: BTreeMap<String, LspDocumentAnalysis>,
     projects: BTreeMap<PathBuf, LspProjectAnalysis>,
 }
@@ -45,6 +45,18 @@ pub(crate) struct LspWorkspaceSymbol {
     pub(crate) uri: String,
 }
 
+impl Default for LspAnalysisWorkspace {
+    fn default() -> Self {
+        Self {
+            compiler: sifr_driver::CompilerContext::for_test_tokens(
+                crate::compiled_input_tokens(),
+                "sifr_lsp-tests",
+            ),
+            documents: BTreeMap::new(),
+            projects: BTreeMap::new(),
+        }
+    }
+}
 impl LspAnalysisWorkspace {
     pub(crate) const WATCHER_STORM_THRESHOLD: usize = 64;
 
@@ -61,7 +73,7 @@ impl LspAnalysisWorkspace {
             }
             true
         } else {
-            let analysis = LspDocumentAnalysis::open(document);
+            let analysis = LspDocumentAnalysis::open(&self.compiler, document);
             self.documents.insert(document.uri().to_string(), analysis);
             false
         }
@@ -85,9 +97,9 @@ impl LspAnalysisWorkspace {
             true
         } else {
             if let Some(analysis) = self.documents.get_mut(&uri) {
-                analysis.update(document);
+                analysis.update(&self.compiler, document);
             } else {
-                let analysis = LspDocumentAnalysis::open(document);
+                let analysis = LspDocumentAnalysis::open(&self.compiler, document);
                 self.documents.insert(uri, analysis);
             }
             false
@@ -117,7 +129,7 @@ impl LspAnalysisWorkspace {
                 }
                 continue;
             }
-            let analysis = LspProjectAnalysis::open(root.clone(), &documents);
+            let analysis = LspProjectAnalysis::open(&self.compiler, root.clone(), &documents);
             for document in &documents {
                 self.documents.remove(document.uri());
             }
@@ -260,7 +272,11 @@ impl LspFileMaps {
 }
 
 impl LspProjectAnalysis {
-    fn open(root: PathBuf, documents: &[&DocumentState]) -> Self {
+    fn open(
+        compiler: &sifr_driver::CompilerContext,
+        root: PathBuf,
+        documents: &[&DocumentState],
+    ) -> Self {
         let overlays = documents
             .iter()
             .map(|document| {
@@ -286,8 +302,9 @@ impl LspProjectAnalysis {
             root: SourcePath::new(root),
             entrypoint: SourcePath::new(entrypoint),
         };
-        match AnalysisHost::open_project_with_overlays(&project_root, overlays) {
-            Ok(mut host) => {
+        match AnalysisHost::open_project_with_overlays(compiler, &project_root, overlays) {
+            Ok(host) => {
+                let mut host = host;
                 host.record_update_latency_ms(elapsed_ms(started));
                 let files_by_uri = documents
                     .iter()
@@ -541,16 +558,18 @@ impl LspProjectAnalysis {
 }
 
 impl LspDocumentAnalysis {
-    fn open(document: &DocumentState) -> Self {
+    fn open(compiler: &sifr_driver::CompilerContext, document: &DocumentState) -> Self {
         let started = Instant::now();
         match AnalysisHost::open_single_file_overlay(
+            compiler,
             SourcePath::new(document.path().to_path_buf()),
             Some(document.uri().to_string()),
             document_version(document),
             SourceText::new(document.text().to_string()),
             FrontendMode::SingleFile,
         ) {
-            Ok(mut host) => {
+            Ok(host) => {
+                let mut host = host;
                 host.record_update_latency_ms(elapsed_ms(started));
                 Self::from_host(host, document)
             }
@@ -562,7 +581,7 @@ impl LspDocumentAnalysis {
         }
     }
 
-    fn update(&mut self, document: &DocumentState) {
+    fn update(&mut self, compiler: &sifr_driver::CompilerContext, document: &DocumentState) {
         let started = Instant::now();
         let result = if let Some(host) = self.host.as_mut() {
             host.upsert_overlay_document(
@@ -572,7 +591,7 @@ impl LspDocumentAnalysis {
                 SourceText::new(document.text().to_string()),
             )
         } else {
-            return *self = Self::open(document);
+            return *self = Self::open(compiler, document);
         };
         match result {
             Ok(()) => {

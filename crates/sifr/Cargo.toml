@@ -1,4 +1,5 @@
 [package]
+links = "sifr_compiled_identity"
 name = "sifr"
 version = "0.0.0"
 publish = false
@@ -11,6 +12,7 @@ name = "sifr"
 path = "src/main.rs"
 
 [dependencies]
+sifr_identity.workspace = true
 # Wired early for diagnostic registry migration; compiler emission migration uses this dependency.
 ruff_text_size = { workspace = true }
 sifr_diagnostics = { workspace = true }
@@ -37,3 +39,6 @@ tempfile = "3.27.0"
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

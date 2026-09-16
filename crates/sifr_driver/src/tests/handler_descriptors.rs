@@ -60,7 +60,7 @@ fn project(main: &str) -> HashMap<String, Suite> {
 }
 
 fn compile_errors(main: &str) -> Vec<sifr_diagnostics::RenderedDiagnostic> {
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -102,7 +102,7 @@ class Model(HandlerContract):
         return self
 "#,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -295,7 +295,7 @@ class Child(Parent):
         return value
 "#,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -371,7 +371,7 @@ class Parent(HandlerContract):
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -438,7 +438,7 @@ class Model(HandlerContract):
         return value
 "#
         );
-        let stdlib_defs = compile_stdlib()
+        let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
             .expect("stdlib should compile")
             .defs
             .clone();
@@ -491,7 +491,7 @@ class Box[T]:
         return self
 "#,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();

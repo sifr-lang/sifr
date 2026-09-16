@@ -10,7 +10,6 @@ use sifr_frontend::DiskSourceProvider;
 use std::fmt::Write as _;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 pub(super) fn cmd_host_tools_lock(check: bool, format: DiagnosticFormat) -> i32 {
     let (graph, mut provider) = match load_graph(format) {
@@ -67,21 +66,14 @@ pub(super) fn cmd_host_tool(words: &[String], format: DiagnosticFormat) -> i32 {
             return EXIT_USAGE_OR_CONFIG;
         }
     };
-    let cargo = match resolve_program("cargo") {
-        Ok(path) => path,
+    let tools = match sifr_sysroot::NativeToolchain::resolve_at(&plan.current_dir) {
+        Ok(tools) => tools,
         Err(message) => {
             render_tool_error(&message, format);
             return EXIT_USAGE_OR_CONFIG;
         }
     };
-    let rustc = match resolve_program("rustc") {
-        Ok(path) => path,
-        Err(message) => {
-            render_tool_error(&message, format);
-            return EXIT_USAGE_OR_CONFIG;
-        }
-    };
-    let executable = match build_tool(&cargo, &rustc, &graph.target_directory, &plan) {
+    let executable = match build_tool(&tools, &graph.target_directory, &plan) {
         Ok(path) => path,
         Err(message) => {
             render_tool_error(&message, format);
@@ -189,29 +181,13 @@ fn load_graph(
     Ok((graph, provider))
 }
 
-fn resolve_program(name: &str) -> Result<PathBuf, String> {
-    let path = std::env::var_os("PATH").ok_or_else(|| "PATH is not set".to_string())?;
-    for directory in std::env::split_paths(&path) {
-        let candidate = directory.join(name);
-        if candidate.is_file() {
-            return std::path::absolute(&candidate).map_err(|error| {
-                format!(
-                    "cannot make program '{}' absolute: {error}",
-                    candidate.display()
-                )
-            });
-        }
-    }
-    Err(format!("cannot find required program '{name}' on PATH"))
-}
-
 fn build_tool(
-    cargo: &Path,
-    rustc: &Path,
+    tools: &sifr_sysroot::NativeToolchain,
     target_directory: &Path,
     plan: &sifr_package::HostToolBuildPlan,
 ) -> Result<PathBuf, String> {
-    let output = Command::new(cargo)
+    let output = tools
+        .cargo_command()?
         .args(&plan.args)
         .arg("--config")
         .arg("build.rustc-wrapper=\"\"")
@@ -223,14 +199,19 @@ fn build_tool(
         .arg(format!("target.{}.rustflags=[]", env!("SIFR_BUILD_TARGET")))
         .current_dir(&plan.current_dir)
         .env("CARGO_TARGET_DIR", target_directory)
-        .env("RUSTC", rustc)
+        .env("RUSTC", tools.rustc_path())
         .env_remove("RUSTC_WRAPPER")
         .env_remove("RUSTC_WORKSPACE_WRAPPER")
         .env_remove("RUSTFLAGS")
         .env_remove("CARGO_ENCODED_RUSTFLAGS")
         .env_remove("CARGO_BUILD_RUSTC")
         .output()
-        .map_err(|error| format!("cannot build host tool with '{}': {error}", cargo.display()))?;
+        .map_err(|error| {
+            format!(
+                "cannot build host tool with '{}': {error}",
+                tools.cargo_path().display()
+            )
+        })?;
     if !output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);

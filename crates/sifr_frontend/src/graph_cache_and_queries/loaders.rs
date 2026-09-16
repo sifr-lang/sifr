@@ -33,6 +33,16 @@ fn too_many_source_files_diagnostic() -> Vec<RenderedDiagnostic> {
 }
 
 impl FrontendContext {
+    #[must_use]
+    pub fn with_compiler_identity(mut self, identity: sifr_identity::CompilerIdentity) -> Self {
+        self.compiler_identity = identity;
+        self.reuse_caches = FrontendReuseCaches::new();
+        self
+    }
+    pub fn compiler_identity(&self) -> &sifr_identity::CompilerIdentity {
+        &self.compiler_identity
+    }
+
     pub fn load_single_file(input: FrontendInput) -> Result<Self, Vec<RenderedDiagnostic>> {
         Self::load_single_file_with_external_defs(input, ExternalDefs::default())
     }
@@ -67,6 +77,10 @@ impl FrontendContext {
             None,
         );
         let mut context = Self {
+            compiler_identity: sifr_identity::CompilerIdentity::for_test(
+                crate::compiled_input_tokens(),
+                "frontend-fixture",
+            ),
             modules: vec![module],
             module_by_id: BTreeMap::from([(ModuleId(0), 0)]),
             entrypoint: ModuleId(0),
@@ -198,6 +212,10 @@ impl FrontendContext {
             entrypoint: Some(root.entrypoint.clone()),
         };
         let mut context = Self {
+            compiler_identity: sifr_identity::CompilerIdentity::for_test(
+                crate::compiled_input_tokens(),
+                "frontend-fixture",
+            ),
             auxiliary_sources: auxiliary_source_states(modules.len(), auxiliary_sources)?,
             modules,
             module_by_id,

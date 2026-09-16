@@ -21,7 +21,7 @@ def main():
 "#,
         &contract,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -62,6 +62,7 @@ def main():
         .expect("model module should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &main_file,
         &build_out,
         &mut sifr_frontend::DiskSourceProvider::new(),

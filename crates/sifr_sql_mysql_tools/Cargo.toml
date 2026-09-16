@@ -16,6 +16,7 @@ supported-servers = ["8.4", "9.7", "26.7"]
 connection-manifest-version = 1
 
 [dependencies]
+sifr_identity.workspace = true
 mysql_async = { workspace = true, features = ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -34,3 +35,6 @@ tempfile = "3.27.0"
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

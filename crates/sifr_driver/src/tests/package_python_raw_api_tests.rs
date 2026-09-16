@@ -83,9 +83,12 @@ def main() -> Result[None, PythonError]:
     let mut entrypoint =
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
     entrypoint.python_runtime = Some(local_python_runtime(&app.root));
-    let artifact =
-        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
-            .expect("typed raw Python API package should build");
+    let artifact = build_cached_package_project(
+        &crate::CompilerContext::for_test(),
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("typed raw Python API package should build");
     let output = std::process::Command::new(artifact.binary_path())
         .output()
         .expect("typed raw Python API package should run");

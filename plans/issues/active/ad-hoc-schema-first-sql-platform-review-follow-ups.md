@@ -145,3 +145,15 @@ The descriptive-demo-variable follow-up ran its final merge gate on
 2026-09-05. It reproduced the same SQL coverage-classification failures
 after all 264 demo companions passed freshness. No SQL source or coverage
 classification changed. Evidence: `target/demo-name-followup/merge-gate.log`.
+
+### Additional test-target lint observation (DX.2, 2026-09-17)
+
+An exploratory all-target Clippy invocation found an existing
+clippy::type_complexity diagnostic in
+crates/sifr_sql_mysql_runtime/src/codec.rs:115 (the unit-test function-pointer
+assertion). That file is unchanged from base
+8fb424984351768116251ed5a5e577373603c533. No SQL runtime implementation was
+changed for this observation. The required merge profile runs workspace Clippy
+without --all-targets, so this separate test-target lint does not replace or
+relax that gate. The SQL follow-up owner can factor the assertion's type.
+Evidence: /home/yaser5/projects/sifr/dx2-evidence/clippy6.log.

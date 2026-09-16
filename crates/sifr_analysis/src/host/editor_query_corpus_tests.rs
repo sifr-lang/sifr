@@ -120,10 +120,16 @@ fn marker_editor_corpus_covers_multifile_queries_and_stale_snapshots() {
     let fixtures = vec![load_fixture("main.sifr"), load_fixture("helper.sifr")];
     let dir = temp_project_dir("editor_corpus");
     write_fixtures(&dir, &fixtures);
-    let mut host = AnalysisHost::open_project(&ProjectRoot {
-        root: SourcePath::new(&dir),
-        entrypoint: SourcePath::new(dir.join("main.sifr")),
-    })
+    let mut host = AnalysisHost::open_project(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        &ProjectRoot {
+            root: SourcePath::new(&dir),
+            entrypoint: SourcePath::new(dir.join("main.sifr")),
+        },
+    )
     .expect("editor corpus project should load");
     let main_file = host
         .document_file_for_path(&dir.join("main.sifr"))
@@ -283,11 +289,17 @@ fn marker_editor_corpus_covers_multifile_queries_and_stale_snapshots() {
 
 #[test]
 fn snapshot_handles_are_internal_and_reject_wrong_snapshot_resolution() {
-    let mut host = AnalysisHost::open_single_file(FrontendInput {
-        path: SourcePath::new("main.sifr"),
-        source: SourceText::new("def main():\n    value: int = 1\n    return value  \n"),
-        mode: FrontendMode::SingleFile,
-    })
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        FrontendInput {
+            path: SourcePath::new("main.sifr"),
+            source: SourceText::new("def main():\n    value: int = 1\n    return value  \n"),
+            mode: FrontendMode::SingleFile,
+        },
+    )
     .expect("single file host should load");
     let file = host.files()[0];
     let snapshot = host.snapshot();

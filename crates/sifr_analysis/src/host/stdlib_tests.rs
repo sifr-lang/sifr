@@ -21,6 +21,10 @@ fn stdlib_interop_startup_editor_retained_snapshot_after_defs_projection() {
         entrypoint: SourcePath::new(&path),
     };
     let mut host = AnalysisHost::open_project_with_overlays(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
         &root,
         vec![(
             SourcePath::new(&path),
@@ -35,7 +39,11 @@ fn stdlib_interop_startup_editor_retained_snapshot_after_defs_projection() {
     let old_answers = old.diagnostics(&mut host, file).unwrap();
     assert!(old_answers.value().is_empty());
     let weak = std::sync::Arc::downgrade(old.workspace().source_map.as_ref().unwrap());
-    let defs = sifr_driver::stdlib_external_defs().unwrap();
+    let defs = sifr_driver::stdlib_external_defs(&sifr_driver::CompilerContext::for_test_tokens(
+        crate::compiled_input_tokens(),
+        "sifr_analysis-tests",
+    ))
+    .unwrap();
     assert!(defs.functions.contains_key("sifr.calendar"));
     let changed = source.replace("return result", "return \"wrong\"");
     assert_ne!(changed, source);
@@ -163,8 +171,14 @@ fn assert_stdlib_import_resolves(host: &mut AnalysisHost, file: FileId) {
 
 #[test]
 fn single_file_analysis_resolves_sysroot_stdlib_imports() {
-    let mut host = AnalysisHost::open_single_file(single_file_input(STDLIB_IMPORT_SAMPLE))
-        .expect("single-file analysis host should load with stdlib definitions");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(STDLIB_IMPORT_SAMPLE),
+    )
+    .expect("single-file analysis host should load with stdlib definitions");
     let file = host.files()[0];
 
     assert_stdlib_import_resolves(&mut host, file);
@@ -180,8 +194,14 @@ fn project_analysis_resolves_sysroot_stdlib_imports() {
         entrypoint: SourcePath::new(&entrypoint),
     };
 
-    let mut host =
-        AnalysisHost::open_project(&root).expect("project analysis host should load stdlib defs");
+    let mut host = AnalysisHost::open_project(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        &root,
+    )
+    .expect("project analysis host should load stdlib defs");
     let file = host
         .document_file_for_path(&entrypoint)
         .expect("entrypoint should be indexed");
@@ -192,8 +212,14 @@ fn project_analysis_resolves_sysroot_stdlib_imports() {
 
 #[test]
 fn analysis_source_map_tracks_public_and_private_sysroot_origins() {
-    let host = AnalysisHost::open_single_file(single_file_input(STDLIB_IMPORT_SAMPLE))
-        .expect("single-file analysis host should load with stdlib tooling sources");
+    let host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(STDLIB_IMPORT_SAMPLE),
+    )
+    .expect("single-file analysis host should load with stdlib tooling sources");
 
     let source_map = host
         .context()
@@ -221,8 +247,14 @@ fn analysis_source_map_tracks_public_and_private_sysroot_origins() {
 
 #[test]
 fn stdlib_symbol_bucket_is_available_without_private_declarations() {
-    let mut host = AnalysisHost::open_single_file(single_file_input("def main():\n    return 1\n"))
-        .expect("single-file analysis host should load");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input("def main():\n    return 1\n"),
+    )
+    .expect("single-file analysis host should load");
     let file = host.files()[0];
 
     let completion = host
@@ -256,8 +288,14 @@ fn stdlib_symbol_bucket_is_available_without_private_declarations() {
 
 #[test]
 fn definition_for_public_stdlib_import_lands_in_sysroot_source() {
-    let mut host = AnalysisHost::open_single_file(single_file_input(STDLIB_IMPORT_SAMPLE))
-        .expect("single-file analysis host should load");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(STDLIB_IMPORT_SAMPLE),
+    )
+    .expect("single-file analysis host should load");
     let file = host.files()[0];
 
     let locations = host
@@ -287,8 +325,14 @@ fn definition_for_public_stdlib_import_lands_in_sysroot_source() {
 
 #[test]
 fn definition_inside_public_stdlib_can_link_to_private_declaration_file() {
-    let mut host = AnalysisHost::open_single_file(single_file_input(STDLIB_IMPORT_SAMPLE))
-        .expect("single-file analysis host should load");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(STDLIB_IMPORT_SAMPLE),
+    )
+    .expect("single-file analysis host should load");
     let source_map = host
         .context()
         .expect("context should be loaded")

@@ -17,7 +17,19 @@ pub fn run_stdio() -> ServerResult<()> {
 }
 
 pub fn run_stdio_with_options(options: LspServerOptions) -> ServerResult<()> {
-    LspServer::stdio(options).run()
+    run_stdio_with_identity(
+        options,
+        sifr_identity::CompilerIdentity::for_test(crate::compiled_input_tokens(), "embedded-lsp"),
+    )
+}
+
+pub fn run_stdio_with_identity(
+    options: LspServerOptions,
+    identity: sifr_identity::CompilerIdentity,
+) -> ServerResult<()> {
+    let mut server = LspServer::stdio(options);
+    server.session.set_compiler_identity(identity);
+    server.run()
 }
 
 struct LspServer {

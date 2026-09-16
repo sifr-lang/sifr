@@ -411,7 +411,7 @@ impl CompiledCase {
 }
 
 pub(crate) fn compile_source(source: &str) -> Result<String, Vec<CompiledFailure>> {
-    match sifr_driver::compile(source) {
+    match sifr_driver::compile(&sifr_driver::CompilerContext::for_test(), source) {
         sifr_driver::CompileResult::Success { rust_source } => Ok(rust_source),
         sifr_driver::CompileResult::Errors { errors } => {
             let mut failures = Vec::new();

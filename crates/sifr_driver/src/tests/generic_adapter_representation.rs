@@ -26,7 +26,11 @@ def main():
     )
     .expect("main module should be written");
 
-    let errors = check_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new());
+    let errors = check_project(
+        &crate::CompilerContext::for_test(),
+        &main_file,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(errors.iter().any(|error| {
         error.code == DiagnosticCode::CLASS_INVALID_BASE.code()
             && error.message.contains("union's member topology")
@@ -58,7 +62,11 @@ def main():
     )
     .expect("main module should be written");
 
-    let errors = check_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new());
+    let errors = check_project(
+        &crate::CompilerContext::for_test(),
+        &main_file,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(errors.iter().any(|error| {
         error.code == DiagnosticCode::CLASS_INVALID_BASE.code()
             && error.message.contains("union's member topology")
@@ -90,6 +98,7 @@ def main():
     .expect("main module should be written");
 
     let result = build_project(
+        &crate::CompilerContext::for_test(),
         &main_file,
         &build_out,
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -138,6 +147,7 @@ def main():
     .expect("main module should be written");
 
     let result = build_project(
+        &crate::CompilerContext::for_test(),
         &main_file,
         &build_out,
         &mut sifr_frontend::DiskSourceProvider::new(),

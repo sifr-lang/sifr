@@ -8,6 +8,7 @@ use std::path::Path;
 
 impl AnalysisHost {
     pub fn open_project_with_overlays(
+        compiler: &sifr_driver::CompilerContext,
         root: &ProjectRoot,
         overlays: Vec<(SourcePath, Option<String>, DocumentVersion, SourceText)>,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
@@ -16,17 +17,18 @@ impl AnalysisHost {
                 .unwrap_or_else(sifr_driver::PreparedSqlProfiles::from_initialization_failure);
         let mut session = WorkspaceSession::project_with_external_defs_and_auxiliary_sources(
             root.clone(),
-            sifr_driver::stdlib_external_defs()?,
-            sifr_driver::stdlib_tooling_sources()?,
+            sifr_driver::stdlib_external_defs(compiler)?,
+            sifr_driver::stdlib_tooling_sources(compiler)?,
         );
         for (path, uri, version, source) in overlays {
             session.upsert_overlay(path, uri, version, source, None);
         }
         session.reload()?;
-        Self::new_with_sql_profiles(session, profiles)
+        Self::new_with_sql_profiles(compiler, session, profiles)
     }
 
     pub fn open_single_file_overlay(
+        compiler: &sifr_driver::CompilerContext,
         path: SourcePath,
         uri: Option<String>,
         version: DocumentVersion,
@@ -36,12 +38,12 @@ impl AnalysisHost {
         let mut session = WorkspaceSession::single_file_with_external_defs_and_auxiliary_sources(
             path.clone(),
             mode,
-            sifr_driver::stdlib_external_defs()?,
-            sifr_driver::stdlib_tooling_sources()?,
+            sifr_driver::stdlib_external_defs(compiler)?,
+            sifr_driver::stdlib_tooling_sources(compiler)?,
         );
         session.upsert_overlay(path, uri, version, source, None);
         session.reload()?;
-        Self::new(session)
+        Self::new(compiler, session)
     }
 
     pub fn upsert_overlay_document(

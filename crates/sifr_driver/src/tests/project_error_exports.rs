@@ -26,6 +26,7 @@ fn test_check_project_preserves_aliased_error_status_through_facade() {
     write_aliased_error_project(&dir);
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -41,6 +42,7 @@ fn test_build_project_preserves_aliased_error_status_through_facade() {
     write_aliased_error_project(&dir);
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -71,6 +73,7 @@ fn test_check_project_does_not_leak_error_status_between_modules() {
     .expect("main module should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );

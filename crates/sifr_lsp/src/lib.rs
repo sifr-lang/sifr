@@ -28,5 +28,9 @@ mod settings;
 mod sql_editor_contract;
 mod watchdog;
 
-pub use server::{run_stdio, run_stdio_with_options};
+pub use server::{run_stdio, run_stdio_with_identity, run_stdio_with_options};
 pub use watchdog::LspServerOptions;
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

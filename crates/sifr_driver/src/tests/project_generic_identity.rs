@@ -21,6 +21,7 @@ fn test_check_project_imports_generic_function_metadata_through_facade() {
     .expect("main should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -48,6 +49,7 @@ fn test_build_project_imports_generic_function_metadata_through_facade() {
     )
     .expect("main should be written");
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -77,6 +79,7 @@ fn test_build_project_shares_union_identity_across_modules() {
     .expect("union consumer should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -101,6 +104,7 @@ fn test_build_project_centralizes_stdlib_nominal_union_payload() {
     .expect("main should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -128,6 +132,7 @@ fn test_build_project_isolates_union_prelude_imports() {
     .expect("main should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -160,6 +165,7 @@ fn test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct() {
     .expect("union consumer should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -182,6 +188,7 @@ fn test_check_project_keeps_same_basename_protocol_unions_distinct() {
     .expect("protocol consumer should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -197,8 +204,12 @@ fn test_build_single_file_consumes_three_level_class_upcast() {
     let dir = mktemp_dir("single_file_three_level_upcast");
     let source = "class Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n\ndef consume(own value: Root) -> int:\n    return value.value\n\ndef as_root(own value: Child) -> Root:\n    return value\n\ndef main():\n    assert consume(Child(1, 2, 3)) == 1\n    root: Root = as_root(Child(4, 5, 6))\n    assert root.value == 4\n";
 
-    let binary = build(source, &dir.join("build_out"))
-        .expect("single-file transitive class upcast should build natively");
+    let binary = build(
+        &crate::CompilerContext::for_test(),
+        source,
+        &dir.join("build_out"),
+    )
+    .expect("single-file transitive class upcast should build natively");
     let status = std::process::Command::new(&binary)
         .status()
         .expect("single-file transitive class upcast binary should run");
@@ -224,6 +235,7 @@ fn test_build_project_keeps_same_basename_union_identities_distinct() {
     .expect("union consumer should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -253,6 +265,7 @@ fn test_check_project_preserves_imported_generic_function_bounds() {
     .expect("main should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -289,6 +302,7 @@ fn test_check_project_preserves_same_basename_affine_capabilities() {
     .expect("main should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -333,6 +347,7 @@ fn test_check_project_canonicalizes_imported_parent_ancestry() {
     let dir = mktemp_dir("imported_parent_ancestry");
     write_split_ancestry_project(&dir);
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -346,6 +361,7 @@ fn test_build_project_canonicalizes_imported_parent_ancestry() {
     let dir = mktemp_dir("imported_parent_ancestry_native");
     write_split_ancestry_project(&dir);
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -369,6 +385,7 @@ fn test_build_project_specializes_zero_argument_generic_return() {
     )
     .expect("main should be written");
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -391,6 +408,7 @@ fn test_build_project_consumes_transitive_class_upcasts() {
     )
     .expect("main should be written");
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -424,6 +442,7 @@ fn test_build_project_crate_roots_non_main_transitive_upcasts() {
     .expect("main consumer should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -446,6 +465,7 @@ fn test_build_project_remaps_structural_consuming_upcasts() {
     )
     .expect("main should be written");
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -485,6 +505,7 @@ fn test_build_project_prefers_exact_same_basename_ancestor() {
     )
     .expect("main should be written");
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -507,6 +528,7 @@ fn test_build_project_specializes_inferred_generic_returns() {
     )
     .expect("main should be written");
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),

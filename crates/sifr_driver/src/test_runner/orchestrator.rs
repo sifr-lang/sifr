@@ -29,6 +29,7 @@ pub(crate) struct GeneratedTestRunnerProject {
 }
 
 pub fn run_tests(
+    compiler: &crate::CompilerContext,
     test_dir: &Path,
     provider: &mut dyn SourceProvider,
 ) -> Result<bool, Vec<RenderedDiagnostic>> {
@@ -44,11 +45,13 @@ pub fn run_tests(
         test_files_by_module.len()
     ));
 
-    let generated_project = build_test_runner_project(test_dir, &test_files_by_module, provider)?;
+    let generated_project =
+        build_test_runner_project(compiler, test_dir, &test_files_by_module, provider)?;
     execute_test_runner_project(&generated_project).map(|outcome| outcome.success)
 }
 
 pub(crate) fn build_test_runner_project(
+    compiler: &crate::CompilerContext,
     test_dir: &Path,
     test_files_by_module: &BTreeMap<String, PathBuf>,
     provider: &mut dyn SourceProvider,
@@ -71,7 +74,7 @@ pub(crate) fn build_test_runner_project(
         }
     }
 
-    let stdlib_compiled = compile_stdlib()?;
+    let stdlib_compiled = compile_stdlib(compiler)?;
     let project_lowering =
         collect_project_hir_source_modules(&support_modules, stdlib_compiled.defs.clone())?;
     let project_externals = project_lowering.external_defs.clone();

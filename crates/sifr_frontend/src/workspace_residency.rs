@@ -109,6 +109,10 @@ pub(crate) struct WorkspaceResidencyState {
 }
 
 impl WorkspaceResidencyState {
+    pub(crate) fn invalidate_compiler_metadata(&mut self) {
+        self.build_info = None;
+    }
+
     #[must_use]
     pub(crate) fn for_target(target: &WorkspaceSessionTarget) -> Self {
         let mut state = Self::default();
@@ -210,11 +214,11 @@ impl WorkspaceResidencyState {
     pub(crate) fn verify_build_info(
         &mut self,
         candidate: SifrBuildInfoCandidate,
+        current_compiler: CompilerFingerprint,
         source_map: Option<&SourceMapView>,
         package_identity: &WorkspacePackageConfigIdentity,
     ) -> SifrBuildInfoVerification {
         let mut reasons = Vec::new();
-        let current_compiler = CompilerFingerprint::current();
         if candidate.compiler != current_compiler {
             reasons.push(SifrBuildInfoRejection::CompilerFingerprintMismatch);
         }

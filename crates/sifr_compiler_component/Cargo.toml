@@ -1,4 +1,5 @@
 [package]
+links = "sifr_compiler_component_compiled_identity"
 name = "sifr_compiler_component"
 version = "0.0.0"
 publish = false
@@ -21,3 +22,6 @@ wat = { workspace = true }
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

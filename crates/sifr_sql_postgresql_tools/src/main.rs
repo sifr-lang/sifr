@@ -36,7 +36,13 @@ async fn main() -> ExitCode {
             .await
         }
         Some("migration") => {
-            run_migration_command(&arguments, &workspace_root, connection.as_deref()).await
+            run_migration_command(
+                &compiler_context(),
+                &arguments,
+                &workspace_root,
+                connection.as_deref(),
+            )
+            .await
         }
         _ => Err(sifr_sql_postgresql_tools::CommandError {
             message: "usage: schema <command> | migration <command>".to_string(),
@@ -52,4 +58,18 @@ async fn main() -> ExitCode {
             ExitCode::FAILURE
         }
     }
+}
+
+fn compiler_context() -> sifr_driver::CompilerContext {
+    if cfg!(test) {
+        return sifr_driver::CompilerContext::for_test_tokens(
+            vec![(env!("CARGO_PKG_NAME"), env!("SIFR_LOCAL_INPUT_TOKEN"))],
+            "sql-tool-unit",
+        );
+    }
+    let identity = match sifr_identity::CompilerIdentity::product(env!("SIFR_COMPILER_BUILD_ID")) {
+        Ok(identity) => identity,
+        Err(error) => panic!("{error}"),
+    };
+    sifr_driver::CompilerContext::new(identity)
 }

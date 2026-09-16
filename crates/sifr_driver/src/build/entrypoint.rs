@@ -102,31 +102,44 @@ pub(crate) struct RootedEntrypointPlan {
 }
 
 pub(crate) fn compile_single_file_frontend(
+    compiler: &crate::CompilerContext,
     source: &str,
 ) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
-    RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::SingleFile {
-        source,
-        display_path: "main",
-        lowering_options: LoweringOptions::default(),
-    })?
+    RootedEntrypointPlan::from_entrypoint(
+        compiler,
+        RootedEntrypoint::SingleFile {
+            source,
+            display_path: "main",
+            lowering_options: LoweringOptions::default(),
+        },
+    )?
     .into_single_file_frontend()
 }
 
 pub(crate) fn compile_single_file_entrypoint_with_metadata(
+    compiler: &crate::CompilerContext,
     source: &str,
 ) -> Result<CompiledSingleFileMetadata, Vec<RenderedDiagnostic>> {
-    compile_single_file_entrypoint_with_metadata_and_options(source, LoweringOptions::default())
+    compile_single_file_entrypoint_with_metadata_and_options(
+        compiler,
+        source,
+        LoweringOptions::default(),
+    )
 }
 
 pub(crate) fn compile_single_file_entrypoint_with_metadata_and_options(
+    compiler: &crate::CompilerContext,
     source: &str,
     lowering_options: LoweringOptions,
 ) -> Result<CompiledSingleFileMetadata, Vec<RenderedDiagnostic>> {
-    let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::SingleFile {
-        source,
-        display_path: "main",
-        lowering_options,
-    })?;
+    let plan = RootedEntrypointPlan::from_entrypoint(
+        compiler,
+        RootedEntrypoint::SingleFile {
+            source,
+            display_path: "main",
+            lowering_options,
+        },
+    )?;
     plan.emit_frontend_diagnostics();
     let rust_interop_context = plan.rust_interop_context.clone();
     let stdlib = std::sync::Arc::clone(&plan.stdlib);
@@ -135,45 +148,58 @@ pub(crate) fn compile_single_file_entrypoint_with_metadata_and_options(
 }
 
 pub(crate) fn check_single_file_entrypoint(
+    compiler: &crate::CompilerContext,
     source: &str,
     entrypoint_file: &Path,
 ) -> Vec<RenderedDiagnostic> {
     let display_path = entrypoint_file.to_string_lossy();
-    match RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::SingleFile {
-        source,
-        display_path: &display_path,
-        lowering_options: LoweringOptions::default(),
-    }) {
+    match RootedEntrypointPlan::from_entrypoint(
+        compiler,
+        RootedEntrypoint::SingleFile {
+            source,
+            display_path: &display_path,
+            lowering_options: LoweringOptions::default(),
+        },
+    ) {
         Ok(plan) => plan.frontend_diagnostics(),
         Err(errors) => errors,
     }
 }
 
 pub(crate) fn resolve_project_entrypoint_plan(
+    compiler: &crate::CompilerContext,
     main_file: &Path,
     provider: &mut dyn SourceProvider,
 ) -> Result<RootedEntrypointPlan, Vec<RenderedDiagnostic>> {
-    RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
-        main_file,
-        provider,
-    })
+    RootedEntrypointPlan::from_entrypoint(
+        compiler,
+        RootedEntrypoint::Project {
+            main_file,
+            provider,
+        },
+    )
 }
 
 pub(crate) fn resolve_package_project_entrypoint_plan(
+    compiler: &crate::CompilerContext,
     entrypoint: &PackageEntrypoint,
     provider: &mut dyn SourceProvider,
 ) -> Result<RootedEntrypointPlan, Vec<RenderedDiagnostic>> {
-    RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::PackageProject {
-        entrypoint,
-        provider,
-    })
+    RootedEntrypointPlan::from_entrypoint(
+        compiler,
+        RootedEntrypoint::PackageProject {
+            entrypoint,
+            provider,
+        },
+    )
 }
 
 pub(crate) fn emit_project_entrypoint(
+    compiler: &crate::CompilerContext,
     main_file: &Path,
     provider: &mut dyn SourceProvider,
 ) -> CompileResult {
-    let plan = match resolve_project_entrypoint_plan(main_file, provider) {
+    let plan = match resolve_project_entrypoint_plan(compiler, main_file, provider) {
         Ok(plan) => plan,
         Err(errors) => return CompileResult::Errors { errors },
     };
@@ -190,13 +216,14 @@ pub(crate) fn emit_project_entrypoint(
 }
 
 pub(crate) fn build_rooted_entrypoint_binary_with_report(
+    compiler: &crate::CompilerContext,
     entrypoint: RootedEntrypoint<'_>,
     output_dir: &Path,
 ) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
     let total_start = Instant::now();
     let mut stages = Vec::new();
     let (plan, mode, entrypoint_path) =
-        RootedEntrypointPlan::from_entrypoint_with_stages(entrypoint, &mut stages)?;
+        RootedEntrypointPlan::from_entrypoint_with_stages(compiler, entrypoint, &mut stages)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
     let query_signatures = plan.query_signature_artifact()?;
     let cargo_resolution = plan.cargo_resolution.clone();
@@ -228,6 +255,12 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
             )]
         })?;
     Ok(BuildReport::new(BuildReportInput {
+        compiler_identity: compiler.identity().as_str().to_owned(),
+        native_toolchain_identity: cargo_resolution
+            .native_toolchain
+            .as_ref()
+            .ok()
+            .map(|tools| tools.identity().to_owned()),
         entrypoint_path,
         mode,
         sysroot: materialized.sysroot,
@@ -241,11 +274,12 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
 }
 
 pub(crate) fn materialize_rooted_entrypoint_rust_project(
+    compiler: &crate::CompilerContext,
     entrypoint: RootedEntrypoint<'_>,
     output_dir: &Path,
 ) -> Result<MaterializedRustProjectReport, Vec<RenderedDiagnostic>> {
     let mode = entrypoint.build_mode();
-    let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
+    let plan = RootedEntrypointPlan::from_entrypoint(compiler, entrypoint)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
     let cargo_resolution = plan.cargo_resolution.clone();
     let generated_project = plan.into_generated_binary_project()?;
@@ -264,10 +298,12 @@ pub(crate) fn materialize_rooted_entrypoint_rust_project(
 }
 
 pub(crate) fn build_cached_project_binary(
+    compiler: &crate::CompilerContext,
     main_file: &Path,
     provider: &mut dyn SourceProvider,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     build_cached_rooted_entrypoint_binary(
+        compiler,
         RootedEntrypoint::Project {
             main_file,
             provider,
@@ -278,10 +314,12 @@ pub(crate) fn build_cached_project_binary(
 }
 
 pub(crate) fn build_cached_package_project_binary(
+    compiler: &crate::CompilerContext,
     entrypoint: &PackageEntrypoint,
     provider: &mut dyn SourceProvider,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     build_cached_rooted_entrypoint_binary(
+        compiler,
         RootedEntrypoint::PackageProject {
             entrypoint,
             provider,
@@ -292,11 +330,13 @@ pub(crate) fn build_cached_package_project_binary(
 }
 
 pub(crate) fn build_cached_single_file_binary(
+    compiler: &crate::CompilerContext,
     source: &str,
     entrypoint_file: &Path,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     let display_path = entrypoint_file.to_string_lossy();
     build_cached_rooted_entrypoint_binary(
+        compiler,
         RootedEntrypoint::SingleFile {
             source,
             display_path: &display_path,
@@ -308,6 +348,7 @@ pub(crate) fn build_cached_single_file_binary(
 }
 
 fn build_cached_rooted_entrypoint_binary(
+    compiler: &crate::CompilerContext,
     entrypoint: RootedEntrypoint<'_>,
     cache_scope: &Path,
     cache_namespace: &str,
@@ -315,7 +356,7 @@ fn build_cached_rooted_entrypoint_binary(
     let total_start = Instant::now();
     let mut stages = Vec::new();
     let (plan, mode, entrypoint_path) =
-        RootedEntrypointPlan::from_entrypoint_with_stages(entrypoint, &mut stages)?;
+        RootedEntrypointPlan::from_entrypoint_with_stages(compiler, entrypoint, &mut stages)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
     let cargo_resolution = plan.cargo_resolution.clone();
     let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
@@ -342,6 +383,12 @@ fn build_cached_rooted_entrypoint_binary(
     }
     let binary_path = cached_binary_path(cache_entry.workspace_root(), "sifr_output");
     let build_report = BuildReport::new(BuildReportInput {
+        compiler_identity: compiler.identity().as_str().to_owned(),
+        native_toolchain_identity: cargo_resolution
+            .native_toolchain
+            .as_ref()
+            .ok()
+            .map(|tools| tools.identity().to_owned()),
         entrypoint_path,
         mode,
         sysroot,
@@ -359,13 +406,17 @@ fn build_cached_rooted_entrypoint_binary(
 }
 
 impl RootedEntrypointPlan {
-    fn from_entrypoint(entrypoint: RootedEntrypoint<'_>) -> Result<Self, Vec<RenderedDiagnostic>> {
+    fn from_entrypoint(
+        compiler: &crate::CompilerContext,
+        entrypoint: RootedEntrypoint<'_>,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let mut stages = Vec::new();
-        Self::from_entrypoint_with_stages(entrypoint, &mut stages)
+        Self::from_entrypoint_with_stages(compiler, entrypoint, &mut stages)
             .map(|(plan, _mode, _entrypoint_path)| plan)
     }
 
     fn from_entrypoint_with_stages(
+        compiler: &crate::CompilerContext,
         entrypoint: RootedEntrypoint<'_>,
         stages: &mut Vec<BuildStageReport>,
     ) -> Result<(Self, BuildCompilationMode, PathBuf), Vec<RenderedDiagnostic>> {
@@ -376,7 +427,9 @@ impl RootedEntrypointPlan {
             RootedEntrypoint::Project { .. } => "__sifr_project__".to_string(),
             RootedEntrypoint::SingleFile { .. } => "__sifr_single_file__".to_string(),
         };
-        let stdlib = measure_stage(stages, "Loading Sifr standard library", compile_stdlib)?;
+        let stdlib = measure_stage(stages, "Loading Sifr standard library", || {
+            compile_stdlib(compiler)
+        })?;
         let package_entrypoint = match &entrypoint {
             RootedEntrypoint::PackageProject { entrypoint, .. } => Some(*entrypoint),
             RootedEntrypoint::SingleFile { .. } | RootedEntrypoint::Project { .. } => None,

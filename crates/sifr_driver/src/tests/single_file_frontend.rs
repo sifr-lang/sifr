@@ -8,6 +8,7 @@ use sifr_frontend::SourceOrigin;
 #[test]
 fn generated_rust_production_preserves_deferred_sysroot_probe_plan() {
     let compiled = compile_with_metadata(
+        &crate::CompilerContext::for_test(),
         "from sifr.calendar import isleap\n\ndef main() -> bool:\n    return isleap(2024)\n",
     );
     let CompileResultFull::Success { interop, .. } = compiled else {
@@ -24,7 +25,10 @@ fn generated_rust_production_preserves_deferred_sysroot_probe_plan() {
             .all(|probe| { probe.module_name.as_deref() == Some("_sifr.calendar") })
     );
 
-    let empty = compile_with_metadata("def main() -> int:\n    return 0\n");
+    let empty = compile_with_metadata(
+        &crate::CompilerContext::for_test(),
+        "def main() -> int:\n    return 0\n",
+    );
     let CompileResultFull::Success { interop, .. } = empty else {
         panic!("valid empty-demand source should produce generated Rust metadata");
     };
@@ -32,7 +36,7 @@ fn generated_rust_production_preserves_deferred_sysroot_probe_plan() {
 }
 
 fn assert_check_compile_error_parity(source: &str, expected_code: DiagnosticCode) {
-    let check_errors = type_check_source(source);
+    let check_errors = type_check_source(&crate::CompilerContext::for_test(), source);
     assert!(
         check_errors
             .iter()
@@ -41,7 +45,7 @@ fn assert_check_compile_error_parity(source: &str, expected_code: DiagnosticCode
 
     let CompileResult::Errors {
         errors: compile_errors,
-    } = compile(source)
+    } = compile(&crate::CompilerContext::for_test(), source)
     else {
         panic!("invalid source must not reach code generation");
     };
@@ -191,7 +195,10 @@ fn test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic() {
 
 #[test]
 fn test_lower_source_and_type_check_source_surface_type_errors() {
-    let errors = match lower_source("def main():\n    x: int = \"bad\"\n") {
+    let errors = match lower_source(
+        &crate::CompilerContext::for_test(),
+        "def main():\n    x: int = \"bad\"\n",
+    ) {
         Ok(_) => panic!("type mismatch should fail lowering/type-check"),
         Err(errors) => errors,
     };
@@ -202,7 +209,10 @@ fn test_lower_source_and_type_check_source_surface_type_errors() {
             .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code())
     );
 
-    let check_errors = type_check_source("def main():\n    x: int = \"bad\"\n");
+    let check_errors = type_check_source(
+        &crate::CompilerContext::for_test(),
+        "def main():\n    x: int = \"bad\"\n",
+    );
     assert_eq!(errors.len(), check_errors.len());
     assert_eq!(errors, check_errors);
 }
@@ -221,7 +231,7 @@ class PythonError(Error):
 @python.buffer(builtins.bytearray, access=read, layout=any)
 def view(size: int) -> Result[python.Buffer[uint8], PythonError]: ...
 "#;
-    let check_errors = type_check_source(source);
+    let check_errors = type_check_source(&crate::CompilerContext::for_test(), source);
     assert!(check_errors.iter().any(|error| {
         error.code == DiagnosticCode::PYZC_INVALID_DECLARATION.code()
             && error
@@ -231,7 +241,7 @@ def view(size: int) -> Result[python.Buffer[uint8], PythonError]: ...
 
     let CompileResult::Errors {
         errors: compile_errors,
-    } = compile(source)
+    } = compile(&crate::CompilerContext::for_test(), source)
     else {
         panic!("duplicate PythonError fields must not reach code generation");
     };
@@ -290,8 +300,10 @@ class PythonError(Error):
 @python.buffer(builtins.memoryview, access=read, layout=any)
 def view(owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...
 "#;
-    assert!(type_check_source(source).is_empty());
-    let CompileResult::Success { rust_source } = compile(source) else {
+    assert!(type_check_source(&crate::CompilerContext::for_test(), source).is_empty());
+    let CompileResult::Success { rust_source } =
+        compile(&crate::CompilerContext::for_test(), source)
+    else {
         panic!("same-named local record should compile through record conversion");
     };
     assert!(rust_source.contains("from_record_results"), "{rust_source}");
@@ -305,8 +317,11 @@ from sifr.python import Object, PythonError
 @python.buffer(builtins.memoryview, access=write, layout=any)
 def view(own owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...
 "#;
-    assert!(type_check_source(source).is_empty());
-    assert!(matches!(compile(source), CompileResult::Success { .. }));
+    assert!(type_check_source(&crate::CompilerContext::for_test(), source).is_empty());
+    assert!(matches!(
+        compile(&crate::CompilerContext::for_test(), source),
+        CompileResult::Success { .. }
+    ));
 }
 
 #[test]
@@ -325,8 +340,10 @@ def compute(
     handler: Callable[[int], int],
 ) -> Result[int, CanonicalError | PythonError]: ...
 "#;
-    assert!(type_check_source(source).is_empty());
-    let CompileResult::Success { rust_source } = compile(source) else {
+    assert!(type_check_source(&crate::CompilerContext::for_test(), source).is_empty());
+    let CompileResult::Success { rust_source } =
+        compile(&crate::CompilerContext::for_test(), source)
+    else {
         panic!("same-basename callback errors should compile with distinct Rust identities");
     };
     let canonical = sifr_type_system::stdlib_class_rust_name("_sifr.python", "PythonError");
@@ -336,7 +353,10 @@ def compute(
 
 #[test]
 fn test_type_check_source_surfaces_reveal_type_as_structured_note() {
-    let diagnostics = type_check_source("def main():\n    reveal_type(1)\n");
+    let diagnostics = type_check_source(
+        &crate::CompilerContext::for_test(),
+        "def main():\n    reveal_type(1)\n",
+    );
 
     assert_eq!(diagnostics.len(), 1);
     let diagnostic = &diagnostics[0];
@@ -363,7 +383,10 @@ fn test_type_check_source_surfaces_reveal_type_as_structured_note() {
 
 #[test]
 fn test_type_check_source_accepts_exact_integer_arithmetic_without_overflow_warning() {
-    let diagnostics = type_check_source("def multiply(a: int, b: int) -> int:\n    return a * b\n");
+    let diagnostics = type_check_source(
+        &crate::CompilerContext::for_test(),
+        "def multiply(a: int, b: int) -> int:\n    return a * b\n",
+    );
 
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
 }
@@ -371,6 +394,7 @@ fn test_type_check_source_accepts_exact_integer_arithmetic_without_overflow_warn
 #[test]
 fn test_type_check_source_surfaces_blocking_io_direct_call_error() {
     let diagnostics = type_check_source(
+        &crate::CompilerContext::for_test(),
         r"@blocking_io
 def read_file() -> int:
     return 1
@@ -414,7 +438,10 @@ async def main() -> None:
 
 #[test]
 fn test_type_check_source_surfaces_unreachable_statement_as_structured_warning() {
-    let diagnostics = type_check_source("def value() -> int:\n    return 1\n    return 2\n");
+    let diagnostics = type_check_source(
+        &crate::CompilerContext::for_test(),
+        "def value() -> int:\n    return 1\n    return 2\n",
+    );
 
     assert_eq!(diagnostics.len(), 1);
     let diagnostic = &diagnostics[0];
@@ -451,7 +478,7 @@ fn test_type_check_source_rejects_removed_bigint_surface() {
     ];
 
     for (context, source) in cases {
-        let diagnostics = type_check_source(source);
+        let diagnostics = type_check_source(&crate::CompilerContext::for_test(), source);
         assert!(
             diagnostics
                 .iter()
@@ -467,7 +494,7 @@ fn test_compile_hello_world() {
 def main():
     print("Hello, World!")
 "#;
-    match compile(source) {
+    match compile(&crate::CompilerContext::for_test(), source) {
         CompileResult::Success { rust_source } => {
             assert!(rust_source.contains("fn main()"));
             assert!(rust_source.contains("println!"));
@@ -491,7 +518,7 @@ def main():
     x: int = factorial(5)
     print(x)
 "#;
-    match compile(source) {
+    match compile(&crate::CompilerContext::for_test(), source) {
         CompileResult::Success { rust_source } => {
             assert!(
                 rust_source.contains("fn factorial(n: SifrInt) -> SifrInt"),
@@ -514,7 +541,7 @@ def main():
     if value is not None:
         print(value)
 "#;
-    match compile_with_metadata(source) {
+    match compile_with_metadata(&crate::CompilerContext::for_test(), source) {
         CompileResultFull::Success { rust_source, .. } => {
             let main_start = rust_source
                 .find("fn main()")
@@ -551,7 +578,7 @@ def main():
     except ValueError:
         print(0)
 "#;
-    match compile_with_metadata(source) {
+    match compile_with_metadata(&crate::CompilerContext::for_test(), source) {
         CompileResultFull::Success {
             generated_source_map,
             rust_source,
@@ -594,7 +621,7 @@ fn test_source_python_error_contract_without_interop_has_no_runtime_bridge() {
         rust_source,
         required_features,
         ..
-    } = compile_with_metadata(&source)
+    } = compile_with_metadata(&crate::CompilerContext::for_test(), &source)
     else {
         panic!("source PythonError contract should compile");
     };
@@ -612,7 +639,7 @@ fn test_source_python_error_contract_with_interop_gets_runtime_bridge() {
         rust_source,
         required_features,
         ..
-    } = compile_with_metadata(&source)
+    } = compile_with_metadata(&crate::CompilerContext::for_test(), &source)
     else {
         panic!("Python declaration should compile");
     };
@@ -639,7 +666,7 @@ def render() -> Result[str, PythonError]:
     except PythonError as error:
         raise error
 "#;
-    let compiled = compile_with_metadata(source);
+    let compiled = compile_with_metadata(&crate::CompilerContext::for_test(), source);
     let CompileResultFull::Success {
         rust_source,
         required_features,
@@ -664,7 +691,7 @@ fn test_type_mismatch_error() {
 def main():
     x: int = "hello"
 "#;
-    let errors = check(source);
+    let errors = check(&crate::CompilerContext::for_test(), source);
     assert!(!errors.is_empty());
     assert!(errors.iter().any(|e| e.message.contains("type mismatch")));
 }
@@ -675,7 +702,7 @@ fn test_check_reports_structured_frontend_diagnostics() {
 def main():
     x: int = "hello"
 "#;
-    let errors = check(source);
+    let errors = check(&crate::CompilerContext::for_test(), source);
     assert!(!errors.is_empty());
     assert!(
         errors
@@ -687,7 +714,7 @@ def main():
 #[test]
 fn test_check_reports_primary_span_for_ranged_hir_diagnostic() {
     let source = "def main():\n    if 1:\n        pass\n";
-    let errors = check(source);
+    let errors = check(&crate::CompilerContext::for_test(), source);
     let diagnostic = errors
         .iter()
         .find(|error| error.code == DiagnosticCode::FLOW_INVALID_CONDITION_TYPE.code())
@@ -712,7 +739,7 @@ def main():
     x: int = 42
     print(x)
 "#;
-    let errors = check(source);
+    let errors = check(&crate::CompilerContext::for_test(), source);
     assert!(errors.is_empty());
 }
 
@@ -724,7 +751,7 @@ from ..helper import value
 def main():
     print(value())
 "#;
-    let errors = check(source);
+    let errors = check(&crate::CompilerContext::for_test(), source);
     assert!(errors.iter().any(|e| {
         e.message
             .contains("unsupported import form: relative import level 2")
@@ -739,7 +766,7 @@ from . import helper
 def main():
     print(helper)
 "#;
-    let errors = check(source);
+    let errors = check(&crate::CompilerContext::for_test(), source);
     assert!(errors.iter().any(|e| {
         e.message
             .contains("unsupported import form: bare relative import")
@@ -754,7 +781,7 @@ import helper
 def main():
     print("ok")
 "#;
-    let errors = check(source);
+    let errors = check(&crate::CompilerContext::for_test(), source);
     assert!(
         errors
             .iter()

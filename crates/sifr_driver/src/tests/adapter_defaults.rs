@@ -78,7 +78,7 @@ fn compile_with_contract(main: &str, contract: &str) -> ProjectLowering {
         ("fixture.defaults".to_string(), parse_suite(contract)),
         ("main".to_string(), parse_suite(main)),
     ]);
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -207,7 +207,7 @@ class Model(Contract):
             ),
         ),
     ]);
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -390,7 +390,7 @@ class Child(Parent[int]):
             ),
         ),
     ]);
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -426,7 +426,7 @@ class Child(Parent):
             ),
         ),
     ]);
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -505,7 +505,7 @@ class Model(Contract):
             ),
         ),
     ]);
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -618,7 +618,7 @@ def build() -> Result[Model, ContractError | RustPanicError]:
             ),
         ),
     ]);
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -670,7 +670,7 @@ class Invalid(Contract):
             ("fixture.defaults".to_string(), parse_suite(CONTRACT)),
             ("main".to_string(), parse_suite(&source)),
         ]);
-        let stdlib_defs = compile_stdlib()
+        let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
             .expect("stdlib should compile")
             .defs
             .clone();

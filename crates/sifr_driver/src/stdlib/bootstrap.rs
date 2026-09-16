@@ -1,6 +1,6 @@
 use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary};
 use crate::export_policy::should_export_callable;
-use crate::stdlib::cache::{STDLIB_COMPILED_CACHE, get_or_init_stdlib_cache, project_stdlib_cache};
+use crate::stdlib::cache::{get_or_init_stdlib_cache, project_stdlib_cache};
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
 use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
 use crate::stdlib::types::StdlibCompiled;
@@ -22,25 +22,33 @@ use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-pub(crate) fn compile_stdlib() -> Result<std::sync::Arc<StdlibCompiled>, Vec<RenderedDiagnostic>> {
-    get_or_init_stdlib_cache(&STDLIB_COMPILED_CACHE, compile_stdlib_uncached)
+pub(crate) fn compile_stdlib(
+    compiler: &crate::CompilerContext,
+) -> Result<std::sync::Arc<StdlibCompiled>, Vec<RenderedDiagnostic>> {
+    get_or_init_stdlib_cache(&compiler.stdlib_cache, || {
+        compile_stdlib_for_context(compiler)
+    })
 }
 
-pub fn external_defs() -> Result<ExternalDefs, Vec<RenderedDiagnostic>> {
+pub fn external_defs(
+    compiler: &crate::CompilerContext,
+) -> Result<ExternalDefs, Vec<RenderedDiagnostic>> {
     project_stdlib_cache(
-        &STDLIB_COMPILED_CACHE,
-        compile_stdlib_uncached,
+        &compiler.stdlib_cache,
+        || compile_stdlib_for_context(compiler),
         |compiled| compiled.defs.clone(),
     )
 }
 
+#[cfg(test)]
 pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
-    let sysroot = sifr_sysroot::resolve_sysroot(None).map_err(|error| {
-        vec![crate::diagnostics::diagnostic_with_code(
-            error.boundary_message(),
-            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
-        )]
-    })?;
+    compile_stdlib_for_context(&crate::CompilerContext::for_test())
+}
+
+fn compile_stdlib_for_context(
+    compiler: &crate::CompilerContext,
+) -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
+    let sysroot = compiler.sysroot()?.clone();
     let sources = load_stdlib_tooling_sources_from_sysroot(&sysroot).map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
             format!("Sifr stdlib source inventory is invalid: {error}"),

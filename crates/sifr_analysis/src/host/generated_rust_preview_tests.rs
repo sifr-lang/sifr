@@ -12,8 +12,14 @@ fn single_file_input(source: &str) -> FrontendInput {
 
 #[test]
 fn generated_rust_preview_tracks_compiler_synthetic_source_map_entry() {
-    let mut host = AnalysisHost::open_single_file(single_file_input("def main():\n    return 1\n"))
-        .expect("host should load");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input("def main():\n    return 1\n"),
+    )
+    .expect("host should load");
     let file = host.files()[0];
 
     let preview = host
@@ -40,8 +46,14 @@ def main():
     except ValueError:
         print(0)
 ";
-    let mut host =
-        AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(source),
+    )
+    .expect("host should load");
     let file = host.files()[0];
 
     let preview = host

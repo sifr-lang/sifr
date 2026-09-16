@@ -20,6 +20,15 @@ pub(crate) struct TestRunnerExecutionOutcome {
 pub(crate) fn execute_test_runner_project(
     generated_project: &GeneratedTestRunnerProject,
 ) -> Result<TestRunnerExecutionOutcome, Vec<RenderedDiagnostic>> {
+    let native_toolchain = std::env::current_dir()
+        .map_err(|_| "cannot resolve invocation directory".to_owned())
+        .and_then(|cwd| sifr_sysroot::NativeToolchain::resolve_at(&cwd))
+        .map_err(|error| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                error,
+                DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+            )]
+        })?;
     let cargo_plan = try_generate_test_runner_cargo_plan(
         &generated_project.all_stdlib_modules,
         &generated_project.all_required_features,
@@ -35,12 +44,14 @@ pub(crate) fn execute_test_runner_project(
         &generated_project.support_module_names,
         &generated_project.all_rust_code,
     );
-    let cache_key = test_runner_cache_key(
+    let mut cache_key = test_runner_cache_key(
         generated_project,
         &cargo_plan.cargo_toml,
         &test_lib,
         &cargo_plan.dependency_plan,
     )?;
+    cache_key.push_str("\n[native-toolchain]\n");
+    cache_key.push_str(native_toolchain.identity());
     let mut required_files = vec![
         PathBuf::from("Cargo.toml"),
         PathBuf::from("src/lib.rs"),
@@ -57,6 +68,7 @@ pub(crate) fn execute_test_runner_project(
         .map(PathBuf::as_path)
         .collect::<Vec<_>>();
     let prepared = prepare_cached_artifact(
+        native_toolchain.identity(),
         "test_runner",
         &generated_project.cache_scope,
         &cache_key,
@@ -156,12 +168,18 @@ pub(crate) fn execute_test_runner_project(
         })?;
     }
 
-    let mut command = std::process::Command::new("cargo");
+    let mut command = native_toolchain.cargo_command().map_err(|error| {
+        vec![crate::diagnostics::diagnostic_with_code(
+            error,
+            DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+        )]
+    })?;
     command
         .args(sysroot_cargo_config_args(&cargo_plan.dependency_plan))
         .args(["test"])
-        .current_dir(&project_dir);
-    command.env_remove("CARGO_TARGET_DIR");
+        .arg("--manifest-path")
+        .arg(project_dir.join("Cargo.toml"));
+    command.arg("--target-dir").arg(project_dir.join("target"));
     let output = command.output().map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
             format!("failed to run cargo test: {error}"),
@@ -202,25 +220,40 @@ fn test_runner_cache_key(
         .map(|(name, code)| (name.as_str(), code.as_str()))
         .collect();
     support_modules.sort_unstable_by(|left, right| left.0.cmp(right.0));
-    let support_modules = support_modules
-        .into_iter()
-        .map(|(name, code)| format!("{name}\n{code}"))
-        .collect::<Vec<_>>()
-        .join("\n===\n");
-    let bridge_files =
-        serde_json::to_string(&generated_project.bridge_rust_files).map_err(|error| {
+    let mut identity = sifr_identity::IdentityEncoder::new("test-runner-project-v1");
+    identity.field(
+        "scope",
+        generated_project.cache_scope.as_os_str().as_encoded_bytes(),
+    );
+    identity.field("manifest", cargo_toml.as_bytes());
+    identity.field("lib", test_lib.as_bytes());
+    for (name, code) in support_modules {
+        identity.field("support-name", name.as_bytes());
+        identity.field("support-source", code.as_bytes());
+    }
+    for (name, code) in &generated_project.bridge_rust_files {
+        let name = name.to_str().ok_or_else(|| {
             vec![crate::diagnostics::diagnostic_with_code(
-                format!("failed to serialize test bridge cache inputs: {error}"),
+                "failed to serialize test bridge cache inputs: non-UTF8 path".to_owned(),
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]
         })?;
-    Ok(format!(
-        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[bridge-files]\n{bridge_files}\n[sysroot-dependency-inputs]\n{}[sysroot-dependency-plan]\n{}\n[interop]\n{}",
-        generated_project.cache_scope.display(),
-        dependency_plan.dependency_input_fingerprint(),
-        dependency_plan.cache_fingerprint,
-        generated_project.interop.cache_key_fragment()
-    ))
+        identity.field("bridge-name", name.as_bytes());
+        identity.field("bridge-source", code.as_bytes());
+    }
+    identity.field(
+        "dependency-inputs",
+        dependency_plan.dependency_input_fingerprint().as_bytes(),
+    );
+    identity.field(
+        "dependency-plan",
+        dependency_plan.cache_fingerprint.as_bytes(),
+    );
+    identity.field(
+        "interop",
+        generated_project.interop.cache_key_fragment().as_bytes(),
+    );
+    Ok(identity.finish())
 }
 
 #[cfg(test)]
@@ -271,10 +304,19 @@ mod tests {
         )
         .expect("valid cache inputs");
 
-        assert!(cache_key.contains(
-            "[sysroot-dependency-inputs]\n[stdlib]\nsifr.json\n[features]\nserde_json\n"
-        ));
-        assert!(cache_key.contains("[sysroot-dependency-plan]\nfingerprint-a"));
+        assert_eq!(cache_key.len(), 64);
+        let mut changed_plan = dependency_plan.clone();
+        changed_plan.stdlib_modules.insert("sifr.math".into());
+        assert_ne!(
+            cache_key,
+            test_runner_cache_key(
+                &generated_project,
+                "[package]\nname = \"sifr_tests\"\n",
+                "#[test]\nfn test_case() {}\n",
+                &changed_plan
+            )
+            .expect("valid cache inputs")
+        );
         let identity = |project: &GeneratedTestRunnerProject| {
             test_runner_cache_key(
                 project,
@@ -290,9 +332,6 @@ mod tests {
             .insert(path.clone(), "pub struct First;".into());
         let with_bridge = identity(&generated_project);
         assert_ne!(with_bridge, cache_key);
-        assert!(with_bridge.contains(
-            "[bridge-files]\n{\"sifr_generated_bridge/contract.rs\":\"pub struct First;\"}\n"
-        ));
         generated_project
             .bridge_rust_files
             .insert(path.clone(), "pub struct Second;".into());

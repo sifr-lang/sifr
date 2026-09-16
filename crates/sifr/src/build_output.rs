@@ -145,6 +145,8 @@ mod tests {
 
     fn report(cache_hit: bool) -> BuildReport {
         BuildReport::new(BuildReportInput {
+            compiler_identity: crate::compiler_identity().as_str().to_owned(),
+            native_toolchain_identity: None,
             entrypoint_path: Path::new("demo main.sifr").to_path_buf(),
             mode: BuildCompilationMode::Project,
             sysroot: BuildSysrootReport::from_dependency_plan(&sysroot_dependency_plan()),

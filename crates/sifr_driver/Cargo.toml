@@ -1,4 +1,5 @@
 [package]
+links = "sifr_driver_compiled_identity"
 name = "sifr_driver"
 version = "0.0.0"
 publish = false
@@ -7,6 +8,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+sifr_identity.workspace = true
 # Wired early for diagnostic registry migration; compiler emission migration uses this dependency.
 sifr_diagnostics = { workspace = true }
 sifr_python_ast = { workspace = true }
@@ -34,3 +36,6 @@ wat = { workspace = true }
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

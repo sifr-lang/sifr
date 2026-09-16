@@ -5,40 +5,56 @@ use sifr_frontend::{FrontendInput, ProjectRoot, WorkspaceSession};
 use std::collections::BTreeMap;
 
 impl AnalysisHost {
-    pub fn open_project(root: &ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
+    pub fn open_project(
+        compiler: &sifr_driver::CompilerContext,
+        root: &ProjectRoot,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let profiles =
             sifr_driver::load_sql_editor_profiles(root.root.as_path(), root.entrypoint.as_path())
                 .unwrap_or_else(sifr_driver::PreparedSqlProfiles::from_initialization_failure);
         let session = WorkspaceSession::open_project_with_external_defs_and_auxiliary_sources(
             root.clone(),
-            sifr_driver::stdlib_external_defs()?,
-            sifr_driver::stdlib_tooling_sources()?,
+            sifr_driver::stdlib_external_defs(compiler)?,
+            sifr_driver::stdlib_tooling_sources(compiler)?,
         )?;
-        Self::new_with_sql_profiles(session, profiles)
+        Self::new_with_sql_profiles(compiler, session, profiles)
     }
 
-    pub fn open_single_file(input: FrontendInput) -> Result<Self, Vec<RenderedDiagnostic>> {
+    pub fn open_single_file(
+        compiler: &sifr_driver::CompilerContext,
+        input: FrontendInput,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let session = WorkspaceSession::open_single_file_with_external_defs_and_auxiliary_sources(
             input,
-            sifr_driver::stdlib_external_defs()?,
-            sifr_driver::stdlib_tooling_sources()?,
+            sifr_driver::stdlib_external_defs(compiler)?,
+            sifr_driver::stdlib_tooling_sources(compiler)?,
         )?;
-        Self::new(session)
+        Self::new(compiler, session)
     }
 
-    pub(super) fn new(session: WorkspaceSession) -> Result<Self, Vec<RenderedDiagnostic>> {
-        Self::new_with_sql_profiles(session, sifr_driver::PreparedSqlProfiles::default())
+    pub(super) fn new(
+        compiler: &sifr_driver::CompilerContext,
+        session: WorkspaceSession,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
+        Self::new_with_sql_profiles(
+            compiler,
+            session,
+            sifr_driver::PreparedSqlProfiles::default(),
+        )
     }
 
     pub(super) fn new_with_sql_profiles(
+        compiler: &sifr_driver::CompilerContext,
         mut session: WorkspaceSession,
         profiles: sifr_driver::PreparedSqlProfiles,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
+        session = session.with_compiler_identity(compiler.identity().clone());
         let snapshot = session.snapshot();
         let Some(current_revision) = revision_from_workspace_snapshot(&snapshot) else {
             return Err(Vec::new());
         };
         let mut host = Self {
+            compiler: compiler.clone(),
             session,
             file_to_module: BTreeMap::new(),
             symbol_index: None,

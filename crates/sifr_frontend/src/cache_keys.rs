@@ -4,7 +4,7 @@ use super::{
 };
 use crate::cache_fingerprint::{CacheKeyFingerprint, FingerprintBuilder};
 
-const CACHE_KEY_SCHEMA_VERSION: &str = "frontend-cache-key-v1";
+const CACHE_KEY_SCHEMA_VERSION: &str = "frontend-cache-key-v2";
 const SOURCE_HASH_SCHEMA_VERSION: &str = "source-text-fnv1a64-v1";
 const SOURCE_MAP_ALGORITHM_VERSION: &str = "source-map-line-index-v1";
 const PARSER_OPTIONS_VERSION: &str = "ruff-0.16.6-sifr-parser-v1";
@@ -23,9 +23,24 @@ pub struct CompilerFingerprint(String);
 impl CompilerFingerprint {
     #[must_use]
     pub fn current() -> Self {
+        Self::for_identity(&sifr_identity::CompilerIdentity::for_test(
+            crate::compiled_input_tokens(),
+            "frontend-fixture",
+        ))
+    }
+
+    pub fn for_identity(identity: &sifr_identity::CompilerIdentity) -> Self {
         let mut builder = FingerprintBuilder::new("compiler");
         builder.field("cache_key_schema", CACHE_KEY_SCHEMA_VERSION);
-        builder.field("frontend_crate_version", env!("CARGO_PKG_VERSION"));
+        builder.field("compiler_build", identity.as_str());
+        builder.field(
+            "identity_kind",
+            if identity.is_test() {
+                "test"
+            } else {
+                "product"
+            },
+        );
         builder.field("parser_options", PARSER_OPTIONS_VERSION);
         builder.field("lowering_options", LOWERING_OPTIONS_VERSION);
         builder.field("source_map_algorithm", SOURCE_MAP_ALGORITHM_VERSION);
@@ -197,13 +212,14 @@ impl CacheKeyContext {
 
     #[must_use]
     pub fn from_workspace(
+        compiler: CompilerFingerprint,
         family: CacheFamily,
         target: &WorkspaceSessionTarget,
         package_identity: &WorkspacePackageConfigIdentity,
     ) -> Self {
         Self::new(
             family,
-            CompilerFingerprint::current(),
+            compiler,
             WorkspaceContextFingerprint::from_target(target),
             PackageContextFingerprint::from_identity(package_identity),
         )
@@ -725,8 +741,14 @@ mod tests {
             workspace_root: Some(SourcePath::new("pkg")),
             entrypoint: Some(SourcePath::new("pkg/main.sifr")),
         };
-        let context = CacheKeyContext::from_workspace(CacheFamily::Parse, &target, &package);
+        let context = CacheKeyContext::from_workspace(
+            CompilerFingerprint::current(),
+            CacheFamily::Parse,
+            &target,
+            &package,
+        );
         let changed_context = CacheKeyContext::from_workspace(
+            CompilerFingerprint::current(),
             CacheFamily::Parse,
             &target,
             &WorkspacePackageConfigIdentity {

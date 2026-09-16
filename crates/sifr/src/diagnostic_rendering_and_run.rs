@@ -510,7 +510,7 @@ pub(super) fn cmd_run_package_file(
     };
     let result = match run_with_panic_boundary(
         "internal compiler panic during package run command compilation",
-        || build_cached_package_project(&entrypoint, provider),
+        || build_cached_package_project(&crate::compiler_context(), &entrypoint, provider),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -805,14 +805,10 @@ pub(super) fn cargo_package_list_entries(
         &selection,
         &options,
     );
-    let output = match std::process::Command::new(&plan.program)
-        .args(&plan.args)
-        .current_dir(&plan.current_dir)
-        .output()
-    {
+    let output = match resolved_cargo_output(&plan) {
         Ok(output) => output,
         Err(error) => {
-            let diagnostic = cargo_failure_diagnostic(&plan, lock_mode, None, &error.to_string());
+            let diagnostic = cargo_failure_diagnostic(&plan, lock_mode, None, &error);
             render_diagnostics(&[diagnostic], diagnostic_format);
             return Err(EXIT_USAGE_OR_CONFIG);
         }
@@ -861,14 +857,10 @@ pub(super) fn execute_cargo_plan(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let output = match std::process::Command::new(&plan.program)
-        .args(&plan.args)
-        .current_dir(&plan.current_dir)
-        .output()
-    {
+    let output = match resolved_cargo_output(plan) {
         Ok(output) => output,
         Err(error) => {
-            let diagnostic = cargo_failure_diagnostic(plan, lock_mode, None, &error.to_string());
+            let diagnostic = cargo_failure_diagnostic(plan, lock_mode, None, &error);
             render_diagnostics(&[diagnostic], diagnostic_format);
             return EXIT_USAGE_OR_CONFIG;
         }
@@ -893,4 +885,16 @@ pub(super) fn execute_cargo_plan(
     );
     render_diagnostics(&[diagnostic], diagnostic_format);
     EXIT_USER_DIAGNOSTIC
+}
+
+fn resolved_cargo_output(
+    plan: &sifr_package::CargoCommandPlan,
+) -> Result<std::process::Output, String> {
+    let tools = sifr_sysroot::NativeToolchain::resolve_at(&plan.current_dir)?;
+    tools
+        .cargo_command()?
+        .args(&plan.args)
+        .current_dir(&plan.current_dir)
+        .output()
+        .map_err(|error| error.to_string())
 }

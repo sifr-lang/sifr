@@ -6,7 +6,7 @@
 use super::*;
 
 fn compile_source_for_e2e(source: &str) -> sifr_driver::CompileResultFull {
-    sifr_driver::compile_with_metadata(source)
+    sifr_driver::compile_with_metadata(&sifr_driver::CompilerContext::for_test(), source)
 }
 
 type CompiledMetadata = (

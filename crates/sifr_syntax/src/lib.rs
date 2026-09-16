@@ -666,3 +666,7 @@ mod tests {
         assert_eq!(span.lines[0].text, "lazy import value");
     }
 }
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

@@ -49,6 +49,7 @@ fn trace_entrypoint(file: &Path) -> Result<String, Vec<sifr_diagnostics::Rendere
             })?
         }
     };
+    session = session.with_compiler_identity(crate::compiler_identity());
     Ok(session.snapshot().debug.render_text())
 }
 

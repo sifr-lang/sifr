@@ -45,19 +45,19 @@
     {
       "name": "sifr_analysis",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_analysis", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_analysis", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
       "name": "sifr_codegen",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_codegen", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_codegen", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
       "name": "sifr_compiler_component",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_compiler_component", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_compiler_component", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
@@ -67,7 +67,7 @@
         {"name": "sifr_diagnostics", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
         {"name": "gen-diagnostic-schema", "kind": "bin", "classification": "internal_codegen_tool", "profile_assignment": "internal"},
         {"name": "gen-error-docs", "kind": "bin", "classification": "internal_codegen_tool", "profile_assignment": "internal"}
-      ],
+      , {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
@@ -76,13 +76,13 @@
       "targets": [
         {"name": "sifr_driver", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
         {"name": "diagnostic_rendering_harness", "kind": "bin", "classification": "internal_codegen_tool", "profile_assignment": "internal"}
-      ],
+      , {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
       "name": "sifr_format",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_format", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_format", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
@@ -94,13 +94,13 @@
         {"name": "sql_migrations", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "sql_queries", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "sql_schema_polymorphism", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
-      ],
+      , {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
       "name": "sifr_ir",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_ir", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_ir", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
@@ -110,7 +110,7 @@
         {"name": "sifr_ipc", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
         {"name": "sifr-ipc-pipe-fixture-worker", "kind": "bin", "classification": "test_fixture", "profile_assignment": "test-fixture"},
         {"name": "ipc_process_pipe_fixture", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
-      ],
+      , {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": [
         {"name": "__test_fixture", "profile_assignment": "test-fixture", "classification": "test_fixture"}
       ]
@@ -118,25 +118,25 @@
     {
       "name": "sifr_lint",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_lint", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_lint", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
       "name": "sifr_lowering",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_lowering", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_lowering", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
       "name": "sifr_lsp",
       "classification": "first_party_tooling",
-      "targets": [{"name": "sifr_lsp", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_lsp", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
       "name": "sifr_package",
       "classification": "first_party_tooling",
-      "targets": [{"name": "sifr_package", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_package", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
@@ -170,7 +170,7 @@
         {"name": "schema_polymorphism", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "schema_profiles", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "semantic_completion", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
-      ],
+      , {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
@@ -253,6 +253,7 @@
       "name": "sifr_sql_mysql_tools",
       "classification": "first_party_tooling",
       "targets": [
+        {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "sifr_sql_mysql_tools", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "sifr-sql-mysql", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "live_catalog", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
@@ -265,6 +266,7 @@
       "name": "sifr_sql_postgresql_tools",
       "classification": "first_party_tooling",
       "targets": [
+        {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "sifr_sql_postgresql_tools", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "sifr-sql-postgresql", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "live_catalog", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
@@ -277,6 +279,7 @@
       "name": "sifr_sql_sqlite_tools",
       "classification": "first_party_tooling",
       "targets": [
+        {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "sifr_sql_sqlite_tools", "kind": "lib", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "sifr-sql-sqlite", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
         {"name": "sqlite-runtime-probe", "kind": "bin", "classification": "test_fixture", "profile_assignment": "test-fixture"},
@@ -418,7 +421,7 @@
     {
       "name": "sifr_source",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_source", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_source", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
@@ -433,7 +436,7 @@
     {
       "name": "sifr_stdlib_imports",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_stdlib_imports", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_stdlib_imports", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
@@ -458,20 +461,26 @@
         {"name": "syn_prettyplease_dependency_versions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "text_i18n_icu_dependency_versions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "text_i18n_dependency_snapshots", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
-      ],
+      , {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
       "name": "sifr_syntax",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_syntax", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_syntax", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
     },
     {
       "name": "sifr_type_system",
       "classification": "first_party_compiler",
-      "targets": [{"name": "sifr_type_system", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "targets": [{"name": "sifr_type_system", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}],
       "features": []
+    },
+    {
+      "name": "sifr_identity",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_identity", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": [{"name": "build", "profile_assignment": "merge", "classification": "first_party_compiler"}]
     }
   ]
 }

@@ -1,4 +1,5 @@
 [package]
+links = "sifr_sql_contract_compiled_identity"
 name = "sifr_sql_contract"
 version = "0.0.0"
 publish = false
@@ -21,3 +22,6 @@ static_assertions = { workspace = true }
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

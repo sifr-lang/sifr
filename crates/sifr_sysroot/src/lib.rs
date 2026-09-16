@@ -5,6 +5,8 @@ mod digest;
 mod error;
 mod layout;
 mod manifest;
+mod native_context;
+pub use native_context::{NativeBuildContext, NativeToolchain};
 mod resolve;
 
 pub use digest::{
@@ -25,3 +27,10 @@ pub use resolve::{
 
 #[cfg(test)]
 mod tests;
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;
+
+#[cfg(all(test, unix))]
+mod native_context_tests;

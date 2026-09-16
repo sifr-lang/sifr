@@ -94,3 +94,7 @@ mod workspace_residency;
 pub use workspace_residency::*;
 mod workspace_trace;
 pub use workspace_trace::*;
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

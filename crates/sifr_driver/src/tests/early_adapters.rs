@@ -77,7 +77,7 @@ pub(super) fn compile_errors(
     modules: &HashMap<String, Suite>,
     message: &str,
 ) -> Vec<sifr_diagnostics::RenderedDiagnostic> {
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -160,7 +160,7 @@ def main():
 "#,
         &contract,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -184,7 +184,7 @@ class Model(Contract):
 "#,
         CONTRACT,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -278,7 +278,7 @@ def main():
 "#,
         &contract,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -480,7 +480,7 @@ def main():
 "#,
         &contract,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -517,7 +517,7 @@ def main():
 "#,
         &contract,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -695,7 +695,7 @@ class Model(Contract):
         "fixture.facade".to_string(),
         parse_suite("from fixture.contract import Contract, contract_config\n"),
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -784,7 +784,7 @@ class Child(Contract, Parent):
 "#,
         CONTRACT,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();

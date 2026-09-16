@@ -1,4 +1,5 @@
 [package]
+links = "sifr_source_compiled_identity"
 name = "sifr_source"
 version = "0.0.0"
 publish = false
@@ -11,3 +12,6 @@ ruff_text_size = { workspace = true }
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

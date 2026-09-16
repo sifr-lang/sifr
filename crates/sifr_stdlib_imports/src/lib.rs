@@ -211,3 +211,7 @@ mod tests {
         assert!(is_bare_stdlib_tail("enum").is_none());
     }
 }
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

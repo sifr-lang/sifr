@@ -358,7 +358,8 @@ fn test_receiver_place_representative_diagnostics_populate_declared_args() {
             .expect("active receiver-place diagnostic should declare a representative fixture");
         let source = std::fs::read_to_string(repo_root.join(fixture))
             .unwrap_or_else(|error| panic!("failed to read {fixture}: {error}"));
-        let errors = match sifr_driver::compile(&source) {
+        let errors = match sifr_driver::compile(&sifr_driver::CompilerContext::for_test(), &source)
+        {
             sifr_driver::CompileResult::Errors { errors } => errors,
             sifr_driver::CompileResult::Success { .. } => {
                 panic!("{fixture} should emit {}", code.code())
@@ -435,7 +436,7 @@ class Foxtrot:
         self.value += 1
         return self.value == other.value
 "#;
-    let errors = match sifr_driver::compile(source) {
+    let errors = match sifr_driver::compile(&sifr_driver::CompilerContext::for_test(), source) {
         sifr_driver::CompileResult::Errors { errors } => errors,
         sifr_driver::CompileResult::Success { .. } => {
             panic!("fixed receiver mutations should fail")

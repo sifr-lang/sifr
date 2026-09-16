@@ -5,7 +5,6 @@ use crate::{
 };
 use sifr_frontend::SourceProvider;
 use std::path::Path;
-use std::process::Command;
 
 /// Read-only Cargo-backed package graph and Sifr source namespace snapshot.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -59,7 +58,18 @@ pub fn load_package_graph_snapshot(
     provider: &mut impl SourceProvider,
 ) -> Result<PackageGraphSnapshot, PackageGraphLoadFailure> {
     let plan = CargoCommandPlan::metadata(workspace_root.to_path_buf(), lock_mode);
-    let mut command = Command::new(&plan.program);
+    let tools = sifr_sysroot::NativeToolchain::resolve_at(workspace_root).map_err(|message| {
+        PackageGraphLoadFailure {
+            plan: plan.clone(),
+            kind: PackageGraphLoadFailureKind::Spawn { message },
+        }
+    })?;
+    let mut command = tools
+        .cargo_command()
+        .map_err(|message| PackageGraphLoadFailure {
+            plan: plan.clone(),
+            kind: PackageGraphLoadFailureKind::Spawn { message },
+        })?;
     command.args(&plan.args).current_dir(&plan.current_dir);
     record_cargo_invocation("package-metadata", lock_mode, &command);
     let output = command.output().map_err(|error| PackageGraphLoadFailure {

@@ -202,6 +202,7 @@ pub struct WorkspaceSnapshot {
 }
 
 pub struct WorkspaceSession {
+    compiler_identity: sifr_identity::CompilerIdentity,
     target: WorkspaceSessionTarget,
     overlays: BTreeMap<PathBuf, OverlayDocument>,
     single_file_source: Option<SourceText>,
@@ -222,6 +223,21 @@ pub struct WorkspaceSession {
 }
 
 impl WorkspaceSession {
+    #[must_use]
+    pub fn with_compiler_identity(mut self, identity: sifr_identity::CompilerIdentity) -> Self {
+        if self.compiler_identity != identity {
+            self.residency.invalidate_compiler_metadata();
+        }
+        self.compiler_identity = identity.clone();
+        self.context = self
+            .context
+            .map(|context| context.with_compiler_identity(identity));
+        self
+    }
+    pub fn compiler_identity(&self) -> &sifr_identity::CompilerIdentity {
+        &self.compiler_identity
+    }
+
     pub fn open_project(root: ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
         let mut session = Self::project(root);
         session.reload()?;
@@ -376,6 +392,10 @@ impl WorkspaceSession {
             format!("initialized target={}", target_kind(&target)),
         );
         Self {
+            compiler_identity: sifr_identity::CompilerIdentity::for_test(
+                crate::compiled_input_tokens(),
+                "frontend-fixture",
+            ),
             target,
             overlays: BTreeMap::new(),
             single_file_source: None,
@@ -413,7 +433,7 @@ impl WorkspaceSession {
                         self.auxiliary_sources.clone(),
                     )?;
                 let (_, dependencies) = provider.into_parts();
-                self.context = Some(context);
+                self.context = Some(context.with_compiler_identity(self.compiler_identity.clone()));
                 self.source_dependencies = dependencies;
                 self.snapshot_source_dependencies = None;
             }
@@ -430,6 +450,10 @@ impl WorkspaceSession {
                 self.snapshot_source_dependencies = None;
             }
         }
+        self.context = self
+            .context
+            .take()
+            .map(|context| context.with_compiler_identity(self.compiler_identity.clone()));
         self.revision.0 += 1;
         if self.dirty_scope_report.scope == WorkspaceDirtyScope::None
             && self.dirty_scope_report.reasons.is_empty()
@@ -576,6 +600,7 @@ impl WorkspaceSession {
         let source_map = self.context.as_ref().map(FrontendContext::source_map);
         self.residency.verify_build_info(
             candidate,
+            crate::CompilerFingerprint::for_identity(&self.compiler_identity),
             source_map.as_ref(),
             self.snapshot_package_config_identity.as_ref(),
         )

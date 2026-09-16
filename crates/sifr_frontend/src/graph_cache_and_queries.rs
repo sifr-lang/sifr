@@ -232,6 +232,7 @@ pub(super) struct ModuleState {
 }
 
 pub struct FrontendContext {
+    compiler_identity: sifr_identity::CompilerIdentity,
     modules: Vec<ModuleState>,
     module_by_id: BTreeMap<ModuleId, usize>,
     entrypoint: ModuleId,

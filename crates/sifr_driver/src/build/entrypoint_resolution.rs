@@ -37,6 +37,13 @@ pub(super) fn package_cargo_resolution_policy(
         trusted_vendor_dirs.push(vendor_dir);
     }
     CargoResolutionPolicy {
+        native_toolchain: entrypoint
+            .and_then(|entrypoint| entrypoint.graph.packages.get(&entrypoint.package_id))
+            .map_or_else(CargoResolutionPolicy::resolve_native_toolchain, |package| {
+                sifr_sysroot::NativeToolchain::resolve_at(&package.package_root).map(|tools| {
+                    tools.with_declared_environment(package.manifest.trust.build_env.clone())
+                })
+            }),
         lock_mode: entrypoint.map_or(sifr_package::CargoLockMode::Locked, |entrypoint| {
             entrypoint.lock_mode
         }),

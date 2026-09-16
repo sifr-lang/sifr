@@ -19,11 +19,14 @@ fn mktemp_dir(name: &str) -> PathBuf {
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_single_file_entrypoint_plan_generates_main_only_project() {
-    let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::SingleFile {
-        source: "def main():\n    print(\"ok\")\n",
-        display_path: "main",
-        lowering_options: LoweringOptions::default(),
-    })
+    let plan = RootedEntrypointPlan::from_entrypoint(
+        &crate::CompilerContext::for_test(),
+        RootedEntrypoint::SingleFile {
+            source: "def main():\n    print(\"ok\")\n",
+            display_path: "main",
+            lowering_options: LoweringOptions::default(),
+        },
+    )
     .expect("single-file entrypoint should compile");
 
     let generated_project = plan
@@ -52,10 +55,13 @@ fn test_project_entrypoint_plan_generates_support_modules() {
     )
     .expect("helper should be written");
 
-    let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
-        main_file: &main_file,
-        provider: &mut DiskSourceProvider::new(),
-    })
+    let plan = RootedEntrypointPlan::from_entrypoint(
+        &crate::CompilerContext::for_test(),
+        RootedEntrypoint::Project {
+            main_file: &main_file,
+            provider: &mut DiskSourceProvider::new(),
+        },
+    )
     .expect("project entrypoint should compile");
     let generated_project = plan
         .into_generated_binary_project()
@@ -96,10 +102,13 @@ fn test_project_entrypoint_plan_propagates_const_apis_across_modules() {
     )
     .expect("provider should be written");
 
-    let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
-        main_file: &main_file,
-        provider: &mut DiskSourceProvider::new(),
-    })
+    let plan = RootedEntrypointPlan::from_entrypoint(
+        &crate::CompilerContext::for_test(),
+        RootedEntrypoint::Project {
+            main_file: &main_file,
+            provider: &mut DiskSourceProvider::new(),
+        },
+    )
     .expect("project entrypoint should compile");
     let generated_project = plan
         .into_generated_binary_project()
@@ -129,10 +138,13 @@ fn test_project_entrypoint_plan_reports_reachable_frontend_errors() {
     )
     .expect("helper should be written");
 
-    let errors = match RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
-        main_file: &main_file,
-        provider: &mut DiskSourceProvider::new(),
-    }) {
+    let errors = match RootedEntrypointPlan::from_entrypoint(
+        &crate::CompilerContext::for_test(),
+        RootedEntrypoint::Project {
+            main_file: &main_file,
+            provider: &mut DiskSourceProvider::new(),
+        },
+    ) {
         Ok(_) => panic!("reachable project type error should fail plan construction"),
         Err(errors) => errors,
     };
@@ -172,10 +184,13 @@ fn test_project_entrypoint_plan_retains_final_reachable_dependency_metadata() {
     )
     .expect("helper should be written");
 
-    let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
-        main_file: &main_file,
-        provider: &mut DiskSourceProvider::new(),
-    })
+    let plan = RootedEntrypointPlan::from_entrypoint(
+        &crate::CompilerContext::for_test(),
+        RootedEntrypoint::Project {
+            main_file: &main_file,
+            provider: &mut DiskSourceProvider::new(),
+        },
+    )
     .expect("project entrypoint should compile");
     let generated_project = plan
         .into_generated_binary_project()
@@ -232,10 +247,13 @@ fn test_project_entrypoint_plan_ignores_unreachable_dependency_metadata() {
     )
     .expect("unused dependency should be written");
 
-    let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
-        main_file: &main_file,
-        provider: &mut DiskSourceProvider::new(),
-    })
+    let plan = RootedEntrypointPlan::from_entrypoint(
+        &crate::CompilerContext::for_test(),
+        RootedEntrypoint::Project {
+            main_file: &main_file,
+            provider: &mut DiskSourceProvider::new(),
+        },
+    )
     .expect("project entrypoint should compile");
     let generated_project = plan
         .into_generated_binary_project()
@@ -267,8 +285,12 @@ fn test_cached_project_binary_reuses_workspace_for_unchanged_input() {
     )
     .expect("helper should be written");
 
-    let first = build_cached_project_binary(&main_file, &mut DiskSourceProvider::new())
-        .expect("first cached build should succeed");
+    let first = build_cached_project_binary(
+        &crate::CompilerContext::for_test(),
+        &main_file,
+        &mut DiskSourceProvider::new(),
+    )
+    .expect("first cached build should succeed");
     assert!(first.binary_path().exists());
     assert!(!first.build_report().cache_hit());
 
@@ -278,8 +300,12 @@ fn test_cached_project_binary_reuses_workspace_for_unchanged_input() {
     assert!(first_output.status.success());
     assert_eq!(String::from_utf8_lossy(&first_output.stdout).trim(), "11");
 
-    let second = build_cached_project_binary(&main_file, &mut DiskSourceProvider::new())
-        .expect("second cached build should succeed");
+    let second = build_cached_project_binary(
+        &crate::CompilerContext::for_test(),
+        &main_file,
+        &mut DiskSourceProvider::new(),
+    )
+    .expect("second cached build should succeed");
     assert!(second.build_report().cache_hit());
     assert_eq!(first.binary_path(), second.binary_path());
 
@@ -306,14 +332,22 @@ fn test_cached_project_binary_invalidates_when_sources_change() {
     std::fs::write(&helper, "def value() -> int:\n    return 21\n")
         .expect("helper should be written");
 
-    let first = build_cached_project_binary(&main_file, &mut DiskSourceProvider::new())
-        .expect("first cached build should succeed");
+    let first = build_cached_project_binary(
+        &crate::CompilerContext::for_test(),
+        &main_file,
+        &mut DiskSourceProvider::new(),
+    )
+    .expect("first cached build should succeed");
     assert!(!first.build_report().cache_hit());
 
     std::fs::write(&helper, "def value() -> int:\n    return 22\n")
         .expect("helper should be updated");
-    let second = build_cached_project_binary(&main_file, &mut DiskSourceProvider::new())
-        .expect("second cached build should succeed");
+    let second = build_cached_project_binary(
+        &crate::CompilerContext::for_test(),
+        &main_file,
+        &mut DiskSourceProvider::new(),
+    )
+    .expect("second cached build should succeed");
     assert!(!second.build_report().cache_hit());
     assert_ne!(first.binary_path(), second.binary_path());
 

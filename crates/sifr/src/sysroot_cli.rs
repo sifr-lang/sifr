@@ -9,20 +9,55 @@ use std::io::{self, Write as _};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 pub(crate) enum PrintKind {
     Sysroot,
+    CompilerIdentity,
+    NativeContext,
 }
 
 pub(super) fn cmd_print(print: PrintKind, json: bool, diagnostic_format: DiagnosticFormat) -> i32 {
     match print {
         PrintKind::Sysroot => print_sysroot(json, diagnostic_format),
+        PrintKind::CompilerIdentity => {
+            let identity = crate::compiler_identity();
+            if json {
+                let _ = writeln!(
+                    io::stdout(),
+                    "{}",
+                    serde_json::json!({"compiler_build_id": identity.as_str(), "identity_kind": "product"})
+                );
+            } else {
+                let _ = writeln!(io::stdout(), "{}", identity.as_str());
+            }
+            EXIT_SUCCESS
+        }
+        PrintKind::NativeContext => print_native_context(json, diagnostic_format),
     }
 }
 
 pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32 {
+    let native = std::env::current_dir()
+        .map_err(|_| "cannot resolve invocation directory".to_owned())
+        .and_then(|cwd| sifr_sysroot::NativeToolchain::resolve_at(&cwd));
+    let native = match native {
+        Ok(native) => native,
+        Err(error) => {
+            render_diagnostics(
+                &[diagnostic_with_code(
+                    error,
+                    DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+                )],
+                diagnostic_format,
+            );
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
     match sifr_sysroot::resolve_sysroot(None) {
         Ok(sysroot) => {
             if json {
                 let value = serde_json::json!({
                     "schema_version": 1,
+                    "compiler_build_id": crate::compiler_identity().as_str(),
+                    "native_toolchain_id": native.identity(),
+                    "rustc_version": native.rustc_version(),
                     "status": "ok",
                     "root": sysroot.root,
                     "toolchain_id": sysroot.toolchain_id(),
@@ -133,6 +168,51 @@ fn print_sysroot(json: bool, diagnostic_format: DiagnosticFormat) -> i32 {
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             );
             render_diagnostics(&[diagnostic], diagnostic_format);
+            EXIT_USAGE_OR_CONFIG
+        }
+    }
+}
+
+fn print_native_context(json: bool, diagnostic_format: DiagnosticFormat) -> i32 {
+    let tools = std::env::current_dir()
+        .map_err(|_| "cannot resolve invocation directory".to_owned())
+        .and_then(|cwd| sifr_sysroot::NativeToolchain::resolve_at(&cwd));
+    match tools {
+        Ok(tools) => {
+            if json {
+                let _ = writeln!(
+                    io::stdout(),
+                    "{}",
+                    serde_json::json!({
+                        "compiler_build_id": crate::compiler_identity().as_str(),
+                        "native_toolchain_id": tools.identity(),
+                    "cargo_path": tools.cargo_path(),
+                    "rustc_path": tools.rustc_path(),
+                        "cargo_version": tools.cargo_version(),
+                        "rustc_version": tools.rustc_version(),
+                        "host": tools.host(),
+                        "target": tools.target()
+                    })
+                );
+            } else {
+                let _ = writeln!(
+                    io::stdout(),
+                    "native toolchain: {}\nhost: {}\n{}",
+                    tools.identity(),
+                    tools.host(),
+                    tools.rustc_version()
+                );
+            }
+            EXIT_SUCCESS
+        }
+        Err(error) => {
+            render_diagnostics(
+                &[diagnostic_with_code(
+                    error,
+                    DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+                )],
+                diagnostic_format,
+            );
             EXIT_USAGE_OR_CONFIG
         }
     }

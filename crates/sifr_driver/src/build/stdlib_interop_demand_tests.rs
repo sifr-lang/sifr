@@ -35,7 +35,8 @@ pub(super) fn owners(plan: &RustInteropPlan) -> BTreeSet<String> {
 }
 
 pub(super) fn generated(source: &str) -> (sifr_codegen::CodegenResult, Arc<StdlibCompiled>) {
-    let frontend = compile_single_file_frontend(source).expect("application lowers");
+    let frontend = compile_single_file_frontend(&crate::CompilerContext::for_test(), source)
+        .expect("application lowers");
     let generated = codegen_single_file_frontend(&frontend).expect("application generates");
     (generated, frontend.stdlib)
 }

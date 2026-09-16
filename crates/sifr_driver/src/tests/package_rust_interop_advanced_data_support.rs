@@ -52,7 +52,11 @@ fn test_check_advanced_data_schema_shape_device_mismatch_rejected() {
     install_evidence_source(&package_root, ADVANCED_DATA_NEGATIVE);
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "advanced-data-runtime");
 
-    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
+    let errors = check_package_project(
+        &crate::CompilerContext::for_test(),
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
 
     assert_eq!(
         errors.len(),

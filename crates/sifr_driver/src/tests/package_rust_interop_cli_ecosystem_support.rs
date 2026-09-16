@@ -25,7 +25,11 @@ fn test_build_cli_tooling_probe_and_anyhow_adapter() {
         ),
     );
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "cli-feature-package");
-    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
+    let errors = check_package_project(
+        &crate::CompilerContext::for_test(),
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.is_empty(),
         "bridge-safe CLI/tooling package must pass compiler checking: {errors:#?}"
@@ -66,6 +70,7 @@ fn test_check_direct_anyhow_surface_rejected() {
     let accepted_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "cli-feature-package");
     let accepted = check_package_project(
+        &crate::CompilerContext::for_test(),
         &accepted_entrypoint,
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -78,6 +83,7 @@ fn test_check_direct_anyhow_surface_rejected() {
     let rejected_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "cli-feature-package");
     let errors = check_package_project(
+        &crate::CompilerContext::for_test(),
         &rejected_entrypoint,
         &mut sifr_frontend::DiskSourceProvider::new(),
     );

@@ -2,9 +2,14 @@ use super::*;
 
 #[test]
 fn no_profile_sql_editor_preserves_snapshot_queries_after_update() {
-    let mut host =
-        AnalysisHost::open_single_file(single_file_input("def answer() -> int:\n    return 1\n"))
-            .expect("empty-profile host");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input("def answer() -> int:\n    return 1\n"),
+    )
+    .expect("empty-profile host");
     let file = host.files()[0];
     let snapshot = host.snapshot();
     assert!(
@@ -39,8 +44,14 @@ fn no_profile_sql_editor_preserves_snapshot_queries_after_update() {
 #[test]
 fn sql_templates_route_through_virtual_document_editor_queries() {
     let source = "@app.query\ndef query(user_id: int) -> Template:\n    return t\"SELECT users.name FROM users WHERE users.id = {user_id} LIMIT 1\"\n";
-    let mut host =
-        AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(source),
+    )
+    .expect("host should load");
     let file = host.files()[0];
     let users_position = TextPosition {
         line: 2,
@@ -107,6 +118,10 @@ fn lockfile_less_project_defers_sql_profiles_and_preserves_overlay_analysis() {
         entrypoint: SourcePath::new(entrypoint.clone()),
     };
     let mut host = AnalysisHost::open_project_with_overlays(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
         &root,
         vec![(
             SourcePath::new(entrypoint),
@@ -147,8 +162,14 @@ fn lockfile_less_project_defers_sql_profiles_and_preserves_disk_analysis() {
         root: SourcePath::new(dir.clone()),
         entrypoint: SourcePath::new(entrypoint),
     };
-    let mut host = AnalysisHost::open_project(&root)
-        .expect("SQL initialization must not abort direct project analysis");
+    let mut host = AnalysisHost::open_project(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        &root,
+    )
+    .expect("SQL initialization must not abort direct project analysis");
     let file = host.files()[0];
     assert!(
         host.document_symbols(file)

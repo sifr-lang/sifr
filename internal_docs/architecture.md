@@ -577,6 +577,18 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
 - `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds
 - `test_runner/`: test root discovery, generated test harness assembly, reusable cached Cargo test workspaces, and cargo test execution orchestration
 
+### Compiler and Native Invocation Identity
+
+Outer executables embed a canonical compiler input identity and inject
+sifr_driver::CompilerContext through driver, frontend and analysis/LSP
+constructors. Bare library tests compose compiled dependency-local tokens;
+common libraries do not embed the application-wide volatile identity.
+sifr_sysroot::NativeToolchain resolves explicit tools and effective Cargo
+configuration before temporary project creation. Native preparation, probes
+and builds retain this selection and expose its digest in build reports.
+See compiler_dx_architecture.md sections 4.2.2 and 8.1 for the constructor
+inventory and override contract.
+
 ### Generated Artifact Cache Boundary
 
 Generated artifact cache work moved `run`/`test` away from invocation-scoped temp directories as the default cache boundary.

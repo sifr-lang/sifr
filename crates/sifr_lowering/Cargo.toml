@@ -1,4 +1,5 @@
 [package]
+links = "sifr_lowering_compiled_identity"
 name = "sifr_lowering"
 version = "0.0.0"
 publish = false
@@ -25,3 +26,6 @@ insta = { workspace = true }
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

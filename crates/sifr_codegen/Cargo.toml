@@ -1,4 +1,5 @@
 [package]
+links = "sifr_codegen_compiled_identity"
 name = "sifr_codegen"
 version = "0.0.0"
 publish = false
@@ -31,3 +32,6 @@ tempfile = "3.27.0"
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

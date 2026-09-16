@@ -226,13 +226,13 @@ impl<'a> RustInteropResolver<'a> {
             probes: std::mem::take(&mut self.probes),
         };
         generated.interop.rust.bridge_sources = bridge_source_digests(self.context, package);
-        let mut cargo_input = cargo_inputs(self.context, package);
+        let mut cargo_input = cargo_inputs(self.cargo_resolution, self.context, package);
         if let Some(trust) = &self.context.sysroot_trust {
             if trust.package_id != self.context.package_id {
                 if let Some(sysroot_package) = self.context.graph.packages.get(&trust.package_id) {
                     cargo_input = combined_cargo_inputs(
                         cargo_input,
-                        cargo_inputs(self.context, sysroot_package),
+                        cargo_inputs(self.cargo_resolution, self.context, sysroot_package),
                     );
                 }
             }

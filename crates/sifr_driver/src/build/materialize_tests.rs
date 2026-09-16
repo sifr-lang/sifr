@@ -1,0 +1,329 @@
+use super::{
+    binary_project_cache_key, canonical_rust_module_path, materialize_binary_project_files,
+    should_validate_native_link_evidence, sysroot_trusted_native_links, trusted_native_links,
+    validate_native_link_evidence,
+};
+use crate::build::project_codegen::GeneratedBinaryProject;
+use crate::build::python_runtime::PackagePythonRuntime;
+use sifr_codegen::{
+    InteropBuildPlan, RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration,
+    RustInteropTrustRequirement, RustInteropTrustRequirementKind,
+};
+use sifr_ir::{
+    RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
+    RustInteropEffect, RustTargetPath,
+};
+use sifr_stdlib_manifest::{CargoVendorMode, StdlibFeature, SysrootDependencyPlan};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
+
+#[test]
+fn generated_module_paths_are_relative_and_cannot_escape() {
+    let bridge = canonical_rust_module_path(std::path::Path::new("__sifr_bridge/_sifr_fs.rs"));
+    assert!(matches!(
+        bridge.as_deref(),
+        Ok(path) if path == std::path::Path::new("sifr_generated_bridge/sifr_generated_fs.rs")
+    ));
+    let public = canonical_rust_module_path(std::path::Path::new("public/mod.rs"));
+    assert!(matches!(
+        public.as_deref(),
+        Ok(path) if path == std::path::Path::new("public/mod.rs")
+    ));
+    assert!(canonical_rust_module_path(std::path::Path::new("../escape.rs")).is_err());
+    assert!(canonical_rust_module_path(std::path::Path::new("/escape.rs")).is_err());
+}
+
+#[test]
+fn source_materialization_writes_a_complete_uncompiled_cargo_project() {
+    let root = std::env::temp_dir().join(format!(
+        "sifr_source_materialization_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    ));
+    let project_path = root.join("sifr_output");
+
+    materialize_binary_project_files(
+        &project_path,
+        "sifr_output",
+        base_project(),
+        &test_dependency_plan("fingerprint-a"),
+    )
+    .expect("source-only materialization should succeed");
+
+    assert!(project_path.join("Cargo.toml").is_file());
+    let main_rs = std::fs::read_to_string(project_path.join("src/main.rs"))
+        .expect("generated main should be readable");
+    assert!(main_rs.contains("fn main()"), "{main_rs}");
+    assert!(!project_path.join("target").exists());
+
+    let _ = std::fs::remove_dir_all(root);
+}
+
+#[test]
+fn rematerialization_removes_stale_generated_sources_but_preserves_target() {
+    let root = std::env::temp_dir().join(format!(
+        "sifr_source_rematerialization_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    ));
+    let project_path = root.join("sifr_output");
+    let stale_source = project_path.join("src/obsolete/generated.rs");
+    std::fs::create_dir_all(stale_source.parent().expect("stale source has a parent"))
+        .expect("stale source directory should be writable");
+    std::fs::write(&stale_source, "fn obsolete() {}\n").expect("stale source should be writable");
+    let target_marker = project_path.join("target/cache-marker");
+    std::fs::create_dir_all(target_marker.parent().expect("target marker has a parent"))
+        .expect("target directory should be writable");
+    std::fs::write(&target_marker, "preserve").expect("target marker should be writable");
+
+    materialize_binary_project_files(
+        &project_path,
+        "sifr_output",
+        base_project(),
+        &test_dependency_plan("fingerprint-a"),
+    )
+    .expect("rematerialization should succeed");
+
+    assert!(!stale_source.exists());
+    assert!(target_marker.is_file());
+    assert!(project_path.join("src/main.rs").is_file());
+    let _ = std::fs::remove_dir_all(root);
+}
+
+#[test]
+fn binary_project_cache_key_includes_package_cache_fragment() {
+    let base = base_project();
+    let mut with_python_probe = GeneratedBinaryProject {
+        cache_key_fragment: Some("python-probe-a".to_string()),
+        ..base
+    };
+    let dependency_plan = test_dependency_plan("fingerprint-a");
+    let first = binary_project_cache_key("sifr_output", &with_python_probe, &dependency_plan);
+    with_python_probe.cache_key_fragment = Some("python-probe-b".to_string());
+    let second = binary_project_cache_key("sifr_output", &with_python_probe, &dependency_plan);
+
+    assert_ne!(first, second);
+}
+
+#[test]
+fn binary_project_cache_key_includes_interop_build_plan() {
+    let base = base_project();
+    let mut with_interop = base_project();
+    with_interop.interop = InteropBuildPlan {
+        rust: RustInteropPlan {
+            declarations: vec![RustInteropPlanDeclaration {
+                module_name: Some("main".to_string()),
+                owner: RustInteropOwner::Function {
+                    name: "digest".to_string(),
+                },
+                declaration: RustInteropDeclaration {
+                    kind: RustInteropDecoratorKind::Function,
+                    target: Some(RustTargetPath {
+                        segments: vec![
+                            "bridge".to_string(),
+                            "hash".to_string(),
+                            "digest".to_string(),
+                        ],
+                        span: Default::default(),
+                    }),
+                    arguments: Vec::new(),
+                    span: Default::default(),
+                    effect: RustInteropEffect::Sync,
+                    abi_requirements: RustInteropAbiRequirements::default(),
+                    consumes_receiver: false,
+                },
+            }],
+            ..RustInteropPlan::default()
+        },
+        ..InteropBuildPlan::default()
+    };
+
+    assert_ne!(
+        binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-a")),
+        binary_project_cache_key(
+            "sifr_output",
+            &with_interop,
+            &test_dependency_plan("fingerprint-a")
+        )
+    );
+}
+
+#[test]
+fn binary_project_cache_key_includes_sysroot_dependency_plan() {
+    let base = base_project();
+
+    assert_ne!(
+        binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-a")),
+        binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-b"))
+    );
+}
+
+#[test]
+fn binary_project_cache_key_uses_sysroot_dependency_plan_inputs() {
+    let base = base_project();
+    let mut dependency_plan = test_dependency_plan("fingerprint-a");
+    dependency_plan.stdlib_modules = BTreeSet::from(["sifr.json".to_string()]);
+    dependency_plan.required_features = BTreeSet::from([StdlibFeature::SerdeJson]);
+
+    let cache_key = binary_project_cache_key("sifr_output", &base, &dependency_plan);
+
+    assert_eq!(cache_key.len(), 64);
+    dependency_plan.stdlib_modules.insert("sifr.math".into());
+    assert_ne!(
+        cache_key,
+        binary_project_cache_key("sifr_output", &base, &dependency_plan)
+    );
+}
+
+#[test]
+fn native_link_evidence_rejects_untrusted_build_script_output() {
+    let stdout = br#"{"reason":"build-script-executed","linked_libs":["dylib=ssl"]}"#;
+    let diagnostics = validate_native_link_evidence(stdout, &BTreeSet::new())
+        .expect_err("untrusted link evidence should fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
+
+    let trusted = BTreeSet::from(["ssl".to_string()]);
+    validate_native_link_evidence(stdout, &trusted).expect("trusted link should pass");
+}
+
+#[test]
+fn native_link_evidence_policy_skips_non_rust_interop_projects() {
+    let mut project = base_project();
+    assert!(!should_validate_native_link_evidence(&project));
+
+    project
+        .interop
+        .rust
+        .trust_requirements
+        .push(RustInteropTrustRequirement {
+            canonical_target_path: "openssl::ssl".to_string(),
+            kind: RustInteropTrustRequirementKind::NativeLinks,
+            trusted: true,
+            required_entry: "ssl".to_string(),
+            evidence: "links=ssl".to_string(),
+        });
+    assert!(should_validate_native_link_evidence(&project));
+}
+
+#[test]
+fn python_runtime_libpython_link_is_trusted_when_interop_validation_runs() {
+    let mut project = base_project();
+    let mut python_runtime = PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
+    python_runtime.set_libpython_for_tests("/opt/python/lib/libpython3.14.dylib");
+    project.python_runtime = Some(python_runtime);
+    project
+        .interop
+        .rust
+        .trust_requirements
+        .push(RustInteropTrustRequirement {
+            canonical_target_path: "::sifr_stdlib::html::html_escape".to_string(),
+            kind: RustInteropTrustRequirementKind::NativeLinks,
+            trusted: true,
+            required_entry: "ssl".to_string(),
+            evidence: "links=ssl".to_string(),
+        });
+
+    let stdout = br#"{"reason":"build-script-executed","linked_libs":["dylib=python3.14"]}"#;
+    validate_native_link_evidence(
+        stdout,
+        &trusted_native_links(&project, &test_dependency_plan("fingerprint-a")),
+    )
+    .expect("selected Python runtime link should be trusted");
+}
+
+#[test]
+fn sysroot_tls_native_link_evidence_is_explicitly_trusted() {
+    let mut dependency_plan = test_dependency_plan("fingerprint-a");
+    dependency_plan
+        .crates
+        .push(sifr_stdlib_manifest::SysrootCrateDependency {
+            krate: sifr_stdlib_manifest::SysrootCrate::SifrStdlib,
+            path: "/sysroot/crates/sifr_stdlib".into(),
+            features: BTreeSet::from(["tls".to_string()]),
+        });
+
+    let trusted = sysroot_trusted_native_links(&dependency_plan);
+    assert_eq!(
+        trusted,
+        BTreeSet::from(["aws_lc_0_44_0_crypto".to_string()])
+    );
+
+    let stdout =
+        br#"{"reason":"build-script-executed","linked_libs":["static=aws_lc_0_44_0_crypto"]}"#;
+    validate_native_link_evidence(stdout, &trusted)
+        .expect("sysroot-selected TLS provider link should pass");
+
+    let untrusted = br#"{"reason":"build-script-executed","linked_libs":["static=crypto"]}"#;
+    validate_native_link_evidence(untrusted, &trusted)
+        .expect_err("unrelated native links must still fail");
+}
+
+#[test]
+fn sysroot_http_native_link_evidence_inherits_tls_provider_trust() {
+    let mut dependency_plan = test_dependency_plan("fingerprint-a");
+    dependency_plan
+        .crates
+        .push(sifr_stdlib_manifest::SysrootCrateDependency {
+            krate: sifr_stdlib_manifest::SysrootCrate::SifrStdlib,
+            path: "/sysroot/crates/sifr_stdlib".into(),
+            features: BTreeSet::from(["http".to_string()]),
+        });
+
+    let trusted = sysroot_trusted_native_links(&dependency_plan);
+    assert_eq!(
+        trusted,
+        BTreeSet::from(["aws_lc_0_44_0_crypto".to_string()])
+    );
+}
+
+pub(super) fn base_project() -> GeneratedBinaryProject {
+    GeneratedBinaryProject {
+        main_rs: "fn main() {}\n".to_string(),
+        support_modules: BTreeMap::new(),
+        used_stdlib_modules: HashSet::new(),
+        required_features: HashSet::new(),
+        interop: InteropBuildPlan::default(),
+        cache_key_fragment: None,
+        bridge_modules: BTreeMap::new(),
+        python_runtime: None,
+    }
+}
+
+pub(super) fn test_dependency_plan(cache_fingerprint: &str) -> SysrootDependencyPlan {
+    SysrootDependencyPlan {
+        stdlib_modules: BTreeSet::new(),
+        required_features: BTreeSet::new(),
+        sysroot_root: "/sysroot".into(),
+        toolchain_id: "0.1.0-test-aarch64-test".to_string(),
+        sysroot_content_sha256: "0".repeat(64),
+        cargo_config: "/sysroot/.cargo/config.toml".into(),
+        vendor_dir: "/sysroot/vendor".into(),
+        crates: Vec::new(),
+        retained_direct_dependencies: Vec::new(),
+        cargo_vendor_mode: CargoVendorMode::SysrootOnly,
+        cache_fingerprint: cache_fingerprint.to_string(),
+    }
+}
+
+#[test]
+fn native_source_identity_distinguishes_support_and_bridge_roles() {
+    let mut support = base_project();
+    support
+        .support_modules
+        .insert("same".into(), "pub fn same() {}".into());
+    let mut bridge = base_project();
+    bridge
+        .bridge_modules
+        .insert("same".into(), "pub fn same() {}".into());
+    let plan = test_dependency_plan("fingerprint-a");
+    assert_ne!(
+        binary_project_cache_key("app", &support, &plan),
+        binary_project_cache_key("app", &bridge, &plan)
+    );
+}

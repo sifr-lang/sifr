@@ -114,6 +114,8 @@ impl BuildSysrootReport {
 
 #[derive(Clone, Debug)]
 pub struct BuildReport {
+    compiler_identity: String,
+    native_toolchain_identity: Option<String>,
     entrypoint_path: PathBuf,
     mode: BuildCompilationMode,
     target: &'static str,
@@ -129,6 +131,8 @@ pub struct BuildReport {
 
 #[derive(Clone, Debug)]
 pub struct BuildReportInput {
+    pub compiler_identity: String,
+    pub native_toolchain_identity: Option<String>,
     pub entrypoint_path: PathBuf,
     pub mode: BuildCompilationMode,
     pub sysroot: BuildSysrootReport,
@@ -182,8 +186,17 @@ pub enum PythonEnvironmentCheck {
 }
 
 impl BuildReport {
+    pub fn compiler_identity(&self) -> &str {
+        &self.compiler_identity
+    }
+    pub fn native_toolchain_identity(&self) -> Option<&str> {
+        self.native_toolchain_identity.as_deref()
+    }
+
     pub fn new(input: BuildReportInput) -> Self {
         let BuildReportInput {
+            compiler_identity,
+            native_toolchain_identity,
             entrypoint_path,
             mode,
             sysroot,
@@ -195,6 +208,8 @@ impl BuildReport {
             query_signature_artifact_path,
         } = input;
         Self {
+            compiler_identity,
+            native_toolchain_identity,
             entrypoint_path,
             mode,
             target: "release native",

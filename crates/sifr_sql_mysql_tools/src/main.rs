@@ -35,11 +35,14 @@ async fn main() -> ExitCode {
         )
         .await
         .map(|outcome| (outcome.exit_code, outcome.stdout)),
-        Some("migration") => {
-            run_migration_command(&arguments, &workspace_root, connection.as_deref())
-                .await
-                .map(|outcome| (outcome.exit_code, outcome.stdout))
-        }
+        Some("migration") => run_migration_command(
+            &compiler_context(),
+            &arguments,
+            &workspace_root,
+            connection.as_deref(),
+        )
+        .await
+        .map(|outcome| (outcome.exit_code, outcome.stdout)),
         Some("test") => run_test_command(&arguments, &workspace_root, connection.as_deref())
             .await
             .map(|stdout| (0, stdout)),
@@ -101,4 +104,18 @@ async fn run_test_command(
 fn fail(message: &str) -> ExitCode {
     let _ = writeln!(std::io::stderr(), "{message}");
     ExitCode::FAILURE
+}
+
+fn compiler_context() -> sifr_driver::CompilerContext {
+    if cfg!(test) {
+        return sifr_driver::CompilerContext::for_test_tokens(
+            vec![(env!("CARGO_PKG_NAME"), env!("SIFR_LOCAL_INPUT_TOKEN"))],
+            "sql-tool-unit",
+        );
+    }
+    let identity = match sifr_identity::CompilerIdentity::product(env!("SIFR_COMPILER_BUILD_ID")) {
+        Ok(identity) => identity,
+        Err(error) => panic!("{error}"),
+    };
+    sifr_driver::CompilerContext::new(identity)
 }

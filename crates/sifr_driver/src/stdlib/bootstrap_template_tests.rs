@@ -137,7 +137,8 @@ fn stdlib_structural_templates_retain_signatures_without_bodies() {
 
 #[test]
 fn recursive_json_structural_contracts_follow_the_shared_project_owner() {
-    let compiled = compile_stdlib().expect("real complete stdlib");
+    let compiled =
+        compile_stdlib(&crate::CompilerContext::for_test()).expect("real complete stdlib");
     let source = include_str!(
         "../../../../verification/areas/rust_interop/fixtures/structural_bridge_calls/examples/structural_bridge_runtime/src/main.sifr"
     );

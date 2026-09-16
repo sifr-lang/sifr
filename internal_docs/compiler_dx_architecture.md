@@ -141,6 +141,35 @@ This is the documented source-tree test identity rule, not a second semantic alg
 
 Library API tests needing no real stdlib continue to inject small fixture providers. Tests requiring the real producer obtain it from their existing outer driver/integration owner, without reverse production dependencies. Build-time token helpers do not compile stdlib. Byte-change, feature-change and dependency-change tests must demonstrate identity correctness for bare Cargo tests as well as the CLI. [D5]
 
+### 4.2.2 Implemented constructor inventory (DX.2)
+
+The stateless sifr_identity crate owns canonical SHA-256 records and distinct
+compiler, semantic-target, stdlib-input, metadata, native-build and validation
+types. Its build-only module walks sorted source inventories without Git.
+Package-local build scripts emit source/configuration tokens and Cargo links
+metadata composes the actual dependency closure. The outer sifr/build.rs
+embeds the aggregate CLI identity; each SQL migration tool binary also
+embeds an outer identity because it directly invokes the compiler.
+
+| Constructor owner | Identity and lifetime |
+| --- | --- |
+| sifr/src/main.rs::compiler_context; CLI build/check/run/test/emit/trace | Embedded product identity; unit builds use the compiled CLI dependency closure and cfg(test) token |
+| SQL MySQL/PostgreSQL/SQLite tool main.rs::compiler_context | Embedded outer product identity passed into the library migration API; unit context uses linked driver tokens |
+| sifr_driver::CompilerContext::new | Caller-supplied immutable identity and pinned sysroot; process-local stdlib ownership keyed by both |
+| sifr_driver::CompilerContext::for_test[_tokens]; driver unit/integration callers | Compiled driver producer closure, optionally extended by the owning harness; no installed CLI or recursive producer build |
+| sifr_analysis::AnalysisHost::open_* and internal constructors | Required compiler context propagated into the frontend session before queries; analysis tests extend driver tokens with the analysis closure |
+| sifr_lsp::run_stdio_with_identity; workspace/session | CLI product identity pinned for the session and document/project replacement; embedded library convenience entrypoint uses the compiled LSP test-family identity |
+| sifr_frontend::FrontendContext loaders and WorkspaceSession constructors | Pure-library fixture family from compiled frontend tokens; real compiler/analysis owners inject their context through consuming with_compiler_identity before use |
+| CompilerFingerprint::current | Pure-frontend fixture fingerprint; production reuse derives for_identity from its owning context |
+
+All direct driver real-stdlib APIs require a CompilerContext. Fixture-only
+frontend, lint and format consumers do not acquire driver dependencies.
+Dependency tokens include per-crate cfg(test) distinctions and build feature,
+target, profile, flags and rustc inputs. Source inputs are read only by build
+scripts; installed identity inspection never scans the checkout or hashes the
+running Sifr executable. Test/product identity overrides must match both kind
+and compiled digest. Actual binary integrity remains a separate package digest.
+
 ### 4.3 Stable semantic identity
 
 Persist artifact-local declaration/type/source IDs with explicit tables. Decode and intern them through normal compiler identity rules. Include package/version/source identity where nominal semantics require it; a bare class or module name is insufficient. No persisted pointer, arena index, allocation-order ID, or process-specific source-map number is an identity contract.
@@ -326,6 +355,26 @@ Resolve one immutable `NativeBuildContext` before preparing a generated project.
 Internal temporary projects must not accidentally inherit an unrelated working directory's toolchain or Cargo configuration. Intentionally supported workspace/user configuration remains supported and appears in the effective context. Existing package/network/offline rules remain in force; no implicit online resolution is added to a check. Unknown build-affecting configuration cannot silently share a trusted-ready artifact.
 
 `doctor` validates the selected toolchain, not an unrelated `rustc` earlier on shell PATH. Build, check-probe, metadata, test and portable-export paths consume the same context rather than independently constructing `Command::new("cargo")` policies.
+
+DX.2 implements this boundary with sifr_sysroot::NativeToolchain and
+NativeBuildContext. Resolve in the intentional caller/package root before
+materializing temporary projects. SIFR_RUST_TOOLCHAIN selects an installed
+rustup toolchain; paired absolute SIFR_CARGO/SIFR_RUSTC overrides select
+explicit executables. A one-sided or unavailable selection fails. Cargo and
+rustc versions, executable digests, target, supported native environment and
+Cargo configuration bytes participate in identity. Only selected build
+environment names are hashed; debug/CLI reports expose identities and tool
+paths, not secret values.
+
+Preparation, interop probes, generated builds/tests, package metadata and
+host-tool Cargo commands consume resolved tool selections. Generated commands
+use explicit manifests from the original configuration root; their private
+target destination is explicit. Cargo-reported executable paths are published
+at Sifr's stable artifact path. Application build remains release and generated
+test remains Cargo's test profile. The --print native-context --json command
+and doctor inspect the selected tools; build reports retain compiler and native
+toolchain identities. Persistent metadata production/storage and changed
+application profile defaults remain later milestones.
 
 ### 8.2 Compatible native storage
 
