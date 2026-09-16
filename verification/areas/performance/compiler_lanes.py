@@ -116,3 +116,26 @@ def assert_comparable(expected: dict[str, Any], actual: dict[str, Any]) -> None:
     for key in ("lane", "compiler_build_profile", "application_profile", "verification_selection"):
         if expected.get(key) is None or expected.get(key) != actual.get(key):
             raise BenchmarkError(f"incomparable measurement: {key}")
+
+
+def validate_measurement_rows(manifest, report):
+    cases = {case["id"]: case for case in manifest["cases"]}
+    measurement = report.get("metadata", {}).get("compiler_measurement", {})
+    lane = measurement.get("lane")
+    if lane not in LANES or measurement.get("compiler_build_profile") != LANES[lane]:
+        raise BenchmarkError("incomparable compiler lane/profile")
+    for row in report["results"]:
+        case = cases.get(row["id"])
+        if case is None:
+            raise BenchmarkError("unknown measurement case")
+        expected = {
+            "lane": lane, "compiler_build_profile": LANES[lane],
+            "application_profile": "release" if case.get("mode") == "build" else "not-applicable",
+            "verification_selection": case["id"],
+        }
+        assert_comparable(expected, {
+            "lane": row.get("compiler_measurement_lane"),
+            "compiler_build_profile": row.get("compiler_build_profile"),
+            "application_profile": row.get("application_profile"),
+            "verification_selection": row.get("verification_selection"),
+        })

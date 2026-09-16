@@ -13,6 +13,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from compiler_lanes import validate_measurement_rows
+from benchmark_manifest import BenchmarkError
 from reference_profiles import ReferenceProfileError, load_profile, validate_result_profile, validate_manifest_binding, reference_budget_results
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -83,6 +85,8 @@ def main() -> int:
             results = load_json(Path(args.results))
             if results.get("metadata", {}).get("reference_profile"):
                 raise ReferenceProfileError("select a named reference profile for qualification")
+        if args.results != str(DEFAULT_BASELINES):
+            validate_measurement_rows(manifest, results)
         if reference is None and args.results != str(DEFAULT_BASELINES):
             validate_legacy_measurement_scope(results)
         measurement = results.get("metadata", {}).get("compiler_measurement", {})
@@ -107,7 +111,7 @@ def main() -> int:
         )
         print("performance budget check passed")
         return 0
-    except (BudgetError, ReferenceProfileError) as error:
+    except (BudgetError, ReferenceProfileError, BenchmarkError) as error:
         print(f"performance budget error: {error}", file=sys.stderr)
         return 1
 

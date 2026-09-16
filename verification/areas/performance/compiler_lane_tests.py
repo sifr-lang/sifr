@@ -76,6 +76,17 @@ def run_self_test():
         bad[section][key] = value
         if not comparison_mismatches(identity, bad):
             raise AssertionError(f"Q08 accepted cross-lane {section}.{key}")
+    manifest = {"cases": [{"id": "native", "mode": "build"}]}
+    report = {"metadata": {"compiler_measurement": {
+        "lane": "contributor-dev", "compiler_build_profile": "dev"}},
+        "results": [{"id": "native", "compiler_measurement_lane": "contributor-dev",
+                     "compiler_build_profile": "dev", "application_profile": "release",
+                     "verification_selection": "native"}]}
+    compiler_lanes.validate_measurement_rows(manifest, report)
+    for key in ("application_profile", "compiler_build_profile", "verification_selection"):
+        bad = deepcopy(report)
+        bad["results"][0][key] = "mislabeled"
+        rejected(lambda: compiler_lanes.validate_measurement_rows(manifest, bad), key)
     comparison = {"lane": "contributor-dev", "compiler_build_profile": "dev",
                   "application_profile": "release", "verification_selection": "same"}
     compiler_lanes.assert_comparable(comparison, comparison)
