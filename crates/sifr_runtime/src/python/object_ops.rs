@@ -59,8 +59,17 @@ pub fn resolve_target(segments: &[String]) -> Result<ObjectHandle, PythonError> 
         let mut last_error = None;
         for split in (1..segments.len()).rev() {
             let module_name = segments[..split].join(".");
-            let Ok(module) = py.import(&module_name) else {
-                continue;
+            let module = match py.import(&module_name) {
+                Ok(module) => module,
+                Err(error) if missing_target_module(py, &error, &module_name) => continue,
+                Err(error) => {
+                    return Err(PythonError::from_pyerr(
+                        py,
+                        error,
+                        "import",
+                        segments.join("."),
+                    ));
+                }
             };
             let mut value = module.into_any();
             let mut failed = false;
@@ -94,6 +103,20 @@ pub fn resolve_target(segments: &[String]) -> Result<ObjectHandle, PythonError> 
         ))
     })
     .map_err(PythonError::runtime)?
+}
+
+// A dotted target may end in attributes rather than importable modules. Only
+// absence of that candidate module permits trying a shorter module prefix.
+// Exceptions raised while loading a real module must retain their traceback.
+fn missing_target_module(py: Python<'_>, error: &PyErr, candidate: &str) -> bool {
+    if !error.is_instance_of::<pyo3::exceptions::PyModuleNotFoundError>(py) {
+        return false;
+    }
+    error
+        .value(py)
+        .getattr("name")
+        .and_then(|name| name.extract::<String>())
+        .is_ok_and(|name| candidate == name || candidate.starts_with(&format!("{name}.")))
 }
 
 pub fn expect_instance(

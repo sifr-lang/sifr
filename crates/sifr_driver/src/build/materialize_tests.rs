@@ -327,3 +327,49 @@ fn native_source_identity_distinguishes_support_and_bridge_roles() {
         binary_project_cache_key("app", &bridge, &plan)
     );
 }
+
+#[test]
+fn python_native_loader_materialization_preserves_selection_and_removes_stale_script() {
+    let root = std::env::temp_dir().join(format!(
+        "sifr_python_native_loader_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("clock")
+            .as_nanos()
+    ));
+    let local = root.join("local");
+    let portable = root.join("portable");
+    let plan = test_dependency_plan("python-loader");
+    let mut project = base_project();
+    let mut python = PackagePythonRuntime::for_tests("/opt/python/bin/python", "probe");
+    python.set_libpython_for_tests("/opt/a python/lib/libpython3.14.so");
+    project.python_runtime = Some(python.clone());
+    let first_key = binary_project_cache_key("sifr_output", &project, &plan);
+    python.set_libpython_for_tests("/opt/another python/lib/libpython3.14.so");
+    project.python_runtime = Some(python);
+    assert_ne!(
+        first_key,
+        binary_project_cache_key("sifr_output", &project, &plan)
+    );
+    materialize_binary_project_files(&local, "sifr_output", project, &plan)
+        .expect("Python project should materialize");
+    let script = std::fs::read_to_string(local.join("build.rs")).expect("loader script");
+    assert!(script.contains("\"/opt/another python/lib\""));
+    assert!(script.contains("\"-Xlinker\", \"-rpath\", \"-Xlinker\""));
+    std::fs::write(local.join("Cargo.lock"), "version = 4\n").expect("lock");
+    crate::build::portable_project::publish_portable_project(&local, &portable)
+        .expect("portable publication should preserve loader script");
+    assert_eq!(
+        std::fs::read_to_string(portable.join("build.rs")).expect("published loader script"),
+        script
+    );
+
+    materialize_binary_project_files(&local, "sifr_output", base_project(), &plan)
+        .expect("non-Python project should rematerialize");
+    assert!(!local.join("build.rs").exists());
+    crate::build::portable_project::publish_portable_project(&local, &portable)
+        .expect("portable publication should remove obsolete loader script");
+    assert!(!portable.join("build.rs").exists());
+    std::fs::remove_dir_all(root).expect("remove owned test fixture");
+}

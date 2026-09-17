@@ -373,7 +373,7 @@ at Sifr's stable artifact path. Application build remains release and generated
 test remains Cargo's test profile. The --print native-context --json command
 and doctor inspect the selected tools; build reports retain compiler and native
 toolchain identities. Persistent metadata production/storage and changed
-application profile defaults remain unchanged by this context contract.
+application profile defaults remain unchanged by this context contract. Selected Python shared-library directories are retained in generated Unix loader paths and in native artifact identity, so link-time interpreter selection also governs normal execution.
 
 ### 8.2 Compatible native storage
 

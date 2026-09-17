@@ -296,6 +296,24 @@ fn materialize_binary_project_files(
 
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
+    let loader_script = generated_project
+        .python_runtime
+        .as_ref()
+        .map(super::python_runtime::PackagePythonRuntime::native_loader_build_script)
+        .transpose()
+        .map_err(|message| vec![build_error(message)])?
+        .flatten();
+    let build_script = project_path.join("build.rs");
+    if let Some(source) = loader_script {
+        write_project_file(&build_script, source, "Python loader build script")?;
+    } else if build_script.exists() {
+        std::fs::remove_file(&build_script).map_err(|error| {
+            vec![build_error(format!(
+                "failed to remove obsolete Python loader build script: {error}"
+            ))]
+        })?;
+    }
+
     let main_rs = format!(
         "{}{}",
         generated_project.bridge_root_declaration(),
@@ -602,7 +620,7 @@ fn binary_project_cache_key(
     generated_project: &GeneratedBinaryProject,
     dependency_plan: &SysrootDependencyPlan,
 ) -> String {
-    let mut identity = sifr_identity::IdentityEncoder::new("native-project-source-v1");
+    let mut identity = sifr_identity::IdentityEncoder::new("native-project-source-v2");
     identity.field("project", project_name.as_bytes());
     identity.field(
         "manifest",
@@ -614,6 +632,15 @@ fn binary_project_cache_key(
         .as_bytes(),
     );
     identity.field("main", generated_project.main_rs.as_bytes());
+    identity.field(
+        "python-selected-library",
+        generated_project
+            .python_runtime
+            .as_ref()
+            .and_then(super::python_runtime::PackagePythonRuntime::selected_library)
+            .unwrap_or("")
+            .as_bytes(),
+    );
     for (name, code) in &generated_project.support_modules {
         identity.field("support-name", name.as_bytes());
         identity.field("support-source", code.as_bytes());

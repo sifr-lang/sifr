@@ -323,3 +323,66 @@ fn opaque_factory_instance_mismatch_releases_the_rejected_identity() {
         }
     );
 }
+
+#[test]
+fn declaration_target_preserves_import_failures_and_resolves_nested_attributes() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    let prefix = "__sifr_bridge__.p_target_errors";
+    let mut config = test_config("declaration-target-import-errors");
+    config.bridge_sources = [
+        ("__sifr_bridge__".to_string(), "", true),
+        (prefix.to_string(), "", true),
+        (
+            format!("{prefix}.broken"),
+            "raise RuntimeError('original import failure')\n",
+            false,
+        ),
+        (
+            format!("{prefix}.missing"),
+            "import sifr_missing_decl_dependency\n",
+            false,
+        ),
+        (
+            format!("{prefix}.valid"),
+            "class Outer:\n    class Inner:\n        VALUE = 42\n",
+            false,
+        ),
+    ]
+    .into_iter()
+    .map(|(module, source, is_package)| super::PythonBridgeSource {
+        filename: format!("<{module}>"),
+        module,
+        source: source.to_string(),
+        is_package,
+        package_prefix: prefix.to_string(),
+    })
+    .collect();
+    initialize_runtime(config).expect("runtime should initialize");
+
+    for (module, exception, message) in [
+        ("broken", "RuntimeError", "original import failure"),
+        (
+            "missing",
+            "ModuleNotFoundError",
+            "sifr_missing_decl_dependency",
+        ),
+    ] {
+        let target = format!("{prefix}.{module}.call");
+        let segments = target.split('.').map(str::to_string).collect::<Vec<_>>();
+        let error = resolve_target(&segments).expect_err("module import must fail");
+        assert_eq!(error.kind, "import");
+        assert_eq!(error.exception_type, exception);
+        assert!(error.message.contains(message), "{}", error.message);
+        assert!(error.traceback.contains(message), "{}", error.traceback);
+        assert_eq!(error.context, target);
+    }
+
+    let segments = format!("{prefix}.valid.Outer.Inner.VALUE")
+        .split('.')
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+    let value = resolve_target(&segments).expect("nested attributes should resolve");
+    assert_eq!(to_int(&value).expect("integer attribute"), 42);
+    close_object(value).expect("resolved handle should close");
+}
