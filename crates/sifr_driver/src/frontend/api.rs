@@ -95,7 +95,7 @@ pub fn check(compiler: &crate::CompilerContext, source: &str) -> Vec<RenderedDia
     type_check_source(compiler, source)
 }
 
-fn generated_source_map_files(rust_source: &str) -> Vec<GeneratedSourceMapFile> {
+pub(crate) fn generated_source_map_files(rust_source: &str) -> Vec<GeneratedSourceMapFile> {
     let mut files = Vec::new();
     if let Some(source) = generated_support_source(rust_source) {
         files.push(GeneratedSourceMapFile {

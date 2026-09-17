@@ -146,15 +146,19 @@
     {
       "surface_id": "sysroot_release_installed_toolchain",
       "profiles": {
-        "create-pr": [],
-        "merge": ["sysroot_release:host-installed-smoke"],
+        "create-pr": ["sysroot_release:metadata-structural"],
+        "merge": ["sysroot_release:host-installed-smoke", "sysroot_release:metadata-structural", "sysroot_release:metadata-corpus"],
         "nightly": [
           "sysroot_release:host-installed-smoke",
-          "sysroot_release:host-installed-stdlib-heavy"
+          "sysroot_release:host-installed-stdlib-heavy",
+          "sysroot_release:metadata-structural",
+          "sysroot_release:metadata-corpus"
         ],
         "release": [
           "sysroot_release:host-installed-smoke",
-          "sysroot_release:host-installed-stdlib-heavy"
+          "sysroot_release:host-installed-stdlib-heavy",
+          "sysroot_release:metadata-structural",
+          "sysroot_release:metadata-corpus"
         ]
       }
     },

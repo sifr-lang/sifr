@@ -37,7 +37,7 @@ impl StdlibCompiled {
         };
         let requested = modules
             .into_iter()
-            .flat_map(|module| module.imports.iter().map(|import| import.module.clone()))
+            .flat_map(sifr_codegen::stdlib_module_roots)
             .collect::<Vec<_>>();
         let sysroot = self.interop.sysroot.as_ref().ok_or_else(|| {
             vec![crate::diagnostics::diagnostic_with_code(

@@ -47,7 +47,8 @@ pub(super) fn project(
         let rendered = ident.to_string();
         let source_name = constants
             .iter()
-            .find(|(_, (_, name))| name == &rendered)
+            .filter(|(_, (_, name))| name == &rendered)
+            .min_by_key(|(name, _)| *name)
             .map(|(name, _)| name.as_str())
             .unwrap_or_else(|| rendered.strip_prefix("r#").unwrap_or(&rendered));
         let name = source_name.encode(cx)?;
@@ -94,13 +95,17 @@ pub(super) fn project(
     }
     let boundary = cx.records.intern(&wire::FragmentBoundary::StdlibModule)?;
     let identity = cx.compatibility;
-    let validation = cx.records.intern(&wire::FragmentValidation {
-        bytes_digest: Sha256::digest(rust.rust.as_bytes()).into(),
-        compiler_identity: identity.compiler,
-        target_identity: identity.semantic_target,
-        grammar_identity: Sha256::digest(b"syn-stdlib-module-v1").into(),
-        boundary,
-    })?;
+    let validation = wire::Ref::anchor(&[&module.id(), b"rust-validation"]);
+    cx.records.insert(
+        validation,
+        &wire::FragmentValidation {
+            bytes_digest: Sha256::digest(rust.rust.as_bytes()).into(),
+            compiler_identity: identity.compiler,
+            target_identity: identity.semantic_target,
+            grammar_identity: Sha256::digest(b"syn-stdlib-module-v1").into(),
+            boundary,
+        },
+    )?;
     let source = rust.rust.encode(cx)?;
     let generators = compiled
         .code
@@ -109,13 +114,17 @@ pub(super) fn project(
         .cloned()
         .unwrap_or_default()
         .encode(cx)?;
-    let payload = cx.records.intern(&wire::RustPayload {
-        module,
-        source,
-        names,
-        mappings,
-        validation,
-        generators,
-    })?;
+    let payload = wire::Ref::anchor(&[&module.id(), b"rust-payload"]);
+    cx.records.insert(
+        payload,
+        &wire::RustPayload {
+            module,
+            source,
+            names,
+            mappings,
+            validation,
+            generators,
+        },
+    )?;
     Ok((Some(payload), support))
 }

@@ -72,7 +72,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_contract",
         "package": "sifr_sql_contract",
@@ -88,7 +87,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_mysql",
         "package": "sifr_sql_mysql",
@@ -104,7 +102,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_sqlite",
         "package": "sifr_sql_sqlite",
@@ -120,7 +117,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_postgresql",
         "package": "sifr_sql_postgresql",
@@ -136,7 +132,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_diagnostics",
         "package": "sifr_diagnostics",
@@ -725,7 +720,9 @@
       "area": "sysroot_release",
       "suites": [
         "host-installed-smoke",
-        "boundary-equivalence"
+        "boundary-equivalence",
+        "metadata-structural",
+        "metadata-corpus"
       ],
       "resource_classes": [
         "default-local",

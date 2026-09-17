@@ -6,6 +6,7 @@ mod decode;
 mod navigation;
 mod nominal;
 mod provider;
+mod qualification;
 mod selection;
 mod semantic;
 mod support;
@@ -63,3 +64,11 @@ impl<'a> Decoder<'a> {
 }
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod corpus_tests;
+
+#[cfg(all(test, unix))]
+mod generation_tests;
+
+pub use qualification::qualify_development_metadata;

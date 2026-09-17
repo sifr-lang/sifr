@@ -358,17 +358,8 @@ impl Demand<'_> {
             HirExpr::IntrinsicCall { intrinsic, .. } => {
                 // Builtin open has no imported HIR declaration. Its generated
                 // constructor and Drop support have explicit declaration owners.
-                match intrinsic {
-                    CompilerIntrinsicId::OpenBinary | CompilerIntrinsicId::OpenText => {
-                        self.symbol("_sifr.fs", "_open_file");
-                        self.symbol("_sifr.fs", "_file_close");
-                        self.symbol("sifr.io", "FileHandle");
-                        self.symbol("sifr.io", "BinaryFileHandle");
-                        if *intrinsic == CompilerIntrinsicId::OpenText {
-                            self.symbol("sifr.io", "TextFileHandle");
-                        }
-                    }
-                    _ => {}
+                for (module, symbol) in builtin_symbols(*intrinsic) {
+                    self.symbol(module, symbol);
                 }
                 if let Some(owners) = self.intrinsics.get(intrinsic).cloned() {
                     for (owner, name) in owners {
@@ -395,4 +386,59 @@ impl Demand<'_> {
             _ => {}
         }
     }
+}
+
+fn builtin_symbols(intrinsic: CompilerIntrinsicId) -> &'static [(&'static str, &'static str)] {
+    match intrinsic {
+        CompilerIntrinsicId::OpenBinary => &[
+            ("_sifr.fs", "_open_file"),
+            ("_sifr.fs", "_file_close"),
+            ("sifr.io", "FileHandle"),
+            ("sifr.io", "BinaryFileHandle"),
+        ],
+        CompilerIntrinsicId::OpenText => &[
+            ("_sifr.fs", "_open_file"),
+            ("_sifr.fs", "_file_close"),
+            ("sifr.io", "FileHandle"),
+            ("sifr.io", "BinaryFileHandle"),
+            ("sifr.io", "TextFileHandle"),
+        ],
+        _ => &[],
+    }
+}
+/// Module demand before payload loading, including compiler-owned builtin roots.
+pub fn stdlib_module_roots(module: &HirModule) -> Vec<String> {
+    let mut roots = module
+        .imports
+        .iter()
+        .map(|import| import.module.clone())
+        .collect::<BTreeSet<_>>();
+    let mut visit = |node: sifr_ir::HirNode<'_>| {
+        if let sifr_ir::HirNode::Expr(HirExpr::IntrinsicCall { intrinsic, .. }) = node {
+            roots.extend(
+                builtin_symbols(*intrinsic)
+                    .iter()
+                    .map(|(module, _)| (*module).to_owned()),
+            );
+        }
+    };
+    for function in &module.functions {
+        sifr_ir::visit_hir_function(function, &mut visit);
+    }
+    for class in &module.classes {
+        for (_, value) in &class.field_defaults {
+            sifr_ir::visit_hir_expr(value, &mut visit);
+        }
+        for method in class
+            .methods
+            .iter()
+            .chain(class.operator_impls.iter().map(|(_, method)| method))
+        {
+            sifr_ir::visit_hir_function(method, &mut visit);
+        }
+    }
+    for (_, _, value) in &module.constants {
+        sifr_ir::visit_hir_expr(value, &mut visit);
+    }
+    roots.into_iter().collect()
 }

@@ -8,3 +8,6 @@ pub use api::{
 pub(crate) use api::FrontendCompiled;
 #[cfg(test)]
 pub(crate) use sifr_frontend::FrontendDiagnosticStyle;
+
+#[cfg(test)]
+pub(crate) use api::generated_source_map_files;

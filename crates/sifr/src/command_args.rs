@@ -71,6 +71,9 @@ pub(crate) struct Fetch {
 
 #[derive(clap::Args)]
 pub(crate) struct Doctor {
+    /// Verify every package file and canonical metadata payload
+    #[arg(long)]
+    pub(crate) verify_integrity: bool,
     /// Print doctor output as JSON
     #[arg(long)]
     pub(crate) json: bool,

@@ -2035,3 +2035,11 @@ validation preserved. LSP navigation indexes declaration paths/spans without
 loading source text; a selected source is size- and digest-checked on first use.
 The navigation index belongs to its pinned provider and sysroot and is shared
 while live.
+
+DX.8 separates captured portable stdlib producer-source identity from the required
+host/compiler envelope and provides explicit full-record metadata qualification.
+Installed selection pins an immutable manifest generation; installer upgrades
+atomically select a complete generation while retaining prior ones. Doctor reports
+metadata readiness and offers explicit full package/metadata integrity verification.
+The detailed ownership and supported installation modes remain in
+[the Compiler DX architecture](compiler_dx_architecture.md).

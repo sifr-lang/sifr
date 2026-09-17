@@ -3,6 +3,7 @@
 
 mod digest;
 mod error;
+mod integrity;
 mod layout;
 mod manifest;
 mod native_context;

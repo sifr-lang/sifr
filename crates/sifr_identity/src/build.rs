@@ -97,6 +97,10 @@ pub fn emit_local_token(extra_roots: &[&str]) -> io::Result<()> {
     for input in extra_roots {
         visit(root, &root.join(input), &mut hash)?;
     }
+    println!(
+        "cargo:rustc-env=SIFR_PORTABLE_SOURCE_TOKEN={}",
+        hash.clone().finish()
+    );
     configuration(&mut hash)?;
     let token = hash.finish();
     println!("cargo:rustc-env=SIFR_LOCAL_INPUT_TOKEN={token}");

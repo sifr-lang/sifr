@@ -340,3 +340,22 @@ pub(crate) fn open_consumer(
         _lease: lease,
     }))
 }
+
+/// Read-only doctor selection; a missing or stale development artifact is not produced.
+pub fn development_metadata_path(
+    identity: &CompilerIdentity,
+    source_root: &Path,
+    target: &str,
+    cache: &Path,
+) -> Result<PathBuf> {
+    let inputs = Inputs::capture(identity, source_root, target)?;
+    let key = sifr_sysroot::sha256_hex(
+        &[
+            inputs.compatibility.compiler,
+            inputs.compatibility.semantic_target,
+            inputs.compatibility.stdlib_inputs,
+        ]
+        .concat(),
+    );
+    Ok(cache.join("metadata").join(format!("{key}.sifrmeta")))
+}

@@ -186,7 +186,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_contract",
         "package": "sifr_sql_contract",
@@ -202,7 +201,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_mysql",
         "package": "sifr_sql_mysql",
@@ -218,7 +216,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_sqlite",
         "package": "sifr_sql_sqlite",
@@ -234,7 +231,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_sql_postgresql",
         "package": "sifr_sql_postgresql",
@@ -250,7 +246,6 @@
         "status": "blocking",
         "executed_in_merge": true
       },
-
       {
         "id": "sifr_diagnostics",
         "package": "sifr_diagnostics",
@@ -833,6 +828,15 @@
         "schema-tools",
         "sqlite-provider",
         "mutation"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "sysroot_release",
+      "suites": [
+        "metadata-structural"
       ],
       "resource_classes": [
         "default-local"

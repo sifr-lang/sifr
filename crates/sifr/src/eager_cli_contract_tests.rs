@@ -122,6 +122,9 @@ enum Commands {
     },
     /// Inspect the resolved Sifr sysroot and install health
     Doctor {
+        /// Verify every package file and canonical metadata payload
+        #[arg(long)]
+        verify_integrity: bool,
         /// Print doctor output as JSON
         #[arg(long)]
         json: bool,
@@ -437,6 +440,7 @@ fn all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order()
         &["sifr", "init", "project", "--lib", "--bin"],
         &["sifr", "init", "--lib", "--force", "--name", "project"],
         &["sifr", "doctor", "--json"],
+        &["sifr", "doctor", "--json", "--verify-integrity"],
         &["sifr", "repair", "--check"],
         &["sifr", "bridge", "check", "--workspace", "--locked"],
         &[

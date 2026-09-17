@@ -316,10 +316,17 @@ detect_installed_version() {
 
 canonical_path() {
   path="\$1"
+  while [ -L "\${path}" ]; do
+    target_path="\$(readlink "\${path}")" || return 1
+    case "\${target_path}" in
+      /*) path="\${target_path}" ;;
+      *) path="\$(dirname "\${path}")/\${target_path}" ;;
+    esac
+  done
   dir="\$(dirname "\${path}")"
   file="\$(basename "\${path}")"
   physical_dir="\$(cd "\${dir}" 2>/dev/null && pwd -P)" || return 1
-  printf '%s/%s\n' "\${physical_dir}" "\${file}"
+  printf '%s/%s\\n' "\${physical_dir}" "\${file}"
 }
 
 toml_string_field() {
@@ -586,31 +593,9 @@ manifest_path="\${manifest_dir}/install.json"
 installed_binary="\${install_dir}/sifr"
 install_lock_path=""
 manifest_tmp=""
-backup_root=""
 rollback_active=0
 installed_version="\$(detect_installed_version)"
 
-rollback_install_transaction() {
-  if [ "\${rollback_active}" != "1" ] || [ -z "\${backup_root}" ] || [ ! -d "\${backup_root}" ]; then
-    return 0
-  fi
-  for relative in .cargo vendor crates lib Cargo.toml Cargo.lock sysroot.toml bin/sifr; do
-    case "\${relative}" in
-      bin/sifr)
-        destination="\${installed_binary}"
-        ;;
-      *)
-        destination="\${sysroot_dir}/\${relative}"
-        ;;
-    esac
-    rm -rf "\${destination}"
-    if [ -e "\${backup_root}/\${relative}" ]; then
-      mkdir -p "\$(dirname "\${destination}")"
-      mv "\${backup_root}/\${relative}" "\${destination}"
-    fi
-  done
-  rm -rf "\${backup_root}"
-}
 
 if [ -x "\${installed_binary}" ] && [ -n "\${installed_version}" ]; then
   version_order="\$(compare_versions "\${installed_version}" "\${APP_VERSION}")" || version_order=""
@@ -648,7 +633,7 @@ fi
 
 tmp_dir="\$(mktemp -d "\${TMPDIR:-/tmp}/sifr-install.XXXXXX")"
 cleanup() {
-  rollback_install_transaction
+  if [ "\${rollback_active}" = "1" ]; then rollback_install_transaction; fi
   release_install_lock
   if [ -n "\${manifest_tmp:-}" ] && [ -f "\${manifest_tmp}" ]; then
     rm -f "\${manifest_tmp}"
@@ -717,73 +702,7 @@ validate_extracted_toolchain() {
   fi
 }
 
-begin_install_transaction() {
-  rollback_active=1
-  backup_root="\${sysroot_dir}/.sifr-install-backup.\$\$"
-  rm -rf "\${backup_root}"
-  mkdir -p "\${backup_root}"
-}
-
-backup_path() {
-  relative="\$1"
-  destination="\$2"
-  backup="\${backup_root}/\${relative}"
-  if [ -e "\${destination}" ]; then
-    mkdir -p "\$(dirname "\${backup}")"
-    mv "\${destination}" "\${backup}"
-  fi
-}
-
-backup_managed_toolchain() {
-  backup_path ".cargo" "\${sysroot_dir}/.cargo"
-  backup_path "vendor" "\${sysroot_dir}/vendor"
-  backup_path "crates" "\${sysroot_dir}/crates"
-  backup_path "lib" "\${sysroot_dir}/lib"
-  backup_path "Cargo.toml" "\${sysroot_dir}/Cargo.toml"
-  backup_path "Cargo.lock" "\${sysroot_dir}/Cargo.lock"
-  backup_path "sysroot.toml" "\${sysroot_dir}/sysroot.toml"
-  backup_path "bin/sifr" "\${installed_binary}"
-}
-
-replace_sysroot_path() {
-  relative="\$1"
-  source="\${extract_dir}/\${relative}"
-  destination="\${sysroot_dir}/\${relative}"
-  backup_path "\${relative}" "\${destination}"
-  mkdir -p "\$(dirname "\${destination}")"
-  mv "\${source}" "\${destination}"
-}
-
-install_binary_from_stage() {
-  tmp_binary="\${install_dir}/.sifr.\$\$.tmp"
-  mkdir -p "\${install_dir}"
-  cp "\${extract_dir}/bin/sifr" "\${tmp_binary}"
-  chmod 755 "\${tmp_binary}"
-  backup_path "bin/sifr" "\${installed_binary}"
-  mv "\${tmp_binary}" "\${installed_binary}"
-}
-
-commit_install_transaction() {
-  rollback_active=0
-  rm -rf "\${backup_root}"
-}
-
-validate_extracted_toolchain
-
-acquire_install_lock
-mkdir -p "\${install_dir}" "\${sysroot_dir}"
-begin_install_transaction
-backup_managed_toolchain
-replace_sysroot_path ".cargo"
-replace_sysroot_path "vendor"
-replace_sysroot_path "crates"
-replace_sysroot_path "lib"
-replace_sysroot_path "Cargo.toml"
-replace_sysroot_path "Cargo.lock"
-replace_sysroot_path "sysroot.toml"
-install_binary_from_stage
-write_install_manifest
-commit_install_transaction
+$(cat "${SCRIPT_DIR}/immutable_installation.sh")
 
 echo "installed sifr \${APP_VERSION} to \${install_dir}/sifr"
 configure_path

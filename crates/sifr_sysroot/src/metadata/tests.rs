@@ -696,3 +696,22 @@ fn dx6_class_shaped_constructor_views_preserve_declared_nominal_kinds() {
         assert_eq!(store.get(occurrence).is_ok(), valid);
     }
 }
+
+#[test]
+fn dx8_portable_digest_preserves_semantic_payload_changes() {
+    let digest = |text: &str| {
+        let mut encoder = MetadataEncoder::new(identity(), limits());
+        encoder
+            .intern(&Text {
+                value: text.to_owned(),
+            })
+            .unwrap();
+        let bytes = encoder.finish().unwrap();
+        MetadataStore::open(Cursor::new(bytes), identity(), limits())
+            .unwrap()
+            .portable_payload_digest()
+            .unwrap()
+    };
+    assert_ne!(digest("declaration-a"), digest("declaration-b"));
+    assert_eq!(digest("declaration-a"), digest("declaration-a"));
+}

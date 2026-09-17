@@ -7,16 +7,30 @@ pub(crate) fn register_imported_stdlib_metadata(
     module: &sifr_ir::HirModule,
     stdlib_code: &crate::StdlibEmissionCode,
 ) {
-    // Register stdlib generic classes so user code skips explicit type annotations
-    emitter
-        .generic_classes
-        .extend(stdlib_code.generic_classes.iter().cloned());
-    emitter
-        .generic_class_params
-        .extend(stdlib_code.generic_class_params.clone());
-    emitter
-        .generic_class_templates
-        .extend(stdlib_code.generic_class_templates.clone());
+    // A local declaration owns its name even when an unrelated stdlib module
+    // contains a generic class with the same spelling.
+    let external = |name: &String| !module.classes.iter().any(|class| class.name == *name);
+    emitter.generic_classes.extend(
+        stdlib_code
+            .generic_classes
+            .iter()
+            .filter(|name| external(name))
+            .cloned(),
+    );
+    emitter.generic_class_params.extend(
+        stdlib_code
+            .generic_class_params
+            .iter()
+            .filter(|(name, _)| external(name))
+            .map(|(name, value)| (name.clone(), value.clone())),
+    );
+    emitter.generic_class_templates.extend(
+        stdlib_code
+            .generic_class_templates
+            .iter()
+            .filter(|(name, _)| external(name))
+            .map(|(name, value)| (name.clone(), value.clone())),
+    );
 
     // Pre-register imported constants and function signatures so user code can reference them correctly.
     crate::project_constants::register_imported_constants(emitter, module, stdlib_code);

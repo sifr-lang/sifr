@@ -115,6 +115,8 @@ def main(argv: list[str] | None = None) -> int:
 def select_suites(requested: set[str]) -> list[str]:
     available = {
         "boundary-equivalence",
+        "metadata-structural",
+        "metadata-corpus",
         "host-installed-smoke",
         "host-installed-stdlib-heavy",
         "path-leakage-self-test",
@@ -129,7 +131,9 @@ def select_suites(requested: set[str]) -> list[str]:
 
 def run_suite(suite: str) -> dict[str, Any]:
     started = time.perf_counter()
-    if suite == "path-leakage-self-test":
+    if suite in ("metadata-structural", "metadata-corpus"):
+        status, mismatches = run_metadata_qualification(suite)
+    elif suite == "path-leakage-self-test":
         status, mismatches = run_path_leakage_self_test()
     elif suite == "boundary-equivalence":
         status, mismatches = run_boundary_equivalence()
@@ -171,6 +175,29 @@ def run_suite(suite: str) -> dict[str, Any]:
         "total_variants": 1,
         "total_failures": 0 if status == 0 else 1,
     }
+
+
+def run_metadata_qualification(suite: str) -> tuple[int, list[str]]:
+    selection = "dx8_m03_m15_full_corpus_exact_emission" if suite == "metadata-corpus" else "dx8_m05"
+    command = ["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", selection, "--", "--nocapture"]
+    if suite == "metadata-corpus":
+        command.append("--ignored")
+    env=base_env()
+    env.pop("SIFR_DX8_CORPUS_CASES",None)
+    env.pop("SIFR_DX8_SEMANTIC_TARGET",None)
+    env["SIFR_DX8_CORPUS_OUTPUT"] = str(ACTUAL_ROOT / "metadata-corpus-reference")
+    result = run_command(command, cwd=REPO_ROOT, env=env, timeout=2400)
+    if result.returncode or suite != "metadata-corpus":
+        return result.returncode, [] if result.returncode == 0 else [result.summary()]
+    from metadata_qualification import Qualification
+    try:
+        owned = Path(tempfile.mkdtemp(prefix="metadata-installed-",dir=ACTUAL_ROOT))
+        package = owned / "package"
+        extract_archive(archive_for_host(host_triple()), package)
+        Qualification(package / "bin/sifr", Path(env["SIFR_DX8_CORPUS_OUTPUT"]), owned / "results").installed()
+    except (AssertionError, OSError, CertificationError) as error:
+        return 1, [str(error)]
+    return 0, []
 
 
 def run_path_leakage_self_test() -> tuple[int, list[str]]:

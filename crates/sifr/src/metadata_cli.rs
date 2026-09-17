@@ -10,6 +10,15 @@ pub(crate) struct SysrootArgs {
 }
 #[derive(clap::Subcommand)]
 enum SysrootCommand {
+    /// Traverse every canonical metadata section and project all semantic/codegen payloads
+    ValidateMetadata {
+        #[arg(long, requires = "metadata")]
+        source_root: Option<PathBuf>,
+        #[arg(long, requires = "source_root")]
+        metadata: Option<PathBuf>,
+        #[arg(long, requires = "source_root")]
+        target: Option<String>,
+    },
     /// Produce and validate indexed stdlib metadata from a complete source tree
     BuildMetadata {
         #[arg(long)]
@@ -22,6 +31,35 @@ enum SysrootCommand {
 }
 pub(crate) fn run(args: SysrootArgs) -> i32 {
     match args.command {
+        SysrootCommand::ValidateMetadata {
+            source_root,
+            metadata,
+            target,
+        } => {
+            let target = target.unwrap_or_else(|| env!("SIFR_BUILD_TARGET").into());
+            let result = match (source_root, metadata) {
+                (Some(root), Some(metadata)) => sifr_driver::qualify_development_metadata(
+                    &crate::compiler_identity(),
+                    &root,
+                    &metadata,
+                    &target,
+                ),
+                (None, None) => {
+                    sifr_driver::CompilerContext::new(crate::compiler_identity()).qualify_metadata()
+                }
+                _ => Err("source-root and metadata must be provided together".into()),
+            };
+            match result {
+                Ok(report) => {
+                    let _ = writeln!(io::stdout(), "{report}");
+                    0
+                }
+                Err(error) => {
+                    let _ = writeln!(io::stderr(), "{error}");
+                    2
+                }
+            }
+        }
         SysrootCommand::BuildMetadata {
             source_root,
             output,

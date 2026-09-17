@@ -201,3 +201,18 @@ fn type_kind(value: &sifr_type_system::Type) -> wire::DeclarationKind {
 mod rust_payload;
 
 mod exports;
+
+pub use ensure::development_metadata_path;
+
+/// Re-encode a complete decoded projection through the canonical producer for
+/// qualification. This is never selected by ordinary checks or E2E consumers.
+#[cfg(test)]
+pub(crate) fn reencode_qualified(
+    compiled: &crate::stdlib::StdlibCompiled,
+    root: &sifr_sysroot::ResolvedSysroot,
+    compatibility: wire::Compatibility,
+) -> Result<Vec<u8>> {
+    let sources = sifr_stdlib_manifest::load_stdlib_tooling_sources_from_sysroot(root)
+        .map_err(|e| wire::MetadataError(e.to_string()))?;
+    project::project(compiled, &sources, compatibility, &root.paths.stdlib_root)
+}

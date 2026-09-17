@@ -430,3 +430,45 @@ fn dx6_prepare_test_metadata() {
         "production_seconds":metadata.production_seconds,"elapsed_seconds":started.elapsed().as_secs_f64()})
     );
 }
+
+#[test]
+fn dx8_m11_portable_records_ignore_only_the_producer_envelope() {
+    let a = Inputs::capture(&identity("dx8-envelope-a"), &root(), TARGET).unwrap();
+    let b = Inputs::capture(&identity("dx8-envelope-b"), &root(), TARGET).unwrap();
+    assert_eq!(a.compatibility.stdlib_inputs, b.compatibility.stdlib_inputs);
+    assert_ne!(a.compatibility.compiler, b.compatibility.compiler);
+    let a_bytes = a.produce().unwrap();
+    let b_bytes = b.produce().unwrap();
+    assert_ne!(a_bytes, b_bytes);
+    let a_store = wire::MetadataStore::open(
+        std::io::Cursor::new(a_bytes),
+        a.compatibility,
+        wire::Limits::default(),
+    )
+    .unwrap();
+    let b_store = wire::MetadataStore::open(
+        std::io::Cursor::new(b_bytes),
+        b.compatibility,
+        wire::Limits::default(),
+    )
+    .unwrap();
+    assert_eq!(
+        a_store.portable_payload_digest().unwrap(),
+        b_store.portable_payload_digest().unwrap()
+    );
+    // Different semantic targets are deliberately not comparable.
+    let other = if TARGET == "aarch64-apple-darwin" {
+        "x86_64-unknown-linux-gnu"
+    } else {
+        "aarch64-apple-darwin"
+    };
+    let changed = Inputs::capture(&identity("dx8-envelope-a"), &root(), other).unwrap();
+    assert_ne!(
+        a.compatibility.semantic_target,
+        changed.compatibility.semantic_target
+    );
+    assert_ne!(
+        a.compatibility.stdlib_inputs,
+        changed.compatibility.stdlib_inputs
+    );
+}

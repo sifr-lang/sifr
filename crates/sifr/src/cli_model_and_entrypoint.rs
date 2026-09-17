@@ -277,7 +277,8 @@ fn run_cli(cli: Cli) -> i32 {
         }
         Commands::Doctor(crate::deferred_cli_args::DeferredArgs(crate::command_args::Doctor {
             json,
-        })) => cmd_doctor(json, diagnostic_format),
+            verify_integrity,
+        })) => cmd_doctor(json, verify_integrity, diagnostic_format),
         Commands::Init(crate::deferred_cli_args::DeferredArgs(crate::command_args::Init {
             path,
             lib,
