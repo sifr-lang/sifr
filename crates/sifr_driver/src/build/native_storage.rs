@@ -267,7 +267,9 @@ fn is_runtime_library(path: &Path) -> bool {
     path.file_name()
         .and_then(|name| name.to_str())
         .is_some_and(|name| {
-            name.ends_with(".dylib") || name.ends_with(".so") || name.contains(".so.")
+            path.extension().is_some_and(|extension| {
+                extension.eq_ignore_ascii_case("dylib") || extension.eq_ignore_ascii_case("so")
+            }) || name.contains(".so.")
         })
 }
 

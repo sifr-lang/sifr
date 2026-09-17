@@ -9,6 +9,7 @@ use crate::diagnostics::{RenderedDiagnostic, write_stderr, write_stderr_line};
 use crate::project::namespace_module_files;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_stdlib_manifest::SysrootDependencyPlan;
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 pub(crate) struct TestRunnerExecutionOutcome {
@@ -67,10 +68,11 @@ pub(crate) fn execute_test_runner_project(
         .project(&generated_project.cache_scope, "sifr_tests")
         .map_err(test_io_error)?;
     let root_id = sifr_sysroot::sha256_hex(project_dir.as_os_str().as_encoded_bytes());
-    cargo_plan.cargo_toml.push_str(&format!(
+    let _ = write!(
+        cargo_plan.cargo_toml,
         "\n[lib]\nname = \"sifr_tests_{}\"\n",
         &root_id[..16]
-    ));
+    );
     {
         let src_dir = project_dir.join("src");
         std::fs::create_dir_all(&src_dir).map_err(|error| {

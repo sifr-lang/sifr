@@ -461,8 +461,11 @@ materialization to the complete probe key. Generated binary/test target names
 include the stable root identity. Byte-identical inputs retain mtimes, and
 obsolete generated support files are removed. Ordinary binary, test and direct
 probe requests consult Cargo even when a prior finalized result exists.
-Executable bytes and platform debug side files define the finalized bundle;
-capture copies these into leased immutable artifact entries and validates an
+Executable bytes, Cargo-produced runtime libraries and platform debug side
+files define the finalized bundle. Generated loader paths use the executable
+directory for bundled runtime libraries; system/Python libraries retain their
+declared external environment contract.
+Capture copies these into leased immutable artifact entries and validates an
 existing entry's bytes before returning it. Cargo failure cannot select the
 previous generation. Cargo profiles and application defaults remain unchanged.
 

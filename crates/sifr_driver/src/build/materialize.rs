@@ -16,6 +16,7 @@ use sifr_codegen::RustInteropTrustRequirementKind;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_stdlib_manifest::{CargoVendorMode, SysrootCrate, SysrootDependencyPlan};
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -441,9 +442,10 @@ fn materialize_binary_project_files_with_target(
     );
 
     if let Some(target_name) = target_name {
-        cargo_toml.push_str(&format!(
+        let _ = write!(
+            cargo_toml,
             "\n[[bin]]\nname = {target_name:?}\npath = \"src/main.rs\"\n"
-        ));
+        );
     }
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
@@ -591,9 +593,8 @@ fn run_cargo_build(
     if let Some(argument) = cargo_resolution.lock_mode.cargo_arg() {
         command.arg(argument);
     }
-    // Generated projects are materialized and cached with their own `target/`
-    // directory. Inheriting an outer CARGO_TARGET_DIR moves binaries away from
-    // the reported artifact paths and breaks cache completeness checks.
+    // Cargo's mutable family storage is explicit; finalized results are
+    // independent bundles captured while the family lease remains held.
     command.arg("--target-dir").arg(target);
     configure_hermetic_build_environment(&mut command);
     if let Some(python_interpreter) = python_interpreter {
