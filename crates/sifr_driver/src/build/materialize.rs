@@ -20,7 +20,8 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 pub(super) struct MaterializedBinaryProject {
-    native_executable: PathBuf,
+    pub(super) native_executable: PathBuf,
+    pub(super) native_libraries: Vec<PathBuf>,
     pub(super) binary_path: PathBuf,
     pub(super) sysroot: BuildSysrootReport,
     pub(super) materialize_elapsed: Duration,
@@ -227,6 +228,12 @@ pub(super) fn materialize_cached_binary_project_with_report(
         &report.native_executable,
         &binary_relative_path(project_name),
     )
+    .and_then(|snapshot| {
+        snapshot.with_runtime(
+            &report.native_libraries,
+            &binary_relative_path(project_name),
+        )
+    })
     .map_err(|error| vec![build_error(error.to_string())])?;
     cache_key.push_str("\n[final-native-bundle]\n");
     cache_key.push_str(&snapshot.identity);
@@ -337,7 +344,7 @@ pub(super) fn materialize_binary_project_at_path_with_target(
     let cargo_prefix_args = sysroot_cargo_config_args(dependency_plan);
     let prepared_resolution =
         prepare_cargo_resolution(project_path, cargo_resolution, &cargo_prefix_args)?;
-    let executable = run_cargo_build(
+    let (executable, native_libraries) = run_cargo_build(
         project_path,
         python_interpreter.as_deref(),
         validate_native_links,
@@ -350,24 +357,26 @@ pub(super) fn materialize_binary_project_at_path_with_target(
         project_path.parent().unwrap_or(Path::new(".")),
         project_name,
     );
-    if executable != destination
-        && std::fs::read(&destination).ok() != std::fs::read(&executable).ok()
-    {
-        if let Some(parent) = destination.parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|error| vec![cargo_build_error(error.to_string())])?;
-        }
-        std::fs::copy(&executable, &destination).map_err(|error| {
+    let output_name = destination
+        .file_name()
+        .ok_or_else(|| vec![build_error("native output has no filename".to_owned())])?;
+    let output_parent = destination
+        .parent()
+        .ok_or_else(|| vec![build_error("native output has no directory".to_owned())])?;
+    super::native_storage::NativeSnapshot::inspect(&executable, Path::new(output_name))
+        .and_then(|snapshot| snapshot.with_runtime(&native_libraries, Path::new(output_name)))
+        .and_then(|snapshot| snapshot.capture(output_parent))
+        .map_err(|error| {
             vec![cargo_build_error(format!(
-                "failed to publish native executable: {error}"
+                "failed to publish native output bundle: {error}"
             ))]
         })?;
-    }
     prepared_resolution.assert_unchanged()?;
     let cargo_elapsed = cargo_start.elapsed();
 
     Ok(MaterializedBinaryProject {
         native_executable: executable,
+        native_libraries,
         binary_path: cached_binary_path(
             project_path.parent().unwrap_or(Path::new(".")),
             project_name,
@@ -445,16 +454,11 @@ fn materialize_binary_project_files_with_target(
         .transpose()
         .map_err(|message| vec![build_error(message)])?
         .flatten();
-    let build_script = project_path.join("build.rs");
-    if let Some(source) = loader_script {
-        write_project_file(&build_script, source, "Python loader build script")?;
-    } else if build_script.exists() {
-        std::fs::remove_file(&build_script).map_err(|error| {
-            vec![build_error(format!(
-                "failed to remove obsolete Python loader build script: {error}"
-            ))]
-        })?;
-    }
+    write_project_file(
+        &project_path.join("build.rs"),
+        super::native_storage::loader_build_script(loader_script),
+        "native loader build script",
+    )?;
 
     let main_rs = format!(
         "{}{}",
@@ -572,7 +576,7 @@ fn run_cargo_build(
     dependency_plan: &SysrootDependencyPlan,
     cargo_resolution: &CargoResolutionPolicy,
     target: &Path,
-) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
+) -> Result<(PathBuf, Vec<PathBuf>), Vec<RenderedDiagnostic>> {
     let mut command = cargo_resolution.cargo_command()?;
     command.args(sysroot_cargo_config_args(dependency_plan));
     command
@@ -622,7 +626,7 @@ fn run_cargo_build(
             "cargo build failed:\n{stderr}"
         ))]);
     }
-    String::from_utf8_lossy(&output.stdout)
+    let executable = String::from_utf8_lossy(&output.stdout)
         .lines()
         .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
         .filter(|message| {
@@ -638,7 +642,10 @@ fn run_cargo_build(
             vec![cargo_build_error(
                 "cargo did not report a native executable".to_owned(),
             )]
-        })
+        })?;
+    let libraries = super::native_storage::runtime_libraries(&output.stdout, target)
+        .map_err(|error| vec![cargo_build_error(error.to_string())])?;
+    Ok((executable, libraries))
 }
 
 fn trusted_native_links(

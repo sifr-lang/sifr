@@ -258,3 +258,82 @@ fn dx9_finalized_artifact_survives_same_root_edit_and_runs_again() {
     }
     std::fs::remove_dir_all(root).expect("cleanup");
 }
+
+#[cfg(target_os = "linux")]
+#[test]
+fn dx9_runtime_library_bundle_survives_mutable_cargo_output_removal() {
+    let root = root("dylib");
+    let dependency = root.join("dependency");
+    std::fs::create_dir_all(dependency.join("src")).expect("dependency");
+    std::fs::write(
+        dependency.join("Cargo.toml"),
+        "[package]\nname = \"dx9_dylib\"\nversion = \"0.0.0\"\nedition = \"2024\"\n",
+    )
+    .expect("manifest");
+    std::fs::write(
+        dependency.join("value.c"),
+        "int dx9_value(void) { return 42; }\n",
+    )
+    .expect("C source");
+    std::fs::write(dependency.join("build.rs"), r#"fn main() {
+        let out = std::env::var("OUT_DIR").unwrap();
+        assert!(std::process::Command::new("cc").args(["-shared", "-fPIC", "value.c", "-o"]).arg(format!("{out}/libdx9_value.so")).status().unwrap().success());
+        println!("cargo:rerun-if-changed=value.c");
+        println!("cargo:rustc-link-search=native={out}");
+        println!("cargo:rustc-link-lib=dylib=dx9_value");
+    }"#).expect("build script");
+    std::fs::write(
+        dependency.join("src/lib.rs"),
+        r#"unsafe extern "C" { fn dx9_value() -> i32; }
+pub fn value() -> i32 { unsafe { dx9_value() } }"#,
+    )
+    .expect("library");
+    let mut plan = test_dependency_plan("dx9");
+    plan.cargo_vendor_mode = CargoVendorMode::PackageOwned;
+    plan.retained_direct_dependencies
+        .push(format!("dx9_dylib = {{ path = {:?} }}", dependency));
+    let mut project = base_project();
+    project.main_rs = r#"fn main() { println!("{}", dx9_dylib::value()); }"#.to_owned();
+    let policy = CargoResolutionPolicy::normal();
+    let tools = policy.native_toolchain.as_ref().expect("tools");
+    let family = super::native_storage::NativeFamily::acquire(
+        tools.identity(),
+        &root.display().to_string(),
+        "",
+        "dx9-dylib",
+    )
+    .expect("family");
+    let report = super::materialize::materialize_binary_project_at_path_with_target(
+        &root.join("app"),
+        "same_name",
+        project,
+        &plan,
+        &policy,
+        &family.target(),
+    )
+    .expect("native dylib build");
+    assert!(!report.native_libraries.is_empty());
+    let snapshot = super::native_storage::NativeSnapshot::inspect(
+        &report.native_executable,
+        Path::new("program"),
+    )
+    .and_then(|snapshot| snapshot.with_runtime(&report.native_libraries, Path::new("program")))
+    .expect("bundle inventory");
+    let final_root = root.join("final");
+    snapshot.capture(&final_root).expect("independent capture");
+    for library in report.native_libraries {
+        std::fs::remove_file(library).expect("remove mutable output");
+    }
+    drop(family);
+    let output = std::process::Command::new(final_root.join("program"))
+        .env_remove("LD_LIBRARY_PATH")
+        .output()
+        .expect("run captured bundle");
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(output.stdout, b"42\n");
+    std::fs::remove_dir_all(root).expect("cleanup");
+}

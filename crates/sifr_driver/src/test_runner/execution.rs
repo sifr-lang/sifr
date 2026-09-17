@@ -170,6 +170,11 @@ pub(crate) fn execute_test_runner_project(
         })?;
     }
 
+    crate::build::native_storage::write_changed(
+        &project_dir.join("build.rs"),
+        crate::build::native_storage::loader_build_script(None).as_bytes(),
+    )
+    .map_err(test_io_error)?;
     let mut command = native_toolchain.cargo_command().map_err(test_io_error)?;
     command
         .args(sysroot_cargo_config_args(&cargo_plan.dependency_plan))
@@ -196,11 +201,15 @@ pub(crate) fn execute_test_runner_project(
         .filter(|event| event["reason"] == "compiler-artifact" && event["profile"]["test"] == true)
         .filter_map(|event| event["executable"].as_str().map(PathBuf::from))
         .collect::<Vec<_>>();
+    let runtime_libraries =
+        crate::build::native_storage::runtime_libraries(&output.stdout, &family.target())
+            .map_err(test_io_error)?;
     let mut executables = Vec::new();
     let mut snapshots = Vec::new();
     for (index, path) in cargo_executables.iter().enumerate() {
         let relative = PathBuf::from(format!("executables/test-{index}"));
         let snapshot = crate::build::native_storage::NativeSnapshot::inspect(path, &relative)
+            .and_then(|snapshot| snapshot.with_runtime(&runtime_libraries, &relative))
             .map_err(test_io_error)?;
         cache_key.push_str(&snapshot.identity);
         snapshots.push(snapshot);

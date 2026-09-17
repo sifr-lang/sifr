@@ -107,6 +107,10 @@ impl NativeSnapshot {
                 collect_bundle(&source, &destination, &mut files)?;
             }
         }
+        Self::from_files(files)
+    }
+
+    fn from_files(files: Vec<(PathBuf, PathBuf)>) -> std::io::Result<Self> {
         let mut identity = sifr_identity::IdentityEncoder::new("final-native-bundle-v1");
         for (source, destination) in &files {
             identity.field("path", destination.as_os_str().as_encoded_bytes());
@@ -116,6 +120,30 @@ impl NativeSnapshot {
             identity: identity.finish(),
             files,
         })
+    }
+
+    pub(crate) fn with_runtime(
+        self,
+        libraries: &[PathBuf],
+        destination: &Path,
+    ) -> std::io::Result<Self> {
+        let mut files = self.files;
+        for source in libraries {
+            let name = source
+                .file_name()
+                .ok_or_else(|| std::io::Error::other("runtime library has no filename"))?;
+            let target = destination.parent().unwrap_or(Path::new("")).join(name);
+            if let Some((previous, _)) = files.iter().find(|(_, path)| path == &target) {
+                if std::fs::read(previous)? != std::fs::read(source)? {
+                    return Err(std::io::Error::other(
+                        "conflicting native runtime library basenames",
+                    ));
+                }
+            } else {
+                files.push((source.clone(), target));
+            }
+        }
+        Self::from_files(files)
     }
 
     pub(crate) fn required(&self) -> Vec<&Path> {
@@ -140,9 +168,13 @@ impl NativeSnapshot {
         for (source, relative) in &self.files {
             let destination = stage.join(relative);
             if let Some(parent) = destination.parent() {
-                crate::cache_storage::directory(parent)?;
+                std::fs::create_dir_all(parent)?;
             }
-            std::fs::copy(source, destination)?;
+            if std::fs::read(&destination).ok().as_deref()
+                != Some(std::fs::read(source)?.as_slice())
+            {
+                std::fs::copy(source, destination)?;
+            }
         }
         Ok(())
     }
@@ -173,4 +205,84 @@ fn collect_bundle(
         ));
     }
     Ok(())
+}
+
+/// Runtime libraries produced inside Cargo storage must travel with the root.
+/// System/external library search paths retain their explicit environment
+/// contract; proc-macro shared objects are compiler inputs, not runtime files.
+pub(crate) fn runtime_libraries(stdout: &[u8], target: &Path) -> std::io::Result<Vec<PathBuf>> {
+    let target = target.canonicalize()?;
+    let mut libraries = std::collections::BTreeSet::new();
+    for line in String::from_utf8_lossy(stdout).lines() {
+        let Ok(event) = serde_json::from_str::<serde_json::Value>(line) else {
+            continue;
+        };
+        if event["reason"] == "build-script-executed" {
+            for path in event["linked_paths"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(serde_json::Value::as_str)
+            {
+                let path = Path::new(path.split_once('=').map_or(path, |(_, path)| path));
+                if !path.starts_with(&target) || !path.is_dir() {
+                    continue;
+                }
+                for entry in std::fs::read_dir(path)? {
+                    let entry = entry?;
+                    if is_runtime_library(&entry.path()) {
+                        let canonical = entry.path().canonicalize()?;
+                        if !canonical.starts_with(&target) {
+                            return Err(std::io::Error::other(
+                                "native runtime library escapes Cargo storage",
+                            ));
+                        }
+                        libraries.insert(entry.path());
+                    }
+                }
+            }
+        }
+        if event["reason"] == "compiler-artifact"
+            && event["target"]["kind"]
+                .as_array()
+                .is_some_and(|kinds| kinds.iter().any(|kind| kind == "dylib" || kind == "cdylib"))
+        {
+            for path in event["filenames"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(serde_json::Value::as_str)
+            {
+                let path = PathBuf::from(path);
+                if path.starts_with(&target) && is_runtime_library(&path) {
+                    libraries.insert(path);
+                }
+            }
+        }
+    }
+    Ok(libraries.into_iter().collect())
+}
+
+fn is_runtime_library(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| {
+            name.ends_with(".dylib") || name.ends_with(".so") || name.contains(".so.")
+        })
+}
+
+pub(crate) fn loader_build_script(python: Option<String>) -> String {
+    let source = python.unwrap_or_else(|| "fn main() {\n}\n".to_owned());
+    source.replacen(
+        "fn main() {",
+        r#"fn main() {
+    println!("cargo:rerun-if-changed=build.rs");
+    match std::env::var("CARGO_CFG_TARGET_OS").as_deref() {
+        Ok("macos") => println!("cargo:rustc-link-arg=-Wl,-rpath,@loader_path"),
+        Ok("linux") => println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN"),
+        _ => {}
+    }
+"#,
+        1,
+    )
 }
