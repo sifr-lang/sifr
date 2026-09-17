@@ -341,6 +341,10 @@ pub fn prune(
 
 /// Available space on the selected destination filesystem.
 #[allow(unsafe_code)]
+#[allow(
+    clippy::useless_conversion,
+    reason = "statvfs block counts are u32 on macOS and u64 on Linux"
+)]
 pub fn available_bytes() -> io::Result<u64> {
     use std::os::unix::ffi::OsStrExt;
     let root = root();
@@ -354,5 +358,5 @@ pub fn available_bytes() -> io::Result<u64> {
     }
     // SAFETY: statvfs succeeded and initialized the structure.
     let stats = unsafe { stats.assume_init() };
-    Ok(stats.f_bavail * stats.f_frsize)
+    Ok(u64::from(stats.f_bavail) * stats.f_frsize)
 }
