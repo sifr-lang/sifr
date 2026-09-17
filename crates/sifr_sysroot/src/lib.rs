@@ -34,3 +34,6 @@ pub use compiled_identity::compiled_input_tokens;
 
 #[cfg(all(test, unix))]
 mod native_context_tests;
+
+/// Private, versioned stdlib transport; not yet selected by normal commands.
+pub mod metadata;

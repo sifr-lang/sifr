@@ -865,3 +865,11 @@ The normative requirements above define Sifr's target architecture. Pinned repos
 [R8]: https://rustc-dev-guide.rust-lang.org/memory.html "Interning and type memory ownership"
 [D5]: https://doc.rust-lang.org/cargo/reference/build-scripts.html "Package-scoped build-script outputs and change tracking"
 [D6]: https://doc.rust-lang.org/cargo/commands/cargo-test.html "Cargo tests: target execution, parallel test cases and no-fail-fast"
+
+### DX.5 implemented transport boundary
+
+The private v1 indexed schema and bounded record decoder live in
+`sifr_sysroot::metadata`. [The pinned field/site inventory](compiler_dx_metadata_consumers.md)
+documents stable-ID rules, explicit payload records, per-store shared handles and
+the forthcoming source-backed layered-view migration. This does not activate normal
+metadata production or CLI/LSP consumers; DX.6 and DX.7 retain those responsibilities.
