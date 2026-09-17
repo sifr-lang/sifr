@@ -265,6 +265,14 @@ package_toolchain() {
   copy_sysroot_dir "stdlib/_sifr" "${package_root}/lib/sifr/stdlib/_sifr"
   copy_sysroot_dir "vendor" "${package_root}/vendor"
   write_installed_cargo_config "${package_root}"
+  copy_sysroot_file "sysroot.toml" "${package_root}/sysroot.toml"
+  local metadata_args=()
+  if [[ "${CARGO_BUILD}" -eq 0 ]]; then
+    metadata_args+=(--allow-fixture-script)
+  fi
+  python3 "${SCRIPT_DIR}/metadata_artifact.py" \
+    --binary "${binary_path}" --source-root "${package_root}" \
+    --package-root "${package_root}" --target "${target}" "${metadata_args[@]}"
   write_sysroot_manifest "${package_root}" "${target}"
 
   COPYFILE_DISABLE=1 tar -C "${package_root}" -czf "${archive_path}" \
@@ -281,6 +289,7 @@ mkdir -p "${OUTPUT_DIR}"
 
 for target in "${SELECTED_TARGETS[@]}"; do
   if [[ "${CARGO_BUILD}" -eq 1 ]]; then
+    python3 "${SCRIPT_DIR}/metadata_artifact.py" --require-native-target "${target}"
     RUSTFLAGS="$(release_rustflags)" SIFR_RELEASE_VERSION="${VERSION}" cargo build --locked --release -p sifr --target "${target}"
     binary_path="${CARGO_TARGET_DIR:-target}/${target}/release/sifr"
   else

@@ -13,12 +13,29 @@ static CACHES: OnceLock<Mutex<ContextCaches>> = OnceLock::new();
 #[derive(Clone)]
 pub struct CompilerContext {
     identity: CompilerIdentity,
+    metadata_override: Option<std::path::PathBuf>,
     sysroot: Result<sifr_sysroot::ResolvedSysroot, sifr_sysroot::SysrootError>,
     pub(crate) stdlib_cache: Arc<StdlibCache>,
 }
 impl CompilerContext {
     pub fn new(identity: CompilerIdentity) -> Self {
-        let sysroot = sifr_sysroot::resolve_sysroot(None);
+        Self::from_resolved(identity, sifr_sysroot::resolve_sysroot(None))
+    }
+    pub fn with_sysroot(
+        identity: CompilerIdentity,
+        sysroot: sifr_sysroot::ResolvedSysroot,
+    ) -> Self {
+        Self::from_resolved(identity, Ok(sysroot))
+    }
+    #[must_use]
+    pub fn with_metadata_override(mut self, path: std::path::PathBuf) -> Self {
+        self.metadata_override = Some(path);
+        self
+    }
+    fn from_resolved(
+        identity: CompilerIdentity,
+        sysroot: Result<sifr_sysroot::ResolvedSysroot, sifr_sysroot::SysrootError>,
+    ) -> Self {
         let key = sysroot.as_ref().map_or_else(
             |_| "<unresolved>".to_owned(),
             |root| format!("{}:{}", root.root.display(), root.toolchain_id()),
@@ -32,6 +49,7 @@ impl CompilerContext {
             .clone();
         Self {
             identity,
+            metadata_override: None,
             sysroot,
             stdlib_cache: cache,
         }
@@ -45,6 +63,45 @@ impl CompilerContext {
             crate::compiled_input_tokens(),
             "driver-producer",
         ))
+    }
+    pub fn ensure_development_metadata(&self) -> Result<(), Vec<RenderedDiagnostic>> {
+        let sysroot = self.sysroot()?;
+        if sysroot.mode() == sifr_sysroot::SysrootMode::InstalledToolchain {
+            return Ok(());
+        }
+        let target = if cfg!(target_os = "macos") {
+            if cfg!(target_arch = "aarch64") {
+                "aarch64-apple-darwin"
+            } else {
+                "x86_64-apple-darwin"
+            }
+        } else if cfg!(target_arch = "aarch64") {
+            "aarch64-unknown-linux-gnu"
+        } else {
+            "x86_64-unknown-linux-gnu"
+        };
+        match &self.metadata_override {
+            Some(path) => crate::metadata_producer::validate_development_metadata(
+                self.identity(),
+                &sysroot.root,
+                target,
+                path,
+            ),
+            None => crate::metadata_producer::ensure_development_metadata(
+                self.identity(),
+                &sysroot.root,
+                target,
+                &crate::cache_storage::root(),
+                &std::sync::atomic::AtomicBool::new(false),
+            ),
+        }
+        .map(|_| ())
+        .map_err(|error| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                error.to_string(),
+                sifr_diagnostics::DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+            )]
+        })
     }
     pub fn identity(&self) -> &CompilerIdentity {
         &self.identity

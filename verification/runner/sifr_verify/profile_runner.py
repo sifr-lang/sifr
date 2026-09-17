@@ -300,7 +300,8 @@ class ProfileRunner:
 
     def run_toolchain_step(self, toolchain_step: str) -> None:
         if toolchain_step == "cargo-build-release":
-            run_command(cargo_command("build", "--release"), env=self.env)
+            run_command(["python3", "-m", "sifr_verify.metadata_setup", "--",
+                         *cargo_command("build", "--release")], env=self.env)
         elif toolchain_step == "cargo-fmt-check":
             run_command(["cargo", "fmt", "--check"], env=self.env)
         elif toolchain_step == "cargo-clippy-workspace":

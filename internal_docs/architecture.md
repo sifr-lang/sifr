@@ -1998,5 +1998,13 @@ DX.5 adds the private indexed stdlib wire schema in `sifr_sysroot::metadata`, wi
 explicit type/declaration/binder/payload records and a bounded, shared lazy decoder.
 The [payload and consumer inventory](compiler_dx_metadata_consumers.md) owns the
 source-to-wire field classification and planned overlay/lifetime migration. Normal
-commands still use checked-source stdlib state; DX.6/DX.7 own production and consumer
-activation. Fragment validation identity never replaces final application checks.
+commands still use checked-source stdlib state; DX.7 owns consumer activation.
+DX.6 adds the linked canonical source producer and shared write-through preparation
+in `sifr_driver::metadata_producer`. The CLI `sysroot build-metadata`, bare driver
+tests, verification preparation and native packaging use that same operation.
+Successful owners are keyed by compiled compiler/test identity, semantic target and
+complete captured stdlib inputs; per-key OS locks serialize durable publication.
+The producer validates all indexed records before publication, preserves failures
+for retry, and rejects source changes before committing an artifact. Packaging
+produces metadata from the staged source snapshot before sealing the installed
+manifest, and binds its descriptor to exact compiler bytes and target. Fragment validation identity never replaces final application checks.

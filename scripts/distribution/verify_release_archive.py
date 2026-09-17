@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
+from metadata_artifact import METADATA_PATH, DESCRIPTOR_PATH, validate_metadata
 import posixpath
 import re
 import tarfile
@@ -13,6 +15,8 @@ from pathlib import PurePosixPath
 
 REQUIRED_FILES = (
     "bin/sifr",
+    METADATA_PATH,
+    DESCRIPTOR_PATH,
     "Cargo.toml",
     "Cargo.lock",
     "sysroot.toml",
@@ -187,6 +191,15 @@ def verify_archive(path: str, version: str, target: str) -> None:
         if manifest_source is None:
             raise SystemExit("sysroot.toml could not be read from archive")
         validate_manifest(manifest_source, sysroot_file_digests, version, target)
+        if name_to_member[METADATA_PATH].size > 256 * 1024 * 1024 or name_to_member[DESCRIPTOR_PATH].size > 64 * 1024:
+            raise SystemExit("metadata artifact exceeds bounded package limits")
+        with archive.extractfile(name_to_member["bin/sifr"]) as binary:
+            binary_digest = hashlib.file_digest(binary, "sha256").hexdigest()
+        try:
+            validate_metadata(archive.extractfile(name_to_member[METADATA_PATH]).read(),
+                              json.load(archive.extractfile(name_to_member[DESCRIPTOR_PATH])), binary_digest, target)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
 
 
 def main() -> int:

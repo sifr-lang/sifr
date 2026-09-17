@@ -67,8 +67,23 @@ impl MetadataStore {
             };
             if let Some((decl, expected)) = nominal {
                 let declaration = self.referenced(decl)?;
-                if self.referenced(declaration.kind)? != expected {
-                    return Err(err("nominal type has the wrong declaration kind"));
+                let actual = self.referenced(declaration.kind)?;
+                // The source frontend retains class-shaped synthetic constructor views
+                // for enum/newtype/protocol declarations. Preserve that occurrence
+                // shape while keeping the real declaration's nominal kind.
+                let class_shape = expected == DeclarationKind::Class
+                    && matches!(
+                        actual,
+                        DeclarationKind::Enum
+                            | DeclarationKind::Newtype
+                            | DeclarationKind::Protocol
+                    );
+                if actual != expected && !class_shape {
+                    let symbol = self.referenced(declaration.symbol)?;
+                    return Err(err(format!(
+                        "nominal type has the wrong declaration kind: {} expected {expected:?}, got {actual:?}",
+                        symbol.value.chars().take(120).collect::<String>()
+                    )));
                 }
             }
         }

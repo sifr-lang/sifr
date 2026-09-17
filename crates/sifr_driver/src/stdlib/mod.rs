@@ -35,3 +35,5 @@ pub(crate) use types::{StdlibCompiled, StdlibRustInterop};
 
 #[cfg(test)]
 pub(crate) use bootstrap::compile_stdlib_uncached;
+
+pub(crate) use bootstrap::compile_stdlib_sources_with_sysroot;

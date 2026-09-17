@@ -34,6 +34,7 @@ mod formatter_discovery;
 mod host_tool_cli;
 mod host_tool_sandbox;
 mod lint_cli;
+mod metadata_cli;
 mod package_graph_context;
 mod package_python_certifications;
 mod package_session_cli;

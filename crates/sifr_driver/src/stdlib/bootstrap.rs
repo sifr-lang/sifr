@@ -25,6 +25,7 @@ use std::path::Path;
 pub(crate) fn compile_stdlib(
     compiler: &crate::CompilerContext,
 ) -> Result<std::sync::Arc<StdlibCompiled>, Vec<RenderedDiagnostic>> {
+    compiler.ensure_development_metadata()?;
     get_or_init_stdlib_cache(&compiler.stdlib_cache, || {
         compile_stdlib_for_context(compiler)
     })
@@ -33,6 +34,7 @@ pub(crate) fn compile_stdlib(
 pub fn external_defs(
     compiler: &crate::CompilerContext,
 ) -> Result<ExternalDefs, Vec<RenderedDiagnostic>> {
+    compiler.ensure_development_metadata()?;
     project_stdlib_cache(
         &compiler.stdlib_cache,
         || compile_stdlib_for_context(compiler),
@@ -58,12 +60,13 @@ fn compile_stdlib_for_context(
     compile_stdlib_sources_with_sysroot(&sources, sysroot)
 }
 
-fn compile_stdlib_sources_with_sysroot(
+pub(crate) fn compile_stdlib_sources_with_sysroot(
     sources: &[LoadedStdlibSource],
     sysroot: ResolvedSysroot,
 ) -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     let mut stdlib_defs = ExternalDefs::default();
     let mut stdlib_code = StdlibCode::default();
+    let mut metadata_features = HashMap::new();
     let mut hir_modules = std::collections::BTreeMap::new();
     let mut private_interop_modules = Vec::new();
     let syntax_session = sifr_codegen::StdlibSyntaxSession::default();
@@ -349,6 +352,10 @@ fn compile_stdlib_sources_with_sysroot(
                 diagnostic.message = format!("[stdlib:{module_name}] {}", diagnostic.message);
                 vec![diagnostic]
             })?;
+            metadata_features.insert(
+                module_name.to_owned(),
+                codegen_result.required_features.iter().copied().collect(),
+            );
             let rust_source = stdlib_rust_source(
                 module_name,
                 stdlib_source,
@@ -550,6 +557,7 @@ fn compile_stdlib_sources_with_sysroot(
     stdlib_code.hir_modules = std::sync::Arc::new(hir_modules);
     Ok(StdlibCompiled {
         defs: stdlib_defs,
+        metadata_features,
         code: stdlib_code,
         interop: build_stdlib_rust_interop(Some(sysroot), &private_interop_modules),
     })

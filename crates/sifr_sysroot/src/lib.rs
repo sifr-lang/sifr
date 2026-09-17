@@ -14,7 +14,7 @@ pub use digest::{
     canonical_sysroot_tree_digest, sha256_file, sha256_hex,
 };
 pub use error::{SysrootError, SysrootErrorKind};
-pub use layout::{ResolvedSysroot, SysrootPaths};
+pub use layout::{ResolvedSysroot, SysrootMode, SysrootPaths};
 pub use manifest::{
     COMPILER_SIFR_VERSION, SUPPORTED_SYSROOT_SCHEMA_VERSION, SYSROOT_MANIFEST_FIELDS,
     SysrootManifest, parse_sysroot_manifest,

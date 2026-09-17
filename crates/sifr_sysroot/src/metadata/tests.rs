@@ -662,3 +662,37 @@ fn bounded_retention_evicts_only_unreferenced_records() {
     drop(pinned_records);
     assert!(store.get(refs[79]).is_ok());
 }
+
+#[test]
+fn dx6_class_shaped_constructor_views_preserve_declared_nominal_kinds() {
+    for (kind, valid) in [
+        (DeclarationKind::Class, true),
+        (DeclarationKind::Enum, true),
+        (DeclarationKind::Newtype, true),
+        (DeclarationKind::Protocol, true),
+        (DeclarationKind::Function, false),
+        (DeclarationKind::Alias, false),
+    ] {
+        let mut encoder = encoder();
+        let kind = encoder.intern(&kind).unwrap();
+        let declaration = encoder
+            .intern(&Declaration {
+                module: fixture(),
+                symbol: fixture(),
+                kind,
+                binder: None,
+                full_view: None,
+                location: fixture(),
+            })
+            .unwrap();
+        let occurrence = encoder
+            .intern(&Type::Class {
+                declaration,
+                view: fixture(),
+                type_args: Vec::new(),
+            })
+            .unwrap();
+        let store = store(encoder);
+        assert_eq!(store.get(occurrence).is_ok(), valid);
+    }
+}
