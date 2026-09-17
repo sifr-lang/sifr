@@ -53,4 +53,3 @@ def run_native_gate(api, entries, args):
                 json.dumps({"evidence": str(evidence), "cases": records}, indent=2))
     if failed:
         raise RuntimeError(f"native assertions failed; evidence={run}.json")
-

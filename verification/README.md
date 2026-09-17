@@ -162,8 +162,13 @@ manifest, not a replacement for the canonical area/profile result. Ownership
 roots cover compiler sources, generators, fixtures, vendored inputs, scripts,
 workflows and tested diagnostic documentation without a suffix allowlist.
 Initialized submodules contribute both their declared/checked-out identity and
-nonignored contents, including dirty files and additions. Prose outside these
-input roots (including phase records and general documentation) is excluded.
+nonignored contents, including dirty files and additions. Outside source ownership roots, inventory derives file constants from the
+guardrail policy's entrypoints and the documentation inventory's active consumers.
+It uses the compatibility check's own scan roots and skip predicate for its
+document/config sweep, and the documentation consumer's public-page selection.
+Consequently tested prose is an input; unconsumed prose and phase records remain
+excluded. New declared config inputs and newly scanned public pages invalidate
+evidence without editing an inventory suffix list.
 Files inside an input root remain inputs even when their suffix resembles prose:
 generators and tests can consume Markdown and arbitrary future asset types.
 

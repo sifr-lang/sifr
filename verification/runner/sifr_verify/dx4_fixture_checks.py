@@ -248,6 +248,56 @@ class FixtureTests(unittest.TestCase):
             "commit", "-qm", "new input")
         self.assertIn("third_party/component", compare(before, inventory(self.root))["changed"])
 
+    def test_r08_declared_consumers_track_docs_configs_and_future_additions(self):
+        from .fixture_inventory import inventory, compare
+        from .declared_fixture_inputs import declared_selector
+        import subprocess
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        def write(name, text):
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text)
+        write("verification/policy/guardrails.json", json.dumps({"guardrails": [
+            {"entrypoint": "scripts/guard.py"}]}))
+        write("scripts/guard.py", "from pathlib import Path\n"
+              "INPUT = Path('internal_docs/future.config')\n")
+        write("verification/areas/documentation/docs_inventory.json",
+              json.dumps({"checks": [{"status": "active", "command": ["python3",
+                  "verification/areas/documentation/check.py"]}]}))
+        write("verification/areas/documentation/check.py", "from pathlib import Path\n"
+              "CANONICAL_DOCUMENTS = {'guide': Path('docs/guide.mdx')}\n"
+              "DOCS_CONFIG_PATH = Path('docs/docs.json')\n"
+              "PUBLIC_DOC_SUFFIXES = {'.md', '.mdx'}\n")
+        names = ["internal_docs/future.config", "docs/guide.mdx", "docs/docs.json"]
+        for name in names:
+            write(name, "original")
+        before = inventory(self.root)
+        for name in names:
+            write(name, "changed")
+            self.assertEqual(compare(before, inventory(self.root))["changed"], [name])
+            write(name, "original")
+        write("docs/future-page.mdx", "new public page")
+        self.assertEqual(compare(before, inventory(self.root))["added"], ["docs/future-page.mdx"])
+        (self.root / "docs/future-page.mdx").unlink()
+        (self.root / names[0]).unlink()
+        self.assertEqual(compare(before, inventory(self.root))["removed"], [names[0]])
+        write(names[0], "original")
+        for name in ["plans/issues/active/record.md", "notes/guide.md", "internal_docs/unconsumed.txt"]:
+            write(name, "unconsumed prose")
+        self.assertTrue(compare(before, inventory(self.root))["unchanged"])
+        # Real consumer declarations cover the omissions; prose scanned by an
+        # actual checker is an input even if it lives in internal_docs.
+        select = declared_selector(REPO_ROOT)
+        for name in ["internal_docs/stdlib_retained_compiler_intrinsics.toml",
+                     "internal_docs/stdlib_native_adapter_reachability.toml",
+                     "internal_docs/distribution_pipeline.md",
+                     "internal_docs/diagnostic_codes.md", "docs/docs.json",
+                     "docs/installation.mdx", "docs/future-page.mdx"]:
+            self.assertTrue(select(name), name)
+        for name in ["plans/issues/active/record.md", "plans/issues/archive/record.md",
+                     "notes/guide.md", "internal_docs/unconsumed.txt"]:
+            self.assertFalse(select(name), name)
+
     def test_bless_never_accepts_setup_failure(self):
         self.manifest([self.script("negative", "raise SystemExit(9)", expected=1)])
         self.options = adapter.AreaRunOptions(set(), True, self.root / "report.json")
@@ -269,4 +319,3 @@ def policy_checks():
 
 if __name__ == "__main__":
     unittest.main()
-

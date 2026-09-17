@@ -67,4 +67,3 @@ def assertion_selection(case):
     if command in {"check", "package-check", "lint", "fmt-check"}:
         return [command, "diagnostic-baseline"]
     return [command]
-

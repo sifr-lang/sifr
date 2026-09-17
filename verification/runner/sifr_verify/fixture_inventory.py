@@ -5,6 +5,7 @@ import os
 import subprocess
 from pathlib import Path
 from .paths import REPO_ROOT
+from .declared_fixture_inputs import declared_selector
 
 # Ownership determines inputs, never a file-extension allowlist: generators and
 # fixtures consume arbitrary assets. Prose/phase records outside these roots do
@@ -26,7 +27,7 @@ def _selected(name):
 def _git(root, *args):
     return subprocess.check_output(["git", *args], cwd=root)
 
-def _records(root, prefix=""):
+def _records(root, additional, prefix=""):
     # NUL-delimited names preserve arbitrary fixture filenames. Git's index is
     # authoritative for tracked files; nonignored additions invalidate evidence
     # before commit. Ignored target/cache artifacts are not inputs.
@@ -43,7 +44,7 @@ def _records(root, prefix=""):
             entries.setdefault(os.fsdecode(name), (None, None))
     for name, (mode, oid) in sorted(entries.items()):
         full_name = prefix + name
-        if not _selected(full_name):
+        if not (_selected(full_name) or additional(full_name)):
             continue
         path = root / name
         if mode == "160000":
@@ -56,7 +57,7 @@ def _records(root, prefix=""):
             content = json.dumps(identity, sort_keys=True).encode()
             yield {"path": full_name, "sha256": hashlib.sha256(content).hexdigest()}
             if initialized:
-                yield from _records(path, full_name + "/")
+                yield from _records(path, additional, full_name + "/")
         elif path.is_symlink():
             # Include link identity and the bytes consumed through a file link.
             # Do not traverse directory links into ignored/external inventories.
@@ -68,7 +69,8 @@ def _records(root, prefix=""):
             yield {"path": full_name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 def inventory(root=REPO_ROOT):
-    records = sorted(_records(Path(root)), key=lambda record: record["path"])
+    root = Path(root)
+    records = sorted(_records(root, declared_selector(root)), key=lambda record: record["path"])
     raw = json.dumps(records, sort_keys=True, separators=(",", ":")).encode()
     return {"schema_version": 1, "input_digest": hashlib.sha256(raw).hexdigest(),
             "inputs": records}
@@ -92,4 +94,3 @@ def compare_paths(reference, candidate, expected):
     if left != right:
         raise AssertionError("compiler path outcomes differ")
     return left
-
