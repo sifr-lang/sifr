@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.7 complete; DX.8 next
+status: in progress; DX.1–DX.8 complete; DX.9 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -618,7 +618,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.7 are complete and merged. DX.8–DX.16 are not started; DX.8 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.8 are complete and merged. DX.9–DX.16 are not started; DX.9 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -629,7 +629,7 @@ DX.1–DX.7 are complete and merged. DX.8–DX.16 are not started; DX.8 is the n
 | DX.5 | Complete / merged | Candidate `c7734025c242631a326901ce08c846ac42afd7ae`; [PR #3848](https://github.com/sifr-lang/sifr/pull/3848); merge `22a72c6c6c9f95242e3e60ba83e473f0edd60d11` | I05, I06, M06, M16: 14 focused tests PASS; schema/site, scoped clippy/fmt and guardrails PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3848#issuecomment-5712915895) |
 | DX.6 | Complete / merged | Candidate `5581af0884edcb46d88419b9b7d66d1ce97531df`; [PR #3850](https://github.com/sifr-lang/sifr/pull/3850); merge `d53899694e8b65f47f7105fda34fec039459549a` | M09, M12–M14, R10 and focused producer/preparation/packaging checks PASS; two full bare driver runs 649 passed / 78 ignored each; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3850#issuecomment-5717512054) |
 | DX.7 | Complete / merged | Candidate `036e69592164b87d309f31ba43ee406a58ed79ca`; [PR #3852](https://github.com/sifr-lang/sifr/pull/3852); merge `fb6d432be20d945e0266030b076dbc76ce4c8a50` | M01, M02, M04, M17, representative M15/native parity and paired installed Q09 PASS; focused tests and guardrails PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3852#issuecomment-5719741485) |
-| DX.8 | Not started | — | — | — |
+| DX.8 | Complete / merged | Candidate `78f12c5cdd357f1601926f3fa78ec96f004108dd`; [PR #3854](https://github.com/sifr-lang/sifr/pull/3854); merge `1b55710f4a6e1d796be243c025b673f8958de72b` | M03, M05, M07, M08, M10, M11, M15, R09, Q05, Q09 PASS; 727-case corpus/native, four-target portable records, actual Linux/Mac qualification, installed generations and focused regressions; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3854#issuecomment-5722224549) |
 | DX.9 | Not started | — | — | — |
 | DX.10 | Not started | — | — | — |
 | DX.11 | Not started | — | — | — |
@@ -1171,3 +1171,130 @@ artifact identities, raw reports, scripts and per-file digests.
 | `installed-036e69-v2/report.json` | `19aef4c93dd47491baccb7adc5b2a5bde9cab1c40fc67398c71e62900c798e45` |
 | `q09-comparison.json` | `ebd89eddce113fc6252310baf86fb064b8e9b31ab8decb9ac16c6fb225aa3861` |
 | Original Opus response | `1e159c464005c26e3df1beb40711b6783b78b2878f7cb08e9173be4fb1e91d79` |
+
+
+## Current Handoff — DX.8 (2026-09-18)
+
+- **State:** complete and merged. Implementation [PR #3854](https://github.com/sifr-lang/sifr/pull/3854);
+  final candidate `78f12c5cdd357f1601926f3fa78ec96f004108dd`, merge
+  `1b55710f4a6e1d796be243c025b673f8958de72b`, base
+  `e96028d97fdc2efe4389485dfcb88981d17f32a5`. Sole implementation/review checkout:
+  `yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/compiler-dx-orchestration`,
+  branch `codex/dx8`. This record uses `codex/dx8-record`.
+- **Metadata/corpus:** M03, M05, M10, M15 and Q05 pass. Complete qualification
+  traverses 89 canonical modules and 50,410 records for each semantic target.
+  Each of the four target corpora passes all 727 exact source-versus-metadata
+  Rust/source-map comparisons, including final newline and preamble positions.
+  The corpus references 83 modules; six are structurally qualified without corpus
+  references (`_sifr.python`, `sifr.meta`, `sifr.python`, `sifr.python_core`,
+  `sifr.sql`, `sifr.sql.migration`). This does not claim exhaustive API or generic
+  instantiation coverage.
+- **Behavioral oracle:** the full native maintained corpus passes 727/727
+  (185 groups, signature `ca4467fa7af12bd4`). After canonical NaN repair,
+  `native-oracle-reuse.json` proves unchanged exact emitted Rust, source maps,
+  fixture/runtime/runner inputs and module sets. Only unordered coverage-report
+  module arrays are compared as sets; Rust and metadata are never normalized.
+  Four focused installed native programs also pass.
+- **Portable identity/M11:** actual native Linux x86_64 and actual native macOS
+  arm64 producers, both Rust 1.98.1, produce byte-identical complete portable
+  record streams for matching explicit semantic targets:
+  `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`,
+  `x86_64-apple-darwin`, `aarch64-apple-darwin`.
+  Every record ID/kind/length/payload, including semantic/type/declaration
+  identities, participates. Only the compiler header envelope and
+  `FragmentValidation.compiler_identity` are excluded; an independent parser
+  validates offsets/digests and matches the compiler digest before complete
+  streams are compared. Actual cross-host qualification exposed CPU-dependent
+  NaN HIR bits; the existing constant-folding owner now emits a canonical quiet
+  NaN before identity construction. No semantic identity field is masked.
+  Compiler envelopes remain strict. Native behavior was qualified on Linux;
+  no foreign target binary was executed.
+- **Mac exception:** the user authorized only M11 qualification in isolated
+  `/tmp/sifr-dx8-m11-checkout`, private target `/tmp/sifr-dx8-m11-target` and
+  evidence `/tmp/sifr-dx8-m11-evidence`. The existing local user checkout was
+  untouched. The final candidate rebuilt a byte-identical native Mac binary and
+  revalidated all four original metadata artifacts (`mac-final-78f/report.json`).
+  All implementation, other tests and scoped review ran remotely.
+- **Installed generations/M07/M08:** atomic selection of retained immutable
+  generations pins matching compiler/metadata/source payloads for live sessions.
+  Real LSP old/new generation navigation and rollback pass, as do archive
+  relocation, two-store isolation and installer/self-update assertions.
+  Receipts retain the stable install directory but pin physical binary/sysroot
+  generation paths. Unsupported mutable roots reject with an empty-root remedy;
+  no backward migration or retroactive live-session pinning is claimed.
+- **Installed emission and recovery:** all 727 public `emit` stdout/newline/
+  preamble/source-map comparisons passed in `installed-5628e142a/report.json`.
+  That invocation later failed on an unsupported standalone `--offline` flag;
+  its failed outcome remains preserved. The corrected committed helper uses
+  Cargo's offline environment with ordinary standalone execution.
+  `installed-native-current/report.json` passes native assertions, live LSP,
+  missing/corrupt/incompatible rejection, restoration and lazy checking with
+  private navigation source absent on the same qualified artifact bytes.
+  `final-package-equivalence.json` proves all final packaged payload files
+  unchanged except the manifest build-commit provenance label. Final installed
+  doctor integrity and full metadata validation pass. These are explicitly
+  joined successful stages, not a relabeled failed invocation.
+- **R09/profile regressions:** development doctor missing/ready/corrupt/recovered
+  behavior, identity and remedy text, and no implicit production/repair now have
+  a committed real-CLI regression in the existing `metadata-structural` suite.
+  Complete structural and corpus tiers remain profile-wired. The distribution
+  representative runner passes all 59 cases, including the executable immutable
+  generation fixture and generation-pinned receipt assertions, with pinned Node
+  26.8.2/npm 12.0.2. Format, maintainability, diff and 900-line guardrails pass
+  (4,046 files).
+- **Q09:** fresh paired optimized installed cohorts use the unchanged frozen
+  DX.1 workload on the reference Linux host. Each primary lane has 21 fresh
+  checks and 21 LSP sequences, first warmup excluded; separate 21-sample heap
+  cohorts do not supply latency claims. LSP median improves 9.88%
+  (1,841.644 → 1,659.732 ms); fresh checking improves 10.40%
+  (1,160.407 → 1,039.678 ms). Timing CV is below 2%; maximum candidate peak
+  100,642,816 bytes remains below 128 MiB. All samples retain 13 demanded
+  semantic modules/13 shared nominal projections and zero HIR/Rust payload reads.
+
+| Q09 metric | Source reference | Metadata candidate | Delta |
+| --- | ---: | ---: | ---: |
+| Steady/post-close RSS | 128.359 MiB | 65.303 MiB | −49.13% |
+| Peak RSS | 128.359 MiB | 95.713 MiB | −25.43% |
+| Steady allocated chunks | 89.364 MiB | 44.051 MiB | −50.71% |
+| Post-close allocated chunks | 72.233 MiB | 43.255 MiB | −40.12% |
+| Peak allocated chunks | 98.721 MiB | 82.819 MiB | −16.11% |
+| Empty allocated chunks | 0.070 MiB | 0.174 MiB | +0.104 MiB |
+
+The frozen workload retains its exact existing `SIFR-PACKAGE-0103` diagnostic;
+these measurements do not establish clean-package editor correctness. The
+separate glibc `mallinfo2` lane includes allocated chunks/direct mappings and
+allocator/thread-cache retention, not exact object attribution. Reduced retention
+is consistent with demanded semantics/shared nominal payloads; pinned container
+state, transient decoding and allocator high-water retention remain.
+
+- **Review/remediation:** read-only Claude Opus 5 first identified a missing
+  executable bit and absent committed development-doctor regression. The bounded
+  correction also reconciled a stale mutable-root receipt assertion exposed by
+  the real area runner. A first area run with that stale assertion and wrong
+  ambient Node remains failed; the corrected pinned-toolchain run passes.
+  Final [Opus review is SATISFIED, no blockers](https://github.com/sifr-lang/sifr/pull/3854#issuecomment-5722224549).
+  Nonblocking observations are recorded in the
+  [metadata follow-up issue](ad-hoc-dx-metadata-review-followups.md).
+- **Evidence reuse/policy:** the final four-file remediation changes only
+  verification files. Compiler, semantic/source/runtime/lock/vendor/installer
+  and corpus inputs are unchanged from qualified product candidate
+  `53e9a8f05ccebd794311cef39c34c0059ceb98b4`; its immutable receipts retain that
+  provenance. Final wrapper `final-evidence-78f.json` adds the focused corrections
+  and actual final Mac audit. Earlier failed/incomplete runs remain historical.
+  Pressure checks retained about 100 GiB free during final validation; no
+  foreign/shared target cleanup was needed. No intermediate full create-PR/merge
+  gate or release qualification was run or claimed. The full phase-end gate
+  remains required; no release was requested.
+- **Blocker:** none for DX.8 acceptance.
+- **Exact next action:** stop after this record update. Start DX.9 only in a new
+  bounded session; no DX.9 implementation belongs to this handoff.
+
+Evidence host/root:
+`yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx8-evidence/`.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Final `final-evidence-78f.json` | `2ac0d40ea6b501011a961145e613820d3fd48d031e52a7c3c57d59de492d5f0f` |
+| Product `qualification-manifest.json` | `59c1578ad47ba67ef3898ca5852b7d8c579c3c56db9ff486aa85270cb2aa23b1` |
+| `q09-comparison.json` | `df4a08b07b756baac0b11af320040c2cc690c101b5497c0203c2155a5056bbd3` |
+| Final original Opus response | `3f859a2ef2524dda2648215792aba88033c44a04b666d0b5c4924f82316a0fb9` |
