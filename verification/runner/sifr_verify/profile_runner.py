@@ -80,6 +80,8 @@ class ProfileRunner:
         self.profile = load_profile(profile_name)
         self.profile_name = str(self.profile["name"])
         self.forward_args = forward_args
+        self.functional_exit_status = 0
+        self.performance_exit_status = 0
         self.env = os.environ.copy()
         self.env["CARGO_BUILD_JOBS"] = str(self.profile["e2e"]["cargo_build_jobs"])
         self.env["RAYON_NUM_THREADS"] = str(self.profile["resource_policy"]["max_parallel"])
@@ -136,8 +138,11 @@ class ProfileRunner:
         budget = self.prepare_step_budget(name)
         result = timed_step(name, callback)
         if result.status != 0:
+            self.functional_exit_status = result.status
             return result.status
         budget_status = enforce_prepared_step_budget(budget, result.elapsed_ms)
+        if budget_status != 0:
+            self.performance_exit_status = budget_status
         if budget_status == 0:
             record_step_success(budget)
         return budget_status
@@ -352,9 +357,14 @@ def run_profile(
     *,
     release_report_out: str | None = None,
 ) -> int:
+    runner = ProfileRunner(profile_name, forward_args)
     return run_profile_with_report(
         profile_name,
-        lambda: ProfileRunner(profile_name, forward_args).run(),
+        runner.run,
+        execution_outcomes=lambda: {
+            "functional_exit_status": runner.functional_exit_status,
+            "performance_exit_status": runner.performance_exit_status,
+        },
         handled_error=ProfileRunnerError,
         release_report_out=release_report_out,
     )

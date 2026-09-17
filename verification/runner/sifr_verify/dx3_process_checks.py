@@ -66,6 +66,28 @@ class ProcessTests(unittest.TestCase):
         self.assertEqual(report["artifact_cache"]["test"]["hits"], 1)
         self.assertEqual(report["case_timings"][0]["elapsed_ms"], 9)
 
+    def test_blocking_performance_failure_is_separate_from_functional_outcome(self):
+        from . import profile_reporting
+        from .profile_runner import ProfileRunner
+        from .step_budgets import StepBudgetContext
+        runner = ProfileRunner("create-pr", [])
+        runner.prepare_step_budget = lambda name: StepBudgetContext(name, 1, "blocking")
+        with tempfile.TemporaryDirectory() as temporary, contextlib.redirect_stdout(io.StringIO()):
+            root = Path(temporary)
+            def summary(args):
+                Path(args.json_out).write_text("{}")
+            with patch.object(profile_reporting, "REPO_ROOT", root), patch.object(profile_reporting.reports, "summarize", summary):
+                status = profile_reporting.run_profile_with_report(
+                    "fixture", lambda: runner.execute_step("fixture", lambda: time.sleep(.02)),
+                    handled_error=ValueError, release_report_out=None,
+                    execution_outcomes=lambda: {
+                        "functional_exit_status": runner.functional_exit_status,
+                        "performance_exit_status": runner.performance_exit_status})
+            report = json.loads((root / "target/validation_lane_reports/fixture.latest.json").read_text())
+        self.assertEqual(status, 124)
+        self.assertEqual(report["functional_status"], "pass")
+        self.assertEqual(report["performance_status"], "fail")
+
     def test_r01_canonical_report_retains_runner_failure(self):
         from . import profile_reporting
         from .profile_runner import timed_step

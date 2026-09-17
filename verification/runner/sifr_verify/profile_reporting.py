@@ -71,6 +71,7 @@ def run_profile_with_report(
     *,
     handled_error: type[Exception],
     release_report_out: str | None,
+    execution_outcomes: Callable[[], dict[str, int]] | None = None,
 ) -> int:
     release_output = None
     if release_report_out is not None:
@@ -143,8 +144,13 @@ def run_profile_with_report(
     # Bind functional status to the runner result, never to arbitrary child text.
     if json_file.exists():
         payload = json.loads(json_file.read_text())
-        payload["functional_exit_status"] = status
-        payload["functional_status"] = "pass" if status == 0 else "fail"
+        outcomes = execution_outcomes() if execution_outcomes is not None else {
+            "functional_exit_status": status, "performance_exit_status": 0,
+        }
+        payload.update(outcomes)
+        payload["exit_status"] = status
+        payload["functional_status"] = "pass" if outcomes["functional_exit_status"] == 0 else "fail"
+        payload["performance_status"] = "pass" if outcomes["performance_exit_status"] == 0 else "fail"
         json_file.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     publish_status("completed", status)
     temp_log.unlink(missing_ok=True)
