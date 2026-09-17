@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 COMPATIBILITY_CHECK = "verification/areas/developer_tooling/check_no_pre_v1_compatibility.py"
+TAXONOMY_CHECK = "verification/areas/coverage_matrix/checks/verification_taxonomy.py"
 DOCUMENTATION_INVENTORY = "verification/areas/documentation/docs_inventory.json"
 GUARDRAIL_POLICY = "verification/policy/guardrails.json"
 
@@ -55,6 +56,12 @@ def declared_selector(root):
                 if len(command) < 2 or not command[1].endswith(".py"):
                     raise ValueError("documentation input consumer must declare a Python entrypoint")
                 consumers.add(command[1])
+    # These active source-sweep consumers declare input authorities beyond the
+    # source roots (notably the taxonomy check's top-level README). Their Path
+    # collections remain the authority, rather than duplicating a file list.
+    for relative in (COMPATIBILITY_CHECK, TAXONOMY_CHECK):
+        if (root / relative).is_file():
+            consumers.add(relative)
     exact = set()
     modules = [_load(root, relative) for relative in sorted(consumers)]
     for module in modules:
@@ -75,8 +82,8 @@ def declared_selector(root):
             exact.update(path.relative_to(root).as_posix()
                          for path in (root / "docs").rglob("*")
                          if path.is_file() and path.suffix in module.PUBLIC_DOC_SUFFIXES)
-    compatibility_path = root / COMPATIBILITY_CHECK
-    compatibility = _load(root, COMPATIBILITY_CHECK) if compatibility_path.is_file() else None
+    compatibility = next((module for module in modules
+                          if Path(module.__file__) == root / COMPATIBILITY_CHECK), None)
 
     def selected(name):
         if name in exact:

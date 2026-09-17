@@ -271,6 +271,11 @@ class FixtureTests(unittest.TestCase):
         names = ["internal_docs/future.config", "docs/guide.mdx", "docs/docs.json"]
         for name in names:
             write(name, "original")
+        write("verification/areas/coverage_matrix/checks/verification_taxonomy.py",
+              "from pathlib import Path\nACTIVE_ROOTS = (Path('README.md'), Path('future-root.asset'))\n")
+        names += ["README.md", "future-root.asset"]
+        for name in names:
+            write(name, "original")
         before = inventory(self.root)
         for name in names:
             write(name, "changed")
@@ -292,7 +297,7 @@ class FixtureTests(unittest.TestCase):
                      "internal_docs/stdlib_native_adapter_reachability.toml",
                      "internal_docs/distribution_pipeline.md",
                      "internal_docs/diagnostic_codes.md", "docs/docs.json",
-                     "docs/installation.mdx", "docs/future-page.mdx"]:
+                     "docs/installation.mdx", "docs/future-page.mdx", "README.md"]:
             self.assertTrue(select(name), name)
         for name in ["plans/issues/active/record.md", "plans/issues/archive/record.md",
                      "notes/guide.md", "internal_docs/unconsumed.txt"]:

@@ -164,7 +164,8 @@ workflows and tested diagnostic documentation without a suffix allowlist.
 Initialized submodules contribute both their declared/checked-out identity and
 nonignored contents, including dirty files and additions. Outside source ownership roots, inventory derives file constants from the
 guardrail policy's entrypoints and the documentation inventory's active consumers.
-It uses the compatibility check's own scan roots and skip predicate for its
+It also reads the active taxonomy check's declared roots (including the root README)
+and uses the compatibility check's own scan roots and skip predicate for its
 document/config sweep, and the documentation consumer's public-page selection.
 Consequently tested prose is an input; unconsumed prose and phase records remain
 excluded. New declared config inputs and newly scanned public pages invalidate
