@@ -1988,4 +1988,8 @@ restricts reclamation to inactive entries owned by the current worktree, protect
 the newest candidate, and uses explicit free-space reserve pressure.
 Driver process execution owns bounded streams, safety deadlines and descendant
 groups; verification wraps its command boundary separately from runner events.
+User programs stream their full output and retain their normal runtime duration;
+compiler capture limits apply only to compiler-owned subprocesses. Signal
+ownership is scoped to live operations, and staged payload permissions are
+sealed before publication independently of the user's umask.
 These DX.3 primitives do not implement semantic project generations.

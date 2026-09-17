@@ -22,8 +22,18 @@ enum CacheCommand {
 }
 pub(crate) fn run(args: CacheArgs) -> i32 {
     let result = match args.command {
-        CacheCommand::Inspect { json: _ } => sifr_driver::cache_storage::inspect()
-            .and_then(|v| serde_json::to_value(v).map_err(io::Error::other)),
+        CacheCommand::Inspect { json } => match sifr_driver::cache_storage::inspect() {
+            Ok(report) if !json => {
+                let _ = writeln!(io::stdout(), "cache: {}", report.root.display());
+                for entry in report.entries {
+                    let _ = writeln!(io::stdout(), "{} bytes={} protected={}",
+                        entry.path.display(), entry.bytes, entry.protected);
+                }
+                return 0;
+            }
+            Ok(report) => serde_json::to_value(report).map_err(io::Error::other),
+            Err(error) => Err(error),
+        },
         CacheCommand::Prune { dry_run, reserve_bytes } => {
             sifr_driver::cache_storage::available_bytes().and_then(|available| {
                 let report = sifr_driver::cache_storage::prune(reserve_bytes, available, dry_run)?;

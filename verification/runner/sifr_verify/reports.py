@@ -224,6 +224,16 @@ def parse_log(path: Path) -> dict[str, Any]:
                 "fingerprint": match.group(4),
             }
             continue
+        # Decode only child metrics after runner-owned status/cache/budget
+        # matching. A decoded child can never enter those authoritative branches.
+        if line.startswith(("[child:stdout] ", "[child:stderr] ")):
+            try:
+                decoded = json.loads(line.split("] ", 1)[1])
+            except (ValueError, IndexError):
+                continue
+            if not isinstance(decoded, str):
+                continue
+            line = decoded.strip()
         if match := CASE_TIMING_RE.match(line):
             case_timings.append(
                 {

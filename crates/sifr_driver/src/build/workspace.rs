@@ -80,6 +80,7 @@ impl PendingCachedArtifact {
         self,
         required_paths: &[&Path],
     ) -> Result<CachedArtifactEntry, Vec<RenderedDiagnostic>> {
+        crate::cache_storage::seal(&self.staging_root).map_err(storage_error)?;
         for required_path in required_paths {
             let absolute = self.staging_root.join(required_path);
             if crate::cache_storage::payload(&self.staging_root, required_path).is_err() {
@@ -257,6 +258,11 @@ pub(crate) fn prepare_cached_artifact(
                     })
                 {
                     lease.lock_shared().map_err(storage_error)?;
+                    if !valid_entry(&final_root, &expected, required_paths) {
+                        return Err(storage_error(
+                            "cache entry disappeared during reader lock conversion",
+                        ));
+                    }
                     return Ok(PreparedArtifactCache::Hit(CachedArtifactEntry {
                         _lease: lease,
                         workspace_root: final_root.clone(),

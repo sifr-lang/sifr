@@ -103,6 +103,31 @@ pub(crate) fn check_owned(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// Seal producer-created payloads without relying on the ambient umask.
+/// Symlinks are never followed; required paths still reject them at use.
+pub(crate) fn seal(root: &Path) -> io::Result<()> {
+    let metadata = fs::symlink_metadata(root)?;
+    if metadata.uid() != uid() {
+        return Err(invalid(format!(
+            "foreign-owned staged payload: {}",
+            root.display()
+        )));
+    }
+    if metadata.file_type().is_symlink() {
+        return Ok(());
+    }
+    fs::set_permissions(
+        root,
+        fs::Permissions::from_mode(metadata.permissions().mode() & !0o022),
+    )?;
+    if metadata.is_dir() {
+        for entry in fs::read_dir(root)? {
+            seal(&entry?.path())?;
+        }
+    }
+    Ok(())
+}
+
 pub(crate) fn payload(root: &Path, relative_path: &Path) -> io::Result<()> {
     relative(relative_path)?;
     let mut path = root.to_path_buf();
@@ -158,8 +183,13 @@ pub struct CacheEntryInspection {
 }
 
 fn size(path: &Path) -> io::Result<u64> {
-    check_owned(path)?;
     let meta = fs::symlink_metadata(path)?;
+    if meta.uid() != uid() {
+        return Err(invalid("foreign-owned cache payload"));
+    }
+    if meta.file_type().is_symlink() {
+        return Ok(meta.len());
+    }
     if meta.is_file() {
         return Ok(meta.len());
     }

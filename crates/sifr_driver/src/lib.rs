@@ -11,6 +11,7 @@ mod build;
 pub mod cache_storage;
 mod compiler_context;
 pub mod process_execution;
+mod process_signals;
 pub use compiler_context::CompilerContext;
 mod diagnostics;
 mod export_policy;

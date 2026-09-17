@@ -45,7 +45,6 @@ def prepare_step_budget(
         return None
     enforcement = str(raw_budget.get("enforcement", "advisory"))
     if "budget_ms" in raw_budget:
-        env["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"] = str(int(raw_budget["budget_ms"]) / 1000)
         return StepBudgetContext(
             name=name,
             budget_ms=int(raw_budget.get("budget_ms", 0) or 0),
@@ -90,7 +89,6 @@ def prepare_step_budget(
         receipt_eligible=eligible,
         required_cache_paths=required_paths,
     )
-    env["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"] = str(context.budget_ms / 1000)
     env["SIFR_VERIFY_STEP_CACHE_STATE"] = state
     if name == "python_interop":
         env["SIFR_PYTHON_INTEROP_CACHE_STATE"] = state
@@ -103,7 +101,7 @@ def prepare_step_budget(
 def enforce_step_budget(context: StepBudgetContext | None, elapsed_ms: int) -> int:
     if context is None:
         return 0
-    print(f"[sifr-step-contract] name={context.name} kind=safety_deadline")
+    print(f"[sifr-step-contract] name={context.name} kind=performance_budget")
     exceeded = context.budget_ms > 0 and elapsed_ms > context.budget_ms
     budget_status = "fail" if exceeded else "pass"
     print(

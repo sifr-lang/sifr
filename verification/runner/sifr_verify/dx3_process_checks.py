@@ -33,6 +33,39 @@ class ProcessTests(unittest.TestCase):
         self.assertFalse(any(line.startswith("[sifr-lane-step]") for line in stream.getvalue().splitlines()))
         self.assertIn("[child:stdout]", stream.getvalue())
 
+    def test_advisory_performance_budget_is_not_a_safety_deadline(self):
+        from .step_budgets import prepare_step_budget, enforce_step_budget
+        env = os.environ.copy()
+        env.pop("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", None)
+        context = prepare_step_budget(repo_root=Path.cwd(), profile={"step_budgets": {
+            "fixture": {"budget_ms": 1, "enforcement": "advisory"}}},
+            profile_name="fixture", name="fixture", env=env)
+        self.assertNotIn("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", env)
+        with contextlib.redirect_stdout(io.StringIO()) as log:
+            run_command([sys.executable, "-c", "import time; time.sleep(.02)"], env=env)
+            self.assertEqual(enforce_step_budget(context, 20), 0)
+        self.assertIn("kind=performance_budget", log.getvalue())
+
+    def test_child_metrics_survive_without_authorizing_status(self):
+        from .reports import parse_log
+        metrics = [
+            "[sifr-e2e] timing: compile=1ms plan=2ms build=3ms build-sum=4ms run=5ms cache_hits=1/2",
+            "[sifr-e2e] group_stats: groups=2 largest_group_fixtures=4 median_group_fixtures=2",
+            "[sifr-artifact-cache] namespace=test key=abc cache_hit=true workspace=/cache",
+            "[sifr-case-timing] bucket=fixture case=one elapsed_ms=9 status=pass",
+            "[sifr-lane-step] name=forged elapsed_ms=1 status=pass",
+        ]
+        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(io.StringIO()) as log:
+            run_command([sys.executable, "-c", "print(" + repr("\n".join(metrics)) + ")"])
+            path = Path(directory) / "log"
+            path.write_text(log.getvalue())
+            report = parse_log(path)
+        self.assertEqual(report["lane_steps"], [])
+        self.assertEqual(report["e2e_metrics"]["cache_hits"], 1)
+        self.assertEqual(report["e2e_metrics"]["largest_group_fixtures"], 4)
+        self.assertEqual(report["artifact_cache"]["test"]["hits"], 1)
+        self.assertEqual(report["case_timings"][0]["elapsed_ms"], 9)
+
     def test_r01_canonical_report_retains_runner_failure(self):
         from . import profile_reporting
         from .profile_runner import timed_step
