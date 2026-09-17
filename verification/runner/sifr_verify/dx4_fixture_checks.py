@@ -160,6 +160,37 @@ class FixtureTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             failed_selection(self.options.result_json, "other-area")
 
+    def test_bless_preserves_declared_package_exit_two(self):
+        source = self.root / "main.sifr"
+        source.write_text("def main(): pass")
+        case = {"id": "package", "entry": str(source.relative_to(REPO_ROOT)),
+                "command": "check", "expect_exit_code": 2, "diagnostic_formats": []}
+        options = adapter.AreaRunOptions(set(), True, self.root / "report.json")
+        with patch.object(adapter, "run_sifr_variant",
+                return_value=(2, "", "declared package error\n", 1.0, ["sifr", "check"])):
+            result, failed, count = adapter.run_baseline_case(self.config, "seeds", case, options)
+        self.assertFalse(failed)
+        self.assertEqual(count, 0)
+        self.assertEqual(result["variants"][0]["status"], "pass")
+        self.assertEqual((self.root / "baselines/check.exit-code.txt").read_text(), "2\n")
+
+    def test_r08_demo_and_vendor_assets_invalidate_evidence(self):
+        from .fixture_inventory import inventory, compare
+        import subprocess
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        (self.root / "demos").mkdir()
+        (self.root / "vendor").mkdir()
+        demo = self.root / "demos/main.sifr"
+        asset = self.root / "vendor/build-input.bin"
+        demo.write_text("def main(): pass")
+        asset.write_bytes(b"original native input")
+        before = inventory(self.root)
+        demo.write_text("def main(): assert False")
+        self.assertEqual(compare(before, inventory(self.root))["changed"], ["demos/main.sifr"])
+        demo.write_text("def main(): pass")
+        asset.write_bytes(b"changed native input")
+        self.assertEqual(compare(before, inventory(self.root))["changed"], ["vendor/build-input.bin"])
+
     def test_bless_never_accepts_setup_failure(self):
         self.manifest([self.script("negative", "raise SystemExit(9)", expected=1)])
         self.options = adapter.AreaRunOptions(set(), True, self.root / "report.json")

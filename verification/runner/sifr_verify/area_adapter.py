@@ -605,9 +605,8 @@ def compare_or_bless(
     exit_file: Path,
 ) -> list[str]:
     if options.bless:
-        # Never turn crashes/tool failures into approved language expectations.
-        if exit_code not in {0, 1}:
-            return ["unblessable-process-failure"]
+        # run_baseline_case requires the declared expected exit and a completed
+        # process before reaching this write, including legitimate exit code 2.
         write_text(stdout_file, stdout_norm)
         write_text(stderr_file, stderr_norm)
         write_text(exit_file, f"{exit_code}\n")

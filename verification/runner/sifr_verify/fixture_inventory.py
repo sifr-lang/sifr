@@ -15,7 +15,9 @@ def inventory(root=REPO_ROOT):
         if not path.is_file():
             continue
         # Documentation-only phase records do not change compiler/verification inputs.
-        selected = (
+        # Demos and vendored builds may consume arbitrary data/configuration
+        # assets, not only source suffixes. Track their complete file inventory.
+        selected = name.startswith(("demos/", "vendor/")) or (
             name.startswith(("crates/", "stdlib/", "verification/", "third_party/", "scripts/", ".cargo/"))
             and path.suffix in {".rs", ".sifr", ".py", ".json", ".toml", ".sh", ".snap", ".txt", ".lock", ".c", ".h", ".pyi"}
         ) or name in {"Cargo.toml", "Cargo.lock", "rust-toolchain.toml"} or (
