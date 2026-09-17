@@ -179,8 +179,9 @@ class Qualification:
         workspace.mkdir()
         source = workspace / "main.sifr"
         source.write_text("from sifr.math import sqrt\n\ndef main():\n    value: float = sqrt(4.0)\n")
-        old_env = {key: os.environ.get(key) for key in ("SIFR_SYSROOT", "SIFR_LSP_COMMAND")}
+        old_env = {key: os.environ.get(key) for key in ("SIFR_SYSROOT", "SIFR_LSP_COMMAND", "SIFR_CACHE_DIR")}
         os.environ["SIFR_SYSROOT"] = str(selector)
+        os.environ["SIFR_CACHE_DIR"] = self.env["SIFR_CACHE_DIR"]
         os.environ["SIFR_LSP_COMMAND"] = shlex.join([str(first / "bin/sifr"), "lsp", "--stdio"])
         client = LspClient()
         def switch(root):
@@ -206,7 +207,10 @@ class Qualification:
                 assert second.as_uri() in new_uri, new_uri
                 assert new_range["start"]["line"] == old_range["start"]["line"] + 1
             finally:
-                newer.close()
+                try:
+                    newer.request("shutdown")
+                finally:
+                    newer.close()
             switch(first)
             assert definition(client) == (old_uri, old_range)
             self.report["lsp_generations"] = {"old": old_uri, "new": new_uri,
@@ -214,7 +218,10 @@ class Qualification:
                                              "rollback_preserved": True}
             self.save()
         finally:
-            client.close()
+            try:
+                client.request("shutdown")
+            finally:
+                client.close()
             for key, value in old_env.items():
                 if value is None:
                     os.environ.pop(key, None)
