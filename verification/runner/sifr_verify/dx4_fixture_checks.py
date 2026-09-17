@@ -191,6 +191,63 @@ class FixtureTests(unittest.TestCase):
         asset.write_bytes(b"changed native input")
         self.assertEqual(compare(before, inventory(self.root))["changed"], ["vendor/build-input.bin"])
 
+    def test_r08_structural_authorities_include_future_generator_assets(self):
+        from .fixture_inventory import inventory, compare
+        import subprocess
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        names = ["crates/sql/parser.lalrpop", "crates/sql/catalog.sql",
+                 "crates/components/component.wasm", "crates/components/interface.wit",
+                 "crates/future/input.unrecognized", "verification/fixtures/input.md",
+                 "sifr.toml", "sysroot.toml", ".github/workflows/test.yml"]
+        for name in names:
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("original")
+        before = inventory(self.root)
+        self.assertEqual({item["path"] for item in before["inputs"]}, set(names))
+        for name in names:
+            path = self.root / name
+            path.write_text("changed")
+            self.assertEqual(compare(before, inventory(self.root))["changed"], [name])
+            path.write_text("original")
+        for name in ["plans/issues/active/phase.md", "internal_docs/design.md", "docs/guide.md"]:
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("documentation only")
+        self.assertTrue(compare(before, inventory(self.root))["unchanged"])
+        (self.root / names[0]).unlink()
+        self.assertEqual(compare(before, inventory(self.root))["removed"], [names[0]])
+
+    def test_r08_submodule_identity_dirty_assets_and_additions(self):
+        from .fixture_inventory import inventory, compare
+        import subprocess
+        def git(root, *args):
+            return subprocess.run(["git", "-C", str(root), *args], check=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        git(self.root, "init", "-q")
+        module = self.root / "third_party/component"
+        module.mkdir(parents=True)
+        git(module, "init", "-q")
+        (module / "asset.wit").write_text("original")
+        git(module, "add", ".")
+        git(module, "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+            "commit", "-qm", "fixture")
+        git(self.root, "add", "third_party/component")
+        before = inventory(self.root)
+        self.assertEqual({item["path"] for item in before["inputs"]},
+                         {"third_party/component", "third_party/component/asset.wit"})
+        (module / "asset.wit").write_text("dirty")
+        self.assertEqual(compare(before, inventory(self.root))["changed"],
+                         ["third_party/component/asset.wit"])
+        (module / "asset.wit").write_text("original")
+        (module / "future.input").write_text("new")
+        self.assertEqual(compare(before, inventory(self.root))["added"],
+                         ["third_party/component/future.input"])
+        git(module, "add", ".")
+        git(module, "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+            "commit", "-qm", "new input")
+        self.assertIn("third_party/component", compare(before, inventory(self.root))["changed"])
+
     def test_bless_never_accepts_setup_failure(self):
         self.manifest([self.script("negative", "raise SystemExit(9)", expected=1)])
         self.options = adapter.AreaRunOptions(set(), True, self.root / "report.json")

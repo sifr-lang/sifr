@@ -158,7 +158,14 @@ uv run --project verification --locked python -m sifr_verify areas inventory --o
 Inventory comparison authorizes reuse only when inputs are unchanged; it never
 creates a new test execution. Added fixtures and changed validation inputs change
 the inventory digest. Phase records alone do not. An inventory is an input
-manifest, not a replacement for the canonical area/profile result.
+manifest, not a replacement for the canonical area/profile result. Ownership
+roots cover compiler sources, generators, fixtures, vendored inputs, scripts,
+workflows and tested diagnostic documentation without a suffix allowlist.
+Initialized submodules contribute both their declared/checked-out identity and
+nonignored contents, including dirty files and additions. Prose outside these
+input roots (including phase records and general documentation) is excluded.
+Files inside an input root remain inputs even when their suffix resembles prose:
+generators and tests can consume Markdown and arbitrary future asset types.
 
 The shared adapter prepares its compiler through Cargo once per process and
 checks configured compiler overrides against the prepared artifact. Setup,
