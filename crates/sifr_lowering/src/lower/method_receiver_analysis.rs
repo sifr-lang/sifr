@@ -124,12 +124,27 @@ pub(super) fn validate_and_annotate_class_receivers(classes: &mut [HirClass], ct
 }
 
 fn refresh_protocol_implementations(classes: &mut [HirClass], ctx: &LowerCtx) {
-    let protocols = ctx
+    let declaration_order = classes
+        .iter()
+        .enumerate()
+        .map(|(index, class)| (class.name.clone(), index))
+        .collect::<HashMap<_, _>>();
+    let mut protocols = ctx
         .class_types
         .iter()
         .filter(|(_, ty)| matches!(ty.resolve_alias(), Type::Protocol { .. }))
         .map(|(name, ty)| (name.clone(), ty.clone()))
         .collect::<Vec<_>>();
+    // HashMap insertion/allocation order is not an emission or metadata identity.
+    // Local protocols follow source declaration order; external names sort canonically.
+    protocols.sort_by(|(left, _), (right, _)| {
+        declaration_order
+            .get(left)
+            .copied()
+            .unwrap_or(usize::MAX)
+            .cmp(&declaration_order.get(right).copied().unwrap_or(usize::MAX))
+            .then_with(|| left.cmp(right))
+    });
 
     for class in classes {
         if matches!(class.kind, HirClassKind::Protocol) {

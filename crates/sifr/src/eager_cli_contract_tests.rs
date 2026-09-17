@@ -54,6 +54,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Prepare matching stdlib toolchain metadata
+    Sysroot(crate::metadata_cli::SysrootArgs),
     /// Inspect or safely prune owned generated artifacts
     Cache(crate::cache_cli::CacheArgs),
     /// Compile a .sifr file to a native binary
@@ -380,9 +382,9 @@ fn equivalent(args: &[&str], update: bool) {
 #[test]
 fn all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order() {
     for command in [
-        "build", "run", "fetch", "doctor", "init", "repair", "bridge", "python", "check", "tree",
-        "package", "publish", "vendor", "fmt", "lint", "lsp", "trace", "emit", "test", "tools",
-        "self",
+        "sysroot", "build", "run", "fetch", "doctor", "init", "repair", "bridge", "python",
+        "check", "tree", "package", "publish", "vendor", "fmt", "lint", "lsp", "trace", "emit",
+        "test", "tools", "self",
     ] {
         for update in [false, true] {
             for suffix in [
@@ -408,6 +410,23 @@ fn all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order()
         &["sifr", "--version"],
         &["sifr", "--print", "sysroot", "--json"],
         &["sifr", "--json"],
+        &["sifr", "sysroot", "validate-metadata"],
+        &["sifr", "sysroot", "validate-metadata", "--help"],
+        &["sifr", "sysroot", "validate-metadata", "--source-root", "."],
+        &[
+            "sifr",
+            "sysroot",
+            "validate-metadata",
+            "--metadata",
+            "stdlib.sifrmeta",
+        ],
+        &[
+            "sifr",
+            "sysroot",
+            "validate-metadata",
+            "--target",
+            "aarch64-apple-darwin",
+        ],
         &[
             "sifr",
             "build",

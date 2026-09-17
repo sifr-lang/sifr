@@ -593,6 +593,10 @@ class Counter:
     def bump(mut self) -> None:
         self.value += 1
 
+class Alpha(Protocol):
+    def bump(mut self) -> None:
+        pass
+
 def invoke(own mut entity: Mutable) -> None:
     entity.bump()
 "#;
@@ -602,11 +606,7 @@ def invoke(own mut entity: Mutable) -> None:
         .iter()
         .find(|class| class.name == "Counter")
         .expect("counter class should exist");
-    assert!(
-        counter
-            .implements_protocols
-            .contains(&"Mutable".to_string())
-    );
+    assert_eq!(counter.implements_protocols, ["Mutable", "Alpha"]);
     let HirExpr::MethodCall {
         receiver_convention,
         source: Some(_),
