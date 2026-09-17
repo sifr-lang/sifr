@@ -1,7 +1,7 @@
 # Compiler DX and Toolchain Reuse Architecture
 
 status: final target design  
-implementation status: DX.1 baseline/policy complete; DX.2–DX.16 not started
+implementation status: DX.1 baseline/policy and DX.2 identity/toolchain context complete; DX.3–DX.16 not started
 implementation baseline: `sifr-lang/sifr@0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
 design date: 2026-09-16  
 

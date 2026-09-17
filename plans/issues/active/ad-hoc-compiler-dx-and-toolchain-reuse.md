@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1 blocked
+status: in progress; DX.1–DX.2 complete; DX.3 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -60,7 +60,9 @@ Do not create reverse crate dependencies merely to share a persistence helper. I
 
 Milestones execute in the order below. An implementation milestone may be split into bounded PR items, but each item retains the same milestone scope and completion criteria. Finish the selected item before starting another. All milestones are required for phase completion.
 
-Run focused tests while developing and the appropriate existing create-PR/merge validation on the final candidate. Group related in-scope fixes before broad qualification. A failed prerequisite blocks dependents; independent diagnostic collection may continue only when safe. Do not repeatedly run an unchanged failed performance gate without new evidence or a controlled measurement reason.
+**Prospective validation policy (user-approved 2026-09-17):** each intermediate milestone requires its named acceptance tests, focused regressions for changed behavior, and scoped Opus review. Do not run a full create-PR or merge gate as an intermediate merge prerequisite. At phase end, run one full merge gate on the final implementation; correct failures and rerun affected checks as needed. Release-checkpoint qualification runs only when an actual release is requested. Record-only changes require relevant documentation checks, with no new external review or broad gate.
+
+This policy supersedes earlier per-item gate requirements for Phase DX from this date forward. Historical failed or incomplete gates retain their original outcomes; deferral does not turn them into passes. Group related in-scope fixes before qualification. A failed named prerequisite blocks dependents; independent diagnostic collection may continue only when safe. Do not repeatedly run an unchanged failed performance check without new evidence or a controlled measurement reason.
 
 Every milestone includes its own regression tests. Later consolidation/qualification milestones do not excuse shipping an earlier untested cache or identity boundary. Existing required assertions remain selected during migration; replacements must show equivalent coverage before old paths are removed.
 
@@ -91,7 +93,7 @@ The early order removes observed operational costs before adding project persist
 
 ### Release-eligible checkpoints within one required phase
 
-After DX.8, the metadata improvement may be released when its exact installed artifacts pass the existing applicable package/publication qualification. After DX.11, native/profile/editor improvements may be released on the same basis. Neither checkpoint marks Phase DX complete, advertises unimplemented project persistence, changes release authorization, or requires additional duplicate reviews/gates for unchanged evidence. They are integration and release opportunities, not optional scope decisions.
+Only if an actual release is requested after DX.8, the metadata improvement may be released when its exact installed artifacts pass the existing applicable package/publication qualification. After DX.11, native/profile/editor improvements may be released on the same basis. Neither checkpoint marks Phase DX complete, advertises unimplemented project persistence, changes release authorization, or requires additional duplicate reviews/gates for unchanged evidence. They are integration and release opportunities, not optional scope decisions.
 
 Continue DX.12–DX.14 in sequence using the recorded checkpoint measurements as the comparison baseline. Measurements guide implementation and optimization of the required persistent capabilities. Final phase closure follows DX.15/DX.16; independently qualified user-visible improvements may ship at the checkpoints.
 
@@ -309,7 +311,7 @@ Complete M01, M02, M04 and M17; assert decoded-module/payload counters, not just
 
 Complete M03, M05, M07, M08, M10, M11, M15, R09, Q05 and the metadata-stage Q09 comparison. Include actual installed-layout commands, public `sifr emit` stdout and marker-dependent source maps rather than only internal strings/source-tree calls. Retain an artifact/source/coverage manifest and per-target qualification results; do not claim every possible generic instantiation is exhaustively covered.
 
-**Checkpoint:** the exact metadata-enabled installed toolchain may be independently released after its applicable release qualification. Record only implemented claims and existing authorization; Phase DX and project persistence remain incomplete. This checkpoint is not another automatic whole-gate/review cycle over unchanged evidence.
+**Checkpoint:** if an actual release is requested, the exact metadata-enabled installed toolchain may be independently released after its applicable release qualification. Record only implemented claims and existing authorization; Phase DX and project persistence remain incomplete. This checkpoint is not another automatic whole-gate/review cycle over unchanged evidence.
 
 ### milestone_dx_9: Compatible Native Reuse and Finalized Artifacts
 
@@ -616,12 +618,12 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1 is complete and merged, including the required canonical LSP measurement transport correction. DX.2–DX.16 are not started; DX.2 is the next eligible item in a new session.
+DX.1 and DX.2 are complete and merged. DX.3–DX.16 are not started; DX.3 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
 | DX.1 | Complete / merged | Candidate `5c7502f7aea3cd887a217c2fb3e289c7a1f2c653`; [PR #3840](https://github.com/sifr-lang/sifr/pull/3840); merge `de41ced4d65a3c511617219238f26052227fd6e8` | Product and contributor baselines validated; Q07/Q08, transport regressions, schema and guardrail pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3840#issuecomment-5705061104) |
-| DX.2 | Not started | — | — | — |
+| DX.2 | Complete / merged | Candidate c6841ab44a6c0e738045586f32e36c5fa1155a26; [PR #3842](https://github.com/sifr-lang/sifr/pull/3842); merge 59be2f046f71e0e3ac626f51e8ffd2614573f8bd | I01/I02/I07/I08 actual rebuilds and focused regressions PASS; broad gate deferred by prospective policy | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3842#issuecomment-5709069845) |
 | DX.3 | Not started | — | — | — |
 | DX.4 | Not started | — | — | — |
 | DX.5 | Not started | — | — | — |
@@ -637,7 +639,9 @@ DX.1 is complete and merged, including the required canonical LSP measurement tr
 | DX.15 | Not started | — | — | — |
 | DX.16 | Not started | — | — | — |
 
-## Current Handoff — DX.1 (2026-09-16)
+## Historical Handoff — DX.1 (2026-09-16)
+
+Superseded for next-action purposes by the DX.2 handoff below; historical evidence is unchanged.
 
 - **State:** complete and merged. Owned checkout:
   `yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/compiler-dx-orchestration`;
@@ -710,6 +714,70 @@ assertions and per-row source paths, hashes and original row indices.
 | `dev-baseline-e1bbacdf4/baseline.json` | Preserved FAILED cold helper build; successful rows are explicitly reused |
 | `dev-completed-e1bbacdf4/baseline.json` | Preserved FAILED outside-tree report display |
 | `frontend-helper-e1bbacdf4.log` | Explicit preparation cost after cold timeout; hash bound from completed contributor report |
+
+## Current Handoff — DX.2 (2026-09-17)
+
+- **State:** complete and merged in [PR #3842](https://github.com/sifr-lang/sifr/pull/3842).
+  Candidate c6841ab44a6c0e738045586f32e36c5fa1155a26; merge
+  59be2f046f71e0e3ac626f51e8ffd2614573f8bd; base
+  8fb424984351768116251ed5a5e577373603c533. Owned remote checkout remains
+  /home/yaser5/projects/sifr/compiler-dx-orchestration; implementation branch
+  codex/dx2, record branch codex/dx2-record.
+- **Scope:** role-separated canonical identities; outer product input tracking;
+  dependency-scoped compiled test tokens; immutable compiler context injection;
+  context-owned stdlib caches; pinned inspectable Cargo/rustc/configuration;
+  native key separation and constructor/entrypoint inventories. The explicitly
+  authorized Python qualification prerequisite pins the probed libpython loader
+  and preserves original import errors. No DX.3 implementation.
+- **Named validation:** I01/I02/I07/I08 PASS through actual Cargo rebuilds.
+  Same-HEAD dirty LSP changes alter product identity while frontend/sysroot remain
+  fresh. Compiled dependency/feature changes alter test and product identities;
+  inventory add/delete, archive inputs and source-independent installed inspection
+  pass. Deterministic encoding, explicit overrides, unavailable tools, redaction,
+  frontend/context ownership and native key tests pass. Required workspace Clippy,
+  formatting and HIR/file-size checks pass.
+- **Evidence reuse:** final Rust implementation is f912025c15cb1259203ca053b7e181dc2f15fd84;
+  c6841ab44 only adjusts two verification guards. Its actual rebuild receipt and
+  focused compiler/Python results remain applicable. The complete Git-free source
+  archive build at 82e6fa2d7 is reused for unchanged archive/identity mechanics.
+  Final warm generation-only median is **15.526 seconds** (first sample excluded),
+  not a product target or claimed speedup.
+- **Review:** final scoped Claude Opus 5 review is SATISFIED, no blockers.
+  [Published response](https://github.com/sifr-lang/sifr/pull/3842#issuecomment-5709069845);
+  SHA-256 27b7424514cbb38fc982d0e440c754e798f3b06e3b465f21ab49c11c9c9ef59d.
+- **Preserved broader evidence:** original gates remain failed, including
+  dependency/taxonomy/guard integration failures and the Python loader failure.
+  The final c6841ab44 aggregate attempt failed at an unprofiled Linux-versus-Mac
+  performance comparison after preceding functional areas passed. Authorized
+  focused performance qualification passed with the immutable matching Linux
+  reference and all governors restored. Missing nested editor and Node/npm
+  preparation was completed; affected distribution checks passed. Cold sysroot
+  packaging exceeded its original deadline; prepared installed-smoke and boundary
+  equivalence passed under unchanged limits. Further collected project/package,
+  stdlib, regression, fuzz and ecosystem results pass. On the user's prospective
+  policy change, owned SQL execution was stopped safely; full crate/E2E steps
+  were not started. **No full-gate pass is claimed.**
+- **Follow-ups:** [separate identity/review observations](ad-hoc-dx2-identity-review-followups.md).
+  The [Python qualification owner](ad-hoc-python-interop-qualification-dependencies.md)
+  records the bounded prerequisite. Full final-implementation validation remains
+  required at phase end; actual release checkpoints retain their qualification.
+- **Blocker:** none for DX.2 acceptance.
+- **Exact next action:** stop after this record update. Start DX.3 only in a new
+  bounded session. Local unrelated modifications remain untouched.
+
+Evidence host/root:
+yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx2-evidence/.
+
+| Artifact | Result / SHA-256 |
+| --- | --- |
+| evidence-index-c6841ab44.json | Full receipt/log digest index; ffc8d68fa638d5f58624e0809ee8c2fa7e8d69e31c499de126eb11fa411e0da5 |
+| rebuild-f912025c1/receipt.json | Actual I01/I02/I07/I08, native context and overhead proof |
+| validation-summary-c6841ab44.md | Current acceptance, evidence reuse and prospective policy |
+| python-affected-examples.log, python-qualified/ | Nine affected example variants PASS |
+| merge-c6841ab44.report.json | Original aggregate FAILED; retained unchanged |
+| performance-named-c6841ab44.json | Corrected named-reference performance PASS |
+| merge-c6841ab44-*-completion.json | Provenance-bound focused results; original failures retained |
+| gate-policy-stop.json | Owned execution terminated after prospective policy change |
 
 ## Handoff Format
 

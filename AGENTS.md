@@ -92,6 +92,16 @@ Run the PR gate before you open a PR.
 
 Run the merge gate once on the final implementation candidate.
 
+Phase DX has a user-approved prospective exception (2026-09-17), recorded in
+[its canonical phase](plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md#global-execution-rules):
+intermediate milestones use named acceptance tests, focused regressions and scoped
+Opus review, with no full create-PR/merge gate prerequisite. Run one full merge
+gate at phase end on the final implementation, correct failures and rerun affected
+checks as needed. Qualify release checkpoints only when an actual release is
+requested. Preserve historical failures; record-only updates need documentation
+checks only. This exception supersedes the two per-PR/per-item gate requirements
+above for Phase DX.
+
 CI uses the same scripts.
 
 Do not wait for CI instead of local validation.
