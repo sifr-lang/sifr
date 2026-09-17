@@ -44,6 +44,7 @@ fn stdlib_interop_startup_editor_retained_snapshot_after_defs_projection() {
         "sifr_analysis-tests",
     ))
     .unwrap();
+    let defs = defs.prepare_modules(&["sifr.calendar".into()]).unwrap();
     assert!(defs.functions.contains_key("sifr.calendar"));
     let changed = source.replace("return result", "return \"wrong\"");
     assert_ne!(changed, source);
@@ -233,16 +234,22 @@ fn analysis_source_map_tracks_public_and_private_sysroot_origins() {
             .any(|file| file.origin == SourceOrigin::UserSource
                 && file.module_name.as_deref() == Some("main"))
     );
-    assert!(source_map.files.iter().any(|file| {
-        file.origin == SourceOrigin::SysrootPublicStdlib
-            && file.module_name.as_deref() == Some("sifr.random")
-    }));
-    assert!(source_map.files.iter().any(|file| {
-        file.origin == SourceOrigin::SysrootPrivateDeclaration
-            && file.module_name.as_deref() == Some("_sifr.math")
-    }));
+    let navigation = host.stdlib_navigation();
+    assert!(
+        navigation
+            .symbols
+            .iter()
+            .any(|symbol| symbol.module == "sifr.random" && !symbol.private)
+    );
+    assert!(
+        navigation
+            .symbols
+            .iter()
+            .any(|symbol| symbol.module == "_sifr.math" && symbol.private)
+    );
+    assert_eq!(navigation.loaded_sources(), 0);
     assert_eq!(host.files().len(), 1);
-    assert!(host.all_files().len() > host.files().len());
+    assert_eq!(host.all_files().len(), host.files().len());
 }
 
 #[test]
@@ -333,19 +340,15 @@ fn definition_inside_public_stdlib_can_link_to_private_declaration_file() {
         single_file_input(STDLIB_IMPORT_SAMPLE),
     )
     .expect("single-file analysis host should load");
-    let source_map = host
-        .context()
-        .expect("context should be loaded")
-        .source_map();
-    let math_file = source_map
-        .files
-        .iter()
-        .find(|file| {
-            file.origin == SourceOrigin::SysrootPublicStdlib
-                && file.module_name.as_deref() == Some("sifr.math")
-        })
-        .expect("sifr.math public stdlib source should be loaded")
-        .id;
+    let navigation = host.stdlib_navigation();
+    let math_file = FileId::new(
+        navigation
+            .symbols
+            .iter()
+            .find(|symbol| symbol.module == "sifr.math")
+            .unwrap()
+            .file,
+    );
 
     let locations = host
         .definition(

@@ -168,6 +168,7 @@ impl Encode<wire::Ref<wire::SourceOriginId>> for sifr_ir::SourceOriginId {
 }
 
 mod ensure;
+pub(crate) use ensure::open_consumer;
 mod production;
 mod project;
 mod semantic;

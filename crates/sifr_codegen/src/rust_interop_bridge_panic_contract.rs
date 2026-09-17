@@ -63,8 +63,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         }
     }

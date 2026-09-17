@@ -14,8 +14,8 @@ fn generic_type_rendering_preserves_compiler_owned_class_names() {
             identity: Some(identity.to_string()),
             type_args: Vec::new(),
             name: identity.rsplit('.').next().expect("class name").to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         assert_eq!(emitter.render_rust_type_with_generics(&ty), expected);
@@ -30,8 +30,8 @@ fn canonical_generic_class_rendering_preserves_concrete_arguments() {
         identity: Some("sifr.resource.NullContext".to_string()),
         type_args: vec![Type::Int],
         name: "NullContext".to_string(),
-        fields: vec![("value".to_string(), Type::Int)],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::Int)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let canonical = sifr_type_system::stdlib_class_rust_name("sifr.resource", "NullContext");
@@ -53,8 +53,8 @@ fn nested_generic_classes_keep_emitter_owned_arguments() {
         identity: None,
         type_args: Vec::new(),
         name: "Counter".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
 

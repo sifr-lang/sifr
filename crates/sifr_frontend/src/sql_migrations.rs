@@ -351,8 +351,8 @@ fn nominal_type(identity: &str, type_args: Vec<Type>) -> Type {
         identity: Some(identity.to_string()),
         type_args,
         name: identity.rsplit('.').next().unwrap_or(identity).to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     }
 }

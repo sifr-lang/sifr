@@ -11,6 +11,8 @@ mod build;
 pub mod cache_storage;
 mod compiler_context;
 pub mod metadata_producer;
+mod metadata_reader;
+pub use metadata_reader::{StdlibNavigation, StdlibNavigationSymbol};
 pub mod process_execution;
 mod process_signals;
 pub use compiler_context::CompilerContext;

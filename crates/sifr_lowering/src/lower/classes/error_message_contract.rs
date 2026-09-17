@@ -9,8 +9,8 @@ pub(in crate::lower) fn root_error_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "Error".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     }
 }
@@ -107,7 +107,7 @@ pub(super) fn inherit_constructor(
     else {
         return;
     };
-    if fields != parent_fields {
+    if fields != **parent_fields {
         return; // ordinary missing-initializer diagnostic owns additional fields
     }
     if let Some(constructor) = ctx.functions.get(&parent).cloned() {

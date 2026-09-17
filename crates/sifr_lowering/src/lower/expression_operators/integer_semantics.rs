@@ -191,8 +191,8 @@ pub(in crate::lower) fn builtin_error_type(
             identity: None,
             type_args: Vec::new(),
             name: name.to_string(),
-            fields,
-            methods: vec![],
+            fields: fields.into(),
+            methods: vec![].into(),
             parent_class: Some(parent.to_string()),
         }
     })
@@ -206,8 +206,8 @@ fn division_error_type(ctx: &LowerCtx) -> Type {
             identity: None,
             type_args: Vec::new(),
             name: "DivisionError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: vec![],
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         })
 }

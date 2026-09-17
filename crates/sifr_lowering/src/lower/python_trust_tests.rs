@@ -9,16 +9,16 @@ fn python_externals() -> ExternalDefs {
         identity: None,
         type_args: Vec::new(),
         name: "Object".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let error_ty = Type::Class {
         identity: None,
         type_args: Vec::new(),
         name: "PythonError".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let mut functions = HashMap::new();

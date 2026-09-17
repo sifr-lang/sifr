@@ -202,8 +202,9 @@ mod tests {
                 ("message".to_string(), Type::Str),
                 ("attempts".to_string(), Type::Int),
                 ("tags".to_string(), Type::List(Box::new(Type::Str))),
-            ],
-            methods: vec![],
+            ]
+            .into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let payloads = [
@@ -220,7 +221,7 @@ mod tests {
             Type::Enum {
                 identity: None,
                 name: "Color".to_string(),
-                variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+                variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))].into(),
             },
             record,
         ];
@@ -236,8 +237,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "PipeReader".to_string(),
-            fields: vec![("_handle".to_string(), Type::Int)],
-            methods: vec![],
+            fields: vec![("_handle".to_string(), Type::Int)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let callable = Type::Callable(vec![Type::Int], vec![], Box::new(Type::Int));

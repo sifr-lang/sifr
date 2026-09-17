@@ -353,8 +353,8 @@ mod tests {
             identity: Some(identity.to_string()),
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: parent_class.map(str::to_string),
         }
     }

@@ -508,8 +508,8 @@ pub(in crate::lower) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
                         identity: None,
                         type_args: Vec::new(),
                         name: "ValueError".to_string(),
-                        fields: vec![("message".to_string(), Type::Str)],
-                        methods: vec![],
+                        fields: vec![("message".to_string(), Type::Str)].into(),
+                        methods: vec![].into(),
                         parent_class: Some("Error".to_string()),
                     }),
             ),
@@ -596,8 +596,8 @@ pub(in crate::lower) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
                         identity: None,
                         type_args: Vec::new(),
                         name: "ValueError".to_string(),
-                        fields: vec![("message".to_string(), Type::Str)],
-                        methods: vec![],
+                        fields: vec![("message".to_string(), Type::Str)].into(),
+                        methods: vec![].into(),
                         parent_class: Some("Error".to_string()),
                     }),
             ),
@@ -863,8 +863,8 @@ pub(super) fn parse_error_type(ctx: &LowerCtx) -> Type {
             identity: None,
             type_args: Vec::new(),
             name: "ParseError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: vec![],
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         })
 }
@@ -877,8 +877,8 @@ pub(in crate::lower) fn value_error_type(ctx: &LowerCtx) -> Type {
             identity: None,
             type_args: Vec::new(),
             name: "ValueError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: vec![],
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         })
 }

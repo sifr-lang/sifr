@@ -484,8 +484,8 @@ pub(super) fn lower_unshadowed_builtin_call(
                         identity: None,
                         type_args: Vec::new(),
                         name: "ParseError".to_string(),
-                        fields: vec![("message".to_string(), Type::Str)],
-                        methods: vec![],
+                        fields: vec![("message".to_string(), Type::Str)].into(),
+                        methods: vec![].into(),
                         parent_class: None,
                     });
             Type::Result(Box::new(Type::Int), Box::new(parse_error_ty))
@@ -554,8 +554,8 @@ pub(super) fn lower_unshadowed_builtin_call(
                         identity: None,
                         type_args: Vec::new(),
                         name: "ParseError".to_string(),
-                        fields: vec![("message".to_string(), Type::Str)],
-                        methods: vec![],
+                        fields: vec![("message".to_string(), Type::Str)].into(),
+                        methods: vec![].into(),
                         parent_class: None,
                     });
             Type::Result(Box::new(Type::Float), Box::new(parse_error_ty))
@@ -565,8 +565,8 @@ pub(super) fn lower_unshadowed_builtin_call(
                     identity: None,
                     type_args: Vec::new(),
                     name: name.to_string(),
-                    fields: vec![("message".to_string(), Type::Str)],
-                    methods: vec![],
+                    fields: vec![("message".to_string(), Type::Str)].into(),
+                    methods: vec![].into(),
                     parent_class: Some("OverflowError".to_string()),
                 })
             };

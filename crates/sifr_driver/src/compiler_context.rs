@@ -1,14 +1,8 @@
 //! Immutable outer compilation identity and its process-local source-stdlib owner.
-use crate::{diagnostics::RenderedDiagnostic, stdlib::StdlibCompiled};
+use crate::diagnostics::RenderedDiagnostic;
 use sifr_identity::CompilerIdentity;
-use std::{
-    collections::BTreeMap,
-    sync::{Arc, Mutex, OnceLock},
-};
-
-type StdlibCache = OnceLock<Result<Arc<StdlibCompiled>, Vec<RenderedDiagnostic>>>;
-type ContextCaches = BTreeMap<(CompilerIdentity, String), Arc<StdlibCache>>;
-static CACHES: OnceLock<Mutex<ContextCaches>> = OnceLock::new();
+use std::sync::{Arc, Mutex};
+type StdlibCache = Mutex<Option<Arc<crate::metadata_reader::Provider>>>;
 
 #[derive(Clone)]
 pub struct CompilerContext {
@@ -30,23 +24,14 @@ impl CompilerContext {
     #[must_use]
     pub fn with_metadata_override(mut self, path: std::path::PathBuf) -> Self {
         self.metadata_override = Some(path);
+        self.stdlib_cache = Arc::new(Mutex::new(None));
         self
     }
     fn from_resolved(
         identity: CompilerIdentity,
         sysroot: Result<sifr_sysroot::ResolvedSysroot, sifr_sysroot::SysrootError>,
     ) -> Self {
-        let key = sysroot.as_ref().map_or_else(
-            |_| "<unresolved>".to_owned(),
-            |root| format!("{}:{}", root.root.display(), root.toolchain_id()),
-        );
-        let cache = CACHES
-            .get_or_init(Mutex::default)
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .entry((identity.clone(), key))
-            .or_default()
-            .clone();
+        let cache = Arc::new(Mutex::new(None));
         Self {
             identity,
             metadata_override: None,
@@ -103,6 +88,66 @@ impl CompilerContext {
             )]
         })
     }
+    pub(crate) fn metadata_provider(
+        &self,
+    ) -> Result<Arc<crate::metadata_reader::Provider>, Vec<RenderedDiagnostic>> {
+        let mut cache = self.stdlib_cache.lock().map_err(|_| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                "metadata provider owner poisoned",
+                sifr_diagnostics::DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+            )]
+        })?;
+        if let Some(provider) = &*cache {
+            return Ok(provider.clone());
+        }
+        let provider = crate::metadata_reader::select(
+            self.identity(),
+            self.sysroot()?,
+            self.metadata_override.as_deref(),
+        )
+        .map_err(|error| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                error.to_string(),
+                sifr_diagnostics::DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+            )]
+        })?;
+        *cache = Some(provider.clone());
+        Ok(provider)
+    }
+    pub fn stdlib_navigation(
+        &self,
+    ) -> Result<Arc<crate::StdlibNavigation>, Vec<RenderedDiagnostic>> {
+        self.metadata_provider()?
+            .navigation(&self.sysroot()?.paths.stdlib_root)
+            .map_err(|e| {
+                vec![crate::diagnostics::diagnostic_with_code(
+                    e.to_string(),
+                    sifr_diagnostics::DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                )]
+            })
+    }
+    pub fn metadata_stats(&self) -> Option<serde_json::Value> {
+        let cache = self.stdlib_cache.lock().ok()?;
+        let provider = cache.as_ref()?;
+        let store = &provider.metadata.store;
+        use sifr_sysroot::metadata as wire;
+        Some(serde_json::json!({
+            "metadata_id":provider.metadata.metadata_id,
+            "semantic_modules":provider.loaded_semantic_modules(),
+            "decoded_semantic_records":store.decoded_count::<wire::SemanticExports>(),
+            "decoded_hir_modules":store.decoded_count::<wire::HirModule>(),
+            "decoded_types":store.decoded_count::<wire::Type>(),
+            "decoded_nominal_views":store.decoded_count::<wire::NominalView>(),
+            "projected_nominal_views":provider.projected_nominal_views().ok(),
+            "decoded_hir_functions":store.decoded_count::<wire::HirFunction>(),
+            "decoded_hir_classes":store.decoded_count::<wire::HirClass>(),
+            "decoded_rust_payloads":store.decoded_count::<wire::RustPayload>(),
+            "decoded_templates":store.decoded_count::<wire::TemplatePayload>(),
+            "rust_payload_reads":store.payload_read_count::<wire::RustPayload>(),
+            "hir_module_reads":store.payload_read_count::<wire::HirModule>(),
+            "retained_decode_bound_bytes":store.retained_bound().ok()
+        }))
+    }
     pub fn identity(&self) -> &CompilerIdentity {
         &self.identity
     }
@@ -129,7 +174,7 @@ mod tests {
         let a = CompilerContext::new(CompilerIdentity::product(&"a".repeat(64)).unwrap());
         let b = CompilerContext::new(CompilerIdentity::product(&"b".repeat(64)).unwrap());
         assert!(!Arc::ptr_eq(&a.stdlib_cache, &b.stdlib_cache));
-        let same = CompilerContext::new(a.identity().clone());
+        let same = a.clone();
         assert!(Arc::ptr_eq(&a.stdlib_cache, &same.stdlib_cache));
         assert!(a.identity().validate_override(b.identity()).is_err());
     }

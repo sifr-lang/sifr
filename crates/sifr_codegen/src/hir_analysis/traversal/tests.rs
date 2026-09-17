@@ -9,8 +9,8 @@ fn test_error_type(name: &str) -> Type {
         identity: None,
         type_args: Vec::new(),
         name: name.to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     }
 }

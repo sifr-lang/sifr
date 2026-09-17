@@ -38,8 +38,8 @@ fn equality_rejects_python_buffers_through_nested_aggregates() {
         identity: None,
         type_args: Vec::new(),
         name: "BufferRecord".to_string(),
-        fields: vec![("views".to_string(), collection.clone())],
-        methods: vec![],
+        fields: vec![("views".to_string(), collection.clone())].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
 

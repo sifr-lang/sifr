@@ -50,8 +50,8 @@ fn timeout_error_type() -> Type {
         identity: Some("sifr.builtin.TimeoutError".to_string()),
         type_args: Vec::new(),
         name: "TimeoutError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: vec![],
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: vec![].into(),
         parent_class: Some("Error".to_string()),
     }
 }
@@ -61,8 +61,8 @@ fn scope_failure_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "ScopeFailure".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: vec![],
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: vec![].into(),
         parent_class: Some("Error".to_string()),
     }
 }
@@ -86,8 +86,8 @@ fn async_exit_cause_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "AsyncExitCause".to_string(),
-        fields: vec![],
-        methods: vec![],
+        fields: vec![].into(),
+        methods: vec![].into(),
         parent_class: None,
     }
 }

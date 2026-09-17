@@ -187,8 +187,8 @@ fn process_class_type(name: &str, ctx: &LowerCtx) -> Type {
             identity: Some(format!("sifr.parallel.{name}")),
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: vec![("_handle".to_string(), Type::Int)],
-            methods: Vec::new(),
+            fields: vec![("_handle".to_string(), Type::Int)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         })
 }
@@ -201,8 +201,8 @@ fn process_error_type(ctx: &LowerCtx) -> Type {
             identity: None,
             type_args: Vec::new(),
             name: "ProcessError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         })
 }
@@ -313,8 +313,8 @@ fn worker_error_type(name: &str, ctx: &LowerCtx) -> Type {
             identity: Some(format!("sifr.parallel.{name}")),
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         })
 }

@@ -24,6 +24,8 @@ use std::hash::Hash;
 use std::path::Path;
 use std::sync::Arc;
 
+mod external_overlay;
+pub use external_overlay::prepare_external_defs;
 mod loaders;
 mod reuse;
 
@@ -297,6 +299,15 @@ pub fn compile_module_hir_with_source_and_options(
     source_context: Option<FrontendSourceContext<'_>>,
     mut lowering_options: LoweringOptions,
 ) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
+    let prepared_externals = external_defs
+        .prepare_modules(&external_overlay::import_modules(stmts))
+        .map_err(|message| {
+            vec![diagnostic_with_code(
+                message,
+                DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+            )]
+        })?;
+    let external_defs = &prepared_externals;
     if let Some(context) = source_context {
         lowering_options.source_text = Some(context.source.to_string());
     }
@@ -694,6 +705,11 @@ impl FrontendContext {
             let _ = self.ensure_lowered(dependency);
         }
         let index = self.index_for_module(module);
+        if let Err(errors) = prepare_external_defs(&parsed, &mut self.external_defs) {
+            self.modules[index].diagnostics = Some(Arc::new(errors));
+            self.lowering_modules.remove(&module);
+            return CacheStatus::Miss;
+        }
         let hir_key = self.hir_key_fingerprint(index);
         if let Some(lowered) = self.reuse_caches.hir(&hir_key) {
             let module_name = self.modules[index].module_name.clone();
@@ -862,35 +878,5 @@ impl FrontendContext {
             }
         }
         seen.into_iter().collect()
-    }
-
-    fn clear_module_caches(
-        &mut self,
-        modules: &[ModuleId],
-        modules_with_source_changes: &[ModuleId],
-    ) {
-        let clear_parse_modules = modules_with_source_changes
-            .iter()
-            .copied()
-            .collect::<BTreeSet<_>>();
-        for module in modules {
-            let index = self.index_for_module(*module);
-            let module_state = &mut self.modules[index];
-            if clear_parse_modules.contains(module) {
-                module_state.parsed = None;
-            }
-            module_state.lowered = None;
-            module_state.diagnostics = None;
-            module_state.analysis = None;
-        }
-        self.reuse_caches.prune_unshared();
-    }
-
-    fn rebuild_external_defs_from_lowered(&mut self) {
-        for module in &self.modules {
-            if let Some(lowered) = &module.lowered {
-                collect_module_exports(&module.module_name, lowered, &mut self.external_defs);
-            }
-        }
     }
 }

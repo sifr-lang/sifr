@@ -6,8 +6,8 @@ fn interop_bridge_uses_package_structural_mapping_for_native_values() {
         identity: Some("values.Token".to_string()),
         type_args: Vec::new(),
         name: "Token".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let mut mapped_class = class("Token", HirClassKind::Regular, Vec::new());

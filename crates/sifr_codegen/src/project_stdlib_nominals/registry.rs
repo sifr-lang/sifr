@@ -81,8 +81,8 @@ mod tests {
                 identity: Some(identity.clone()),
                 type_args: Vec::new(),
                 name: name.to_string(),
-                fields: vec![("message".to_string(), Type::Str)],
-                methods: Vec::new(),
+                fields: vec![("message".to_string(), Type::Str)].into(),
+                methods: Vec::new().into(),
                 parent_class: Some("Error".to_string()),
             };
             let unions = HashMap::from([("WorkerErrors".to_string(), vec![worker])]);
@@ -121,8 +121,8 @@ mod tests {
                 identity: Some(identity.clone()),
                 type_args: Vec::new(),
                 name: name.to_string(),
-                fields: vec![("detail".to_string(), Type::Str)],
-                methods: Vec::new(),
+                fields: vec![("detail".to_string(), Type::Str)].into(),
+                methods: Vec::new().into(),
                 parent_class: Some("Error".to_string()),
             };
             let unions = HashMap::from([("ShadowErrors".to_string(), vec![shadow])]);

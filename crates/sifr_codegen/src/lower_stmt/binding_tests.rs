@@ -209,7 +209,7 @@ fn lowers_simple_let_alias_enum_name_rhs() {
         Type::Enum {
             identity: None,
             name: "Color".to_string(),
-            variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+            variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))].into(),
         },
     );
     let let_stmt = HirStmt::Let {

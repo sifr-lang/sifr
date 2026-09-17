@@ -601,8 +601,8 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                                     identity: identity.clone(),
                                     type_args: type_args.clone(),
                                     name: name.clone(),
-                                    fields: subst_fields,
-                                    methods: subst_methods,
+                                    fields: subst_fields.into(),
+                                    methods: subst_methods.into(),
                                     parent_class: parent_class.clone(),
                                 };
                             }

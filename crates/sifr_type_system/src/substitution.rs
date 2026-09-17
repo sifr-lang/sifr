@@ -297,8 +297,8 @@ mod tests {
             identity: Some("fixture.Inner".to_string()),
             type_args: vec![Type::Str],
             name: "Inner".to_string(),
-            fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
-            methods: Vec::new(),
+            fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let bindings = HashMap::from([("T".to_string(), Type::Int)]);
@@ -321,8 +321,8 @@ mod tests {
             identity: Some("missing.Inner".to_string()),
             type_args: Vec::new(),
             name: "Inner".to_string(),
-            fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
-            methods: Vec::new(),
+            fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let bindings = HashMap::from([("T".to_string(), Type::Int)]);
@@ -364,8 +364,9 @@ mod tests {
             fields: vec![(
                 "value".to_string(),
                 Type::Union(vec![Type::None, Type::TypeVar("T".to_string())]),
-            )],
-            methods: Vec::new(),
+            )]
+            .into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let outer_optional = crate::make_union(vec![Type::None, Type::Int]);
@@ -382,8 +383,8 @@ mod tests {
             identity: Some("models.Inner".to_string()),
             type_args: vec![Type::TypeVar("T".to_string())],
             name: "Inner".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let outer_optional = crate::make_union(vec![Type::None, Type::Str]);
@@ -410,8 +411,8 @@ mod tests {
             identity: Some("models.Inner".to_string()),
             type_args: vec![Type::Str],
             name: "Inner".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let preserved = substitution_preserves_union_structure_with_class_scopes(

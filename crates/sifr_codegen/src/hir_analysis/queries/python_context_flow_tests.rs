@@ -7,8 +7,8 @@ fn python_error_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "PythonError".to_string(),
-        fields: vec![],
-        methods: vec![],
+        fields: vec![].into(),
+        methods: vec![].into(),
         parent_class: None,
     }
 }

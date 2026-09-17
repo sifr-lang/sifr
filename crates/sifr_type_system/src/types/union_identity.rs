@@ -312,8 +312,8 @@ mod tests {
             identity: identity.map(str::to_string),
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let local_int = class("Int", Some("pkg.Int"));
@@ -359,12 +359,12 @@ mod tests {
         let enumeration = |name: &str, identity: &str| Type::Enum {
             identity: Some(identity.to_string()),
             name: name.to_string(),
-            variants: vec![("READY".to_string(), Some(1))],
+            variants: vec![("READY".to_string(), Some(1))].into(),
         };
         let protocol = |name: &str, identity: &str| Type::Protocol {
             identity: Some(identity.to_string()),
             name: name.to_string(),
-            methods: Vec::new(),
+            methods: Vec::new().into(),
         };
         for (left, right) in [
             (
@@ -412,16 +412,16 @@ mod tests {
             identity: Some("pkg.Item".to_string()),
             type_args: Vec::new(),
             name: "Item".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let snapshot = Type::Class {
             identity: Some("pkg.Item".to_string()),
             type_args: Vec::new(),
             name: "Item".to_string(),
-            fields: vec![("value".to_string(), Type::Int)],
-            methods: Vec::new(),
+            fields: vec![("value".to_string(), Type::Int)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         assert_eq!(

@@ -696,8 +696,8 @@ mod payload_identity_tests {
             identity: None,
             name: "String".to_string(),
             type_args: Vec::new(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let channel = Type::Union(vec![class, Type::Str]);
@@ -713,8 +713,8 @@ mod payload_identity_tests {
             identity: None,
             name: "SifrInt".to_string(),
             type_args: Vec::new(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let channel = Type::Union(vec![class, Type::Int]);

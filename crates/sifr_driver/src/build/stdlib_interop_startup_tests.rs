@@ -16,7 +16,8 @@ fn lowered(source: &str, defs: &sifr_lowering::ExternalDefs) -> HirModule {
 
 #[test]
 fn stdlib_interop_startup_project_selection_is_once_per_complete_application() {
-    let stdlib = crate::stdlib::compile_stdlib(&crate::CompilerContext::for_test()).unwrap();
+    let stdlib =
+        crate::stdlib::metadata_inventory_for_test(&crate::CompilerContext::for_test()).unwrap();
     let first = lowered("def main():\n    pass\n", &stdlib.defs);
     let last = lowered(
         "from sifr.calendar import isleap\ndef last() -> bool:\n    return isleap(2024)\n",
@@ -116,8 +117,8 @@ fn stdlib_interop_startup_readonly_walk_preserves_hidden_edges() {
         identity: Some(format!("{name}.Hidden")),
         name: "Hidden".into(),
         type_args: vec![],
-        fields: vec![],
-        methods: vec![],
+        fields: vec![].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
     // An empty handler has no expression carrying these types: they exist only

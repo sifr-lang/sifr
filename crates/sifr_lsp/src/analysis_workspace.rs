@@ -36,6 +36,7 @@ enum ProjectDocumentFailure {
 }
 
 pub(crate) struct LspFileMaps {
+    stdlib_navigation: std::sync::Arc<sifr_driver::StdlibNavigation>,
     uri_by_file: BTreeMap<u32, String>,
     source_by_file: BTreeMap<u32, String>,
 }
@@ -260,13 +261,22 @@ impl LspFileMaps {
         self.uri_by_file
             .get(&file.as_u32())
             .cloned()
+            .or_else(|| {
+                self.stdlib_navigation
+                    .path(file.as_u32())
+                    .and_then(file_uri_for_path)
+            })
             .ok_or_else(|| LspError::internal(format!("unknown file {}", file.as_u32())))
     }
 
     pub(crate) fn source_for(&self, file: FileId) -> LspResult<String> {
-        self.source_by_file
-            .get(&file.as_u32())
-            .cloned()
+        if let Some(source) = self.source_by_file.get(&file.as_u32()) {
+            return Ok(source.clone());
+        }
+        self.stdlib_navigation
+            .source(file.as_u32())
+            .map_err(LspError::internal)?
+            .map(str::to_owned)
             .ok_or_else(|| LspError::internal(format!("unknown source {}", file.as_u32())))
     }
 }
@@ -502,6 +512,7 @@ impl LspProjectAnalysis {
             })
             .collect();
         Ok(LspFileMaps {
+            stdlib_navigation: host.stdlib_navigation(),
             uri_by_file,
             source_by_file,
         })
@@ -549,7 +560,14 @@ impl LspProjectAnalysis {
             result
                 .into_iter()
                 .filter_map(|symbol| {
-                    let uri = uri_by_file.get(&symbol.file.as_u32())?.clone();
+                    let uri = uri_by_file
+                        .get(&symbol.file.as_u32())
+                        .cloned()
+                        .or_else(|| {
+                            host.stdlib_navigation()
+                                .path(symbol.file.as_u32())
+                                .and_then(file_uri_for_path)
+                        })?;
                     Some(LspWorkspaceSymbol { symbol, uri })
                 })
                 .collect(),
@@ -678,6 +696,7 @@ impl LspDocumentAnalysis {
             }
         }
         Ok(LspFileMaps {
+            stdlib_navigation: host.stdlib_navigation(),
             uri_by_file,
             source_by_file,
         })

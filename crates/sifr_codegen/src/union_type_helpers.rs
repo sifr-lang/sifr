@@ -189,8 +189,8 @@ impl RustEmitter {
                             identity: None,
                             type_args: Vec::new(),
                             name: class.name.clone(),
-                            fields: class.fields.clone(),
-                            methods: Vec::new(),
+                            fields: class.fields.clone().into(),
+                            methods: Vec::new().into(),
                             parent_class: class.semantic_parent_chain(),
                         },
                     ),
@@ -638,16 +638,16 @@ mod tests {
             identity: Some("tests.first.Error".to_string()),
             type_args: Vec::new(),
             name: "Error".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let second_error = Type::Class {
             identity: Some("tests.second.Error".to_string()),
             type_args: Vec::new(),
             name: "Error".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let union = Type::Union(vec![first_error, second_error]);
@@ -668,8 +668,8 @@ mod tests {
             identity: Some(format!("a.{name}")),
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let os_error = error("OSError");
@@ -711,16 +711,16 @@ mod tests {
             identity: Some("tests.Error".to_string()),
             type_args: Vec::new(),
             name: "Error".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let snapshot = Type::Class {
             identity: Some("tests.Error".to_string()),
             type_args: Vec::new(),
             name: "Error".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let mut emitter = RustEmitter::new();
@@ -760,8 +760,9 @@ mod tests {
                     vec![ParamConvention::own()],
                     Box::new(Type::Int),
                 ),
-            )],
-            methods: vec![],
+            )]
+            .into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let mut emitter = RustEmitter::new();
@@ -781,16 +782,16 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "HandlerError".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let python_error = Type::Class {
             identity: None,
             type_args: Vec::new(),
             name: "PythonError".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let error = Type::Union(vec![handler_error, python_error]);

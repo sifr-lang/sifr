@@ -698,8 +698,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: name.to_string(),
-            fields,
-            methods: Vec::new(),
+            fields: fields.into(),
+            methods: Vec::new().into(),
             parent_class: None,
         }
     }
@@ -818,8 +818,8 @@ mod tests {
             identity: Some("models.Payload".to_string()),
             type_args: Vec::new(),
             name: "Payload".to_string(),
-            fields: vec![("value".to_string(), Type::Int)],
-            methods: Vec::new(),
+            fields: vec![("value".to_string(), Type::Int)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let envelope = class(

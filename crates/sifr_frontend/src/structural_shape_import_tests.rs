@@ -196,8 +196,8 @@ class Outer[T]:
         identity: Some("models.Inner".to_string()),
         type_args: vec![Type::Str],
         name: "Inner".to_string(),
-        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     models.class_adapter_selections.push(ClassAdapterSelection {
@@ -683,7 +683,13 @@ class LocalUse:
         &external_defs,
     );
     collect_module_exports("models", &models, &mut external_defs);
-    assert!(!external_defs.classes["models"].contains_key("_Hidden"));
+    assert!(
+        !external_defs
+            .classes
+            .get("models")
+            .expect("model exports")
+            .contains_key("_Hidden")
+    );
     assert!(
         external_defs
             .structural_methods_for("models")

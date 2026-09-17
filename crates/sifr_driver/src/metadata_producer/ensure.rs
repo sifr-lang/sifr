@@ -4,7 +4,7 @@ use std::os::unix::fs::OpenOptionsExt;
 use std::{
     collections::BTreeMap,
     fs::{self, File, OpenOptions},
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
     sync::{
         Arc, Mutex, OnceLock,
@@ -50,7 +50,7 @@ fn validate(
     expected: wire::Compatibility,
     lease: File,
 ) -> Result<Arc<PreparedMetadata>> {
-    let bytes = fs::read(path).map_err(fail)?;
+    let bytes = read_bounded(path)?;
     let metadata_id = sifr_sysroot::sha256_hex(&bytes);
     let store = wire::MetadataStore::open(
         std::io::Cursor::new(bytes),
@@ -58,6 +58,7 @@ fn validate(
         wire::Limits::default(),
     )?;
     store.validate_complete()?;
+    store.release_unpinned()?;
     Ok(Arc::new(PreparedMetadata {
         path: path.to_owned(),
         metadata_id,
@@ -124,7 +125,7 @@ pub(super) fn ensure_with_hook(
         .get(&path)
         .cloned()
     {
-        if fs::read(&path)
+        if read_bounded(&path)
             .is_ok_and(|bytes| sifr_sysroot::sha256_hex(&bytes) == prepared.metadata_id)
         {
             return Ok(prepared);
@@ -156,7 +157,7 @@ pub(super) fn ensure_with_hook(
         .get(&path)
         .cloned()
     {
-        if fs::read(&path)
+        if read_bounded(&path)
             .is_ok_and(|bytes| sifr_sysroot::sha256_hex(&bytes) == prepared.metadata_id)
         {
             return Ok(prepared);
@@ -245,7 +246,7 @@ impl PreparedMetadata {
         ));
         let mut owns_stage = false;
         let result = (|| {
-            let bytes = fs::read(&self.path).map_err(fail)?;
+            let bytes = read_bounded(&self.path)?;
             if sifr_sysroot::sha256_hex(&bytes) != self.metadata_id {
                 return Err(fail(
                     "prepared metadata changed before output publication; retry preparation",
@@ -283,13 +284,9 @@ pub fn validate_development_metadata(
         .get(path)
         .cloned()
     {
-        if prepared.compatibility != inputs.compatibility {
-            return Err(fail(
-                "explicit metadata override does not match this compiler/test configuration and source inputs",
-            ));
-        }
-        if fs::read(path)
-            .is_ok_and(|bytes| sifr_sysroot::sha256_hex(&bytes) == prepared.metadata_id)
+        if prepared.compatibility == inputs.compatibility
+            && read_bounded(path)
+                .is_ok_and(|bytes| sifr_sysroot::sha256_hex(&bytes) == prepared.metadata_id)
         {
             return Ok(prepared);
         }
@@ -299,4 +296,47 @@ pub fn validate_development_metadata(
         inputs.compatibility,
         File::open(path).map_err(fail)?,
     )?)
+}
+
+/// Read at most the wire limit plus one byte, including a concurrent growth race.
+pub(crate) fn read_bounded(path: &Path) -> Result<Vec<u8>> {
+    let file = File::open(path).map_err(fail)?;
+    let limit = wire::Limits::default().file_bytes;
+    if file.metadata().map_err(fail)?.len() > limit {
+        return Err(fail("metadata file exceeds bounded container limit"));
+    }
+    let mut bytes = Vec::new();
+    file.take(limit + 1).read_to_end(&mut bytes).map_err(fail)?;
+    if bytes.len() as u64 > limit {
+        return Err(fail("metadata file grew beyond bounded container limit"));
+    }
+    Ok(bytes)
+}
+/// Open a consumer owner without traversal of unrelated payloads.
+pub(crate) fn open_consumer(
+    path: &Path,
+    compatibility: wire::Compatibility,
+    expected_id: Option<&str>,
+) -> Result<Arc<PreparedMetadata>> {
+    let lease = File::open(path).map_err(fail)?;
+    let bytes = read_bounded(path)?;
+    let metadata_id = sifr_sysroot::sha256_hex(&bytes);
+    if expected_id.is_some_and(|id| id != metadata_id) {
+        return Err(fail(
+            "installed metadata content identity mismatch; reinstall this toolchain",
+        ));
+    }
+    let store = wire::MetadataStore::open(
+        std::io::Cursor::new(bytes),
+        compatibility,
+        wire::Limits::default(),
+    )?;
+    Ok(Arc::new(PreparedMetadata {
+        path: path.to_owned(),
+        metadata_id,
+        compatibility,
+        production_seconds: None,
+        store,
+        _lease: lease,
+    }))
 }

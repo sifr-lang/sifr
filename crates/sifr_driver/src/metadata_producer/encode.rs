@@ -144,3 +144,8 @@ pub(super) fn error_type_set(
     references.sort();
     Ok(references)
 }
+impl<T: Encode<U>, U> Encode<Vec<U>> for sifr_type_system::SharedVec<T> {
+    fn encode(&self, cx: &mut Encoder) -> Result<Vec<U>> {
+        self.as_slice().encode(cx)
+    }
+}

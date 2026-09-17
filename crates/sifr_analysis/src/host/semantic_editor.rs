@@ -107,6 +107,15 @@ impl AnalysisHost {
             .iter()
             .find(|source| source.module_name.as_deref() == Some(&definition.module_name))
             .map(|source| source.id);
+        let definition_file = definition_file.or_else(|| {
+            self.stdlib_navigation
+                .symbols
+                .iter()
+                .find(|symbol| {
+                    symbol.module == definition.module_name && symbol.name == definition.name
+                })
+                .map(|symbol| FileId::new(symbol.file))
+        });
         let Some(definition_file) = definition_file else {
             return Ok(None);
         };

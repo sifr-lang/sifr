@@ -322,8 +322,8 @@ pub(super) fn resolve_class_method_type(
             identity: class.identity.cloned(),
             type_args: class.type_args.to_vec(),
             name: class.name.to_string(),
-            fields: class.fields.to_vec(),
-            methods: class.methods.to_vec(),
+            fields: class.fields.to_vec().into(),
+            methods: class.methods.to_vec().into(),
             parent_class: None,
         };
         if !super::super::generic_method_requirements::validate_generic_method_specialization(

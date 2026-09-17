@@ -94,3 +94,44 @@ fn lowering_external_defs_preserves_success_and_failure_inputs() {
     assert!(lower_module_with_externals(declaration.suite(), &defs).is_err());
     assert_eq!(format!("{defs:?}"), before);
 }
+
+#[test]
+fn source_layered_view_preserves_lowering_diagnostics_and_ir() {
+    let flat = external_input();
+    let mut layered = flat.clone();
+    layered.freeze_baseline();
+    for source in [
+        "from values import ANSWER\ndef main() -> int:\n    return ANSWER\n",
+        "from values import MISSING\ndef main() -> int:\n    return MISSING\n",
+        "from values import ANSWER\ndef main() -> str:\n    return ANSWER\n",
+    ] {
+        let parsed = parse_module(source).unwrap();
+        let reference = lower_module_with_externals(parsed.suite(), &flat);
+        let actual = lower_module_with_externals(parsed.suite(), &layered);
+        match (reference, actual) {
+            (Ok(reference), Ok(actual)) => assert_eq!(
+                format!("{:?}", reference.module),
+                format!("{:?}", actual.module)
+            ),
+            (Err(reference), Err(actual)) => {
+                assert_eq!(format!("{reference:?}"), format!("{actual:?}"))
+            }
+            _ => panic!("source and layered result kinds differ"),
+        }
+    }
+    let mut overlay = layered.clone();
+    overlay
+        .constants
+        .entry("values".into())
+        .or_default()
+        .insert("ANSWER".into(), Type::Str);
+    overlay.constants.remove("values");
+    assert_eq!(
+        overlay.constants.get("values").unwrap().get("ANSWER"),
+        Some(&Type::Int)
+    );
+    assert!(std::ptr::eq(
+        layered.constants.get("values").unwrap(),
+        overlay.constants.get("values").unwrap()
+    ));
+}

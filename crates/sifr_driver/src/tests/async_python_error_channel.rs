@@ -1,5 +1,6 @@
 use super::support::parse_suite;
-use crate::{collect_project_hir_modules, compile_stdlib, type_check_source};
+use crate::stdlib::metadata_inventory_for_test as compile_stdlib;
+use crate::{collect_project_hir_modules, type_check_source};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{LoweringOptions, PythonBridgeTargetAuthority};
 use sifr_type_system::Type;
@@ -63,7 +64,11 @@ fn async_python_error_channel_rejects_unrelated_return_errors() {
 #[test]
 fn async_python_error_channel_retains_stdlib_ancestry_without_data_parent() {
     let stdlib = compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib must compile");
-    let error = &stdlib.defs.classes["sifr.python"]["PythonError"];
+    let error = &stdlib
+        .defs
+        .classes
+        .get("sifr.python")
+        .expect("Python exports")["PythonError"];
     let Type::Class {
         identity,
         parent_class,

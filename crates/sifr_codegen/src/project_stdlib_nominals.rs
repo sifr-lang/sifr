@@ -259,8 +259,8 @@ fn builtin_error_type(name: &str) -> Type {
         identity: None,
         type_args: Vec::new(),
         name: name.to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: (name != "Error").then(|| "Error".to_string()),
     }
 }
@@ -498,8 +498,8 @@ mod tests {
             identity: Some(identity.to_string()),
             type_args: Vec::new(),
             name: "Error".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         }
     }
@@ -558,8 +558,8 @@ mod tests {
             identity: Some("_sifr.fs.NativeFileHandle".to_string()),
             type_args: Vec::new(),
             name: "NativeFileHandle".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let unions = HashMap::from([("NativeFile".to_string(), vec![native_file])]);
@@ -581,8 +581,8 @@ mod tests {
             identity: Some("sifr.builtin.TimeoutError".to_string()),
             type_args: Vec::new(),
             name: "TimeoutError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let unions = HashMap::from([(
@@ -593,8 +593,8 @@ mod tests {
                     identity: None,
                     type_args: Vec::new(),
                     name: "ValueError".to_string(),
-                    fields: vec![("message".to_string(), Type::Str)],
-                    methods: Vec::new(),
+                    fields: vec![("message".to_string(), Type::Str)].into(),
+                    methods: Vec::new().into(),
                     parent_class: Some("Error".to_string()),
                 },
             ],
@@ -773,8 +773,9 @@ mod tests {
             fields: vec![
                 ("message".to_string(), Type::Str),
                 ("kind".to_string(), Type::Str),
-            ],
-            methods: Vec::new(),
+            ]
+            .into(),
+            methods: Vec::new().into(),
             parent_class: Some("IOError".to_string()),
         };
         let unions = HashMap::from([("DirectKind".to_string(), vec![direct_kind])]);

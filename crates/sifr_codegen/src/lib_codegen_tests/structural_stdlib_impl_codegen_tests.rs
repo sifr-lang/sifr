@@ -159,8 +159,8 @@ fn imported_stdlib_structural_contracts_include_transitive_field_types_only() {
         name: child.name.clone(),
         identity: child.identity.clone(),
         type_args: Vec::new(),
-        fields: child.fields.clone(),
-        methods: Vec::new(),
+        fields: child.fields.clone().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let templates = stdlib

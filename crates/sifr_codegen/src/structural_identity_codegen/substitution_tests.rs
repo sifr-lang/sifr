@@ -62,8 +62,8 @@ fn structural_substitution_uses_project_nominal_scope_authority() {
         identity: Some("models.Inner".to_string()),
         type_args: vec![Type::Str],
         name: "Inner".to_string(),
-        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let bindings = HashMap::from([("T".to_string(), Type::Int)]);
@@ -81,8 +81,8 @@ fn structural_substitution_uses_project_nominal_scope_authority() {
         identity: Some("missing.Inner".to_string()),
         type_args: vec![Type::TypeVar("T".to_string())],
         name: "Inner".to_string(),
-        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let unresolved = substitute_structural_type(&missing, &bindings, "models", &context);
@@ -111,8 +111,8 @@ fn imported_outer_fields_resolve_nested_scopes_in_the_declaring_module() {
                 identity: None,
                 type_args: vec![Type::Str],
                 name: "Inner".to_string(),
-                fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
-                methods: Vec::new(),
+                fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))].into(),
+                methods: Vec::new().into(),
                 parent_class: None,
             },
         )],
@@ -150,8 +150,8 @@ fn imported_outer_fields_resolve_nested_scopes_in_the_declaring_module() {
         identity: Some("models.Outer".to_string()),
         type_args: vec![Type::Int],
         name: "Outer".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
 

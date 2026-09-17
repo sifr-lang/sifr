@@ -99,8 +99,8 @@ mod tests {
             identity: Some("pkg.Node".to_string()),
             type_args: vec![Type::TypeVar("T".to_string())],
             name: "Node".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let mut vars = Vec::new();

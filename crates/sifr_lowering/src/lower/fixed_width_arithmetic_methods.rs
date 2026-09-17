@@ -74,8 +74,8 @@ fn overflow_error_type(ctx: &LowerCtx) -> Type {
             identity: None,
             type_args: Vec::new(),
             name: "OverflowError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: vec![],
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         })
 }

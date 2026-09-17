@@ -303,12 +303,12 @@ pub fn collect_module_exports(
                     HirClassKind::Protocol => Type::Protocol {
                         identity: None,
                         name: class.name.clone(),
-                        methods,
+                        methods: methods.into(),
                     },
                     HirClassKind::Enum => Type::Enum {
                         identity: None,
                         name: class.name.clone(),
-                        variants: class.enum_variants.clone(),
+                        variants: class.enum_variants.clone().into(),
                     },
                     HirClassKind::Regular | HirClassKind::PythonOpaque(_) => Type::Class {
                         identity: None,
@@ -319,8 +319,8 @@ pub fn collect_module_exports(
                             .map(Type::TypeVar)
                             .collect(),
                         name: class.name.clone(),
-                        fields: exported_class_fields(class),
-                        methods,
+                        fields: exported_class_fields(class).into(),
+                        methods: methods.into(),
                         parent_class: if class.is_error_type {
                             class.semantic_parent_chain()
                         } else {
@@ -482,6 +482,7 @@ pub fn collect_module_exports(
         }
     }
 
+    external_defs.remove_module_overlay(module_name);
     external_defs
         .functions
         .insert(module_name.to_string(), fn_exports);

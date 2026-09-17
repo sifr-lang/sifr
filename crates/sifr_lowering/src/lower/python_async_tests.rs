@@ -9,8 +9,8 @@ fn object_ty() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "Object".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("NonSend".to_string()),
     }
 }
@@ -20,8 +20,8 @@ fn error_ty() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "PythonError".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     }
 }

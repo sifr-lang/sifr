@@ -695,8 +695,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "Node".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let node = Type::Class {
@@ -706,8 +706,9 @@ mod tests {
             fields: vec![(
                 "next".to_string(),
                 Type::Union(vec![node_ref.clone(), Type::None]),
-            )],
-            methods: Vec::new(),
+            )]
+            .into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
 

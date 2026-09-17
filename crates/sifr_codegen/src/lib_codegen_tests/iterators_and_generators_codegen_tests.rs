@@ -529,8 +529,9 @@ fn test_checked_field_mutation_is_explicit_and_non_sticky() {
             ("items".to_string(), items_ty.clone()),
             ("table".to_string(), table_ty.clone()),
             ("label".to_string(), label_ty.clone()),
-        ],
-        methods: vec![],
+        ]
+        .into(),
+        methods: vec![].into(),
         parent_class: None,
     };
 

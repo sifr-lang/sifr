@@ -7538,6 +7538,7 @@ name = "sifr_driver"
 version = "0.0.0"
 dependencies = [
  "libc",
+ "num-bigint 0.5.1",
  "ruff_python_ast",
  "ruff_text_size",
  "serde",
@@ -7558,6 +7559,7 @@ dependencies = [
  "sifr_sysroot",
  "sifr_type_system",
  "syn 3.0.5",
+ "tempfile",
  "toml",
  "wat",
 ]

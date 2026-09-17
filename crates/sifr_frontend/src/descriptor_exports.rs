@@ -38,8 +38,8 @@ pub(crate) fn add_aliases(
                         identity: Some(format!("{}.{}", marker.module, marker.symbol)),
                         type_args: Vec::new(),
                         name: marker.symbol.clone(),
-                        fields: Vec::new(),
-                        methods: Vec::new(),
+                        fields: Vec::new().into(),
+                        methods: Vec::new().into(),
                         parent_class: None,
                     },
                 )
@@ -57,8 +57,8 @@ pub(crate) fn add_aliases(
                         identity: Some(format!("{}.{}", set.identity.module, set.identity.symbol)),
                         type_args: Vec::new(),
                         name: set.identity.symbol.clone(),
-                        fields: Vec::new(),
-                        methods: Vec::new(),
+                        fields: Vec::new().into(),
+                        methods: Vec::new().into(),
                         parent_class: None,
                     },
                 )

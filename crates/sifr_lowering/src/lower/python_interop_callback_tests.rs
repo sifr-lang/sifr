@@ -120,7 +120,7 @@ def compute(
             .into_iter()
             .map(|name| (name.to_string(), Type::Str))
             .collect(),
-        methods: Vec::new(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let mut externals = ExternalDefs::default();

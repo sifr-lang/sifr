@@ -18,7 +18,7 @@ impl AnalysisHost {
         let mut session = WorkspaceSession::project_with_external_defs_and_auxiliary_sources(
             root.clone(),
             sifr_driver::stdlib_external_defs(compiler)?,
-            sifr_driver::stdlib_tooling_sources(compiler)?,
+            Vec::new(),
         );
         for (path, uri, version, source) in overlays {
             session.upsert_overlay(path, uri, version, source, None);
@@ -39,7 +39,7 @@ impl AnalysisHost {
             path.clone(),
             mode,
             sifr_driver::stdlib_external_defs(compiler)?,
-            sifr_driver::stdlib_tooling_sources(compiler)?,
+            Vec::new(),
         );
         session.upsert_overlay(path, uri, version, source, None);
         session.reload()?;

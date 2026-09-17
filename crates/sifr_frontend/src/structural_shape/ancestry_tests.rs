@@ -11,7 +11,7 @@ fn class_type(class: &sifr_lowering::HirClass) -> Type {
         identity: None,
         type_args: Vec::new(),
         name: class.name.clone(),
-        fields: class.fields.clone(),
+        fields: class.fields.clone().into(),
         methods: class
             .methods
             .iter()

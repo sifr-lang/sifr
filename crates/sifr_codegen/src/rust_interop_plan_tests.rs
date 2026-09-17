@@ -107,16 +107,16 @@ fn interop_build_plan_records_bridge_signature_and_generated_types() {
         identity: None,
         type_args: Vec::new(),
         name: "Token".to_string(),
-        fields: vec![("text".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("text".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let error_ty = Type::Class {
         identity: None,
         type_args: Vec::new(),
         name: "HashError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let module = HirModule {
@@ -183,8 +183,8 @@ fn interop_build_plan_accepts_tuple_result_with_error_class_flag() {
         identity: None,
         type_args: Vec::new(),
         name: "PythonError".to_string(),
-        fields: python_error_fields(),
-        methods: Vec::new(),
+        fields: python_error_fields().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let mut python_error_class = class("PythonError", HirClassKind::Regular, python_error_fields());
@@ -246,8 +246,8 @@ fn interop_bridge_resolves_imported_opaque_type_to_declared_rust_target() {
         identity: None,
         type_args: Vec::new(),
         name: "Object".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("NonSend".to_string()),
     };
     let mut object_class = class("Object", HirClassKind::Regular, Vec::new());
@@ -504,16 +504,16 @@ fn interop_bridge_generated_field_paths_use_declaring_module() {
         identity: None,
         type_args: Vec::new(),
         name: "Token".to_string(),
-        fields: vec![("text".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("text".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let wrapper_ty = Type::Class {
         identity: None,
         type_args: Vec::new(),
         name: "Wrapper".to_string(),
-        fields: vec![("token".to_string(), token_ty.clone())],
-        methods: Vec::new(),
+        fields: vec![("token".to_string(), token_ty.clone())].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let models = module_with(
@@ -572,7 +572,7 @@ fn interop_bridge_rejects_enum_discriminants_outside_repr_u32() {
     let bad_enum = Type::Enum {
         identity: None,
         name: "Status".to_string(),
-        variants: vec![("Broken".to_string(), Some(-1))],
+        variants: vec![("Broken".to_string(), Some(-1))].into(),
     };
     let module = module_with(
         vec![HirFunction {
@@ -611,16 +611,16 @@ fn interop_bridge_keeps_same_basename_canonical_records_distinct() {
         identity: Some("sifr.csv.Error".to_string()),
         type_args: Vec::new(),
         name: "Error".to_string(),
-        fields: vec![("line".to_string(), Type::Int)],
-        methods: Vec::new(),
+        fields: vec![("line".to_string(), Type::Int)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let config_error = Type::Class {
         identity: Some("sifr.configparser.Error".to_string()),
         type_args: Vec::new(),
         name: "Error".to_string(),
-        fields: vec![("section".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("section".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let module = module_with(

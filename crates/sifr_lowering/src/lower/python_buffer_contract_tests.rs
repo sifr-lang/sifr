@@ -356,16 +356,16 @@ fn same_basename_class_identity_does_not_hide_nested_buffer_sendability() {
         identity: Some("inner.Root".to_string()),
         type_args: Vec::new(),
         name: "Root".to_string(),
-        fields: vec![("view".to_string(), buffer)],
-        methods: Vec::new(),
+        fields: vec![("view".to_string(), buffer)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let outer = Type::Class {
         identity: Some("outer.Root".to_string()),
         type_args: Vec::new(),
         name: "Root".to_string(),
-        fields: vec![("inner".to_string(), inner)],
-        methods: Vec::new(),
+        fields: vec![("inner".to_string(), inner)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
 

@@ -245,8 +245,8 @@ pub enum Type {
         /// non-generic class.
         type_args: Vec<Type>,
         name: String,
-        fields: Vec<(String, Type)>,
-        methods: Vec<(String, FunctionType)>,
+        fields: crate::SharedVec<(String, Type)>,
+        methods: crate::SharedVec<(String, FunctionType)>,
         parent_class: Option<String>,
     },
 
@@ -256,7 +256,7 @@ pub enum Type {
     Protocol {
         identity: Option<String>,
         name: String,
-        methods: Vec<(String, FunctionType)>,
+        methods: crate::SharedVec<(String, FunctionType)>,
     },
 
     /// Newtype wrapper around a primitive type.
@@ -285,7 +285,7 @@ pub enum Type {
     Enum {
         identity: Option<String>,
         name: String,
-        variants: Vec<(String, Option<i64>)>,
+        variants: crate::SharedVec<(String, Option<i64>)>,
     },
 
     // --- Decimal Types ---

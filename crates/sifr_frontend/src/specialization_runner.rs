@@ -48,8 +48,8 @@ pub(crate) fn run_specializations(
                 .map(Type::TypeVar)
                 .collect(),
             name: class.name.clone(),
-            fields: class.fields.clone(),
-            methods: Vec::new(),
+            fields: class.fields.clone().into(),
+            methods: Vec::new().into(),
             parent_class: class.semantic_parent_chain(),
         };
         if !class.type_params.is_empty() {

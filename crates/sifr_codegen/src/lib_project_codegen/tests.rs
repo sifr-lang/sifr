@@ -36,8 +36,8 @@ fn error_type(name: &str) -> sifr_type_system::Type {
         identity: Some(format!("errors.{name}")),
         type_args: Vec::new(),
         name: name.to_string(),
-        fields: vec![("message".to_string(), sifr_type_system::Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), sifr_type_system::Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     }
 }
@@ -255,24 +255,24 @@ fn root_union_plan_distinguishes_non_class_nominal_identities() {
             sifr_type_system::Type::Enum {
                 identity: Some("left.Status".to_string()),
                 name: "Status".to_string(),
-                variants: vec![("READY".to_string(), Some(1))],
+                variants: vec![("READY".to_string(), Some(1))].into(),
             },
             sifr_type_system::Type::Enum {
                 identity: Some("right.Status".to_string()),
                 name: "Status".to_string(),
-                variants: vec![("READY".to_string(), Some(1))],
+                variants: vec![("READY".to_string(), Some(1))].into(),
             },
         ),
         (
             sifr_type_system::Type::Protocol {
                 identity: Some("left.Readable".to_string()),
                 name: "Readable".to_string(),
-                methods: Vec::new(),
+                methods: Vec::new().into(),
             },
             sifr_type_system::Type::Protocol {
                 identity: Some("right.Readable".to_string()),
                 name: "Readable".to_string(),
-                methods: Vec::new(),
+                methods: Vec::new().into(),
             },
         ),
     ];

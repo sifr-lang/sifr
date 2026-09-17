@@ -51,7 +51,13 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
         "textDocument/formatting" => formatting::formatting(session, params),
         "textDocument/rangeFormatting" => formatting::range_formatting(session, params),
         "sifr/sysroot" => sysroot_status(session, &params),
-        "sifr/debugTrace" => Ok(Value::String(session.trace_snapshot().render_text())),
+        "sifr/debugTrace" => {
+            let mut text = session.trace_snapshot().render_text();
+            if let Some(stats) = session.compiler_context().metadata_stats() {
+                text.push_str(&format!("\nmetadata_stats={stats}"));
+            }
+            Ok(Value::String(text))
+        }
         _ => Err(LspError::method_not_found(format!(
             "unsupported Sifr LSP request: {method}"
         ))),

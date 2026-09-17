@@ -2008,3 +2008,30 @@ The producer validates all indexed records before publication, preserves failure
 for retry, and rejects source changes before committing an artifact. Packaging
 produces metadata from the staged source snapshot before sealing the installed
 manifest, and binds its descriptor to exact compiler bytes and target. Fragment validation identity never replaces final application checks.
+
+### Demand-loaded standard-library consumers
+
+Ordinary CLI, frontend, analysis/LSP and test-runner compilation select one
+identity-bound metadata provider through `CompilerContext`. Installed selection
+requires the packaged descriptor and matching indexed artifact; development and
+linked-test selection use the canonical preparation entrypoint. Failures remain
+retryable and installed readers never bootstrap from source.
+
+`ExternalDefs` combines shared immutable module values with project-owned export
+overlays. Frontend preparation pins the demanded semantic closure before lowering,
+export collection and editor queries. Invalidation removes only project exports.
+Lowering itself performs no provider I/O. The metadata reader retains indexed wire
+records through the bounded sysroot store and projects only demanded module
+closures into the existing semantic types. Nominal fields, methods and enum
+variants use shared copy-on-write buffers at the existing type-system owner.
+Each artifact-local nominal view is projected once per provider; repeated type
+occurrences share those complete buffers. Contextual substitutions detach before
+mutation. Baseline maps share these values across compilations without deep-cloning
+the complete stdlib.
+
+Codegen materializes the selected HIR, Rust and role-checked template inventory,
+with producer fragment identities checked before reuse and existing final syntax
+validation preserved. LSP navigation indexes declaration paths/spans without
+loading source text; a selected source is size- and digest-checked on first use.
+The navigation index belongs to its pinned provider and sysroot and is shared
+while live.

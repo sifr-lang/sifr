@@ -252,15 +252,15 @@ pub(super) fn lower_shadowable_builtin_call(
                 identity: None,
                 type_args: Vec::new(),
                 name: "IOError".to_string(),
-                fields: vec![("message".to_string(), Type::Str)],
-                methods: vec![],
+                fields: vec![("message".to_string(), Type::Str)].into(),
+                methods: vec![].into(),
                 parent_class: None,
             };
             let text_handle_ty = Type::Class {
                 identity: Some(TEXT_FILE_HANDLE_IDENTITY.to_string()),
                 type_args: Vec::new(),
                 name: "TextFileHandle".to_string(),
-                fields: vec![],
+                fields: vec![].into(),
                 methods: vec![
                     (
                         "read".to_string(),
@@ -288,8 +288,8 @@ pub(super) fn lower_shadowable_builtin_call(
                                 identity: Some(TEXT_FILE_HANDLE_IDENTITY.to_string()),
                                 type_args: Vec::new(),
                                 name: "TextFileHandle".to_string(),
-                                fields: vec![],
-                                methods: vec![],
+                                fields: vec![].into(),
+                                methods: vec![].into(),
                                 parent_class: None,
                             },
                         ),
@@ -298,7 +298,8 @@ pub(super) fn lower_shadowable_builtin_call(
                         "__exit__".to_string(),
                         FunctionType::all_borrow(vec![], Type::None),
                     ),
-                ],
+                ]
+                .into(),
                 parent_class: None,
             };
             // Preserve an explicitly imported stdlib handle even when it is aliased.
@@ -338,8 +339,8 @@ pub(super) fn lower_shadowable_builtin_call(
             identity: None,
             type_args: Vec::new(),
             name: "IOError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: vec![],
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let file_handle_ty = Type::Class {
@@ -349,7 +350,8 @@ pub(super) fn lower_shadowable_builtin_call(
             fields: vec![
                 ("_handle".to_string(), Type::Int),
                 ("_mode".to_string(), Type::Str),
-            ],
+            ]
+            .into(),
             methods: vec![
                 (
                     "read".to_string(),
@@ -417,8 +419,9 @@ pub(super) fn lower_shadowable_builtin_call(
                             fields: vec![
                                 ("_handle".to_string(), Type::Int),
                                 ("_mode".to_string(), Type::Str),
-                            ],
-                            methods: vec![],
+                            ]
+                            .into(),
+                            methods: vec![].into(),
                             parent_class: None,
                         },
                     ),
@@ -427,7 +430,8 @@ pub(super) fn lower_shadowable_builtin_call(
                     "__exit__".to_string(),
                     FunctionType::all_borrow(vec![], Type::None),
                 ),
-            ],
+            ]
+            .into(),
             parent_class: None,
         };
         let mut file_handle_ty = prefer_complete_class_surface(
@@ -468,8 +472,8 @@ mod tests {
             identity: Some(TEXT_FILE_HANDLE_IDENTITY.to_string()),
             type_args: Vec::new(),
             name: "TextFileHandle".to_string(),
-            fields: Vec::new(),
-            methods,
+            fields: Vec::new().into(),
+            methods: methods.into(),
             parent_class: None,
         }
     }
@@ -506,7 +510,7 @@ mod file_handle_receiver_tests {
             identity: Some(FILE_HANDLE_IDENTITY.to_string()),
             type_args: vec![],
             name: "FileHandle".to_string(),
-            fields: vec![],
+            fields: vec![].into(),
             methods: ["write", "write_bytes", "close", "__exit__"]
                 .into_iter()
                 .map(|name| {
@@ -538,12 +542,13 @@ mod file_handle_receiver_tests {
             identity: Some(FILE_HANDLE_IDENTITY.to_string()),
             type_args: vec![],
             name: "FileHandle".to_string(),
-            fields: vec![],
+            fields: vec![].into(),
             methods: vec![(
                 "write".to_string(),
                 FunctionType::all_borrow(vec![], Type::None)
                     .with_receiver(ReceiverConvention::MutableBorrow),
-            )],
+            )]
+            .into(),
             parent_class: None,
         };
         fill_file_handle_receiver_conventions(&mut ty);

@@ -34,8 +34,8 @@ pub(in crate::lower) fn lower_module_impl<'defs>(
                         identity: None,
                         type_args: Vec::new(),
                         name: class_name,
-                        fields: Vec::new(),
-                        methods: Vec::new(),
+                        fields: Vec::new().into(),
+                        methods: Vec::new().into(),
                         parent_class: None,
                     },
                 );

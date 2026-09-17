@@ -32,8 +32,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: "Error".to_string(),
-            fields: msg_fields.clone(),
-            methods: vec![],
+            fields: msg_fields.clone().into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         ctx.class_types
@@ -53,8 +53,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: "NonSend".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         ctx.class_types.insert("NonSend".to_string(), class_ty);
@@ -71,8 +71,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: "IOError".to_string(),
-            fields: fields.clone(),
-            methods: vec![],
+            fields: fields.clone().into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         };
         ctx.class_types
@@ -107,8 +107,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
                 .then(|| "sifr.builtin.TimeoutError".to_string()),
             type_args: Vec::new(),
             name: error_name.to_string(),
-            fields: fields.clone(),
-            methods: vec![],
+            fields: fields.clone().into(),
+            methods: vec![].into(),
             parent_class: Some(
                 if matches!(error_name, "FloatOverflowError" | "FloatPrecisionLossError") {
                     "OverflowError"
@@ -135,8 +135,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: "ArithmeticLimitError".to_string(),
-            fields: fields.clone(),
-            methods: vec![],
+            fields: fields.clone().into(),
+            methods: vec![].into(),
             parent_class: Some("OverflowError".to_string()),
         };
         ctx.class_types
@@ -152,8 +152,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: Some("sifr.builtin.CancellationError".to_string()),
             type_args: Vec::new(),
             name: "CancellationError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: vec![],
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         ctx.class_types
@@ -168,8 +168,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: "AsyncExitCause".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         ctx.class_types
@@ -187,8 +187,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: "JsonIntegerRangeError".to_string(),
-            fields: fields.clone(),
-            methods: vec![],
+            fields: fields.clone().into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         };
         ctx.class_types
@@ -208,8 +208,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: "JsonLimitError".to_string(),
-            fields: fields.clone(),
-            methods: vec![],
+            fields: fields.clone().into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         };
         ctx.class_types
@@ -228,8 +228,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: error_name.to_string(),
-            fields: fields.clone(),
-            methods: vec![],
+            fields: fields.clone().into(),
+            methods: vec![].into(),
             parent_class: Some("IOError".to_string()),
         };
         ctx.class_types
@@ -253,8 +253,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: "JSONDecodeError".to_string(),
-            fields: fields.clone(),
-            methods: vec![],
+            fields: fields.clone().into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         };
         ctx.class_types
@@ -278,8 +278,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: "TOMLDecodeError".to_string(),
-            fields: fields.clone(),
-            methods: vec![],
+            fields: fields.clone().into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         };
         ctx.class_types
@@ -301,8 +301,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             identity: None,
             type_args: Vec::new(),
             name: "RegexError".to_string(),
-            fields: fields.clone(),
-            methods: vec![],
+            fields: fields.clone().into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         };
         ctx.class_types

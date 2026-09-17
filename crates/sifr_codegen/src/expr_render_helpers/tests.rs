@@ -8,8 +8,8 @@ fn field_read_from_borrowed_parameter_clones_move_value() {
         identity: Some("_sifr.python.PythonError".to_string()),
         type_args: Vec::new(),
         name: "PythonError".to_string(),
-        fields: vec![("kind".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("kind".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let object = HirExpr::Name {
@@ -36,8 +36,8 @@ fn field_read_from_owned_local_clones_reusable_value() {
         identity: Some("records.Item".to_string()),
         type_args: Vec::new(),
         name: "Item".to_string(),
-        fields: vec![("identity".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("identity".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let object = HirExpr::Name {
@@ -63,8 +63,8 @@ fn inherited_field_value_read_uses_shared_storage_rerooting() {
         identity: None,
         type_args: Vec::new(),
         name: "Child".to_string(),
-        fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
-        methods: Vec::new(),
+        fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Base".to_string()),
     };
     let object = HirExpr::Name {
@@ -98,8 +98,8 @@ fn checked_mutating_field_receiver_does_not_clone() {
         identity: None,
         type_args: Vec::new(),
         name: "Crate".to_string(),
-        fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
-        methods: Vec::new(),
+        fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let object = HirExpr::Name {
@@ -133,16 +133,16 @@ fn checked_nested_mutating_field_receiver_preserves_every_hop() {
         identity: None,
         type_args: Vec::new(),
         name: "Inner".to_string(),
-        fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
-        methods: Vec::new(),
+        fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let outer = Type::Class {
         identity: None,
         type_args: Vec::new(),
         name: "Outer".to_string(),
-        fields: vec![("inner".to_string(), inner.clone())],
-        methods: Vec::new(),
+        fields: vec![("inner".to_string(), inner.clone())].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let receiver = HirExpr::FieldAccess {

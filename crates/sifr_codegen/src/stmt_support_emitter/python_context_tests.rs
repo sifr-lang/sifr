@@ -16,9 +16,9 @@ fn class_type(name: &str) -> Type {
                 .map(|field| (field.to_string(), Type::Str))
                 .collect()
         } else {
-            Vec::new()
+            Vec::new().into()
         },
-        methods: vec![],
+        methods: vec![].into(),
         parent_class: (name == "PythonError").then(|| "Error".to_string()),
     }
 }
