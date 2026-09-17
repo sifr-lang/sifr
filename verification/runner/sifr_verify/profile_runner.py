@@ -81,6 +81,8 @@ class ProfileRunner:
         self.profile_name = str(self.profile["name"])
         self.forward_args = forward_args
         self.env = os.environ.copy()
+        self.env["CARGO_BUILD_JOBS"] = str(self.profile["e2e"]["cargo_build_jobs"])
+        self.env["RAYON_NUM_THREADS"] = str(self.profile["resource_policy"]["max_parallel"])
         target_root = Path(self.env.get("CARGO_TARGET_DIR", REPO_ROOT / "target"))
         if not target_root.is_absolute():
             target_root = REPO_ROOT / target_root

@@ -1977,3 +1977,15 @@ Mojo (`/Users/yaseralnajjar/work/sifr/modular/mojo`) was evaluated as a referenc
 ## Compiler DX migration contract
 
 [Prebuilt stdlib and toolchain reuse](compiler_dx_architecture.md) defines the compiler development-loop migration contract. Installed execution requires matching metadata after its consumer migration; source-tree production remains explicit. Optional project persistence restores existing frontend result families or misses without changing correctness. Cleanup follows owned storage pressure and obsolescence rather than target size. Functional outcomes, named performance contracts and safety deadlines remain separate. These are prospective contracts, not claims that later DX implementation increments have shipped.
+
+Generated native/test entries now live under the private persistent
+`SIFR_CACHE_DIR` (platform user-cache default), with staging on that filesystem.
+The driver storage owner holds OS entry leases through binary/test execution;
+native descendants inherit producer leases so writer death does not make live
+staging pruneable. Final test entries contain their runnable executables and are
+not mutated by a subsequent Cargo test invocation. Cache inspection/pruning
+restricts reclamation to inactive entries owned by the current worktree, protects
+the newest candidate, and uses explicit free-space reserve pressure.
+Driver process execution owns bounded streams, safety deadlines and descendant
+groups; verification wraps its command boundary separately from runner events.
+These DX.3 primitives do not implement semantic project generations.

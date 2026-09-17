@@ -5,14 +5,18 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import tempfile
+import os
+import sys
 from pathlib import Path
 from typing import Any
 
 from .paths import REPO_ROOT
 from .profiles import load_profile
 
-ARTIFACT_CACHE_ROOT = Path(tempfile.gettempdir()) / "sifr_generated_artifact_cache"
+ARTIFACT_CACHE_ROOT = Path(os.environ.get("SIFR_CACHE_DIR", (
+    str(Path.home() / "Library/Caches/sifr") if sys.platform == "darwin" else
+    str(Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "sifr")
+))) / "native/artifacts"
 BSD_TIME_COMBINED_RE = re.compile(r"^\s*([0-9.]+)\s+real\s+([0-9.]+)\s+user\s+([0-9.]+)\s+sys$")
 TIME_REAL_RE = re.compile(r"^\s*([0-9.]+)\s+real$")
 TIME_USER_RE = re.compile(r"^\s*([0-9.]+)\s+user$")

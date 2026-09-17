@@ -400,6 +400,7 @@ fn build_cached_rooted_entrypoint_binary(
         query_signature_artifact_path: None,
     });
     Ok(CachedBinaryArtifact {
+        _cache_lease: cache_entry,
         binary_path,
         build_report,
     })

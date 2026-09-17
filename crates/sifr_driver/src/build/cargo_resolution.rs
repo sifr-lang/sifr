@@ -252,7 +252,7 @@ fn prepare_lockfile_from_authority(
         command.arg("--offline");
     }
     record_cargo_invocation("resolution", policy.lock_mode, &command);
-    let output = command.output().map_err(|error| {
+    let output = crate::process_execution::output(&mut command).map_err(|error| {
         vec![cargo_resolution_error(format!(
             "failed to prepare generated Cargo resolution: {error}"
         ))]

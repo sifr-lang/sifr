@@ -33,6 +33,9 @@ pub(super) const SIFR_BUILD_VERSION: &str = env!("SIFR_BUILD_VERSION");
     about = "The Sifr programming language compiler"
 )]
 pub(crate) struct Cli {
+    /// Print invocation timing and selected cache root on stderr
+    #[arg(long, global = true)]
+    pub(crate) timings: bool,
     /// Diagnostic output format
     #[arg(long, value_enum, default_value_t = DiagnosticFormat::Human)]
     pub(crate) diagnostic_format: DiagnosticFormat,
@@ -67,6 +70,8 @@ pub(crate) struct Cli {
 
 #[derive(Subcommand)]
 pub(crate) enum Commands {
+    /// Inspect or safely prune owned generated artifacts
+    Cache(DeferredArgs<crate::cache_cli::CacheArgs>),
     /// Compile a .sifr file to a native binary
     Build(DeferredArgs<super::command_args::Build>),
     /// Compile and run a .sifr file
@@ -185,6 +190,7 @@ pub(super) fn main() {
 }
 
 fn run_cli(cli: Cli) -> i32 {
+    let _timing = crate::native_execution::Timing(cli.timings.then(std::time::Instant::now));
     let diagnostic_format = cli.diagnostic_format;
     if let Some(sysroot) = cli.sysroot {
         if let Err(existing) = sifr_sysroot::set_process_sysroot_override(sysroot.clone()) {
@@ -261,6 +267,9 @@ fn run_cli(cli: Cli) -> i32 {
             lock_mode_from_flags(locked, offline, frozen),
             diagnostic_format,
         ),
+        Commands::Cache(crate::deferred_cli_args::DeferredArgs(args)) => {
+            crate::cache_cli::run(args)
+        }
         Commands::Doctor(crate::deferred_cli_args::DeferredArgs(crate::command_args::Doctor {
             json,
         })) => cmd_doctor(json, diagnostic_format),

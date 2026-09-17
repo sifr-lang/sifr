@@ -42,7 +42,9 @@ pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32
         Err(error) => {
             render_diagnostics(
                 &[diagnostic_with_code(
-                    error,
+                    format!(
+                        "{error}; install the selected Rust toolchain with rustup toolchain install, or correct SIFR_CARGO/SIFR_RUSTC"
+                    ),
                     DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
                 )],
                 diagnostic_format,
@@ -56,6 +58,7 @@ pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32
                 let value = serde_json::json!({
                     "schema_version": 1,
                     "compiler_build_id": crate::compiler_identity().as_str(),
+                    "cache_root": sifr_driver::cache_storage::root(),
                     "native_toolchain_id": native.identity(),
                     "rustc_version": native.rustc_version(),
                     "status": "ok",
@@ -80,6 +83,11 @@ pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32
                 );
             } else {
                 let _ = writeln!(io::stdout(), "Sifr doctor: ok");
+                let _ = writeln!(
+                    io::stdout(),
+                    "cache: {}",
+                    sifr_driver::cache_storage::root().display()
+                );
                 let _ = writeln!(io::stdout(), "sysroot: {}", sysroot.root.display());
                 let _ = writeln!(io::stdout(), "toolchain: {}", sysroot.toolchain_id());
                 let _ = writeln!(io::stdout(), "target: {}", sysroot.manifest.target_triple);
@@ -107,6 +115,7 @@ pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32
                     "binary_path": error.binary_path,
                     "attempted_sysroot": error.attempted_sysroot,
                     "asset_path": error.asset_path,
+                    "help": "Select or reinstall a matching Sifr toolchain; source-tree contributors must prepare the sysroot with the documented sysroot build command.",
                 });
                 let _ = writeln!(
                     io::stdout(),
@@ -115,7 +124,10 @@ pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32
                 );
             }
             let diagnostic = diagnostic_with_code(
-                error.boundary_message(),
+                format!(
+                    "{}; select or reinstall a matching Sifr toolchain; source-tree contributors: run cargo build -p sifr in the complete source checkout",
+                    error.boundary_message()
+                ),
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             );
             render_diagnostics(&[diagnostic], diagnostic_format);
@@ -185,6 +197,7 @@ fn print_native_context(json: bool, diagnostic_format: DiagnosticFormat) -> i32 
                     "{}",
                     serde_json::json!({
                         "compiler_build_id": crate::compiler_identity().as_str(),
+                    "cache_root": sifr_driver::cache_storage::root(),
                         "native_toolchain_id": tools.identity(),
                     "cargo_path": tools.cargo_path(),
                     "rustc_path": tools.rustc_path(),

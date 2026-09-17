@@ -170,8 +170,7 @@ pub(super) fn execute_direct_cargo_probe(
     command.env("CARGO_TARGET_DIR", probe_cargo_target_dir(&invocation_cwd));
     configure_hermetic_build_environment(&mut command);
     record_cargo_invocation("rust-probe", probe.cargo_resolution.lock_mode, &command);
-    let output = command
-        .output()
+    let output = crate::process_execution::output(&mut command)
         .map_err(|error| probe_io_failure(format!("failed to run Rust probe: {error}")))?;
     let unchanged = prepared_resolution
         .assert_unchanged()

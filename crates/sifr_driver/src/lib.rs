@@ -8,7 +8,9 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 mod build;
+pub mod cache_storage;
 mod compiler_context;
+pub mod process_execution;
 pub use compiler_context::CompilerContext;
 mod diagnostics;
 mod export_policy;

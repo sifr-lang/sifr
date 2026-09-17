@@ -3,47 +3,7 @@ use serde::{Deserialize, Serialize};
 use sifr_diagnostics::DiagnosticCode;
 use std::path::{Path, PathBuf};
 
-pub(crate) fn create_invocation_workspace(
-    prefix: &str,
-) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
-    let base_nanos = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos();
-    let root = std::env::temp_dir();
-    for attempt in 0..8u8 {
-        let unique = if attempt == 0 {
-            format!("sifr_{}_{}_{}", prefix, std::process::id(), base_nanos)
-        } else {
-            format!(
-                "sifr_{}_{}_{}_{}",
-                prefix,
-                std::process::id(),
-                base_nanos,
-                attempt
-            )
-        };
-        let workspace = root.join(unique);
-        match std::fs::create_dir(&workspace) {
-            Ok(()) => return Ok(workspace),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
-            Err(error) => {
-                let workspace_display = workspace.display();
-                return Err(vec![crate::diagnostics::diagnostic_with_code(
-                    format!("failed to create invocation workspace '{workspace_display}': {error}"),
-                    DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
-                )]);
-            }
-        }
-    }
-    Err(vec![crate::diagnostics::diagnostic_with_code(
-        format!("failed to allocate unique invocation workspace for prefix '{prefix}'"),
-        DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
-    )])
-}
-
-const ARTIFACT_CACHE_SCHEMA_VERSION: u32 = 2;
-const ARTIFACT_CACHE_ROOT_DIR: &str = "sifr_generated_artifact_cache";
+const ARTIFACT_CACHE_SCHEMA_VERSION: u32 = 3;
 const ARTIFACT_CACHE_METADATA_FILE: &str = "artifact_cache.json";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -87,6 +47,7 @@ impl ArtifactCacheReport {
 }
 
 pub(crate) struct CachedArtifactEntry {
+    _lease: std::sync::Arc<std::fs::File>,
     workspace_root: PathBuf,
     report: ArtifactCacheReport,
 }
@@ -102,6 +63,8 @@ impl CachedArtifactEntry {
 }
 
 pub(crate) struct PendingCachedArtifact {
+    lease: std::sync::Arc<std::fs::File>,
+    scope: PathBuf,
     native_identity: String,
     final_root: PathBuf,
     staging_root: PathBuf,
@@ -119,7 +82,7 @@ impl PendingCachedArtifact {
     ) -> Result<CachedArtifactEntry, Vec<RenderedDiagnostic>> {
         for required_path in required_paths {
             let absolute = self.staging_root.join(required_path);
-            if !absolute.exists() {
+            if crate::cache_storage::payload(&self.staging_root, required_path).is_err() {
                 return Err(vec![crate::diagnostics::diagnostic_with_code(
                     format!(
                         "generated artifact cache staging directory is missing required path '{}'",
@@ -135,25 +98,62 @@ impl PendingCachedArtifact {
             namespace: self.report.namespace.clone(),
             key: self.report.key.clone(),
             toolchain_signature: self.native_identity.clone(),
+            scope: self.scope.clone(),
+            required_paths: required_paths.iter().map(|p| p.to_path_buf()).collect(),
         };
         write_cache_metadata(&self.staging_root, &metadata)?;
+        std::fs::File::open(self.staging_root.join(ARTIFACT_CACHE_METADATA_FILE))
+            .and_then(|file| file.sync_all())
+            .map_err(storage_error)?;
+        for path in required_paths {
+            let absolute = self.staging_root.join(path);
+            if absolute.is_file() {
+                std::fs::File::open(absolute)
+                    .and_then(|file| file.sync_all())
+                    .map_err(storage_error)?;
+            }
+        }
+        std::fs::File::open(&self.staging_root)
+            .and_then(|file| file.sync_all())
+            .map_err(storage_error)?;
 
         match std::fs::rename(&self.staging_root, &self.final_root) {
-            Ok(()) => Ok(CachedArtifactEntry {
-                workspace_root: self.final_root.clone(),
-                report: ArtifactCacheReport {
+            Ok(()) => {
+                self.lease.lock_shared().map_err(storage_error)?;
+                if !valid_entry(&self.final_root, &metadata, required_paths) {
+                    return Err(storage_error(
+                        "published cache entry disappeared during lock conversion",
+                    ));
+                }
+                Ok(CachedArtifactEntry {
+                    _lease: self.lease.clone(),
                     workspace_root: self.final_root.clone(),
-                    ..self.report.clone()
-                },
-            }),
+                    report: ArtifactCacheReport {
+                        workspace_root: self.final_root.clone(),
+                        ..self.report.clone()
+                    },
+                })
+            }
             Err(error)
                 if matches!(
                     error.kind(),
                     std::io::ErrorKind::AlreadyExists | std::io::ErrorKind::DirectoryNotEmpty
                 ) =>
             {
+                if !valid_entry(&self.final_root, &metadata, required_paths) {
+                    return Err(storage_error(
+                        "concurrent cache winner is incomplete or incompatible",
+                    ));
+                }
+                self.lease.lock_shared().map_err(storage_error)?;
+                if !valid_entry(&self.final_root, &metadata, required_paths) {
+                    return Err(storage_error(
+                        "published cache entry disappeared during lock conversion",
+                    ));
+                }
                 let _ = std::fs::remove_dir_all(&self.staging_root);
                 Ok(CachedArtifactEntry {
+                    _lease: self.lease.clone(),
                     workspace_root: self.final_root.clone(),
                     report: ArtifactCacheReport {
                         cache_hit: true,
@@ -210,20 +210,37 @@ pub(crate) fn prepare_cached_artifact(
     key.field("native-context", native_identity.as_bytes());
     key.field("material", key_material.as_bytes());
     let cache_key = key.finish();
+    crate::cache_storage::relative(Path::new(namespace)).map_err(storage_error)?;
+    for path in required_paths {
+        crate::cache_storage::relative(path).map_err(storage_error)?;
+    }
     let cache_root = artifact_cache_root().join(namespace);
-    std::fs::create_dir_all(&cache_root).map_err(|error| {
-        vec![crate::diagnostics::diagnostic_with_code(
-            format!(
-                "failed to create generated artifact cache root '{}': {error}",
-                cache_root.display()
-            ),
-            DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
-        )]
-    })?;
+    crate::cache_storage::directory(&cache_root).map_err(storage_error)?;
+    let lease = std::sync::Arc::new(
+        crate::cache_storage::entry_lock(&cache_root, &cache_key).map_err(storage_error)?,
+    );
+    // Readers lease immutable entries. A miss upgrades to exclusive ownership
+    // and revalidates after acquisition before producing a new entry.
+    lease.lock_shared().map_err(storage_error)?;
 
     let final_root = cache_root.join(&cache_key);
+    let expected = ArtifactCacheMetadata {
+        schema_version: ARTIFACT_CACHE_SCHEMA_VERSION,
+        namespace: namespace.to_owned(),
+        key: cache_key.clone(),
+        toolchain_signature: native_identity.to_owned(),
+        scope: crate::cache_storage::owner_scope().map_err(storage_error)?,
+        required_paths: required_paths.iter().map(|p| p.to_path_buf()).collect(),
+    };
+    if !valid_entry(&final_root, &expected, required_paths) {
+        lease.unlock().map_err(storage_error)?;
+        lease.lock().map_err(storage_error)?;
+        // Revalidation below sees a winner that completed during lock acquisition.
+    }
+
     let mut miss_reason = Some("not_found".to_string());
-    if final_root.is_dir() {
+    if std::fs::symlink_metadata(&final_root).is_ok() {
+        crate::cache_storage::check_owned(&final_root).map_err(storage_error)?;
         match load_cache_metadata(&final_root) {
             Some(metadata)
                 if metadata.schema_version == ARTIFACT_CACHE_SCHEMA_VERSION
@@ -231,11 +248,17 @@ pub(crate) fn prepare_cached_artifact(
                     && metadata.key == cache_key
                     && metadata.toolchain_signature == native_identity =>
             {
-                if required_paths
+                if metadata
+                    .required_paths
                     .iter()
-                    .all(|relative| final_root.join(relative).exists())
+                    .all(|relative| crate::cache_storage::payload(&final_root, relative).is_ok())
+                    && required_paths.iter().all(|relative| {
+                        crate::cache_storage::payload(&final_root, relative).is_ok()
+                    })
                 {
+                    lease.lock_shared().map_err(storage_error)?;
                     return Ok(PreparedArtifactCache::Hit(CachedArtifactEntry {
+                        _lease: lease,
                         workspace_root: final_root.clone(),
                         report: ArtifactCacheReport {
                             namespace: namespace.to_string(),
@@ -255,11 +278,29 @@ pub(crate) fn prepare_cached_artifact(
                 miss_reason = Some("metadata_missing".to_string());
             }
         }
-        let _ = std::fs::remove_dir_all(&final_root);
+        std::fs::remove_dir_all(&final_root).map_err(storage_error)?;
     }
 
-    let staging_root = create_invocation_workspace(&format!("{namespace}_cache_stage"))?;
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let staging_root = cache_root.join(format!("{cache_key}.stage-{}-{nonce}", std::process::id()));
+    crate::cache_storage::directory(&staging_root).map_err(storage_error)?;
+    write_cache_metadata(
+        &staging_root,
+        &ArtifactCacheMetadata {
+            schema_version: ARTIFACT_CACHE_SCHEMA_VERSION,
+            namespace: namespace.to_owned(),
+            key: cache_key.clone(),
+            toolchain_signature: native_identity.to_owned(),
+            scope: crate::cache_storage::owner_scope().map_err(storage_error)?,
+            required_paths: required_paths.iter().map(|p| p.to_path_buf()).collect(),
+        },
+    )?;
     Ok(PreparedArtifactCache::Miss(PendingCachedArtifact {
+        lease,
+        scope: crate::cache_storage::owner_scope().map_err(storage_error)?,
         native_identity: native_identity.to_owned(),
         final_root,
         staging_root: staging_root.clone(),
@@ -274,7 +315,7 @@ pub(crate) fn prepare_cached_artifact(
 }
 
 pub(super) fn artifact_cache_root() -> PathBuf {
-    std::env::temp_dir().join(ARTIFACT_CACHE_ROOT_DIR)
+    crate::cache_storage::root().join("native/artifacts")
 }
 
 #[derive(Deserialize, Serialize)]
@@ -283,10 +324,13 @@ struct ArtifactCacheMetadata {
     namespace: String,
     key: String,
     toolchain_signature: String,
+    required_paths: Vec<PathBuf>,
+    scope: PathBuf,
 }
 
 fn load_cache_metadata(workspace_root: &Path) -> Option<ArtifactCacheMetadata> {
     let metadata_path = workspace_root.join(ARTIFACT_CACHE_METADATA_FILE);
+    crate::cache_storage::payload(workspace_root, Path::new(ARTIFACT_CACHE_METADATA_FILE)).ok()?;
     let raw = std::fs::read_to_string(metadata_path).ok()?;
     serde_json::from_str(&raw).ok()
 }
@@ -309,55 +353,70 @@ fn write_cache_metadata(
     })
 }
 
+fn storage_error(error: impl std::fmt::Display) -> Vec<RenderedDiagnostic> {
+    vec![crate::diagnostics::diagnostic_with_code(
+        format!("generated cache storage: {error}; select a private absolute SIFR_CACHE_DIR"),
+        DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+    )]
+}
+
+fn valid_entry(root: &Path, expected: &ArtifactCacheMetadata, required: &[&Path]) -> bool {
+    let Some(actual) = load_cache_metadata(root) else {
+        return false;
+    };
+    actual.schema_version == expected.schema_version
+        && actual.namespace == expected.namespace
+        && actual.key == expected.key
+        && actual.toolchain_signature == expected.toolchain_signature
+        && actual
+            .required_paths
+            .iter()
+            .all(|p| crate::cache_storage::payload(root, p).is_ok())
+        && required
+            .iter()
+            .all(|p| crate::cache_storage::payload(root, p).is_ok())
+}
+
 #[cfg(test)]
-mod tests {
-    use super::{ArtifactCacheReport, PendingCachedArtifact};
-    use std::path::Path;
+#[path = "workspace_tests.rs"]
+mod tests;
 
-    fn temp_dir(name: &str) -> std::path::PathBuf {
-        let unique = format!(
-            "sifr_artifact_cache_{name}_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("time should move forward")
-                .as_nanos()
-        );
-        let dir = std::env::temp_dir().join(unique);
-        std::fs::create_dir_all(&dir).expect("temp dir should be created");
-        dir
-    }
-
-    #[test]
-    fn pending_artifact_commit_treats_existing_final_dir_as_concurrent_populate() {
-        let root = temp_dir("concurrent_populate");
-        let staging_root = root.join("stage");
-        let final_root = root.join("final");
-        std::fs::create_dir_all(&staging_root).expect("staging should be created");
-        std::fs::create_dir_all(&final_root).expect("final should be created");
-        std::fs::write(final_root.join("winner"), b"ok").expect("winner file should be written");
-
-        let pending = PendingCachedArtifact {
-            native_identity: "fixture".to_owned(),
-            final_root: final_root.clone(),
-            staging_root: staging_root.clone(),
-            report: ArtifactCacheReport {
-                namespace: "test".to_string(),
-                key: "key".to_string(),
-                workspace_root: staging_root,
-                cache_hit: false,
-                miss_reason: Some("not_found".to_string()),
-            },
+#[cfg(test)]
+pub(crate) fn create_invocation_workspace(
+    prefix: &str,
+) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
+    let base_nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let root = std::env::temp_dir();
+    for attempt in 0..8u8 {
+        let unique = if attempt == 0 {
+            format!("sifr_{}_{}_{}", prefix, std::process::id(), base_nanos)
+        } else {
+            format!(
+                "sifr_{}_{}_{}_{}",
+                prefix,
+                std::process::id(),
+                base_nanos,
+                attempt
+            )
         };
-
-        let entry = pending.commit(&[]).expect("commit should use winner dir");
-        let report = entry.report();
-
-        assert!(report.cache_hit);
-        assert_eq!(report.workspace_root, final_root);
-        assert_eq!(report.miss_reason.as_deref(), Some("concurrent_populate"));
-        assert!(!root.join("stage").exists());
-
-        let _ = std::fs::remove_dir_all(Path::new(&root));
+        let workspace = root.join(unique);
+        match std::fs::create_dir(&workspace) {
+            Ok(()) => return Ok(workspace),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(error) => {
+                let workspace_display = workspace.display();
+                return Err(vec![crate::diagnostics::diagnostic_with_code(
+                    format!("failed to create invocation workspace '{workspace_display}': {error}"),
+                    DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
+                )]);
+            }
+        }
     }
+    Err(vec![crate::diagnostics::diagnostic_with_code(
+        format!("failed to allocate unique invocation workspace for prefix '{prefix}'"),
+        DiagnosticCode::BUILD_TEMP_WORKSPACE_FAILURE,
+    )])
 }
