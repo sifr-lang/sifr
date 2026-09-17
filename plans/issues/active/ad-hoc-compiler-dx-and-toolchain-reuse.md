@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.4 complete; DX.5 next
+status: in progress; DX.1–DX.5 complete; DX.6 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -626,7 +626,7 @@ DX.1–DX.4 are complete and merged. DX.5–DX.16 are not started; DX.5 is the n
 | DX.2 | Complete / merged | Candidate c6841ab44a6c0e738045586f32e36c5fa1155a26; [PR #3842](https://github.com/sifr-lang/sifr/pull/3842); merge 59be2f046f71e0e3ac626f51e8ffd2614573f8bd | I01/I02/I07/I08 actual rebuilds and focused regressions PASS; broad gate deferred by prospective policy | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3842#issuecomment-5709069845) |
 | DX.3 | Complete / merged | Candidate `63640031f7b66e067b2cbb26849277faed725668`; [PR #3844](https://github.com/sifr-lang/sifr/pull/3844); merge `f7b733875ecd2a1bd86431daed4056249dad9212` | C01–C03, C05–C07, B10, R01–R03 and focused checks PASS; full gate deferred by prospective policy | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3844#issuecomment-5711325637) |
 | DX.4 | Complete / merged | Candidate `fa8083ccfea3ec1b8d0fe8a5290c9a3d21efe834`; [PR #3846](https://github.com/sifr-lang/sifr/pull/3846); merge `41675c336e562ff43c4339630097a4533d321de7` | E07, R04, R05, R07, R08, existing-path Q01 and focused checks PASS; explicit unchanged-input reuse; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3846#issuecomment-5712346406) |
-| DX.5 | Not started | — | — | — |
+| DX.5 | Complete / merged | Candidate `c7734025c242631a326901ce08c846ac42afd7ae`; [PR #3848](https://github.com/sifr-lang/sifr/pull/3848); merge `22a72c6c6c9f95242e3e60ba83e473f0edd60d11` | I05, I06, M06, M16: 14 focused tests PASS; schema/site, scoped clippy/fmt and guardrails PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3848#issuecomment-5712915895) |
 | DX.6 | Not started | — | — | — |
 | DX.7 | Not started | — | — | — |
 | DX.8 | Not started | — | — | — |
@@ -856,7 +856,9 @@ yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx3-evidence/.
 | review-candidate-clippy.log / review-candidate-fmt.log / review-candidate-budget.log | Production Clippy, formatting and unchanged budget parser checks PASS |
 | reviews/63640031f7b66e067b2cbb26849277faed725668/response.md | Final read-only Opus review SATISFIED |
 
-## Current Handoff — DX.4 (2026-09-17)
+## Historical Handoff — DX.4 (2026-09-17)
+
+Superseded by the DX.5 handoff below; do not restart DX.5 from this historical record.
 
 - **State:** complete and merged in [PR #3846](https://github.com/sifr-lang/sifr/pull/3846).
   Candidate `fa8083ccfea3ec1b8d0fe8a5290c9a3d21efe834`; merge
@@ -922,3 +924,72 @@ yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx3-evidence/.
 Evidence host/root:
 yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx4-evidence/.
 Final candidate directory: `fa8083ccfea3ec1b8d0fe8a5290c9a3d21efe834/`.
+
+
+## Current Handoff — DX.5 (2026-09-17)
+
+- **State:** complete and merged in [PR #3848](https://github.com/sifr-lang/sifr/pull/3848).
+  Final candidate `c7734025c242631a326901ce08c846ac42afd7ae`; merge
+  `22a72c6c6c9f95242e3e60ba83e473f0edd60d11`; base
+  `3f070fcdbc8a205104291d32b91edd8e3c59b12f`. Sole owned remote checkout:
+  `/home/yaser5/projects/sifr/compiler-dx-orchestration`; implementation branch
+  `codex/dx5`, record branch `codex/dx5-record`.
+- **Scope:** private v1 indexed container with explicit 134-record type/HIR,
+  declaration, binder, source, descriptor, interop, fragment and template schema;
+  canonical typed references and shared lazy decoded owners; bounded header,
+  directory, digest, reference, source-range and graph validation; cache pressure
+  evicts only unreferenced records. The checked [consumer/field inventory](../../../internal_docs/compiler_dx_metadata_consumers.md)
+  records exact current source symbols plus mutation, clone and lifetime migration.
+  No producer command, source-backed overlay migration or normal CLI/LSP metadata
+  consumer was activated. DX.6/DX.7 retain those implementation boundaries.
+- **Named validation:** I05, I06, M06 and M16 PASS on the exact clean final candidate:
+  `RUSTUP_TOOLCHAIN=1.98.1 cargo test -p sifr_sysroot metadata:: -- --nocapture`
+  runs 14 tests, including all record kinds/variants, generated valid type graphs,
+  shuffled insertion ordering, relocation, same-name package/version/source
+  declarations, binder/partial-view distinction, malformed headers/offsets/IDs/
+  digests, mutation seeds, structural-cycle/depth rejection, nominal/mutual
+  recursion, and active-handle retention/eviction.
+- **Scaling evidence:** a 500-field class referenced by 10 versus 1,000 signatures
+  produces 167,449 versus 677,209 encoded bytes. Demanded signature lookup retains
+  11 versus 1,001 records without loading the class view; decoder allocation-budget
+  charges are 150,688 versus 14,089,888 bytes. These are conservative bounds, not
+  measured RSS or a product performance improvement claim.
+- **Focused checks:** scoped `cargo clippy -p sifr_sysroot --all-targets -- -D warnings`,
+  `cargo fmt -p sifr_sysroot -- --check`, `python3 scripts/check_dx_metadata_inventory.py`,
+  `python3 scripts/check_hir_maintainability_guardrails.py` and `git diff --check`
+  pass. The touched-source file-size audit passes; the largest source is 790 lines.
+  Existing Cargo dependencies were retained; the intentional lockfile change adds
+  the already pinned `serde_json` dependency to `sifr_sysroot`.
+- **Review:** read-only Claude Opus 5 returned SATISFIED with no blocking findings.
+  [Published review](https://github.com/sifr-lang/sifr/pull/3848#issuecomment-5712915895).
+  The reviewer independently checked record-kind coverage, IR enum variants and
+  the Type mapping in addition to the checked-in inventory guardrail. Review
+  evidence is outside the approved Git tree, keyed by final candidate SHA.
+- **Storage/policy:** approximately 202 GiB was free with a useful 127 GiB owned
+  target before the focused work; no cleanup was required. All implementation,
+  checks and review ran on the owned Linux host; the unrelated local checkout was
+  untouched. No intermediate full create-PR/merge gate was run or claimed. The
+  single final-phase merge gate remains required; no release was requested.
+- **Follow-ups:** [separate nonblocking metadata review observations](ad-hoc-dx-metadata-review-followups.md)
+  retain encoder/decoder limit alignment, future enum/Type drift coverage and
+  pressure-path accounting observations under their later owning milestones.
+- **Blocker:** none for DX.5 acceptance.
+- **Exact next action:** stop after this record update. Start DX.6 only in a new
+  bounded session. Do not repeat unchanged DX.5 validation or review.
+
+Evidence host/root:
+`yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx5-evidence/`.
+Final candidate directory: `c7734025c242631a326901ce08c846ac42afd7ae/`.
+
+| Evidence | SHA-256 / result |
+| --- | --- |
+| `receipt.json` | `081e9b0cf4af349245dae2a689fa12357d2c9116dc4e15d990fdce1f86dcd276`; exact commands, exits and per-log digests |
+| `check-0.log` | 14 named/focused metadata tests PASS, with M16 size/retention counters |
+| `check-1.log` through `check-5.log` | Scoped clippy, formatting, inventory, HIR maintainability and whitespace checks PASS |
+| `file-size.json` | Touched hand-maintained first-party source files below 900 lines; maximum 790 |
+| `review-response.md` | SATISFIED; `71aea7ddf381607ee9b137b477827efa89406ae396509188d839698f05a2b5bd` |
+| `review-prompt.md` | `3573ce41dd2ea8c15e506b3180e652d5099f7a5a06f7c18deaafd01823fab10f`; exact base/candidate, paths, scope and evidence |
+
+The earlier implementation attempts and lint/test receipts remain in the evidence
+root with their original outcomes. Only the final candidate directory is closure
+validation evidence; no earlier outcome is relabeled as a fresh final-candidate run.
