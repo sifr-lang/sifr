@@ -334,6 +334,12 @@ fn dx9_trust_revocation_after_real_native_cache_hit() {
         "native_trust_package",
         "dx9_trust_revoke",
     );
+    install_evidence_source(
+        &package_root,
+        &format!(
+            "{NATIVE_BUILD_EVIDENCE}\n\ndef main() -> Result[None, NativeError | RustPanicError]:\n    try:\n        print(verify_trusted_build_script_native_evidence())\n    except NativeError as error:\n        raise error\n    except RustPanicError as error:\n        raise error\n    return None\n"
+        ),
+    );
     let compiler = crate::CompilerContext::for_test();
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
     let first = build_cached_package_project(

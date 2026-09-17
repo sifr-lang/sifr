@@ -224,7 +224,14 @@ fn dx9_finalized_artifact_survives_same_root_edit_and_runs_again() {
         .0
     };
     let first = compile(r#"fn main() { println!("first"); }"#);
-    let repeat = compile(r#"fn main() { println!("first"); }"#);
+    let (repeat, invocations) = super::cargo_invocation_trace::capture_cargo_invocations(|| {
+        compile(r#"fn main() { println!("first"); }"#)
+    });
+    assert!(
+        invocations
+            .iter()
+            .any(|invocation| invocation.phase == "final-build")
+    );
     assert!(repeat.report().cache_hit());
     assert_eq!(first.workspace_root(), repeat.workspace_root());
     let second = compile(r#"fn main() { println!("second"); }"#);
