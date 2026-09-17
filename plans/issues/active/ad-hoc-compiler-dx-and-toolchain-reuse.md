@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.5 complete; DX.6 next
+status: in progress; DX.1–DX.6 complete; DX.7 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -618,7 +618,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.4 are complete and merged. DX.5–DX.16 are not started; DX.5 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.6 are complete and merged. DX.7–DX.16 are not started; DX.7 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -627,7 +627,7 @@ DX.1–DX.4 are complete and merged. DX.5–DX.16 are not started; DX.5 is the n
 | DX.3 | Complete / merged | Candidate `63640031f7b66e067b2cbb26849277faed725668`; [PR #3844](https://github.com/sifr-lang/sifr/pull/3844); merge `f7b733875ecd2a1bd86431daed4056249dad9212` | C01–C03, C05–C07, B10, R01–R03 and focused checks PASS; full gate deferred by prospective policy | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3844#issuecomment-5711325637) |
 | DX.4 | Complete / merged | Candidate `fa8083ccfea3ec1b8d0fe8a5290c9a3d21efe834`; [PR #3846](https://github.com/sifr-lang/sifr/pull/3846); merge `41675c336e562ff43c4339630097a4533d321de7` | E07, R04, R05, R07, R08, existing-path Q01 and focused checks PASS; explicit unchanged-input reuse; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3846#issuecomment-5712346406) |
 | DX.5 | Complete / merged | Candidate `c7734025c242631a326901ce08c846ac42afd7ae`; [PR #3848](https://github.com/sifr-lang/sifr/pull/3848); merge `22a72c6c6c9f95242e3e60ba83e473f0edd60d11` | I05, I06, M06, M16: 14 focused tests PASS; schema/site, scoped clippy/fmt and guardrails PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3848#issuecomment-5712915895) |
-| DX.6 | Not started | — | — | — |
+| DX.6 | Complete / merged | Candidate `5581af0884edcb46d88419b9b7d66d1ce97531df`; [PR #3850](https://github.com/sifr-lang/sifr/pull/3850); merge `d53899694e8b65f47f7105fda34fec039459549a` | M09, M12–M14, R10 and focused producer/preparation/packaging checks PASS; two full bare driver runs 649 passed / 78 ignored each; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3850#issuecomment-5717512054) |
 | DX.7 | Not started | — | — | — |
 | DX.8 | Not started | — | — | — |
 | DX.9 | Not started | — | — | — |
@@ -993,3 +993,84 @@ Final candidate directory: `c7734025c242631a326901ce08c846ac42afd7ae/`.
 The earlier implementation attempts and lint/test receipts remain in the evidence
 root with their original outcomes. Only the final candidate directory is closure
 validation evidence; no earlier outcome is relabeled as a fresh final-candidate run.
+
+
+## Current Handoff — DX.6 (2026-09-17)
+
+- **State:** complete and merged in [PR #3850](https://github.com/sifr-lang/sifr/pull/3850).
+  Final candidate `5581af0884edcb46d88419b9b7d66d1ce97531df`; merge
+  `d53899694e8b65f47f7105fda34fec039459549a`; base
+  `03c4b0d0671afe7e96f054cf0a39dcab63e56db9`. Sole owned remote checkout:
+  `/home/yaser5/projects/sifr/compiler-dx-orchestration`; implementation branch
+  `codex/dx6`, record branch `codex/dx6-record`.
+- **Scope:** canonical 89-module source producer with exhaustive typed semantic,
+  HIR, generic/default, interop and Rust payload projection; one write-through
+  ensure for development launch, linked driver tests, verification preparation and
+  native packaging. Successful owners are keyed by compiled compiler/test,
+  semantic target and complete captured input identities. Per-key OS locks,
+  complete validation, source recapture, fsync and atomic publication coordinate
+  callers and preserve retryable failures. No DX.7 metadata consumer was activated.
+- **Named validation:** M09, M12–M14 and the full inventory producer pass in
+  `cargo test -p sifr_driver --lib dx6_ -- --nocapture`: 11 passed, one ignored
+  subprocess-protocol helper (exercised by its parent acceptance tests). This
+  covers exact repeated output bytes, checked-source semantic/HIR/Rust parity,
+  initial absence, stale/corrupt/missing entries, strict overrides, source mutation,
+  four concurrent threads, four cold/four warm processes, two independent
+  configurations, producer death/failure/cancellation, read-only source, writable
+  cache, and output errors. Every successful waiter runs independent positive and
+  negative checking assertions; identical-family cold requests publish once.
+- **R10:** full bare `cargo test -p sifr_driver` ran with both normal debug/release
+  CLI binary paths unavailable and no injected verification environment. Empty
+  matching metadata cache: 649 passed / 78 ignored, 266.45 s wall, 1,941,448 KiB
+  maximum RSS. Prepared cache: the same 649 passed / 78 ignored, 242.41 s wall,
+  1,821,740 KiB maximum RSS. Regenerated and prepared artifact identities match the
+  linked preparation report. Normal generated-program Cargo tests remain intact;
+  no recursive Cargo or preexisting CLI is used by the metadata producer.
+- **Configuration evidence:** the real CLI produces distinct metadata identities
+  for the four supported semantic targets and reuses each warm entry without
+  production. Actual Cargo-reported executable preparation passes. Native Linux
+  fixture packaging and archive verification pass; separately producing from the
+  staged source snapshot gives exactly the source-tree metadata identity.
+  Host/target execution distinctions are preserved; no foreign binary was run.
+  These are observed preparation measurements, not a latency-contract or native
+  qualification claim for the other three targets.
+- **Focused checks:** constructor-shaped nominal-view decoder regression,
+  verification adapter policy tests, descriptor/foreign-binary/error tests and
+  existing all-target/stable/corrupt-archive distribution fixtures pass. Scoped
+  driver clippy, generated-encoder check, exact site/schema inventory, file-size
+  guardrail, format and diff checks pass. Unchanged schema/Python/fixture inputs
+  reuse their recorded evidence; real CLI/native packaging and driver acceptance
+  were validated on the final candidate.
+- **Review:** read-only Claude Opus 5 returned SATISFIED with no blocking findings.
+  [Published review](https://github.com/sifr-lang/sifr/pull/3850#issuecomment-5717512054)
+  is keyed to the exact candidate; its original response and SHA-256 receipts
+  remain outside the approved Git tree. Nonblocking observations are retained in
+  the [metadata review follow-up issue](ad-hoc-dx-metadata-review-followups.md).
+- **History/storage/policy:** the remote interruption, initial producer ordering
+  failure, initial lint failures and one CLI test-harness package-boundary error
+  remain historical evidence, not passes. About 202 GiB was initially free with
+  the useful 128 GiB private target; 183 GiB remained during final native packaging.
+  No pressure cleanup was necessary. All implementation, tests and review ran
+  remotely; the unrelated local checkout was untouched. No intermediate full
+  create-PR/merge gate or release qualification was run or claimed. The single
+  final-phase gate remains required.
+- **Blocker:** none for DX.6 acceptance.
+- **Exact next action:** stop after this record update. Start DX.7 only in a new
+  bounded session. Assess its recorded suggestions against DX.7 scope; do not
+  repeat unchanged DX.6 validation or review.
+
+Evidence host/root:
+`yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx6-evidence/`.
+Final candidate directory: `5581af0884edcb46d88419b9b7d66d1ce97531df/`.
+The root `final-evidence.json` and candidate `evidence.json` enumerate exact
+configuration identities, timing reports and per-file SHA-256 receipts.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| `driver-final.log` | `796f721fbe2ab5d46e8bacd1289b299e8c045842a9980d4a3860e4c6fd708b26` |
+| `bare-empty.log` | `fb7149e613a8c44a6fa8bcab93d05159f0c3a7aae039b958bbef982054c3ea36` |
+| `bare-warm.log` | `15f01ceda9d95350b7a3d67694050c18b369edb5613bbdc5e68b2c59f205dd82` |
+| `cli-configurations.json` | `0a270530f90ebbcd37c4ab39b6bf63e97a617199c1ecb4c25c44f0dc79e44731` |
+| `native-package-parity.log` | `3d6572f615914a11d79d93d51e1620de283216959fa1be031139ba8435a94533` |
+| `clippy-focused-final.log` | `88ebf1ad1b5ef5f9ee922ee89a4175f4918b402a3e35f90b09c88e869f2012f9` |
+| Original Opus response | `ae9dab23539f905748bda3efbce525c74e7c3fd74b2c9b6208e3d70c09d2afb2` |
