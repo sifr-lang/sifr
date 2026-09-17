@@ -12,6 +12,7 @@ use super::cli_model_and_entrypoint::{
 use super::package_graph_context::load_package_graph_context;
 use super::package_session_cli::package_session_for_cwd;
 use super::workspace_run_selection::resolve_run_session;
+use crate::native_execution::resolved_cargo_output;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
     CachedBinaryArtifact, PackageEntrypoint, apply_diagnostic_recovery_limits,
@@ -458,13 +459,13 @@ pub(super) fn cmd_run_file(
             if !quiet && !artifact.build_report().cache_hit() {
                 emit_build_report(artifact.build_report(), false, false, diagnostic_format);
             }
-            let output = std::process::Command::new(artifact.binary_path())
-                .args(app_args)
-                .output()
-                .unwrap_or_else(|e| {
-                    let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
-                    process::exit(EXIT_USAGE_OR_CONFIG);
-                });
+            let output = sifr_driver::process_execution::run_program(
+                std::process::Command::new(artifact.binary_path()).args(app_args),
+            )
+            .unwrap_or_else(|e| {
+                let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
+                process::exit(sifr_driver::process_execution::failure_exit_code(&e));
+            });
 
             // Forward stdout and stderr
             std::io::stdout().write_all(&output.stdout).ok();
@@ -536,13 +537,13 @@ pub(super) fn run_binary_artifact(
     if !quiet && !artifact.build_report().cache_hit() {
         emit_build_report(artifact.build_report(), false, false, diagnostic_format);
     }
-    let output = std::process::Command::new(artifact.binary_path())
-        .args(app_args)
-        .output()
-        .unwrap_or_else(|e| {
-            let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
-            process::exit(EXIT_USAGE_OR_CONFIG);
-        });
+    let output = sifr_driver::process_execution::run_program(
+        std::process::Command::new(artifact.binary_path()).args(app_args),
+    )
+    .unwrap_or_else(|e| {
+        let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
+        process::exit(sifr_driver::process_execution::failure_exit_code(&e));
+    });
 
     std::io::stdout().write_all(&output.stdout).ok();
     std::io::stderr().write_all(&output.stderr).ok();
@@ -885,16 +886,4 @@ pub(super) fn execute_cargo_plan(
     );
     render_diagnostics(&[diagnostic], diagnostic_format);
     EXIT_USER_DIAGNOSTIC
-}
-
-fn resolved_cargo_output(
-    plan: &sifr_package::CargoCommandPlan,
-) -> Result<std::process::Output, String> {
-    let tools = sifr_sysroot::NativeToolchain::resolve_at(&plan.current_dir)?;
-    tools
-        .cargo_command()?
-        .args(&plan.args)
-        .current_dir(&plan.current_dir)
-        .output()
-        .map_err(|error| error.to_string())
 }

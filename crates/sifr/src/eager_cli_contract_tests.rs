@@ -17,6 +17,9 @@ use std::path::PathBuf;
     about = "The Sifr programming language compiler"
 )]
 struct Cli {
+    /// Print invocation timing and selected cache root on stderr
+    #[arg(long, global = true)]
+    timings: bool,
     /// Diagnostic output format
     #[arg(long, value_enum, default_value_t = DiagnosticFormat::Human)]
     pub(crate) diagnostic_format: DiagnosticFormat,
@@ -51,6 +54,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Inspect or safely prune owned generated artifacts
+    Cache(crate::cache_cli::CacheArgs),
     /// Compile a .sifr file to a native binary
     Build {
         /// Input .sifr file

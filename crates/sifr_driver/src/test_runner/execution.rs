@@ -56,6 +56,7 @@ pub(crate) fn execute_test_runner_project(
         PathBuf::from("Cargo.toml"),
         PathBuf::from("src/lib.rs"),
         PathBuf::from("target"),
+        PathBuf::from("test_executables.json"),
     ];
     required_files.extend(
         generated_project
@@ -168,44 +169,93 @@ pub(crate) fn execute_test_runner_project(
         })?;
     }
 
-    let mut command = native_toolchain.cargo_command().map_err(|error| {
-        vec![crate::diagnostics::diagnostic_with_code(
-            error,
-            DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
-        )]
-    })?;
-    command
-        .args(sysroot_cargo_config_args(&cargo_plan.dependency_plan))
-        .args(["test"])
-        .arg("--manifest-path")
-        .arg(project_dir.join("Cargo.toml"));
-    command.arg("--target-dir").arg(project_dir.join("target"));
-    let output = command.output().map_err(|error| {
-        vec![crate::diagnostics::diagnostic_with_code(
-            format!("failed to run cargo test: {error}"),
-            DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
-        )]
-    })?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    if !stdout.is_empty() {
-        write_stderr(&stdout);
-    }
-    if !stderr.is_empty() {
-        write_stderr(&stderr);
-    }
-
-    let cache_report = match prepared {
-        PreparedArtifactCache::Hit(entry) => entry.report().clone(),
-        PreparedArtifactCache::Miss(entry) => entry.commit(&required_paths)?.report().clone(),
+    let executables: Vec<PathBuf>;
+    let entry = match prepared {
+        PreparedArtifactCache::Hit(entry) => {
+            executables = serde_json::from_slice(
+                &std::fs::read(project_dir.join("test_executables.json")).map_err(test_io_error)?,
+            )
+            .map_err(test_io_error)?;
+            for path in &executables {
+                crate::cache_storage::payload(&project_dir, path).map_err(test_io_error)?;
+            }
+            entry
+        }
+        PreparedArtifactCache::Miss(pending) => {
+            let mut command = native_toolchain.cargo_command().map_err(test_io_error)?;
+            command
+                .args(sysroot_cargo_config_args(&cargo_plan.dependency_plan))
+                .args([
+                    "test",
+                    "--no-run",
+                    "--message-format=json-render-diagnostics",
+                ])
+                .arg("--manifest-path")
+                .arg(project_dir.join("Cargo.toml"))
+                .arg("--target-dir")
+                .arg(project_dir.join("target"));
+            let output = crate::process_execution::output(&mut command).map_err(test_io_error)?;
+            write_stderr(&String::from_utf8_lossy(&output.stderr));
+            if !output.status.success() {
+                return Err(test_io_error(format!(
+                    "cargo test preparation failed: {}",
+                    String::from_utf8_lossy(&output.stdout)
+                )));
+            }
+            executables = String::from_utf8_lossy(&output.stdout)
+                .lines()
+                .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+                .filter(|event| {
+                    event["reason"] == "compiler-artifact" && event["profile"]["test"] == true
+                })
+                .filter_map(|event| event["executable"].as_str().map(PathBuf::from))
+                .map(|path| {
+                    path.strip_prefix(&project_dir)
+                        .map(Path::to_path_buf)
+                        .map_err(test_io_error)
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            if executables.is_empty() {
+                return Err(test_io_error("Cargo produced no test executable"));
+            }
+            std::fs::write(
+                project_dir.join("test_executables.json"),
+                serde_json::to_vec(&executables).map_err(test_io_error)?,
+            )
+            .map_err(test_io_error)?;
+            let mut all_required = required_paths.clone();
+            all_required.extend(executables.iter().map(PathBuf::as_path));
+            pending.commit(&all_required)?
+        }
     };
+    if executables.is_empty() {
+        return Err(test_io_error("cached test entry contains no executable"));
+    }
+    let mut success = true;
+    for executable in executables {
+        let output = crate::process_execution::output(
+            std::process::Command::new(entry.workspace_root().join(executable))
+                .current_dir(&generated_project.cache_scope),
+        )
+        .map_err(test_io_error)?;
+        write_stderr(&String::from_utf8_lossy(&output.stdout));
+        write_stderr(&String::from_utf8_lossy(&output.stderr));
+        success &= output.status.success();
+    }
+    let cache_report = entry.report().clone();
     write_stderr_line(&cache_report.status_line());
 
     Ok(TestRunnerExecutionOutcome {
-        success: output.status.success(),
+        success,
         cache_report,
     })
+}
+
+fn test_io_error(error: impl std::fmt::Display) -> Vec<RenderedDiagnostic> {
+    vec![crate::diagnostics::diagnostic_with_code(
+        format!("test subprocess/artifact failure: {error}"),
+        DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+    )]
 }
 
 fn test_runner_cache_key(

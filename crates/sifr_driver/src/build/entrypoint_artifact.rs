@@ -2,6 +2,7 @@ use super::report::BuildReport;
 use std::path::{Path, PathBuf};
 
 pub struct CachedBinaryArtifact {
+    pub(super) _cache_lease: super::workspace::CachedArtifactEntry,
     pub(super) binary_path: PathBuf,
     pub(super) build_report: BuildReport,
 }

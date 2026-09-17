@@ -101,6 +101,7 @@ def prepare_step_budget(
 def enforce_step_budget(context: StepBudgetContext | None, elapsed_ms: int) -> int:
     if context is None:
         return 0
+    print(f"[sifr-step-contract] name={context.name} kind=performance_budget")
     exceeded = context.budget_ms > 0 and elapsed_ms > context.budget_ms
     budget_status = "fail" if exceeded else "pass"
     print(

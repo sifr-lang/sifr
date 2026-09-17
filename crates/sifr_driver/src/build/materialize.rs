@@ -447,7 +447,7 @@ fn run_cargo_build(
         command.env("PYO3_PYTHON", python_interpreter);
     }
     record_cargo_invocation("final-build", cargo_resolution.lock_mode, &command);
-    let output = command.output().map_err(|error| {
+    let output = crate::process_execution::output(&mut command).map_err(|error| {
         vec![cargo_build_error(format!(
             "failed to run cargo build: {error}"
         ))]

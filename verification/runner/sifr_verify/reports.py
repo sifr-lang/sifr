@@ -5,14 +5,18 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import tempfile
+import os
+import sys
 from pathlib import Path
 from typing import Any
 
 from .paths import REPO_ROOT
 from .profiles import load_profile
 
-ARTIFACT_CACHE_ROOT = Path(tempfile.gettempdir()) / "sifr_generated_artifact_cache"
+ARTIFACT_CACHE_ROOT = Path(os.environ.get("SIFR_CACHE_DIR", (
+    str(Path.home() / "Library/Caches/sifr") if sys.platform == "darwin" else
+    str(Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "sifr")
+))) / "native/artifacts"
 BSD_TIME_COMBINED_RE = re.compile(r"^\s*([0-9.]+)\s+real\s+([0-9.]+)\s+user\s+([0-9.]+)\s+sys$")
 TIME_REAL_RE = re.compile(r"^\s*([0-9.]+)\s+real$")
 TIME_USER_RE = re.compile(r"^\s*([0-9.]+)\s+user$")
@@ -220,6 +224,16 @@ def parse_log(path: Path) -> dict[str, Any]:
                 "fingerprint": match.group(4),
             }
             continue
+        # Decode only child metrics after runner-owned status/cache/budget
+        # matching. A decoded child can never enter those authoritative branches.
+        if line.startswith(("[child:stdout] ", "[child:stderr] ")):
+            try:
+                decoded = json.loads(line.split("] ", 1)[1])
+            except (ValueError, IndexError):
+                continue
+            if not isinstance(decoded, str):
+                continue
+            line = decoded.strip()
         if match := CASE_TIMING_RE.match(line):
             case_timings.append(
                 {

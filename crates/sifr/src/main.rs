@@ -13,9 +13,11 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used, dead_code))]
 
 mod bridge_cli;
+mod cache_cli;
 mod cargo_diagnostics;
 mod cli_lock_modes;
 mod cli_model_and_entrypoint;
+mod native_execution;
 pub(crate) use cli_model_and_entrypoint::main;
 mod build_output;
 mod check_and_package_commands;

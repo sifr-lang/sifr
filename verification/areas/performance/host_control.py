@@ -301,7 +301,10 @@ class HostActivityMonitor:
 def cache_state(
     repo_root: Path, cargo_debug_dir: Path, helper_names: list[str]
 ) -> dict[str, Any]:
-    artifact_root = Path(tempfile.gettempdir()) / "sifr_generated_artifact_cache"
+    artifact_root = Path(os.environ.get("SIFR_CACHE_DIR", (
+        str(Path.home() / "Library/Caches/sifr") if platform.system() == "Darwin" else
+        str(Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "sifr")
+    ))) / "native/artifacts"
     artifact_entries = 0
     if artifact_root.is_dir():
         for namespace in artifact_root.iterdir():

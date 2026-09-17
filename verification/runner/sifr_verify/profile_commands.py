@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import subprocess
+from .process_execution import execute
 import sys
+import json
 
 from .paths import REPO_ROOT
 
@@ -17,21 +18,23 @@ class CommandFailed(Exception):
 
 
 def run_command(command: list[str], *, env: dict[str, str] | None = None) -> None:
-    proc = subprocess.Popen(
-        command,
-        cwd=REPO_ROOT,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        bufsize=1,
-    )
-    assert proc.stdout is not None
-    for line in proc.stdout:
-        sys.stdout.write(line)
-    returncode = proc.wait()
-    if returncode != 0:
-        raise CommandFailed(returncode)
+    # Prefix every child line, including runner-looking lines. The authoritative
+    # events remain emitted solely by the enclosing profile runner.
+    pending = {"stdout": "", "stderr": ""}
+    def emit(stream: str, data: bytes) -> None:
+        pending[stream] += data.decode("utf-8", errors="replace")
+        while "\n" in pending[stream]:
+            line, pending[stream] = pending[stream].split("\n", 1)
+            sys.stdout.write(f"[child:{stream}] {json.dumps(line, ensure_ascii=True)}\n")
+    outcome = execute(command, cwd=REPO_ROOT, env=env, emit=emit,
+                      deadline_seconds=float((env or {}).get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400")))
+    for stream, text in pending.items():
+        if text:
+            sys.stdout.write(f"[child:{stream}] {json.dumps(text, ensure_ascii=True)}\n")
+    if outcome.returncode != 0:
+        error = CommandFailed(outcome.returncode)
+        error.outcome = outcome
+        raise error
 
 
 def uv_area_command(*args: str) -> list[str]:

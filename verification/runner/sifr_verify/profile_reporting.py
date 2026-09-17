@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import json
 import resource
 import shutil
 import sys
@@ -24,13 +25,22 @@ class Tee:
 
     def write(self, data: str) -> int:
         for stream in self._streams:
-            stream.write(data)
-            stream.flush()
+            try:
+                stream.write(data)
+                stream.flush()
+            except BrokenPipeError:
+                # A detached terminal is only an observer; the log remains live.
+                if stream is self._streams[-1]:
+                    raise
         return len(data)
 
     def flush(self) -> None:
         for stream in self._streams:
-            stream.flush()
+            try:
+                stream.flush()
+            except BrokenPipeError:
+                if stream is self._streams[-1]:
+                    raise
 
 
 def write_time_file(path: Path, *, start: float, usage_start: resource.struct_rusage) -> None:
@@ -61,6 +71,7 @@ def run_profile_with_report(
     *,
     handled_error: type[Exception],
     release_report_out: str | None,
+    execution_outcomes: Callable[[], dict[str, int]] | None = None,
 ) -> int:
     release_output = None
     if release_report_out is not None:
@@ -84,6 +95,12 @@ def run_profile_with_report(
     start = time.monotonic()
     usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
     status = 0
+    live_status = report_dir / f"{profile_name}.status.json"
+    def publish_status(state: str, code: int | None) -> None:
+        temporary = temporary_report_path(report_dir, f"{profile_name}.status.")
+        temporary.write_text(json.dumps({"state": state, "exit_status": code, "log": str(latest_log if state == "completed" else temp_log)}))
+        temporary.replace(live_status)
+    publish_status("running", None)
 
     with temp_log.open("w", encoding="utf-8") as log_file:
         tee = Tee(sys.stdout, log_file)
@@ -97,6 +114,7 @@ def run_profile_with_report(
     write_time_file(temp_time, start=start, usage_start=usage_start)
     shutil.copyfile(temp_log, latest_log)
     shutil.copyfile(temp_time, latest_time)
+    json_file.unlink(missing_ok=True)
     try:
         reports.summarize(
             argparse.Namespace(
@@ -106,7 +124,10 @@ def run_profile_with_report(
                 json_out=str(json_file),
             )
         )
-    except Exception as exc:  # Preserve validation status while surfacing report regressions.
+    except BrokenPipeError:
+        pass  # JSON is written before rendering the optional terminal summary.
+    except Exception as exc:  # Preserve the original failing execution status.
+        status = status or 2
         print(f"warning: lane report summarization failed: {exc}", file=sys.stderr)
     if release_output is not None and status == 0:
         from .release_evidence import write_release_profile_report
@@ -120,6 +141,18 @@ def run_profile_with_report(
         except ValueError as exc:
             print(f"sifr_verify: {exc}", file=sys.stderr)
             status = 2
+    # Bind functional status to the runner result, never to arbitrary child text.
+    if json_file.exists():
+        payload = json.loads(json_file.read_text())
+        outcomes = execution_outcomes() if execution_outcomes is not None else {
+            "functional_exit_status": status, "performance_exit_status": 0,
+        }
+        payload.update(outcomes)
+        payload["exit_status"] = status
+        payload["functional_status"] = "pass" if outcomes["functional_exit_status"] == 0 else "fail"
+        payload["performance_status"] = "pass" if outcomes["performance_exit_status"] == 0 else "fail"
+        json_file.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    publish_status("completed", status)
     temp_log.unlink(missing_ok=True)
     temp_time.unlink(missing_ok=True)
     return status
