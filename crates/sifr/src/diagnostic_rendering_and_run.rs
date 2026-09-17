@@ -459,8 +459,9 @@ pub(super) fn cmd_run_file(
             if !quiet && !artifact.build_report().cache_hit() {
                 emit_build_report(artifact.build_report(), false, false, diagnostic_format);
             }
-            let output = sifr_driver::process_execution::output(
+            let output = sifr_driver::process_execution::output_with_deadline(
                 std::process::Command::new(artifact.binary_path()).args(app_args),
+                std::time::Duration::MAX,
             )
             .unwrap_or_else(|e| {
                 let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
@@ -537,8 +538,9 @@ pub(super) fn run_binary_artifact(
     if !quiet && !artifact.build_report().cache_hit() {
         emit_build_report(artifact.build_report(), false, false, diagnostic_format);
     }
-    let output = sifr_driver::process_execution::output(
+    let output = sifr_driver::process_execution::output_with_deadline(
         std::process::Command::new(artifact.binary_path()).args(app_args),
+        std::time::Duration::MAX,
     )
     .unwrap_or_else(|e| {
         let _ = writeln!(io::stderr(), "error: could not run binary: {e}");

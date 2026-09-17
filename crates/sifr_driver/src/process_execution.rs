@@ -114,31 +114,30 @@ pub fn output_with_deadline(command: &mut Command, deadline: Duration) -> io::Re
     let (stdout, out_truncated) = out
         .join()
         .map_err(|_| io::Error::other("stdout capture failed"))??;
-    let (stderr, err_truncated) = err
+    let (mut stderr, err_truncated) = err
         .join()
         .map_err(|_| io::Error::other("stderr capture failed"))??;
-    if timed_out || out_truncated || err_truncated {
+    if timed_out {
         return Err(io::Error::new(
             if cancelled {
                 io::ErrorKind::Interrupted
-            } else if timed_out {
-                io::ErrorKind::TimedOut
             } else {
-                io::ErrorKind::FileTooLarge
+                io::ErrorKind::TimedOut
             },
             format!(
                 "{}; stdout_truncated={out_truncated} stderr_truncated={err_truncated}\nstdout:\n{}\nstderr:\n{}",
                 if cancelled {
                     "subprocess cancelled"
-                } else if timed_out {
-                    "subprocess safety deadline exceeded"
                 } else {
-                    "subprocess capture limit exceeded"
+                    "subprocess safety deadline exceeded"
                 },
                 String::from_utf8_lossy(&stdout),
                 String::from_utf8_lossy(&stderr)
             ),
         ));
+    }
+    if out_truncated || err_truncated {
+        stderr.extend_from_slice(format!("\n[sifr-process] stdout_truncated={out_truncated} stderr_truncated={err_truncated} exit_status={status}\n").as_bytes());
     }
     Ok(Output {
         status,
@@ -169,6 +168,15 @@ mod tests {
         std::thread::sleep(Duration::from_millis(1100));
         assert!(!marker.exists());
         std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn dx3_process_truncation_preserves_exit_status() {
+        let result =
+            output(Command::new("sh").args(["-c", "head -c 9000000 /dev/zero; exit 7"])).unwrap();
+        assert_eq!(result.status.code(), Some(7));
+        assert_eq!(result.stdout.len(), STREAM_LIMIT);
+        assert!(String::from_utf8_lossy(&result.stderr).contains("stdout_truncated=true"));
     }
 
     #[test]
