@@ -71,8 +71,13 @@ if receipt["install_dir"] != install_dir_text:
     raise SystemExit("install_dir drifted")
 if receipt["binary_path"] != str((install_dir / "sifr").resolve()):
     raise SystemExit(f"binary_path was not canonicalized: {receipt['binary_path']}")
-if receipt["sysroot_path"] != str(install_root.resolve()):
-    raise SystemExit(f"sysroot_path was not canonicalized: {receipt['sysroot_path']}")
+generation = (install_root / ".sifr-current").resolve(strict=True)
+if generation.parent != install_root / ".sifr-generations":
+    raise SystemExit(f"selected sysroot is not an owned immutable generation: {generation}")
+if receipt["sysroot_path"] != str(generation):
+    raise SystemExit(f"sysroot_path did not pin the selected generation: {receipt['sysroot_path']}")
+if pathlib.Path(receipt["binary_path"]).parent.parent != generation:
+    raise SystemExit("receipt binary and sysroot must pin the same generation")
 if receipt["sysroot_schema_version"] != 1:
     raise SystemExit("sysroot_schema_version must be 1")
 if receipt["sysroot_sifr_version"] != version:
