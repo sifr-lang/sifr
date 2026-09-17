@@ -187,8 +187,17 @@ def run_metadata_qualification(suite: str) -> tuple[int, list[str]]:
     env.pop("SIFR_DX8_SEMANTIC_TARGET",None)
     env["SIFR_DX8_CORPUS_OUTPUT"] = str(ACTUAL_ROOT / "metadata-corpus-reference")
     result = run_command(command, cwd=REPO_ROOT, env=env, timeout=2400)
-    if result.returncode or suite != "metadata-corpus":
-        return result.returncode, [] if result.returncode == 0 else [result.summary()]
+    if result.returncode:
+        return result.returncode, [result.summary()]
+    if suite == "metadata-structural":
+        from development_metadata_doctor import run_development_doctor
+        try:
+            binary = build_source_sifr()
+            owned = Path(tempfile.mkdtemp(prefix="metadata-doctor-", dir=ACTUAL_ROOT))
+            run_development_doctor(binary, REPO_ROOT, owned / "results", env)
+        except (AssertionError, OSError, CertificationError, ValueError, KeyError) as error:
+            return 1, [str(error)]
+        return 0, []
     from metadata_qualification import Qualification
     try:
         owned = Path(tempfile.mkdtemp(prefix="metadata-installed-",dir=ACTUAL_ROOT))
