@@ -1,5 +1,7 @@
 #![allow(unsafe_code)]
 
+pub mod loader;
+
 use pyo3::{ffi, prelude::*};
 use std::ffi::{CStr, CString};
 use std::fmt;

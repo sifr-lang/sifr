@@ -282,7 +282,7 @@ fn sysroot_http_native_link_evidence_inherits_tls_provider_trust() {
     );
 }
 
-pub(super) fn base_project() -> GeneratedBinaryProject {
+pub(crate) fn base_project() -> GeneratedBinaryProject {
     GeneratedBinaryProject {
         main_rs: "fn main() {}\n".to_string(),
         support_modules: BTreeMap::new(),
@@ -295,7 +295,7 @@ pub(super) fn base_project() -> GeneratedBinaryProject {
     }
 }
 
-pub(super) fn test_dependency_plan(cache_fingerprint: &str) -> SysrootDependencyPlan {
+pub(crate) fn test_dependency_plan(cache_fingerprint: &str) -> SysrootDependencyPlan {
     SysrootDependencyPlan {
         stdlib_modules: BTreeSet::new(),
         required_features: BTreeSet::new(),

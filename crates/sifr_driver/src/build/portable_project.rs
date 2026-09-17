@@ -37,7 +37,12 @@ pub(super) fn publish_portable_project(
         })?;
     }
     copy_tree(&local_project.join("src"), &destination_src)?;
-    for file_name in ["Cargo.toml", "Cargo.lock", "build.rs"] {
+    for file_name in [
+        "Cargo.toml",
+        "Cargo.lock",
+        "build.rs",
+        "sifr-python-runtime.json",
+    ] {
         let destination = project_path.join(file_name);
         if destination.exists() {
             std::fs::remove_file(&destination).map_err(|error| {
@@ -46,7 +51,9 @@ pub(super) fn publish_portable_project(
                 ))]
             })?;
         }
-        if file_name == "build.rs" && !local_project.join(file_name).exists() {
+        if matches!(file_name, "build.rs" | "sifr-python-runtime.json")
+            && !local_project.join(file_name).exists()
+        {
             continue;
         }
         std::fs::copy(local_project.join(file_name), &destination).map_err(|error| {

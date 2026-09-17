@@ -1,7 +1,4 @@
-use super::super::rust_interop_probe_paths::{
-    RUST_BRIDGE_PROBE_TARGET_DIR, normalize_cargo_target_dir, probe_cargo_target_dir_with_env,
-};
-use super::super::workspace::artifact_cache_root;
+use super::super::rust_interop_probe_paths::normalize_cargo_target_dir;
 use super::{
     dependency_features, generated_bridge_type_stubs, opaque_type_probe_source,
     prefixed_probe_source, probe_cargo_toml, probe_cargo_vendor_args,
@@ -397,35 +394,5 @@ fn absolute_probe_target_dir_is_preserved() {
             Path::new("/tmp/sifr-target").to_path_buf()
         ),
         Path::new("/tmp/sifr-target")
-    );
-}
-
-#[test]
-fn probe_target_dir_defaults_to_stable_artifact_cache_subdir() {
-    assert_eq!(
-        probe_cargo_target_dir_with_env(None, Path::new("/workspace/sifr")),
-        artifact_cache_root().join(RUST_BRIDGE_PROBE_TARGET_DIR)
-    );
-}
-
-#[test]
-fn probe_target_dir_honors_relative_env_override() {
-    assert_eq!(
-        probe_cargo_target_dir_with_env(
-            Some(std::ffi::OsString::from("target/create-pr")),
-            Path::new("/workspace/sifr")
-        ),
-        Path::new("/workspace/sifr/target/create-pr/rust_bridge_probe_target")
-    );
-}
-
-#[test]
-fn configured_probe_storage_is_separate_from_compiler_artifacts() {
-    assert_eq!(
-        probe_cargo_target_dir_with_env(
-            Some(std::ffi::OsString::from("/tmp/compiler-target")),
-            Path::new("/workspace/sifr")
-        ),
-        Path::new("/tmp/compiler-target/rust_bridge_probe_target")
     );
 }

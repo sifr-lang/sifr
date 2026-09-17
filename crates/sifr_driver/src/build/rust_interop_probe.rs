@@ -1,6 +1,5 @@
 use super::cargo_invocation_trace::record_cargo_invocation;
 use super::cargo_resolution::{CargoResolutionPolicy, prepare_cargo_resolution};
-use super::rust_interop_digest::fnv1a64_hex;
 use super::rust_interop_panic_probe::panic_mapper_probe;
 use super::rust_interop_probe_cache::{
     ProbeCacheKeyCache, mark_probe_cache_hit, probe_cache_file, probe_cache_key,
@@ -12,8 +11,6 @@ use super::rust_interop_probe_features::dependency_features;
 use super::rust_interop_probe_manifest::{
     bind_probe_package_identity, probe_cargo_toml, probe_cargo_vendor_args,
 };
-use super::rust_interop_probe_nonce::unique_probe_nonce;
-use super::rust_interop_probe_paths::probe_cargo_target_dir;
 use super::rust_interop_sqlx_offline::{
     configure_hermetic_build_environment, validate_probe_sqlx_offline_metadata,
 };
@@ -103,33 +100,37 @@ pub(super) fn execute_direct_cargo_probe(
         .map_err(|error| probe_io_failure(error.clone()))?;
     let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source, cache);
     let cache_file = probe_cache_file(&cache_key, &invocation_cwd);
-    if cache_file.is_file() {
-        return Ok(());
-    }
     validate_probe_sqlx_offline_metadata(probe, backend_root)?;
-    let probe_root = std::env::temp_dir().join(format!(
-        "sifr_rust_probe_{}_{}_{}",
-        std::process::id(),
-        unique_probe_nonce(),
-        fnv1a64_hex(
-            format!(
-                "{}:{}",
-                probe.backend.cargo_package_id.0,
-                probe.path.dotted()
-            )
-            .as_bytes()
-        )
-    ));
-    if probe_root.exists() {
-        let _ = fs::remove_dir_all(&probe_root);
-    }
+    let tools = probe
+        .cargo_resolution
+        .native_toolchain
+        .as_ref()
+        .map_err(|error| probe_io_failure(error.clone()))?;
+    let family = super::native_storage::NativeFamily::acquire(
+        tools.identity(),
+        &format!(
+            "{:?}:{:?}",
+            probe.cargo_resolution.cargo_vendor_mode, probe.sysroot_vendor_dir
+        ),
+        "",
+        if probe.trusted_sysroot {
+            "sysroot"
+        } else {
+            "package"
+        },
+    )
+    .map_err(|error| probe_io_failure(error.to_string()))?;
+    let probe_root = family
+        .project(backend_root, &cache_key)
+        .map_err(|error| probe_io_failure(error.to_string()))?;
     fs::create_dir_all(probe_root.join("src")).map_err(|error| {
         probe_io_failure(format!("failed to create Rust probe project: {error}"))
     })?;
-    fs::write(probe_root.join("Cargo.toml"), probe_manifest).map_err(|error| {
-        probe_io_failure(format!("failed to write Rust probe manifest: {error}"))
-    })?;
-    fs::write(probe_root.join("src/lib.rs"), probe_source)
+    super::native_storage::write_changed(&probe_root.join("Cargo.toml"), probe_manifest.as_bytes())
+        .map_err(|error| {
+            probe_io_failure(format!("failed to write Rust probe manifest: {error}"))
+        })?;
+    super::native_storage::write_changed(&probe_root.join("src/lib.rs"), probe_source.as_bytes())
         .map_err(|error| probe_io_failure(format!("failed to write Rust probe source: {error}")))?;
 
     let vendor_dir = probe
@@ -167,7 +168,7 @@ pub(super) fn execute_direct_cargo_probe(
     ) {
         command.arg("--frozen");
     }
-    let target_dir = probe_cargo_target_dir(&invocation_cwd);
+    let target_dir = family.target();
     crate::cache_storage::directory(&target_dir)
         .map_err(|error| probe_io_failure(format!("unsafe Rust probe target: {error}")))?;
     command.env("CARGO_TARGET_DIR", target_dir);
@@ -178,7 +179,6 @@ pub(super) fn execute_direct_cargo_probe(
     let unchanged = prepared_resolution
         .assert_unchanged()
         .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics));
-    let _ = fs::remove_dir_all(&probe_root);
     unchanged?;
     if output.status.success() {
         mark_probe_cache_hit(&cache_file);

@@ -94,7 +94,6 @@ fn copy_vendor_tree(source: &std::path::Path, destination: &std::path::Path) {
 
 #[test]
 fn vendored_probe_preserves_compiler_dependency_freshness() {
-    use super::super::rust_interop_probe_paths::probe_cargo_target_dir_with_env;
     use super::probe_cargo_vendor_args;
     use std::path::Path;
 
@@ -135,8 +134,16 @@ fn vendored_probe_preserves_compiler_dependency_freshness() {
     )
     .expect("write host dependency probe");
     let target = projects.0.join("target");
-    let probe_target =
-        probe_cargo_target_dir_with_env(Some(target.clone().into_os_string()), &projects.0);
+    let tools = sifr_sysroot::NativeToolchain::resolve_at(&projects.0).expect("native toolchain");
+    let family = crate::build::native_storage::NativeFamily::acquire(
+        tools.identity(),
+        &probe_vendor.display().to_string(),
+        "",
+        "dx9-storage-regression",
+    )
+    .expect("probe family");
+    let probe_target = family.target();
+    assert!(!probe_target.starts_with(&target));
     for (root, vendor, target, command, must_be_fresh) in [
         (&compiler, &original_vendor, &target, "build", false),
         (&probe, &probe_vendor, &probe_target, "check", false),

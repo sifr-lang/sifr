@@ -20,6 +20,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 pub(super) struct MaterializedBinaryProject {
+    native_executable: PathBuf,
     pub(super) binary_path: PathBuf,
     pub(super) sysroot: BuildSysrootReport,
     pub(super) materialize_elapsed: Duration,
@@ -69,6 +70,25 @@ pub(super) fn materialize_binary_project_sources(
         requested_vendor_mode,
     )
     .map_err(|error| vec![build_error(error.boundary_message())])?;
+    let tools = cargo_resolution
+        .native_toolchain
+        .as_ref()
+        .map_err(|error| vec![build_error(error.clone())])?;
+    let _publication = super::native_storage::NativeFamily::acquire(
+        tools.identity(),
+        "portable-export",
+        &project_path.display().to_string(),
+        "",
+    )
+    .map_err(|error| vec![build_error(error.to_string())])?;
+    let runtime_contract = generated_project.python_runtime.as_ref().map(|runtime| serde_json::json!({
+        "schema": 1,
+        "mode": "external-runtime",
+        "contract": "Deploy the selected CPython environment at the declared paths. The executable validates the loaded shared-library identity before initialization.",
+        "interpreter": runtime.interpreter(),
+        "shared_library": runtime.selected_library(),
+        "relocatable": false,
+    }));
     let interop = generated_project.interop.clone();
     let local_project_path =
         super::portable_project::local_resolution_project_path(output_dir, project_name);
@@ -90,6 +110,14 @@ pub(super) fn materialize_binary_project_sources(
             &interop,
             cargo_resolution,
         )?;
+        if let Some(contract) = &runtime_contract {
+            std::fs::write(
+                local_project_path.join("sifr-python-runtime.json"),
+                serde_json::to_vec_pretty(contract)
+                    .map_err(|error| vec![build_error(error.to_string())])?,
+            )
+            .map_err(|error| vec![build_error(error.to_string())])?;
+        }
         super::portable_project::publish_portable_project(&local_project_path, &project_path)?;
         Ok(project_path)
     })();
@@ -154,29 +182,58 @@ pub(super) fn materialize_cached_binary_project_with_report(
         cache_key.push_str("\n[normal-authority-seed]\n");
         cache_key.push_str(&seed);
     }
-    let required_paths = [
-        Path::new(project_name).join("target"),
-        binary_relative_path(project_name),
-    ];
-    let required_refs: Vec<&Path> = required_paths.iter().map(PathBuf::as_path).collect();
-    let prepared = prepare_cached_artifact(
+    // Always run Cargo before consulting finalized output: build scripts and
+    // local dependencies can change without changing generated Rust.
+    let family = super::native_storage::NativeFamily::acquire(
+        tools.identity(),
+        &format!(
+            "{:?}:{}",
+            dependency_plan.cargo_vendor_mode,
+            dependency_plan.sysroot_root.display()
+        ),
+        &python_environment(&generated_project),
+        &format!("{:?}", generated_project.interop.rust.trust_requirements),
+    )
+    .map_err(|error| vec![build_error(error.to_string())])?;
+    let scope = cache_scope
+        .canonicalize()
+        .unwrap_or_else(|_| cache_scope.to_path_buf());
+    let project_root = family
+        .project(&scope, project_name)
+        .map_err(|error| vec![build_error(error.to_string())])?;
+    let report = materialize_binary_project_at_path_with_target(
+        &project_root,
+        project_name,
+        generated_project,
+        &dependency_plan,
+        cargo_resolution,
+        &family.target(),
+    )?;
+    let snapshot = super::native_storage::NativeSnapshot::inspect(
+        &report.native_executable,
+        &binary_relative_path(project_name),
+    )
+    .map_err(|error| vec![build_error(error.to_string())])?;
+    cache_key.push_str("\n[final-native-bundle]\n");
+    cache_key.push_str(&snapshot.identity);
+    let required_refs = snapshot.required();
+    match prepare_cached_artifact(
         native_context.identity().as_str(),
         cache_namespace,
         cache_scope,
         &cache_key,
         &required_refs,
-    )?;
-    match prepared {
-        PreparedArtifactCache::Hit(entry) => Ok((entry, None, sysroot)),
+    )? {
+        PreparedArtifactCache::Hit(entry) => {
+            snapshot
+                .verify(entry.workspace_root())
+                .map_err(|error| vec![build_error(error.to_string())])?;
+            Ok((entry, Some(report), sysroot))
+        }
         PreparedArtifactCache::Miss(pending) => {
-            let project_root = pending.workspace_root().join(project_name);
-            let report = materialize_binary_project_at_path(
-                &project_root,
-                project_name,
-                generated_project,
-                &dependency_plan,
-                cargo_resolution,
-            )?;
+            snapshot
+                .capture(pending.workspace_root())
+                .map_err(|error| vec![build_error(error.to_string())])?;
             pending
                 .commit(&required_refs)
                 .map(|entry| (entry, Some(report), sysroot))
@@ -200,12 +257,48 @@ fn binary_relative_path(project_name: &str) -> PathBuf {
         .join(binary_name)
 }
 
-fn materialize_binary_project_at_path(
+pub(super) fn materialize_binary_project_at_path(
     project_path: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
     dependency_plan: &SysrootDependencyPlan,
     cargo_resolution: &CargoResolutionPolicy,
+) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
+    let tools = cargo_resolution
+        .native_toolchain
+        .as_ref()
+        .map_err(|error| vec![cargo_build_error(error.clone())])?;
+    let family = super::native_storage::NativeFamily::acquire(
+        tools.identity(),
+        &format!(
+            "{:?}:{}",
+            dependency_plan.cargo_vendor_mode,
+            dependency_plan.sysroot_root.display()
+        ),
+        generated_project
+            .cache_key_fragment
+            .as_deref()
+            .unwrap_or(""),
+        &generated_project.interop.cache_key_fragment(),
+    )
+    .map_err(|error| vec![build_error(error.to_string())])?;
+    materialize_binary_project_at_path_with_target(
+        project_path,
+        project_name,
+        generated_project,
+        dependency_plan,
+        cargo_resolution,
+        &family.target(),
+    )
+}
+
+pub(super) fn materialize_binary_project_at_path_with_target(
+    project_path: &Path,
+    project_name: &str,
+    generated_project: GeneratedBinaryProject,
+    dependency_plan: &SysrootDependencyPlan,
+    cargo_resolution: &CargoResolutionPolicy,
+    target: &Path,
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
     let python_interpreter = generated_project
         .python_runtime
@@ -215,11 +308,14 @@ fn materialize_binary_project_at_path(
     let validate_native_links = should_validate_native_link_evidence(&generated_project);
     let trusted_native_links = trusted_native_links(&generated_project, dependency_plan);
     let materialize_start = std::time::Instant::now();
-    materialize_binary_project_files(
+    let root_id = sifr_sysroot::sha256_hex(project_path.as_os_str().as_encoded_bytes());
+    let target_name = format!("{project_name}_{}", &root_id[..16]);
+    materialize_binary_project_files_with_target(
         project_path,
         project_name,
         generated_project,
         dependency_plan,
+        Some(&target_name),
     )?;
     let materialize_elapsed = materialize_start.elapsed();
 
@@ -234,12 +330,15 @@ fn materialize_binary_project_at_path(
         &trusted_native_links,
         dependency_plan,
         cargo_resolution,
+        target,
     )?;
     let destination = cached_binary_path(
         project_path.parent().unwrap_or(Path::new(".")),
         project_name,
     );
-    if executable != destination {
+    if executable != destination
+        && std::fs::read(&destination).ok() != std::fs::read(&executable).ok()
+    {
         if let Some(parent) = destination.parent() {
             std::fs::create_dir_all(parent)
                 .map_err(|error| vec![cargo_build_error(error.to_string())])?;
@@ -254,6 +353,7 @@ fn materialize_binary_project_at_path(
     let cargo_elapsed = cargo_start.elapsed();
 
     Ok(MaterializedBinaryProject {
+        native_executable: executable,
         binary_path: cached_binary_path(
             project_path.parent().unwrap_or(Path::new(".")),
             project_name,
@@ -264,36 +364,64 @@ fn materialize_binary_project_at_path(
     })
 }
 
+fn python_environment(project: &GeneratedBinaryProject) -> String {
+    project
+        .python_runtime
+        .as_ref()
+        .map_or_else(String::new, |runtime| {
+            format!(
+                "{}:{}",
+                runtime.probe_digest(),
+                runtime.selected_library().unwrap_or("")
+            )
+        })
+}
+
 fn sysroot_report(dependency_plan: &SysrootDependencyPlan) -> BuildSysrootReport {
     BuildSysrootReport::from_dependency_plan(dependency_plan)
 }
 
-fn materialize_binary_project_files(
+pub(super) fn materialize_binary_project_files(
     project_path: &Path,
     project_name: &str,
     generated_project: GeneratedBinaryProject,
     dependency_plan: &SysrootDependencyPlan,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
+    materialize_binary_project_files_with_target(
+        project_path,
+        project_name,
+        generated_project,
+        dependency_plan,
+        None,
+    )
+}
+
+fn materialize_binary_project_files_with_target(
+    project_path: &Path,
+    project_name: &str,
+    generated_project: GeneratedBinaryProject,
+    dependency_plan: &SysrootDependencyPlan,
+    target_name: Option<&str>,
+) -> Result<(), Vec<RenderedDiagnostic>> {
     let src_dir = project_path.join("src");
-    if src_dir.exists() {
-        std::fs::remove_dir_all(&src_dir).map_err(|error| {
-            vec![build_error(format!(
-                "failed to reset generated source directory: {error}"
-            ))]
-        })?;
-    }
+    let mut current_files = BTreeSet::new();
     std::fs::create_dir_all(&src_dir).map_err(|error| {
         vec![build_error(format!(
             "failed to create output directory: {error}"
         ))]
     })?;
 
-    let cargo_toml = generate_dependency_cargo_toml_with_interop(
+    let mut cargo_toml = generate_dependency_cargo_toml_with_interop(
         project_name,
         dependency_plan,
         &generated_project.interop,
     );
 
+    if let Some(target_name) = target_name {
+        cargo_toml.push_str(&format!(
+            "\n[[bin]]\nname = {target_name:?}\npath = \"src/main.rs\"\n"
+        ));
+    }
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
     let loader_script = generated_project
@@ -319,6 +447,7 @@ fn materialize_binary_project_files(
         generated_project.bridge_root_declaration(),
         generated_project.main_rs
     );
+    current_files.insert(src_dir.join("main.rs"));
     write_project_file(&src_dir.join("main.rs"), main_rs, "main.rs")?;
 
     for (module, source) in generated_project.bridge_modules {
@@ -328,6 +457,7 @@ fn materialize_binary_project_files(
             PathBuf::from(&module).join("mod.rs")
         };
         let canonical_path = canonical_rust_module_path(&path)?;
+        current_files.insert(src_dir.join(&canonical_path));
         write_project_file(
             &src_dir.join(&canonical_path),
             source,
@@ -360,6 +490,7 @@ fn materialize_binary_project_files(
             continue;
         }
         let file_name = canonical_rust_module_path(&rust_module_file_path(&module_name))?;
+        current_files.insert(src_dir.join(&file_name));
         write_project_file(
             &src_dir.join(&file_name),
             code,
@@ -369,6 +500,7 @@ fn materialize_binary_project_files(
 
     for (namespace_path, contents) in namespace_contents {
         let namespace_path = canonical_rust_module_path(&namespace_path)?;
+        current_files.insert(src_dir.join(&namespace_path));
         write_project_file(
             &src_dir.join(&namespace_path),
             contents,
@@ -376,6 +508,8 @@ fn materialize_binary_project_files(
         )?;
     }
 
+    super::native_storage::remove_stale(&src_dir, &current_files)
+        .map_err(|error| vec![build_error(error.to_string())])?;
     Ok(())
 }
 
@@ -423,6 +557,7 @@ fn run_cargo_build(
     trusted_native_links: &BTreeSet<String>,
     dependency_plan: &SysrootDependencyPlan,
     cargo_resolution: &CargoResolutionPolicy,
+    target: &Path,
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let mut command = cargo_resolution.cargo_command()?;
     command.args(sysroot_cargo_config_args(dependency_plan));
@@ -441,7 +576,7 @@ fn run_cargo_build(
     // Generated projects are materialized and cached with their own `target/`
     // directory. Inheriting an outer CARGO_TARGET_DIR moves binaries away from
     // the reported artifact paths and breaks cache completeness checks.
-    command.arg("--target-dir").arg(project_path.join("target"));
+    command.arg("--target-dir").arg(target);
     configure_hermetic_build_environment(&mut command);
     if let Some(python_interpreter) = python_interpreter {
         command.env("PYO3_PYTHON", python_interpreter);
@@ -458,7 +593,14 @@ fn run_cargo_build(
     }
 
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
+        let mut stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+        for line in String::from_utf8_lossy(&output.stdout).lines() {
+            if let Ok(event) = serde_json::from_str::<serde_json::Value>(line) {
+                if let Some(rendered) = event["message"]["rendered"].as_str() {
+                    stderr.push_str(rendered);
+                }
+            }
+        }
         if let Some(diagnostic) = cargo_lock_mode_diagnostic("cargo build", &stderr) {
             return Err(vec![diagnostic]);
         }
@@ -603,7 +745,7 @@ fn write_project_file(
     } else {
         contents
     };
-    std::fs::write(path, contents)
+    super::native_storage::write_changed(path, contents)
         .map_err(|error| vec![build_error(format!("failed to write {label}: {error}"))])
 }
 
@@ -674,7 +816,7 @@ fn binary_project_cache_key(
 
 #[cfg(test)]
 #[path = "materialize_tests.rs"]
-mod tests;
+pub(super) mod tests;
 
 #[cfg(test)]
 #[path = "materialize_field_identity_tests.rs"]

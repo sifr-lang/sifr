@@ -385,8 +385,12 @@ pub(super) fn inject_python_runtime_bootstrap(
     let insert_at = find_main_body_insert(main_rs).ok_or_else(|| {
         "generated package project has Python runtime metadata but no main function".to_string()
     })?;
+    let loader_check = metadata.selected_library().map_or_else(String::new, |library| format!(
+        "\n    if let Err(error) = ::sifr_runtime::python::loader::validate_loaded_library({library:?}) {{\n        eprintln!(\"{{error}}\");\n        std::process::exit(1);\n    }}\n"
+    ));
     let mut with_bootstrap = render_python_runtime_prelude(metadata);
     with_bootstrap.push_str(&main_rs[..insert_at]);
+    with_bootstrap.push_str(&loader_check);
     let _ = write!(
         with_bootstrap,
         "\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime() {{\n        Ok(__sifr_python_runtime_guard) => __sifr_python_runtime_guard,\n        Err(::sifr_runtime::python::PythonRuntimeError::ReservedBridgeCollision {{ module }}) => {{\n            eprintln!(\"{collision_code}: reserved Python bridge namespace collision at '{{}}'\", module);\n            std::process::exit(1);\n        }}\n        Err(__sifr_python_runtime_error) => {{\n            eprintln!(\"Sifr Python runtime initialization failed: {{}}\", __sifr_python_runtime_error);\n            std::process::exit(1);\n        }}\n    }};\n",
