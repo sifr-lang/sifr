@@ -25,6 +25,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 mod external_overlay;
+pub use external_overlay::prepare_external_defs;
 mod loaders;
 mod reuse;
 
@@ -298,6 +299,15 @@ pub fn compile_module_hir_with_source_and_options(
     source_context: Option<FrontendSourceContext<'_>>,
     mut lowering_options: LoweringOptions,
 ) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
+    let prepared_externals = external_defs
+        .prepare_modules(&external_overlay::import_modules(stmts))
+        .map_err(|message| {
+            vec![diagnostic_with_code(
+                message,
+                DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+            )]
+        })?;
+    let external_defs = &prepared_externals;
     if let Some(context) = source_context {
         lowering_options.source_text = Some(context.source.to_string());
     }
@@ -695,6 +705,11 @@ impl FrontendContext {
             let _ = self.ensure_lowered(dependency);
         }
         let index = self.index_for_module(module);
+        if let Err(errors) = prepare_external_defs(&parsed, &mut self.external_defs) {
+            self.modules[index].diagnostics = Some(Arc::new(errors));
+            self.lowering_modules.remove(&module);
+            return CacheStatus::Miss;
+        }
         let hir_key = self.hir_key_fingerprint(index);
         if let Some(lowered) = self.reuse_caches.hir(&hir_key) {
             let module_name = self.modules[index].module_name.clone();

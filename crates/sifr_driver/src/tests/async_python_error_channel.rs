@@ -1,5 +1,6 @@
 use super::support::parse_suite;
-use crate::{collect_project_hir_modules, compile_stdlib, type_check_source};
+use crate::stdlib::metadata_inventory_for_test as compile_stdlib;
+use crate::{collect_project_hir_modules, type_check_source};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{LoweringOptions, PythonBridgeTargetAuthority};
 use sifr_type_system::Type;

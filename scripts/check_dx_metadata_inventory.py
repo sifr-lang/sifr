@@ -77,7 +77,7 @@ def fields(text: str, name: str) -> set[str]:
 def check_fields() -> None:
     source = (ROOT / "crates/sifr_lowering/src/lower/external_defs.rs").read_text()
     wire = (ROOT / "crates/sifr_sysroot/src/metadata/semantic_records.rs").read_text()
-    if fields(source, "ExternalDefs") != fields(wire, "SemanticExports"):
+    if fields(source, "ExternalDefs") - {"provider"} != fields(wire, "SemanticExports"):
         raise ValueError("ExternalDefs field inventory changed; explicitly classify and preserve the payload")
     groups = ("hir_nodes", "specialization_metadata", "rust_interop", "python_interop", "template_strings", "sql_queries", "sql_migrations")
     for group in groups:

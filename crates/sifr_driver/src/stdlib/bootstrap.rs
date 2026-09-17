@@ -1,6 +1,5 @@
 use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary};
 use crate::export_policy::should_export_callable;
-use crate::stdlib::cache::{get_or_init_stdlib_cache, project_stdlib_cache};
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
 use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
 use crate::stdlib::types::StdlibCompiled;
@@ -12,9 +11,9 @@ use sifr_lowering::{
     lower_module_sysroot_private_declaration_with_externals,
     lower_module_sysroot_public_stdlib_with_externals,
 };
-use sifr_stdlib_manifest::{
-    LoadedStdlibSource, LoadedStdlibSourceKind, load_stdlib_tooling_sources_from_sysroot,
-};
+#[cfg(test)]
+use sifr_stdlib_manifest::load_stdlib_tooling_sources_from_sysroot;
+use sifr_stdlib_manifest::{LoadedStdlibSource, LoadedStdlibSourceKind};
 use sifr_syntax::parse_module_raw;
 use sifr_sysroot::ResolvedSysroot;
 use sifr_sysroot::sha256_hex;
@@ -25,21 +24,25 @@ use std::path::Path;
 pub(crate) fn compile_stdlib(
     compiler: &crate::CompilerContext,
 ) -> Result<std::sync::Arc<StdlibCompiled>, Vec<RenderedDiagnostic>> {
-    compiler.ensure_development_metadata()?;
-    get_or_init_stdlib_cache(&compiler.stdlib_cache, || {
-        compile_stdlib_for_context(compiler)
-    })
+    let provider = compiler.metadata_provider()?;
+    let mut defs = ExternalDefs::default();
+    defs.provider = Some(provider.clone());
+    Ok(std::sync::Arc::new(StdlibCompiled {
+        defs,
+        code: StdlibCode::default(),
+        metadata_features: HashMap::new(),
+        interop: crate::stdlib::StdlibRustInterop {
+            sysroot: Some(compiler.sysroot()?.clone()),
+            ..Default::default()
+        },
+        provider: Some(provider),
+    }))
 }
 
 pub fn external_defs(
     compiler: &crate::CompilerContext,
 ) -> Result<ExternalDefs, Vec<RenderedDiagnostic>> {
-    compiler.ensure_development_metadata()?;
-    project_stdlib_cache(
-        &compiler.stdlib_cache,
-        || compile_stdlib_for_context(compiler),
-        |compiled| compiled.defs.clone(),
-    )
+    Ok(compile_stdlib(compiler)?.defs.clone())
 }
 
 #[cfg(test)]
@@ -47,6 +50,7 @@ pub(crate) fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<RenderedDi
     compile_stdlib_for_context(&crate::CompilerContext::for_test())
 }
 
+#[cfg(test)]
 fn compile_stdlib_for_context(
     compiler: &crate::CompilerContext,
 ) -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
@@ -557,6 +561,7 @@ pub(crate) fn compile_stdlib_sources_with_sysroot(
     stdlib_code.hir_modules = std::sync::Arc::new(hir_modules);
     stdlib_defs.freeze_baseline();
     Ok(StdlibCompiled {
+        provider: None,
         defs: stdlib_defs,
         metadata_features,
         code: stdlib_code,
@@ -717,7 +722,7 @@ fn named_params(params: &[HirParam]) -> Vec<(String, Type, ParamConvention)> {
         .collect()
 }
 
-fn signature_params(
+pub(crate) fn signature_params(
     params: &[HirParam],
     convention_override: Option<ParamConvention>,
 ) -> Vec<(Type, ParamConvention)> {
@@ -745,7 +750,10 @@ fn collect_public_constant_integer_value_exports<'a, T: Clone>(
         .collect()
 }
 
-fn stdlib_class_template(module_name: &str, class: &sifr_ir::HirClass) -> sifr_ir::HirClass {
+pub(crate) fn stdlib_class_template(
+    module_name: &str,
+    class: &sifr_ir::HirClass,
+) -> sifr_ir::HirClass {
     // Structural emission needs every declaration field but never method
     // statements. Project directly so bootstrap does not clone and discard
     // entire bodies or retain their empty allocation in its lifetime cache.
@@ -803,3 +811,22 @@ mod tests;
 #[cfg(test)]
 #[path = "bootstrap_template_tests.rs"]
 mod template_tests;
+
+/// Explicit complete inventory view for tests whose assertion enumerates the inventory.
+/// Ordinary test compilation uses the same lazy entrypoint as installed consumers.
+#[cfg(test)]
+pub(crate) fn metadata_inventory_for_test(
+    compiler: &crate::CompilerContext,
+) -> Result<std::sync::Arc<StdlibCompiled>, Vec<sifr_diagnostics::RenderedDiagnostic>> {
+    let provider = compiler.metadata_provider()?;
+    let names = provider.modules.keys().cloned().collect::<Vec<_>>();
+    provider
+        .materialize(&names, compiler.sysroot()?)
+        .map(std::sync::Arc::new)
+        .map_err(|e| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                e.to_string(),
+                sifr_diagnostics::DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+            )]
+        })
+}

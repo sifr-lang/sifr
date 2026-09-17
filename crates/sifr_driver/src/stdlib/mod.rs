@@ -1,4 +1,5 @@
 mod bootstrap;
+#[cfg(test)]
 mod cache;
 mod interop;
 mod re_exports;
@@ -21,7 +22,7 @@ mod stateless_python_codegen_tests;
 #[cfg(test)]
 mod stateless_time_codegen_tests;
 mod tooling;
-mod types;
+pub(crate) mod types;
 
 pub(crate) use bootstrap::compile_stdlib;
 pub use bootstrap::external_defs;
@@ -37,3 +38,8 @@ pub(crate) use types::{StdlibCompiled, StdlibRustInterop};
 pub(crate) use bootstrap::compile_stdlib_uncached;
 
 pub(crate) use bootstrap::compile_stdlib_sources_with_sysroot;
+
+pub(crate) use bootstrap::{signature_params, stdlib_class_template};
+
+#[cfg(test)]
+pub(crate) use bootstrap::metadata_inventory_for_test;

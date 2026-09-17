@@ -132,7 +132,7 @@ pub(crate) fn compile_single_file_entrypoint_with_metadata_and_options(
     source: &str,
     lowering_options: LoweringOptions,
 ) -> Result<CompiledSingleFileMetadata, Vec<RenderedDiagnostic>> {
-    let plan = RootedEntrypointPlan::from_entrypoint(
+    let mut plan = RootedEntrypointPlan::from_entrypoint(
         compiler,
         RootedEntrypoint::SingleFile {
             source,
@@ -140,6 +140,9 @@ pub(crate) fn compile_single_file_entrypoint_with_metadata_and_options(
             lowering_options,
         },
     )?;
+    plan.stdlib = plan
+        .stdlib
+        .for_codegen(plan.project_lowering.hir_modules.values())?;
     plan.emit_frontend_diagnostics();
     let rust_interop_context = plan.rust_interop_context.clone();
     let stdlib = std::sync::Arc::clone(&plan.stdlib);
@@ -713,10 +716,13 @@ impl RootedEntrypointPlan {
     }
 
     pub(super) fn into_generated_binary_project_with_probe_policy(
-        self,
+        mut self,
         allow_deferred_python_probes: bool,
         direct_probe_policy: DirectProbePolicy,
     ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
+        self.stdlib = self
+            .stdlib
+            .for_codegen(self.project_lowering.hir_modules.values())?;
         let python_runtime = self.python_runtime.clone();
         let python_bridges = self.python_bridges.clone();
         let rust_interop_context = self.rust_interop_context.clone();

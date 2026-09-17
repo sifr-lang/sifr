@@ -21,6 +21,8 @@ pub struct MetadataStore {
     retained: Mutex<Retained>,
     pub(super) limits: Limits,
     compatibility: Compatibility,
+    reads: Vec<std::sync::atomic::AtomicU64>,
+    decoded: Vec<std::sync::atomic::AtomicU64>,
 }
 impl MetadataStore {
     pub fn open(
@@ -116,6 +118,12 @@ impl MetadataStore {
             }),
             limits,
             compatibility: actual,
+            reads: (0..=KIND_COUNT)
+                .map(|_| std::sync::atomic::AtomicU64::new(0))
+                .collect(),
+            decoded: (0..=KIND_COUNT)
+                .map(|_| std::sync::atomic::AtomicU64::new(0))
+                .collect(),
         })
     }
     /// Enumerate the small typed directory without reading record payloads.
@@ -146,6 +154,28 @@ impl MetadataStore {
             .lock()
             .map_err(|_| err("retention lock poisoned"))?
             .bytes)
+    }
+    pub fn payload_read_count<T: Record>(&self) -> u64 {
+        self.reads[usize::from(T::KIND)].load(std::sync::atomic::Ordering::Relaxed)
+    }
+    pub fn decoded_count<T: Record>(&self) -> u64 {
+        self.decoded[usize::from(T::KIND)].load(std::sync::atomic::Ordering::Relaxed)
+    }
+    pub fn release_unpinned(&self) -> Result<()> {
+        let mut retained = self
+            .retained
+            .lock()
+            .map_err(|_| err("retention lock poisoned"))?;
+        retained
+            .records
+            .retain(|_, value| Arc::strong_count(value) > 1);
+        retained.bytes = retained
+            .records
+            .keys()
+            .filter_map(|id| self.directory.get(id))
+            .map(|entry| entry.decoded_bound)
+            .sum();
+        Ok(())
     }
     pub fn get<T: Record>(&self, reference: Ref<T>) -> Result<Arc<T>> {
         let entry = self
@@ -212,11 +242,13 @@ impl MetadataStore {
             }
         }
         let value = Arc::new(value);
+        self.decoded[usize::from(T::KIND)].fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         retained.records.insert(reference.id, value.clone());
         retained.bytes += entry.decoded_bound;
         Ok(value)
     }
     pub(super) fn read_payload(&self, entry: &Entry) -> Result<Vec<u8>> {
+        self.reads[usize::from(entry.kind)].fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let len =
             usize::try_from(entry.len).map_err(|_| err("record size exceeds address space"))?;
         let mut bytes = vec![0; len];

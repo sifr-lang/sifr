@@ -132,6 +132,12 @@ pub(crate) fn build_test_runner_project(
         .iter()
         .map(|(name, module)| (name.as_str(), module))
         .collect::<Vec<_>>();
+    let stdlib_compiled = stdlib_compiled.for_codegen(
+        support_module_refs
+            .iter()
+            .chain(&test_module_refs)
+            .map(|(_, module)| *module),
+    )?;
     let generated = run_codegen_with_boundary(
         "internal compiler panic during test-project code generation",
         || {

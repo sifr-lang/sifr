@@ -3,9 +3,8 @@ use crate::editor::EditorToken;
 use crate::queries::Location;
 use crate::snapshot::AnalysisError;
 use crate::symbols::StdlibSymbolInput;
-use ruff_text_size::{Ranged as _, TextRange};
-use sifr_frontend::{FileId, SourceFileView, SourceOrigin, parse_source};
-use sifr_python_ast::{Expr, Stmt};
+use ruff_text_size::TextRange;
+use sifr_frontend::{FileId, SourceOrigin};
 
 impl AnalysisHost {
     pub(super) fn refresh_stdlib_symbol_bucket(&mut self) {
@@ -21,17 +20,17 @@ impl AnalysisHost {
         file: FileId,
         token: &EditorToken,
     ) -> Result<Option<Location>, AnalysisError> {
-        let context = self.context()?;
-        let Some(source_file) = context.source_file_for_file(file) else {
-            return Ok(None);
-        };
-        let allow_private = matches!(
-            source_file.origin,
-            SourceOrigin::SysrootPublicStdlib | SourceOrigin::SysrootPrivateDeclaration
-        );
-        let Some(source) = context.source_text_for_file(file) else {
-            return Ok(None);
-        };
+        let allow_private = self.stdlib_navigation.path(file.as_u32()).is_some()
+            || self
+                .context()?
+                .source_file_for_file(file)
+                .is_some_and(|source_file| {
+                    matches!(
+                        source_file.origin,
+                        SourceOrigin::SysrootPublicStdlib | SourceOrigin::SysrootPrivateDeclaration
+                    )
+                });
+        let source = self.source_text_for_file(file)?;
         let Some((module_name, imported_name)) = stdlib_import_target(source, token, allow_private)
         else {
             return Ok(None);
@@ -55,18 +54,20 @@ impl AnalysisHost {
     }
 
     fn stdlib_symbols_from_source_map(&self) -> Vec<StdlibSymbolInput> {
-        self.session
-            .context()
-            .map(|context| {
-                context
-                    .source_map()
-                    .files
-                    .into_iter()
-                    .filter(|file| file.origin == SourceOrigin::SysrootPublicStdlib)
-                    .flat_map(|file| stdlib_symbols_from_file(&file))
-                    .collect()
+        self.stdlib_navigation
+            .symbols
+            .iter()
+            .filter(|symbol| !symbol.private)
+            .enumerate()
+            .map(|(ordinal, symbol)| StdlibSymbolInput {
+                module_name: symbol.module.clone(),
+                name: symbol.name.clone(),
+                kind: symbol.kind.clone(),
+                file: FileId::new(symbol.file),
+                range: Some(TextRange::new(symbol.start.into(), symbol.end.into())),
+                ordinal,
             })
-            .unwrap_or_default()
+            .collect()
     }
 
     fn stdlib_symbol_location_from_source_map(
@@ -75,132 +76,19 @@ impl AnalysisHost {
         name: &str,
         origin: SourceOrigin,
     ) -> Option<Location> {
-        self.session
-            .context()?
-            .source_map()
-            .files
-            .into_iter()
-            .filter(|file| {
-                file.origin == origin && file.module_name.as_deref() == Some(module_name)
+        self.stdlib_navigation
+            .symbols
+            .iter()
+            .find(|symbol| {
+                symbol.module == module_name
+                    && symbol.name == name
+                    && symbol.private == (origin == SourceOrigin::SysrootPrivateDeclaration)
             })
-            .find_map(|file| {
-                stdlib_symbols_from_file(&file)
-                    .into_iter()
-                    .find(|symbol| symbol.name == name)
-                    .map_or_else(
-                        || {
-                            Some(Location {
-                                file: file.id,
-                                range: None,
-                            })
-                        },
-                        |symbol| {
-                            Some(Location {
-                                file: symbol.file,
-                                range: symbol.range,
-                            })
-                        },
-                    )
+            .map(|symbol| Location {
+                file: FileId::new(symbol.file),
+                range: Some(TextRange::new(symbol.start.into(), symbol.end.into())),
             })
     }
-}
-
-fn stdlib_symbols_from_file(file: &SourceFileView) -> Vec<StdlibSymbolInput> {
-    let Some(module_name) = file.module_name.as_ref() else {
-        return Vec::new();
-    };
-    let Ok(stmts) = parse_source(file.source.as_str(), Some(module_name)) else {
-        return Vec::new();
-    };
-    let mut symbols = stmts
-        .iter()
-        .enumerate()
-        .filter_map(|(ordinal, stmt)| symbol_from_stmt(module_name, file.id, stmt, ordinal))
-        .collect::<Vec<_>>();
-    symbols.sort_by(|left, right| {
-        left.name
-            .cmp(&right.name)
-            .then(left.ordinal.cmp(&right.ordinal))
-    });
-    symbols
-}
-
-fn symbol_from_stmt(
-    module_name: &str,
-    file: FileId,
-    stmt: &Stmt,
-    ordinal: usize,
-) -> Option<StdlibSymbolInput> {
-    match stmt {
-        Stmt::FunctionDef(function) if public_name(&function.name) => Some(stdlib_symbol(
-            module_name,
-            function.name.to_string(),
-            "function",
-            file,
-            Some(function.range()),
-            ordinal,
-        )),
-        Stmt::ClassDef(class) if public_name(&class.name) => Some(stdlib_symbol(
-            module_name,
-            class.name.to_string(),
-            "class",
-            file,
-            Some(class.range()),
-            ordinal,
-        )),
-        Stmt::AnnAssign(assign) => public_target_name(assign.target.as_ref()).map(|name| {
-            stdlib_symbol(
-                module_name,
-                name,
-                "constant",
-                file,
-                Some(assign.range()),
-                ordinal,
-            )
-        }),
-        Stmt::Assign(assign) if assign.targets.len() == 1 => public_target_name(&assign.targets[0])
-            .map(|name| {
-                stdlib_symbol(
-                    module_name,
-                    name,
-                    "constant",
-                    file,
-                    Some(assign.range()),
-                    ordinal,
-                )
-            }),
-        _ => None,
-    }
-}
-
-fn stdlib_symbol(
-    module_name: &str,
-    name: String,
-    kind: &str,
-    file: FileId,
-    range: Option<TextRange>,
-    ordinal: usize,
-) -> StdlibSymbolInput {
-    StdlibSymbolInput {
-        module_name: module_name.to_string(),
-        name,
-        kind: kind.to_string(),
-        file,
-        range,
-        ordinal,
-    }
-}
-
-fn public_name(name: &str) -> bool {
-    !name.starts_with('_')
-}
-
-fn public_target_name(target: &Expr) -> Option<String> {
-    let Expr::Name(name) = target else {
-        return None;
-    };
-    let name = name.id.to_string();
-    public_name(&name).then_some(name)
 }
 
 fn stdlib_import_target(

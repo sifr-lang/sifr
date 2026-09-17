@@ -1,13 +1,13 @@
 use super::support::parse_suite;
-use crate::{collect_project_hir_modules, compile_stdlib};
+use crate::collect_project_hir_modules;
 use sifr_lowering::{HirExpr, HirStmt};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fmt::Write as _;
 
 #[test]
 fn compiled_stdlib_exports_match_public_reference() {
-    let compiled =
-        compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib should compile");
+    let compiled = crate::stdlib::metadata_inventory_for_test(&crate::CompilerContext::for_test())
+        .expect("stdlib should compile");
     let mut modules =
         BTreeMap::<String, (BTreeSet<String>, BTreeSet<String>, BTreeSet<String>)>::new();
     for (module, functions) in &compiled.defs.functions {
@@ -94,8 +94,8 @@ fn compiled_stdlib_exports_match_public_reference() {
 
 #[test]
 fn compiled_stdlib_same_operation_groups_have_one_public_name() {
-    let compiled =
-        compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib should compile");
+    let compiled = crate::stdlib::metadata_inventory_for_test(&crate::CompilerContext::for_test())
+        .expect("stdlib should compile");
     let groups: &[(&str, &[&str])] = &[
         ("sifr.math", &["fabs", "abs_val"]),
         ("sifr.math", &["pow", "pow_val"]),
@@ -132,8 +132,8 @@ fn compiled_stdlib_same_operation_groups_have_one_public_name() {
 
 #[test]
 fn stdlib_heapq_exports_allowlisted_private_max_heap_helpers() {
-    let compiled =
-        compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib should compile");
+    let compiled = crate::stdlib::metadata_inventory_for_test(&crate::CompilerContext::for_test())
+        .expect("stdlib should compile");
     let heapq_functions = compiled
         .defs
         .functions
@@ -164,10 +164,11 @@ def main() -> uint8:
         ),
     );
 
-    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
-        .expect("stdlib should compile")
-        .defs
-        .clone();
+    let stdlib_defs =
+        crate::stdlib::metadata_inventory_for_test(&crate::CompilerContext::for_test())
+            .expect("stdlib should compile")
+            .defs
+            .clone();
     let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .expect("project lowering should fit imported stdlib integer constants");
     let main_module = result

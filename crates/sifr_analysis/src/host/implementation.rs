@@ -29,6 +29,7 @@ use std::collections::BTreeMap;
 pub(super) type QueryResult<T> = Result<AnalysisQueryResult<T>, AnalysisError>;
 
 pub struct AnalysisHost {
+    pub(super) stdlib_navigation: std::sync::Arc<sifr_driver::StdlibNavigation>,
     pub(super) compiler: sifr_driver::CompilerContext,
     pub(super) session: WorkspaceSession,
     pub(super) file_to_module: BTreeMap<FileId, ModuleId>,
@@ -744,10 +745,7 @@ impl AnalysisHost {
     }
 
     pub(super) fn source_text(&self, file: FileId) -> Result<String, AnalysisError> {
-        self.context()?
-            .source_text_for_file(file)
-            .map(str::to_owned)
-            .ok_or_else(|| unknown_file(file))
+        self.source_text_for_file(file).map(str::to_owned)
     }
 
     pub(super) fn module_for_file(&self, file: FileId) -> Result<ModuleId, AnalysisError> {

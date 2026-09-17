@@ -65,6 +65,11 @@ pub struct ModuleSpecializationMetadata {
     pub json_integer_boundary_requests: Vec<sifr_ir::JsonIntegerBoundaryRequest>,
 }
 
+/// Semantic transport lives at the outer frontend boundary, never inside lowering.
+pub trait ExternalProvider: std::fmt::Debug + Send + Sync {
+    fn prepare(&self, modules: &[String]) -> Result<ExternalDefs, String>;
+}
+
 /// External module definitions that can be imported.
 #[derive(Debug, Clone, Default)]
 pub struct ExternalDefs {
@@ -204,9 +209,187 @@ pub struct ExternalDefs {
         String,
         std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
     >,
+    /// Driver-owned immutable semantic provider; never invoked by lowering.
+    pub provider: Option<std::sync::Arc<dyn ExternalProvider>>,
 }
 
 impl ExternalDefs {
+    /// Combine demanded immutable modules without cloning their decoded values.
+    pub fn extend_baseline(&mut self, other: &Self) {
+        self.functions.extend_baseline(&other.functions);
+        self.compiler_intrinsics
+            .extend_baseline(&other.compiler_intrinsics);
+        self.classes.extend_baseline(&other.classes);
+        self.generic_type_aliases
+            .extend_baseline(&other.generic_type_aliases);
+        self.class_instance_methods
+            .extend_baseline(&other.class_instance_methods);
+        self.rust_consuming_methods
+            .extend_baseline(&other.rust_consuming_methods);
+        self.rust_opaque_classes
+            .extend_baseline(&other.rust_opaque_classes);
+        self.rust_structural_classes
+            .extend_baseline(&other.rust_structural_classes);
+        self.class_type_params
+            .extend_baseline(&other.class_type_params);
+        self.class_field_defaults
+            .extend_baseline(&other.class_field_defaults);
+        self.declaration_metadata
+            .extend_baseline(&other.declaration_metadata);
+        self.class_adapter_providers
+            .extend_baseline(&other.class_adapter_providers);
+        self.class_adapter_markers
+            .extend_baseline(&other.class_adapter_markers);
+        self.attached_api_sets
+            .extend_baseline(&other.attached_api_sets);
+        self.attached_apis.extend_baseline(&other.attached_apis);
+        self.class_adapter_selections
+            .extend_baseline(&other.class_adapter_selections);
+        self.descriptor_functions
+            .extend_baseline(&other.descriptor_functions);
+        self.declaration_descriptors
+            .extend_baseline(&other.declaration_descriptors);
+        self.applied_adapter_metadata
+            .extend_baseline(&other.applied_adapter_metadata);
+        self.const_functions.extend_baseline(&other.const_functions);
+        self.specialization_requests
+            .extend_baseline(&other.specialization_requests);
+        self.specialization_outputs
+            .extend_baseline(&other.specialization_outputs);
+        self.json_integer_boundary_requests
+            .extend_baseline(&other.json_integer_boundary_requests);
+        self.constants.extend_baseline(&other.constants);
+        self.constant_integer_values
+            .extend_baseline(&other.constant_integer_values);
+        self.error_types.extend_baseline(&other.error_types);
+        self.type_param_bounds
+            .extend_baseline(&other.type_param_bounds);
+        self.generic_functions
+            .extend_baseline(&other.generic_functions);
+        self.function_varargs
+            .extend_baseline(&other.function_varargs);
+        self.function_python_call_shapes
+            .extend_baseline(&other.function_python_call_shapes);
+        self.rust_threadsafe_callback_targets
+            .extend_baseline(&other.rust_threadsafe_callback_targets);
+        self.function_workloads
+            .extend_baseline(&other.function_workloads);
+        self.function_defaults
+            .extend_baseline(&other.function_defaults);
+        if let Some(methods) = &other.structural_methods {
+            self.structural_methods
+                .get_or_insert_with(Box::default)
+                .extend_baseline(methods);
+        }
+    }
+
+    /// Demand semantic modules before entering lowering, retaining only project mutations.
+    pub fn prepare_modules(&self, modules: &[String]) -> Result<Self, String> {
+        let Some(provider) = &self.provider else {
+            return Ok(self.clone());
+        };
+        let mut prepared = provider.prepare(modules)?;
+        prepared.functions.copy_overlay_from(&self.functions);
+        prepared
+            .compiler_intrinsics
+            .copy_overlay_from(&self.compiler_intrinsics);
+        prepared.classes.copy_overlay_from(&self.classes);
+        prepared
+            .generic_type_aliases
+            .copy_overlay_from(&self.generic_type_aliases);
+        prepared
+            .class_instance_methods
+            .copy_overlay_from(&self.class_instance_methods);
+        prepared
+            .rust_consuming_methods
+            .copy_overlay_from(&self.rust_consuming_methods);
+        prepared
+            .rust_opaque_classes
+            .copy_overlay_from(&self.rust_opaque_classes);
+        prepared
+            .rust_structural_classes
+            .copy_overlay_from(&self.rust_structural_classes);
+        prepared
+            .class_type_params
+            .copy_overlay_from(&self.class_type_params);
+        prepared
+            .class_field_defaults
+            .copy_overlay_from(&self.class_field_defaults);
+        prepared
+            .declaration_metadata
+            .copy_overlay_from(&self.declaration_metadata);
+        prepared
+            .class_adapter_providers
+            .copy_overlay_from(&self.class_adapter_providers);
+        prepared
+            .class_adapter_markers
+            .copy_overlay_from(&self.class_adapter_markers);
+        prepared
+            .attached_api_sets
+            .copy_overlay_from(&self.attached_api_sets);
+        prepared
+            .attached_apis
+            .copy_overlay_from(&self.attached_apis);
+        prepared
+            .class_adapter_selections
+            .copy_overlay_from(&self.class_adapter_selections);
+        prepared
+            .descriptor_functions
+            .copy_overlay_from(&self.descriptor_functions);
+        prepared
+            .declaration_descriptors
+            .copy_overlay_from(&self.declaration_descriptors);
+        prepared
+            .applied_adapter_metadata
+            .copy_overlay_from(&self.applied_adapter_metadata);
+        prepared
+            .const_functions
+            .copy_overlay_from(&self.const_functions);
+        prepared
+            .specialization_requests
+            .copy_overlay_from(&self.specialization_requests);
+        prepared
+            .specialization_outputs
+            .copy_overlay_from(&self.specialization_outputs);
+        prepared
+            .json_integer_boundary_requests
+            .copy_overlay_from(&self.json_integer_boundary_requests);
+        prepared.constants.copy_overlay_from(&self.constants);
+        prepared
+            .constant_integer_values
+            .copy_overlay_from(&self.constant_integer_values);
+        prepared.error_types.copy_overlay_from(&self.error_types);
+        prepared
+            .type_param_bounds
+            .copy_overlay_from(&self.type_param_bounds);
+        prepared
+            .generic_functions
+            .copy_overlay_from(&self.generic_functions);
+        prepared
+            .function_varargs
+            .copy_overlay_from(&self.function_varargs);
+        prepared
+            .function_python_call_shapes
+            .copy_overlay_from(&self.function_python_call_shapes);
+        prepared
+            .rust_threadsafe_callback_targets
+            .copy_overlay_from(&self.rust_threadsafe_callback_targets);
+        prepared
+            .function_workloads
+            .copy_overlay_from(&self.function_workloads);
+        prepared
+            .function_defaults
+            .copy_overlay_from(&self.function_defaults);
+        if let Some(methods) = &self.structural_methods {
+            prepared
+                .structural_methods
+                .get_or_insert_with(Box::default)
+                .copy_overlay_from(methods);
+        }
+        prepared.provider = self.provider.clone();
+        Ok(prepared)
+    }
+
     /// Invalidate one project module atomically; immutable baseline authority survives.
     pub fn remove_module_overlay(&mut self, module: &str) {
         self.functions.remove(module);

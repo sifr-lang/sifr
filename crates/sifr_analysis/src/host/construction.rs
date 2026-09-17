@@ -15,7 +15,7 @@ impl AnalysisHost {
         let session = WorkspaceSession::open_project_with_external_defs_and_auxiliary_sources(
             root.clone(),
             sifr_driver::stdlib_external_defs(compiler)?,
-            sifr_driver::stdlib_tooling_sources(compiler)?,
+            Vec::new(),
         )?;
         Self::new_with_sql_profiles(compiler, session, profiles)
     }
@@ -27,7 +27,7 @@ impl AnalysisHost {
         let session = WorkspaceSession::open_single_file_with_external_defs_and_auxiliary_sources(
             input,
             sifr_driver::stdlib_external_defs(compiler)?,
-            sifr_driver::stdlib_tooling_sources(compiler)?,
+            Vec::new(),
         )?;
         Self::new(compiler, session)
     }
@@ -54,6 +54,7 @@ impl AnalysisHost {
             return Err(Vec::new());
         };
         let mut host = Self {
+            stdlib_navigation: compiler.stdlib_navigation()?,
             compiler: compiler.clone(),
             session,
             file_to_module: BTreeMap::new(),

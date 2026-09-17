@@ -16,7 +16,8 @@ fn lowered(source: &str, defs: &sifr_lowering::ExternalDefs) -> HirModule {
 
 #[test]
 fn stdlib_interop_startup_project_selection_is_once_per_complete_application() {
-    let stdlib = crate::stdlib::compile_stdlib(&crate::CompilerContext::for_test()).unwrap();
+    let stdlib =
+        crate::stdlib::metadata_inventory_for_test(&crate::CompilerContext::for_test()).unwrap();
     let first = lowered("def main():\n    pass\n", &stdlib.defs);
     let last = lowered(
         "from sifr.calendar import isleap\ndef last() -> bool:\n    return isleap(2024)\n",

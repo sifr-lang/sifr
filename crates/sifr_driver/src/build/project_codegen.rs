@@ -61,13 +61,16 @@ impl GeneratedBinaryProject {
 pub(super) fn codegen_single_file_frontend(
     frontend: &FrontendCompiled,
 ) -> Result<sifr_codegen::CodegenResult, Vec<RenderedDiagnostic>> {
+    let stdlib = frontend
+        .stdlib
+        .for_codegen(std::iter::once(&frontend.lowering_result.module))?;
     let static_programs = frontend.lowering_result.specialization_outputs.clone();
     let mut generated = run_codegen_with_boundary(
         "internal compiler panic during single-file code generation",
         || {
             generate_rust_with_stdlib_for_module(
                 &frontend.lowering_result.module,
-                &frontend.stdlib.code,
+                &stdlib.code,
                 Some("main"),
             )
         },

@@ -44,6 +44,7 @@ pub(crate) fn compile_frontend_modules(
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]);
         };
+        sifr_frontend::prepare_external_defs(stmts, &mut external_defs)?;
         let result = compile_module_hir(module_name, stmts, &external_defs, diagnostic_style)?;
         validate_sql_witnesses(&result.module)?;
         let LoweringResult {
@@ -130,6 +131,7 @@ pub(crate) fn compile_single_frontend_module_with_source_and_options(
     diagnostic_style: FrontendDiagnosticStyle,
     lowering_options: LoweringOptions,
 ) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
+    sifr_frontend::prepare_external_defs(stmts, &mut external_defs)?;
     let result = compile_module_hir_with_source_and_options(
         module_name,
         stmts,
@@ -264,6 +266,7 @@ pub(crate) fn collect_project_hir_source_modules_with_options(
                 DiagnosticCode::INTERNAL_COMPILER_PANIC,
             )]);
         };
+        sifr_frontend::prepare_external_defs(&parsed_module.suite, &mut external_defs)?;
         let result = compile_module_hir_with_source_and_options(
             module_name,
             &parsed_module.suite,

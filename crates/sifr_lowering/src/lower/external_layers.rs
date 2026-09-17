@@ -7,7 +7,7 @@ use std::{
 /// priority; mutations operate only on the overlay, including removal/taking.
 #[derive(Debug, Clone)]
 pub struct ModuleMap<K, V> {
-    baseline: Arc<HashMap<K, V>>,
+    baseline: Arc<HashMap<K, Arc<V>>>,
     overlay: HashMap<K, V>,
 }
 impl<K, V> Default for ModuleMap<K, V> {
@@ -19,13 +19,28 @@ impl<K, V> Default for ModuleMap<K, V> {
     }
 }
 impl<V: Clone> ModuleMap<String, V> {
+    pub fn extend_baseline(&mut self, other: &Self) {
+        Arc::make_mut(&mut self.baseline)
+            .extend(other.baseline.iter().map(|(k, v)| (k.clone(), v.clone())));
+    }
+    pub fn copy_overlay_from(&mut self, other: &Self) {
+        self.overlay = other.overlay.clone();
+    }
     pub fn freeze(&mut self) {
         if self.baseline.is_empty() {
-            self.baseline = Arc::new(std::mem::take(&mut self.overlay));
+            self.baseline = Arc::new(
+                std::mem::take(&mut self.overlay)
+                    .into_iter()
+                    .map(|(k, v)| (k, Arc::new(v)))
+                    .collect(),
+            );
         }
     }
     pub fn get(&self, key: &str) -> Option<&V> {
-        self.baseline.get(key).or_else(|| self.overlay.get(key))
+        self.baseline
+            .get(key)
+            .map(Arc::as_ref)
+            .or_else(|| self.overlay.get(key))
     }
     pub fn contains_key(&self, key: &str) -> bool {
         self.get(key).is_some()
@@ -43,7 +58,7 @@ impl<V: Clone> ModuleMap<String, V> {
         self.overlay.get_mut(key)
     }
     pub fn iter(&self) -> impl Iterator<Item = (&String, &V)> {
-        self.baseline.iter().chain(
+        self.baseline.iter().map(|(k, v)| (k, v.as_ref())).chain(
             self.overlay
                 .iter()
                 .filter(|(key, _)| !self.baseline.contains_key(*key)),
