@@ -24,6 +24,7 @@ use std::hash::Hash;
 use std::path::Path;
 use std::sync::Arc;
 
+mod external_overlay;
 mod loaders;
 mod reuse;
 
@@ -862,35 +863,5 @@ impl FrontendContext {
             }
         }
         seen.into_iter().collect()
-    }
-
-    fn clear_module_caches(
-        &mut self,
-        modules: &[ModuleId],
-        modules_with_source_changes: &[ModuleId],
-    ) {
-        let clear_parse_modules = modules_with_source_changes
-            .iter()
-            .copied()
-            .collect::<BTreeSet<_>>();
-        for module in modules {
-            let index = self.index_for_module(*module);
-            let module_state = &mut self.modules[index];
-            if clear_parse_modules.contains(module) {
-                module_state.parsed = None;
-            }
-            module_state.lowered = None;
-            module_state.diagnostics = None;
-            module_state.analysis = None;
-        }
-        self.reuse_caches.prune_unshared();
-    }
-
-    fn rebuild_external_defs_from_lowered(&mut self) {
-        for module in &self.modules {
-            if let Some(lowered) = &module.lowered {
-                collect_module_exports(&module.module_name, lowered, &mut self.external_defs);
-            }
-        }
     }
 }

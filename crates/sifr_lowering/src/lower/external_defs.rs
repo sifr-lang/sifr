@@ -46,7 +46,7 @@ mod tests {
 }
 
 pub type StructuralMethodExports = std::collections::HashMap<String, Vec<StructuralMethodExport>>;
-type StructuralMethodModules = std::collections::HashMap<String, StructuralMethodExports>;
+type StructuralMethodModules = super::external_layers::ModuleMap<String, StructuralMethodExports>;
 
 #[derive(Debug, Clone, Default)]
 pub struct ModuleSpecializationMetadata {
@@ -70,33 +70,38 @@ pub struct ModuleSpecializationMetadata {
 pub struct ExternalDefs {
     /// Map of `module_name` -> (`function_name` -> `FunctionType`)
     pub functions:
-        std::collections::HashMap<String, std::collections::HashMap<String, FunctionType>>,
+        super::external_layers::ModuleMap<String, std::collections::HashMap<String, FunctionType>>,
     /// Map of `module_name` -> (`function_name` -> typed compiler intrinsic ID).
-    pub compiler_intrinsics:
-        std::collections::HashMap<String, std::collections::HashMap<String, CompilerIntrinsicId>>,
+    pub compiler_intrinsics: super::external_layers::ModuleMap<
+        String,
+        std::collections::HashMap<String, CompilerIntrinsicId>,
+    >,
     /// Map of `module_name` -> (`class_name` -> Type)
-    pub classes: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
+    pub classes: super::external_layers::ModuleMap<String, std::collections::HashMap<String, Type>>,
     /// Map of `module_name` -> (`alias_name` -> (`type_params`, resolved alias type)).
-    pub generic_type_aliases:
-        std::collections::HashMap<String, std::collections::HashMap<String, (Vec<String>, Type)>>,
+    pub generic_type_aliases: super::external_layers::ModuleMap<
+        String,
+        std::collections::HashMap<String, (Vec<String>, Type)>,
+    >,
     /// Map of `module_name` -> (`class_name` -> locally callable instance method names).
-    pub class_instance_methods: std::collections::HashMap<
+    pub class_instance_methods: super::external_layers::ModuleMap<
         String,
         std::collections::HashMap<String, std::collections::HashSet<String>>,
     >,
     /// Map of `module_name` -> (`class_name` -> consuming Rust opaque method names).
-    pub rust_consuming_methods: std::collections::HashMap<
+    pub rust_consuming_methods: super::external_layers::ModuleMap<
         String,
         std::collections::HashMap<String, std::collections::HashSet<String>>,
     >,
     /// Map of `module_name` -> Rust-backed opaque class names.
-    pub rust_opaque_classes: std::collections::HashMap<String, std::collections::HashSet<String>>,
+    pub rust_opaque_classes:
+        super::external_layers::ModuleMap<String, std::collections::HashSet<String>>,
     /// Map of `module_name` -> Rust-backed opaque value classes with structural mappings.
     pub rust_structural_classes:
-        std::collections::HashMap<String, std::collections::HashSet<String>>,
+        super::external_layers::ModuleMap<String, std::collections::HashSet<String>>,
     /// Map of `module_name` -> (`class_name` -> `type_param_names`)
     pub class_type_params:
-        std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
+        super::external_layers::ModuleMap<String, std::collections::HashMap<String, Vec<String>>>,
     /// Map of `module_name` -> (`class_name` -> annotated-method-capable contracts).
     ///
     /// These are compiler-internal exports. They preserve declaration details that
@@ -106,93 +111,182 @@ pub struct ExternalDefs {
     ///
     /// Constructor defaults intentionally remain separate because an explicit constructor is
     /// not an authority for the required/defaulted state of class declarations.
-    pub class_field_defaults:
-        std::collections::HashMap<String, std::collections::HashMap<String, Vec<(usize, HirExpr)>>>,
+    pub class_field_defaults: super::external_layers::ModuleMap<
+        String,
+        std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
+    >,
     /// Map of module name to typed package-owned declaration metadata.
     pub declaration_metadata:
-        std::collections::HashMap<String, Vec<sifr_ir::TypedDeclarationMetadata>>,
+        super::external_layers::ModuleMap<String, Vec<sifr_ir::TypedDeclarationMetadata>>,
     /// Canonical class-adapter provider declarations keyed by module and function.
-    pub class_adapter_providers: std::collections::HashMap<
+    pub class_adapter_providers: super::external_layers::ModuleMap<
         String,
         std::collections::HashMap<String, sifr_ir::ClassAdapterProviderDeclaration>,
     >,
     /// Erased adapter markers keyed by canonical declaring module and symbol.
-    pub class_adapter_markers: std::collections::HashMap<
+    pub class_adapter_markers: super::external_layers::ModuleMap<
         String,
         std::collections::HashMap<String, sifr_ir::ClassAdapterMarkerDeclaration>,
     >,
     /// Erased attached-API namespaces keyed by canonical declaring module and symbol.
-    pub attached_api_sets: std::collections::HashMap<
+    pub attached_api_sets: super::external_layers::ModuleMap<
         String,
         std::collections::HashMap<String, sifr_ir::AttachedApiSetDeclaration>,
     >,
     /// Checked attached package functions keyed by declaring module and function.
-    pub attached_apis: std::collections::HashMap<
+    pub attached_apis: super::external_layers::ModuleMap<
         String,
         std::collections::HashMap<String, sifr_ir::AttachedApiDeclaration>,
     >,
     /// Adapted class selections keyed by declaring module and class symbol.
-    pub class_adapter_selections: std::collections::HashMap<
+    pub class_adapter_selections: super::external_layers::ModuleMap<
         String,
         std::collections::HashMap<String, sifr_ir::ClassAdapterSelection>,
     >,
     /// Canonical descriptor function declarations keyed by module and function.
-    pub descriptor_functions: std::collections::HashMap<
+    pub descriptor_functions: super::external_layers::ModuleMap<
         String,
         std::collections::HashMap<String, sifr_ir::DeclarationDescriptorFunction>,
     >,
     /// Evaluated descriptor uses keyed by the declaring module.
     pub declaration_descriptors:
-        std::collections::HashMap<String, Vec<sifr_ir::TypedDeclarationDescriptor>>,
+        super::external_layers::ModuleMap<String, Vec<sifr_ir::TypedDeclarationDescriptor>>,
     /// Typed metadata produced by validated early adapters.
     pub applied_adapter_metadata:
-        std::collections::HashMap<String, Vec<sifr_ir::AppliedAdapterMetadata>>,
+        super::external_layers::ModuleMap<String, Vec<sifr_ir::AppliedAdapterMetadata>>,
     /// Const-evaluable package function bodies keyed by module and function name.
-    pub const_functions:
-        std::collections::HashMap<String, std::collections::HashMap<String, sifr_ir::HirFunction>>,
+    pub const_functions: super::external_layers::ModuleMap<
+        String,
+        std::collections::HashMap<String, sifr_ir::HirFunction>,
+    >,
     /// Specialization requests retained for single-file/project result reconstruction.
     pub specialization_requests:
-        std::collections::HashMap<String, Vec<sifr_ir::ConstSpecializationRequest>>,
+        super::external_layers::ModuleMap<String, Vec<sifr_ir::ConstSpecializationRequest>>,
     /// Validated static specialization results keyed by the declaring module.
     pub specialization_outputs:
-        std::collections::HashMap<String, Vec<sifr_ir::StaticSpecializationOutput>>,
+        super::external_layers::ModuleMap<String, Vec<sifr_ir::StaticSpecializationOutput>>,
     pub json_integer_boundary_requests:
-        std::collections::HashMap<String, Vec<sifr_ir::JsonIntegerBoundaryRequest>>,
+        super::external_layers::ModuleMap<String, Vec<sifr_ir::JsonIntegerBoundaryRequest>>,
     /// Map of `module_name` -> (`constant_name` -> Type)
-    pub constants: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
+    pub constants:
+        super::external_layers::ModuleMap<String, std::collections::HashMap<String, Type>>,
     /// Map of `module_name` -> (`constant_name` -> compile-time integer value)
-    pub constant_integer_values:
-        std::collections::HashMap<String, std::collections::HashMap<String, num_bigint::BigInt>>,
+    pub constant_integer_values: super::external_layers::ModuleMap<
+        String,
+        std::collections::HashMap<String, num_bigint::BigInt>,
+    >,
     /// Map of `module_name` -> error class names declared or re-exported by that module.
-    pub error_types: std::collections::HashMap<String, std::collections::HashSet<String>>,
+    pub error_types: super::external_layers::ModuleMap<String, std::collections::HashSet<String>>,
     /// Map of `module_name` -> (`owner_name` -> (`type_var_name` -> bounds))
-    pub type_param_bounds: std::collections::HashMap<
+    pub type_param_bounds: super::external_layers::ModuleMap<
         String,
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
     >,
     /// Map of `module_name` -> (`function_name` -> `type_var_names`)
     pub generic_functions:
-        std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
+        super::external_layers::ModuleMap<String, std::collections::HashMap<String, Vec<String>>>,
     /// Map of `module_name` -> (`callable_name` -> vararg parameter index)
     pub function_varargs:
-        std::collections::HashMap<String, std::collections::HashMap<String, usize>>,
+        super::external_layers::ModuleMap<String, std::collections::HashMap<String, usize>>,
     /// Map of `module_name` -> (`callable_name` -> Python declaration parameter kinds)
-    pub function_python_call_shapes: std::collections::HashMap<
+    pub function_python_call_shapes: super::external_layers::ModuleMap<
         String,
         std::collections::HashMap<String, Vec<sifr_ir::PythonParameterKind>>,
     >,
     /// Map of `module_name` -> (`callable_name` -> retained callback parameter indices).
     pub rust_threadsafe_callback_targets:
-        std::collections::HashMap<String, std::collections::HashMap<String, Vec<usize>>>,
+        super::external_layers::ModuleMap<String, std::collections::HashMap<String, Vec<usize>>>,
     /// Map of `module_name` -> (`callable_name` -> workload label)
     pub function_workloads:
-        std::collections::HashMap<String, std::collections::HashMap<String, String>>,
+        super::external_layers::ModuleMap<String, std::collections::HashMap<String, String>>,
     /// Map of `module_name` -> (`callable_name` -> default argument expressions by parameter index)
-    pub function_defaults:
-        std::collections::HashMap<String, std::collections::HashMap<String, Vec<(usize, HirExpr)>>>,
+    pub function_defaults: super::external_layers::ModuleMap<
+        String,
+        std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
+    >,
 }
 
 impl ExternalDefs {
+    /// Invalidate one project module atomically; immutable baseline authority survives.
+    pub fn remove_module_overlay(&mut self, module: &str) {
+        self.functions.remove(module);
+        self.compiler_intrinsics.remove(module);
+        self.classes.remove(module);
+        self.generic_type_aliases.remove(module);
+        self.class_instance_methods.remove(module);
+        self.rust_consuming_methods.remove(module);
+        self.rust_opaque_classes.remove(module);
+        self.rust_structural_classes.remove(module);
+        self.class_type_params.remove(module);
+        self.class_field_defaults.remove(module);
+        self.declaration_metadata.remove(module);
+        self.class_adapter_providers.remove(module);
+        self.class_adapter_markers.remove(module);
+        self.attached_api_sets.remove(module);
+        self.attached_apis.remove(module);
+        self.class_adapter_selections.remove(module);
+        self.descriptor_functions.remove(module);
+        self.declaration_descriptors.remove(module);
+        self.applied_adapter_metadata.remove(module);
+        self.const_functions.remove(module);
+        self.specialization_requests.remove(module);
+        self.specialization_outputs.remove(module);
+        self.json_integer_boundary_requests.remove(module);
+        self.constants.remove(module);
+        self.constant_integer_values.remove(module);
+        self.error_types.remove(module);
+        self.type_param_bounds.remove(module);
+        self.generic_functions.remove(module);
+        self.function_varargs.remove(module);
+        self.function_python_call_shapes.remove(module);
+        self.rust_threadsafe_callback_targets.remove(module);
+        self.function_workloads.remove(module);
+        self.function_defaults.remove(module);
+        if let Some(methods) = &mut self.structural_methods {
+            methods.remove(module);
+        }
+    }
+
+    /// Freeze source-built baseline modules; clones share immutable definitions.
+    pub fn freeze_baseline(&mut self) {
+        if let Some(methods) = &mut self.structural_methods {
+            methods.freeze();
+        }
+        self.functions.freeze();
+        self.compiler_intrinsics.freeze();
+        self.classes.freeze();
+        self.generic_type_aliases.freeze();
+        self.class_instance_methods.freeze();
+        self.rust_consuming_methods.freeze();
+        self.rust_opaque_classes.freeze();
+        self.rust_structural_classes.freeze();
+        self.class_type_params.freeze();
+        self.class_field_defaults.freeze();
+        self.declaration_metadata.freeze();
+        self.class_adapter_providers.freeze();
+        self.class_adapter_markers.freeze();
+        self.attached_api_sets.freeze();
+        self.attached_apis.freeze();
+        self.class_adapter_selections.freeze();
+        self.descriptor_functions.freeze();
+        self.declaration_descriptors.freeze();
+        self.applied_adapter_metadata.freeze();
+        self.const_functions.freeze();
+        self.specialization_requests.freeze();
+        self.specialization_outputs.freeze();
+        self.json_integer_boundary_requests.freeze();
+        self.constants.freeze();
+        self.constant_integer_values.freeze();
+        self.error_types.freeze();
+        self.type_param_bounds.freeze();
+        self.generic_functions.freeze();
+        self.function_varargs.freeze();
+        self.function_python_call_shapes.freeze();
+        self.rust_threadsafe_callback_targets.freeze();
+        self.function_workloads.freeze();
+        self.function_defaults.freeze();
+    }
+
     #[must_use]
     pub fn contains_attached_api_set(&self, identity: &sifr_ir::AttachedApiSetIdentity) -> bool {
         self.attached_api_sets

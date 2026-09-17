@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use sifr_lowering::ModuleMap;
 
-pub(crate) fn replace_module_entry<T>(
-    modules: &mut HashMap<String, T>,
+pub(crate) fn replace_module_entry<T: Clone>(
+    modules: &mut ModuleMap<String, T>,
     module_name: &str,
     value: T,
     is_empty: impl FnOnce(&T) -> bool,

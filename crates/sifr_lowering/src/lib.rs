@@ -20,7 +20,7 @@ mod scope;
 
 pub use hir_nodes::*;
 pub use lower::{
-    ExternalDefs, LoweringOptions, LoweringSourceOrigin, PythonBridgeTargetAuthority,
+    ExternalDefs, LoweringOptions, LoweringSourceOrigin, ModuleMap, PythonBridgeTargetAuthority,
     PythonTrustPolicy, StructuralMethodExport, StructuralMethodExports,
     canonicalize_user_export_function_type, canonicalize_user_export_type,
     canonicalize_user_export_type_in_place, localize_user_import_function_type,

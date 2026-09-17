@@ -311,19 +311,23 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_frontend/src/export_type_localization.rs:126` `reexport_class_aliases` | read, enumerate, borrow/retain | layered view + demanded record handles | 128, 132 |
 | `crates/sifr_frontend/src/export_type_localization.rs:153` `copy_function_generic_metadata` | read, mutate overlay/producer, borrow/retain | layered view + demanded record handles | 154, 161, 168 |
 | `crates/sifr_frontend/src/export_type_localization.rs:177` `copy_class_generic_metadata` | read, mutate overlay/producer, borrow/retain | layered view + demanded record handles | 178, 186, 194 |
+| `crates/sifr_frontend/src/graph_cache_and_queries/external_overlay.rs:4` `clear_module_caches` | read, enumerate | layered view + demanded record handles | 19 |
+| `crates/sifr_frontend/src/graph_cache_and_queries/external_overlay.rs:28` `rebuild_external_defs_from_lowered` | read | layered view + demanded record handles | 31 |
+| `crates/sifr_frontend/src/graph_cache_and_queries/external_overlay.rs:41` `context` | read | layered view + demanded record handles | 41 |
+| `crates/sifr_frontend/src/graph_cache_and_queries/external_overlay.rs:53` `source_overlay_failed_and_deleted_exports_are_invalidated` | read | test setup/parity | 56, 65, 83, 97, 112 |
+| `crates/sifr_frontend/src/graph_cache_and_queries/external_overlay.rs:119` `source_overlay_projects_share_only_immutable_baseline` | read | test setup/parity | 120, 150, 151, 155, 163 |
 | `crates/sifr_frontend/src/graph_cache_and_queries/loaders.rs:46` `load_single_file` | read | layered view + demanded record handles | 47 |
 | `crates/sifr_frontend/src/graph_cache_and_queries/loaders.rs:50` `load_single_file_with_external_defs` | read | layered view + demanded record handles | 52, 56 |
 | `crates/sifr_frontend/src/graph_cache_and_queries/loaders.rs:61` `load_single_file_with_external_defs_and_auxiliary_sources` | read, clone projection, borrow/retain | layered view + demanded record handles | 63, 98, 99 |
 | `crates/sifr_frontend/src/graph_cache_and_queries/loaders.rs:106` `load_project` | read | layered view + demanded record handles | 110 |
 | `crates/sifr_frontend/src/graph_cache_and_queries/loaders.rs:113` `load_project_with_external_defs` | read | layered view + demanded record handles | 116, 121 |
 | `crates/sifr_frontend/src/graph_cache_and_queries/loaders.rs:126` `load_project_with_external_defs_and_auxiliary_sources` | read, enumerate, clone projection, borrow/retain | layered view + demanded record handles | 129, 233, 234 |
-| `crates/sifr_frontend/src/graph_cache_and_queries.rs:266` `compile_module_hir` | read, borrow/retain | layered view + demanded record handles | 269, 272 |
-| `crates/sifr_frontend/src/graph_cache_and_queries.rs:275` `compile_module_hir_with_source` | read, borrow/retain | layered view + demanded record handles | 278, 285 |
-| `crates/sifr_frontend/src/graph_cache_and_queries.rs:292` `compile_module_hir_with_source_and_options` | read, enumerate, clone projection, borrow/retain | layered view + demanded record handles | 295, 310, 315, 333, 391, 420 |
-| `crates/sifr_frontend/src/graph_cache_and_queries.rs:457` `update_module_source` | read, clone projection | layered view + demanded record handles | 512 |
-| `crates/sifr_frontend/src/graph_cache_and_queries.rs:665` `ensure_lowered` | read, enumerate, mutate overlay/producer, borrow/retain | layered view + demanded record handles | 700, 708, 717 |
-| `crates/sifr_frontend/src/graph_cache_and_queries.rs:767` `ensure_analysis` | read | layered view + demanded record handles | 795 |
-| `crates/sifr_frontend/src/graph_cache_and_queries.rs:889` `rebuild_external_defs_from_lowered` | read | layered view + demanded record handles | 892 |
+| `crates/sifr_frontend/src/graph_cache_and_queries.rs:267` `compile_module_hir` | read, borrow/retain | layered view + demanded record handles | 270, 273 |
+| `crates/sifr_frontend/src/graph_cache_and_queries.rs:276` `compile_module_hir_with_source` | read, borrow/retain | layered view + demanded record handles | 279, 286 |
+| `crates/sifr_frontend/src/graph_cache_and_queries.rs:293` `compile_module_hir_with_source_and_options` | read, enumerate, clone projection, borrow/retain | layered view + demanded record handles | 296, 311, 316, 334, 392, 421 |
+| `crates/sifr_frontend/src/graph_cache_and_queries.rs:458` `update_module_source` | read, clone projection | layered view + demanded record handles | 513 |
+| `crates/sifr_frontend/src/graph_cache_and_queries.rs:666` `ensure_lowered` | read, enumerate, mutate overlay/producer, borrow/retain | layered view + demanded record handles | 701, 709, 718 |
+| `crates/sifr_frontend/src/graph_cache_and_queries.rs:768` `ensure_analysis` | read | layered view + demanded record handles | 796 |
 | `crates/sifr_frontend/src/handler_ancestry.rs:16` `resolve` | read, enumerate, borrow/retain | layered view + demanded record handles | 22, 31 |
 | `crates/sifr_frontend/src/handler_ancestry.rs:37` `walk_local` | read, enumerate, clone projection, borrow/retain | layered view + demanded record handles | 43, 85, 90 |
 | `crates/sifr_frontend/src/handler_ancestry.rs:132` `compile` | read, borrow/retain | layered view + demanded record handles | 132, 137 |
@@ -334,7 +338,7 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_frontend/src/query_diagnostics/const_reexports.rs:16` `copy_const_function_and_defaults` | read, mutate overlay/producer, clone projection, borrow/retain | layered view + demanded record handles | 17, 24, 33 |
 | `crates/sifr_frontend/src/query_diagnostics/rust_class_exports.rs:24` `record_imported` | read, mutate overlay/producer, borrow/retain | layered view + demanded record handles | 25, 32, 39 |
 | `crates/sifr_frontend/src/query_diagnostics/rust_class_exports.rs:48` `replace_module` | read, mutate overlay/producer | layered view + demanded record handles | 49, 55, 57, 62, 64 |
-| `crates/sifr_frontend/src/query_diagnostics.rs:171` `collect_module_exports` | read, enumerate, mutate overlay/producer, clone projection | layered view + demanded record handles | 174, 201, 203, 353, 369, 370, 381, 388, 395, 402, 410, 420, 422, 426, 438, 444, 455, 467, 473, 485, 489, 493, 496, 499, 501, 503, 508, 514, 520, 525, 527, 533, 539, 544, 546, 552, 557, 562, 567, 572, 577, 581, 582, 586 |
+| `crates/sifr_frontend/src/query_diagnostics.rs:171` `collect_module_exports` | read, enumerate, mutate overlay/producer, clone projection | layered view + demanded record handles | 174, 201, 203, 353, 369, 370, 381, 388, 395, 402, 410, 420, 422, 426, 438, 444, 455, 467, 473, 485, 486, 490, 494, 497, 500, 502, 504, 509, 515, 521, 526, 528, 534, 540, 545, 547, 553, 558, 563, 568, 573, 578, 582, 583, 587 |
 | `crates/sifr_frontend/src/slot_table.rs:51` `resolve_method_slots` | read, enumerate, borrow/retain | layered view + demanded record handles | 57, 128, 146, 180 |
 | `crates/sifr_frontend/src/slot_table.rs:371` `owner_type_for_identity` | read, enumerate, borrow/retain | layered view + demanded record handles | 376, 416 |
 | `crates/sifr_frontend/src/slot_table.rs:423` `resolve_method_slot` | read, enumerate, borrow/retain | layered view + demanded record handles | 429, 497, 499, 535, 543 |
@@ -392,7 +396,7 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_frontend/src/structural_shape_import_tests.rs:538` `recollection_removes_stale_structural_shape_exports` | read, mutate overlay/producer | test setup/parity | 539, 551, 553, 554, 555, 556, 557, 559, 560, 561, 562, 563, 564 |
 | `crates/sifr_frontend/src/structural_shape_import_tests.rs:568` `structural_method_storage_is_allocated_only_while_demanded` | read, mutate overlay/producer | test setup/parity | 569, 570, 571, 572, 580, 581, 582, 584, 585, 586, 588, 589, 590, 591, 592, 593, 594, 595, 596 |
 | `crates/sifr_frontend/src/structural_shape_import_tests.rs:600` `imported_nominal_ignores_colliding_local_class_shape` | read, mutate overlay/producer | test setup/parity | 601, 618, 624, 626, 643, 649 |
-| `crates/sifr_frontend/src/structural_shape_import_tests.rs:659` `public_import_preserves_private_generic_nested_shape` | read, mutate overlay/producer | test setup/parity | 660, 677, 683, 685, 686, 688, 696, 702 |
+| `crates/sifr_frontend/src/structural_shape_import_tests.rs:659` `public_import_preserves_private_generic_nested_shape` | read, mutate overlay/producer | test setup/parity | 660, 677, 683, 685, 687, 694, 702, 708 |
 | `crates/sifr_frontend/src/template_documents.rs:209` `lowered_template` | read, borrow/retain | layered view + demanded record handles | 214 |
 | `crates/sifr_frontend/src/typed_descriptors/nested_const_calls.rs:7` `nested_const_call` | read, enumerate | layered view + demanded record handles | 67 |
 | `crates/sifr_frontend/src/typed_descriptors.rs:21` `collect` | read, borrow/retain | layered view + demanded record handles | 25, 27, 34 |
@@ -540,14 +544,14 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_driver/src/stdlib/bootstrap.rs:34` `external_defs` | read, clone projection | layered view + demanded record handles | 34, 36, 38, 39, 40 |
 | `crates/sifr_driver/src/stdlib/bootstrap.rs:46` `compile_stdlib_uncached` | read | layered view + demanded record handles | 46, 47 |
 | `crates/sifr_driver/src/stdlib/bootstrap.rs:50` `compile_stdlib_for_context` | read | layered view + demanded record handles | 50, 54, 60 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:63` `compile_stdlib_sources_with_sysroot` | read, enumerate, mutate overlay/producer, clone projection, borrow/retain | canonical source-only producer (retain) | 63, 67, 68, 70, 74, 75, 76, 77, 110, 133, 140, 142, 150, 199, 203, 207, 223, 225, 246, 248, 255, 314, 348, 359, 361, 376, 377, 380, 381, 434, 435, 448, 449, 455, 456, 457, 459, 460, 469, 470, 478, 482, 483, 488, 489, 493, 497, 501, 505, 507, 511, 515, 520, 525, 530, 535, 540, 545, 550, 554, 557, 559, 561, 562 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:566` `stdlib_rust_source` | read | layered view + demanded record handles | 566, 575 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:582` `canonical_stdlib_source_path` | read | layered view + demanded record handles | 582, 588, 594 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:613` `lower_stdlib_source` | read, borrow/retain | layered view + demanded record handles | 613, 616, 620, 623 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:628` `canonical_stdlib_type` | read | layered view + demanded record handles | 628 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:632` `canonicalize_stdlib_hir_signatures` | read | layered view + demanded record handles | 632, 641, 649, 652 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:666` `canonicalize_stdlib_hir_function` | read | layered view + demanded record handles | 666 |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs:747` `stdlib_class_template` | read, enumerate | layered view + demanded record handles | 747 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:63` `compile_stdlib_sources_with_sysroot` | read, enumerate, mutate overlay/producer, clone projection, borrow/retain | canonical source-only producer (retain) | 63, 67, 68, 70, 74, 75, 76, 77, 110, 133, 140, 142, 150, 199, 203, 207, 223, 225, 246, 248, 255, 314, 348, 359, 361, 376, 377, 380, 381, 434, 435, 448, 449, 455, 456, 457, 459, 460, 469, 470, 478, 482, 483, 488, 489, 493, 497, 501, 505, 507, 511, 515, 520, 525, 530, 535, 540, 545, 550, 554, 557, 558, 560, 562, 563 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:567` `stdlib_rust_source` | read | layered view + demanded record handles | 567, 576 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:583` `canonical_stdlib_source_path` | read | layered view + demanded record handles | 583, 589, 595 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:614` `lower_stdlib_source` | read, borrow/retain | layered view + demanded record handles | 614, 617, 621, 624 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:629` `canonical_stdlib_type` | read | layered view + demanded record handles | 629 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:633` `canonicalize_stdlib_hir_signatures` | read | layered view + demanded record handles | 633, 642, 650, 653 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:667` `canonicalize_stdlib_hir_function` | read | layered view + demanded record handles | 667 |
+| `crates/sifr_driver/src/stdlib/bootstrap.rs:748` `stdlib_class_template` | read, enumerate | layered view + demanded record handles | 748 |
 | `crates/sifr_driver/src/stdlib/bootstrap_fixture_tests.rs:5` `stdlib_interop_startup_bootstrap_preserves_inventory_without_application_plan` | read, enumerate | test setup/parity | 5, 6, 7, 17, 20, 21, 22, 28, 34, 39 |
 | `crates/sifr_driver/src/stdlib/bootstrap_fixture_tests.rs:50` `fixture_source` | read | test setup/parity | 51, 57 |
 | `crates/sifr_driver/src/stdlib/bootstrap_fixture_tests.rs:62` `compile_fixture_sources` | read | test setup/parity | 66 |
@@ -636,8 +640,8 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_driver/src/tests/adapter_defaults.rs:643` `invalid_constant_and_factory_defaults_are_rejected_by_the_adapter_boundary` | read, enumerate, clone projection | test setup/parity | 673, 677 |
 | `crates/sifr_driver/src/tests/async_python_error_channel.rs:15` `check_example` | read | test setup/parity | 16, 20 |
 | `crates/sifr_driver/src/tests/async_python_error_channel.rs:64` `async_python_error_channel_retains_stdlib_ancestry_without_data_parent` | read, enumerate | test setup/parity | 64, 65, 66 |
-| `crates/sifr_driver/src/tests/async_python_error_channel.rs:83` `async_python_error_channel_preserves_local_and_imported_error_ancestry` | read | test setup/parity | 98, 99, 101 |
-| `crates/sifr_driver/src/tests/async_python_error_channel.rs:121` `async_python_error_channel_preserves_same_named_stdlib_root_ancestry` | read | test setup/parity | 121 |
+| `crates/sifr_driver/src/tests/async_python_error_channel.rs:87` `async_python_error_channel_preserves_local_and_imported_error_ancestry` | read | test setup/parity | 102, 103, 105 |
+| `crates/sifr_driver/src/tests/async_python_error_channel.rs:125` `async_python_error_channel_preserves_same_named_stdlib_root_ancestry` | read | test setup/parity | 125 |
 | `crates/sifr_driver/src/tests/async_python_error_channel_native.rs:69` `async_python_error_channel_native_stdlib_nominal_collisions` | read | test setup/parity | 69 |
 | `crates/sifr_driver/src/tests/attached_api_aliases.rs:6` `local_generic_type_alias_forwards_attached_type_calls` | read, clone projection | test setup/parity | 24, 28, 31 |
 | `crates/sifr_driver/src/tests/attached_api_codegen.rs:53` `attached_type_api_codegen_keeps_the_concrete_owner_and_exact_bounds` | read, enumerate | test setup/parity | 68, 69, 71, 75, 77 |

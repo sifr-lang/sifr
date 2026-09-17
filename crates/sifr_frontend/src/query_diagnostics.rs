@@ -482,6 +482,7 @@ pub fn collect_module_exports(
         }
     }
 
+    external_defs.remove_module_overlay(module_name);
     external_defs
         .functions
         .insert(module_name.to_string(), fn_exports);

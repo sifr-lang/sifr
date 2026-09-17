@@ -683,7 +683,13 @@ class LocalUse:
         &external_defs,
     );
     collect_module_exports("models", &models, &mut external_defs);
-    assert!(!external_defs.classes["models"].contains_key("_Hidden"));
+    assert!(
+        !external_defs
+            .classes
+            .get("models")
+            .expect("model exports")
+            .contains_key("_Hidden")
+    );
     assert!(
         external_defs
             .structural_methods_for("models")

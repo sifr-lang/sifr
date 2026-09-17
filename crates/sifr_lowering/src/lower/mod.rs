@@ -58,6 +58,7 @@ mod expressions;
 #[cfg(test)]
 mod expressions_tests;
 mod external_defs;
+mod external_layers;
 mod fixed_width_arithmetic_methods;
 mod fixed_width_class_payload;
 mod fixed_width_fitting;
@@ -222,6 +223,7 @@ pub(in crate::lower) use diagnostic_types::{
     HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic, fallback_error_type,
 };
 pub use external_defs::{ExternalDefs, StructuralMethodExport, StructuralMethodExports};
+pub use external_layers::ModuleMap;
 
 pub fn localize_user_import_type(
     ty: &Type,

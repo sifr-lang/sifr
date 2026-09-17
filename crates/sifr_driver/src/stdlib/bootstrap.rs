@@ -555,6 +555,7 @@ pub(crate) fn compile_stdlib_sources_with_sysroot(
     }
 
     stdlib_code.hir_modules = std::sync::Arc::new(hir_modules);
+    stdlib_defs.freeze_baseline();
     Ok(StdlibCompiled {
         defs: stdlib_defs,
         metadata_features,

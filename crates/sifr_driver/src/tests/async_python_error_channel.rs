@@ -63,7 +63,11 @@ fn async_python_error_channel_rejects_unrelated_return_errors() {
 #[test]
 fn async_python_error_channel_retains_stdlib_ancestry_without_data_parent() {
     let stdlib = compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib must compile");
-    let error = &stdlib.defs.classes["sifr.python"]["PythonError"];
+    let error = &stdlib
+        .defs
+        .classes
+        .get("sifr.python")
+        .expect("Python exports")["PythonError"];
     let Type::Class {
         identity,
         parent_class,
