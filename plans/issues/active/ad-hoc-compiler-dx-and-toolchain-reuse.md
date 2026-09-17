@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.2 complete; DX.3 next
+status: in progress; DX.1–DX.3 complete; DX.4 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -618,13 +618,13 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1 and DX.2 are complete and merged. DX.3–DX.16 are not started; DX.3 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.3 are complete and merged. DX.4–DX.16 are not started; DX.4 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
 | DX.1 | Complete / merged | Candidate `5c7502f7aea3cd887a217c2fb3e289c7a1f2c653`; [PR #3840](https://github.com/sifr-lang/sifr/pull/3840); merge `de41ced4d65a3c511617219238f26052227fd6e8` | Product and contributor baselines validated; Q07/Q08, transport regressions, schema and guardrail pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3840#issuecomment-5705061104) |
 | DX.2 | Complete / merged | Candidate c6841ab44a6c0e738045586f32e36c5fa1155a26; [PR #3842](https://github.com/sifr-lang/sifr/pull/3842); merge 59be2f046f71e0e3ac626f51e8ffd2614573f8bd | I01/I02/I07/I08 actual rebuilds and focused regressions PASS; broad gate deferred by prospective policy | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3842#issuecomment-5709069845) |
-| DX.3 | Not started | — | — | — |
+| DX.3 | Complete / merged | Candidate `63640031f7b66e067b2cbb26849277faed725668`; [PR #3844](https://github.com/sifr-lang/sifr/pull/3844); merge `f7b733875ecd2a1bd86431daed4056249dad9212` | C01–C03, C05–C07, B10, R01–R03 and focused checks PASS; full gate deferred by prospective policy | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3844#issuecomment-5711325637) |
 | DX.4 | Not started | — | — | — |
 | DX.5 | Not started | — | — | — |
 | DX.6 | Not started | — | — | — |
@@ -715,7 +715,7 @@ assertions and per-row source paths, hashes and original row indices.
 | `dev-completed-e1bbacdf4/baseline.json` | Preserved FAILED outside-tree report display |
 | `frontend-helper-e1bbacdf4.log` | Explicit preparation cost after cold timeout; hash bound from completed contributor report |
 
-## Current Handoff — DX.2 (2026-09-17)
+## Merged Record — DX.2 (2026-09-17)
 
 - **State:** complete and merged in [PR #3842](https://github.com/sifr-lang/sifr/pull/3842).
   Candidate c6841ab44a6c0e738045586f32e36c5fa1155a26; merge
@@ -786,3 +786,70 @@ After each bounded item, record only the current milestone/item, branch and cand
 ## Planning And Repository References
 
 The architecture's source appendix contains the pinned Rust/TypeScript/Cargo mechanisms and current Sifr integration paths. Repository formatting and workflow references for this phase are [Phase 35](../../phases/35_performance_benchmarking_and_budgets.md), [Phase 36](../../phases/36_developer_tooling_and_ecosystem_hooks.md), [AGENTS.md](../../../AGENTS.md), and the [phase-closure skill](../../../.cursor/skills/phase-closure-loop/SKILL.md). These references preserve ownership and execution conventions; they do not authorize changing unrelated release or language requirements.
+
+## Current Handoff — DX.3 (2026-09-17)
+
+- **State:** complete and merged in [PR #3844](https://github.com/sifr-lang/sifr/pull/3844).
+  Candidate `63640031f7b66e067b2cbb26849277faed725668`; merge
+  `f7b733875ecd2a1bd86431daed4056249dad9212`; base
+  `f22e6686f12be874d4e30d89c51d76d13d832d03`. Owned remote checkout:
+  /home/yaser5/projects/sifr/compiler-dx-orchestration; implementation branch
+  codex/dx3, record branch codex/dx3-record.
+- **Scope:** persistent generated native/test artifact storage; same-filesystem
+  private staging, immutable publication, OS leases, winner validation and
+  active-reader protection; owner-scoped pressure pruning and auxiliary-root
+  protection; compiler process outcomes, bounded raw streams, cancellation and
+  descendant cleanup; complete streamed user-program output; independent safety
+  deadlines/performance contracts; runner-owned status and retained child metrics;
+  initial doctor/cache/timing surfaces. No semantic generation GC or DX.4 work.
+- **Named validation:** C01–C03, C05–C07, B10 and R01–R03 PASS through real
+  filesystem/subprocess injection and actual native/test consumers. Eight Rust
+  tests cover killed producers at publication boundaries, surviving descendants,
+  concurrent readers/winners, active older-entry prune exclusion, distinct TMPDIR
+  filesystem, invalid payloads/ownership, positive pressure cleanup, retained
+  useful large storage, timeout/cancellation and raw output. Ten Python tests cover
+  status forgery, preserved metrics, separate functional/performance outcomes,
+  safety deadlines, cancellation, bounded output and detached observers.
+- **Actual consumers:** final-candidate cold/warm CLI tests under umask 002 pass;
+  warm finalized payload mtimes stay unchanged while tests rerun, failing tests
+  remain failures, missing executables rebuild, pressure removes eligible older
+  entries while protecting newest state, and user output retains all 9,000,001
+  bytes. Cache inspect/dry-run, timings and actionable doctor errors pass.
+- **Focused checks:** CLI schema parity, production driver Clippy, selected-crate
+  formatting, step-budget self-test and 900-line guardrail pass. Unchanged native
+  consumer reuse/invalidation evidence is reused. Optional all-targets Clippy
+  exposed three pre-existing test lints; its failed output remains preserved and
+  is owned by the separate follow-up below.
+- **Before/after evidence:** retained DX.2 binary identity is tied to its actual
+  rebuild receipt. Baseline and final cold/warm preparation and cleanup receipts
+  remain separate. These observations are functional evidence, not a
+  host-sensitive performance claim; no cold-cache run is relabeled as warm.
+  Existing approximately 116–130 GiB target was retained with sufficient free
+  space (approximately 207–220 GiB); cleanup qualification used owned cache entries.
+- **Review:** final scoped Claude Opus 5 review is SATISFIED, no blockers.
+  [Published response](https://github.com/sifr-lang/sifr/pull/3844#issuecomment-5711325637);
+  SHA-256 `2c4f1f652364f1490db1d807119cb1566d171b94bf985870baed91c173ea0345`.
+  The initial NOT SATISFIED review and failed intermediate evidence remain
+  preserved; all four blockers were remediated in one batch and requalified.
+- **Policy:** no intermediate create-PR/merge full gate was run under the
+  prospective phase-end policy. No full-gate pass is claimed. One full gate remains
+  required on the final phase implementation; actual release qualification remains
+  conditional on a release request.
+- **Follow-ups:** [separate storage/process review observations](ad-hoc-dx3-storage-process-review-followups.md).
+- **Blocker:** none for DX.3 acceptance.
+- **Exact next action:** stop after this record update. Start DX.4 only in a new
+  bounded session. Local unrelated modifications remain untouched.
+
+Evidence host/root:
+yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx3-evidence/.
+
+| Artifact | Result / SHA-256 |
+| --- | --- |
+| evidence-index-63640031f7b66e067b2cbb26849277faed725668.json | Receipt/log digest index; `c5fc8c0bdf4cff0ad6f17031121561fb1a18969a590182b39f926cdc7be7e6df` |
+| review-candidate-acceptance.log | Eight Rust acceptance/regression tests PASS |
+| remediation-final-process.log | Ten process/reporting regression tests PASS; unchanged Python inputs reused |
+| consumer-63640031f/consumer-receipt.json | Baseline/final cold/warm actual consumers, umask 002, full user output PASS |
+| consumer-63640031f/failure-injection-receipt.json | Actual missing-payload recovery and positive pressure cleanup PASS |
+| review-candidate-file-size.log | 3954 files checked; 900-line guardrail PASS |
+| review-candidate-clippy.log / review-candidate-fmt.log / review-candidate-budget.log | Production Clippy, formatting and unchanged budget parser checks PASS |
+| reviews/63640031f7b66e067b2cbb26849277faed725668/response.md | Final read-only Opus review SATISFIED |
