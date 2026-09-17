@@ -14,6 +14,13 @@ fn storage_child() {
         return;
     }
     if mode == "pressure" {
+        // This helper is a dedicated subprocess, so its permissive umask cannot
+        // leak into the parent harness or other tests.
+        #[allow(unsafe_code)]
+        unsafe {
+            libc::umask(0o002);
+        }
+
         let old = prepare_cached_artifact("fixture", "dx3", &scope, "old", &required).unwrap();
         let PreparedArtifactCache::Miss(pending) = old else {
             panic!("fresh root")
