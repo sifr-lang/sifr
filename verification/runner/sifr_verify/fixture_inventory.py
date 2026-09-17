@@ -17,9 +17,11 @@ def inventory(root=REPO_ROOT):
         # Documentation-only phase records do not change compiler/verification inputs.
         selected = (
             name.startswith(("crates/", "stdlib/", "verification/", "third_party/", "scripts/", ".cargo/"))
-            and path.suffix in {".rs", ".sifr", ".py", ".json", ".toml", ".sh", ".snap", ".txt", ".lock"}
+            and path.suffix in {".rs", ".sifr", ".py", ".json", ".toml", ".sh", ".snap", ".txt", ".lock", ".c", ".h", ".pyi"}
         ) or name in {"Cargo.toml", "Cargo.lock", "rust-toolchain.toml"} or (
-            name.startswith("crates/sifr_diagnostics/error_page_examples/"))
+            name.startswith("crates/sifr_diagnostics/error_page_examples/")) or (
+            name.startswith(("docs/errors/", "docs/schemas/", "docs/diagnostics/"))
+            and path.suffix in {".mdx", ".json"})
         if selected:
             records.append({"path": name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
     raw = json.dumps(records, sort_keys=True, separators=(",", ":")).encode()

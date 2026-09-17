@@ -96,7 +96,10 @@ def run_area(args: argparse.Namespace) -> int:
         from .fixture_execution import failed_selection
         requested = frozenset(args.case)
         if args.rerun_failures:
-            requested |= failed_selection(args.rerun_failures)
+            requested |= failed_selection(args.rerun_failures, area.name)
+            if not requested:
+                print(f"no failed cases in {args.rerun_failures}; original evidence retained")
+                return 0
         return run_shared_area(module.CONFIG, AreaRunOptions(
             suite_filters=set(args.suite), bless=args.bless,
             result_json=Path(args.result_json) if args.result_json else module.RESULT_JSON,

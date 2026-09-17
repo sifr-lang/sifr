@@ -9,11 +9,11 @@ import sys
 from pathlib import Path
 
 def resolve_sifr_binary(repo_root: Path, *, explicit_env_var: str | None = None,
-                        default_binary: Path | None = None) -> Path:
+                        default_binary: Path | None = None, env: dict[str, str] | None = None) -> Path:
     """Prepare the exact development candidate; never trust an existing pathname."""
-    candidate = _prepare(repo_root.resolve(), os.environ.get("CARGO_TARGET_DIR"),
-                         os.environ.get("RUSTUP_TOOLCHAIN"))
-    override = os.environ.get(explicit_env_var) if explicit_env_var else None
+    selected_env = dict(os.environ) if env is None else dict(env)
+    candidate = _prepare(repo_root.resolve(), tuple(sorted(selected_env.items())))
+    override = selected_env.get(explicit_env_var) if explicit_env_var else None
     if override:
         selected = Path(override).resolve()
         if not selected.is_file() or _digest(selected) != _digest(candidate):
@@ -26,12 +26,12 @@ def _digest(path: Path) -> str:
         return hashlib.file_digest(source, "sha256").hexdigest()
 
 @functools.lru_cache(maxsize=8)
-def _prepare(repo_root: Path, target_dir: str | None, toolchain: str | None) -> Path:
+def _prepare(repo_root: Path, environment: tuple[tuple[str, str], ...]) -> Path:
     # Cargo owns freshness including manifests, build-script inputs and flags.
     sys.path.insert(0, str(repo_root / "verification/runner"))
     from sifr_verify.fixture_execution import run_process
     proc = run_process(["cargo", "build", "--locked", "-q", "-p", "sifr",
-                       "--bin", "sifr", "--message-format=json"], cwd=repo_root)
+                       "--bin", "sifr", "--message-format=json"], cwd=repo_root, env=dict(environment))
     if proc.returncode or proc.cause != "exit" or proc.truncated:
         raise RuntimeError(f"failed to prepare compiler (exit {proc.returncode}):\\n{proc.stderr}")
     executables = []

@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import time
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -94,6 +95,12 @@ def main(argv: list[str] | None = None) -> int:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     validate_smoke_profile(CORPUS_MANIFEST)
     selected = select_suites(manifest, set(args.suite))
+    # One owned materialization/dependency root serves every gate in this run.
+    # Profile invocations already supply their prepared shared root.
+    if not os.environ.get("SIFR_GCQ_SHARED_ROOT"):
+        shared_parent = REPO_ROOT / "target/sifr_generated_code_quality"
+        shared_parent.mkdir(parents=True, exist_ok=True)
+        os.environ["SIFR_GCQ_SHARED_ROOT"] = tempfile.mkdtemp(prefix="area-", dir=shared_parent)
 
     print("Running generated-code quality verification area", flush=True)
     print(f"  manifest={MANIFEST_PATH.relative_to(REPO_ROOT)}", flush=True)

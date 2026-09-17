@@ -40,8 +40,10 @@ def selected_cases(suites, requested):
              if f"{suite['name']}/{case['id']}" in requested]} for suite in suites
             if any(f"{suite['name']}/{case['id']}" in requested for case in suite["cases"])]
 
-def failed_selection(path):
+def failed_selection(path, area=None):
     payload = json.loads(Path(path).read_text())
+    if area is not None and payload.get("area") != area:
+        raise ValueError(f"failure report belongs to {payload.get('area')}, not {area}")
     return frozenset(f"{suite['name']}/{case['id']}"
         for suite in payload["suites"] for case in suite["cases"]
         if any(variant["status"] != "pass" for variant in case["variants"]))

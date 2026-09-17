@@ -129,6 +129,37 @@ class FixtureTests(unittest.TestCase):
         self.assertFalse(delta["unchanged"])
         self.assertEqual(delta["added"], ["crates/two.sifr"])
 
+    def test_no_fail_fast_reaches_cases_and_blocks_dependent_checks(self):
+        from .profile_runner import ProfileRunner
+        from .profile_commands import CommandFailed
+        runner = ProfileRunner("create-pr", ["--no-fail-fast"])
+        runner.profile["guardrail_steps"] = []
+        runner.profile["selected_areas"] = []
+        runner.profile["toolchain_steps"] = ["e2e-pass", "e2e-report-determinism", "cargo-fmt-check"]
+        attempted = []
+        def step(name):
+            attempted.append(name)
+            if name in {"e2e-pass", "cargo-fmt-check"}:
+                raise CommandFailed(1)
+        with patch.object(runner, "prepare_cargo_cache"), patch.object(runner, "run_toolchain_step", step), contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertNotEqual(runner.run(), 0)
+        self.assertEqual(attempted, ["e2e-pass", "cargo-fmt-check"])
+        self.assertIn("status=blocked", output.getvalue())
+        with patch("sifr_verify.profile_runner.run_selected_area") as selected:
+            runner.run_area("diagnostics", ["baselines"])
+            builder = selected.call_args.kwargs["command_builder"]
+            self.assertIn("--no-fail-fast", builder("--area", "diagnostics"))
+
+    def test_passing_failure_report_does_not_select_every_case(self):
+        from .areas import run_command
+        self.options.result_json.write_text(json.dumps({"area": "diagnostics", "suites": []}))
+        with patch("sifr_verify.area_adapter.run_area") as run, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(run_command(["run", "--area", "diagnostics",
+                "--rerun-failures", str(self.options.result_json)]), 0)
+        run.assert_not_called()
+        with self.assertRaises(ValueError):
+            failed_selection(self.options.result_json, "other-area")
+
     def test_bless_never_accepts_setup_failure(self):
         self.manifest([self.script("negative", "raise SystemExit(9)", expected=1)])
         self.options = adapter.AreaRunOptions(set(), True, self.root / "report.json")

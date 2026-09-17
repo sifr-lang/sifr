@@ -145,13 +145,19 @@ class ProfileRunner:
             failed = failed or status
             if status and not self.no_fail_fast:
                 return failed
+        failed_toolchain = set()
         for toolchain_step in self.profile["toolchain_steps"]:
+            if toolchain_step in {"e2e-report-determinism", "e2e-sequential-parallel-equivalence"} and "e2e-pass" in failed_toolchain:
+                self.block_step(step_name("toolchain", toolchain_step), "e2e-pass")
+                continue
             if prepared:
                 self.block_step(step_name("toolchain", toolchain_step), "cargo_cache_setup")
                 continue
             status = self.execute_step(step_name("toolchain", toolchain_step),
                                        lambda t=toolchain_step: self.run_toolchain_step(t))
             failed = failed or status
+            if status:
+                failed_toolchain.add(toolchain_step)
             if status and not self.no_fail_fast:
                 return failed
         return failed
@@ -184,10 +190,10 @@ class ProfileRunner:
         try:
             prepare_profile_cargo_cache(self.profile, self.env, run_command)
             # Overrides must identify the same Cargo-prepared candidate.
-            binary = resolve_sifr_binary(REPO_ROOT)
+            binary = resolve_sifr_binary(REPO_ROOT, env=self.env)
             for variable in ("SIFR_GCQ_BIN", "SIFR_RUNTIME_PLATFORM_BIN"):
                 if os.environ.get(variable):
-                    resolve_sifr_binary(REPO_ROOT, explicit_env_var=variable)
+                    resolve_sifr_binary(REPO_ROOT, explicit_env_var=variable, env=self.env)
                 self.env[variable] = str(binary)
         except (ValueError, RuntimeError, OSError) as exc:
             raise ProfileRunnerError(str(exc)) from exc
@@ -287,7 +293,8 @@ class ProfileRunner:
             suites=suites,
             profile_name=self.profile_name,
             result_slug=result_slug,
-            command_builder=uv_area_command,
+            command_builder=lambda *args: uv_area_command(
+                *args, *(["--no-fail-fast"] if self.no_fail_fast else [])),
             command_runner=lambda command: run_command(command, env=self.env),
         )
 
