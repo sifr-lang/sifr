@@ -28,6 +28,7 @@ ALL_SIFR_CRATES = {
     "sifr_format",
     "sifr_frontend",
     "sifr_ir",
+    "sifr_identity",
     "sifr_ipc",
     "sifr_lint",
     "sifr_lowering",
@@ -136,10 +137,17 @@ class CrateRule:
 
 
 RULES = (
+    # The stateless identity/encoding leaf may be shared by compiler layers,
+    # but must never acquire a reverse compiler dependency.
+    CrateRule(
+        crate="sifr_identity",
+        allowed_normal_dependencies=frozenset({"sha2"}),
+        forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_identity"}),
+    ),
     CrateRule(
         crate="sifr_source",
-        allowed_normal_dependencies=frozenset({"ruff_text_size"}),
-        forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_source"}),
+        allowed_normal_dependencies=frozenset({"ruff_text_size", "sifr_identity"}),
+        forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_source", "sifr_identity"}),
     ),
     CrateRule(
         crate="sifr_ir",
@@ -150,14 +158,14 @@ RULES = (
     ),
     CrateRule(
         crate="sifr_ipc",
-        allowed_normal_dependencies=frozenset({"postcard", "serde"}),
-        forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_ipc"}),
+        allowed_normal_dependencies=frozenset({"postcard", "serde", "sifr_identity"}),
+        forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_ipc", "sifr_identity"}),
     ),
     CrateRule(
         crate="sifr_stdlib_imports",
-        allowed_normal_dependencies=frozenset({"sifr_stdlib_manifest"}),
+        allowed_normal_dependencies=frozenset({"sifr_stdlib_manifest", "sifr_identity"}),
         forbidden_source_references=frozenset(
-            ALL_SIFR_CRATES - {"sifr_stdlib_imports", "sifr_stdlib_manifest"}
+            ALL_SIFR_CRATES - {"sifr_stdlib_imports", "sifr_stdlib_manifest", "sifr_identity"}
         ),
     ),
     CrateRule(
@@ -418,11 +426,12 @@ edition = "2024"
 
 def seed_valid_repo(root: Path) -> None:
     allowed_deps = {
-        "sifr_source": ["ruff_text_size"],
+        "sifr_identity": ["sha2"],
+        "sifr_source": ["ruff_text_size", "sifr_identity"],
         "sifr_ir": ["sifr_diagnostics", "sifr_type_system"],
-        "sifr_ipc": ["postcard", "serde"],
+        "sifr_ipc": ["postcard", "serde", "sifr_identity"],
         "sifr_stdlib": ["sifr_runtime"],
-        "sifr_stdlib_imports": ["sifr_stdlib_manifest"],
+        "sifr_stdlib_imports": ["sifr_stdlib_manifest", "sifr_identity"],
         "sifr_codegen": ["sifr_ir", "sifr_stdlib_manifest"],
         "sifr_lint": ["sifr_frontend", "sifr_ir"],
         "sifr_analysis": ["sifr_frontend", "sifr_lint"],
@@ -465,6 +474,22 @@ def run_self_test() -> int:
     if found:
         failures.append(f"positive fixture unexpectedly failed: {found!r}")
 
+    assert_self_test_case(
+        "sifr_identity reverse compiler dependency",
+        lambda root: write_manifest(
+            root / "crates" / "sifr_identity", "sifr_identity", ["sifr_driver"]
+        ),
+        "sifr_identity: unexpected normal dependency",
+        failures,
+    )
+    assert_self_test_case(
+        "sifr_identity reverse source reference",
+        lambda root: (
+            root / "crates" / "sifr_identity" / "src" / "lib.rs"
+        ).write_text("use sifr_frontend::FrontendContext;\n", encoding="utf-8"),
+        "sifr_identity: crates/sifr_identity/src/lib.rs references sifr_frontend",
+        failures,
+    )
     assert_self_test_case(
         "sifr_source upward dependency",
         lambda root: write_manifest(
