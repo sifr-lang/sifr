@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.3 complete; DX.4 next
+status: in progress; DX.1–DX.4 complete; DX.5 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -618,14 +618,14 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.3 are complete and merged. DX.4–DX.16 are not started; DX.4 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.4 are complete and merged. DX.5–DX.16 are not started; DX.5 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
 | DX.1 | Complete / merged | Candidate `5c7502f7aea3cd887a217c2fb3e289c7a1f2c653`; [PR #3840](https://github.com/sifr-lang/sifr/pull/3840); merge `de41ced4d65a3c511617219238f26052227fd6e8` | Product and contributor baselines validated; Q07/Q08, transport regressions, schema and guardrail pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3840#issuecomment-5705061104) |
 | DX.2 | Complete / merged | Candidate c6841ab44a6c0e738045586f32e36c5fa1155a26; [PR #3842](https://github.com/sifr-lang/sifr/pull/3842); merge 59be2f046f71e0e3ac626f51e8ffd2614573f8bd | I01/I02/I07/I08 actual rebuilds and focused regressions PASS; broad gate deferred by prospective policy | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3842#issuecomment-5709069845) |
 | DX.3 | Complete / merged | Candidate `63640031f7b66e067b2cbb26849277faed725668`; [PR #3844](https://github.com/sifr-lang/sifr/pull/3844); merge `f7b733875ecd2a1bd86431daed4056249dad9212` | C01–C03, C05–C07, B10, R01–R03 and focused checks PASS; full gate deferred by prospective policy | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3844#issuecomment-5711325637) |
-| DX.4 | Not started | — | — | — |
+| DX.4 | Complete / merged | Candidate `fa8083ccfea3ec1b8d0fe8a5290c9a3d21efe834`; [PR #3846](https://github.com/sifr-lang/sifr/pull/3846); merge `41675c336e562ff43c4339630097a4533d321de7` | E07, R04, R05, R07, R08, existing-path Q01 and focused checks PASS; explicit unchanged-input reuse; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3846#issuecomment-5712346406) |
 | DX.5 | Not started | — | — | — |
 | DX.6 | Not started | — | — | — |
 | DX.7 | Not started | — | — | — |
@@ -787,7 +787,9 @@ After each bounded item, record only the current milestone/item, branch and cand
 
 The architecture's source appendix contains the pinned Rust/TypeScript/Cargo mechanisms and current Sifr integration paths. Repository formatting and workflow references for this phase are [Phase 35](../../phases/35_performance_benchmarking_and_budgets.md), [Phase 36](../../phases/36_developer_tooling_and_ecosystem_hooks.md), [AGENTS.md](../../../AGENTS.md), and the [phase-closure skill](../../../.cursor/skills/phase-closure-loop/SKILL.md). These references preserve ownership and execution conventions; they do not authorize changing unrelated release or language requirements.
 
-## Current Handoff — DX.3 (2026-09-17)
+## Historical Handoff — DX.3 (2026-09-17)
+
+Superseded by the merged DX.4 handoff below; its next-action instruction is historical.
 
 - **State:** complete and merged in [PR #3844](https://github.com/sifr-lang/sifr/pull/3844).
   Candidate `63640031f7b66e067b2cbb26849277faed725668`; merge
@@ -853,3 +855,70 @@ yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx3-evidence/.
 | review-candidate-file-size.log | 3954 files checked; 900-line guardrail PASS |
 | review-candidate-clippy.log / review-candidate-fmt.log / review-candidate-budget.log | Production Clippy, formatting and unchanged budget parser checks PASS |
 | reviews/63640031f7b66e067b2cbb26849277faed725668/response.md | Final read-only Opus review SATISFIED |
+
+## Current Handoff — DX.4 (2026-09-17)
+
+- **State:** complete and merged in [PR #3846](https://github.com/sifr-lang/sifr/pull/3846).
+  Candidate `fa8083ccfea3ec1b8d0fe8a5290c9a3d21efe834`; merge
+  `41675c336e562ff43c4339630097a4533d321de7`; base
+  `d28e84b64ad911cba41e553654f69681237060b1`. Owned remote checkout:
+  /home/yaser5/projects/sifr/compiler-dx-orchestration; implementation branch
+  codex/dx4, record branch codex/dx4-record.
+- **Scope:** shared area fixture selection/preparation/reporting, Cargo-authoritative
+  binary resolution, exact failed-case reruns, independent failure collection and
+  dependent blocked outcomes, explicit native application profiles/assertions,
+  existing-path comparison hooks, diagnostic examples and safe fix/recheck.
+  No metadata-reader qualification, CLI-default change or DX.5 implementation.
+- **Named validation:** E07, R04, R05, R07, R08 and existing-path Q01 PASS.
+  Final foundation run re-executes all relevant earlier harness seeds and 16 DX.4
+  seeds, including missing-tool/timeout negative controls, blocked-independent
+  collection, warm assertion execution, independent wrong-result detection,
+  metadata-check versus native-link/runtime failure separation, exact selection,
+  declared exit-2 blessing, structural/add/change/remove input identity and
+  consumed-document/config versus unconsumed-prose/phase-record controls.
+- **Actual consumers:** safe text edit applies and the next document version
+  rechecks; 12 diagnostic recovery tests, 148 codegen/IR invariant tests and
+  185 diagnostic variants pass, including five executable error-document/explain
+  pairs. Seven codegen smoke gates include two explicit release compile/link/run
+  cases with independent expected stdout. A real warm artifact rerun still
+  executes both runtime assertions. Per-case stage outcomes remain in reports.
+- **Evidence reuse:** these compiler/diagnostic/native executions are retained
+  from their actual earlier candidates through the final `reused-evidence.json`
+  chain. Only affected runner/inventory controls were rerun after their changes.
+  No unchanged execution is relabeled as a fresh run. File-size and full-base
+  whitespace checks pass; retained formatting/HIR checks cover unchanged inputs.
+  The installed uv launcher mismatch (0.12.5 versus pinned 0.12.10) is preserved;
+  validation used the existing locked verification virtual environment through
+  the canonical Python entrypoint.
+- **Before/after:** all 2,436 original source fixtures and original area-manifest
+  assertions remain selected; profile manifests are unchanged. Added assertions
+  are diagnostic examples and native release/runtime companions. Final inventory
+  has 52,276 inputs, including arbitrary generator assets, vendor/demo inputs,
+  submodule identities/dirty contents and actual declared document/config inputs;
+  no prior inputs were removed and no phase records are selected. Final
+  `assertion-inventory-diff.json` and `changed-paths.json` carry the exact
+  candidate's full changed-path inventory; historical copies remain intact.
+- **Review/adjudication:** final scoped Claude Opus 5 review is SATISFIED, no blockers.
+  [Published response](https://github.com/sifr-lang/sifr/pull/3846#issuecomment-5712346406);
+  raw response SHA-256
+  `742d68130962e8ea4ecde8cc6fe1553570d275686b2bf9ce5dac46457e573559`.
+  Initial NOT SATISFIED reviews identified the expected-exit blessing regression
+  and incomplete inventory authority. Parent adjudications explicitly authorized
+  bounded root-cause remediation beyond the default review loop: structural
+  ownership/submodules, actual consumed docs/configs, and taxonomy-declared root
+  inputs. Intermediate SATISFIED reviews retain their original nonblocking
+  classifications; their related input omissions were repaired. All responses,
+  failed intermediate evidence and adjudications remain outside the Git tree.
+- **Storage/policy:** the useful approximately 127 GiB owned target was retained
+  with approximately 207 GiB free; no size-only cleanup. No intermediate
+  create-PR/merge full gate was run or claimed. One full gate remains required on
+  the final phase implementation; actual release qualification is conditional
+  on a release request.
+- **Follow-ups:** [separate fixture/inventory review observations](ad-hoc-dx4-fixture-review-followups.md).
+- **Blocker:** none for DX.4 acceptance.
+- **Exact next action:** stop after this record update. Start DX.5 only in a new
+  bounded session. Local unrelated modifications remain untouched.
+
+Evidence host/root:
+yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx4-evidence/.
+Final candidate directory: `fa8083ccfea3ec1b8d0fe8a5290c9a3d21efe834/`.
