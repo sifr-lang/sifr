@@ -1,4 +1,4 @@
-//! Check the library that supplied CPython symbols before initializing it.
+//! Check the library that supplied `CPython` symbols before initializing it.
 use std::path::Path;
 
 /// A same-basename shared library selected by the process loader is not
@@ -57,7 +57,7 @@ fn loaded_library() -> Result<String, String> {
     // on success, and its filename is a loader-owned terminated string.
     let actual = unsafe {
         if libc::dladdr(
-            pyo3::ffi::Py_GetVersion as *const () as *const _,
+            (pyo3::ffi::Py_GetVersion as *const ()).cast(),
             info.as_mut_ptr(),
         ) == 0
         {
