@@ -115,6 +115,11 @@ fn lower_annotated_module_constant_expr(
 
 fn canonicalize_non_finite_float_constant(value: HirExpr) -> HirExpr {
     match evaluate_float_division_constant(&value) {
+        // Arithmetic NaN sign/payload bits vary by producer CPU. Preserve one
+        // explicit IEEE quiet NaN in portable HIR; codegen already emits f64::NAN.
+        Some(folded) if folded.is_nan() => {
+            HirExpr::FloatLiteral(f64::from_bits(0x7ff8_0000_0000_0000))
+        }
         Some(folded) if !folded.is_finite() => HirExpr::FloatLiteral(folded),
         _ => value,
     }
@@ -331,7 +336,7 @@ mod tests {
             && matches!(value, HirExpr::FloatLiteral(value) if value.is_infinite() && value.is_sign_positive())));
         assert!(constants.iter().any(|(name, ty, value)| name == "nan"
             && ty == &Type::Float
-            && matches!(value, HirExpr::FloatLiteral(value) if value.is_nan())));
+            && matches!(value, HirExpr::FloatLiteral(value) if value.to_bits() == 0x7ff8_0000_0000_0000)));
         assert!(constants.iter().any(|(name, ty, value)| name == "neg_inf"
             && ty == &Type::Float
             && matches!(value, HirExpr::FloatLiteral(value) if value.is_infinite() && value.is_sign_negative())));
@@ -341,6 +346,20 @@ mod tests {
         assert!(constants.iter().any(|(name, ty, value)| name == "flag"
             && ty == &Type::Bool
             && matches!(value, HirExpr::BoolLiteral(true))));
+    }
+
+    #[test]
+    fn dx8_non_finite_nan_constants_have_portable_ieee_bits() {
+        let constants = lower_private_declaration_constants(
+            "positive: float = 0.0 / 0.0\nnegative: float = -0.0 / 0.0\nnegated: float = -(0.0 / 0.0)\n",
+        );
+        assert_eq!(constants.len(), 3);
+        for (_, _, value) in constants {
+            let HirExpr::FloatLiteral(value) = value else {
+                panic!("non-finite constant should be folded");
+            };
+            assert_eq!(value.to_bits(), 0x7ff8_0000_0000_0000);
+        }
     }
 
     #[test]

@@ -54,16 +54,20 @@ impl Inputs {
         let mut inputs = IdentityEncoder::new("stdlib-inputs-v1");
         inputs.field("semantic-target", semantic.as_str().as_bytes());
         inputs.field("producer-policy", b"checked-source-indexed-v1");
-        for (name, token) in crate::compiled_input_tokens() {
-            if matches!(
-                name,
-                "sifr_stdlib_manifest"
-                    | "sifr_stdlib_imports"
-                    | "sifr_rust_interop_catalog"
-                    | "sifr_ir"
-            ) {
-                inputs.field(name, token.as_bytes());
-            }
+        // These captured source tokens describe portable semantic producer inputs.
+        // Host/profile/rustc configuration remains in the required compiler envelope.
+        for (name, token) in [
+            (
+                "sifr_stdlib_manifest",
+                sifr_stdlib_manifest::portable_source_token(),
+            ),
+            (
+                "sifr_stdlib_imports",
+                sifr_stdlib_imports::portable_source_token(),
+            ),
+            ("sifr_ir", sifr_ir::portable_source_token()),
+        ] {
+            inputs.field(name, token.as_bytes());
         }
         for source in &sources {
             inputs.field("module", source.module.as_bytes());

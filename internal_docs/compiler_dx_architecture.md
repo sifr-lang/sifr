@@ -281,7 +281,20 @@ Extend `scripts/distribution/build_release_artifacts.sh` and existing archive/in
 
 Distinguish producer execution host from semantic target. For cross builds, run the appropriate host-native producer with explicit target semantics, or produce on the corresponding native qualification host. Never try to execute a foreign-target binary accidentally. Do not assert byte equality between different-target metadata. Require reproducible portable payloads for equivalent inputs/target, and whole-artifact reproducibility when the complete producer envelope matches.
 
-Toolchain generations are immutable. Installation/update publishes a complete new generation and switches the selected generation atomically. Running CLI/LSP processes pin their resolved generation, including sources and codegen payloads. Cleanup retains active generations. A process either continues with its pinned generation or explicitly restarts/reloads; it cannot mix old decoded records with new files.
+DX.8 keys portable stdlib source inputs from captured source-only tokens, while the
+required compiler compatibility envelope retains host/profile/rustc configuration.
+Stable module-owned Rust/validation references keep that envelope from changing
+semantic identities. Full-record portability comparison excludes only the compiler
+header and FragmentValidation.compiler_identity; all semantic, type, declaration,
+HIR, template, source and Rust records remain included.
+
+Toolchain generations are immutable. Installation/update publishes a complete new generation and switches the selected generation atomically. Running CLI/LSP processes pin their resolved generation, including sources and codegen payloads. The installer publishes .sifr-generations and atomically switches .sifr-current;
+the resolver canonicalizes the selected manifest once and derives every path from
+that retained generation. Current cleanup conservatively retains all installed
+generations. Generation-to-generation upgrades, forced downgrades and relocation
+are supported. A legacy mutable or unmanaged populated root is rejected with an
+empty-root installation remedy; no legacy migration or retroactive pinning of an
+old running compiler is claimed. Cleanup retains active generations. A process either continues with its pinned generation or explicitly restarts/reloads; it cannot mix old decoded records with new files.
 
 Integrity verification at installation covers the full package. Normal commands check compatibility and consumed metadata payloads without rehashing the entire runtime/vendor/source tree. An explicit doctor integrity operation performs the full check.
 
@@ -590,6 +603,8 @@ DX.1 also freezes a demanded-stdlib retained-memory workload, measured with comp
 | `--timings` | Human timing/cache summary on stderr, without polluting emitted source or program output |
 | `--trace-dir <dir>` | Opt-in versioned trace/artifact diagnostics with redaction and controlled size |
 | `sifr sysroot build-metadata ...` | Explicit canonical metadata producer |
+| `sifr sysroot validate-metadata [--source-root <root> --metadata <file> --target <triple>]` | Complete structural traversal of the selected installed artifact, or an explicit host-produced target artifact; reports full portable-record digest |
+| `sifr doctor --verify-integrity` | Read-only complete metadata and installed package/compiler digest verification |
 | `sifr doctor [--json] [--verify-integrity]` | Report selected compiler/native toolchain, sysroot/metadata identities, readiness and cache locations; full package integrity only when requested |
 | `sifr cache inspect [--json]` | Read-only size, generation, ownership and scope summary |
 | `sifr cache prune [--dry-run]` | Pressure/obsolescence-based safe reclamation; no deletion of active generations or unrelated worktrees |

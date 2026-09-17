@@ -372,3 +372,46 @@ fn dx7_nominal_references_share_one_complete_projection_per_store() {
     assert!(!fields.shares_storage(first_fields));
     assert_eq!(fields.len(), first_fields.len() + 1);
 }
+
+#[test]
+fn dx8_m05_q05_complete_canonical_metadata_inventory() {
+    let report = crate::CompilerContext::for_test()
+        .qualify_metadata()
+        .unwrap();
+    assert_eq!(report["structural_status"], "ok");
+    assert!(report["modules"].as_array().unwrap().len() > 30);
+    if let Some(path) = std::env::var_os("SIFR_DX8_STRUCTURAL_REPORT") {
+        std::fs::write(path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
+    }
+}
+
+#[test]
+fn dx8_m05_full_decoded_projection_preserves_canonical_records() {
+    let context = crate::CompilerContext::for_test();
+    let provider = context.metadata_provider().unwrap();
+    let root = context.sysroot().unwrap();
+    let modules = provider.modules.keys().cloned().collect::<Vec<_>>();
+    let decoded = provider.materialize(&modules, root).unwrap();
+    let bytes = crate::metadata_producer::reencode_qualified(
+        &decoded,
+        root,
+        provider.metadata.compatibility,
+    )
+    .unwrap();
+    if let Some(path) = std::env::var_os("SIFR_DX8_REENCODE_OUTPUT") {
+        let path = std::path::PathBuf::from(path);
+        std::fs::create_dir_all(&path).unwrap();
+        std::fs::copy(&provider.metadata.path, path.join("original.sifrmeta")).unwrap();
+        std::fs::write(path.join("reencoded.sifrmeta"), &bytes).unwrap();
+    }
+    let restored = wire::MetadataStore::open(
+        std::io::Cursor::new(bytes),
+        provider.metadata.compatibility,
+        wire::Limits::default(),
+    )
+    .unwrap();
+    assert_eq!(
+        provider.metadata.store.portable_payload_digest().unwrap(),
+        restored.portable_payload_digest().unwrap()
+    );
+}

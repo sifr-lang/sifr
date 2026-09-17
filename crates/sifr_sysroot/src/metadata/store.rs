@@ -294,3 +294,36 @@ impl MetadataStore {
         Ok(())
     }
 }
+
+impl MetadataStore {
+    /// Canonical full-record portability evidence. Only the producer compiler
+    /// envelope in FragmentValidation is excluded; semantic identities and every
+    /// semantic/type/declaration/HIR/template/Rust/source field remain included.
+    /// Call validate_complete first so malformed records cannot become evidence.
+    pub fn portable_payload_digest(&self) -> Result<String> {
+        self.validate_complete()?;
+        let mut hash = Sha256::new();
+        hash.update(b"sifr-portable-records-v1");
+        hash.update(self.compatibility.semantic_target);
+        hash.update(self.compatibility.stdlib_inputs);
+        for (id, entry) in &self.directory {
+            let payload = self.read_payload(entry)?;
+            let payload = if entry.kind == super::FragmentValidation::KIND {
+                let mut value: serde_json::Value =
+                    serde_json::from_slice(&payload).map_err(|e| err(e.to_string()))?;
+                value
+                    .as_object_mut()
+                    .ok_or_else(|| err("invalid validation envelope"))?
+                    .remove("compiler_identity");
+                serde_json::to_vec(&value).map_err(|e| err(e.to_string()))?
+            } else {
+                payload
+            };
+            hash.update(id);
+            hash.update(entry.kind.to_le_bytes());
+            hash.update((payload.len() as u64).to_le_bytes());
+            hash.update(payload);
+        }
+        Ok(hash.finalize().iter().map(|b| format!("{b:02x}")).collect())
+    }
+}

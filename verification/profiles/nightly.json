@@ -728,7 +728,9 @@
       "area": "sysroot_release",
       "suites": [
         "host-installed-smoke",
-        "host-installed-stdlib-heavy"
+        "host-installed-stdlib-heavy",
+        "metadata-structural",
+        "metadata-corpus"
       ],
       "resource_classes": [
         "default-local",

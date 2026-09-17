@@ -213,3 +213,9 @@ mod tests {
 mod compiled_identity;
 #[doc(hidden)]
 pub use compiled_identity::compiled_input_tokens;
+
+/// Captured source identity excluding producer host/profile/toolchain configuration.
+#[doc(hidden)]
+pub fn portable_source_token() -> &'static str {
+    env!("SIFR_PORTABLE_SOURCE_TOKEN")
+}

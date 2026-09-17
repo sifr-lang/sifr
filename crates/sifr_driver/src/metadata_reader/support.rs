@@ -110,6 +110,45 @@ impl Provider {
                     })?;
                     constants.insert(symbol, (ty, String::decode(rendered, &mut cx)?));
                 }
+                // Codegen also records imported constants that are private to this
+                // module. They are absent from its public semantic exports, but
+                // their canonical declaration mappings remain in the Rust payload.
+                for import in &hir.imports {
+                    let Some(reference) = self.modules.get(&import.module) else {
+                        continue;
+                    };
+                    let imported_module = self.metadata.store.get(*reference)?;
+                    let imported_semantics = self.semantic(&import.module)?;
+                    let Some(imported_constants) = imported_semantics.constants.get(&import.module)
+                    else {
+                        continue;
+                    };
+                    for symbol in &import.names {
+                        let Some(ty) = imported_constants.get(symbol) else {
+                            continue;
+                        };
+                        let mut declaration = None;
+                        for (key, value) in &imported_module.exports {
+                            if String::decode(key, &mut cx)? == *symbol {
+                                declaration = Some(value);
+                                break;
+                            }
+                        }
+                        let Some(rendered) = declaration.and_then(|d| payload.names.get(d)) else {
+                            continue;
+                        };
+                        let local = import
+                            .aliases
+                            .iter()
+                            .find(|(original, _)| original == symbol)
+                            .map(|(_, alias)| alias)
+                            .unwrap_or(symbol);
+                        constants.insert(
+                            local.clone(),
+                            (ty.clone(), String::decode(rendered, &mut cx)?),
+                        );
+                    }
+                }
                 if !constants.is_empty() {
                     code.module_constants.insert(name.clone(), constants);
                 }

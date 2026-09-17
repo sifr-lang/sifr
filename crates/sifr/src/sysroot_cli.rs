@@ -33,7 +33,11 @@ pub(super) fn cmd_print(print: PrintKind, json: bool, diagnostic_format: Diagnos
     }
 }
 
-pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32 {
+pub(super) fn cmd_doctor(
+    json: bool,
+    verify_integrity: bool,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
     let native = std::env::current_dir()
         .map_err(|_| "cannot resolve invocation directory".to_owned())
         .and_then(|cwd| sifr_sysroot::NativeToolchain::resolve_at(&cwd));
@@ -54,6 +58,41 @@ pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32
     };
     match sifr_sysroot::resolve_sysroot(None) {
         Ok(sysroot) => {
+            let context = sifr_driver::CompilerContext::with_sysroot(
+                crate::compiler_identity(),
+                sysroot.clone(),
+            );
+            let metadata = context
+                .inspect_metadata(verify_integrity)
+                .and_then(|metadata| {
+                    if verify_integrity {
+                        sysroot.verify_integrity()?;
+                    }
+                    Ok(metadata)
+                });
+            let metadata = match metadata {
+                Ok(metadata) => metadata,
+                Err(error) => {
+                    if json {
+                        let _ = writeln!(
+                            io::stdout(),
+                            "{}",
+                            serde_json::json!({
+                                "schema_version":1,"status":"error","error_kind":"metadata", "message":error,
+                                "compiler_build_id":crate::compiler_identity().as_str(),"root":sysroot.root
+                            })
+                        );
+                    }
+                    render_diagnostics(
+                        &[diagnostic_with_code(
+                            error,
+                            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+                        )],
+                        diagnostic_format,
+                    );
+                    return EXIT_USAGE_OR_CONFIG;
+                }
+            };
             if json {
                 let value = serde_json::json!({
                     "schema_version": 1,
@@ -62,6 +101,8 @@ pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32
                     "native_toolchain_id": native.identity(),
                     "rustc_version": native.rustc_version(),
                     "status": "ok",
+                    "metadata":metadata,
+                    "package_integrity_verified":verify_integrity,
                     "root": sysroot.root,
                     "toolchain_id": sysroot.toolchain_id(),
                     "sifr_version": sysroot.manifest.sifr_version,
@@ -82,7 +123,11 @@ pub(super) fn cmd_doctor(json: bool, diagnostic_format: DiagnosticFormat) -> i32
                     serde_json::to_string_pretty(&value).unwrap_or_else(|_| "{}".to_string())
                 );
             } else {
-                let _ = writeln!(io::stdout(), "Sifr doctor: ok");
+                let _ = writeln!(
+                    io::stdout(),
+                    "Sifr doctor: ok\nmetadata: {}",
+                    metadata["metadata_id"]
+                );
                 let _ = writeln!(
                     io::stdout(),
                     "cache: {}",
