@@ -183,12 +183,13 @@ sha256_fixture_file() {
 make_mock_binary() {
   local path="$1"
   local message="$2"
-  cat >"${path}" <<EOF
-#!/bin/sh
-set -eu
-printf '%s\n' "${message}"
-exit 0
-EOF
+  python3 - "${REPO_ROOT}/verification/areas/distribution_release/cases/mock_metadata_binary.py" "${path}" "${message}" <<'PYTHON'
+import json
+from pathlib import Path
+import sys
+source, destination, message = sys.argv[1:]
+Path(destination).write_text(Path(source).read_text().replace('"__FIXTURE_MESSAGE__"', json.dumps(message)))
+PYTHON
   chmod 755 "${path}"
 }
 

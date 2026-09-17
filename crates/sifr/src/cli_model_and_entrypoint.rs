@@ -70,6 +70,8 @@ pub(crate) struct Cli {
 
 #[derive(Subcommand)]
 pub(crate) enum Commands {
+    /// Prepare matching stdlib toolchain metadata
+    Sysroot(DeferredArgs<crate::metadata_cli::SysrootArgs>),
     /// Inspect or safely prune owned generated artifacts
     Cache(DeferredArgs<crate::cache_cli::CacheArgs>),
     /// Compile a .sifr file to a native binary
@@ -267,6 +269,9 @@ fn run_cli(cli: Cli) -> i32 {
             lock_mode_from_flags(locked, offline, frozen),
             diagnostic_format,
         ),
+        Commands::Sysroot(crate::deferred_cli_args::DeferredArgs(args)) => {
+            crate::metadata_cli::run(args)
+        }
         Commands::Cache(crate::deferred_cli_args::DeferredArgs(args)) => {
             crate::cache_cli::run(args)
         }

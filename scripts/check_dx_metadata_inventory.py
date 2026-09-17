@@ -56,6 +56,8 @@ def sites() -> str:
                     operations.append("borrow/retain")
                 test = "test" in path.name or "tests" in path.parts or "#[test]" in text[max(0,start-100):start]
                 target = "test setup/parity" if test else ("snapshot query (indirect)" if indirect and not matches else "layered view + demanded record handles")
+                if "metadata_producer" in path.parts and not test:
+                    target = "canonical source-only producer (retain)"
                 anchors = sorted({text.count("\n", 0, start+m.start())+1 for m in matches})
                 anchor_text = ", ".join(map(str, anchors)) if anchors else "indirect"
                 rows.append(f"| `{path.relative_to(ROOT)}:{line}` `{symbol}` | {', '.join(operations)} | {target} | {anchor_text} |")

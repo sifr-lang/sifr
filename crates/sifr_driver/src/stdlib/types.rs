@@ -7,6 +7,8 @@ use std::collections::HashMap;
 /// Mutable lowering receives its own definitions projection.
 pub(crate) struct StdlibCompiled {
     pub(crate) defs: ExternalDefs,
+    pub(crate) metadata_features:
+        HashMap<String, std::collections::BTreeSet<sifr_stdlib_manifest::StdlibFeature>>,
     pub(crate) code: StdlibCode,
     pub(crate) interop: StdlibRustInterop,
 }

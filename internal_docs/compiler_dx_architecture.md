@@ -285,6 +285,52 @@ Toolchain generations are immutable. Installation/update publishes a complete ne
 
 Integrity verification at installation covers the full package. Normal commands check compatibility and consumed metadata payloads without rehashing the entire runtime/vendor/source tree. An explicit doctor integrity operation performs the full check.
 
+### 6.5 Implemented producer and preparation ownership (DX.6)
+
+`metadata_producer::production::Inputs` captures the canonical public/private
+stdlib inventory and passes those exact bytes to the existing source frontend and
+codegen. Source record paths are relative to `sysroot.paths.stdlib_root`, so a
+packaging snapshot can use `lib/sifr/stdlib` without embedding the build location.
+The input identity also binds the source manifest, lockfile, compiled mapping
+components, producer policy and explicit 64-bit little-endian semantic target.
+The four currently supported triples have distinct target identities.
+
+Typed encoders preserve the live semantic, HIR, generic/default, interop and Rust
+payload families. `scripts/generate_metadata_encoders.py --check` verifies the
+exhaustive generated projections; handwritten declaration, binder, export and
+source-location ownership remains in the driver. Try-body error types are a set;
+the encoder orders their complete references, avoiding ties in frontend display
+names. Class-shaped synthetic constructor views retain the actual enum/newtype/
+protocol declaration identity. Complete decoder validation precedes publication.
+
+`ensure_development_metadata` is the one source write-through operation. Its
+process store retains only successful immutable owners. The private durable entry
+is keyed by compiler/test identity, semantic target and captured input identity;
+an OS lock, validation before/after ownership, same-directory stage, fsync and
+rename coordinate competing processes. Stale stages are replaced only under that
+key's exclusive lock. Errors/cancellation release ownership and do not enter the
+success store. Inputs are recaptured before publication, and changed inputs cause
+an explicit retry diagnostic. A caller's explicit artifact override must match;
+it cannot cause a substitute identity to be selected. Metadata owners currently
+pin owned immutable bytes; native-artifact pruning does not prune metadata files.
+
+Bare driver tests use `CompilerContext::for_test()` and the already linked source
+producer. Verification runs that setup once per selected driver Cargo graph and
+uses Cargo-reported product executables for CLI preparation; neither path assumes
+a preexisting CLI for bare tests or invokes Cargo from inside the producer.
+Other linked test configurations select their own keyed owner when initialized.
+Preparation reports producer duration, compiler identity and metadata identity;
+subprocess consumers revalidate the same durable entry.
+
+Packaging invokes the exact native compiler over the staged source snapshot,
+then seals metadata and `stdlib.metadata.json` into the installation. The descriptor
+binds compiler bytes, compiler identity, semantic target, input identity and
+metadata digest. Production packaging must run on each target's native
+qualification host; it never runs a foreign binary or relabels a host compiler.
+The explicit `--binary` script fixture protocol is limited to distribution tests.
+Source-tree mode is explicit in the manifest; an installed snapshot is rejected
+by the source producer. Ordinary metadata-backed consumer activation remains DX.7.
+
 ## 7. Local storage, publication, and cleanup
 
 ### 7.1 Storage boundaries

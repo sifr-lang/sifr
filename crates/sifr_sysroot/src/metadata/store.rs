@@ -241,3 +241,24 @@ fn array<const N: usize>(bytes: &[u8], start: usize) -> Result<[u8; N]> {
 fn io_error(e: &std::io::Error) -> MetadataError {
     err(format!("indexed input read: {e}"))
 }
+
+impl MetadataStore {
+    /// Producer qualification checks every payload without retaining decoded records.
+    pub fn validate_complete(&self) -> Result<()> {
+        for (id, entry) in &self.directory {
+            let payload = self.read_payload(entry)?;
+            let references = super::decode::references(self, entry.kind, &payload)?;
+            for (reference, kind) in references {
+                if self
+                    .directory
+                    .get(&reference)
+                    .is_none_or(|entry| entry.kind != kind)
+                {
+                    return Err(err("missing or wrong-kind complete record reference"));
+                }
+            }
+            self.validate_graph(*id, &payload)?;
+        }
+        Ok(())
+    }
+}

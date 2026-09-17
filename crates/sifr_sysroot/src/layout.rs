@@ -3,6 +3,12 @@ use crate::manifest::{SysrootManifest, read_sysroot_manifest};
 use crate::sha256_file;
 use std::path::{Path, PathBuf};
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SysrootMode {
+    SourceTreeDevelopment,
+    InstalledToolchain,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ResolvedSysroot {
     pub root: PathBuf,
@@ -12,6 +18,14 @@ pub struct ResolvedSysroot {
 }
 
 impl ResolvedSysroot {
+    #[must_use]
+    pub fn mode(&self) -> SysrootMode {
+        if self.manifest.target_triple == "source-tree" {
+            SysrootMode::SourceTreeDevelopment
+        } else {
+            SysrootMode::InstalledToolchain
+        }
+    }
     pub(crate) fn from_root(root: PathBuf, binary_path: &Path) -> Result<Self, SysrootError> {
         let manifest = read_sysroot_manifest(&root, binary_path)?;
         let paths = SysrootPaths::from_root(&root);
