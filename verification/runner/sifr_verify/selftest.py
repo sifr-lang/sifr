@@ -18,6 +18,7 @@ from .areas import discover_areas
 from .cargo_setup import cargo_setup_command
 from .generated_cargo_setup_checks import policy_checks as generated_cargo_setup_policy_checks
 from .errors import SchemaError
+from .dx4_fixture_checks import policy_checks as dx4_fixture_checks
 from .dx3_process_checks import policy_checks as dx3_process_checks
 from .profile_area_steps import run_selected_area
 from .profile_results import AreaResultError, validate_area_result
@@ -53,6 +54,7 @@ GOVERNANCE_SCHEMA_COUNT = 20
 
 def run_all() -> list[str]:
     checks = [
+        ("DX.4 shared fixture checks", dx4_fixture_checks),
         ("DX.3 subprocess ownership checks", dx3_process_checks),
         ("generated Cargo setup policy checks", generated_cargo_setup_policy_checks),
         ("runtime sanitizer target checks", runtime_sanitizer_policy_checks),

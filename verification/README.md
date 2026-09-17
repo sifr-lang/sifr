@@ -141,3 +141,55 @@ report signatures, and hashes of the validation report JSON files.
 Schemas intentionally support only a small subset: object shape, required keys,
 primitive scalar types, arrays of objects or strings, enums, booleans, integers,
 and repo-relative path strings. Unsupported schema keywords are rejected.
+
+## Focused fixture collection
+
+The existing area manifests remain the fixture authorities. Shared baseline
+adapters accept exact suite/case selections and failure reports:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --case baselines/parser_bad_indent --no-fail-fast
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --rerun-failures target/verification/areas/diagnostics-results.json --no-fail-fast
+uv run --project verification --locked python -m sifr_verify profiles run --profile merge --no-fail-fast
+uv run --project verification --locked python -m sifr_verify areas inventory --output /tmp/inputs.json
+uv run --project verification --locked python -m sifr_verify areas inventory --output /tmp/current-inputs.json --compare /tmp/inputs.json
+```
+
+Inventory comparison authorizes reuse only when inputs are unchanged; it never
+creates a new test execution. Added fixtures and changed validation inputs change
+the inventory digest. Phase records alone do not. An inventory is an input
+manifest, not a replacement for the canonical area/profile result. Ownership
+roots cover compiler sources, generators, fixtures, vendored inputs, scripts,
+workflows and tested diagnostic documentation without a suffix allowlist.
+Initialized submodules contribute both their declared/checked-out identity and
+nonignored contents, including dirty files and additions. Outside source ownership roots, inventory derives file constants from the
+guardrail policy's entrypoints and the documentation inventory's active consumers.
+It also reads the active taxonomy check's declared roots (including the root README)
+and uses the compatibility check's own scan roots and skip predicate for its
+document/config sweep, and the documentation consumer's public-page selection.
+Consequently tested prose is an input; unconsumed prose and phase records remain
+excluded. New declared config inputs and newly scanned public pages invalidate
+evidence without editing an inventory suffix list.
+Files inside an input root remain inputs even when their suffix resembles prose:
+generators and tests can consume Markdown and arbitrary future asset types.
+
+The shared adapter prepares its compiler through Cargo once per process and
+checks configured compiler overrides against the prepared artifact. Setup,
+signals, output truncation and deadlines cannot satisfy a language-negative
+baseline. Failed and blocked cases remain failures during collection and bless.
+Raw diagnostics remain in the area report and mismatch artifacts; failures stream
+as each case finishes. Specialized area runners retain their suite selectors.
+
+Generated-code smoke, representative and full modes now run explicit release
+link/runtime assertions for the two safe codegen demo companions in addition to
+their existing Rust-check, snapshot, formatting and quality obligations. Their
+declared stdout is independent of equivalence comparisons. Full E2E/release
+coverage remains selected. Cargo freshness never skips a selected runtime
+assertion. Native stage details are referenced from the area result.
+
+The fixture comparison hook requires two executable providers and an independent
+expected result. DX.4 exercises source/native controls only; metadata and
+persistent providers are not qualified until their owning milestones connect and
+test them. Diagnostic example checks execute explicitly selected standalone
+check-fail/check-pass pairs and their explain/help surface; contextual package and
+runtime examples are not indiscriminately executed.

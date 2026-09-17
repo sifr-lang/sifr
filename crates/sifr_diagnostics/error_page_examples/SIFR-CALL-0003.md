@@ -4,7 +4,8 @@
 def greet(name: str) -> str:
     return "hi " + name
 
-message = greet()
+def main():
+    message = greet("Ada", name="Sifr")
 ```
 
 ## How To Fix It
@@ -17,5 +18,6 @@ Make the call match the function signature: provide required arguments once, use
 def greet(name: str) -> str:
     return "hi " + name
 
-message = greet("Sifr")
+def main():
+    message = greet("Sifr")
 ```

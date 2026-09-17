@@ -91,6 +91,22 @@ def run_area(args: argparse.Namespace) -> int:
         raise DiscoveryError(f"could not load verification area runner: {runner_path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if getattr(module, "CONFIG", None) is not None:
+        from .area_adapter import AreaRunOptions, run_area as run_shared_area
+        from .fixture_execution import failed_selection
+        requested = frozenset(args.case)
+        if args.rerun_failures:
+            requested |= failed_selection(args.rerun_failures, area.name)
+            if not requested:
+                print(f"no failed cases in {args.rerun_failures}; original evidence retained")
+                return 0
+        return run_shared_area(module.CONFIG, AreaRunOptions(
+            suite_filters=set(args.suite), bless=args.bless,
+            result_json=Path(args.result_json) if args.result_json else module.RESULT_JSON,
+            case_filters=requested, no_fail_fast=args.no_fail_fast,
+        ))
+    if args.case or args.rerun_failures:
+        raise DiscoveryError(f"{area.name} supports suite selection only")
     main = getattr(module, "main", None)
     if not callable(main):
         raise DiscoveryError(f"verification area runner has no callable main(): {runner_path}")
@@ -109,16 +125,31 @@ def run_command(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="sifr_verify areas")
     subcommands = parser.add_subparsers(dest="command", required=True)
 
+    inventory_parser = subcommands.add_parser("inventory", help="Capture validation input identities.")
+    inventory_parser.add_argument("--output", required=True)
+    inventory_parser.add_argument("--compare", help="Prior inventory; changed inputs return nonzero.")
     subcommands.add_parser("list", help="List discovered areas as JSON.")
     subcommands.add_parser("check", help="Validate all discovered area manifests.")
 
     run_parser = subcommands.add_parser("run", help="Run one verification area adapter.")
     run_parser.add_argument("--area", required=True, help="Area name to execute.")
     run_parser.add_argument("--suite", action="append", default=[], help="Area suite filter.")
+    run_parser.add_argument("--case", action="append", default=[], help="Exact suite/case identifier.")
+    run_parser.add_argument("--rerun-failures", help="Select failed/blocked cases from an area report.")
+    run_parser.add_argument("--no-fail-fast", action="store_true", help="Collect independent failures.")
     run_parser.add_argument("--bless", action="store_true", help="Update checked-in baselines.")
     run_parser.add_argument("--result-json", help="Area result JSON path.")
 
     args = parser.parse_args(argv)
+    if args.command == "inventory":
+        from .fixture_inventory import inventory, compare
+        current = inventory()
+        Path(args.output).write_text(json.dumps(current, indent=2, sort_keys=True) + "\n")
+        if args.compare:
+            delta = compare(json.loads(Path(args.compare).read_text()), current)
+            print(json.dumps(delta, indent=2))
+            return 0 if delta["unchanged"] else 1
+        return 0
     if args.command == "list":
         print_list()
         return 0

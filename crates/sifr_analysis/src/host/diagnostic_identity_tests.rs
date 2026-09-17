@@ -181,3 +181,63 @@ fn code_actions_offer_policy_suppression_and_explain_not_found_is_explicit() {
     assert!(explanation.diagnostic.is_none());
     assert!(explanation.unavailable_reason.is_some());
 }
+
+#[test]
+fn safe_fix_applies_then_rechecks_the_new_document_version() {
+    let source = "def main():\n    value: int = 1  \n    assert value == 1\n";
+    let context = sifr_driver::CompilerContext::for_test_tokens(
+        crate::compiled_input_tokens(),
+        "sifr_analysis-tests",
+    );
+    let mut host = AnalysisHost::open_single_file(&context, single_file_input(source))
+        .expect("host should load");
+    let file = host.files()[0];
+    let original = host.diagnostics(file).expect("diagnostics").into_value();
+    assert!(original.iter().any(|item| item.code == "SIFR-LINT-0004"));
+    let actions = host
+        .code_actions(
+            file,
+            full_range(source).expect("range"),
+            &CodeActionContext {
+                diagnostics: vec![DiagnosticId::policy(
+                    "SIFR-LINT-0004",
+                    "trailing-whitespace",
+                )],
+            },
+        )
+        .expect("actions")
+        .into_value();
+    let edit = actions
+        .into_iter()
+        .find(|action| action.kind == "quickfix.sifr.applySafeFix")
+        .and_then(|action| action.edit)
+        .expect("safe fix");
+    let mut text = source.to_owned();
+    for file_edit in edit.edits {
+        assert_eq!(file_edit.file, file);
+        let mut edits = file_edit.edits;
+        edits.sort_by_key(|edit| std::cmp::Reverse(edit.range.start()));
+        for edit in edits {
+            text.replace_range(
+                usize::from(edit.range.start())..usize::from(edit.range.end()),
+                &edit.replacement,
+            );
+        }
+    }
+    assert_eq!(text, source.replace("1  ", "1"));
+    let update = host
+        .update_document(file, DocumentVersion::new(2), SourceText::new(text))
+        .expect("apply current source edit");
+    assert_eq!(
+        update.updated_documents[0].new_version,
+        Some(DocumentVersion::new(2))
+    );
+    let after = host.diagnostics(file).expect("recheck").into_value();
+    assert!(!after.iter().any(|item| item.code == "SIFR-LINT-0004"));
+    assert!(
+        after
+            .iter()
+            .all(|item| original.iter().any(|before| before.code == item.code)),
+        "safe edit must not introduce a diagnostic"
+    );
+}
