@@ -10,6 +10,7 @@ license = { workspace = true }
 [dependencies]
 sifr_identity.workspace = true
 serde = { workspace = true }
+serde_json = { workspace = true }
 sha2 = { workspace = true }
 toml = { workspace = true }
 

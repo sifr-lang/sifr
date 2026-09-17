@@ -1993,3 +1993,10 @@ compiler capture limits apply only to compiler-owned subprocesses. Signal
 ownership is scoped to live operations, and staged payload permissions are
 sealed before publication independently of the user's umask.
 These DX.3 primitives do not implement semantic project generations.
+
+DX.5 adds the private indexed stdlib wire schema in `sifr_sysroot::metadata`, with
+explicit type/declaration/binder/payload records and a bounded, shared lazy decoder.
+The [payload and consumer inventory](compiler_dx_metadata_consumers.md) owns the
+source-to-wire field classification and planned overlay/lifetime migration. Normal
+commands still use checked-source stdlib state; DX.6/DX.7 own production and consumer
+activation. Fragment validation identity never replaces final application checks.
