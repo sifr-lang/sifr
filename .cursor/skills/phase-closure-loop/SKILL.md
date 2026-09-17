@@ -107,7 +107,13 @@ If relevant base code changes, update the base and repeat the affected work.
 
 Do not invalidate evidence for an unrelated base change.
 
-Run the merge gate once on the final implementation candidate.
+Run the merge gate once on the final implementation candidate, unless the user
+has explicitly approved a prospective phase-end gate policy in the canonical
+phase. Under that policy, intermediate items require their named tests, focused
+regressions and scoped review; run one full gate on the final phase implementation,
+then correct failures and rerun affected checks as needed. Release-checkpoint
+qualification remains conditional on an actual release request. Preserve all
+historical failed/incomplete evidence; do not reclassify it as passing.
 
 Do not rerun the merge gate after documentation-only or review-record-only changes.
 

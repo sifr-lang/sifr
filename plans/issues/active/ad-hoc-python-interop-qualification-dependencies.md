@@ -268,5 +268,11 @@ python-gate-failures/loader-selection-fixed.json, kafka-loader-fixed stdout/stde
 python-affected-examples.log, python-qualified/, python-target-errors-tests.log,
 python-native-loader-tests.log, clippy-python-loader.log, and
 guardrails-python-loader.log under the DX.2 evidence root.
-Final candidate review and merge qualification are still required; this is not
-a claim that DX.2 or this prerequisite has merged.
+The bounded prerequisite merged with DX.2 in [PR #3842](https://github.com/sifr-lang/sifr/pull/3842),
+merge 59be2f046f71e0e3ac626f51e8ffd2614573f8bd, final candidate
+c6841ab44a6c0e738045586f32e36c5fa1155a26. Final scoped Opus review is
+SATISFIED; all 30 Python merge-area variants also passed on the final inputs.
+The user's prospective 2026-09-17 Phase DX policy defers the complete broad gate
+to phase end; earlier aggregate failures retain their original outcomes. This
+closure does not change Item12's historical records or authorize additional Python
+features. Final evidence index: dx2-evidence/evidence-index-c6841ab44.json.
