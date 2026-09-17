@@ -167,7 +167,7 @@ class Qualification:
         for relative in ("Cargo.toml", "Cargo.lock", ".cargo/config.toml", "crates", "lib", "vendor"):
             path = second / relative
             files.extend([path] if path.is_file() else [p for p in path.rglob("*") if p.is_file()])
-        receipt = "".join(str(p.relative_to(second)) + "\n" + digest(p) + "\n" for p in sorted(files))
+        receipt = "".join(str(p.relative_to(second)) + "\n" + digest(p) + "\n" for p in sorted(files, key=str))
         manifest = second / "sysroot.toml"
         text = re.sub(r'("sysroot-content-sha256"\s*=\s*")[^"]+',
                       lambda m: m[1] + hashlib.sha256(receipt.encode()).hexdigest(), manifest.read_text())

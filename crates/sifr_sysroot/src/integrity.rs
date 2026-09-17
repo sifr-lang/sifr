@@ -40,7 +40,9 @@ impl ResolvedSysroot {
         ] {
             collect(&self.root.join(path), &mut files).map_err(|e| e.to_string())?;
         }
-        files.sort();
+        // Release manifests use LC_ALL=C sorting of whole path strings.
+        // Path::Ord compares components and orders a/z before a.rs instead.
+        files.sort_by(|left, right| left.as_os_str().cmp(right.as_os_str()));
         let mut manifest = String::new();
         for path in files {
             let relative = path.strip_prefix(&self.root).map_err(|e| e.to_string())?;
