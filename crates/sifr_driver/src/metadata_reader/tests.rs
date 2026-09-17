@@ -48,7 +48,7 @@ fn dx7_m02_m04_m15_source_metadata_diagnostics_and_emission_agree() {
         "from sifr.collections import Counter, from_list\ndef main():\n    counts: Counter[str] = from_list([\"a\",\"a\"])\n    assert counts.get(\"a\") == 2\n",
         "from sifr.datetime import date\ndef main():\n    value: date = date(2024,1,2)\n    assert value.year == 2024\n",
         "from sifr.json import dumps_exact, from_int\ndef main():\n    assert dumps_exact(from_int(42)) == \"42\"\n",
-        "from sifr.re import search\ndef main():\n    try:\n        assert search(\"[0-9]+\", \"value42\") == \"42\"\n    except RegexError as error:\n        assert False\n",
+        "from sifr.re import search\ndef main():\n    try:\n        found: str | None = search(\"[0-9]+\", \"value42\")\n        assert found == \"42\"\n    except RegexError as error:\n        assert False\n",
     ];
     for (case, source) in cases.into_iter().enumerate() {
         let parsed = crate::parse_source(source).unwrap();
