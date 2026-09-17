@@ -9,7 +9,7 @@ impl Encode<wire::Ref<wire::PythonArrowKind>> for sifr_type_system::PythonArrowK
             sifr_type_system::PythonArrowKind::DeviceArray => wire::PythonArrowKind::DeviceArray,
             sifr_type_system::PythonArrowKind::DeviceStream => wire::PythonArrowKind::DeviceStream,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::FixedIntType>> for sifr_type_system::FixedIntType {
@@ -26,7 +26,7 @@ impl Encode<wire::Ref<wire::FixedIntType>> for sifr_type_system::FixedIntType {
             sifr_type_system::FixedIntType::ISize => wire::FixedIntType::ISize,
             sifr_type_system::FixedIntType::USize => wire::FixedIntType::USize,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::FunctionType>> for sifr_type_system::FunctionType {
@@ -36,7 +36,7 @@ impl Encode<wire::Ref<wire::FunctionType>> for sifr_type_system::FunctionType {
             params: self.params.encode(cx)?,
             return_type: self.return_type.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::ReceiverConvention>> for sifr_type_system::ReceiverConvention {
@@ -53,7 +53,7 @@ impl Encode<wire::Ref<wire::ReceiverConvention>> for sifr_type_system::ReceiverC
                 wire::ReceiverConvention::OwnedMutable
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::ParamOwnership>> for sifr_type_system::ParamOwnership {
@@ -62,7 +62,7 @@ impl Encode<wire::Ref<wire::ParamOwnership>> for sifr_type_system::ParamOwnershi
             sifr_type_system::ParamOwnership::Borrow => wire::ParamOwnership::Borrow,
             sifr_type_system::ParamOwnership::Own => wire::ParamOwnership::Own,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::ParamMutability>> for sifr_type_system::ParamMutability {
@@ -71,7 +71,7 @@ impl Encode<wire::Ref<wire::ParamMutability>> for sifr_type_system::ParamMutabil
             sifr_type_system::ParamMutability::Immutable => wire::ParamMutability::Immutable,
             sifr_type_system::ParamMutability::Mutable => wire::ParamMutability::Mutable,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::ParamConvention>> for sifr_type_system::ParamConvention {
@@ -80,6 +80,6 @@ impl Encode<wire::Ref<wire::ParamConvention>> for sifr_type_system::ParamConvent
             ownership: self.ownership().encode(cx)?,
             mutability: self.mutability().encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }

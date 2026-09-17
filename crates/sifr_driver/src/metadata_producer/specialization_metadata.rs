@@ -24,7 +24,7 @@ impl Encode<wire::Ref<wire::DeclarationMetadataTargetKind>>
                 wire::DeclarationMetadataTargetKind::Parameter
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::TypedDeclarationMetadata>> for sifr_ir::TypedDeclarationMetadata {
@@ -38,7 +38,7 @@ impl Encode<wire::Ref<wire::TypedDeclarationMetadata>> for sifr_ir::TypedDeclara
             value: self.value.encode(cx)?,
             range: self.range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::ConstSpecializationRequest>> for sifr_ir::ConstSpecializationRequest {
@@ -49,7 +49,7 @@ impl Encode<wire::Ref<wire::ConstSpecializationRequest>> for sifr_ir::ConstSpeci
             function: self.function.encode(cx)?,
             range: self.range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::DeclarationDescriptorKind>> for sifr_ir::DeclarationDescriptorKind {
@@ -60,7 +60,7 @@ impl Encode<wire::Ref<wire::DeclarationDescriptorKind>> for sifr_ir::Declaration
             sifr_ir::DeclarationDescriptorKind::Method => wire::DeclarationDescriptorKind::Method,
             sifr_ir::DeclarationDescriptorKind::Type => wire::DeclarationDescriptorKind::Type,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::ClassAdapterProviderDeclaration>>
@@ -75,7 +75,7 @@ impl Encode<wire::Ref<wire::ClassAdapterProviderDeclaration>>
             descriptor_type: self.descriptor_type.encode(cx)?,
             range: self.range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::ClassAdapterMarkerDeclaration>>
@@ -90,7 +90,7 @@ impl Encode<wire::Ref<wire::ClassAdapterMarkerDeclaration>>
             descriptor_type: self.descriptor_type.encode(cx)?,
             range: self.range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::AttachedApiSetIdentity>> for sifr_ir::AttachedApiSetIdentity {
@@ -99,7 +99,7 @@ impl Encode<wire::Ref<wire::AttachedApiSetIdentity>> for sifr_ir::AttachedApiSet
             module: self.module.encode(cx)?,
             symbol: self.symbol.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::AttachedApiSetDeclaration>> for sifr_ir::AttachedApiSetDeclaration {
@@ -108,7 +108,7 @@ impl Encode<wire::Ref<wire::AttachedApiSetDeclaration>> for sifr_ir::AttachedApi
             identity: self.identity.encode(cx)?,
             range: self.range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::AttachedApiReceiver>> for sifr_ir::AttachedApiReceiver {
@@ -119,7 +119,7 @@ impl Encode<wire::Ref<wire::AttachedApiReceiver>> for sifr_ir::AttachedApiReceiv
             sifr_ir::AttachedApiReceiver::Mutable => wire::AttachedApiReceiver::Mutable,
             sifr_ir::AttachedApiReceiver::Owned => wire::AttachedApiReceiver::Owned,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::AttachedApiDeclaration>> for sifr_ir::AttachedApiDeclaration {
@@ -137,7 +137,7 @@ impl Encode<wire::Ref<wire::AttachedApiDeclaration>> for sifr_ir::AttachedApiDec
             defaults: self.defaults.encode(cx)?,
             range: self.range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::ClassAdapterSelection>> for sifr_ir::ClassAdapterSelection {
@@ -156,7 +156,7 @@ impl Encode<wire::Ref<wire::ClassAdapterSelection>> for sifr_ir::ClassAdapterSel
             post_adapter_identity: self.post_adapter_identity.encode(cx)?,
             range: self.range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::AdapterHandlerPlan>> for sifr_ir::AdapterHandlerPlan {
@@ -169,7 +169,7 @@ impl Encode<wire::Ref<wire::AdapterHandlerPlan>> for sifr_ir::AdapterHandlerPlan
             descriptor_range: self.descriptor_range.encode(cx)?,
             declaration_order: self.declaration_order.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::AdapterFieldPlan>> for sifr_ir::AdapterFieldPlan {
@@ -181,7 +181,7 @@ impl Encode<wire::Ref<wire::AdapterFieldPlan>> for sifr_ir::AdapterFieldPlan {
             default: self.default.encode(cx)?,
             validation_policy: self.validation_policy.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::AdapterFieldDefault>> for sifr_ir::AdapterFieldDefault {
@@ -195,7 +195,7 @@ impl Encode<wire::Ref<wire::AdapterFieldDefault>> for sifr_ir::AdapterFieldDefau
                 wire::AdapterFieldDefault::Factory(v0.encode(cx)?)
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::DeclarationDescriptorFunction>>
@@ -212,7 +212,7 @@ impl Encode<wire::Ref<wire::DeclarationDescriptorFunction>>
             kind: self.kind.encode(cx)?,
             range: self.range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::CallableIdentity>> for sifr_ir::CallableIdentity {
@@ -224,7 +224,7 @@ impl Encode<wire::Ref<wire::CallableIdentity>> for sifr_ir::CallableIdentity {
             generic_arguments: self.generic_arguments.encode(cx)?,
             signature: self.signature.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::TypedDeclarationDescriptor>> for sifr_ir::TypedDeclarationDescriptor {
@@ -240,7 +240,7 @@ impl Encode<wire::Ref<wire::TypedDeclarationDescriptor>> for sifr_ir::TypedDecla
             value: self.value.encode(cx)?,
             range: self.range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::AppliedAdapterMetadata>> for sifr_ir::AppliedAdapterMetadata {
@@ -253,7 +253,7 @@ impl Encode<wire::Ref<wire::AppliedAdapterMetadata>> for sifr_ir::AppliedAdapter
             value_type: self.value_type.encode(cx)?,
             value: self.value.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::StaticProgramValue>> for sifr_ir::StaticProgramValue {
@@ -284,7 +284,7 @@ impl Encode<wire::Ref<wire::StaticProgramValue>> for sifr_ir::StaticProgramValue
                 wire::StaticProgramValue::CallableIdentity(v0.encode(cx)?)
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::StaticSpecializationOutput>> for sifr_ir::StaticSpecializationOutput {
@@ -300,7 +300,7 @@ impl Encode<wire::Ref<wire::StaticSpecializationOutput>> for sifr_ir::StaticSpec
             method_slots: self.method_slots.encode(cx)?,
             method_slot_context: self.method_slot_context.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::StaticMethodSlotContext>> for sifr_ir::StaticMethodSlotContext {
@@ -314,7 +314,7 @@ impl Encode<wire::Ref<wire::StaticMethodSlotContext>> for sifr_ir::StaticMethodS
                 wire::StaticMethodSlotContext::Mutable(v0.encode(cx)?)
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::StaticMethodSlotInputRole>> for sifr_ir::StaticMethodSlotInputRole {
@@ -328,7 +328,7 @@ impl Encode<wire::Ref<wire::StaticMethodSlotInputRole>> for sifr_ir::StaticMetho
                 wire::StaticMethodSlotInputRole::ReceiverAndValue
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::StaticMethodSlot>> for sifr_ir::StaticMethodSlot {
@@ -355,7 +355,7 @@ impl Encode<wire::Ref<wire::StaticMethodSlot>> for sifr_ir::StaticMethodSlot {
             declaration_order: self.declaration_order.encode(cx)?,
             is_fallible: self.is_fallible.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::StaticMethodParam>> for sifr_ir::StaticMethodParam {
@@ -366,7 +366,7 @@ impl Encode<wire::Ref<wire::StaticMethodParam>> for sifr_ir::StaticMethodParam {
             keyword_only: self.keyword_only.encode(cx)?,
             convention: self.convention.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::JsonIntegerBoundaryRequest>> for sifr_ir::JsonIntegerBoundaryRequest {
@@ -388,6 +388,6 @@ impl Encode<wire::Ref<wire::JsonIntegerBoundaryRequest>> for sifr_ir::JsonIntege
                 .encode(cx)?,
             range: self.range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }

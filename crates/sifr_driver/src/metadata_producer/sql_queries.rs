@@ -8,7 +8,7 @@ impl Encode<wire::Ref<wire::HirSqlQueryAdapter>> for sifr_ir::HirSqlQueryAdapter
             }
             sifr_ir::HirSqlQueryAdapter::First => wire::HirSqlQueryAdapter::First,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirSqlEffectKind>> for sifr_ir::HirSqlEffectKind {
@@ -23,7 +23,7 @@ impl Encode<wire::Ref<wire::HirSqlEffectKind>> for sifr_ir::HirSqlEffectKind {
                 wire::HirSqlEffectKind::TransactionControl
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirSqlCardinality>> for sifr_ir::HirSqlCardinality {
@@ -33,7 +33,7 @@ impl Encode<wire::Ref<wire::HirSqlCardinality>> for sifr_ir::HirSqlCardinality {
             minimum: self.minimum.encode(cx)?,
             maximum: self.maximum.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirSqlEffectContract>> for sifr_ir::HirSqlEffectContract {
@@ -43,7 +43,7 @@ impl Encode<wire::Ref<wire::HirSqlEffectContract>> for sifr_ir::HirSqlEffectCont
             referenced_objects: self.referenced_objects.encode(cx)?,
             affected_objects: self.affected_objects.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirSqlParameterSlot>> for sifr_ir::HirSqlParameterSlot {
@@ -52,7 +52,7 @@ impl Encode<wire::Ref<wire::HirSqlParameterSlot>> for sifr_ir::HirSqlParameterSl
             slot: self.slot.encode(cx)?,
             ty: self.ty.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirSqlQueryTemplate>> for sifr_ir::HirSqlQueryTemplate {
@@ -74,7 +74,7 @@ impl Encode<wire::Ref<wire::HirSqlQueryTemplate>> for sifr_ir::HirSqlQueryTempla
             adapters: self.adapters.encode(cx)?,
             ty: self.ty.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirSqlBoundQuery>> for sifr_ir::HirSqlBoundQuery {
@@ -89,7 +89,7 @@ impl Encode<wire::Ref<wire::HirSqlBoundQuery>> for sifr_ir::HirSqlBoundQuery {
             effects: self.effects.encode(cx)?,
             ty: self.ty.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirSqlExecutionMethod>> for sifr_ir::HirSqlExecutionMethod {
@@ -107,7 +107,7 @@ impl Encode<wire::Ref<wire::HirSqlExecutionMethod>> for sifr_ir::HirSqlExecution
             }
             sifr_ir::HirSqlExecutionMethod::Stream => wire::HirSqlExecutionMethod::Stream,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirSqlExecution>> for sifr_ir::HirSqlExecution {
@@ -118,6 +118,6 @@ impl Encode<wire::Ref<wire::HirSqlExecution>> for sifr_ir::HirSqlExecution {
             runtime_cardinality: self.runtime_cardinality.encode(cx)?,
             runtime_effects: self.runtime_effects.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }

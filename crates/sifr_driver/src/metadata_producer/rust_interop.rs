@@ -6,7 +6,7 @@ impl Encode<wire::Ref<wire::RustTargetPath>> for sifr_ir::RustTargetPath {
             segments: self.segments.encode(cx)?,
             span: self.span.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::RustInteropDecoratorKind>> for sifr_ir::RustInteropDecoratorKind {
@@ -22,7 +22,7 @@ impl Encode<wire::Ref<wire::RustInteropDecoratorKind>> for sifr_ir::RustInteropD
             sifr_ir::RustInteropDecoratorKind::ZeroCopy => wire::RustInteropDecoratorKind::ZeroCopy,
             sifr_ir::RustInteropDecoratorKind::View => wire::RustInteropDecoratorKind::View,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::RustInteropEffect>> for sifr_ir::RustInteropEffect {
@@ -33,7 +33,7 @@ impl Encode<wire::Ref<wire::RustInteropEffect>> for sifr_ir::RustInteropEffect {
             sifr_ir::RustInteropEffect::BlockingIo => wire::RustInteropEffect::BlockingIo,
             sifr_ir::RustInteropEffect::CpuHeavy => wire::RustInteropEffect::CpuHeavy,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::RustInteropAbiRequirements>> for sifr_ir::RustInteropAbiRequirements {
@@ -44,7 +44,7 @@ impl Encode<wire::Ref<wire::RustInteropAbiRequirements>> for sifr_ir::RustIntero
             zero_copy: self.zero_copy.encode(cx)?,
             view: self.view.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::RustInteropArgument>> for sifr_ir::RustInteropArgument {
@@ -54,7 +54,7 @@ impl Encode<wire::Ref<wire::RustInteropArgument>> for sifr_ir::RustInteropArgume
             value: self.value.encode(cx)?,
             span: self.span.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::RustInteropValue>> for sifr_ir::RustInteropValue {
@@ -83,7 +83,7 @@ impl Encode<wire::Ref<wire::RustInteropValue>> for sifr_ir::RustInteropValue {
                 wire::RustInteropValue::TargetPath(v0.encode(cx)?)
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::RustCallbackBackpressure>> for sifr_ir::RustCallbackBackpressure {
@@ -97,7 +97,7 @@ impl Encode<wire::Ref<wire::RustCallbackBackpressure>> for sifr_ir::RustCallback
                 wire::RustCallbackBackpressure::Unbounded
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::RustCallbackOverflow>> for sifr_ir::RustCallbackOverflow {
@@ -107,7 +107,7 @@ impl Encode<wire::Ref<wire::RustCallbackOverflow>> for sifr_ir::RustCallbackOver
             sifr_ir::RustCallbackOverflow::DropOldest => wire::RustCallbackOverflow::DropOldest,
             sifr_ir::RustCallbackOverflow::DropNewest => wire::RustCallbackOverflow::DropNewest,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::RustCallbackShutdown>> for sifr_ir::RustCallbackShutdown {
@@ -119,7 +119,7 @@ impl Encode<wire::Ref<wire::RustCallbackShutdown>> for sifr_ir::RustCallbackShut
                 wire::RustCallbackShutdown::DetachForbidden
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::RustThreadsafeCallbackContract>>
@@ -131,7 +131,7 @@ impl Encode<wire::Ref<wire::RustThreadsafeCallbackContract>>
             overflow: self.overflow.encode(cx)?,
             shutdown: self.shutdown.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::RustInteropDeclaration>> for sifr_ir::RustInteropDeclaration {
@@ -145,6 +145,6 @@ impl Encode<wire::Ref<wire::RustInteropDeclaration>> for sifr_ir::RustInteropDec
             abi_requirements: self.abi_requirements.encode(cx)?,
             consumes_receiver: self.consumes_receiver.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }

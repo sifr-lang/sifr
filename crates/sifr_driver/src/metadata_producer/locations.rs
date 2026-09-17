@@ -7,9 +7,6 @@ pub(super) struct SourceDeclarations {
     pub(super) parameters: Vec<String>,
 }
 pub(super) fn declarations(source: &str) -> Result<SourceDeclarations> {
-    let parsed = sifr_syntax::parse_module_raw(source, None).map_err(|_| {
-        wire::MetadataError("cannot recover checked declaration source ranges".into())
-    })?;
     fn visit(statements: &[Stmt], prefix: &str, out: &mut BTreeMap<String, (u32, u32)>) {
         fn target_names(target: &Expr, out: &mut Vec<String>) {
             match target {
@@ -78,6 +75,9 @@ pub(super) fn declarations(source: &str) -> Result<SourceDeclarations> {
             }
         }
     }
+    let parsed = sifr_syntax::parse_module_raw(source, None).map_err(|_| {
+        wire::MetadataError("cannot recover checked declaration source ranges".into())
+    })?;
     let mut locations = BTreeMap::new();
     visit(parsed.suite(), "", &mut locations);
     let mut parameters = Vec::new();

@@ -10,7 +10,7 @@ impl Encode<wire::Ref<wire::HirModule>> for sifr_ir::HirModule {
             generic_functions: self.generic_functions.encode(cx)?,
             type_param_bounds: self.type_param_bounds.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirImport>> for sifr_ir::HirImport {
@@ -20,7 +20,7 @@ impl Encode<wire::Ref<wire::HirImport>> for sifr_ir::HirImport {
             names: self.names.encode(cx)?,
             aliases: self.aliases.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirClassKind>> for sifr_ir::HirClassKind {
@@ -33,7 +33,7 @@ impl Encode<wire::Ref<wire::HirClassKind>> for sifr_ir::HirClassKind {
                 wire::HirClassKind::PythonOpaque(v0.encode(cx)?)
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirClass>> for sifr_ir::HirClass {
@@ -63,7 +63,7 @@ impl Encode<wire::Ref<wire::HirClass>> for sifr_ir::HirClass {
                     enum_variants: self.enum_variants.encode(cx)?,
                     rust_interop: self.rust_interop.encode(cx)?,
                 };
-                cx.records.intern(&value).map_err(Into::into)
+                cx.records.intern(&value)
             },
         )
     }
@@ -75,7 +75,7 @@ impl Encode<wire::Ref<wire::MethodKind>> for sifr_ir::MethodKind {
             sifr_ir::MethodKind::ClassMethod => wire::MethodKind::ClassMethod,
             sifr_ir::MethodKind::StaticMethod => wire::MethodKind::StaticMethod,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::MethodCallSource>> for sifr_ir::MethodCallSource {
@@ -85,7 +85,7 @@ impl Encode<wire::Ref<wire::MethodCallSource>> for sifr_ir::MethodCallSource {
             receiver_range: self.receiver_range.encode(cx)?,
             arg_ranges: self.arg_ranges.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::FieldIdentity>> for sifr_ir::FieldIdentity {
@@ -94,7 +94,7 @@ impl Encode<wire::Ref<wire::FieldIdentity>> for sifr_ir::FieldIdentity {
             declaring_class: self.declaring_class.encode(cx)?,
             field: self.field.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PlaceProjection>> for sifr_ir::PlaceProjection {
@@ -102,7 +102,7 @@ impl Encode<wire::Ref<wire::PlaceProjection>> for sifr_ir::PlaceProjection {
         let value = match self {
             sifr_ir::PlaceProjection::Field(v0) => wire::PlaceProjection::Field(v0.encode(cx)?),
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::Place>> for sifr_ir::Place {
@@ -111,7 +111,7 @@ impl Encode<wire::Ref<wire::Place>> for sifr_ir::Place {
             root: self.root.encode(cx)?,
             projections: self.projections.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::MutableReceiverTarget>> for sifr_ir::MutableReceiverTarget {
@@ -127,7 +127,7 @@ impl Encode<wire::Ref<wire::MutableReceiverTarget>> for sifr_ir::MutableReceiver
                 wire::MutableReceiverTarget::SpecializedIndexedStorage(v0.encode(cx)?)
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::MutableArgumentTarget>> for sifr_ir::MutableArgumentTarget {
@@ -140,7 +140,7 @@ impl Encode<wire::Ref<wire::MutableArgumentTarget>> for sifr_ir::MutableArgument
                 wire::MutableArgumentTarget::OwnedTemporary
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirFunction>> for sifr_ir::HirFunction {
@@ -164,7 +164,7 @@ impl Encode<wire::Ref<wire::HirFunction>> for sifr_ir::HirFunction {
                     compiler_intrinsic: self.compiler_intrinsic.encode(cx)?,
                     type_params: self.type_params.encode(cx)?,
                 };
-                cx.records.intern(&value).map_err(Into::into)
+                cx.records.intern(&value)
             },
         )
     }
@@ -217,7 +217,7 @@ impl Encode<wire::Ref<wire::CompilerIntrinsicId>> for sifr_ir::CompilerIntrinsic
             sifr_ir::CompilerIntrinsicId::PythonToValue => wire::CompilerIntrinsicId::PythonToValue,
             sifr_ir::CompilerIntrinsicId::PythonKwarg => wire::CompilerIntrinsicId::PythonKwarg,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirAsyncWithKind>> for sifr_ir::HirAsyncWithKind {
@@ -267,7 +267,7 @@ impl Encode<wire::Ref<wire::HirAsyncWithKind>> for sifr_ir::HirAsyncWithKind {
                 body_may_raise: body_may_raise.encode(cx)?,
             },
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirWithItemKind>> for sifr_ir::HirWithItemKind {
@@ -292,7 +292,7 @@ impl Encode<wire::Ref<wire::HirWithItemKind>> for sifr_ir::HirWithItemKind {
                 body_may_raise: body_may_raise.encode(cx)?,
             },
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirWithItem>> for sifr_ir::HirWithItem {
@@ -302,7 +302,7 @@ impl Encode<wire::Ref<wire::HirWithItem>> for sifr_ir::HirWithItem {
             context: self.context.encode(cx)?,
             kind: self.kind.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirParam>> for sifr_ir::HirParam {
@@ -314,7 +314,7 @@ impl Encode<wire::Ref<wire::HirParam>> for sifr_ir::HirParam {
             keyword_only: self.keyword_only.encode(cx)?,
             convention: self.convention.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirStmt>> for sifr_ir::HirStmt {
@@ -602,7 +602,7 @@ impl Encode<wire::Ref<wire::HirStmt>> for sifr_ir::HirStmt {
                 arms: arms.encode(cx)?,
             },
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirCollectionMutation>> for sifr_ir::HirCollectionMutation {
@@ -613,7 +613,7 @@ impl Encode<wire::Ref<wire::HirCollectionMutation>> for sifr_ir::HirCollectionMu
                 wire::HirCollectionMutation::AugAssign(v0.encode(cx)?)
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirMatchArm>> for sifr_ir::HirMatchArm {
@@ -623,7 +623,7 @@ impl Encode<wire::Ref<wire::HirMatchArm>> for sifr_ir::HirMatchArm {
             guard: self.guard.encode(cx)?,
             body: self.body.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirPattern>> for sifr_ir::HirPattern {
@@ -657,7 +657,7 @@ impl Encode<wire::Ref<wire::HirPattern>> for sifr_ir::HirPattern {
                 elements: elements.encode(cx)?,
             },
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirExceptHandler>> for sifr_ir::HirExceptHandler {
@@ -668,7 +668,7 @@ impl Encode<wire::Ref<wire::HirExceptHandler>> for sifr_ir::HirExceptHandler {
             name: self.name.encode(cx)?,
             body: self.body.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirFStringPart>> for sifr_ir::HirFStringPart {
@@ -677,7 +677,7 @@ impl Encode<wire::Ref<wire::HirFStringPart>> for sifr_ir::HirFStringPart {
             sifr_ir::HirFStringPart::Literal(v0) => wire::HirFStringPart::Literal(v0.encode(cx)?),
             sifr_ir::HirFStringPart::Expr(v0) => wire::HirFStringPart::Expr(v0.encode(cx)?),
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirIteratorOp>> for sifr_ir::HirIteratorOp {
@@ -691,7 +691,7 @@ impl Encode<wire::Ref<wire::HirIteratorOp>> for sifr_ir::HirIteratorOp {
             sifr_ir::HirIteratorOp::Zip => wire::HirIteratorOp::Zip,
             sifr_ir::HirIteratorOp::Enumerate => wire::HirIteratorOp::Enumerate,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirExpr>> for sifr_ir::HirExpr {
@@ -1007,7 +1007,7 @@ impl Encode<wire::Ref<wire::HirExpr>> for sifr_ir::HirExpr {
                 ty: ty.encode(cx)?,
             },
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirTupleTargetBinding>> for sifr_ir::HirTupleTargetBinding {
@@ -1023,7 +1023,7 @@ impl Encode<wire::Ref<wire::HirTupleTargetBinding>> for sifr_ir::HirTupleTargetB
                 }
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirTupleTarget>> for sifr_ir::HirTupleTarget {
@@ -1033,7 +1033,7 @@ impl Encode<wire::Ref<wire::HirTupleTarget>> for sifr_ir::HirTupleTarget {
             ty: self.ty.encode(cx)?,
             rebind_existing: self.rebind_existing.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonRecordExpansion>> for sifr_ir::PythonRecordExpansion {
@@ -1042,6 +1042,6 @@ impl Encode<wire::Ref<wire::PythonRecordExpansion>> for sifr_ir::PythonRecordExp
             span: self.span.encode(cx)?,
             fields: self.fields.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }

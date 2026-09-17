@@ -224,6 +224,7 @@ pub(super) fn ensure_with_hook(
 impl PreparedMetadata {
     /// Publish a validated immutable container beside the explicit destination.
     pub fn publish_output(&self, output: &Path) -> Result<()> {
+        static NEXT_OUTPUT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let parent = output
             .parent()
             .filter(|p| !p.as_os_str().is_empty())
@@ -236,7 +237,6 @@ impl PreparedMetadata {
         if output == self.path {
             return Ok(());
         }
-        static NEXT_OUTPUT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let stage = parent.join(format!(
             ".sifrmeta-{}-{}-{}",
             std::process::id(),

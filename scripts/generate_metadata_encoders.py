@@ -74,7 +74,7 @@ for group in groups:
      members=[re.match(r'(\w+)\s*:',p)[1] for p in split(tail[1:-1])]
      lines+=[f'{live}::{var} {{ {", ".join(members)} }} => wire::{name}::{var} {{ '+', '.join(f'{x}: '+(f'super::encode::error_type_set({x}, cx)?' if x=='body_error_types' else f'{x}.encode(cx)?') for x in members)+' },']
    lines+=['};']
-  lines+=['cx.records.intern(&value).map_err(Into::into)']
+  lines+=['cx.records.intern(&value)']
   if scoped:lines+=['})']
   lines+=['}','}']
   body.extend(lines)
@@ -144,14 +144,14 @@ for field in wire['SemanticExports'][1]:
  elif name in ('functions','function_defaults','class_field_defaults'):
   params='generic_functions' if name in ('functions','function_defaults') else 'class_type_params'
   kind='Function' if params=='generic_functions' else 'Class'
-  body.append(f'{name}: scoped_map(defs.{name}.get(module), defs.{params}.get(module), wire::DeclarationKind::{kind},cx)?,')
+  body.append(f'{name}: scoped_map(defs.{name}.get(module), defs.{params}.get(module), &wire::DeclarationKind::{kind},cx)?,')
  elif name=='generic_type_aliases':
   body.append('generic_type_aliases: defs.generic_type_aliases.get(module).cloned().unwrap_or_default().iter().map(|(name,(params,ty))|cx.with_owner(name,params,wire::DeclarationKind::Alias,|cx|Ok((name.encode(cx)?,(params.encode(cx)?,ty.encode(cx)?))))).collect::<Result<_>>()?,')
  elif name=='constant_integer_values':
   body.append('constant_integer_values:defs.constant_integer_values.get(module).cloned().unwrap_or_default().iter().map(|(k,v)|Ok((k.encode(cx)?,v.to_string().encode(cx)?))).collect::<Result<_>>()?,')
  else:
   body.append(f'{name}:defs.{name}.get(module).cloned().unwrap_or_default().encode(cx)?,')
-body.extend(['};cx.records.intern(&value)','}', '''fn scoped_map<T: Encode<U>,U>(values:Option<&std::collections::HashMap<String,T>>,parameters:Option<&std::collections::HashMap<String,Vec<String>>>,kind:wire::DeclarationKind,cx:&mut Encoder)->Result<std::collections::BTreeMap<wire::Ref<wire::Text>,U>> {
+body.extend(['};cx.records.intern(&value)','}', '''fn scoped_map<T: Encode<U>,U>(values:Option<&std::collections::HashMap<String,T>>,parameters:Option<&std::collections::HashMap<String,Vec<String>>>,kind:&wire::DeclarationKind,cx:&mut Encoder)->Result<std::collections::BTreeMap<wire::Ref<wire::Text>,U>> {
  let mut entries=values.into_iter().flat_map(|v|v.iter()).collect::<Vec<_>>();entries.sort_by(|a,b|a.0.cmp(b.0));
  entries.into_iter().map(|(name,value)|{let params=parameters.and_then(|m|m.get(name)).map(Vec::as_slice).unwrap_or(&[]);cx.with_owner(name,params,kind.clone(),|cx|Ok((name.encode(cx)?,value.encode(cx)?)))}).collect()
 }'''])

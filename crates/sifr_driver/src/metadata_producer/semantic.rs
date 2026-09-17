@@ -9,7 +9,7 @@ pub(super) fn project(
         functions: scoped_map(
             defs.functions.get(module),
             defs.generic_functions.get(module),
-            wire::DeclarationKind::Function,
+            &wire::DeclarationKind::Function,
             cx,
         )?,
         compiler_intrinsics: defs
@@ -74,7 +74,7 @@ pub(super) fn project(
         class_field_defaults: scoped_map(
             defs.class_field_defaults.get(module),
             defs.class_type_params.get(module),
-            wire::DeclarationKind::Class,
+            &wire::DeclarationKind::Class,
             cx,
         )?,
         declaration_metadata: defs
@@ -214,7 +214,7 @@ pub(super) fn project(
         function_defaults: scoped_map(
             defs.function_defaults.get(module),
             defs.generic_functions.get(module),
-            wire::DeclarationKind::Function,
+            &wire::DeclarationKind::Function,
             cx,
         )?,
     };
@@ -223,7 +223,7 @@ pub(super) fn project(
 fn scoped_map<T: Encode<U>, U>(
     values: Option<&std::collections::HashMap<String, T>>,
     parameters: Option<&std::collections::HashMap<String, Vec<String>>>,
-    kind: wire::DeclarationKind,
+    kind: &wire::DeclarationKind,
     cx: &mut Encoder,
 ) -> Result<std::collections::BTreeMap<wire::Ref<wire::Text>, U>> {
     let mut entries = values

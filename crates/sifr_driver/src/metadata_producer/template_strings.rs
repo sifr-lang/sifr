@@ -7,7 +7,7 @@ impl Encode<wire::Ref<wire::HirTemplateSegment>> for sifr_ir::HirTemplateSegment
             mappings: self.mappings.encode(cx)?,
             virtual_range: self.virtual_range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirTemplateStaticMapping>> for sifr_ir::HirTemplateStaticMapping {
@@ -17,7 +17,7 @@ impl Encode<wire::Ref<wire::HirTemplateStaticMapping>> for sifr_ir::HirTemplateS
             virtual_range: self.virtual_range.encode(cx)?,
             offsets: self.offsets.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirTemplateOffsetMapping>> for sifr_ir::HirTemplateOffsetMapping {
@@ -26,7 +26,7 @@ impl Encode<wire::Ref<wire::HirTemplateOffsetMapping>> for sifr_ir::HirTemplateO
             source_range: self.source_range.encode(cx)?,
             virtual_range: self.virtual_range.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirTemplateFormatSpec>> for sifr_ir::HirTemplateFormatSpec {
@@ -35,7 +35,7 @@ impl Encode<wire::Ref<wire::HirTemplateFormatSpec>> for sifr_ir::HirTemplateForm
             range: self.range.encode(cx)?,
             parts: self.parts.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirTemplateFormatSpecPart>> for sifr_ir::HirTemplateFormatSpecPart {
@@ -58,7 +58,7 @@ impl Encode<wire::Ref<wire::HirTemplateFormatSpecPart>> for sifr_ir::HirTemplate
                 format_spec: format_spec.encode(cx)?,
             },
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirTemplateInterpolation>> for sifr_ir::HirTemplateInterpolation {
@@ -74,7 +74,7 @@ impl Encode<wire::Ref<wire::HirTemplateInterpolation>> for sifr_ir::HirTemplateI
             conversion: self.conversion.encode(cx)?,
             format_spec: self.format_spec.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirTemplateString>> for sifr_ir::HirTemplateString {
@@ -86,6 +86,6 @@ impl Encode<wire::Ref<wire::HirTemplateString>> for sifr_ir::HirTemplateString {
             interpolations: self.interpolations.encode(cx)?,
             ty: self.ty.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }

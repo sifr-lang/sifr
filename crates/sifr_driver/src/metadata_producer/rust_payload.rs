@@ -3,16 +3,18 @@ use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use syn::spanned::Spanned;
 
+type RustProjection = (
+    Option<wire::Ref<wire::RustPayload>>,
+    BTreeSet<wire::Ref<wire::Text>>,
+);
+
 pub(super) fn project(
     compiled: &crate::stdlib::StdlibCompiled,
     module_name: &str,
     module: wire::Ref<wire::Module>,
     declarations: &BTreeMap<wire::Ref<wire::Text>, wire::Ref<wire::Declaration>>,
     cx: &mut Encoder,
-) -> Result<(
-    Option<wire::Ref<wire::RustPayload>>,
-    BTreeSet<wire::Ref<wire::Text>>,
-)> {
+) -> Result<RustProjection> {
     let Some(rust) = compiled.code.module_rust_code.get(module_name) else {
         return Ok((None, BTreeSet::new()));
     };

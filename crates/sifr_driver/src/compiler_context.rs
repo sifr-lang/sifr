@@ -27,6 +27,7 @@ impl CompilerContext {
     ) -> Self {
         Self::from_resolved(identity, Ok(sysroot))
     }
+    #[must_use]
     pub fn with_metadata_override(mut self, path: std::path::PathBuf) -> Self {
         self.metadata_override = Some(path);
         self

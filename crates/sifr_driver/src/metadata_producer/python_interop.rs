@@ -6,7 +6,7 @@ impl Encode<wire::Ref<wire::PythonTargetPath>> for sifr_ir::PythonTargetPath {
             segments: self.segments.encode(cx)?,
             span: self.span.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonInteropDecoratorKind>> for sifr_ir::PythonInteropDecoratorKind {
@@ -45,7 +45,7 @@ impl Encode<wire::Ref<wire::PythonInteropDecoratorKind>> for sifr_ir::PythonInte
                 wire::PythonInteropDecoratorKind::DlpackStream
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonBufferAccess>> for sifr_ir::PythonBufferAccess {
@@ -54,7 +54,7 @@ impl Encode<wire::Ref<wire::PythonBufferAccess>> for sifr_ir::PythonBufferAccess
             sifr_ir::PythonBufferAccess::Read => wire::PythonBufferAccess::Read,
             sifr_ir::PythonBufferAccess::Write => wire::PythonBufferAccess::Write,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonBufferLayout>> for sifr_ir::PythonBufferLayout {
@@ -64,7 +64,7 @@ impl Encode<wire::Ref<wire::PythonBufferLayout>> for sifr_ir::PythonBufferLayout
             sifr_ir::PythonBufferLayout::CContiguous => wire::PythonBufferLayout::CContiguous,
             sifr_ir::PythonBufferLayout::FContiguous => wire::PythonBufferLayout::FContiguous,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonBufferDeclaration>> for sifr_ir::PythonBufferDeclaration {
@@ -74,7 +74,7 @@ impl Encode<wire::Ref<wire::PythonBufferDeclaration>> for sifr_ir::PythonBufferD
             access: self.access.encode(cx)?,
             layout: self.layout.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonArrowSchemaMode>> for sifr_ir::PythonArrowSchemaMode {
@@ -88,7 +88,7 @@ impl Encode<wire::Ref<wire::PythonArrowSchemaMode>> for sifr_ir::PythonArrowSche
                 }
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonArrowDeclaration>> for sifr_ir::PythonArrowDeclaration {
@@ -97,7 +97,7 @@ impl Encode<wire::Ref<wire::PythonArrowDeclaration>> for sifr_ir::PythonArrowDec
             kind: self.kind.encode(cx)?,
             schema: self.schema.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonDlpackDevice>> for sifr_ir::PythonDlpackDevice {
@@ -107,7 +107,7 @@ impl Encode<wire::Ref<wire::PythonDlpackDevice>> for sifr_ir::PythonDlpackDevice
             sifr_ir::PythonDlpackDevice::Cuda => wire::PythonDlpackDevice::Cuda,
             sifr_ir::PythonDlpackDevice::Any => wire::PythonDlpackDevice::Any,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonDlpackStreamMode>> for sifr_ir::PythonDlpackStreamMode {
@@ -121,7 +121,7 @@ impl Encode<wire::Ref<wire::PythonDlpackStreamMode>> for sifr_ir::PythonDlpackSt
                 }
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonDlpackDeclaration>> for sifr_ir::PythonDlpackDeclaration {
@@ -131,7 +131,7 @@ impl Encode<wire::Ref<wire::PythonDlpackDeclaration>> for sifr_ir::PythonDlpackD
             stream: self.stream.encode(cx)?,
             element_type: self.element_type.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonInteropEffect>> for sifr_ir::PythonInteropEffect {
@@ -140,7 +140,7 @@ impl Encode<wire::Ref<wire::PythonInteropEffect>> for sifr_ir::PythonInteropEffe
             sifr_ir::PythonInteropEffect::BlockingIo => wire::PythonInteropEffect::BlockingIo,
             sifr_ir::PythonInteropEffect::Async => wire::PythonInteropEffect::Async,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonCleanupPolicy>> for sifr_ir::PythonCleanupPolicy {
@@ -152,7 +152,7 @@ impl Encode<wire::Ref<wire::PythonCleanupPolicy>> for sifr_ir::PythonCleanupPoli
             sifr_ir::PythonCleanupPolicy::Context => wire::PythonCleanupPolicy::Context,
             sifr_ir::PythonCleanupPolicy::AsyncContext => wire::PythonCleanupPolicy::AsyncContext,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonParameterKind>> for sifr_ir::PythonParameterKind {
@@ -167,7 +167,7 @@ impl Encode<wire::Ref<wire::PythonParameterKind>> for sifr_ir::PythonParameterKi
                 wire::PythonParameterKind::KeywordVariadic
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonCallbackLifetime>> for sifr_ir::PythonCallbackLifetime {
@@ -177,7 +177,7 @@ impl Encode<wire::Ref<wire::PythonCallbackLifetime>> for sifr_ir::PythonCallback
             sifr_ir::PythonCallbackLifetime::Result => wire::PythonCallbackLifetime::Result,
             sifr_ir::PythonCallbackLifetime::Receiver => wire::PythonCallbackLifetime::Receiver,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonCallbackDispatch>> for sifr_ir::PythonCallbackDispatch {
@@ -187,7 +187,7 @@ impl Encode<wire::Ref<wire::PythonCallbackDispatch>> for sifr_ir::PythonCallback
             sifr_ir::PythonCallbackDispatch::Foreign => wire::PythonCallbackDispatch::Foreign,
             sifr_ir::PythonCallbackDispatch::Asyncio => wire::PythonCallbackDispatch::Asyncio,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonCallbackConcurrency>> for sifr_ir::PythonCallbackConcurrency {
@@ -198,7 +198,7 @@ impl Encode<wire::Ref<wire::PythonCallbackConcurrency>> for sifr_ir::PythonCallb
                 wire::PythonCallbackConcurrency::Parallel
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonCallbackDeclaration>> for sifr_ir::PythonCallbackDeclaration {
@@ -217,7 +217,7 @@ impl Encode<wire::Ref<wire::PythonCallbackDeclaration>> for sifr_ir::PythonCallb
             owner_class: self.owner_class.encode(cx)?,
             owner_cleanup: self.owner_cleanup.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonInteropParameter>> for sifr_ir::PythonInteropParameter {
@@ -229,7 +229,7 @@ impl Encode<wire::Ref<wire::PythonInteropParameter>> for sifr_ir::PythonInteropP
             omit_when_absent: self.omit_when_absent.encode(cx)?,
             span: self.span.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::PythonInteropDeclaration>> for sifr_ir::PythonInteropDeclaration {
@@ -248,6 +248,6 @@ impl Encode<wire::Ref<wire::PythonInteropDeclaration>> for sifr_ir::PythonIntero
             arrow: self.arrow.encode(cx)?,
             dlpack: self.dlpack.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }

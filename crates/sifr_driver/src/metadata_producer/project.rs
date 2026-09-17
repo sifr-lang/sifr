@@ -96,8 +96,16 @@ pub(super) fn project(
                 .parameters
                 .iter()
                 .enumerate()
-                .map(|(slot, name)| (name.clone(), binder, slot as u32))
-                .collect(),
+                .map(|(slot, name)| {
+                    Ok((
+                        name.clone(),
+                        binder,
+                        u32::try_from(slot).map_err(|_| {
+                            wire::MetadataError("too many module generic parameters".into())
+                        })?,
+                    ))
+                })
+                .collect::<Result<_>>()?,
             origins: BTreeMap::new(),
         };
         let declaration = cx.declaration("<module>", wire::DeclarationKind::Metadata)?;

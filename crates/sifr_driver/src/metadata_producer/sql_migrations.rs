@@ -15,7 +15,7 @@ impl Encode<wire::Ref<wire::HirSqlMigrationStepKind>> for sifr_ir::HirSqlMigrati
                 wire::HirSqlMigrationStepKind::RecoveryPoint
             }
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirSqlMigrationStep>> for sifr_ir::HirSqlMigrationStep {
@@ -33,7 +33,7 @@ impl Encode<wire::Ref<wire::HirSqlMigrationStep>> for sifr_ir::HirSqlMigrationSt
             affected_objects: self.affected_objects.encode(cx)?,
             kind: self.kind.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
 impl Encode<wire::Ref<wire::HirSqlMigrationGraph>> for sifr_ir::HirSqlMigrationGraph {
@@ -44,6 +44,6 @@ impl Encode<wire::Ref<wire::HirSqlMigrationGraph>> for sifr_ir::HirSqlMigrationG
             target_fingerprint: self.target_fingerprint.encode(cx)?,
             steps: self.steps.encode(cx)?,
         };
-        cx.records.intern(&value).map_err(Into::into)
+        cx.records.intern(&value)
     }
 }
