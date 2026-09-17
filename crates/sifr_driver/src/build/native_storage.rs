@@ -59,6 +59,20 @@ impl NativeFamily {
     }
 }
 
+/// Caller-owned output roots can be shared by otherwise incompatible families.
+/// Serialize their mutation and publication independently of Cargo context.
+pub(crate) fn publication_lock(path: &Path) -> std::io::Result<File> {
+    std::fs::create_dir_all(path)?;
+    let path = path.canonicalize()?;
+    let mut id = sifr_identity::IdentityEncoder::new("native-publication-v1");
+    id.field("path", path.as_os_str().as_encoded_bytes());
+    let directory = crate::cache_storage::root().join("native/publications");
+    crate::cache_storage::directory(&directory)?;
+    let lease = crate::cache_storage::entry_lock(&directory, &id.finish())?;
+    lease.lock()?;
+    Ok(lease)
+}
+
 pub(crate) fn write_changed(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     if std::fs::read(path).is_ok_and(|current| current == bytes) {
         return Ok(());

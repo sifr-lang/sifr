@@ -72,17 +72,8 @@ pub(super) fn materialize_binary_project_sources(
         requested_vendor_mode,
     )
     .map_err(|error| vec![build_error(error.boundary_message())])?;
-    let tools = cargo_resolution
-        .native_toolchain
-        .as_ref()
-        .map_err(|error| vec![build_error(error.clone())])?;
-    let _publication = super::native_storage::NativeFamily::acquire(
-        tools.identity(),
-        "portable-export",
-        &project_path.display().to_string(),
-        "",
-    )
-    .map_err(|error| vec![build_error(error.to_string())])?;
+    let _publication = super::native_storage::publication_lock(&project_path)
+        .map_err(|error| vec![build_error(error.to_string())])?;
     let runtime_contract = if let Some(runtime) = &generated_project.python_runtime {
         let library_sha256 = runtime
             .selected_library()
@@ -286,6 +277,8 @@ pub(super) fn materialize_binary_project_at_path(
     dependency_plan: &SysrootDependencyPlan,
     cargo_resolution: &CargoResolutionPolicy,
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
+    let _publication = super::native_storage::publication_lock(project_path)
+        .map_err(|error| vec![build_error(error.to_string())])?;
     let tools = cargo_resolution
         .native_toolchain
         .as_ref()
@@ -297,11 +290,8 @@ pub(super) fn materialize_binary_project_at_path(
             dependency_plan.cargo_vendor_mode,
             dependency_plan.sysroot_root.display()
         ),
-        generated_project
-            .cache_key_fragment
-            .as_deref()
-            .unwrap_or(""),
-        &generated_project.interop.cache_key_fragment(),
+        &python_environment(&generated_project),
+        &format!("{:?}", generated_project.interop.rust.trust_requirements),
     )
     .map_err(|error| vec![build_error(error.to_string())])?;
     materialize_binary_project_at_path_with_target(

@@ -111,14 +111,16 @@ fn dx9_real_concurrent_same_root_capture_is_serialized() {
             let path = root.join("app");
             std::thread::spawn(move || {
                 // The publication path is deliberately caller-owned for this API.
-                // Capture while holding the same native family lease below.
+                // Different native contexts still serialize the caller-owned root.
+                let publication =
+                    super::native_storage::publication_lock(&path).expect("publication lease");
                 let tools = CargoResolutionPolicy::normal()
                     .native_toolchain
                     .expect("tools");
                 let family = super::native_storage::NativeFamily::acquire(
                     tools.identity(),
                     "dx9-concurrent",
-                    "",
+                    &value.to_string(),
                     "",
                 )
                 .expect("family");
@@ -138,6 +140,7 @@ fn dx9_real_concurrent_same_root_capture_is_serialized() {
                 let captured = family.root.join(format!("captured-{value}"));
                 std::fs::copy(report.binary_path, &captured).expect("capture");
                 drop(family);
+                drop(publication);
                 assert_eq!(
                     std::process::Command::new(captured)
                         .output()
