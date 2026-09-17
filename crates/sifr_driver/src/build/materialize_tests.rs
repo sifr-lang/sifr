@@ -372,7 +372,10 @@ fn python_native_loader_materialization_preserves_selection_and_removes_stale_pa
     assert!(!loader.contains("/opt/a python"));
     assert!(!loader.contains("/opt/another python"));
     crate::build::portable_project::publish_portable_project(&local, &portable)
-        .expect("portable publication should remove obsolete loader script");
-    assert!(!portable.join("build.rs").exists());
+        .expect("portable publication should replace the obsolete Python loader path");
+    assert_eq!(
+        std::fs::read_to_string(portable.join("build.rs")).expect("generic published loader"),
+        loader
+    );
     std::fs::remove_dir_all(root).expect("remove owned test fixture");
 }
