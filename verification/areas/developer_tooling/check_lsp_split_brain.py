@@ -57,7 +57,7 @@ def violations(paths: list[Path]) -> list[str]:
 
 def project_fallback_violations(path: Path, text: str) -> list[str]:
     failures: list[str] = []
-    fallback_calls = text.count("LspDocumentAnalysis::open(document)")
+    fallback_calls = text.count("LspDocumentAnalysis::open(")
     if fallback_calls != 2:
         failures.append(
             f"{path.relative_to(REPO_ROOT)} has {fallback_calls} standalone document open call(s); expected 2 no-project branches"
@@ -68,7 +68,7 @@ def project_fallback_violations(path: Path, text: str) -> list[str]:
     else:
         refresh_next = text.find("pub(crate) fn", refresh_start + 1)
         refresh_text = text[refresh_start:] if refresh_next == -1 else text[refresh_start:refresh_next]
-        if "LspDocumentAnalysis::open(document)" in refresh_text:
+        if "LspDocumentAnalysis::open(" in refresh_text:
             failures.append(f"{path.relative_to(REPO_ROOT)} refresh_projects creates standalone project fallback")
         if "self.documents.remove(document.uri())" not in refresh_text:
             failures.append(f"{path.relative_to(REPO_ROOT)} refresh_projects must drop standalone project entries")
@@ -99,7 +99,7 @@ def project_fallback_violations(path: Path, text: str) -> list[str]:
             failures.append(f"{path.relative_to(REPO_ROOT)} {method} has unverifiable {boundary_label}")
             continue
         project_arm = method_text[project_arm_start:project_arm_end]
-        if "LspDocumentAnalysis::open(document)" in project_arm:
+        if "LspDocumentAnalysis::open(" in project_arm:
             failures.append(
                 f"{path.relative_to(REPO_ROOT)} {method} creates standalone analysis from a project-owned path"
             )
@@ -239,6 +239,19 @@ impl LspAnalysisWorkspace {
         found = violations([seed])
     if not any("refresh_projects must drop standalone project entries" in item for item in found):
         raise SystemExit("LSP split-brain self-test failed: seeded missing refresh remove passed")
+    current = (LSP_ROOT / "src" / "analysis_workspace.rs").read_text(encoding="utf-8")
+    current_path = LSP_ROOT / "src" / "analysis_workspace.rs"
+    if project_fallback_violations(current_path, current):
+        raise SystemExit("LSP split-brain self-test failed: context-injected routing rejected")
+    seeded = current.replace(
+        "if let Some(project) = self.projects.get_mut(&root) {",
+        "if let Some(project) = self.projects.get_mut(&root) {"
+        "\nlet fallback = LspDocumentAnalysis::open(&self.compiler, document);",
+        1,
+    )
+    found = project_fallback_violations(current_path, seeded)
+    if not any("standalone analysis from a project-owned path" in item for item in found):
+        raise SystemExit("LSP split-brain self-test failed: context-injected project fallback passed")
     print("LSP split-brain self-test: PASS")
 
 
