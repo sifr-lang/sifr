@@ -140,7 +140,7 @@ pub(super) fn prepare_cargo_resolution(
                 &policy.trusted_vendor_dirs,
             )?;
             if let Some(parent) = prepared_lock.parent() {
-                std::fs::create_dir_all(parent).map_err(|error| {
+                crate::cache_storage::directory(parent).map_err(|error| {
                     vec![cargo_resolution_error(format!(
                         "failed to create prepared Cargo resolution cache '{}': {error}",
                         parent.display()

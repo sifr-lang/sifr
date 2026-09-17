@@ -43,6 +43,9 @@ fn storage_child() {
             old_path.exists(),
             "concurrent prune removed active older reader"
         );
+        let auxiliary = crate::cache_storage::root().join("native/artifacts/cargo_resolution");
+        std::fs::create_dir_all(&auxiliary).unwrap();
+        std::fs::write(auxiliary.join("auxiliary"), b"protected").unwrap();
         drop(old);
         crate::cache_storage::prune(1, u64::MAX, false).unwrap();
         assert!(old_path.exists(), "size alone caused cleanup");

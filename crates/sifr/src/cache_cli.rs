@@ -25,6 +25,9 @@ pub(crate) fn run(args: CacheArgs) -> i32 {
         CacheCommand::Inspect { json } => match sifr_driver::cache_storage::inspect() {
             Ok(report) if !json => {
                 let _ = writeln!(io::stdout(), "cache: {}", report.root.display());
+                for root in report.protected_roots {
+                    let _ = writeln!(io::stdout(), "{} protected=true (auxiliary owner)", root.display());
+                }
                 for entry in report.entries {
                     let _ = writeln!(io::stdout(), "{} bytes={} protected={}",
                         entry.path.display(), entry.bytes, entry.protected);

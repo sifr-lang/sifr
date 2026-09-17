@@ -174,6 +174,7 @@ fn inherit_lease(file: &File) -> io::Result<()> {
 pub struct CacheInspection {
     pub root: PathBuf,
     pub entries: Vec<CacheEntryInspection>,
+    pub protected_roots: Vec<PathBuf>,
 }
 #[derive(serde::Serialize)]
 pub struct CacheEntryInspection {
@@ -205,11 +206,18 @@ fn size(path: &Path) -> io::Result<u64> {
 pub fn inspect() -> io::Result<CacheInspection> {
     let root = root().join("native/artifacts");
     let mut entries = Vec::new();
+    let mut protected_roots = Vec::new();
     let scope = owner_scope()?;
     if root.exists() {
         directory(&root)?;
         for family in fs::read_dir(&root)? {
             let family = family?.path();
+            // Auxiliary Cargo resolution/probe roots have different owners and
+            // no finalized-entry lock namespace; never inspect or prune them.
+            if !family.join(".locks").is_dir() {
+                protected_roots.push(family);
+                continue;
+            }
             check_owned(&family)?;
             if !family.is_dir() {
                 continue;
@@ -284,7 +292,11 @@ pub fn inspect() -> io::Result<CacheInspection> {
             entry.protected = true;
         }
     }
-    Ok(CacheInspection { root, entries })
+    Ok(CacheInspection {
+        root,
+        entries,
+        protected_roots,
+    })
 }
 
 /// Explicit pressure input comes from the resource-policy owner. No target-size

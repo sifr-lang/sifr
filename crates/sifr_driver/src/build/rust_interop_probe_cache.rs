@@ -51,10 +51,22 @@ fn probe_cache_file_with_env(
 }
 
 pub(super) fn mark_probe_cache_hit(path: &Path) {
-    if let Some(parent) = path.parent() {
-        let _ = fs::create_dir_all(parent);
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+    let Some(parent) = path.parent() else { return };
+    if crate::cache_storage::directory(parent).is_err() {
+        return;
     }
-    let _ = fs::write(path, b"ok\n");
+    if let Ok(mut file) = fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .mode(0o600)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(path)
+    {
+        let _ = file.write_all(b"ok\n");
+    }
 }
 
 pub(super) fn probe_cache_key(
