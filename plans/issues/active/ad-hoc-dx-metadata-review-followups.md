@@ -1,6 +1,6 @@
 # DX metadata review observations
 
-status: open follow-up suggestions; nonblocking for DX.5–DX.7
+status: open follow-up suggestions; nonblocking for DX.5–DX.8
 source candidate: `c7734025c242631a326901ce08c846ac42afd7ae`
 implementation: [PR #3848](https://github.com/sifr-lang/sifr/pull/3848)
 review: [Claude Opus 5, SATISFIED](https://github.com/sifr-lang/sifr/pull/3848#issuecomment-5712915895)
@@ -78,5 +78,38 @@ permission to implement the next item during its record-only closure.
 | DX7-F6 | performance reporting owner | The empty allocator sample grows by 0.107 MiB (0.070 → 0.177 MiB), while steady, peak and retained totals decrease. Keep this absolute increase visible alongside the larger reductions; no optimization is required by this observation. |
 | DX7-F7 | package graph/editor owner, separate scoped assessment | The frozen DX.1 demanded-stdlib fixture already reports `SIFR-PACKAGE-0103` for its Cargo package graph. All paired DX.7 samples preserve the exact diagnostic while demand checking executes. Investigate package graph setup separately; do not erase the diagnostic, change the frozen workload, or claim clean-package editor correctness from this measurement. |
 | DX7-F8 | compiler measurement receipt owner, future scoped maintenance | The existing lane receipt still labels embedded compatibility identity as unavailable-before-DX.2. DX.7 evidence separately verifies the actual installed descriptor's compiler identity and binary digest. Update the receipt probe when next editing that owner; do not treat the legacy label as authoritative evidence of absent identity. |
+
+No implementation for these observations belongs to this record-only update.
+
+
+## DX.8 disposition and new observations
+
+Source candidate: `78f12c5cdd357f1601926f3fa78ec96f004108dd`.
+Implementation: [PR #3854](https://github.com/sifr-lang/sifr/pull/3854).
+Review: [Claude Opus 5, SATISFIED](https://github.com/sifr-lang/sifr/pull/3854#issuecomment-5722224549).
+These observations are nonblocking; they do not authorize implementation during
+this record-only update or add DX.8 acceptance requirements.
+
+- DX7-F5 is addressed by the full 727-case source/metadata corpus for four
+  targets, full native corpus with exact-input reuse, installed behavioral
+  qualification and actual complete Linux/Mac portable-record comparison.
+  The single phase-end full gate remains required.
+- DX7-F6 remains visible in the new paired measurements: empty allocated chunks
+  increase by 0.104 MiB while steady/peak/retained totals decrease.
+- DX7-F4's ordinary-consumer missing-required-module diagnostic suggestion
+  remains distinct from DX.8's complete canonical inventory validation.
+  Earlier storage, overlay, package-graph and receipt-label suggestions retain
+  their recorded owners; this handoff does not claim they were implemented.
+
+| ID | Owner / suggested timing | Observation and proposed follow-up |
+| --- | --- | --- |
+| DX8-F1 | semantic producer identity, future scoped maintenance | Portable source tokens currently cover `sifr_stdlib_manifest`, `sifr_stdlib_imports` and `sifr_ir`, but not `sifr_rust_interop_catalog`, which previously participated through compiled tokens. The strict compiler envelope still covers catalog changes, preventing stale compatibility. Consider a portable catalog source token to restore producer-input granularity. |
+| DX8-F2 | driver metadata producer, future scoped maintenance | Development doctor duplicates the ensure cache-key derivation. A shared helper would prevent future producer/doctor path drift. Current paths match and the committed real-CLI regression passes. |
+| DX8-F3 | sysroot verification adapter, future scoped maintenance | The installed corpus branch catches only a narrow error tuple; malformed JSON, missing keys or archive errors can escape as an area crash instead of a recorded failure. The new development structural branch handles JSON/value/key errors. |
+| DX8-F4 | sysroot integrity owner, future scoped maintenance | Integrity traversal hardcodes descriptor/binary relative paths instead of deriving them from `SysrootPaths`; missing optional package entries can expose raw I/O errors rather than the other branches' reinstall remedy. |
+| DX8-F5 | distribution code cleanup, future scoped maintenance | The changed printf backslash spelling inside the unquoted generated-installer heredoc is a harmless no-op. Consider removing this misleading cosmetic diff when next touching the owner. |
+| DX8-F6 | verification preparation/performance, future scoped assessment | The committed development-doctor regression adds the existing source compiler build to metadata-structural (13m03s in the recorded cold source-target rebuild). Merge/nightly/release share that target with boundary-equivalence; create-PR can pay this setup independently. Assess reuse without weakening the source compiler graph contract or assertions. |
+| DX8-F7 | verification storage owner, pressure-based cleanup assessment | Each metadata-doctor run retains its evidence tree and published metadata under `target/verification/actual/sysroot_release`, following the existing metadata-installed retention pattern. Account for inactive owned artifacts under the pressure policy. |
+| DX8-F8 | sysroot verification adapter, next scoped addition | `runner.py` is 891 lines and passes the 900-line guardrail. A future addition should split responsibilities instead of shaving lines. |
 
 No implementation for these observations belongs to this record-only update.
