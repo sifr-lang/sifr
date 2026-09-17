@@ -406,8 +406,8 @@ fn owner_type_for_identity(
                     .map(Type::TypeVar)
                     .collect(),
                 name: class.name.clone(),
-                fields: class.fields.clone(),
-                methods: Vec::new(),
+                fields: class.fields.clone().into(),
+                methods: Vec::new().into(),
                 parent_class: class.semantic_parent_chain(),
             });
         }

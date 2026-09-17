@@ -126,8 +126,8 @@ mod tests {
             identity: Some("models.Parent".to_string()),
             type_args: vec![type_arg],
             name: "Parent".to_string(),
-            fields: vec![("value".to_string(), field)],
-            methods: Vec::new(),
+            fields: vec![("value".to_string(), field)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         }
     }
@@ -186,8 +186,9 @@ mod tests {
             fields: vec![(
                 "value".to_string(),
                 Type::Union(vec![Type::None, Type::TypeVar("U".to_string())]),
-            )],
-            methods: Vec::new(),
+            )]
+            .into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let imported_parent = parent(
@@ -196,8 +197,8 @@ mod tests {
                 identity: Some("models.Inner".to_string()),
                 type_args: vec![Type::TypeVar("T".to_string())],
                 name: "Inner".to_string(),
-                fields: Vec::new(),
-                methods: Vec::new(),
+                fields: Vec::new().into(),
+                methods: Vec::new().into(),
                 parent_class: None,
             },
         );

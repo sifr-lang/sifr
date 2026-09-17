@@ -34,8 +34,8 @@ mod tests {
             identity: identity.map(str::to_string),
             type_args: Vec::new(),
             name: "Error".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: parent_class.map(str::to_string),
         }
     }

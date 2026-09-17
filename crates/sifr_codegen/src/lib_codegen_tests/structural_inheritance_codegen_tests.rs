@@ -17,8 +17,8 @@ fn concrete_generic_child_flattens_parent_fields_for_structural_bridge() {
         identity: Some("models.GenericParent".to_string()),
         type_args: vec![Type::Int],
         name: "GenericParent".to_string(),
-        fields: vec![("value".to_string(), Type::Int)],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::Int)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let child = HirClass {
@@ -42,8 +42,9 @@ fn concrete_generic_child_flattens_parent_fields_for_structural_bridge() {
                 fields: vec![
                     ("value".to_string(), Type::Int),
                     ("label".to_string(), Type::Str),
-                ],
-                methods: Vec::new(),
+                ]
+                .into(),
+                methods: Vec::new().into(),
                 parent_class: Some("models.GenericParent".to_string()),
             },
         )],
@@ -128,8 +129,8 @@ fn plain_data_parent_flattens_into_structural_child_impls() {
             identity: Some("main.Parent".to_string()),
             type_args: Vec::new(),
             name: "Parent".to_string(),
-            fields: vec![("value".to_string(), Type::Int)],
-            methods: Vec::new(),
+            fields: vec![("value".to_string(), Type::Int)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         }),
         is_hashable: true,
@@ -156,8 +157,8 @@ fn recursive_boxed_data_parent_is_not_structurally_emitted_for_child() {
         identity: Some("main.Node".to_string()),
         type_args: Vec::new(),
         name: "Node".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let recursive_field = Type::Union(vec![Type::None, recursive_type]);
@@ -176,8 +177,8 @@ fn recursive_boxed_data_parent_is_not_structurally_emitted_for_child() {
             identity: Some("main.Node".to_string()),
             type_args: Vec::new(),
             name: "Node".to_string(),
-            fields: vec![("next".to_string(), recursive_field)],
-            methods: Vec::new(),
+            fields: vec![("next".to_string(), recursive_field)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         }),
         is_hashable: true,

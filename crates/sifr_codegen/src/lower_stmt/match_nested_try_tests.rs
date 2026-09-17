@@ -5,8 +5,8 @@ fn test_error_type(name: &str) -> Type {
         identity: None,
         type_args: Vec::new(),
         name: name.to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     }
 }
@@ -49,8 +49,8 @@ fn lowers_match_with_class_patterns_and_captures() {
         identity: None,
         type_args: Vec::new(),
         name: "Point".to_string(),
-        fields: vec![("x".to_string(), Type::Int), ("y".to_string(), Type::Int)],
-        methods: vec![],
+        fields: vec![("x".to_string(), Type::Int), ("y".to_string(), Type::Int)].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
     let stmt = HirStmt::Match {
@@ -125,16 +125,16 @@ fn lowers_borrowed_union_match_with_string_concat_returns() {
         identity: Some("sifr.csv.Error".to_string()),
         type_args: Vec::new(),
         name: "Error".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let config_error = Type::Class {
         identity: Some("sifr.configparser.Error".to_string()),
         type_args: Vec::new(),
         name: "Error".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let union = Type::Union(vec![config_error.clone(), csv_error.clone()]);
@@ -200,16 +200,16 @@ fn lowers_result_error_union_class_pattern() {
         identity: None,
         type_args: Vec::new(),
         name: "HandlerError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: vec![],
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: vec![].into(),
         parent_class: Some("Error".to_string()),
     };
     let python_error = Type::Class {
         identity: None,
         type_args: Vec::new(),
         name: "PythonError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: vec![],
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: vec![].into(),
         parent_class: Some("Error".to_string()),
     };
     let error_union = Type::Union(vec![python_error, handler_error.clone()]);
@@ -463,8 +463,8 @@ fn does_not_lower_try_except_with_typed_handler() {
                 identity: None,
                 type_args: Vec::new(),
                 name: "IOError".to_string(),
-                fields: vec![],
-                methods: vec![],
+                fields: vec![].into(),
+                methods: vec![].into(),
                 parent_class: None,
             }),
             name: None,

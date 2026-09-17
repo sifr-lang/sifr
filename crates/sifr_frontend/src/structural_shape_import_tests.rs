@@ -196,8 +196,8 @@ class Outer[T]:
         identity: Some("models.Inner".to_string()),
         type_args: vec![Type::Str],
         name: "Inner".to_string(),
-        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     models.class_adapter_selections.push(ClassAdapterSelection {

@@ -73,8 +73,8 @@ fn local_object_record_uses_async_record_conversion_not_sealed_handle() {
         identity: None,
         type_args: Vec::new(),
         name: "Object".to_string(),
-        fields: vec![("value".to_string(), Type::Int)],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::Int)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let function = function(
@@ -107,16 +107,17 @@ fn recursive_factory_emits_loop_thread_schema_and_owned_opaque_result() {
         fields: vec![
             ("name".to_string(), Type::Str),
             ("scores".to_string(), Type::List(Box::new(Type::Int))),
-        ],
-        methods: Vec::new(),
+        ]
+        .into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let client = Type::Class {
         identity: None,
         type_args: Vec::new(),
         name: "Client".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("NonSend".to_string()),
     };
     let mut opaque = HashMap::new();
@@ -230,8 +231,8 @@ fn async_owner_methods_observe_typed_retained_callback_failures() {
         identity: None,
         type_args: Vec::new(),
         name: "HandlerError".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     }];
 
@@ -295,8 +296,9 @@ fn zero_argument_record_wrapper_emits_concrete_frames_and_borrowed_field_names()
         fields: vec![
             ("status".to_string(), Type::Int),
             ("message".to_string(), Type::Str),
-        ],
-        methods: Vec::new(),
+        ]
+        .into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let function = function(
@@ -572,8 +574,8 @@ fn retained_asyncio_result_masks_native_cancellation_until_rollback_finishes() {
         identity: None,
         type_args: Vec::new(),
         name: "Subscription".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("NonSend".to_string()),
     };
     let wrapper = function(
@@ -631,8 +633,8 @@ fn async_python_error_converts_to_an_active_error_supertype() {
                 identity: None,
                 type_args: Vec::new(),
                 name: "Error".to_string(),
-                fields: vec![("message".to_string(), Type::Str)],
-                methods: Vec::new(),
+                fields: vec![("message".to_string(), Type::Str)].into(),
+                methods: Vec::new().into(),
                 parent_class: None,
             }),
         ),
@@ -779,7 +781,7 @@ fn python_error_type() -> Type {
             .into_iter()
             .map(|name| (name.to_string(), Type::Str))
             .collect(),
-        methods: Vec::new(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     }
 }

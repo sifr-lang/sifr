@@ -307,8 +307,8 @@ mod tests {
             identity: identity.map(str::to_string),
             type_args: Vec::new(),
             name: "Selected".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         }
     }

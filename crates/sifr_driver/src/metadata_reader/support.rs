@@ -22,7 +22,7 @@ impl Provider {
         let closure = self.closure(requested)?;
         for name in &closure {
             let module = self.metadata.store.get(self.modules[name])?;
-            let mut cx = Decoder::new(&self.metadata.store);
+            let mut cx = Decoder::with_nominals(&self.metadata.store, &self.nominals);
             let hir = Arc::<sifr_ir::HirModule>::decode(&module.hir_inventory, &mut cx)?;
             super::templates::validate(&self.metadata.store, &module)?;
             let semantics = self.semantic(name)?;

@@ -477,8 +477,8 @@ fn join_item_id_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "JoinItemId".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     }
 }
@@ -488,8 +488,8 @@ fn cancel_outcome_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "CancelOutcome".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     }
 }
@@ -502,8 +502,8 @@ fn worker_error_type(name: &str, ctx: &LowerCtx) -> Type {
             identity: Some(format!("sifr.parallel.{name}")),
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         })
 }

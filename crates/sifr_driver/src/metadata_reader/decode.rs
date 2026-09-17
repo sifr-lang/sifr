@@ -98,3 +98,8 @@ impl<K: Decode<X> + Hash + Eq, V: Decode<Y>, X, Y> Decode<Vec<(X, Y)>> for HashM
             .collect()
     }
 }
+impl<T: Decode<W>, W> Decode<Vec<W>> for sifr_type_system::SharedVec<T> {
+    fn decode(value: &Vec<W>, cx: &mut Decoder) -> Result<Self> {
+        value.iter().map(|v| T::decode(v, cx)).collect()
+    }
+}

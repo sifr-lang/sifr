@@ -77,8 +77,8 @@ fn nominal() -> Type {
         identity: Some("app.Widget".to_string()),
         type_args: vec![Type::Int],
         name: "Widget".to_string(),
-        fields: vec![("value".to_string(), Type::Int)],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::Int)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     }
 }
@@ -135,7 +135,7 @@ fn every_type_variant_uses_structured_conversion() {
         Type::Protocol {
             identity: Some("app.Readable".to_string()),
             name: "Readable".to_string(),
-            methods: vec![("read".to_string(), function())],
+            methods: vec![("read".to_string(), function())].into(),
         },
         Type::Newtype {
             identity: Some("app.UserId".to_string()),
@@ -156,7 +156,7 @@ fn every_type_variant_uses_structured_conversion() {
         Type::Enum {
             identity: Some("app.Color".to_string()),
             name: "Color".to_string(),
-            variants: vec![("RED".to_string(), Some(1))],
+            variants: vec![("RED".to_string(), Some(1))].into(),
         },
         Type::Decimal,
         Type::BigDecimal,

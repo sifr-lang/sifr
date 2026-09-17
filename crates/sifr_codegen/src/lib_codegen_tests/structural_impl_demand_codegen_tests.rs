@@ -149,8 +149,8 @@ fn project_union_resolves_structural_members_from_their_defining_module() {
         identity: Some("models.Payload".to_string()),
         type_args: Vec::new(),
         name: "Payload".to_string(),
-        fields: vec![("value".to_string(), Type::Int)],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::Int)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let api = module(
@@ -184,8 +184,8 @@ fn project_record_eligibility_resolves_nested_imported_members() {
         identity: Some("models.Leaf".to_string()),
         type_args: Vec::new(),
         name: "Leaf".to_string(),
-        fields: vec![("value".to_string(), Type::Int)],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::Int)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let mut payload = payload_class();
@@ -195,8 +195,8 @@ fn project_record_eligibility_resolves_nested_imported_members() {
         identity: Some("records.Payload".to_string()),
         type_args: Vec::new(),
         name: "Payload".to_string(),
-        fields: vec![("leaf".to_string(), leaf_type)],
-        methods: Vec::new(),
+        fields: vec![("leaf".to_string(), leaf_type)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let records = module(
@@ -421,7 +421,7 @@ fn structural_demand_emits_checked_enum_and_ordinary_union_impls() {
     let enum_type = Type::Enum {
         identity: Some("main.Status".to_string()),
         name: "Status".to_string(),
-        variants: enumeration.enum_variants.clone(),
+        variants: enumeration.enum_variants.clone().into(),
     };
     let mut container = payload_class();
     container.name = "SumPayload".to_string();
@@ -780,8 +780,8 @@ fn project_static_program_owners_include_supported_imported_fields() {
             Type::Class {
                 identity: Some("support.ImportedPayload".to_string()),
                 name: "ImportedPayload".to_string(),
-                fields: vec![("value".to_string(), Type::Int)],
-                methods: Vec::new(),
+                fields: vec![("value".to_string(), Type::Int)].into(),
+                methods: Vec::new().into(),
                 parent_class: None,
                 type_args: Vec::new(),
             },

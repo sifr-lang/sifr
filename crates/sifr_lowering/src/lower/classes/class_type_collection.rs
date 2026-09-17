@@ -247,7 +247,7 @@ pub(in crate::lower) fn collect_class_type(
         let proto_ty = Type::Protocol {
             identity: declared_class_identity(ctx.current_module_name.as_deref(), &class_name),
             name: class_name.clone(),
-            methods: methods.clone(),
+            methods: methods.clone().into(),
         };
         ctx.class_types.insert(class_name, proto_ty);
         return;
@@ -342,8 +342,8 @@ pub(in crate::lower) fn collect_class_type(
                 .map(Type::TypeVar)
                 .collect(),
             name: class_name.clone(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: parent_class_chain.clone(),
         },
     );
@@ -745,8 +745,8 @@ pub(in crate::lower) fn collect_class_type(
         identity: declared_class_identity(ctx.current_module_name.as_deref(), &class_name),
         type_args: generic_type_args,
         name: class_name.clone(),
-        fields: fields.clone(),
-        methods: methods.clone(),
+        fields: fields.clone().into(),
+        methods: methods.clone().into(),
         parent_class: if is_python_opaque {
             Some("NonSend".to_string())
         } else {

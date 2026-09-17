@@ -66,8 +66,8 @@ fn simple_star_unpack_requires_structured_cardinality_handling() {
             identity: None,
             name: "ValueError".to_string(),
             type_args: vec![],
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: None,
         }),
     };

@@ -234,7 +234,7 @@ pub(super) fn lowers_enum_variant_equality_compare() {
     let enum_ty = Type::Enum {
         identity: None,
         name: "Color".to_string(),
-        variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+        variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))].into(),
     };
     let cmp = HirExpr::Compare {
         left: Box::new(HirExpr::EnumVariant {
@@ -263,7 +263,7 @@ pub(super) fn does_not_lower_enum_variant_ordering_compare() {
     let enum_ty = Type::Enum {
         identity: None,
         name: "Color".to_string(),
-        variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+        variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))].into(),
     };
     let cmp = HirExpr::Compare {
         left: Box::new(HirExpr::EnumVariant {
@@ -290,7 +290,7 @@ pub(super) fn lowers_alias_wrapped_enum_variant_equality_compare() {
         Type::Enum {
             identity: None,
             name: "Color".to_string(),
-            variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+            variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))].into(),
         },
     );
     let cmp = HirExpr::Compare {
@@ -322,7 +322,7 @@ pub(super) fn does_not_lower_alias_wrapped_enum_variant_ordering_compare() {
         Type::Enum {
             identity: None,
             name: "Color".to_string(),
-            variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+            variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))].into(),
         },
     );
     let cmp = HirExpr::Compare {
@@ -710,8 +710,8 @@ pub(super) fn does_not_lower_field_access_for_non_self_name() {
                 identity: None,
                 type_args: Vec::new(),
                 name: "Point".to_string(),
-                fields: vec![],
-                methods: vec![],
+                fields: vec![].into(),
+                methods: vec![].into(),
                 parent_class: None,
             },
         }),
@@ -732,8 +732,8 @@ pub(super) fn does_not_lower_self_field_access() {
                 identity: None,
                 type_args: Vec::new(),
                 name: "Point".to_string(),
-                fields: vec![],
-                methods: vec![],
+                fields: vec![].into(),
+                methods: vec![].into(),
                 parent_class: None,
             },
         }),
@@ -754,8 +754,8 @@ pub(super) fn does_not_lower_subclass_field_access() {
                 identity: None,
                 type_args: Vec::new(),
                 name: "Dog".to_string(),
-                fields: vec![],
-                methods: vec![],
+                fields: vec![].into(),
+                methods: vec![].into(),
                 parent_class: Some("Animal".to_string()),
             },
         }),

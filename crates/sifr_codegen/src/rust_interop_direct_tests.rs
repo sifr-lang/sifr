@@ -50,8 +50,8 @@ fn rust_interop_function_body_emits_owned_threadsafe_callback_policy() {
         identity: None,
         type_args: Vec::new(),
         name: "CallbackError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let func = HirFunction {
@@ -169,8 +169,8 @@ fn rust_interop_method_body_emits_self_handle_call() {
         identity: None,
         type_args: Vec::new(),
         name: "EncodeError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let func = HirFunction {
@@ -440,8 +440,8 @@ fn emitted_direct_result_none_interop_does_not_append_ok_tail() {
         identity: None,
         type_args: Vec::new(),
         name: "ZipError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let module = HirModule {
@@ -538,8 +538,9 @@ fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata()
             ("exception_type".to_string(), Type::Str),
             ("traceback".to_string(), Type::Str),
             ("context".to_string(), Type::Str),
-        ],
-        methods: Vec::new(),
+        ]
+        .into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let func = HirFunction {
@@ -587,16 +588,17 @@ fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
             ("exception_type".to_string(), Type::Str),
             ("traceback".to_string(), Type::Str),
             ("context".to_string(), Type::Str),
-        ],
-        methods: Vec::new(),
+        ]
+        .into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let object = Type::Class {
         identity: Some("_sifr.python.Object".to_string()),
         type_args: Vec::new(),
         name: "Object".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("NonSend".to_string()),
     };
     let func = HirFunction {
@@ -668,8 +670,9 @@ fn rust_interop_function_body_converts_python_int_dict_return() {
             ("exception_type".to_string(), Type::Str),
             ("traceback".to_string(), Type::Str),
             ("context".to_string(), Type::Str),
-        ],
-        methods: Vec::new(),
+        ]
+        .into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let func = HirFunction {

@@ -184,11 +184,12 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "Counter".to_string(),
-            fields: vec![],
+            fields: vec![].into(),
             methods: vec![(
                 "__iter__".to_string(),
                 FunctionType::new(vec![], Type::Iterator(Box::new(Type::Int))),
-            )],
+            )]
+            .into(),
             parent_class: None,
         };
 
@@ -202,15 +203,15 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "CounterIter".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let iterator_class = Type::Class {
             identity: None,
             type_args: Vec::new(),
             name: "CounterIter".to_string(),
-            fields: vec![],
+            fields: vec![].into(),
             methods: vec![
                 (
                     "__iter__".to_string(),
@@ -220,7 +221,8 @@ mod tests {
                     "__next__".to_string(),
                     FunctionType::new(vec![], Type::Union(vec![Type::Int, Type::None])),
                 ),
-            ],
+            ]
+            .into(),
             parent_class: None,
         };
 
@@ -235,7 +237,7 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "Deck".to_string(),
-            fields: vec![],
+            fields: vec![].into(),
             methods: vec![
                 (
                     "__iter__".to_string(),
@@ -245,7 +247,8 @@ mod tests {
                     "__reversed__".to_string(),
                     FunctionType::new(vec![], Type::Iterator(Box::new(Type::Int))),
                 ),
-            ],
+            ]
+            .into(),
             parent_class: None,
         };
 
@@ -289,8 +292,9 @@ mod tests {
             fields: vec![(
                 "views".to_string(),
                 Type::List(Box::new(Type::Union(vec![Type::None, buffer]))),
-            )],
-            methods: vec![],
+            )]
+            .into(),
+            methods: vec![].into(),
             parent_class: None,
         };
 
@@ -311,12 +315,13 @@ mod tests {
                     identity: None,
                     type_args: Vec::new(),
                     name: "Node".to_string(),
-                    fields: vec![],
-                    methods: vec![],
+                    fields: vec![].into(),
+                    methods: vec![].into(),
                     parent_class: None,
                 },
-            )],
-            methods: vec![],
+            )]
+            .into(),
+            methods: vec![].into(),
             parent_class: None,
         };
 
@@ -336,8 +341,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "Holder".to_string(),
-            fields: vec![("callback".to_string(), callable)],
-            methods: vec![],
+            fields: vec![("callback".to_string(), callable)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
 
@@ -360,8 +365,9 @@ mod tests {
                     vec![ParamConvention::own()],
                     Box::new(Type::Int),
                 ),
-            )],
-            methods: vec![],
+            )]
+            .into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let comparable_union = Type::Union(vec![Type::Int, Type::Str]);
@@ -370,8 +376,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "JoinItemId".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
 
@@ -408,8 +414,8 @@ mod tests {
             identity: Some("markers.Marker".to_string()),
             type_args: vec![callable],
             name: "Marker".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
 
@@ -425,8 +431,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "LocalChild".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: Some("LocalParent|NonSend".to_string()),
         };
 
@@ -459,16 +465,16 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "Object".to_string(),
-            fields: vec![("_handle".to_string(), Type::Int)],
-            methods: vec![],
+            fields: vec![("_handle".to_string(), Type::Int)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let object_b = Type::Class {
             identity: None,
             type_args: Vec::new(),
             name: "Object".to_string(),
-            fields: vec![("_token".to_string(), Type::Int)],
-            methods: vec![],
+            fields: vec![("_token".to_string(), Type::Int)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         assert!(
@@ -480,8 +486,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "ChildObject".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: Some("Object".to_string()),
         };
         assert!(!Type::List(Box::new(child)).is_assignable_to(&Type::List(Box::new(object_a))));
@@ -493,24 +499,24 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "Base".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let mid = Type::Class {
             identity: None,
             type_args: Vec::new(),
             name: "Mid".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: Some("Base".to_string()),
         };
         let leaf = Type::Class {
             identity: None,
             type_args: Vec::new(),
             name: "Leaf".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: Some("Mid|Base".to_string()),
         };
 
@@ -524,32 +530,32 @@ mod tests {
             identity: Some("left.Box".to_string()),
             type_args: vec![Type::Int],
             name: "Left".to_string(),
-            fields: vec![("value".to_string(), Type::Int)],
-            methods: vec![],
+            fields: vec![("value".to_string(), Type::Int)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let through_factory_facade = Type::Class {
             identity: Some("left.Box".to_string()),
             type_args: vec![Type::Int],
             name: "Box".to_string(),
-            fields: vec![("value".to_string(), Type::Int)],
-            methods: vec![],
+            fields: vec![("value".to_string(), Type::Int)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let unrelated_same_name = Type::Class {
             identity: Some("right.Box".to_string()),
             type_args: vec![Type::Int],
             name: "Box".to_string(),
-            fields: vec![("value".to_string(), Type::Int)],
-            methods: vec![],
+            fields: vec![("value".to_string(), Type::Int)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let other_specialization = Type::Class {
             identity: Some("left.Box".to_string()),
             type_args: vec![Type::Str],
             name: "Box".to_string(),
-            fields: vec![("value".to_string(), Type::Str)],
-            methods: vec![],
+            fields: vec![("value".to_string(), Type::Str)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
 
@@ -568,24 +574,24 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "Error".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let non_error_child = Type::Class {
             identity: None,
             type_args: Vec::new(),
             name: "Widget".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: Some("BaseThing".to_string()),
         };
         let real_error_child = Type::Class {
             identity: None,
             type_args: Vec::new(),
             name: "ValueError".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: Some("Error".to_string()),
         };
 

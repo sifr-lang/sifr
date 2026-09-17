@@ -6,8 +6,8 @@ fn test_nested_stdlib_constructor_uses_canonical_nominal_path() {
         identity: Some(identity.to_string()),
         type_args: Vec::new(),
         name: name.to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let locale_ty = class("LocaleId", "sifr.i18n.LocaleId");
@@ -170,8 +170,8 @@ fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it()
         identity: None,
         type_args: Vec::new(),
         name: "TextFileHandle".to_string(),
-        fields: vec![],
-        methods: vec![],
+        fields: vec![].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
     let module = HirModule {
@@ -585,8 +585,8 @@ fn test_structured_tuple_index_field_assign_moves_non_clone_element() {
         identity: Some("_sifr.python.ResourceIdentity".to_string()),
         type_args: Vec::new(),
         name: "ResourceIdentity".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("NonSend".to_string()),
     };
     let stmt = HirStmt::FieldAssign {

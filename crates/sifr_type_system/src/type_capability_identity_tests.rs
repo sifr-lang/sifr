@@ -9,7 +9,7 @@ fn class(identity: &str, type_args: Vec<Type>, fields: Vec<(&str, Type)>) -> Typ
             .into_iter()
             .map(|(name, ty)| (name.to_string(), ty))
             .collect(),
-        methods: Vec::new(),
+        methods: Vec::new().into(),
         parent_class: None,
     }
 }
@@ -59,8 +59,8 @@ fn derived_hash_accepts_type_variables_but_rejects_transitive_non_send_ancestry(
         identity: Some("main.Child".to_string()),
         type_args: Vec::new(),
         name: "Child".to_string(),
-        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Parent|NonSend".to_string()),
     };
     assert!(!non_send_child.supports_derived_hash());

@@ -138,6 +138,7 @@ impl CompilerContext {
             "decoded_hir_modules":store.decoded_count::<wire::HirModule>(),
             "decoded_types":store.decoded_count::<wire::Type>(),
             "decoded_nominal_views":store.decoded_count::<wire::NominalView>(),
+            "projected_nominal_views":provider.projected_nominal_views().ok(),
             "decoded_hir_functions":store.decoded_count::<wire::HirFunction>(),
             "decoded_hir_classes":store.decoded_count::<wire::HirClass>(),
             "decoded_rust_payloads":store.decoded_count::<wire::RustPayload>(),

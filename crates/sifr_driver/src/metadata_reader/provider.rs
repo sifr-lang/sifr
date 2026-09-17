@@ -9,6 +9,7 @@ use std::{
 pub(crate) struct Provider {
     pub(crate) metadata: Arc<PreparedMetadata>,
     pub(crate) modules: BTreeMap<String, wire::Ref<wire::Module>>,
+    pub(super) nominals: super::nominal::Cache,
     semantics: Mutex<BTreeMap<String, Arc<ExternalDefs>>>,
     pub(super) navigation_cache:
         Mutex<BTreeMap<std::path::PathBuf, std::sync::Weak<super::StdlibNavigation>>>,
@@ -35,6 +36,7 @@ impl Provider {
             metadata,
             modules,
             semantics: Mutex::default(),
+            nominals: Mutex::default(),
             navigation_cache: Mutex::default(),
         }))
     }
@@ -69,7 +71,7 @@ impl Provider {
             .get(name)
             .ok_or_else(|| wire::MetadataError(format!("unknown metadata module {name}")))?;
         let module = self.metadata.store.get(*reference)?;
-        let mut cx = Decoder::new(&self.metadata.store);
+        let mut cx = Decoder::with_nominals(&self.metadata.store, &self.nominals);
         let defs = Arc::new(super::semantic::project(name, module.semantic, &mut cx)?);
         cached.insert(name.to_owned(), defs.clone());
         Ok(defs)
@@ -91,5 +93,13 @@ impl Provider {
             .lock()
             .map(|modules| modules.keys().cloned().collect())
             .unwrap_or_default()
+    }
+}
+impl Provider {
+    pub(crate) fn projected_nominal_views(&self) -> Result<usize> {
+        self.nominals
+            .lock()
+            .map(|values| values.len())
+            .map_err(|_| wire::MetadataError("nominal projection owner poisoned".into()))
     }
 }

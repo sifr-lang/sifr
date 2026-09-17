@@ -12,7 +12,7 @@ fn class_type(class: &sifr_lowering::HirClass, type_args: Vec<Type>) -> Type {
         identity: None,
         type_args,
         name: class.name.clone(),
-        fields: class.fields.clone(),
+        fields: class.fields.clone().into(),
         methods: class
             .methods
             .iter()
@@ -428,8 +428,8 @@ class Container:
         identity: Some("fixture.scoped_generics.Inner".to_string()),
         type_args: vec![Type::Str],
         name: "Inner".to_string(),
-        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     lowered

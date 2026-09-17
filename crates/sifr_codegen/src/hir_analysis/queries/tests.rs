@@ -9,8 +9,8 @@ fn test_error_type(name: &str) -> Type {
         identity: None,
         type_args: Vec::new(),
         name: name.to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     }
 }
@@ -84,8 +84,8 @@ fn collect_mutated_vars_marks_method_mutborrow_argument() {
         identity: None,
         type_args: Vec::new(),
         name: "Crate".to_string(),
-        fields: vec![],
-        methods: vec![],
+        fields: vec![].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
     let stmts = vec![HirStmt::Expr {
@@ -125,16 +125,16 @@ fn collect_mutated_vars_marks_method_mutborrow_field_argument_root() {
         identity: None,
         type_args: Vec::new(),
         name: "Crate".to_string(),
-        fields: vec![],
-        methods: vec![],
+        fields: vec![].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
     let depot_ty = Type::Class {
         identity: None,
         type_args: Vec::new(),
         name: "Depot".to_string(),
-        fields: vec![("stock".to_string(), crate_ty.clone())],
-        methods: vec![],
+        fields: vec![("stock".to_string(), crate_ty.clone())].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
     let stmts = vec![HirStmt::Expr {
@@ -240,7 +240,7 @@ fn collect_mutated_vars_marks_iterator_next_argument() {
         identity: None,
         type_args: Vec::new(),
         name: "CountdownIter".to_string(),
-        fields: vec![],
+        fields: vec![].into(),
         methods: vec![(
             "__next__".to_string(),
             sifr_type_system::FunctionType {
@@ -248,7 +248,8 @@ fn collect_mutated_vars_marks_iterator_next_argument() {
                 params: vec![],
                 return_type: Box::new(Type::Union(vec![Type::Int, Type::None])),
             },
-        )],
+        )]
+        .into(),
         parent_class: None,
     };
     let stmts = vec![HirStmt::Expr {
@@ -644,16 +645,16 @@ fn collect_mutated_vars_marks_self_for_delegated_field_class_method_call() {
         identity: None,
         type_args: Vec::new(),
         name: "writer".to_string(),
-        fields: vec![],
-        methods: vec![],
+        fields: vec![].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
     let holder_ty = Type::Class {
         identity: None,
         type_args: Vec::new(),
         name: "DictWriter".to_string(),
-        fields: vec![("_writer".to_string(), writer_ty.clone())],
-        methods: vec![],
+        fields: vec![("_writer".to_string(), writer_ty.clone())].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
     let stmts = vec![HirStmt::Expr {

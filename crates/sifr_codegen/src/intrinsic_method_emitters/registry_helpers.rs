@@ -833,16 +833,16 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "Parent".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let child = Type::Class {
             identity: None,
             type_args: Vec::new(),
             name: "Child".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: Some("Parent".to_string()),
         };
         let callable = HirExpr::Name {

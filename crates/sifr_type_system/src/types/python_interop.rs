@@ -73,7 +73,7 @@ mod tests {
                 .into_iter()
                 .map(|(name, ty)| (name.to_string(), ty))
                 .collect(),
-            methods: Vec::new(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         }
     }
@@ -125,8 +125,8 @@ mod tests {
             identity: identity.map(str::to_string),
             type_args: Vec::new(),
             name: "Object".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: Some("NonSend".to_string()),
         };
         assert!(object(Some("_sifr.python.Object")).is_python_object_contract());
@@ -144,8 +144,8 @@ mod tests {
             identity: identity.map(str::to_string),
             type_args: Vec::new(),
             name: "ResourceIdentity".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: Some("NonSend".to_string()),
         };
         let canonical = resource(Some("_sifr.python.ResourceIdentity"));

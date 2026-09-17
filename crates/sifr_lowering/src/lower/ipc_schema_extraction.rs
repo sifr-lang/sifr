@@ -170,8 +170,9 @@ mod tests {
                     "coords".to_string(),
                     Type::Tuple(vec![Type::Int, Type::Float]),
                 ),
-            ],
-            methods: vec![],
+            ]
+            .into(),
+            methods: vec![].into(),
             parent_class: None,
         };
 
@@ -188,7 +189,8 @@ mod tests {
                 variants: vec![
                     ("Accepted".to_string(), Some(1)),
                     ("Rejected".to_string(), Some(2)),
-                ],
+                ]
+                .into(),
             }),
             error: extract_ipc_schema_type(&Type::None),
         }
@@ -371,8 +373,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "PipeReader".to_string(),
-            fields: vec![("_handle".to_string(), Type::Int)],
-            methods: vec![],
+            fields: vec![("_handle".to_string(), Type::Int)].into(),
+            methods: vec![].into(),
             parent_class: None,
         };
         let callable = Type::Function(FunctionType::new(

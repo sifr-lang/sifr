@@ -325,8 +325,8 @@ pub(crate) fn compile_stdlib_sources_with_sysroot(
                             .map(Type::TypeVar)
                             .collect(),
                         name: class.name.clone(),
-                        fields: class.fields.clone(),
-                        methods,
+                        fields: class.fields.clone().into(),
+                        methods: methods.into(),
                         parent_class: class.semantic_parent_chain(),
                     },
                     &local_classes,
@@ -426,8 +426,8 @@ pub(crate) fn compile_stdlib_sources_with_sysroot(
                                     .map(Type::TypeVar)
                                     .collect(),
                                 name: class.name.clone(),
-                                fields: class.fields.clone(),
-                                methods: Vec::new(),
+                                fields: class.fields.clone().into(),
+                                methods: Vec::new().into(),
                                 parent_class: class.semantic_parent_chain(),
                             },
                         ),

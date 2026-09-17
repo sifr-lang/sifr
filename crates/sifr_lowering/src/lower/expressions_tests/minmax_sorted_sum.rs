@@ -771,7 +771,8 @@ pub(super) fn test_protocol_method_wrong_arity_has_call_code() {
         methods: vec![(
             "run".to_string(),
             FunctionType::new(vec![("value".to_string(), Type::Int)], Type::Str),
-        )],
+        )]
+        .into(),
     };
     let mut ctx = LowerCtx::new();
     let method_range = TextRange::new(TextSize::new(10), TextSize::new(13));
@@ -794,7 +795,8 @@ pub(super) fn test_protocol_missing_method_has_protocol_code() {
         methods: vec![(
             "run".to_string(),
             FunctionType::new(vec![("value".to_string(), Type::Int)], Type::Str),
-        )],
+        )]
+        .into(),
     };
     let mut ctx = LowerCtx::new();
     let method_range = TextRange::new(TextSize::new(20), TextSize::new(27));

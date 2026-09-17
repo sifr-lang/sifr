@@ -282,8 +282,8 @@ fn parallel_error_type(name: &str, ctx: &LowerCtx) -> Type {
             identity: Some(format!("sifr.parallel.{name}")),
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         })
 }

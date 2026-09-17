@@ -396,7 +396,7 @@ mod tests {
                 .into_iter()
                 .map(|(name, ty)| (name.to_string(), ty))
                 .collect(),
-            methods: Vec::new(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         }
     }

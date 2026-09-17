@@ -623,16 +623,16 @@ mod tests {
             identity: Some("pkg.Item".to_string()),
             type_args: Vec::new(),
             name: "Item".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         }));
         let complete = Type::List(Box::new(Type::Class {
             identity: Some("pkg.Item".to_string()),
             type_args: Vec::new(),
             name: "Item".to_string(),
-            fields: vec![("value".to_string(), Type::Int)],
-            methods: Vec::new(),
+            fields: vec![("value".to_string(), Type::Int)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         }));
 
@@ -663,14 +663,14 @@ mod tests {
             identity: Some(identity.to_string()),
             type_args: Vec::new(),
             name: "Record".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let enumeration = |identity: &str| Type::Enum {
             identity: Some(identity.to_string()),
             name: "Status".to_string(),
-            variants: vec![("READY".to_string(), Some(1))],
+            variants: vec![("READY".to_string(), Some(1))].into(),
         };
         let newtype = |identity: &str| Type::Newtype {
             identity: Some(identity.to_string()),
@@ -694,8 +694,8 @@ mod tests {
             identity: Some(identity.to_string()),
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let member_names = |union: Type| {
@@ -719,16 +719,16 @@ mod tests {
             identity: Some("pkg.Record".to_string()),
             type_args: Vec::new(),
             name: "Record".to_string(),
-            fields: vec![("value".to_string(), Type::Int)],
-            methods: Vec::new(),
+            fields: vec![("value".to_string(), Type::Int)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let incomplete = Type::Class {
             identity: Some("pkg.Record".to_string()),
             type_args: Vec::new(),
             name: "Record".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let forward = make_union(vec![incomplete.clone(), complete.clone()]);
@@ -744,14 +744,14 @@ mod tests {
             identity: Some("pkg.Record".to_string()),
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
         let protocol = |name: &str| Type::Protocol {
             identity: Some("pkg.Readable".to_string()),
             name: name.to_string(),
-            methods: Vec::new(),
+            methods: Vec::new().into(),
         };
         let newtype = |name: &str| Type::Newtype {
             identity: Some("pkg.Token".to_string()),
@@ -761,7 +761,7 @@ mod tests {
         let enumeration = |name: &str| Type::Enum {
             identity: Some("pkg.Status".to_string()),
             name: name.to_string(),
-            variants: Vec::new(),
+            variants: Vec::new().into(),
         };
 
         for (left, right) in [
@@ -784,8 +784,8 @@ mod tests {
             identity: Some("pkg.Record".to_string()),
             type_args: Vec::new(),
             name: "Record".to_string(),
-            fields: vec![("first".to_string(), Type::Int)],
-            methods: vec![("render".to_string(), method)],
+            fields: vec![("first".to_string(), Type::Int)].into(),
+            methods: vec![("render".to_string(), method)].into(),
             parent_class: None,
         };
         let field_snapshot = Type::Class {
@@ -795,8 +795,9 @@ mod tests {
             fields: vec![
                 ("first".to_string(), Type::Int),
                 ("second".to_string(), Type::Str),
-            ],
-            methods: Vec::new(),
+            ]
+            .into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
 
@@ -812,14 +813,14 @@ mod tests {
             identity: Some(identity.to_string()),
             type_args: Vec::new(),
             name: "Failure".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let protocol = |identity: &str| Type::Protocol {
             identity: Some(identity.to_string()),
             name: "Readable".to_string(),
-            methods: Vec::new(),
+            methods: Vec::new().into(),
         };
         let alias = |body| Type::Alias {
             name: "Value".to_string(),

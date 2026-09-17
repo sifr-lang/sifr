@@ -112,13 +112,13 @@ impl PreparedSqlProfiles {
                 identity: Some(identity.to_string()),
                 type_args: Vec::new(),
                 name: "Schema".to_string(),
-                fields: Vec::new(),
-                methods: Vec::new(),
+                fields: Vec::new().into(),
+                methods: Vec::new().into(),
                 parent_class: None,
             }],
             name: "SqlSchema".to_string(),
-            fields: Vec::new(),
-            methods: vec![template_method("sql")],
+            fields: Vec::new().into(),
+            methods: vec![template_method("sql")].into(),
             parent_class: None,
         };
         let mut profiles = std::collections::HashMap::new();
@@ -128,8 +128,8 @@ impl PreparedSqlProfiles {
                 identity: Some(identity.clone()),
                 type_args: Vec::new(),
                 name: "Schema".to_string(),
-                fields: Vec::new(),
-                methods: Vec::new(),
+                fields: Vec::new().into(),
+                methods: Vec::new().into(),
                 parent_class: None,
             };
             profiles.insert(
@@ -141,7 +141,8 @@ impl PreparedSqlProfiles {
                     fields: vec![
                         ("Schema".to_string(), marker),
                         ("schema".to_string(), schema_witness(identity)),
-                    ],
+                    ]
+                    .into(),
                     methods: vec![
                         template_method("sql"),
                         template_method("all"),
@@ -159,7 +160,8 @@ impl PreparedSqlProfiles {
                                 return_type: Box::new(Type::Str),
                             },
                         ),
-                    ],
+                    ]
+                    .into(),
                     parent_class: None,
                 },
             );
@@ -186,10 +188,11 @@ impl PreparedSqlProfiles {
                         Type::Protocol {
                             identity: Some(identity),
                             name: "Schema".to_string(),
-                            methods: Vec::new(),
+                            methods: Vec::new().into(),
                         },
-                    )],
-                    methods: Vec::new(),
+                    )]
+                    .into(),
+                    methods: Vec::new().into(),
                     parent_class: None,
                 },
             );

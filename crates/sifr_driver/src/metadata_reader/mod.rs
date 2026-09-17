@@ -4,6 +4,7 @@ use sifr_sysroot::metadata as wire;
 use wire::Result;
 mod decode;
 mod navigation;
+mod nominal;
 mod provider;
 mod selection;
 mod semantic;
@@ -26,6 +27,8 @@ struct Decoder<'a> {
     store: &'a wire::MetadataStore,
     active: std::collections::BTreeSet<wire::RecordId>,
     work: usize,
+    nominal_cache: Option<&'a nominal::Cache>,
+    local_nominals: std::collections::BTreeMap<wire::RecordId, std::sync::Arc<nominal::Projection>>,
 }
 impl<'a> Decoder<'a> {
     fn new(store: &'a wire::MetadataStore) -> Self {
@@ -33,6 +36,14 @@ impl<'a> Decoder<'a> {
             store,
             active: Default::default(),
             work: 0,
+            nominal_cache: None,
+            local_nominals: Default::default(),
+        }
+    }
+    fn with_nominals(store: &'a wire::MetadataStore, cache: &'a nominal::Cache) -> Self {
+        Self {
+            nominal_cache: Some(cache),
+            ..Self::new(store)
         }
     }
     fn record<R: wire::Record, T>(

@@ -300,8 +300,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "DiagnosticError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
 
@@ -325,8 +325,9 @@ mod tests {
             fields: vec![
                 ("message".to_string(), Type::Str),
                 ("detail".to_string(), Type::Str),
-            ],
-            methods: Vec::new(),
+            ]
+            .into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
 
@@ -354,8 +355,9 @@ mod tests {
                 ("traceback".to_string(), Type::Str),
                 ("context".to_string(), Type::Str),
                 ("code".to_string(), Type::Int),
-            ],
-            methods: Vec::new(),
+            ]
+            .into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let mapped = bridge_error_expr(RustExpr::Ident("__sifr_bridge_error".to_string()), &shadow);
@@ -369,8 +371,8 @@ mod tests {
             identity: Some("local.__SifrBridgeError".to_string()),
             type_args: Vec::new(),
             name: "__SifrBridgeError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
 
@@ -397,8 +399,9 @@ mod tests {
             fields: vec![
                 ("message".to_string(), Type::Str),
                 ("context".to_string(), Type::Str),
-            ],
-            methods: Vec::new(),
+            ]
+            .into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
 
@@ -419,8 +422,8 @@ mod tests {
             identity: None,
             type_args: Vec::new(),
             name: "MessageRecord".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
 
@@ -435,8 +438,8 @@ mod tests {
             identity: Some("app.PanicMapped".to_string()),
             type_args: Vec::new(),
             name: "PanicMapped".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: None,
         };
 
@@ -460,8 +463,8 @@ mod tests {
             identity: Some("app.PayloadError".to_string()),
             type_args: Vec::new(),
             name: "PayloadError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let alias = Type::Alias {

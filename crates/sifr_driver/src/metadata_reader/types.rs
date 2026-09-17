@@ -104,43 +104,40 @@ impl Decode<wire::Ref<wire::Type>> for Type {
                 wire::Type::Class {
                     view, type_args, ..
                 } => {
-                    let v = cx.store.get(*view)?;
+                    let v = cx.nominal(*view)?;
                     Self::Class {
-                        identity: Decode::decode(&v.identity, cx)?,
-                        name: Decode::decode(&v.name, cx)?,
+                        identity: v.identity.clone(),
+                        name: v.name.clone(),
                         type_args: Decode::decode(type_args, cx)?,
-                        fields: Decode::decode(&v.fields, cx)?,
-                        methods: Decode::decode(&v.methods, cx)?,
-                        parent_class: Decode::decode(&v.parent_class, cx)?,
+                        fields: v.fields.clone(),
+                        methods: v.methods.clone(),
+                        parent_class: v.parent_class.clone(),
                     }
                 }
                 wire::Type::Protocol { view, .. } => {
-                    let v = cx.store.get(*view)?;
+                    let v = cx.nominal(*view)?;
                     Self::Protocol {
-                        identity: Decode::decode(&v.identity, cx)?,
-                        name: Decode::decode(&v.name, cx)?,
-                        methods: Decode::decode(&v.methods, cx)?,
+                        identity: v.identity.clone(),
+                        name: v.name.clone(),
+                        methods: v.methods.clone(),
                     }
                 }
                 wire::Type::Newtype { view, .. } => {
-                    let v = cx.store.get(*view)?;
+                    let v = cx.nominal(*view)?;
                     Self::Newtype {
-                        identity: Decode::decode(&v.identity, cx)?,
-                        name: Decode::decode(&v.name, cx)?,
-                        inner: Decode::decode(
-                            v.newtype_inner.as_ref().ok_or_else(|| {
-                                wire::MetadataError("newtype missing inner type".into())
-                            })?,
-                            cx,
-                        )?,
+                        identity: v.identity.clone(),
+                        name: v.name.clone(),
+                        inner: Box::new(v.newtype_inner.clone().ok_or_else(|| {
+                            wire::MetadataError("newtype missing inner type".into())
+                        })?),
                     }
                 }
                 wire::Type::Enum { view, .. } => {
-                    let v = cx.store.get(*view)?;
+                    let v = cx.nominal(*view)?;
                     Self::Enum {
-                        identity: Decode::decode(&v.identity, cx)?,
-                        name: Decode::decode(&v.name, cx)?,
-                        variants: Decode::decode(&v.enum_variants, cx)?,
+                        identity: v.identity.clone(),
+                        name: v.name.clone(),
+                        variants: v.enum_variants.clone(),
                     }
                 }
             })

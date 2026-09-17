@@ -43,8 +43,9 @@ fn nested_generic_union_topology_change_is_not_structurally_supported() {
         fields: vec![(
             "value".to_string(),
             sifr_type_system::make_union(vec![Type::None, Type::Str]),
-        )],
-        methods: Vec::new(),
+        )]
+        .into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let owner = class("Owner", vec![("payload".to_string(), concrete.clone())]);
@@ -86,8 +87,8 @@ fn transitive_nested_generic_union_change_is_not_structurally_supported() {
                 identity: Some("main.Inner".to_string()),
                 type_args: vec![Type::TypeVar("T".to_string())],
                 name: "Inner".to_string(),
-                fields: Vec::new(),
-                methods: Vec::new(),
+                fields: Vec::new().into(),
+                methods: Vec::new().into(),
                 parent_class: None,
             },
         )],
@@ -97,8 +98,8 @@ fn transitive_nested_generic_union_change_is_not_structurally_supported() {
         identity: Some("main.Outer".to_string()),
         type_args: vec![sifr_type_system::make_union(vec![Type::None, Type::Str])],
         name: "Outer".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let owner = class("Owner", vec![("payload".to_string(), concrete)]);

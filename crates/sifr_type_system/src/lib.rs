@@ -12,12 +12,14 @@ pub mod infer;
 pub mod literal;
 mod receiver_mutation;
 mod safe_optional;
+mod shared_vec;
 #[cfg(test)]
 mod structural_record_tests;
 mod substitution;
 #[cfg(test)]
 mod type_capability_identity_tests;
 mod types;
+pub use shared_vec::SharedVec;
 pub mod union;
 #[cfg(test)]
 mod union_operation_tests;

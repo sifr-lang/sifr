@@ -37,8 +37,8 @@ fn test_error_type(name: &str) -> Type {
         identity: None,
         type_args: Vec::new(),
         name: name.to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     }
 }
@@ -58,8 +58,8 @@ fn classify_value_category_marks_names_and_fields_as_places() {
                 identity: None,
                 type_args: Vec::new(),
                 name: "C".to_string(),
-                fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
-                methods: vec![],
+                fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))].into(),
+                methods: vec![].into(),
                 parent_class: None,
             },
         }),
@@ -177,8 +177,8 @@ fn iterator_plan_defaults_to_borrow_for_conservative_unknown_elements() {
             identity: None,
             type_args: Vec::new(),
             name: "Unknown".to_string(),
-            fields: vec![],
-            methods: vec![],
+            fields: vec![].into(),
+            methods: vec![].into(),
             parent_class: None,
         },
     };

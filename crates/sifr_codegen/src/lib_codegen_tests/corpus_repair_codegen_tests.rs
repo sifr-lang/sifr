@@ -479,8 +479,8 @@ fn corpus_repair_structured_exception_proven_nested_read_uses_typed_carrier() {
         identity: None,
         type_args: vec![],
         name: "IndexError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: vec![],
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
     let mut emitter = RustEmitter::new();

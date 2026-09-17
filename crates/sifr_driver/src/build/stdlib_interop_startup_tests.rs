@@ -117,8 +117,8 @@ fn stdlib_interop_startup_readonly_walk_preserves_hidden_edges() {
         identity: Some(format!("{name}.Hidden")),
         name: "Hidden".into(),
         type_args: vec![],
-        fields: vec![],
-        methods: vec![],
+        fields: vec![].into(),
+        methods: vec![].into(),
         parent_class: None,
     };
     // An empty handler has no expression carrying these types: they exist only

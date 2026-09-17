@@ -6,8 +6,8 @@ pub(crate) fn timeout_error_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "TimeoutError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     }
 }
@@ -52,8 +52,8 @@ mod tests {
             identity: Some(identity.to_string()),
             type_args: Vec::new(),
             name: "Error".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         }
     }
@@ -80,8 +80,8 @@ mod tests {
             identity: Some(format!("a.{name}")),
             type_args: Vec::new(),
             name: name.to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
             parent_class: Some("Error".to_string()),
         };
         let os_error = named_error("OSError");

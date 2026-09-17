@@ -47,7 +47,7 @@ pub(super) fn declaration_value(
         let fields = if fields.is_empty() {
             local_parent_fields(module_name, result, &parent_identity, type_args)
         } else {
-            fields.clone()
+            fields.to_vec()
         };
         (parent_identity, fields)
     } else {
@@ -208,7 +208,7 @@ fn parent_method_contracts(
 ) -> Vec<(String, FunctionType)> {
     if let Some(Type::Class { methods, .. }) = class.parent_type.as_ref() {
         if !methods.is_empty() {
-            return methods.clone();
+            return methods.to_vec();
         }
     }
     result

@@ -17,8 +17,8 @@ pub(in crate::lower) fn task_scope_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "TaskScope".to_string(),
-        fields: vec![],
-        methods: vec![],
+        fields: vec![].into(),
+        methods: vec![].into(),
         parent_class: None,
     }
 }
@@ -28,8 +28,8 @@ pub(in crate::lower) fn task_group_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "TaskGroup".to_string(),
-        fields: vec![],
-        methods: vec![],
+        fields: vec![].into(),
+        methods: vec![].into(),
         parent_class: None,
     }
 }

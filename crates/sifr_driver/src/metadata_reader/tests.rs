@@ -313,3 +313,62 @@ def value() -> float:
         "the provider handle is not a mutable project"
     );
 }
+
+#[test]
+fn dx7_nominal_references_share_one_complete_projection_per_store() {
+    let context = crate::CompilerContext::for_test();
+    let provider = context.metadata_provider().unwrap();
+    let module = provider
+        .metadata
+        .store
+        .get(provider.modules["sifr.collections"])
+        .unwrap();
+    let exports = provider.metadata.store.get(module.semantic).unwrap();
+    let reference = *exports
+        .classes
+        .iter()
+        .find(|(name, _)| provider.metadata.store.get(**name).unwrap().value == "Counter")
+        .unwrap()
+        .1;
+    let mut decoder = Decoder::with_nominals(&provider.metadata.store, &provider.nominals);
+    let first = sifr_type_system::Type::decode(&reference, &mut decoder).unwrap();
+    let sifr_type_system::Type::Class {
+        fields: first_fields,
+        methods: first_methods,
+        ..
+    } = &first
+    else {
+        panic!("Counter is a class");
+    };
+    assert!(!first_fields.is_empty());
+    assert!(first_methods.len() > 10);
+    let projected = provider.projected_nominal_views().unwrap();
+    let decoded = provider.metadata.store.decoded_count::<wire::NominalView>();
+    let mut occurrences = Vec::with_capacity(1000);
+    for _ in 0..1000 {
+        let mut next = Decoder::with_nominals(&provider.metadata.store, &provider.nominals);
+        let next = sifr_type_system::Type::decode(&reference, &mut next).unwrap();
+        let sifr_type_system::Type::Class {
+            fields, methods, ..
+        } = &next
+        else {
+            panic!("class");
+        };
+        assert!(fields.shares_storage(first_fields));
+        assert!(methods.shares_storage(first_methods));
+        occurrences.push(next);
+    }
+    assert_eq!(occurrences.len(), 1000);
+    assert_eq!(provider.projected_nominal_views().unwrap(), projected);
+    assert_eq!(
+        provider.metadata.store.decoded_count::<wire::NominalView>(),
+        decoded
+    );
+    let mut changed = first.clone();
+    let sifr_type_system::Type::Class { fields, .. } = &mut changed else {
+        panic!("class");
+    };
+    fields.push(("project".into(), sifr_type_system::Type::Int));
+    assert!(!fields.shares_storage(first_fields));
+    assert_eq!(fields.len(), first_fields.len() + 1);
+}

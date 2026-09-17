@@ -32,8 +32,9 @@ fn sync_wrapper_emits_complete_owned_argument_frame() {
             ("exception_type".to_string(), Type::Str),
             ("traceback".to_string(), Type::Str),
             ("context".to_string(), Type::Str),
-        ],
-        methods: Vec::new(),
+        ]
+        .into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let optional_string = Type::Union(vec![Type::Str, Type::None]);
@@ -137,8 +138,8 @@ fn omittable_positional_parameters_are_forwarded_by_name_without_shifting() {
                 identity: None,
                 type_args: Vec::new(),
                 name: "PythonError".to_string(),
-                fields: Vec::new(),
-                methods: Vec::new(),
+                fields: Vec::new().into(),
+                methods: Vec::new().into(),
                 parent_class: Some("Error".to_string()),
             }),
         ),
@@ -177,8 +178,9 @@ fn recursive_wrapper_emits_list_dict_tuple_and_record_conversions() {
         fields: vec![
             ("name".to_string(), Type::Str),
             ("scores".to_string(), Type::List(Box::new(Type::Int))),
-        ],
-        methods: Vec::new(),
+        ]
+        .into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let mut declaration = declaration();
@@ -226,16 +228,16 @@ fn object_basename_does_not_bypass_canonical_python_identity() {
         identity: Some("main.Object".to_string()),
         type_args: Vec::new(),
         name: "Object".to_string(),
-        fields: vec![("value".to_string(), Type::Int)],
-        methods: Vec::new(),
+        fields: vec![("value".to_string(), Type::Int)].into(),
+        methods: Vec::new().into(),
         parent_class: None,
     };
     let canonical_object = Type::Class {
         identity: Some("_sifr.python.Object".to_string()),
         type_args: Vec::new(),
         name: "Object".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("NonSend".to_string()),
     };
 
@@ -293,8 +295,8 @@ fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_clean
         identity: None,
         type_args: Vec::new(),
         name: "HandlerError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let error = Type::Union(vec![python_error, handler_error.clone()]);
@@ -363,8 +365,8 @@ fn retained_foreign_callback_is_aggregated_into_the_opaque_result_owner() {
         identity: None,
         type_args: Vec::new(),
         name: "Subscription".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("NonSend".to_string()),
     };
     let opaque = PythonInteropDeclaration {
@@ -517,8 +519,8 @@ fn retained_callback_owner_attribute_does_not_drop_an_absent_argument_frame() {
         identity: None,
         type_args: Vec::new(),
         name: "HandlerError".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let error_channel = Type::Union(vec![python_error_type(), handler_error.clone()]);
@@ -583,8 +585,8 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
         identity: None,
         type_args: Vec::new(),
         name: "HandlerError".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     };
     let error_channel = Type::Union(vec![python_error_type(), handler_error.clone()]);
@@ -592,8 +594,8 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
         identity: None,
         type_args: Vec::new(),
         name: "Subscription".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
+        fields: Vec::new().into(),
+        methods: Vec::new().into(),
         parent_class: Some("NonSend".to_string()),
     };
     let mut opaque = declaration();
@@ -829,8 +831,8 @@ fn python_error_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "PythonError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
-        methods: Vec::new(),
+        fields: vec![("message".to_string(), Type::Str)].into(),
+        methods: Vec::new().into(),
         parent_class: Some("Error".to_string()),
     }
 }

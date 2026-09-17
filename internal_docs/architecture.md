@@ -2022,8 +2022,12 @@ overlays. Frontend preparation pins the demanded semantic closure before lowerin
 export collection and editor queries. Invalidation removes only project exports.
 Lowering itself performs no provider I/O. The metadata reader retains indexed wire
 records through the bounded sysroot store and projects only demanded module
-closures into the existing semantic types. Baseline maps share these projected
-values across compilations; they do not deep-clone the complete stdlib.
+closures into the existing semantic types. Nominal fields, methods and enum
+variants use shared copy-on-write buffers at the existing type-system owner.
+Each artifact-local nominal view is projected once per provider; repeated type
+occurrences share those complete buffers. Contextual substitutions detach before
+mutation. Baseline maps share these values across compilations without deep-cloning
+the complete stdlib.
 
 Codegen materializes the selected HIR, Rust and role-checked template inventory,
 with producer fragment identities checked before reuse and existing final syntax
