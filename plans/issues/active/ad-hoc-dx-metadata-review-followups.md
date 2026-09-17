@@ -1,8 +1,8 @@
 # DX.5 metadata schema review observations
 
-status: open follow-up suggestions; nonblocking for DX.5  
-source candidate: `c7734025c242631a326901ce08c846ac42afd7ae`  
-implementation: [PR #3848](https://github.com/sifr-lang/sifr/pull/3848)  
+status: open follow-up suggestions; nonblocking for DX.5
+source candidate: `c7734025c242631a326901ce08c846ac42afd7ae`
+implementation: [PR #3848](https://github.com/sifr-lang/sifr/pull/3848)
 review: [Claude Opus 5, SATISFIED](https://github.com/sifr-lang/sifr/pull/3848#issuecomment-5712915895)
 
 The [canonical Phase DX](ad-hoc-compiler-dx-and-toolchain-reuse.md) remains the
