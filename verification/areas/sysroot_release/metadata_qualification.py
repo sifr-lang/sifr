@@ -28,6 +28,7 @@ class Qualification:
         output.mkdir(parents=True, exist_ok=False)
         self.env = os.environ.copy()
         self.env.pop("SIFR_SYSROOT", None)
+        self.env["CARGO_NET_OFFLINE"] = "true"
         self.env["SIFR_CACHE_DIR"] = str(output.resolve() / "cache")
         self.rows = []
         self.report = {"binary": str(self.binary), "binary_sha256": digest(binary), "rows": self.rows}
@@ -96,7 +97,7 @@ class Qualification:
         native_cases = ["class_mut_self", "explicit_owned_mutable_receiver",
                         "template_string_evaluation_order", "text_i18n_translation_bundles"]
         for name in native_cases:
-            self.run("native-" + name, [binary, "run", self.corpus / (name + ".sifr"), "--offline"])
+            self.run("native-" + name, [binary, "run", self.corpus / (name + ".sifr")])
         self.report["installed_native_cases"] = native_cases
         self.live_generations(moved)
         self.rejection_recovery(moved)
