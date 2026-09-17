@@ -515,7 +515,7 @@ Development runtime lookup can use the selected local environment. Portable outp
 
 Generated Python binaries additionally validate the actual library supplying
 CPython symbols before interpreter initialization. A different canonical
-same-basename library produces a concrete loader-mismatch diagnostic. Python
+same-basename library or changed library content produces a concrete loader-mismatch diagnostic. Python
 source exports carry sifr-python-runtime.json: an explicit external-runtime
 deployment contract naming the required interpreter and library paths, with
 relocatable set to false. This mode requires that environment at deployment; it

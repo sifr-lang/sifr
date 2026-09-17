@@ -385,9 +385,15 @@ pub(super) fn inject_python_runtime_bootstrap(
     let insert_at = find_main_body_insert(main_rs).ok_or_else(|| {
         "generated package project has Python runtime metadata but no main function".to_string()
     })?;
-    let loader_check = metadata.selected_library().map_or_else(String::new, |library| format!(
-        "\n    if let Err(error) = ::sifr_runtime::python::loader::validate_loaded_library({library:?}) {{\n        eprintln!(\"{{error}}\");\n        std::process::exit(1);\n    }}\n"
-    ));
+    let loader_check = if let Some(library) = metadata.selected_library() {
+        let digest = sifr_sysroot::sha256_file(std::path::Path::new(library))
+            .map_err(|error| format!("cannot identify selected Python library: {error}"))?;
+        format!(
+            "\n    if let Err(error) = ::sifr_runtime::python::loader::validate_loaded_library({library:?}, {digest:?}) {{\n        eprintln!(\"{{error}}\");\n        std::process::exit(1);\n    }}\n"
+        )
+    } else {
+        String::new()
+    };
     let mut with_bootstrap = render_python_runtime_prelude(metadata);
     with_bootstrap.push_str(&main_rs[..insert_at]);
     with_bootstrap.push_str(&loader_check);

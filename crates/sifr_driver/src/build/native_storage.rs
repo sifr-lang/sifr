@@ -31,8 +31,14 @@ impl NativeFamily {
         let key = id.finish();
         let lease = crate::cache_storage::entry_lock(&directory, &key)?;
         lease.lock()?;
-        let root = directory.join(key);
+        let root = directory.join(&key);
         crate::cache_storage::directory(&root)?;
+        let metadata = serde_json::to_vec(&serde_json::json!({
+            "schema": 1, "family": key,
+            "owner_scope": crate::cache_storage::owner_scope()?,
+            "native_toolchain": toolchain,
+        }))?;
+        write_changed(&root.join("native_family.json"), &metadata)?;
         Ok(Self {
             _lease: lease,
             root,

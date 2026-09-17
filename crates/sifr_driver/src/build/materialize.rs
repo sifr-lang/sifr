@@ -81,14 +81,28 @@ pub(super) fn materialize_binary_project_sources(
         "",
     )
     .map_err(|error| vec![build_error(error.to_string())])?;
-    let runtime_contract = generated_project.python_runtime.as_ref().map(|runtime| serde_json::json!({
-        "schema": 1,
-        "mode": "external-runtime",
-        "contract": "Deploy the selected CPython environment at the declared paths. The executable validates the loaded shared-library identity before initialization.",
-        "interpreter": runtime.interpreter(),
-        "shared_library": runtime.selected_library(),
-        "relocatable": false,
-    }));
+    let runtime_contract = if let Some(runtime) = &generated_project.python_runtime {
+        let library_sha256 = runtime
+            .selected_library()
+            .map(|path| sifr_sysroot::sha256_file(Path::new(path)))
+            .transpose()
+            .map_err(|error| {
+                vec![build_error(format!(
+                    "cannot identify exported Python library: {error}"
+                ))]
+            })?;
+        Some(serde_json::json!({
+            "schema": 1,
+            "mode": "external-runtime",
+            "contract": "Deploy the selected CPython environment at the declared paths. The executable validates the loaded shared-library path and content before initialization.",
+            "interpreter": runtime.interpreter(),
+            "shared_library": runtime.selected_library(),
+            "shared_library_sha256": library_sha256,
+            "relocatable": false,
+        }))
+    } else {
+        None
+    };
     let interop = generated_project.interop.clone();
     let local_project_path =
         super::portable_project::local_resolution_project_path(output_dir, project_name);
