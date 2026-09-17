@@ -33,10 +33,10 @@ ARTIFACT_CACHE_RE = re.compile(
     r"^\[sifr-artifact-cache\]\s+namespace=([a-z0-9_-]+)\s+key=([0-9a-f]+)\s+cache_hit=(true|false)\s+workspace=([^\s]+)(?:\s+miss_reason=([a-z0-9_-]+))?$"
 )
 CACHE_DIR_RE = re.compile(r"^\s*cache_dir=(.+)$")
-LANE_STEP_RE = re.compile(r"^\[sifr-lane-step\]\s+name=([A-Za-z0-9_.-]+)\s+elapsed_ms=(\d+)\s+status=(pass|fail)$")
+LANE_STEP_RE = re.compile(r"^\[sifr-lane-step\]\s+name=([A-Za-z0-9_.-]+)\s+elapsed_ms=(\d+)\s+status=(pass|fail|blocked)$")
 LANE_STEP_BUDGET_RE = re.compile(
     r"^\[sifr-lane-step-budget\]\s+name=([A-Za-z0-9_.-]+)\s+elapsed_ms=(\d+)\s+"
-    r"budget_ms=(\d+)\s+enforcement=(advisory|blocking)\s+status=(pass|fail)$"
+    r"budget_ms=(\d+)\s+enforcement=(advisory|blocking)\s+status=(pass|fail|blocked)$"
 )
 LANE_STEP_CACHE_RE = re.compile(
     r"^\[sifr-lane-step-cache\]\s+name=([A-Za-z0-9_.-]+)\s+state=(warm|cold)\s+"

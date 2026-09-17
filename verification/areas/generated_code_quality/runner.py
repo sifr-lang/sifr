@@ -23,12 +23,13 @@ SMOKE_ENTRY_IDS = (
     "demo-002-codegen-structural-passes",
 )
 SMOKE_ALLOWED_GROUPS = {"demos-required"}
-POSITIVE_ENTRY_GATES = {"corpus", "panic-scan", "rustfmt", "clippy", "determinism"}
+POSITIVE_ENTRY_GATES = {"corpus", "panic-scan", "rustfmt", "clippy", "determinism", "native"}
 
 PROFILE_SUITES = {
     "smoke": [
         ("inventory", None, None),
         ("corpus", None, SMOKE_ENTRY_IDS),
+        ("native", None, SMOKE_ENTRY_IDS),
         ("panic-scan", None, SMOKE_ENTRY_IDS),
         ("intrinsic-panic-lint", None, None),
         ("rustfmt", None, SMOKE_ENTRY_IDS),
@@ -37,6 +38,7 @@ PROFILE_SUITES = {
     "representative": [
         ("inventory", None, None),
         ("corpus", "12", None),
+        ("native", None, SMOKE_ENTRY_IDS),
         ("panic-scan", "12", None),
         ("intrinsic-panic-lint", None, None),
         ("rustfmt", "12", None),
@@ -49,6 +51,7 @@ PROFILE_SUITES = {
         ("inventory", None, None),
         ("companions", None, None),
         ("corpus", None, None),
+        ("native", None, SMOKE_ENTRY_IDS),
         ("panic-scan", None, None),
         ("intrinsic-panic-lint", None, None),
         ("rustfmt", None, None),
@@ -204,6 +207,10 @@ def run_gate(
         env.pop("SIFR_GCQ_ENTRY_IDS", None)
     else:
         env["SIFR_GCQ_ENTRY_IDS"] = ",".join(entry_ids)
+    detail_path = REPO_ROOT / "target/verification/areas" / f"gcq-{suite_name}-{gate}-cases.json"
+    detail_path.parent.mkdir(parents=True, exist_ok=True)
+    detail_path.unlink(missing_ok=True)
+    env["SIFR_GCQ_CASE_REPORT"] = str(detail_path)
     argv = [sys.executable, str(GATE_SCRIPT), gate, "--manifest", str(CORPUS_MANIFEST)]
     started = time.perf_counter()
     proc = subprocess.run(argv, cwd=REPO_ROOT, env=env, text=True, check=False)
@@ -220,6 +227,7 @@ def run_gate(
         "actual_exit_code": proc.returncode,
         "duration_ms": round(elapsed_ms, 3),
         "entry_ids": list(entry_ids) if entry_ids is not None else None,
+        "case_evidence": json.loads(detail_path.read_text()) if detail_path.is_file() else None,
     }
 
 

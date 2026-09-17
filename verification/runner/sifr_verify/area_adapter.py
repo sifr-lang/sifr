@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
-import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from .paths import REPO_ROOT
+from .fixture_execution import run_process, selected_cases, blocked_case, assertion_selection
 
 TMP_PATTERNS = (
     re.compile(r"/private/var/folders/[^\s\"']+"),
@@ -60,23 +61,37 @@ class AreaRunOptions:
     suite_filters: set[str]
     bless: bool
     result_json: Path
+    case_filters: frozenset[str] = frozenset()
+    no_fail_fast: bool = True
 
 
 def run_area(config: AreaAdapterConfig, options: AreaRunOptions) -> int:
     manifest = load_manifest(config.manifest_path)
     suites = select_suites(config, manifest, options.suite_filters)
+    # Validate the entire selected inventory before preparing any compiler artifacts.
+    for suite in suites:
+        validate_unique_baseline_artifact_paths(config, str(suite["name"]), suite["cases"])
+        for case in suite["cases"]:
+            entry = case_entry_path(config, str(suite["name"]), str(case["id"]), case)
+            if not entry.is_file():
+                raise ValueError(f"fixture inventory missing entry: {entry}")
+    suites = selected_cases(suites, options.case_filters)
     config.actual_root.mkdir(parents=True, exist_ok=True)
 
     print(f"Running {config.status_label} verification area")
     print(f"  manifest={format_repo_relative_path(config.manifest_path)}")
     print(f"  bless={'yes' if options.bless else 'no'}")
 
+    from .fixture_inventory import inventory
+    inputs = inventory()
     suite_results = [run_suite(config, suite, options) for suite in suites]
     total_variants = sum(int(result["total_variants"]) for result in suite_results)
     total_failures = sum(int(result["total_failures"]) for result in suite_results)
     blocking_failures = total_failures
     result_payload = {
         "schema_version": 1,
+        "validation_inputs": inputs,
+        "selection_digest": hashlib.sha256(json.dumps(suites, sort_keys=True).encode()).hexdigest(),
         "area": config.area,
         "bless": options.bless,
         "manifest": format_repo_relative_path(config.manifest_path),
@@ -88,7 +103,7 @@ def run_area(config: AreaAdapterConfig, options: AreaRunOptions) -> int:
             "non_blocking_failures": 0,
         },
     }
-    result_path = resolve_repo_path(options.result_json)
+    result_path = options.result_json if options.result_json.is_absolute() else REPO_ROOT / options.result_json
     result_path.parent.mkdir(parents=True, exist_ok=True)
     result_path.write_text(json.dumps(result_payload, indent=2, sort_keys=True), encoding="utf-8")
 
@@ -97,7 +112,7 @@ def run_area(config: AreaAdapterConfig, options: AreaRunOptions) -> int:
     else:
         print(f"result_json={format_repo_relative_path(result_path)}")
 
-    if blocking_failures > 0 and not options.bless:
+    if blocking_failures > 0:
         print(
             f"verification failed: variants={total_variants}, failures={total_failures}, "
             f"blocking_failures={blocking_failures}, non_blocking_failures=0",
@@ -159,8 +174,20 @@ def run_suite(
         "total_failures": 0,
     }
     validate_unique_baseline_artifact_paths(config, suite_name, cases)
+    stopped = False
     for case in cases:
-        case_result, case_failed, failed_variants = run_case(config, suite_name, case, options)
+        if stopped:
+            case_result, case_failed, failed_variants = blocked_case(case, "fail-fast")
+        else:
+            try:
+                case_result, case_failed, failed_variants = run_case(config, suite_name, case, options)
+            except (OSError, RuntimeError) as error:
+                case_result, case_failed, failed_variants = blocked_case(case, str(error))
+        if case_failed:
+            print(f"failure: {suite_name}/{case['id']}: {case_result['variants']}", flush=True)
+        case_result["assertions"] = assertion_selection(case)
+        case_result["application_profile"] = "release" if case["command"] in {"build", "run", "test"} else None
+        stopped = stopped or (case_failed and not options.no_fail_fast)
         result["cases"].append(case_result)
         result["total_variants"] += len(case_result["variants"])
         result["total_failures"] += failed_variants
@@ -200,12 +227,9 @@ def run_area_check_case(
     if self_test:
         argv.append("--self-test")
     started = time.perf_counter()
-    proc = subprocess.run(
+    proc = run_process(
         argv,
         cwd=REPO_ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
     )
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     if proc.stdout:
@@ -213,7 +237,7 @@ def run_area_check_case(
     if proc.stderr:
         sys.stderr.write(proc.stderr)
     mismatches = []
-    if proc.returncode != expected_exit:
+    if proc.cause != "exit" or proc.truncated or proc.returncode != expected_exit:
         mismatches.append("unexpected-exit")
     status = "pass" if not mismatches else "fail"
     emit_case_timing(config.area, suite_name, case_id, command, elapsed_ms, status)
@@ -231,6 +255,10 @@ def run_area_check_case(
                     "mismatches": mismatches,
                     "expected_exit_code": expected_exit,
                     "actual_exit_code": proc.returncode,
+                    "process_cause": proc.cause,
+                    "truncated": proc.truncated,
+                    "stdout": proc.stdout,
+                    "stderr": proc.stderr,
                     "duration_ms": round(elapsed_ms, 3),
                 }
             ],
@@ -267,7 +295,7 @@ def run_validation_suite_case(
         "--nocapture",
     ]
     started = time.perf_counter()
-    proc = subprocess.run(
+    proc = run_process(
         argv,
         cwd=REPO_ROOT,
         env={
@@ -275,9 +303,6 @@ def run_validation_suite_case(
             "SIFR_VALIDATION_SUITE_MANIFEST": str(entry),
             "SIFR_VALIDATION_SUITE_FILTER": suite_filter,
         },
-        text=True,
-        capture_output=True,
-        check=False,
     )
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     if proc.stdout:
@@ -285,7 +310,7 @@ def run_validation_suite_case(
     if proc.stderr:
         sys.stderr.write(proc.stderr)
     mismatches = []
-    if proc.returncode != expected_exit:
+    if proc.cause != "exit" or proc.truncated or proc.returncode != expected_exit:
         mismatches.append("unexpected-exit")
     status = "pass" if not mismatches else "fail"
     emit_case_timing(config.area, suite_name, case_id, VALIDATION_SUITE_COMMAND, elapsed_ms, status)
@@ -304,6 +329,10 @@ def run_validation_suite_case(
                     "mismatches": mismatches,
                     "expected_exit_code": expected_exit,
                     "actual_exit_code": proc.returncode,
+                    "process_cause": proc.cause,
+                    "truncated": proc.truncated,
+                    "stdout": proc.stdout,
+                    "stderr": proc.stderr,
                     "duration_ms": round(elapsed_ms, 3),
                 }
             ],
@@ -342,6 +371,8 @@ def run_baseline_case(
         stdout_norm = canonicalize_output(stdout, diagnostic_format, "stdout")
         stderr_norm = canonicalize_output(stderr, diagnostic_format, "stderr")
         stdout_file, stderr_file, exit_file = baseline_artifact_paths(entry, label)
+        if options.bless and exit_code != expected_exit:
+            raise RuntimeError(f"cannot bless unexpected exit {exit_code}, expected {expected_exit}: {stderr}")
         mismatches = compare_or_bless(
             config=config,
             options=options,
@@ -498,7 +529,8 @@ def run_sifr_variant(
     quiet: bool,
 ) -> tuple[int, str, str, float, list[str]]:
     cwd = REPO_ROOT
-    argv = ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
+    from .fixture_execution import compiler_binary
+    argv = [str(compiler_binary())]
     if command_name in {
         "package-check",
         "package-check-default",
@@ -512,17 +544,6 @@ def run_sifr_variant(
         "package-run-target-admin",
     }:
         cwd = find_package_root(entry)
-        argv = [
-            "cargo",
-            "run",
-            "--manifest-path",
-            str(REPO_ROOT / "Cargo.toml"),
-            "--locked",
-            "-q",
-            "-p",
-            "sifr",
-            "--",
-        ]
     if diagnostic_format is not None:
         argv.extend(["--diagnostic-format", diagnostic_format])
     if command_name == "fmt-check":
@@ -559,15 +580,14 @@ def run_sifr_variant(
         env = dict(os.environ)
         env["SIFR_INSTALL_MANIFEST_DIR"] = str(entry.parent / "missing-receipt")
     started = time.perf_counter()
-    proc = subprocess.run(
+    proc = run_process(
         argv,
         cwd=cwd,
         env=env,
-        text=True,
-        capture_output=True,
-        check=False,
     )
     elapsed_ms = (time.perf_counter() - started) * 1000.0
+    if proc.cause != "exit" or proc.truncated or proc.returncode < 0:
+        raise RuntimeError(f"fixture process failed: {proc.cause}; exit={proc.returncode}; truncated={proc.truncated}\nstdout={proc.stdout}\nstderr={proc.stderr}")
     return proc.returncode, proc.stdout, proc.stderr, elapsed_ms, argv
 
 
@@ -585,6 +605,9 @@ def compare_or_bless(
     exit_file: Path,
 ) -> list[str]:
     if options.bless:
+        # Never turn crashes/tool failures into approved language expectations.
+        if exit_code not in {0, 1}:
+            return ["unblessable-process-failure"]
         write_text(stdout_file, stdout_norm)
         write_text(stderr_file, stderr_norm)
         write_text(exit_file, f"{exit_code}\n")
@@ -703,7 +726,7 @@ def emit_case_timing(
     print(
         f"[sifr-case-timing] bucket={area} "
         f"case={timing_token(suite_name)}/{timing_token(case_id)}/{timing_token(label)} "
-        f"elapsed_ms={int(elapsed_ms)} status={status}"
+        f"elapsed_ms={int(elapsed_ms)} status={status}", flush=True
     )
 
 

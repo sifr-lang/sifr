@@ -56,14 +56,16 @@
       "group": "demos-required",
       "source_path": "demos/codegen_output/main.sifr",
       "expected_command": "build",
-      "evidence_category": "demo-codegen"
+      "evidence_category": "demo-codegen",
+      "native_stdout": "1\n5\n[4, 2]\n[5, 3, 4]\nHello, World!\ndoing work inside with block\nItem: Widget\nAll codegen quality v2 improvements verified!\n"
     },
     {
       "id": "demo-002-codegen-structural-passes",
       "group": "demos-required",
       "source_path": "demos/codegen_structural_passes/main.sifr",
       "expected_command": "build",
-      "evidence_category": "demo-codegen"
+      "evidence_category": "demo-codegen",
+      "native_stdout": "current_has_t = true\ntoday_has_dash = true\nfrom_timestamp_ok = 1970-01-01T00:00:00\nfrom_timestamp_invalid = invalid timestamp\n"
     },
     {
       "id": "demo-003-cargo-manifest",

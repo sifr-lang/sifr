@@ -79,7 +79,8 @@ class ProfileRunner:
     def __init__(self, profile_name: str, forward_args: list[str]) -> None:
         self.profile = load_profile(profile_name)
         self.profile_name = str(self.profile["name"])
-        self.forward_args = forward_args
+        self.no_fail_fast = "--no-fail-fast" in forward_args
+        self.forward_args = [arg for arg in forward_args if arg != "--no-fail-fast"]
         self.functional_exit_status = 0
         self.performance_exit_status = 0
         self.env = os.environ.copy()
@@ -101,38 +102,70 @@ class ProfileRunner:
 
     def run(self) -> int:
         self.print_header()
-        status = self.execute_step("cargo_cache_setup", self.prepare_cargo_cache)
-        if status != 0:
-            return status
-        if self.profile.get("cargo_policy", {}).get("offline") is True:
-            enable_profile_offline_cargo(self.env)
-
+        early = {"hir-maintainability", "file-size", "source-crate-dependency-direction",
+                 "submodule-ownership", "stdlib-manifest-schema"}
+        failed = 0
         for guardrail in self.profile["guardrail_steps"]:
-            status = self.execute_step(
-                step_name("guardrail", guardrail),
-                lambda guardrail=guardrail: self.run_guardrail(guardrail),
-            )
-            if status != 0:
-                return status
-
+            if guardrail not in early:
+                continue
+            status = self.execute_step(step_name("guardrail", guardrail),
+                                       lambda g=guardrail: self.run_guardrail(g))
+            failed = failed or status
+            if status and not self.no_fail_fast:
+                return failed
+        # Invalid inventories are unsafe preparation inputs.
+        if failed:
+            self.block_steps("invalid-inventory")
+            return failed
+        prepared = self.execute_step("cargo_cache_setup", self.prepare_cargo_cache)
+        if prepared and not self.no_fail_fast:
+            return prepared
+        if not prepared and self.profile.get("cargo_policy", {}).get("offline") is True:
+            enable_profile_offline_cargo(self.env)
+        failed = prepared
+        for guardrail in self.profile["guardrail_steps"]:
+            if guardrail in early:
+                continue
+            if prepared:
+                self.block_step(step_name("guardrail", guardrail), "cargo_cache_setup")
+                continue
+            status = self.execute_step(step_name("guardrail", guardrail),
+                                       lambda g=guardrail: self.run_guardrail(g))
+            failed = failed or status
+            if status and not self.no_fail_fast:
+                return failed
         for selection in self.profile["selected_areas"]:
             area = str(selection["area"])
             suites = [str(suite) for suite in selection["suites"]]
-            status = self.execute_step(
-                step_name("area", area),
-                lambda area=area, suites=suites: self.run_area(area, suites),
-            )
-            if status != 0:
-                return status
-
+            if prepared:
+                self.block_step(step_name("area", area), "cargo_cache_setup")
+                continue
+            status = self.execute_step(step_name("area", area),
+                                       lambda a=area, s=suites: self.run_area(a, s))
+            failed = failed or status
+            if status and not self.no_fail_fast:
+                return failed
         for toolchain_step in self.profile["toolchain_steps"]:
-            status = self.execute_step(
-                step_name("toolchain", toolchain_step),
-                lambda toolchain_step=toolchain_step: self.run_toolchain_step(toolchain_step),
-            )
-            if status != 0:
-                return status
-        return 0
+            if prepared:
+                self.block_step(step_name("toolchain", toolchain_step), "cargo_cache_setup")
+                continue
+            status = self.execute_step(step_name("toolchain", toolchain_step),
+                                       lambda t=toolchain_step: self.run_toolchain_step(t))
+            failed = failed or status
+            if status and not self.no_fail_fast:
+                return failed
+        return failed
+
+    def block_step(self, name: str, prerequisite: str) -> None:
+        print(f"[sifr-lane-step] name={name} elapsed_ms=0 status=blocked")
+        print(f"blocked {name}: prerequisite {prerequisite}")
+
+    def block_steps(self, prerequisite: str) -> None:
+        self.block_step("cargo_cache_setup", prerequisite)
+        for selection in self.profile["selected_areas"]:
+            self.block_step(step_name("area", str(selection["area"])), prerequisite)
+        for name in self.profile["toolchain_steps"]:
+            self.block_step(step_name("toolchain", name), prerequisite)
 
     def execute_step(self, name: str, callback: Callable[[], None]) -> int:
         budget = self.prepare_step_budget(name)
@@ -150,12 +183,13 @@ class ProfileRunner:
     def prepare_cargo_cache(self) -> None:
         try:
             prepare_profile_cargo_cache(self.profile, self.env, run_command)
-            if not (os.environ.get("SIFR_GCQ_BIN") or os.environ.get("SIFR_RUNTIME_PLATFORM_BIN")):
-                # Resolve/build only after the workspace setup has succeeded.
-                binary = resolve_sifr_binary(REPO_ROOT)
-                self.env["SIFR_GCQ_BIN"] = str(binary)
-                self.env["SIFR_RUNTIME_PLATFORM_BIN"] = str(binary)
-        except ValueError as exc:
+            # Overrides must identify the same Cargo-prepared candidate.
+            binary = resolve_sifr_binary(REPO_ROOT)
+            for variable in ("SIFR_GCQ_BIN", "SIFR_RUNTIME_PLATFORM_BIN"):
+                if os.environ.get(variable):
+                    resolve_sifr_binary(REPO_ROOT, explicit_env_var=variable)
+                self.env[variable] = str(binary)
+        except (ValueError, RuntimeError, OSError) as exc:
             raise ProfileRunnerError(str(exc)) from exc
 
     def prepare_step_budget(self, name: str) -> StepBudgetContext | None:

@@ -23,6 +23,7 @@ QUALITY_DEBT = GCQ_ROOT / "data" / "generated_quality_debt.json"
 TARGET_ROOT = REPO_ROOT / "target" / "sifr_generated_code_quality"
 EVIDENCE_ROOT = TARGET_ROOT / "evidence"
 sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
+sys.path.insert(0, str(REPO_ROOT / "verification" / "runner"))
 
 from sifr_binary import resolve_sifr_binary  # noqa: E402
 from inventory_gates import (  # noqa: E402
@@ -117,6 +118,7 @@ class Entry:
     source_path: str
     expected_command: str
     evidence_category: str
+    native_stdout: str | None = None
 
     @property
     def absolute_source(self) -> Path:
@@ -128,6 +130,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "mode",
         choices=(
+            "native",
             "companions",
             "corpus",
             "inventory",
@@ -186,6 +189,7 @@ def load_manifest(path: Path) -> list[Entry]:
             source_path=raw["source_path"],
             expected_command=raw["expected_command"],
             evidence_category=raw["evidence_category"],
+            native_stdout=raw.get("native_stdout"),
         )
         entries.append(entry)
         ids.append(entry.id)
@@ -338,15 +342,10 @@ def run_command(
         env["CARGO_TARGET_DIR"] = str(cargo_target_dir)
     elif shared_root is not None:
         env["CARGO_TARGET_DIR"] = str(shared_root / "cargo-target")
-    result = subprocess.run(
-        args,
-        cwd=cwd,
-        env=env,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
+    from sifr_verify.fixture_execution import run_process
+    result = run_process(args, cwd=cwd, env=env)
+    if result.cause != "exit" or result.truncated:
+        raise RuntimeError(f"process {result.cause}; truncated={result.truncated}: {result.stderr}")
     if check and result.returncode != 0:
         command = " ".join(args)
         raise RuntimeError(
@@ -851,7 +850,10 @@ def main() -> None:
     args = parse_args()
     entries = load_manifest(Path(args.manifest))
     try:
-        if args.mode == "companions":
+        if args.mode == "native":
+            from native_assertions import run_native_gate
+            run_native_gate(sys.modules[__name__], entries, args)
+        elif args.mode == "companions":
             gate_companions(entries, args)
         elif args.mode == "corpus":
             gate_corpus(entries, args)

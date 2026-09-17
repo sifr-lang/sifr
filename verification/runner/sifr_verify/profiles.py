@@ -585,7 +585,7 @@ def run_command(argv: list[str]) -> int:
 
         return run_profile(
             profile_name,
-            _forward_args(argv[1:]),
+            _forward_args(argv[1:]) + (["--no-fail-fast"] if "--no-fail-fast" in argv[1:] and "--" not in argv else []),
             release_report_out=_optional_arg(argv[1:], "--release-report-out"),
         )
     print(f"unsupported profiles command: {command}", file=sys.stderr)

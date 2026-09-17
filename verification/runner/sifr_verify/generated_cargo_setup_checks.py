@@ -98,7 +98,9 @@ class SetupPolicyTests(unittest.TestCase):
                 with redirect_stdout(io.StringIO()):
                     self.assertEqual(runner.run(), 101)
                 offline.assert_not_called()
-                guard.assert_not_called()
+                self.assertEqual([call.args[0] for call in guard.call_args_list], [
+                "hir-maintainability", "file-size", "source-crate-dependency-direction",
+                "submodule-ownership", "stdlib-manifest-schema"])
 
     def test_simulated_runner_output_preserves_release_step_evidence(self):
         from .release_evidence import build_steps
