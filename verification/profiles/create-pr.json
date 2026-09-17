@@ -158,6 +158,20 @@
   "crate_test_membership": {
     "suites": [
       {
+        "id": "sifr_identity",
+        "package": "sifr_identity",
+        "command": [
+          "test",
+          "-p",
+          "sifr_identity"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
         "id": "sifr_compiler_component",
         "package": "sifr_compiler_component",
         "command": [

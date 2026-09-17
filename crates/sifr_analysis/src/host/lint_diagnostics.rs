@@ -50,11 +50,17 @@ mod tests {
     use sifr_frontend::{DocumentVersion, FrontendInput, FrontendMode, SourcePath, SourceText};
 
     fn host(path: &str, source: &str) -> AnalysisHost {
-        AnalysisHost::open_single_file(FrontendInput {
-            path: SourcePath::new(path),
-            source: SourceText::new(source),
-            mode: FrontendMode::SingleFile,
-        })
+        AnalysisHost::open_single_file(
+            &sifr_driver::CompilerContext::for_test_tokens(
+                crate::compiled_input_tokens(),
+                "sifr_analysis-tests",
+            ),
+            FrontendInput {
+                path: SourcePath::new(path),
+                source: SourceText::new(source),
+                mode: FrontendMode::SingleFile,
+            },
+        )
         .expect("host loads")
     }
 

@@ -78,7 +78,7 @@ def invalid():
     value = config()
 "#,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -104,7 +104,7 @@ class Invalid:
     value: int = broken()
 "#,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -128,7 +128,7 @@ class Invalid:
     value: int = forever()
 "#,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -183,7 +183,7 @@ def other_field() -> OtherDescriptor:
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -222,7 +222,7 @@ class Contract:
         return value
 "#,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -295,7 +295,7 @@ class Contract:
     value: Annotated[Annotated[int, bounded(1)], bounded(2)] | None = option(3, [], None)
 "#,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -341,7 +341,7 @@ def bounded(value: int) -> int:
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -374,7 +374,7 @@ class Model:
     callback: int = option(None, [], Callbacks.normalize)
 "#,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -421,7 +421,7 @@ class Invalid:
     value = ordinary()
 "#,
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -484,7 +484,7 @@ class Model:
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -523,7 +523,7 @@ def wrong() -> int:
 "#,
         ),
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();

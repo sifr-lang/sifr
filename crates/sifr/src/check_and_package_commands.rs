@@ -142,7 +142,7 @@ pub(super) fn cmd_check_package_file(
     };
     let errors = match run_with_panic_boundary(
         "internal compiler panic during package check command execution",
-        || check_package_project(&entrypoint, provider),
+        || check_package_project(&crate::compiler_context(), &entrypoint, provider),
     ) {
         Ok(errors) => errors,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -390,7 +390,7 @@ pub(super) fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
     let mut provider = DiskSourceProvider::new();
     let run_result = match run_with_panic_boundary(
         "internal compiler panic during test command execution",
-        || run_tests(dir, &mut provider),
+        || run_tests(&crate::compiler_context(), dir, &mut provider),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -441,10 +441,12 @@ pub(super) fn compile_entrypoint_report(
     provider: &mut dyn SourceProvider,
 ) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
     match resolve_compilation_mode(file, provider)? {
-        CompilationMode::Project => build_project_report(file, output, provider),
+        CompilationMode::Project => {
+            build_project_report(&crate::compiler_context(), file, output, provider)
+        }
         CompilationMode::SingleFile => {
             let source = read_source(file, provider);
-            build_single_file_report(&source, file, output)
+            build_single_file_report(&crate::compiler_context(), &source, file, output)
         }
     }
 }
@@ -464,7 +466,7 @@ pub(super) fn compile_package_entrypoint_report(
     };
     match run_with_panic_boundary(
         "internal compiler panic during package build command execution",
-        || build_package_project_report(&entrypoint, output, provider),
+        || build_package_project_report(&crate::compiler_context(), &entrypoint, output, provider),
     ) {
         Ok(Ok(report)) => Ok(Some(report)),
         Ok(Err(errors)) => Err(render_diagnostics(&errors, diagnostic_format)),
@@ -478,10 +480,12 @@ pub(super) fn materialize_entrypoint_report(
     provider: &mut dyn SourceProvider,
 ) -> Result<MaterializedRustProjectReport, Vec<RenderedDiagnostic>> {
     match resolve_compilation_mode(file, provider)? {
-        CompilationMode::Project => materialize_project(file, output, provider),
+        CompilationMode::Project => {
+            materialize_project(&crate::compiler_context(), file, output, provider)
+        }
         CompilationMode::SingleFile => {
             let source = read_source(file, provider);
-            materialize_single_file(&source, file, output)
+            materialize_single_file(&crate::compiler_context(), &source, file, output)
         }
     }
 }
@@ -501,7 +505,7 @@ pub(super) fn materialize_package_entrypoint_report(
     };
     match run_with_panic_boundary(
         "internal compiler panic during Rust project materialization",
-        || materialize_package_project(&entrypoint, output, provider),
+        || materialize_package_project(&crate::compiler_context(), &entrypoint, output, provider),
     ) {
         Ok(Ok(report)) => Ok(Some(report)),
         Ok(Err(errors)) => Err(render_diagnostics(&errors, diagnostic_format)),
@@ -514,10 +518,12 @@ pub(super) fn build_run_artifact(
     provider: &mut dyn SourceProvider,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     match resolve_compilation_mode(file, provider)? {
-        CompilationMode::Project => build_cached_project(file, provider),
+        CompilationMode::Project => {
+            build_cached_project(&crate::compiler_context(), file, provider)
+        }
         CompilationMode::SingleFile => {
             let source = read_source(file, provider);
-            build_cached_single_file(&source, file)
+            build_cached_single_file(&crate::compiler_context(), &source, file)
         }
     }
 }
@@ -528,10 +534,10 @@ pub(super) fn check_entrypoint(
 ) -> Vec<RenderedDiagnostic> {
     match resolve_compilation_mode(file, provider) {
         Err(errors) => errors,
-        Ok(CompilationMode::Project) => check_project(file, provider),
+        Ok(CompilationMode::Project) => check_project(&crate::compiler_context(), file, provider),
         Ok(CompilationMode::SingleFile) => {
             let source = read_source(file, provider);
-            check_single_file(&source, file)
+            check_single_file(&crate::compiler_context(), &source, file)
         }
     }
 }
@@ -542,10 +548,10 @@ pub(super) fn emit_entrypoint(file: &Path, provider: &mut dyn SourceProvider) ->
         Err(errors) => return CompileResult::Errors { errors },
     };
     match mode {
-        CompilationMode::Project => emit_project(file, provider),
+        CompilationMode::Project => emit_project(&crate::compiler_context(), file, provider),
         CompilationMode::SingleFile => {
             let source = read_source(file, provider);
-            compile(&source)
+            compile(&crate::compiler_context(), &source)
         }
     }
 }

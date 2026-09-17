@@ -1,4 +1,5 @@
 [package]
+links = "sifr_syntax_compiled_identity"
 name = "sifr_syntax"
 version = "0.0.0"
 publish = false
@@ -18,3 +19,6 @@ serde_json = { workspace = true }
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

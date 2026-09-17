@@ -17,6 +17,7 @@ type RegistryCompatibilityFamily = (String, String, String);
 
 #[derive(Clone, Debug)]
 pub(super) struct CargoResolutionPolicy {
+    pub(super) native_toolchain: Result<sifr_sysroot::NativeToolchain, String>,
     pub(super) lock_mode: CargoLockMode,
     pub(super) cargo_vendor_mode: CargoVendorMode,
     pub(super) authoritative_locks: Vec<PathBuf>,
@@ -24,8 +25,22 @@ pub(super) struct CargoResolutionPolicy {
 }
 
 impl CargoResolutionPolicy {
+    pub(super) fn resolve_native_toolchain() -> Result<sifr_sysroot::NativeToolchain, String> {
+        let cwd =
+            std::env::current_dir().map_err(|_| "cannot resolve native invocation directory")?;
+        sifr_sysroot::NativeToolchain::resolve_at(&cwd)
+    }
+    pub(super) fn cargo_command(&self) -> Result<Command, Vec<RenderedDiagnostic>> {
+        self.native_toolchain
+            .as_ref()
+            .map_err(Clone::clone)
+            .and_then(sifr_sysroot::NativeToolchain::cargo_command)
+            .map_err(|error| vec![cargo_resolution_error(error)])
+    }
+
     pub(super) fn normal() -> Self {
         Self {
+            native_toolchain: Self::resolve_native_toolchain(),
             lock_mode: CargoLockMode::Normal,
             cargo_vendor_mode: CargoVendorMode::SysrootOnly,
             authoritative_locks: Vec::new(),
@@ -44,7 +59,13 @@ impl CargoResolutionPolicy {
         // Keep old unconstrained/locked cache identities intact. Only normal
         // generated workspaces with a seed have changed resolution semantics.
         let mut input = Vec::new();
-        push_cache_bytes(&mut input, "normal-authority-seed-v1");
+        push_cache_bytes(&mut input, "normal-authority-seed-v2");
+        push_cache_bytes(
+            &mut input,
+            self.native_toolchain
+                .as_ref()
+                .map_or("<unavailable>", |tools| tools.identity()),
+        );
         push_cache_bytes(&mut input, &format!("{:?}", self.cargo_vendor_mode));
         // Order is significant: earlier authorities override later ones.
         for lock in &self.authoritative_locks {
@@ -221,11 +242,12 @@ fn prepare_lockfile_from_authority(
         &policy.authoritative_locks,
         cargo_prefix_args,
     )?;
-    let mut command = Command::new("cargo");
+    let mut command = policy.cargo_command()?;
     command
         .args(cargo_prefix_args)
         .args(["metadata", "--format-version=1"])
-        .current_dir(project_dir);
+        .arg("--manifest-path")
+        .arg(project_dir.join("Cargo.toml"));
     if policy.lock_mode.is_network_disallowed() {
         command.arg("--offline");
     }
@@ -386,7 +408,12 @@ fn prepared_lock_path(
     cargo_prefix_args: &[String],
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let mut input = Vec::new();
-    push_cache_bytes(&mut input, "sifr-cargo-resolution-v7");
+    push_cache_bytes(&mut input, "sifr-cargo-resolution-v8");
+    let tools = policy
+        .native_toolchain
+        .as_ref()
+        .map_err(|error| vec![cargo_resolution_error(error)])?;
+    push_cache_bytes(&mut input, tools.identity());
     push_cache_bytes(&mut input, &normalized_manifest_cache_input(project_dir)?);
     for argument in cargo_prefix_args {
         push_cache_bytes(&mut input, argument);
@@ -587,6 +614,7 @@ mod tests {
     fn probe_vendor_replacement_follows_resolution_ownership() {
         assert!(CargoResolutionPolicy::normal().uses_sysroot_vendor());
         let package_owned = CargoResolutionPolicy {
+            native_toolchain: CargoResolutionPolicy::resolve_native_toolchain(),
             lock_mode: CargoLockMode::Frozen,
             cargo_vendor_mode: CargoVendorMode::PackageOwned,
             authoritative_locks: Vec::new(),

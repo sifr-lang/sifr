@@ -2,7 +2,6 @@ use crate::diagnostics::RenderedDiagnostic;
 use serde::{Deserialize, Serialize};
 use sifr_diagnostics::DiagnosticCode;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
 
 pub(crate) fn create_invocation_workspace(
     prefix: &str,
@@ -43,7 +42,7 @@ pub(crate) fn create_invocation_workspace(
     )])
 }
 
-const ARTIFACT_CACHE_SCHEMA_VERSION: u32 = 1;
+const ARTIFACT_CACHE_SCHEMA_VERSION: u32 = 2;
 const ARTIFACT_CACHE_ROOT_DIR: &str = "sifr_generated_artifact_cache";
 const ARTIFACT_CACHE_METADATA_FILE: &str = "artifact_cache.json";
 
@@ -103,6 +102,7 @@ impl CachedArtifactEntry {
 }
 
 pub(crate) struct PendingCachedArtifact {
+    native_identity: String,
     final_root: PathBuf,
     staging_root: PathBuf,
     report: ArtifactCacheReport,
@@ -134,7 +134,7 @@ impl PendingCachedArtifact {
             schema_version: ARTIFACT_CACHE_SCHEMA_VERSION,
             namespace: self.report.namespace.clone(),
             key: self.report.key.clone(),
-            toolchain_signature: toolchain_signature().to_string(),
+            toolchain_signature: self.native_identity.clone(),
         };
         write_cache_metadata(&self.staging_root, &metadata)?;
 
@@ -196,17 +196,20 @@ impl PreparedArtifactCache {
 }
 
 pub(crate) fn prepare_cached_artifact(
+    native_identity: &str,
     namespace: &str,
     scope: &Path,
     key_material: &str,
     required_paths: &[&Path],
 ) -> Result<PreparedArtifactCache, Vec<RenderedDiagnostic>> {
     let scope_path = scope.canonicalize().unwrap_or_else(|_| scope.to_path_buf());
-    let cache_key = deterministic_hash(&format!(
-        "schema={ARTIFACT_CACHE_SCHEMA_VERSION}\0namespace={namespace}\0scope={}\0toolchain={}\0{key_material}",
-        scope_path.display(),
-        toolchain_signature()
-    ));
+    let mut key = sifr_identity::IdentityEncoder::new("generated-artifact-v2");
+    key.field("schema", &ARTIFACT_CACHE_SCHEMA_VERSION.to_le_bytes());
+    key.field("namespace", namespace.as_bytes());
+    key.field("scope", scope_path.as_os_str().as_encoded_bytes());
+    key.field("native-context", native_identity.as_bytes());
+    key.field("material", key_material.as_bytes());
+    let cache_key = key.finish();
     let cache_root = artifact_cache_root().join(namespace);
     std::fs::create_dir_all(&cache_root).map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
@@ -226,7 +229,7 @@ pub(crate) fn prepare_cached_artifact(
                 if metadata.schema_version == ARTIFACT_CACHE_SCHEMA_VERSION
                     && metadata.namespace == namespace
                     && metadata.key == cache_key
-                    && metadata.toolchain_signature == toolchain_signature() =>
+                    && metadata.toolchain_signature == native_identity =>
             {
                 if required_paths
                     .iter()
@@ -257,6 +260,7 @@ pub(crate) fn prepare_cached_artifact(
 
     let staging_root = create_invocation_workspace(&format!("{namespace}_cache_stage"))?;
     Ok(PreparedArtifactCache::Miss(PendingCachedArtifact {
+        native_identity: native_identity.to_owned(),
         final_root,
         staging_root: staging_root.clone(),
         report: ArtifactCacheReport {
@@ -305,48 +309,6 @@ fn write_cache_metadata(
     })
 }
 
-fn toolchain_signature() -> &'static str {
-    static TOOLCHAIN_SIGNATURE: OnceLock<String> = OnceLock::new();
-    TOOLCHAIN_SIGNATURE
-        .get_or_init(|| {
-            let values = [
-                command_signature("cargo", &["-V"]).unwrap_or_else(|| "cargo:unavailable".into()),
-                command_signature("rustc", &["-Vv"]).unwrap_or_else(|| "rustc:unavailable".into()),
-                env_signature("RUSTFLAGS"),
-                env_signature("CARGO_BUILD_TARGET"),
-                env_signature("CARGO_TARGET_DIR"),
-                env_signature("RUSTC_WRAPPER"),
-            ];
-            deterministic_hash(&values.join("\0"))
-        })
-        .as_str()
-}
-
-fn command_signature(program: &str, args: &[&str]) -> Option<String> {
-    let output = std::process::Command::new(program)
-        .args(args)
-        .output()
-        .ok()?;
-    if !output.status.success() {
-        return None;
-    }
-    Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
-}
-
-fn env_signature(name: &str) -> String {
-    let value = std::env::var(name).unwrap_or_default();
-    format!("{name}={value}")
-}
-
-fn deterministic_hash(value: &str) -> String {
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
-    for byte in value.bytes() {
-        hash ^= u64::from(byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    format!("{hash:016x}")
-}
-
 #[cfg(test)]
 mod tests {
     use super::{ArtifactCacheReport, PendingCachedArtifact};
@@ -376,6 +338,7 @@ mod tests {
         std::fs::write(final_root.join("winner"), b"ok").expect("winner file should be written");
 
         let pending = PendingCachedArtifact {
+            native_identity: "fixture".to_owned(),
             final_root: final_root.clone(),
             staging_root: staging_root.clone(),
             report: ArtifactCacheReport {

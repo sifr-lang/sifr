@@ -22,26 +22,20 @@ pub(crate) fn stable_cache_fingerprint(
 }
 
 pub(crate) struct FingerprintBuilder {
-    hash: u64,
+    hash: sifr_identity::IdentityEncoder,
 }
 
 impl FingerprintBuilder {
     pub(crate) fn new(domain: &str) -> Self {
         let mut builder = Self {
-            hash: 0xcbf2_9ce4_8422_2325_u64,
+            hash: sifr_identity::IdentityEncoder::new("frontend-cache-v2"),
         };
         builder.field("domain", domain);
         builder
     }
 
     pub(crate) fn field(&mut self, name: &str, value: impl AsRef<str>) {
-        let value = value.as_ref();
-        self.write(name.as_bytes());
-        self.write(&[0]);
-        self.write(value.len().to_string().as_bytes());
-        self.write(&[0]);
-        self.write(value.as_bytes());
-        self.write(&[0xff]);
+        self.hash.field(name, value.as_ref().as_bytes());
     }
 
     pub(crate) fn path_field(&mut self, name: &str, path: &SourcePath) {
@@ -57,13 +51,6 @@ impl FingerprintBuilder {
     }
 
     pub(crate) fn finish_hex(self) -> String {
-        format!("{:016x}", self.hash)
-    }
-
-    fn write(&mut self, bytes: &[u8]) {
-        for byte in bytes {
-            self.hash ^= u64::from(*byte);
-            self.hash = self.hash.wrapping_mul(0x0000_0100_0000_01b3);
-        }
+        self.hash.finish()
     }
 }

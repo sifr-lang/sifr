@@ -56,3 +56,22 @@ mod diagnostics_and_packages_tests;
 #[cfg(test)]
 mod mode_resolution_tests;
 mod python_cli;
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;
+
+fn compiler_identity() -> sifr_identity::CompilerIdentity {
+    if cfg!(test) {
+        return sifr_identity::CompilerIdentity::for_test(compiled_input_tokens(), "sifr-unit");
+    }
+    // A malformed build-generated ID is a compiler build invariant.
+    match sifr_identity::CompilerIdentity::product(env!("SIFR_COMPILER_BUILD_ID")) {
+        Ok(identity) => identity,
+        Err(error) => panic!("{error}"),
+    }
+}
+
+fn compiler_context() -> sifr_driver::CompilerContext {
+    sifr_driver::CompilerContext::new(compiler_identity())
+}

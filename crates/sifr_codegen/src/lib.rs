@@ -227,3 +227,7 @@ mod type_conversion_tests;
 
 #[cfg(test)]
 mod generated_support_regression_tests;
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

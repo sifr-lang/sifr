@@ -1,4 +1,5 @@
 [package]
+links = "sifr_analysis_compiled_identity"
 name = "sifr_analysis"
 version = "0.0.0"
 publish = false
@@ -7,6 +8,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+sifr_identity.workspace = true
 ruff_text_size = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_diagnostics = { workspace = true }
@@ -27,3 +29,6 @@ doctest = false
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

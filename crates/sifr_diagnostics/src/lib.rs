@@ -23,3 +23,7 @@ pub use source_map::{SourceId, SourceMap, SourceMapError, SourceSpan};
 pub fn compiler_diagnostic_namespaces() -> impl Iterator<Item = &'static str> {
     codes::DIAGNOSTIC_FAMILIES.iter().map(|family| family.name)
 }
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

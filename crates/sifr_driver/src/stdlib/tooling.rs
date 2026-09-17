@@ -24,8 +24,10 @@ pub struct ToolingSysrootDiagnostic {
     pub asset_path: Option<PathBuf>,
 }
 
-pub fn sysroot_status() -> Result<ToolingSysrootStatus, Vec<RenderedDiagnostic>> {
-    let sysroot = resolve_tooling_sysroot()?;
+pub fn sysroot_status(
+    compiler: &crate::CompilerContext,
+) -> Result<ToolingSysrootStatus, Vec<RenderedDiagnostic>> {
+    let sysroot = resolve_tooling_sysroot(compiler)?;
     let toolchain_id = sysroot.toolchain_id();
     Ok(ToolingSysrootStatus {
         root: sysroot.root,
@@ -33,8 +35,8 @@ pub fn sysroot_status() -> Result<ToolingSysrootStatus, Vec<RenderedDiagnostic>>
     })
 }
 
-pub fn sysroot_probe() -> ToolingSysrootProbe {
-    match sifr_sysroot::resolve_sysroot(None) {
+pub fn sysroot_probe(compiler: &crate::CompilerContext) -> ToolingSysrootProbe {
+    match compiler.resolved_sysroot().clone() {
         Ok(sysroot) => {
             let toolchain_id = sysroot.toolchain_id();
             ToolingSysrootProbe {
@@ -57,8 +59,10 @@ pub fn sysroot_probe() -> ToolingSysrootProbe {
     }
 }
 
-pub fn tooling_sources() -> Result<Vec<WorkspaceAuxiliarySource>, Vec<RenderedDiagnostic>> {
-    let sysroot = resolve_tooling_sysroot()?;
+pub fn tooling_sources(
+    compiler: &crate::CompilerContext,
+) -> Result<Vec<WorkspaceAuxiliarySource>, Vec<RenderedDiagnostic>> {
+    let sysroot = resolve_tooling_sysroot(compiler)?;
     let sources = load_stdlib_tooling_sources_from_sysroot(&sysroot).map_err(|error| {
         vec![diagnostic_with_code(
             format!(
@@ -84,11 +88,8 @@ pub fn tooling_sources() -> Result<Vec<WorkspaceAuxiliarySource>, Vec<RenderedDi
         .collect())
 }
 
-fn resolve_tooling_sysroot() -> Result<sifr_sysroot::ResolvedSysroot, Vec<RenderedDiagnostic>> {
-    sifr_sysroot::resolve_sysroot(None).map_err(|error| {
-        vec![diagnostic_with_code(
-            error.boundary_message(),
-            DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
-        )]
-    })
+fn resolve_tooling_sysroot(
+    compiler: &crate::CompilerContext,
+) -> Result<sifr_sysroot::ResolvedSysroot, Vec<RenderedDiagnostic>> {
+    compiler.sysroot().cloned()
 }

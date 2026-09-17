@@ -7414,6 +7414,7 @@ dependencies = [
  "sifr_driver",
  "sifr_format",
  "sifr_frontend",
+ "sifr_identity",
  "sifr_lint",
  "sifr_lsp",
  "sifr_package",
@@ -7474,6 +7475,7 @@ dependencies = [
  "sifr_driver",
  "sifr_format",
  "sifr_frontend",
+ "sifr_identity",
  "sifr_lint",
  "sifr_sql_contract",
  "sifr_syntax",
@@ -7492,6 +7494,7 @@ dependencies = [
  "ruff_text_size",
  "rust_decimal",
  "sifr_diagnostics",
+ "sifr_identity",
  "sifr_ir",
  "sifr_lowering",
  "sifr_stdlib_manifest",
@@ -7512,6 +7515,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "sifr_diagnostics",
+ "sifr_identity",
  "wasmtime",
  "wat",
 ]
@@ -7524,6 +7528,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "sifr_identity",
  "sifr_source",
  "static_assertions",
 ]
@@ -7541,6 +7546,7 @@ dependencies = [
  "sifr_compiler_component",
  "sifr_diagnostics",
  "sifr_frontend",
+ "sifr_identity",
  "sifr_ir",
  "sifr_lowering",
  "sifr_package",
@@ -7564,6 +7570,7 @@ dependencies = [
  "ruff_text_size",
  "sifr_diagnostics",
  "sifr_frontend",
+ "sifr_identity",
  "sifr_syntax",
  "toml",
 ]
@@ -7580,6 +7587,7 @@ dependencies = [
  "serde_json",
  "sifr_compiler_component",
  "sifr_diagnostics",
+ "sifr_identity",
  "sifr_ir",
  "sifr_lowering",
  "sifr_source",
@@ -7591,11 +7599,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_identity"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.11.0",
+]
+
+[[package]]
 name = "sifr_ipc"
 version = "0.0.0"
 dependencies = [
  "postcard",
  "serde",
+ "sifr_identity",
 ]
 
 [[package]]
@@ -7605,6 +7621,7 @@ dependencies = [
  "num-bigint 0.5.1",
  "ruff_text_size",
  "sifr_diagnostics",
+ "sifr_identity",
  "sifr_type_system",
 ]
 
@@ -7617,6 +7634,7 @@ dependencies = [
  "ruff_python_ast",
  "sifr_diagnostics",
  "sifr_frontend",
+ "sifr_identity",
  "sifr_ir",
  "sifr_syntax",
  "toml",
@@ -7635,6 +7653,7 @@ dependencies = [
  "rust_decimal",
  "serde_json",
  "sifr_diagnostics",
+ "sifr_identity",
  "sifr_ipc",
  "sifr_ir",
  "sifr_stdlib_imports",
@@ -7654,6 +7673,7 @@ dependencies = [
  "sifr_analysis",
  "sifr_diagnostics",
  "sifr_driver",
+ "sifr_identity",
  "sifr_package",
  "sifr_source",
  "tempfile",
@@ -7672,8 +7692,10 @@ dependencies = [
  "sifr_compiler_component",
  "sifr_diagnostics",
  "sifr_frontend",
+ "sifr_identity",
  "sifr_sql_contract",
  "sifr_syntax",
+ "sifr_sysroot",
  "toml",
 ]
 
@@ -7768,6 +7790,7 @@ name = "sifr_source"
 version = "0.0.0"
 dependencies = [
  "ruff_text_size",
+ "sifr_identity",
 ]
 
 [[package]]
@@ -7781,6 +7804,7 @@ dependencies = [
  "sha2 0.11.0",
  "sifr_compiler_component",
  "sifr_diagnostics",
+ "sifr_identity",
  "sifr_structural_identity",
  "static_assertions",
 ]
@@ -7849,6 +7873,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "sifr_driver",
+ "sifr_identity",
  "sifr_sql_contract",
  "sifr_sql_mysql",
  "sifr_sql_runtime",
@@ -7902,6 +7927,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "sifr_driver",
+ "sifr_identity",
  "sifr_sql_contract",
  "sifr_sql_postgresql",
  "sifr_sql_runtime",
@@ -7962,6 +7988,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "sifr_driver",
+ "sifr_identity",
  "sifr_sql_contract",
  "sifr_sql_runtime",
  "sifr_sql_sqlite",
@@ -8033,6 +8060,7 @@ dependencies = [
 name = "sifr_stdlib_imports"
 version = "0.0.0"
 dependencies = [
+ "sifr_identity",
  "sifr_stdlib_manifest",
 ]
 
@@ -8042,6 +8070,7 @@ version = "0.0.0"
 dependencies = [
  "itertools 0.15.0",
  "serde_json",
+ "sifr_identity",
  "sifr_sysroot",
  "toml",
 ]
@@ -8062,6 +8091,7 @@ dependencies = [
  "ruff_text_size",
  "serde_json",
  "sifr_diagnostics",
+ "sifr_identity",
  "sifr_source",
 ]
 
@@ -8071,6 +8101,7 @@ version = "0.0.0"
 dependencies = [
  "serde",
  "sha2 0.11.0",
+ "sifr_identity",
  "toml",
 ]
 
@@ -8079,6 +8110,7 @@ name = "sifr_type_system"
 version = "0.0.0"
 dependencies = [
  "sifr_diagnostics",
+ "sifr_identity",
 ]
 
 [[package]]

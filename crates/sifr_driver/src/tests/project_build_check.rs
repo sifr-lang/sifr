@@ -37,6 +37,7 @@ fn build_project_preserves_module_scoped_builtin_error_shadow_identities() {
     .expect("builtin user module should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &main_file,
         &build_out,
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -82,6 +83,7 @@ def area(radius: float) -> float:
     .expect("helper module should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -100,7 +102,11 @@ fn test_check_project_reports_primary_span_for_ranged_hir_diagnostic() {
     std::fs::write(&main_file, "def main() -> None:\n    if 1:\n        pass\n")
         .expect("main module should be written");
 
-    let errors = check_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new());
+    let errors = check_project(
+        &crate::CompilerContext::for_test(),
+        &main_file,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     let diagnostic = errors
         .iter()
         .find(|error| error.code == DiagnosticCode::FLOW_INVALID_CONDITION_TYPE.code())
@@ -140,6 +146,7 @@ fn test_check_project_resolves_workspace_source_import_for_non_main_entry() {
     .expect("helper should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("cases/app.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -174,6 +181,7 @@ fn test_build_project_materializes_dotted_workspace_modules() {
     .expect("helper should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &main_file,
         &build_out,
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -244,6 +252,7 @@ def node_value(node: LinkedNode | None) -> int:
     .expect("helper should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &main_file,
         &build_out,
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -366,6 +375,7 @@ from helpers.left import Box as Left
     .expect("leaf facade should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &main_file,
         &build_out,
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -422,6 +432,7 @@ class Child(Parent):
         .expect("child facade should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -472,6 +483,7 @@ def main():
     .expect("factory facade should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -513,6 +525,7 @@ def invalid(value: Box[Local], other: Local) -> bool:
     .expect("facade should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -547,7 +560,11 @@ fn test_emit_project_includes_workspace_support_modules() {
     )
     .expect("helper should be written");
 
-    let emitted = emit_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new());
+    let emitted = emit_project(
+        &crate::CompilerContext::for_test(),
+        &main_file,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
 
     let CompileResult::Success { rust_source } = emitted else {
         panic!("workspace project emit should succeed");
@@ -577,12 +594,20 @@ fn test_cached_project_invalidates_when_workspace_helper_changes() {
     std::fs::write(&helper_file, "def answer() -> int:\n    return 10\n")
         .expect("helper should be written");
 
-    let first = build_cached_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new())
-        .expect("first workspace build should succeed");
+    let first = build_cached_project(
+        &crate::CompilerContext::for_test(),
+        &main_file,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("first workspace build should succeed");
     std::fs::write(&helper_file, "def answer() -> int:\n    return 11\n")
         .expect("helper should be updated");
-    let second = build_cached_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new())
-        .expect("second workspace build should succeed");
+    let second = build_cached_project(
+        &crate::CompilerContext::for_test(),
+        &main_file,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("second workspace build should succeed");
 
     assert!(!first.build_report().cache_hit());
     assert!(!second.build_report().cache_hit());
@@ -609,6 +634,7 @@ fn test_check_project_ignores_unrelated_non_closure_parse_errors() {
         .expect("unrelated sibling should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -638,6 +664,7 @@ fn test_check_project_reports_reachable_parse_errors_in_import_closure() {
     .expect("unrelated module should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
@@ -676,10 +703,12 @@ def broken() -> int:
     .expect("helper module should be written");
 
     let check_errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );
     let build_errors = build_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -719,6 +748,7 @@ def render() -> str:\n    try:\n        parsed: TomlValue = loads(\"name = \\\"f
     .expect("helper should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &main_file,
         &build_out,
         &mut sifr_frontend::DiskSourceProvider::new(),
@@ -764,6 +794,7 @@ def unused() -> str:\n    try:\n        parsed: str = loads(\"name = \\\"unused\
     .expect("unused helper should be written");
 
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &main_file,
         &build_out,
         &mut sifr_frontend::DiskSourceProvider::new(),

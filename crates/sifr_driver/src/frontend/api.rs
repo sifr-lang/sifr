@@ -18,18 +18,25 @@ pub fn parse_source(source: &str) -> Result<Suite, Vec<RenderedDiagnostic>> {
     sifr_frontend::parse_source(source, None)
 }
 
-fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
-    compile_single_file_frontend(source)
+fn compile_frontend(
+    compiler: &crate::CompilerContext,
+    source: &str,
+) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
+    compile_single_file_frontend(compiler, source)
 }
 
-pub fn lower_source(source: &str) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
-    compile_frontend(source).map(|frontend| frontend.lowering_result)
+pub fn lower_source(
+    compiler: &crate::CompilerContext,
+    source: &str,
+) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
+    compile_frontend(compiler, source).map(|frontend| frontend.lowering_result)
 }
 
 pub fn compile_sql_migration_source(
+    compiler: &crate::CompilerContext,
     source: &str,
 ) -> Result<Vec<sifr_frontend::MigrationSourceDeclaration>, Vec<RenderedDiagnostic>> {
-    let lowered = lower_source(source)?;
+    let lowered = lower_source(compiler, source)?;
     sifr_frontend::sql_migration_declarations(&lowered.module).map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
             error.message,
@@ -38,8 +45,11 @@ pub fn compile_sql_migration_source(
     })
 }
 
-pub fn type_check_source(source: &str) -> Vec<RenderedDiagnostic> {
-    match lower_source(source) {
+pub fn type_check_source(
+    compiler: &crate::CompilerContext,
+    source: &str,
+) -> Vec<RenderedDiagnostic> {
+    match lower_source(compiler, source) {
         Ok(lowering_result) => {
             let source_context = FrontendSourceContext {
                 display_path: "main",
@@ -57,8 +67,8 @@ pub fn type_check_source(source: &str) -> Vec<RenderedDiagnostic> {
     }
 }
 
-pub fn compile_with_metadata(source: &str) -> CompileResultFull {
-    let codegen_result = match compile_single_file_entrypoint_with_metadata(source) {
+pub fn compile_with_metadata(compiler: &crate::CompilerContext, source: &str) -> CompileResultFull {
+    let codegen_result = match compile_single_file_entrypoint_with_metadata(compiler, source) {
         Ok(result) => result,
         Err(errors) => return CompileResultFull::Errors { errors },
     };
@@ -73,16 +83,16 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     }
 }
 
-pub fn compile(source: &str) -> CompileResult {
-    let result = compile_with_metadata(source);
+pub fn compile(compiler: &crate::CompilerContext, source: &str) -> CompileResult {
+    let result = compile_with_metadata(compiler, source);
     match result {
         CompileResultFull::Success { rust_source, .. } => CompileResult::Success { rust_source },
         CompileResultFull::Errors { errors } => CompileResult::Errors { errors },
     }
 }
 
-pub fn check(source: &str) -> Vec<RenderedDiagnostic> {
-    type_check_source(source)
+pub fn check(compiler: &crate::CompilerContext, source: &str) -> Vec<RenderedDiagnostic> {
+    type_check_source(compiler, source)
 }
 
 fn generated_source_map_files(rust_source: &str) -> Vec<GeneratedSourceMapFile> {

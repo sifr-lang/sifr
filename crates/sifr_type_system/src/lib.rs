@@ -81,3 +81,7 @@ pub use union::{
     intersect_with_union, make_union, remove_none_from_union, subtract_from_union, union_contains,
     union_contains_none,
 };
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

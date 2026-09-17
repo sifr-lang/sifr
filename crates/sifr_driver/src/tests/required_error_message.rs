@@ -29,10 +29,13 @@ fn required_error_message_rejects_invalid_source_before_emission() {
         "class CodeError(Error):\n    message: int\ndef main():\n    _error = CodeError(3)\n",
         "class CodeError(Error):\n    def __init__(self, code: int):\n        self.code = code\ndef main():\n    _error = CodeError(3)\n",
     ] {
-        let errors = check(source);
+        let errors = check(&crate::CompilerContext::for_test(), source);
         assert!(!errors.is_empty(), "source check must reject: {source}");
         assert!(
-            matches!(compile(source), CompileResult::Errors { .. }),
+            matches!(
+                compile(&crate::CompilerContext::for_test(), source),
+                CompileResult::Errors { .. }
+            ),
             "emission must reject: {source}"
         );
     }
@@ -138,7 +141,7 @@ def main():
         assert error.message == "inherited!"
     print("required-error-message-ok")
 "#;
-    let rust = emitted(compile(source));
+    let rust = emitted(compile(&crate::CompilerContext::for_test(), source));
     for name in [
         "CodeError",
         "EmptyError",
@@ -160,7 +163,8 @@ def main():
         "conversion must consume string storage"
     );
     let dir = mktemp_dir("required_error_message_local");
-    let binary = build(source, &dir).expect("native local message contract");
+    let binary = build(&crate::CompilerContext::for_test(), source, &dir)
+        .expect("native local message contract");
     run(&binary);
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -232,7 +236,11 @@ def verify():
         std::fs::write(dir.join(format!("{name}.sifr")), source).expect("write owned test fixture");
     }
     let main = dir.join("main.sifr");
-    let rust = emitted(emit_project(&main, &mut DiskSourceProvider::new()));
+    let rust = emitted(emit_project(
+        &crate::CompilerContext::for_test(),
+        &main,
+        &mut DiskSourceProvider::new(),
+    ));
     for name in [
         "crate::left::CodeError",
         "crate::left::Inherited",
@@ -246,12 +254,21 @@ def verify():
             "{rust}"
         );
     }
-    let binary = build_project(&main, &dir.join("out"), &mut DiskSourceProvider::new())
-        .expect("native imported message contract");
+    let binary = build_project(
+        &crate::CompilerContext::for_test(),
+        &main,
+        &dir.join("out"),
+        &mut DiskSourceProvider::new(),
+    )
+    .expect("native imported message contract");
     run(&binary);
     assert!(
-        run_tests(&dir, &mut DiskSourceProvider::new())
-            .expect("native test-project message contract")
+        run_tests(
+            &crate::CompilerContext::for_test(),
+            &dir,
+            &mut DiskSourceProvider::new()
+        )
+        .expect("native test-project message contract")
     );
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -269,7 +286,11 @@ fn required_error_message_imported_constructor_rejects_missing_message() {
         "from errors import LeafError\ndef main():\n    _error = LeafError(3)\n",
     )
     .expect("write invalid call");
-    let result = emit_project(&dir.join("main.sifr"), &mut DiskSourceProvider::new());
+    let result = emit_project(
+        &crate::CompilerContext::for_test(),
+        &dir.join("main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
     assert!(
         matches!(result, CompileResult::Errors { .. }),
         "invalid imported call must fail before Rust"

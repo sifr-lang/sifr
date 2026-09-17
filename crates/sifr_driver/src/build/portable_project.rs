@@ -37,7 +37,7 @@ pub(super) fn publish_portable_project(
         })?;
     }
     copy_tree(&local_project.join("src"), &destination_src)?;
-    for file_name in ["Cargo.toml", "Cargo.lock"] {
+    for file_name in ["Cargo.toml", "Cargo.lock", "build.rs"] {
         let destination = project_path.join(file_name);
         if destination.exists() {
             std::fs::remove_file(&destination).map_err(|error| {
@@ -45,6 +45,9 @@ pub(super) fn publish_portable_project(
                     "failed to replace portable {file_name}: {error}"
                 ))]
             })?;
+        }
+        if file_name == "build.rs" && !local_project.join(file_name).exists() {
+            continue;
         }
         std::fs::copy(local_project.join(file_name), &destination).map_err(|error| {
             vec![portable_error(format!(
@@ -450,6 +453,7 @@ mod tests {
             cache_fingerprint: "test".to_string(),
         };
         let policy = CargoResolutionPolicy {
+            native_toolchain: CargoResolutionPolicy::resolve_native_toolchain(),
             lock_mode: sifr_package::CargoLockMode::Locked,
             cargo_vendor_mode: CargoVendorMode::SysrootOnly,
             authoritative_locks: Vec::new(),

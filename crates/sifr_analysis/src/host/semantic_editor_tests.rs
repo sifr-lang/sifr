@@ -21,8 +21,14 @@ def main() -> int:
     y = generate_random()
     return 0
 ";
-    let mut host =
-        AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(source),
+    )
+    .expect("host should load");
     let file = host.files()[0];
 
     let function_hover = host
@@ -67,8 +73,14 @@ def combine(left: int, right: int) -> int:
 def main() -> int:
     return combine(1, 2)
 ";
-    let mut host =
-        AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(source),
+    )
+    .expect("host should load");
     let file = host.files()[0];
     let help = host
         .signature_help(
@@ -101,8 +113,14 @@ def generate_random() -> int | None:
     except ValueError:
         return None
 ";
-    let mut host =
-        AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(source),
+    )
+    .expect("host should load");
     let file = host.files()[0];
 
     let call_hover = host
@@ -144,8 +162,14 @@ def main() -> int:
     # main
     return 0
 ";
-    let mut host =
-        AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(source),
+    )
+    .expect("host should load");
     let file = host.files()[0];
 
     for position in [

@@ -2,10 +2,6 @@ use crate::diagnostics::RenderedDiagnostic;
 use crate::stdlib::StdlibCompiled;
 use std::sync::{Arc, OnceLock};
 
-pub(super) static STDLIB_COMPILED_CACHE: OnceLock<
-    Result<Arc<StdlibCompiled>, Vec<RenderedDiagnostic>>,
-> = OnceLock::new();
-
 pub(crate) fn get_or_init_stdlib_cache(
     cache: &OnceLock<Result<Arc<StdlibCompiled>, Vec<RenderedDiagnostic>>>,
     build: impl FnOnce() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>>,

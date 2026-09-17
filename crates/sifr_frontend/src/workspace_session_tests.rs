@@ -335,7 +335,7 @@ fn build_info_is_verified_against_current_workspace_fingerprints() {
             source_hash: file.source_hash.clone(),
         })
         .collect::<Vec<_>>();
-    let candidate = SifrBuildInfoCandidate {
+    let mut candidate = SifrBuildInfoCandidate {
         path: SourcePath::new(temp.root.join(".sifrbuildinfo")),
         compiler: CompilerFingerprint::current(),
         package_config_identity: snapshot.package_config_identity.as_ref().clone(),
@@ -348,6 +348,20 @@ fn build_info_is_verified_against_current_workspace_fingerprints() {
         SifrBuildInfoVerification::Verified(_)
     ));
     assert!(session.snapshot().residency.build_info.is_some());
+
+    let product =
+        sifr_identity::CompilerIdentity::product(&"a".repeat(64)).expect("valid identity");
+    session = session.with_compiler_identity(product.clone());
+    assert!(session.snapshot().residency.build_info.is_none());
+    assert!(matches!(
+        session.verify_build_info(candidate.clone()),
+        SifrBuildInfoVerification::Rejected { .. }
+    ));
+    candidate.compiler = CompilerFingerprint::for_identity(&product);
+    assert!(matches!(
+        session.verify_build_info(candidate.clone()),
+        SifrBuildInfoVerification::Verified(_)
+    ));
 
     let mut stale = candidate;
     stale.sources[0].source_hash = SourceHash::new("stale");

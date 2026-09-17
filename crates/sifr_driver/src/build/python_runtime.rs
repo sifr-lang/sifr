@@ -196,6 +196,40 @@ impl PackagePythonRuntime {
         }
     }
 
+    pub(super) fn selected_library(&self) -> Option<&str> {
+        self.libpython.as_deref()
+    }
+
+    pub(super) fn native_loader_build_script(&self) -> Result<Option<String>, String> {
+        let Some(library) = self.selected_library() else {
+            return Ok(None);
+        };
+        let path = std::path::Path::new(library);
+        let directory = path
+            .parent()
+            .and_then(std::path::Path::to_str)
+            .filter(|directory| !directory.is_empty())
+            .ok_or("selected Python library has no valid parent directory")?;
+        if !path.is_absolute() || directory.contains(['\n', '\r']) {
+            return Err(
+                "selected Python library must have an absolute single-line path".to_string(),
+            );
+        }
+        Ok(Some(format!(
+            r#"fn main() {{
+    println!("cargo:rerun-if-changed=build.rs");
+    if std::env::var("CARGO_CFG_TARGET_FAMILY")
+        .is_ok_and(|family| family.split(',').any(|value| value == "unix"))
+    {{
+        for argument in ["-Xlinker", "-rpath", "-Xlinker", {directory:?}] {{
+            println!("cargo:rustc-link-arg={{argument}}");
+        }}
+    }}
+}}
+"#
+        )))
+    }
+
     #[must_use]
     pub(super) fn trusted_native_link_names(&self) -> Vec<String> {
         let mut links = Vec::new();

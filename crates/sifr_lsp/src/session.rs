@@ -43,6 +43,13 @@ pub(crate) struct DocumentChangeSummary {
 }
 
 impl Session {
+    pub(crate) fn compiler_context(&self) -> &sifr_driver::CompilerContext {
+        &self.analysis.compiler
+    }
+    pub(crate) fn set_compiler_identity(&mut self, identity: sifr_identity::CompilerIdentity) {
+        self.analysis.compiler = sifr_driver::CompilerContext::new(identity);
+    }
+
     pub(crate) fn new() -> Self {
         Self {
             store: DocumentStore::new(),

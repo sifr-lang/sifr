@@ -27,3 +27,7 @@ pub use ipc_schema::{
     canonical_schema_descriptor, fnv1a_128, schema_hash_hex_v1, schema_hash_v1,
 };
 pub use ipc_transport::{IpcTransportError, read_frame, write_frame};
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

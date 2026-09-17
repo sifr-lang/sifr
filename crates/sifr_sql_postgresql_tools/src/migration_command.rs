@@ -26,6 +26,7 @@ enum MigrationCommand {
 }
 
 pub async fn run_migration_command(
+    compiler: &sifr_driver::CompilerContext,
     arguments: &[String],
     workspace_root: &Path,
     connection_url: Option<&str>,
@@ -39,7 +40,7 @@ pub async fn run_migration_command(
         | MigrationCommand::Rollback { profile } => profile,
     };
     if matches!(command, MigrationCommand::Build { .. }) {
-        return build(workspace_root, profile);
+        return build(compiler, workspace_root, profile);
     }
     let plan = read_plan(workspace_root, profile)?;
     let operator_plan = validate_postgres_migration_plan(&plan)
@@ -108,7 +109,11 @@ pub async fn run_migration_command(
     })
 }
 
-fn build(workspace_root: &Path, profile: &str) -> Result<CommandOutcome, CommandError> {
+fn build(
+    compiler: &sifr_driver::CompilerContext,
+    workspace_root: &Path,
+    profile: &str,
+) -> Result<CommandOutcome, CommandError> {
     let authority = load_authority(workspace_root, profile)?;
     let target = authority.profile.schema;
     let parser = LibpgQueryParser;
@@ -117,8 +122,10 @@ fn build(workspace_root: &Path, profile: &str) -> Result<CommandOutcome, Command
         target.dialect.server_version.clone(),
         postgresql_capabilities(),
     );
-    let inputs = load_migration_source_inputs(workspace_root, profile, compile_migration_source)
-        .map_err(|failure| command_error(failure.message))?;
+    let inputs = load_migration_source_inputs(workspace_root, profile, |source| {
+        compile_migration_source(compiler, source)
+    })
+    .map_err(|failure| command_error(failure.message))?;
     let graph = compile_migration_sources(
         &dialect,
         target.clone(),
@@ -148,9 +155,10 @@ fn build(workspace_root: &Path, profile: &str) -> Result<CommandOutcome, Command
 }
 
 fn compile_migration_source(
+    compiler: &sifr_driver::CompilerContext,
     source: &str,
 ) -> Result<Vec<sifr_sql_contract::MigrationSourceDeclaration>, String> {
-    sifr_driver::compile_sql_migration_source(source).map_err(|failures| {
+    sifr_driver::compile_sql_migration_source(compiler, source).map_err(|failures| {
         failures
             .into_iter()
             .map(|failure| failure.message)

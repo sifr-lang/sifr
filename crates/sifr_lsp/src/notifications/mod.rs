@@ -38,7 +38,10 @@ pub(crate) fn handle(
 
 fn initialized(session: &mut Session, connection: &Connection) -> LspResult<()> {
     session.note_initialized();
-    publish_tooling_sysroot_diagnostic(connection, sifr_analysis::tooling_sysroot_probe())?;
+    publish_tooling_sysroot_diagnostic(
+        connection,
+        sifr_analysis::tooling_sysroot_probe(session.compiler_context()),
+    )?;
     Ok(())
 }
 

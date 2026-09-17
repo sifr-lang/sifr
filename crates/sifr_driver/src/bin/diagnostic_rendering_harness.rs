@@ -206,7 +206,7 @@ fn check_parser_fixture(base: &Path, fixture: &str, code: &str) -> Result<(), St
     let entry = base.join(fixture).join("main.sifr");
     let source = std::fs::read_to_string(&entry)
         .map_err(|err| format!("failed to read {}: {err}", entry.display()))?;
-    let diagnostics = check_single_file(&source, &entry);
+    let diagnostics = check_single_file(&sifr_driver::CompilerContext::for_test(), &source, &entry);
     assert_rules(&diagnostics, code, fixture, &[], true, true)?;
     assert_text_formats(&diagnostics, code, &entry)
 }
@@ -249,7 +249,11 @@ fn check_project_fixture(
 ) -> Result<(), String> {
     let entry = base.join(fixture).join("src/main.sifr");
     let mut provider = sifr_frontend::DiskSourceProvider::new();
-    let diagnostics = check_project(&entry, &mut provider);
+    let diagnostics = check_project(
+        &sifr_driver::CompilerContext::for_test(),
+        &entry,
+        &mut provider,
+    );
     assert_rules(&diagnostics, code, fixture, required_args, true, true)?;
     assert_no_prefix(&diagnostics, fixture, "SIFR-WORKSPACE-01")?;
     assert_text_formats(&diagnostics, code, &entry)
@@ -391,7 +395,11 @@ fn package_diagnostics(package: &Path) -> Result<Vec<RenderedDiagnostic>, String
         python_runtime: None,
         lock_mode: sifr_package::CargoLockMode::Normal,
     };
-    Ok(check_package_project(&entrypoint, &mut provider))
+    Ok(check_package_project(
+        &sifr_driver::CompilerContext::for_test(),
+        &entrypoint,
+        &mut provider,
+    ))
 }
 
 fn find_package_entry(package: &Path) -> Result<PathBuf, String> {

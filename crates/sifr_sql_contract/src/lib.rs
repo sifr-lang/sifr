@@ -127,3 +127,7 @@ pub use sql_type::{
 
 /// The canonical serialization and fingerprint contract for schema graphs.
 pub const SCHEMA_IR_FORMAT_VERSION: u32 = 1;
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

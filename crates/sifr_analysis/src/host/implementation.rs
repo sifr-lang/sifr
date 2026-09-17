@@ -29,6 +29,7 @@ use std::collections::BTreeMap;
 pub(super) type QueryResult<T> = Result<AnalysisQueryResult<T>, AnalysisError>;
 
 pub struct AnalysisHost {
+    pub(super) compiler: sifr_driver::CompilerContext,
     pub(super) session: WorkspaceSession,
     pub(super) file_to_module: BTreeMap<FileId, ModuleId>,
     pub(super) symbol_index: Option<SymbolIndex>,
@@ -554,7 +555,10 @@ impl AnalysisHost {
     ) -> QueryResult<GeneratedRustPreview> {
         self.module_for_file(file)?;
         let source = self.source_text(file)?;
-        let (rust, source_map_files) = match sifr_driver::compile_with_metadata(&source) {
+        let (rust, source_map_files) = match sifr_driver::compile_with_metadata(
+            &self.compiler,
+            &source,
+        ) {
             sifr_driver::CompileResultFull::Success {
                 rust_source,
                 generated_source_map,

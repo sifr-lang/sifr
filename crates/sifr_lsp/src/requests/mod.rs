@@ -50,7 +50,7 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
         "codeAction/resolve" => code_action::resolve(session, params),
         "textDocument/formatting" => formatting::formatting(session, params),
         "textDocument/rangeFormatting" => formatting::range_formatting(session, params),
-        "sifr/sysroot" => sysroot_status(&params),
+        "sifr/sysroot" => sysroot_status(session, &params),
         "sifr/debugTrace" => Ok(Value::String(session.trace_snapshot().render_text())),
         _ => Err(LspError::method_not_found(format!(
             "unsupported Sifr LSP request: {method}"
@@ -69,7 +69,7 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
     result
 }
 
-fn sysroot_status(params: &Value) -> LspResult<Value> {
+fn sysroot_status(session: &Session, params: &Value) -> LspResult<Value> {
     let expected_root = params
         .get("expectedRoot")
         .map(|raw| {
@@ -87,7 +87,7 @@ fn sysroot_status(params: &Value) -> LspResult<Value> {
         })
         .transpose()?;
     Ok(sysroot_status_from_probe(
-        sifr_analysis::tooling_sysroot_probe(),
+        sifr_analysis::tooling_sysroot_probe(session.compiler_context()),
         expected_root,
         expected_toolchain_id,
     ))

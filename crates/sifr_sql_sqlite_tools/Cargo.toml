@@ -16,6 +16,7 @@ supported-servers = ["3.53.4"]
 connection-manifest-version = 1
 
 [dependencies]
+sifr_identity.workspace = true
 rusqlite = { workspace = true, features = ["bundled", "hooks", "limits", "unlock_notify"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -34,3 +35,6 @@ tempfile = "3.27.0"
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

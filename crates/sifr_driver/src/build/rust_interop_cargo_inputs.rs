@@ -8,7 +8,6 @@ use sifr_package::{TrustPolicy, digest_package_graph, digest_package_source_map}
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 pub(super) fn bridge_source_digests(
     context: &PackageRustInteropContext,
@@ -32,6 +31,7 @@ pub(super) fn bridge_source_digests(
 }
 
 pub(super) fn cargo_inputs(
+    resolution: &super::cargo_resolution::CargoResolutionPolicy,
     context: &PackageRustInteropContext,
     package: &sifr_package::SifrPackageMetadata,
 ) -> RustInteropCargoInputs {
@@ -40,7 +40,7 @@ pub(super) fn cargo_inputs(
         .as_ref()
         .filter(|trust| trust.package_id == package.package_id)
     {
-        return sysroot_cargo_inputs(trust, &package.manifest.trust);
+        return sysroot_cargo_inputs(resolution, trust, &package.manifest.trust);
     }
     let graph_digest = digest_package_graph(&context.graph);
     let source_map_digest = digest_package_source_map(&context.source_map);
@@ -54,13 +54,27 @@ pub(super) fn cargo_inputs(
         package_graph_digest: Some(graph_digest.hex),
         package_source_map_digest: Some(source_map_digest.hex),
         cargo_lock_digest: cargo_lock_digest(&package.package_root),
-        target_triple: target_triple(),
+        target_triple: std::env::var("SIFR_TARGET").ok().or_else(|| {
+            resolution
+                .native_toolchain
+                .as_ref()
+                .ok()
+                .map(|tools| tools.target().to_owned())
+        }),
         target_features: target_features(),
         cargo_profile: "release".to_string(),
         panic_strategy: std::env::var("SIFR_RUST_PANIC_STRATEGY").ok(),
         profile_codegen_settings: profile_codegen_settings(&package.package_root, "release"),
-        cargo_version: tool_version("cargo"),
-        rustc_version: tool_version("rustc"),
+        cargo_version: resolution
+            .native_toolchain
+            .as_ref()
+            .ok()
+            .map(|tools| tools.cargo_version().to_owned()),
+        rustc_version: resolution
+            .native_toolchain
+            .as_ref()
+            .ok()
+            .map(|tools| tools.rustc_version().to_owned()),
         trust_policy_digest,
         declared_build_env,
     }
@@ -99,6 +113,7 @@ pub(super) fn combined_cargo_inputs(
 }
 
 fn sysroot_cargo_inputs(
+    resolution: &super::cargo_resolution::CargoResolutionPolicy,
     trust: &SysrootRustInteropTrust,
     policy: &TrustPolicy,
 ) -> RustInteropCargoInputs {
@@ -112,13 +127,27 @@ fn sysroot_cargo_inputs(
         package_graph_digest: Some(trust.sysroot_content_sha256.clone()),
         package_source_map_digest: Some(digest_path(&trust.stdlib_private_sources)),
         cargo_lock_digest: digest_file(&trust.cargo_lock),
-        target_triple: target_triple(),
+        target_triple: std::env::var("SIFR_TARGET").ok().or_else(|| {
+            resolution
+                .native_toolchain
+                .as_ref()
+                .ok()
+                .map(|tools| tools.target().to_owned())
+        }),
         target_features: target_features(),
         cargo_profile: "release".to_string(),
         panic_strategy: std::env::var("SIFR_RUST_PANIC_STRATEGY").ok(),
         profile_codegen_settings: profile_codegen_settings(&trust.sysroot_root, "release"),
-        cargo_version: tool_version("cargo"),
-        rustc_version: tool_version("rustc"),
+        cargo_version: resolution
+            .native_toolchain
+            .as_ref()
+            .ok()
+            .map(|tools| tools.cargo_version().to_owned()),
+        rustc_version: resolution
+            .native_toolchain
+            .as_ref()
+            .ok()
+            .map(|tools| tools.rustc_version().to_owned()),
         trust_policy_digest,
         declared_build_env,
     }
@@ -400,25 +429,6 @@ fn ancestor_cargo_tomls(package_root: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
-fn target_triple() -> Option<String> {
-    std::env::var("SIFR_TARGET").ok().or_else(rustc_host_triple)
-}
-
-fn rustc_host_triple() -> Option<String> {
-    Command::new("rustc")
-        .arg("-vV")
-        .output()
-        .ok()
-        .filter(|output| output.status.success())
-        .and_then(|output| String::from_utf8(output.stdout).ok())
-        .and_then(|version| {
-            version
-                .lines()
-                .find_map(|line| line.strip_prefix("host: "))
-                .map(str::to_string)
-        })
-}
-
 fn target_features() -> Vec<String> {
     let mut features = Vec::new();
     if let Ok(flags) = std::env::var("RUSTFLAGS") {
@@ -449,16 +459,6 @@ fn trust_policy_digest(trust: &TrustPolicy) -> String {
         }
     }
     fnv1a64_hex(&bytes)
-}
-
-fn tool_version(tool: &str) -> Option<String> {
-    Command::new(tool)
-        .arg("--version")
-        .output()
-        .ok()
-        .filter(|output| output.status.success())
-        .and_then(|output| String::from_utf8(output.stdout).ok())
-        .map(|version| version.trim().to_string())
 }
 
 #[cfg(test)]

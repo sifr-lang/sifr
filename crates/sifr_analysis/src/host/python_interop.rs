@@ -49,11 +49,17 @@ mod tests {
     #[test]
     fn plan_preserves_declaration_module_file_identity() {
         let source = "from sifr.python import PythonError\n\n@python(math.sqrt)\ndef sqrt(value: float) -> Result[float, PythonError]: ...\n";
-        let mut host = AnalysisHost::open_single_file(FrontendInput {
-            path: sifr_frontend::SourcePath::new("main.sifr"),
-            source: SourceText::new(source),
-            mode: FrontendMode::SingleFile,
-        })
+        let mut host = AnalysisHost::open_single_file(
+            &sifr_driver::CompilerContext::for_test_tokens(
+                crate::compiled_input_tokens(),
+                "analysis-tests",
+            ),
+            FrontendInput {
+                path: sifr_frontend::SourcePath::new("main.sifr"),
+                source: SourceText::new(source),
+                mode: FrontendMode::SingleFile,
+            },
+        )
         .expect("single-file analysis host should load");
         let file = host.files()[0];
         let result = host

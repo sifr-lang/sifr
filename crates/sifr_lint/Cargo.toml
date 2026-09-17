@@ -1,4 +1,5 @@
 [package]
+links = "sifr_lint_compiled_identity"
 name = "sifr_lint"
 version = "0.0.0"
 publish = false
@@ -21,3 +22,6 @@ doctest = false
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

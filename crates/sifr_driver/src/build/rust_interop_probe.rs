@@ -26,7 +26,6 @@ use sifr_package::BackendCrateMetadata;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::path::PathBuf;
-use std::process::Command;
 use std::{env, fs};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -97,6 +96,11 @@ pub(super) fn execute_direct_cargo_probe(
     let probe_manifest = bind_probe_package_identity(&probe_manifest, &probe_source);
     let invocation_cwd = env::current_dir()
         .map_err(|error| probe_io_failure(format!("failed to resolve Rust probe cwd: {error}")))?;
+    probe
+        .cargo_resolution
+        .native_toolchain
+        .as_ref()
+        .map_err(|error| probe_io_failure(error.clone()))?;
     let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source, cache);
     let cache_file = probe_cache_file(&cache_key, &invocation_cwd);
     if cache_file.is_file() {
@@ -145,11 +149,15 @@ pub(super) fn execute_direct_cargo_probe(
     let prepared_resolution =
         prepare_cargo_resolution(&probe_root, &probe.cargo_resolution, &cargo_prefix_args)
             .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?;
-    let mut command = Command::new("cargo");
+    let mut command = probe
+        .cargo_resolution
+        .cargo_command()
+        .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?;
     command
         .args(&cargo_prefix_args)
         .args(["check", "--quiet"])
-        .current_dir(&probe_root);
+        .arg("--manifest-path")
+        .arg(probe_root.join("Cargo.toml"));
     if let Some(argument) = probe.cargo_resolution.lock_mode.cargo_arg() {
         command.arg(argument);
     }

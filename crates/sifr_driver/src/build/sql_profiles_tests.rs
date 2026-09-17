@@ -91,7 +91,8 @@ fn package_query_declarations_emit_non_empty_compatibility_artifact() {
         .expect("offline schema profile preparation should succeed");
     let source = "from sifr.sql.schemas import app\n\n@app.query\ndef find_user(user_id: int64) -> Template:\n    return app.sql(t\"SELECT {user_id} AS value\")\n";
     let parsed = crate::frontend::parse_source(source).expect("query source should parse");
-    let mut external_defs = crate::stdlib::external_defs().expect("stdlib should compile");
+    let mut external_defs = crate::stdlib::external_defs(&crate::CompilerContext::for_test())
+        .expect("stdlib should compile");
     prepared.install_compiler_externals(&mut external_defs);
     let mut project = crate::project::compile_single_frontend_module_with_source_and_options(
         "main",
@@ -152,7 +153,8 @@ def main():
     print(app.schema)
 "#;
     let parsed = crate::frontend::parse_source(source).expect("ordinary source should parse");
-    let mut external_defs = crate::stdlib::external_defs().expect("stdlib should compile");
+    let mut external_defs = crate::stdlib::external_defs(&crate::CompilerContext::for_test())
+        .expect("stdlib should compile");
     prepared.install_compiler_externals(&mut external_defs);
     let mut project = crate::project::compile_single_frontend_module_with_source_and_options(
         "main",
@@ -185,7 +187,8 @@ fn portable_schema_source_lowers_and_runtime_witness_uses_fail() {
     );
     let prepared = prepare_sql_profiles(&fixture.graph, &fixture.owner_id)
         .expect("offline schema profile preparation should succeed");
-    let mut external_defs = crate::stdlib::external_defs().expect("stdlib should compile");
+    let mut external_defs = crate::stdlib::external_defs(&crate::CompilerContext::for_test())
+        .expect("stdlib should compile");
     prepared.install_compiler_externals(&mut external_defs);
     let positive = include_str!(
         "../../../../verification/areas/sql_platform/fixtures/schema_polymorphism/portable_by_email.sifr"
@@ -286,7 +289,8 @@ fn migration_sifr_source_discovers_checked_ordered_steps() {
     let source = include_str!(
         "../../../../verification/areas/sql_platform/fixtures/migration_source/add_status.sifr"
     );
-    let external_defs = crate::stdlib::external_defs().expect("stdlib should compile");
+    let external_defs = crate::stdlib::external_defs(&crate::CompilerContext::for_test())
+        .expect("stdlib should compile");
     let project = lower_sql_fixture(source, external_defs)
         .expect("migration source should lower through the normal frontend");
     let declarations = sifr_frontend::sql_migration_declarations(

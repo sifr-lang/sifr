@@ -6,7 +6,8 @@ use std::fmt::Write as _;
 
 #[test]
 fn compiled_stdlib_exports_match_public_reference() {
-    let compiled = compile_stdlib().expect("stdlib should compile");
+    let compiled =
+        compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib should compile");
     let mut modules =
         BTreeMap::<String, (BTreeSet<String>, BTreeSet<String>, BTreeSet<String>)>::new();
     for (module, functions) in &compiled.defs.functions {
@@ -93,7 +94,8 @@ fn compiled_stdlib_exports_match_public_reference() {
 
 #[test]
 fn compiled_stdlib_same_operation_groups_have_one_public_name() {
-    let compiled = compile_stdlib().expect("stdlib should compile");
+    let compiled =
+        compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib should compile");
     let groups: &[(&str, &[&str])] = &[
         ("sifr.math", &["fabs", "abs_val"]),
         ("sifr.math", &["pow", "pow_val"]),
@@ -130,7 +132,8 @@ fn compiled_stdlib_same_operation_groups_have_one_public_name() {
 
 #[test]
 fn stdlib_heapq_exports_allowlisted_private_max_heap_helpers() {
-    let compiled = compile_stdlib().expect("stdlib should compile");
+    let compiled =
+        compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib should compile");
     let heapq_functions = compiled
         .defs
         .functions
@@ -161,7 +164,7 @@ def main() -> uint8:
         ),
     );
 
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();

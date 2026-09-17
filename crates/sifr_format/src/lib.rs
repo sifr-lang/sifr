@@ -659,3 +659,7 @@ mod tests {
 
 #[cfg(test)]
 mod validation_tests;
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

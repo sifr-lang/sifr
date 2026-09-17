@@ -371,7 +371,14 @@ impl FrontendContext {
     }
 
     fn cache_context(&self, family: CacheFamily) -> CacheKeyContext {
-        CacheKeyContext::from_workspace(family, &self.cache_target, &self.package_config_identity)
+        {
+            CacheKeyContext::from_workspace(
+                crate::CompilerFingerprint::for_identity(&self.compiler_identity),
+                family,
+                &self.cache_target,
+                &self.package_config_identity,
+            )
+        }
     }
 
     fn semantic_cache_context(&self, family: CacheFamily) -> CacheKeyContext {

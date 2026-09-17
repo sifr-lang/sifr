@@ -1,4 +1,5 @@
 [package]
+links = "sifr_stdlib_imports_compiled_identity"
 name = "sifr_stdlib_imports"
 version = "0.0.0"
 publish = false
@@ -11,3 +12,6 @@ sifr_stdlib_manifest = { workspace = true }
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

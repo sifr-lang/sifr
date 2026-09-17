@@ -305,6 +305,7 @@ fn run_python_read_only_plan(
     let mut requires_async_loop = false;
     for entrypoint in &context.entrypoints {
         let report = sifr_driver::check_package_python_interop(
+            &crate::compiler_context(),
             &sifr_driver::PackageEntrypoint {
                 main_file: entrypoint.clone(),
                 package_id: context.package_id.clone(),

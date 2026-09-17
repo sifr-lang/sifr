@@ -16,7 +16,7 @@ fn imported_parent_defaults_are_flattened_into_child_hir() {
             ),
         ),
     ]);
-    let stdlib = compile_stdlib().expect("stdlib must compile");
+    let stdlib = compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib must compile");
     let compiled = collect_project_hir_modules(&modules, stdlib.defs.clone())
         .expect("imported inheritance project must lower");
     let child = compiled.hir_modules["main"]

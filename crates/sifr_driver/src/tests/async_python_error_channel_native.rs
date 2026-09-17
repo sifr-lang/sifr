@@ -55,11 +55,12 @@ def main():
         assert error.message == "inherited"
     print("error-conversions-ok")
 "#;
-    let rust = emitted(compile(source));
+    let rust = emitted(compile(&crate::CompilerContext::for_test(), source));
     assert!(rust.contains("From<DomainError> for Error"), "{rust}");
     assert!(rust.contains("From<DetailedError> for Error"), "{rust}");
     let dir = mktemp_dir("error_channel_local_native");
-    let binary = build(source, &dir).expect("local/transitive errors must compile natively");
+    let binary = build(&crate::CompilerContext::for_test(), source, &dir)
+        .expect("local/transitive errors must compile natively");
     run(&binary);
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -89,7 +90,7 @@ def main():
         assert error.message == "config"
     print("error-conversions-ok")
 "#;
-    let rust = emitted(compile(source));
+    let rust = emitted(compile(&crate::CompilerContext::for_test(), source));
     for identity in ["sifr.csv.Error", "sifr.configparser.Error"] {
         let name = sifr_type_system::class_rust_name(Some(identity), "Error");
         assert_eq!(
@@ -99,7 +100,8 @@ def main():
         );
     }
     let dir = mktemp_dir("error_channel_stdlib_native");
-    let binary = build(source, &dir).expect("distinct stdlib errors must compile natively");
+    let binary = build(&crate::CompilerContext::for_test(), source, &dir)
+        .expect("distinct stdlib errors must compile natively");
     run(&binary);
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -164,6 +166,7 @@ def main():
     }
     let main = dir.join("main.sifr");
     let rust = emitted(emit_project(
+        &crate::CompilerContext::for_test(),
         &main,
         &mut sifr_frontend::DiskSourceProvider::new(),
     ));
@@ -180,6 +183,7 @@ def main():
         );
     }
     let binary = build_project(
+        &crate::CompilerContext::for_test(),
         &main,
         &dir.join("out"),
         &mut sifr_frontend::DiskSourceProvider::new(),

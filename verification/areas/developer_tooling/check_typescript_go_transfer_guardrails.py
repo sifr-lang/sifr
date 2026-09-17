@@ -414,12 +414,23 @@ def validate_bucket_and_lane_state(failures: list[str]) -> None:
     tests = (REPO_ROOT / "crates" / "sifr_analysis" / "src" / "host" / "tests.rs").read_text(
         encoding="utf-8"
     )
+    diagnostic_tests = (
+        REPO_ROOT / "crates" / "sifr_analysis" / "src" / "host" / "diagnostic_identity_tests.rs"
+    ).read_text(encoding="utf-8")
+    validate_host_bucket_queries(host, tests, diagnostic_tests, failures)
+
+
+def validate_host_bucket_queries(
+    host: str, tests: str, diagnostic_tests: str, failures: list[str]
+) -> None:
     require(
         "completion_symbols" in host
         and "workspace_import_symbols" in host
         and "project_symbol_index_refreshes_dirty_module_buckets_only" in tests
-        and "workspace_diagnostic_order_is_stable_across_repeated_queries" in tests,
-        "bucketed index guard requires host queries and regression tests to exercise bucketed symbols/imports",
+        and '#[path = "diagnostic_identity_tests.rs"]' in tests
+        and "mod diagnostics;" in tests
+        and "workspace_diagnostic_order_is_stable_across_repeated_queries" in diagnostic_tests,
+        "bucketed index guard requires host queries and registered regression tests to exercise bucketed symbols/imports",
         failures,
     )
 
@@ -600,6 +611,25 @@ def run_self_test() -> None:
     validate_direct_fs_inventory("WorkspaceSession only\n", failures)
     if not failures:
         raise SystemExit("transfer guardrail self-test failed: incomplete inventory passed")
+    host = "completion_symbols workspace_import_symbols"
+    tests = (
+        "project_symbol_index_refreshes_dirty_module_buckets_only"
+        '#[path = "diagnostic_identity_tests.rs"] mod diagnostics;'
+    )
+    diagnostics = "workspace_diagnostic_order_is_stable_across_repeated_queries"
+    failures = []
+    validate_host_bucket_queries(host, tests, diagnostics, failures)
+    if failures:
+        raise SystemExit("transfer guardrail self-test failed: split diagnostic tests rejected")
+    for broken_tests, broken_diagnostics in [
+        (tests.replace("mod diagnostics;", ""), diagnostics),
+        (tests.replace("project_symbol_index_refreshes_dirty_module_buckets_only", ""), diagnostics),
+        (tests, ""),
+    ]:
+        failures = []
+        validate_host_bucket_queries(host, broken_tests, broken_diagnostics, failures)
+        if not failures:
+            raise SystemExit("transfer guardrail self-test failed: missing registered regression passed")
     print("TypeScript-Go transfer guardrail self-test: PASS")
 
 

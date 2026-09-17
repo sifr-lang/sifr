@@ -6,7 +6,6 @@ use super::workspace::artifact_cache_root;
 use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::sync::{Mutex, OnceLock};
 use std::{env, fs};
 
@@ -68,7 +67,6 @@ pub(super) fn probe_cache_key(
     let mut input = Vec::new();
     for value in [
         "sifr-rust-bridge-probe-cache-v1",
-        &toolchain_signature(),
         &probe.backend.cargo_package_id.0,
         &probe.backend.dependency_name,
         &probe.backend.cargo_package_name,
@@ -96,6 +94,14 @@ pub(super) fn probe_cache_key(
     ] {
         push_cache_bytes(&mut input, value);
     }
+    push_cache_bytes(
+        &mut input,
+        probe
+            .cargo_resolution
+            .native_toolchain
+            .as_ref()
+            .map_or("<unavailable>", |tools| tools.identity()),
+    );
     if let Some(seed) = probe.cargo_resolution.normal_seed_cache_fragment() {
         push_cache_bytes(&mut input, "normal-authority-seed");
         push_cache_bytes(&mut input, &seed);
@@ -105,40 +111,6 @@ pub(super) fn probe_cache_key(
         push_cache_bytes(&mut input, &metadata_digest);
     }
     fnv1a64_hex(&input)
-}
-
-fn toolchain_signature() -> String {
-    static TOOLCHAIN_SIGNATURE: OnceLock<String> = OnceLock::new();
-    TOOLCHAIN_SIGNATURE
-        .get_or_init(|| {
-            let mut input = Vec::new();
-            for value in [
-                command_output("cargo", &["-V"]).unwrap_or_else(|| "cargo:unavailable".into()),
-                command_output("rustc", &["-Vv"]).unwrap_or_else(|| "rustc:unavailable".into()),
-                env_signature("RUSTFLAGS"),
-                env_signature("CARGO_BUILD_TARGET"),
-                env_signature("RUSTC_WRAPPER"),
-            ] {
-                push_cache_bytes(&mut input, &value);
-            }
-            fnv1a64_hex(&input)
-        })
-        .clone()
-}
-
-fn command_output(program: &str, args: &[&str]) -> Option<String> {
-    let output = Command::new(program).args(args).output().ok()?;
-    output
-        .status
-        .success()
-        .then(|| String::from_utf8_lossy(&output.stdout).trim().to_string())
-}
-
-fn env_signature(name: &str) -> String {
-    env::var(name).map_or_else(
-        |_| format!("{name}=<unset>"),
-        |value| format!("{name}={value}"),
-    )
 }
 
 fn cached_digest_path(path: &Path) -> String {

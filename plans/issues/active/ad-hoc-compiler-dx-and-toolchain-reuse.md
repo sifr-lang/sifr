@@ -522,6 +522,98 @@ The verification platform prepares each required configuration once, preserves d
 
 All canonical acceptance cases in architecture section 16 are covered. The final target/corpus/resource evidence satisfies architecture section 14. No stale private-cache compatibility, hidden fallback checker, global unrestricted target sharing or evidence-rewriting shortcut remains.
 
+## Acceptance-case sequencing
+
+The architecture section 16 remains the canonical semantic case inventory. This plan owns the original first-milestone assignment; moving this scheduling column here does not change case IDs, requirements, ownership, or sequencing.
+
+| Case ID | First milestone |
+| --- | --- |
+| I01 | DX.2 |
+| I02 | DX.2 |
+| I03 | DX.12 |
+| I04 | DX.9 |
+| I05 | DX.5 |
+| I06 | DX.5 |
+| I07 | DX.2 |
+| I08 | DX.2 |
+| M01 | DX.7 |
+| M02 | DX.7 |
+| M03 | DX.8 |
+| M04 | DX.7 |
+| M05 | DX.8 |
+| M06 | DX.5 |
+| M07 | DX.8 |
+| M08 | DX.8 |
+| M09 | DX.6 |
+| M10 | DX.8 |
+| M11 | DX.8 |
+| M12 | DX.6 |
+| M13 | DX.6 |
+| M14 | DX.6 |
+| M15 | DX.8 |
+| M16 | DX.5 |
+| M17 | DX.7 |
+| C01 | DX.3 |
+| C02 | DX.3 |
+| C03 | DX.3 |
+| C04 | DX.13 |
+| C05 | DX.3 |
+| C06 | DX.3 |
+| C07 | DX.3 |
+| C08 | DX.13 |
+| C09 | DX.13 |
+| B01 | DX.9 |
+| B02 | DX.9 |
+| B03 | DX.9 |
+| B04 | DX.9 |
+| B05 | DX.10 |
+| B06 | DX.10 |
+| B07 | DX.9 |
+| B08 | DX.9 |
+| B09 | DX.9 |
+| B10 | DX.3 |
+| B11 | DX.10 |
+| B12 | DX.10 |
+| P01 | DX.13 |
+| P02 | DX.13 |
+| P03 | DX.12 |
+| P04 | DX.12 |
+| P05 | DX.14 |
+| P06 | DX.14 |
+| P07 | DX.12 |
+| P08 | DX.13 |
+| P09 | DX.13 |
+| P10 | DX.13 |
+| P11 | DX.14 |
+| P12 | DX.13 |
+| E01 | DX.11 |
+| E02 | DX.11 |
+| E03 | DX.11 |
+| E04 | DX.11 |
+| E05 | DX.11 |
+| E06 | DX.11 |
+| E07 | DX.4 |
+| R01 | DX.3 |
+| R02 | DX.3 |
+| R03 | DX.3 |
+| R04 | DX.4 |
+| R05 | DX.4 |
+| R06 | DX.10 |
+| R07 | DX.4 |
+| R08 | DX.4 |
+| R09 | DX.8 |
+| R10 | DX.6 |
+| Q01 | DX.4 |
+| Q02 | DX.15 |
+| Q03 | DX.15 |
+| Q04 | DX.15 |
+| Q05 | DX.8 |
+| Q06 | DX.15 |
+| Q07 | DX.1 |
+| Q08 | DX.1 |
+| Q09 | DX.7 |
+
+
 ## Execution Status
 
 DX.1 is complete and merged, including the required canonical LSP measurement transport correction. DX.2–DX.16 are not started; DX.2 is the next eligible item in a new session.

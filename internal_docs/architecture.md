@@ -577,6 +577,18 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
 - `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds
 - `test_runner/`: test root discovery, generated test harness assembly, reusable cached Cargo test workspaces, and cargo test execution orchestration
 
+### Compiler and Native Invocation Identity
+
+Outer executables embed a canonical compiler input identity and inject
+sifr_driver::CompilerContext through driver, frontend and analysis/LSP
+constructors. Bare library tests compose compiled dependency-local tokens;
+common libraries do not embed the application-wide volatile identity.
+sifr_sysroot::NativeToolchain resolves explicit tools and effective Cargo
+configuration before temporary project creation. Native preparation, probes
+and builds retain this selection and expose its digest in build reports.
+See compiler_dx_architecture.md sections 4.2.2 and 8.1 for the constructor
+inventory and override contract.
+
 ### Generated Artifact Cache Boundary
 
 Generated artifact cache work moved `run`/`test` away from invocation-scoped temp directories as the default cache boundary.
@@ -1964,4 +1976,4 @@ Mojo (`/Users/yaseralnajjar/work/sifr/modular/mojo`) was evaluated as a referenc
 
 ## Compiler DX migration contract
 
-[Phase DX](../plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md) owns the sequential migration to [prebuilt stdlib and toolchain reuse](compiler_dx_architecture.md). Installed execution requires matching metadata after its consumer migration; source-tree production remains explicit. Optional project persistence restores existing frontend result families or misses without changing correctness. Cleanup follows owned storage pressure and obsolescence rather than target size. Functional outcomes, named performance contracts and safety deadlines remain separate. These are prospective contracts, not claims that later DX milestones have shipped.
+[Prebuilt stdlib and toolchain reuse](compiler_dx_architecture.md) defines the compiler development-loop migration contract. Installed execution requires matching metadata after its consumer migration; source-tree production remains explicit. Optional project persistence restores existing frontend result families or misses without changing correctness. Cleanup follows owned storage pressure and obsolescence rather than target size. Functional outcomes, named performance contracts and safety deadlines remain separate. These are prospective contracts, not claims that later DX implementation increments have shipped.

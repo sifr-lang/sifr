@@ -65,7 +65,7 @@ def main():
 "#,
         &attached_contract(),
     );
-    let stdlib = compile_stdlib().expect("stdlib must compile");
+    let stdlib = compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib must compile");
     let compiled = collect_project_hir_modules(&modules, stdlib.defs.clone())
         .expect("attached API project must lower");
     let mut module_names = compiled.hir_modules.keys().cloned().collect::<Vec<_>>();
@@ -131,6 +131,7 @@ class Model(Contract):
 fn non_string_leaf_negative_is_package_compilable() {
     let root = static_adapter_negative_root();
     let errors = check_package_project(
+        &crate::CompilerContext::for_test(),
         &package_entrypoint(&root),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );

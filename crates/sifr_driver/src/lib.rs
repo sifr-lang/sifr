@@ -8,6 +8,8 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 mod build;
+mod compiler_context;
+pub use compiler_context::CompilerContext;
 mod diagnostics;
 mod export_policy;
 mod frontend;
@@ -82,3 +84,7 @@ pub(crate) use test_runner::{compose_test_runner_lib, generate_test_runner_cargo
 
 #[cfg(test)]
 mod tests;
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

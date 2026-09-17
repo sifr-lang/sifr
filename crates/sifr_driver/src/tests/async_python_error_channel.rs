@@ -13,7 +13,7 @@ const CONTEXT: &str = include_str!(
 );
 
 fn check_example(source: &str, bridge_module: &str) -> Vec<sifr_ir::HirDiagnostic> {
-    let stdlib = compile_stdlib().expect("stdlib must compile");
+    let stdlib = compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib must compile");
     sifr_lowering::lower_module_with_externals_name_and_options(
         "main",
         &parse_suite(source),
@@ -62,7 +62,7 @@ fn async_python_error_channel_rejects_unrelated_return_errors() {
 
 #[test]
 fn async_python_error_channel_retains_stdlib_ancestry_without_data_parent() {
-    let stdlib = compile_stdlib().expect("stdlib must compile");
+    let stdlib = compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib must compile");
     let error = &stdlib.defs.classes["sifr.python"]["PythonError"];
     let Type::Class {
         identity,
@@ -95,7 +95,7 @@ fn async_python_error_channel_preserves_local_and_imported_error_ancestry() {
             ),
         ),
     ]);
-    let stdlib = compile_stdlib().expect("stdlib must compile");
+    let stdlib = compile_stdlib(&crate::CompilerContext::for_test()).expect("stdlib must compile");
     let lowered = collect_project_hir_modules(&modules, stdlib.defs.clone())
         .expect("exported errors must retain their declared ancestry");
     let root = &lowered.hir_modules["errors"].classes[0];
@@ -108,7 +108,7 @@ fn async_python_error_channel_preserves_local_and_imported_error_ancestry() {
 #[test]
 fn async_python_error_channel_rejects_same_named_nominal_target() {
     let source = "from sifr.python import PythonError\n\nclass Error(ValueError):\n    message: str\n\ndef fail(own error: PythonError) -> Result[None, Error]:\n    raise error\n\ndef main():\n    pass\n";
-    let errors = type_check_source(source);
+    let errors = type_check_source(&crate::CompilerContext::for_test(), source);
     assert!(
         errors
             .iter()
@@ -123,7 +123,7 @@ fn async_python_error_channel_preserves_same_named_stdlib_root_ancestry() {
         let source = format!(
             "from {module} import Error as ImportedError\n\ndef propagate(own error: ImportedError) -> Result[None, Error]:\n    raise error\n\ndef main():\n    pass\n"
         );
-        let errors = type_check_source(&source);
+        let errors = type_check_source(&crate::CompilerContext::for_test(), &source);
         assert!(errors.is_empty(), "{module}: {errors:?}");
     }
 }

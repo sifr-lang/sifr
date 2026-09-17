@@ -522,7 +522,10 @@ pub(super) fn cmd_lsp(stdio: bool, parent_pid: Option<u32>) -> i32 {
         render_diagnostics(&[diagnostic], DiagnosticFormat::Human);
         return EXIT_USAGE_OR_CONFIG;
     }
-    match sifr_lsp::run_stdio_with_options(sifr_lsp::LspServerOptions { parent_pid }) {
+    match sifr_lsp::run_stdio_with_identity(
+        sifr_lsp::LspServerOptions { parent_pid },
+        crate::compiler_identity(),
+    ) {
         Ok(()) => EXIT_SUCCESS,
         Err(error) => {
             let diagnostic = diagnostic_with_code(

@@ -7,7 +7,6 @@ use sifr_sysroot::sha256_hex;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::sync::{Mutex, OnceLock};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
@@ -311,7 +310,10 @@ fn workspace_resolution_fingerprint(backend_root: &Path) -> String {
 
 fn resolve_cargo_workspace_root(backend_root: &Path) -> Option<PathBuf> {
     let manifest_path = backend_root.join("Cargo.toml");
-    let output = Command::new("cargo")
+    let output = sifr_sysroot::NativeToolchain::resolve_at(backend_root)
+        .ok()?
+        .cargo_command()
+        .ok()?
         .args([
             "metadata",
             "--format-version=1",

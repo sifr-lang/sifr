@@ -57,6 +57,7 @@ class Tools:
     .expect("helper module should be written");
 
     let errors = check_project(
+        &crate::CompilerContext::for_test(),
         &dir.join("main.sifr"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     );

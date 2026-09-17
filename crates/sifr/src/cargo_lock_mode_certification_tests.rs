@@ -212,12 +212,20 @@ fn test_locked_offline_sifr_commands_and_warm_cache() {
     .expect("package entrypoint resolution should not render an error")
     .expect("scenario must resolve as a package entrypoint");
     let (cold, mut cargo_invocations) = sifr_driver::capture_cargo_invocations(|| {
-        sifr_driver::build_cached_package_project(&entrypoint, &mut provider)
+        sifr_driver::build_cached_package_project(
+            &crate::compiler_context(),
+            &entrypoint,
+            &mut provider,
+        )
     });
     let cold = cold.expect("cold frozen prepared build should succeed");
     assert!(!cold.build_report().cache_hit());
     let (warm, warm_invocations) = sifr_driver::capture_cargo_invocations(|| {
-        sifr_driver::build_cached_package_project(&entrypoint, &mut provider)
+        sifr_driver::build_cached_package_project(
+            &crate::compiler_context(),
+            &entrypoint,
+            &mut provider,
+        )
     });
     let warm = warm.expect("warm frozen build should succeed");
     assert!(warm.build_report().cache_hit());

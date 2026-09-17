@@ -54,7 +54,11 @@ fn test_check_zero_copy_borrow_escape_and_invalid_mutability_rejected() {
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "crate-backed-view-runtime");
 
-    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
+    let errors = check_package_project(
+        &crate::CompilerContext::for_test(),
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
 
     assert_eq!(
         errors.len(),
@@ -109,7 +113,11 @@ fn test_check_zero_copy_view_send_sync_obligations() {
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "crate-backed-view-runtime");
 
-    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
+    let errors = check_package_project(
+        &crate::CompilerContext::for_test(),
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
 
     let obligation_error = errors.iter().find(|error| {
         error.code == DiagnosticCode::RUST_ZERO_COPY_CONTRACT.code()

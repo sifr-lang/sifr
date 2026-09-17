@@ -35,9 +35,12 @@ def main():
     // Canonical PythonError links the Python runtime even without invoking
     // Python. Use the existing probed package fixture, including native trust.
     entrypoint.python_runtime = Some(local_python_runtime(&dir));
-    let artifact =
-        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
-            .expect("canonical PythonError must build with the selected runtime");
+    let artifact = build_cached_package_project(
+        &crate::CompilerContext::for_test(),
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("canonical PythonError must build with the selected runtime");
     let output = std::process::Command::new(artifact.binary_path())
         .output()
         .expect("execute native PythonError assertions");

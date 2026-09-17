@@ -37,3 +37,7 @@ mod tests {
         assert!(json.source.contains("from _sifr.json import"));
     }
 }
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

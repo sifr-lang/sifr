@@ -96,6 +96,20 @@ Rules:
 
 Generated package binaries initialize Python before user `main` when Python metadata is present. Generated Cargo metadata threads `PYO3_PYTHON` so PyO3 links/configures against the selected interpreter.
 
+For a probed shared Python library, generated Cargo projects also retain its
+directory in the Unix executable's runtime loader path through an owned build
+script. Link-time selection alone is insufficient when another installed Python
+distribution exports the same library SONAME. Source exports preserve this build
+script, rematerializing a non-Python project removes it, and native artifact
+identity includes the selected library. No ambient loader-path variable is
+required for the selected interpreter's stdlib and extension modules.
+
+Declaration target resolution distinguishes absent candidate modules from errors
+raised while importing a real module. A nested attribute may require a shorter
+module prefix; an import-time exception or missing transitive dependency retains
+its original Python exception and traceback instead of becoming a misleading
+parent-module attribute error.
+
 Typed Python async contexts reuse the application-owned asyncio loop. Enter,
 body execution, exit, cancellation handoff, and cleanup stay on that one loop;
 the compiler never creates a nested executor. The entered value may differ

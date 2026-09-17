@@ -1,4 +1,5 @@
 [package]
+links = "sifr_ipc_compiled_identity"
 name = "sifr_ipc"
 version = "0.0.0"
 publish = false
@@ -22,3 +23,6 @@ bench = false
 
 [lints]
 workspace = true
+
+[build-dependencies]
+sifr_identity = { workspace = true, features = ["build"] }

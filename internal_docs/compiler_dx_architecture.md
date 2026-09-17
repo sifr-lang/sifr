@@ -4,7 +4,6 @@ status: final target design
 implementation status: DX.1 baseline/policy complete; DX.2–DX.16 not started
 implementation baseline: `sifr-lang/sifr@0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
 design date: 2026-09-16  
-phase: [Compiler DX and Toolchain Reuse](../plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md)
 
 ## 1. Purpose and authority
 
@@ -12,7 +11,7 @@ Make Sifr's normal development loop fast, predictable, resource-bounded, and cor
 
 The target architecture requires prebuilt standard-library metadata, native artifact reuse, persistent project results, editor lifecycle improvements, and verification improvements. Implementation proceeds sequentially through the companion phase. Measurements establish whether each mechanism achieves its objectives and identify the optimizations needed to meet the completion criteria.
 
-This document owns architectural behavior and invariants. The phase owns milestone scope, sequencing, status, and acceptance evidence. Neither document owns a running experiment diary. Existing subsystem documents remain authoritative for language semantics, package trust, SQL and Python contracts, runtime safety, and release authorization. A planned integration must update a conflicting contract explicitly rather than bypass it.
+This document owns architectural behavior and invariants. The companion implementation plan owns scope, sequencing, status, and acceptance evidence. Neither document owns a running experiment diary. Existing subsystem documents remain authoritative for language semantics, package trust, SQL and Python contracts, runtime safety, and release authorization. A planned integration must update a conflicting contract explicitly rather than bypass it.
 
 All commands and interfaces introduced below are target contracts. Their presence here does not mean they exist in the baseline repository. Naming may change only through an explicit documentation update that preserves the capabilities and ownership boundaries.
 
@@ -40,7 +39,7 @@ Provide fast fresh-process checks and incremental edit loops without a mandatory
 
 ### 2.2 Non-goals
 
-This phase does not change Sifr syntax or language semantics, implement a replacement checker/query engine, add a public compiler-service protocol, create a remote/distributed cache, ship a universal precompiled native runtime for every configuration, redesign SQL/Python trust, add unsupported targets, or change release authorization. It does not promise compatibility between private cache formats from different compiler builds. It does not make every possible stdlib input or generic instantiation exhaustively testable.
+This design does not change Sifr syntax or language semantics, implement a replacement checker/query engine, add a public compiler-service protocol, create a remote/distributed cache, ship a universal precompiled native runtime for every configuration, redesign SQL/Python trust, add unsupported targets, or change release authorization. It does not promise compatibility between private cache formats from different compiler builds. It does not make every possible stdlib input or generic instantiation exhaustively testable.
 
 ### 2.3 Required invariants
 
@@ -141,6 +140,35 @@ This is the documented source-tree test identity rule, not a second semantic alg
 
 Library API tests needing no real stdlib continue to inject small fixture providers. Tests requiring the real producer obtain it from their existing outer driver/integration owner, without reverse production dependencies. Build-time token helpers do not compile stdlib. Byte-change, feature-change and dependency-change tests must demonstrate identity correctness for bare Cargo tests as well as the CLI. [D5]
 
+### 4.2.2 Implemented constructor inventory (DX.2)
+
+The stateless sifr_identity crate owns canonical SHA-256 records and distinct
+compiler, semantic-target, stdlib-input, metadata, native-build and validation
+types. Its build-only module walks sorted source inventories without Git.
+Package-local build scripts emit source/configuration tokens and Cargo links
+metadata composes the actual dependency closure. The outer sifr/build.rs
+embeds the aggregate CLI identity; each SQL migration tool binary also
+embeds an outer identity because it directly invokes the compiler.
+
+| Constructor owner | Identity and lifetime |
+| --- | --- |
+| sifr/src/main.rs::compiler_context; CLI build/check/run/test/emit/trace | Embedded product identity; unit builds use the compiled CLI dependency closure and cfg(test) token |
+| SQL MySQL/PostgreSQL/SQLite tool main.rs::compiler_context | Embedded outer product identity passed into the library migration API; unit context uses linked driver tokens |
+| sifr_driver::CompilerContext::new | Caller-supplied immutable identity and pinned sysroot; process-local stdlib ownership keyed by both |
+| sifr_driver::CompilerContext::for_test[_tokens]; driver unit/integration callers | Compiled driver producer closure, optionally extended by the owning harness; no installed CLI or recursive producer build |
+| sifr_analysis::AnalysisHost::open_* and internal constructors | Required compiler context propagated into the frontend session before queries; analysis tests extend driver tokens with the analysis closure |
+| sifr_lsp::run_stdio_with_identity; workspace/session | CLI product identity pinned for the session and document/project replacement; embedded library convenience entrypoint uses the compiled LSP test-family identity |
+| sifr_frontend::FrontendContext loaders and WorkspaceSession constructors | Pure-library fixture family from compiled frontend tokens; real compiler/analysis owners inject their context through consuming with_compiler_identity before use |
+| CompilerFingerprint::current | Pure-frontend fixture fingerprint; production reuse derives for_identity from its owning context |
+
+All direct driver real-stdlib APIs require a CompilerContext. Fixture-only
+frontend, lint and format consumers do not acquire driver dependencies.
+Dependency tokens include per-crate cfg(test) distinctions and build feature,
+target, profile, flags and rustc inputs. Source inputs are read only by build
+scripts; installed identity inspection never scans the checkout or hashes the
+running Sifr executable. Test/product identity overrides must match both kind
+and compiled digest. Actual binary integrity remains a separate package digest.
+
 ### 4.3 Stable semantic identity
 
 Persist artifact-local declaration/type/source IDs with explicit tables. Decode and intern them through normal compiler identity rules. Include package/version/source identity where nominal semantics require it; a bare class or module name is insufficient. No persisted pointer, arena index, allocation-order ID, or process-specific source-map number is an identity contract.
@@ -185,7 +213,7 @@ The producer emits and validates reusable stdlib Rust once. Its validation recor
 
 An installed build reuses those bytes without rerunning whole-stdlib `StdlibSyntaxSession` bootstrap. It can still parse the selected fragment to perform a necessary transformation and must validate affected boundaries/final assembly. Rewriting, specialization, pruning, changed fragment placement, or changed grammar invalidates the relevant prior assurance. The final program still passes rustc checking/linking. A `validated = true` field alone never authorizes a bypass.
 
-Preserve the emitted layout so source-produced and metadata-loaded routes can be compared byte for byte under identical inputs. Test public `sifr emit`, not only internal Rust strings: stdout bytes, final newline, stdlib preamble start/end markers and the source-map extraction that consumes those markers must be unchanged. Timings stay off emitted-source stdout. No normalization may remove a meaningful marker just to make the comparison pass. This phase does not also redesign generated module layout. [S10] [S16]
+Preserve the emitted layout so source-produced and metadata-loaded routes can be compared byte for byte under identical inputs. Test public `sifr emit`, not only internal Rust strings: stdout bytes, final newline, stdlib preamble start/end markers and the source-map extraction that consumes those markers must be unchanged. Timings stay off emitted-source stdout. No normalization may remove a meaningful marker just to make the comparison pass. This design does not also redesign generated module layout. [S10] [S16]
 
 ### 5.3 Demand-driven consumer API
 
@@ -197,7 +225,7 @@ Place the provider contract beside existing external definitions. It provides la
 
 Decoded baseline values and indexed type records are shared immutable owners. Per-project discoveries and specialization results never mutate that baseline. Context-dependent provider memoization includes the context identity or remains in the overlay. An initial compatibility projection may materialize the complete required module closure, but may not materialize unrelated modules or deep-clone the entire stdlib. Two simultaneous project compilations over one store must not see one another's added/removed exports.
 
-The DX.5 consumer inventory must enumerate read, enumeration, mutation, cloning and lifetime sites by exact repository path and symbol, including: `sifr_lowering::lower_module_with_externals_name_and_options` and sibling lowerers; frontend compile/query helpers and `collect_module_exports`; driver `project/frontend.rs` collection/single-module helpers, `build/entrypoint.rs`, test-runner preparation and stdlib accessors; analysis/LSP external-definition consumers; and codegen import/interop-demand readers. Derive the complete inventory from the pinned source tree and verify migration coverage for every recorded site. The first DX.7 implementation slice is the layered view and mutation migration under the source-backed provider; only after its parity/isolation tests pass does the metadata adapter become the normal reader.
+The DX.5 consumer inventory must enumerate read, enumeration, mutation, cloning and lifetime sites by exact repository path and symbol, including: `sifr_lowering::lower_module_with_externals_name_and_options` and sibling lowerers; frontend compile/query helpers and `collect_module_exports`; driver `project/frontend.rs` collection/single-module helpers, `build/entrypoint.rs`, test-runner preparation and stdlib accessors; analysis/LSP external-definition consumers; and codegen import/interop-demand readers. Derive the complete inventory from the pinned source tree and verify migration coverage for every recorded site. The first DX.7 implementation boundary is the layered view and mutation migration under the source-backed provider; only after its parity/isolation tests pass does the metadata adapter become the normal reader.
 
 A small global name/module index is allowed for import completion and resolution. Discovering dependencies or interop demand must not scan/decode all stdlib bodies. Use producer-derived summaries and demand traversal. Private modules are available only through the existing trusted stdlib context, never made importable merely because they occur in an index.
 
@@ -327,6 +355,26 @@ Internal temporary projects must not accidentally inherit an unrelated working d
 
 `doctor` validates the selected toolchain, not an unrelated `rustc` earlier on shell PATH. Build, check-probe, metadata, test and portable-export paths consume the same context rather than independently constructing `Command::new("cargo")` policies.
 
+DX.2 implements this boundary with sifr_sysroot::NativeToolchain and
+NativeBuildContext. Resolve in the intentional caller/package root before
+materializing temporary projects. SIFR_RUST_TOOLCHAIN selects an installed
+rustup toolchain; paired absolute SIFR_CARGO/SIFR_RUSTC overrides select
+explicit executables. A one-sided or unavailable selection fails. Cargo and
+rustc versions, executable digests, target, supported native environment and
+Cargo configuration bytes participate in identity. Only selected build
+environment names are hashed; debug/CLI reports expose identities and tool
+paths, not secret values.
+
+Preparation, interop probes, generated builds/tests, package metadata and
+host-tool Cargo commands consume resolved tool selections. Generated commands
+use explicit manifests from the original configuration root; their private
+target destination is explicit. Cargo-reported executable paths are published
+at Sifr's stable artifact path. Application build remains release and generated
+test remains Cargo's test profile. The --print native-context --json command
+and doctor inspect the selected tools; build reports retain compiler and native
+toolchain identities. Persistent metadata production/storage and changed
+application profile defaults remain unchanged by this context contract. Selected Python shared-library directories are retained in generated Unix loader paths and in native artifact identity, so link-time interpreter selection also governs normal execution.
+
 ### 8.2 Compatible native storage
 
 Cargo owns unit freshness, dependency artifacts and its internal target layout. Sifr groups storage by compatibility boundaries such as toolchain/host/target, dependency source configuration, native environment and trust domain. Distinct Cargo profiles/features remain represented in Cargo's own unit identities and in `NativeBuildId`; do not build a bespoke substitute for Cargo's fingerprint engine. [D1] [D2] [D3]
@@ -451,7 +499,7 @@ Use the current module-granular dependency model. A changed source invalidates t
 
 `ModuleInterfaceId` is not a hash of a pretty-printed function signature. It includes necessary generic/const/default payloads, nominal identity, re-exports, ownership/effects and declaration-derived rules. Ordinary implementation-body changes that provably do not affect importer semantics need not invalidate importer checking, but still invalidate the appropriate native build. Unknown or dynamic dependency scope is conservatively invalidated.
 
-Tests must prove both semantic equivalence and reuse behavior. Merely returning the same diagnostics with caching disabled does not demonstrate this feature. Do not implement expression-level persistence, a second salsa database, or speculative dependency elision as part of this phase.
+Tests must prove both semantic equivalence and reuse behavior. Merely returning the same diagnostics with caching disabled does not demonstrate this feature. Do not implement expression-level persistence, a second salsa database, or speculative dependency elision as part of this design.
 
 ### 9.5 Recovery and explicit controls
 
@@ -552,7 +600,7 @@ Emit one canonical report per run, with stable test IDs, selection digest, candi
 
 Evidence is keyed to the candidate and its complete validation inputs. An unrelated documentation-only commit may retain original evidence only with an explicit unchanged-input comparison and reference to the original run; do not manufacture a new execution record. A failed cold result remains recorded when a later warm run succeeds.
 
-Apply the existing phase-closure workflow: bounded item, targeted validation, one final required gate on the final implementation candidate, scoped review, and a compact handoff. Do not commit the approval into the commit it approves. Record-only updates do not trigger another broad gate or external review. Historical evidence stays linked outside the current-status summary. [S11]
+Apply the existing bounded implementation workflow: bounded item, targeted validation, one final required gate on the final implementation candidate, scoped review, and a compact handoff. Do not commit the approval into the commit it approves. Record-only updates do not trigger another broad gate or external review. Historical evidence stays linked outside the current-status summary. [S11]
 
 ## 13. Test architecture and full-stdlib qualification
 
@@ -655,7 +703,7 @@ A correctly scoped active host/profile regression contract remains enforceable u
 
 ## 15. Migration and completion rules
 
-Adoption is an explicit contract change to the Phase 35 process-local-only deferral and to the old size-based cleanup rule. Preserve Phase 35/36 semantic ownership and tooling protocols. Update `internal_docs/architecture.md`, the appropriate subsystem docs, profile policy and the phase index with links instead of copying this entire contract into each location.
+Adoption is an explicit contract change to the existing performance policy's process-local-only deferral and to the old size-based cleanup rule. Preserve existing performance and editor semantic ownership and tooling protocols. Update `internal_docs/architecture.md`, the appropriate subsystem docs, profile policy and the phase index with links instead of copying this entire contract into each location.
 
 Migrate consumers before removing old aggregate/cache interfaces. During migration, a test-only source-built reference path and the production metadata reader may coexist; they must use the same semantic compiler. At phase exit there is no normal installed source-bootstrap fallback and no unqualified global stdlib singleton.
 
@@ -665,98 +713,98 @@ Completion requires the acceptance matrix, the sequential phase's definitions of
 
 Sequential implementation is not an all-or-nothing release barrier. The integrated metadata result after DX.8 and metadata/native/profile/editor result after DX.11 are release-eligible checkpoints once their exact artifacts satisfy existing publication qualification and their then-implemented public behavior. They do not assert that later project persistence exists or that Phase DX is complete. Reuse applicable candidate-bound evidence rather than add checkpoint-only duplicate reviews/gates. Actual release authorization/account operations remain governed elsewhere.
 
-DX.12–DX.14 implement the required project persistence and interface propagation. The DX.8/DX.11 measurements guide tuning and identify remaining costs. Qualified improvements may ship at a checkpoint while the phase continues sequentially. Register `DX` as an ad hoc row in both the roadmap summary and phase navigation index during DX.1, and maintain checkpoint and phase status in those rows.
+DX.12–DX.14 implement the required project persistence and interface propagation. The DX.8/DX.11 measurements guide tuning and identify remaining costs. Qualified improvements may ship at a checkpoint while the phase continues sequentially. Maintain implementation status and qualification evidence in the companion implementation plan.
 
 ## 16. Acceptance and failure-injection matrix
 
-This is the canonical case inventory for the phase. Milestones reference these IDs instead of duplicating the matrix. Each case needs executable coverage and evidence; the table does not assert that coverage already exists.
+This is the canonical acceptance-case inventory. The implementation plan references these IDs instead of duplicating their semantic requirements. Each case needs executable coverage and evidence; the table does not assert that coverage already exists.
 
-| ID | Scenario | Required outcome | Owner | First milestone |
-| --- | --- | --- | --- | --- |
-| I01 | Change compiler implementation without changing package version or HEAD. | Embedded compatibility identity changes; incompatible metadata/project results are rejected. | compiler build / frontend | DX.2 |
-| I02 | Change a compiler input, source inventory, parser submodule, build feature or generated schema input independently. | Build tracking updates the identity; source-archive and dirty-checkout builds cannot retain a stale ID. | compiler build | DX.2 |
-| I03 | Change only diagnostic color, width or LSP position encoding. | Semantic results remain reusable; current presentation is rendered correctly. | frontend / diagnostics | DX.12 |
-| I04 | Change target, Rust toolchain, lock/source configuration or relevant native environment. | The correct semantic/native family invalidates; no stale executable is accepted. | driver / package | DX.9 |
-| I05 | Reorder unordered producer collections or move the producer checkout. | Canonical payloads are reproducible; no build-machine path or allocation-order identity leaks. | metadata producer | DX.5 |
-| I06 | Add a nominally named declaration in another package/version. | Artifact-local identities remap without aliasing the existing declaration. | IR / lowering | DX.5 |
-| I07 | Change only an LSP implementation input and rebuild the compiler. | Changed code and its normal dependents rebuild; a volatile aggregate identity does not force frontend/sysroot libraries to rebuild. Capture actual Cargo freshness/artifact evidence. | compiler build | DX.2 |
-| I08 | Run a library test after changing its linked semantic implementation, features or test configuration without changing HEAD/version. | Its compiled test identity changes where required; no constant test ID or unrelated mutable source scan authorizes stale metadata. | compiler build / test adapters | DX.2 |
-| M01 | Run a tiny installed check with no project cache. | Zero stdlib source bootstrap/emission; only the required metadata closure is decoded. | driver / frontend | DX.7 |
-| M02 | Use defaults, const bodies, generic templates, descriptors and interop-heavy stdlib declarations. | All required semantic/codegen payloads load and agree with source production. | lowering / codegen | DX.7 |
-| M03 | Compile the maintained E2E corpus through source-built and artifact-loaded stdlib providers. | Generated Rust is byte-identical for identical declared inputs, with native and behavioral assertions retained. | codegen / verification | DX.8 |
-| M04 | Rewrite/specialize/reassemble a prevalidated Rust fragment; include invalid lexical joins. | Only unchanged valid fragment assurances are reused; required transformed/final validation catches the defect. | codegen | DX.7 |
-| M05 | Decode every canonical public/private module and required section. | Inventory, bounds, references, template and payload validation are complete; no module is silently absent. | sysroot / verification | DX.8 |
-| M06 | Truncate metadata or inject invalid lengths, offsets, IDs, recursion or payload digests. | Bounded actionable rejection; no panic, runaway allocation or false success. | sysroot / IR | DX.5 |
-| M07 | Move an intact installed toolchain. | Relative source/payload references and navigation still resolve. | distribution / source | DX.8 |
-| M08 | Upgrade/rollback during a live LSP session; open two compatible sysroot stores in one process. | Requests pin a consistent generation; stores cannot contaminate one another; incompatible artifacts reject. | sysroot / analysis | DX.8 |
-| M09 | Correct a missing or stale development artifact after an initialization error. | Explicit ensure/re-resolution retries the canonical producer; no permanent global error poisoning. | driver / sysroot | DX.6 |
-| M10 | Attempt production from a cross-build machine. | A supported host producer executes with explicit target semantics; no accidental execution of a foreign target binary. | distribution | DX.8 |
-| M11 | Produce on macOS and Linux under equivalent semantic inputs/target. | Portable payload bytes agree; legitimate producer-envelope/target differences are not falsely compared as identical. | metadata / distribution | DX.8 |
-| M12 | Modify producer inputs during metadata construction. | Output binds to captured inputs and is not selected as current for different live source; bounded retry or changed-input error. | driver / source | DX.6 |
-| M13 | Start N threads/processes ensuring the same dev-metadata key with an empty cache; repeat warm and with different configurations. | One successful production per identical key; all waiters validate complete output and run assertions. Incompatible identities remain isolated. | driver / test adapters | DX.6 |
-| M14 | Kill/fail/cancel the producer while other metadata-ensure callers wait. | No partial artifact or permanently cached failure escapes; ownership is released and a later eligible caller can retry without deadlock. | driver / storage | DX.6 |
-| M15 | Run public sifr emit through source-built and metadata-loaded providers over the maintained corpus. | Stdout bytes, final newline, stdlib preamble markers and derived source-map ranges match; timings do not contaminate emitted output. | CLI / codegen / source | DX.8 |
-| M16 | Encode/decode many signatures referring to a large class, recursive references and distinct binders/nominal views. | Storage/retention scales with unique records plus references; permitted recursion terminates and distinct semantic identities do not merge. | IR / type system / sysroot | DX.5 |
-| M17 | Compile two projects sharing one baseline, then fail/delete/reconfigure an export in only one. | Mutations remain in the correct overlay; no stale export, reserved-stdlib shadowing or cross-project contamination occurs. | lowering / frontend / driver | DX.7 |
-| C01 | Kill a cache writer before, during and immediately after publication. | A complete valid entry or miss remains; partial state never becomes readable success. Requalify with project generations in DX.13. | driver storage | DX.3 |
-| C02 | Run concurrent readers/writers and prune. | Entry-level OS ownership protects current native/test state and publication; extend to project generations in C09. | driver storage | DX.3 |
-| C03 | Move persistent cache to a filesystem different from TMPDIR. | Staging remains under the destination filesystem; atomic publication is preserved. | driver storage | DX.3 |
-| C04 | Use full, read-only, inaccessible or unsupported project-cache storage. | Actual semantic outcome survives with explicit unavailable-cache status; required native/artifact output failures remain errors. | driver / frontend | DX.13 |
-| C05 | Remove a manifest-referenced payload or replace a concurrently published winner with an invalid entry. | Entry is revalidated and rejected; directory existence never proves completeness. | driver storage | DX.3 |
-| C06 | Run on a target larger than 20 GiB with sufficient free space, then simulate real disk pressure. | No size-only clean; pressure cleanup reclaims only eligible inactive owned entries. | verification / storage | DX.3 |
-| C07 | Inject path traversal, unsafe symlink destinations or foreign-owned cache entries. | Writes/pruning cannot escape the authorized cache scope; untrusted entries do not grant execution. | storage / package | DX.3 |
-| C08 | Rotate A/B/A source generations without touching an eligible result in B. | Still-required valid records survive publication and can be reused in A subject to input validation. | frontend / storage | DX.13 |
-| C09 | Use real inherited project-result generations with concurrent readers/writers and GC, including unused-but-valid records. | Finalized records remain immutable and active records survive; interrupted publication is a valid generation or miss and A/B/A eligibility is preserved. | frontend / driver storage | DX.13 |
-| B01 | Repeat an unchanged native build/run. | Cargo confirms freshness; no needless file rewriting, Rust recompilation or relinking; the program still executes when requested. | driver | DX.9 |
-| B02 | Compile two generated roots with identical display/package/binary names; make the second deliberately invalid. | Root/output isolation detects the intended error or lint and preserves each case diagnostics. | driver / codegen verification | DX.9 |
-| B03 | Run builds concurrently while one root is edited or its output copied. | Owned mutation and artifact capture prevent source/output races; no shared mutable path is a durable result. | driver | DX.9 |
-| B04 | Validate an unpushed local compiler candidate; separately export a portable project. | Local paths work locally; portable source/lock rewrite is explicit and independently validated. | driver / package | DX.9 |
-| B05 | Exercise development, test and release applications, including actual release executables. | Required language, numeric, error, ownership and panic-boundary semantics hold; profile selection is explicit. | runtime / driver | DX.10 |
-| B06 | Change a minimal/default/feature-isolation configuration while grouped integration tests pass. | Isolation regression remains detectable; grouping preserves the executed assertion/configuration inventory. | verification | DX.10 |
-| B07 | Compile successfully but fail at native link; link successfully but fail at runtime. | Each required stage fails correctly; a shallower success cannot satisfy a deeper assertion. | driver / verification | DX.9 |
-| B08 | Select Python library A at build time but expose library B at runtime. | Qualified loader behavior or a concrete mismatch diagnostic; no silent wrong-library success. | Python interop / driver | DX.9 |
-| B09 | Change trust, build-script inputs, native flags or relevant compiler-component/environment inputs after a cache hit. | Current authorization and Cargo/environment freshness remain effective. | package / driver | DX.9 |
-| B10 | Run nested Cargo/native work on the constrained resource profile. | Total concurrency remains bounded; cancellation leaves no owned descendants or source mutation behind. | verification / driver | DX.3 |
-| B11 | Change the default run profile while executing the inventoried E2E/profile selections. | The release run-pass corpus and release boundary assertions remain explicit and execute; dev coverage is additional and defaults have their own tests. | verification / runtime | DX.10 |
-| B12 | Alternate dev and release builds with both caches retained on the 12 GB host. | Measure time, memory, duplicate/reused units and actual disk use; useful profile artifacts remain valid and no size-only cleanup is triggered. | driver / performance | DX.10 |
-| P01 | Check unchanged saved inputs in a new process. | Completed frontend work is actually restored; diagnostics agree with fresh mode and counters prove reuse. | frontend | DX.13 |
-| P02 | Introduce an error, fix it, then revert. | Completed error and success results remain correct; stale diagnostics disappear and reappear appropriately. | frontend | DX.13 |
-| P03 | Create a previously missing import or a higher-priority resolver candidate. | Resolution and all affected results update despite unchanged previous resolved files. | frontend / package | DX.12 |
-| P04 | Delete/rename files, change source inclusion rules or switch package configuration. | File-set/dependency invalidation follows the current resolver and cycle semantics. | frontend | DX.12 |
-| P05 | Change a default, constant, generic/const body, inferred effect or ownership contract without changing an obvious signature. | All semantically affected importers recheck; interface-only reuse never hides the change. | frontend / lowering | DX.14 |
-| P06 | Change an ordinary private implementation body with an unchanged proven interface. | Local/codegen/native work invalidates; eligible importer checking is reused and fresh results still agree. | frontend | DX.14 |
-| P07 | Hash and analyze a file while another process edits it. | Records describe the captured bytes; no mismatched source hash/result is published. | source / frontend | DX.12 |
-| P08 | Restore a check then request missing typed build/editor data. | Missing families are computed normally; a cached successful check is not a complete process image or executable. | frontend / driver | DX.13 |
-| P09 | Cancel/crash partway through checking or fail a transient environment query. | No incomplete aggregate is published as success; deterministic completed error records follow their distinct contract. | frontend | DX.13 |
-| P10 | Use --no-incremental or remove .sifrbuildinfo. | Same semantic result through normal computation; installed stdlib metadata is still used and no cache requirement leaks into correctness. | CLI / frontend | DX.13 |
-| P11 | Alter a SQL schema/provider identity, Python declaration/ABI context or compiler component. | Only complete declared semantic reuse applies; live certification/trust is not replayed as immutable authority. | frontend / package | DX.14 |
-| P12 | Deserialize module results with changed local allocation order or relocated source-map IDs. | Stable IDs remap and canonical diagnostics point to the correct captured source. | IR / frontend | DX.13 |
-| E01 | Maintain unsaved editor text different from disk while running CLI checks. | Each sees its own authoritative source snapshot; persisted saved-source state is uncontaminated. | analysis / LSP | DX.11 |
-| E02 | Complete an older request after a newer edit/configuration change. | No stale result or registration overwrites newer state, even when cancellation arrives too late. | LSP | DX.11 |
-| E03 | Exercise Unicode, CRLF, relative roots, symlinks and supported case rules. | Source identities, cached spans and negotiated LSP positions remain correct. | source / LSP | DX.11 |
-| E04 | Open/edit/close/switch projects repeatedly with outstanding requests. | Referenced snapshots survive; unreferenced state is released; memory remains within its scoped budgets. | analysis | DX.11 |
-| E05 | Request formatting or a syntax-only editor operation with no semantic project needed. | No unrelated metadata/native/environment work is forced. | format / analysis | DX.11 |
-| E06 | Use a missing/incompatible installed metadata artifact from an editor. | Actionable setup diagnostics and recoverable session behavior, not fabricated semantic success. | LSP / sysroot | DX.11 |
-| E07 | Apply a completion/fix/rename edit and immediately recheck. | Resulting text and versions are correct; safe fixes remove the intended error without introducing an unexpected one. | analysis / diagnostics | DX.4 |
-| R01 | A child prints runner-like pass/fail events, including a negative self-test failure. | Runner-controlled aggregate status is unaffected by child text. | verification | DX.3 |
-| R02 | Cargo emits build-finished success, then the test/program exits nonzero. | The overall required runtime/test result remains failed. | driver / verification | DX.3 |
-| R03 | Timeout or cancel a process with nested children and partial binary/text output. | Original cause and bounded streams survive; owned descendants terminate before cleanup. | driver / verification | DX.3 |
-| R04 | A negative fixture cannot launch because its compiler/tool is missing. | Setup failure cannot satisfy the expected language diagnostic. | verification | DX.4 |
-| R05 | Run no-fail-fast with one failed prerequisite and two independent case failures. | Dependents are blocked, independent failures are collected, and final qualification remains nonpassing. | verification | DX.4 |
-| R06 | Compare grouped/prepared execution with the original selected configurations. | Binary identity, effective arguments/environment and assertion inventory match; no hidden second compiler build. | verification | DX.10 |
-| R07 | Reuse warm artifacts during a required qualification run. | Every selected assertion executes or is explicitly blocked/not-run; build cache receipts do not impersonate test results. | verification | DX.4 |
-| R08 | Add a source fixture or change only records/documentation. | Cheap inventory checks catch mismatches early; valid unchanged-input evidence is preserved without fabricated reruns. | verification / phase workflow | DX.4 |
-| R09 | Read help/doctor for stale source-tree and installed artifacts. | The correct remedy and selected artifact/toolchain identities are reported without a fake source location. | CLI / diagnostics | DX.8 |
-| R10 | Run bare cargo test -p sifr_driver from a clean source checkout without a CLI binary or injected verification environment. | Relevant tests ensure matching metadata through their linked canonical producer/test identity; no recursive Cargo invocation or implicit installed fallback is needed. | driver / test adapters | DX.6 |
-| Q01 | Both reference and optimized paths share the same compiler defect. | Independent expected results, IR invariants and native/runtime assertions still detect it. | verification | DX.4 |
-| Q02 | Compare cold preparation, warm reuse, tracing-enabled and tracing-disabled runs. | Workload/overhead attribution stays explicit; total DX cost does not omit moved work. | performance | DX.15 |
-| Q03 | Functional tests pass but a required performance target fails or sampling is inconclusive. | Separate outcomes are preserved and qualification applies explicit policy without rerunning until green. | performance / verification | DX.15 |
-| Q04 | Install, move, update and roll back every supported release package. | The exact qualified compiler/metadata/runtime bytes work together; no source-tree path or stale generation leaks. | distribution | DX.15 |
-| Q05 | Run full metadata traversal plus ordinary lazy E2E and native parity coverage. | Complete structural validation is explicit; lazy behavior remains tested and uncovered API families are not falsely certified. | verification | DX.8 |
-| Q06 | Run the declared 12 GB developer workload and fixed latency corpus. | Recorded product/resource targets hold without upgrading the machine, weakening tests or hiding preparation. | performance | DX.15 |
-| Q07 | Supply dev compiler results to product thresholds, or mislabeled compiler/application/verification profiles. | Measurement is incomparable/rejected; the actual optimized installed artifact is selected and separately identified for product targets. | performance / verification | DX.1 |
-| Q08 | Apply a legacy Mac/dev anchor to Linux/product results; separately seed a valid same-lane regression. | Wrong-lane historical values cannot gate/pass the run, while active scoped regression/product/resource contracts still enforce failure. | performance policy | DX.1 |
-| Q09 | Compare pre-migration and candidate demanded-stdlib LSP loading/retention under matching optimized installed conditions. | Report steady/peak RSS and allocation deltas with noise and decoded counts, preserve scoped caps and attribute changes; no historical 130 MiB claim substitutes for measurement. | analysis / performance | DX.7 |
+| ID | Scenario | Required outcome | Owner |
+| --- | --- | --- | --- |
+| I01 | Change compiler implementation without changing package version or HEAD. | Embedded compatibility identity changes; incompatible metadata/project results are rejected. | compiler build / frontend |
+| I02 | Change a compiler input, source inventory, parser submodule, build feature or generated schema input independently. | Build tracking updates the identity; source-archive and dirty-checkout builds cannot retain a stale ID. | compiler build |
+| I03 | Change only diagnostic color, width or LSP position encoding. | Semantic results remain reusable; current presentation is rendered correctly. | frontend / diagnostics |
+| I04 | Change target, Rust toolchain, lock/source configuration or relevant native environment. | The correct semantic/native family invalidates; no stale executable is accepted. | driver / package |
+| I05 | Reorder unordered producer collections or move the producer checkout. | Canonical payloads are reproducible; no build-machine path or allocation-order identity leaks. | metadata producer |
+| I06 | Add a nominally named declaration in another package/version. | Artifact-local identities remap without aliasing the existing declaration. | IR / lowering |
+| I07 | Change only an LSP implementation input and rebuild the compiler. | Changed code and its normal dependents rebuild; a volatile aggregate identity does not force frontend/sysroot libraries to rebuild. Capture actual Cargo freshness/artifact evidence. | compiler build |
+| I08 | Run a library test after changing its linked semantic implementation, features or test configuration without changing HEAD/version. | Its compiled test identity changes where required; no constant test ID or unrelated mutable source scan authorizes stale metadata. | compiler build / test adapters |
+| Metadata case M01 | Run a tiny installed check with no project cache. | Zero stdlib source bootstrap/emission; only the required metadata closure is decoded. | driver / frontend |
+| Metadata case M02 | Use defaults, const bodies, generic templates, descriptors and interop-heavy stdlib declarations. | All required semantic/codegen payloads load and agree with source production. | lowering / codegen |
+| Metadata case M03 | Compile the maintained E2E corpus through source-built and artifact-loaded stdlib providers. | Generated Rust is byte-identical for identical declared inputs, with native and behavioral assertions retained. | codegen / verification |
+| Metadata case M04 | Rewrite/specialize/reassemble a prevalidated Rust fragment; include invalid lexical joins. | Only unchanged valid fragment assurances are reused; required transformed/final validation catches the defect. | codegen |
+| Metadata case M05 | Decode every canonical public/private module and required section. | Inventory, bounds, references, template and payload validation are complete; no module is silently absent. | sysroot / verification |
+| Metadata case M06 | Truncate metadata or inject invalid lengths, offsets, IDs, recursion or payload digests. | Bounded actionable rejection; no panic, runaway allocation or false success. | sysroot / IR |
+| Metadata case M07 | Move an intact installed toolchain. | Relative source/payload references and navigation still resolve. | distribution / source |
+| Metadata case M08 | Upgrade/rollback during a live LSP session; open two compatible sysroot stores in one process. | Requests pin a consistent generation; stores cannot contaminate one another; incompatible artifacts reject. | sysroot / analysis |
+| Metadata case M09 | Correct a missing or stale development artifact after an initialization error. | Explicit ensure/re-resolution retries the canonical producer; no permanent global error poisoning. | driver / sysroot |
+| Metadata case M10 | Attempt production from a cross-build machine. | A supported host producer executes with explicit target semantics; no accidental execution of a foreign target binary. | distribution |
+| Metadata case M11 | Produce on macOS and Linux under equivalent semantic inputs/target. | Portable payload bytes agree; legitimate producer-envelope/target differences are not falsely compared as identical. | metadata / distribution |
+| Metadata case M12 | Modify producer inputs during metadata construction. | Output binds to captured inputs and is not selected as current for different live source; bounded retry or changed-input error. | driver / source |
+| Metadata case M13 | Start N threads/processes ensuring the same dev-metadata key with an empty cache; repeat warm and with different configurations. | One successful production per identical key; all waiters validate complete output and run assertions. Incompatible identities remain isolated. | driver / test adapters |
+| Metadata case M14 | Kill/fail/cancel the producer while other metadata-ensure callers wait. | No partial artifact or permanently cached failure escapes; ownership is released and a later eligible caller can retry without deadlock. | driver / storage |
+| Metadata case M15 | Run public sifr emit through source-built and metadata-loaded providers over the maintained corpus. | Stdout bytes, final newline, stdlib preamble markers and derived source-map ranges match; timings do not contaminate emitted output. | CLI / codegen / source |
+| Metadata case M16 | Encode/decode many signatures referring to a large class, recursive references and distinct binders/nominal views. | Storage/retention scales with unique records plus references; permitted recursion terminates and distinct semantic identities do not merge. | IR / type system / sysroot |
+| Metadata case M17 | Compile two projects sharing one baseline, then fail/delete/reconfigure an export in only one. | Mutations remain in the correct overlay; no stale export, reserved-stdlib shadowing or cross-project contamination occurs. | lowering / frontend / driver |
+| C01 | Kill a cache writer before, during and immediately after publication. | A complete valid entry or miss remains; partial state never becomes readable success. Requalify with project generations in DX.13. | driver storage |
+| C02 | Run concurrent readers/writers and prune. | Entry-level OS ownership protects current native/test state and publication; extend to project generations in C09. | driver storage |
+| C03 | Move persistent cache to a filesystem different from TMPDIR. | Staging remains under the destination filesystem; atomic publication is preserved. | driver storage |
+| C04 | Use full, read-only, inaccessible or unsupported project-cache storage. | Actual semantic outcome survives with explicit unavailable-cache status; required native/artifact output failures remain errors. | driver / frontend |
+| C05 | Remove a manifest-referenced payload or replace a concurrently published winner with an invalid entry. | Entry is revalidated and rejected; directory existence never proves completeness. | driver storage |
+| C06 | Run on a target larger than 20 GiB with sufficient free space, then simulate real disk pressure. | No size-only clean; pressure cleanup reclaims only eligible inactive owned entries. | verification / storage |
+| C07 | Inject path traversal, unsafe symlink destinations or foreign-owned cache entries. | Writes/pruning cannot escape the authorized cache scope; untrusted entries do not grant execution. | storage / package |
+| C08 | Rotate A/B/A source generations without touching an eligible result in B. | Still-required valid records survive publication and can be reused in A subject to input validation. | frontend / storage |
+| C09 | Use real inherited project-result generations with concurrent readers/writers and GC, including unused-but-valid records. | Finalized records remain immutable and active records survive; interrupted publication is a valid generation or miss and A/B/A eligibility is preserved. | frontend / driver storage |
+| B01 | Repeat an unchanged native build/run. | Cargo confirms freshness; no needless file rewriting, Rust recompilation or relinking; the program still executes when requested. | driver |
+| B02 | Compile two generated roots with identical display/package/binary names; make the second deliberately invalid. | Root/output isolation detects the intended error or lint and preserves each case diagnostics. | driver / codegen verification |
+| B03 | Run builds concurrently while one root is edited or its output copied. | Owned mutation and artifact capture prevent source/output races; no shared mutable path is a durable result. | driver |
+| B04 | Validate an unpushed local compiler candidate; separately export a portable project. | Local paths work locally; portable source/lock rewrite is explicit and independently validated. | driver / package |
+| B05 | Exercise development, test and release applications, including actual release executables. | Required language, numeric, error, ownership and panic-boundary semantics hold; profile selection is explicit. | runtime / driver |
+| B06 | Change a minimal/default/feature-isolation configuration while grouped integration tests pass. | Isolation regression remains detectable; grouping preserves the executed assertion/configuration inventory. | verification |
+| B07 | Compile successfully but fail at native link; link successfully but fail at runtime. | Each required stage fails correctly; a shallower success cannot satisfy a deeper assertion. | driver / verification |
+| B08 | Select Python library A at build time but expose library B at runtime. | Qualified loader behavior or a concrete mismatch diagnostic; no silent wrong-library success. | Python interop / driver |
+| B09 | Change trust, build-script inputs, native flags or relevant compiler-component/environment inputs after a cache hit. | Current authorization and Cargo/environment freshness remain effective. | package / driver |
+| B10 | Run nested Cargo/native work on the constrained resource profile. | Total concurrency remains bounded; cancellation leaves no owned descendants or source mutation behind. | verification / driver |
+| B11 | Change the default run profile while executing the inventoried E2E/profile selections. | The release run-pass corpus and release boundary assertions remain explicit and execute; dev coverage is additional and defaults have their own tests. | verification / runtime |
+| B12 | Alternate dev and release builds with both caches retained on the 12 GB host. | Measure time, memory, duplicate/reused units and actual disk use; useful profile artifacts remain valid and no size-only cleanup is triggered. | driver / performance |
+| P01 | Check unchanged saved inputs in a new process. | Completed frontend work is actually restored; diagnostics agree with fresh mode and counters prove reuse. | frontend |
+| P02 | Introduce an error, fix it, then revert. | Completed error and success results remain correct; stale diagnostics disappear and reappear appropriately. | frontend |
+| P03 | Create a previously missing import or a higher-priority resolver candidate. | Resolution and all affected results update despite unchanged previous resolved files. | frontend / package |
+| P04 | Delete/rename files, change source inclusion rules or switch package configuration. | File-set/dependency invalidation follows the current resolver and cycle semantics. | frontend |
+| P05 | Change a default, constant, generic/const body, inferred effect or ownership contract without changing an obvious signature. | All semantically affected importers recheck; interface-only reuse never hides the change. | frontend / lowering |
+| P06 | Change an ordinary private implementation body with an unchanged proven interface. | Local/codegen/native work invalidates; eligible importer checking is reused and fresh results still agree. | frontend |
+| P07 | Hash and analyze a file while another process edits it. | Records describe the captured bytes; no mismatched source hash/result is published. | source / frontend |
+| P08 | Restore a check then request missing typed build/editor data. | Missing families are computed normally; a cached successful check is not a complete process image or executable. | frontend / driver |
+| P09 | Cancel/crash partway through checking or fail a transient environment query. | No incomplete aggregate is published as success; deterministic completed error records follow their distinct contract. | frontend |
+| P10 | Use --no-incremental or remove .sifrbuildinfo. | Same semantic result through normal computation; installed stdlib metadata is still used and no cache requirement leaks into correctness. | CLI / frontend |
+| P11 | Alter a SQL schema/provider identity, Python declaration/ABI context or compiler component. | Only complete declared semantic reuse applies; live certification/trust is not replayed as immutable authority. | frontend / package |
+| P12 | Deserialize module results with changed local allocation order or relocated source-map IDs. | Stable IDs remap and canonical diagnostics point to the correct captured source. | IR / frontend |
+| E01 | Maintain unsaved editor text different from disk while running CLI checks. | Each sees its own authoritative source snapshot; persisted saved-source state is uncontaminated. | analysis / LSP |
+| E02 | Complete an older request after a newer edit/configuration change. | No stale result or registration overwrites newer state, even when cancellation arrives too late. | LSP |
+| E03 | Exercise Unicode, CRLF, relative roots, symlinks and supported case rules. | Source identities, cached spans and negotiated LSP positions remain correct. | source / LSP |
+| E04 | Open/edit/close/switch projects repeatedly with outstanding requests. | Referenced snapshots survive; unreferenced state is released; memory remains within its scoped budgets. | analysis |
+| E05 | Request formatting or a syntax-only editor operation with no semantic project needed. | No unrelated metadata/native/environment work is forced. | format / analysis |
+| E06 | Use a missing/incompatible installed metadata artifact from an editor. | Actionable setup diagnostics and recoverable session behavior, not fabricated semantic success. | LSP / sysroot |
+| E07 | Apply a completion/fix/rename edit and immediately recheck. | Resulting text and versions are correct; safe fixes remove the intended error without introducing an unexpected one. | analysis / diagnostics |
+| R01 | A child prints runner-like pass/fail events, including a negative self-test failure. | Runner-controlled aggregate status is unaffected by child text. | verification |
+| R02 | Cargo emits build-finished success, then the test/program exits nonzero. | The overall required runtime/test result remains failed. | driver / verification |
+| R03 | Timeout or cancel a process with nested children and partial binary/text output. | Original cause and bounded streams survive; owned descendants terminate before cleanup. | driver / verification |
+| R04 | A negative fixture cannot launch because its compiler/tool is missing. | Setup failure cannot satisfy the expected language diagnostic. | verification |
+| R05 | Run no-fail-fast with one failed prerequisite and two independent case failures. | Dependents are blocked, independent failures are collected, and final qualification remains nonpassing. | verification |
+| R06 | Compare grouped/prepared execution with the original selected configurations. | Binary identity, effective arguments/environment and assertion inventory match; no hidden second compiler build. | verification |
+| R07 | Reuse warm artifacts during a required qualification run. | Every selected assertion executes or is explicitly blocked/not-run; build cache receipts do not impersonate test results. | verification |
+| R08 | Add a source fixture or change only records/documentation. | Cheap inventory checks catch mismatches early; valid unchanged-input evidence is preserved without fabricated reruns. | verification / phase workflow |
+| R09 | Read help/doctor for stale source-tree and installed artifacts. | The correct remedy and selected artifact/toolchain identities are reported without a fake source location. | CLI / diagnostics |
+| R10 | Run bare cargo test -p sifr_driver from a clean source checkout without a CLI binary or injected verification environment. | Relevant tests ensure matching metadata through their linked canonical producer/test identity; no recursive Cargo invocation or implicit installed fallback is needed. | driver / test adapters |
+| Q01 | Both reference and optimized paths share the same compiler defect. | Independent expected results, IR invariants and native/runtime assertions still detect it. | verification |
+| Q02 | Compare cold preparation, warm reuse, tracing-enabled and tracing-disabled runs. | Workload/overhead attribution stays explicit; total DX cost does not omit moved work. | performance |
+| Q03 | Functional tests pass but a required performance target fails or sampling is inconclusive. | Separate outcomes are preserved and qualification applies explicit policy without rerunning until green. | performance / verification |
+| Q04 | Install, move, update and roll back every supported release package. | The exact qualified compiler/metadata/runtime bytes work together; no source-tree path or stale generation leaks. | distribution |
+| Q05 | Run full metadata traversal plus ordinary lazy E2E and native parity coverage. | Complete structural validation is explicit; lazy behavior remains tested and uncovered API families are not falsely certified. | verification |
+| Q06 | Run the declared 12 GB developer workload and fixed latency corpus. | Recorded product/resource targets hold without upgrading the machine, weakening tests or hiding preparation. | performance |
+| Q07 | Supply dev compiler results to product thresholds, or mislabeled compiler/application/verification profiles. | Measurement is incomparable/rejected; the actual optimized installed artifact is selected and separately identified for product targets. | performance / verification |
+| Q08 | Apply a legacy Mac/dev anchor to Linux/product results; separately seed a valid same-lane regression. | Wrong-lane historical values cannot gate/pass the run, while active scoped regression/product/resource contracts still enforce failure. | performance policy |
+| Q09 | Compare pre-migration and candidate demanded-stdlib LSP loading/retention under matching optimized installed conditions. | Report steady/peak RSS and allocation deltas with noise and decoded counts, preserve scoped caps and attribute changes; no historical 130 MiB claim substitutes for measurement. | analysis / performance |
 
 ## 17. Engineering precedent and source references
 
@@ -786,7 +834,7 @@ The normative requirements above define Sifr's target architecture. Pinned repos
 [S8]: https://github.com/sifr-lang/sifr/blob/0f819c2f04bf5b2891074c55ba26369ddf4f13bd/crates/sifr_driver/src/build/workspace.rs "Artifact cache and staging"
 [S9]: https://github.com/sifr-lang/sifr/blob/0f819c2f04bf5b2891074c55ba26369ddf4f13bd/AGENTS.md "Contributor rules and cleanup policy"
 [S10]: https://github.com/sifr-lang/sifr/blob/0f819c2f04bf5b2891074c55ba26369ddf4f13bd/crates/sifr_codegen/src/inline_syntax.rs "Existing fragment-boundary syntax validation"
-[S11]: https://github.com/sifr-lang/sifr/blob/0f819c2f04bf5b2891074c55ba26369ddf4f13bd/.cursor/skills/phase-closure-loop/SKILL.md "Phase closure workflow"
+[S11]: https://github.com/sifr-lang/sifr/blob/0f819c2f04bf5b2891074c55ba26369ddf4f13bd/AGENTS.md "Contributor workflow"
 [S12]: https://github.com/sifr-lang/sifr/blob/0f819c2f04bf5b2891074c55ba26369ddf4f13bd/plans/phases/35_performance_benchmarking_and_budgets.md "Existing performance/query/cache contract"
 
 [S13]: https://github.com/sifr-lang/sifr/blob/0f819c2f04bf5b2891074c55ba26369ddf4f13bd/crates/sifr/build.rs "Executable package identity injection point"

@@ -52,14 +52,15 @@ pub use sifr_syntax::TextPosition;
 
 pub use sifr_driver::{ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus};
 
-pub fn tooling_sysroot_status()
--> Result<ToolingSysrootStatus, Vec<sifr_diagnostics::RenderedDiagnostic>> {
-    sifr_driver::stdlib_tooling_sysroot_status()
+pub fn tooling_sysroot_status(
+    compiler: &sifr_driver::CompilerContext,
+) -> Result<ToolingSysrootStatus, Vec<sifr_diagnostics::RenderedDiagnostic>> {
+    sifr_driver::stdlib_tooling_sysroot_status(compiler)
 }
 
 #[must_use]
-pub fn tooling_sysroot_probe() -> ToolingSysrootProbe {
-    sifr_driver::stdlib_tooling_sysroot_probe()
+pub fn tooling_sysroot_probe(compiler: &sifr_driver::CompilerContext) -> ToolingSysrootProbe {
+    sifr_driver::stdlib_tooling_sysroot_probe(compiler)
 }
 
 pub fn format_options_for_path(
@@ -68,3 +69,7 @@ pub fn format_options_for_path(
 ) -> Result<FormatOptions, Vec<sifr_diagnostics::RenderedDiagnostic>> {
     sifr_format::config::effective_format_options_for_file(path, provider)
 }
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

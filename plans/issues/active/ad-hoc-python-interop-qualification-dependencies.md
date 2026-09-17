@@ -182,3 +182,91 @@ worker, then Item12I and Item12J in order. Use the named validation mapping
 above and preserve each item's review/gate limits. Item12K's expressly approved
 integration allowance follows dependency qualification; it does not reset
 Item12B's exhausted history. No Item12H–12K code was written by Item12G.
+
+## DX.2 merge-validation prerequisite (2026-09-17, authorized)
+
+DX.2 candidate cec479df631badb5a4abcf475f2c9c7cb13c027a failed nine
+Python-interop example variants after passing the preceding lane areas. The
+owning DX.2 session is explicitly authorized to diagnose and repair only the
+demonstrated interpreter/module-loading cause and import-error masking required
+for accurate diagnostics. This is a bounded prerequisite to DX.2 acceptance,
+not a new Python feature, public API redesign, or DX.3 work. Existing Item12
+historical gate/review allowances and failures are unchanged.
+
+The Kafka callback's native build succeeds, then resolving the embedded
+kafka_declaration.poll target reports a missing parent-module attribute.
+The identical error is reproduced by the preserved pre-DX.2 compiler artifact
+5c7502f7aea3cd887a217c2fb3e289c7a1f2c653 (binary SHA-256
+ff932673d79912e0659c630a19623b70d5a4b86e9b745570696d427605a2152b).
+Compiler inputs from that artifact to the DX.2 base, Python runtime sources,
+and Python verification inputs are unchanged. The target resolver currently
+discards import exceptions before attempting parent attributes; diagnosis must
+retain the actual import failure before changing module loading.
+
+Evidence root: yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx2-evidence/.
+Preserve merge-cec479df6.report.json, the full SHA-keyed merge log,
+python-gate-failures/area-results.json, all example reports, and
+python-gate-failures/base-kafka-disk-receipt.json. Earlier diagnostic attempts
+exposed the ambient uv mismatch and /tmp user quota; they remain failed records.
+The successful native base reproduction used uv 0.12.10 and an owned disk-backed
+temporary directory with Rust 1.98.1.
+
+### Bounded prerequisite validation plan
+
+Before implementing the repair, register these focused checks:
+- Runtime object-operations tests, including new regressions for preserving an
+  original declaration-target import failure and retaining valid nested-attribute
+  resolution: cargo test -p sifr_runtime --features python --lib python::object_ops_tests.
+- A focused initialization/module-loading regression for the demonstrated cause
+  once the original import error establishes it; record its exact name here.
+- Affected example variants: callback-examples, dataframe-examples,
+  buffer-examples, arrow-examples, dlpack-examples, ml, libraries,
+  async-declaration-examples, and async-context-examples, via the canonical
+  Python-interop area runner.
+- Required workspace Clippy, formatting, HIR/file-size checks and a review of the
+  final changed inputs, followed by one merge-profile gate on the new final SHA.
+  Reuse unchanged identity/rebuild evidence; never rerun an unchanged failed gate.
+
+If diagnosis requires a new Python behavior/API redesign or establishes an
+unavailable external service/resource, stop with the precise cause and proposed
+scope. This record authorizes no broader Python implementation.
+
+### Demonstrated cause and additional focused regression
+
+The preserved executable's ELF dependencies select only the libpython3.14 SONAME,
+with no loader path. Linux loads system libpython 3.14.4, while the captured module
+paths belong to uv CPython 3.14.7. The latter builds _ssl into libpython; the former
+expects a separate extension in its own stdlib tree. Preserving the original
+exception exposes ModuleNotFoundError for _ssl. The exact previously failing
+binary succeeds without rebuilding when a diagnostic LD_LIBRARY_PATH selects
+the probed uv library directory. See python-gate-failures/libpython-loader-mismatch.json.
+
+The bounded repair emits a generated Cargo build script with the selected Python
+library directory as a Unix runtime loader path, preserves it for exported Cargo
+projects, removes it on rematerialization without Python, and includes the
+selection in native artifact identity. No ambient loader variable is required.
+Register focused driver regression:
+cargo test -p sifr_driver python_native_loader_materialization
+It verifies selected-library cache separation, generated script publication and
+removal, and unchanged portable export behavior. The real Kafka/affected example
+runs must succeed with LD_LIBRARY_PATH unset and readelf/ldd must show selection
+of the probed libpython.
+
+### Bounded prerequisite focused results
+
+The nine affected example variants now pass (zero failures), including Kafka,
+dataframe, buffer, Arrow, DLPack, ML, library and both async example families.
+The runtime object-operations selection passes nine tests, including preservation
+of both an import-time RuntimeError and a missing transitive module alongside
+successful nested-attribute resolution. The driver materialization regression
+passes. Strict workspace Clippy, formatting, HIR and file-size checks pass.
+
+An actual generated Kafka executable succeeds with LD_LIBRARY_PATH unset.
+Its ELF RUNPATH names the selected uv Python library directory, and ldd resolves
+the matching library rather than system Python. Evidence is in
+python-gate-failures/loader-selection-fixed.json, kafka-loader-fixed stdout/stderr,
+python-affected-examples.log, python-qualified/, python-target-errors-tests.log,
+python-native-loader-tests.log, clippy-python-loader.log, and
+guardrails-python-loader.log under the DX.2 evidence root.
+Final candidate review and merge qualification are still required; this is not
+a claim that DX.2 or this prerequisite has merged.

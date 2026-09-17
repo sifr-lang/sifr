@@ -108,9 +108,12 @@ pub(super) fn rebase_sifr_runtime_dependency(package_root: &Path) {
 }
 
 pub(super) fn built_package_output(entrypoint: &PackageEntrypoint) -> std::process::Output {
-    let artifact =
-        build_cached_package_project(entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
-            .expect("Rust interop package should build");
+    let artifact = build_cached_package_project(
+        &crate::CompilerContext::for_test(),
+        entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("Rust interop package should build");
     let output = std::process::Command::new(artifact.binary_path())
         .output()
         .expect("Rust interop package binary should run");

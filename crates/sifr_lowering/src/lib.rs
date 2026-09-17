@@ -47,3 +47,7 @@ pub use sifr_ir::{
     TypedDeclarationDescriptor, TypedDeclarationMetadata, canonical_callable_identity,
     rust_opaque_close_method, rust_opaque_structural_mapping, rust_opaque_type_path,
 };
+
+mod compiled_identity;
+#[doc(hidden)]
+pub use compiled_identity::compiled_input_tokens;

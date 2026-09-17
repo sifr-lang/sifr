@@ -99,6 +99,8 @@ FILENAME_PATTERNS = (
 )
 
 ALLOW_TEXT_PATTERNS = (
+    # Stable metadata acceptance case identifiers are not delivery sequencing.
+    re.compile(r"\bMetadata case M\d{2}\b"),
     re.compile(r"\b(?:WorkspaceTracePhase|SingleOwnerCompilerPhase|LintPhase|PhaseExecution|ProgressPhase)\b"),
     re.compile(r"\b(?:phase_plan|empty_phase_plan|phase_has_enabled_rules|mark_phase_readonly)\b"),
     re.compile(r"\b(?:record_compiler_phase_trace|build phase|compiler phase|trace phases|phase-aware|phase=)\b", re.IGNORECASE),
@@ -438,6 +440,16 @@ def run_self_test(*, quiet: bool = False) -> int:
             "enum WorkspaceTracePhase { Parse }\nfn record_compiler_phase_trace() {}\n",
             encoding="utf-8",
         )
+        metadata_cases = root / "metadata_cases.md"
+        metadata_cases.write_text(
+            "| Metadata case M01 | Reject stale metadata. |\\n",
+            encoding="utf-8",
+        )
+        mixed_metadata_case = root / "mixed_metadata_case.md"
+        mixed_metadata_case.write_text(
+            "| Metadata case M01 | " + DELIVERY_STEP + " 99 |\\n",
+            encoding="utf-8",
+        )
         bad_text = root / "active_manifest.json"
         bad_label = DELIVERY_STAGE.capitalize() + " 99 readiness"
         bad_file = DELIVERY_STEP + "_99_tests.rs"
@@ -670,6 +682,8 @@ def run_self_test(*, quiet: bool = False) -> int:
         or bad_quoted_marker_label not in rendered
         or bad_path_marker_label not in rendered
         or "compiler_interface.rs" in rendered
+        or "metadata_cases.md" in rendered
+        or "mixed_metadata_case.md" not in rendered
     ):
         print(f"verification taxonomy self-test failed: {rendered}", file=sys.stderr)
         return 1

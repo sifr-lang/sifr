@@ -42,8 +42,13 @@ fn stdlib_interop_test_project_materializes_selected_contracts() {
     .expect("write support source");
     let mut provider = DiskSourceProvider::new();
     let roots = discover_test_root_modules(&source.0, &mut provider);
-    let project = build_test_runner_project(&source.0, &roots, &mut provider)
-        .expect("resolve complete test-project runtime demand");
+    let project = build_test_runner_project(
+        &crate::CompilerContext::for_test(),
+        &source.0,
+        &roots,
+        &mut provider,
+    )
+    .expect("resolve complete test-project runtime demand");
     assert!(project.interop.stdlib_demand.declarations.is_empty());
     let modules = project
         .interop
@@ -90,8 +95,13 @@ fn stdlib_interop_test_project_empty_demand_stays_empty() {
     let source = TestSource::new("empty", "def test_contract():\n    assert True\n");
     let mut provider = DiskSourceProvider::new();
     let roots = discover_test_root_modules(&source.0, &mut provider);
-    let project = build_test_runner_project(&source.0, &roots, &mut provider)
-        .expect("generate test project without interop");
+    let project = build_test_runner_project(
+        &crate::CompilerContext::for_test(),
+        &source.0,
+        &roots,
+        &mut provider,
+    )
+    .expect("generate test project without interop");
     assert!(project.interop.rust.declarations.is_empty());
     assert!(project.interop.rust.resolved_targets.is_empty());
     assert!(project.interop.rust.cargo_inputs.is_none());

@@ -183,18 +183,22 @@ fn compiled_fixture_plan_matches_production_build_report() {
     };
     let compiled = compile_fixture(&fixture).expect("fixture should compile");
     let output_dir = env::temp_dir().join("sifr_e2e_production_plan_parity");
-    let report = sifr_driver::build_single_file_report(&source, path, &output_dir).unwrap_or_else(
-        |errors| {
-            panic!(
-                "production build should succeed: {}",
-                errors
-                    .iter()
-                    .map(|error| error.message.as_str())
-                    .collect::<Vec<_>>()
-                    .join("; ")
-            )
-        },
-    );
+    let report = sifr_driver::build_single_file_report(
+        &sifr_driver::CompilerContext::for_test(),
+        &source,
+        path,
+        &output_dir,
+    )
+    .unwrap_or_else(|errors| {
+        panic!(
+            "production build should succeed: {}",
+            errors
+                .iter()
+                .map(|error| error.message.as_str())
+                .collect::<Vec<_>>()
+                .join("; ")
+        )
+    });
 
     assert_eq!(
         compiled.dependency_plan.dependency_input_fingerprint(),
@@ -250,6 +254,7 @@ def main():
 "#;
     let first = tempfile::tempdir().expect("first materialization root");
     let report = sifr_driver::materialize_single_file(
+        &sifr_driver::CompilerContext::for_test(),
         source,
         Path::new("portable_project.sifr"),
         first.path(),

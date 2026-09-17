@@ -44,7 +44,7 @@ def main():
         &contract,
     );
     modules.insert("fixture.models".to_string(), parse_suite(MODELS));
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();
@@ -93,7 +93,7 @@ def main():
         "fixture.facade".to_string(),
         parse_suite("type Adapter[T] = T\n"),
     );
-    let stdlib_defs = compile_stdlib()
+    let stdlib_defs = compile_stdlib(&crate::CompilerContext::for_test())
         .expect("stdlib should compile")
         .defs
         .clone();

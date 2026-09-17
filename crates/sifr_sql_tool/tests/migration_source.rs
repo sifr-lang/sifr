@@ -143,13 +143,14 @@ fn source_loading_rejects_path_escape_and_filename_identity_drift() {
 fn compile_source(
     source: &str,
 ) -> Result<Vec<sifr_sql_contract::MigrationSourceDeclaration>, String> {
-    sifr_driver::compile_sql_migration_source(source).map_err(|failures| {
-        failures
-            .into_iter()
-            .map(|failure| failure.message)
-            .collect::<Vec<_>>()
-            .join("\n")
-    })
+    sifr_driver::compile_sql_migration_source(&sifr_driver::CompilerContext::for_test(), source)
+        .map_err(|failures| {
+            failures
+                .into_iter()
+                .map(|failure| failure.message)
+                .collect::<Vec<_>>()
+                .join("\n")
+        })
 }
 
 fn analyze(_schema: &SchemaIr, statement: &str) -> Result<ProviderAnalysis, String> {
