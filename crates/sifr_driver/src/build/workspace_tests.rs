@@ -9,6 +9,10 @@ fn storage_child() {
     };
     let scope = std::env::current_dir().unwrap();
     let required = [Path::new("payload")];
+    if mode == "prune" {
+        crate::cache_storage::prune(u64::MAX, 0, false).unwrap();
+        return;
+    }
     if mode == "pressure" {
         let old = prepare_cached_artifact("fixture", "dx3", &scope, "old", &required).unwrap();
         let PreparedArtifactCache::Miss(pending) = old else {
@@ -25,6 +29,20 @@ fn storage_child() {
         };
         std::fs::write(pending.workspace_root().join("payload"), b"current").unwrap();
         let current = pending.commit(&required).unwrap();
+        assert!(
+            child(
+                &crate::cache_storage::root(),
+                "prune",
+                &old_path.join("unused")
+            )
+            .status()
+            .unwrap()
+            .success()
+        );
+        assert!(
+            old_path.exists(),
+            "concurrent prune removed active older reader"
+        );
         drop(old);
         crate::cache_storage::prune(1, u64::MAX, false).unwrap();
         assert!(old_path.exists(), "size alone caused cleanup");
