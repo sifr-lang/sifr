@@ -82,6 +82,13 @@ class Qualification:
             end = result.stdout.find(b"\n// --- end stdlib ---")
             assert (None if start < 0 else start) == row["preamble_start"], name
             assert (None if end < 0 else end) == row["preamble_end"], name
+            for mapping in row["generated_source_maps"]:
+                mapped = result.stdout
+                if mapping["path"].endswith("#stdlib-preamble"):
+                    assert start >= 0 and end >= start, name
+                    mapped = result.stdout[start:end].decode().rstrip().encode() + b"\n"
+                assert len(mapped) == mapping["source_bytes"], name
+                assert hashlib.sha256(mapped).hexdigest() == mapping["source_sha256"], name
         assert digest(metadata) == before, "qualification replaced the consumed metadata"
         self.report["public_emit_cases"] = len(coverage["rows"])
         self.save()

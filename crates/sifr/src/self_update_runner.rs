@@ -118,7 +118,10 @@ impl SelfUpdateRunner {
             command.arg("--force");
         }
         command.env("SIFR_INSTALL_DIR", &discovered.receipt.install_dir);
-        command.env("SIFR_SYSROOT_INSTALL_DIR", &discovered.receipt.sysroot_path);
+        let install_root = Path::new(&discovered.receipt.install_dir)
+            .parent()
+            .ok_or_else(|| runner_error("standalone install directory has no parent"))?;
+        command.env("SIFR_SYSROOT_INSTALL_DIR", install_root);
         command.env("SIFR_INSTALL_LOCK_HELD", "1");
         if !discovered.receipt.modify_path {
             command.env("SIFR_NO_MODIFY_PATH", "1");
@@ -484,6 +487,39 @@ cp "{}" "$out"
 
     #[cfg(not(unix))]
     fn make_executable(_path: &Path) {}
+
+    #[test]
+    fn dx8_self_update_targets_stable_root_not_pinned_generation() {
+        let root = TestDir::new("generation-root");
+        let record = root.path().join("root.txt");
+        let installer = write_installer(
+            root.path(),
+            &format!(
+                "printf '%s' \"$SIFR_SYSROOT_INSTALL_DIR\" > \"{}\"\n",
+                record.display()
+            ),
+        );
+        let mut discovered = discovered(root.path(), false, false);
+        let stable_root = Path::new(&discovered.receipt.install_dir)
+            .parent()
+            .unwrap()
+            .to_path_buf();
+        discovered.receipt.sysroot_path = stable_root
+            .join(".sifr-generations/a")
+            .display()
+            .to_string();
+        let status = SelfUpdateRunner::run_installer(
+            &plan_for_installer(false, &installer),
+            &discovered,
+            &installer,
+        )
+        .unwrap();
+        assert!(status.success());
+        assert_eq!(
+            fs::read_to_string(record).unwrap(),
+            stable_root.display().to_string()
+        );
+    }
 
     #[test]
     fn passes_receipt_environment_force_and_manifest_override_to_installer() {

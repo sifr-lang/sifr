@@ -160,7 +160,8 @@ fn validate_receipt_eligibility(
             "standalone install receipt binary_path has no parent directory",
         )
     })?;
-    if !paths_same_after_canonicalization(&install_dir, binary_parent) {
+    let installed_binary = canonicalize_for_receipt(&install_dir.join("sifr"), "install_dir/sifr")?;
+    if !paths_same_after_canonicalization(&installed_binary, &binary_path) {
         return Err(unmanaged_receipt_diagnostic(format!(
             "standalone install receipt binary_path {} is outside install_dir {}",
             receipt.binary_path, receipt.install_dir
@@ -495,6 +496,38 @@ mod tests {
             receipt_json(version, channel, install_dir, binary_path),
         )
         .expect("write receipt");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn dx8_receipt_discovers_selected_immutable_generation() {
+        let tmp = TestDir::new("generation");
+        let stable_bin = tmp.path().join("bin");
+        let generation = tmp.path().join(".sifr-generations/a");
+        let binary = generation.join("bin/sifr");
+        touch(&binary);
+        fs::create_dir_all(&stable_bin).unwrap();
+        std::os::unix::fs::symlink(&binary, stable_bin.join("sifr")).unwrap();
+        fs::write(generation.join("sysroot.toml"), "").unwrap();
+        let mut receipt: serde_json::Value =
+            serde_json::from_str(&receipt_json("0.1.0-beta.2", "beta", &stable_bin, &binary))
+                .unwrap();
+        receipt["sysroot_path"] = generation.display().to_string().into();
+        fs::write(generation.join("install.json"), receipt.to_string()).unwrap();
+        let discovered = discover_install_receipt(&ReceiptDiscoveryEnv {
+            current_executable: binary,
+            manifest_dir: None,
+            home_dir: None,
+        })
+        .unwrap();
+        assert_eq!(
+            discovered.receipt.install_dir,
+            stable_bin.display().to_string()
+        );
+        assert_eq!(
+            discovered.receipt.sysroot_path,
+            generation.display().to_string()
+        );
     }
 
     #[test]
