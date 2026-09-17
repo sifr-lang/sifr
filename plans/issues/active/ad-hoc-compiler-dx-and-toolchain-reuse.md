@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.6 complete; DX.7 next
+status: in progress; DX.1–DX.7 complete; DX.8 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -618,7 +618,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.6 are complete and merged. DX.7–DX.16 are not started; DX.7 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.7 are complete and merged. DX.8–DX.16 are not started; DX.8 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -628,7 +628,7 @@ DX.1–DX.6 are complete and merged. DX.7–DX.16 are not started; DX.7 is the n
 | DX.4 | Complete / merged | Candidate `fa8083ccfea3ec1b8d0fe8a5290c9a3d21efe834`; [PR #3846](https://github.com/sifr-lang/sifr/pull/3846); merge `41675c336e562ff43c4339630097a4533d321de7` | E07, R04, R05, R07, R08, existing-path Q01 and focused checks PASS; explicit unchanged-input reuse; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3846#issuecomment-5712346406) |
 | DX.5 | Complete / merged | Candidate `c7734025c242631a326901ce08c846ac42afd7ae`; [PR #3848](https://github.com/sifr-lang/sifr/pull/3848); merge `22a72c6c6c9f95242e3e60ba83e473f0edd60d11` | I05, I06, M06, M16: 14 focused tests PASS; schema/site, scoped clippy/fmt and guardrails PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3848#issuecomment-5712915895) |
 | DX.6 | Complete / merged | Candidate `5581af0884edcb46d88419b9b7d66d1ce97531df`; [PR #3850](https://github.com/sifr-lang/sifr/pull/3850); merge `d53899694e8b65f47f7105fda34fec039459549a` | M09, M12–M14, R10 and focused producer/preparation/packaging checks PASS; two full bare driver runs 649 passed / 78 ignored each; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3850#issuecomment-5717512054) |
-| DX.7 | Not started | — | — | — |
+| DX.7 | Complete / merged | Candidate `036e69592164b87d309f31ba43ee406a58ed79ca`; [PR #3852](https://github.com/sifr-lang/sifr/pull/3852); merge `fb6d432be20d945e0266030b076dbc76ce4c8a50` | M01, M02, M04, M17, representative M15/native parity and paired installed Q09 PASS; focused tests and guardrails PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3852#issuecomment-5719741485) |
 | DX.8 | Not started | — | — | — |
 | DX.9 | Not started | — | — | — |
 | DX.10 | Not started | — | — | — |
@@ -926,7 +926,7 @@ yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx4-evidence/.
 Final candidate directory: `fa8083ccfea3ec1b8d0fe8a5290c9a3d21efe834/`.
 
 
-## Current Handoff — DX.5 (2026-09-17)
+## Historical Handoff — DX.5 (2026-09-17)
 
 - **State:** complete and merged in [PR #3848](https://github.com/sifr-lang/sifr/pull/3848).
   Final candidate `c7734025c242631a326901ce08c846ac42afd7ae`; merge
@@ -995,7 +995,7 @@ root with their original outcomes. Only the final candidate directory is closure
 validation evidence; no earlier outcome is relabeled as a fresh final-candidate run.
 
 
-## Current Handoff — DX.6 (2026-09-17)
+## Historical Handoff — DX.6 (2026-09-17)
 
 - **State:** complete and merged in [PR #3850](https://github.com/sifr-lang/sifr/pull/3850).
   Final candidate `5581af0884edcb46d88419b9b7d66d1ce97531df`; merge
@@ -1074,3 +1074,100 @@ configuration identities, timing reports and per-file SHA-256 receipts.
 | `native-package-parity.log` | `3d6572f615914a11d79d93d51e1620de283216959fa1be031139ba8435a94533` |
 | `clippy-focused-final.log` | `88ebf1ad1b5ef5f9ee922ee89a4175f4918b402a3e35f90b09c88e869f2012f9` |
 | Original Opus response | `ae9dab23539f905748bda3efbce525c74e7c3fd74b2c9b6208e3d70c09d2afb2` |
+
+
+## Current Handoff — DX.7 (2026-09-17)
+
+- **State:** complete and merged. Implementation [PR #3852](https://github.com/sifr-lang/sifr/pull/3852);
+  final candidate `036e69592164b87d309f31ba43ee406a58ed79ca`, merge
+  `fb6d432be20d945e0266030b076dbc76ce4c8a50`; base
+  `963eed6419d8947822030451017fde6212a1b86f`. Sole remote checkout:
+  `yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/compiler-dx-orchestration`;
+  implementation branch `codex/dx7`.
+- **Source-first boundary:** checkpoint `e7e89bab2703d66256400aadfd112fc522b6f8af`
+  established the immutable baseline and mutable project overlay over the source
+  provider. Lookup/visibility, failed/deleted/repaired exports and two-project
+  isolation passed before metadata activation. Export collection and invalidation
+  mutate only project overlays; lowering performs no provider I/O.
+- **Consumer boundary:** ordinary CLI, bare-test, frontend, analysis/LSP and
+  codegen paths demand metadata closures through the existing semantic authority.
+  Complete nominal fields/methods/variants share immutable storage; contextual
+  mutation detaches. Artifact-local nominal projections are reused. Checking
+  loads selected semantics, building loads selected HIR/Rust/templates, navigation
+  reads selected source on demand, and installed operation has no source fallback.
+  Transformed/specialized/final Rust validation remains active. Transient selection
+  failures are retryable and explicit artifact overrides have separate owners.
+- **Named/focused validation:** M01, M02, M04 and M17 pass, including decoded/read
+  counters and 1,000 nominal references sharing one projection without mutation
+  leakage. Selected runs pass: source sharing 1, baseline parity 4, source overlay
+  2, driver DX.7 acceptance 6, defaults 15, typed descriptors 11, stdlib exports 4,
+  analysis 9, LSP 5, syntax validation 6 and source-map origins 1.
+  Format, generated encoder/decoder, exact inventory, file-size/maintainability
+  and diff checks pass on the final candidate.
+- **Installed/native/M15:** six representative math, bisect, collections,
+  datetime, JSON and regex programs preserve exact public emit bytes, final
+  newlines and stdlib preamble markers against both source production and the
+  installed source reference. Twelve actual source/metadata native assertion
+  executions and the installed native test runner pass. Selected-source removal
+  does not break checking; missing, corrupt and incompatible metadata reject;
+  restoration retries successfully. The installed report has 30 command rows.
+  Full corpus/target qualification remains DX.8.
+- **Q09:** the same reference host, Rust 1.98.1 and optimized installed artifacts
+  execute the frozen DX.1 sources. Each primary lane has 21 fresh checks and
+  21 LSP open/diagnose/close samples, with the first warmup excluded; separate
+  21-sample allocator lanes do not supply latency claims. Fresh checks improve
+  10.76% (1,168.256 → 1,042.541 ms); the LSP sequence improves 10.67%
+  (1,850.225 → 1,652.757 ms), with timing CV below 1.3%. Candidate peak stays
+  below the scoped 128 MiB cap. Every sample preserves the exact existing
+  `SIFR-PACKAGE-0103` diagnostic in the frozen DX.1 workload; this is not a
+  clean-package editor correctness claim or a new expected-difference baseline.
+- **Memory evidence:** the following medians are paired measurements, not a
+  historical RSS estimate. Candidate counters show 13 semantic modules and
+  13 shared nominal projections, with zero HIR-module or Rust payload reads.
+
+| Q09 metric | Source reference | Metadata candidate | Delta |
+| --- | ---: | ---: | ---: |
+| Steady/post-close RSS | 128.262 MiB | 65.350 MiB | −49.05% |
+| Peak RSS | 128.264 MiB | 95.766 MiB | −25.34% |
+| Steady allocated chunks | 89.364 MiB | 44.054 MiB | −50.70% |
+| Post-close allocated chunks | 72.234 MiB | 43.258 MiB | −40.11% |
+| Peak allocated chunks | 98.948 MiB | 82.823 MiB | −16.30% |
+| Empty allocated chunks | 0.070 MiB | 0.177 MiB | +0.107 MiB |
+
+The separate glibc `mallinfo2` sampler measures allocated chunks/direct mappings,
+including allocator/thread-cache retention; it is not exact object attribution.
+The conservative 58,952,288-byte decoded bound is a separate counter, not a heap
+measurement. Reduced retained state is consistent with demanded semantics and
+shared nominal payloads. The pinned metadata container/directory, transient
+record decoding and allocator high-water retention remain; peak improves less
+than steady. Empty allocation grows slightly in absolute terms.
+
+- **Review:** read-only Claude Opus 5 returned SATISFIED, no blocking findings,
+  for the exact candidate. [Published review](https://github.com/sifr-lang/sifr/pull/3852#issuecomment-5719741485).
+  Nonblocking observations and prior DX.6 dispositions remain in the
+  [metadata follow-up issue](ad-hoc-dx-metadata-review-followups.md).
+- **History/storage/policy:** earlier compile/fixture failures and superseded
+  incomplete `product-e824bd` preparation remain historical, not passes.
+  The first installed capture used an outside-package fixture with the repository
+  as cwd and failed; only its external harness cwd was corrected for the passing
+  v2 capture. Final installed preparation took 741.18 s; warm build artifacts
+  were reused, with about 150 GiB free and no pressure cleanup required. All
+  implementation, tests and review ran remotely; local source was untouched.
+  No intermediate full create-PR/merge gate, clippy gate or release qualification
+  was run or claimed. The single full phase-end gate remains required.
+- **Blocker:** none for DX.7 acceptance.
+- **Exact next action:** stop after this record update. Start DX.8 only in a new
+  bounded session. Reuse unchanged DX.7 evidence; do not repeat its review.
+
+Evidence host/root:
+`yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx7-evidence/`.
+The root `final-evidence.json` indexes candidate
+`036e69592164b87d309f31ba43ee406a58ed79ca/evidence.json`, including exact commands,
+artifact identities, raw reports, scripts and per-file digests.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Candidate `evidence.json` | `ca2da8bf220515f694c8043a41be008760fd87022fdc7e719c2415ec4fb9ae1b` |
+| `installed-036e69-v2/report.json` | `19aef4c93dd47491baccb7adc5b2a5bde9cab1c40fc67398c71e62900c798e45` |
+| `q09-comparison.json` | `ebd89eddce113fc6252310baf86fb064b8e9b31ab8decb9ac16c6fb225aa3861` |
+| Original Opus response | `1e159c464005c26e3df1beb40711b6783b78b2878f7cb08e9173be4fb1e91d79` |

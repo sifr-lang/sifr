@@ -1,6 +1,6 @@
 # DX metadata review observations
 
-status: open follow-up suggestions; nonblocking for DX.5 and DX.6
+status: open follow-up suggestions; nonblocking for DX.5–DX.7
 source candidate: `c7734025c242631a326901ce08c846ac42afd7ae`
 implementation: [PR #3848](https://github.com/sifr-lang/sifr/pull/3848)
 review: [Claude Opus 5, SATISFIED](https://github.com/sifr-lang/sifr/pull/3848#issuecomment-5712915895)
@@ -45,5 +45,38 @@ permission to implement the next item in this session.
 | DX6-F2 | driver/provider, DX.7 | `with_metadata_override` does not enter the current source-stdlib owner key `(compiler identity, sysroot)`. This is harmless while the override only validates; when consumers read metadata, key the owner by the selected immutable artifact identity so different selections cannot share the wrong owner. |
 | DX6-F3 | storage owner, future scoped maintenance assessment | Failed/cancelled `{key}.stage` files are reclaimed on the next production of that key; published metadata entries currently have no pruning. This matches DX.6's documented immutable-byte ownership and native-only pruning boundary. Assess inactive-stage and obsolete-configuration cleanup under the existing pressure policy; do not infer new work authorization from this suggestion. |
 | DX6-F4 | documentation closer | Wrap the appended DX.6 paragraph's trailing fragment-validation sentence in `internal_docs/architecture.md`; cosmetic only. |
+
+No implementation for these observations belongs to this record-only update.
+
+
+## DX.7 disposition and new observations
+
+Source candidate: `036e69592164b87d309f31ba43ee406a58ed79ca`.
+Implementation: [PR #3852](https://github.com/sifr-lang/sifr/pull/3852).
+Review: [Claude Opus 5, SATISFIED](https://github.com/sifr-lang/sifr/pull/3852#issuecomment-5719741485).
+These are nonblocking observations, not new DX.7 acceptance requirements or
+permission to implement the next item during its record-only closure.
+
+- DX6-F1 is addressed: required metadata/descriptor/source reads are bounded,
+  including growth races, before decoding or retaining buffers.
+- DX6-F2 is addressed: explicit artifact selection resets the context-owned
+  provider; only successful initialization is retained. Tests prove independent
+  owners and retry after a corrected missing artifact.
+- DX5-F3 was assessed against actual demanded retention: the Q09 candidate loads
+  13 semantic modules/13 shared nominal projections and passes its scoped cap.
+  Incremental cache-charge accounting remains optional, with no measured blocker.
+- DX6-F3 remains with storage maintenance under pressure-based cleanup.
+  DX6-F4 remains a cosmetic documentation-closer observation.
+
+| ID | Owner / suggested timing | Observation and proposed follow-up |
+| --- | --- | --- |
+| DX7-F1 | lowering/external definitions, future scoped maintenance | Baseline-priority reads and overlay-only mutation are intentionally asymmetric. Existing callers respect reserved baseline ownership; a future mutator targeting a baselined key could be silently hidden. Consider enforcing the invariant explicitly at mutable access boundaries without allowing reserved stdlib shadowing. |
+| DX7-F2 | lowering/external definitions, future scoped maintenance | Calling `freeze()` after a baseline is already present leaves overlay entries unshared. Current bootstrap freezes once; consider making unsupported repeated freeze explicit. |
+| DX7-F3 | frontend/incremental owner, assess before frequent overlay enumeration | `len()`/`is_empty()` enumerate and overlay iteration performs baseline membership lookups. Current sizes are bounded; measure before adding accounting complexity. |
+| DX7-F4 | driver metadata/codegen, assess during DX.8 qualification | The provider closure skips absent names, following pre-existing demand/support `continue` behavior. A valid-but-incomplete artifact could therefore surface missing support only in downstream Rust validation. Producer complete validation/template checks remain active; assess a precise missing-required-module diagnostic without adding fallback. |
+| DX7-F5 | phase qualification owner | Intermediate validation is intentionally scoped: no full driver corpus or clippy receipt is claimed for DX.7. Preserve the required DX.8 corpus/target work and the single phase-end full gate; this observation does not reinstate intermediate gates. |
+| DX7-F6 | performance reporting owner | The empty allocator sample grows by 0.107 MiB (0.070 → 0.177 MiB), while steady, peak and retained totals decrease. Keep this absolute increase visible alongside the larger reductions; no optimization is required by this observation. |
+| DX7-F7 | package graph/editor owner, separate scoped assessment | The frozen DX.1 demanded-stdlib fixture already reports `SIFR-PACKAGE-0103` for its Cargo package graph. All paired DX.7 samples preserve the exact diagnostic while demand checking executes. Investigate package graph setup separately; do not erase the diagnostic, change the frozen workload, or claim clean-package editor correctness from this measurement. |
+| DX7-F8 | compiler measurement receipt owner, future scoped maintenance | The existing lane receipt still labels embedded compatibility identity as unavailable-before-DX.2. DX.7 evidence separately verifies the actual installed descriptor's compiler identity and binary digest. Update the receipt probe when next editing that owner; do not treat the legacy label as authoritative evidence of absent identity. |
 
 No implementation for these observations belongs to this record-only update.
