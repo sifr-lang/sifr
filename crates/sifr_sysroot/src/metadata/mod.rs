@@ -1,4 +1,4 @@
-//! Private indexed stdlib wire schema. Version 2 compresses the physical container; normal commands validate its complete digest before opening.
+//! Private indexed stdlib wire schema. Version 4 separates directory, module/name catalog and other payload frames; normal commands validate its complete digest before opening.
 //!
 //! Every non-scalar payload reference names a typed directory record, including
 //! strings and type occurrences. Wire records never contain live HIR or `Type`.

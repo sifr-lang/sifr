@@ -89,7 +89,6 @@ impl MetadataStore {
             return Err(err("truncated directory"));
         }
         let mut directory = Vec::with_capacity(count as usize);
-        let mut next = start;
         let mut previous = None;
         for _ in 0..count {
             let mut raw = [0; ENTRY_SIZE];
@@ -110,7 +109,7 @@ impl MetadataStore {
                 decoded_bound: u64::from_le_bytes(array(&raw, 52)?),
                 digest: array(&raw, 60)?,
             };
-            if entry.offset != next || entry.len == 0 || entry.len > limits.record_bytes {
+            if entry.len == 0 || entry.len > limits.record_bytes {
                 return Err(err("invalid payload offset or bounded length"));
             }
             if entry.decoded_bound
@@ -123,13 +122,24 @@ impl MetadataStore {
             {
                 return Err(err("invalid decoded allocation bound"));
             }
-            next = next
-                .checked_add(entry.len)
-                .ok_or_else(|| err("payload offset overflow"))?;
-            if next > size {
-                return Err(err("payload outside file bounds"));
-            }
             directory.push((id, entry));
+        }
+        let mut next = start;
+        for group in 0..2 {
+            for (_, entry) in directory
+                .iter()
+                .filter(|(_, entry)| super::physical::payload_group(entry.kind) == group)
+            {
+                if entry.offset != next {
+                    return Err(err("noncanonical payload group offset"));
+                }
+                next = next
+                    .checked_add(entry.len)
+                    .ok_or_else(|| err("payload offset overflow"))?;
+                if next > size {
+                    return Err(err("payload outside file bounds"));
+                }
+            }
         }
         if next != size {
             return Err(err("unindexed trailing bytes"));
@@ -294,8 +304,8 @@ impl MetadataStore {
             .seek(SeekFrom::Start(entry.offset))
             .map_err(|e| io_error(&e))?;
         input.read_exact(&mut bytes).map_err(|e| io_error(&e))?;
-        let digest: RecordId = Sha256::digest(&bytes).into();
-        if digest != entry.digest {
+        let digest = ring::digest::digest(&ring::digest::SHA256, &bytes);
+        if digest.as_ref() != entry.digest.as_slice() {
             return Err(err("payload digest mismatch"));
         }
         Ok(bytes)

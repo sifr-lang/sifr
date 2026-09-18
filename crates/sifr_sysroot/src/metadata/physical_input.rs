@@ -1,16 +1,20 @@
-//! Bounded logical read/seek view over the two immutable physical frames.
+//! Bounded logical read/seek view over immutable physical frames.
 use std::io::{self, Read, Seek, SeekFrom};
+use std::ops::Range;
 use std::sync::{
     Arc,
     atomic::{AtomicU64, Ordering},
 };
-
+struct Frame {
+    compressed: Range<usize>,
+    logical: Range<usize>,
+    decoded: Option<Vec<u8>>,
+}
 pub(super) struct PhysicalInput {
     prefix: Vec<u8>,
     compressed: Vec<u8>,
-    payload_start: usize,
+    frames: Vec<Frame>,
     expanded: usize,
-    payload: Option<Vec<u8>>,
     position: u64,
     pub(super) payload_decode_us: Arc<AtomicU64>,
 }
@@ -18,41 +22,75 @@ impl PhysicalInput {
     pub(super) fn new(
         prefix: Vec<u8>,
         compressed: Vec<u8>,
-        payload_start: usize,
+        ranges: Vec<Range<usize>>,
+        lengths: [usize; 2],
         expanded: usize,
     ) -> Self {
+        let mut next = prefix.len();
+        let frames = ranges
+            .into_iter()
+            .zip(lengths)
+            .map(|(compressed, length)| {
+                let start = next;
+                next += length;
+                Frame {
+                    compressed,
+                    logical: start..next,
+                    decoded: None,
+                }
+            })
+            .collect();
         Self {
             prefix,
             compressed,
-            payload_start,
+            frames,
             expanded,
-            payload: None,
             position: 0,
             payload_decode_us: Arc::new(AtomicU64::new(0)),
         }
     }
-    fn payload(&mut self) -> io::Result<&[u8]> {
-        if self.payload.is_none() {
+    fn payload(&mut self, position: usize) -> io::Result<&[u8]> {
+        let index = self
+            .frames
+            .iter()
+            .position(|frame| frame.logical.contains(&position))
+            .ok_or_else(|| {
+                io::Error::new(io::ErrorKind::InvalidData, "unmapped payload position")
+            })?;
+        let frame = &mut self.frames[index];
+        if frame.decoded.is_none() {
             let started = std::time::Instant::now();
-            let bound = self.expanded - self.prefix.len();
-            let payload = zstd::bulk::decompress(&self.compressed[self.payload_start..], bound)?;
+            let bound = frame.logical.len();
+            let payload =
+                zstd::bulk::decompress(&self.compressed[frame.compressed.clone()], bound)?;
             if payload.len() != bound {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
                     "expanded payload length differs from bounded layout",
                 ));
             }
-            self.payload = Some(payload);
-            self.compressed = Vec::new();
-            self.payload_decode_us.store(
-                u64::try_from(started.elapsed().as_micros())
-                    .unwrap_or(u64::MAX)
-                    .max(1),
+            frame.decoded = Some(payload);
+            let elapsed = u64::try_from(started.elapsed().as_micros())
+                .unwrap_or(u64::MAX)
+                .max(1);
+            let _ = self.payload_decode_us.fetch_update(
                 Ordering::Relaxed,
+                Ordering::Relaxed,
+                |previous| Some(previous.saturating_add(elapsed)),
             );
         }
-        self.payload
+        if self
+            .frames
+            .iter()
+            .all(|frame| frame.decoded.is_some() || frame.logical.is_empty())
+        {
+            self.compressed = Vec::new();
+        }
+        let frame = &self.frames[index];
+        frame
+            .decoded
             .as_deref()
+            .map(|bytes| &bytes[position - frame.logical.start..])
             .ok_or_else(|| io::Error::other("payload decompression did not produce bytes"))
     }
 }
@@ -70,8 +108,7 @@ impl Read for PhysicalInput {
         let bytes = if position < self.prefix.len() {
             &self.prefix[position..]
         } else {
-            let offset = position - self.prefix.len();
-            &self.payload()?[offset..]
+            self.payload(position)?
         };
         let count = out.len().min(bytes.len());
         out[..count].copy_from_slice(&bytes[..count]);

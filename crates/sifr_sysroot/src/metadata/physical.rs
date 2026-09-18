@@ -1,7 +1,7 @@
-//! Versioned physical frames: eager directory, demand-loaded record payload bytes.
+//! Versioned directory, module/name catalog and remaining payload frames.
 use super::container::{ENTRY_SIZE, HEADER_SIZE, MAGIC, VERSION};
 use super::physical_input::PhysicalInput;
-use super::{Compatibility, Limits, Result, err};
+use super::{Compatibility, Limits, Module, Record, Result, Text, err};
 
 const PHYSICAL_HEADER: usize = HEADER_SIZE + 8;
 
@@ -20,10 +20,22 @@ pub(super) fn encode(logical: &[u8], limits: Limits) -> Result<Vec<u8>> {
     }
     let prefix = zstd::bulk::compress(&logical[..split], 9)
         .map_err(|e| err(format!("compress directory: {e}")))?;
-    let payload = zstd::bulk::compress(&logical[split..], 9)
+    let lengths = payload_lengths(&logical[..split], limits)?;
+    if split
+        .checked_add(lengths[0])
+        .and_then(|n| n.checked_add(lengths[1]))
+        != Some(logical.len())
+    {
+        return Err(err("payload groups differ from expanded length"));
+    }
+    let catalog_end = split + lengths[0];
+    let catalog = zstd::bulk::compress(&logical[split..catalog_end], 9)
+        .map_err(|e| err(format!("compress catalog: {e}")))?;
+    let payload = zstd::bulk::compress(&logical[catalog_end..], 9)
         .map_err(|e| err(format!("compress payload: {e}")))?;
     let size = PHYSICAL_HEADER
         .checked_add(prefix.len())
+        .and_then(|size| size.checked_add(catalog.len()))
         .and_then(|size| size.checked_add(payload.len()))
         .ok_or_else(|| err("physical length overflow"))?;
     if size as u64 > limits.file_bytes || logical.len() as u64 > limits.file_bytes {
@@ -36,6 +48,7 @@ pub(super) fn encode(logical: &[u8], limits: Limits) -> Result<Vec<u8>> {
     bytes.extend_from_slice(&(size as u64).to_le_bytes());
     bytes.extend_from_slice(&(logical.len() as u64).to_le_bytes());
     bytes.extend_from_slice(&prefix);
+    bytes.extend_from_slice(&catalog);
     bytes.extend_from_slice(&payload);
     Ok(bytes)
 }
@@ -78,12 +91,6 @@ pub(super) fn open(
         usize::try_from(expanded).map_err(|_| err("expanded size exceeds address space"))?;
     let frames = &input[PHYSICAL_HEADER..];
     let prefix_size = frame_size(frames, prefix_len)?;
-    let body = frames
-        .get(prefix_size..)
-        .ok_or_else(|| err("truncated payload frame"))?;
-    if frame_size(body, expanded - prefix_len)? != body.len() {
-        return Err(err("trailing bytes or additional compressed frame"));
-    }
     let prefix = zstd::bulk::decompress(&frames[..prefix_size], prefix_len)
         .map_err(|e| err(format!("bounded directory decompression: {e}")))?;
     if prefix.len() != prefix_len
@@ -98,12 +105,70 @@ pub(super) fn open(
             "expanded file length or header differs from bounded outer header",
         ));
     }
-    Ok(PhysicalInput::new(
-        prefix,
-        input,
-        PHYSICAL_HEADER + prefix_size,
-        expanded,
-    ))
+    let lengths = payload_lengths(&prefix, limits)?;
+    if prefix_len
+        .checked_add(lengths[0])
+        .and_then(|n| n.checked_add(lengths[1]))
+        != Some(expanded)
+    {
+        return Err(err("payload groups differ from expanded length"));
+    }
+    let mut cursor = PHYSICAL_HEADER + prefix_size;
+    let mut ranges = Vec::with_capacity(2);
+    for length in lengths {
+        let remaining = input
+            .get(cursor..)
+            .ok_or_else(|| err("truncated payload frame"))?;
+        let size = frame_size(remaining, length)?;
+        if length == 0 {
+            zstd::bulk::decompress(&remaining[..size], 0)
+                .map_err(|e| err(format!("invalid empty payload frame: {e}")))?;
+        }
+        let end = cursor
+            .checked_add(size)
+            .ok_or_else(|| err("frame length overflow"))?;
+        ranges.push(cursor..end);
+        cursor = end;
+    }
+    if cursor != input.len() {
+        return Err(err("trailing bytes or additional compressed frame"));
+    }
+    Ok(PhysicalInput::new(prefix, input, ranges, lengths, expanded))
+}
+
+/// Locality only: this does not defer the provider's authoritative module/name
+/// validation or decode any semantic, HIR or Rust record.
+pub(super) const fn payload_group(kind: u16) -> usize {
+    if kind == Module::KIND || kind == Text::KIND {
+        0
+    } else {
+        1
+    }
+}
+
+fn payload_lengths(prefix: &[u8], limits: Limits) -> Result<[usize; 2]> {
+    let mut lengths = [0_usize; 2];
+    for entry in prefix[HEADER_SIZE..].as_chunks::<ENTRY_SIZE>().0 {
+        let kind = u16::from_le_bytes(
+            entry[32..34]
+                .try_into()
+                .map_err(|_| err("truncated record kind"))?,
+        );
+        let len = u64::from_le_bytes(
+            entry[44..52]
+                .try_into()
+                .map_err(|_| err("truncated record length"))?,
+        );
+        if kind == 0 || kind > super::KIND_COUNT || len == 0 || len > limits.record_bytes {
+            return Err(err("invalid payload kind or bounded length"));
+        }
+        let len = usize::try_from(len).map_err(|_| err("payload exceeds address space"))?;
+        let group = &mut lengths[payload_group(kind)];
+        *group = group
+            .checked_add(len)
+            .ok_or_else(|| err("payload group length overflow"))?;
+    }
+    Ok(lengths)
 }
 
 fn directory_end(count: u32, limits: Limits) -> Result<usize> {

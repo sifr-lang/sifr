@@ -307,9 +307,20 @@ fn m06_header_index_payload_and_reference_fuzz_seeds_fail_closed() {
         .unwrap()
         .into_inner();
     for offset in [120 + 32, 120 + 34, 120 + 36, 120 + 44, 120 + 52] {
-        let mut bytes = logical.clone();
-        bytes[offset] ^= 0xff;
-        let bytes = super::physical::encode(&bytes, limits()).unwrap();
+        // Preserve payload-frame boundaries while corrupting the logical
+        // directory, so this exercises decoder validation, not encoder checks.
+        let frame_size = zstd::zstd_safe::find_frame_compressed_size(&original[128..]).unwrap();
+        let mut prefix = zstd::bulk::decompress(
+            &original[128..128 + frame_size],
+            limits().file_bytes as usize,
+        )
+        .unwrap();
+        prefix[offset] ^= 0xff;
+        let mut bytes = original[..128].to_vec();
+        bytes.extend_from_slice(&zstd::bulk::compress(&prefix, 9).unwrap());
+        bytes.extend_from_slice(&original[128 + frame_size..]);
+        let size = bytes.len() as u64;
+        bytes[112..120].copy_from_slice(&size.to_le_bytes());
         assert!(
             MetadataStore::open(Cursor::new(bytes), identity(), limits()).is_err(),
             "offset {offset}"
@@ -321,7 +332,11 @@ fn m06_header_index_payload_and_reference_fuzz_seeds_fail_closed() {
     bytes[start] ^= 1;
     let bytes = super::physical::encode(&bytes, limits()).unwrap();
     let store = MetadataStore::open(Cursor::new(bytes), identity(), limits()).unwrap();
-    let first = store.directory.iter().next().unwrap();
+    let first = store
+        .directory
+        .iter()
+        .min_by_key(|(_, entry)| entry.offset)
+        .unwrap();
     assert!(store.read_payload(first.1).is_err());
     let mut encoded = encoder();
     let missing = Ref::<Type>::anchor(&[b"missing"]);
@@ -757,7 +772,9 @@ fn dx15_self_contained_distribution_fixture_uses_a_valid_raw_zstd_frame() {
     assert_eq!(logical.len(), 120);
     let mut frame = vec![0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x78, 0xc1, 0x03, 0x00];
     frame.extend_from_slice(&logical);
-    frame.extend_from_slice(&[0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x00, 0x01, 0x00, 0x00]);
+    for _ in 0..2 {
+        frame.extend_from_slice(&[0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x00, 0x01, 0x00, 0x00]);
+    }
     let mut fixture = logical[..112].to_vec();
     fixture.extend_from_slice(&((128 + frame.len()) as u64).to_le_bytes());
     fixture.extend_from_slice(&120_u64.to_le_bytes());
@@ -778,4 +795,35 @@ fn dx15_payload_frame_is_demand_loaded_once_without_decoding_unrequested_records
     assert_eq!(store.decoded_count::<HirModule>(), 0);
     assert_eq!(first, get::<SemanticExports>(&store));
     assert_eq!(store.physical_payload_decode_us(), elapsed);
+}
+
+#[test]
+fn dx15_catalog_locality_preserves_authoritative_records_and_bounds() {
+    let store = store(encoder());
+    let module = get::<Module>(&store);
+    let catalog_time = store.physical_payload_decode_us();
+    assert!(catalog_time > 0);
+    let _ = get::<Text>(&store);
+    assert_eq!(
+        catalog_time,
+        store.physical_payload_decode_us(),
+        "module and name records share one physical frame"
+    );
+    assert_eq!(store.decoded_count::<SemanticExports>(), 0);
+    assert_eq!(store.decoded_count::<HirModule>(), 0);
+    assert_eq!(module, get::<Module>(&store));
+    let _ = get::<SemanticExports>(&store);
+    assert!(store.physical_payload_decode_us() > catalog_time);
+}
+
+#[test]
+fn dx15_empty_payload_frames_still_require_valid_decompression() {
+    let mut bytes = MetadataEncoder::new(identity(), limits()).finish().unwrap();
+    // Last frame declares zero content, but contains a nonempty raw block.
+    let end = bytes.len();
+    bytes[end - 3..].copy_from_slice(&[9, 0, 0]);
+    bytes.push(b'x');
+    let size = bytes.len() as u64;
+    bytes[112..120].copy_from_slice(&size.to_le_bytes());
+    assert!(MetadataStore::open_bytes(bytes, identity(), limits()).is_err());
 }

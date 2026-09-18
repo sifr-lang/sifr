@@ -18,13 +18,13 @@ elif sys.argv[1:3] == ["sysroot", "build-metadata"]:
         for part in (name.encode(), value):
             digest.update(len(part).to_bytes(8, "little"))
             digest.update(part)
-    logical = (b"SIFRMETA" + (3).to_bytes(4, "little") + bytes(4)
+    logical = (b"SIFRMETA" + (4).to_bytes(4, "little") + bytes(4)
                + bytes.fromhex(identity) + digest.digest()
                + hashlib.sha256(b"explicit-packaging-fixture-inputs").digest()
                + (120).to_bytes(8, "little"))
-    # A directory frame with one raw 120-byte block, then an empty payload frame.
+    # A directory frame with one raw 120-byte block, then two empty payload frames.
     # Fixtures stay self-contained and do not require a host compressor.
-    frame = bytes.fromhex("28b52ffd2078c10300") + logical + bytes.fromhex("28b52ffd2000010000")
+    frame = bytes.fromhex("28b52ffd2078c10300") + logical + bytes.fromhex("28b52ffd2000010000") * 2
     header = (logical[:112] + (128 + len(frame)).to_bytes(8, "little")
               + len(logical).to_bytes(8, "little") + frame)
     Path(arguments["--output"]).write_bytes(header)

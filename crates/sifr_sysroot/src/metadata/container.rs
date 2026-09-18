@@ -1,7 +1,7 @@
 use super::{BTreeMap, Digest, Record, RecordId, Ref, Result, Sha256, err};
 
 pub(crate) const MAGIC: &[u8; 8] = b"SIFRMETA";
-pub(crate) const VERSION: u32 = 3;
+pub(crate) const VERSION: u32 = 4;
 pub(crate) const HEADER_SIZE: usize = 120;
 pub(crate) const ENTRY_SIZE: usize = 92;
 pub(crate) const RECORD_FIXED_BOUND: u64 = 4096;
@@ -119,21 +119,37 @@ impl MetadataEncoder {
         bytes.extend_from_slice(&self.compatibility.semantic_target);
         bytes.extend_from_slice(&self.compatibility.stdlib_inputs);
         bytes.extend_from_slice(&total.to_le_bytes());
-        let mut offset = start as u64;
+        let catalog_bytes: u64 = self
+            .records
+            .values()
+            .filter(|(kind, _, _)| super::physical::payload_group(*kind) == 0)
+            .map(|(_, payload, _)| payload.len() as u64)
+            .sum();
+        let mut offsets = [start as u64, start as u64 + catalog_bytes];
         for (id, (kind, payload, _)) in &self.records {
             bytes.extend_from_slice(id);
             bytes.extend_from_slice(&kind.to_le_bytes());
             bytes.extend_from_slice(&0_u16.to_le_bytes());
             let len = payload.len() as u64;
+            let offset = &mut offsets[super::physical::payload_group(*kind)];
             bytes.extend_from_slice(&offset.to_le_bytes());
             bytes.extend_from_slice(&len.to_le_bytes());
             bytes.extend_from_slice(&(RECORD_FIXED_BOUND + len.saturating_mul(32)).to_le_bytes());
             bytes.extend_from_slice(&Sha256::digest(payload));
-            offset += len;
+            *offset += len;
         }
-        for (_, payload, _) in self.records.into_values() {
-            bytes.extend_from_slice(&payload);
+        // Canonical physical locality: module/name catalog first, all other
+        // records second; stable record-ID order is preserved within each group.
+        for group in 0..2 {
+            for (_, payload, _) in self
+                .records
+                .values()
+                .filter(|(kind, _, _)| super::physical::payload_group(*kind) == group)
+            {
+                bytes.extend_from_slice(payload);
+            }
         }
+        drop(self.records);
         super::physical::encode(&bytes, self.limits)
     }
 }
