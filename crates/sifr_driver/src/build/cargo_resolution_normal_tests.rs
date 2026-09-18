@@ -156,3 +156,29 @@ fn normal_seed_cache_identity_tracks_ordered_authorities_without_resetting_other
         None
     );
 }
+
+#[test]
+fn dx9_changed_authority_reseeds_a_reused_generated_root() {
+    let fixture = Fixture::new();
+    let policy = fixture.policy(PACKAGE_LOCK);
+    prepare_cargo_resolution(&fixture.0, &policy, &[]).expect("first seed");
+    let lock = fixture.0.join("Cargo.lock");
+    let generated = std::fs::read_to_string(&lock).expect("seed");
+    let retained = format!("# Cargo updated this generated root\n{generated}");
+    std::fs::write(&lock, &retained).expect("normal Cargo update");
+    prepare_cargo_resolution(&fixture.0, &policy, &[]).expect("same authority");
+    assert_eq!(
+        std::fs::read_to_string(&lock).expect("retained pins"),
+        retained
+    );
+    let changed = PACKAGE_LOCK.replace("0.10.0", "0.11.0");
+    std::fs::write(&policy.authoritative_locks[0], &changed).expect("new source selection");
+    prepare_cargo_resolution(&fixture.0, &policy, &[]).expect("reseed changed authority");
+    let actual = std::fs::read_to_string(&lock).expect("new generated selection");
+    assert!(actual.contains("0.11.0"));
+    assert!(!actual.contains("0.10.0"));
+    assert_eq!(
+        std::fs::read_to_string(&policy.authoritative_locks[0]).expect("source authority"),
+        changed
+    );
+}

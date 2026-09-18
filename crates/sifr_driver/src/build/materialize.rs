@@ -199,9 +199,10 @@ pub(super) fn materialize_cached_binary_project_with_report(
     let family = super::native_storage::NativeFamily::acquire(
         tools.identity(),
         &format!(
-            "{:?}:{}",
+            "{:?}:{}:{:?}",
             dependency_plan.cargo_vendor_mode,
-            dependency_plan.sysroot_root.display()
+            dependency_plan.sysroot_root.display(),
+            cargo_resolution.normal_seed_cache_fragment()
         ),
         &python_environment(&generated_project),
         &format!("{:?}", generated_project.interop.rust.trust_requirements),
@@ -291,9 +292,10 @@ pub(super) fn materialize_binary_project_at_path(
     let family = super::native_storage::NativeFamily::acquire(
         tools.identity(),
         &format!(
-            "{:?}:{}",
+            "{:?}:{}:{:?}",
             dependency_plan.cargo_vendor_mode,
-            dependency_plan.sysroot_root.display()
+            dependency_plan.sysroot_root.display(),
+            cargo_resolution.normal_seed_cache_fragment()
         ),
         &python_environment(&generated_project),
         &format!("{:?}", generated_project.interop.rust.trust_requirements),

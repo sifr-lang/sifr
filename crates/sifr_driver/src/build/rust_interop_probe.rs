@@ -109,8 +109,10 @@ pub(super) fn execute_direct_cargo_probe(
     let family = super::native_storage::NativeFamily::acquire(
         tools.identity(),
         &format!(
-            "{:?}:{:?}",
-            probe.cargo_resolution.cargo_vendor_mode, probe.sysroot_vendor_dir
+            "{:?}:{:?}:{:?}",
+            probe.cargo_resolution.cargo_vendor_mode,
+            probe.sysroot_vendor_dir,
+            probe.cargo_resolution.normal_seed_cache_fragment()
         ),
         "",
         if probe.trusted_sysroot {
