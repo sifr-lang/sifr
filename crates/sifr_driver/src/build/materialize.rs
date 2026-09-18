@@ -109,6 +109,11 @@ pub(super) fn materialize_binary_project_sources(
         let cargo_prefix_args = sysroot_cargo_config_args(&dependency_plan);
         let prepared_resolution =
             prepare_cargo_resolution(&local_project_path, cargo_resolution, &cargo_prefix_args)?;
+        super::portable_project::resolve_portable_local_root(
+            &local_project_path,
+            cargo_resolution,
+            &cargo_prefix_args,
+        )?;
         prepared_resolution.assert_unchanged()?;
         super::portable_project::prepare_portable_project_metadata(
             &local_project_path,

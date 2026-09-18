@@ -100,6 +100,41 @@ fn copy_tree(source: &Path, destination: &Path) -> Result<(), Vec<RenderedDiagno
     Ok(())
 }
 
+/// Normal mode may only seed a workspace lock. Resolve the generated local
+/// root before freezing sources, retaining Cargo's existing version pins.
+pub(super) fn resolve_portable_local_root(
+    project: &Path,
+    policy: &CargoResolutionPolicy,
+    cargo_prefix_args: &[String],
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    if policy.lock_mode != sifr_package::CargoLockMode::Normal {
+        return Ok(());
+    }
+    let mut command = policy.cargo_command()?;
+    command
+        .args(cargo_prefix_args)
+        .args(["metadata", "--format-version=1"])
+        .arg("--manifest-path")
+        .arg(project.join("Cargo.toml"));
+    super::cargo_invocation_trace::record_cargo_invocation(
+        "portable-resolution",
+        policy.lock_mode,
+        &command,
+    );
+    let output = crate::process_execution::output(&mut command).map_err(|error| {
+        vec![portable_error(format!(
+            "failed to resolve portable local root: {error}"
+        ))]
+    })?;
+    if !output.status.success() {
+        return Err(vec![portable_error(format!(
+            "failed to resolve portable local root: {}",
+            String::from_utf8_lossy(&output.stderr),
+        ))]);
+    }
+    Ok(())
+}
+
 pub(super) fn prepare_portable_project_metadata(
     project_path: &Path,
     project_name: &str,
@@ -499,6 +534,32 @@ mod tests {
                 .expect("render lock")
                 .contains("/private/host")
         );
+    }
+
+    #[test]
+    fn dx9_portable_normal_lock_is_resolved_before_freezing() {
+        let root = tempfile::tempdir().expect("owned fixture");
+        let project = root.path().join("project");
+        let dependency = root.path().join("dependency");
+        for path in [&project, &dependency] {
+            std::fs::create_dir_all(path.join("src")).expect("source directory");
+            std::fs::write(path.join("src/lib.rs"), "").expect("library");
+        }
+        std::fs::write(dependency.join("Cargo.toml"),
+            "[package]\nname = \"dx9_export_dependency\"\nversion = \"0.1.0\"\nedition = \"2024\"\n").expect("dependency manifest");
+        std::fs::write(project.join("Cargo.toml"),
+            "[package]\nname = \"dx9_export_root\"\nversion = \"0.1.0\"\nedition = \"2024\"\n[dependencies]\ndx9_export_dependency = { path = \"../dependency\" }\n").expect("root manifest");
+        std::fs::write(
+            project.join("Cargo.lock"),
+            "version = 4\n[[package]]\nname = \"unrelated_seed_root\"\nversion = \"0.1.0\"\n",
+        )
+        .expect("workspace seed");
+        resolve_portable_local_root(&project, &CargoResolutionPolicy::normal(), &[])
+            .expect("resolve actual generated root");
+        let lock = std::fs::read_to_string(project.join("Cargo.lock")).expect("resolved lock");
+        assert!(lock.contains("name = \"dx9_export_root\""));
+        assert!(lock.contains("name = \"dx9_export_dependency\""));
+        assert!(!lock.contains("unrelated_seed_root"));
     }
 
     #[test]
