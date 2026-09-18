@@ -1,4 +1,5 @@
 //! Driver-owned project storage behind the frontend's completed result contract.
+mod package_context;
 mod storage;
 #[cfg(test)]
 mod tests;
@@ -14,6 +15,21 @@ use std::{
     time::Instant,
 };
 
+/// The computation owner explicitly attests that no live external operation
+/// would be skipped by reusing this completed source result.
+pub struct CheckComputation {
+    pub diagnostics: Vec<RenderedDiagnostic>,
+    pub reusable: bool,
+}
+impl From<Vec<RenderedDiagnostic>> for CheckComputation {
+    fn from(diagnostics: Vec<RenderedDiagnostic>) -> Self {
+        Self {
+            diagnostics,
+            reusable: true,
+        }
+    }
+}
+
 #[derive(Debug, Default, serde::Serialize)]
 pub struct ProjectCacheReport {
     pub status: String,
@@ -22,23 +38,36 @@ pub struct ProjectCacheReport {
     pub captured_sources: usize,
     pub validation_us: u128,
     pub serialization_us: u128,
-    pub retained_bytes: usize,
+    pub payload_bytes: usize,
 }
 
-/// Saved-source CLI checks only. Package commands retain their live trust,
-/// component, schema, Python and native checks; no unresolved context is cached.
+/// Saved-source checks with a complete resolved context. Pure package graphs
+/// are supplied only after ordinary package resolution. Dynamic component,
+/// schema, Python and native contexts retain their live owner checks.
 pub fn check_saved_sources(
     compiler: &crate::CompilerContext,
     file: &Path,
     provider: &mut dyn SourceProvider,
     enabled: bool,
-    compute: impl FnOnce(&mut dyn SourceProvider) -> Vec<RenderedDiagnostic>,
+    package: Option<&crate::PackageEntrypoint>,
+    compute: impl FnOnce(&mut dyn SourceProvider) -> CheckComputation,
 ) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
     if !enabled {
         return (
-            compute(provider),
+            compute(provider).diagnostics,
             ProjectCacheReport {
                 status: "disabled".into(),
+                computed_checks: 1,
+                ..Default::default()
+            },
+        );
+    }
+    let package_context = package.map(package_context::identity);
+    if matches!(package_context, Some(None)) {
+        return (
+            compute(provider).diagnostics,
+            ProjectCacheReport {
+                status: "external-context".into(),
                 computed_checks: 1,
                 ..Default::default()
             },
@@ -58,13 +87,36 @@ pub fn check_saved_sources(
         }
     };
     let cwd = std::env::current_dir().unwrap_or_default();
+    let normalized_file = if let Some(package) = package {
+        let absolute = std::path::absolute(file).ok();
+        package
+            .source_map
+            .modules
+            .values()
+            .find(|module| std::path::absolute(&module.file_path).ok() == absolute)
+            .map(|module| module.file_path.clone())
+            .unwrap_or_else(|| file.to_path_buf())
+    } else {
+        file.to_path_buf()
+    };
+    let file = normalized_file.as_path();
+    let workspace = package
+        .and_then(|package| package.graph.packages.get(&package.package_id))
+        .map(|package| package.package_root.as_path())
+        .unwrap_or_else(|| {
+            file.parent()
+                .filter(|path| !path.as_os_str().is_empty())
+                .unwrap_or(Path::new("."))
+        });
     let inputs = SemanticInputs {
         compiler: compiler.identity().as_str().into(),
         metadata: metadata.metadata.metadata_id.clone(),
         target: format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS),
         workspace_and_source_policy: identity("saved-check-policy-v1", &(file.parent(), &cwd))
             .unwrap_or_default(),
-        package_and_lock: "manifestless-owner-v1".into(),
+        package_and_lock: package_context
+            .flatten()
+            .unwrap_or_else(|| "manifestless-owner-v1".into()),
         language_options: "ordinary-check-defaults-v1".into(),
         diagnostic_policy: "canonical-source-diagnostics-v1".into(),
         components: BTreeMap::new(),
@@ -73,6 +125,7 @@ pub fn check_saved_sources(
     };
     check(
         &crate::cache_storage::root(),
+        workspace,
         file,
         provider,
         inputs,
@@ -82,22 +135,19 @@ pub fn check_saved_sources(
 }
 fn check(
     cache: &Path,
+    workspace: &Path,
     file: &Path,
     provider: &mut dyn SourceProvider,
     inputs: SemanticInputs,
     cancel: &AtomicBool,
-    compute: impl FnOnce(&mut dyn SourceProvider) -> Vec<RenderedDiagnostic>,
+    compute: impl FnOnce(&mut dyn SourceProvider) -> CheckComputation,
 ) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
     let mut report = ProjectCacheReport::default();
     let validation = Instant::now();
-    let root = file
-        .parent()
-        .filter(|path| !path.as_os_str().is_empty())
-        .unwrap_or(Path::new("."));
     let store = inputs
         .identity()
         .ok()
-        .and_then(|context| storage::Store::open(cache, root, &context).ok());
+        .and_then(|context| storage::Store::open(cache, workspace, &context).ok());
     let mut capture = CapturingSourceProvider::new(provider);
     if let Some(store) = &store {
         if let Ok(Some(generation)) = store.latest() {
@@ -116,7 +166,7 @@ fn check(
                             .resolution
                             .ready()
                             .map_or(0, |resolution| resolution.sources.len());
-                        report.retained_bytes =
+                        report.payload_bytes =
                             serde_json::to_vec(&record).map_or(0, |bytes| bytes.len());
                         report.validation_us = validation.elapsed().as_micros();
                         return (diagnostics, report);
@@ -128,7 +178,8 @@ fn check(
     report.validation_us = validation.elapsed().as_micros();
     // Validation's captured bytes are reused by the actual checker. Publishing
     // replays observations against disk; edits during capture cannot be mislabeled.
-    let diagnostics = compute(&mut capture);
+    let computation = compute(&mut capture);
+    let diagnostics = computation.diagnostics;
     report.computed_checks = 1;
     report.captured_sources = capture.sources().len();
     report.status = if store.is_some() {
@@ -141,11 +192,15 @@ fn check(
         report.status = "cancelled".into();
         return (diagnostics, report);
     }
+    if !computation.reusable {
+        report.status = "external-context".into();
+        return (diagnostics, report);
+    }
     let serialization = Instant::now();
     if let Some(store) = &store {
         match CompletedCheck::capture(file, inputs, &capture, &diagnostics) {
             Ok(record) if capture.unchanged() => {
-                report.retained_bytes = serde_json::to_vec(&record).map_or(0, |bytes| bytes.len());
+                report.payload_bytes = serde_json::to_vec(&record).map_or(0, |bytes| bytes.len());
                 if store.publish(&record, cancel).is_ok() {
                     report.status = "published".into();
                 } else {

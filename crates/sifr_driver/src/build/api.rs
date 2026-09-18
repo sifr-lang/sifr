@@ -134,6 +134,32 @@ pub fn check_package_python_interop(
     entrypoint: &PackageEntrypoint,
     provider: &mut dyn SourceProvider,
 ) -> Result<PythonInteropCheckReport, Vec<RenderedDiagnostic>> {
+    check_package_python_interop_completion(compiler, entrypoint, provider)
+        .map(|(report, _)| report)
+}
+
+/// Completed package checking carries the actual generated interop demand. An
+/// empty package manifest alone cannot prove that imported stdlib calls need no
+/// live native probe, so persistence must use this owner-produced attestation.
+pub fn check_package_project_completion(
+    compiler: &crate::CompilerContext,
+    entrypoint: &PackageEntrypoint,
+    provider: &mut dyn SourceProvider,
+) -> crate::project_cache::CheckComputation {
+    match check_package_python_interop_completion(compiler, entrypoint, provider) {
+        Ok((_, reusable)) => crate::project_cache::CheckComputation {
+            diagnostics: Vec::new(),
+            reusable,
+        },
+        Err(diagnostics) => diagnostics.into(),
+    }
+}
+
+fn check_package_python_interop_completion(
+    compiler: &crate::CompilerContext,
+    entrypoint: &PackageEntrypoint,
+    provider: &mut dyn SourceProvider,
+) -> Result<(PythonInteropCheckReport, bool), Vec<RenderedDiagnostic>> {
     let project_plan = resolve_package_project_entrypoint_plan(compiler, entrypoint, provider)?;
     let diagnostics = project_plan.frontend_diagnostics();
     if !diagnostics.is_empty() {
@@ -141,7 +167,12 @@ pub fn check_package_python_interop(
     }
     let generated = project_plan
         .into_generated_binary_project_with_probe_policy(true, DirectProbePolicy::ExecuteAll)?;
-    Ok(super::python_check::python_interop_check_report(&generated))
+    let reusable = generated.interop == sifr_codegen::InteropBuildPlan::default()
+        && generated.python_runtime.is_none();
+    Ok((
+        super::python_check::python_interop_check_report(&generated),
+        reusable,
+    ))
 }
 
 pub fn check_single_file(

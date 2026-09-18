@@ -2066,7 +2066,7 @@ HIR/interface transport through the existing bounded driver metadata codec.
 Canonical diagnostic facts remap into current source maps. DX.13 now restores
 completed saved-source checking families through that frontend contract. The
 ordinary CLI keeps deeper HIR/editor/codegen families explicit and computes them
-when requested; dynamic package/SQL/Python contexts retain their live owner checks.
+when requested; pure resolved package graphs also reuse checking, while dynamic SQL/Python/native contexts retain their live owner checks.
 Driver-owned project generations inherit immutable records under OS leases,
 validate complete manifests, and publish atomically. Optional project storage
 failures preserve semantic results. `--no-incremental` disables this project

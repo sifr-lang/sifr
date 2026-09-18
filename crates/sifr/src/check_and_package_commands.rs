@@ -17,7 +17,7 @@ use sifr_driver::{
     BuildReport, CachedBinaryArtifact, CompileResult, MaterializedRustProjectReport,
     PackageEntrypoint, build_cached_project, build_cached_single_file,
     build_package_project_report, build_project_report, build_single_file_report,
-    check_package_project, check_project, check_single_file, compile, emit_project,
+    check_package_project_completion, check_project, check_single_file, compile, emit_project,
     materialize_package_project, materialize_project, materialize_single_file, run_tests,
 };
 use sifr_format::config::{EffectiveFormatConfig, FormatConfigOverrides, effective_format_config};
@@ -142,7 +142,23 @@ pub(super) fn cmd_check_package_file(
     };
     let errors = match run_with_panic_boundary(
         "internal compiler panic during package check command execution",
-        || check_package_project(&crate::compiler_context(), &entrypoint, provider),
+        || {
+            let compiler = crate::compiler_context();
+            let (enabled, timings) = crate::PROJECT_CACHE_OPTIONS
+                .get()
+                .copied()
+                .unwrap_or((true, false));
+            let (diagnostics, report) = sifr_driver::project_cache::check_saved_sources(
+                &compiler,
+                &entrypoint.main_file,
+                provider,
+                enabled,
+                Some(&entrypoint),
+                |provider| check_package_project_completion(&compiler, &entrypoint, provider),
+            );
+            render_project_cache_report(&report, timings);
+            diagnostics
+        },
     ) {
         Ok(errors) => errors,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -542,21 +558,32 @@ pub(super) fn check_entrypoint(
         file,
         provider,
         enabled,
-        |provider| match resolve_compilation_mode(file, provider) {
-            Err(errors) => errors,
-            Ok(CompilationMode::Project) => check_project(&compiler, file, provider),
-            Ok(CompilationMode::SingleFile) => {
-                let source = read_source(file, provider);
-                check_single_file(&compiler, &source, file)
-            }
+        None,
+        |provider| {
+            (match resolve_compilation_mode(file, provider) {
+                Err(errors) => errors,
+                Ok(CompilationMode::Project) => check_project(&compiler, file, provider),
+                Ok(CompilationMode::SingleFile) => {
+                    let source = read_source(file, provider);
+                    check_single_file(&compiler, &source, file)
+                }
+            })
+            .into()
         },
     );
+    render_project_cache_report(&report, timings);
+    diagnostics
+}
+
+fn render_project_cache_report(
+    report: &sifr_driver::project_cache::ProjectCacheReport,
+    timings: bool,
+) {
     if timings {
-        if let Ok(report) = serde_json::to_string(&report) {
+        if let Ok(report) = serde_json::to_string(report) {
             let _ = writeln!(io::stderr(), "[sifr-project-cache] {report}");
         }
     }
-    diagnostics
 }
 
 pub(super) fn emit_entrypoint(file: &Path, provider: &mut dyn SourceProvider) -> CompileResult {

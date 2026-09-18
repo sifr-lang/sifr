@@ -102,13 +102,17 @@ def run(binary, output, compiler_profile, source_root):
         workspace.chmod(0o700)
     report["cases"]["C04"] = "inaccessible optional project namespace and read-only hintless workspace preserve source result"
     # Exercise real import observations and canonical multi-module diagnostics.
-    (workspace / "sifr.toml").write_text('[source]\nroot = "."\n')
-    (workspace / "helper.sifr").write_text("def value() -> int:\n    return 4\n")
-    main.write_text("from helper import value\ndef main() -> None:\n    print(value())\n")
+    invoke("package-initialization", ["init", str(output / "package"), "--name", "dx13_package"])
+    workspace = output / "package"
+    main = workspace / "src/main.sifr"
+    helper = workspace / "src/helper.sifr"
+    helper.write_text("def value() -> int:\n    return 4\n")
+    main.write_text("from dx13_package.helper import value\ndef main() -> None:\n    print(value())\n")
+    args = ["--diagnostic-format", "json", "--timings", "check", "src/main.sifr"]
     project, _ = invoke("project-initial", args)
     project_hit, stats = invoke("project-restored", args)
     assert stats["restored_checks"] == 1 and project.diagnostics == project_hit.diagnostics
-    (workspace / "helper.sifr").write_text('def value() -> int:\n    return "bad"\n')
+    helper.write_text('def value() -> int:\n    return "bad"\n')
     changed, stats = invoke("project-edited-dependency", args, 1)
     assert stats["computed_checks"] == 1 and "SIFR-TYPE-0002" in json.dumps(changed.diagnostics)
     changed_hit, stats = invoke("project-edited-restored", args, 1)
@@ -117,6 +121,13 @@ def run(binary, output, compiler_profile, source_root):
     assert direct.diagnostics == changed.diagnostics
     report["cases"]["dependencies"] = "changed imported source invalidates and canonical diagnostics match"
     main.write_text(GOOD)
+    manifest = workspace / "sifr.toml"
+    pure_manifest = manifest.read_text()
+    manifest.write_text(pure_manifest + "\n[rust]\ndirect-crate-bindings = true\n")
+    _, stats = invoke("live-owner-context", args)
+    assert stats["status"] == "external-context" and stats["restored_checks"] == 0
+    manifest.write_text(pure_manifest)
+    report["cases"]["external_context"] = "changed native authority retains ordinary live checking"
     invoke("measurement-prepare", args)
     for sample in range(5):
         invoke(f"measured-fresh-{sample}", ["--no-incremental", *args])

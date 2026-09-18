@@ -37,11 +37,12 @@ fn compute(file: &Path, provider: &mut dyn SourceProvider) -> Vec<RenderedDiagno
 fn run(cache: &Path, file: &Path) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
     check(
         cache,
+        file.parent().unwrap(),
         file,
         &mut DiskSourceProvider::new(),
         context(),
         &AtomicBool::new(false),
-        |provider| compute(file, provider),
+        |provider| compute(file, provider).into(),
     )
 }
 fn fixture() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
@@ -220,6 +221,7 @@ fn dx13_p09_cancel_transient_and_changed_input() {
     let cancel = AtomicBool::new(false);
     let (_, report) = check(
         &cache,
+        file.parent().unwrap(),
         &file,
         &mut DiskSourceProvider::new(),
         context(),
@@ -227,13 +229,14 @@ fn dx13_p09_cancel_transient_and_changed_input() {
         |provider| {
             let result = compute(&file, provider);
             cancel.store(true, Ordering::Release);
-            result
+            result.into()
         },
     );
     assert_eq!(report.status, "cancelled");
     assert!(store(&cache, &file).latest().unwrap().is_none());
     let (_, report) = check(
         &cache,
+        file.parent().unwrap(),
         &file,
         &mut DiskSourceProvider::new(),
         context(),
@@ -241,12 +244,13 @@ fn dx13_p09_cancel_transient_and_changed_input() {
         |provider| {
             let result = compute(&file, provider);
             fs::write(&file, "def main() -> None:\n    pass\n").unwrap();
-            result
+            result.into()
         },
     );
     assert_eq!(report.status, "changed-inputs");
     let (_, report) = check(
         &cache,
+        file.parent().unwrap(),
         &file,
         &mut DiskSourceProvider::new(),
         context(),
@@ -257,6 +261,7 @@ fn dx13_p09_cancel_transient_and_changed_input() {
                 "temporary environment failure",
                 sifr_diagnostics::DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
             )]
+            .into()
         },
     );
     assert_eq!(report.status, "uncacheable");
@@ -405,4 +410,103 @@ fn dx13_c04_readonly_workspace_publishes_without_hint() {
     assert!(!file.parent().unwrap().join(".sifrbuildinfo").exists());
     assert_eq!(run(&cache, &file).1.restored_checks, 1);
     fs::set_permissions(file.parent().unwrap(), fs::Permissions::from_mode(0o700)).unwrap();
+}
+
+#[test]
+fn dx13_resolved_package_context_and_live_external_inventory() {
+    use sifr_package::{
+        CargoLockMode, CargoPackageId, PackageSourceMap, SifrManifest, SifrPackageGraph,
+        SifrPackageId, SifrPackageMetadata,
+    };
+    let (_root, file, _cache) = fixture();
+    let package_id = SifrPackageId("pure-fixture".into());
+    let cargo_package_id = CargoPackageId("pure-fixture".into());
+    let manifest_path = file.parent().unwrap().join("sifr.toml");
+    let manifest = SifrManifest::parse(
+        &cargo_package_id,
+        &manifest_path,
+        "[package]\nname = \"pure\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n",
+    )
+    .unwrap();
+    let package = SifrPackageMetadata {
+        package_id: package_id.clone(),
+        cargo_package_id,
+        cargo_package_name: "sifr-pure".into(),
+        cargo_version: "0.1.0".into(),
+        cargo_source: None,
+        package_root: file.parent().unwrap().into(),
+        sifr_manifest: manifest_path,
+        sifr_name: manifest.package_name.clone(),
+        manifest,
+        aliases: BTreeMap::new(),
+    };
+    let mut entry = crate::PackageEntrypoint {
+        main_file: file,
+        package_id: package_id.clone(),
+        graph: SifrPackageGraph {
+            packages: BTreeMap::from([(package_id.clone(), package)]),
+            cargo_edges: BTreeMap::new(),
+            direct_dependency_scopes: BTreeMap::new(),
+            backend_crates: BTreeMap::new(),
+            classifications: BTreeMap::new(),
+        },
+        source_map: PackageSourceMap::default(),
+        python_runtime: None,
+        lock_mode: CargoLockMode::Normal,
+    };
+    let first = package_context::identity(&entry).unwrap();
+    entry
+        .graph
+        .packages
+        .get_mut(&package_id)
+        .unwrap()
+        .manifest
+        .source_features
+        .insert("feature".into(), "module".into());
+    assert_ne!(package_context::identity(&entry).unwrap(), first);
+    entry
+        .graph
+        .packages
+        .get_mut(&package_id)
+        .unwrap()
+        .manifest
+        .python
+        .requires_imports
+        .push("live_environment".into());
+    assert!(package_context::identity(&entry).is_none());
+    entry
+        .graph
+        .packages
+        .get_mut(&package_id)
+        .unwrap()
+        .manifest
+        .python = Default::default();
+    entry
+        .graph
+        .packages
+        .get_mut(&package_id)
+        .unwrap()
+        .manifest
+        .rust
+        .direct_crate_bindings = true;
+    assert!(package_context::identity(&entry).is_none());
+}
+
+#[test]
+fn dx13_p09_completed_live_operation_stays_uncached() {
+    let (_root, file, cache) = fixture();
+    let (_, report) = check(
+        &cache,
+        file.parent().unwrap(),
+        &file,
+        &mut DiskSourceProvider::new(),
+        context(),
+        &AtomicBool::new(false),
+        |provider| CheckComputation {
+            diagnostics: compute(&file, provider),
+            reusable: false,
+        },
+    );
+    assert_eq!(report.status, "external-context");
+    assert!(store(&cache, &file).latest().unwrap().is_none());
 }

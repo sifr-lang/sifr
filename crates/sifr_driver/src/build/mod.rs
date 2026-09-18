@@ -85,8 +85,9 @@ mod workspace;
 pub use api::{
     build, build_cached_package_project, build_cached_project, build_cached_single_file,
     build_package_project_report, build_project, build_project_report, build_single_file_report,
-    check_package_project, check_package_python_interop, check_project, check_single_file,
-    emit_project, materialize_package_project, materialize_project, materialize_single_file,
+    check_package_project, check_package_project_completion, check_package_python_interop,
+    check_project, check_single_file, emit_project, materialize_package_project,
+    materialize_project, materialize_single_file,
 };
 #[doc(hidden)]
 pub use cargo_invocation_trace::{CargoInvocation, capture_cargo_invocations};

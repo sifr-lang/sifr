@@ -586,9 +586,14 @@ The existing bounded typed codec remains available to deeper consumers.
 `project_cache` is driver-owned storage; `persistence::CompletedCheck` is the
 frontend-owned completion, source-observation and canonical remapping authority.
 The ordinary saved-source CLI check calls the existing checker on a miss. It
-pins and validates required stdlib metadata before reuse. Package operations
-whose SQL/component/Python/native authorization is live remain uncached ordinary
-work, rather than declaring an incomplete external context complete.
+pins and validates required stdlib metadata before reuse. Pure package graphs also reuse completed checking after the ordinary package
+resolver runs. The complete resolved graph/source-map projections bind package,
+lock/feature selection, namespace and source inclusion inputs. A nonempty
+compiler-component, SQL, Python or native-backend inventory keeps the operation
+uncached, preserving live owner checks instead of declaring missing context complete.
+For otherwise eligible packages, the actual generated interop plan must also be
+empty before a successful check can be published. This owner-produced attestation
+prevents imported stdlib native demand from bypassing required live probes.
 
 Each canonical workspace/context has a serialized writer and immutable generation
 manifests naming content-bound records. Readers retain shared generation locks;
