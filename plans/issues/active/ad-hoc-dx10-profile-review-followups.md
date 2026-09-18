@@ -41,3 +41,33 @@ Self without must_use. Keep these for profile maintenance and the phase-end gate
 No profile code was changed by DX.12. Exact diagnostics and changed-line
 classification are retained in /home/yaser5/projects/sifr/dx12-evidence/
 lint-scope-report.json; the scan reports zero new/touched-line diagnostics.
+
+## F6 bounded DX.15 repair under qualification
+
+The original failed observation remains intact. A final-candidate comparison at
+`b46545b7541420302c9408588dc42ac2d8f777a9` also failed with the original
+two-directory harness: 6,634,776 → 6,644,400 bytes (+9,624). Its artifacts and
+failure are preserved in `dx15-evidence/<candidate>/binary-size-wrapper-fixed/`.
+
+Controlled attribution keeps the exact compiler/sysroot bytes, Sifr program,
+Rust toolchain and release profile, and changes physical locations independently.
+At one shared source/output/sysroot location, baseline and candidate produce
+byte-identical 6,603,136-byte native executables. Changing only the candidate
+sysroot location increases the whole file by 1,768 bytes. Native crate identities
+and retained debug/string sections depend on paths; different checkout/sysroot
+locations confound a compiler-size comparison.
+
+The harness now measures both real refs sequentially in one private detached
+checkout and one output location. It resolves both refs before switching and
+retains Cargo storage, explicit `--release`, and the unchanged whole-file
+non-increase assertion. No section is excluded, stripped or remapped and no
+tolerance is added. The actual repaired harness passes at 6,640,088 → 6,640,088
+bytes; both release Cargo profiles retain overflow checks. Synthetic harness
+controls separately prove that a one-byte increase rejects, equality/decrease
+pass, and source/output paths stay identical. These controls do not impersonate
+native measurements.
+
+Evidence is under `dx15-evidence/b46545b7541420302c9408588dc42ac2d8f777a9/`:
+`size-path-attribution/`, `binary-size-controlled/`, plus
+`dx15-evidence/size-tool-controls.log`. DX.15's final gate/review/merge record
+will bind the repair to the final candidate. Other followups remain separate.

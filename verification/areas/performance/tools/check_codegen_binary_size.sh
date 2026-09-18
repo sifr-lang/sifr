@@ -33,22 +33,19 @@ DEMO_PATH="${3:-demos/codegen_structural_passes/main.sifr}"
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
-git -C "$REPO_ROOT" cat-file -e "${BASE_REF}^{commit}" >/dev/null
-git -C "$REPO_ROOT" cat-file -e "${CANDIDATE_REF}^{commit}" >/dev/null
+BASE_SHA="$(git -C "$REPO_ROOT" rev-parse --verify "${BASE_REF}^{commit}")"
+CANDIDATE_SHA="$(git -C "$REPO_ROOT" rev-parse --verify "${CANDIDATE_REF}^{commit}")"
 
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sifr-size-check.XXXXXX")"
-BASE_WT="$TMP_DIR/base"
-CAND_WT="$TMP_DIR/candidate"
+WORKTREE="$TMP_DIR/checkout"
 
 cleanup() {
-  git -C "$REPO_ROOT" worktree remove --force "$BASE_WT" >/dev/null 2>&1 || true
-  git -C "$REPO_ROOT" worktree remove --force "$CAND_WT" >/dev/null 2>&1 || true
+  git -C "$REPO_ROOT" worktree remove --force "$WORKTREE" >/dev/null 2>&1 || true
   rm -rf "$TMP_DIR"
 }
 trap cleanup EXIT
 
-git -C "$REPO_ROOT" worktree add --detach "$BASE_WT" "$BASE_REF" >/dev/null
-git -C "$REPO_ROOT" worktree add --detach "$CAND_WT" "$CANDIDATE_REF" >/dev/null
+git -C "$REPO_ROOT" worktree add --detach "$WORKTREE" "$BASE_SHA" >/dev/null
 
 materialize_ruff_submodule() {
   local worktree="$1"
@@ -69,8 +66,7 @@ materialize_ruff_submodule() {
   git -C "$worktree" submodule update --init --recursive third_party/ruff >/dev/null
 }
 
-materialize_ruff_submodule "$BASE_WT"
-materialize_ruff_submodule "$CAND_WT"
+materialize_ruff_submodule "$WORKTREE"
 
 materialize_local_workspace_roots() {
   local worktree="$1"
@@ -80,13 +76,15 @@ materialize_local_workspace_roots() {
   mkdir -p "$worktree/verification/areas/algorithmic_compatibility/corpora/leetcode/src"
 }
 
-materialize_local_workspace_roots "$BASE_WT"
-materialize_local_workspace_roots "$CAND_WT"
+materialize_local_workspace_roots "$WORKTREE"
 
 measure_size() {
   local worktree="$1"
   local label="$2"
-  local out_dir="$TMP_DIR/out-$label"
+  # Paths affect native crate identity and retained debug/string sections.
+  # Keep source, sysroot and output locations identical for both real refs;
+  # retain the whole-file assertion and the explicit release profile.
+  local out_dir="$TMP_DIR/output"
 
   mkdir -p "$out_dir"
   (
@@ -111,8 +109,13 @@ measure_size() {
   fi
 }
 
-BASE_SIZE="$(measure_size "$BASE_WT" baseline)"
-CAND_SIZE="$(measure_size "$CAND_WT" candidate)"
+BASE_SIZE="$(measure_size "$WORKTREE" baseline)"
+# This detached checkout belongs solely to this invocation. Switching normally
+# preserves reusable Cargo storage and rejects conflicting source modifications.
+git -C "$WORKTREE" switch --detach "$CANDIDATE_SHA" >/dev/null
+materialize_ruff_submodule "$WORKTREE"
+materialize_local_workspace_roots "$WORKTREE"
+CAND_SIZE="$(measure_size "$WORKTREE" candidate)"
 DELTA=$((CAND_SIZE - BASE_SIZE))
 PCT="$(awk -v b="$BASE_SIZE" -v c="$CAND_SIZE" 'BEGIN { if (b == 0) { print "0.00" } else { printf "%.2f", ((c - b) / b) * 100 } }')"
 

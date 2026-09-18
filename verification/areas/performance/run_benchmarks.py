@@ -752,6 +752,9 @@ def invalidate_output(path: Path) -> None:
 
 
 def run_self_test() -> None:
+    from binary_size_tool_tests import run_self_test as run_size_tool_tests
+
+    run_size_tool_tests()
     from reference_profile_tests import run_self_test as run_reference_tests
 
     from compiler_lane_tests import run_self_test as run_lane_tests
