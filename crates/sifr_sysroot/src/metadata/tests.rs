@@ -298,31 +298,28 @@ fn m06_header_index_payload_and_reference_fuzz_seeds_fail_closed() {
                 .is_err()
         );
     }
-    for offset in [
-        0,
-        8,
-        12,
-        16,
-        48,
-        80,
-        112,
-        120 + 32,
-        120 + 34,
-        120 + 36,
-        120 + 44,
-        120 + 52,
-    ] {
+    for offset in [0, 8, 12, 16, 48, 80, 112, 120] {
         let mut bytes = original.clone();
         bytes[offset] ^= 0xff;
+        assert!(MetadataStore::open(Cursor::new(bytes), identity(), limits()).is_err());
+    }
+    let logical = super::physical::decode(&original, identity(), limits())
+        .unwrap()
+        .into_inner();
+    for offset in [120 + 32, 120 + 34, 120 + 36, 120 + 44, 120 + 52] {
+        let mut bytes = logical.clone();
+        bytes[offset] ^= 0xff;
+        let bytes = super::physical::encode(&bytes, limits()).unwrap();
         assert!(
             MetadataStore::open(Cursor::new(bytes), identity(), limits()).is_err(),
             "offset {offset}"
         );
     }
-    let mut bytes = original.clone();
+    let mut bytes = logical;
     let count = u32::from_le_bytes(bytes[12..16].try_into().unwrap()) as usize;
     let start = 120 + count * 92;
     bytes[start] ^= 1;
+    let bytes = super::physical::encode(&bytes, limits()).unwrap();
     let store = MetadataStore::open(Cursor::new(bytes), identity(), limits()).unwrap();
     let first = store.directory.iter().next().unwrap();
     assert!(store.read_payload(first.1).is_err());
@@ -445,11 +442,10 @@ fn i05_indexed_file_relocation_and_separate_store_owners_preserve_identity() {
     std::fs::remove_dir(root).unwrap();
 }
 
-fn replace_payload(
-    mut bytes: Vec<u8>,
-    id: RecordId,
-    replacement: impl FnOnce(&mut [u8]),
-) -> Vec<u8> {
+fn replace_payload(bytes: Vec<u8>, id: RecordId, replacement: impl FnOnce(&mut [u8])) -> Vec<u8> {
+    let mut bytes = super::physical::decode(&bytes, identity(), limits())
+        .unwrap()
+        .into_inner();
     let count = u32::from_le_bytes(bytes[12..16].try_into().unwrap()) as usize;
     let index = (0..count)
         .map(|i| 120 + i * 92)
@@ -466,7 +462,7 @@ fn replace_payload(
     replacement(&mut bytes[start..start + len]);
     let digest = Sha256::digest(&bytes[start..start + len]);
     bytes[index + 60..index + 92].copy_from_slice(&digest);
-    bytes
+    super::physical::encode(&bytes, limits()).unwrap()
 }
 #[test]
 fn m06_checks_corrupt_reference_ids_even_when_payload_digest_matches() {
@@ -625,11 +621,14 @@ fn bounded_retention_evicts_only_unreferenced_records() {
         );
     }
     let bytes = encoder.finish().unwrap();
-    let count = u32::from_le_bytes(bytes[12..16].try_into().unwrap()) as usize;
+    let logical = super::physical::decode(&bytes, identity(), limits())
+        .unwrap()
+        .into_inner();
+    let count = u32::from_le_bytes(logical[12..16].try_into().unwrap()) as usize;
     let maximum = (0..count)
         .map(|i| {
             u64::from_le_bytes(
-                bytes[120 + i * 92 + 52..120 + i * 92 + 60]
+                logical[120 + i * 92 + 52..120 + i * 92 + 60]
                     .try_into()
                     .unwrap(),
             )
@@ -714,4 +713,54 @@ fn dx8_portable_digest_preserves_semantic_payload_changes() {
     };
     assert_ne!(digest("declaration-a"), digest("declaration-b"));
     assert_eq!(digest("declaration-a"), digest("declaration-a"));
+}
+
+#[test]
+fn dx15_physical_frames_are_bounded_single_and_versioned() {
+    let original = encoder().finish().unwrap();
+    for expanded in [0_u64, 119, u64::MAX, limits().file_bytes + 1] {
+        let mut bytes = original.clone();
+        bytes[120..128].copy_from_slice(&expanded.to_le_bytes());
+        assert!(MetadataStore::open(Cursor::new(bytes), identity(), limits()).is_err());
+    }
+    for suffix in [vec![0], original[128..].to_vec()] {
+        let mut bytes = original.clone();
+        bytes.extend_from_slice(&suffix);
+        let size = bytes.len() as u64;
+        bytes[112..120].copy_from_slice(&size.to_le_bytes());
+        assert!(MetadataStore::open(Cursor::new(bytes), identity(), limits()).is_err());
+    }
+    let mut old = original.clone();
+    old[8..12].copy_from_slice(&1_u32.to_le_bytes());
+    assert!(MetadataStore::open(Cursor::new(old), identity(), limits()).is_err());
+    let logical = super::physical::decode(&original, identity(), limits())
+        .unwrap()
+        .into_inner();
+    assert_eq!(
+        super::physical::encode(&logical, limits()).unwrap(),
+        original
+    );
+    let mut undersized = original.clone();
+    undersized[120..128].copy_from_slice(&((logical.len() - 1) as u64).to_le_bytes());
+    assert!(MetadataStore::open(Cursor::new(undersized), identity(), limits()).is_err());
+    let mut oversized = original;
+    oversized[120..128].copy_from_slice(&((logical.len() + 1) as u64).to_le_bytes());
+    assert!(MetadataStore::open(Cursor::new(oversized), identity(), limits()).is_err());
+}
+
+#[test]
+fn dx15_self_contained_distribution_fixture_uses_a_valid_raw_zstd_frame() {
+    let encoded = MetadataEncoder::new(identity(), limits()).finish().unwrap();
+    let logical = super::physical::decode(&encoded, identity(), limits())
+        .unwrap()
+        .into_inner();
+    assert_eq!(logical.len(), 120);
+    let mut frame = vec![0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x78, 0xc1, 0x03, 0x00];
+    frame.extend_from_slice(&logical);
+    let mut fixture = logical[..112].to_vec();
+    fixture.extend_from_slice(&((128 + frame.len()) as u64).to_le_bytes());
+    fixture.extend_from_slice(&120_u64.to_le_bytes());
+    fixture.extend_from_slice(&frame);
+    let store = MetadataStore::open_bytes(fixture, identity(), limits()).unwrap();
+    assert_eq!(store.retained_records().unwrap(), 0);
 }

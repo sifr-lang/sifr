@@ -7,6 +7,90 @@ use sifr_frontend::SourceProvider;
 use std::path::PathBuf;
 
 impl PackageSession {
+    /// Prove that an explicit file belongs only to a source workspace, not a
+    /// Cargo package. Virtual-workspace members do not own such a file.
+    /// Uncertain ownership remains on the ordinary package-resolution path.
+    pub fn standalone_file_in_virtual_workspace(
+        cwd: &std::path::Path,
+        file: &std::path::Path,
+        provider: &mut impl SourceProvider,
+    ) -> bool {
+        let Some(manifest) = super::session_discovery::find_manifest(cwd, provider) else {
+            return false;
+        };
+        let Some(root) = manifest.parent() else {
+            return false;
+        };
+        let table = |text: &str| text.parse::<toml::Table>().ok();
+        let Ok(source) = provider.read_file(&manifest) else {
+            return false;
+        };
+        let Some(config) = table(source.as_str()) else {
+            return false;
+        };
+        // These source-workspace fields carry no package backend, component,
+        // Python or dependency authority. Other configurations resolve normally.
+        if config
+            .keys()
+            .any(|key| !matches!(key.as_str(), "package" | "source"))
+        {
+            return false;
+        }
+        let Some(package) = config.get("package").and_then(toml::Value::as_table) else {
+            return false;
+        };
+        if package.keys().any(|key| {
+            !matches!(
+                key.as_str(),
+                "name" | "version" | "edition" | "sifr-version"
+            )
+        }) {
+            return false;
+        }
+        let id = super::session_discovery::session_cargo_id(root);
+        let Ok(source_manifest) = crate::SifrManifest::load(&id, &manifest, provider) else {
+            return false;
+        };
+        let Ok(source_root) = provider.canonicalize(&root.join(&source_manifest.source_root.0))
+        else {
+            return false;
+        };
+        let Ok(cargo) = provider.read_file(&root.join("Cargo.toml")) else {
+            return false;
+        };
+        let Some(cargo) = table(cargo.as_str()) else {
+            return false;
+        };
+        if cargo.contains_key("package")
+            || !cargo.get("workspace").is_some_and(toml::Value::is_table)
+        {
+            return false;
+        }
+        let (Ok(root), Ok(file)) = (provider.canonicalize(root), provider.canonicalize(file))
+        else {
+            return false;
+        };
+        if !file.starts_with(&root) || !file.starts_with(&source_root) {
+            return false;
+        }
+        let Some(parent) = file.parent() else {
+            return false;
+        };
+        for directory in parent.ancestors() {
+            if directory == root {
+                return true;
+            }
+            // A nested Cargo or Sifr manifest may carry actual package/source
+            // authority. Do not infer its absence from workspace membership.
+            if provider.is_file(&directory.join("Cargo.toml"))
+                || provider.is_file(&directory.join("sifr.toml"))
+            {
+                return false;
+            }
+        }
+        false
+    }
+
     #[must_use]
     pub fn package_id(&self, graph: &crate::SifrPackageGraph) -> Option<crate::SifrPackageId> {
         let manifest_path = self.manifest_path.as_ref()?;

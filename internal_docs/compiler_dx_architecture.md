@@ -183,6 +183,20 @@ Produce one indexed `stdlib.sifrmeta` for each required compiler/target-semantic
 
 The container is a private compiler format with a magic/header, explicit schema version, compatibility IDs, and a small bounded directory of sections. Directory entries contain section kind, module/record identity, offset, encoded size, decoded-size limit, and payload digest. Use fixed-width integer encodings for container offsets and a deterministic, bounded record codec. The existing `postcard` transport may encode explicit records; do not derive serialization over the entire live HIR graph merely because the serializer permits it.
 
+DX.15 physical format version 2 keeps the compatibility header and uses one
+bounded Zstandard frame for the indexed logical container. The clear outer
+compatibility header must equal its decoded counterpart. The outer header
+binds both physical and expanded lengths; each must fit the configured file
+limit before allocation. The reader rejects old versions, extra frames, trailing
+bytes, mismatched expansion lengths and invalid directory bounds. It verifies
+the entire installed artifact digest before opening it, then preserves record
+digests, canonical JSON records and all semantic/graph checks on demand.
+Physical decompression is measured separately from index construction and does
+not materialize semantic, type, HIR or Rust payload records. The validated sorted
+directory uses contiguous entries with binary search, avoiding per-entry tree
+allocation at startup. This private format has no compatibility fallback.
+
+
 | Section | Required content |
 | --- | --- |
 | Module/declaration directory | Complete public/private module inventory, canonical exports/re-exports and stable IDs |

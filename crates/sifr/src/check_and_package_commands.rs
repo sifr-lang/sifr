@@ -37,6 +37,16 @@ pub(super) fn cmd_check(
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
     let mut provider = DiskSourceProvider::new();
+    if lock_mode == sifr_package::CargoLockMode::Normal
+        && let (Some(file), Ok(cwd)) = (file, std::env::current_dir())
+        && sifr_package::PackageSession::standalone_file_in_virtual_workspace(
+            &cwd,
+            file,
+            &mut provider,
+        )
+    {
+        return cmd_check_file(file, diagnostic_format, &mut provider);
+    }
     let session = match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) => session,
         Err(error) => {

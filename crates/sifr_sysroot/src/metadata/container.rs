@@ -1,7 +1,7 @@
 use super::{BTreeMap, Digest, Record, RecordId, Ref, Result, Sha256, err};
 
 pub(crate) const MAGIC: &[u8; 8] = b"SIFRMETA";
-pub(crate) const VERSION: u32 = 1;
+pub(crate) const VERSION: u32 = 2;
 pub(crate) const HEADER_SIZE: usize = 120;
 pub(crate) const ENTRY_SIZE: usize = 92;
 pub(crate) const RECORD_FIXED_BOUND: u64 = 4096;
@@ -134,6 +134,6 @@ impl MetadataEncoder {
         for (_, payload, _) in self.records.into_values() {
             bytes.extend_from_slice(&payload);
         }
-        Ok(bytes)
+        super::physical::encode(&bytes, self.limits)
     }
 }

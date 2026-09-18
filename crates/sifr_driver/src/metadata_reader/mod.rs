@@ -79,8 +79,8 @@ pub fn decode_project_results(
     artifact: &crate::metadata_producer::ProjectTypedArtifact,
     compatibility: wire::Compatibility,
 ) -> Result<std::collections::BTreeMap<String, (sifr_ir::HirModule, sifr_lowering::ExternalDefs)>> {
-    let store = wire::MetadataStore::open(
-        std::io::Cursor::new(artifact.bytes.clone()),
+    let store = wire::MetadataStore::open_bytes(
+        artifact.bytes.clone(),
         compatibility,
         wire::Limits::default(),
     )?;

@@ -404,8 +404,8 @@ fn dx8_m05_full_decoded_projection_preserves_canonical_records() {
         std::fs::copy(&provider.metadata.path, path.join("original.sifrmeta")).unwrap();
         std::fs::write(path.join("reencoded.sifrmeta"), &bytes).unwrap();
     }
-    let restored = wire::MetadataStore::open(
-        std::io::Cursor::new(bytes),
+    let restored = wire::MetadataStore::open_bytes(
+        bytes,
         provider.metadata.compatibility,
         wire::Limits::default(),
     )

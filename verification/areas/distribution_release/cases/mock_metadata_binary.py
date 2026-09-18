@@ -18,10 +18,15 @@ elif sys.argv[1:3] == ["sysroot", "build-metadata"]:
         for part in (name.encode(), value):
             digest.update(len(part).to_bytes(8, "little"))
             digest.update(part)
-    header = (b"SIFRMETA" + (1).to_bytes(4, "little") + bytes(4)
-              + bytes.fromhex(identity) + digest.digest()
-              + hashlib.sha256(b"explicit-packaging-fixture-inputs").digest()
-              + (120).to_bytes(8, "little"))
+    logical = (b"SIFRMETA" + (2).to_bytes(4, "little") + bytes(4)
+               + bytes.fromhex(identity) + digest.digest()
+               + hashlib.sha256(b"explicit-packaging-fixture-inputs").digest()
+               + (120).to_bytes(8, "little"))
+    # One valid Zstandard frame containing a final 120-byte raw block.
+    # Fixtures stay self-contained and do not require a host compressor.
+    frame = bytes.fromhex("28b52ffd2078c10300") + logical
+    header = (logical[:112] + (128 + len(frame)).to_bytes(8, "little")
+              + len(logical).to_bytes(8, "little") + frame)
     Path(arguments["--output"]).write_bytes(header)
     print(json.dumps({"compiler_identity": identity, "semantic_target": target,
                       "metadata_id": hashlib.sha256(header).hexdigest()}))

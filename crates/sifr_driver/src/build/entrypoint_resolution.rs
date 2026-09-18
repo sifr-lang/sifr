@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 pub(super) fn package_cargo_resolution_policy(
     entrypoint: Option<&PackageEntrypoint>,
     stdlib: &StdlibCompiled,
+    prepare_native: bool,
 ) -> CargoResolutionPolicy {
     let mut authoritative_locks = Vec::new();
     let mut trusted_vendor_dirs = Vec::new();
@@ -38,13 +39,17 @@ pub(super) fn package_cargo_resolution_policy(
     }
     CargoResolutionPolicy {
         application_profile: crate::ApplicationProfile::Development,
-        native_toolchain: entrypoint
-            .and_then(|entrypoint| entrypoint.graph.packages.get(&entrypoint.package_id))
-            .map_or_else(CargoResolutionPolicy::resolve_native_toolchain, |package| {
-                sifr_sysroot::NativeToolchain::resolve_at(&package.package_root).map(|tools| {
-                    tools.with_declared_environment(package.manifest.trust.build_env.clone())
+        native_toolchain: if prepare_native {
+            entrypoint
+                .and_then(|entrypoint| entrypoint.graph.packages.get(&entrypoint.package_id))
+                .map_or_else(CargoResolutionPolicy::resolve_native_toolchain, |package| {
+                    sifr_sysroot::NativeToolchain::resolve_at(&package.package_root).map(|tools| {
+                        tools.with_declared_environment(package.manifest.trust.build_env.clone())
+                    })
                 })
-            }),
+        } else {
+            Err("native policy was not requested by this frontend-only check".to_owned())
+        },
         lock_mode: entrypoint.map_or(sifr_package::CargoLockMode::Locked, |entrypoint| {
             entrypoint.lock_mode
         }),

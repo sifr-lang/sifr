@@ -53,11 +53,7 @@ fn validate(
 ) -> Result<Arc<PreparedMetadata>> {
     let bytes = read_bounded(path)?;
     let metadata_id = sifr_sysroot::sha256_hex(&bytes);
-    let store = wire::MetadataStore::open(
-        std::io::Cursor::new(bytes),
-        expected,
-        wire::Limits::default(),
-    )?;
+    let store = wire::MetadataStore::open_bytes(bytes, expected, wire::Limits::default())?;
     store.validate_complete()?;
     store.release_unpinned()?;
     Ok(Arc::new(PreparedMetadata {
@@ -335,11 +331,7 @@ pub(crate) fn open_consumer(
     }
     let indexing = Instant::now();
     let input_bytes = bytes.len();
-    let store = wire::MetadataStore::open(
-        std::io::Cursor::new(bytes),
-        compatibility,
-        wire::Limits::default(),
-    )?;
+    let store = wire::MetadataStore::open_bytes(bytes, compatibility, wire::Limits::default())?;
     Ok(Arc::new(PreparedMetadata {
         path: path.to_owned(),
         metadata_id,
@@ -347,7 +339,8 @@ pub(crate) fn open_consumer(
         production_seconds: None,
         load_timings: Some(serde_json::json!({
             "read_us": read_us, "hash_us": hash_us,
-            "index_us": indexing.elapsed().as_micros(), "input_bytes": input_bytes,
+            "index_us": indexing.elapsed().as_micros().saturating_sub(store.physical_decode_us()),
+            "physical_decode_us": store.physical_decode_us(), "input_bytes": input_bytes,
             "total_us": started.elapsed().as_micros()
         })),
         store,

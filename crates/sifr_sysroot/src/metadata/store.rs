@@ -17,7 +17,8 @@ struct Retained {
 /// source-bootstrap fallback. Separate stores never share decoded nominal owners.
 pub struct MetadataStore {
     input: Mutex<Box<dyn MetadataRead>>,
-    pub(super) directory: BTreeMap<RecordId, Entry>,
+    pub(super) directory: super::directory::Directory,
+    physical_decode_us: u128,
     retained: Mutex<Retained>,
     pub(super) limits: Limits,
     compatibility: Compatibility,
@@ -30,6 +31,31 @@ impl MetadataStore {
         expected: Compatibility,
         limits: Limits,
     ) -> Result<Self> {
+        let size = input.seek(SeekFrom::End(0)).map_err(|e| io_error(&e))?;
+        if size > limits.file_bytes {
+            return Err(err("physical size outside bounded container limits"));
+        }
+        input.seek(SeekFrom::Start(0)).map_err(|e| io_error(&e))?;
+        let mut bytes = Vec::new();
+        input
+            .take(size.saturating_add(1))
+            .read_to_end(&mut bytes)
+            .map_err(|e| io_error(&e))?;
+        if bytes.len() as u64 != size {
+            return Err(err("physical input changed while reading"));
+        }
+        Self::open_bytes(bytes, expected, limits)
+    }
+
+    /// Open already captured immutable bytes without copying the compressed body.
+    /// This uses the same bounded decoder as the read/seek adapter.
+    pub fn open_bytes(input: Vec<u8>, expected: Compatibility, limits: Limits) -> Result<Self> {
+        let started = std::time::Instant::now();
+        let decoded = super::physical::decode(&input, expected, limits)?;
+        // Release captured compressed bytes before allocating the decoded directory.
+        drop(input);
+        let mut input = decoded;
+        let physical_decode_us = started.elapsed().as_micros();
         let size = input.seek(SeekFrom::End(0)).map_err(|e| io_error(&e))?;
         if size < HEADER_SIZE as u64 || size > limits.file_bytes {
             return Err(err("file size outside bounded container limits"));
@@ -63,7 +89,7 @@ impl MetadataStore {
         if start > size {
             return Err(err("truncated directory"));
         }
-        let mut directory = BTreeMap::new();
+        let mut directory = Vec::with_capacity(count as usize);
         let mut next = start;
         let mut previous = None;
         for _ in 0..count {
@@ -104,14 +130,15 @@ impl MetadataStore {
             if next > size {
                 return Err(err("payload outside file bounds"));
             }
-            directory.insert(id, entry);
+            directory.push((id, entry));
         }
         if next != size {
             return Err(err("unindexed trailing bytes"));
         }
         Ok(Self {
             input: Mutex::new(Box::new(input)),
-            directory,
+            directory: super::directory::Directory(directory),
+            physical_decode_us,
             retained: Mutex::new(Retained {
                 bytes: 0,
                 records: BTreeMap::new(),
@@ -126,6 +153,11 @@ impl MetadataStore {
                 .collect(),
         })
     }
+    #[must_use]
+    pub fn physical_decode_us(&self) -> u128 {
+        self.physical_decode_us
+    }
+
     /// Enumerate the small typed directory without reading record payloads.
     pub fn record_refs<T: Record>(&self) -> impl Iterator<Item = Ref<T>> + '_ {
         self.directory

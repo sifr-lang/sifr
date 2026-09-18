@@ -68,12 +68,13 @@ def validate_metadata(metadata: bytes, descriptor: dict, binary_digest: str, tar
         raise ValueError("metadata semantic target does not match the package")
     if descriptor["compiler_binary_sha256"] != binary_digest:
         raise ValueError("metadata descriptor does not bind the packaged compiler bytes")
-    if not 120 <= len(metadata) <= 256 * 1024 * 1024 or metadata[:8] != b"SIFRMETA":
+    if not 128 <= len(metadata) <= 256 * 1024 * 1024 or metadata[:8] != b"SIFRMETA":
         raise ValueError("missing or invalid bounded metadata container")
-    if int.from_bytes(metadata[8:12], "little") != 1 or int.from_bytes(metadata[112:120], "little") != len(metadata):
+    if int.from_bytes(metadata[8:12], "little") != 2 or int.from_bytes(metadata[112:120], "little") != len(metadata):
         raise ValueError("incompatible or incomplete metadata container")
     count = int.from_bytes(metadata[12:16], "little")
-    if count > 200_000 or 120 + count * 92 > len(metadata):
+    expanded = int.from_bytes(metadata[120:128], "little")
+    if not 120 <= expanded <= 256 * 1024 * 1024 or count > 200_000 or 120 + count * 92 > expanded:
         raise ValueError("metadata directory exceeds its bounded container")
     for field, start in (("compiler_identity", 16), ("semantic_target_id", 48), ("stdlib_inputs_id", 80)):
         if metadata[start:start + 32].hex() != descriptor[field]:

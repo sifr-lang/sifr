@@ -150,23 +150,39 @@ pub(crate) fn compile_single_file_entrypoint_with_metadata_and_options(
     resolve_single_file_metadata(codegen_result, rust_interop_context, &stdlib.interop)
 }
 
+/// Frontend-only checks never consume the native policy. Actual package checks
+/// retain their existing native/package authority and every backend entrypoint
+/// still resolves tools before doing native work.
+pub(crate) fn check_frontend_entrypoint(
+    compiler: &crate::CompilerContext,
+    entrypoint: RootedEntrypoint<'_>,
+) -> Vec<RenderedDiagnostic> {
+    let prepare_native = matches!(&entrypoint, RootedEntrypoint::PackageProject { .. });
+    match RootedEntrypointPlan::from_entrypoint_with_stages(
+        compiler,
+        entrypoint,
+        &mut Vec::new(),
+        prepare_native,
+    ) {
+        Ok((plan, _, _)) => plan.frontend_diagnostics(),
+        Err(errors) => errors,
+    }
+}
+
 pub(crate) fn check_single_file_entrypoint(
     compiler: &crate::CompilerContext,
     source: &str,
     entrypoint_file: &Path,
 ) -> Vec<RenderedDiagnostic> {
     let display_path = entrypoint_file.to_string_lossy();
-    match RootedEntrypointPlan::from_entrypoint(
+    check_frontend_entrypoint(
         compiler,
         RootedEntrypoint::SingleFile {
             source,
             display_path: &display_path,
             lowering_options: LoweringOptions::default(),
         },
-    ) {
-        Ok(plan) => plan.frontend_diagnostics(),
-        Err(errors) => errors,
-    }
+    )
 }
 
 pub(crate) fn resolve_project_entrypoint_plan(
@@ -226,7 +242,7 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
     let total_start = Instant::now();
     let mut stages = Vec::new();
     let (plan, mode, entrypoint_path) =
-        RootedEntrypointPlan::from_entrypoint_with_stages(compiler, entrypoint, &mut stages)?;
+        RootedEntrypointPlan::from_entrypoint_with_stages(compiler, entrypoint, &mut stages, true)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
     let query_signatures = plan.query_signature_artifact()?;
     let cargo_resolution = plan.cargo_resolution.clone();
@@ -361,7 +377,7 @@ fn build_cached_rooted_entrypoint_binary(
     let total_start = Instant::now();
     let mut stages = Vec::new();
     let (plan, mode, entrypoint_path) =
-        RootedEntrypointPlan::from_entrypoint_with_stages(compiler, entrypoint, &mut stages)?;
+        RootedEntrypointPlan::from_entrypoint_with_stages(compiler, entrypoint, &mut stages, true)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
     let cargo_resolution = plan.cargo_resolution.clone();
     let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
@@ -422,7 +438,7 @@ impl RootedEntrypointPlan {
         entrypoint: RootedEntrypoint<'_>,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let mut stages = Vec::new();
-        Self::from_entrypoint_with_stages(compiler, entrypoint, &mut stages)
+        Self::from_entrypoint_with_stages(compiler, entrypoint, &mut stages, true)
             .map(|(plan, _mode, _entrypoint_path)| plan)
     }
 
@@ -430,6 +446,7 @@ impl RootedEntrypointPlan {
         compiler: &crate::CompilerContext,
         entrypoint: RootedEntrypoint<'_>,
         stages: &mut Vec<BuildStageReport>,
+        prepare_native: bool,
     ) -> Result<(Self, BuildCompilationMode, PathBuf), Vec<RenderedDiagnostic>> {
         let mode = entrypoint.build_mode();
         let entrypoint_path = entrypoint.display_path();
@@ -448,6 +465,7 @@ impl RootedEntrypointPlan {
         let mut cargo_resolution = super::entrypoint_resolution::package_cargo_resolution_policy(
             package_entrypoint,
             &stdlib,
+            prepare_native,
         );
         cargo_resolution.application_profile = compiler.application_profile();
         let resolved = match entrypoint {
