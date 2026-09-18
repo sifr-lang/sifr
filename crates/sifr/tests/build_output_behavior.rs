@@ -440,13 +440,17 @@ fn dx10_b11_default_build_and_run_report_development() {
 
 #[test]
 fn dx10_b05_unrelated_cargo_manifest_cannot_override_applications() {
-    let project = TestProject::new("unrelated-profile", "def main():\n    print(42)\n");
+    let project = TestProject::new(
+        "unrelated-profile",
+        "from sifr.html import escape\ndef main():\n    assert escape(\"<tag>\") == \"&lt;tag&gt;\"\n    print(42)\n",
+    );
+    let cache = project.root.join("cache").to_string_lossy().into_owned();
     let main = project.main.to_string_lossy();
     let tests = project.root.join("tests");
     std::fs::create_dir(&tests).expect("test source directory");
     std::fs::write(
         tests.join("test_profile.sifr"),
-        "def test_profile():\n    assert 2 + 2 == 4\n",
+        "from sifr.html import escape\ndef test_profile():\n    assert escape(\"<tag>\") == \"&lt;tag&gt;\"\n",
     )
     .expect("test source");
     let tests = tests.to_string_lossy();
@@ -462,7 +466,8 @@ fn dx10_b05_unrelated_cargo_manifest_cannot_override_applications() {
             vec!["test", &tests],
             vec!["test", &tests, "--release"],
         ] {
-            let capture = run_sifr_with_env(&arguments, &project.root, &[]);
+            let capture =
+                run_sifr_with_env(&arguments, &project.root, &[("SIFR_CACHE_DIR", &cache)]);
             assert_eq!(capture.status_code, 0, "{}", capture.stderr);
             if arguments[0] == "run" {
                 assert_eq!(capture.stdout, "42\n");
