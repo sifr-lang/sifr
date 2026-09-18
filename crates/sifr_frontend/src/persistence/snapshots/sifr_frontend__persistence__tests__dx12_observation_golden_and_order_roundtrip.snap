@@ -1,0 +1,42 @@
+---
+source: crates/sifr_frontend/src/persistence/tests.rs
+expression: "serde_json::to_string_pretty(capture.observations()).unwrap()"
+---
+[
+  {
+    "FileProbe": {
+      "path": "/workspace/helper.sifr",
+      "exists": false
+    }
+  },
+  {
+    "FileProbe": {
+      "path": "/workspace/src/helper.sifr",
+      "exists": true
+    }
+  },
+  {
+    "File": {
+      "path": "/workspace/src/helper.sifr",
+      "identity": "9920ce26a1e17c76b0828d6ce3564028ee04c0a182738fb7c633697a83cbd350"
+    }
+  },
+  {
+    "Directory": {
+      "path": "/workspace/src",
+      "entries": [
+        {
+          "path": "/workspace/src/helper.sifr",
+          "file": true,
+          "directory": false
+        }
+      ]
+    }
+  },
+  {
+    "Canonical": {
+      "path": "/workspace/src/helper.sifr",
+      "result": "/workspace/src/helper.sifr"
+    }
+  }
+]

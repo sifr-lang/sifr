@@ -135,3 +135,28 @@ No metadata implementation was changed for these observations. Raw diagnostics
 are preserved outside the reviewed tree in
 yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx9-evidence/
 (clippy-final-preflight.log and clippy-scoped-preflight.log).
+
+## Supplemental lint observation during DX.12
+
+A dependency-inclusive supplemental lint check on base
+f1d0e1d72ad107e816c16690cefddfb19df6200f plus DX.12 changes still fails in
+unchanged sysroot owners. Existing store documentation/hex-format findings above
+remain open. Additional unchanged locations are integrity.rs:12 (nested helper
+after statements), layout.rs:29 (unconsumed PathBuf), and native_context.rs:413–414
+(nested helper and single-pattern match). Preserve this failed evidence at
+/home/yaser5/projects/sifr/dx12-evidence/scoped-lints.log. These are follow-up
+maintenance and phase-end gate work, not additional DX.12 acceptance requirements.
+No sysroot implementation is changed by this observation.
+
+The owner-only supplemental check also reaches the unchanged frontend metadata
+overlay wildcard import (graph_cache_and_queries/external_overlay.rs:1).
+Its failed log is owner-lints.log in the same external evidence directory.
+DX.12's new diagnostic documentation/clone-assignment warnings were corrected
+inside its own scope; the existing overlay import remains follow-up work.
+
+The completed owner-only JSON scan reports nine unchanged warnings, including
+the already recorded compiler-context helper, provider Debug and two metadata
+hex-format findings. Native/profile-owned findings are recorded in the DX.10
+profile follow-up issue. lint-scope-report.json classifies every diagnostic
+against actual changed line ranges and reports zero new/touched-line diagnostics.
+This is a scoped result, not a passing full lint gate.

@@ -7582,6 +7582,7 @@ dependencies = [
 name = "sifr_frontend"
 version = "0.0.0"
 dependencies = [
+ "insta",
  "num-bigint 0.5.1",
  "ruff_python_ast",
  "ruff_text_size",
@@ -7676,6 +7677,7 @@ dependencies = [
  "sifr_analysis",
  "sifr_diagnostics",
  "sifr_driver",
+ "sifr_frontend",
  "sifr_identity",
  "sifr_package",
  "sifr_source",

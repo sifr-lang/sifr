@@ -72,3 +72,57 @@ mod corpus_tests;
 mod generation_tests;
 
 pub use qualification::qualify_development_metadata;
+
+/// Restore only explicitly complete typed families; caller owns input and
+/// completeness validation. No syntax, editor index or executable is implied.
+pub fn decode_project_results(
+    artifact: &crate::metadata_producer::ProjectTypedArtifact,
+    compatibility: wire::Compatibility,
+) -> Result<std::collections::BTreeMap<String, (sifr_ir::HirModule, sifr_lowering::ExternalDefs)>> {
+    let store = wire::MetadataStore::open(
+        std::io::Cursor::new(artifact.bytes.clone()),
+        compatibility,
+        wire::Limits::default(),
+    )?;
+    store.validate_complete()?;
+    for (reference, captured) in &artifact.sources {
+        use sha2::Digest;
+        let source = store.get(*reference)?;
+        let digest: [u8; 32] = sha2::Sha256::digest(captured.text.as_bytes()).into();
+        if source.relative_path != format!("project/{}.sifr", captured.identity())
+            || source.content_digest != digest
+            || usize::try_from(source.byte_length).ok() != Some(captured.text.len())
+        {
+            return Err(wire::MetadataError("project source table mismatch".into()));
+        }
+    }
+    let mut cx = Decoder::new(&store);
+    artifact
+        .modules
+        .iter()
+        .map(|(name, references)| {
+            let module = store.get(references.module)?;
+            let stored_name: String = Decode::decode(&module.name, &mut cx)?;
+            if !artifact.sources.contains_key(&module.source)
+                || stored_name != *name
+                || module.hir_inventory != references.checked.hir
+                || module.semantic != references.interface.exports.semantic
+                || module.hir_inventory != references.interface.exports.bodies
+                || references.checked.module_identity != references.interface.module_identity
+                || references.checked.input_identity != references.interface.input_identity
+                || references.checked.input_identity.is_empty()
+            {
+                return Err(wire::MetadataError(
+                    "inconsistent project family references".into(),
+                ));
+            }
+            Ok((
+                name.clone(),
+                (
+                    Decode::decode(&references.checked.hir, &mut cx)?,
+                    semantic::project(name, references.interface.exports.semantic, &mut cx)?,
+                ),
+            ))
+        })
+        .collect()
+}

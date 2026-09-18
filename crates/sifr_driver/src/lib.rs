@@ -14,7 +14,7 @@ pub use application_profile::ApplicationProfile;
 mod compiler_context;
 pub mod metadata_producer;
 mod metadata_reader;
-pub use metadata_reader::{StdlibNavigation, StdlibNavigationSymbol};
+pub use metadata_reader::{StdlibNavigation, StdlibNavigationSymbol, decode_project_results};
 pub mod process_execution;
 mod process_signals;
 pub use compiler_context::CompilerContext;

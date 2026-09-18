@@ -31,3 +31,13 @@ controls in `size-consumer-controls/receipt.json` verify expected tool exits
 0/2; they do not erase the failed real-ref non-increase observation.
 
 This issue does not authorize DX.11 work or weaken the phase-end gate.
+
+## Supplemental lint observations from DX.12
+
+The owner-only JSON lint scan reached unchanged profile-related code at the
+DX.12 base f1d0e1d72ad107e816c16690cefddfb19df6200f: cargo_resolution.rs:39,434
+implicitly clones Strings, and compiler_context.rs:50,56 has methods returning
+Self without must_use. Keep these for profile maintenance and the phase-end gate.
+No profile code was changed by DX.12. Exact diagnostics and changed-line
+classification are retained in /home/yaser5/projects/sifr/dx12-evidence/
+lint-scope-report.json; the scan reports zero new/touched-line diagnostics.
