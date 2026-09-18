@@ -171,6 +171,7 @@ impl CompilerContext {
         Some(serde_json::json!({
             "metadata_id":provider.metadata.metadata_id,
             "load_timings":provider.metadata.load_timings,
+            "physical_payload_decode_us":store.physical_payload_decode_us(),
             "semantic_modules":provider.loaded_semantic_modules(),
             "decoded_semantic_records":store.decoded_count::<wire::SemanticExports>(),
             "decoded_hir_modules":store.decoded_count::<wire::HirModule>(),

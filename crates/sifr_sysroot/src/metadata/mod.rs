@@ -14,6 +14,7 @@ mod container;
 mod decode;
 mod directory;
 mod physical;
+mod physical_input;
 mod store;
 mod validation;
 pub use container::{Compatibility, Limits, MetadataEncoder};

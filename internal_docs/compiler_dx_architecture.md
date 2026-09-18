@@ -183,18 +183,21 @@ Produce one indexed `stdlib.sifrmeta` for each required compiler/target-semantic
 
 The container is a private compiler format with a magic/header, explicit schema version, compatibility IDs, and a small bounded directory of sections. Directory entries contain section kind, module/record identity, offset, encoded size, decoded-size limit, and payload digest. Use fixed-width integer encodings for container offsets and a deterministic, bounded record codec. The existing `postcard` transport may encode explicit records; do not derive serialization over the entire live HIR graph merely because the serializer permits it.
 
-DX.15 physical format version 2 keeps the compatibility header and uses one
-bounded Zstandard frame for the indexed logical container. The clear outer
-compatibility header must equal its decoded counterpart. The outer header
-binds both physical and expanded lengths; each must fit the configured file
-limit before allocation. The reader rejects old versions, extra frames, trailing
-bytes, mismatched expansion lengths and invalid directory bounds. It verifies
-the entire installed artifact digest before opening it, then preserves record
-digests, canonical JSON records and all semantic/graph checks on demand.
-Physical decompression is measured separately from index construction and does
-not materialize semantic, type, HIR or Rust payload records. The validated sorted
-directory uses contiguous entries with binary search, avoiding per-entry tree
-allocation at startup. This private format has no compatibility fallback.
+DX.15 physical format version 3 keeps the compatibility header and uses two
+bounded Zstandard frames: the logical header/directory, then record payload
+bytes. The clear outer compatibility header must equal its decoded counterpart.
+Both frame content lengths and the complete physical/expanded lengths are
+checked before allocation. The reader rejects old versions, missing/extra
+frames, trailing bytes, mismatched expansion lengths and invalid directory
+bounds. It verifies the entire installed artifact digest before opening it.
+Only the directory frame expands at startup; the payload frame expands once
+when a record is requested. Record digests, canonical JSON records and all
+semantic/graph checks remain authoritative on demand. Startup physical
+decompression and index construction are measured separately; cumulative
+demanded payload decompression is exposed as physical_payload_decode_us.
+Physical expansion never itself materializes semantic, type, HIR or Rust records.
+The validated sorted directory uses contiguous entries with binary search.
+This private format has no compatibility fallback.
 
 
 | Section | Required content |

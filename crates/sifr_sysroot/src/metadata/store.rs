@@ -19,6 +19,7 @@ pub struct MetadataStore {
     input: Mutex<Box<dyn MetadataRead>>,
     pub(super) directory: super::directory::Directory,
     physical_decode_us: u128,
+    physical_payload_decode_us: Arc<std::sync::atomic::AtomicU64>,
     retained: Mutex<Retained>,
     pub(super) limits: Limits,
     compatibility: Compatibility,
@@ -51,10 +52,8 @@ impl MetadataStore {
     /// This uses the same bounded decoder as the read/seek adapter.
     pub fn open_bytes(input: Vec<u8>, expected: Compatibility, limits: Limits) -> Result<Self> {
         let started = std::time::Instant::now();
-        let decoded = super::physical::decode(&input, expected, limits)?;
-        // Release captured compressed bytes before allocating the decoded directory.
-        drop(input);
-        let mut input = decoded;
+        let mut input = super::physical::open(input, expected, limits)?;
+        let physical_payload_decode_us = input.payload_decode_us.clone();
         let physical_decode_us = started.elapsed().as_micros();
         let size = input.seek(SeekFrom::End(0)).map_err(|e| io_error(&e))?;
         if size < HEADER_SIZE as u64 || size > limits.file_bytes {
@@ -139,6 +138,7 @@ impl MetadataStore {
             input: Mutex::new(Box::new(input)),
             directory: super::directory::Directory(directory),
             physical_decode_us,
+            physical_payload_decode_us,
             retained: Mutex::new(Retained {
                 bytes: 0,
                 records: BTreeMap::new(),
@@ -156,6 +156,11 @@ impl MetadataStore {
     #[must_use]
     pub fn physical_decode_us(&self) -> u128 {
         self.physical_decode_us
+    }
+    #[must_use]
+    pub fn physical_payload_decode_us(&self) -> u64 {
+        self.physical_payload_decode_us
+            .load(std::sync::atomic::Ordering::Relaxed)
     }
 
     /// Enumerate the small typed directory without reading record payloads.

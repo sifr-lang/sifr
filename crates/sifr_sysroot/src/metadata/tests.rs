@@ -716,7 +716,7 @@ fn dx8_portable_digest_preserves_semantic_payload_changes() {
 }
 
 #[test]
-fn dx15_physical_frames_are_bounded_single_and_versioned() {
+fn dx15_physical_frames_are_bounded_canonical_and_versioned() {
     let original = encoder().finish().unwrap();
     for expanded in [0_u64, 119, u64::MAX, limits().file_bytes + 1] {
         let mut bytes = original.clone();
@@ -757,10 +757,25 @@ fn dx15_self_contained_distribution_fixture_uses_a_valid_raw_zstd_frame() {
     assert_eq!(logical.len(), 120);
     let mut frame = vec![0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x78, 0xc1, 0x03, 0x00];
     frame.extend_from_slice(&logical);
+    frame.extend_from_slice(&[0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x00, 0x01, 0x00, 0x00]);
     let mut fixture = logical[..112].to_vec();
     fixture.extend_from_slice(&((128 + frame.len()) as u64).to_le_bytes());
     fixture.extend_from_slice(&120_u64.to_le_bytes());
     fixture.extend_from_slice(&frame);
     let store = MetadataStore::open_bytes(fixture, identity(), limits()).unwrap();
     assert_eq!(store.retained_records().unwrap(), 0);
+}
+
+#[test]
+fn dx15_payload_frame_is_demand_loaded_once_without_decoding_unrequested_records() {
+    let store = store(encoder());
+    assert_eq!(store.physical_payload_decode_us(), 0);
+    assert_eq!(store.retained_records().unwrap(), 0);
+    let first = get::<SemanticExports>(&store);
+    let elapsed = store.physical_payload_decode_us();
+    assert!(elapsed > 0);
+    assert_eq!(store.retained_records().unwrap(), 1);
+    assert_eq!(store.decoded_count::<HirModule>(), 0);
+    assert_eq!(first, get::<SemanticExports>(&store));
+    assert_eq!(store.physical_payload_decode_us(), elapsed);
 }
