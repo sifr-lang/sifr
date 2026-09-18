@@ -650,7 +650,9 @@ The driver can recompute changed modules in a captured flat non-package graph
 and retain unchanged importer diagnostics. The current positive interface proof
 erases only undecorated, nongeneric, synchronous zero-argument functions with an
 explicit primitive result and one pure return expression; checking changed
-modules must still succeed. All other bodies, private declarations, defaults,
+modules must still succeed. Stored interface identities are full SHA-256
+fingerprints of the structural AST hash stream, so body size does not expand
+resident signatures or graph cache keys. All other bodies, private declarations, defaults,
 constants, class declarations, ownership and unknown effects remain conservative
 dependencies. Pure package checks retain exact-context reuse; live external
 authorities retain their ordinary owner execution.
