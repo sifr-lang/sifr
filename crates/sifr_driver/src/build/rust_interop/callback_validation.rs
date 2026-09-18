@@ -70,7 +70,11 @@ impl RustInteropResolver<'_> {
                     .packages
                     .get(package_id)
                     .is_some_and(|package| {
-                        super::panic_validation::selected_panic_strategy(package).as_deref()
+                        super::panic_validation::selected_panic_strategy(
+                            package,
+                            self.cargo_resolution.application_profile.cargo_name(),
+                        )
+                        .as_deref()
                             == Some("abort")
                     })
             })
@@ -238,7 +242,11 @@ impl RustInteropResolver<'_> {
                 .package_id_for_module(declaration.module_name.as_deref())
                 .and_then(|package_id| self.context.graph.packages.get(&package_id))
                 .is_some_and(|package| {
-                    super::panic_validation::selected_panic_strategy(package).as_deref()
+                    super::panic_validation::selected_panic_strategy(
+                        package,
+                        self.cargo_resolution.application_profile.cargo_name(),
+                    )
+                    .as_deref()
                         == Some("abort")
                 })
     }

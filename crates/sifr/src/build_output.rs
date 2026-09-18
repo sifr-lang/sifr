@@ -23,6 +23,18 @@ pub(super) fn render_build_success(
     push_key_value(&mut output, "input:", &quote_path(report.entrypoint_path()));
     push_key_value(&mut output, "mode:", report.mode().as_str());
     push_key_value(&mut output, "target:", report.target());
+    if let Some(profile) = report.cargo_artifact_profile() {
+        push_key_value(
+            &mut output,
+            "Cargo application profile:",
+            &profile.to_string(),
+        );
+    }
+    push_key_value(
+        &mut output,
+        "application policy:",
+        report.application_profile().policy_identity(),
+    );
     push_key_value(
         &mut output,
         "sysroot:",
@@ -145,6 +157,8 @@ mod tests {
 
     fn report(cache_hit: bool) -> BuildReport {
         BuildReport::new(BuildReportInput {
+            cargo_artifact_profile: None,
+            application_profile: sifr_driver::ApplicationProfile::Release,
             compiler_identity: crate::compiler_identity().as_str().to_owned(),
             native_toolchain_identity: None,
             entrypoint_path: Path::new("demo main.sifr").to_path_buf(),

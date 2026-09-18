@@ -7,6 +7,7 @@ mod integrity;
 mod layout;
 mod manifest;
 mod native_context;
+mod native_profile;
 pub use native_context::{NativeBuildContext, NativeToolchain};
 mod resolve;
 

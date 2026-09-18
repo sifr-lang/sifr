@@ -1,4 +1,6 @@
 mod api;
+#[cfg(test)]
+mod application_profile_tests;
 mod cargo_invocation_trace;
 mod cargo_manifest;
 mod cargo_resolution;

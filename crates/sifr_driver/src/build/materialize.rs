@@ -21,6 +21,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 pub(super) struct MaterializedBinaryProject {
+    pub(super) cargo_artifact_profile: serde_json::Value,
     pub(super) native_executable: PathBuf,
     pub(super) native_libraries: Vec<PathBuf>,
     pub(super) binary_path: PathBuf,
@@ -178,7 +179,11 @@ pub(super) fn materialize_cached_binary_project_with_report(
     let native_context = sifr_sysroot::NativeBuildContext {
         toolchain: tools.clone(),
         target: tools.target().to_owned(),
-        profile: "release".to_owned(),
+        profile: format!(
+            "{}:{}",
+            cargo_resolution.application_profile.policy_identity(),
+            cargo_resolution.application_profile.name()
+        ),
         flags_id: tools.identity().to_owned(),
         features_id: dependency_plan.cache_fingerprint.clone(),
         resolution_id: dependency_plan.dependency_input_fingerprint(),
@@ -272,7 +277,7 @@ fn binary_relative_path(project_name: &str) -> PathBuf {
     };
     PathBuf::from(project_name)
         .join("target")
-        .join("release")
+        .join("final")
         .join(binary_name)
 }
 
@@ -342,7 +347,7 @@ pub(super) fn materialize_binary_project_at_path_with_target(
     let cargo_prefix_args = sysroot_cargo_config_args(dependency_plan);
     let prepared_resolution =
         prepare_cargo_resolution(project_path, cargo_resolution, &cargo_prefix_args)?;
-    let (executable, native_libraries) = run_cargo_build(
+    let (executable, native_libraries, cargo_artifact_profile) = run_cargo_build(
         project_path,
         python_interpreter.as_deref(),
         validate_native_links,
@@ -373,6 +378,7 @@ pub(super) fn materialize_binary_project_at_path_with_target(
     let cargo_elapsed = cargo_start.elapsed();
 
     Ok(MaterializedBinaryProject {
+        cargo_artifact_profile,
         native_executable: executable,
         native_libraries,
         binary_path: cached_binary_path(
@@ -575,18 +581,24 @@ fn run_cargo_build(
     dependency_plan: &SysrootDependencyPlan,
     cargo_resolution: &CargoResolutionPolicy,
     target: &Path,
-) -> Result<(PathBuf, Vec<PathBuf>), Vec<RenderedDiagnostic>> {
+) -> Result<(PathBuf, Vec<PathBuf>, serde_json::Value), Vec<RenderedDiagnostic>> {
+    cargo_resolution
+        .native_toolchain
+        .as_ref()
+        .map_err(|e| vec![cargo_build_error(e.clone())])?
+        .validate_application_profile(cargo_resolution.application_profile.cargo_name())
+        .map_err(|e| vec![cargo_build_error(e)])?;
     let mut command = cargo_resolution.cargo_command()?;
     command.args(sysroot_cargo_config_args(dependency_plan));
     command
         .args([
             "build",
-            "--release",
             "--quiet",
             "--message-format=json-render-diagnostics",
         ])
         .arg("--manifest-path")
         .arg(project_path.join("Cargo.toml"));
+    cargo_resolution.application_profile.configure(&mut command);
     if let Some(argument) = cargo_resolution.lock_mode.cargo_arg() {
         command.arg(argument);
     }
@@ -624,26 +636,49 @@ fn run_cargo_build(
             "cargo build failed:\n{stderr}"
         ))]);
     }
-    let executable = String::from_utf8_lossy(&output.stdout)
+    let artifact = String::from_utf8_lossy(&output.stdout)
         .lines()
         .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
         .filter(|message| {
             message.get("reason").and_then(serde_json::Value::as_str) == Some("compiler-artifact")
         })
-        .find_map(|message| {
+        .find(|message| {
             message
                 .get("executable")
                 .and_then(serde_json::Value::as_str)
-                .map(PathBuf::from)
+                .is_some()
         })
         .ok_or_else(|| {
             vec![cargo_build_error(
                 "cargo did not report a native executable".to_owned(),
             )]
         })?;
+    let executable = artifact
+        .get("executable")
+        .and_then(serde_json::Value::as_str)
+        .map(PathBuf::from)
+        .ok_or_else(|| {
+            vec![cargo_build_error(
+                "Cargo artifact has no executable".to_owned(),
+            )]
+        })?;
+    let cargo_artifact_profile = artifact.get("profile").cloned().ok_or_else(|| {
+        vec![cargo_build_error(
+            "Cargo artifact has no effective profile".to_owned(),
+        )]
+    })?;
+    if cargo_artifact_profile
+        .get("overflow_checks")
+        .and_then(serde_json::Value::as_bool)
+        != Some(true)
+    {
+        return Err(vec![cargo_build_error(
+            "Cargo disabled required application overflow checks".to_owned(),
+        )]);
+    }
     let libraries = super::native_storage::runtime_libraries(&output.stdout, target)
         .map_err(|error| vec![cargo_build_error(error.to_string())])?;
-    Ok((executable, libraries))
+    Ok((executable, libraries, cargo_artifact_profile))
 }
 
 fn trusted_native_links(

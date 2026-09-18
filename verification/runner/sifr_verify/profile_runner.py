@@ -18,6 +18,7 @@ from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area
 from .profile_commands import CommandFailed, cargo_command, run_command, uv_area_command
 from .profile_reporting import run_profile_with_report
+from .compiler_configuration_plan import configuration_plan
 from .profiles import crate_test_mode, crate_test_suites_for_mode, load_profile, resolve_fixture_manifest
 from .step_budgets import (
     StepBudgetContext,
@@ -339,23 +340,13 @@ class ProfileRunner:
             raise ProfileRunnerError(f"unsupported toolchain step: {toolchain_step}")
 
     def run_crate_tests(self, mode: str) -> None:
-        for suite in crate_test_suites_for_mode(self.profile, mode):
-            suite_id = str(suite["id"])
-            status = str(suite["status"])
-            executed = bool(suite["executed_in_merge"])
-            if status == "red-blocker" and not executed:
-                print(
-                    "Planned crate test red-blocker "
-                    f"{suite_id}: must_be_executed_by={suite.get('must_be_executed_by', 'unknown')}"
-                )
-                continue
-            command = suite.get("command", [])
-            if not isinstance(command, list) or not all(isinstance(arg, str) for arg in command):
-                raise ProfileRunnerError(f"crate test suite {suite_id} has invalid command")
+        for configuration in configuration_plan(self.profile, mode):
+            suite_id = ",".join(configuration.ids)
+            command = configuration.execution()
             start_ms = now_ms()
             case_status = "pass"
             try:
-                run_command(cargo_command(*command), env=self.env)
+                run_command(command, env=self.env)
             except CommandFailed:
                 case_status = "fail"
                 raise

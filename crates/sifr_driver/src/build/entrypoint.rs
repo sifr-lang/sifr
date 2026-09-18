@@ -246,7 +246,7 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
         materialized.materialize_elapsed,
     ));
     stages.push(BuildStageReport::new(
-        "Building release binary",
+        compiler.application_profile().report_target(),
         materialized.cargo_elapsed,
     ));
     let query_signature_artifact_path =
@@ -258,6 +258,8 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
             )]
         })?;
     Ok(BuildReport::new(BuildReportInput {
+        cargo_artifact_profile: Some(materialized.cargo_artifact_profile),
+        application_profile: compiler.application_profile(),
         compiler_identity: compiler.identity().as_str().to_owned(),
         native_toolchain_identity: cargo_resolution
             .native_toolchain
@@ -374,18 +376,23 @@ fn build_cached_rooted_entrypoint_binary(
         requested_vendor_mode,
         &cargo_resolution,
     )?;
+    let cargo_artifact_profile = native_report
+        .as_ref()
+        .map(|report| report.cargo_artifact_profile.clone());
     if let Some(native_report) = native_report {
         stages.push(BuildStageReport::new(
             "Materializing Cargo project",
             native_report.materialize_elapsed,
         ));
         stages.push(BuildStageReport::new(
-            "Building release binary",
+            compiler.application_profile().report_target(),
             native_report.cargo_elapsed,
         ));
     }
     let binary_path = cached_binary_path(cache_entry.workspace_root(), "sifr_output");
     let build_report = BuildReport::new(BuildReportInput {
+        cargo_artifact_profile,
+        application_profile: compiler.application_profile(),
         compiler_identity: compiler.identity().as_str().to_owned(),
         native_toolchain_identity: cargo_resolution
             .native_toolchain
@@ -438,10 +445,11 @@ impl RootedEntrypointPlan {
             RootedEntrypoint::PackageProject { entrypoint, .. } => Some(*entrypoint),
             RootedEntrypoint::SingleFile { .. } | RootedEntrypoint::Project { .. } => None,
         };
-        let cargo_resolution = super::entrypoint_resolution::package_cargo_resolution_policy(
+        let mut cargo_resolution = super::entrypoint_resolution::package_cargo_resolution_policy(
             package_entrypoint,
             &stdlib,
         );
+        cargo_resolution.application_profile = compiler.application_profile();
         let resolved = match entrypoint {
             RootedEntrypoint::SingleFile {
                 source,

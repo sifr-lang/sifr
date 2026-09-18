@@ -136,6 +136,7 @@ edition = "2024"
         );
     }
 
+    cargo_toml.push_str(crate::application_profile::MANIFEST);
     cargo_toml
 }
 
@@ -180,6 +181,7 @@ edition = "2024"
             "\n[patch.crates-io]\nlibsqlite3-sys = {{ git = \"{SIFR_GIT_SOURCE}\", rev = \"{sifr_revision}\" }}\n"
         );
     }
+    cargo_toml.push_str(crate::application_profile::MANIFEST);
     Ok(cargo_toml)
 }
 

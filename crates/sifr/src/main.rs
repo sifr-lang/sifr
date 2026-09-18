@@ -75,6 +75,14 @@ fn compiler_identity() -> sifr_identity::CompilerIdentity {
     }
 }
 
+static APPLICATION_PROFILE: std::sync::OnceLock<sifr_driver::ApplicationProfile> =
+    std::sync::OnceLock::new();
+
 fn compiler_context() -> sifr_driver::CompilerContext {
-    sifr_driver::CompilerContext::new(compiler_identity())
+    sifr_driver::CompilerContext::new(compiler_identity()).with_application_profile(
+        APPLICATION_PROFILE
+            .get()
+            .copied()
+            .unwrap_or(sifr_driver::ApplicationProfile::Release),
+    )
 }

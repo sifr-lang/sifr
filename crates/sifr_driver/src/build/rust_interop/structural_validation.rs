@@ -22,7 +22,12 @@ impl RustInteropResolver<'_> {
             let Some(package) = self.context.graph.packages.get(&package_id) else {
                 continue;
             };
-            if super::panic_validation::selected_panic_strategy(package).as_deref() != Some("abort")
+            if super::panic_validation::selected_panic_strategy(
+                package,
+                self.cargo_resolution.application_profile.cargo_name(),
+            )
+            .as_deref()
+                != Some("abort")
             {
                 continue;
             }

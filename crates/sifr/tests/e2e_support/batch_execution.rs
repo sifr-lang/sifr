@@ -5,7 +5,7 @@
 
 use super::*;
 pub(crate) fn build_group_binary_path(group_root: &Path, package_name: &str) -> PathBuf {
-    let debug_dir = group_root.join("target").join("debug");
+    let debug_dir = group_root.join("target").join(application_directory());
     if cfg!(target_os = "windows") {
         debug_dir.join(format!("{package_name}.exe"))
     } else {
@@ -80,6 +80,7 @@ pub(crate) fn build_batch_group(
             // Batch crates are cached by their own `target/` artifact paths.
             // An inherited outer CARGO_TARGET_DIR moves binaries away from the
             // recorded cache location and makes the run phase miss them.
+            application_profile().configure(&mut build_command);
             build_command.env_remove("CARGO_TARGET_DIR");
             let build_capture = run_capture(build_command);
             if build_capture.status_ok {
@@ -355,6 +356,7 @@ pub(crate) fn build_and_run_capture_with_deps(
         .args(sifr_driver::sysroot_cargo_config_args(&dependency_plan))
         .args(["build", "--quiet"])
         .current_dir(&tmp_dir);
+    application_profile().configure(&mut build_command);
     build_command.env_remove("CARGO_TARGET_DIR");
     let build_capture = run_capture(build_command);
     if !build_capture.status_ok {
@@ -369,7 +371,10 @@ pub(crate) fn build_and_run_capture_with_deps(
     } else {
         "sifr_output"
     };
-    let binary_path = tmp_dir.join("target").join("debug").join(binary_name);
+    let binary_path = tmp_dir
+        .join("target")
+        .join(application_directory())
+        .join(binary_name);
     let run_capture = command_with_capture(
         binary_path.to_str().unwrap_or("sifr_output"),
         &[],

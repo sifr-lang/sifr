@@ -51,6 +51,8 @@ pub(crate) fn execute_test_runner_project(
         &test_lib,
         &cargo_plan.dependency_plan,
     )?;
+    cache_key.push_str(generated_project.application_profile.name());
+    cache_key.push_str(generated_project.application_profile.policy_identity());
     cache_key.push_str("\n[native-toolchain]\n");
     cache_key.push_str(native_toolchain.identity());
     let family = crate::build::native_storage::NativeFamily::acquire(
@@ -177,6 +179,14 @@ pub(crate) fn execute_test_runner_project(
         crate::build::native_storage::loader_build_script(None).as_bytes(),
     )
     .map_err(test_io_error)?;
+    native_toolchain
+        .validate_application_profile(generated_project.application_profile.cargo_name())
+        .map_err(test_io_error)?;
+    write_stderr_line(&format!(
+        "application profile: {} ({})",
+        generated_project.application_profile.name(),
+        generated_project.application_profile.policy_identity()
+    ));
     let mut command = native_toolchain.cargo_command().map_err(test_io_error)?;
     command
         .args(sysroot_cargo_config_args(&cargo_plan.dependency_plan))
@@ -189,6 +199,9 @@ pub(crate) fn execute_test_runner_project(
         .arg(project_dir.join("Cargo.toml"))
         .arg("--target-dir")
         .arg(family.target());
+    generated_project
+        .application_profile
+        .configure(&mut command);
     let output = crate::process_execution::output(&mut command).map_err(test_io_error)?;
     write_stderr(&String::from_utf8_lossy(&output.stderr));
     if !output.status.success() {
@@ -196,6 +209,20 @@ pub(crate) fn execute_test_runner_project(
             "cargo test preparation failed: {}",
             String::from_utf8_lossy(&output.stdout)
         )));
+    }
+    for event in String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+    {
+        if event["reason"] == "compiler-artifact"
+            && event["profile"]["test"] == true
+            && event["executable"].is_string()
+            && event["profile"]["overflow_checks"] != true
+        {
+            return Err(test_io_error(
+                "Cargo disabled required test overflow checks",
+            ));
+        }
     }
     let cargo_executables = String::from_utf8_lossy(&output.stdout)
         .lines()
@@ -347,6 +374,7 @@ mod tests {
     #[test]
     fn test_runner_cache_key_uses_sysroot_dependency_plan_inputs() {
         let mut generated_project = GeneratedTestRunnerProject {
+            application_profile: crate::ApplicationProfile::Test,
             interop: sifr_codegen::InteropBuildPlan::default(),
             cache_scope: PathBuf::from("/tmp/sifr-tests"),
             support_module_names: Vec::new(),

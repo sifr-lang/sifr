@@ -7,6 +7,7 @@ type StdlibCache = Mutex<Option<Arc<crate::metadata_reader::Provider>>>;
 #[derive(Clone)]
 pub struct CompilerContext {
     identity: CompilerIdentity,
+    application_profile: crate::ApplicationProfile,
     metadata_override: Option<std::path::PathBuf>,
     sysroot: Result<sifr_sysroot::ResolvedSysroot, sifr_sysroot::SysrootError>,
     pub(crate) stdlib_cache: Arc<StdlibCache>,
@@ -34,6 +35,7 @@ impl CompilerContext {
         let cache = Arc::new(Mutex::new(None));
         Self {
             identity,
+            application_profile: crate::ApplicationProfile::Development,
             metadata_override: None,
             sysroot,
             stdlib_cache: cache,
@@ -42,12 +44,14 @@ impl CompilerContext {
     pub fn for_test_tokens(mut tokens: Vec<(&str, &str)>, configuration: &str) -> Self {
         tokens.extend(crate::compiled_input_tokens());
         Self::new(CompilerIdentity::for_test(tokens, configuration))
+            .with_application_profile(crate::ApplicationProfile::Release)
     }
     pub fn for_test() -> Self {
         Self::new(CompilerIdentity::for_test(
             crate::compiled_input_tokens(),
             "driver-producer",
         ))
+        .with_application_profile(crate::ApplicationProfile::Release)
     }
     pub fn ensure_development_metadata(&self) -> Result<(), Vec<RenderedDiagnostic>> {
         let sysroot = self.sysroot()?;
@@ -147,6 +151,14 @@ impl CompilerContext {
             "hir_module_reads":store.payload_read_count::<wire::HirModule>(),
             "retained_decode_bound_bytes":store.retained_bound().ok()
         }))
+    }
+    #[must_use]
+    pub fn with_application_profile(mut self, profile: crate::ApplicationProfile) -> Self {
+        self.application_profile = profile;
+        self
+    }
+    pub fn application_profile(&self) -> crate::ApplicationProfile {
+        self.application_profile
     }
     pub fn identity(&self) -> &CompilerIdentity {
         &self.identity

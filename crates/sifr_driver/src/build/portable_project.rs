@@ -495,6 +495,7 @@ mod tests {
             cache_fingerprint: "test".to_string(),
         };
         let policy = CargoResolutionPolicy {
+            application_profile: crate::ApplicationProfile::Release,
             native_toolchain: CargoResolutionPolicy::resolve_native_toolchain(),
             lock_mode: sifr_package::CargoLockMode::Locked,
             cargo_vendor_mode: CargoVendorMode::SysrootOnly,

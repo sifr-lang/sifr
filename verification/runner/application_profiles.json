@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "policy_identity": "sifr-application-profiles-v1",
+  "target": "selected-native-target",
+  "compiler_profile": "independent-optimized-product-or-explicit-contributor",
+  "selections": [
+    {
+      "id": "e2e-run-pass",
+      "selector": "crates/sifr/tests/e2e/pass/*.sifr",
+      "application_profiles": [
+        "development",
+        "release"
+      ],
+      "assertions": [
+        "type-check",
+        "emit",
+        "native-build",
+        "native-run"
+      ],
+      "release_qualification": "complete-corpus-actual-release-executables",
+      "development_selection": "existing-e2e-selections"
+    },
+    {
+      "id": "area-native",
+      "selector": "verification/areas/*/manifest.json cases with native build/run/test commands",
+      "application_profiles": [
+        "release"
+      ],
+      "assertions": "preserve-case-declarations-and-negative-baselines"
+    },
+    {
+      "id": "cli-defaults",
+      "selector": "dx10_b11_cli_application_profile_defaults_and_release",
+      "application_profiles": [
+        "development",
+        "test",
+        "release"
+      ],
+      "assertions": [
+        "explicit-command-selection",
+        "actual-cli-process-qualification"
+      ]
+    }
+  ]
+}

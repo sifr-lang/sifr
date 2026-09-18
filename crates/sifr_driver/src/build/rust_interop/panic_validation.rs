@@ -140,7 +140,13 @@ impl RustInteropResolver<'_> {
         {
             return;
         }
-        if selected_panic_strategy(package).as_deref() == Some("abort") {
+        if selected_panic_strategy(
+            package,
+            self.cargo_resolution.application_profile.cargo_name(),
+        )
+        .as_deref()
+            == Some("abort")
+        {
             return;
         }
         self.push_panic_diagnostic(
@@ -158,9 +164,11 @@ fn signature_has_unsupported_type(signature: &RustBridgeSignatureContract) -> bo
             .any(|param| param.ty.kind == RustBridgeTypeKind::Unsupported)
 }
 
-pub(super) fn selected_panic_strategy(package: &SifrPackageMetadata) -> Option<String> {
-    // Rust interop bridge builds currently select the release Cargo profile.
-    panic_strategy_from_profile(&package.package_root, "release")
+pub(super) fn selected_panic_strategy(
+    package: &SifrPackageMetadata,
+    profile: &str,
+) -> Option<String> {
+    panic_strategy_from_profile(&package.package_root, profile)
         .or_else(|| std::env::var("SIFR_RUST_PANIC_STRATEGY").ok())
 }
 

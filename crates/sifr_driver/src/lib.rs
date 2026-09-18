@@ -7,8 +7,10 @@
 //! They are compiled before user code (two-phase compilation).
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
+mod application_profile;
 mod build;
 pub mod cache_storage;
+pub use application_profile::ApplicationProfile;
 mod compiler_context;
 pub mod metadata_producer;
 mod metadata_reader;

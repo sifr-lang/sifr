@@ -2052,3 +2052,10 @@ requests no longer treat cached output existence as native freshness. Python
 startup verifies the selected shared library, and Python source exports declare
 their external-runtime deployment paths. See
 [Compiler DX sections 8.2–8.6](compiler_dx_architecture.md#82-compatible-native-storage).
+
+The DX.10 application policy selects development for ordinary `sifr build` and
+`sifr run`, development-derived test for `sifr test`, and explicit release via
+`--release`. Compiler optimization is independent. Generated Cargo roots carry
+all pinned profile tables; native family storage retains both profile outputs,
+while finalized copies use `target/final`. The shared compiler configuration plan
+preserves isolated feature/native selections and original assertion inventories.
