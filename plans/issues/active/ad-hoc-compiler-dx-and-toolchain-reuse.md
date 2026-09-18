@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.8 complete; DX.9 next
+status: in progress; DX.1–DX.9 complete; DX.10 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -618,7 +618,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.8 are complete and merged. DX.9–DX.16 are not started; DX.9 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.9 are complete and merged. DX.10–DX.16 are not started; DX.10 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -630,7 +630,7 @@ DX.1–DX.8 are complete and merged. DX.9–DX.16 are not started; DX.9 is the n
 | DX.6 | Complete / merged | Candidate `5581af0884edcb46d88419b9b7d66d1ce97531df`; [PR #3850](https://github.com/sifr-lang/sifr/pull/3850); merge `d53899694e8b65f47f7105fda34fec039459549a` | M09, M12–M14, R10 and focused producer/preparation/packaging checks PASS; two full bare driver runs 649 passed / 78 ignored each; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3850#issuecomment-5717512054) |
 | DX.7 | Complete / merged | Candidate `036e69592164b87d309f31ba43ee406a58ed79ca`; [PR #3852](https://github.com/sifr-lang/sifr/pull/3852); merge `fb6d432be20d945e0266030b076dbc76ce4c8a50` | M01, M02, M04, M17, representative M15/native parity and paired installed Q09 PASS; focused tests and guardrails PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3852#issuecomment-5719741485) |
 | DX.8 | Complete / merged | Candidate `78f12c5cdd357f1601926f3fa78ec96f004108dd`; [PR #3854](https://github.com/sifr-lang/sifr/pull/3854); merge `1b55710f4a6e1d796be243c025b673f8958de72b` | M03, M05, M07, M08, M10, M11, M15, R09, Q05, Q09 PASS; 727-case corpus/native, four-target portable records, actual Linux/Mac qualification, installed generations and focused regressions; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3854#issuecomment-5722224549) |
-| DX.9 | Not started | — | — | — |
+| DX.9 | Complete / merged | Candidate `2f1f3fb215d5263c0d1fb49d8c3346aafa299b33`; [PR #3856](https://github.com/sifr-lang/sifr/pull/3856); merge `455400351b3d989490191a09b3cb3d2c817404fa` | I04, B01–B04, B07–B09 and focused regressions PASS; actual native/Python exports, current Cargo freshness and paired rebuilt-unit/latency measurements; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3856#issuecomment-5723374425) |
 | DX.10 | Not started | — | — | — |
 | DX.11 | Not started | — | — | — |
 | DX.12 | Not started | — | — | — |
@@ -1076,7 +1076,7 @@ configuration identities, timing reports and per-file SHA-256 receipts.
 | Original Opus response | `ae9dab23539f905748bda3efbce525c74e7c3fd74b2c9b6208e3d70c09d2afb2` |
 
 
-## Current Handoff — DX.7 (2026-09-17)
+## Historical Handoff — DX.7 (2026-09-17)
 
 - **State:** complete and merged. Implementation [PR #3852](https://github.com/sifr-lang/sifr/pull/3852);
   final candidate `036e69592164b87d309f31ba43ee406a58ed79ca`, merge
@@ -1173,7 +1173,7 @@ artifact identities, raw reports, scripts and per-file digests.
 | Original Opus response | `1e159c464005c26e3df1beb40711b6783b78b2878f7cb08e9173be4fb1e91d79` |
 
 
-## Current Handoff — DX.8 (2026-09-18)
+## Historical Handoff — DX.8 (2026-09-18)
 
 - **State:** complete and merged. Implementation [PR #3854](https://github.com/sifr-lang/sifr/pull/3854);
   final candidate `78f12c5cdd357f1601926f3fa78ec96f004108dd`, merge
@@ -1298,3 +1298,75 @@ Evidence host/root:
 | Product `qualification-manifest.json` | `59c1578ad47ba67ef3898ca5852b7d8c579c3c56db9ff486aa85270cb2aa23b1` |
 | `q09-comparison.json` | `df4a08b07b756baac0b11af320040c2cc690c101b5497c0203c2155a5056bbd3` |
 | Final original Opus response | `3f859a2ef2524dda2648215792aba88033c44a04b666d0b5c4924f82316a0fb9` |
+
+## Current Handoff — DX.9 (2026-09-18)
+
+- **Current state:** DX.9 implementation is merged in [PR #3856](https://github.com/sifr-lang/sifr/pull/3856).
+  Candidate `2f1f3fb215d5263c0d1fb49d8c3346aafa299b33`;
+  merge `455400351b3d989490191a09b3cb3d2c817404fa`.
+  This record-only update is on `codex/dx9-record`.
+- **Implemented:** owned compatible native Cargo families, stable generated
+  roots and root-specific target names; family/publication leases span source
+  mutation and capture. Ordinary binary/test/probe requests ask Cargo for
+  freshness, preserve unchanged input mtimes and return captured final bundles.
+  Current source lock authority changes reseed normal generated roots without
+  discarding their ordinary Cargo updates when authority is unchanged.
+  Native defaults remain release/test; no DX.10 profiles or project generations.
+- **Named acceptance:** I04, B01–B04 and B07–B09 pass on the exact candidate.
+  Nine DX.9 cases cover real same-name compile/lint errors, concurrent mutation
+  and capture across native contexts, linker/runtime failures, independent
+  runtime-library capture, build-script changes, lock-authority changes and
+  trust revocation after a real native cache hit. Focused materialization,
+  portable lock, normal-resolution, probe, native-context and test-runner checks
+  pass, as do the actual alternate Python loader process and generated typed
+  Python integration. File-size/HIR guardrails, formatting and diff checks pass.
+- **Installed qualification:** real build/run/test requests confirm Cargo
+  freshness, native flag repartition, invalid-target failure/recovery and
+  repeated failing tests executing again. Native and Python source exports are
+  independently built offline with `--locked` and run. Python export declares
+  its selected external interpreter/library paths and SHA256; exposing an
+  alternate library produces the concrete loader-mismatch error. The unpushed
+  exact Git candidate was supplied through command-local test transport;
+  exported manifests/locks were not rewritten for qualification.
+- **Bounded repair:** actual Python export qualification exposed an unresolved
+  normal-mode workspace seed lock. Local Cargo metadata now resolves the
+  generated root before source/lock freezing. The original failed export and
+  its independent diagnostic copy remain preserved; a new permanent seeded
+  root regression and the final real export pass.
+- **Observed paired performance:** three measured pairs after discarding the
+  first warmup pair, optimized installed compilers on the same Linux host:
+
+| Native request | Before median | After median | Cargo work after |
+| --- | --- | --- | --- |
+| Cold | 12.628 s | 12.707 s | 32 rebuilt units |
+| No-op | 0.252 s | 0.513 s | 0 rebuilt, 32 fresh units |
+| Edited | 12.389 s | 0.592 s | 1 rebuilt, 31 fresh units |
+
+The prior edited request rebuilt 31 units; its no-op bypassed Cargo. The new
+no-op cost includes the required current Cargo check. These are observed
+latencies, not a universal host budget. The prior DX.8 installed compiler's
+native/runtime sources match the phase base; later DX.8 changes were
+documentation/verification only (`baseline-reuse-final.json`).
+
+- **Review:** one read-only Opus 5 review returned
+  [SATISFIED, no blockers](https://github.com/sifr-lang/sifr/pull/3856#issuecomment-5723374425). Suggestions are separate work in
+  [native reuse follow-ups](ad-hoc-native-cargo-reuse-followups.md).
+- **Policy and preserved failures:** no intermediate full create-PR/merge gate
+  or release qualification was run or claimed. Supplemental feature-enabled
+  Clippy still reports 498 pre-existing metadata/Python errors, with zero
+  errors in changed source files; their owning issues retain the findings.
+  Earlier failed/incomplete fixture, loader-environment, lint, test-transport
+  and portable-lock attempts remain in the manifest. They are not passes.
+  Validation retained at least 83 GiB free before final product preparation;
+  no shared/foreign target cleanup was performed.
+- **Blocker:** none for DX.9 acceptance.
+- **Exact next action:** stop after this record update. Start DX.10 only in a
+  new bounded session. The full phase-end gate remains required.
+
+Evidence host/root:
+`yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx9-evidence/`.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| `qualification-manifest.json` | `deedd24f44e6ada7896c963af6ce2a442a6e1df93351fd72d1ee8eeb187a62ac` |
+| Original Opus response | `38c3078487ec037b914c18cdde22057a78ad2e96315113e62dc90b49dca462d7` |
