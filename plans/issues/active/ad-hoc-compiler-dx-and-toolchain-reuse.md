@@ -476,6 +476,7 @@ Complete P05, P06 and P11, plus randomized bounded edit sequences compared again
 **Scope**
 
 - Run the fixed product/user/contributor workloads on the qualified 12 GB host and supported named reference configurations.
+- Follow the user-directed host split of 2026-09-18: qualify bounded editor/Cargo resources and fixed product targets on the 12 GB Linux reference, and real desktop overlap separately on the named Mac with its actual 32 GiB hardware. Preserve the original combined 12 GB graphical-desktop scenario as not executed; neither infer a Linux pass from the Mac nor raise the Linux machine requirement.
 - Compare candidate and pinned comparable baseline, retain long-term anchors, and qualify actual percentile/resource claims with sufficient sampling.
 - Verify all supported release targets and installer/update/relocation/rollback modes using exact packaged bytes and explicit native profiles/loader behavior.
 - Complete the integrated timings/trace/doctor/cache surfaces and documentation for normal installed, source-tree, offline/prepared and error-recovery workflows.
