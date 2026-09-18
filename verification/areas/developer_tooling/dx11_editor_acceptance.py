@@ -47,9 +47,10 @@ def finish(client):
         client.close()
 
 
-def run(binary, output):
+def run(binary, output, no_incremental=False):
     output.mkdir(parents=True, exist_ok=False)
-    os.environ["SIFR_LSP_COMMAND"] = shlex.join([str(binary), "lsp", "--stdio"])
+    flags = ["--no-incremental"] if no_incremental else []
+    os.environ["SIFR_LSP_COMMAND"] = shlex.join([str(binary), *flags, "lsp", "--stdio"])
     os.environ["SIFR_CACHE_DIR"] = str(output / "cache")
     report = {"binary": str(binary), "sha256": hashlib.sha256(binary.read_bytes()).hexdigest(), "cases": {}}
     def record(name, detail):
@@ -58,13 +59,25 @@ def run(binary, output):
     root = output / "workspace"
     root.mkdir()
     path = root / "main.sifr"
-    path.write_text(BAD)
-    client = LspClient()
+    path.write_text(GOOD)
+    seed = subprocess.run([str(binary), *flags, "--timings", "check", str(path)],
+                          cwd=root, capture_output=True)
+    assert seed.returncode == 0, (seed.stdout, seed.stderr)
+    (output / "saved-seed.stderr").write_bytes(seed.stderr)
+    client = LspClient(cwd=root)
     try:
         initialize(client, root)
         open_source(client, path, GOOD)
         assert not diagnostics(client, path)
-        cli = subprocess.run([str(binary), "check", path.name], cwd=root, capture_output=True)
+        trace = client.request("sifr/debugTrace", {})
+        restored = int(trace.split("\nproject_restored_checks=", 1)[1].splitlines()[0])
+        assert (restored > 0) != no_incremental, trace
+        record("DX14-saved", {"restored_checks": restored, "persistence": not no_incremental})
+        close_source(client, path)
+        path.write_text(BAD)
+        open_source(client, path, GOOD)
+        assert not diagnostics(client, path)
+        cli = subprocess.run([str(binary), *flags, "check", path.name], cwd=root, capture_output=True)
         (output / "cli.stdout").write_bytes(cli.stdout)
         (output / "cli.stderr").write_bytes(cli.stderr)
         assert cli.returncode != 0 and b"SIFR-TYPE-0002" in cli.stdout + cli.stderr
@@ -127,7 +140,7 @@ def run(binary, output):
         finish(client)
 
     for encoding, end in [("utf-8", 21), ("utf-32", 18)]:
-        client = LspClient()
+        client = LspClient(cwd=root)
         try:
             initialized = client.request("initialize", {"processId": None, "rootUri": file_uri(root), "capabilities": {"general": {"positionEncodings": [encoding]}}})
             assert initialized["capabilities"]["positionEncoding"] == encoding
@@ -144,12 +157,12 @@ def run(binary, output):
     # semantic owner; explicit reconfiguration recovers the same live process.
     installed = output / "installed"
     shutil.copytree(binary.parent.parent, installed)
-    os.environ["SIFR_LSP_COMMAND"] = shlex.join([str(installed / "bin/sifr"), "lsp", "--stdio"])
+    os.environ["SIFR_LSP_COMMAND"] = shlex.join([str(installed / "bin/sifr"), *flags, "lsp", "--stdio"])
     descriptor = installed / "lib/sifr/stdlib.metadata.json"
     metadata = installed / "lib/sifr/stdlib.sifrmeta"
     metadata_bytes, descriptor_bytes = metadata.read_bytes(), descriptor.read_bytes()
     metadata.unlink()
-    client = LspClient()
+    client = LspClient(cwd=root)
     try:
         initialize(client, root, {"diagnosticsMode": "off"})
         open_source(client, path, GOOD)
@@ -183,5 +196,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--no-incremental", action="store_true")
     args = parser.parse_args()
-    run(args.binary.resolve(), args.output.resolve())
+    run(args.binary.resolve(), args.output.resolve(), args.no_incremental)

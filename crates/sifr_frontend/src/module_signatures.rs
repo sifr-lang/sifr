@@ -8,14 +8,16 @@ use sifr_python_ast::{Decorator, Expr, Parameters, Stmt, TypeParams};
 pub(super) struct ModuleSignature {
     pub(super) imports: ImportSignature,
     pub(super) exports: ExportSignature,
+    pub(super) semantic_body: String,
 }
 
 impl ModuleSignature {
     pub(super) fn cache_key_input(&self) -> String {
         format!(
-            "imports=[{}]|exports=[{}]",
+            "imports=[{}]|exports=[{}]|semantic=[{}]",
             self.imports.cache_key_input(),
-            self.exports.cache_key_input()
+            self.exports.cache_key_input(),
+            self.semantic_body
         )
     }
 }
@@ -85,6 +87,7 @@ pub(super) fn module_signature(stmts: &[Stmt]) -> ModuleSignature {
     ModuleSignature {
         imports: import_signature(stmts),
         exports: export_signature(stmts),
+        semantic_body: interface_projection(stmts),
     }
 }
 
@@ -248,4 +251,104 @@ fn comparable_optional_type_params(
     type_params: Option<&TypeParams>,
 ) -> Option<ComparableTypeParams<'_>> {
     type_params.map(Into::into)
+}
+
+/// Only this deliberately small, effect-free body class is erased. Everything
+/// else, including private helpers, generic/const bodies, class field defaults,
+/// decorators and unknown constructs, is part of the consumed interface proof.
+/// Callers must also establish successful checking before retaining importers.
+pub(crate) fn interface_projection(stmts: &[Stmt]) -> String {
+    use sifr_python_ast::comparable::ComparableStmt;
+    use std::hash::Hash;
+    let mut hash = InterfaceHasher(sifr_identity::IdentityEncoder::new(
+        "consumed-module-interface-v1",
+    ));
+    stmts.len().hash(&mut hash);
+    for stmt in stmts {
+        if let Stmt::FunctionDef(function) = stmt {
+            if function.type_params.is_none()
+                && function.decorator_list.is_empty()
+                && !function.is_async
+                && function.parameters.is_empty()
+                && matches!(function.returns.as_deref(), Some(Expr::Name(name))
+                if matches!(name.id.as_str(), "int" | "float" | "bool" | "str"))
+                && matches!(function.body.as_slice(), [Stmt::Return(ret)]
+                if ret.value.as_deref().is_some_and(pure_return))
+            {
+                (
+                    0_u8,
+                    function.name.as_str(),
+                    comparable_parameters(&function.parameters),
+                    comparable_optional_expr(function.returns.as_deref()),
+                )
+                    .hash(&mut hash);
+                continue;
+            }
+        }
+        (1_u8, ComparableStmt::from(stmt)).hash(&mut hash);
+    }
+    // Keep the full SHA-256 identity. No AST rendering enters resident state or
+    // graph cache keys, whose size must not grow with implementation bodies.
+    hash.0.finish()
+}
+
+/// Adapt the comparable AST's structural Hash stream to the existing identity
+/// encoder. The compiler identity pins Rust/AST hash encoding for disk records.
+struct InterfaceHasher(sifr_identity::IdentityEncoder);
+impl std::hash::Hasher for InterfaceHasher {
+    fn write(&mut self, bytes: &[u8]) {
+        self.0.field("structural-hash-chunk", bytes);
+    }
+
+    fn finish(&self) -> u64 {
+        // Required by Hasher, but interface_projection consumes the full digest.
+        // Do not use this shortened value as persisted semantic authority.
+        self.0
+            .clone()
+            .finish()
+            .bytes()
+            .take(16)
+            .fold(0, |value, byte| {
+                (value << 4)
+                    | u64::from(if byte <= b'9' {
+                        byte - b'0'
+                    } else {
+                        byte - b'a' + 10
+                    })
+            })
+    }
+}
+
+fn pure_return(expr: &Expr) -> bool {
+    match expr {
+        Expr::NumberLiteral(_)
+        | Expr::BooleanLiteral(_)
+        | Expr::StringLiteral(_)
+        | Expr::Name(_) => true,
+        Expr::BinOp(value) => pure_return(&value.left) && pure_return(&value.right),
+        Expr::UnaryOp(value) => pure_return(&value.operand),
+        _ => false,
+    }
+}
+
+#[cfg(test)]
+mod dx14_tests {
+    use super::*;
+
+    #[test]
+    fn dx14_semantic_interface_keys_have_bounded_size() {
+        fn signature(body: &str) -> ModuleSignature {
+            let source = format!("def value(x: int) -> int:\n{body}    return x\n");
+            let parsed = sifr_syntax::parse_module(&source, Some("fixture")).unwrap();
+            module_signature(parsed.suite())
+        }
+        let small = signature("    x = 1\n");
+        let large = signature(&"    x = x + 1\n".repeat(2000));
+        let changed = signature(&"    x = x + 2\n".repeat(2000));
+        assert_eq!(small.semantic_body.len(), 64);
+        assert_eq!(large.semantic_body.len(), 64);
+        assert_eq!(small.cache_key_input().len(), large.cache_key_input().len());
+        assert_ne!(large.semantic_body, changed.semantic_body);
+        assert_eq!(large, signature(&"    x = x + 1\n".repeat(2000)));
+    }
 }

@@ -29,6 +29,7 @@ use std::collections::BTreeMap;
 pub(super) type QueryResult<T> = Result<AnalysisQueryResult<T>, AnalysisError>;
 
 pub struct AnalysisHost {
+    pub(super) restored_check_modules: usize,
     pub(super) snapshot_owner: std::sync::Arc<()>,
     pub(super) stdlib_navigation: std::sync::Arc<sifr_driver::StdlibNavigation>,
     pub(super) compiler: sifr_driver::CompilerContext,

@@ -59,6 +59,15 @@ impl Default for LspAnalysisWorkspace {
     }
 }
 impl LspAnalysisWorkspace {
+    pub(crate) fn restored_check_modules(&self) -> usize {
+        self.documents
+            .values()
+            .filter_map(|item| item.host.as_ref())
+            .chain(self.projects.values().filter_map(|item| item.host.as_ref()))
+            .map(AnalysisHost::restored_check_modules)
+            .sum()
+    }
+
     pub(crate) fn discard_documents(&mut self) {
         self.documents.clear();
         self.projects.clear();

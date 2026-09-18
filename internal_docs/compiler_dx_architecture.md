@@ -642,6 +642,28 @@ Use the current module-granular dependency model. A changed source invalidates t
 
 Tests must prove both semantic equivalence and reuse behavior. Merely returning the same diagnostics with caching disabled does not demonstrate this feature. Do not implement expression-level persistence, a second salsa database, or speculative dependency elision as part of this design.
 
+### DX.14 proven checking propagation boundary
+
+Completed saved-source diagnostics can seed the existing frontend queries after
+revalidating the same compiler, metadata, source and ordered resolver observations.
+The driver can recompute changed modules in a captured flat non-package graph
+and retain unchanged importer diagnostics. The current positive interface proof
+erases only undecorated, nongeneric, synchronous zero-argument functions with an
+explicit primitive result and one pure return expression; checking changed
+modules must still succeed. Stored interface identities are full SHA-256
+fingerprints of the structural AST hash stream, so body size does not expand
+resident signatures or graph cache keys. All other bodies, private declarations, defaults,
+constants, class declarations, ownership and unknown effects remain conservative
+dependencies. Pure package checks retain exact-context reuse; live external
+authorities retain their ordinary owner execution.
+
+The editor only restores matching saved-source diagnostic facts into its captured
+generation. It does not publish overlays or claim typed HIR, flow, codegen or
+editor-index readiness. Rich requests continue through the existing owners.
+The --no-incremental flag also disables the editor adapter through the immutable
+compiler context and survives explicit toolchain refresh. Module decisions report
+the diagnostic family, computed/restored action and proof or invalidation reason.
+
 ### 9.5 Recovery and explicit controls
 
 Missing, stale, corrupt or unsupported-format project records are ignored and recomputed from authoritative inputs. Cache-write failure preserves the actual semantic outcome and reports that persistence was unavailable; it cannot turn valid source into a type error. Required output/native materialization errors remain errors.

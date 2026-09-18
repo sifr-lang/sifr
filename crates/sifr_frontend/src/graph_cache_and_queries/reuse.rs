@@ -148,6 +148,7 @@ impl FrontendContext {
         !parse_failed
             && old_signature.imports == new_signature.imports
             && old_signature.exports == new_signature.exports
+            && old_signature.semantic_body == new_signature.semantic_body
     }
 
     pub fn module_graph_arc_for_reuse(&mut self) -> Arc<ModuleGraphView> {
