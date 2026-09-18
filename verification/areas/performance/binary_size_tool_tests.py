@@ -8,7 +8,7 @@ import tempfile
 
 def run_self_test():
     tool = Path(__file__).parent / "tools/check_codegen_binary_size.sh"
-    for delta in (-1, 0, 1):
+    for delta in (-1, 0, 1, -129):
         with tempfile.TemporaryDirectory(prefix="sifr-size-tool-test-") as directory:
             root = Path(directory)
             repo = root / "repository"
@@ -49,11 +49,13 @@ out=pathlib.Path(sys.argv[sys.argv.index("--output")+1])
 binary=out/"sifr_output/target/final/sifr_output"
 binary.parent.mkdir(parents=True,exist_ok=True)
 size=int(pathlib.Path("size").read_text())
-binary.write_bytes(b"x"*size)
+if size >= 0:
+ binary.write_bytes(b"x"*size)
 row={"cwd":os.getcwd(),"output":str(out),"size":size,
      "head":subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()}
 with open(os.environ["SIFR_SIZE_TEST_LOG"],"a") as log:
  log.write(json.dumps(row)+"\\n")
+sys.exit(37 if size < 0 else 0)
 """)
             cargo.chmod(0o755)
             log = root / "calls.jsonl"
@@ -64,17 +66,21 @@ with open(os.environ["SIFR_SIZE_TEST_LOG"],"a") as log:
                 ["bash", str(tool), baseline], cwd=repo, env=env,
                 capture_output=True, text=True,
             )
-            assert result.returncode == (2 if delta > 0 else 0), result.stderr
+            expected = 37 if delta == -129 else (2 if delta > 0 else 0)
+            assert result.returncode == expected, result.stderr
             rows = [json.loads(line) for line in log.read_text().splitlines()]
             assert len(rows) == 2
             assert [row["head"] for row in rows] == [baseline, candidate]
             assert rows[0]["cwd"] == rows[1]["cwd"]
             assert rows[0]["output"] == rows[1]["output"]
             assert [row["size"] for row in rows] == [128, 128 + delta]
-            assert f"delta_bytes={delta}\n" in result.stdout
+            if delta == -129:
+                assert "result=PASS" not in result.stdout
+            else:
+                assert f"delta_bytes={delta}\n" in result.stdout
             assert git("rev-parse", "HEAD") == candidate
             assert len(git("worktree", "list", "--porcelain").split("worktree ")) == 2
-    print("Binary size tool controls: PASS (fixed paths; whole-byte increase rejects)")
+    print("Binary size tool controls: PASS (fixed paths; growth and stale-output failure reject)")
 
 
 if __name__ == "__main__":

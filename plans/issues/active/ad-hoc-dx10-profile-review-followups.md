@@ -64,7 +64,8 @@ non-increase assertion. No section is excluded, stripped or remapped and no
 tolerance is added. The actual repaired harness passes at 6,640,088 → 6,640,088
 bytes; both release Cargo profiles retain overflow checks. Synthetic harness
 controls separately prove that a one-byte increase rejects, equality/decrease
-pass, and source/output paths stay identical. These controls do not impersonate
+pass, source/output paths stay identical, and a failed candidate build cannot
+accept a stale baseline executable. These controls do not impersonate
 native measurements.
 
 Evidence is under `dx15-evidence/b46545b7541420302c9408588dc42ac2d8f777a9/`:

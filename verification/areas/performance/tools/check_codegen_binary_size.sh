@@ -88,9 +88,9 @@ measure_size() {
 
   mkdir -p "$out_dir"
   (
-    cd "$worktree"
+    cd "$worktree" || exit $?
     cargo run -p sifr -- build "$DEMO_PATH" --release --output "$out_dir" >/dev/null
-  )
+  ) || return $?
 
   local binary="$out_dir/sifr_output/target/final/sifr_output"
   if [[ ! -f "$binary" ]]; then
