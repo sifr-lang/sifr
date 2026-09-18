@@ -532,14 +532,31 @@ pub(super) fn check_entrypoint(
     file: &Path,
     provider: &mut dyn SourceProvider,
 ) -> Vec<RenderedDiagnostic> {
-    match resolve_compilation_mode(file, provider) {
-        Err(errors) => errors,
-        Ok(CompilationMode::Project) => check_project(&crate::compiler_context(), file, provider),
-        Ok(CompilationMode::SingleFile) => {
-            let source = read_source(file, provider);
-            check_single_file(&crate::compiler_context(), &source, file)
+    let compiler = crate::compiler_context();
+    let (enabled, timings) = crate::PROJECT_CACHE_OPTIONS
+        .get()
+        .copied()
+        .unwrap_or((true, false));
+    let (diagnostics, report) = sifr_driver::project_cache::check_saved_sources(
+        &compiler,
+        file,
+        provider,
+        enabled,
+        |provider| match resolve_compilation_mode(file, provider) {
+            Err(errors) => errors,
+            Ok(CompilationMode::Project) => check_project(&compiler, file, provider),
+            Ok(CompilationMode::SingleFile) => {
+                let source = read_source(file, provider);
+                check_single_file(&compiler, &source, file)
+            }
+        },
+    );
+    if timings {
+        if let Ok(report) = serde_json::to_string(&report) {
+            let _ = writeln!(io::stderr(), "[sifr-project-cache] {report}");
         }
     }
+    diagnostics
 }
 
 pub(super) fn emit_entrypoint(file: &Path, provider: &mut dyn SourceProvider) -> CompileResult {

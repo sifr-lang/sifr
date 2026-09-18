@@ -6,6 +6,14 @@ pub(crate) struct CacheArgs {
 }
 #[derive(clap::Subcommand)]
 enum CacheCommand {
+    /// Reclaim inactive project generations for one exact workspace under pressure
+    PruneProject {
+        workspace: std::path::PathBuf,
+        #[arg(long)]
+        dry_run: bool,
+        #[arg(long, default_value_t = 0)]
+        reserve_bytes: u64,
+    },
     /// Show sizes and protected entries in the selected owned cache
     Inspect {
         #[arg(long)]
@@ -22,6 +30,15 @@ enum CacheCommand {
 }
 pub(crate) fn run(args: CacheArgs) -> i32 {
     let result = match args.command {
+        CacheCommand::PruneProject { workspace, dry_run, reserve_bytes } => {
+            sifr_driver::cache_storage::available_bytes().and_then(|available| {
+                let generations = sifr_driver::project_cache::prune_project_cache(
+                    &workspace, available < reserve_bytes, dry_run)?;
+                Ok(serde_json::json!({"workspace": workspace, "dry_run": dry_run,
+                    "reserve_bytes": reserve_bytes, "available_bytes": available,
+                    "eligible_generations": generations}))
+            })
+        },
         CacheCommand::Inspect { json } => match sifr_driver::cache_storage::inspect() {
             Ok(report) if !json => {
                 let _ = writeln!(io::stdout(), "cache: {}", report.root.display());

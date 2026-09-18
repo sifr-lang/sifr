@@ -24,6 +24,9 @@ pub struct CanonicalDiagnostic {
     edits: Vec<Vec<CanonicalSpan>>,
 }
 impl CanonicalDiagnostic {
+    pub fn is_error(&self) -> bool {
+        self.fact.severity == sifr_diagnostics::Severity::Error
+    }
     pub fn capture(
         diagnostic: &RenderedDiagnostic,
         sources: &BTreeMap<String, CapturedSource>,
@@ -79,7 +82,14 @@ impl CanonicalDiagnostic {
         source_map: &mut SourceMap,
     ) -> Result<RenderedDiagnostic, String> {
         let mut remapped = BTreeMap::new();
-        for (identity, (source, display)) in sources {
+        let needed: std::collections::BTreeSet<_> = self
+            .spans
+            .iter()
+            .chain(self.edits.iter().flatten())
+            .filter_map(|span| span.source_identity.as_ref())
+            .collect();
+        for identity in needed {
+            let (source, display) = sources.get(identity).ok_or("missing canonical source")?;
             if source.identity() != *identity {
                 return Err("diagnostic source identity mismatch".into());
             }

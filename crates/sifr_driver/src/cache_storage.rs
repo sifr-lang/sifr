@@ -140,6 +140,16 @@ pub(crate) fn payload(root: &Path, relative_path: &Path) -> io::Result<()> {
 }
 
 pub(crate) fn entry_lock(parent: &Path, key: &str) -> io::Result<File> {
+    open_entry_lock(parent, key, true)
+}
+
+/// Project semantic readers/writers have no mutable native child owner. Keep
+/// their leases CLOEXEC so unrelated subprocesses cannot prolong retention.
+pub(crate) fn process_entry_lock(parent: &Path, key: &str) -> io::Result<File> {
+    open_entry_lock(parent, key, false)
+}
+
+fn open_entry_lock(parent: &Path, key: &str, inherit: bool) -> io::Result<File> {
     relative(Path::new(key))?;
     let locks = parent.join(".locks");
     directory(&locks)?;
@@ -155,7 +165,9 @@ pub(crate) fn entry_lock(parent: &Path, key: &str) -> io::Result<File> {
     if meta.uid() != uid() || meta.permissions().mode() & 0o022 != 0 || !meta.is_file() {
         return Err(invalid("unsafe cache ownership lock"));
     }
-    inherit_lease(&file)?;
+    if inherit {
+        inherit_lease(&file)?;
+    }
     Ok(file)
 }
 

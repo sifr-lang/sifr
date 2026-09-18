@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 /// Ordered operations are the actual resolver's observations, including absence.
 /// Directory membership is sorted; search order is never sorted.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub enum Observation {
     File {
         path: PathBuf,
@@ -92,6 +93,14 @@ impl<'a> CapturingSourceProvider<'a> {
 fn members(entries: &[SourceDirEntry]) -> Vec<DirectoryMember> {
     let mut output: Vec<_> = entries
         .iter()
+        // The compiler's own non-source hint cannot invalidate its publication.
+        // Keep the provider's resolver-visible entries unchanged.
+        .filter(|entry| {
+            !entry.path.file_name().is_some_and(|name| {
+                name == ".sifrbuildinfo"
+                    || name.to_string_lossy().starts_with(".sifrbuildinfo.stage-")
+            })
+        })
         .map(|entry| DirectoryMember {
             path: entry.path.clone(),
             file: entry.is_file,

@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 /// Family completion is independent of source success and other families.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub enum Family<T> {
     Pending,
     Cancelled,
@@ -20,6 +21,7 @@ impl<T> Family<T> {
     }
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub enum SourceOutcome {
     Success,
     DeterministicErrors,

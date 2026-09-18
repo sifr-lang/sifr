@@ -63,3 +63,7 @@ demos/**/*.exe
 
 # Mintlify docs tooling (local analysis cache; also in docs/.mintignore)
 docs/.atlas-analysis.json
+
+# Private project-generation hints
+.sifrbuildinfo
+.sifrbuildinfo.stage-*

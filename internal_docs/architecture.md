@@ -2063,5 +2063,12 @@ preserves isolated feature/native selections and original assertion inventories.
 DX.12 defines persistence-facing frontend families and ordered source/resolver
 observations, with package discovery using the same captured provider and typed
 HIR/interface transport through the existing bounded driver metadata codec.
-Canonical diagnostic facts remap into current source maps. These contracts do
-not activate disk reuse; the transactional consumer remains owned by DX.13.
+Canonical diagnostic facts remap into current source maps. DX.13 now restores
+completed saved-source checking families through that frontend contract. The
+ordinary CLI keeps deeper HIR/editor/codegen families explicit and computes them
+when requested; dynamic package/SQL/Python contexts retain their live owner checks.
+Driver-owned project generations inherit immutable records under OS leases,
+validate complete manifests, and publish atomically. Optional project storage
+failures preserve semantic results. `--no-incremental` disables this project
+family without cleaning metadata or Cargo; `cache prune-project` is scoped to
+one explicit workspace and only deletes inactive generations under pressure.

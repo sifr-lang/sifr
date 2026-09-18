@@ -98,3 +98,5 @@ mod compiled_identity;
 pub use compiled_identity::compiled_input_tokens;
 
 pub use metadata_reader::qualify_development_metadata;
+
+pub mod project_cache;
