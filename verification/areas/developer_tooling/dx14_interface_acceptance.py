@@ -32,7 +32,10 @@ def run(binary, output):
         (output / (label + ".stderr")).write_text(result.stderr)
         stats = next(json.loads(line.split("] ", 1)[1]) for line in result.stderr.splitlines()
                      if line.startswith("[sifr-project-cache] "))
-        diagnostics = json.loads(result.stdout)
+        stream = result.stdout.strip() or "\n".join(
+            line for line in result.stderr.splitlines()
+            if not line.startswith(("[sifr-project-cache] ", "[sifr-timing] ")))
+        diagnostics = json.loads(stream)
         report["rows"].append({"label": label, "command": command,
                                "returncode": result.returncode, "cache": stats})
         (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")

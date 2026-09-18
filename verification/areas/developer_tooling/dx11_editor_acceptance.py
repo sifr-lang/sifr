@@ -58,14 +58,13 @@ def run(binary, output, no_incremental=False):
         (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     root = output / "workspace"
     root.mkdir()
-    os.chdir(root)
     path = root / "main.sifr"
     path.write_text(GOOD)
     seed = subprocess.run([str(binary), *flags, "--timings", "check", str(path)],
                           cwd=root, capture_output=True)
     assert seed.returncode == 0, (seed.stdout, seed.stderr)
     (output / "saved-seed.stderr").write_bytes(seed.stderr)
-    client = LspClient()
+    client = LspClient(cwd=root)
     try:
         initialize(client, root)
         open_source(client, path, GOOD)
@@ -141,7 +140,7 @@ def run(binary, output, no_incremental=False):
         finish(client)
 
     for encoding, end in [("utf-8", 21), ("utf-32", 18)]:
-        client = LspClient()
+        client = LspClient(cwd=root)
         try:
             initialized = client.request("initialize", {"processId": None, "rootUri": file_uri(root), "capabilities": {"general": {"positionEncodings": [encoding]}}})
             assert initialized["capabilities"]["positionEncoding"] == encoding
@@ -163,7 +162,7 @@ def run(binary, output, no_incremental=False):
     metadata = installed / "lib/sifr/stdlib.sifrmeta"
     metadata_bytes, descriptor_bytes = metadata.read_bytes(), descriptor.read_bytes()
     metadata.unlink()
-    client = LspClient()
+    client = LspClient(cwd=root)
     try:
         initialize(client, root, {"diagnosticsMode": "off"})
         open_source(client, path, GOOD)
