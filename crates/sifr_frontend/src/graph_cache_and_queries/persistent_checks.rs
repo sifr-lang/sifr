@@ -28,12 +28,19 @@ impl FrontendContext {
             return None;
         }
         let saved = record.result.resolution.ready()?;
-        if saved.sources.len() != self.modules.len() || !self.auxiliary_sources.is_empty() {
+        if saved
+            .sources
+            .iter()
+            .filter(|source| source.path.extension().is_some_and(|ext| ext == "sifr"))
+            .count()
+            != self.modules.len()
+            || !self.auxiliary_sources.is_empty()
+        {
             return None;
         }
         let mut updated = record.clone();
         let mut changed = Vec::new();
-        let mut current_sources = Vec::new();
+        let mut current_sources = saved.sources.clone();
         for module in &self.modules {
             let old = saved
                 .sources
@@ -58,7 +65,10 @@ impl FrontendContext {
                 }
                 changed.push(module.id);
             }
-            current_sources.push(current);
+            let slot = current_sources
+                .iter_mut()
+                .find(|source| source.path == current.path)?;
+            *slot = current;
         }
         // Rewrite only the file observations whose semantic equivalence is
         // proved above. Search order, absence, config and context remain exact.

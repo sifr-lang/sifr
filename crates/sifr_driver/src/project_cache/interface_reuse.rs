@@ -4,7 +4,7 @@ use sifr_frontend::{
 };
 use std::path::Path;
 
-/// The initial proven boundary supports ordinary manifestless source graphs.
+/// The initial proven boundary supports ordinary non-package source graphs.
 /// Package, SQL, Python and component authorities continue through their owners.
 pub(super) fn restore(
     record: &CompletedCheck,

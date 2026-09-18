@@ -646,7 +646,7 @@ Tests must prove both semantic equivalence and reuse behavior. Merely returning 
 
 Completed saved-source diagnostics can seed the existing frontend queries after
 revalidating the same compiler, metadata, source and ordered resolver observations.
-The driver can recompute changed modules in a captured flat manifestless graph
+The driver can recompute changed modules in a captured flat non-package graph
 and retain unchanged importer diagnostics. The current positive interface proof
 erases only undecorated, nongeneric, synchronous zero-argument functions with an
 explicit primitive result and one pure return expression; checking changed
