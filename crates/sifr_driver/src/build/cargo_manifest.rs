@@ -694,7 +694,7 @@ edition = "2024"
 [dependencies]
 sifr_stdlib = { path = "/opt/sifr/crates/sifr_stdlib", default-features = false, features = ["json"] }
 serde_json = { version = "1.0.151", features = ["preserve_order"] }
-"#
+"#.to_owned() + crate::application_profile::MANIFEST
         );
     }
 
