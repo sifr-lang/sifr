@@ -2059,3 +2059,9 @@ The DX.10 application policy selects development for ordinary `sifr build` and
 all pinned profile tables; native family storage retains both profile outputs,
 while finalized copies use `target/final`. The shared compiler configuration plan
 preserves isolated feature/native selections and original assertion inventories.
+
+DX.12 defines persistence-facing frontend families and ordered source/resolver
+observations, with package discovery using the same captured provider and typed
+HIR/interface transport through the existing bounded driver metadata codec.
+Canonical diagnostic facts remap into current source maps. These contracts do
+not activate disk reuse; the transactional consumer remains owned by DX.13.

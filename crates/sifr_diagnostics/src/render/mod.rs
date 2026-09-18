@@ -239,7 +239,7 @@ fn canonical_args_bytes(args: &BTreeMap<String, DiagnosticArg>) -> Vec<u8> {
     serde_json::to_vec(args).unwrap_or_default()
 }
 
-fn render_span(
+pub fn render_span(
     source_map: &SourceMap,
     span: &SourceSpan,
     is_primary: bool,

@@ -697,4 +697,64 @@ mod tests {
         );
         assert_eq!(value["relatedInformation"][0]["message"], "declared here");
     }
+    #[test]
+    fn dx12_i03_restored_facts_use_current_lsp_position_encoding() {
+        use sifr_frontend::persistence::{CanonicalDiagnostic, CapturedSource};
+        let source = CapturedSource {
+            path: "/workspace/main.sifr".into(),
+            text: "a🦀b\r\n".into(),
+        };
+        let rendered = RenderedDiagnostic {
+            code: "SIFR-META-0001".into(),
+            severity: Severity::Error,
+            message: "example".into(),
+            message_template: "{message}".into(),
+            args: BTreeMap::new(),
+            url: String::new(),
+            spans: vec![DiagnosticSpan {
+                file: Some("main.sifr".into()),
+                byte_start: 1,
+                byte_end: 5,
+                line: None,
+                column: None,
+                end_line: None,
+                end_column: None,
+                is_primary: true,
+                label: None,
+                lines: Vec::new(),
+            }],
+            children: Vec::new(),
+            help: None,
+            suggestions: Vec::new(),
+        };
+        let facts = CanonicalDiagnostic::capture(
+            &rendered,
+            &BTreeMap::from([("main.sifr".into(), source.clone())]),
+        )
+        .unwrap();
+        let bytes = serde_json::to_vec(&facts).unwrap();
+        for (encoding, end) in [
+            (PositionEncoding::Utf8, 5),
+            (PositionEncoding::Utf16, 3),
+            (PositionEncoding::Utf32, 2),
+        ] {
+            let restored: CanonicalDiagnostic = serde_json::from_slice(&bytes).unwrap();
+            let rendered = restored
+                .render(
+                    &BTreeMap::from([(source.identity(), (source.clone(), "main.sifr".into()))]),
+                    &mut sifr_diagnostics::SourceMap::new(),
+                )
+                .unwrap();
+            let value = diagnostic(
+                rendered,
+                "file:///workspace/main.sifr",
+                &source.text,
+                encoding,
+            )
+            .unwrap();
+            assert_eq!(value["range"]["start"]["character"], 1);
+            assert_eq!(value["range"]["end"]["character"], end);
+            assert_eq!(serde_json::to_vec(&restored).unwrap(), bytes);
+        }
+    }
 }

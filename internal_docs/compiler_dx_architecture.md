@@ -985,3 +985,39 @@ The private v1 indexed schema and bounded record decoder live in
 documents stable-ID rules, explicit payload records, per-store shared handles and
 the forthcoming source-backed layered-view migration. This does not activate normal
 metadata production or CLI/LSP consumers; DX.6 and DX.7 retain those responsibilities.
+
+### DX.12 implemented persistence-facing boundary
+
+The frontend persistence module owns the ordered resolution journal, captured
+source bytes, explicit semantic input contract, independent family completion
+and conservative module-interface identity. CapturingSourceProvider must remain
+alive across package discovery, resolution and parsing: repeated reads return
+the captured bytes, and publication eligibility replays the actual observation
+journal. Ordered absent candidates, directory membership, canonical aliases and
+configuration reads are recorded without changing resolver precedence or cycles.
+An environmental read failure cannot authorize a reusable record.
+
+The package semantic_capture adapter uses the existing Cargo metadata parser,
+package graph and source-map builder with that same provider. It records the
+effective Cargo metadata and captured lock bytes, while manifest, namespace and
+source-set observations come from actual resolver operations. The outer owner
+supplies the compiler, metadata, target, language/diagnostic policy, component and
+declared SQL/Python/interop identities. Required external observations must all
+be resolved before input completeness; terminal presentation is excluded.
+
+Canonical diagnostics store source identities and byte ranges, including
+suggestion edits; the current source map allocates fresh source IDs and renders
+current display paths, line/column and snippets. Typed interface and checked-HIR
+families use the existing bounded indexed metadata codec through driver adapters.
+Package/source identity anchors declarations; types and binders follow the
+existing normal decode rules. Interface summaries include the complete semantic
+export projection and a conservative exact-input stamp, so no unchanged-interface
+optimization is claimed. Codegen handoffs identify checked inputs and required
+specializations independently of executable materialization.
+
+The declared checked-family consumers are typed HIR/codegen and semantic exports.
+Syntax, flow-analysis queries and rich editor indexes remain separate unpersisted
+families and are recomputed by their existing owners when demanded. These APIs do
+not enable cross-process reuse or write project generations: DX.13 owns those
+consumers, transaction boundaries and compatibility/miss policy, and DX.14 owns
+proof-based narrowing of importer invalidation.

@@ -216,3 +216,9 @@ pub(crate) fn reencode_qualified(
         .map_err(|e| wire::MetadataError(e.to_string()))?;
     project::project(compiled, &sources, compatibility, &root.paths.stdlib_root)
 }
+
+mod project_results;
+pub use project_results::{
+    ProjectInterfacePayload, ProjectModuleInput, ProjectModuleReferences, ProjectTypedArtifact,
+    encode_project_results,
+};

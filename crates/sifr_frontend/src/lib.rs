@@ -63,6 +63,7 @@ mod warning_diagnostics;
 pub use warning_diagnostics::{reveal_type_diagnostics, warning_diagnostics};
 mod query_diagnostics;
 pub use query_diagnostics::*;
+pub mod persistence;
 #[cfg(test)]
 mod query_diagnostics_behavior_tests;
 #[cfg(test)]

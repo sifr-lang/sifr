@@ -28,6 +28,7 @@ serde_json = { workspace = true }
 workspace = true
 
 [dev-dependencies]
+insta = { workspace = true }
 semver = { workspace = true }
 sifr_sql_runtime = { workspace = true }
 
