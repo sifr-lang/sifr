@@ -121,10 +121,12 @@ impl Session {
     ) -> LspResult<()> {
         self.python_declarations.invalidate_source();
         self.store.open(uri.clone(), language_id, version, text)?;
-        if self.store.settings().diagnostics_mode == crate::document_store::DiagnosticsMode::Off {
+        let document = self.store.document(&uri)?;
+        if self.store.settings().diagnostics_mode == crate::document_store::DiagnosticsMode::Off
+            && !self.analysis.has_analysis(document)
+        {
             return Ok(());
         }
-        let document = self.store.document(&uri)?;
         if self.analysis.open_document(document) {
             self.analysis.refresh_projects(&self.store);
         }
@@ -151,11 +153,9 @@ impl Session {
         let text_changed =
             self.store
                 .apply_compacted_change(uri, version, &compacted, self.position_encoding)?;
-        if self.store.settings().diagnostics_mode == crate::document_store::DiagnosticsMode::Off {
-            self.analysis.discard_documents();
-        }
         let document = self.store.document(uri)?;
-        if self.store.settings().diagnostics_mode != crate::document_store::DiagnosticsMode::Off
+        if (self.store.settings().diagnostics_mode != crate::document_store::DiagnosticsMode::Off
+            || self.analysis.has_analysis(document))
             && self.analysis.update_document(document)
         {
             self.analysis.refresh_projects(&self.store);
@@ -172,11 +172,9 @@ impl Session {
         if !self.store.save(uri, text) {
             return Ok(false);
         }
-        if self.store.settings().diagnostics_mode == crate::document_store::DiagnosticsMode::Off {
-            self.analysis.discard_documents();
-        }
         let document = self.store.document(uri)?;
-        if self.store.settings().diagnostics_mode != crate::document_store::DiagnosticsMode::Off
+        if (self.store.settings().diagnostics_mode != crate::document_store::DiagnosticsMode::Off
+            || self.analysis.has_analysis(document))
             && self.analysis.update_document(document)
         {
             self.analysis.refresh_projects(&self.store);
@@ -189,11 +187,7 @@ impl Session {
         self.diagnostic_jobs.remove(uri);
         self.analysis.close_document(uri);
         let closed = self.store.close(uri);
-        if self.store.settings().diagnostics_mode == crate::document_store::DiagnosticsMode::Off {
-            self.analysis.discard_documents();
-        } else {
-            self.analysis.refresh_projects(&self.store);
-        }
+        self.analysis.refresh_existing_projects(&self.store);
         if self.store.document_uris().is_empty() {
             self.analysis.compiler = self.analysis.compiler.without_cached_metadata();
         }
