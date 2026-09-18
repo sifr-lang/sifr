@@ -174,6 +174,8 @@ fn native_context_digests_executable_content_not_only_version_text() {
 #[test]
 fn dx10_b05_profile_overrides_preserve_boundaries() {
     let fixture = Fixture::new();
+    let manifest = fixture.root.join("generated.toml");
+    fs::write(&manifest, "[workspace]\n").unwrap();
     fs::create_dir_all(fixture.root.join(".cargo")).unwrap();
     let config = fixture.root.join(".cargo/config.toml");
     for source in [
@@ -182,14 +184,24 @@ fn dx10_b05_profile_overrides_preserve_boundaries() {
         "[build]\nrustflags = [\"-C\", \"overflow-checks=off\"]\n",
     ] {
         fs::write(&config, source).unwrap();
-        assert!(fixture.tools().validate_application_profile("dev").is_err());
+        assert!(
+            fixture
+                .tools()
+                .validate_application_profile("dev", &manifest)
+                .is_err()
+        );
     }
     fs::write(&config, "[profile.release]\npanic = \"abort\"\n").unwrap();
-    assert!(fixture.tools().validate_application_profile("dev").is_ok());
     assert!(
         fixture
             .tools()
-            .validate_application_profile("release")
+            .validate_application_profile("dev", &manifest)
+            .is_ok()
+    );
+    assert!(
+        fixture
+            .tools()
+            .validate_application_profile("release", &manifest)
             .is_err()
     );
     fs::write(
@@ -197,5 +209,48 @@ fn dx10_b05_profile_overrides_preserve_boundaries() {
         "[profile.dev]\noverflow-checks = true\npanic = \"unwind\"\n",
     )
     .unwrap();
-    assert!(fixture.tools().validate_application_profile("dev").is_ok());
+    assert!(
+        fixture
+            .tools()
+            .validate_application_profile("dev", &manifest)
+            .is_ok()
+    );
+}
+
+#[test]
+fn dx10_b05_generated_manifest_owns_profile_authority() {
+    let fixture = Fixture::new();
+    let manifest = fixture.root.join("generated.toml");
+    fs::write(
+        &manifest,
+        "[workspace]\n[profile.dev]\npanic = \"unwind\"\noverflow-checks = true\n",
+    )
+    .unwrap();
+    for unrelated in [
+        "[workspace]\n[profile.dev]\npanic = \"abort\"\noverflow-checks = false\n",
+        "this is not valid TOML [",
+    ] {
+        fs::write(fixture.root.join("Cargo.toml"), unrelated).unwrap();
+        assert!(
+            fixture
+                .tools()
+                .validate_application_profile("dev", &manifest)
+                .is_ok()
+        );
+    }
+    fs::write(&manifest, "[workspace]\n[profile.dev]\npanic = \"abort\"\n").unwrap();
+    assert!(
+        fixture
+            .tools()
+            .validate_application_profile("dev", &manifest)
+            .is_err()
+    );
+    // No generated root may silently inherit an enclosing workspace's policy.
+    fs::write(&manifest, "[package]\nname = \"member\"\n").unwrap();
+    assert!(
+        fixture
+            .tools()
+            .validate_application_profile("dev", &manifest)
+            .is_err()
+    );
 }

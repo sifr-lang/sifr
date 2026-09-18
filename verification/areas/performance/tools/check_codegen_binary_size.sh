@@ -7,6 +7,7 @@ Usage: verification/areas/performance/tools/check_codegen_binary_size.sh <baseli
 
 Compares release binary size for a Sifr demo between two git refs.
 Exits non-zero if candidate binary is larger than baseline.
+Both refs must support explicit --release and the finalized artifact layout.
 
 Arguments:
   baseline_ref   Git ref/commit to compare from
@@ -90,12 +91,12 @@ measure_size() {
   mkdir -p "$out_dir"
   (
     cd "$worktree"
-    cargo run -p sifr -- build "$DEMO_PATH" --output "$out_dir" >/dev/null
+    cargo run -p sifr -- build "$DEMO_PATH" --release --output "$out_dir" >/dev/null
   )
 
-  local binary="$out_dir/sifr_output/target/release/sifr_output"
+  local binary="$out_dir/sifr_output/target/final/sifr_output"
   if [[ ! -f "$binary" ]]; then
-    binary="$out_dir/sifr_output/target/release/sifr_output.exe"
+    binary="$out_dir/sifr_output/target/final/sifr_output.exe"
   fi
 
   if [[ ! -f "$binary" ]]; then

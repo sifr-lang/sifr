@@ -180,7 +180,10 @@ pub(crate) fn execute_test_runner_project(
     )
     .map_err(test_io_error)?;
     native_toolchain
-        .validate_application_profile(generated_project.application_profile.cargo_name())
+        .validate_application_profile(
+            generated_project.application_profile.cargo_name(),
+            &project_dir.join("Cargo.toml"),
+        )
         .map_err(test_io_error)?;
     write_stderr_line(&format!(
         "application profile: {} ({})",

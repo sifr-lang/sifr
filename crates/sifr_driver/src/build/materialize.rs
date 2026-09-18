@@ -586,7 +586,10 @@ fn run_cargo_build(
         .native_toolchain
         .as_ref()
         .map_err(|e| vec![cargo_build_error(e.clone())])?
-        .validate_application_profile(cargo_resolution.application_profile.cargo_name())
+        .validate_application_profile(
+            cargo_resolution.application_profile.cargo_name(),
+            &project_path.join("Cargo.toml"),
+        )
         .map_err(|e| vec![cargo_build_error(e)])?;
     let mut command = cargo_resolution.cargo_command()?;
     command.args(sysroot_cargo_config_args(dependency_plan));

@@ -437,3 +437,36 @@ fn dx10_b11_default_build_and_run_report_development() {
         assert!(capture.stderr.contains("sifr-application-profiles-v1"));
     }
 }
+
+#[test]
+fn dx10_b05_unrelated_cargo_manifest_cannot_override_applications() {
+    let project = TestProject::new("unrelated-profile", "def main():\n    print(42)\n");
+    let main = project.main.to_string_lossy();
+    let tests = project.root.join("tests");
+    std::fs::create_dir(&tests).expect("test source directory");
+    std::fs::write(
+        tests.join("test_profile.sifr"),
+        "def test_profile():\n    assert 2 + 2 == 4\n",
+    )
+    .expect("test source");
+    let tests = tests.to_string_lossy();
+    for unrelated in [
+        "[workspace]\n[profile.dev]\npanic = \"abort\"\noverflow-checks = false\n[profile.release]\npanic = \"abort\"\n",
+        "this is not valid TOML [",
+    ] {
+        std::fs::write(project.root.join("Cargo.toml"), unrelated)
+            .expect("unrelated caller manifest");
+        for arguments in [
+            vec!["run", &main],
+            vec!["run", &main, "--release"],
+            vec!["test", &tests],
+            vec!["test", &tests, "--release"],
+        ] {
+            let capture = run_sifr_with_env(&arguments, &project.root, &[]);
+            assert_eq!(capture.status_code, 0, "{}", capture.stderr);
+            if arguments[0] == "run" {
+                assert_eq!(capture.stdout, "42\n");
+            }
+        }
+    }
+}

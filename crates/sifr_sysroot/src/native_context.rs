@@ -379,7 +379,11 @@ impl NativeToolchain {
         Ok(())
     }
     /// Check captured effective configuration before selecting an application profile.
-    pub fn validate_application_profile(&self, profile: &str) -> Result<(), String> {
+    pub fn validate_application_profile(
+        &self,
+        profile: &str,
+        manifest: &Path,
+    ) -> Result<(), String> {
         fn check(value: &toml::Value, profile: &str) -> Result<(), String> {
             if let Some(table) = value.get("profile").and_then(|v| v.get(profile)) {
                 fn boundary(value: &toml::Value) -> Result<(), String> {
@@ -429,17 +433,21 @@ impl NativeToolchain {
                 .map_err(|_| "invalid Cargo profile configuration")?;
             check(&toml::Value::Table(value), profile)?;
         }
-        for ancestor in self.invocation_root.ancestors() {
-            let manifest = ancestor.join("Cargo.toml");
-            if manifest.is_file() {
-                let value: toml::Table = std::fs::read_to_string(manifest)
-                    .map_err(|_| "cannot read profile manifest")?
-                    .parse()
-                    .map_err(|_| "invalid profile manifest")?;
-                check(&toml::Value::Table(value), profile)?;
-                break;
-            }
+        // Generated applications declare their own workspace. Their profile
+        // authority is this manifest, never a manifest above the caller's CWD.
+        let document: toml::Table = std::fs::read_to_string(manifest)
+            .map_err(|_| "cannot read generated application manifest")?
+            .parse()
+            .map_err(|_| "invalid generated application manifest")?;
+        if !document.get("workspace").is_some_and(toml::Value::is_table)
+            || document
+                .get("package")
+                .and_then(|value| value.get("workspace"))
+                .is_some()
+        {
+            return Err("generated application must own its Cargo workspace".into());
         }
+        check(&toml::Value::Table(document), profile)?;
         let prefix = format!("CARGO_PROFILE_{}_", profile.to_uppercase());
         for (name, value) in &self.environment {
             if let Some(value) = value {
