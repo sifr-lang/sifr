@@ -25,7 +25,7 @@ def run(binary, output):
         if disabled:
             command.append("--no-incremental")
         command += ["check", str(main)]
-        result = subprocess.run(command, env=env, capture_output=True, text=True)
+        result = subprocess.run(command, cwd=project, env=env, capture_output=True, text=True)
         (output / (label + ".stdout")).write_text(result.stdout)
         (output / (label + ".stderr")).write_text(result.stderr)
         stats = next(json.loads(line.split("] ", 1)[1]) for line in result.stderr.splitlines()

@@ -441,3 +441,33 @@ fn dx14_reconfiguration_deletion_and_unknown_effect_scope() {
         assert!(update.invalidated_modules.contains(&graph.entrypoint));
     }
 }
+
+#[test]
+fn dx14_restored_interface_reports_unavailable_publication() {
+    use std::os::unix::fs::PermissionsExt;
+    let (_root, file, cache) = fixture();
+    assert_eq!(run(&cache, &file, inputs()).1.status, "published");
+    let store = storage::Store::open(
+        &cache,
+        file.parent().unwrap(),
+        &inputs().identity().unwrap(),
+    )
+    .unwrap();
+    fs::set_permissions(&store.root, fs::Permissions::from_mode(0o500)).unwrap();
+    fs::write(
+        file.parent().unwrap().join("helper.sifr"),
+        "def value() -> int:\n    return 7\n",
+    )
+    .unwrap();
+    let (diagnostics, report) = run(&cache, &file, inputs());
+    fs::set_permissions(&store.root, fs::Permissions::from_mode(0o700)).unwrap();
+    assert!(diagnostics.is_empty());
+    assert_eq!(report.status, "interface-restored-write-unavailable");
+    assert_eq!(report.restored_checks, 1);
+    assert!(
+        report
+            .modules
+            .iter()
+            .any(|module| module.action == "restored" && module.path == file)
+    );
+}

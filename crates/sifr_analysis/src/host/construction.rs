@@ -49,14 +49,18 @@ impl AnalysisHost {
         profiles: sifr_driver::PreparedSqlProfiles,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         session = session.with_compiler_identity(compiler.identity().clone());
-        if let Some(frontend) = session.context_mut() {
-            let _ = sifr_driver::project_cache::restore_editor_checks(compiler, frontend);
-        }
+        let restored_check_modules = session.context_mut().map_or(0, |frontend| {
+            sifr_driver::project_cache::restore_editor_checks(compiler, frontend)
+                .iter()
+                .filter(|decision| decision.action == "restored")
+                .count()
+        });
         let snapshot = session.snapshot();
         let Some(current_revision) = revision_from_workspace_snapshot(&snapshot) else {
             return Err(Vec::new());
         };
         let mut host = Self {
+            restored_check_modules,
             snapshot_owner: std::sync::Arc::new(()),
             stdlib_navigation: compiler.stdlib_navigation()?,
             compiler: compiler.clone(),

@@ -46,6 +46,10 @@ pub(crate) struct DocumentChangeSummary {
 }
 
 impl Session {
+    pub(crate) fn restored_check_modules(&self) -> usize {
+        self.analysis.restored_check_modules()
+    }
+
     pub(crate) fn ensure_document_analysis(&mut self, uri: &str) -> LspResult<()> {
         let document = self.store.document(uri)?;
         if !self.analysis.can_analyze_document(document)

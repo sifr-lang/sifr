@@ -4,6 +4,10 @@ use crate::symbols::{SymbolBucketKind, SymbolBucketReadinessState};
 use sifr_frontend::{WorkspaceDebugSnapshot, WorkspaceIndexReadinessStatus};
 
 impl AnalysisHost {
+    pub fn restored_check_modules(&self) -> usize {
+        self.restored_check_modules
+    }
+
     pub fn debug_snapshot(&mut self) -> WorkspaceDebugSnapshot {
         let mut debug = self.session.snapshot().debug.as_ref().clone();
         debug.status.index_readiness = self.symbol_index.as_ref().map_or_else(

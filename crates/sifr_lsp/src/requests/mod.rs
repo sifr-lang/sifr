@@ -53,6 +53,10 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
         "sifr/sysroot" => sysroot_status(session, &params),
         "sifr/debugTrace" => {
             let mut text = session.trace_snapshot().render_text();
+            text.push_str(&format!(
+                "\nproject_restored_checks={}",
+                session.restored_check_modules()
+            ));
             if let Some(stats) = session.compiler_context().metadata_stats() {
                 text.push_str(&format!("\nmetadata_stats={stats}"));
             }

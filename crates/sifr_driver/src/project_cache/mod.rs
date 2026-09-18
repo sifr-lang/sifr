@@ -173,6 +173,9 @@ fn check(
                             record.result.resolution.ready().map_or_else(Vec::new, |r| {
                                 r.sources
                                     .iter()
+                                    .filter(|source| {
+                                        source.path.extension().is_some_and(|ext| ext == "sifr")
+                                    })
                                     .map(|source| sifr_frontend::ModuleCheckDecision {
                                         path: source.path.clone(),
                                         family: "diagnostics",
@@ -207,13 +210,27 @@ fn check(
                         report.modules = modules;
                         report.captured_sources = capture.sources().len();
                         report.validation_us = validation.elapsed().as_micros();
-                        if let Ok(updated) =
-                            CompletedCheck::capture(file, inputs.clone(), &capture, &[])
-                        {
-                            if capture.unchanged() && !cancel.load(Ordering::Acquire) {
-                                let _ = store.publish(&updated, cancel);
+                        let serialization = Instant::now();
+                        match CompletedCheck::capture(file, inputs.clone(), &capture, &[]) {
+                            Ok(updated)
+                                if !cancel.load(Ordering::Acquire) && capture.unchanged() =>
+                            {
+                                report.payload_bytes =
+                                    serde_json::to_vec(&updated).map_or(0, |bytes| bytes.len());
+                                if store.publish(&updated, cancel).is_err() {
+                                    report.status = "interface-restored-write-unavailable".into();
+                                }
                             }
+                            Ok(_) => {
+                                report.status = if cancel.load(Ordering::Acquire) {
+                                    "cancelled".into()
+                                } else {
+                                    "interface-restored-changed-inputs".into()
+                                }
+                            }
+                            Err(_) => report.status = "interface-restored-uncacheable".into(),
                         }
+                        report.serialization_us = serialization.elapsed().as_micros();
                         return (Vec::new(), report);
                     }
                 }
@@ -229,6 +246,7 @@ fn check(
     report.modules = capture
         .sources()
         .iter()
+        .filter(|source| source.path.extension().is_some_and(|ext| ext == "sifr"))
         .map(|source| sifr_frontend::ModuleCheckDecision {
             path: source.path.clone(),
             family: "diagnostics",

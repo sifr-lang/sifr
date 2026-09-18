@@ -58,11 +58,24 @@ def run(binary, output, no_incremental=False):
         (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     root = output / "workspace"
     root.mkdir()
+    os.chdir(root)
     path = root / "main.sifr"
-    path.write_text(BAD)
+    path.write_text(GOOD)
+    seed = subprocess.run([str(binary), *flags, "--timings", "check", str(path)],
+                          cwd=root, capture_output=True)
+    assert seed.returncode == 0, (seed.stdout, seed.stderr)
+    (output / "saved-seed.stderr").write_bytes(seed.stderr)
     client = LspClient()
     try:
         initialize(client, root)
+        open_source(client, path, GOOD)
+        assert not diagnostics(client, path)
+        trace = client.request("sifr/debugTrace", {})
+        restored = int(trace.split("\nproject_restored_checks=", 1)[1].splitlines()[0])
+        assert (restored > 0) != no_incremental, trace
+        record("DX14-saved", {"restored_checks": restored, "persistence": not no_incremental})
+        close_source(client, path)
+        path.write_text(BAD)
         open_source(client, path, GOOD)
         assert not diagnostics(client, path)
         cli = subprocess.run([str(binary), *flags, "check", path.name], cwd=root, capture_output=True)
