@@ -9,11 +9,14 @@ def prepare_crate_test_binaries(profile, env, command_runner) -> None:
     if mode is None:
         return
     prepared = set()
+    built = set()
     for configuration in configuration_plan(profile, mode):
         command = configuration.preparation()
         arguments = command[5:]
-        print(f"[sifr-profile-setup] crate-test-build={' '.join(command)}", flush=True)
-        command_runner(command, env=env)
+        if tuple(command) not in built:
+            print(f"[sifr-profile-setup] crate-test-build={' '.join(command)}", flush=True)
+            command_runner(command, env=env)
+            built.add(tuple(command))
 
         # Run the already linked driver setup in this exact Cargo test graph.
         # No CLI binary, recursive Cargo producer, or cross-configuration override.

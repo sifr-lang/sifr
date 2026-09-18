@@ -24,6 +24,14 @@ class ProfilePlanTests(unittest.TestCase):
                     self.assertEqual(group.preparation()[5:], list(group.command[1:group.command.index("--") if "--" in group.command else len(group.command)]))
                     self.assertEqual(group.execution()[4:], list(group.command[1:]))
 
+    def test_r06_duplicate_compiler_preparation_is_memoized(self):
+        from .cargo_crate_setup import prepare_crate_test_binaries
+        profile = load_profile("merge")
+        calls = []
+        prepare_crate_test_binaries(profile, {}, lambda command, **kwargs: calls.append(command))
+        builds = [tuple(command) for command in calls if "--no-run" in command]
+        self.assertEqual(len(builds), len(set(builds)))
+
     def test_b11_release_corpus_and_retained_native_selection(self):
         authority = json.loads((REPO_ROOT / "verification/runner/application_profiles.json").read_text())
         self.assertEqual(authority["policy_identity"], "sifr-application-profiles-v1")
