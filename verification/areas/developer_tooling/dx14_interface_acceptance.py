@@ -10,7 +10,8 @@ import subprocess
 def run(binary, output):
     output.mkdir(parents=True, exist_ok=False)
     project = output / "workspace"
-    project.mkdir()\n    (project / "sifr.toml").write_text('[source]\\nroot = "."\\n')
+    project.mkdir()
+    (project / "sifr.toml").write_text('[source]\nroot = "."\n')
     main = project / "main.sifr"
     helper = project / "helper.sifr"
     main.write_text("from helper import value\n\ndef main() -> int:\n    return value()\n")

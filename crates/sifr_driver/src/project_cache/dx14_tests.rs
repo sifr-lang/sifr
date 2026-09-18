@@ -45,6 +45,10 @@ fn run(
         &AtomicBool::new(false),
         Some((&compiler(), Default::default())),
         |provider| {
+            let config = file.parent().unwrap().join("sifr.toml");
+            if provider.is_file(&config) {
+                provider.read_file(&config).unwrap();
+            }
             frontend(file, provider)
                 .diagnostics_for_project()
                 .into_value()
@@ -57,6 +61,7 @@ fn fixture() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
     let root = tempfile::tempdir().unwrap();
     let project = root.path().join("project");
     fs::create_dir(&project).unwrap();
+    fs::write(project.join("sifr.toml"), "[source]\nroot = \".\"\n").unwrap();
     let file = project.join("main.sifr");
     fs::write(
         &file,

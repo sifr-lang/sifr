@@ -31,6 +31,7 @@ pub(super) fn restore(
         .ready()?
         .sources
         .iter()
+        .filter(|source| source.path.extension().is_some_and(|ext| ext == "sifr"))
         .map(|source| {
             use sifr_frontend::SourceProvider;
             Some(sifr_frontend::persistence::CapturedSource {
