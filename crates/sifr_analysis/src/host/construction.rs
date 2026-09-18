@@ -49,12 +49,11 @@ impl AnalysisHost {
         profiles: sifr_driver::PreparedSqlProfiles,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         session = session.with_compiler_identity(compiler.identity().clone());
-        let restored_check_modules = session.context_mut().map_or(0, |frontend| {
-            sifr_driver::project_cache::restore_editor_checks(compiler, frontend)
+        let restored_check_modules =
+            sifr_driver::project_cache::restore_editor_checks(compiler, &mut session)
                 .iter()
                 .filter(|decision| decision.action == "restored")
-                .count()
-        });
+                .count();
         let snapshot = session.snapshot();
         let Some(current_revision) = revision_from_workspace_snapshot(&snapshot) else {
             return Err(Vec::new());

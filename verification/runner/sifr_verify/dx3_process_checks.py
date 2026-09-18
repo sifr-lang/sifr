@@ -107,6 +107,23 @@ class ProcessTests(unittest.TestCase):
             self.assertEqual(live["exit_status"], 9)
             self.assertTrue(Path(live["log"]).is_file())
 
+    def test_dx15_profile_rss_roundtrip_preserves_linux_and_darwin_bytes(self):
+        from types import SimpleNamespace
+        from . import profile_reporting
+        from .reports import parse_time_file
+        expected = 7 * 1024**3
+        initial = SimpleNamespace(ru_utime=0, ru_stime=0, ru_nswap=0)
+        for host, native_rss in (("linux", expected // 1024), ("darwin", expected)):
+            with self.subTest(host=host), tempfile.TemporaryDirectory() as directory:
+                usage = SimpleNamespace(ru_utime=1, ru_stime=2, ru_nswap=0,
+                                        ru_maxrss=native_rss)
+                path = Path(directory) / "time"
+                with patch.object(profile_reporting.sys, "platform", host), \
+                     patch.object(profile_reporting.resource, "getrusage", return_value=usage):
+                    profile_reporting.write_time_file(path, start=time.monotonic(),
+                                                      usage_start=initial)
+                self.assertEqual(parse_time_file(path)["max_rss_bytes"], expected)
+
     def test_detached_observer_does_not_change_log(self):
         from .profile_reporting import Tee
         class Detached(io.StringIO):

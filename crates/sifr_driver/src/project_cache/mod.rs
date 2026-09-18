@@ -351,11 +351,14 @@ fn manifestless_inputs(
 /// frontend's captured source bytes must agree with the CLI record.
 pub fn restore_editor_checks(
     compiler: &crate::CompilerContext,
-    frontend: &mut sifr_frontend::FrontendContext,
+    session: &mut sifr_frontend::WorkspaceSession,
 ) -> Vec<sifr_frontend::ModuleCheckDecision> {
     if !compiler.project_incremental() {
         return Vec::new();
     }
+    let Some(frontend) = session.context() else {
+        return Vec::new();
+    };
     let graph = frontend.module_graph();
     let Some(entry) = graph
         .modules
@@ -383,12 +386,7 @@ pub fn restore_editor_checks(
     };
     for record in generation.records().flatten() {
         if record.result.inputs.source.path == file {
-            if let Some(decisions) = frontend.restore_completed_checks(
-                &record,
-                &inputs,
-                &mut sifr_frontend::DiskSourceProvider::new(),
-                false,
-            ) {
+            if let Some(decisions) = session.restore_saved_checks(&record, &inputs) {
                 return decisions;
             }
         }

@@ -470,3 +470,52 @@ fn dx14_restored_interface_reports_unavailable_publication() {
             .any(|module| module.action == "restored" && module.path == file)
     );
 }
+
+#[test]
+fn dx15_workspace_owned_saved_validation_rejects_changed_disk_and_overlay() {
+    let (_root, file, cache) = fixture();
+    assert_eq!(run(&cache, &file, inputs()).1.status, "published");
+    let store = storage::Store::open(
+        &cache,
+        file.parent().unwrap(),
+        &inputs().identity().unwrap(),
+    )
+    .unwrap();
+    let generation = store.latest().unwrap();
+    let record = generation.records().next().unwrap().unwrap();
+    let open = || {
+        sifr_frontend::WorkspaceSession::open_project(ProjectRoot {
+            root: SourcePath::new(file.parent().unwrap()),
+            entrypoint: SourcePath::new(&file),
+        })
+        .unwrap()
+        .with_compiler_identity(compiler())
+    };
+    let mut saved = open();
+    assert!(
+        saved
+            .restore_saved_checks(&record, &inputs())
+            .unwrap()
+            .iter()
+            .all(|decision| decision.action == "restored")
+    );
+    let mut overlay = open();
+    let frontend = overlay.context_mut().unwrap();
+    let entry = frontend.module_graph().entrypoint;
+    frontend
+        .update_module_source(
+            entry,
+            SourceText::new("def main() -> int:\n    return \"bad\"\n"),
+            None,
+        )
+        .unwrap();
+    assert!(overlay.restore_saved_checks(&record, &inputs()).is_none());
+    let mut old_snapshot = open();
+    fs::write(&file, "def main() -> int:\n    return \"bad\"\n").unwrap();
+    assert!(
+        old_snapshot
+            .restore_saved_checks(&record, &inputs())
+            .is_none(),
+        "workspace ownership must still reobserve disk, not just validate the captured snapshot"
+    );
+}
