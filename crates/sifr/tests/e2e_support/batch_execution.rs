@@ -480,6 +480,36 @@ where
 pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
     let fixtures = discover_fixtures(Path::new("tests/e2e/pass"));
     assert!(!fixtures.is_empty(), "No pass tests found");
+    if env::var("SIFR_E2E_PROFILE").ok().as_deref() == Some("release") {
+        assert_eq!(
+            application_profile(),
+            sifr_driver::ApplicationProfile::Release
+        );
+        let authority: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../verification/runner/application_profiles.json"
+        ))
+        .expect("application selection authority");
+        let expected = authority["selections"][0]["fixtures"]
+            .as_array()
+            .expect("release inventory")
+            .iter()
+            .map(|v| v.as_str().expect("fixture name"))
+            .collect::<Vec<_>>();
+        let actual = fixtures
+            .iter()
+            .map(|fixture| {
+                fixture
+                    .path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .expect("fixture filename")
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            actual, expected,
+            "release qualification must execute every declared run-pass fixture"
+        );
+    }
 
     let compile_started = Instant::now();
     let compiled_results = compile_suite_parallel(&fixtures, config.sifr_jobs);

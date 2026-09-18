@@ -1,5 +1,6 @@
 """DX.10 B06/R06 inventory and configuration-plan negative controls."""
 import copy
+import io
 import json
 from .paths import REPO_ROOT
 import unittest
@@ -32,7 +33,8 @@ class ProfilePlanTests(unittest.TestCase):
         release = load_profile("release")
         self.assertFalse(release["e2e"].get("fixture_manifest"), "release must execute the complete run-pass corpus")
         fixtures = sorted(REPO_ROOT.glob(selection["selector"]))
-        self.assertGreater(len(fixtures), 1000)
+        self.assertTrue(fixtures)
+        self.assertEqual([p.name for p in fixtures], selection["fixtures"])
         self.assertEqual(fixtures, sorted((REPO_ROOT / "crates/sifr/tests/e2e/pass").glob("*.sifr")))
 
     def test_b06_isolation_mutation_cannot_be_absorbed_into_integration(self):
@@ -45,5 +47,10 @@ class ProfilePlanTests(unittest.TestCase):
         self.assertEqual(group.classification, "isolated")
         self.assertIn("--no-default-features", group.preparation())
         self.assertIn("--no-default-features", group.execution())
+
+def policy_checks():
+    result = unittest.TextTestRunner(stream=io.StringIO()).run(unittest.defaultTestLoader.loadTestsFromTestCase(ProfilePlanTests))
+    if not result.wasSuccessful():
+        raise AssertionError(f"DX.10 profile seeds failed: {result.failures} {result.errors}")
 
 if __name__ == "__main__": unittest.main()
