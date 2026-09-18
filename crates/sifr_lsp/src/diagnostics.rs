@@ -58,6 +58,21 @@ impl DiagnosticsController {
     }
 
     pub(crate) fn publish_all(connection: &Connection, session: &mut Session) -> LspResult<()> {
+        Self::publish_workspace(connection, session, true)
+    }
+
+    pub(crate) fn reconcile_changes(
+        connection: &Connection,
+        session: &mut Session,
+    ) -> LspResult<()> {
+        Self::publish_workspace(connection, session, false)
+    }
+
+    fn publish_workspace(
+        connection: &Connection,
+        session: &mut Session,
+        report_progress: bool,
+    ) -> LspResult<()> {
         let mode = session.store().settings().diagnostics_mode;
         Self::flush_clears(connection, session)?;
         if mode == DiagnosticsMode::Off {
@@ -69,7 +84,11 @@ impl DiagnosticsController {
             .into_iter()
             .filter(|uri| session.can_publish_document_diagnostics(uri))
             .collect::<Vec<_>>();
-        let progress = session.begin_progress(ProgressKind::FullDiagnostics, uris.len());
+        let progress = if report_progress {
+            session.begin_progress(ProgressKind::FullDiagnostics, uris.len())
+        } else {
+            None
+        };
         if let Some(handle) = &progress {
             publish_progress(
                 connection,
@@ -103,7 +122,7 @@ impl DiagnosticsController {
             return Ok(());
         }
         // Leave pending jobs queued while newer input waits to be applied. The
-        // next event reconciles them without publishing every open file per edit.
+        // next event reconciles them against the latest applied generation.
         if !session.generations.publish(session.generation, Ok)? {
             return Ok(());
         }

@@ -161,7 +161,7 @@ fn text_document_did_change(
             summary.raw_change_count, summary.compacted_change_count, summary.text_changed
         ),
     );
-    DiagnosticsController::publish_all(connection, session)
+    DiagnosticsController::reconcile_changes(connection, session)
 }
 
 fn text_document_did_save(

@@ -193,3 +193,52 @@ fn dx11_stale_close_clear_cannot_overwrite_reopened_document() {
     };
     assert_eq!(clear.params, json!({"uri":uri,"diagnostics":[]}));
 }
+
+#[test]
+fn dx11_incremental_push_reconciles_multiple_documents_without_workspace_progress() {
+    let temp = tempfile::tempdir().unwrap();
+    let mut session = Session::new();
+    session.set_work_done_progress_enabled(true);
+    let mut uris = Vec::new();
+    for name in ["first.sifr", "second.sifr"] {
+        let uri = url::Url::from_file_path(temp.path().join(name))
+            .unwrap()
+            .to_string();
+        session
+            .open_document(
+                uri.clone(),
+                "sifr",
+                Some(1),
+                "def main():\n    value: int = 1\n".into(),
+            )
+            .unwrap();
+        uris.push(uri);
+    }
+    let (server, client) = lsp_server::Connection::memory();
+    crate::notifications::handle(
+        &mut session,
+        &server,
+        "textDocument/didChange",
+        json!({"textDocument":{"uri":uris[0],"version":2},
+               "contentChanges":[{"text":"def main():\n    value: int = 2\n"}]}),
+    )
+    .unwrap();
+    let incremental = client.receiver.try_iter().collect::<Vec<_>>();
+    assert_eq!(incremental.len(), 2);
+    for message in incremental {
+        let lsp_server::Message::Notification(notification) = message else {
+            panic!("expected diagnostics");
+        };
+        assert_eq!(notification.method, "textDocument/publishDiagnostics");
+    }
+    crate::diagnostics::DiagnosticsController::publish_all(&server, &mut session).unwrap();
+    let workspace = client.receiver.try_iter().collect::<Vec<_>>();
+    assert_eq!(
+        workspace
+            .iter()
+            .filter(|message| matches!(message,
+        lsp_server::Message::Notification(notification) if notification.method == "$/progress"))
+            .count(),
+        2
+    );
+}
