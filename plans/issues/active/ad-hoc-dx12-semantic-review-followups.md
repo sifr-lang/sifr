@@ -19,3 +19,15 @@ Pre-existing supplemental lint findings stay in the
 [metadata owner issue](ad-hoc-dx-metadata-review-followups.md) and
 [profile owner issue](ad-hoc-dx10-profile-review-followups.md).
 They remain failed evidence for phase-end work; DX.12 does not waive them.
+
+
+## DX.13 consumer disposition (2026-09-18)
+
+[PR #3864](https://github.com/sifr-lang/sifr/pull/3864) addresses DX12-F2 with
+demand-selected diagnostic source remapping and measured CLI peak RSS, and
+DX12-F3 with unknown-field rejection for Observation, Family and SourceOutcome.
+DX12-F4 is handled conservatively at this consumer: configured components and
+external contexts are ineligible, and successful pure-package publication also
+requires the actual empty generated interop plan. A general persisted component
+inventory remains separate future work. DX12-F1 remains open: DX.13 does not
+restore typed/codegen families, so it does not consume that handoff identity.

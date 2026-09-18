@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.12 complete; DX.13 next
+status: in progress; DX.1–DX.13 complete; DX.14 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -618,7 +618,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.12 are complete and merged. DX.13–DX.16 are not started; DX.13 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.13 are complete and merged. DX.14–DX.16 are not started; DX.14 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -634,7 +634,7 @@ DX.1–DX.12 are complete and merged. DX.13–DX.16 are not started; DX.13 is th
 | DX.10 | Complete / merged | Candidate `d4b80812086538f6d26bf7830f30da54d52bffb0`; [PR #3858](https://github.com/sifr-lang/sifr/pull/3858); merge `65e870fced69b02c6833fa9f000d31d8c1bbefb8` | B05, B06, B11, B12, R06 PASS; 727 actual release fixtures, additional dev/default coverage, profile/configuration inventories and actual cold/warm/edit/alternating costs; final consumer regressions and explicit unchanged-input reuse; full gate deferred | [Opus: SATISFIED after adjudicated remediation](https://github.com/sifr-lang/sifr/pull/3858#issuecomment-5725527463) |
 | DX.11 | Complete / merged | Candidate `c0d490d460ca4f8a286226da804b31744b5a0b3c`; [PR #3860](https://github.com/sifr-lang/sifr/pull/3860); merge `24eec746b3b72d1b3bdbbb073986092f629b1ab9` | E01–E06, nine Rust regressions, installed protocol/push-progress PASS; real upgrade/recovery and paired Q09 with scoped unchanged-input reuse; post-close ownership released, no active/peak RSS improvement claimed; full gate deferred | [Opus: SATISFIED after bounded remediation](https://github.com/sifr-lang/sifr/pull/3860#issuecomment-5726309175) |
 | DX.12 | Complete / merged | Candidate `cc2874a319feef6f96f45954b91dc3bed79cc2e8`; [PR #3862](https://github.com/sifr-lang/sifr/pull/3862); merge `3959f0168f0630802548ad2b12d3623ab71f151c` | I03, P03, P04, P07 and all five result families: 14 tests PASS; ordered-observation golden, actual resolver/package edits, real writer and LSP encoding; guards PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3862#issuecomment-5726861173) |
-| DX.13 | Not started | — | — | — |
+| DX.13 | Complete / merged | Candidate `be67cc8dfa7d6db91f295557f08123d705cc79ff`; [PR #3864](https://github.com/sifr-lang/sifr/pull/3864); merge `9ee1d65db9a1f1851f46032f641d39dc27460bc0` | C04/C08/C09/P01/P02/P08–P10/P12; 12 DX.13 tests, focused regressions, 31 CLI processes and guards pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3864#issuecomment-5727613414) |
 | DX.14 | Not started | — | — | — |
 | DX.15 | Not started | — | — | — |
 | DX.16 | Not started | — | — | — |
@@ -1595,7 +1595,7 @@ remains the earlier baseline, not replaced by this incremental comparison.
   Stop after this merged record. DX.12 is next only in a new bounded session.
 
 
-## Current Handoff — DX.12 (2026-09-18)
+## Historical Handoff — DX.12 (2026-09-18; superseded by DX.13 below)
 
 - **Current state:** DX.12 is complete and merged in
   [PR #3862](https://github.com/sifr-lang/sifr/pull/3862).
@@ -1663,3 +1663,75 @@ remains the earlier baseline, not replaced by this incremental comparison.
 - **Blocker:** none for the named DX.12 scope.
 - **Exact next action:** stop after this record update. DX.13 is eligible only
   in a new bounded session; no DX.13 implementation belongs to this handoff.
+
+
+## Current Handoff — DX.13 (2026-09-18)
+
+- **Current state:** DX.13 is complete and merged in
+  [PR #3864](https://github.com/sifr-lang/sifr/pull/3864).
+  Final candidate `be67cc8dfa7d6db91f295557f08123d705cc79ff`;
+  merge `9ee1d65db9a1f1851f46032f641d39dc27460bc0`.
+  This record-only update is on `codex/dx13-record`.
+- **Ownership:** implementation, tests and read-only Opus review ran exclusively
+  in `/home/yaser5/projects/sifr/compiler-dx-orchestration` on Linux with Rust
+  1.98.1. Base was `72e9490fc43a809648947d8cf6cc9594a30abd53`.
+  The private target was reused; 16–19 GiB free space provided the operation
+  reserve, so no size-triggered cleanup ran. Local Mac work was limited to
+  Git bundle transport and GitHub administration.
+- **Implemented:** a new CLI process restores completed shallow checking through
+  the frontend canonical result contract after validating compiler, pinned
+  metadata, resolved package context, captured sources and ordered resolver
+  observations. Pure packages require the actual generated empty interop demand
+  attestation; configured components, Python/native/external contexts retain
+  ordinary owner execution. Deterministic source errors restore separately from
+  success; transient, cancelled and changed-input work does not publish.
+- **Generation protocol:** private stages, immutable inherited hard-linked or
+  copied records, bounded digest-checked manifests, atomic publication, shared
+  reader leases and pressure-driven project-only GC preserve A/B/A eligibility.
+  Project leases no longer leak into unrelated child processes. Optional cache
+  failure preserves semantic results; workspace hints remain optional and
+  `--no-incremental` executes ordinary checking without project publication.
+  Typed HIR, codegen and editor families remain explicitly Pending and compute
+  through their normal owners when requested. No DX.14 propagation/editor work
+  was implemented.
+- **Named acceptance and focused evidence:** the exact final candidate passed
+  C04, C08, C09, P01, P02 and P08–P10/P12: 12 project-cache tests with actual
+  semantic payloads, partial ENOSPC injection, read-only/unavailable storage,
+  killed writer subprocesses, active-reader/GC contention, immutable inheritance,
+  error/fix/revert, cancellation/transient exclusion and source-map remapping.
+  Focused regressions passed: 3 DX.12 driver, 8 DX.3 ownership and 9 frontend
+  persistence tests, CLI schema/global tests. The acceptance runner made 31
+  separate CLI invocations, including actual package imports/dependency edits,
+  restored canonical error equality, live-context exclusion, hint removal and
+  missing deeper-family computation. Format, file-size (4075 files),
+  HIR maintainability and diff guards passed.
+- **Measurements:** five prepared contributor-profile samples on the same
+  candidate gave median process wall time 3.3715 s fresh / 3.1239 s restored;
+  maximum sampled peak RSS 118092 / 80512 KiB. Restored runs reported one restored
+  check and zero computed checks; median project validation was 1186 microseconds.
+  Observed publication serialization costs were 19035–76287 microseconds;
+  serialized payloads were 1776–4501 bytes. Payload bytes are encoded size, not
+  retained heap. These descriptive samples do not claim optimized phase-end
+  percentile or full project memory qualification.
+- **Review:** the first completed exact-candidate
+  [Opus review](https://github.com/sifr-lang/sifr/pull/3864#issuecomment-5727613414)
+  is **SATISFIED**, with no blocking findings. No remediation or second review
+  was required. Seven nonblocking observations are separate work in
+  [DX.13 project reuse followups](ad-hoc-dx13-project-review-followups.md).
+  Existing DX.12/metadata/profile lint ownership remains unchanged.
+- **Evidence:** external root `/home/yaser5/projects/sifr/dx13-evidence`;
+  candidate-keyed `be67cc8dfa7d6db91f295557f08123d705cc79ff/qualification-manifest.json`,
+  SHA-256 `489d91b9810ad6cc0856fd68dacc6b3a3bdc6faf7afe1ec4a1409c8bc005a601`.
+  Validation manifest SHA-256
+  `f9a1f1d05762ef790ead5ab4c0cfe41af415a6ee8c26008fa09b12336aa1493c`;
+  review SHA-256
+  `3b769f729399e919a157be781789b375e0b6d4ff79da50dc5518ff16b1a0a78a`.
+  Earlier API/fixture/lease development failures and the interrupted earlier
+  candidate run remain preserved, not relabelled as passes.
+- **Gate policy:** no create-PR/full merge gate ran for this intermediate item.
+  The approved prospective phase-end gate remains authoritative. No release
+  was requested or performed. Record-only changes require documentation checks,
+  not another broad gate or external review.
+- **Blocker:** none for DX.13.
+- **Exact next action:** stop after this merged record. DX.14 is eligible only
+  in a new bounded session; no DX.14 implementation belongs to this handoff.
