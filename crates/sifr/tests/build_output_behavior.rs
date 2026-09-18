@@ -47,7 +47,14 @@ struct CommandCapture {
 }
 
 fn run_sifr(args: &[&str], cwd: &Path) -> CommandCapture {
-    run_sifr_with_env(args, cwd, &[])
+    let mut args = args.to_vec();
+    if args
+        .iter()
+        .any(|arg| matches!(*arg, "build" | "run" | "test"))
+    {
+        args.push("--release");
+    }
+    run_sifr_with_env(&args, cwd, &[])
 }
 
 fn run_sifr_with_env(args: &[&str], cwd: &Path, envs: &[(&str, &str)]) -> CommandCapture {
@@ -97,7 +104,7 @@ fn explain_without_subcommand_still_prints_explanation() {
 }
 
 #[test]
-fn build_output_default_is_phase_aware_and_stderr_only() {
+fn build_output_release_is_phase_aware_and_stderr_only() {
     let project = TestProject::new("default", "def main():\n    print(\"ok\")\n");
     let output_dir = project.output_dir("out");
     let output_dir_arg = output_dir.to_string_lossy().to_string();
@@ -400,4 +407,21 @@ fn failed_rust_probe_does_not_print_success_footer() {
     );
     assert!(!capture.stderr.contains("Finished release build"));
     assert!(!capture.stderr.contains("Binary: "));
+}
+
+#[test]
+fn dx10_b11_default_build_and_run_report_development() {
+    let project = TestProject::new("development-default", "def main():\n    print(42)\n");
+    let main = project.main.to_string_lossy();
+    for command in ["build", "run"] {
+        let capture = run_sifr_with_env(&[command, &main], &project.root, &[]);
+        assert_eq!(capture.status_code, 0, "{}", capture.stderr);
+        assert!(
+            capture.stderr.contains("target: development native"),
+            "{}",
+            capture.stderr
+        );
+        assert!(capture.stderr.contains("Finished development build in"));
+        assert!(capture.stderr.contains("sifr-application-profiles-v1"));
+    }
 }

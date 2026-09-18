@@ -246,7 +246,7 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
         materialized.materialize_elapsed,
     ));
     stages.push(BuildStageReport::new(
-        compiler.application_profile().report_target(),
+        compiler.application_profile().build_stage(),
         materialized.cargo_elapsed,
     ));
     let query_signature_artifact_path =
@@ -385,7 +385,7 @@ fn build_cached_rooted_entrypoint_binary(
             native_report.materialize_elapsed,
         ));
         stages.push(BuildStageReport::new(
-            compiler.application_profile().report_target(),
+            compiler.application_profile().build_stage(),
             native_report.cargo_elapsed,
         ));
     }

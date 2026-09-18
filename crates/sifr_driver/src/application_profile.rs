@@ -28,6 +28,13 @@ impl ApplicationProfile {
             Self::Release => "release native",
         }
     }
+    pub const fn build_stage(self) -> &'static str {
+        match self {
+            Self::Development => "Building development binary",
+            Self::Test => "Building test binary",
+            Self::Release => "Building release binary",
+        }
+    }
     pub const fn policy_identity(self) -> &'static str {
         "sifr-application-profiles-v1"
     }

@@ -424,19 +424,19 @@ impl NativeToolchain {
             flags(value)
         }
         for (_, bytes) in &self.configuration {
-            let value: toml::Value = String::from_utf8_lossy(bytes)
+            let value: toml::Table = String::from_utf8_lossy(bytes)
                 .parse()
                 .map_err(|_| "invalid Cargo profile configuration")?;
-            check(&value, profile)?;
+            check(&toml::Value::Table(value), profile)?;
         }
         for ancestor in self.invocation_root.ancestors() {
             let manifest = ancestor.join("Cargo.toml");
             if manifest.is_file() {
-                let value: toml::Value = std::fs::read_to_string(manifest)
+                let value: toml::Table = std::fs::read_to_string(manifest)
                     .map_err(|_| "cannot read profile manifest")?
                     .parse()
                     .map_err(|_| "invalid profile manifest")?;
-                check(&value, profile)?;
+                check(&toml::Value::Table(value), profile)?;
                 break;
             }
         }
