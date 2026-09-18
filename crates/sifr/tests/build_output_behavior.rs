@@ -327,7 +327,15 @@ fn failed_materialization_does_not_print_success_footer() {
 
     assert_ne!(capture.status_code, 0);
     assert!(capture.stdout.is_empty());
-    assert!(capture.stderr.contains("failed to create output directory"));
+    assert!(
+        capture.stderr.contains("SIFR-BUILD-0002"),
+        "{}",
+        capture.stderr
+    );
+    assert_eq!(
+        std::fs::read_to_string(&output_file).expect("original output file"),
+        "occupied"
+    );
     assert!(!capture.stderr.contains("Finished release build"));
     assert!(!capture.stderr.contains("Binary: "));
 }
@@ -366,7 +374,9 @@ fn failed_cargo_invocation_does_not_print_success_footer() {
     assert!(capture.stdout.is_empty());
     assert!(
         capture.stderr.contains("SIFR-BUILD-0005")
-            && capture.stderr.contains("failed to run cargo build"),
+            && capture
+                .stderr
+                .contains("selected native executable is unavailable"),
         "stderr:\n{}",
         capture.stderr
     );
@@ -401,7 +411,9 @@ fn failed_rust_probe_does_not_print_success_footer() {
     assert!(capture.stdout.is_empty());
     assert!(
         capture.stderr.contains("SIFR-RUST-CARGO-0001")
-            && capture.stderr.contains("failed to run Rust probe"),
+            && capture
+                .stderr
+                .contains("selected native executable is unavailable"),
         "stderr:\n{}",
         capture.stderr
     );

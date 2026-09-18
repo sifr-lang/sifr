@@ -55,6 +55,7 @@ pub(super) fn probe_cargo_toml(
             "\n[patch.crates-io]\nlibsqlite3-sys = {{ path = {native} }}"
         );
     }
+    cargo_toml.push_str(crate::application_profile::MANIFEST);
     cargo_toml
 }
 
