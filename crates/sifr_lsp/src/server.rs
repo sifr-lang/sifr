@@ -144,6 +144,10 @@ impl LspServer {
                             &mut self.session,
                         );
                     }
+                    crate::diagnostics::DiagnosticsController::flush_clears(
+                        &self.connection,
+                        &mut self.session,
+                    )?;
                     if is_exit {
                         #[allow(clippy::bool_to_int_with_if)]
                         let code = if self.session.shutdown_requested() {

@@ -72,3 +72,124 @@ fn dx11_invalid_incremental_batch_leaves_source_and_version_unchanged() {
     assert_eq!(session.store().document(&uri).unwrap().text(), "original");
     assert_eq!(session.store().document(&uri).unwrap().version(), Some(1));
 }
+
+#[cfg(unix)]
+#[test]
+fn dx11_nonexistent_overlay_alias_has_one_physical_owner() {
+    let temp = tempfile::tempdir().unwrap();
+    let real = temp.path().join("real");
+    let alias = temp.path().join("alias");
+    std::fs::create_dir(&real).unwrap();
+    std::os::unix::fs::symlink(&real, &alias).unwrap();
+    let real_uri = url::Url::from_file_path(real.join("new.sifr"))
+        .unwrap()
+        .to_string();
+    let alias_uri = url::Url::from_file_path(alias.join("new.sifr"))
+        .unwrap()
+        .to_string();
+    let mut store = crate::document_store::DocumentStore::new();
+    store
+        .open(real_uri.clone(), "sifr", Some(1), "first".into())
+        .unwrap();
+    assert!(
+        store
+            .open(alias_uri.clone(), "sifr", Some(1), "second".into())
+            .is_err()
+    );
+    assert_eq!(store.document(&real_uri).unwrap().text(), "first");
+    store.close(&real_uri);
+    store
+        .open(alias_uri.clone(), "sifr", Some(1), "second".into())
+        .unwrap();
+    assert_eq!(
+        store.document(&alias_uri).unwrap().path(),
+        real.join("new.sifr")
+    );
+}
+
+#[test]
+fn dx11_superseded_diagnostics_remain_pending_until_latest_input_is_applied() {
+    let temp = tempfile::tempdir().unwrap();
+    let uri = url::Url::from_file_path(temp.path().join("main.sifr"))
+        .unwrap()
+        .to_string();
+    let mut session = Session::new();
+    session
+        .open_document(
+            uri.clone(),
+            "sifr",
+            Some(1),
+            "def main():\n    value: int = 1\n".into(),
+        )
+        .unwrap();
+    let (server, client) = lsp_server::Connection::memory();
+    session.generation = session
+        .generations
+        .observe(Some("textDocument/didOpen"))
+        .unwrap();
+    let latest = session
+        .generations
+        .observe(Some("textDocument/didSave"))
+        .unwrap();
+    crate::diagnostics::DiagnosticsController::publish_document(
+        &server,
+        &mut session,
+        &uri,
+        DiagnosticsMode::OpenFiles,
+    )
+    .unwrap();
+    assert!(client.receiver.try_recv().is_err());
+    session.generation = latest;
+    crate::diagnostics::DiagnosticsController::publish_document(
+        &server,
+        &mut session,
+        &uri,
+        DiagnosticsMode::OpenFiles,
+    )
+    .unwrap();
+    let lsp_server::Message::Notification(notification) = client.receiver.try_recv().unwrap()
+    else {
+        panic!("expected diagnostics");
+    };
+    assert_eq!(notification.params["uri"], uri);
+    assert_eq!(notification.params["version"], 1);
+    assert!(client.receiver.try_recv().is_err());
+    assert!(session.take_next_diagnostic_job().is_none());
+}
+
+#[test]
+fn dx11_stale_close_clear_cannot_overwrite_reopened_document() {
+    let temp = tempfile::tempdir().unwrap();
+    let uri = url::Url::from_file_path(temp.path().join("main.sifr"))
+        .unwrap()
+        .to_string();
+    let mut session = Session::new();
+    let (server, client) = lsp_server::Connection::memory();
+    session.generation = session
+        .generations
+        .observe(Some("textDocument/didClose"))
+        .unwrap();
+    session.diagnostic_clears.insert(uri.clone());
+    let reopened = session
+        .generations
+        .observe(Some("textDocument/didOpen"))
+        .unwrap();
+    crate::diagnostics::DiagnosticsController::flush_clears(&server, &mut session).unwrap();
+    assert!(client.receiver.try_recv().is_err());
+    assert!(session.diagnostic_clears.contains(&uri));
+    session
+        .store_mut()
+        .open(uri.clone(), "sifr", Some(1), "new owner".into())
+        .unwrap();
+    session.generation = reopened;
+    crate::diagnostics::DiagnosticsController::flush_clears(&server, &mut session).unwrap();
+    assert!(client.receiver.try_recv().is_err());
+    assert!(session.diagnostic_clears.is_empty());
+    session.store_mut().close(&uri);
+    session.diagnostic_clears.insert(uri.clone());
+    crate::diagnostics::DiagnosticsController::flush_clears(&server, &mut session).unwrap();
+    let lsp_server::Message::Notification(clear) = client.receiver.try_recv().unwrap() else {
+        panic!("expected clear");
+    };
+    assert_eq!(clear.params, json!({"uri":uri,"diagnostics":[]}));
+}

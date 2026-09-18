@@ -23,6 +23,7 @@ pub(crate) struct Session {
     store: DocumentStore,
     pub(crate) generations: crate::generation::Generations,
     pub(crate) generation: u64,
+    pub(crate) diagnostic_clears: std::collections::BTreeSet<String>,
     analysis: LspAnalysisWorkspace,
     queue: RequestQueue,
     progress: ProgressState,
@@ -80,6 +81,7 @@ impl Session {
             store: DocumentStore::new(),
             generations: Default::default(),
             generation: 0,
+            diagnostic_clears: Default::default(),
             analysis: LspAnalysisWorkspace::default(),
             queue: RequestQueue::default(),
             progress: ProgressState::default(),
@@ -187,6 +189,7 @@ impl Session {
         self.diagnostic_jobs.remove(uri);
         self.analysis.close_document(uri);
         let closed = self.store.close(uri);
+        self.python_declarations.retain_open_projects(&self.store);
         self.analysis.refresh_existing_projects(&self.store);
         if self.store.document_uris().is_empty() {
             self.analysis.compiler = self.analysis.compiler.without_cached_metadata();

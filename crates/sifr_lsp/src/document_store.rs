@@ -76,7 +76,14 @@ impl DocumentStore {
             )));
         }
         let logical_path = uri_to_path(&uri)?;
-        let path = logical_path.canonicalize().unwrap_or(logical_path);
+        let path = logical_path
+            .canonicalize()
+            .ok()
+            .or_else(|| {
+                let parent = logical_path.parent()?.canonicalize().ok()?;
+                Some(parent.join(logical_path.file_name()?))
+            })
+            .unwrap_or(logical_path);
         if self
             .documents
             .values()
@@ -100,7 +107,6 @@ impl DocumentStore {
     ) -> LspResult<bool> {
         let state = self.document_mut(uri)?;
         state.reject_stale(version)?;
-        let previous = state.text.clone();
         let mut candidate = state.clone();
         for item in &change.changes {
             match item {
@@ -113,8 +119,9 @@ impl DocumentStore {
             }
         }
         candidate.version = version;
+        let text_changed = candidate.text != state.text;
         *state = candidate;
-        Ok(state.text != previous)
+        Ok(text_changed)
     }
 
     pub(crate) fn save(&mut self, uri: &str, text: Option<String>) -> bool {

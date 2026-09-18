@@ -11,8 +11,55 @@ use sifr_analysis::WorkspaceTracePhase;
 pub(crate) struct DiagnosticsController;
 
 impl DiagnosticsController {
+    pub(crate) fn flush_clears(connection: &Connection, session: &mut Session) -> LspResult<()> {
+        if session.diagnostic_clears.is_empty() {
+            return Ok(());
+        }
+        let sent = session.generations.publish(session.generation, |current| {
+            if !current {
+                return Ok(false);
+            }
+            for uri in &session.diagnostic_clears {
+                // A reopened document belongs to its newer owner. In off mode,
+                // clear previous diagnostics even when that document stays open.
+                if session.store().settings().diagnostics_mode == DiagnosticsMode::Off
+                    || session.store().document(uri).is_err()
+                {
+                    connection
+                        .sender
+                        .send(Message::Notification(Notification {
+                            method: "textDocument/publishDiagnostics".into(),
+                            params: json!({"uri":uri,"diagnostics":[]}),
+                        }))
+                        .map_err(|error| crate::errors::LspError::internal(error.to_string()))?;
+                }
+            }
+            Ok(true)
+        })?;
+        if sent {
+            session.diagnostic_clears.clear();
+        }
+        Ok(())
+    }
+
+    pub(crate) fn publish_document(
+        connection: &Connection,
+        session: &mut Session,
+        uri: &str,
+        mode: DiagnosticsMode,
+    ) -> LspResult<()> {
+        Self::flush_clears(connection, session)?;
+        if mode == DiagnosticsMode::Off {
+            session.clear_diagnostic_jobs();
+            return Ok(());
+        }
+        session.schedule_document_diagnostics(uri)?;
+        Self::flush_ready(connection, session, mode)
+    }
+
     pub(crate) fn publish_all(connection: &Connection, session: &mut Session) -> LspResult<()> {
         let mode = session.store().settings().diagnostics_mode;
+        Self::flush_clears(connection, session)?;
         if mode == DiagnosticsMode::Off {
             session.clear_diagnostic_jobs();
             return Ok(());
@@ -50,8 +97,14 @@ impl DiagnosticsController {
         session: &mut Session,
         mode: DiagnosticsMode,
     ) -> LspResult<()> {
+        Self::flush_clears(connection, session)?;
         if mode == DiagnosticsMode::Off {
             session.clear_diagnostic_jobs();
+            return Ok(());
+        }
+        // Leave pending jobs queued while newer input waits to be applied. The
+        // next event reconciles them without publishing every open file per edit.
+        if !session.generations.publish(session.generation, Ok)? {
             return Ok(());
         }
         while let Some(job) = session.take_next_diagnostic_job() {
@@ -77,13 +130,13 @@ impl DiagnosticsController {
                 continue;
             }
             let params = json!({
-                "uri": job.uri,
+                "uri": job.uri.clone(),
                 "version": job.version,
                 "diagnostics": diagnostics
             });
-            session.generations.publish(session.generation, |current| {
+            let published = session.generations.publish(session.generation, |current| {
                 if !current {
-                    return Ok(());
+                    return Ok(false);
                 }
                 connection
                     .sender
@@ -95,8 +148,13 @@ impl DiagnosticsController {
                         crate::errors::LspError::internal(format!(
                             "failed to publish diagnostics: {error}"
                         ))
-                    })
+                    })?;
+                Ok(true)
             })?;
+            if !published {
+                session.schedule_document_diagnostics(&job.uri)?;
+                break;
+            }
         }
         Ok(())
     }

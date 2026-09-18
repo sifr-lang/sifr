@@ -9,11 +9,16 @@ import shlex
 import shutil
 import subprocess
 
-from lsp_protocol import LspClient, file_uri
+from lsp_protocol import LspClient
 from lsp_protocol_smoke import initialize
 
 GOOD = 'def main():\n    value: int = 1\n'
 BAD = 'def main():\n    value: int = "bad"\n'
+
+
+def file_uri(path):
+    # Preserve the client's logical symlink URI; Path.resolve would hide E03.
+    return path.absolute().as_uri()
 
 
 def open_source(client, path, source, version=1):
@@ -59,8 +64,10 @@ def run(binary, output):
         initialize(client, root)
         open_source(client, path, GOOD)
         assert not diagnostics(client, path)
-        cli = subprocess.run([str(binary), "check", str(path)], capture_output=True)
-        assert cli.returncode != 0 and b"int" in cli.stderr
+        cli = subprocess.run([str(binary), "check", path.name], cwd=root, capture_output=True)
+        (output / "cli.stdout").write_bytes(cli.stdout)
+        (output / "cli.stderr").write_bytes(cli.stderr)
+        assert cli.returncode != 0 and b"SIFR-TYPE-0002" in cli.stdout + cli.stderr
         assert not diagnostics(client, path)
         # didSave without text preserves editor authority even if disk is stale.
         client.notify("textDocument/didSave", {"textDocument": {"uri": file_uri(path)}})
@@ -118,6 +125,20 @@ def run(binary, output):
         record("E04", {"open_close_switch_cycles": 12, "unreferenced_metadata_released": True})
     finally:
         finish(client)
+
+    for encoding, end in [("utf-8", 21), ("utf-32", 18)]:
+        client = LspClient()
+        try:
+            initialized = client.request("initialize", {"processId": None, "rootUri": file_uri(root), "capabilities": {"general": {"positionEncodings": [encoding]}}})
+            assert initialized["capabilities"]["positionEncoding"] == encoding
+            client.notify("initialized", {})
+            open_source(client, path, unicode)
+            assert diagnostics(client, path)[0]["range"]["start"]["line"] == 2
+            client.notify("textDocument/didChange", {"textDocument": {"uri": file_uri(path), "version": 2}, "contentChanges": [{"range": {"start": {"line": 1, "character": 17}, "end": {"line": 1, "character": end}}, "text": "ok"}]})
+            assert all(item["range"]["start"]["line"] == 2 for item in diagnostics(client, path))
+            record("E03-" + encoding, {"negotiated": encoding, "crlf_unicode_edit": True})
+        finally:
+            finish(client)
 
     # Damage an owned installed copy. Formatting and syntax still work with no
     # semantic owner; explicit reconfiguration recovers the same live process.

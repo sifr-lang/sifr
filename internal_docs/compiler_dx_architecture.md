@@ -623,8 +623,11 @@ late work returns `ContentModified` independently of cancellation. Analysis
 snapshots retain captured source maps/overlays and their exact compiler metadata
 owner. Incremental updates commit the same overlay bytes used by later reloads.
 Configuration notifications explicitly re-resolve the toolchain and rebuild open
-overlays; ordinary requests remain pinned. Closing the last document releases the
-idle editor's decoded metadata ownership. Formatting, folding and selection use
+overlays; ordinary requests remain pinned. Closing projects releases their Python environment/inspection caches; closing
+the last document releases the idle editor's decoded metadata ownership.
+Logical client URIs remain distinct from physical source identity, including
+new unsaved files under symlinked parents. Simultaneous aliases for one source
+are rejected explicitly; close its existing URI before opening another alias. Formatting, folding and selection use
 the existing analysis syntax APIs without constructing a semantic host; with
 push diagnostics disabled, opening text itself does not load metadata.
 

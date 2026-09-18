@@ -107,15 +107,7 @@ fn workspace_did_change_configuration(
     session.store_mut().apply_settings(settings);
     if previous_mode != next_mode && next_mode == crate::document_store::DiagnosticsMode::Off {
         session.clear_diagnostic_jobs();
-        for uri in session.document_uris() {
-            connection
-                .sender
-                .send(Message::Notification(Notification {
-                    method: "textDocument/publishDiagnostics".into(),
-                    params: json!({"uri":uri,"diagnostics":[]}),
-                }))
-                .map_err(|error| LspError::internal(error.to_string()))?;
-        }
+        session.diagnostic_clears.extend(session.document_uris());
     }
     session.refresh_toolchain();
     DiagnosticsController::publish_all(connection, session)
@@ -144,7 +136,8 @@ fn text_document_did_open(
     let version = optional_i32(&params, "/textDocument/version")?;
     let text = required_string(&params, "/textDocument/text")?;
     session.open_document(uri.clone(), &language_id, version, text)?;
-    DiagnosticsController::publish_all(connection, session)
+    let mode = session.store().settings().diagnostics_mode;
+    DiagnosticsController::publish_document(connection, session, &uri, mode)
 }
 
 fn text_document_did_change(
@@ -182,7 +175,8 @@ fn text_document_did_save(
         .and_then(Value::as_str)
         .map(str::to_owned);
     if session.save_document(&uri, text)? {
-        DiagnosticsController::publish_all(connection, session)?;
+        let mode = session.store().settings().diagnostics_mode;
+        DiagnosticsController::publish_document(connection, session, &uri, mode)?;
     }
     Ok(())
 }
@@ -200,18 +194,7 @@ fn text_document_did_close(
         );
         return Ok(());
     }
-    connection
-        .sender
-        .send(lsp_server::Message::Notification(
-            lsp_server::Notification {
-                method: "textDocument/publishDiagnostics".to_string(),
-                params: serde_json::json!({
-                    "uri": uri,
-                    "diagnostics": []
-                }),
-            },
-        ))
-        .map_err(|error| LspError::internal(format!("failed to clear diagnostics: {error}")))?;
+    session.diagnostic_clears.insert(uri);
     DiagnosticsController::publish_all(connection, session)
 }
 
