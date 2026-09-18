@@ -40,8 +40,7 @@ impl FrontendContext {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{FrontendInput, FrontendMode};
-    use sifr_source::{SourcePath, SourceText};
+    use crate::{FrontendInput, FrontendMode, SourcePath, SourceText};
     fn context(source: &str, defs: ExternalDefs) -> FrontendContext {
         FrontendContext::load_single_file_with_external_defs(
             FrontendInput {
