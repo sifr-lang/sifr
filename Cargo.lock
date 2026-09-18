@@ -7677,6 +7677,7 @@ dependencies = [
  "sifr_analysis",
  "sifr_diagnostics",
  "sifr_driver",
+ "sifr_frontend",
  "sifr_identity",
  "sifr_package",
  "sifr_source",
