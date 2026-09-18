@@ -29,6 +29,7 @@ use std::collections::BTreeMap;
 pub(super) type QueryResult<T> = Result<AnalysisQueryResult<T>, AnalysisError>;
 
 pub struct AnalysisHost {
+    pub(super) snapshot_owner: std::sync::Arc<()>,
     pub(super) stdlib_navigation: std::sync::Arc<sifr_driver::StdlibNavigation>,
     pub(super) compiler: sifr_driver::CompilerContext,
     pub(super) session: WorkspaceSession,
@@ -65,12 +66,20 @@ impl AnalysisHost {
             }
         }
         let previous_revision = self.current_revision.graph;
+        let path = sifr_frontend::SourcePath::new(
+            self.context()?
+                .path_for_file(file)
+                .ok_or_else(|| unknown_file(file))?
+                .to_path_buf(),
+        );
+        let overlay = text.clone();
         let report = {
             let context = self.context_mut()?;
             context
                 .update_module_source(module, text, Some(version))
                 .map_err(|diagnostics| frontend_diagnostics(&diagnostics))?
         };
+        self.session.record_analysis_overlay(path, version, overlay);
         self.refresh_file_map();
         self.refresh_current_revision();
         self.session
@@ -97,7 +106,12 @@ impl AnalysisHost {
     }
 
     pub fn snapshot(&mut self) -> AnalysisSnapshot {
-        AnalysisSnapshot::new(self.session.snapshot(), self.current_revision)
+        AnalysisSnapshot::new(
+            self.session.snapshot(),
+            self.current_revision,
+            self.compiler.clone(),
+            self.snapshot_owner.clone(),
+        )
     }
 
     pub fn record_update_latency_ms(&mut self, latency_ms: u64) {
@@ -106,7 +120,9 @@ impl AnalysisHost {
 
     #[must_use]
     pub fn is_snapshot_current(&self, snapshot: &AnalysisSnapshot) -> bool {
-        snapshot.revision() == self.current_revision
+        snapshot.belongs_to(&self.snapshot_owner)
+            && snapshot.matches_compiler(&self.compiler)
+            && snapshot.revision() == self.current_revision
             && snapshot.workspace().revision == self.session.revision()
     }
 

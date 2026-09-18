@@ -617,6 +617,20 @@ Keep logical URIs/paths distinct from canonical filesystem identity where the re
 
 Separate latency-sensitive syntax/editor work from expensive native/environment operations using the existing scheduler/cancellation boundary. Formatting and syntax-only requests do not force native compilation. Semantic requests that legitimately require an external contract retain that dependency and an explicit readiness state; they do not silently fabricate an answer to appear fast. Missing metadata keeps the server alive enough to publish the setup error and recover on explicit re-resolution, without providing counterfeit semantic results.
 
+The stdio owner serializes analysis mutations. Its ingress generation lock also
+orders source/configuration events against response and diagnostic publication;
+late work returns `ContentModified` independently of cancellation. Analysis
+snapshots retain captured source maps/overlays and their exact compiler metadata
+owner. Incremental updates commit the same overlay bytes used by later reloads.
+Configuration notifications explicitly re-resolve the toolchain and rebuild open
+overlays; ordinary requests remain pinned. Closing projects releases their Python environment/inspection caches; closing
+the last document releases the idle editor's decoded metadata ownership.
+Logical client URIs remain distinct from physical source identity, including
+new unsaved files under symlinked parents. Simultaneous aliases for one source
+are rejected explicitly; close its existing URI before opening another alias. Formatting, folding and selection use
+the existing analysis syntax APIs without constructing a semantic host; with
+push diagnostics disabled, opening text itself does not load metadata.
+
 ### 10.1 Retention policy
 
 Share immutable source/semantic/metadata values across requests. Reference-count active snapshots and release old generations when no request uses them. Keep bounded optional decoded-module/project caches; only unreferenced entries are evictable. Do not retain every stdlib HIR or every closed workspace indefinitely. [T3] [T4]

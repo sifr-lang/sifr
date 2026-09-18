@@ -34,6 +34,7 @@ pub(crate) struct DocumentStore {
     settings: WorkspaceSettings,
 }
 
+#[derive(Clone)]
 pub(crate) struct DocumentState {
     uri: String,
     path: PathBuf,
@@ -74,7 +75,24 @@ impl DocumentStore {
                 "unsupported language id {language_id:?}; expected sifr"
             )));
         }
-        let path = uri_to_path(&uri)?;
+        let logical_path = uri_to_path(&uri)?;
+        let path = logical_path
+            .canonicalize()
+            .ok()
+            .or_else(|| {
+                let parent = logical_path.parent()?.canonicalize().ok()?;
+                Some(parent.join(logical_path.file_name()?))
+            })
+            .unwrap_or(logical_path);
+        if self
+            .documents
+            .values()
+            .any(|document| document.path == path && document.uri != uri)
+        {
+            return Err(LspError::invalid_params(
+                "source is already open under another URI; close that document before opening its alias",
+            ));
+        }
         let state = DocumentState::new(uri.clone(), path, version, text);
         self.documents.insert(uri, state);
         Ok(())
@@ -89,19 +107,21 @@ impl DocumentStore {
     ) -> LspResult<bool> {
         let state = self.document_mut(uri)?;
         state.reject_stale(version)?;
-        let previous = state.text.clone();
+        let mut candidate = state.clone();
         for item in &change.changes {
             match item {
                 DocumentContentChange::Full { text } => {
-                    state.text.clone_from(text);
+                    candidate.text.clone_from(text);
                 }
                 DocumentContentChange::Incremental { range, text } => {
-                    state.apply_incremental_change(range, text, position_encoding)?;
+                    candidate.apply_incremental_change(range, text, position_encoding)?;
                 }
             }
         }
-        state.version = version;
-        Ok(state.text != previous)
+        candidate.version = version;
+        let text_changed = candidate.text != state.text;
+        *state = candidate;
+        Ok(text_changed)
     }
 
     pub(crate) fn save(&mut self, uri: &str, text: Option<String>) -> bool {

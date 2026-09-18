@@ -77,6 +77,25 @@ impl PythonDeclarationCache {
         self.entries.clear();
     }
 
+    pub(crate) fn retain_open_projects(
+        &mut self,
+        documents: &crate::document_store::DocumentStore,
+    ) {
+        let mut provider = DiskSourceProvider::new();
+        let roots = documents
+            .documents()
+            .map(|document| {
+                package_root_for(document.path(), &mut provider)
+                    .unwrap_or_else(|| document.path().to_path_buf())
+            })
+            .collect::<std::collections::BTreeSet<_>>();
+        self.entries.retain(|root, _| roots.contains(root));
+        self.environments
+            .retain(|key, _| roots.contains(&key.package_root));
+        self.target_inspections
+            .retain(|(root, _, _), _| roots.contains(root));
+    }
+
     pub(crate) fn invalidate_external(&mut self) {
         self.entries.clear();
         self.environments.clear();
@@ -847,3 +866,7 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+#[path = "python_retention_tests.rs"]
+mod retention_tests;

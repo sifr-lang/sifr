@@ -11,12 +11,44 @@ use sifr_analysis::WorkspaceTracePhase;
 pub(crate) struct DiagnosticsController;
 
 impl DiagnosticsController {
+    pub(crate) fn flush_clears(connection: &Connection, session: &mut Session) -> LspResult<()> {
+        if session.diagnostic_clears.is_empty() {
+            return Ok(());
+        }
+        let sent = session.generations.publish(session.generation, |current| {
+            if !current {
+                return Ok(false);
+            }
+            for uri in &session.diagnostic_clears {
+                // A reopened document belongs to its newer owner. In off mode,
+                // clear previous diagnostics even when that document stays open.
+                if session.store().settings().diagnostics_mode == DiagnosticsMode::Off
+                    || session.store().document(uri).is_err()
+                {
+                    connection
+                        .sender
+                        .send(Message::Notification(Notification {
+                            method: "textDocument/publishDiagnostics".into(),
+                            params: json!({"uri":uri,"diagnostics":[]}),
+                        }))
+                        .map_err(|error| crate::errors::LspError::internal(error.to_string()))?;
+                }
+            }
+            Ok(true)
+        })?;
+        if sent {
+            session.diagnostic_clears.clear();
+        }
+        Ok(())
+    }
+
     pub(crate) fn publish_document(
         connection: &Connection,
         session: &mut Session,
         uri: &str,
         mode: DiagnosticsMode,
     ) -> LspResult<()> {
+        Self::flush_clears(connection, session)?;
         if mode == DiagnosticsMode::Off {
             session.clear_diagnostic_jobs();
             return Ok(());
@@ -26,7 +58,23 @@ impl DiagnosticsController {
     }
 
     pub(crate) fn publish_all(connection: &Connection, session: &mut Session) -> LspResult<()> {
+        Self::publish_workspace(connection, session, true)
+    }
+
+    pub(crate) fn reconcile_changes(
+        connection: &Connection,
+        session: &mut Session,
+    ) -> LspResult<()> {
+        Self::publish_workspace(connection, session, false)
+    }
+
+    fn publish_workspace(
+        connection: &Connection,
+        session: &mut Session,
+        report_progress: bool,
+    ) -> LspResult<()> {
         let mode = session.store().settings().diagnostics_mode;
+        Self::flush_clears(connection, session)?;
         if mode == DiagnosticsMode::Off {
             session.clear_diagnostic_jobs();
             return Ok(());
@@ -36,7 +84,11 @@ impl DiagnosticsController {
             .into_iter()
             .filter(|uri| session.can_publish_document_diagnostics(uri))
             .collect::<Vec<_>>();
-        let progress = session.begin_progress(ProgressKind::FullDiagnostics, uris.len());
+        let progress = if report_progress {
+            session.begin_progress(ProgressKind::FullDiagnostics, uris.len())
+        } else {
+            None
+        };
         if let Some(handle) = &progress {
             publish_progress(
                 connection,
@@ -64,8 +116,14 @@ impl DiagnosticsController {
         session: &mut Session,
         mode: DiagnosticsMode,
     ) -> LspResult<()> {
+        Self::flush_clears(connection, session)?;
         if mode == DiagnosticsMode::Off {
             session.clear_diagnostic_jobs();
+            return Ok(());
+        }
+        // Leave pending jobs queued while newer input waits to be applied. The
+        // next event reconciles them against the latest applied generation.
+        if !session.generations.publish(session.generation, Ok)? {
             return Ok(());
         }
         while let Some(job) = session.take_next_diagnostic_job() {
@@ -91,21 +149,31 @@ impl DiagnosticsController {
                 continue;
             }
             let params = json!({
-                "uri": job.uri,
+                "uri": job.uri.clone(),
                 "version": job.version,
                 "diagnostics": diagnostics
             });
-            connection
-                .sender
-                .send(Message::Notification(Notification {
-                    method: "textDocument/publishDiagnostics".to_string(),
-                    params,
-                }))
-                .map_err(|error| {
-                    crate::errors::LspError::internal(format!(
-                        "failed to publish diagnostics: {error}"
-                    ))
-                })?;
+            let published = session.generations.publish(session.generation, |current| {
+                if !current {
+                    return Ok(false);
+                }
+                connection
+                    .sender
+                    .send(Message::Notification(Notification {
+                        method: "textDocument/publishDiagnostics".to_string(),
+                        params,
+                    }))
+                    .map_err(|error| {
+                        crate::errors::LspError::internal(format!(
+                            "failed to publish diagnostics: {error}"
+                        ))
+                    })?;
+                Ok(true)
+            })?;
+            if !published {
+                session.schedule_document_diagnostics(&job.uri)?;
+                break;
+            }
         }
         Ok(())
     }
@@ -124,6 +192,7 @@ fn publish_progress(connection: &Connection, params: Value) -> LspResult<()> {
 }
 
 pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResult<Vec<Value>> {
+    session.ensure_document_analysis(uri)?;
     let position_encoding = session.position_encoding();
     let source = session.store().document(uri)?.text().to_string();
     // Load-time diagnostics are replaced whenever the document analysis owner is

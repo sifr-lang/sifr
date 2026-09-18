@@ -34,3 +34,5 @@ pub use watchdog::LspServerOptions;
 mod compiled_identity;
 #[doc(hidden)]
 pub use compiled_identity::compiled_input_tokens;
+
+mod generation;

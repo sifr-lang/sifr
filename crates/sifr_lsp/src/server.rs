@@ -80,6 +80,7 @@ impl LspServer {
             .initialize_finish(initialize_id, initialize_data)?;
         let source = self.connection.receiver.clone();
         let cancellation = self.session.cancellation_registry();
+        let generations = self.session.generations.clone();
         let (forward, incoming) = std::sync::mpsc::channel();
         let message_pump = std::thread::spawn(move || {
             while let Ok(message) = source.recv() {
@@ -89,12 +90,20 @@ impl LspServer {
                 {
                     cancellation.cancel(&id);
                 }
-                if forward.send(message).is_err() {
+                let method = match &message {
+                    Message::Notification(n) => Some(n.method.as_str()),
+                    _ => None,
+                };
+                let Ok(generation) = generations.observe(method) else {
+                    break;
+                };
+                if forward.send((message, generation)).is_err() {
                     break;
                 }
             }
         });
-        while let Ok(message) = incoming.recv() {
+        while let Ok((message, generation)) = incoming.recv() {
+            self.session.generation = generation;
             self.watchdog.check()?;
             match message {
                 Message::Request(request) => {
@@ -128,7 +137,17 @@ impl LspServer {
                                 error.message()
                             ),
                         );
+                        // A rejected mutation still advanced ingress. Reconcile the
+                        // unchanged authoritative state after suppressing older work.
+                        let _ = crate::diagnostics::DiagnosticsController::publish_all(
+                            &self.connection,
+                            &mut self.session,
+                        );
                     }
+                    crate::diagnostics::DiagnosticsController::flush_clears(
+                        &self.connection,
+                        &mut self.session,
+                    )?;
                     if is_exit {
                         #[allow(clippy::bool_to_int_with_if)]
                         let code = if self.session.shutdown_requested() {
@@ -211,12 +230,22 @@ impl LspServer {
                     Ok(result)
                 });
             self.session.finish_request(&id);
-            let response = response_from_result(id, result);
-            self.connection
-                .sender
-                .send(Message::Response(response))
-                .map_err(|error| {
-                    LspError::internal(format!("failed to send LSP response: {error}"))
+            self.session
+                .generations
+                .publish(self.session.generation, |current| {
+                    let result = if current {
+                        result
+                    } else {
+                        Err(LspError::content_modified(
+                            "request snapshot was superseded by a source or configuration event",
+                        ))
+                    };
+                    self.connection
+                        .sender
+                        .send(Message::Response(response_from_result(id, result)))
+                        .map_err(|error| {
+                            LspError::internal(format!("failed to send LSP response: {error}"))
+                        })
                 })?;
         }
         Ok(())

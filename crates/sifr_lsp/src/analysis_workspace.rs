@@ -59,7 +59,23 @@ impl Default for LspAnalysisWorkspace {
     }
 }
 impl LspAnalysisWorkspace {
+    pub(crate) fn discard_documents(&mut self) {
+        self.documents.clear();
+        self.projects.clear();
+    }
+
+    pub(crate) fn reset_toolchain(&mut self) {
+        self.discard_documents();
+        self.compiler = self.compiler.refreshed_toolchain();
+    }
+
     pub(crate) const WATCHER_STORM_THRESHOLD: usize = 64;
+
+    pub(crate) fn has_analysis(&self, document: &DocumentState) -> bool {
+        self.documents.contains_key(document.uri())
+            || workspace_root_for(document.path())
+                .is_some_and(|root| self.projects.contains_key(&root))
+    }
 
     pub(crate) fn open_document(&mut self, document: &DocumentState) -> bool {
         if let Some(root) = workspace_root_for(document.path()) {
@@ -112,6 +128,21 @@ impl LspAnalysisWorkspace {
     }
 
     pub(crate) fn refresh_projects(&mut self, documents: &crate::document_store::DocumentStore) {
+        self.synchronize_projects(documents, true);
+    }
+
+    pub(crate) fn refresh_existing_projects(
+        &mut self,
+        documents: &crate::document_store::DocumentStore,
+    ) {
+        self.synchronize_projects(documents, false);
+    }
+
+    fn synchronize_projects(
+        &mut self,
+        documents: &crate::document_store::DocumentStore,
+        create: bool,
+    ) {
         let mut grouped: BTreeMap<PathBuf, Vec<&DocumentState>> = BTreeMap::new();
         for document in documents.documents() {
             if let Some(root) = workspace_root_for(document.path()) {
@@ -128,6 +159,9 @@ impl LspAnalysisWorkspace {
                 for document in &documents {
                     self.documents.remove(document.uri());
                 }
+                continue;
+            }
+            if !create {
                 continue;
             }
             let analysis = LspProjectAnalysis::open(&self.compiler, root.clone(), &documents);
@@ -400,6 +434,19 @@ impl LspProjectAnalysis {
                 .open_uris
                 .iter()
                 .map(|uri| (uri.clone(), diagnostics.clone()))
+                .collect();
+        } else {
+            self.load_diagnostics.clear();
+            self.files_by_uri = self
+                .open_uris
+                .iter()
+                .filter_map(|uri| {
+                    let path = crate::conversion::uri_to_path(uri).ok()?;
+                    let canonical = path.canonicalize().unwrap_or(path);
+                    host.document_file_for_path(&canonical)
+                        .ok()
+                        .map(|file| (uri.clone(), file))
+                })
                 .collect();
         }
     }

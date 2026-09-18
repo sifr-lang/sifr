@@ -12,13 +12,22 @@ pub(crate) fn formatting(session: &mut Session, params: Value) -> LspResult<Valu
     let path = session.store().document(&uri)?.path().to_path_buf();
     let options = format_options(&params, &path)?;
     let position_encoding = session.position_encoding();
-    session.with_document_analysis(&uri, |snapshot, host, file, source| {
-        let edits = snapshot
-            .format_document(host, file, options)
-            .map_err(|error| LspError::internal(error.message))?
-            .into_value();
-        conversion::text_edits(edits, source, position_encoding)
-    })
+    let source = session.store().document(&uri)?.text();
+    let formatted = sifr_analysis::syntax_queries::format_source(source, Some(&path), options)
+        .map_err(|diagnostics| LspError::internal(formatter_diagnostic_message(&diagnostics)))?;
+    if formatted.formatted == source {
+        return Ok(serde_json::json!([]));
+    }
+    let length =
+        u32::try_from(source.len()).map_err(|_| LspError::invalid_params("source too large"))?;
+    conversion::text_edits(
+        vec![sifr_analysis::TextEdit {
+            range: ruff_text_size::TextRange::up_to(ruff_text_size::TextSize::new(length)),
+            replacement: formatted.formatted,
+        }],
+        source,
+        position_encoding,
+    )
 }
 
 pub(crate) fn range_formatting(session: &mut Session, params: Value) -> LspResult<Value> {
@@ -33,13 +42,11 @@ pub(crate) fn range_formatting(session: &mut Session, params: Value) -> LspResul
         .ok_or_else(|| LspError::invalid_params("rangeFormatting requires range"))
         .and_then(|range| conversion::lsp_range(range, &source, position_encoding))?;
     let options = format_options(&params, &path)?;
-    session.with_document_analysis(&uri, |snapshot, host, file, source| {
-        let edits = snapshot
-            .format_range(host, file, range, options)
-            .map_err(|error| LspError::internal(error.message))?
-            .into_value();
-        conversion::text_edits(edits, source, position_encoding)
-    })
+    let edits = sifr_analysis::syntax_queries::format_range(&source, range, Some(&path), options)
+        .map_err(|diagnostics| {
+        LspError::internal(formatter_diagnostic_message(&diagnostics))
+    })?;
+    conversion::text_edits(edits, &source, position_encoding)
 }
 
 fn ensure_formatting_enabled(session: &Session) -> LspResult<()> {

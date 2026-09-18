@@ -14,7 +14,9 @@ pub(crate) fn handle(
 ) -> LspResult<()> {
     match method {
         "initialized" => initialized(session, connection),
-        "workspace/didChangeConfiguration" => workspace_did_change_configuration(session, params),
+        "workspace/didChangeConfiguration" => {
+            workspace_did_change_configuration(session, params, connection)
+        }
         "workspace/didChangeWatchedFiles" => {
             workspace_did_change_watched_files(session, params, connection)
         }
@@ -93,7 +95,11 @@ pub(crate) fn cancel_request_id(params: &Value) -> Option<RequestId> {
     }
 }
 
-fn workspace_did_change_configuration(session: &mut Session, params: Value) -> LspResult<()> {
+fn workspace_did_change_configuration(
+    session: &mut Session,
+    params: Value,
+    connection: &Connection,
+) -> LspResult<()> {
     let root = params.get("settings").unwrap_or(&params);
     let previous_mode = session.store().settings().diagnostics_mode;
     let settings = crate::settings::parse_workspace_settings(root, session.store().settings())?;
@@ -101,8 +107,10 @@ fn workspace_did_change_configuration(session: &mut Session, params: Value) -> L
     session.store_mut().apply_settings(settings);
     if previous_mode != next_mode && next_mode == crate::document_store::DiagnosticsMode::Off {
         session.clear_diagnostic_jobs();
+        session.diagnostic_clears.extend(session.document_uris());
     }
-    Ok(())
+    session.refresh_toolchain();
+    DiagnosticsController::publish_all(connection, session)
 }
 
 fn workspace_did_change_watched_files(
@@ -153,8 +161,7 @@ fn text_document_did_change(
             summary.raw_change_count, summary.compacted_change_count, summary.text_changed
         ),
     );
-    let mode = session.store().settings().diagnostics_mode;
-    DiagnosticsController::publish_document(connection, session, &uri, mode)
+    DiagnosticsController::reconcile_changes(connection, session)
 }
 
 fn text_document_did_save(
@@ -187,18 +194,7 @@ fn text_document_did_close(
         );
         return Ok(());
     }
-    connection
-        .sender
-        .send(lsp_server::Message::Notification(
-            lsp_server::Notification {
-                method: "textDocument/publishDiagnostics".to_string(),
-                params: serde_json::json!({
-                    "uri": uri,
-                    "diagnostics": []
-                }),
-            },
-        ))
-        .map_err(|error| LspError::internal(format!("failed to clear diagnostics: {error}")))?;
+    session.diagnostic_clears.insert(uri);
     DiagnosticsController::publish_all(connection, session)
 }
 

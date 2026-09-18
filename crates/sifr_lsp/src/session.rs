@@ -21,6 +21,9 @@ const MAX_LSP_TRACE_EVENTS: usize = 256;
 
 pub(crate) struct Session {
     store: DocumentStore,
+    pub(crate) generations: crate::generation::Generations,
+    pub(crate) generation: u64,
+    pub(crate) diagnostic_clears: std::collections::BTreeSet<String>,
     analysis: LspAnalysisWorkspace,
     queue: RequestQueue,
     progress: ProgressState,
@@ -43,6 +46,29 @@ pub(crate) struct DocumentChangeSummary {
 }
 
 impl Session {
+    pub(crate) fn ensure_document_analysis(&mut self, uri: &str) -> LspResult<()> {
+        let document = self.store.document(uri)?;
+        if !self.analysis.can_analyze_document(document)
+            && self.analysis.load_diagnostics(uri).is_empty()
+        {
+            if self.analysis.open_document(document) {
+                self.analysis.refresh_projects(&self.store);
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) fn refresh_toolchain(&mut self) {
+        self.python_declarations.invalidate_external();
+        self.analysis.reset_toolchain();
+        for uri in self.store.document_uris() {
+            if self.store.settings().diagnostics_mode != crate::document_store::DiagnosticsMode::Off
+            {
+                let _ = self.ensure_document_analysis(&uri);
+            }
+        }
+    }
+
     pub(crate) fn compiler_context(&self) -> &sifr_driver::CompilerContext {
         &self.analysis.compiler
     }
@@ -53,6 +79,9 @@ impl Session {
     pub(crate) fn new() -> Self {
         Self {
             store: DocumentStore::new(),
+            generations: Default::default(),
+            generation: 0,
+            diagnostic_clears: Default::default(),
             analysis: LspAnalysisWorkspace::default(),
             queue: RequestQueue::default(),
             progress: ProgressState::default(),
@@ -95,6 +124,11 @@ impl Session {
         self.python_declarations.invalidate_source();
         self.store.open(uri.clone(), language_id, version, text)?;
         let document = self.store.document(&uri)?;
+        if self.store.settings().diagnostics_mode == crate::document_store::DiagnosticsMode::Off
+            && !self.analysis.has_analysis(document)
+        {
+            return Ok(());
+        }
         if self.analysis.open_document(document) {
             self.analysis.refresh_projects(&self.store);
         }
@@ -122,7 +156,10 @@ impl Session {
             self.store
                 .apply_compacted_change(uri, version, &compacted, self.position_encoding)?;
         let document = self.store.document(uri)?;
-        if self.analysis.update_document(document) {
+        if (self.store.settings().diagnostics_mode != crate::document_store::DiagnosticsMode::Off
+            || self.analysis.has_analysis(document))
+            && self.analysis.update_document(document)
+        {
             self.analysis.refresh_projects(&self.store);
         }
         Ok(DocumentChangeSummary {
@@ -138,7 +175,10 @@ impl Session {
             return Ok(false);
         }
         let document = self.store.document(uri)?;
-        if self.analysis.update_document(document) {
+        if (self.store.settings().diagnostics_mode != crate::document_store::DiagnosticsMode::Off
+            || self.analysis.has_analysis(document))
+            && self.analysis.update_document(document)
+        {
             self.analysis.refresh_projects(&self.store);
         }
         Ok(true)
@@ -149,7 +189,11 @@ impl Session {
         self.diagnostic_jobs.remove(uri);
         self.analysis.close_document(uri);
         let closed = self.store.close(uri);
-        self.analysis.refresh_projects(&self.store);
+        self.python_declarations.retain_open_projects(&self.store);
+        self.analysis.refresh_existing_projects(&self.store);
+        if self.store.document_uris().is_empty() {
+            self.analysis.compiler = self.analysis.compiler.without_cached_metadata();
+        }
         closed
     }
 
@@ -180,7 +224,8 @@ impl Session {
         self.analysis.load_diagnostics(uri)
     }
 
-    pub(crate) fn file_maps_for_uri(&self, uri: &str) -> LspResult<LspFileMaps> {
+    pub(crate) fn file_maps_for_uri(&mut self, uri: &str) -> LspResult<LspFileMaps> {
+        self.ensure_document_analysis(uri)?;
         let document = self.store.document(uri)?;
         self.analysis.file_maps_for_document(document, &self.store)
     }
@@ -190,6 +235,9 @@ impl Session {
         query: &sifr_analysis::SymbolQuery,
     ) -> LspResult<Vec<LspWorkspaceSymbol>> {
         self.check_active_request_cancelled()?;
+        for uri in self.store.document_uris() {
+            self.ensure_document_analysis(&uri)?;
+        }
         let symbols = self.analysis.workspace_symbols(query)?;
         self.check_active_request_cancelled()?;
         self.trace(
@@ -205,6 +253,7 @@ impl Session {
         operation: impl FnOnce(&AnalysisSnapshot, &mut AnalysisHost, FileId, &str) -> LspResult<T>,
     ) -> LspResult<T> {
         self.check_active_request_cancelled()?;
+        self.ensure_document_analysis(uri)?;
         let before_version = self.store.document(uri)?.version();
         let cancellation = self.active_request.as_ref().map(CancellationToken::flag);
         let result = {
@@ -447,6 +496,8 @@ mod tests {
     use serde_json::json;
     use sifr_analysis::WorkspaceTracePhase;
 
+    #[path = "dx11_editor_tests.rs"]
+    mod dx11_editor_tests;
     #[path = "project_ownership_tests.rs"]
     mod project_ownership_tests;
     #[path = "python_declaration_tests.rs"]

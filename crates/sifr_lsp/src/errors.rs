@@ -34,6 +34,13 @@ impl LspError {
         }
     }
 
+    pub(crate) fn content_modified(message: impl Into<String>) -> Self {
+        Self {
+            code: ErrorCode::ContentModified,
+            message: message.into(),
+        }
+    }
+
     pub(crate) fn internal(message: impl Into<String>) -> Self {
         Self {
             code: ErrorCode::InternalError,

@@ -73,3 +73,5 @@ pub fn format_options_for_path(
 mod compiled_identity;
 #[doc(hidden)]
 pub use compiled_identity::compiled_input_tokens;
+
+pub mod syntax_queries;
