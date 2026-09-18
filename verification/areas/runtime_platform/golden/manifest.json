@@ -4,7 +4,7 @@
   "entries": [
     {
       "program": "binary_file_io_capability.sifr",
-      "command": "{sifr} run --isolated verification/areas/runtime_platform/golden/binary_file_io_capability.sifr",
+      "command": "{sifr} run --release --isolated verification/areas/runtime_platform/golden/binary_file_io_capability.sifr",
       "expected_exit": 0,
       "expected_stdout_contains": [
         "platform-golden: binary-file-io pass"
@@ -191,7 +191,7 @@
     },
     {
       "program": "http_body_text_after_text_i18n.sifr",
-      "command": "{sifr} run --isolated verification/areas/runtime_platform/golden/http_body_text_after_text_i18n.sifr",
+      "command": "{sifr} run --release --isolated verification/areas/runtime_platform/golden/http_body_text_after_text_i18n.sifr",
       "expected_exit": 0,
       "expected_stdout_contains": [
         "platform-golden: pass"
@@ -212,7 +212,7 @@
     },
     {
       "program": "subprocess_text_explicit_encoding.sifr",
-      "command": "{sifr} run --isolated verification/areas/runtime_platform/golden/subprocess_text_explicit_encoding.sifr",
+      "command": "{sifr} run --release --isolated verification/areas/runtime_platform/golden/subprocess_text_explicit_encoding.sifr",
       "expected_exit": 0,
       "expected_stdout_contains": [
         "platform-golden: pass"
@@ -230,7 +230,7 @@
     },
     {
       "program": "locale_host_limited_formatting.sifr",
-      "command": "{sifr} run --isolated verification/areas/runtime_platform/golden/locale_host_limited_formatting.sifr",
+      "command": "{sifr} run --release --isolated verification/areas/runtime_platform/golden/locale_host_limited_formatting.sifr",
       "expected_exit": 0,
       "expected_stdout_contains": [
         "platform-golden: pass"

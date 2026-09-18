@@ -1,6 +1,7 @@
 """Prepare the exact selected crate test graphs before timed execution."""
 
-from .profiles import crate_test_mode, crate_test_suites_for_mode
+from .profiles import crate_test_mode
+from .compiler_configuration_plan import configuration_plan
 
 
 def prepare_crate_test_binaries(profile, env, command_runner) -> None:
@@ -8,19 +9,14 @@ def prepare_crate_test_binaries(profile, env, command_runner) -> None:
     if mode is None:
         return
     prepared = set()
-    for suite in crate_test_suites_for_mode(profile, mode):
-        if suite["status"] == "red-blocker" and not suite["executed_in_merge"]:
-            continue
-        original = suite["command"]
-        if not isinstance(original, list) or not original or original[0] != "test":
-            raise ValueError("crate preparation requires a canonical cargo test command")
-        # Arguments after -- belong to the test executable, not Cargo's graph.
-        arguments = original[1:]
-        if "--" in arguments:
-            arguments = arguments[:arguments.index("--")]
-        command = ["cargo", "test", "--locked", "--offline", "--no-run", *arguments]
-        print(f"[sifr-profile-setup] crate-test-build={' '.join(command)}", flush=True)
-        command_runner(command, env=env)
+    built = set()
+    for configuration in configuration_plan(profile, mode):
+        command = configuration.preparation()
+        arguments = command[5:]
+        if tuple(command) not in built:
+            print(f"[sifr-profile-setup] crate-test-build={' '.join(command)}", flush=True)
+            command_runner(command, env=env)
+            built.add(tuple(command))
 
         # Run the already linked driver setup in this exact Cargo test graph.
         # No CLI binary, recursive Cargo producer, or cross-configuration override.

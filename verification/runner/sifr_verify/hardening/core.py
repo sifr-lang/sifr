@@ -156,6 +156,8 @@ def run_variant(
     if diagnostic_format is not None:
         args.extend(["--diagnostic-format", diagnostic_format])
     args.extend([command_name, str(entry)])
+    if command_name in {"run", "build"}:
+        args.append("--release")
 
     started = time.perf_counter()
     try:

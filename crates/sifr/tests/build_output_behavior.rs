@@ -47,7 +47,14 @@ struct CommandCapture {
 }
 
 fn run_sifr(args: &[&str], cwd: &Path) -> CommandCapture {
-    run_sifr_with_env(args, cwd, &[])
+    let mut args = args.to_vec();
+    if args
+        .iter()
+        .any(|arg| matches!(*arg, "build" | "run" | "test"))
+    {
+        args.push("--release");
+    }
+    run_sifr_with_env(&args, cwd, &[])
 }
 
 fn run_sifr_with_env(args: &[&str], cwd: &Path, envs: &[(&str, &str)]) -> CommandCapture {
@@ -97,7 +104,7 @@ fn explain_without_subcommand_still_prints_explanation() {
 }
 
 #[test]
-fn build_output_default_is_phase_aware_and_stderr_only() {
+fn build_output_release_is_phase_aware_and_stderr_only() {
     let project = TestProject::new("default", "def main():\n    print(\"ok\")\n");
     let output_dir = project.output_dir("out");
     let output_dir_arg = output_dir.to_string_lossy().to_string();
@@ -320,7 +327,15 @@ fn failed_materialization_does_not_print_success_footer() {
 
     assert_ne!(capture.status_code, 0);
     assert!(capture.stdout.is_empty());
-    assert!(capture.stderr.contains("failed to create output directory"));
+    assert!(
+        capture.stderr.contains("SIFR-BUILD-0002"),
+        "{}",
+        capture.stderr
+    );
+    assert_eq!(
+        std::fs::read_to_string(&output_file).expect("original output file"),
+        "occupied"
+    );
     assert!(!capture.stderr.contains("Finished release build"));
     assert!(!capture.stderr.contains("Binary: "));
 }
@@ -359,7 +374,9 @@ fn failed_cargo_invocation_does_not_print_success_footer() {
     assert!(capture.stdout.is_empty());
     assert!(
         capture.stderr.contains("SIFR-BUILD-0005")
-            && capture.stderr.contains("failed to run cargo build"),
+            && capture
+                .stderr
+                .contains("selected native executable is unavailable"),
         "stderr:\n{}",
         capture.stderr
     );
@@ -394,10 +411,67 @@ fn failed_rust_probe_does_not_print_success_footer() {
     assert!(capture.stdout.is_empty());
     assert!(
         capture.stderr.contains("SIFR-RUST-CARGO-0001")
-            && capture.stderr.contains("failed to run Rust probe"),
+            && capture
+                .stderr
+                .contains("selected native executable is unavailable"),
         "stderr:\n{}",
         capture.stderr
     );
     assert!(!capture.stderr.contains("Finished release build"));
     assert!(!capture.stderr.contains("Binary: "));
+}
+
+#[test]
+fn dx10_b11_default_build_and_run_report_development() {
+    let project = TestProject::new("development-default", "def main():\n    print(42)\n");
+    let main = project.main.to_string_lossy();
+    for command in ["build", "run"] {
+        let capture = run_sifr_with_env(&[command, &main], &project.root, &[]);
+        assert_eq!(capture.status_code, 0, "{}", capture.stderr);
+        assert!(
+            capture.stderr.contains("target: development native"),
+            "{}",
+            capture.stderr
+        );
+        assert!(capture.stderr.contains("Finished development build in"));
+        assert!(capture.stderr.contains("sifr-application-profiles-v1"));
+    }
+}
+
+#[test]
+fn dx10_b05_unrelated_cargo_manifest_cannot_override_applications() {
+    let project = TestProject::new(
+        "unrelated-profile",
+        "from sifr.html import escape\ndef main():\n    assert escape(\"<tag>\") == \"&lt;tag&gt;\"\n    print(42)\n",
+    );
+    let cache = project.root.join("cache").to_string_lossy().into_owned();
+    let main = project.main.to_string_lossy();
+    let tests = project.root.join("tests");
+    std::fs::create_dir(&tests).expect("test source directory");
+    std::fs::write(
+        tests.join("test_profile.sifr"),
+        "from sifr.html import escape\ndef test_profile():\n    assert escape(\"<tag>\") == \"&lt;tag&gt;\"\n",
+    )
+    .expect("test source");
+    let tests = tests.to_string_lossy();
+    for unrelated in [
+        "[workspace]\n[profile.dev]\npanic = \"abort\"\noverflow-checks = false\n[profile.release]\npanic = \"abort\"\n",
+        "this is not valid TOML [",
+    ] {
+        std::fs::write(project.root.join("Cargo.toml"), unrelated)
+            .expect("unrelated caller manifest");
+        for arguments in [
+            vec!["run", &main],
+            vec!["run", &main, "--release"],
+            vec!["test", &tests],
+            vec!["test", &tests, "--release"],
+        ] {
+            let capture =
+                run_sifr_with_env(&arguments, &project.root, &[("SIFR_CACHE_DIR", &cache)]);
+            assert_eq!(capture.status_code, 0, "{}", capture.stderr);
+            if arguments[0] == "run" {
+                assert_eq!(capture.stdout, "42\n");
+            }
+        }
+    }
 }

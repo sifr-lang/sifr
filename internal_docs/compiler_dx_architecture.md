@@ -504,6 +504,20 @@ The maintained release qualification must execute the complete declared release 
 
 Development and release Cargo artifacts coexist in their respective profile storage. Measure dependency build count, elapsed cold setup, no-op/edited builds, peak memory, total disk bytes and live reserve for dev-only, release-only and alternating dev/release on the 12 GB machine. Do not claim a single dependency build or exactly doubled storage: Cargo can reuse some units and duplicate others. Changing profiles must not trigger automatic cleanup of the other useful profile or weaken qualified runtime semantics. [D1]
 
+DX.10 implements this policy in `sifr_driver::ApplicationProfile` and emits all
+three profile tables into each generated Cargo manifest. The test table derives
+from dev; Cargo ignores an explicit test panic key, so the harness retains its
+required unwinding behavior without an ignored setting. The outer CLI selects
+one immutable application profile; build reports name it independently of compiler
+identity. Captured Cargo configuration, environment and Rust flags are checked
+for incompatible unwind/overflow overrides. Finalized executable paths use
+`target/final` because those immutable copies are not Cargo profile storage;
+Cargo's development and release directories remain separate within one family.
+The maintained selection authority is `verification/runner/application_profiles.json`.
+E2E release qualification rejects a development application override and executes
+the complete declared release corpus in native binaries. Ordinary E2E retains
+its development assertions; area-native commands explicitly retain release.
+
 ### 8.5 Feature-graph consolidation
 
 Classify compiler-gate configurations by what they certify. Group ordinary compiler integration checks that support additive unification. Preserve minimal/default-feature checks, missing-feature regressions, native ABI/source-isolation cases and host/target distinctions in explicit separate groups.

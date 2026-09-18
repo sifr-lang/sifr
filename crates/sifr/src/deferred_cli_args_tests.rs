@@ -248,3 +248,28 @@ fn deferred_cli_args_do_not_construct_unselected_commands() {
 fn deferred_cli_args_complete_cli_model_is_consistent() {
     Cli::command().debug_assert();
 }
+
+#[test]
+fn dx10_b11_cli_application_profile_defaults_and_release() {
+    use crate::cli_model_and_entrypoint::{Cli, selected_application_profile};
+    use clap::Parser;
+    use sifr_driver::ApplicationProfile;
+    for (command, expected) in [
+        ("build", ApplicationProfile::Development),
+        ("run", ApplicationProfile::Development),
+        ("test", ApplicationProfile::Test),
+    ] {
+        let default =
+            Cli::try_parse_from(["sifr", command, "input.sifr"]).expect("default command");
+        assert_eq!(
+            selected_application_profile(default.command.as_ref().expect("command")),
+            expected
+        );
+        let release = Cli::try_parse_from(["sifr", command, "--release", "input.sifr"])
+            .expect("release command");
+        assert_eq!(
+            selected_application_profile(release.command.as_ref().expect("command")),
+            ApplicationProfile::Release
+        );
+    }
+}

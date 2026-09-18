@@ -4,6 +4,9 @@ use std::path::PathBuf;
 
 #[derive(clap::Args)]
 pub(crate) struct Build {
+    /// Optimize the generated application using the release profile
+    #[arg(long)]
+    pub(crate) release: bool,
     /// Input .sifr file
     pub(crate) file: PathBuf,
     /// Output directory (default: current directory)
@@ -28,6 +31,9 @@ pub(crate) struct Build {
 
 #[derive(clap::Args)]
 pub(crate) struct Run {
+    /// Optimize the generated application using the release profile
+    #[arg(long)]
+    pub(crate) release: bool,
     /// Input .sifr file, app target, or script name
     pub(crate) target: Option<String>,
     /// Select a workspace package by Cargo package name
@@ -274,6 +280,9 @@ pub(crate) struct Emit {
 
 #[derive(clap::Args)]
 pub(crate) struct Test {
+    /// Optimize the generated application using the release profile
+    #[arg(long)]
+    pub(crate) release: bool,
     /// Directory containing test files (default: current directory)
     #[arg(default_value = ".")]
     pub(crate) dir: PathBuf,

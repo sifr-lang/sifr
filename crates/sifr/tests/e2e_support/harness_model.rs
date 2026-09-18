@@ -6,7 +6,9 @@ pub(crate) const E2E_CACHE_DIR: &str = "target/sifr_e2e_cache";
 pub(crate) const E2E_CACHE_MANIFEST: &str = "manifest.json";
 pub(crate) const E2E_CACHE_SCHEMA_VERSION: u32 = 2;
 pub(crate) const E2E_CACHE_TTL_SECS: u64 = 2 * 60 * 60;
-pub(crate) const E2E_CACHE_ENV_ALLOWLIST: [&str; 6] = [
+pub(crate) const E2E_CACHE_ENV_ALLOWLIST: [&str; 8] = [
+    "SIFR_E2E_APPLICATION_PROFILE",
+    "SIFR_E2E_PROFILE",
     "RUSTFLAGS",
     "CARGO_ENCODED_RUSTFLAGS",
     "RUSTC_WRAPPER",
@@ -701,4 +703,31 @@ pub(crate) fn compile_failures_to_messages(failures: &[CompiledFailure]) -> Vec<
             None => format!("{}: {}", failure.code, failure.message),
         })
         .collect()
+}
+
+/// Verification profile selection is separate from generated application code.
+pub(crate) fn application_profile() -> sifr_driver::ApplicationProfile {
+    match env::var("SIFR_E2E_APPLICATION_PROFILE").ok().as_deref() {
+        Some("release") => sifr_driver::ApplicationProfile::Release,
+        Some("development") => {
+            assert_ne!(
+                env::var("SIFR_E2E_PROFILE").ok().as_deref(),
+                Some("release"),
+                "release qualification requires actual release applications"
+            );
+            sifr_driver::ApplicationProfile::Development
+        }
+        Some(other) => panic!("invalid explicit E2E application profile: {other}"),
+        None if env::var("SIFR_E2E_PROFILE").ok().as_deref() == Some("release") => {
+            sifr_driver::ApplicationProfile::Release
+        }
+        None => sifr_driver::ApplicationProfile::Development,
+    }
+}
+pub(crate) fn application_directory() -> &'static str {
+    if application_profile() == sifr_driver::ApplicationProfile::Release {
+        "release"
+    } else {
+        "debug"
+    }
 }

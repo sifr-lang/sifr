@@ -21,6 +21,7 @@ impl Fixture {
         let authority = self.0.join("package.lock");
         std::fs::write(&authority, source).expect("package lock");
         CargoResolutionPolicy {
+            application_profile: crate::ApplicationProfile::Release,
             native_toolchain: CargoResolutionPolicy::resolve_native_toolchain(),
             lock_mode: CargoLockMode::Normal,
             cargo_vendor_mode: CargoVendorMode::PackageOwned,

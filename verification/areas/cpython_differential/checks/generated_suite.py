@@ -218,6 +218,7 @@ def run_case(
             "--sysroot",
             str(REPO_ROOT),
             "run",
+            "--release",
             str(sifr_path),
         ],
         timeout,

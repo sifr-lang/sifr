@@ -191,6 +191,16 @@ pub(super) fn main() {
     process::exit(run_cli(cli));
 }
 
+pub(crate) fn selected_application_profile(command: &Commands) -> sifr_driver::ApplicationProfile {
+    match command {
+        Commands::Build(args) if args.0.release => sifr_driver::ApplicationProfile::Release,
+        Commands::Run(args) if args.0.release => sifr_driver::ApplicationProfile::Release,
+        Commands::Test(args) if args.0.release => sifr_driver::ApplicationProfile::Release,
+        Commands::Test(_) => sifr_driver::ApplicationProfile::Test,
+        _ => sifr_driver::ApplicationProfile::Development,
+    }
+}
+
 fn run_cli(cli: Cli) -> i32 {
     let _timing = crate::native_execution::Timing(cli.timings.then(std::time::Instant::now));
     let diagnostic_format = cli.diagnostic_format;
@@ -219,10 +229,15 @@ fn run_cli(cli: Cli) -> i32 {
         let _ = cli_command.write_help(&mut io::stderr());
         return EXIT_USAGE_OR_CONFIG;
     };
+    let application_profile = selected_application_profile(&command);
+    if crate::APPLICATION_PROFILE.set(application_profile).is_err() {
+        return EXIT_INTERNAL_COMPILER_FAILURE;
+    }
     let config = cli.config;
     let isolated = cli.isolated;
     match command {
         Commands::Build(crate::deferred_cli_args::DeferredArgs(crate::command_args::Build {
+            release: _,
             file,
             output,
             quiet,
@@ -239,6 +254,7 @@ fn run_cli(cli: Cli) -> i32 {
             materialize_only,
         ),
         Commands::Run(crate::deferred_cli_args::DeferredArgs(crate::command_args::Run {
+            release: _,
             target,
             packages,
             bin,
@@ -448,6 +464,7 @@ fn run_cli(cli: Cli) -> i32 {
             file,
         })) => cmd_emit(&file, diagnostic_format),
         Commands::Test(crate::deferred_cli_args::DeferredArgs(crate::command_args::Test {
+            release: _,
             dir,
         })) => cmd_test(&dir, diagnostic_format),
         Commands::Tools(crate::deferred_cli_args::DeferredArgs(crate::command_args::Tools {

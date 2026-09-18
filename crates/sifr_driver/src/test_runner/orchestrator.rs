@@ -18,6 +18,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 pub(crate) struct GeneratedTestRunnerProject {
+    pub(crate) application_profile: crate::ApplicationProfile,
     pub(crate) interop: sifr_codegen::InteropBuildPlan,
     pub(crate) cache_scope: PathBuf,
     pub(crate) support_module_names: Vec<String>,
@@ -173,6 +174,7 @@ pub(crate) fn build_test_runner_project(
     }
     finalize_test_runner_project(
         GeneratedTestRunnerProject {
+            application_profile: compiler.application_profile(),
             interop: generated.interop,
             cache_scope: test_dir.to_path_buf(),
             support_module_names,

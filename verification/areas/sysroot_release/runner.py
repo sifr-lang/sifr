@@ -256,13 +256,13 @@ def run_boundary_equivalence() -> tuple[int, list[str]]:
                 probe_cache.mkdir(parents=True)
                 env["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache)
                 run_checked(
-                    [str(compiler), *extra, "build", str(fixture), "-o", str(output), "--quiet"],
+                    [str(compiler), *extra, "build", "--release", str(fixture), "-o", str(output), "--quiet"],
                     cwd=work_root,
                     env=env,
                     label=f"{label} boundary build",
                     timeout=1200,
                 )
-                binary = output / "sifr_output" / "target" / "release" / "sifr_output"
+                binary = output / "sifr_output" / "target" / "final" / "sifr_output"
                 result = run_checked(
                     [str(binary)], cwd=work_root, env=env, label=f"{label} boundary run"
                 )
@@ -511,14 +511,14 @@ def run_host_installed_stdlib_heavy() -> tuple[int, list[str]]:
                 return 1, ["installed heavy emit output did not reference sifr_stdlib"]
 
             run_checked(
-                [str(installed_sifr), "build", str(compile_fixture), "-o", str(build_root), "--quiet"],
+                [str(installed_sifr), "build", "--release", str(compile_fixture), "-o", str(build_root), "--quiet"],
                 cwd=work_root,
                 env=env,
                 label="build",
                 timeout=1200,
             )
             generated = build_root / "sifr_output"
-            binary = generated / "target" / "release" / "sifr_output"
+            binary = generated / "target" / "final" / "sifr_output"
             run_output = run_checked([str(binary)], cwd=work_root, env=env, label="run built binary")
             if "sysroot release compile smoke: pass" not in run_output.stdout:
                 return 1, ["built stdlib compile fixture did not execute successfully"]

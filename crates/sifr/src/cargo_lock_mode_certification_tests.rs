@@ -269,7 +269,7 @@ fn test_locked_offline_sifr_commands_and_warm_cache() {
         );
         assert!(
             output
-                .join("sifr_output/target/release/sifr_output")
+                .join("sifr_output/target/final/sifr_output")
                 .is_file()
         );
         let (run_exit, captured) = sifr_driver::capture_cargo_invocations(|| {

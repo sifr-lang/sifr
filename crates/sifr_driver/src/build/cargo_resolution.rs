@@ -17,6 +17,7 @@ type RegistryCompatibilityFamily = (String, String, String);
 
 #[derive(Clone, Debug)]
 pub(super) struct CargoResolutionPolicy {
+    pub(super) application_profile: crate::ApplicationProfile,
     pub(super) native_toolchain: Result<sifr_sysroot::NativeToolchain, String>,
     pub(super) lock_mode: CargoLockMode,
     pub(super) cargo_vendor_mode: CargoVendorMode,
@@ -40,6 +41,7 @@ impl CargoResolutionPolicy {
 
     pub(super) fn normal() -> Self {
         Self {
+            application_profile: crate::ApplicationProfile::Release,
             native_toolchain: Self::resolve_native_toolchain(),
             lock_mode: CargoLockMode::Normal,
             cargo_vendor_mode: CargoVendorMode::SysrootOnly,
@@ -631,6 +633,7 @@ mod tests {
     fn probe_vendor_replacement_follows_resolution_ownership() {
         assert!(CargoResolutionPolicy::normal().uses_sysroot_vendor());
         let package_owned = CargoResolutionPolicy {
+            application_profile: crate::ApplicationProfile::Release,
             native_toolchain: CargoResolutionPolicy::resolve_native_toolchain(),
             lock_mode: CargoLockMode::Frozen,
             cargo_vendor_mode: CargoVendorMode::PackageOwned,

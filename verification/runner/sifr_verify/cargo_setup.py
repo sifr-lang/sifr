@@ -60,7 +60,10 @@ def prepare_cargo_cache(
             env=setup_env,
         )
 
-    prepare_crate_test_binaries(profile, setup_env, command_runner)
+    # Compiler preparation and execution have identical offline build-script
+    # environments; dependency acquisition above remains explicitly online.
+    compiler_env = setup_env | {"CARGO_NET_OFFLINE": "true"}
+    prepare_crate_test_binaries(profile, compiler_env, command_runner)
     prepare_authoring_test_binaries(profile, setup_env, command_runner)
     prepare_tooling_test_binaries(profile, setup_env, command_runner)
     prepare_performance_binaries(profile, setup_env, command_runner)

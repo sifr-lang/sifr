@@ -1,6 +1,6 @@
 use super::materialize::canonical_rust_module_path;
 use super::project_codegen::{GeneratedBinaryProject, format_generated_binary_project};
-use super::rust_interop_resolution::resolve_package_rust_interop_metadata;
+use super::rust_interop::apply_package_rust_interop_metadata_with_resolution;
 use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::rust_module_file_path;
@@ -26,7 +26,14 @@ pub(crate) fn finalize_test_runner_project(
         python_runtime: None,
     };
     let (generated, context) = attach_stdlib_rust_interop(generated, None, stdlib);
-    let generated = resolve_package_rust_interop_metadata(generated, context)?;
+    let mut policy = super::cargo_resolution::CargoResolutionPolicy::normal();
+    policy.application_profile = project.application_profile;
+    let generated = apply_package_rust_interop_metadata_with_resolution(
+        generated,
+        context,
+        &policy,
+        super::rust_interop_probe_policy::DirectProbePolicy::DeferTrustedSysroot,
+    )?;
     let generated = format_generated_binary_project(generated)?;
     let all_rust_code = format!(
         "{}{}",
@@ -43,6 +50,7 @@ pub(crate) fn finalize_test_runner_project(
         bridge_rust_files.insert(canonical_rust_module_path(&path)?, source);
     }
     Ok(GeneratedTestRunnerProject {
+        application_profile: project.application_profile,
         cache_scope: project.cache_scope,
         support_module_names: generated.support_modules.keys().cloned().collect(),
         support_rust_files: generated.support_modules.into_iter().collect(),

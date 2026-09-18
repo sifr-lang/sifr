@@ -60,6 +60,9 @@ enum Commands {
     Cache(crate::cache_cli::CacheArgs),
     /// Compile a .sifr file to a native binary
     Build {
+        /// Optimize the generated application using the release profile
+        #[arg(long)]
+        release: bool,
         /// Input .sifr file
         file: PathBuf,
         /// Output directory (default: current directory)
@@ -83,6 +86,9 @@ enum Commands {
     },
     /// Compile and run a .sifr file
     Run {
+        /// Optimize the generated application using the release profile
+        #[arg(long)]
+        release: bool,
         /// Input .sifr file, app target, or script name
         target: Option<String>,
         /// Select a workspace package by Cargo package name
@@ -321,6 +327,9 @@ enum Commands {
     },
     /// Run tests in a directory
     Test {
+        /// Optimize the generated application using the release profile
+        #[arg(long)]
+        release: bool,
         /// Directory containing test files (default: current directory)
         #[arg(default_value = ".")]
         dir: PathBuf,

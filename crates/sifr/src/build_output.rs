@@ -23,6 +23,18 @@ pub(super) fn render_build_success(
     push_key_value(&mut output, "input:", &quote_path(report.entrypoint_path()));
     push_key_value(&mut output, "mode:", report.mode().as_str());
     push_key_value(&mut output, "target:", report.target());
+    if let Some(profile) = report.cargo_artifact_profile() {
+        push_key_value(
+            &mut output,
+            "Cargo application profile:",
+            &profile.to_string(),
+        );
+    }
+    push_key_value(
+        &mut output,
+        "application policy:",
+        report.application_profile().policy_identity(),
+    );
     push_key_value(
         &mut output,
         "sysroot:",
@@ -92,7 +104,8 @@ fn push_key_value(output: &mut String, key: &str, value: &str) {
 fn finished_line(report: &BuildReport) -> String {
     let cached = if report.cache_hit() { " (cached)" } else { "" };
     format!(
-        "Finished release build in {}{cached}",
+        "Finished {} build in {}{cached}",
+        report.application_profile().name(),
         format_duration(report.total_elapsed())
     )
 }
@@ -145,12 +158,14 @@ mod tests {
 
     fn report(cache_hit: bool) -> BuildReport {
         BuildReport::new(BuildReportInput {
+            cargo_artifact_profile: None,
+            application_profile: sifr_driver::ApplicationProfile::Release,
             compiler_identity: crate::compiler_identity().as_str().to_owned(),
             native_toolchain_identity: None,
             entrypoint_path: Path::new("demo main.sifr").to_path_buf(),
             mode: BuildCompilationMode::Project,
             sysroot: BuildSysrootReport::from_dependency_plan(&sysroot_dependency_plan()),
-            binary_path: Path::new("./sifr_output/target/release/sifr_output").to_path_buf(),
+            binary_path: Path::new("./sifr_output/target/final/sifr_output").to_path_buf(),
             total_elapsed: Duration::from_millis(54),
             stages: vec![
                 BuildStageReport::new("Loading Sifr standard library", Duration::from_millis(8)),
@@ -213,7 +228,7 @@ mod tests {
         assert!(rendered.contains("Loading Sifr standard library"));
         assert!(rendered.contains("Parsing import closure (4 modules)"));
         assert!(rendered.contains("Finished release build in 54 ms\n"));
-        assert!(rendered.contains("Binary: ./sifr_output/target/release/sifr_output\n"));
+        assert!(rendered.contains("Binary: ./sifr_output/target/final/sifr_output\n"));
     }
 
     #[test]
@@ -229,7 +244,7 @@ mod tests {
 
         assert_eq!(
             rendered,
-            "Finished release build in 54 ms\nBinary: ./sifr_output/target/release/sifr_output\n"
+            "Finished release build in 54 ms\nBinary: ./sifr_output/target/final/sifr_output\n"
         );
     }
 

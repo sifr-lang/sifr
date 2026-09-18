@@ -352,7 +352,7 @@ def main() -> int:
                 f"failed foreign annotation {rejected!r} mutated package inputs")
 
     write_runtime_main(package)
-    runtime = run(binary, package, "run", "src/main.sifr", "--frozen")
+    runtime = run(binary, package, "run", "--release", "src/main.sifr", "--frozen")
     require("binding runtime ok" in runtime.stdout,
             "cross-module PythonError binding execution did not run")
 

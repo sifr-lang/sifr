@@ -5,7 +5,7 @@
 
 use super::*;
 pub(crate) fn build_group_binary_path(group_root: &Path, package_name: &str) -> PathBuf {
-    let debug_dir = group_root.join("target").join("debug");
+    let debug_dir = group_root.join("target").join(application_directory());
     if cfg!(target_os = "windows") {
         debug_dir.join(format!("{package_name}.exe"))
     } else {
@@ -80,6 +80,7 @@ pub(crate) fn build_batch_group(
             // Batch crates are cached by their own `target/` artifact paths.
             // An inherited outer CARGO_TARGET_DIR moves binaries away from the
             // recorded cache location and makes the run phase miss them.
+            application_profile().configure(&mut build_command);
             build_command.env_remove("CARGO_TARGET_DIR");
             let build_capture = run_capture(build_command);
             if build_capture.status_ok {
@@ -355,6 +356,7 @@ pub(crate) fn build_and_run_capture_with_deps(
         .args(sifr_driver::sysroot_cargo_config_args(&dependency_plan))
         .args(["build", "--quiet"])
         .current_dir(&tmp_dir);
+    application_profile().configure(&mut build_command);
     build_command.env_remove("CARGO_TARGET_DIR");
     let build_capture = run_capture(build_command);
     if !build_capture.status_ok {
@@ -369,7 +371,10 @@ pub(crate) fn build_and_run_capture_with_deps(
     } else {
         "sifr_output"
     };
-    let binary_path = tmp_dir.join("target").join("debug").join(binary_name);
+    let binary_path = tmp_dir
+        .join("target")
+        .join(application_directory())
+        .join(binary_name);
     let run_capture = command_with_capture(
         binary_path.to_str().unwrap_or("sifr_output"),
         &[],
@@ -475,6 +480,36 @@ where
 pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
     let fixtures = discover_fixtures(Path::new("tests/e2e/pass"));
     assert!(!fixtures.is_empty(), "No pass tests found");
+    if env::var("SIFR_E2E_PROFILE").ok().as_deref() == Some("release") {
+        assert_eq!(
+            application_profile(),
+            sifr_driver::ApplicationProfile::Release
+        );
+        let authority: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../verification/runner/application_profiles.json"
+        ))
+        .expect("application selection authority");
+        let expected = authority["selections"][0]["fixtures"]
+            .as_array()
+            .expect("release inventory")
+            .iter()
+            .map(|v| v.as_str().expect("fixture name"))
+            .collect::<Vec<_>>();
+        let actual = fixtures
+            .iter()
+            .map(|fixture| {
+                fixture
+                    .path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .expect("fixture filename")
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            actual, expected,
+            "release qualification must execute every declared run-pass fixture"
+        );
+    }
 
     let compile_started = Instant::now();
     let compiled_results = compile_suite_parallel(&fixtures, config.sifr_jobs);

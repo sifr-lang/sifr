@@ -572,6 +572,8 @@ def run_sifr_variant(
         argv.extend(["self", "version"])
     else:
         argv.append(command_name)
+        if command_name in {"run", "build", "test"}:
+            argv.append("--release")
         if quiet:
             argv.append("--quiet")
         argv.append(str(entry))
@@ -579,6 +581,8 @@ def run_sifr_variant(
     if command_name == "self-version":
         env = dict(os.environ)
         env["SIFR_INSTALL_MANIFEST_DIR"] = str(entry.parent / "missing-receipt")
+    if command_name in {"package-run-bin-bad-name", "package-run-script", "package-run-target-admin"}:
+        argv.append("--release")
     started = time.perf_counter()
     proc = run_process(
         argv,

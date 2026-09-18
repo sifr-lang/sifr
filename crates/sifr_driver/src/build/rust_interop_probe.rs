@@ -161,6 +161,10 @@ pub(super) fn execute_direct_cargo_probe(
         .args(["check", "--quiet"])
         .arg("--manifest-path")
         .arg(probe_root.join("Cargo.toml"));
+    probe
+        .cargo_resolution
+        .application_profile
+        .configure(&mut command);
     if let Some(argument) = probe.cargo_resolution.lock_mode.cargo_arg() {
         command.arg(argument);
     }

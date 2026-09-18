@@ -69,7 +69,7 @@ def run_case(case: dict[str, Any]) -> list[str]:
 
     cpython = run_command([sys.executable, str(python_path)])
     sifr = run_command(
-        ["cargo", "run", "-q", "-p", "sifr", "--", "run", str(sifr_path)]
+        ["cargo", "run", "-q", "-p", "sifr", "--", "run", "--release", str(sifr_path)]
     )
     print(
         f"[cpython-differential] case={case_id} "

@@ -114,6 +114,8 @@ impl BuildSysrootReport {
 
 #[derive(Clone, Debug)]
 pub struct BuildReport {
+    cargo_artifact_profile: Option<serde_json::Value>,
+    application_profile: crate::ApplicationProfile,
     compiler_identity: String,
     native_toolchain_identity: Option<String>,
     entrypoint_path: PathBuf,
@@ -131,6 +133,8 @@ pub struct BuildReport {
 
 #[derive(Clone, Debug)]
 pub struct BuildReportInput {
+    pub cargo_artifact_profile: Option<serde_json::Value>,
+    pub application_profile: crate::ApplicationProfile,
     pub compiler_identity: String,
     pub native_toolchain_identity: Option<String>,
     pub entrypoint_path: PathBuf,
@@ -186,6 +190,12 @@ pub enum PythonEnvironmentCheck {
 }
 
 impl BuildReport {
+    pub fn cargo_artifact_profile(&self) -> Option<&serde_json::Value> {
+        self.cargo_artifact_profile.as_ref()
+    }
+    pub fn application_profile(&self) -> crate::ApplicationProfile {
+        self.application_profile
+    }
     pub fn compiler_identity(&self) -> &str {
         &self.compiler_identity
     }
@@ -195,6 +205,8 @@ impl BuildReport {
 
     pub fn new(input: BuildReportInput) -> Self {
         let BuildReportInput {
+            cargo_artifact_profile,
+            application_profile,
             compiler_identity,
             native_toolchain_identity,
             entrypoint_path,
@@ -208,11 +220,13 @@ impl BuildReport {
             query_signature_artifact_path,
         } = input;
         Self {
+            cargo_artifact_profile,
+            application_profile,
             compiler_identity,
             native_toolchain_identity,
             entrypoint_path,
             mode,
-            target: "release native",
+            target: application_profile.report_target(),
             sysroot,
             binary_size_bytes: binary_size(&binary_path),
             binary_path,

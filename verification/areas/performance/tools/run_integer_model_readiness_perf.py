@@ -224,7 +224,7 @@ def main() -> None:
     if args.max_slowdown <= 0:
         raise SystemExit("--max-slowdown must be positive")
 
-    fixture = run(["cargo", "run", "-q", "-p", "sifr", "--", "run", str(PERF_FIXTURE)])
+    fixture = run(["cargo", "run", "-q", "-p", "sifr", "--", "run", "--release", str(PERF_FIXTURE)])
     require_success(fixture, "Sifr perf fixture")
     if "sifr_int_loop: passed" not in fixture.stdout:
         sys.stderr.write("Sifr perf fixture did not report success\n")

@@ -378,6 +378,92 @@ impl NativeToolchain {
         }
         Ok(())
     }
+    /// Check captured effective configuration before selecting an application profile.
+    pub fn validate_application_profile(
+        &self,
+        profile: &str,
+        manifest: &Path,
+    ) -> Result<(), String> {
+        fn check(value: &toml::Value, profile: &str) -> Result<(), String> {
+            if let Some(table) = value.get("profile").and_then(|v| v.get(profile)) {
+                fn boundary(value: &toml::Value) -> Result<(), String> {
+                    if value
+                        .get("panic")
+                        .and_then(toml::Value::as_str)
+                        .is_some_and(|v| v != "unwind")
+                        || value.get("overflow-checks").and_then(toml::Value::as_bool)
+                            == Some(false)
+                    {
+                        return Err(
+                            "application profile requires panic=unwind and overflow-checks=true"
+                                .into(),
+                        );
+                    }
+                    if let Some(table) = value.as_table() {
+                        for child in table.values() {
+                            boundary(child)?;
+                        }
+                    }
+                    Ok(())
+                }
+                boundary(table)?;
+            }
+            // Rustflags have higher priority than profile settings. Reject flags
+            // that disable the same language/runtime boundary in any target scope.
+            fn flags(value: &toml::Value) -> Result<(), String> {
+                match value {
+                    toml::Value::Table(table) => {
+                        for (key, value) in table {
+                            if key == "rustflags" {
+                                crate::native_profile::validate_flags(&value.to_string())?;
+                            } else {
+                                flags(value)?;
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+                Ok(())
+            }
+            flags(value)
+        }
+        for (_, bytes) in &self.configuration {
+            let value: toml::Table = String::from_utf8_lossy(bytes)
+                .parse()
+                .map_err(|_| "invalid Cargo profile configuration")?;
+            check(&toml::Value::Table(value), profile)?;
+        }
+        // Generated applications declare their own workspace. Their profile
+        // authority is this manifest, never a manifest above the caller's CWD.
+        let document: toml::Table = std::fs::read_to_string(manifest)
+            .map_err(|_| "cannot read generated application manifest")?
+            .parse()
+            .map_err(|_| "invalid generated application manifest")?;
+        if !document.get("workspace").is_some_and(toml::Value::is_table)
+            || document
+                .get("package")
+                .and_then(|value| value.get("workspace"))
+                .is_some()
+        {
+            return Err("generated application must own its Cargo workspace".into());
+        }
+        check(&toml::Value::Table(document), profile)?;
+        let prefix = format!("CARGO_PROFILE_{}_", profile.to_uppercase());
+        for (name, value) in &self.environment {
+            if let Some(value) = value {
+                let value = value.to_string_lossy();
+                if (name == &format!("{prefix}PANIC") && value != "unwind")
+                    || (name == &format!("{prefix}OVERFLOW_CHECKS") && value != "true")
+                {
+                    return Err("application profile environment invalidates required unwind/overflow boundary".into());
+                }
+                if name.ends_with("RUSTFLAGS") {
+                    crate::native_profile::validate_flags(&value)?;
+                }
+            }
+        }
+        Ok(())
+    }
     pub fn cargo_command(&self) -> Result<Command, String> {
         self.validate_configuration()?;
         let mut command = Command::new(&self.cargo);

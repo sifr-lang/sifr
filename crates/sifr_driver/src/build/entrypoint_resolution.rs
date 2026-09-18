@@ -37,6 +37,7 @@ pub(super) fn package_cargo_resolution_policy(
         trusted_vendor_dirs.push(vendor_dir);
     }
     CargoResolutionPolicy {
+        application_profile: crate::ApplicationProfile::Development,
         native_toolchain: entrypoint
             .and_then(|entrypoint| entrypoint.graph.packages.get(&entrypoint.package_id))
             .map_or_else(CargoResolutionPolicy::resolve_native_toolchain, |package| {

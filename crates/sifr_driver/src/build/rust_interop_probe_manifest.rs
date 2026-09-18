@@ -12,7 +12,7 @@ pub(super) fn probe_cargo_toml(
     requires_structural_runtime: bool,
 ) -> String {
     let mut cargo_toml =
-        "[package]\nname = \"sifr-rust-probe\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[dependencies]\n"
+        "[package]\nname = \"sifr-rust-probe\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[workspace]\n\n[dependencies]\n"
             .to_string();
     let mut dependency_features = dependency_features.to_vec();
     if dependency_name == "sifr_runtime"
@@ -55,6 +55,7 @@ pub(super) fn probe_cargo_toml(
             "\n[patch.crates-io]\nlibsqlite3-sys = {{ path = {native} }}"
         );
     }
+    cargo_toml.push_str(crate::application_profile::MANIFEST);
     cargo_toml
 }
 

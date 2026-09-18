@@ -62,9 +62,12 @@ pub(super) fn cargo_inputs(
                 .map(|tools| tools.target().to_owned())
         }),
         target_features: target_features(),
-        cargo_profile: "release".to_string(),
+        cargo_profile: resolution.application_profile.cargo_name().to_string(),
         panic_strategy: std::env::var("SIFR_RUST_PANIC_STRATEGY").ok(),
-        profile_codegen_settings: profile_codegen_settings(&package.package_root, "release"),
+        profile_codegen_settings: profile_codegen_settings(
+            &package.package_root,
+            resolution.application_profile.cargo_name(),
+        ),
         cargo_version: resolution
             .native_toolchain
             .as_ref()
@@ -135,9 +138,12 @@ fn sysroot_cargo_inputs(
                 .map(|tools| tools.target().to_owned())
         }),
         target_features: target_features(),
-        cargo_profile: "release".to_string(),
+        cargo_profile: resolution.application_profile.cargo_name().to_string(),
         panic_strategy: std::env::var("SIFR_RUST_PANIC_STRATEGY").ok(),
-        profile_codegen_settings: profile_codegen_settings(&trust.sysroot_root, "release"),
+        profile_codegen_settings: profile_codegen_settings(
+            &trust.sysroot_root,
+            resolution.application_profile.cargo_name(),
+        ),
         cargo_version: resolution
             .native_toolchain
             .as_ref()
