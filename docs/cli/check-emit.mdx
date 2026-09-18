@@ -189,7 +189,8 @@ sifr --diagnostic-format json --explain SIFR-TYPE-0002
 A normal explicit-file check in a virtual Cargo workspace can check a standalone
 source file without resolving unrelated Cargo members. This applies only when
 the enclosing source workspace has no backend/dependency authority and the file
-has no nested package or source manifest. It intentionally removes failures from
+has no nested Cargo package. A nested source-only manifest must have a valid
+source root that owns the checked file. It intentionally removes failures from
 unrelated broken members in that case. Actual package checks and explicit
 `--locked`, `--offline` and `--frozen` checks retain Cargo validation.
 

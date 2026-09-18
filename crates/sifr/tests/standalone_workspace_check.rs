@@ -32,6 +32,21 @@ fn standalone_file_does_not_resolve_unrelated_members_but_package_and_flags_do()
         "{}",
         String::from_utf8_lossy(&normal.stderr)
     );
+    std::fs::create_dir(root.join("nested")).test_unwrap("nested source directory");
+    std::fs::write(root.join("nested/main.sifr"), "def main():\n    pass\n")
+        .test_unwrap("nested standalone source");
+    std::fs::write(root.join("nested/sifr.toml"), "[source]\nroot = \".\"\n")
+        .test_unwrap("nested source-only policy");
+    let nested = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .args(["check", "nested/main.sifr"])
+        .current_dir(root)
+        .output()
+        .test_unwrap("check nested source-only workspace");
+    assert!(
+        nested.status.success(),
+        "{}",
+        String::from_utf8_lossy(&nested.stderr)
+    );
     #[cfg(unix)]
     assert_frontend_does_not_probe_native_tools(root);
     for flag in ["--locked", "--offline", "--frozen"] {

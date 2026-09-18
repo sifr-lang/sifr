@@ -425,6 +425,24 @@ fn dx15_standalone_virtual_workspace_requires_proven_source_ownership() {
         "an actual nested package must retain normal resolution"
     );
     fs::remove_file(temp.path().join("files/Cargo.toml")).test_unwrap("remove nested manifest");
+    temp.write("files/sifr.toml", "[source]\nroot = \".\"\n");
+    assert!(
+        eligible(),
+        "validated nested source-only ownership remains standalone"
+    );
+    for invalid in [
+        "[source]\nroot = \"../\"\n",
+        "[source]\nroot = \"absent\"\n",
+        "[source]\nroot = 42\n",
+        "[source]\nroot = \".\"\nbackend = \"native\"\n",
+        "[package]\nname = \"nested-package\"\n[source]\nroot = \".\"\n",
+    ] {
+        temp.write("files/sifr.toml", invalid);
+        assert!(
+            !eligible(),
+            "unknown or invalid nested authority must resolve normally"
+        );
+    }
     temp.write("files/sifr.toml", "invalid = [");
     assert!(!eligible(), "nested source policy must not be bypassed");
     fs::remove_file(temp.path().join("files/sifr.toml")).test_unwrap("remove nested policy");

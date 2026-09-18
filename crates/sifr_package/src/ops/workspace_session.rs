@@ -80,10 +80,11 @@ impl PackageSession {
             if directory == root {
                 return true;
             }
-            // A nested Cargo or Sifr manifest may carry actual package/source
-            // authority. Do not infer its absence from workspace membership.
+            // Nested source-only workspaces retain their checked ownership.
+            // Any Cargo/package/backend authority still resolves normally.
             if provider.is_file(&directory.join("Cargo.toml"))
-                || provider.is_file(&directory.join("sifr.toml"))
+                || (provider.is_file(&directory.join("sifr.toml"))
+                    && !source_only_workspace_owns(directory, &file, provider))
             {
                 return false;
             }
@@ -150,4 +151,58 @@ impl PackageSession {
 fn same_path(left: &std::path::Path, right: &std::path::Path) -> bool {
     left.canonicalize().unwrap_or_else(|_| left.to_path_buf())
         == right.canonicalize().unwrap_or_else(|_| right.to_path_buf())
+}
+
+/// A nested source-only manifest is an input policy, not a Cargo package.
+/// The frontend still applies its authoritative parser after this ownership proof.
+fn source_only_workspace_owns(
+    directory: &std::path::Path,
+    file: &std::path::Path,
+    provider: &mut impl SourceProvider,
+) -> bool {
+    let Ok(text) = provider.read_file(&directory.join("sifr.toml")) else {
+        return false;
+    };
+    let Ok(config) = text.as_str().parse::<toml::Table>() else {
+        return false;
+    };
+    if config.keys().any(|key| key != "source") {
+        return false;
+    }
+    let root = match config.get("source") {
+        None => "src",
+        Some(value) => {
+            let Some(source) = value.as_table() else {
+                return false;
+            };
+            if source.keys().any(|key| key != "root") {
+                return false;
+            }
+            match source.get("root") {
+                None => "src",
+                Some(value) => {
+                    let Some(root) = value.as_str() else {
+                        return false;
+                    };
+                    root
+                }
+            }
+        }
+    };
+    let path = std::path::Path::new(root);
+    if root.is_empty()
+        || path.components().any(|part| {
+            !matches!(
+                part,
+                std::path::Component::CurDir | std::path::Component::Normal(_)
+            )
+        })
+    {
+        return false;
+    }
+    let path = directory.join(path);
+    provider.is_dir(&path)
+        && provider
+            .canonicalize(&path)
+            .is_ok_and(|root| file.starts_with(root))
 }
