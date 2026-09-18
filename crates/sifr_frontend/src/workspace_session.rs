@@ -606,6 +606,21 @@ impl WorkspaceSession {
         )
     }
 
+    /// Commit the authoritative overlay after an incremental frontend update.
+    /// Reload and snapshot capture must observe the same bytes as the context.
+    pub fn record_analysis_overlay(
+        &mut self,
+        path: SourcePath,
+        version: DocumentVersion,
+        source: SourceText,
+    ) {
+        let uri = self
+            .overlays
+            .get(path.as_path())
+            .and_then(|overlay| overlay.uri.clone());
+        self.upsert_overlay(path, uri, version, source, None);
+    }
+
     pub fn record_analysis_document_update(&mut self) {
         self.revision.0 += 1;
         self.dirty_scope_report = WorkspaceDirtyScopeReport::new(

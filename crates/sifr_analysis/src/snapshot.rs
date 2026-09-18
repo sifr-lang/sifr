@@ -84,18 +84,42 @@ impl<T> AnalysisQueryResult<T> {
 pub struct AnalysisSnapshot {
     workspace: WorkspaceSnapshot,
     revision: AnalysisRevision,
+    compiler: SnapshotCompiler,
 }
 
 impl AnalysisSnapshot {
     #[must_use]
-    pub(crate) fn new(workspace: WorkspaceSnapshot, revision: AnalysisRevision) -> Self {
+    pub(crate) fn new(
+        workspace: WorkspaceSnapshot,
+        revision: AnalysisRevision,
+        compiler: sifr_driver::CompilerContext,
+        owner: std::sync::Arc<()>,
+    ) -> Self {
         Self {
             workspace,
             revision,
+            compiler: SnapshotCompiler(compiler, owner),
         }
     }
 
     #[must_use]
+    pub(crate) fn belongs_to(&self, owner: &std::sync::Arc<()>) -> bool {
+        std::sync::Arc::ptr_eq(&self.compiler.1, owner)
+    }
+
+    pub(crate) fn matches_compiler(&self, compiler: &sifr_driver::CompilerContext) -> bool {
+        self.compiler.0.shares_metadata_generation(compiler)
+    }
+
+    /// This is a captured source-authority description, not disk-cache eligibility:
+    /// a future writer must revalidate every saved input before publication.
+    pub fn has_unsaved_overlays(&self) -> bool {
+        self.workspace
+            .overlays
+            .iter()
+            .any(|overlay| !overlay.matches_disk)
+    }
+
     pub fn revision(&self) -> AnalysisRevision {
         self.revision
     }
@@ -136,3 +160,21 @@ impl AnalysisError {
         }
     }
 }
+
+// Retaining a snapshot pins the exact toolchain owner even after host closure or
+// explicit re-resolution. Equality is generation identity, never live disk state.
+#[derive(Clone)]
+struct SnapshotCompiler(sifr_driver::CompilerContext, std::sync::Arc<()>);
+impl std::fmt::Debug for SnapshotCompiler {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("SnapshotCompiler")
+            .field(self.0.identity())
+            .finish()
+    }
+}
+impl PartialEq for SnapshotCompiler {
+    fn eq(&self, other: &Self) -> bool {
+        std::sync::Arc::ptr_eq(&self.1, &other.1) && self.0.shares_metadata_generation(&other.0)
+    }
+}
+impl Eq for SnapshotCompiler {}

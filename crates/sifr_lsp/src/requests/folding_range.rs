@@ -7,14 +7,19 @@ use serde_json::Value;
 pub(crate) fn folding_range(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position_encoding = session.position_encoding();
-    session.with_document_analysis(&uri, |snapshot, host, file, source| {
-        snapshot
-            .folding_ranges(host, file)
-            .map_err(|error| LspError::internal(error.message))?
-            .into_value()
-            .into_iter()
-            .map(|range| conversion::folding_range(range, source, position_encoding))
-            .collect::<LspResult<Vec<_>>>()
-            .map(Value::Array)
-    })
+    let source = session.store().document(&uri)?.text();
+    sifr_analysis::syntax_queries::folding_ranges(source)
+        .map_err(|diagnostics| {
+            LspError::internal(
+                diagnostics
+                    .iter()
+                    .map(|d| d.message.as_str())
+                    .collect::<Vec<_>>()
+                    .join("; "),
+            )
+        })?
+        .into_iter()
+        .map(|range| conversion::folding_range(range, source, position_encoding))
+        .collect::<LspResult<Vec<_>>>()
+        .map(Value::Array)
 }

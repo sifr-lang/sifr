@@ -11,20 +11,6 @@ use sifr_analysis::WorkspaceTracePhase;
 pub(crate) struct DiagnosticsController;
 
 impl DiagnosticsController {
-    pub(crate) fn publish_document(
-        connection: &Connection,
-        session: &mut Session,
-        uri: &str,
-        mode: DiagnosticsMode,
-    ) -> LspResult<()> {
-        if mode == DiagnosticsMode::Off {
-            session.clear_diagnostic_jobs();
-            return Ok(());
-        }
-        session.schedule_document_diagnostics(uri)?;
-        Self::flush_ready(connection, session, mode)
-    }
-
     pub(crate) fn publish_all(connection: &Connection, session: &mut Session) -> LspResult<()> {
         let mode = session.store().settings().diagnostics_mode;
         if mode == DiagnosticsMode::Off {
@@ -95,17 +81,22 @@ impl DiagnosticsController {
                 "version": job.version,
                 "diagnostics": diagnostics
             });
-            connection
-                .sender
-                .send(Message::Notification(Notification {
-                    method: "textDocument/publishDiagnostics".to_string(),
-                    params,
-                }))
-                .map_err(|error| {
-                    crate::errors::LspError::internal(format!(
-                        "failed to publish diagnostics: {error}"
-                    ))
-                })?;
+            session.generations.publish(session.generation, |current| {
+                if !current {
+                    return Ok(());
+                }
+                connection
+                    .sender
+                    .send(Message::Notification(Notification {
+                        method: "textDocument/publishDiagnostics".to_string(),
+                        params,
+                    }))
+                    .map_err(|error| {
+                        crate::errors::LspError::internal(format!(
+                            "failed to publish diagnostics: {error}"
+                        ))
+                    })
+            })?;
         }
         Ok(())
     }
@@ -124,6 +115,7 @@ fn publish_progress(connection: &Connection, params: Value) -> LspResult<()> {
 }
 
 pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResult<Vec<Value>> {
+    session.ensure_document_analysis(uri)?;
     let position_encoding = session.position_encoding();
     let source = session.store().document(uri)?.text().to_string();
     // Load-time diagnostics are replaced whenever the document analysis owner is

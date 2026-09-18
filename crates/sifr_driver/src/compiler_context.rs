@@ -41,6 +41,24 @@ impl CompilerContext {
             stdlib_cache: cache,
         }
     }
+    /// Start a new editor generation. Existing hosts and snapshots keep their
+    /// original immutable metadata owner alive until their last reference drops.
+    pub fn shares_metadata_generation(&self, other: &Self) -> bool {
+        self.identity == other.identity && Arc::ptr_eq(&self.stdlib_cache, &other.stdlib_cache)
+    }
+
+    pub fn refreshed_toolchain(&self) -> Self {
+        Self::new(self.identity.clone()).with_application_profile(self.application_profile)
+    }
+
+    /// Drop this idle editor's cache ownership without changing its pinned
+    /// toolchain selection or invalidating another active generation.
+    pub fn without_cached_metadata(&self) -> Self {
+        let mut next = self.clone();
+        next.stdlib_cache = Arc::new(Mutex::new(None));
+        next
+    }
+
     pub fn for_test_tokens(mut tokens: Vec<(&str, &str)>, configuration: &str) -> Self {
         tokens.extend(crate::compiled_input_tokens());
         Self::new(CompilerIdentity::for_test(tokens, configuration))

@@ -212,7 +212,12 @@ class Qualification:
                     newer.request("shutdown")
                 finally:
                     newer.close()
+            # DX.11 explicit re-resolution replaces hosts as one editor generation;
+            # a live session otherwise keeps its original pinned immutable store.
+            client.notify("workspace/didChangeConfiguration", {"settings": {}})
+            assert definition(client) == (new_uri, new_range)
             switch(first)
+            client.notify("workspace/didChangeConfiguration", {"settings": {}})
             assert definition(client) == (old_uri, old_range)
             self.report["lsp_generations"] = {"old": old_uri, "new": new_uri,
                                              "old_range": old_range, "new_range": new_range,

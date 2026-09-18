@@ -24,3 +24,6 @@ mod stdlib_tests;
 #[cfg(test)]
 mod tests;
 mod text_edits;
+
+#[cfg(test)]
+mod dx11_snapshot_tests;

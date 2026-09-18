@@ -59,6 +59,16 @@ impl Default for LspAnalysisWorkspace {
     }
 }
 impl LspAnalysisWorkspace {
+    pub(crate) fn discard_documents(&mut self) {
+        self.documents.clear();
+        self.projects.clear();
+    }
+
+    pub(crate) fn reset_toolchain(&mut self) {
+        self.discard_documents();
+        self.compiler = self.compiler.refreshed_toolchain();
+    }
+
     pub(crate) const WATCHER_STORM_THRESHOLD: usize = 64;
 
     pub(crate) fn open_document(&mut self, document: &DocumentState) -> bool {
@@ -400,6 +410,19 @@ impl LspProjectAnalysis {
                 .open_uris
                 .iter()
                 .map(|uri| (uri.clone(), diagnostics.clone()))
+                .collect();
+        } else {
+            self.load_diagnostics.clear();
+            self.files_by_uri = self
+                .open_uris
+                .iter()
+                .filter_map(|uri| {
+                    let path = crate::conversion::uri_to_path(uri).ok()?;
+                    let canonical = path.canonicalize().unwrap_or(path);
+                    host.document_file_for_path(&canonical)
+                        .ok()
+                        .map(|file| (uri.clone(), file))
+                })
                 .collect();
         }
     }

@@ -54,6 +54,7 @@ impl AnalysisHost {
             return Err(Vec::new());
         };
         let mut host = Self {
+            snapshot_owner: std::sync::Arc::new(()),
             stdlib_navigation: compiler.stdlib_navigation()?,
             compiler: compiler.clone(),
             session,

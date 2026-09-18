@@ -14,7 +14,9 @@ pub(crate) fn handle(
 ) -> LspResult<()> {
     match method {
         "initialized" => initialized(session, connection),
-        "workspace/didChangeConfiguration" => workspace_did_change_configuration(session, params),
+        "workspace/didChangeConfiguration" => {
+            workspace_did_change_configuration(session, params, connection)
+        }
         "workspace/didChangeWatchedFiles" => {
             workspace_did_change_watched_files(session, params, connection)
         }
@@ -93,7 +95,11 @@ pub(crate) fn cancel_request_id(params: &Value) -> Option<RequestId> {
     }
 }
 
-fn workspace_did_change_configuration(session: &mut Session, params: Value) -> LspResult<()> {
+fn workspace_did_change_configuration(
+    session: &mut Session,
+    params: Value,
+    connection: &Connection,
+) -> LspResult<()> {
     let root = params.get("settings").unwrap_or(&params);
     let previous_mode = session.store().settings().diagnostics_mode;
     let settings = crate::settings::parse_workspace_settings(root, session.store().settings())?;
@@ -101,8 +107,18 @@ fn workspace_did_change_configuration(session: &mut Session, params: Value) -> L
     session.store_mut().apply_settings(settings);
     if previous_mode != next_mode && next_mode == crate::document_store::DiagnosticsMode::Off {
         session.clear_diagnostic_jobs();
+        for uri in session.document_uris() {
+            connection
+                .sender
+                .send(Message::Notification(Notification {
+                    method: "textDocument/publishDiagnostics".into(),
+                    params: json!({"uri":uri,"diagnostics":[]}),
+                }))
+                .map_err(|error| LspError::internal(error.to_string()))?;
+        }
     }
-    Ok(())
+    session.refresh_toolchain();
+    DiagnosticsController::publish_all(connection, session)
 }
 
 fn workspace_did_change_watched_files(
@@ -128,8 +144,7 @@ fn text_document_did_open(
     let version = optional_i32(&params, "/textDocument/version")?;
     let text = required_string(&params, "/textDocument/text")?;
     session.open_document(uri.clone(), &language_id, version, text)?;
-    let mode = session.store().settings().diagnostics_mode;
-    DiagnosticsController::publish_document(connection, session, &uri, mode)
+    DiagnosticsController::publish_all(connection, session)
 }
 
 fn text_document_did_change(
@@ -153,8 +168,7 @@ fn text_document_did_change(
             summary.raw_change_count, summary.compacted_change_count, summary.text_changed
         ),
     );
-    let mode = session.store().settings().diagnostics_mode;
-    DiagnosticsController::publish_document(connection, session, &uri, mode)
+    DiagnosticsController::publish_all(connection, session)
 }
 
 fn text_document_did_save(
@@ -168,8 +182,7 @@ fn text_document_did_save(
         .and_then(Value::as_str)
         .map(str::to_owned);
     if session.save_document(&uri, text)? {
-        let mode = session.store().settings().diagnostics_mode;
-        DiagnosticsController::publish_document(connection, session, &uri, mode)?;
+        DiagnosticsController::publish_all(connection, session)?;
     }
     Ok(())
 }
