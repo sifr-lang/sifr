@@ -97,7 +97,7 @@ class Qualification:
         native_cases = ["class_mut_self", "explicit_owned_mutable_receiver",
                         "template_string_evaluation_order", "text_i18n_translation_bundles"]
         for name in native_cases:
-            self.run("native-" + name, [binary, "run", self.corpus / (name + ".sifr")])
+            self.run("native-" + name, [binary, "run", "--release", self.corpus / (name + ".sifr")])
         self.report["installed_native_cases"] = native_cases
         self.live_generations(moved)
         self.rejection_recovery(moved)

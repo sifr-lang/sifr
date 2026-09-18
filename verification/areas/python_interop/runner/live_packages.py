@@ -138,6 +138,7 @@ def _build_case(
         str(paths.repo_root / "Cargo.toml"),
         "--",
         "build",
+        "--release",
         "src/main.sifr",
         "--output",
         str(output_root),
@@ -169,7 +170,7 @@ def _build_case(
         )
     elapsed_ms = round((time.perf_counter() - started) * 1000.0)
     binary_name = "sifr_output.exe" if os.name == "nt" else "sifr_output"
-    binary_path = output_root / "sifr_output" / "target" / "release" / binary_name
+    binary_path = output_root / "sifr_output" / "target" / "final" / binary_name
     if proc.returncode != 0 or not binary_path.is_file():
         return (
             {

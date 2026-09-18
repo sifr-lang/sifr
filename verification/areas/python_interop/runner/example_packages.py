@@ -630,7 +630,7 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
                 "certification_commands": certification_results,
             }
     try:
-        proc = _run_sifr_process(paths, package_root, "run")
+        proc = _run_sifr_process(paths, package_root, "run", "--release")
     except subprocess.TimeoutExpired as error:
         elapsed_ms = round((time.perf_counter() - started) * 1000.0)
         return {

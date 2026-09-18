@@ -57,6 +57,7 @@ def run_attached_api_certification(
         str(compiler),
         *extra,
         "build",
+        "--release",
         str(fixture / "src" / "app.sifr"),
         "-o",
         str(output),
@@ -69,7 +70,7 @@ def run_attached_api_certification(
         label=f"{label} attached API build",
         timeout=1200,
     )
-    binary = output / "sifr_output" / "target" / "release" / "sifr_output"
+    binary = output / "sifr_output" / "target" / "final" / "sifr_output"
     result = run_checked(
         [str(binary)], cwd=fixture, env=env, label=f"{label} attached API run"
     )

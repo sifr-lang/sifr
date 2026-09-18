@@ -614,14 +614,14 @@ def command_for_case(case: BenchmarkCase, output_dir: Path) -> list[str]:
         return command
     command.extend([str(case.raw["mode"]), source])
     if case.raw["mode"] == "build":
-        command.extend(["--output", str(output_dir)])
+        command.extend(["--release", "--output", str(output_dir)])
     return command
 
 
 def collect_build_size_metrics(output_dir: Path) -> dict[str, int | None]:
     project_dir = output_dir / "sifr_output"
     source_dir = project_dir / "src"
-    binary_path = project_dir / "target" / "release" / executable_name("sifr_output")
+    binary_path = project_dir / "target" / "final" / executable_name("sifr_output")
     metrics = dict(SIZE_METRIC_DEFAULTS)
     rust_files = sorted(source_dir.rglob("*.rs"))
     if not rust_files:

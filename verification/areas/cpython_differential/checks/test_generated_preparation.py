@@ -45,7 +45,7 @@ class GeneratedPreparationTests(unittest.TestCase):
         for case, call in zip(cases, run.call_args_list, strict=True):
             source = self.root / "generated" / suite / case["id"] / "main.sifr"
             self.assertEqual(call.args, ([self.info["binary"], "--sysroot", str(self.root),
-                                         "run", str(source)], 300))
+                                         "run", "--release", str(source)], 300))
             self.assertEqual(source.read_text(), generated.generate_program(case).sifr_source)
             seed = json.loads(source.with_name("seed.json").read_text())
             record = json.loads(source.with_name("preparation.json").read_text())

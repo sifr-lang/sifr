@@ -74,7 +74,10 @@ class ProfilePlanTests(unittest.TestCase):
         self.assertIn("--no-default-features", group.execution())
 
 def policy_checks():
-    result = unittest.TextTestRunner(stream=io.StringIO()).run(unittest.defaultTestLoader.loadTestsFromTestCase(ProfilePlanTests))
+    from .native_release_consumer_checks import NativeReleaseConsumerTests
+    suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(cls)
+                               for cls in (ProfilePlanTests, NativeReleaseConsumerTests))
+    result = unittest.TextTestRunner(stream=io.StringIO()).run(suite)
     if not result.wasSuccessful():
         raise AssertionError(f"DX.10 profile seeds failed: {result.failures} {result.errors}")
 

@@ -23,7 +23,7 @@ def prepare_suites(suite_names: list[str]) -> list[str]:
         for case in manifest["suites"][suite_name]["cases"]:
             _, source = generated.materialize_case(case, build_info, actual_root)
             result = generated.run_command(
-                [build_info["binary"], "--sysroot", str(generated.REPO_ROOT), "run", str(source)],
+                [build_info["binary"], "--sysroot", str(generated.REPO_ROOT), "run", "--release", str(source)],
                 timeout,
             )
             (source.parent / "preparation.json").write_text(json.dumps({

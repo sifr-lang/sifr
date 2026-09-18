@@ -19,6 +19,8 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def observed(command, output, case, number, timeout=300000):
+    if case.startswith("dx-native-") and "--release" not in command:
+        raise ValueError("native release measurement requires explicit --release")
     started = time.monotonic()
     result = runner.run_subprocess(command, timeout)
     record_command_sample(output, case, number, False, command, result)
@@ -121,7 +123,7 @@ def main():
                 if label == "edited":
                     path = project / "main.sifr"
                     path.write_text(path.read_text().replace("Sifr stdlib gzip compression!", "DX.1 edited native rebuild!"))
-                rows.append(observed([compiler, "build", str(project / "main.sifr"), "--output", str(destination)],
+                rows.append(observed([compiler, "build", "--release", str(project / "main.sifr"), "--output", str(destination)],
                                      output, f"dx-native-{label}", number))
                 save()
                 if rows[-1]["functional_status"] != "pass":

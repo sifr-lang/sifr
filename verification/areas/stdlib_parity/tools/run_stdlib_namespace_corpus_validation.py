@@ -115,7 +115,7 @@ def run_fixture(sifr_bin: Path, command: str, path: Path) -> subprocess.Complete
     env = os.environ.copy()
     env.setdefault("SIFR_ARTIFACT_CACHE", "1")
     return subprocess.run(
-        [str(sifr_bin), command, rel(path)],
+        [str(sifr_bin), command, rel(path), *(["--release"] if command == "run" else [])],
         cwd=REPO_ROOT,
         env=env,
         text=True,
