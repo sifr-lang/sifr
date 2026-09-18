@@ -45,6 +45,23 @@ class ProfilePlanTests(unittest.TestCase):
         self.assertEqual([p.name for p in fixtures], selection["fixtures"])
         self.assertEqual(fixtures, sorted((REPO_ROOT / "crates/sifr/tests/e2e/pass").glob("*.sifr")))
 
+    def test_b11_release_native_aliases_with_diagnostic_prefix(self):
+        from pathlib import Path
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from . import area_adapter
+        outcome = SimpleNamespace(cause="exit", truncated=False, returncode=0, stdout="", stderr="")
+        commands = ("run", "build", "test", "package-run-bin-bad-name",
+                    "package-run-script", "package-run-target-admin")
+        with patch("sifr_verify.fixture_execution.compiler_binary", return_value=Path("/compiler")), \
+             patch.object(area_adapter, "find_package_root", return_value=REPO_ROOT), \
+             patch.object(area_adapter, "run_process", return_value=outcome):
+            for command in commands:
+                for diagnostic in (None, "compact", "json"):
+                    *_, argv = area_adapter.run_sifr_variant(command_name=command,
+                        entry=REPO_ROOT / "fixture.sifr", diagnostic_format=diagnostic, quiet=False)
+                    self.assertEqual(argv.count("--release"), 1, (command, diagnostic, argv))
+
     def test_b06_isolation_mutation_cannot_be_absorbed_into_integration(self):
         profile = load_profile("merge")
         changed = copy.deepcopy(profile)
