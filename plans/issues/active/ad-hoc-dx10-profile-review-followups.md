@@ -1,0 +1,33 @@
+# DX.10 profile and native consumer review followups
+
+status: open; separate owning work; not DX.10 acceptance blockers
+
+Origin: [DX.10 implementation #3858](https://github.com/sifr-lang/sifr/pull/3858),
+[preserved initial reviews/adjudication](https://github.com/sifr-lang/sifr/pull/3858#issuecomment-5725480175)
+and [final SATISFIED review](https://github.com/sifr-lang/sifr/pull/3858#issuecomment-5725527463).
+The phase record is [here](ad-hoc-compiler-dx-and-toolchain-reuse.md).
+No implementation is included in this record-only issue.
+
+| ID | Owner | Followup and bounded acceptance |
+| --- | --- | --- |
+| F1 | verification runner | Restore the planned crate-test red-blocker reporting line filtered by configuration planning. Preserve selected suites and execution behavior; assert reporting for a non-executed red-blocker. |
+| F2 | verification runner | Audit the unused `crate_test_suites_for_mode` import in `profile_runner.py`; inspect actual remaining uses before removing any `cargo_command` import. No configuration change. |
+| F3 | E2E runner | Select the release corpus authority by `id == e2e-run-pass` in Rust instead of positional `selections[0]`; test reordered selection records without changing the declared fixture set. |
+| F4 | driver tests / performance | Update stale `target/release` messages in the two native test helpers. Their three-parent traversal is still correct. Consider clarifying the benchmark's release-binary error to distinguish declared profile from finalized location. |
+| F5 | driver Rust probe | Consider early captured-override validation before scratch probe execution, so a rejected build does not first run its probe with that override. Generated application/probe workspace ownership is already fixed; retain that contract. |
+| F6 | performance | Investigate the preserved real-ref whole-file size non-increase failure: 6,634,688 → 6,641,408 bytes (+6720, +0.10%). `.text`/data/bss unchanged; nonallocated debug/string metadata increased. Evidence below. Preserve the existing assertion; any metadata exclusion or budget policy requires its own justified decision. Do not rerun the unchanged failed pair to seek a pass. |
+| F7 | sifr-lang/leetcode | [Owning issue #49](https://github.com/sifr-lang/leetcode/issues/49): explicit generated-application profile and finalized paths in benchmark/audit consumers, independent of compiler optimization. No submodule change in DX.10. |
+| F8 | compiler architecture docs | Add one sentence explaining that generated Cargo manifests own application profile authority and generated applications/probes own their workspace; retain captured config/env/flags validation wording. |
+| F9 | runtime platform / sanitizer | Explicitly decide and inventory the application profile for `generated-binary-asan-smoke` in `sanitizer_manifest.json`. It currently uses the new dev default; exit/sanitizer-clean assertions are profile-agnostic and no named DX.10 release assertion was removed. Qualify the declared choice in the owning sanitizer workflow. |
+| F10 | core language / project workspace | Classify the roughly 12 literal behavior-matrix `sifr build/run` argv in the two `data/validation_suites/manifest.json` files. They execute through the generic command path, and their assertions are profile-agnostic; document the default-dev choice or explicitly qualify a different profile. These were outside the 10 declared literal producer rows in the remediation inventory. |
+| F11 | differential runner infrastructure | Make focused generated-suite tests importable consistently from the repo root as well as their `checks/` directory. Current directory-scoped invocation passes; no oracle or runtime assertion change. |
+
+F6 evidence is on
+`yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx10-evidence/`:
+`size-remediation/receipt.json`, `size-remediation/section-deltas.json`,
+the original tool log and both captured native binaries. The original wrapper
+and failed observation remain intact. The independent real decrease/increase
+controls in `size-consumer-controls/receipt.json` verify expected tool exits
+0/2; they do not erase the failed real-ref non-increase observation.
+
+This issue does not authorize DX.11 work or weaken the phase-end gate.
