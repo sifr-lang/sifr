@@ -8,6 +8,7 @@ use super::diagnostic_rendering_and_run::{
 };
 use super::formatter_cli::FmtArgs;
 use super::formatter_discovery::FormatterGitignore;
+use super::native_execution::render_project_cache_report;
 use super::package_graph_context::load_package_graph_context_for_entrypoint;
 use super::package_session_cli::package_session_for_cwd;
 use super::python_runtime_context::{package_python_runtime, package_python_runtime_for_check};
@@ -156,7 +157,7 @@ pub(super) fn cmd_check_package_file(
                 Some(&entrypoint),
                 |provider| check_package_project_completion(&compiler, &entrypoint, provider),
             );
-            render_project_cache_report(&report, timings);
+            render_project_cache_report(&compiler, &report, timings);
             diagnostics
         },
     ) {
@@ -571,19 +572,8 @@ pub(super) fn check_entrypoint(
             .into()
         },
     );
-    render_project_cache_report(&report, timings);
+    render_project_cache_report(&compiler, &report, timings);
     diagnostics
-}
-
-fn render_project_cache_report(
-    report: &sifr_driver::project_cache::ProjectCacheReport,
-    timings: bool,
-) {
-    if timings {
-        if let Ok(report) = serde_json::to_string(report) {
-            let _ = writeln!(io::stderr(), "[sifr-project-cache] {report}");
-        }
-    }
 }
 
 pub(super) fn emit_entrypoint(file: &Path, provider: &mut dyn SourceProvider) -> CompileResult {

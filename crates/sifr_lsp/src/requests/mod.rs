@@ -15,6 +15,7 @@ use crate::commands::CommandRegistry;
 use crate::errors::{LspError, LspResult};
 use crate::session::Session;
 use serde_json::{Value, json};
+use std::fmt::Write as _;
 use std::path::Path;
 use std::time::Instant;
 
@@ -53,12 +54,13 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
         "sifr/sysroot" => sysroot_status(session, &params),
         "sifr/debugTrace" => {
             let mut text = session.trace_snapshot().render_text();
-            text.push_str(&format!(
+            let _ = write!(
+                text,
                 "\nproject_restored_checks={}",
                 session.restored_check_modules()
-            ));
+            );
             if let Some(stats) = session.compiler_context().metadata_stats() {
-                text.push_str(&format!("\nmetadata_stats={stats}"));
+                let _ = write!(text, "\nmetadata_stats={stats}");
             }
             Ok(Value::String(text))
         }

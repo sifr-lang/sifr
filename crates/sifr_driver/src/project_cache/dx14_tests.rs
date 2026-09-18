@@ -37,13 +37,12 @@ fn run(
     context: SemanticInputs,
 ) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
     check(
-        cache,
-        file.parent().unwrap(),
+        (cache, file.parent().unwrap()),
         file,
         &mut DiskSourceProvider::new(),
         context,
         &AtomicBool::new(false),
-        Some((&compiler(), Default::default())),
+        Some((&compiler(), &Default::default())),
         |provider| {
             let config = file.parent().unwrap().join("sifr.toml");
             if provider.is_file(&config) {
@@ -300,7 +299,7 @@ fn dx14_editor_saved_overlay_stale_and_deeper_family_boundaries() {
         &inputs().identity().unwrap(),
     )
     .unwrap();
-    let generation = store.latest().unwrap().unwrap();
+    let generation = store.latest().unwrap();
     let record = generation.records().next().unwrap().unwrap();
     let mut saved = frontend(&file, &mut DiskSourceProvider::new());
     let entry = saved.module_graph().entrypoint;
@@ -378,7 +377,7 @@ fn dx14_reconfiguration_deletion_and_unknown_effect_scope() {
         &inputs().identity().unwrap(),
     )
     .unwrap();
-    let generation = store.latest().unwrap().unwrap();
+    let generation = store.latest().unwrap();
     let record = generation.records().next().unwrap().unwrap();
     fs::remove_file(file.parent().unwrap().join("helper.sifr")).unwrap();
     let mut disk = DiskSourceProvider::new();

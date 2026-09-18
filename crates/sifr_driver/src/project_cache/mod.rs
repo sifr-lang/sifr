@@ -128,29 +128,28 @@ pub fn check_saved_sources(
         }
     };
     check(
-        &crate::cache_storage::root(),
-        workspace,
+        (&crate::cache_storage::root(), workspace),
         file,
         provider,
         inputs,
         &AtomicBool::new(false),
-        Some((compiler.identity(), defs)),
+        Some((compiler.identity(), &defs)),
         compute,
     )
 }
 fn check(
-    cache: &Path,
-    workspace: &Path,
+    roots: (&Path, &Path),
     file: &Path,
     provider: &mut dyn SourceProvider,
     inputs: SemanticInputs,
     cancel: &AtomicBool,
     module_context: Option<(
         &sifr_identity::CompilerIdentity,
-        sifr_lowering::ExternalDefs,
+        &sifr_lowering::ExternalDefs,
     )>,
     compute: impl FnOnce(&mut dyn SourceProvider) -> CheckComputation,
 ) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
+    let (cache, workspace) = roots;
     let mut report = ProjectCacheReport::default();
     let validation = Instant::now();
     let store = inputs
@@ -159,7 +158,7 @@ fn check(
         .and_then(|context| storage::Store::open(cache, workspace, &context).ok());
     let mut capture = CapturingSourceProvider::new(provider);
     if let Some(store) = &store {
-        if let Ok(Some(generation)) = store.latest() {
+        if let Some(generation) = store.latest() {
             for record in generation.records().flatten() {
                 if cancel.load(Ordering::Acquire) {
                     break;
@@ -196,7 +195,7 @@ fn check(
                         return (diagnostics, report);
                     }
                 }
-                if let Some((compiler, defs)) = &module_context {
+                if let Some((compiler, defs)) = module_context {
                     if let Some(modules) = interface_reuse::restore(
                         &record,
                         file,
@@ -331,7 +330,8 @@ fn manifestless_inputs(
     file: &Path,
 ) -> SemanticInputs {
     let cwd = std::env::current_dir().unwrap_or_default();
-    let inputs = SemanticInputs {
+
+    SemanticInputs {
         compiler: compiler.identity().as_str().into(),
         metadata: metadata.into(),
         target: format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS),
@@ -343,8 +343,7 @@ fn manifestless_inputs(
         components: BTreeMap::new(),
         required_external: Default::default(),
         external: BTreeMap::new(),
-    };
-    inputs
+    }
 }
 
 /// Restore saved diagnostic facts into an already captured editor generation.
@@ -379,7 +378,7 @@ pub fn restore_editor_checks(
     let Ok(store) = storage::Store::open(&crate::cache_storage::root(), workspace, &context) else {
         return Vec::new();
     };
-    let Ok(Some(generation)) = store.latest() else {
+    let Some(generation) = store.latest() else {
         return Vec::new();
     };
     for record in generation.records().flatten() {

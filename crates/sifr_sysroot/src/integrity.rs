@@ -4,30 +4,31 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+fn collect(path: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
+    let metadata = fs::symlink_metadata(path)?;
+    if metadata.file_type().is_symlink() {
+        return Err(std::io::Error::other(
+            "installed generation contains a symlink",
+        ));
+    }
+    if metadata.is_dir() {
+        for entry in fs::read_dir(path)? {
+            collect(&entry?.path(), files)?;
+        }
+    } else if metadata.is_file() {
+        files.push(path.to_owned());
+    } else {
+        return Err(std::io::Error::other(
+            "installed generation contains a special file",
+        ));
+    }
+    Ok(())
+}
+
 impl ResolvedSysroot {
     pub fn verify_integrity(&self) -> Result<(), String> {
         if self.mode() == SysrootMode::SourceTreeDevelopment {
             return Err("package integrity requires an installed toolchain".into());
-        }
-        fn collect(path: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
-            let metadata = fs::symlink_metadata(path)?;
-            if metadata.file_type().is_symlink() {
-                return Err(std::io::Error::other(
-                    "installed generation contains a symlink",
-                ));
-            }
-            if metadata.is_dir() {
-                for entry in fs::read_dir(path)? {
-                    collect(&entry?.path(), files)?;
-                }
-            } else if metadata.is_file() {
-                files.push(path.to_owned());
-            } else {
-                return Err(std::io::Error::other(
-                    "installed generation contains a special file",
-                ));
-            }
-            Ok(())
         }
         let mut files = Vec::new();
         for path in [

@@ -1,4 +1,7 @@
-use super::*;
+use super::{
+    BTreeSet, DiagnosticCode, ExternalDefs, FrontendContext, ModuleId, RenderedDiagnostic, Stmt,
+    collect_module_exports, diagnostic_with_code,
+};
 
 impl FrontendContext {
     pub(super) fn clear_module_caches(

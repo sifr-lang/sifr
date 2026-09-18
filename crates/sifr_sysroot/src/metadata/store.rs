@@ -297,9 +297,9 @@ impl MetadataStore {
 
 impl MetadataStore {
     /// Canonical full-record portability evidence. Only the producer compiler
-    /// envelope in FragmentValidation is excluded; semantic identities and every
+    /// envelope in `FragmentValidation` is excluded; semantic identities and every
     /// semantic/type/declaration/HIR/template/Rust/source field remain included.
-    /// Call validate_complete first so malformed records cannot become evidence.
+    /// Call `validate_complete` first so malformed records cannot become evidence.
     pub fn portable_payload_digest(&self) -> Result<String> {
         self.validate_complete()?;
         let mut hash = Sha256::new();
@@ -324,6 +324,13 @@ impl MetadataStore {
             hash.update((payload.len() as u64).to_le_bytes());
             hash.update(payload);
         }
-        Ok(hash.finalize().iter().map(|b| format!("{b:02x}")).collect())
+        Ok(hash
+            .finalize()
+            .iter()
+            .fold(String::with_capacity(64), |mut text, byte| {
+                use std::fmt::Write as _;
+                let _ = write!(text, "{byte:02x}");
+                text
+            }))
     }
 }

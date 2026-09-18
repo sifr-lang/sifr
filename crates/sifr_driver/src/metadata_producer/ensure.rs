@@ -18,6 +18,7 @@ pub struct PreparedMetadata {
     pub metadata_id: String,
     pub compatibility: wire::Compatibility,
     pub production_seconds: Option<f64>,
+    pub load_timings: Option<serde_json::Value>,
     pub store: wire::MetadataStore,
     _lease: File,
 }
@@ -64,6 +65,7 @@ fn validate(
         metadata_id,
         compatibility: expected,
         production_seconds: None,
+        load_timings: None,
         store,
         _lease: lease,
     }))
@@ -217,6 +219,7 @@ pub(super) fn ensure_with_hook(
         metadata_id: sifr_sysroot::sha256_hex(&bytes),
         compatibility: inputs.compatibility,
         production_seconds: Some(started.elapsed().as_secs_f64()),
+        load_timings: None,
         store,
         _lease: lock,
     });
@@ -318,14 +321,20 @@ pub(crate) fn open_consumer(
     compatibility: wire::Compatibility,
     expected_id: Option<&str>,
 ) -> Result<Arc<PreparedMetadata>> {
+    let started = Instant::now();
     let lease = File::open(path).map_err(fail)?;
     let bytes = read_bounded(path)?;
+    let read_us = started.elapsed().as_micros();
+    let hashing = Instant::now();
     let metadata_id = sifr_sysroot::sha256_hex(&bytes);
+    let hash_us = hashing.elapsed().as_micros();
     if expected_id.is_some_and(|id| id != metadata_id) {
         return Err(fail(
             "installed metadata content identity mismatch; reinstall this toolchain",
         ));
     }
+    let indexing = Instant::now();
+    let input_bytes = bytes.len();
     let store = wire::MetadataStore::open(
         std::io::Cursor::new(bytes),
         compatibility,
@@ -336,6 +345,11 @@ pub(crate) fn open_consumer(
         metadata_id,
         compatibility,
         production_seconds: None,
+        load_timings: Some(serde_json::json!({
+            "read_us": read_us, "hash_us": hash_us,
+            "index_us": indexing.elapsed().as_micros(), "input_bytes": input_bytes,
+            "total_us": started.elapsed().as_micros()
+        })),
         store,
         _lease: lease,
     }))

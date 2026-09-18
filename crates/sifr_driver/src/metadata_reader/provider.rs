@@ -18,7 +18,7 @@ impl std::fmt::Debug for Provider {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MetadataProvider")
             .field("identity", &self.metadata.metadata_id)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 impl Provider {

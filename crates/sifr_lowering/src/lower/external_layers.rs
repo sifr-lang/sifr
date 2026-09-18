@@ -24,7 +24,7 @@ impl<V: Clone> ModuleMap<String, V> {
             .extend(other.baseline.iter().map(|(k, v)| (k.clone(), v.clone())));
     }
     pub fn copy_overlay_from(&mut self, other: &Self) {
-        self.overlay = other.overlay.clone();
+        self.overlay.clone_from(&other.overlay);
     }
     pub fn freeze(&mut self) {
         if self.baseline.is_empty() {

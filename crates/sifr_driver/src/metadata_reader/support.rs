@@ -71,11 +71,7 @@ impl Provider {
                     StdlibRustSource {
                         module: name.clone(),
                         source_path: format!("stdlib/{}", source.relative_path),
-                        source_sha256: source
-                            .content_digest
-                            .iter()
-                            .map(|b| format!("{b:02x}"))
-                            .collect(),
+                        source_sha256: super::qualification::hex(&source.content_digest),
                         nominal_types: hir
                             .classes
                             .iter()

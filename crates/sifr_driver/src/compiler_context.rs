@@ -49,6 +49,7 @@ impl CompilerContext {
         self.identity == other.identity && Arc::ptr_eq(&self.stdlib_cache, &other.stdlib_cache)
     }
 
+    #[must_use]
     pub fn with_project_incremental(mut self, enabled: bool) -> Self {
         self.project_incremental = enabled;
         self
@@ -57,6 +58,7 @@ impl CompilerContext {
         self.project_incremental
     }
 
+    #[must_use]
     pub fn refreshed_toolchain(&self) -> Self {
         Self::new(self.identity.clone())
             .with_application_profile(self.application_profile)
@@ -65,6 +67,7 @@ impl CompilerContext {
 
     /// Drop this idle editor's cache ownership without changing its pinned
     /// toolchain selection or invalidating another active generation.
+    #[must_use]
     pub fn without_cached_metadata(&self) -> Self {
         let mut next = self.clone();
         next.stdlib_cache = Arc::new(Mutex::new(None));
@@ -161,12 +164,13 @@ impl CompilerContext {
             })
     }
     pub fn metadata_stats(&self) -> Option<serde_json::Value> {
+        use sifr_sysroot::metadata as wire;
         let cache = self.stdlib_cache.lock().ok()?;
         let provider = cache.as_ref()?;
         let store = &provider.metadata.store;
-        use sifr_sysroot::metadata as wire;
         Some(serde_json::json!({
             "metadata_id":provider.metadata.metadata_id,
+            "load_timings":provider.metadata.load_timings,
             "semantic_modules":provider.loaded_semantic_modules(),
             "decoded_semantic_records":store.decoded_count::<wire::SemanticExports>(),
             "decoded_hir_modules":store.decoded_count::<wire::HirModule>(),

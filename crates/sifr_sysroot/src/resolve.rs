@@ -38,7 +38,7 @@ pub fn resolve_sysroot_with(
 ) -> Result<ResolvedSysroot, SysrootError> {
     let mut last_error = None;
     for candidate in candidate_roots(input) {
-        match ResolvedSysroot::from_root(candidate.clone(), &input.current_exe) {
+        match ResolvedSysroot::from_root(&candidate, &input.current_exe) {
             Ok(sysroot) => return Ok(sysroot),
             Err(error) => last_error = Some(error),
         }

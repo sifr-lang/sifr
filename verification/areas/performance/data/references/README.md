@@ -23,3 +23,10 @@ capture from a merged compiler reference, with only benchmark-tooling changes
 allowed relative to that compiler. The current candidate cannot become its own
 reference. Each profile binds an approved full-manifest receipt, baseline,
 shared-policy budgets and measured identity in one atomically published JSON.
+
+When a verification profile selects this performance area, the named reference
+owns its measurement Cargo concurrency. The area explicitly sets and reports
+the reference's `cargo_jobs` for its producer and budget checks, even when the
+outer profile uses a different native-build worker count. Other host, toolchain,
+power and input comparisons remain enforced. Selecting a reference does not
+change the machine's governor; establish its recorded policy before admission.

@@ -129,7 +129,7 @@ impl Store {
             context: context.into(),
         })
     }
-    pub(super) fn latest(&self) -> io::Result<Option<Generation>> {
+    pub(super) fn latest(&self) -> Option<Generation> {
         // The workspace hint is optional. An absent/read-only workspace still
         // discovers the generation through the owner-scoped user cache pointer.
         let hint = read(&self.workspace_root, ".sifrbuildinfo", 4096)
@@ -146,11 +146,11 @@ impl Store {
                 && key(&hint.generation)
             {
                 if let Ok(generation) = self.generation(&hint.generation) {
-                    return Ok(Some(generation));
+                    return Some(generation);
                 }
             }
         }
-        Ok(None)
+        None
     }
     fn generation(&self, id: &str) -> io::Result<Generation> {
         if !key(id) {
@@ -207,7 +207,7 @@ impl Store {
         cancelled(cancel)?;
         let writer = storage::process_entry_lock(&self.root, "writer")?;
         writer.try_lock().map_err(io::Error::from)?;
-        let previous = self.latest()?;
+        let previous = self.latest();
         let bytes = serde_json::to_vec(record)?;
         if bytes.len() as u64 > RECORD_LIMIT {
             return Err(invalid("project result exceeds limit"));
@@ -307,7 +307,7 @@ impl Store {
         }
         let writer = storage::process_entry_lock(&self.root, "writer")?;
         writer.try_lock().map_err(io::Error::from)?;
-        let latest = self.latest()?;
+        let latest = self.latest();
         let parent = self.root.join("generations");
         let mut removed = 0;
         for entry in fs::read_dir(&parent)? {
