@@ -385,8 +385,18 @@ pub(super) fn inject_python_runtime_bootstrap(
     let insert_at = find_main_body_insert(main_rs).ok_or_else(|| {
         "generated package project has Python runtime metadata but no main function".to_string()
     })?;
+    let loader_check = if let Some(library) = metadata.selected_library() {
+        let digest = sifr_sysroot::sha256_file(std::path::Path::new(library))
+            .map_err(|error| format!("cannot identify selected Python library: {error}"))?;
+        format!(
+            "\n    if let Err(error) = ::sifr_runtime::python::loader::validate_loaded_library({library:?}, {digest:?}) {{\n        eprintln!(\"{{error}}\");\n        std::process::exit(1);\n    }}\n"
+        )
+    } else {
+        String::new()
+    };
     let mut with_bootstrap = render_python_runtime_prelude(metadata);
     with_bootstrap.push_str(&main_rs[..insert_at]);
+    with_bootstrap.push_str(&loader_check);
     let _ = write!(
         with_bootstrap,
         "\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime() {{\n        Ok(__sifr_python_runtime_guard) => __sifr_python_runtime_guard,\n        Err(::sifr_runtime::python::PythonRuntimeError::ReservedBridgeCollision {{ module }}) => {{\n            eprintln!(\"{collision_code}: reserved Python bridge namespace collision at '{{}}'\", module);\n            std::process::exit(1);\n        }}\n        Err(__sifr_python_runtime_error) => {{\n            eprintln!(\"Sifr Python runtime initialization failed: {{}}\", __sifr_python_runtime_error);\n            std::process::exit(1);\n        }}\n    }};\n",

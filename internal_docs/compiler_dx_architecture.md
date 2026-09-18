@@ -454,6 +454,21 @@ A no-change request should perform a no-op Cargo freshness check, not recompile 
 
 Local development uses resolved local sources. Portable export explicitly rewrites/freezes the appropriate publishable dependency identities and verifies the exported result. A local unpushed compiler candidate does not require a GitHub push merely to be tested.
 
+DX.9 implements private native/families storage outside compiler targets.
+A family file lease spans source mutation, Cargo execution and output capture.
+Editable generated roots retain scope/name identity; direct probes bind their
+materialization to the complete probe key. Generated binary/test target names
+include the stable root identity. Byte-identical inputs retain mtimes, and
+obsolete generated support files are removed. Ordinary binary, test and direct
+probe requests consult Cargo even when a prior finalized result exists.
+Executable bytes, Cargo-produced runtime libraries and platform debug side
+files define the finalized bundle. Generated loader paths use the executable
+directory for bundled runtime libraries; system/Python libraries retain their
+declared external environment contract.
+Capture copies these into leased immutable artifact entries and validates an
+existing entry's bytes before returning it. Cargo failure cannot select the
+previous generation. Cargo profiles and application defaults remain unchanged.
+
 ### 8.4 Application profiles
 
 The optimized compiler executable and the optimization level of its generated application are separate decisions. Ship an optimized Sifr compiler. Adopt these application defaults:
@@ -500,6 +515,14 @@ A workspace-wide invocation is allowed for a named integration selection whose p
 Bind Python declarations and native builds to the selected interpreter, ABI/library and environment contract. Thread it through probing, Cargo build inputs and actual runtime loading. A library with the same basename is not automatically equivalent. Do not hide original import/loader errors.
 
 Development runtime lookup can use the selected local environment. Portable output requires an explicitly qualified deployment arrangement with relocatable loader behavior or a declared external runtime dependency. Do not embed an arbitrary developer path as an undocumented portable contract. Qualify a real process in every supported packaging mode; a successful link does not prove loader correctness.
+
+Generated Python binaries additionally validate the actual library supplying
+CPython symbols before interpreter initialization. A different canonical
+same-basename library or changed library content produces a concrete loader-mismatch diagnostic. Python
+source exports carry sifr-python-runtime.json: an explicit external-runtime
+deployment contract naming the required interpreter and library paths, with
+relocatable set to false. This mode requires that environment at deployment; it
+does not advertise a relocatable bundled interpreter.
 
 Do not cache live runtime certification or database/server observations as if they were immutable compiler facts. Deterministic SQL/component analysis may be cached only with its complete schema/provider/protocol/capability context and current authorization preserved.
 

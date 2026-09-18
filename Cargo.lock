@@ -7729,6 +7729,7 @@ dependencies = [
  "rustls",
  "rustls-pemfile",
  "rustls-platform-verifier",
+ "sha2 0.11.0",
  "sifr_structural_identity",
  "tokio",
  "tokio-rustls",

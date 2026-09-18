@@ -27,6 +27,7 @@ num-bigint = { workspace = true }
 num-traits = { workspace = true }
 sifr_structural_identity = { workspace = true, optional = true }
 pyo3 = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
 rustls = { workspace = true, optional = true }
 rustls-pemfile = { workspace = true, optional = true }
 rustls-platform-verifier = { workspace = true, optional = true }
@@ -53,7 +54,7 @@ i18n = [
     "dep:icu_plurals",
 ]
 unicode = ["dep:unicode-normalization", "dep:unicode-segmentation", "dep:unicode_names2"]
-python = ["dep:libc", "dep:pyo3", "dep:tokio"]
+python = ["dep:libc", "dep:pyo3", "dep:sha2", "dep:tokio"]
 structural = ["dep:sifr_structural_identity"]
 net = ["dep:tokio"]
 tls = [

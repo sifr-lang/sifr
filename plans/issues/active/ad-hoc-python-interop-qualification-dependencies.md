@@ -276,3 +276,14 @@ The user's prospective 2026-09-17 Phase DX policy defers the complete broad gate
 to phase end; earlier aggregate failures retain their original outcomes. This
 closure does not change Item12's historical records or authorize additional Python
 features. Final evidence index: dx2-evidence/evidence-index-c6841ab44.json.
+
+## Pre-existing runtime Clippy follow-up observed during DX.9
+
+A supplemental feature-enabled Clippy invocation at DX.9 exposed existing
+runtime Python lints in unchanged Arrow/resource/conversion code (mostly
+large Result error variants, plus existing arithmetic/return-style lints).
+The exact errors are preserved in the external DX.9 evidence directory,
+070123a27-scoped-clippy.jsonl and its summary. The new loader's two local
+style findings were corrected; the unrelated runtime API design is not
+expanded into DX.9. These existing errors remain for this owner and the
+required phase-end gate; this is not a full Clippy pass.

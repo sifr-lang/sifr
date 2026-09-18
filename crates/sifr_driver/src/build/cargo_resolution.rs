@@ -35,7 +35,7 @@ impl CargoResolutionPolicy {
             .as_ref()
             .map_err(Clone::clone)
             .and_then(sifr_sysroot::NativeToolchain::cargo_command)
-            .map_err(|error| vec![cargo_resolution_error(error)])
+            .map_err(|error| vec![cargo_resolution_error(error.to_string())])
     }
 
     pub(super) fn normal() -> Self {
@@ -96,12 +96,29 @@ pub(super) fn prepare_cargo_resolution(
         // just as Cargo does in the original workspace. Normal mode may still
         // update the generated lock; it must not discard it and resolve anew
         // merely because the compiler placed the probe in a temporary root.
-        if !lock_path.is_file() && !policy.authoritative_locks.is_empty() {
+        let seed = policy.normal_seed_cache_fragment();
+        let seed_path = project_dir.join(".sifr-cargo-seed");
+        let previous_seed = match std::fs::read_to_string(&seed_path) {
+            Ok(previous) => Some(previous),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+            Err(error) => return Err(vec![cargo_resolution_error(error.to_string())]),
+        };
+        let authority_changed = previous_seed
+            .as_ref()
+            .zip(seed.as_ref())
+            .is_some_and(|(previous, current)| previous != current);
+        // A stable generated root retains its normal Cargo updates while the
+        // source authority is unchanged; a new authority must reseed its pins.
+        if authority_changed || (!lock_path.is_file() && !policy.authoritative_locks.is_empty()) {
             seed_lockfile_for_resolution(
                 &lock_path,
                 &policy.authoritative_locks,
                 cargo_prefix_args,
             )?;
+        }
+        if let Some(seed) = seed {
+            super::native_storage::write_changed(&seed_path, seed.as_bytes())
+                .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
         }
         return Ok(PreparedCargoResolution {
             initial_digest: digest_file(&lock_path),
@@ -412,7 +429,7 @@ fn prepared_lock_path(
     let tools = policy
         .native_toolchain
         .as_ref()
-        .map_err(|error| vec![cargo_resolution_error(error)])?;
+        .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
     push_cache_bytes(&mut input, tools.identity());
     push_cache_bytes(&mut input, &normalized_manifest_cache_input(project_dir)?);
     for argument in cargo_prefix_args {

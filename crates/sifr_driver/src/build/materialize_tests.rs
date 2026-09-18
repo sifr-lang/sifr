@@ -282,7 +282,7 @@ fn sysroot_http_native_link_evidence_inherits_tls_provider_trust() {
     );
 }
 
-pub(super) fn base_project() -> GeneratedBinaryProject {
+pub(crate) fn base_project() -> GeneratedBinaryProject {
     GeneratedBinaryProject {
         main_rs: "fn main() {}\n".to_string(),
         support_modules: BTreeMap::new(),
@@ -295,7 +295,7 @@ pub(super) fn base_project() -> GeneratedBinaryProject {
     }
 }
 
-pub(super) fn test_dependency_plan(cache_fingerprint: &str) -> SysrootDependencyPlan {
+pub(crate) fn test_dependency_plan(cache_fingerprint: &str) -> SysrootDependencyPlan {
     SysrootDependencyPlan {
         stdlib_modules: BTreeSet::new(),
         required_features: BTreeSet::new(),
@@ -329,7 +329,7 @@ fn native_source_identity_distinguishes_support_and_bridge_roles() {
 }
 
 #[test]
-fn python_native_loader_materialization_preserves_selection_and_removes_stale_script() {
+fn python_native_loader_materialization_preserves_selection_and_removes_stale_path() {
     let root = std::env::temp_dir().join(format!(
         "sifr_python_native_loader_{}_{}",
         std::process::id(),
@@ -367,9 +367,15 @@ fn python_native_loader_materialization_preserves_selection_and_removes_stale_sc
 
     materialize_binary_project_files(&local, "sifr_output", base_project(), &plan)
         .expect("non-Python project should rematerialize");
-    assert!(!local.join("build.rs").exists());
+    let loader = std::fs::read_to_string(local.join("build.rs")).expect("generic runtime loader");
+    assert!(loader.contains("$ORIGIN"));
+    assert!(!loader.contains("/opt/a python"));
+    assert!(!loader.contains("/opt/another python"));
     crate::build::portable_project::publish_portable_project(&local, &portable)
-        .expect("portable publication should remove obsolete loader script");
-    assert!(!portable.join("build.rs").exists());
+        .expect("portable publication should replace the obsolete Python loader path");
+    assert_eq!(
+        std::fs::read_to_string(portable.join("build.rs")).expect("generic published loader"),
+        loader
+    );
     std::fs::remove_dir_all(root).expect("remove owned test fixture");
 }

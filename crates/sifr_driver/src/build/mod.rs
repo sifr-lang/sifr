@@ -8,6 +8,9 @@ mod entrypoint_resolution;
 mod entrypoint_single_file;
 mod entrypoint_stages;
 mod materialize;
+#[cfg(test)]
+mod native_reuse_tests;
+pub(crate) mod native_storage;
 mod portable_project;
 mod project_codegen;
 mod python_bridges;
@@ -47,6 +50,7 @@ mod rust_interop_probe_cache;
 mod rust_interop_probe_diagnostics;
 mod rust_interop_probe_features;
 mod rust_interop_probe_manifest;
+#[cfg(test)]
 mod rust_interop_probe_nonce;
 mod rust_interop_probe_paths;
 mod rust_interop_probe_policy;

@@ -325,3 +325,59 @@ fn collect_evidence_files(
         );
     }
 }
+
+#[test]
+#[ignore = "DX.9 native trust acceptance runs explicitly"]
+fn dx9_trust_revocation_after_real_native_cache_hit() {
+    let package_root = copied_scenario(
+        "native_build_script",
+        "native_trust_package",
+        "dx9_trust_revoke",
+    );
+    install_evidence_source(
+        &package_root,
+        &format!(
+            "{NATIVE_BUILD_EVIDENCE}\n\ndef main() -> Result[None, NativeError | RustPanicError]:\n    try:\n        print(verify_trusted_build_script_native_evidence())\n    except NativeError as error:\n        raise error\n    except RustPanicError as error:\n        raise error\n    return None\n"
+        ),
+    );
+    let compiler = crate::CompilerContext::for_test();
+    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
+    let first = build_cached_package_project(
+        &compiler,
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("trusted local unpushed native build");
+    let second = build_cached_package_project(
+        &compiler,
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("Cargo freshness on repeat");
+    assert!(second.build_report().cache_hit());
+    assert_eq!(first.binary_path(), second.binary_path());
+    let manifest_path = package_root.join("sifr.toml");
+    let manifest = std::fs::read_to_string(&manifest_path).expect("manifest");
+    let revoked = manifest.replace(
+        "rust-build-scripts = [\"cc\", \"bindgen\", \"cxx\", \"zstd\"]",
+        "rust-build-scripts = [\"cc\", \"bindgen\", \"cxx\"]",
+    );
+    assert_ne!(manifest, revoked);
+    std::fs::write(&manifest_path, revoked).expect("revoke trust");
+    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
+    let result = build_cached_package_project(
+        &compiler,
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
+    let Err(errors) = result else {
+        panic!("old native success cannot authorize revoked trust")
+    };
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == DiagnosticCode::RUST_TRUST_MISSING.code()),
+        "{errors:?}"
+    );
+    std::fs::remove_dir_all(package_root).expect("cleanup");
+}

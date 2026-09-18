@@ -113,3 +113,25 @@ this record-only update or add DX.8 acceptance requirements.
 | DX8-F8 | sysroot verification adapter, next scoped addition | `runner.py` is 891 lines and passes the 900-line guardrail. A future addition should split responsibilities instead of shaving lines. |
 
 No implementation for these observations belongs to this record-only update.
+
+
+## Pre-existing lint observations during DX.9
+
+A supplemental DX.9 Clippy check exposed pre-existing metadata-owner lints at
+the unchanged phase base 7cf0c3953a73a1c6e189fa98f655e1d6c886f612.
+These do not change DX.9's named acceptance selection or reinstate an
+intermediate full gate. Retain them for the owning metadata maintenance item
+and the required phase-end full gate:
+
+- sifr_sysroot metadata/store.rs: documentation markdown and hexadecimal
+  formatting lints (the initial dependency-inclusive invocation reported five
+  errors).
+- sifr_driver compiler_context.rs: items after statements.
+- sifr_driver metadata_reader/provider.rs: incomplete manual Debug fields.
+- sifr_driver metadata_reader/qualification.rs and support.rs: hexadecimal
+  formatting allocations.
+
+No metadata implementation was changed for these observations. Raw diagnostics
+are preserved outside the reviewed tree in
+yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx9-evidence/
+(clippy-final-preflight.log and clippy-scoped-preflight.log).

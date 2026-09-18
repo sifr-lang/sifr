@@ -2043,3 +2043,12 @@ atomically select a complete generation while retaining prior ones. Doctor repor
 metadata readiness and offers explicit full package/metadata integrity verification.
 The detailed ownership and supported installation modes remain in
 [the Compiler DX architecture](compiler_dx_architecture.md).
+
+
+DX.9 separates generated native Cargo families from compiler development
+targets. The driver owns family locks across materialization, Cargo freshness
+and immutable executable/debug-bundle capture; ordinary binary/test/probe
+requests no longer treat cached output existence as native freshness. Python
+startup verifies the selected shared library, and Python source exports declare
+their external-runtime deployment paths. See
+[Compiler DX sections 8.2–8.6](compiler_dx_architecture.md#82-compatible-native-storage).
