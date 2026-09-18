@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.10 complete; DX.11 next
+status: in progress; DX.1–DX.11 complete; DX.12 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -618,7 +618,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.10 are complete and merged. DX.11–DX.16 are not started; DX.11 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.11 are complete and merged. DX.12–DX.16 are not started; DX.12 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -632,7 +632,7 @@ DX.1–DX.10 are complete and merged. DX.11–DX.16 are not started; DX.11 is th
 | DX.8 | Complete / merged | Candidate `78f12c5cdd357f1601926f3fa78ec96f004108dd`; [PR #3854](https://github.com/sifr-lang/sifr/pull/3854); merge `1b55710f4a6e1d796be243c025b673f8958de72b` | M03, M05, M07, M08, M10, M11, M15, R09, Q05, Q09 PASS; 727-case corpus/native, four-target portable records, actual Linux/Mac qualification, installed generations and focused regressions; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3854#issuecomment-5722224549) |
 | DX.9 | Complete / merged | Candidate `2f1f3fb215d5263c0d1fb49d8c3346aafa299b33`; [PR #3856](https://github.com/sifr-lang/sifr/pull/3856); merge `455400351b3d989490191a09b3cb3d2c817404fa` | I04, B01–B04, B07–B09 and focused regressions PASS; actual native/Python exports, current Cargo freshness and paired rebuilt-unit/latency measurements; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3856#issuecomment-5723374425) |
 | DX.10 | Complete / merged | Candidate `d4b80812086538f6d26bf7830f30da54d52bffb0`; [PR #3858](https://github.com/sifr-lang/sifr/pull/3858); merge `65e870fced69b02c6833fa9f000d31d8c1bbefb8` | B05, B06, B11, B12, R06 PASS; 727 actual release fixtures, additional dev/default coverage, profile/configuration inventories and actual cold/warm/edit/alternating costs; final consumer regressions and explicit unchanged-input reuse; full gate deferred | [Opus: SATISFIED after adjudicated remediation](https://github.com/sifr-lang/sifr/pull/3858#issuecomment-5725527463) |
-| DX.11 | Not started | — | — | — |
+| DX.11 | Complete / merged | Candidate `c0d490d460ca4f8a286226da804b31744b5a0b3c`; [PR #3860](https://github.com/sifr-lang/sifr/pull/3860); merge `24eec746b3b72d1b3bdbbb073986092f629b1ab9` | E01–E06, nine Rust regressions, installed protocol/push-progress PASS; real upgrade/recovery and paired Q09 with scoped unchanged-input reuse; post-close ownership released, no active/peak RSS improvement claimed; full gate deferred | [Opus: SATISFIED after bounded remediation](https://github.com/sifr-lang/sifr/pull/3860#issuecomment-5726309175) |
 | DX.12 | Not started | — | — | — |
 | DX.13 | Not started | — | — | — |
 | DX.14 | Not started | — | — | — |
@@ -1372,7 +1372,10 @@ Evidence host/root:
 | Original Opus response | `38c3078487ec037b914c18cdde22057a78ad2e96315113e62dc90b49dca462d7` |
 
 
-## Current Handoff — DX.10 (2026-09-18)
+## Historical Handoff — DX.10 (2026-09-18)
+
+Historical next-action instructions below are superseded by the current DX.11
+handoff. Original validation, failed observations and review history are retained.
 
 - **Current state:** DX.10 implementation is merged in
   [PR #3858](https://github.com/sifr-lang/sifr/pull/3858).
@@ -1484,3 +1487,109 @@ Final candidate directory:
 | Consumer profile/invocation inventory | `2dd6593ed7a8265a25266f393b745e03e411d55e6c50dc2bb60f90476ae2923f` |
 | Inherited ff1 qualification manifest | `3aab3b08c10fe71077c18932f5f37cb3a66a06ba0b3094710ed322e4bfdba369` |
 | Complete native release corpus | `618e863ec3cdc4dfc5978d7e44d1d2acabf06eb8371962a2ac9fc2709049301b` |
+
+## Current Handoff — DX.11 (2026-09-18)
+
+- **Current state:** DX.11 implementation is merged in
+  [PR #3860](https://github.com/sifr-lang/sifr/pull/3860).
+  Final candidate `c0d490d460ca4f8a286226da804b31744b5a0b3c`;
+  merge `24eec746b3b72d1b3bdbbb073986092f629b1ab9`. This docs-only update is on `codex/dx11-record`.
+- **Ownership:** implementation, tests and Opus review ran only on the reference
+  Linux host in `/home/yaser5/projects/sifr/compiler-dx-orchestration`.
+  Original base was `67005d246ef2c261b5d93bbf308df51ef033891c`.
+  The private target was reused; >220 GiB alone did not trigger cleanup, and
+  sufficient operation reserve remained. No local Mac implementation or tests ran.
+- **Implemented:** immutable snapshots pin source and compiler metadata ownership;
+  host identity rejects cross-host snapshot reuse even with coincident revisions.
+  Incremental edits now update the authoritative overlay as well as the frontend
+  context, so reload cannot restore older bytes. Ingress generations independently
+  guard request responses and diagnostics, including pending close clears.
+  Superseded work terminates with ContentModified, without relying on cancellation.
+  Closed projects release semantic/metadata and Python environment/target owners.
+  Configuration explicitly re-resolves toolchains while preserving open overlays.
+  Syntax queries avoid semantic initialization, and physical aliases retain a
+  single owner while results use the logical document URI.
+- **Named acceptance and focused regressions:** nine Rust DX.11 tests pass,
+  including overlapping snapshot lifetime/release, independent stale rejection,
+  atomic invalid edit batches, aliases, syntax-only metadata isolation, closed
+  environment retention, deferred publications and incremental push progress.
+  Actual installed E01–E06 pass: CLI saved-source/editor overlay isolation,
+  20/20 stale terminal responses, real symlink URI and Linux case identity,
+  Unicode/CRLF UTF-8/16/32 edits, 12 close/switch cycles, syntax with missing
+  metadata, and missing/incompatible same-process recovery. Protocol smoke passes.
+  The final installed two-document push regression verifies zero edit-driven
+  progress events and retained begin/end workspace progress.
+- **Evidence reuse:** the final remediation changes only whether an incremental
+  reconciliation starts work-done progress; it preserves publication scheduling
+  and all ownership/analysis code. Earlier exact-candidate evidence retains its
+  real `dd282f9d84e038e4739e73dacdbac400388c8c6f` provenance. The source diff and
+  capability/mode analysis in `evidence-reuse.json` establish applicability:
+  Q09 clients do not advertise progress, the large fixture has diagnostics off,
+  and actual toolchain upgrade/configuration keeps the same workspace path.
+  No old measurement is relabelled as a newly measured final binary.
+- **Scoped budgets and recovery:** the applicable large-session smoke has
+  42 operations, p95 **7.128 ms**, peak RSS **53.1 MiB**, passing unchanged
+  1000 ms/128 MiB limits. That diagnostics-off fixture does not bound multi-document
+  push-diagnostics cost. Actual installed transport verifies pinned A across a
+  selector upgrade, B in a new process, explicit same-process adoption of B, and
+  rollback to A. File-size, maintainability, formatting and diff guards pass.
+- **Q09 paired memory evidence:** optimized installed baseline
+  `ff1f3b84b2b0ba9f174b2623a1837e90ff086ffb` has identical compiler inputs to
+  the base (proof retained). Four normal/heap baseline/candidate cohorts each
+  retain 21 samples with predetermined first-sample warmup excluded. The frozen
+  demanded DX.1 trace is extended equally with edit/close/switch. These medians
+  describe the same 12 GB Linux host, Rust 1.98.1; the heap lane records glibc
+  allocated chunks plus mmap, not requested object sizes or heap-lane latency.
+
+| Q09 median | Baseline | Candidate | Delta |
+| --- | ---: | ---: | ---: |
+| Active steady RSS | 65.273 MiB | 65.426 MiB | +0.152 MiB |
+| Peak RSS | 95.674 MiB | 95.801 MiB | +0.127 MiB |
+| Post-close RSS | 65.510 MiB | 47.805 MiB | −17.705 MiB (−27.03%) |
+| Switched active RSS | 65.930 MiB | 67.414 MiB | +1.484 MiB |
+| Switched closed RSS | 65.930 MiB | 49.613 MiB | −16.316 MiB |
+| Active steady allocated heap | 44.049 MiB | 44.051 MiB | +0.002 MiB |
+| Peak allocated heap | 82.818 MiB | 82.818 MiB | unchanged |
+| Post-close allocated heap | 43.264 MiB | 0.506 MiB | −42.758 MiB (−98.83%) |
+| Switched closed allocated heap | 43.292 MiB | 0.538 MiB | −42.754 MiB |
+
+Active/peak RSS has **no demonstrated improvement**: the same metadata
+container/index and 13 demanded modules are still required, with zero HIR/Rust
+payload reads. After final close the metadata owner disappears. Allocator arena
+medians remain 24,276,992 bytes, supporting the attribution that retained allocator
+arenas account for much of the gap between released chunks and RSS. Switched
+active RSS rises while live heap falls, consistent with allocator/file-residency
+high-water effects, not an additional decoded record set. These are scoped
+attributions, not exact object accounting. Normal trace median elapsed time is
+1850.087 → 1834.750 ms (−0.83%), primary noise status observed; fresh checks are
+comparable, with no product-target claim. Original DX.8 pre-migration evidence
+remains the earlier baseline, not replaced by this incremental comparison.
+
+- **Review:** initial exact-candidate review was
+  [NOT SATISFIED](https://github.com/sifr-lang/sifr/pull/3860#issuecomment-5726155969):
+  multi-document incremental changes incorrectly opened workspace progress.
+  One bounded remediation suppresses that scope on edit reconciliation,
+  corrects the misleading comment and tests both edit/workspace behavior.
+  Final [Opus review](https://github.com/sifr-lang/sifr/pull/3860#issuecomment-5726309175) is SATISFIED without blockers.
+  Suggestions are separate work in
+  [DX.11 editor review followups](ad-hoc-dx11-editor-review-followups.md).
+- **Evidence:** external root
+  `/home/yaser5/projects/sifr/dx11-evidence`; final candidate-keyed
+  `c0d490d460ca4f8a286226da804b31744b5a0b3c/qualification-manifest.json`,
+  SHA-256 `8b29cf3f8599e4fa10cbb3e4c8c1c6155da81ddabe3a60202a99332755dccbad`.
+  Final optimized installed receipt: `product-final/receipt.json`.
+  Final review SHA-256: `7078be8a2a3a1ada0dbf645a4e1a802a9eb3e3fae5e18abd1c20931d5e10e158`.
+  Q09 report: `q09-comparison.json`,
+  SHA-256 `52ea04a875a1381e3b1342556fd1116a35eb4a0df32abd247c22f1535a78a4e3`.
+  The manifest hashes the final focused tests, actual installed acceptance/
+  protocol/progress reports, guards and explicit reuse proof.
+- **Preserved observations:** preliminary unit/harness/protocol failures and
+  original review remain negative evidence. The original frozen Q09 source
+  retains its pre-existing SIFR-PACKAGE-0103; clean semantics are separately
+  qualified by E01–E06. The heap baseline's latency noise is not a timing claim.
+  DX.10 F6 remains **failed +6720 bytes**, with unchanged assertion and historical
+  artifacts in [its owning issue](ad-hoc-dx10-profile-review-followups.md).
+- **Policy and next action:** no intermediate full create-pr/merge gate or
+  unrequested release checkpoint ran. The phase-end full gate remains required.
+  No DX.12/DX.13 persistence was implemented. Blocker: **none**.
+  Stop after this merged record. DX.12 is next only in a new bounded session.
