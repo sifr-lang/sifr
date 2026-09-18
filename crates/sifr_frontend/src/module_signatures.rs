@@ -8,14 +8,16 @@ use sifr_python_ast::{Decorator, Expr, Parameters, Stmt, TypeParams};
 pub(super) struct ModuleSignature {
     pub(super) imports: ImportSignature,
     pub(super) exports: ExportSignature,
+    pub(super) semantic_body: String,
 }
 
 impl ModuleSignature {
     pub(super) fn cache_key_input(&self) -> String {
         format!(
-            "imports=[{}]|exports=[{}]",
+            "imports=[{}]|exports=[{}]|semantic=[{}]",
             self.imports.cache_key_input(),
-            self.exports.cache_key_input()
+            self.exports.cache_key_input(),
+            self.semantic_body
         )
     }
 }
@@ -85,6 +87,7 @@ pub(super) fn module_signature(stmts: &[Stmt]) -> ModuleSignature {
     ModuleSignature {
         imports: import_signature(stmts),
         exports: export_signature(stmts),
+        semantic_body: interface_projection(stmts),
     }
 }
 
@@ -248,4 +251,48 @@ fn comparable_optional_type_params(
     type_params: Option<&TypeParams>,
 ) -> Option<ComparableTypeParams<'_>> {
     type_params.map(Into::into)
+}
+
+/// Only this deliberately small, effect-free body class is erased. Everything
+/// else, including private helpers, generic/const bodies, class field defaults,
+/// decorators and unknown constructs, is part of the consumed interface proof.
+/// Callers must also establish successful checking before retaining importers.
+pub(crate) fn interface_projection(stmts: &[Stmt]) -> String {
+    use sifr_python_ast::comparable::ComparableStmt;
+    stmts
+        .iter()
+        .map(|stmt| {
+            if let Stmt::FunctionDef(function) = stmt {
+                if function.type_params.is_none()
+                    && function.decorator_list.is_empty()
+                    && !function.is_async
+                    && function.parameters.is_empty()
+                    && matches!(function.returns.as_deref(), Some(Expr::Name(name))
+                    if matches!(name.id.as_str(), "int" | "float" | "bool" | "str"))
+                    && matches!(function.body.as_slice(), [Stmt::Return(ret)]
+                    if ret.value.as_deref().is_some_and(pure_return))
+                {
+                    return format!(
+                        "ordinary:{}:{:?}:{:?}",
+                        function.name,
+                        comparable_parameters(&function.parameters),
+                        comparable_optional_expr(function.returns.as_deref())
+                    );
+                }
+            }
+            format!("{:?}", ComparableStmt::from(stmt))
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+fn pure_return(expr: &Expr) -> bool {
+    match expr {
+        Expr::NumberLiteral(_)
+        | Expr::BooleanLiteral(_)
+        | Expr::StringLiteral(_)
+        | Expr::Name(_) => true,
+        Expr::BinOp(value) => pure_return(&value.left) && pure_return(&value.right),
+        Expr::UnaryOp(value) => pure_return(&value.operand),
+        _ => false,
+    }
 }

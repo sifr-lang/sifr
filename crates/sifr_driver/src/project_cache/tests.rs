@@ -42,6 +42,7 @@ fn run(cache: &Path, file: &Path) -> (Vec<RenderedDiagnostic>, ProjectCacheRepor
         &mut DiskSourceProvider::new(),
         context(),
         &AtomicBool::new(false),
+        None,
         |provider| compute(file, provider).into(),
     )
 }
@@ -226,6 +227,7 @@ fn dx13_p09_cancel_transient_and_changed_input() {
         &mut DiskSourceProvider::new(),
         context(),
         &cancel,
+        None,
         |provider| {
             let result = compute(&file, provider);
             cancel.store(true, Ordering::Release);
@@ -241,6 +243,7 @@ fn dx13_p09_cancel_transient_and_changed_input() {
         &mut DiskSourceProvider::new(),
         context(),
         &AtomicBool::new(false),
+        None,
         |provider| {
             let result = compute(&file, provider);
             fs::write(&file, "def main() -> None:\n    pass\n").unwrap();
@@ -255,6 +258,7 @@ fn dx13_p09_cancel_transient_and_changed_input() {
         &mut DiskSourceProvider::new(),
         context(),
         &AtomicBool::new(false),
+        None,
         |provider| {
             provider.read_file(&file).unwrap();
             vec![crate::diagnostics::diagnostic_with_code(
@@ -502,6 +506,7 @@ fn dx13_p09_completed_live_operation_stays_uncached() {
         &mut DiskSourceProvider::new(),
         context(),
         &AtomicBool::new(false),
+        None,
         |provider| CheckComputation {
             diagnostics: compute(&file, provider),
             reusable: false,

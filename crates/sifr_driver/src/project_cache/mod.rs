@@ -1,4 +1,7 @@
 //! Driver-owned project storage behind the frontend's completed result contract.
+#[cfg(test)]
+mod dx14_tests;
+mod interface_reuse;
 mod package_context;
 mod storage;
 #[cfg(test)]
@@ -39,6 +42,7 @@ pub struct ProjectCacheReport {
     pub validation_us: u128,
     pub serialization_us: u128,
     pub payload_bytes: usize,
+    pub modules: Vec<sifr_frontend::ModuleCheckDecision>,
 }
 
 /// Saved-source checks with a complete resolved context. Pure package graphs
@@ -86,7 +90,6 @@ pub fn check_saved_sources(
             );
         }
     };
-    let cwd = std::env::current_dir().unwrap_or_default();
     let normalized_file = if let Some(package) = package {
         let absolute = std::path::absolute(file).ok();
         package
@@ -108,20 +111,21 @@ pub fn check_saved_sources(
                 .filter(|path| !path.as_os_str().is_empty())
                 .unwrap_or(Path::new("."))
         });
-    let inputs = SemanticInputs {
-        compiler: compiler.identity().as_str().into(),
-        metadata: metadata.metadata.metadata_id.clone(),
-        target: format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS),
-        workspace_and_source_policy: identity("saved-check-policy-v1", &(file.parent(), &cwd))
-            .unwrap_or_default(),
-        package_and_lock: package_context
-            .flatten()
-            .unwrap_or_else(|| "manifestless-owner-v1".into()),
-        language_options: "ordinary-check-defaults-v1".into(),
-        diagnostic_policy: "canonical-source-diagnostics-v1".into(),
-        components: BTreeMap::new(),
-        required_external: Default::default(),
-        external: BTreeMap::new(),
+    let mut inputs = manifestless_inputs(compiler, &metadata.metadata.metadata_id, file);
+    inputs.package_and_lock = package_context
+        .flatten()
+        .unwrap_or_else(|| "manifestless-owner-v1".into());
+    let defs = match crate::stdlib_external_defs(compiler) {
+        Ok(defs) => defs,
+        Err(errors) => {
+            return (
+                errors,
+                ProjectCacheReport {
+                    status: "metadata-unavailable".into(),
+                    ..Default::default()
+                },
+            );
+        }
     };
     check(
         &crate::cache_storage::root(),
@@ -130,6 +134,7 @@ pub fn check_saved_sources(
         provider,
         inputs,
         &AtomicBool::new(false),
+        Some((compiler.identity(), defs)),
         compute,
     )
 }
@@ -140,6 +145,10 @@ fn check(
     provider: &mut dyn SourceProvider,
     inputs: SemanticInputs,
     cancel: &AtomicBool,
+    module_context: Option<(
+        &sifr_identity::CompilerIdentity,
+        sifr_lowering::ExternalDefs,
+    )>,
     compute: impl FnOnce(&mut dyn SourceProvider) -> CheckComputation,
 ) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
     let mut report = ProjectCacheReport::default();
@@ -160,6 +169,18 @@ fn check(
                 {
                     if let Ok(diagnostics) = record.diagnostics() {
                         report.status = "restored".into();
+                        report.modules =
+                            record.result.resolution.ready().map_or_else(Vec::new, |r| {
+                                r.sources
+                                    .iter()
+                                    .map(|source| sifr_frontend::ModuleCheckDecision {
+                                        path: source.path.clone(),
+                                        family: "diagnostics",
+                                        action: "restored",
+                                        reason: "exact-source-and-context",
+                                    })
+                                    .collect()
+                            });
                         report.restored_checks = 1;
                         report.captured_sources = record
                             .result
@@ -172,6 +193,30 @@ fn check(
                         return (diagnostics, report);
                     }
                 }
+                if let Some((compiler, defs)) = &module_context {
+                    if let Some(modules) = interface_reuse::restore(
+                        &record,
+                        file,
+                        &inputs,
+                        &mut capture,
+                        compiler,
+                        defs.clone(),
+                    ) {
+                        report.status = "interface-restored".into();
+                        report.restored_checks = 1;
+                        report.modules = modules;
+                        report.captured_sources = capture.sources().len();
+                        report.validation_us = validation.elapsed().as_micros();
+                        if let Ok(updated) =
+                            CompletedCheck::capture(file, inputs.clone(), &capture, &[])
+                        {
+                            if capture.unchanged() && !cancel.load(Ordering::Acquire) {
+                                let _ = store.publish(&updated, cancel);
+                            }
+                        }
+                        return (Vec::new(), report);
+                    }
+                }
             }
         }
     }
@@ -181,6 +226,16 @@ fn check(
     let computation = compute(&mut capture);
     let diagnostics = computation.diagnostics;
     report.computed_checks = 1;
+    report.modules = capture
+        .sources()
+        .iter()
+        .map(|source| sifr_frontend::ModuleCheckDecision {
+            path: source.path.clone(),
+            family: "diagnostics",
+            action: "computed",
+            reason: "no-proven-compatible-record",
+        })
+        .collect();
     report.captured_sources = capture.sources().len();
     report.status = if store.is_some() {
         "miss"
@@ -250,4 +305,76 @@ pub fn prune_project_cache(
         }
     }
     Ok(removed)
+}
+
+fn manifestless_inputs(
+    compiler: &crate::CompilerContext,
+    metadata: &str,
+    file: &Path,
+) -> SemanticInputs {
+    let cwd = std::env::current_dir().unwrap_or_default();
+    let inputs = SemanticInputs {
+        compiler: compiler.identity().as_str().into(),
+        metadata: metadata.into(),
+        target: format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS),
+        workspace_and_source_policy: identity("saved-check-policy-v1", &(file.parent(), &cwd))
+            .unwrap_or_default(),
+        package_and_lock: "manifestless-owner-v1".into(),
+        language_options: "ordinary-check-defaults-v1".into(),
+        diagnostic_policy: "canonical-source-diagnostics-v1".into(),
+        components: BTreeMap::new(),
+        required_external: Default::default(),
+        external: BTreeMap::new(),
+    };
+    inputs
+}
+
+/// Restore saved diagnostic facts into an already captured editor generation.
+/// This function never publishes editor state. Both disk observations and the
+/// frontend's captured source bytes must agree with the CLI record.
+pub fn restore_editor_checks(
+    compiler: &crate::CompilerContext,
+    frontend: &mut sifr_frontend::FrontendContext,
+) -> Vec<sifr_frontend::ModuleCheckDecision> {
+    if !compiler.project_incremental() {
+        return Vec::new();
+    }
+    let graph = frontend.module_graph();
+    let Some(entry) = graph
+        .modules
+        .iter()
+        .find(|module| module.id == graph.entrypoint)
+    else {
+        return Vec::new();
+    };
+    let file = entry.canonical_path.as_path();
+    let Some(workspace) = file.parent() else {
+        return Vec::new();
+    };
+    let Ok(metadata) = compiler.metadata_provider() else {
+        return Vec::new();
+    };
+    let inputs = manifestless_inputs(compiler, &metadata.metadata.metadata_id, file);
+    let Ok(context) = inputs.identity() else {
+        return Vec::new();
+    };
+    let Ok(store) = storage::Store::open(&crate::cache_storage::root(), workspace, &context) else {
+        return Vec::new();
+    };
+    let Ok(Some(generation)) = store.latest() else {
+        return Vec::new();
+    };
+    for record in generation.records().flatten() {
+        if record.result.inputs.source.path == file {
+            if let Some(decisions) = frontend.restore_completed_checks(
+                &record,
+                &inputs,
+                &mut sifr_frontend::DiskSourceProvider::new(),
+                false,
+            ) {
+                return decisions;
+            }
+        }
+    }
+    Vec::new()
 }

@@ -8,6 +8,7 @@ type StdlibCache = Mutex<Option<Arc<crate::metadata_reader::Provider>>>;
 pub struct CompilerContext {
     identity: CompilerIdentity,
     application_profile: crate::ApplicationProfile,
+    project_incremental: bool,
     metadata_override: Option<std::path::PathBuf>,
     sysroot: Result<sifr_sysroot::ResolvedSysroot, sifr_sysroot::SysrootError>,
     pub(crate) stdlib_cache: Arc<StdlibCache>,
@@ -36,6 +37,7 @@ impl CompilerContext {
         Self {
             identity,
             application_profile: crate::ApplicationProfile::Development,
+            project_incremental: true,
             metadata_override: None,
             sysroot,
             stdlib_cache: cache,
@@ -47,8 +49,18 @@ impl CompilerContext {
         self.identity == other.identity && Arc::ptr_eq(&self.stdlib_cache, &other.stdlib_cache)
     }
 
+    pub fn with_project_incremental(mut self, enabled: bool) -> Self {
+        self.project_incremental = enabled;
+        self
+    }
+    pub fn project_incremental(&self) -> bool {
+        self.project_incremental
+    }
+
     pub fn refreshed_toolchain(&self) -> Self {
-        Self::new(self.identity.clone()).with_application_profile(self.application_profile)
+        Self::new(self.identity.clone())
+            .with_application_profile(self.application_profile)
+            .with_project_incremental(self.project_incremental)
     }
 
     /// Drop this idle editor's cache ownership without changing its pinned

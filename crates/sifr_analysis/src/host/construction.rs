@@ -49,6 +49,9 @@ impl AnalysisHost {
         profiles: sifr_driver::PreparedSqlProfiles,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         session = session.with_compiler_identity(compiler.identity().clone());
+        if let Some(frontend) = session.context_mut() {
+            let _ = sifr_driver::project_cache::restore_editor_checks(compiler, frontend);
+        }
         let snapshot = session.snapshot();
         let Some(current_revision) = revision_from_workspace_snapshot(&snapshot) else {
             return Err(Vec::new());
