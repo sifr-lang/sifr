@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.9 complete; DX.10 next
+status: in progress; DX.1–DX.10 complete; DX.11 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -618,7 +618,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.9 are complete and merged. DX.10–DX.16 are not started; DX.10 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.10 are complete and merged. DX.11–DX.16 are not started; DX.11 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -631,7 +631,7 @@ DX.1–DX.9 are complete and merged. DX.10–DX.16 are not started; DX.10 is the
 | DX.7 | Complete / merged | Candidate `036e69592164b87d309f31ba43ee406a58ed79ca`; [PR #3852](https://github.com/sifr-lang/sifr/pull/3852); merge `fb6d432be20d945e0266030b076dbc76ce4c8a50` | M01, M02, M04, M17, representative M15/native parity and paired installed Q09 PASS; focused tests and guardrails PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3852#issuecomment-5719741485) |
 | DX.8 | Complete / merged | Candidate `78f12c5cdd357f1601926f3fa78ec96f004108dd`; [PR #3854](https://github.com/sifr-lang/sifr/pull/3854); merge `1b55710f4a6e1d796be243c025b673f8958de72b` | M03, M05, M07, M08, M10, M11, M15, R09, Q05, Q09 PASS; 727-case corpus/native, four-target portable records, actual Linux/Mac qualification, installed generations and focused regressions; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3854#issuecomment-5722224549) |
 | DX.9 | Complete / merged | Candidate `2f1f3fb215d5263c0d1fb49d8c3346aafa299b33`; [PR #3856](https://github.com/sifr-lang/sifr/pull/3856); merge `455400351b3d989490191a09b3cb3d2c817404fa` | I04, B01–B04, B07–B09 and focused regressions PASS; actual native/Python exports, current Cargo freshness and paired rebuilt-unit/latency measurements; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3856#issuecomment-5723374425) |
-| DX.10 | Not started | — | — | — |
+| DX.10 | Complete / merged | Candidate `d4b80812086538f6d26bf7830f30da54d52bffb0`; [PR #3858](https://github.com/sifr-lang/sifr/pull/3858); merge `65e870fced69b02c6833fa9f000d31d8c1bbefb8` | B05, B06, B11, B12, R06 PASS; 727 actual release fixtures, additional dev/default coverage, profile/configuration inventories and actual cold/warm/edit/alternating costs; final consumer regressions and explicit unchanged-input reuse; full gate deferred | [Opus: SATISFIED after adjudicated remediation](https://github.com/sifr-lang/sifr/pull/3858#issuecomment-5725527463) |
 | DX.11 | Not started | — | — | — |
 | DX.12 | Not started | — | — | — |
 | DX.13 | Not started | — | — | — |
@@ -1299,7 +1299,7 @@ Evidence host/root:
 | `q09-comparison.json` | `df4a08b07b756baac0b11af320040c2cc690c101b5497c0203c2155a5056bbd3` |
 | Final original Opus response | `3f859a2ef2524dda2648215792aba88033c44a04b666d0b5c4924f82316a0fb9` |
 
-## Current Handoff — DX.9 (2026-09-18)
+## Historical Handoff — DX.9 (2026-09-18)
 
 - **Current state:** DX.9 implementation is merged in [PR #3856](https://github.com/sifr-lang/sifr/pull/3856).
   Candidate `2f1f3fb215d5263c0d1fb49d8c3346aafa299b33`;
@@ -1370,3 +1370,117 @@ Evidence host/root:
 | --- | --- |
 | `qualification-manifest.json` | `deedd24f44e6ada7896c963af6ce2a442a6e1df93351fd72d1ee8eeb187a62ac` |
 | Original Opus response | `38c3078487ec037b914c18cdde22057a78ad2e96315113e62dc90b49dca462d7` |
+
+
+## Current Handoff — DX.10 (2026-09-18)
+
+- **Current state:** DX.10 implementation is merged in
+  [PR #3858](https://github.com/sifr-lang/sifr/pull/3858).
+  Candidate `d4b80812086538f6d26bf7830f30da54d52bffb0`;
+  merge `65e870fced69b02c6833fa9f000d31d8c1bbefb8`.
+  This record-only update is on `codex/dx10-record`.
+- **Implemented:** default build/run select development applications, test uses
+  the test profile, and explicit `--release` selects optimized applications.
+  Generated manifests pin overflow/unwind behavior; captured overrides and
+  actual generated-manifest workspace authority are checked. Native profile
+  identity/reports follow Cargo's actual application configuration. Generated
+  applications and bridge probes own their workspace. The distributed compiler
+  remains optimized independently of application selection.
+- **Grouping and retained selection:** compatible compiler integration
+  preparations share the execution configuration and memoize duplicate builds.
+  Minimal, feature, target and native exceptions remain isolated; before/after
+  inventories retain every original assertion. Representative prepared/executed
+  binaries and assertion lists match. E2E/native aliases and standalone release
+  consumers retain explicit release; consumers use finalized `target/final`
+  artifacts. Default-development tests are additional.
+- **Named acceptance:** B05, B06, B11, B12 and R06 pass. The complete declared
+  release run-pass corpus executed **727/727 fixtures through 175 hashed actual
+  release native binaries**; an additional 5/5 development fixtures used debug
+  artifacts. Installed compiler qualification covers actual dev/test/release
+  overflow, assertion, error, ownership and async cleanup semantics, FFI panic
+  mapping/redaction and call-scoped callbacks. The permanent caller-authority
+  regression executes default/release run/test under both unsafe and malformed
+  unrelated Cargo manifests with a Rust-backed HTML probe/cache nested beneath
+  them (eight real requests).
+- **Final consumer qualification:** 13 focused consumer/profile tests and eight
+  generated preparation/selection tests pass. Twenty-one successful actual
+  operations include 16 observed native release application profiles, benchmark
+  final-artifact measurement/execution, sysroot boundary/compile and attached
+  API execution/edit invalidation, Python live-package compilation, differential
+  preparation/execution, and representative golden/hardening/namespace/readiness
+  and metadata/capture commands. Actual Cargo receipts show opt3, debug assertions
+  false and overflow checks true. Python live qualification did not start an
+  external service. File-size and relevant formatting/syntax/diff guards pass.
+- **Observed profile costs:** optimized installed compiler, 12 GB Linux host,
+  Rust 1.98.1. Two isolated samples cover dev-only, release-only and alternating
+  cold/no-op/edit/warm-edited requests. Sample 0 is retained but excluded from
+  comparison; sample 1 is below. GNU time child RSS and 50 ms sampled summed
+  process-tree RSS are recorded; shared pages count per process, not as PSS.
+
+| Sample 1 workload | Cold seconds / rebuilt units | No-op seconds / rebuilt units | Edit seconds / rebuilt units | Warm edited seconds / rebuilt units | Allocated cache |
+| --- | --- | --- | --- | --- | --- |
+| Development only | 8.789 / 31 | 0.638 / 0 | 0.782 / 1 | 0.638 / 0 | 136.0–142.6 MiB |
+| Release only | 12.323 / 32 | 0.615 / 0 | 0.741 / 1 | 0.616 / 0 | 119.3–124.7 MiB |
+| Alternating, development | 8.749 / 31 | 0.630 / 0 | 0.780 / 1 | 0.669 / 0 | shared row below |
+| Alternating, release | 11.976 / 32 | 0.625 / 0 | 0.735 / 1 | 0.620 / 0 | 248.7–261.8 MiB shared |
+
+Cold peak summed RSS is about 653.8–703.2 MiB; edits about 218.4–248.0 MiB.
+Alternating profiles retain 31+32 distinct cold configurations; every warm
+return rebuilds zero units and each edit rebuilds one application unit. These
+are observations for the small scalar-edit workload, not universal latency
+budgets. The full release corpus's 5927.62 s cold serial run is correctness
+evidence, not a host-sensitive performance comparison.
+
+- **Review and adjudication:** the initial review found the release size consumer
+  and generated-manifest authority defects. The second confirmed authority was
+  fixed but found the same consumer migration missing at other first-party
+  entry points. Both remain
+  [NOT SATISFIED in the preserved history](https://github.com/sifr-lang/sifr/pull/3858#issuecomment-5725480175).
+  Execution stopped for the skill's repeated-finding rule; the orchestrator
+  explicitly adjudicated bounded completion of that mechanism and one additional
+  review. The final exact-candidate
+  [Opus review is SATISFIED, no blockers](https://github.com/sifr-lang/sifr/pull/3858#issuecomment-5725527463).
+  Suggestions, profile-agnostic inventory decisions and the size observation
+  are separate work in [DX.10 followups](ad-hoc-dx10-profile-review-followups.md).
+  External LeetCode consumer migration is recorded in
+  [its owning issue #49](https://github.com/sifr-lang/leetcode/issues/49).
+- **Evidence reuse:** final d4 is verification-only relative to qualified
+  installed compiler candidate `ff1f3b84b2b0ba9f174b2623a1837e90ff086ffb`.
+  Exact crate/runtime/stdlib/Cargo/vendor identities prove unchanged compiler,
+  fixture and profile inputs. The ff1 receipts retain their real provenance;
+  earlier corpus reuse has its own tree/blob proof. Final consumer receipts,
+  inventory and the inherited manifests are hashed under the final candidate.
+  No compiler rebranding or broad repeat is claimed.
+- **Preserved observations:** the separate actual-ref whole-file non-increase
+  check remains **failed**: 6,634,688 → 6,641,408 bytes, +6720 (+0.10%).
+  `.text`, data and bss are unchanged; nonallocated debug/string metadata
+  increased. The size assertion remains unchanged. Predetermined real decrease/
+  increase controls passed expected exits 0/2; no whole-file non-growth is
+  claimed as DX.10 acceptance. Both remediation reviews confirmed this separate
+  budget observation is not a new named criterion. Initial pipeline assumptions,
+  extended probe and other failed/incomplete attempts remain historical.
+  Ambient uv 0.12.5 initially failed the Python area's 0.12.10 pin; an owned,
+  external installation of the pinned version corrected only the invocation
+  environment, and the resumed actual build passed.
+- **Resource/policy:** the private compiler target exceeded 220 GiB without
+  size-triggered cleanup; final qualification retained about 43 GiB free.
+  No shared/foreign target or active application profile was evicted. No
+  intermediate full create-PR/merge gate or full release checkpoint was run.
+  Named native release correctness qualification was completed; no release
+  publication was requested. The full phase-end gate remains required.
+- **Blocker:** none for DX.10 acceptance.
+- **Exact next action:** stop after this record update. DX.11 is eligible only
+  in a new bounded session; no DX.11 implementation belongs to this handoff.
+
+Evidence host/root:
+`yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx10-evidence/`.
+Final candidate directory:
+`d4b80812086538f6d26bf7830f30da54d52bffb0/`.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Final qualification-manifest.json | `c22780206faa6168cf7f92ede0b742f652c732c05969de33b96d1eb1a90d7e93` |
+| Original final Opus response | `1c7a0acb69c19f56fdffec0b6ca899e27f89b98f37aa87457fd77b2b0b0c1857` |
+| Consumer profile/invocation inventory | `2dd6593ed7a8265a25266f393b745e03e411d55e6c50dc2bb60f90476ae2923f` |
+| Inherited ff1 qualification manifest | `3aab3b08c10fe71077c18932f5f37cb3a66a06ba0b3094710ed322e4bfdba369` |
+| Complete native release corpus | `618e863ec3cdc4dfc5978d7e44d1d2acabf06eb8371962a2ac9fc2709049301b` |
