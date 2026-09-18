@@ -36,6 +36,9 @@ pub(crate) struct Cli {
     /// Print invocation timing and selected cache root on stderr
     #[arg(long, global = true)]
     pub(crate) timings: bool,
+    /// Compute project checks without reading or writing incremental results
+    #[arg(long, global = true)]
+    pub(crate) no_incremental: bool,
     /// Diagnostic output format
     #[arg(long, value_enum, default_value_t = DiagnosticFormat::Human)]
     pub(crate) diagnostic_format: DiagnosticFormat,
@@ -202,6 +205,7 @@ pub(crate) fn selected_application_profile(command: &Commands) -> sifr_driver::A
 }
 
 fn run_cli(cli: Cli) -> i32 {
+    let _ = crate::PROJECT_CACHE_OPTIONS.set((!cli.no_incremental, cli.timings));
     let _timing = crate::native_execution::Timing(cli.timings.then(std::time::Instant::now));
     let diagnostic_format = cli.diagnostic_format;
     if let Some(sysroot) = cli.sysroot {

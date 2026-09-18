@@ -75,6 +75,8 @@ fn compiler_identity() -> sifr_identity::CompilerIdentity {
     }
 }
 
+static PROJECT_CACHE_OPTIONS: std::sync::OnceLock<(bool, bool)> = std::sync::OnceLock::new();
+
 static APPLICATION_PROFILE: std::sync::OnceLock<sifr_driver::ApplicationProfile> =
     std::sync::OnceLock::new();
 

@@ -1,0 +1,253 @@
+//! Driver-owned project storage behind the frontend's completed result contract.
+mod package_context;
+mod storage;
+#[cfg(test)]
+mod tests;
+use sifr_diagnostics::RenderedDiagnostic;
+use sifr_frontend::{
+    SourceProvider,
+    persistence::{CapturingSourceProvider, CompletedCheck, SemanticInputs, identity},
+};
+use std::{
+    collections::BTreeMap,
+    path::Path,
+    sync::atomic::{AtomicBool, Ordering},
+    time::Instant,
+};
+
+/// The computation owner explicitly attests that no live external operation
+/// would be skipped by reusing this completed source result.
+pub struct CheckComputation {
+    pub diagnostics: Vec<RenderedDiagnostic>,
+    pub reusable: bool,
+}
+impl From<Vec<RenderedDiagnostic>> for CheckComputation {
+    fn from(diagnostics: Vec<RenderedDiagnostic>) -> Self {
+        Self {
+            diagnostics,
+            reusable: true,
+        }
+    }
+}
+
+#[derive(Debug, Default, serde::Serialize)]
+pub struct ProjectCacheReport {
+    pub status: String,
+    pub restored_checks: usize,
+    pub computed_checks: usize,
+    pub captured_sources: usize,
+    pub validation_us: u128,
+    pub serialization_us: u128,
+    pub payload_bytes: usize,
+}
+
+/// Saved-source checks with a complete resolved context. Pure package graphs
+/// are supplied only after ordinary package resolution. Dynamic component,
+/// schema, Python and native contexts retain their live owner checks.
+pub fn check_saved_sources(
+    compiler: &crate::CompilerContext,
+    file: &Path,
+    provider: &mut dyn SourceProvider,
+    enabled: bool,
+    package: Option<&crate::PackageEntrypoint>,
+    compute: impl FnOnce(&mut dyn SourceProvider) -> CheckComputation,
+) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
+    if !enabled {
+        return (
+            compute(provider).diagnostics,
+            ProjectCacheReport {
+                status: "disabled".into(),
+                computed_checks: 1,
+                ..Default::default()
+            },
+        );
+    }
+    let package_context = package.map(package_context::identity);
+    if matches!(package_context, Some(None)) {
+        return (
+            compute(provider).diagnostics,
+            ProjectCacheReport {
+                status: "external-context".into(),
+                computed_checks: 1,
+                ..Default::default()
+            },
+        );
+    }
+    // Resolve/pin required installed metadata even on a project-cache hit.
+    let metadata = match compiler.metadata_provider() {
+        Ok(metadata) => metadata,
+        Err(errors) => {
+            return (
+                errors,
+                ProjectCacheReport {
+                    status: "metadata-unavailable".into(),
+                    ..Default::default()
+                },
+            );
+        }
+    };
+    let cwd = std::env::current_dir().unwrap_or_default();
+    let normalized_file = if let Some(package) = package {
+        let absolute = std::path::absolute(file).ok();
+        package
+            .source_map
+            .modules
+            .values()
+            .find(|module| std::path::absolute(&module.file_path).ok() == absolute)
+            .map(|module| module.file_path.clone())
+            .unwrap_or_else(|| file.to_path_buf())
+    } else {
+        file.to_path_buf()
+    };
+    let file = normalized_file.as_path();
+    let workspace = package
+        .and_then(|package| package.graph.packages.get(&package.package_id))
+        .map(|package| package.package_root.as_path())
+        .unwrap_or_else(|| {
+            file.parent()
+                .filter(|path| !path.as_os_str().is_empty())
+                .unwrap_or(Path::new("."))
+        });
+    let inputs = SemanticInputs {
+        compiler: compiler.identity().as_str().into(),
+        metadata: metadata.metadata.metadata_id.clone(),
+        target: format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS),
+        workspace_and_source_policy: identity("saved-check-policy-v1", &(file.parent(), &cwd))
+            .unwrap_or_default(),
+        package_and_lock: package_context
+            .flatten()
+            .unwrap_or_else(|| "manifestless-owner-v1".into()),
+        language_options: "ordinary-check-defaults-v1".into(),
+        diagnostic_policy: "canonical-source-diagnostics-v1".into(),
+        components: BTreeMap::new(),
+        required_external: Default::default(),
+        external: BTreeMap::new(),
+    };
+    check(
+        &crate::cache_storage::root(),
+        workspace,
+        file,
+        provider,
+        inputs,
+        &AtomicBool::new(false),
+        compute,
+    )
+}
+fn check(
+    cache: &Path,
+    workspace: &Path,
+    file: &Path,
+    provider: &mut dyn SourceProvider,
+    inputs: SemanticInputs,
+    cancel: &AtomicBool,
+    compute: impl FnOnce(&mut dyn SourceProvider) -> CheckComputation,
+) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
+    let mut report = ProjectCacheReport::default();
+    let validation = Instant::now();
+    let store = inputs
+        .identity()
+        .ok()
+        .and_then(|context| storage::Store::open(cache, workspace, &context).ok());
+    let mut capture = CapturingSourceProvider::new(provider);
+    if let Some(store) = &store {
+        if let Ok(Some(generation)) = store.latest() {
+            for record in generation.records().flatten() {
+                if cancel.load(Ordering::Acquire) {
+                    break;
+                }
+                if record.result.inputs.source.path == file
+                    && record.validate(&inputs, &mut capture)
+                {
+                    if let Ok(diagnostics) = record.diagnostics() {
+                        report.status = "restored".into();
+                        report.restored_checks = 1;
+                        report.captured_sources = record
+                            .result
+                            .resolution
+                            .ready()
+                            .map_or(0, |resolution| resolution.sources.len());
+                        report.payload_bytes =
+                            serde_json::to_vec(&record).map_or(0, |bytes| bytes.len());
+                        report.validation_us = validation.elapsed().as_micros();
+                        return (diagnostics, report);
+                    }
+                }
+            }
+        }
+    }
+    report.validation_us = validation.elapsed().as_micros();
+    // Validation's captured bytes are reused by the actual checker. Publishing
+    // replays observations against disk; edits during capture cannot be mislabeled.
+    let computation = compute(&mut capture);
+    let diagnostics = computation.diagnostics;
+    report.computed_checks = 1;
+    report.captured_sources = capture.sources().len();
+    report.status = if store.is_some() {
+        "miss"
+    } else {
+        "unavailable"
+    }
+    .into();
+    if cancel.load(Ordering::Acquire) {
+        report.status = "cancelled".into();
+        return (diagnostics, report);
+    }
+    if !computation.reusable {
+        report.status = "external-context".into();
+        return (diagnostics, report);
+    }
+    let serialization = Instant::now();
+    if let Some(store) = &store {
+        match CompletedCheck::capture(file, inputs, &capture, &diagnostics) {
+            Ok(record) if capture.unchanged() => {
+                report.payload_bytes = serde_json::to_vec(&record).map_or(0, |bytes| bytes.len());
+                if store.publish(&record, cancel).is_ok() {
+                    report.status = "published".into();
+                } else {
+                    report.status = "write-unavailable".into();
+                }
+            }
+            Ok(_) => report.status = "changed-inputs".into(),
+            Err(_) => report.status = "uncacheable".into(),
+        }
+    }
+    report.serialization_us = serialization.elapsed().as_micros();
+    (diagnostics, report)
+}
+
+/// Explicit project-only pressure cleanup. Does not inspect metadata or Cargo.
+/// All semantic contexts under this exact canonical workspace remain separately
+/// leased; dry-run and no-pressure calls never delete generations.
+pub fn prune_project_cache(
+    workspace: &Path,
+    pressure: bool,
+    dry_run: bool,
+) -> std::io::Result<usize> {
+    let cache = crate::cache_storage::root();
+    let workspace = workspace.canonicalize()?;
+    let workspace_id =
+        identity("project-workspace-v1", &workspace).map_err(std::io::Error::other)?;
+    let parent = cache.join("projects").join(workspace_id);
+    if !parent.exists() {
+        return Ok(0);
+    }
+    crate::cache_storage::directory(&parent)?;
+    let mut removed = 0;
+    for entry in std::fs::read_dir(&parent)? {
+        let entry = entry?;
+        let name = entry.file_name();
+        let Some(context) = name.to_str() else {
+            continue;
+        };
+        if context.len() != 64 || !context.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            continue;
+        }
+        crate::cache_storage::check_owned(&entry.path())?;
+        match storage::Store::open(&cache, &workspace, context)?.prune(pressure, dry_run) {
+            Ok(count) => removed += count,
+            Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {}
+            Err(error) => return Err(error),
+        }
+    }
+    Ok(removed)
+}

@@ -572,6 +572,51 @@ Completed deterministic source-error diagnostics may be stored when all relevant
 
 Cache decoding, invalidation and lookup overhead must be visible in timings. Do not persist a huge representation whose read/write cost exceeds the work it saves without an explicit measured reason. Keep the capability enabled by default where its qualified result families apply; uncacheable operations remain ordinary compiler work, not a separate semantic fallback.
 
+### 9.2.1 Implemented checking consumer (DX.13)
+
+The first restored family is the completed entrypoint checking query, including
+its whole captured import closure and canonical diagnostics. Its module result
+records resolution/diagnostics as complete and typed interface/HIR/codegen as
+pending. This is deliberately conservative: any observed source/resolution/config
+change recomputes the closure. Module interface propagation and editor-session
+restoration remain DX.14. Ordinary build/emit/editor requests compute absent
+families with their existing owners; a no-error check never supplies a fake HIR.
+The existing bounded typed codec remains available to deeper consumers.
+
+`project_cache` is driver-owned storage; `persistence::CompletedCheck` is the
+frontend-owned completion, source-observation and canonical remapping authority.
+The ordinary saved-source CLI check calls the existing checker on a miss. It
+pins and validates required stdlib metadata before reuse. Pure package graphs also reuse completed checking after the ordinary package
+resolver runs. The complete resolved graph/source-map projections bind package,
+lock/feature selection, namespace and source inclusion inputs. A nonempty
+compiler-component, SQL, Python or native-backend inventory keeps the operation
+uncached, preserving live owner checks instead of declaring missing context complete.
+For otherwise eligible packages, the actual generated interop plan must also be
+empty before a successful check can be published. This owner-produced attestation
+prevents imported stdlib native demand from bypassing required live probes.
+
+Each canonical workspace/context has a serialized writer and immutable generation
+manifests naming content-bound records. Readers retain shared generation locks;
+GC requires the writer lock and nonblocking exclusive generation locks. The
+order is writer then generation; lock files are never unlinked. Inheritance
+hard-links sealed payloads, or copies into new files when linking is unavailable.
+No finalized payload is truncated. Schema/context/reference/digest validation
+precedes publication-winner reuse. Interrupted private stages and finalized
+orphans are misses until a complete pointer exists; GC only removes inactive
+owners. Latest generations retain historical complete records, revalidated on
+every reuse, including unused records and error/fix/revert states.
+
+`.sifrbuildinfo` is an optional bounded hint; the user-cache pointer works in a
+read-only workspace. Compiler-owned hint names are excluded from directory
+observation identity (the actual resolver still receives unchanged entries).
+`--no-incremental` skips all project reads/writes and does not alter stdlib/Cargo
+storage. `--timings` reports completed-query reuse/computation counts, captured
+source count, payload bytes, validation and serialization/publication wall cost.
+The independent CLI acceptance runner records total wall time and peak RSS.
+`cache prune-project <workspace> --reserve-bytes N [--dry-run]` reclaims inactive
+predecessors/abandoned stages only under pressure, preserving active/current
+project records, installed metadata and Cargo state.
+
 ### 9.3 Dependency observations
 
 A semantic result records all relevant observations, including absence:

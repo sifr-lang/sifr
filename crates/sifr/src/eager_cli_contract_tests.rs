@@ -20,6 +20,9 @@ struct Cli {
     /// Print invocation timing and selected cache root on stderr
     #[arg(long, global = true)]
     timings: bool,
+    /// Compute project checks without reading or writing incremental results
+    #[arg(long, global = true)]
+    no_incremental: bool,
     /// Diagnostic output format
     #[arg(long, value_enum, default_value_t = DiagnosticFormat::Human)]
     pub(crate) diagnostic_format: DiagnosticFormat,

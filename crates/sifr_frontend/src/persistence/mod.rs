@@ -8,3 +8,6 @@ pub use diagnostics::*;
 
 #[cfg(test)]
 mod tests;
+
+mod check;
+pub use check::*;
