@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.13 complete; DX.14 next
+status: in progress; DX.1–DX.14 complete; DX.15 next
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -618,7 +618,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.13 are complete and merged. DX.14–DX.16 are not started; DX.14 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.14 are complete and merged. DX.15–DX.16 are not started; DX.15 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -635,7 +635,7 @@ DX.1–DX.13 are complete and merged. DX.14–DX.16 are not started; DX.14 is th
 | DX.11 | Complete / merged | Candidate `c0d490d460ca4f8a286226da804b31744b5a0b3c`; [PR #3860](https://github.com/sifr-lang/sifr/pull/3860); merge `24eec746b3b72d1b3bdbbb073986092f629b1ab9` | E01–E06, nine Rust regressions, installed protocol/push-progress PASS; real upgrade/recovery and paired Q09 with scoped unchanged-input reuse; post-close ownership released, no active/peak RSS improvement claimed; full gate deferred | [Opus: SATISFIED after bounded remediation](https://github.com/sifr-lang/sifr/pull/3860#issuecomment-5726309175) |
 | DX.12 | Complete / merged | Candidate `cc2874a319feef6f96f45954b91dc3bed79cc2e8`; [PR #3862](https://github.com/sifr-lang/sifr/pull/3862); merge `3959f0168f0630802548ad2b12d3623ab71f151c` | I03, P03, P04, P07 and all five result families: 14 tests PASS; ordered-observation golden, actual resolver/package edits, real writer and LSP encoding; guards PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3862#issuecomment-5726861173) |
 | DX.13 | Complete / merged | Candidate `be67cc8dfa7d6db91f295557f08123d705cc79ff`; [PR #3864](https://github.com/sifr-lang/sifr/pull/3864); merge `9ee1d65db9a1f1851f46032f641d39dc27460bc0` | C04/C08/C09/P01/P02/P08–P10/P12; 12 DX.13 tests, focused regressions, 31 CLI processes and guards pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3864#issuecomment-5727613414) |
-| DX.14 | Not started | — | — | — |
+| DX.14 | Complete / merged | Candidate `2c3f23127966850e7ed961155bcee817514d56f1`; [PR #3866](https://github.com/sifr-lang/sifr/pull/3866); merge `10e917056bc26d7a7b21c1361cc9cecfb1c7afb0` | P05/P06/P11, 35 targeted Rust tests, 44 CLI invocations, native output refresh, E01–E06 enabled/disabled and 84 Q09 samples pass; guards pass; full gate deferred | [Opus: SATISFIED after bounded remediation](https://github.com/sifr-lang/sifr/pull/3866#issuecomment-5729004460) |
 | DX.15 | Not started | — | — | — |
 | DX.16 | Not started | — | — | — |
 
@@ -1665,7 +1665,7 @@ remains the earlier baseline, not replaced by this incremental comparison.
   in a new bounded session; no DX.13 implementation belongs to this handoff.
 
 
-## Current Handoff — DX.13 (2026-09-18)
+## Historical Handoff — DX.13 (2026-09-18)
 
 - **Current state:** DX.13 is complete and merged in
   [PR #3864](https://github.com/sifr-lang/sifr/pull/3864).
@@ -1735,3 +1735,83 @@ remains the earlier baseline, not replaced by this incremental comparison.
 - **Blocker:** none for DX.13.
 - **Exact next action:** stop after this merged record. DX.14 is eligible only
   in a new bounded session; no DX.14 implementation belongs to this handoff.
+
+
+## Current Handoff — DX.14 (2026-09-18)
+
+- **Current state:** DX.14 is complete and merged in
+  [PR #3866](https://github.com/sifr-lang/sifr/pull/3866).
+  Final candidate `2c3f23127966850e7ed961155bcee817514d56f1`;
+  merge `10e917056bc26d7a7b21c1361cc9cecfb1c7afb0`.
+  This record-only update is on `codex/dx14-record`.
+- **Ownership:** implementation, tests and read-only Opus review ran exclusively
+  in /home/yaser5/projects/sifr/compiler-dx-orchestration on Linux with Rust
+  1.98.1, from base b54f8985c50e4f0da4ab9bcc9886da8dab8dec53. Local Mac work
+  was limited to Git bundle transport and GitHub administration. The private
+  Cargo target was reused; 8.9–16 GiB free space provided the planned operation
+  reserve, so no size-triggered cleanup ran.
+- **Implemented:** changed modules are checked through the existing frontend;
+  successful interface-stable bodies retain unchanged importer diagnostics.
+  The positive proof deliberately covers only undecorated, nongeneric,
+  synchronous zero-argument primitive-return functions with one pure return
+  expression in flat non-package source graphs. Defaults, constants,
+  generic/const bodies, effects, ownership and unknown constructs stay
+  conservative. Full SHA-256 structural fingerprints keep body text out of
+  resident signatures and graph cache keys. Native output still recomputes.
+- **Editor boundary:** eligible saved diagnostics enter the existing captured
+  generation only after compiler, metadata, context, sources and resolver
+  observations agree. Unsaved overlays never publish CLI authority. Deeper
+  typed, flow, index and codegen queries compute through their existing owners.
+  --no-incremental disables the adapter and survives toolchain refresh.
+  Ordinary package graphs retain exact-context reuse; positive edited-body
+  reuse currently uses the legacy source workspace from a manifestless CLI
+  invocation. Saved CLI and editor processes must share the pinned cwd context.
+- **Named acceptance and focused evidence:** all checks ran afresh on the final
+  remediation candidate: seven DX.14 tests, twelve DX.13 regressions, six
+  frontend cache tests, nine DX.11 tests and the 2000-statement bounded-key
+  regression. Twenty-four deterministic unit edits and sixteen CLI edit pairs
+  compare independent fresh runs with expected semantic results; thirteen of
+  the sixteen CLI edits retain eligible importers. Forty-four separate CLI
+  invocations cover body/default/constant/error paths. Module family decisions
+  identify computed/restored work with reasons. The native P06 supplement
+  prints 1 then 2 after a helper edit while restoring the unchanged importer.
+  Format, file-size (4080 files), HIR maintainability and diff guards pass.
+- **Editor/Q09 evidence:** E01–E06 pass with persistence enabled and disabled,
+  including actual saved restoration, stale saved records, unsaved overlays,
+  late old requests, aliases/encoding, lifecycle and same-process setup recovery.
+  Q09 uses one rebuilt optimized installed artifact in four 21-sample cohorts
+  (normal/heap, enabled/disabled), excluding each predetermined first warmup
+  from measurements. All 42 enabled samples restore one saved diagnostic
+  module; all 42 disabled samples restore none. Diagnostics remain equal,
+  typed HIR/Rust payload reads remain zero, and close releases metadata owners.
+  The frozen trace retains its historical equal SIFR-PACKAGE-0103 LSP status.
+- **Measurements:** median trace latency is 1848.98 ms disabled / 1843.96 ms
+  enabled (CV approximately 0.7%); median steady RSS is 66.13 / 66.09 MiB;
+  maximum enabled sampled peak RSS is 96.63 MiB. Separate allocator-heap
+  samples and retained/edited/switched stages are in the comparison report.
+  These are descriptive paired observations, not a performance or active-memory
+  improvement claim or a substitute for DX.15 qualification.
+- **Review:** the initial completed review identified one new regression:
+  expanded AST Debug strings inflated resident interfaces and repeated cache
+  keys. One bounded correction replaced them with full structural fingerprints
+  and added the size-invariance regression. The exact-candidate
+  [Opus remediation review](https://github.com/sifr-lang/sifr/pull/3866#issuecomment-5729004460)
+  is **SATISFIED**, with no blocking findings. Ten nonblocking observations
+  from both reviews are separate work in
+  [DX.14 interface/editor followups](ad-hoc-dx14-interface-review-followups.md).
+- **Evidence:** external root /home/yaser5/projects/sifr/dx14-evidence;
+  candidate-keyed 2c3f23127966850e7ed961155bcee817514d56f1/qualification-manifest.json,
+  SHA-256 4a3732ea151d5decd62ade500c1a6bb20ad7a7f88bc170231c6976ad35fe2c4b.
+  Validation manifest SHA-256
+  e94965a3ec3c804117533b59fa4fa6a45ac53e75a3ae3336b1a4e16ce92ea78a;
+  final review SHA-256
+  7195c7a65553aa175e588d6643dad94820d6de1c59ecbf3b086b449db211c5c8.
+  Earlier failed setup/development records and the initial NOT SATISFIED review
+  remain preserved; none is relabeled as passing.
+- **Gate policy:** no create-PR/full merge gate ran for this intermediate item.
+  The prospective phase-end policy remains authoritative. No release was
+  requested or performed. Record-only changes require documentation checks,
+  not another external review or broad gate.
+- **Blocker:** none for DX.14.
+- **Exact next action:** stop after this merged record. DX.15 is eligible only
+  in a new bounded session; no DX.15 implementation belongs to this handoff.
