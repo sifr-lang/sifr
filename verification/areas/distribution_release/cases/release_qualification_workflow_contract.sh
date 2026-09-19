@@ -69,6 +69,13 @@ end
 unless native_run && native_run.fetch("run").include?("scripts/distribution/qualify_native_package.py")
   abort "native package execution protocol is required"
 end
+unless native_run.fetch("run").include?('--output "${RUNNER_TEMP}/sifr-native-qualification"')
+  abort "native package workloads must be isolated from the source checkout"
+end
+bundle = steps.find { |step| step["name"] == "Bundle bounded native qualification evidence" }
+unless bundle.fetch("run").include?('Path(os.environ["RUNNER_TEMP"]) / "sifr-native-qualification"')
+  abort "native evidence collection must use the isolated workload root"
+end
 unless native_run.fetch("env").fetch("SOURCE_COMMIT") == "${{ needs.validate.outputs.source_commit }}"
   abort "native qualification must bind the validated candidate SHA"
 end

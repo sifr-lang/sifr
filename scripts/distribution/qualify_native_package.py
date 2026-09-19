@@ -83,6 +83,10 @@ class NativePackage:
                 < parse_version(version, "candidate version"),
                 "transition fixture must be older than candidate")
         self.output = output.resolve()
+        require(not self.output.is_relative_to(ROOT)
+                and not any((parent / "sifr.toml").exists()
+                            for parent in (self.output, *self.output.parents)),
+                "native package qualification requires output outside a Sifr workspace")
         self.output.mkdir(parents=True, exist_ok=False)
         require(target == current_host_target(), "native host does not match target")
         actual = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()

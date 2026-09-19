@@ -500,7 +500,7 @@ jobs:
             --version "${VERSION}" \
             --target "${TARGET}" \
             --source-commit "${SOURCE_COMMIT}" \
-            --output native-qualification \
+            --output "${RUNNER_TEMP}/sifr-native-qualification" \
             --previous-version "${PREVIOUS_VERSION}" \
             --previous-artifacts transition-inputs \
             --previous-installer "transition-inputs/sifr-installer-${PREVIOUS_VERSION}"
@@ -515,7 +515,8 @@ jobs:
           from pathlib import Path
           import tarfile
 
-          root = Path("native-qualification")
+          import os
+          root = Path(os.environ["RUNNER_TEMP"]) / "sifr-native-qualification"
           if not root.is_dir():
               raise SystemExit("native qualification did not start")
           excluded = {"cache", "managed", "relocated", "producer-source",

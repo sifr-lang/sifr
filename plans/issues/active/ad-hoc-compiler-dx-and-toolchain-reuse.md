@@ -1945,3 +1945,11 @@ compared against a single-file producer contract. Source digests and complete
 emitted-byte comparisons remain required, and a temporary directory beneath a
 Sifr workspace is rejected. Both Linux original failures retain their successful
 727-case provider comparison and eight native profile observations.
+
+The native package workflow also places its complete workload under RUNNER_TEMP,
+with collection bound to that same isolated root. Its constructor rejects an
+output beneath the compiler checkout or another Sifr workspace before mutation.
+Thus plain native profile checks exercise installed standalone behavior without
+ambient source-workspace configuration, while package inputs and all compiled
+artifacts remain exactly bound. Workflow permission and publication boundaries
+are unchanged.

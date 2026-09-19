@@ -170,6 +170,21 @@ class NativePackageContract(unittest.TestCase):
                 qualification.installed()
         installed.assert_not_called()
 
+    def test_native_package_rejects_workspace_output_before_mutation(self):
+        root = Path(self.temporary.name) / "source-workspace"
+        root.mkdir()
+        (root / "sifr.toml").write_text("[workspace]\n")
+        for output in (subject.ROOT / "native-qualification-rejected", root / "results"):
+            with self.subTest(output=output), self.assertRaisesRegex(
+                RuntimeError, "outside a Sifr workspace"
+            ):
+                subject.NativePackage(
+                    self.subject.artifacts, self.subject.installer, "0.1.0",
+                    subject.TARGETS[0], "a" * 40, output,
+                    self.subject.previous_artifacts, self.subject.previous_installer, "0.0.0",
+                )
+            self.assertFalse(output.exists())
+
     def test_missing_selected_rustc_rejects_before_native_execution(self):
         with patch.object(subject.shutil, "which", side_effect=lambda name, **kwargs:
                           "/selected/cargo" if name == "cargo" else None), \
