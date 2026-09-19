@@ -26,7 +26,7 @@ from self_update_certification import (  # noqa: E402
 )
 from attached_api_certification import run_attached_api_certification  # noqa: E402
 from source_build import source_build_configuration  # noqa: E402
-from package_build import RELEASE_VERSION, package_build_configuration  # noqa: E402
+from package_build import RELEASE_VERSION, package_build_configuration, corpus_configuration  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "verification" / "runner"))
@@ -187,6 +187,10 @@ def run_metadata_qualification(suite: str) -> tuple[int, list[str]]:
     env.pop("SIFR_DX8_CORPUS_CASES",None)
     env.pop("SIFR_DX8_SEMANTIC_TARGET",None)
     env["SIFR_DX8_CORPUS_OUTPUT"] = str(ACTUAL_ROOT / "metadata-corpus-reference")
+    if suite == "metadata-corpus":
+        command, env, snapshot = corpus_configuration(REPO_ROOT, env)
+        if not snapshot.is_dir():
+            raise CertificationError("version-matched corpus source was not explicitly prepared")
     result = run_command(command, cwd=REPO_ROOT, env=env, timeout=2400)
     if result.returncode:
         return result.returncode, [result.summary()]

@@ -9,6 +9,7 @@ import re
 import shlex
 import shutil
 import sys
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "verification/runner"))
@@ -16,6 +17,7 @@ sys.path.insert(0, str(ROOT / "verification/areas/developer_tooling"))
 from sifr_verify.process_execution import execute
 from lsp_protocol import LspClient, file_uri
 from lsp_protocol_smoke import initialize, open_document
+from producer_snapshot import prepare_source_snapshot
 
 
 def digest(path):
@@ -141,16 +143,8 @@ class Qualification:
     def live_generations(self, first):
         second = self.output / "generation-b"
         shutil.copytree(first, second)
-        snapshot = self.output / "producer-source"
-        snapshot.mkdir()
-        shutil.copytree(ROOT / "stdlib", snapshot / "stdlib")
-        for relative in ("sysroot.toml", "Cargo.toml", "Cargo.lock", ".cargo/config.toml",
-                         "crates/sifr_runtime/Cargo.toml", "crates/sifr_stdlib/Cargo.toml",
-                         "crates/sifr_structural_identity/Cargo.toml"):
-            target = snapshot / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(ROOT / relative, target)
-        (snapshot / "vendor").mkdir()
+        version = tomllib.loads((first / "sysroot.toml").read_text())["sifr-version"]
+        snapshot = prepare_source_snapshot(ROOT, self.output / "producer-source", version)
         source = snapshot / "stdlib/_sifr/math.sifr"
         source.write_text("# generation B navigation marker\n" + source.read_text())
         shutil.rmtree(second / "lib/sifr/stdlib")

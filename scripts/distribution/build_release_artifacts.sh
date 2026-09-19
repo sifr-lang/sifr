@@ -276,9 +276,12 @@ package_toolchain() {
   copy_sysroot_dir "stdlib/_sifr" "${package_root}/lib/sifr/stdlib/_sifr"
   copy_sysroot_dir "vendor" "${package_root}/vendor"
   write_installed_cargo_config "${package_root}"
-  # The release compiler validates version/target before producing metadata.
-  # Finalize the digest again below once the metadata artifacts are present.
-  write_sysroot_manifest "${package_root}" "${target}"
+  # Metadata production requires a version-matched source-development snapshot.
+  # Keep its input manifest byte-identical when already compatible; the installed
+  # target and complete archive digest are written only after production.
+  python3 "${SCRIPT_DIR}/metadata_artifact.py" \
+    --stage-source-manifest "${SYSROOT_ROOT}/sysroot.toml" \
+    --staged-manifest "${package_root}/sysroot.toml" --version "${VERSION}"
   local metadata_args=()
   if [[ "${CARGO_BUILD}" -eq 0 ]]; then
     metadata_args+=(--allow-fixture-script)

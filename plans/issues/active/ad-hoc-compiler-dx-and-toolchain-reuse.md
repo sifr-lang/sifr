@@ -1832,9 +1832,11 @@ The bounded repair batch preserves acceptance coverage and deadlines:
 - Separate exact selected SQL, native Python example, diagnostic harness and
   release compiler preparation from timed assertions; retain all preparation
   cost and execute the original runtime checks afterward.
-- Stamp the correct release version/target before canonical metadata production,
-  finalize archive integrity afterward, and retain strict producer/installed
-  artifact identity checks. Synthetic governance fixtures now include the
+- Stage a version-matched source-development manifest before canonical metadata
+  production, then finalize the installed target/archive integrity afterward.
+  Use the same staged source inputs and release version for the complete source
+  corpus reference; retain full portable-payload equality and strict
+  producer/installed artifact identity checks. Synthetic governance fixtures now include the
   canonical metadata envelope and its verifier dependency.
 - Use the owned process-tree executor for installed qualification, including
   bounded stdin/output and descendant cleanup on timeout.

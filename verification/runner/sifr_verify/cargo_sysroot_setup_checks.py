@@ -95,6 +95,24 @@ class SysrootSetupPolicyTests(unittest.TestCase):
                                      "-p", "sifr_driver", "--bin", "diagnostic_rendering_harness"])
         self.assertIn("VIRTUAL_ENV", env)
 
+    def test_release_corpus_preparation_pins_matching_producer_version(self):
+        runner = sysroot_module()
+        import package_build
+        calls = []
+        root = Path("/owned/worktree")
+        env = {"CARGO_NET_OFFLINE": "true", "CARGO_BUILD_JOBS": "2"}
+        with patch.object(package_build.subprocess, "check_output", return_value="host: x86_64-unknown-linux-gnu\n"), \
+             patch.object(package_build, "prepare_source_snapshot") as snapshot:
+            package_build.prepare(root, env, lambda command, **kw: calls.append((command, kw)))
+        corpus, execution_env, producer = runner.corpus_configuration(root, env)
+        snapshot.assert_called_once_with(root, producer, runner.RELEASE_VERSION)
+        self.assertEqual(calls[1][0], [*corpus[:7], "--no-run"])
+        self.assertEqual(calls[1][1]["env"], execution_env)
+        self.assertEqual(execution_env["SIFR_RELEASE_VERSION"], runner.RELEASE_VERSION)
+        self.assertEqual(execution_env["SIFR_SYSROOT"], str(producer))
+        self.assertEqual(corpus[-4:], ["full_corpus_exact_emission", "--", "--ignored", "--nocapture"])
+        self.assertNotIn("SIFR_RELEASE_VERSION", env)
+
     def test_source_preparation_failure_propagates(self):
         def fail(*args, **kwargs):
             raise CommandFailed(101)

@@ -393,4 +393,5 @@ impl Drop for TestPackage {
     }
 }
 
+#[path = "tests/standalone_ownership.rs"]
 mod standalone_ownership;

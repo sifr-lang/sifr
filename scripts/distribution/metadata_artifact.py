@@ -7,6 +7,7 @@ import json
 import platform
 import re
 import subprocess
+import tomllib
 from pathlib import Path
 
 METADATA_PATH = "lib/sifr/stdlib.sifrmeta"
@@ -14,6 +15,29 @@ DESCRIPTOR_PATH = "lib/sifr/stdlib.metadata.json"
 FIELDS = {"schema_version", "compiler_identity", "semantic_target", "semantic_target_id",
           "stdlib_inputs_id", "metadata_id", "compiler_binary_sha256"}
 
+
+
+def stage_source_manifest(source: Path, destination: Path, version: str) -> None:
+    """Pin a source-development snapshot for the actual release compiler."""
+    text = source.read_text()
+    manifest = tomllib.loads(text)
+    changes = {"target-triple": "source-tree"}
+    if manifest["sifr-version"] not in (version, version + "-dev"):
+        changes["sifr-version"] = version + "-dev"
+    for field, value in changes.items():
+        if manifest[field] == value:
+            continue
+        # Distribution sources use the canonical one-line scalar manifest.
+        # Reject an unfamiliar representation instead of silently hashing a
+        # different or partly rewritten producer snapshot.
+        pattern = rf'(?m)^"{re.escape(field)}" = "[^"\n]*"$'
+        text, count = re.subn(pattern, f'"{field}" = "{value}"', text)
+        if count != 1:
+            raise ValueError(f"cannot stage canonical source manifest field {field}")
+    staged = tomllib.loads(text)
+    assert staged["target-triple"] == "source-tree"
+    assert staged["sifr-version"] in (version, version + "-dev")
+    destination.write_text(text)
 
 def file_digest(path: Path) -> str:
     with path.open("rb") as stream:
@@ -114,12 +138,20 @@ def prepare(binary: Path, source_root: Path, package_root: Path, target: str,
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--require-native-target")
+    parser.add_argument("--stage-source-manifest", type=Path)
+    parser.add_argument("--staged-manifest", type=Path)
+    parser.add_argument("--version")
     parser.add_argument("--binary", type=Path)
     parser.add_argument("--source-root", type=Path)
     parser.add_argument("--package-root", type=Path)
     parser.add_argument("--target")
     parser.add_argument("--allow-fixture-script", action="store_true")
     args = parser.parse_args()
+    if args.stage_source_manifest:
+        if args.staged_manifest is None or args.version is None:
+            parser.error("--stage-source-manifest requires --staged-manifest and --version")
+        stage_source_manifest(args.stage_source_manifest, args.staged_manifest, args.version)
+        return
     if args.require_native_target:
         if args.require_native_target != host_target():
             raise ValueError(f"prepare {args.require_native_target} on its native qualification host; this host is {host_target()}")

@@ -413,4 +413,5 @@ impl Drop for TestWorkspace {
     }
 }
 
+#[path = "tests/semantic_capture.rs"]
 mod semantic_capture;

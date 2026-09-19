@@ -37,6 +37,20 @@ class MetadataArtifactTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     metadata.validate_metadata(payload, altered, metadata.file_digest(binary), target)
 
+    def test_compatible_source_manifest_is_byte_identical_and_release_is_explicit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source.toml"
+            staged = Path(directory) / "staged.toml"
+            original = ('"sifr-version" = "0.0.0-dev"\n'
+                        '"target-triple" = "source-tree"\n'
+                        '"built-by-compiler-commit" = "development-checkout"\n')
+            source.write_text(original)
+            metadata.stage_source_manifest(source, staged, "0.0.0")
+            self.assertEqual(staged.read_bytes(), source.read_bytes())
+            metadata.stage_source_manifest(source, staged, "0.1.0-beta.1300")
+            self.assertEqual(staged.read_text(), original.replace("0.0.0-dev", "0.1.0-beta.1300-dev"))
+            self.assertEqual(source.read_text(), original)
+
     def test_packaging_stamps_release_manifest_before_production(self):
         repo = Path(__file__).resolve().parents[2]
         target = metadata.host_target()
@@ -52,8 +66,8 @@ class MetadataArtifactTests(unittest.TestCase):
                 '    target = arguments["--target"]\n'
                 '    import tomllib\n'
                 '    manifest = tomllib.loads((Path(arguments["--source-root"]) / "sysroot.toml").read_text())\n'
-                '    assert manifest["sifr-version"] == "0.1.0-beta.1300", manifest\n'
-                '    assert manifest["target-triple"] == target, manifest')
+                '    assert manifest["sifr-version"] == "0.1.0-beta.1300-dev", manifest\n'
+                '    assert manifest["target-triple"] == "source-tree", manifest')
             binary.write_text(producer)
             result = subprocess.run([
                 str(repo / "scripts/distribution/build_release_artifacts.sh"),
