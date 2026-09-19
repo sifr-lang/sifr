@@ -13,6 +13,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts/distribution"))
 import qualify_native_package as subject
+import metadata_qualification as metadata_subject
 
 
 class NativePackageContract(unittest.TestCase):
@@ -138,6 +139,36 @@ class NativePackageContract(unittest.TestCase):
         for output in ("", "libbad.so => not found\n", f"libbad.so => {subject.ROOT}/libbad.so\n"):
             with self.subTest(output=output), self.assertRaises(RuntimeError):
                 subject.validate_loader_output(binary, output, "Linux")
+
+    def test_installed_workload_isolated_from_output_workspace(self):
+        root = Path(self.temporary.name) / "source-workspace"
+        root.mkdir()
+        (root / "sifr.toml").write_text("[workspace]\n")
+        qualification = metadata_subject.Qualification.__new__(metadata_subject.Qualification)
+        qualification.output = root / "reports"
+        qualification.report = {}
+        def inspect():
+            self.assertFalse(qualification.workspace.is_relative_to(root))
+            self.assertTrue(qualification.workspace.is_dir())
+        with patch.object(qualification, "save"), \
+             patch.object(qualification, "_installed", side_effect=inspect) as installed:
+            qualification.installed()
+        installed.assert_called_once()
+        self.assertFalse(qualification.workspace.exists())
+
+    def test_installed_workload_rejects_temporary_workspace_manifest(self):
+        root = Path(self.temporary.name) / "source-workspace"
+        root.mkdir()
+        (root / "sifr.toml").write_text("[workspace]\n")
+        qualification = metadata_subject.Qualification.__new__(metadata_subject.Qualification)
+        qualification.report = {}
+        real_temporary_directory = tempfile.TemporaryDirectory
+        with patch.object(metadata_subject.tempfile, "TemporaryDirectory",
+                          side_effect=lambda **kwargs: real_temporary_directory(dir=root, **kwargs)), \
+             patch.object(qualification, "_installed") as installed:
+            with self.assertRaisesRegex(AssertionError, "manifestless temporary workspace"):
+                qualification.installed()
+        installed.assert_not_called()
 
     def test_missing_selected_rustc_rejects_before_native_execution(self):
         with patch.object(subject.shutil, "which", side_effect=lambda name, **kwargs:

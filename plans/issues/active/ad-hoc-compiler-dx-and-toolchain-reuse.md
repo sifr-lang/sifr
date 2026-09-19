@@ -1936,3 +1936,12 @@ line remains checked for missing or source-tree dependencies; unexpected
 headers and empty evidence reject. The original ARM Mac failure, eight native
 profile passes, and system-only dependency output remain preserved. Actual
 package/corpus qualification continues on the repaired final candidate.
+
+Installed metadata qualification now copies each exact corpus fixture into an
+owned manifestless temporary workspace and uses that workspace for native and
+editor inputs. Corpus files beneath the compiler checkout intentionally select
+project-mode CLI emission, including its source-listing header; they cannot be
+compared against a single-file producer contract. Source digests and complete
+emitted-byte comparisons remain required, and a temporary directory beneath a
+Sifr workspace is rejected. Both Linux original failures retain their successful
+727-case provider comparison and eight native profile observations.
