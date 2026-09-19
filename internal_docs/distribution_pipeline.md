@@ -192,10 +192,29 @@ Marketplace, site, protected-environment, or metadata-mutation authority.
 The workflow uses the governed four-runner matrix, builds with locked
 dependencies, packages through the same release artifact builder, installs and
 smokes each matching-host toolchain, and packages the recorded
-`editor_integrations/vscode` checkout without publishing it. Every upload uses
+`editor_integrations/vscode` checkout without publishing it. Canonical release-input uploads use
 the name
 `sifr-stable-candidate-<version>-<source-sha>-<target-or-kind>`,
 `overwrite: false`, and a 30-day retention period.
+
+After the canonical index is collected, the same four native runners consume
+those exact archives and generated installer. The additional package protocol
+executes installation, same-version forced self-update into a distinct immutable
+generation, transaction rollback after receipt-write failure, relocation, both
+native build profiles with cold/no-op/edit/reused observations, loader inspection,
+and full source/metadata corpus comparison. It uses an allowlisted local network
+transport fixture; the packaged updater and installer retain their real digest,
+receipt, generation, lock, and integrity validation. This proves a forced
+reinstall, not publication or a different-version upgrade.
+
+Additional evidence uses
+`sifr-native-package-<version>-<source-sha>-<target>`, with the same immutable
+upload and 30-day retention policy. Its report binds the original archive and
+installer digests, actual host/toolchain, every command outcome, and a digest
+index for retained logs. Running it after collection keeps these test artifacts
+outside the governed publication artifact index. All four native results are
+required for DX.15 package qualification; cross-target metadata production alone
+does not count as native package execution.
 
 Editor qualification records a `marketplace_publish_plan` with status
 `planned`; it does not claim that a credentialed dry run occurred. The

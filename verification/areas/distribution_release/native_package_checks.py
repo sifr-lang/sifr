@@ -1,0 +1,90 @@
+"""Negative integrity and transport tests for native package qualification."""
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "scripts/distribution"))
+import qualify_native_package as subject
+
+
+class NativePackageContract(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(prefix="sifr-native-package-contract-")
+        self.addCleanup(self.temporary.cleanup)
+        root = Path(self.temporary.name)
+        self.subject = subject.NativePackage.__new__(subject.NativePackage)
+        self.subject.artifacts = root / "artifacts"
+        self.subject.artifacts.mkdir()
+        self.subject.output = root / "results"
+        self.subject.output.mkdir()
+        self.subject.installer = root / "installer"
+        self.subject.installer.write_bytes(b"exact qualification installer\n")
+        self.subject.version = "0.0.0"
+        self.subject.source = "a" * 40
+        self.subject.env = dict(os.environ)
+        self.subject.report = {}
+        for target in subject.TARGETS:
+            archive = self.subject.artifacts / f"sifr-0.0.0-{target}.tar.gz"
+            archive.write_bytes(("test-only artifact " + target).encode())
+            Path(str(archive) + ".sha256").write_text(subject.digest(archive) + "\n")
+            report = {"source_commit": self.subject.source, "target": target,
+                      "candidate_version": self.subject.version, "smoke_status": "pass",
+                      "archive_sha256": subject.digest(archive), "sysroot_sha256": "b" * 64}
+            (self.subject.artifacts / f"qualification-{target}.json").write_text(json.dumps(report))
+
+    def test_transport_serves_only_exact_allowlisted_bytes(self):
+        self.subject.prepare_transport()
+        curl = self.subject.output / "transport/curl"
+        url = f"{subject.PUBLIC}/0.0.0/sifr-installer-0.0.0"
+        destination = self.subject.output / "download"
+        result = subprocess.run([str(curl), "-fsSL", "--proto", "=https",
+                                 "--proto-redir", "=https", url, "-o", str(destination)],
+                                capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(destination.read_bytes(), self.subject.installer.read_bytes())
+        for unlisted in (url + "?other", "https://example.invalid/exfiltrate", "file:///etc/passwd"):
+            result = subprocess.run([str(curl), "-fsSL", unlisted], capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, b"")
+        result = subprocess.run([str(curl), "-fsSL", url, "https://example.invalid/"],
+                                capture_output=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, b"")
+
+    def test_modified_archive_rejects_before_transport_creation(self):
+        archive = next(self.subject.artifacts.glob("*.tar.gz"))
+        archive.write_bytes(archive.read_bytes() + b"altered")
+        with self.assertRaisesRegex(RuntimeError, "archive digest mismatch"):
+            self.subject.prepare_transport()
+        self.assertFalse((self.subject.output / "transport").exists())
+
+    def test_wrong_source_target_version_or_status_rejects(self):
+        path = self.subject.artifacts / f"qualification-{subject.TARGETS[0]}.json"
+        original = json.loads(path.read_text())
+        for field, value in (("source_commit", "c" * 40), ("target", "other-target"),
+                             ("candidate_version", "0.0.1"), ("smoke_status", "fail")):
+            with self.subTest(field=field):
+                path.write_text(json.dumps(original | {field: value}))
+                with self.assertRaisesRegex(RuntimeError, "mismatched target report"):
+                    self.subject.prepare_transport()
+                self.assertFalse((self.subject.output / "transport").exists())
+        path.write_text(json.dumps(original))
+
+    def test_checksum_disagreement_rejects(self):
+        checksum = next(self.subject.artifacts.glob("*.sha256"))
+        checksum.write_text("c" * 64)
+        with self.assertRaisesRegex(RuntimeError, "checksum mismatch"):
+            self.subject.prepare_transport()
+        self.assertFalse((self.subject.output / "transport").exists())
+
+
+if __name__ == "__main__":
+    unittest.main()
+

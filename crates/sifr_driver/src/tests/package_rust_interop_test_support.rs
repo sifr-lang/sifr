@@ -40,6 +40,67 @@ pub(super) fn copied_scenario(fixture_id: &str, scenario_id: &str, test_name: &s
     destination
 }
 
+/// A copied authority used by explicit native preparation and its assertion.
+/// The lease serializes reset, all Cargo work, and output capture at one owned
+/// path. Current fixture bytes are recopied on every acquisition; no semantic
+/// result or authorization is restored from the previous invocation.
+pub(super) struct ReusableScenario {
+    root: PathBuf,
+    _lease: std::fs::File,
+}
+
+impl std::ops::Deref for ReusableScenario {
+    type Target = Path;
+    fn deref(&self) -> &Path {
+        &self.root
+    }
+}
+
+impl Drop for ReusableScenario {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.root);
+    }
+}
+
+pub(super) fn reusable_scenario(
+    fixture_id: &str,
+    scenario_id: &str,
+    test_name: &str,
+) -> ReusableScenario {
+    let owner = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .expect("owned compiler checkout");
+    let mut identity = sifr_identity::IdentityEncoder::new("native-test-fixture-v1");
+    for (name, value) in [
+        ("fixture", fixture_id.as_bytes()),
+        ("scenario", scenario_id.as_bytes()),
+        ("test", test_name.as_bytes()),
+        ("owner", owner.as_os_str().as_encoded_bytes()),
+    ] {
+        identity.field(name, value);
+    }
+    let base = crate::cache_storage::root().join("test-fixtures");
+    crate::cache_storage::directory(&base).expect("private fixture directory");
+    let key = identity.finish();
+    let lease = crate::cache_storage::entry_lock(&base, &key).expect("fixture lease");
+    lease
+        .lock()
+        .expect("own fixture mutation and native capture");
+    let root = base.join(key);
+    if root.exists() {
+        // Validate private ownership and reject symlinks before resetting.
+        crate::cache_storage::directory(&root).expect("owned prior fixture");
+        std::fs::remove_dir_all(&root).expect("reset inactive fixture");
+    }
+    crate::cache_storage::directory(&root).expect("owned fixture root");
+    copy_fixture_tree(&fixture_scenario_root(fixture_id, scenario_id), &root);
+    ReusableScenario {
+        root,
+        _lease: lease,
+    }
+}
+
 pub(super) fn package_entrypoint_from_cargo_layout(
     package_root: &Path,
     sifr_package_name: &str,
@@ -141,4 +202,41 @@ pub(super) fn observed_resource_state(output: &std::process::Output) -> Observed
         "resource-state=poisoned" => ObservedRuntimeState::Poisoned,
         other => panic!("unexpected resource runtime state: {other}"),
     }
+}
+
+#[test]
+fn reusable_scenario_preserves_identity_and_resets_authority() {
+    let first = reusable_scenario(
+        "advanced_data_runtime_matrix",
+        "advanced_data_runtime",
+        "reuse-ownership-regression",
+    );
+    let path = first.root.clone();
+    let original = std::fs::read(path.join("Cargo.toml")).expect("canonical fixture authority");
+    let contender = crate::cache_storage::entry_lock(
+        path.parent().expect("private parent"),
+        path.file_name()
+            .expect("fixture key")
+            .to_str()
+            .expect("encoded key"),
+    )
+    .expect("independent contender");
+    assert!(matches!(
+        contender.try_lock(),
+        Err(std::fs::TryLockError::WouldBlock)
+    ));
+    std::fs::write(path.join("Cargo.toml"), "invalid prior authority")
+        .expect("mutate test fixture");
+    drop(first);
+    assert!(!path.exists());
+    let second = reusable_scenario(
+        "advanced_data_runtime_matrix",
+        "advanced_data_runtime",
+        "reuse-ownership-regression",
+    );
+    assert_eq!(second.root, path);
+    assert_eq!(
+        std::fs::read(second.join("Cargo.toml")).expect("current authority"),
+        original
+    );
 }

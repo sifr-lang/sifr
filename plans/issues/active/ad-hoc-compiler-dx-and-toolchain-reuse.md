@@ -1858,6 +1858,23 @@ tokens) require newly bound final products and affected performance, metadata,
 native package and desktop qualification. Earlier Mac and Linux reports remain
 historical evidence with their original candidate identities. The documented
 Mac desktop / Linux resource host split remains in effect; the literal combined
-12 GB graphical-desktop scenario is not represented as executed. Native Intel
-macOS and ARM64 Linux package execution remains unqualified pending available
-authorized hosts or explicitly authorized nonpublishing native CI.
+12 GB graphical-desktop scenario is not represented as executed. The existing read-only native four-runner qualification workflow is authorized
+for unavailable target execution. Its extension consumes exact indexed archive
+bytes, performs actual installation, packaged same-version forced self-update
+into a distinct immutable generation, receipt-failure rollback, relocation,
+development/release native reuse, and full source/metadata corpus comparison.
+The updater's network transport is an allowlisted local fixture; no publication,
+live channel mutation, or different-version upgrade is claimed. Additional
+native evidence is produced after the governed artifact index, so it cannot
+change the existing publication evidence schema or acquire mutation authority.
+All four native results remain required and are not yet represented as passing.
+
+The final compiler integration repairs also restore reserved CLI namespace
+protection for `cache`/`sysroot`, make test code consume the actual lazy codegen
+projection and native generated source root, and certify warm Cargo freshness
+under the original constrained lock modes. An owned, leased test-fixture path
+lets explicit Arrow/tensor native preparation and its runtime assertion share
+the same authoritative lock path; every acquisition recopies current fixture
+bytes and serializes reset/build/capture. Production native authority and all
+original deadlines remain unchanged. Existing runner fail-fast selection stops
+at the first actionable failure; earlier exact-input passes remain reusable.

@@ -35,13 +35,20 @@ fn host_tool_graph_resolves_locked_host_entrypoint() {
 
 #[test]
 fn host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities() {
-    let reserved = ToolFixture::new("reserved");
-    reserved.write_manifest(
-        "[tools.build]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = []\n",
-    );
-    let errors = resolve_host_tool_graph(&reserved.snapshot(false), &mut DiskSourceProvider::new())
-        .test_expect_err("reserved namespace must fail");
-    assert!(errors[0].message.contains("reserved"));
+    for namespace in ["build", "cache", "sysroot"] {
+        let reserved = ToolFixture::new(&format!("reserved_{namespace}"));
+        reserved.write_manifest(&format!(
+            "[tools.{namespace}]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = []\n",
+        ));
+        let errors =
+            resolve_host_tool_graph(&reserved.snapshot(false), &mut DiskSourceProvider::new())
+                .test_expect_err("reserved namespace must fail");
+        assert!(
+            errors[0]
+                .message
+                .contains(&format!("'{namespace}' is reserved"))
+        );
+    }
 
     let unknown = ToolFixture::new("unknown_capability");
     unknown.write_manifest(

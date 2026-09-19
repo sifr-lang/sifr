@@ -83,9 +83,8 @@ fn stdlib_interop_test_project_materializes_selected_contracts() {
         .expect("execute selected contracts through the actual Cargo consumer");
     assert!(outcome.success);
     for (path, expected) in &project.bridge_rust_files {
-        let actual =
-            std::fs::read_to_string(outcome.cache_report.workspace_root().join("src").join(path))
-                .expect("canonical bridge file materialized");
+        let actual = std::fs::read_to_string(outcome.native_project_root.join("src").join(path))
+            .expect("canonical bridge file materialized");
         assert_eq!(&actual, expected);
     }
 }

@@ -67,3 +67,28 @@ class CrateSetupPolicyTests(unittest.TestCase):
         with self.assertRaises(CommandFailed):
             prepare_crate_test_binaries(payload, {}, fail)
         self.assertEqual(len(calls), 1)
+
+
+    def test_generated_native_preparation_binds_selected_graph_and_environment(self):
+        suite = self.suite(["test", "-p", "sifr_driver", "--lib", "--", "--ignored",
+                            "--test-threads=1"])
+        suite["id"] = "sifr_driver_generated_builds"
+        calls = []
+        env = {"CARGO_NET_OFFLINE": "true"}
+        prepare_crate_test_binaries(self.selected(suite, mode="full"), env,
+                                    lambda args, **kw: calls.append((args, kw["env"])))
+        native = [row for row in calls if any("prepare_advanced_data_native_graph" in
+                                              arg for arg in row[0])]
+        self.assertEqual(len(native), 1)
+        self.assertEqual(native[0][0][:7],
+                         ["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", "--lib"])
+        self.assertEqual(native[0][0][-4:], ["--", "--exact", "--ignored", "--nocapture"])
+        self.assertIs(native[0][1], env)
+        # A driver unit-only selection must not prepare unrelated native work.
+        suite["id"] = "sifr_driver_lib"
+        suite["command"] = ["test", "-p", "sifr_driver", "--lib"]
+        calls.clear()
+        prepare_crate_test_binaries(self.selected(suite, mode="full"), env,
+                                    lambda args, **kw: calls.append((args, kw["env"])))
+        self.assertFalse(any("prepare_advanced_data_native_graph" in arg
+                             for command, _ in calls for arg in command))
