@@ -1843,6 +1843,11 @@ The bounded repair batch preserves acceptance coverage and deadlines:
 - Correct stale test expectations, generated demo output and verification
   inventory/ownership checks. Rename delivery-numbered tests without changing
   their assertions; split oversized package tests by ownership responsibility.
+- Enroll the existing identity crate and driver bigint dependency in the strict
+  Cargo inventory, and record the driver tempfile/sysroot zstd declarations.
+  Extend the registry audit with the official ring index/checksums observed on
+  2026-09-19; preserve the original 2026-09-09 audit and existing release rows.
+  Exact owner, version, source and checksum checks remain enabled.
 - Permit only the regular generated `.sifrbuildinfo` hint in audit directories,
   retaining rejection of unknown files and symlinked hints.
 

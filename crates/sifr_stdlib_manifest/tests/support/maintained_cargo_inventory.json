@@ -10,6 +10,7 @@
     "crates/sifr_driver/Cargo.toml",
     "crates/sifr_format/Cargo.toml",
     "crates/sifr_frontend/Cargo.toml",
+    "crates/sifr_identity/Cargo.toml",
     "crates/sifr_ipc/Cargo.toml",
     "crates/sifr_ir/Cargo.toml",
     "crates/sifr_lint/Cargo.toml",
@@ -184,6 +185,14 @@
       "package": "syn",
       "manifests": [
         "crates/sifr_codegen/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_driver",
+      "package": "num-bigint",
+      "manifests": [
+        "crates/sifr_driver/Cargo.toml"
       ]
     },
     {
