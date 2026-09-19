@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "scripts/distribution"))
@@ -104,6 +105,28 @@ class NativePackageContract(unittest.TestCase):
             with self.subTest(candidate=candidate, rollback=rollback):
                 with self.assertRaises(RuntimeError):
                     subject.transition_fixture_version(root, candidate, rollback)
+
+    def test_instrumented_cargo_keeps_explicit_matching_rustc(self):
+        selected = {"cargo": "/selected/toolchain/bin/cargo", "rustc": "/selected/toolchain/bin/rustc"}
+        class ReachedNativeCommand(Exception):
+            pass
+        with patch.object(subject.shutil, "which", side_effect=lambda name, **kwargs: selected[name]), \
+             patch.object(self.subject, "run", side_effect=ReachedNativeCommand) as run:
+            with self.assertRaises(ReachedNativeCommand):
+                self.subject.native_profiles(Path("/installed/bin/sifr"))
+        env = run.call_args.kwargs["env"]
+        self.assertEqual(env["QUALIFICATION_CARGO"], selected["cargo"])
+        self.assertEqual(env["SIFR_RUSTC"], selected["rustc"])
+        self.assertEqual(Path(env["SIFR_CARGO"]), self.subject.output / "cargo-events")
+
+    def test_missing_selected_rustc_rejects_before_native_execution(self):
+        with patch.object(subject.shutil, "which", side_effect=lambda name, **kwargs:
+                          "/selected/cargo" if name == "cargo" else None), \
+             patch.object(self.subject, "run") as run:
+            with self.assertRaisesRegex(RuntimeError, "paired Cargo and rustc"):
+                self.subject.native_profiles(Path("/installed/bin/sifr"))
+        run.assert_not_called()
+        self.assertFalse((self.subject.output / "cargo-events").exists())
 
     def test_checksum_disagreement_rejects(self):
         checksum = next(self.subject.artifacts.glob("*.sha256"))

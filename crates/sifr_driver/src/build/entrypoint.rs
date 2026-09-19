@@ -392,6 +392,10 @@ fn build_cached_rooted_entrypoint_binary(
         requested_vendor_mode,
         &cargo_resolution,
     )?;
+    #[cfg(test)]
+    let generated_project_root = native_report
+        .as_ref()
+        .map(|report| report.generated_project_root.clone());
     let cargo_artifact_profile = native_report
         .as_ref()
         .map(|report| report.cargo_artifact_profile.clone());
@@ -426,6 +430,8 @@ fn build_cached_rooted_entrypoint_binary(
         query_signature_artifact_path: None,
     });
     Ok(CachedBinaryArtifact {
+        #[cfg(test)]
+        generated_project_root,
         _cache_lease: cache_entry,
         binary_path,
         build_report,

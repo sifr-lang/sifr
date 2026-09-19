@@ -34,7 +34,7 @@ fn test_static_program_constructs_and_projects_arena() {
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
     .expect("source-layout static program scenario should build");
-    let pristine_source = generated_main_source(pristine_artifact.binary_path());
+    let pristine_source = generated_main_source(&pristine_artifact);
     let pristine_identity = static_program_identity(&pristine_source);
 
     install_evidence_source(
@@ -50,7 +50,7 @@ fn test_static_program_constructs_and_projects_arena() {
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
     .expect("installed evidence should build");
-    let evidence_source = generated_main_source(evidence_artifact.binary_path());
+    let evidence_source = generated_main_source(&evidence_artifact);
     assert_eq!(
         static_program_identity(&evidence_source),
         pristine_identity,
@@ -68,7 +68,7 @@ fn test_static_program_constructs_and_projects_arena() {
         "unchanged static-program input must retain its generated-project cache identity"
     );
     assert_eq!(
-        generated_main_source(repeated_artifact.binary_path()),
+        generated_main_source(&repeated_artifact),
         evidence_source,
         "repeated generated output must be byte-identical"
     );
@@ -87,14 +87,9 @@ fn test_static_program_constructs_and_projects_arena() {
     let _ = std::fs::remove_dir_all(package_root);
 }
 
-fn generated_main_source(binary_path: &Path) -> String {
-    let project_root = binary_path
-        .parent()
-        .and_then(Path::parent)
-        .and_then(Path::parent)
-        .expect("cached binary path should be <project>/target/release/<bin>");
-    std::fs::read_to_string(project_root.join("src/main.rs"))
-        .expect("generated main source should be retained")
+fn generated_main_source(artifact: &crate::CachedBinaryArtifact) -> String {
+    std::fs::read_to_string(artifact.generated_project_root().join("src/main.rs"))
+        .expect("actual generated main source should be retained")
 }
 
 fn static_program_identity(source: &str) -> [u8; 32] {

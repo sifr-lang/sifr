@@ -240,7 +240,9 @@ else:
 
     def native_profiles(self, binary):
         cargo = shutil.which("cargo", path=self.env["PATH"])
-        require(cargo is not None, "selected native qualification requires Cargo")
+        rustc = shutil.which("rustc", path=self.env["PATH"])
+        require(cargo is not None and rustc is not None,
+                "selected native qualification requires paired Cargo and rustc")
         wrapper = self.output / "cargo-events"
         wrapper.write_text("#!" + sys.executable + "\n" + """import json,os,subprocess,sys
 result=subprocess.run([os.environ["QUALIFICATION_CARGO"],*sys.argv[1:]],stdout=subprocess.PIPE)
@@ -256,7 +258,8 @@ raise SystemExit(result.returncode)
             for profile in ("development", "release"):
                 label = f"native-{stage}-{profile}"
                 events = self.output / (label + ".cargo.jsonl")
-                env = {"SIFR_CARGO": str(wrapper), "QUALIFICATION_CARGO": cargo,
+                env = {"SIFR_CARGO": str(wrapper), "SIFR_RUSTC": rustc,
+                       "QUALIFICATION_CARGO": cargo,
                        "QUALIFICATION_CARGO_EVENTS": str(events)}
                 args = [binary, "run", source]
                 if profile == "release":

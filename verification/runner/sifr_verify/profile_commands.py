@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .process_execution import execute
+from .process_execution import Outcome, execute
 import sys
 import json
 
@@ -17,7 +17,7 @@ class CommandFailed(Exception):
         self.returncode = returncode
 
 
-def run_command(command: list[str], *, env: dict[str, str] | None = None) -> None:
+def run_command(command: list[str], *, env: dict[str, str] | None = None) -> Outcome:
     # Prefix every child line, including runner-looking lines. The authoritative
     # events remain emitted solely by the enclosing profile runner.
     pending = {"stdout": "", "stderr": ""}
@@ -35,6 +35,7 @@ def run_command(command: list[str], *, env: dict[str, str] | None = None) -> Non
         error = CommandFailed(outcome.returncode)
         error.outcome = outcome
         raise error
+    return outcome
 
 
 def uv_area_command(*args: str) -> list[str]:

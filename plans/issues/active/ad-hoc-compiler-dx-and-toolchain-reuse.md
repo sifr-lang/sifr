@@ -1890,3 +1890,24 @@ production prohibition on fixture-script metadata. Both failed Mac logs remain
 external evidence; all affected native package checks must pass on the repaired
 candidate. Earlier strict workspace lint repairs and their failed/passing logs
 are retained; this batch does not defer required lint cleanup to DX.16.
+
+The final ignored native suite exposed a runner safety-boundary mismatch:
+25 serial cases already exceeded the single child's 2,400-second deadline.
+The canonical isolated Cargo selection now discovers its complete ignored
+inventory and executes each exact case serially through the existing bounded
+executor. Empty, duplicate, truncated or inconsistent inventories fail before
+execution; each successful child must attest exactly one executed test. The
+same feature/target/lock/offline flags, per-child safety deadline and complete
+assertions remain required. Default fail-fast stops on the first failure;
+explicit collection still executes remaining cases and retains failure. This
+is scheduling of functional assertions, not an increased performance budget.
+The original aggregate timeout and all individual preparation costs remain
+preserved and are not reclassified as a passing aggregate invocation.
+
+The first expanded native package execution completed the real installer
+transitions and then rejected an incomplete qualification tool override:
+the Cargo event wrapper lacked its mandatory paired rustc. Qualification now
+selects both tools from the same admitted PATH and supplies the explicit pair;
+missing tools reject before native execution. Compiler toolchain authority is
+unchanged. The original CI failures are retained, and affected native profile
+and corpus checks require repaired-candidate evidence.
