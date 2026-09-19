@@ -58,11 +58,23 @@ def _run_sifr_process(
 
 def run_sifr_launcher_self_test(repo_root: Path) -> None:
     previous = os.environ.get("SIFR_GCQ_BIN")
+    canonical = resolve_sifr_binary(repo_root)
     with TemporaryDirectory(prefix="sifr-python-interop-launcher-") as directory:
-        binary = Path(directory) / "sifr"
+        binary = Path(directory).resolve() / "sifr"
         binary.touch()
         try:
             os.environ["SIFR_GCQ_BIN"] = str(binary)
+            _resolved_sifr_binary.cache_clear()
+            try:
+                _sifr_argv(repo_root, "run")
+            except RuntimeError as error:
+                if "does not match prepared candidate" not in str(error):
+                    raise
+            else:
+                raise SystemExit("Python interop launcher accepted a mismatched compiler")
+            # The positive override must contain the authoritative Cargo bytes.
+            # Keep the shared resolver's integrity check active in this self-test.
+            shutil.copy2(canonical, binary)
             _resolved_sifr_binary.cache_clear()
             argv = _sifr_argv(repo_root, "run")
         finally:

@@ -1911,3 +1911,11 @@ selects both tools from the same admitted PATH and supplies the explicit pair;
 missing tools reject before native execution. Compiler toolchain authority is
 unchanged. The original CI failures are retained, and affected native profile
 and corpus checks require repaired-candidate evidence.
+
+The Python launcher self-test now uses a copy of the actual Cargo-selected
+compiler for its positive override and separately requires rejection of the
+empty mismatched fixture. The shared production resolver still validates
+every override against the prepared candidate. This corrects the remaining
+self-test fixture after strict compiler identity admission; it does not add
+a test bypass or fallback. The original failure and focused repair evidence
+remain external, and untouched package artifacts retain their original SHA.
