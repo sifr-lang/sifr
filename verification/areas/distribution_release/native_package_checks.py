@@ -119,6 +119,26 @@ class NativePackageContract(unittest.TestCase):
         self.assertEqual(env["SIFR_RUSTC"], selected["rustc"])
         self.assertEqual(Path(env["SIFR_CARGO"]), self.subject.output / "cargo-events")
 
+    def test_darwin_loader_separates_exact_binary_header_from_dependencies(self):
+        binary = subject.ROOT / "native-qualification/relocated/bin/sifr"
+        system_library = "/usr/lib/libSystem.B.dylib (compatibility version 1.0.0)"
+        subject.validate_loader_output(binary, f"{binary}:\n\t{system_library}\n", "Darwin")
+        for output in (
+            f"/other/bin/sifr:\n\t{system_library}\n",
+            f"{binary}:\n",
+            f"{binary}:\n\t{subject.ROOT}/build/libbad.dylib\n",
+            f"{binary}:\n\tlibbad.dylib => not found\n",
+        ):
+            with self.subTest(output=output), self.assertRaises(RuntimeError):
+                subject.validate_loader_output(binary, output, "Darwin")
+
+    def test_linux_loader_keeps_all_dependency_lines(self):
+        binary = subject.ROOT / "native-qualification/relocated/bin/sifr"
+        subject.validate_loader_output(binary, "libc.so.6 => /lib/libc.so.6 (0x1)\n", "Linux")
+        for output in ("", "libbad.so => not found\n", f"libbad.so => {subject.ROOT}/libbad.so\n"):
+            with self.subTest(output=output), self.assertRaises(RuntimeError):
+                subject.validate_loader_output(binary, output, "Linux")
+
     def test_missing_selected_rustc_rejects_before_native_execution(self):
         with patch.object(subject.shutil, "which", side_effect=lambda name, **kwargs:
                           "/selected/cargo" if name == "cargo" else None), \

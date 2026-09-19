@@ -1928,3 +1928,11 @@ execution and its assertions still run separately. Any application rebuild
 caused by the distinct generated root remains visible in execution cost.
 Focused preparation checks retain certification immutability and fail-fast
 ordering. The original missing-source CLI rejection remains preserved.
+
+Native Mac package qualification now validates the exact otool binary-name
+header separately from its dependency lines. A relocated installation beneath
+the CI checkout is not itself a source-tree library dependency. Every library
+line remains checked for missing or source-tree dependencies; unexpected
+headers and empty evidence reject. The original ARM Mac failure, eight native
+profile passes, and system-only dependency output remain preserved. Actual
+package/corpus qualification continues on the repaired final candidate.

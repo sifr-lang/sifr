@@ -57,6 +57,19 @@ def transition_fixture_version(root, candidate, rollback):
     return previous
 
 
+def validate_loader_output(binary, text, system):
+    if system == "Darwin":
+        lines = text.splitlines()
+        require(bool(lines) and lines[0] == f"{binary}:",
+                "compiler loader returned an unexpected binary header")
+        # otool identifies the inspected executable before listing dependencies.
+        # Validate that exact header; retain every dependency line for checks.
+        text = "\n".join(lines[1:])
+    require(bool(text.strip()), "compiler loader returned no dependency evidence")
+    require("not found" not in text and str(ROOT) not in text,
+            "compiler loader refers to missing or source-tree libraries")
+
+
 class NativePackage:
     def __init__(self, artifacts, installer, version, target, source, output,
                  previous_artifacts, previous_installer, previous_version):
@@ -291,8 +304,7 @@ raise SystemExit(result.returncode)
                 self.save()
         loader = ["otool", "-L", binary] if platform.system() == "Darwin" else ["ldd", binary]
         text = self.run("native-loader", loader).decode()
-        require("not found" not in text and str(ROOT) not in text,
-                "compiler loader refers to missing or source-tree libraries")
+        validate_loader_output(binary, text, platform.system())
         self.report["native_profile_scope"] = "cold/noop/edit/reused development and release; cold work charged, no latency claim"
         self.save()
 
