@@ -1919,3 +1919,12 @@ every override against the prepared candidate. This corrects the remaining
 self-test fixture after strict compiler identity admission; it does not add
 a test bypass or fallback. The original failure and focused repair evidence
 remain external, and untouched package artifacts retain their original SHA.
+
+Python explicit example preparation now builds the required src/main.sifr
+entrypoint from the real package cwd and writes generated Cargo output to a
+separate owned sibling directory. The CLI package/configuration, interpreter,
+trust and native-family resolution remain authoritative; cached runtime
+execution and its assertions still run separately. Any application rebuild
+caused by the distinct generated root remains visible in execution cost.
+Focused preparation checks retain certification immutability and fail-fast
+ordering. The original missing-source CLI rejection remains preserved.

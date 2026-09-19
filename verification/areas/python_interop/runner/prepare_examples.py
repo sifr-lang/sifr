@@ -33,7 +33,12 @@ def prepare(suites, paths=None):
         for case in cases.values():
             start = time.monotonic()
             package = prepare_example_package(paths, package_name, case)
-            for command in [*certification_commands_for(case), ["build", "--release"]]:
+            # Compile the actual package entrypoint, keeping generated output outside
+            # its authoritative source/configuration tree. Runtime assertions still
+            # execute separately through the canonical cached run path.
+            output = package.parent / (package.name + "-prepared-native")
+            build = ["build", "src/main.sifr", "--release", "--output", str(output)]
+            for command in [*certification_commands_for(case), build]:
                 before = package_snapshot(package) if command[-1] == "--check" else None
                 result = _run_sifr_command(paths, package, command)
                 if result["exit_code"] != 0:
