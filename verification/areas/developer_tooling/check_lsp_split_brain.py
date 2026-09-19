@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -62,12 +63,25 @@ def project_fallback_violations(path: Path, text: str) -> list[str]:
         failures.append(
             f"{path.relative_to(REPO_ROOT)} has {fallback_calls} standalone document open call(s); expected 2 no-project branches"
         )
-    refresh_start = text.find("pub(crate) fn refresh_projects(")
-    if refresh_start == -1:
+    def method_text(name: str) -> str | None:
+        start = re.search(r"(?m)^    (?:pub\(crate\) )?fn " + name + r"\(", text)
+        if start is None:
+            return None
+        following = re.search(r"(?m)^    (?:pub\(crate\) )?fn ", text[start.end():])
+        return text[start.start():start.end() + following.start()] if following else text[start.start():]
+
+    refresh_text = method_text("refresh_projects")
+    if refresh_text is None:
         failures.append(f"{path.relative_to(REPO_ROOT)} missing refresh_projects; cannot verify LSP ownership")
     else:
-        refresh_next = text.find("pub(crate) fn", refresh_start + 1)
-        refresh_text = text[refresh_start:] if refresh_next == -1 else text[refresh_start:refresh_next]
+        # Recognize the reviewed delegation, including the helper's actual body.
+        # Unknown delegation must still fail the required removal assertion.
+        if "self.synchronize_projects(documents, true);" in refresh_text:
+            helper = method_text("synchronize_projects")
+            if helper is None:
+                failures.append(f"{path.relative_to(REPO_ROOT)} missing synchronize_projects ownership helper")
+            else:
+                refresh_text += helper
         if "LspDocumentAnalysis::open(" in refresh_text:
             failures.append(f"{path.relative_to(REPO_ROOT)} refresh_projects creates standalone project fallback")
         if "self.documents.remove(document.uri())" not in refresh_text:
@@ -252,6 +266,20 @@ impl LspAnalysisWorkspace {
     found = project_fallback_violations(current_path, seeded)
     if not any("standalone analysis from a project-owned path" in item for item in found):
         raise SystemExit("LSP split-brain self-test failed: context-injected project fallback passed")
+    for label, seeded, required in [
+        ("helper removal", current.replace("self.documents.remove(document.uri());", ""),
+         "must drop standalone project entries"),
+        ("missing helper", current.replace("fn synchronize_projects(", "fn renamed_helper("),
+         "missing synchronize_projects ownership helper"),
+        ("unknown delegation", current.replace("self.synchronize_projects(documents, true);",
+                                               "self.other_helper(documents);"),
+         "must drop standalone project entries"),
+        ("helper fallback", current.replace("        let mut grouped:",
+             "        let fallback = LspDocumentAnalysis::open(document);\n        let mut grouped:"),
+         "refresh_projects creates standalone project fallback"),
+    ]:
+        if not any(required in item for item in project_fallback_violations(current_path, seeded)):
+            raise SystemExit(f"LSP split-brain self-test failed: seeded {label} passed")
     print("LSP split-brain self-test: PASS")
 
 

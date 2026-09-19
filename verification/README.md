@@ -189,7 +189,7 @@ assertion. Native stage details are referenced from the area result.
 
 The fixture comparison hook requires two executable providers and an independent
 expected result. DX.4 exercises source/native controls only; metadata and
-persistent providers are not qualified until their owning milestones connect and
+persistent providers are not qualified until their provider qualification suites connect and
 test them. Diagnostic example checks execute explicitly selected standalone
 check-fail/check-pass pairs and their explain/help surface; contextual package and
 runtime examples are not indiscriminately executed.

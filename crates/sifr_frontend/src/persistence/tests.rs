@@ -108,7 +108,7 @@ fn dx12_observation_golden_and_order_roundtrip() {
     assert!(capture.unchanged());
 }
 #[test]
-fn dx12_p03_absence_and_higher_priority_candidates() {
+fn absence_and_higher_priority_candidates() {
     let mut memory = Memory::default();
     memory.set("/src/helper.sifr", "answer: int = 1");
     let writer = memory.clone();
@@ -126,7 +126,7 @@ fn dx12_p03_absence_and_higher_priority_candidates() {
     assert!(!capture.unchanged());
 }
 #[test]
-fn dx12_p04_file_set_and_configuration_invalidation() {
+fn file_set_and_configuration_invalidation() {
     let mut memory = Memory::default();
     memory.set("/src/a.sifr", "x: int = 1");
     let writer = memory.clone();
@@ -156,7 +156,7 @@ fn dx12_p04_file_set_and_configuration_invalidation() {
     }
 }
 #[test]
-fn dx12_p07_analyzes_the_captured_bytes_despite_writer() {
+fn analyzes_the_captured_bytes_despite_writer() {
     let mut memory = Memory::default();
     memory.set("/main.sifr", "x: int = 1\n");
     let writer = memory.clone();

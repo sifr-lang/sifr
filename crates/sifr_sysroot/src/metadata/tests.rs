@@ -234,11 +234,11 @@ fn class_scaling(signatures: usize) -> (usize, usize, u64) {
 }
 #[test]
 #[allow(clippy::print_stderr)]
-fn m16_shared_large_class_retention_is_unique_records_plus_references() {
+fn shared_large_class_retention_is_unique_records_plus_references() {
     let small = class_scaling(10);
     let large = class_scaling(1000);
     eprintln!(
-        "M16 (encoded bytes, retained records, retained bound bytes): 10 signatures {small:?}; 1000 signatures {large:?}"
+        "Shared records (encoded bytes, retained records, retained bound bytes): 10 signatures {small:?}; 1000 signatures {large:?}"
     );
     assert!(large.0 - small.0 < 1_000_000);
     assert_eq!(large.1 - small.1, 990);
@@ -246,7 +246,7 @@ fn m16_shared_large_class_retention_is_unique_records_plus_references() {
 }
 
 #[test]
-fn m16_nominal_recursion_terminates_but_structural_cycles_and_excess_depth_reject() {
+fn nominal_recursion_terminates_but_structural_cycles_and_excess_depth_reject() {
     let mut encoded = encoder();
     let recursive = Ref::<Type>::anchor(&[b"recursive"]);
     let view = Ref::<NominalView>::anchor(&[b"recursive-view"]);
@@ -290,7 +290,7 @@ fn m16_nominal_recursion_terminates_but_structural_cycles_and_excess_depth_rejec
 }
 
 #[test]
-fn m06_header_index_payload_and_reference_fuzz_seeds_fail_closed() {
+fn header_index_payload_and_reference_fuzz_seeds_fail_closed() {
     let original = encoder().finish().unwrap();
     for end in [0, 7, 8, 119, 120, original.len() - 1] {
         assert!(
@@ -354,7 +354,7 @@ fn m06_header_index_payload_and_reference_fuzz_seeds_fail_closed() {
 }
 
 #[test]
-fn m06_source_ranges_binders_and_fragment_assurance_are_checked() {
+fn source_ranges_binders_and_fragment_assurance_are_checked() {
     let mut encoded = encoder();
     let bad = encoded
         .intern(&SourceFile {
@@ -480,7 +480,7 @@ fn replace_payload(bytes: Vec<u8>, id: RecordId, replacement: impl FnOnce(&mut [
     super::physical::encode(&bytes, limits()).unwrap()
 }
 #[test]
-fn m06_checks_corrupt_reference_ids_even_when_payload_digest_matches() {
+fn checks_corrupt_reference_ids_even_when_payload_digest_matches() {
     let mut encoder = encoder();
     let root = encoder.intern(&Type::List(fixture::<Type>())).unwrap();
     let bytes = encoder.finish().unwrap();
@@ -501,7 +501,7 @@ fn m06_checks_corrupt_reference_ids_even_when_payload_digest_matches() {
     }
 }
 #[test]
-fn m06_mutation_corpus_never_panics_or_allocates_from_unchecked_lengths() {
+fn mutation_corpus_never_panics_or_allocates_from_unchecked_lengths() {
     let original = encoder().finish().unwrap();
     let mut state = 7_u64;
     for _ in 0..128 {
@@ -593,7 +593,7 @@ fn i06_encoded_same_name_declarations_keep_package_version_and_source_identity()
 }
 
 #[test]
-fn m16_mutually_recursive_nominal_views_stay_lazy() {
+fn mutually_recursive_nominal_views_stay_lazy() {
     let mut encoder = encoder();
     let a = Ref::<Type>::anchor(&[b"mutual-a"]);
     let b = Ref::<Type>::anchor(&[b"mutual-b"]);

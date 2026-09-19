@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.14 complete; DX.15 next
+status: in progress; DX.1–DX.14 complete; DX.15 qualification in progress
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -619,7 +619,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.14 are complete and merged. DX.15–DX.16 are not started; DX.15 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.14 are complete and merged. DX.15 implementation and final qualification are in progress in the owned remote worktree; DX.16 remains not started. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -637,7 +637,7 @@ DX.1–DX.14 are complete and merged. DX.15–DX.16 are not started; DX.15 is th
 | DX.12 | Complete / merged | Candidate `cc2874a319feef6f96f45954b91dc3bed79cc2e8`; [PR #3862](https://github.com/sifr-lang/sifr/pull/3862); merge `3959f0168f0630802548ad2b12d3623ab71f151c` | I03, P03, P04, P07 and all five result families: 14 tests PASS; ordered-observation golden, actual resolver/package edits, real writer and LSP encoding; guards PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3862#issuecomment-5726861173) |
 | DX.13 | Complete / merged | Candidate `be67cc8dfa7d6db91f295557f08123d705cc79ff`; [PR #3864](https://github.com/sifr-lang/sifr/pull/3864); merge `9ee1d65db9a1f1851f46032f641d39dc27460bc0` | C04/C08/C09/P01/P02/P08–P10/P12; 12 DX.13 tests, focused regressions, 31 CLI processes and guards pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3864#issuecomment-5727613414) |
 | DX.14 | Complete / merged | Candidate `2c3f23127966850e7ed961155bcee817514d56f1`; [PR #3866](https://github.com/sifr-lang/sifr/pull/3866); merge `10e917056bc26d7a7b21c1361cc9cecfb1c7afb0` | P05/P06/P11, 35 targeted Rust tests, 44 CLI invocations, native output refresh, E01–E06 enabled/disabled and 84 Q09 samples pass; guards pass; full gate deferred | [Opus: SATISFIED after bounded remediation](https://github.com/sifr-lang/sifr/pull/3866#issuecomment-5729004460) |
-| DX.15 | Not started | — | — | — |
+| DX.15 | In progress: fixed-candidate qualification and required gate repairs | — | — | — |
 | DX.16 | Not started | — | — | — |
 
 ## Historical Handoff — DX.1 (2026-09-16)
@@ -1816,3 +1816,41 @@ remains the earlier baseline, not replaced by this incremental comparison.
 - **Blocker:** none for DX.14.
 - **Exact next action:** stop after this merged record. DX.15 is eligible only
   in a new bounded session; no DX.15 implementation belongs to this handoff.
+
+
+### DX.15 final gate remediation scope (unmerged)
+
+The phase-end merge facade ran once. Its failed reports and the interrupted
+continuations remain immutable under the external `dx15-evidence` directory.
+The continuation on `4f33dcbe77c6541738face6def01b5a8d34ff544` completed the
+canonical 727-fixture E2E suite, but required qualification still has failures
+and unrun configurations. Neither that result nor earlier product measurements
+constitutes a final candidate pass.
+
+The bounded repair batch preserves acceptance coverage and deadlines:
+
+- Separate exact selected SQL, native Python example, diagnostic harness and
+  release compiler preparation from timed assertions; retain all preparation
+  cost and execute the original runtime checks afterward.
+- Stamp the correct release version/target before canonical metadata production,
+  finalize archive integrity afterward, and retain strict producer/installed
+  artifact identity checks. Synthetic governance fixtures now include the
+  canonical metadata envelope and its verifier dependency.
+- Use the owned process-tree executor for installed qualification, including
+  bounded stdin/output and descendant cleanup on timeout.
+- Correct stale test expectations, generated demo output and verification
+  inventory/ownership checks. Rename delivery-numbered tests without changing
+  their assertions; split oversized package tests by ownership responsibility.
+- Permit only the regular generated `.sifrbuildinfo` hint in audit directories,
+  retaining rejection of unknown files and symlinked hints.
+
+These changes are necessary to finish the declared final integration checks,
+including failures that predate DX.15. They do not waive required failures or
+change numerical budgets. Compiler source changes (including test-source input
+tokens) require newly bound final products and affected performance, metadata,
+native package and desktop qualification. Earlier Mac and Linux reports remain
+historical evidence with their original candidate identities. The documented
+Mac desktop / Linux resource host split remains in effect; the literal combined
+12 GB graphical-desktop scenario is not represented as executed. Native Intel
+macOS and ARM64 Linux package execution remains unqualified pending available
+authorized hosts or explicitly authorized nonpublishing native CI.

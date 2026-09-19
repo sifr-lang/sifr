@@ -157,6 +157,40 @@ class ProcessTests(unittest.TestCase):
             time.sleep(2.1)
             self.assertFalse(marker.exists())
 
+    def test_stdin_large_and_empty_are_delivered_without_pipe_deadlock(self):
+        for data in (b"", bytes(range(256)) * 8192):
+            result = execute([sys.executable, "-c",
+                "import sys; sys.stdout.buffer.write(sys.stdin.buffer.read())"],
+                cwd=Path.cwd(), input_bytes=data, limit_bytes=3 * 1024 * 1024)
+            self.assertEqual(result.returncode, 0)
+            self.assertFalse(result.truncated)
+            self.assertEqual(result.stdout, data)
+
+    def test_audit_inventory_allows_only_regular_generated_hint(self):
+        from . import audit_fixtures
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = root / "case.sifr"
+            fixture.write_text("def main():\n    pass\n")
+            manifest = {"schema_version": 1, "area": "fixture", "fixture_root": ".",
+                        "entries": [{"id": "case", "path": "case.sifr", "category": "test",
+                                     "command": "check", "smoke": True, "expect_exit_code": 0}]}
+            with patch.object(audit_fixtures, "REPO_ROOT", root):
+                check = lambda: audit_fixtures.validate_manifest(root / "manifest.json", manifest, area="fixture")
+                hint = root / ".sifrbuildinfo"
+                hint.write_text("{}")
+                self.assertEqual(check(), [])
+                extra = root / "untracked.txt"
+                extra.write_text("unexpected")
+                self.assertTrue(any("non-fixture file" in failure for failure in check()))
+                extra.unlink()
+                hint.unlink()
+                hint.symlink_to("missing")
+                self.assertTrue(any("non-fixture file" in failure for failure in check()))
+                hint.unlink()
+                (root / "missing.sifr").write_text("def main():\n    pass\n")
+                self.assertTrue(any("fixture missing from manifest" in failure for failure in check()))
+
     def test_b10_bounded_streams_and_cancelled_owner(self):
         result = execute([sys.executable, "-c", "import os; os.write(1,b'x'*2000000); os.write(2,b'y'*2000000)"],
                          cwd=Path.cwd(), limit_bytes=4096)

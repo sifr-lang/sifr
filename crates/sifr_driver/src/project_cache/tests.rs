@@ -63,7 +63,7 @@ fn store(cache: &Path, file: &Path) -> storage::Store {
     .unwrap()
 }
 #[test]
-fn dx13_p01_p02_p08_p12_completed_families() {
+fn completed_families() {
     let (_root, file, cache) = fixture();
     let (fresh, first) = run(&cache, &file);
     assert_eq!(first.status, "published");
@@ -216,7 +216,7 @@ fn super_record(file: &Path) -> CompletedCheck {
     CompletedCheck::capture(file, context(), &capture, &result).unwrap()
 }
 #[test]
-fn dx13_p09_cancel_transient_and_changed_input() {
+fn cancel_transient_and_changed_input() {
     let (_root, file, cache) = fixture();
     let cancel = AtomicBool::new(false);
     let (_, report) = check(
@@ -316,7 +316,7 @@ fn dx13_process_worker() {
     .unwrap();
 }
 #[test]
-fn dx13_c09_p01_p09_process_death_and_new_process_restore() {
+fn process_death_and_new_process_restore() {
     let (root, file, cache) = fixture();
     for point in ["before-rename", "after-rename"] {
         let marker = root.path().join(point);
@@ -493,7 +493,7 @@ fn dx13_resolved_package_context_and_live_external_inventory() {
 }
 
 #[test]
-fn dx13_p09_completed_live_operation_stays_uncached() {
+fn completed_live_operation_stays_uncached() {
     let (_root, file, cache) = fixture();
     let (_, report) = check(
         (&cache, file.parent().unwrap()),

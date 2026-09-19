@@ -6,7 +6,6 @@ import argparse
 import json
 import os
 import shutil
-import subprocess
 import sys
 import tarfile
 import tempfile
@@ -27,8 +26,11 @@ from self_update_certification import (  # noqa: E402
 )
 from attached_api_certification import run_attached_api_certification  # noqa: E402
 from source_build import source_build_configuration  # noqa: E402
+from package_build import RELEASE_VERSION, package_build_configuration  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "verification" / "runner"))
+from sifr_verify.process_execution import execute  # noqa: E402
 AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 HEAVY_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_heavy_release_smoke.sifr"
@@ -47,7 +49,6 @@ BOUNDARY_DEPENDENCY_SNAPSHOT_PATH = (
 )
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "sysroot-release-results.json"
 ACTUAL_ROOT = REPO_ROOT / "target" / "verification" / "actual" / "sysroot_release"
-RELEASE_VERSION = "0.1.0-beta.1300"
 BUILT_ARCHIVES: dict[str, Path] = {}
 
 
@@ -178,7 +179,7 @@ def run_suite(suite: str) -> dict[str, Any]:
 
 
 def run_metadata_qualification(suite: str) -> tuple[int, list[str]]:
-    selection = "dx8_m03_m15_full_corpus_exact_emission" if suite == "metadata-corpus" else "dx8_m05"
+    selection = "full_corpus_exact_emission" if suite == "metadata-corpus" else "metadata_structural_"
     command = ["cargo", "test", "--locked", "--offline", "-p", "sifr_driver", selection, "--", "--nocapture"]
     if suite == "metadata-corpus":
         command.append("--ignored")
@@ -629,25 +630,8 @@ def archive_for_host(host: str) -> Path:
 
 
 def build_artifact(host: str, artifact_dir: Path) -> None:
-    env = base_env()
-    env["CARGO_TARGET_DIR"] = str((REPO_ROOT / "target" / "sysroot_release" / "cargo-target").resolve())
-    env["SIFR_RELEASE_VERSION"] = RELEASE_VERSION
-    run_checked(
-        [
-            "scripts/distribution/build_release_artifacts.sh",
-            "--version",
-            RELEASE_VERSION,
-            "--output-dir",
-            str(artifact_dir),
-            "--target",
-            host,
-            "--cargo-build",
-        ],
-        cwd=REPO_ROOT,
-        env=env,
-        label="build preview artifact",
-        timeout=900,
-    )
+    command, env = package_build_configuration(REPO_ROOT, base_env(), host, artifact_dir)
+    run_checked(command, cwd=REPO_ROOT, env=env, label="build preview artifact", timeout=900)
 
 
 def host_triple() -> str:
@@ -847,29 +831,25 @@ def run_command(
     echo_output: bool = True,
 ) -> CommandResult:
     print(f"  $ {' '.join(command)}", flush=True)
-    try:
-        completed = subprocess.run(
-            command,
-            cwd=cwd,
-            env=env,
-            input=input_text,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=timeout,
-            check=False,
-        )
-    except subprocess.TimeoutExpired as error:
-        # TimeoutExpired keeps captured streams as bytes even with text=True.
-        stdout = (error.stdout or b"").decode("utf-8", errors="replace")
-        stderr = (error.stderr or b"").decode("utf-8", errors="replace")
-        diagnostic = f"timeout after {timeout}s"
-        return CommandResult(command, 124, stdout, f"{stderr}\n{diagnostic}".strip())
-    if echo_output and completed.stdout:
-        sys.stdout.write(completed.stdout)
-    if echo_output and completed.stderr:
-        sys.stderr.write(completed.stderr)
-    return CommandResult(command, completed.returncode, completed.stdout, completed.stderr)
+    completed = execute(
+        command, cwd=cwd, env=env, deadline_seconds=timeout,
+        input_bytes=None if input_text is None else input_text.encode("utf-8"),
+        limit_bytes=16 * 1024 * 1024,
+    )
+    stdout = completed.stdout.decode("utf-8", errors="replace")
+    stderr = completed.stderr.decode("utf-8", errors="replace")
+    if completed.cause != "exit":
+        stderr += f"\n{completed.cause} after {timeout}s"
+    code = completed.returncode
+    if completed.truncated:
+        stderr += "\ncommand output exceeded the bounded capture limit"
+        code = code or 1
+    if echo_output and stdout:
+        sys.stdout.write(stdout)
+    if echo_output and stderr:
+        sys.stderr.write(stderr)
+    return CommandResult(command, code, stdout, stderr)
+
 
 
 class CommandResult:

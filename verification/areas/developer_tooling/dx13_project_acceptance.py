@@ -54,37 +54,37 @@ def run(binary, output, compiler_profile, source_root):
     main = workspace / "main.sifr"
     main.write_text(GOOD)
     args = ["--diagnostic-format", "json", "--timings", "check", "main.sifr"]
-    fresh, stats = invoke("p01-initial", args)
+    fresh, stats = invoke("process-restore-initial", args)
     assert stats["computed_checks"] == 1 and stats["status"] == "published", stats
-    restored, stats = invoke("p01-new-process", args)
+    restored, stats = invoke("process-restore-new-process", args)
     assert stats["restored_checks"] == 1 and restored.diagnostics == fresh.diagnostics, stats
-    report["cases"]["P01"] = "new CLI process restores completed checking"
+    report["cases"]["process-restore"] = "new CLI process restores completed checking"
     main.write_text(BAD)
-    bad, stats = invoke("p02-error", args, 1)
+    bad, stats = invoke("diagnostic-edits-error", args, 1)
     assert "SIFR-TYPE-0002" in json.dumps(bad.diagnostics) and stats["computed_checks"] == 1
-    bad_restored, stats = invoke("p02-restored-error", args, 1)
+    bad_restored, stats = invoke("diagnostic-edits-restored-error", args, 1)
     assert stats["restored_checks"] == 1 and bad.diagnostics == bad_restored.diagnostics, stats
     main.write_text(GOOD)
-    fixed, stats = invoke("p02-fixed", args)
+    fixed, stats = invoke("diagnostic-edits-fixed", args)
     assert stats["restored_checks"] == 1 and fixed.diagnostics == fresh.diagnostics
     main.write_text(BAD)
-    reverted, stats = invoke("p02-reverted-error", args, 1)
+    reverted, stats = invoke("diagnostic-edits-reverted-error", args, 1)
     assert stats["restored_checks"] == 1 and reverted.diagnostics == bad.diagnostics
-    report["cases"]["P02"] = "error/fix/revert agrees with independent source expectations"
+    report["cases"]["diagnostic-edits"] = "error/fix/revert agrees with independent source expectations"
     main.write_text(GOOD)
     manifest_before = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in cache.rglob("manifest.json")}
-    disabled, stats = invoke("p10-disabled", ["--no-incremental", *args])
+    disabled, stats = invoke("reuse-disabled-disabled", ["--no-incremental", *args])
     assert stats["status"] == "disabled" and stats["restored_checks"] == 0 and disabled.diagnostics == fresh.diagnostics
     manifest_after = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in cache.rglob("manifest.json")}
     assert manifest_before == manifest_after
     (workspace / ".sifrbuildinfo").unlink()
-    _, stats = invoke("p10-no-hint", args)
+    _, stats = invoke("reuse-disabled-no-hint", args)
     assert stats["restored_checks"] == 1
-    report["cases"]["P10"] = "disabled cache does no project publication; hintless cache still restores"
-    emitted, _ = invoke("p08-emit-after-check", ["emit", "main.sifr"])
-    uncached_emit, _ = invoke("p08-emit-fresh", ["--no-incremental", "emit", "main.sifr"])
+    report["cases"]["reuse-disabled"] = "disabled cache does no project publication; hintless cache still restores"
+    emitted, _ = invoke("typed-families-emit-after-check", ["emit", "main.sifr"])
+    uncached_emit, _ = invoke("typed-families-emit-fresh", ["--no-incremental", "emit", "main.sifr"])
     assert emitted.stdout == uncached_emit.stdout and "fn main" in emitted.stdout
-    report["cases"]["P08"] = "missing typed/codegen families computed by normal emit"
+    report["cases"]["typed-families"] = "missing typed/codegen families computed by normal emit"
     # Optional project storage cannot turn valid source into a language error.
     projects = cache / "projects"
     held_projects = cache / "projects-held"
@@ -137,7 +137,7 @@ def run(binary, output, compiler_profile, source_root):
         for row in report["rows"] if row["label"].startswith("measured-" + lane)),
         "peak_rss_kib": max(row["peak_rss_kib"] for row in report["rows"] if row["label"].startswith("measured-" + lane))}
         for lane in ["fresh", "restored"]}
-    report["note"] = "Same candidate/profile descriptive samples; no phase-end optimized percentile claim."
+    report["note"] = "Same candidate/profile descriptive samples; no final optimized percentile claim."
     (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report["measurement"], indent=2))
 

@@ -28,6 +28,7 @@ from .qualification_fixture_support import (
     digest_text,
     git,
     git_output,
+    metadata_fixture_files,
 )
 from .qualification_rust_fixture import rust_candidate_result
 from .release_report import canonical_profile_digest, collect_submodules
@@ -64,7 +65,7 @@ def create_fixture_source(root: Path, *, variant: str = "baseline") -> Path:
     source_root.mkdir()
     git(source_root, "init")
     configure_git(source_root)
-    (source_root / ".gitignore").write_text("target/\n", encoding="utf-8")
+    (source_root / ".gitignore").write_text("target/\n__pycache__/\n", encoding="utf-8")
     (source_root / "Cargo.lock").write_text(
         f"# fixture lock {variant if variant == 'lock' else 'baseline'}\n",
         encoding="utf-8",
@@ -156,6 +157,7 @@ def write_source_contracts(source_root: Path, *, variant: str) -> None:
     for relative in (
         "scripts/distribution/generate_version_installer.sh",
         "scripts/distribution/verify_release_archive.py",
+        "scripts/distribution/metadata_artifact.py",
     ):
         source = REPO_ROOT / relative
         destination = source_root / relative
@@ -450,6 +452,7 @@ def write_synthetic_target(
         "lib/sifr/stdlib/_sifr/fixture.sifr": b"def fixture() -> int:\n    return 1\n",
         "vendor/fixture.txt": f"vendor:{sysroot_marker}\n".encode(),
     }
+    sysroot_files.update(metadata_fixture_files(binary_bytes, target))
     sysroot_content_sha = sysroot_digest(sysroot_files)
     manifest = (
         f'"schema-version" = 1\n'

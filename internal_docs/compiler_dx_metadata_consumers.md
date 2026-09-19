@@ -541,9 +541,9 @@ all `ExternalDefs`/IR struct fields; regeneration requires reviewing classificat
 | `crates/sifr_driver/src/metadata_reader/semantic.rs:3` `project` | read | layered view + demanded record handles | 7, 9 |
 | `crates/sifr_driver/src/metadata_reader/support.rs:12` `materialize` | read, enumerate, borrow/retain | layered view + demanded record handles | 17, 18, 20, 35, 48, 69, 114, 118, 129, 149, 155, 158, 163 |
 | `crates/sifr_driver/src/metadata_reader/support_projection.rs:9` `project_signatures` | read, enumerate, clone projection, borrow/retain | layered view + demanded record handles | 12, 65, 66, 72, 73, 74, 76, 77, 86, 87, 95, 99, 100 |
-| `crates/sifr_driver/src/metadata_reader/tests.rs:41` `dx7_m02_m04_m15_source_metadata_diagnostics_and_emission_agree` | read, enumerate | test setup/parity | 43, 58, 96, 98, 101, 117, 143 |
+| `crates/sifr_driver/src/metadata_reader/tests.rs:41` `source_metadata_diagnostics_and_emission_agree` | read, enumerate | test setup/parity | 43, 58, 96, 98, 101, 117, 143 |
 | `crates/sifr_driver/src/metadata_reader/tests.rs:184` `dx7_navigation_demand_shares_index_and_reads_only_selected_source` | read, enumerate, borrow/retain | test setup/parity | 186, 187 |
-| `crates/sifr_driver/src/metadata_reader/tests.rs:217` `dx7_m17_metadata_projects_keep_failed_deleted_and_repaired_exports_isolated` | read, borrow/retain | test setup/parity | 222 |
+| `crates/sifr_driver/src/metadata_reader/tests.rs:217` `metadata_projects_keep_failed_deleted_and_repaired_exports_isolated` | read, borrow/retain | test setup/parity | 222 |
 | `crates/sifr_driver/src/project/discovery.rs:458` `bare_stdlib_source_diagnostic` | read | layered view + demanded record handles | 458, 459, 471, 475, 497 |
 | `crates/sifr_driver/src/project/discovery.rs:502` `bare_stdlib_help` | read | layered view + demanded record handles | 502, 503, 507, 511, 514, 519 |
 | `crates/sifr_driver/src/project/discovery.rs:618` `parse_import_closure_source_modules` | read, enumerate | layered view + demanded record handles | 665, 666, 668, 669 |

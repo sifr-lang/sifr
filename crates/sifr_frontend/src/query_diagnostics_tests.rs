@@ -226,8 +226,20 @@ fn import_signature_update_selects_graph_scope() {
         report.dirty_scope_report.reasons,
         vec![
             WorkspaceDirtyReason::SourceTextChanged,
-            WorkspaceDirtyReason::ImportSignatureChanged
+            WorkspaceDirtyReason::ImportSignatureChanged,
+            // Imports and call bodies remain in the conservative consumed interface.
+            WorkspaceDirtyReason::ExportSignatureChanged
         ]
+    );
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from other import other\n\ndef main() -> int:\n    return other()\n",
+    )
+    .expect("fresh main should be written");
+    let mut fresh = load_temp_project(&dir);
+    assert_eq!(
+        context.diagnostics_for_project().into_value().diagnostics,
+        fresh.diagnostics_for_project().into_value().diagnostics
     );
 }
 

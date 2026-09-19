@@ -83,7 +83,7 @@ def main() -> int:
 }
 
 #[test]
-fn dx14_p06_disk_and_memory_reuse_changed_ordinary_body() {
+fn disk_and_memory_reuse_changed_ordinary_body() {
     let (_root, file, cache) = fixture();
     assert_eq!(run(&cache, &file, inputs()).1.status, "published");
     let mut memory = frontend(&file, &mut DiskSourceProvider::new());
@@ -137,7 +137,7 @@ fn dx14_p06_disk_and_memory_reuse_changed_ordinary_body() {
 }
 
 #[test]
-fn dx14_p05_body_errors_defaults_constants_and_generics_are_conservative() {
+fn body_errors_defaults_constants_and_generics_are_conservative() {
     let cases = [
         (
             "@const_eval\ndef constant() -> int:\n    return 1\ndef value() -> int:\n    return 1\n",
@@ -232,7 +232,7 @@ def value() -> int:
 }
 
 #[test]
-fn dx14_p11_context_changes_never_restore_live_authority() {
+fn context_changes_never_restore_live_authority() {
     let (_root, file, cache) = fixture();
     assert!(run(&cache, &file, inputs()).0.is_empty());
     for kind in ["sql", "python", "component"] {

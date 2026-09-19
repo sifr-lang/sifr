@@ -14,6 +14,7 @@ from typing import Any, Callable
 from .paths import REPO_ROOT
 from .cargo_fixture_setup import prepare_locked_fixture_caches
 from .cargo_crate_setup import prepare_crate_test_binaries
+from .area_cargo_setup import prepare_area_graphs
 
 CANONICAL_SETUP_COMMAND = "cargo fetch --locked"
 
@@ -69,6 +70,8 @@ def prepare_cargo_cache(
     prepare_performance_binaries(profile, setup_env, command_runner)
     prepare_generated_oracle_binary(profile, setup_env, command_runner)
     prepare_sysroot_source_binary(profile, setup_env, command_runner)
+    prepare_sysroot_package_binary(profile, setup_env, command_runner)
+    prepare_area_graphs(profile, compiler_env, command_runner)
     prepare_maintained_demo_cache(profile, setup_env, command_runner)
 
 
@@ -97,6 +100,16 @@ def prepare_sysroot_source_binary(profile, env, command_runner) -> None:
         return
     command_runner([sys.executable, str(REPO_ROOT /
         "verification/areas/sysroot_release/source_build.py")], env=env)
+
+
+def prepare_sysroot_package_binary(profile, env, command_runner) -> None:
+    """Prepare the exact release graph once for every installed-package suite."""
+    required = {"boundary-equivalence", "host-installed-smoke",
+                "host-installed-stdlib-heavy", "metadata-corpus"}
+    if any(area["area"] == "sysroot_release" and required.intersection(area["suites"])
+           for area in profile.get("selected_areas", [])):
+        command_runner([sys.executable, str(REPO_ROOT /
+            "verification/areas/sysroot_release/package_build.py")], env=env)
 
 
 def prepare_authoring_test_binaries(profile, env, command_runner) -> None:

@@ -44,7 +44,7 @@ fn install(context: &crate::CompilerContext, dest: &Path) {
     })).unwrap()).unwrap();
 }
 #[test]
-fn dx8_m07_m08_installed_relocation_and_generation_switch_pin_all_sources() {
+fn installed_relocation_and_generation_switch_pin_all_sources() {
     let context = crate::CompilerContext::for_test();
     let scratch = tempfile::tempdir().unwrap();
     let first = scratch.path().join("first");

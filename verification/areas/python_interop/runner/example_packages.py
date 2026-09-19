@@ -594,8 +594,7 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
     return package_root
 
 
-def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) -> dict[str, Any]:
-    started = time.perf_counter()
+def certification_commands_for(case_config: ExampleCase) -> list[list[str]]:
     certification_commands = [
         ["python", "certify", "arrow", target, "--fixture", fixture]
         for target, fixture in case_config.arrow_certifications
@@ -606,6 +605,12 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
     )
     if certification_commands:
         certification_commands.append(["python", "certify", "--check"])
+    return certification_commands
+
+
+def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) -> dict[str, Any]:
+    started = time.perf_counter()
+    certification_commands = certification_commands_for(case_config)
     certification_results: list[dict[str, Any]] = []
     for arguments in certification_commands:
         before_check = package_snapshot(package_root) if arguments[-1] == "--check" else None

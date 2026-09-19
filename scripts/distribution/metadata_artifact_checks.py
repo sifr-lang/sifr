@@ -37,6 +37,34 @@ class MetadataArtifactTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     metadata.validate_metadata(payload, altered, metadata.file_digest(binary), target)
 
+    def test_packaging_stamps_release_manifest_before_production(self):
+        repo = Path(__file__).resolve().parents[2]
+        target = metadata.host_target()
+        with tempfile.TemporaryDirectory() as directory:
+            root, binary = self.fixture(directory)
+            source = root / "source"
+            subprocess.run(["bash", "-c",
+                'source "$1"; make_mock_sysroot_root "$2"', "fixture",
+                str(repo / "verification/areas/distribution_release/cases/common.sh"),
+                str(source)], check=True, cwd=repo)
+            producer = binary.read_text().replace(
+                '    target = arguments["--target"]',
+                '    target = arguments["--target"]\n'
+                '    import tomllib\n'
+                '    manifest = tomllib.loads((Path(arguments["--source-root"]) / "sysroot.toml").read_text())\n'
+                '    assert manifest["sifr-version"] == "0.1.0-beta.1300", manifest\n'
+                '    assert manifest["target-triple"] == target, manifest')
+            binary.write_text(producer)
+            result = subprocess.run([
+                str(repo / "scripts/distribution/build_release_artifacts.sh"),
+                "--version", "0.1.0-beta.1300", "--output-dir", str(root / "archives"),
+                "--sysroot-root", str(source), "--binary", str(binary), "--target", target],
+                cwd=repo, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn('0.0.0-fixture', (source / "sysroot.toml").read_text())
+            archive = root / "archives" / f"sifr-0.1.0-beta.1300-{target}.tar.gz"
+            self.assertTrue(archive.is_file())
+
     def test_foreign_binary_never_executes_even_in_fixture_packaging(self):
         with tempfile.TemporaryDirectory() as directory:
             root, binary = self.fixture(directory)

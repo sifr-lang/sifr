@@ -124,7 +124,7 @@ def consume(value: Token, offset: int = 2) -> int:
     assert!(crate::decode_project_results(&restored, wrong).is_err());
 }
 #[test]
-fn dx12_p03_p04_actual_resolver_and_cycle_policy() {
+fn actual_resolver_and_cycle_policy() {
     use crate::project::{
         DiscoveryDiagnosticStyle, ModuleResolver, parse_import_closure_source_modules,
     };
@@ -205,7 +205,7 @@ fn dx12_p03_p04_actual_resolver_and_cycle_policy() {
 }
 
 #[test]
-fn dx12_p07_real_writer_cannot_relabel_captured_analysis() {
+fn real_writer_cannot_relabel_captured_analysis() {
     use sifr_frontend::SourceProvider;
     let scratch = tempfile::tempdir().unwrap();
     let path = scratch.path().join("main.sifr");

@@ -219,11 +219,11 @@ fn dx6_canonical_inventory_producer_without_metadata() {
     );
 }
 #[test]
-fn dx6_m09_failure_recovery_stale_override_and_missing_entry() {
+fn failure_recovery_stale_override_and_missing_entry() {
     let scratch = Scratch::new();
     let cache = scratch.0.join("cache");
     let source = root();
-    let id = identity("dx6-m09");
+    let id = identity("failure-recovery");
     let cancel = AtomicBool::new(false);
     let failure = ensure_with_hook(&id, &source, TARGET, &cache, &cancel, |stage| {
         if stage == Stage::Owned {
@@ -266,11 +266,11 @@ fn dx6_m09_failure_recovery_stale_override_and_missing_entry() {
     );
 }
 #[test]
-fn dx6_m12_source_mutation_cannot_publish_mislabeled_metadata() {
+fn source_mutation_cannot_publish_mislabeled_metadata() {
     let scratch = Scratch::new();
     let source = scratch.source();
     let cache = scratch.0.join("cache");
-    let id = identity("dx6-m12");
+    let id = identity("source-mutation");
     let file = source.join("stdlib/sifr/math.sifr");
     let original = fs::read(&file).unwrap();
     let result = ensure_with_hook(
@@ -302,7 +302,7 @@ fn dx6_m12_source_mutation_cannot_publish_mislabeled_metadata() {
     assertion(&result, &id, &source);
 }
 #[test]
-fn dx6_m13_threads_share_one_success_and_execute_independent_assertions() {
+fn threads_share_one_success_and_execute_independent_assertions() {
     let scratch = Scratch::new();
     let source = root();
     let cache = scratch.0.join("cache");
@@ -432,7 +432,7 @@ fn dx6_prepare_test_metadata() {
 }
 
 #[test]
-fn dx8_m11_portable_records_ignore_only_the_producer_envelope() {
+fn portable_records_ignore_only_the_producer_envelope() {
     let a = Inputs::capture(&identity("dx8-envelope-a"), &root(), TARGET).unwrap();
     let b = Inputs::capture(&identity("dx8-envelope-b"), &root(), TARGET).unwrap();
     assert_eq!(a.compatibility.stdlib_inputs, b.compatibility.stdlib_inputs);
