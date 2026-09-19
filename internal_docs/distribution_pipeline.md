@@ -198,14 +198,20 @@ the name
 `overwrite: false`, and a 30-day retention period.
 
 After the canonical index is collected, the same four native runners consume
-those exact archives and generated installer. The additional package protocol
-executes installation, same-version forced self-update into a distinct immutable
-generation, transaction rollback after receipt-write failure, relocation, both
-native build profiles with cold/no-op/edit/reused observations, loader inspection,
-and full source/metadata corpus comparison. It uses an allowlisted local network
-transport fixture; the packaged updater and installer retain their real digest,
-receipt, generation, lock, and integrity validation. This proves a forced
-reinstall, not publication or a different-version upgrade.
+those exact archives and generated installer. Separate transition builders
+produce older-version fixture packages from the same exact source on all four
+native targets, using the checked-in CLI crate version. Version admission
+requires that fixture version to precede the candidate and validates the
+candidate against the checked-in editor compatibility range before compilation.
+The additional package protocol installs the older package, performs an actual
+packaged version upgrade, forced downgrade and subsequent upgrade, and exercises
+same-version no-op/reinstall, transaction rollback after receipt-write failure,
+relocation, both native build profiles with cold/no-op/edit/reused observations,
+loader inspection, and full source/metadata corpus comparison. An allowlisted
+local transport supplies exact fixture bytes; the packaged updater and installer
+retain their real digest, receipt, generation, lock, and integrity validation.
+These are nonpublishing qualification versions. Older fixture packages and
+installers use the separate sifr-native-transition artifact prefix.
 
 Additional evidence uses
 `sifr-native-package-<version>-<source-sha>-<target>`, with the same immutable

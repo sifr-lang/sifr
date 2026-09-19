@@ -26,23 +26,30 @@ class NativePackageContract(unittest.TestCase):
         self.subject.output.mkdir()
         self.subject.installer = root / "installer"
         self.subject.installer.write_bytes(b"exact qualification installer\n")
-        self.subject.version = "0.0.0"
+        self.subject.version = "0.1.0"
+        self.subject.previous_version = "0.0.0"
+        self.subject.previous_artifacts = root / "previous-artifacts"
+        self.subject.previous_artifacts.mkdir()
+        self.subject.previous_installer = root / "previous-installer"
+        self.subject.previous_installer.write_bytes(b"exact previous installer\n")
         self.subject.source = "a" * 40
         self.subject.env = dict(os.environ)
         self.subject.report = {}
-        for target in subject.TARGETS:
-            archive = self.subject.artifacts / f"sifr-0.0.0-{target}.tar.gz"
-            archive.write_bytes(("test-only artifact " + target).encode())
-            Path(str(archive) + ".sha256").write_text(subject.digest(archive) + "\n")
-            report = {"source_commit": self.subject.source, "target": target,
-                      "candidate_version": self.subject.version, "smoke_status": "pass",
-                      "archive_sha256": subject.digest(archive), "sysroot_sha256": "b" * 64}
-            (self.subject.artifacts / f"qualification-{target}.json").write_text(json.dumps(report))
+        for version, artifacts in ((self.subject.version, self.subject.artifacts),
+                                   (self.subject.previous_version, self.subject.previous_artifacts)):
+            for target in subject.TARGETS:
+                archive = artifacts / f"sifr-{version}-{target}.tar.gz"
+                archive.write_bytes(("test-only artifact " + version + target).encode())
+                Path(str(archive) + ".sha256").write_text(subject.digest(archive) + "\n")
+                report = {"source_commit": self.subject.source, "target": target,
+                          "candidate_version": version, "smoke_status": "pass",
+                          "archive_sha256": subject.digest(archive), "sysroot_sha256": "b" * 64}
+                (artifacts / f"qualification-{target}.json").write_text(json.dumps(report))
 
     def test_transport_serves_only_exact_allowlisted_bytes(self):
         self.subject.prepare_transport()
         curl = self.subject.output / "transport/curl"
-        url = f"{subject.PUBLIC}/0.0.0/sifr-installer-0.0.0"
+        url = f"{subject.PUBLIC}/0.1.0/sifr-installer-0.1.0"
         destination = self.subject.output / "download"
         result = subprocess.run([str(curl), "-fsSL", "--proto", "=https",
                                  "--proto-redir", "=https", url, "-o", str(destination)],
@@ -76,6 +83,27 @@ class NativePackageContract(unittest.TestCase):
                     self.subject.prepare_transport()
                 self.assertFalse((self.subject.output / "transport").exists())
         path.write_text(json.dumps(original))
+
+    def test_previous_archive_is_also_bound(self):
+        archive = next(self.subject.previous_artifacts.glob("*.tar.gz"))
+        archive.write_bytes(b"changed previous archive")
+        with self.assertRaisesRegex(RuntimeError, "archive digest mismatch"):
+            self.subject.prepare_transport()
+        self.assertFalse((self.subject.output / "transport").exists())
+
+    def test_version_admission_rejects_known_incompatible_candidates(self):
+        root = Path(self.temporary.name) / "source"
+        manifest = root / "crates/sifr/Cargo.toml"
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text('[package]\nversion = "0.0.0"\n')
+        editor = root / "editor_integrations/vscode/package.json"
+        editor.parent.mkdir(parents=True)
+        editor.write_text(json.dumps({"sifrCompilerCompatibility": ">=0.1.0,<0.2.0"}))
+        self.assertEqual(subject.transition_fixture_version(root, "0.1.0", "none"), "0.0.0")
+        for candidate, rollback in (("0.0.0", "none"), ("0.2.0", "none"), ("0.1.0", "0.0.0")):
+            with self.subTest(candidate=candidate, rollback=rollback):
+                with self.assertRaises(RuntimeError):
+                    subject.transition_fixture_version(root, candidate, rollback)
 
     def test_checksum_disagreement_rejects(self):
         checksum = next(self.subject.artifacts.glob("*.sha256"))

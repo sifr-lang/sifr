@@ -282,13 +282,17 @@ package_toolchain() {
   python3 "${SCRIPT_DIR}/metadata_artifact.py" \
     --stage-source-manifest "${SYSROOT_ROOT}/sysroot.toml" \
     --staged-manifest "${package_root}/sysroot.toml" --version "${VERSION}"
-  local metadata_args=()
+  # A nonempty command array also works under macOS Bash 3.2 with nounset.
+  # Empty optional arrays are considered unset by that supported interpreter.
+  local metadata_command=(
+    python3 "${SCRIPT_DIR}/metadata_artifact.py"
+    --binary "${binary_path}" --source-root "${package_root}"
+    --package-root "${package_root}" --target "${target}"
+  )
   if [[ "${CARGO_BUILD}" -eq 0 ]]; then
-    metadata_args+=(--allow-fixture-script)
+    metadata_command+=(--allow-fixture-script)
   fi
-  python3 "${SCRIPT_DIR}/metadata_artifact.py" \
-    --binary "${binary_path}" --source-root "${package_root}" \
-    --package-root "${package_root}" --target "${target}" "${metadata_args[@]}"
+  "${metadata_command[@]}"
   write_sysroot_manifest "${package_root}" "${target}"
 
   COPYFILE_DISABLE=1 tar -C "${package_root}" -czf "${archive_path}" \

@@ -1860,11 +1860,14 @@ historical evidence with their original candidate identities. The documented
 Mac desktop / Linux resource host split remains in effect; the literal combined
 12 GB graphical-desktop scenario is not represented as executed. The existing read-only native four-runner qualification workflow is authorized
 for unavailable target execution. Its extension consumes exact indexed archive
-bytes, performs actual installation, packaged same-version forced self-update
-into a distinct immutable generation, receipt-failure rollback, relocation,
+bytes and same-source older-version fixture packages. It performs actual
+installation, version upgrade and forced downgrade, subsequent upgrade,
+same-version no-op/reinstall, receipt-failure rollback, relocation,
 development/release native reuse, and full source/metadata corpus comparison.
-The updater's network transport is an allowlisted local fixture; no publication,
-live channel mutation, or different-version upgrade is claimed. Additional
+The updater's network transport is an allowlisted local fixture; no publication
+or live channel mutation is performed. Both candidate and fixture archives and
+installers are bound to the exact source, target, version and digest. Candidate
+editor compatibility is checked before expensive native builds. Additional
 native evidence is produced after the governed artifact index, so it cannot
 change the existing publication evidence schema or acquire mutation authority.
 All four native results remain required and are not yet represented as passing.
@@ -1878,3 +1881,12 @@ the same authoritative lock path; every acquisition recopies current fixture
 bytes and serializes reset/build/capture. Production native authority and all
 original deadlines remain unchanged. Existing runner fail-fast selection stops
 at the first actionable failure; earlier exact-input passes remain reusable.
+
+The first native four-target CI run preserved passing Linux primary packages
+and exposed a macOS Bash 3.2 production-builder failure when expanding an empty
+optional array under nounset. The bounded correction constructs a nonempty
+metadata command array in both production and fixture modes, preserving the
+production prohibition on fixture-script metadata. Both failed Mac logs remain
+external evidence; all affected native package checks must pass on the repaired
+candidate. Earlier strict workspace lint repairs and their failed/passing logs
+are retained; this batch does not defer required lint cleanup to DX.16.

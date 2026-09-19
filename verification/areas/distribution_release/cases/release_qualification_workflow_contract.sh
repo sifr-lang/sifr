@@ -23,7 +23,7 @@ unless rollback.fetch("required") == true && rollback.fetch("default") == "none"
   abort "rollback_version must be required with first-GA default none"
 end
 jobs = workflow.fetch("jobs")
-unless jobs.keys.sort == ["assemble", "build", "collect", "editor", "native-packages", "validate"]
+unless jobs.keys.sort == ["assemble", "build", "collect", "editor", "native-packages", "transition-assemble", "transition-build", "validate"]
   abort "release qualification job topology drifted"
 end
 matrix = jobs.fetch("build").fetch("strategy").fetch("matrix").fetch("include")
@@ -36,8 +36,22 @@ expected = {
 actual = matrix.to_h { |row| [row.fetch("target"), row.fetch("runner")] }
 abort "release qualification target/runner matrix drifted" unless actual == expected
 native = jobs.fetch("native-packages")
-unless native.fetch("needs").sort == ["collect", "validate"]
+unless native.fetch("needs").sort == ["collect", "transition-assemble", "validate"]
   abort "native package evidence must follow the canonical collector"
+end
+transition = jobs.fetch("transition-build")
+unless transition.fetch("needs").sort == ["collect", "validate"]
+  abort "transition fixtures must remain outside canonical artifact collection"
+end
+unless transition.fetch("strategy").fetch("matrix").fetch("include") == matrix
+  abort "transition fixture packages require all four native builders"
+end
+unless jobs.fetch("transition-assemble").fetch("needs").sort == ["transition-build", "validate"]
+  abort "fixture installer must consume the complete transition matrix"
+end
+validation_steps = jobs.fetch("validate").fetch("steps")
+unless validation_steps.any? { |step| step["id"] == "package_versions" }
+  abort "version compatibility must be admitted before expensive matrix builds"
 end
 native_matrix = native.fetch("strategy").fetch("matrix").fetch("include")
 unless native_matrix == matrix
@@ -49,6 +63,9 @@ unless download && download.fetch("with").fetch("digest-mismatch") == "error"
   abort "native qualification must reject artifact transport digest mismatch"
 end
 native_run = steps.find { |step| step["name"] == "Qualify exact native package modes" }
+%w[--previous-version --previous-artifacts --previous-installer].each do |flag|
+  abort "native update/rollback lost #{flag}" unless native_run.fetch("run").include?(flag)
+end
 unless native_run && native_run.fetch("run").include?("scripts/distribution/qualify_native_package.py")
   abort "native package execution protocol is required"
 end
@@ -70,12 +87,12 @@ end
 uploads = jobs.values.flat_map { |job| job.fetch("steps", []) }.select {
   |step| step["uses"] == "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
 }
-abort "release qualification upload step count drifted" unless uploads.length == 5
+abort "release qualification upload step count drifted" unless uploads.length == 7
 uploads.each do |upload|
   config = upload.fetch("with")
   abort "qualification artifact retention must be 30 days" unless config["retention-days"] == 30
   abort "qualification artifacts must forbid overwrite" unless config["overwrite"] == false
-  unless config.fetch("name").start_with?("sifr-stable-candidate-", "sifr-native-package-")
+  unless config.fetch("name").start_with?("sifr-stable-candidate-", "sifr-native-package-", "sifr-native-transition-")
     abort "qualification artifact name lost its governed prefix"
   end
 end
@@ -141,7 +158,7 @@ for forbidden in (
 ):
     if forbidden in text:
         raise SystemExit(f"release qualification contains mutation capability: {forbidden}")
-if text.count("overwrite: false") != 5 or text.count("retention-days: 30") != 5:
+if text.count("overwrite: false") != 7 or text.count("retention-days: 30") != 7:
     raise SystemExit("every qualification upload must be immutable with 30-day retention")
 if "cargo build --locked --release -p sifr" not in builder:
     raise SystemExit("governed release artifact builder must use Cargo.lock")

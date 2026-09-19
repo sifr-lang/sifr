@@ -1,9 +1,9 @@
 """Native, nonpublishing qualification of exact installed package generations.
 
 The network transport is an allowlisted local fixture. The packaged updater,
-installer, integrity checks and native compiler execute unchanged. The update is
-an explicit same-version forced reinstall into a new immutable generation; it
-does not claim a published version upgrade.
+installer, integrity checks and native compiler execute unchanged. Same-source fixture packages exercise an actual lower-version installation,
+upgrade, forced downgrade, reinstall and receipt-failure rollback. No version
+or channel is published.
 """
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "verification/runner"))
@@ -24,6 +25,7 @@ from sifr_verify.process_execution import execute
 from producer_snapshot import prepare_source_snapshot
 from metadata_qualification import Qualification
 from qualify_stable_target import current_host_target
+from qualify_stable_editor import parse_version, range_contains
 
 PUBLIC = "https://github.com/sifr-lang/sifr/releases/download"
 TARGETS = ("aarch64-apple-darwin", "x86_64-apple-darwin",
@@ -39,11 +41,34 @@ def require(condition, message):
         raise RuntimeError(message)
 
 
+def transition_fixture_version(root, candidate, rollback):
+    """Admit actual source configuration before any expensive native build."""
+    previous = tomllib.loads((root / "crates/sifr/Cargo.toml").read_text())["package"]["version"]
+    candidate_tuple = parse_version(candidate, "candidate version")
+    require(parse_version(previous, "fixture version") < candidate_tuple,
+            "transition fixture must be older than candidate")
+    editor = json.loads((root / "editor_integrations/vscode/package.json").read_text())
+    compatibility = editor["sifrCompilerCompatibility"]
+    require(range_contains(compatibility, candidate_tuple),
+            "candidate is outside the checked-in editor compatibility range")
+    if rollback != "none":
+        require(range_contains(compatibility, parse_version(rollback, "rollback version")),
+                "rollback is outside the checked-in editor compatibility range")
+    return previous
+
+
 class NativePackage:
-    def __init__(self, artifacts, installer, version, target, source, output):
+    def __init__(self, artifacts, installer, version, target, source, output,
+                 previous_artifacts, previous_installer, previous_version):
         self.artifacts = artifacts.resolve()
         self.installer = installer.resolve()
         self.version, self.target, self.source = version, target, source
+        self.previous_artifacts = previous_artifacts.resolve()
+        self.previous_installer = previous_installer.resolve()
+        self.previous_version = previous_version
+        require(parse_version(previous_version, "fixture version")
+                < parse_version(version, "candidate version"),
+                "transition fixture must be older than candidate")
         self.output = output.resolve()
         self.output.mkdir(parents=True, exist_ok=False)
         require(target == current_host_target(), "native host does not match target")
@@ -62,7 +87,9 @@ class NativePackage:
                        "version": version, "host": platform.uname()._asdict(),
                        "protocol_sha256": digest(__file__),
                        "installer_sha256": digest(installer), "rows": self.rows,
-                       "update_scope": "same-version forced reinstall; distinct immutable generations",
+                       "update_scope": "real version upgrade and forced downgrade, same-version reinstall and transaction rollback",
+                       "previous_version": previous_version,
+                       "previous_installer_sha256": digest(previous_installer),
                        "transport_scope": "allowlisted local fixture; no publication or live channel mutation",
                        "environment": {key: self.env.get(key) for key in (
                            "CARGO_BUILD_JOBS", "CARGO_TARGET_DIR", "CARGO_NET_OFFLINE",
@@ -97,41 +124,43 @@ class NativePackage:
         return report
 
     def prepare_transport(self):
-        evidence = {}
-        for target in TARGETS:
-            path = self.artifacts / f"qualification-{target}.json"
-            report = json.loads(path.read_text())
-            archive = self.artifacts / f"sifr-{self.version}-{target}.tar.gz"
-            require(report["source_commit"] == self.source and report["target"] == target
-                    and report["candidate_version"] == self.version
-                    and report["smoke_status"] == "pass", f"{target}: mismatched target report")
-            require(digest(archive) == report["archive_sha256"], f"{target}: archive digest mismatch")
-            require(Path(str(archive) + ".sha256").read_text().strip() == digest(archive),
-                    f"{target}: checksum mismatch")
-            evidence[target] = {"artifact_sha256": digest(archive),
-                                "sysroot_content_sha256": report["sysroot_sha256"]}
-        self.report["archives"] = evidence
-        # Alpha/beta records only satisfy the channel schema. They are unused
-        # schema fixtures, never selected or treated as qualified packages.
-        releases = {}
-        channels = {"alpha": "0.1.0-alpha.1", "beta": "0.1.0-beta.1", "stable": self.version}
-        for channel, version in channels.items():
-            releases[version] = {"channel": channel, "status": "active",
+        versions = ((self.version, self.artifacts, self.installer),
+                    (self.previous_version, self.previous_artifacts, self.previous_installer))
+        packages, mapping, releases = {}, {}, {}
+        for version, artifacts, installer in versions:
+            evidence = {}
+            for target in TARGETS:
+                path = artifacts / f"qualification-{target}.json"
+                report = json.loads(path.read_text())
+                archive = artifacts / f"sifr-{version}-{target}.tar.gz"
+                require(report["source_commit"] == self.source and report["target"] == target
+                        and report["candidate_version"] == version
+                        and report["smoke_status"] == "pass", f"{target}: mismatched target report")
+                require(digest(archive) == report["archive_sha256"], f"{target}: archive digest mismatch")
+                require(Path(str(archive) + ".sha256").read_text().strip() == digest(archive),
+                        f"{target}: checksum mismatch")
+                evidence[target] = {"artifact_sha256": digest(archive),
+                                    "sysroot_content_sha256": report["sysroot_sha256"]}
+                mapping[archive.as_uri()] = str(archive)
+            packages[version] = evidence
+            mapping[f"{PUBLIC}/{version}/sifr-installer-{version}"] = str(installer)
+            releases[version] = {"channel": "stable", "status": "active",
                                  "source_commit": self.source,
-                                 "installer_sha256": digest(self.installer), "targets": evidence}
+                                 "installer_sha256": digest(installer), "targets": evidence}
+        self.report["packages"] = packages
+        # Unused alpha/beta rows satisfy the existing public channel schema.
+        # Only the two exact, locally qualified stable versions are selected.
+        channels = {"alpha": "0.1.0-alpha.1", "beta": "0.1.0-beta.1", "stable": self.version}
+        for channel in ("alpha", "beta"):
+            releases[channels[channel]] = releases[self.version] | {"channel": channel}
         metadata = self.output / "channels-fixture.json"
         metadata.write_text(json.dumps({"schema_version": 2, "generation": 1,
                                         "ga_status": "active", "channels": channels,
                                         "releases": releases}) + "\n")
-        mapping = {f"{PUBLIC}/channels/channels.json": str(metadata),
-                   f"{PUBLIC}/{self.version}/sifr-installer-{self.version}": str(self.installer)}
-        for target in TARGETS:
-            archive = self.artifacts / f"sifr-{self.version}-{target}.tar.gz"
-            mapping[archive.as_uri()] = str(archive)
+        mapping[f"{PUBLIC}/channels/channels.json"] = str(metadata)
         transport = self.output / "transport"
         transport.mkdir()
-        routes = transport / "routes.json"
-        routes.write_text(json.dumps(mapping))
+        (transport / "routes.json").write_text(json.dumps(mapping))
         curl = transport / "curl"
         curl.write_text("#!" + sys.executable + "\n" + """import json,pathlib,sys
 args=sys.argv[1:]
@@ -154,22 +183,42 @@ else:
     def generation_checks(self):
         managed = self.output / "managed"
         install_env = {"SIFR_INSTALL_DIR": str(managed / "bin")}
-        self.run("install", ["sh", self.installer, "--no-modify-path"], env=install_env)
+        previous_env = {"SIFR_ARTIFACT_BASE_URL": self.previous_artifacts.as_uri()}
+        self.run("install-previous", ["sh", self.previous_installer, "--no-modify-path"],
+                 env=install_env | previous_env)
         binary = managed / "bin/sifr"
-        first = (managed / ".sifr-current").resolve(strict=True)
-        archive_report = json.loads((self.artifacts / f"qualification-{self.target}.json").read_text())
-        require(digest(binary) == archive_report["binary_sha256"], "installed binary differs from archive")
-        first_integrity = self.integrity("install-integrity", binary)
+        generations = []
+        def verify(label, version, artifacts):
+            selected = (managed / ".sifr-current").resolve(strict=True)
+            report = json.loads((artifacts / f"qualification-{self.target}.json").read_text())
+            require(digest(binary) == report["binary_sha256"], f"{label}: binary differs from archive")
+            require(self.run(label + "-version", [binary, "--version"]).strip()
+                    == f"sifr {version}".encode(), f"{label}: wrong selected version")
+            integrity = self.integrity(label + "-integrity", binary)
+            generations.append({"step": label, "version": version, "generation": selected.name,
+                                "binary_sha256": digest(binary),
+                                "metadata_id": integrity["metadata"]["metadata_id"]})
+            self.report["generations"] = generations
+            self.save()
+            return selected
+        first = verify("previous", self.previous_version, self.previous_artifacts)
+        self.run("upgrade", [binary, "self", "update", "--version", self.version])
+        upgraded = verify("upgraded", self.version, self.artifacts)
+        require(upgraded != first and first.is_dir(), "upgrade did not retain the old generation")
+        self.run("version-rollback", [binary, "self", "update", "--version",
+                                     self.previous_version, "--force"], env=previous_env)
+        rolled_back = verify("version-rollback", self.previous_version, self.previous_artifacts)
+        require(rolled_back != upgraded and upgraded.is_dir(), "downgrade mutated an existing generation")
+        self.run("upgrade-after-rollback", [binary, "self", "update", "--version", self.version])
+        current = verify("upgrade-after-rollback", self.version, self.artifacts)
         self.run("same-version-noop", [binary, "self", "update", "--version", self.version])
-        require((managed / ".sifr-current").resolve() == first, "no-op replaced generation")
-        self.run("forced-update", [binary, "self", "update", "--version", self.version, "--force"])
-        second = (managed / ".sifr-current").resolve(strict=True)
-        require(first != second and first.is_dir(), "update failed to retain distinct immutable generations")
-        require(digest(first / "bin/sifr") == digest(binary), "forced reinstall changed compiler bytes")
-        require(self.integrity("update-integrity", binary)["metadata"]["metadata_id"]
-                == first_integrity["metadata"]["metadata_id"], "forced reinstall changed metadata identity")
+        require((managed / ".sifr-current").resolve() == current, "no-op replaced generation")
+        self.run("forced-reinstall", [binary, "self", "update", "--version", self.version, "--force"])
+        reinstalled = verify("forced-reinstall", self.version, self.artifacts)
+        require(current != reinstalled and current.is_dir(), "reinstall failed to retain distinct generations")
+        require(digest(current / "bin/sifr") == digest(binary), "reinstall changed compiler bytes")
         # Fail after the new selector is installed, at atomic receipt publication.
-        # The real installer trap must roll the selector back to generation B.
+        # The real installer trap must roll back to the previous current generation.
         bad_manifest = self.output / "receipt-parent-is-file"
         bad_manifest.write_text("owned failure fixture\n")
         self.run("failed-update-rollback", ["sh", "-x", self.installer, "--force", "--no-modify-path"],
@@ -177,15 +226,15 @@ else:
         trace = (self.output / "failed-update-rollback.stderr").read_text()
         require("rollback_install_transaction" in trace and str(bad_manifest) in trace,
                 "failure did not exercise the installer receipt rollback path")
-        require((managed / ".sifr-current").resolve() == second, "failed update did not restore selector")
-        self.integrity("rollback-integrity", binary)
+        require((managed / ".sifr-current").resolve() == reinstalled,
+                "failed update did not restore selector")
+        verify("transaction-rollback", self.version, self.artifacts)
         moved = self.output / "relocated"
         managed.rename(moved)
         binary = moved / "bin/sifr"
         require(not managed.exists(), "old installation path still exists")
         self.integrity("relocated-integrity", binary)
-        self.report["generations"] = {"first": first.name, "second": second.name,
-                                      "rollback": second.name, "relocated": str(moved)}
+        self.report["relocated"] = str(moved)
         self.save()
         return binary
 
@@ -285,9 +334,13 @@ def main():
     parser.add_argument("--target", choices=TARGETS, required=True)
     parser.add_argument("--source-commit", required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--previous-artifacts", type=Path, required=True)
+    parser.add_argument("--previous-installer", type=Path, required=True)
+    parser.add_argument("--previous-version", required=True)
     args = parser.parse_args()
     NativePackage(args.artifacts, args.installer, args.version, args.target,
-                  args.source_commit, args.output).qualify()
+                  args.source_commit, args.output, args.previous_artifacts,
+                  args.previous_installer, args.previous_version).qualify()
 
 
 if __name__ == "__main__":
