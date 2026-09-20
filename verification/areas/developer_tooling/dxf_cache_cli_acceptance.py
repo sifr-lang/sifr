@@ -25,7 +25,6 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     workspace = output / "workspace"
     workspace.mkdir()
-    (workspace / "sifr.toml").write_text('[source]\nroot = "."\n')
     source = workspace / "main.sifr"
     cache = output / "cache"
     native = cache / "native" / "artifacts"
@@ -69,7 +68,8 @@ def main():
           for value in [[], ["bad"], ["-1"], ["18446744073709551616"]]],
     ]):
         invalid = invoke(f"invalid-{index}", arguments, 2)
-        assert not invalid.stdout and "error:" in invalid.stderr
+        assert not invalid.stdout
+        assert ("Usage: sifr cache" if index == 0 else "error:") in invalid.stderr
     maximum = str(2**64 - 1)
     for label, options in [("native-default", []), ("native-zero", ["--reserve-bytes", "0"]),
                            ("native-dry", ["--dry-run", "--reserve-bytes", maximum])]:
@@ -108,14 +108,15 @@ def main():
         value = project(label, options)
         assert value["reserve_bytes"] == 0 and not value["pressure"] and not value["dry_run"]
         assert all(count == 0 for count in value["cache"].values())
+    # Two publication staging locks plus the older generation are eligible.
     dry = project("project-dry", ["--dry-run", "--reserve-bytes", maximum])
     assert dry["dry_run"] and dry["pressure"]
-    assert dry["cache"] == dict(examined_entries=2, eligible_entries=1, deleted_entries=0,
+    assert dry["cache"] == dict(examined_entries=4, eligible_entries=3, deleted_entries=0,
                                 eligible_generations=1, deleted_generations=0)
     assert before == {str(path): path.read_bytes() for path in cache.rglob("*") if path.is_file()}
     deleted = project("project-delete", ["--reserve-bytes", maximum])
     assert not deleted["dry_run"] and deleted["pressure"]
-    assert deleted["cache"] == dict(examined_entries=2, eligible_entries=1, deleted_entries=1,
+    assert deleted["cache"] == dict(examined_entries=4, eligible_entries=3, deleted_entries=3,
                                     eligible_generations=1, deleted_generations=1)
     assert sum(path.exists() for path in generations) == 1
     again = project("project-idempotent", ["--reserve-bytes", maximum])
@@ -128,7 +129,8 @@ def main():
     workspace = moved
     orphan = report("orphan-delete", ["prune-project", str(output / "workspace"), "--reserve-bytes", maximum])
     assert orphan["pressure"] and orphan["cache"]["deleted_entries"] > 0
-    assert orphan["cache"]["deleted_generations"] == 1
+    assert orphan["cache"]["deleted_generations"] == 0
+    assert orphan["cache"]["deleted_entries"] == 1  # The whole context, not a generation.
     invoke("after-orphan", ["check", str(moved / "main.sifr")])
     evidence = {"candidate": compiler_lanes.selection()["source_commit"],
                 "lane": "contributor-dev", "claim": "functional contracts; no performance claim",
