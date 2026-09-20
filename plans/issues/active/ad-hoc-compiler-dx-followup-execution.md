@@ -1,6 +1,6 @@
 # Compiler DX follow-up execution plan
 
-Status: in progress; DXF.1–6 merged and recorded, DXF.7 in progress. This is the canonical scope for the
+Status: in progress; DXF.1–7 merged and recorded; DXF.8 is next. This is the canonical scope for the
 user-authorized follow-up work, separate from the completed Phase DX.
 Planning baseline: `f9c0d303104fca8181e4624f49d0433779b0e964` on
 `origin/main`, verified 2026-09-20. Remote checkout was clean on
@@ -70,7 +70,7 @@ Link history rather than copying it:
 | DXF.4 | Production embedding identity audit and necessary fixes | DXF.3 (execution order) | merged #3881 |
 | DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | merged #3883 |
 | DXF.6 | Cache CLI/moved-workspace gaps and five documentation links | DXF.3, DXF.5; after DXF.4 | merged #3885 |
-| DXF.7 | Final affected-contract evidence reconciliation | DXF.1–6 | in progress |
+| DXF.7 | Final affected-contract evidence reconciliation | DXF.1–6 | merged #3887 |
 | DXF.8 | Authoritative user binary/local checkout handoff | DXF.7 | queued |
 
 DXF.4 and DXF.5 do not technically depend on package reuse; the edges express
@@ -454,7 +454,7 @@ candidate/merge/PR/evidence/deferred findings here and cross-link the original
 owning issue. Record-only updates require documentation checks, no new Opus.
 Planning alone requires documentation checks and no whole-phase review.
 
-## Current handoff
+## Historical planning handoff
 
 Planning only; all DXF items remain unstarted. Next-ready batch is **DXF.1 only**:
 inspect real package context and the existing narrow proof, add the proposed
@@ -952,3 +952,123 @@ receipts, commands, nonzero counts, source/fixture/lock/environment hashes,
 historical failures, platform evidence and scoped review are indexed externally.
 No old whole-phase gate/review or new broad performance claim is introduced.
 The final merged record will state completed coverage and remaining limits.
+
+## DXF.7 merged record — 2026-09-20
+
+Implementation [#3887](https://github.com/sifr-lang/sifr/pull/3887), final
+validation candidate `db38e61773b351399a0217e502d8011b1212def7`, base
+`4f9fc5c0d8ac82d5a9e01c4dc4b20450ebf23e09`, merge `2c54a129390581b98c0dd24b86d17a2d2461e665`.
+The six prior implementation PRs and scoped reviews are merged ancestors.
+The external candidate-keyed index is
+`/home/yaser5/projects/sifr/dxf-evidence/db38e61773b351399a0217e502d8011b1212def7/evidence-index.json`
+(SHA-256 `897eabc6216e6992140ae14979a2ac7d566aba6011612789e12b58af493fa5a3`). It binds each original base/candidate/PR/review,
+expanded commands, nonzero counts, logs and hashes, compiler receipts,
+Cargo features/profiles/toolchain/configuration/lock, fixtures, source-input
+proofs and native hosts. Historical failed/incomplete runs remain preserved.
+
+### Affected validation and reuse
+
+- 49 selected library/CLI Rust tests: 22 fresh exact selections and 27 retained
+  only under recorded relevant-input equivalence. Dependency-token invariant
+  tests do not depend on literal token values. The trace CLI test that invokes
+  DXF.6-expanded shared assertions was rerun; it was not silently reused.
+- Functional process coverage: package 31, history 10, cache 34, legacy interface
+  44 and project 31 calls. Cache coverage was rerun again against the final
+  contributor receipt after the shared harness environment changed. Five named
+  trace contracts passed against a fresh optimized installed receipt. The package
+  single-pair and warm trace observations are descriptive, not a new speed claim.
+- The new native qualifier initially leaked raw environment into the shared
+  cache harness. A preserved installed-compiler failure with hostile SIFR_SYSROOT
+  established the omission. Explicit owner-environment forwarding fixed it;
+  34 real installed hostile-environment calls and 34 final contributor calls
+  passed. Native source fixtures then exposed macOS /var temporary-path aliases
+  rejected by the intentional secure-cache policy. A Linux alias-failure versus
+  canonical-success reproduction and five source selector reruns validated
+  canonical owned TMPDIR in the helper. No compiler code, Rust fixture or
+  package-producing input changed in either validation correction.
+- Rust 1.98.1, default features, normal test/dev/release profiles, two jobs and
+  the existing private target. Preparations are separate from execution timing.
+  Pressure checks retained sufficient declared operation reserve; no cleanup.
+  Formatting, source-size/HIR, documentation/link and diff guards passed as
+  applicable; record-only updates use documentation checks only.
+
+### Four-platform exact packages
+
+[Canonical nonpublishing qualification](https://github.com/sifr-lang/sifr/actions/runs/35513780133)
+and the bounded remaining-stage continuations cover the final affected package set: aarch64/x86_64 Apple Darwin
+and aarch64/x86_64 GNU/Linux. Native execution was required for DXF.3 filesystem
+ownership, DXF.5 Unix private modes and the planned exact-package Mac handoff.
+Each platform ran 34 real cache CLI operations, private 0700/0600 trace creation
+under umask 000 with product identity/redaction/bound checks, and five exact
+nonzero source selectors for ownership, root movement and embedding context.
+Those 20 source tests are explicitly separate from packaged executable checks.
+The existing canonical protocol also passed real installer version transitions,
+receipt-failure rollback, relocation, loader checks, development/release native
+reuse and source/installed metadata corpus comparison.
+
+The original native workflow remains failed: both Linux jobs passed, while both
+Mac jobs stopped at source-fixture admission after passing the installed package
+transitions/cache/trace checks. Mac
+[ARM continuation](https://github.com/sifr-lang/sifr/actions/runs/35519810319) and
+[Intel continuation](https://github.com/sifr-lang/sifr/actions/runs/35520966256)
+ran only the failed/unreached source tests and previously unreached native
+profiles/loader/metadata stages against the same archives. A first continuation
+admission failure (run 35519633154, wrong installer artifact name, no native
+tests started) is also preserved. No passed package stages or package builds
+were restarted. The Mac remaining-stage checks used archive-identical bytes
+extracted into owned exact-package storage; Linux used the installer-managed
+relocated generation. Earlier same-platform Mac installation/transition evidence
+remains the installation proof. Temporary continuation workflow/launcher bytes are external
+evidence at 99250fccc31fca114ff33be20050e299fd9f8dd7; the original workflow is
+restored byte-for-byte and no continuation launcher remains in the final tree.
+
+The immutable package source is `f6865cdfb8aa8d0f7d62759ec4fe313e5edc3708`.
+The final validation candidate changes only qualifier environment/fixture execution;
+all compiler/package-producing inputs and all shared cache assertions are
+unchanged. Original executed protocols and final protocols are separately hashed,
+and affected forwarding/fixture behavior was rerun. Packages retain their original source
+stamp and hashes; no relabeling or matrix restart occurred. The optimized local
+trace artifact and the four canonical packages have separate actual receipts.
+DX.15 and older item binary evidence do not qualify these new bytes.
+
+[Scoped Opus review](https://github.com/sifr-lang/sifr/pull/3887#issuecomment-5751456217) is SATISFIED with no blockers for the exact final
+candidate, bounded reconciliation and qualifier extension. Its response is
+external and candidate-keyed. Nonblocking index suggestions are resolved by direct final protocol/before-failure
+links and explicit layout provenance. DXF.5’s historical test binary lived in a
+rebuildable target path and no longer matches that historical hash; it is not
+reused as final binary evidence. Future immutable artifact retention remains
+with the [review follow-up owner](ad-hoc-dx16-review-followups.md).
+The pre-existing job-admission failure of the unchanged local-first workflow is
+recorded in [its owning issue](ad-hoc-local-first-workflow-admission.md); its
+underlying cause remains unestablished and it is not a compiler test failure.
+
+### Remaining limits and next owner
+
+No new performance/active-memory claim, graphical 12 GB Mac claim, Windows or
+arbitrary filesystem guarantee. Native source API tests are not tests inside the
+packaged executable. Same-source 0.0.0 fixtures qualify version transitions;
+no live published channel was changed. No release, account/site/Marketplace
+change, local user checkout inspection/update or installed-binary mutation.
+
+The canonical installer SHA-256 is
+`210c67ad282a4ae31ede4fdbe1d3449d18d9e9464b4bd1ce6cd557a7ca328da6`.
+Validated 0.1.0 Mac archive SHA-256 values:
+
+- aarch64-apple-darwin:
+  `38d7a7fe51bb0f3b63f15bb29c765fcdb44d227b50597070fda57b82631adfa5`.
+- x86_64-apple-darwin:
+  `3c588263180674a5cc49f4893c98f8dccf951a8ae9a25e7ff318231d2b2e9279`.
+
+Exact external archive paths, binary/sysroot hashes, artifact IDs and installation
+handoff are in `/home/yaser5/projects/sifr/dxf-evidence/dxf7-handoff.json`.
+CI artifacts expire after 30 days; verified copies are retained in the external
+candidate directory. DXF.8 must inspect the actual local host, checkout and
+resolved executable, preserve IntoIterator/user changes, select the matching
+validated archive and use the existing atomic installer with a recoverable prior
+generation. It must then run its bounded local package/cache/trace smokes.
+
+## Current handoff
+
+DXF.1–7 are merged and recorded. Stop this session. A new bounded **DXF.8 only**
+session owns actual user checkout/binary inspection and safe installation using
+the exact retained package for that host; no rebuild or publication is implied.
