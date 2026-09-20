@@ -120,6 +120,19 @@ fn orphan_prune_requires_owner_and_inactivity() {
     fs::write(&owner_path, "{}").unwrap();
     assert_eq!(prune(&cache, &workspace, true, false).deleted_entries, 0);
     fs::write(&owner_path, &owner).unwrap();
+    // Unknown existing namespace contents cannot acquire ownership merely by
+    // opening a Store for the current directory at that path.
+    let unknown = root.path().join("unknown-owner");
+    fs::create_dir(&unknown).unwrap();
+    let unknown_id = identity("project-workspace-v1", &unknown.canonicalize().unwrap()).unwrap();
+    let unknown_namespace = cache.join("projects").join(unknown_id);
+    cache_storage::directory(&unknown_namespace).unwrap();
+    fs::write(unknown_namespace.join("unclaimed"), "preserve").unwrap();
+    assert!(storage::Store::open(&cache, &unknown, &tests::context().identity().unwrap()).is_err());
+    fs::remove_dir(&unknown).unwrap();
+    assert_eq!(prune(&cache, &unknown, true, false).deleted_entries, 0);
+    assert!(unknown_namespace.join("unclaimed").exists());
+    assert!(!unknown_namespace.join("owner.json").exists());
     // A replacement directory or dangling symlink is never a deleted owner.
     fs::create_dir(&workspace).unwrap();
     assert_eq!(prune(&cache, &workspace, true, false).deleted_entries, 0);

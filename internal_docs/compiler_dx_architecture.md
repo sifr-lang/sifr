@@ -434,7 +434,8 @@ For a deleted workspace, pass its **original absolute canonical path**; no
 workspace recreation or cwd switch is required. Immutable owner records bind
 that path to its device, inode and directory creation time. Missing/malformed
 records, replaced roots, symlinks, unsafe permissions and inaccessible ancestors
-do not authorize reclamation. Filesystems without directory creation-time
+do not authorize reclamation. Opening a store never retroactively claims a
+nonempty ownerless namespace. Filesystems without directory creation-time
 support leave project persistence unavailable, with ordinary computation intact.
 An exclusive namespace lease excludes stores and detached generation readers;
 cleanup also acquires every existing context lock before removing an orphan

@@ -72,6 +72,13 @@ pub(super) fn open_namespace(cache: &Path, workspace: &Path, id: &str) -> io::Re
     lease.try_lock_shared().map_err(io::Error::from)?;
     let namespace = projects.join(id);
     cache_storage::directory(&namespace)?;
+    // Never retroactively claim unknown pre-existing payloads for this owner.
+    // An ownerless interrupted/old namespace remains unavailable and protected.
+    if namespace.join("owner.json").symlink_metadata().is_err()
+        && fs::read_dir(&namespace)?.next().is_some()
+    {
+        return Err(invalid("unrecorded project namespace ownership"));
+    }
     let metadata = fs::metadata(workspace)?;
     let expected = Owner {
         schema: 1,
