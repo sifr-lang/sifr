@@ -36,6 +36,9 @@ pub(crate) struct Cli {
     /// Print invocation timing and selected cache root on stderr
     #[arg(long, global = true)]
     pub(crate) timings: bool,
+    /// Write bounded, redacted versioned diagnostics to a new trace directory
+    #[arg(long, global = true, value_name = "DIR")]
+    pub(crate) trace_dir: Option<PathBuf>,
     /// Compute project checks without reading or writing incremental results
     #[arg(long, global = true)]
     pub(crate) no_incremental: bool,
@@ -190,8 +193,23 @@ pub(crate) fn diagnostic_with_code(
 }
 
 pub(super) fn main() {
+    let start = std::time::Instant::now();
     let cli = Cli::parse();
-    process::exit(run_cli(cli));
+    if let Some(path) = &cli.trace_dir {
+        if let Err(error) = crate::trace_artifacts::start(
+            path,
+            crate::trace_artifacts::command_name(cli.command.as_ref()),
+            start,
+        ) {
+            let diagnostic = diagnostic_with_code(
+                format!("cannot initialize --trace-dir: {error}"),
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            );
+            render_diagnostics(&[diagnostic], cli.diagnostic_format);
+            process::exit(EXIT_USAGE_OR_CONFIG);
+        }
+    }
+    crate::trace_artifacts::exit(run_cli(cli));
 }
 
 pub(crate) fn selected_application_profile(command: &Commands) -> sifr_driver::ApplicationProfile {
@@ -594,7 +612,7 @@ pub(super) fn read_source(file: &Path, provider: &mut dyn SourceProvider) -> Str
                 "error: could not read file '{}': {e}",
                 file.display()
             );
-            process::exit(EXIT_USAGE_OR_CONFIG);
+            crate::trace_artifacts::exit(EXIT_USAGE_OR_CONFIG);
         }
     }
     .as_str()

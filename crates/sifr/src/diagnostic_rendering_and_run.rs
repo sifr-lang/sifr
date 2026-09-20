@@ -22,7 +22,6 @@ use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::collections::BTreeSet;
 use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
-use std::process;
 
 mod materialized_project_command;
 
@@ -153,6 +152,7 @@ fn emit_report_frontend_diagnostics(
     report: &sifr_driver::BuildReport,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
+    crate::trace_artifacts::build_report(report);
     if report.frontend_diagnostics().is_empty() {
         return EXIT_SUCCESS;
     }
@@ -459,12 +459,12 @@ pub(super) fn cmd_run_file(
             if !quiet && !artifact.build_report().cache_hit() {
                 emit_build_report(artifact.build_report(), false, false, diagnostic_format);
             }
-            let output = sifr_driver::process_execution::run_program(
+            let output = crate::trace_artifacts::run_program(
                 std::process::Command::new(artifact.binary_path()).args(app_args),
             )
             .unwrap_or_else(|e| {
                 let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
-                process::exit(sifr_driver::process_execution::failure_exit_code(&e));
+                crate::trace_artifacts::exit(sifr_driver::process_execution::failure_exit_code(&e));
             });
 
             // Forward stdout and stderr
@@ -537,12 +537,12 @@ pub(super) fn run_binary_artifact(
     if !quiet && !artifact.build_report().cache_hit() {
         emit_build_report(artifact.build_report(), false, false, diagnostic_format);
     }
-    let output = sifr_driver::process_execution::run_program(
+    let output = crate::trace_artifacts::run_program(
         std::process::Command::new(artifact.binary_path()).args(app_args),
     )
     .unwrap_or_else(|e| {
         let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
-        process::exit(sifr_driver::process_execution::failure_exit_code(&e));
+        crate::trace_artifacts::exit(sifr_driver::process_execution::failure_exit_code(&e));
     });
 
     std::io::stdout().write_all(&output.stdout).ok();
