@@ -42,4 +42,4 @@ no longer matches its old recorded hash. That artifact is not reused as current
 binary evidence; its original index is preserved, and final receipts bind actual
 prepared/packaged bytes separately. This observation authorizes no unrelated
 implementation. The pre-existing automatic workflow admission failure is owned
-by [CI/verification](ad-hoc-local-first-workflow-admission.md).
+by [CI/verification](../archive/ad-hoc-local-first-workflow-admission.md).
