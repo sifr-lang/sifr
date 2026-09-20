@@ -21,7 +21,16 @@ def main():
     compiler_lanes.configure(ROOT, "contributor-dev", str(receipt))
     binary = args.binary.resolve()
     assert binary == compiler_lanes.selected_binary(binary)
-    output = args.output.resolve()
+    qualify(binary, args.output, {
+        "candidate": compiler_lanes.selection()["source_commit"],
+        "lane": "contributor-dev", "receipt": str(receipt),
+        "receipt_sha256": compiler_lanes.digest(receipt),
+    })
+
+
+def qualify(binary, output, identity):
+    """Run the same contracts after the caller validates its exact artifact."""
+    binary, output = binary.resolve(), output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     workspace = output / "workspace"
     workspace.mkdir()
@@ -132,13 +141,12 @@ def main():
     assert orphan["cache"]["deleted_generations"] == 0
     assert orphan["cache"]["deleted_entries"] == 1  # The whole context, not a generation.
     invoke("after-orphan", ["check", str(moved / "main.sifr")])
-    evidence = {"candidate": compiler_lanes.selection()["source_commit"],
-                "lane": "contributor-dev", "claim": "functional contracts; no performance claim",
+    evidence = identity | {"claim": "functional contracts; no performance claim",
                 "binary": str(binary), "binary_sha256": compiler_lanes.digest(binary),
-                "receipt": str(receipt), "receipt_sha256": compiler_lanes.digest(receipt),
                 "cache": str(cache), "calls": calls}
     (output / "report.json").write_text(json.dumps(evidence, indent=2) + "\n")
     print(f"PASS: {len(calls)} isolated CLI calls")
+    return evidence
 
 
 if __name__ == "__main__":

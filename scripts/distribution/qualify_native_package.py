@@ -333,6 +333,8 @@ raise SystemExit(result.returncode)
             self.run("cargo-identity", ["cargo", "-vV"], deadline=90)
             self.prepare_transport()
             binary = self.generation_checks()
+            from native_dxf_contracts import qualify_dxf
+            qualify_dxf(self, binary)
             self.native_profiles(binary)
             self.metadata_corpus(binary)
             subprocess.run(["git", "diff", "--quiet", "HEAD"], cwd=ROOT, check=True)
