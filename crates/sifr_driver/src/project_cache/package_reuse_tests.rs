@@ -124,8 +124,16 @@ fn run(
     package: &crate::PackageEntrypoint,
     context: SemanticInputs,
 ) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
+    run_with_cache(root, &root.join("cache"), package, context)
+}
+fn run_with_cache(
+    root: &Path,
+    cache: &Path,
+    package: &crate::PackageEntrypoint,
+    context: SemanticInputs,
+) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
     check(
-        (&root.join("cache"), &root.join("app")),
+        (cache, &root.join("app")),
         &package.main_file,
         &mut DiskSourceProvider::new(),
         context,
@@ -335,4 +343,73 @@ fn package_chained_restore_matches_fresh() {
         assert_eq!(!actual.is_empty(), error);
         assert_eq!(actual, fresh(&entry, &mut DiskSourceProvider::new()));
     }
+}
+
+// Each test owns its package graph and cache history. Visibility is resolved by
+// the real package source map, including an existing private implementation.
+fn assert_private_import_rejected(private_import: &str) {
+    let root = fixture();
+    edit(root.path(), "dep/src/hidden.sifr", 7);
+    let entry = package(root.path());
+    let middle = root.path().join("app/src/middle.sifr");
+    let public_source = fs::read_to_string(&middle).unwrap();
+    let (initial, report) = run(root.path(), &entry, inputs(&entry));
+    assert!(initial.is_empty());
+    assert_eq!(report.status, "published");
+
+    let helper = root.path().join("app/src/helper.sifr");
+    edit(root.path(), "app/src/helper.sifr", 2);
+    let (warm, report) = run(root.path(), &entry, inputs(&entry));
+    assert!(warm.is_empty());
+    assert_reused(&report, &helper);
+
+    fs::write(
+        &middle,
+        public_source.replace("from dep import value as other", private_import),
+    )
+    .unwrap();
+    // Rebuild from Cargo metadata at the real app cwd, as a new CLI request
+    // does. No hand-built graph/token can conceal current resolver authority.
+    let private_entry = package(root.path());
+    let expected = fresh(&private_entry, &mut DiskSourceProvider::new());
+    assert_eq!(expected.len(), 1, "{expected:?}");
+    assert_eq!(expected[0].code, "SIFR-PACKAGE-0203");
+    assert!(expected[0].message.contains("private module 'dep.hidden'"));
+    let (actual, report) = run(root.path(), &private_entry, inputs(&private_entry));
+    assert_eq!(actual, expected);
+    assert_eq!(report.restored_checks, 0, "{report:?}");
+    assert_ne!(report.status, "restored", "{report:?}");
+    assert_ne!(report.status, "interface-restored", "{report:?}");
+
+    let cold_cache = root.path().join("independent-cold-cache");
+    assert!(!cold_cache.exists());
+    let (cold, cold_report) = run_with_cache(
+        root.path(),
+        &cold_cache,
+        &private_entry,
+        inputs(&private_entry),
+    );
+    assert_eq!(cold, expected);
+    assert_eq!(cold_report.restored_checks, 0, "{cold_report:?}");
+
+    fs::write(&middle, public_source).unwrap();
+    let recovered = package(root.path());
+    let (actual, _) = run(root.path(), &recovered, inputs(&recovered));
+    assert!(actual.is_empty());
+    assert_eq!(actual, fresh(&recovered, &mut DiskSourceProvider::new()));
+    edit(root.path(), "app/src/helper.sifr", 3);
+    let (actual, report) = run(root.path(), &recovered, inputs(&recovered));
+    assert!(actual.is_empty());
+    assert_eq!(actual, fresh(&recovered, &mut DiskSourceProvider::new()));
+    assert_reused(&report, &helper);
+}
+
+#[test]
+fn package_private_module_edit_rejects_restored_success() {
+    assert_private_import_rejected("import dep.hidden\nfrom dep import value as other");
+}
+
+#[test]
+fn package_private_symbol_edit_rejects_restored_success() {
+    assert_private_import_rejected("from dep.hidden import value as other");
 }
