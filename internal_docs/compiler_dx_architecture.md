@@ -1,7 +1,7 @@
 # Compiler DX and Toolchain Reuse Architecture
 
 status: final target design  
-implementation status: DX.1–DX.15 complete and qualified; DX.16 documentation closure under review
+implementation status: DX.1–DX.15 merged with scoped qualification; DX.16 blocked on required trace-artifact surface
 implementation baseline: `sifr-lang/sifr@0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
 design date: 2026-09-16  
 
@@ -13,7 +13,7 @@ The target architecture requires prebuilt standard-library metadata, native arti
 
 This document owns architectural behavior and invariants. The companion implementation plan owns scope, sequencing, status, and acceptance evidence. Neither document owns a running experiment diary. Existing subsystem documents remain authoritative for language semantics, package trust, SQL and Python contracts, runtime safety, and release authorization. A planned integration must update a conflicting contract explicitly rather than bypass it.
 
-The implemented command and ownership contracts below are qualified by the [canonical phase evidence](../plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status). The baseline comparison is historical. Naming changes must preserve capabilities and ownership boundaries.
+The command and ownership contracts below remain required. The [canonical phase evidence](../plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status) records merged capabilities and qualification; whole-phase review identified the unimplemented `--trace-dir` surface in §11.1, which blocks closure. The baseline comparison is historical. Naming changes must preserve capabilities and ownership boundaries.
 
 ### 1.1 Historical implementation baseline
 

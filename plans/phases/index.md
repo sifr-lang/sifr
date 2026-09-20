@@ -69,4 +69,4 @@ successor and is summarized here.
 
 | Phase | Status | Architecture | Release checkpoints |
 | --- | --- | --- | --- |
-| [DX](../issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md) | DX.1–DX.15 complete and qualified ([PR #3868](https://github.com/sifr-lang/sifr/pull/3868)); DX.16 documentation closure under review | [Compiler DX architecture](../../internal_docs/compiler_dx_architecture.md) | Final four-target package qualification recorded; publication remains separately authorized |
+| [DX](../issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md) | DX.1–DX.15 merged ([PR #3868](https://github.com/sifr-lang/sifr/pull/3868)); DX.16 blocked: required trace-artifact surface | [Compiler DX architecture](../../internal_docs/compiler_dx_architecture.md) | Final four-target package qualification recorded; publication remains separately authorized |

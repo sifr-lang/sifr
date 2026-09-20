@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.15 complete; DX.16 documentation closure under review
+status: blocked; DX.1–DX.15 merged; DX.16 needs scoped trace-artifact implementation
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -95,7 +95,7 @@ The early order removes observed operational costs before adding project persist
 
 Only if an actual release is requested after DX.8, the metadata improvement may be released when its exact installed artifacts pass the existing applicable package/publication qualification. After DX.11, native/profile/editor improvements may be released on the same basis. Neither checkpoint marks Phase DX complete, advertises unimplemented project persistence, changes release authorization, or requires additional duplicate reviews/gates for unchanged evidence. They are integration and release opportunities, not optional scope decisions.
 
-DX.12–DX.15 are now merged, using the recorded checkpoint measurements and final qualification below. DX.16 is the remaining documentation-only closure and authoritative handoff. The checkpoint policy does not itself authorize publication.
+DX.12–DX.15 are now merged, using the recorded checkpoint measurements and final qualification below. DX.16 remains the documentation-only closure and authoritative handoff, currently blocked by the required trace-artifact gap found in whole-phase review. The checkpoint policy does not itself authorize publication.
 
 ## Milestones
 
@@ -619,7 +619,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.15 are complete and merged. DX.15 accounts the required final qualification under the prospective gate policy; original failed invocations remain preserved. DX.16 remains not started and is documentation-only closure, with no known required implementation gap deferred to it.
+DX.1–DX.15 are merged with their original scoped qualification and reviews preserved. The whole-phase review found the required `--trace-dir` surface unimplemented; the existing DX.15 qualification does not cover it. DX.16 is blocked pending a bounded implementation item outside this documentation-only closer. No scope waiver was granted, no phase completion is claimed, and original failed invocations remain preserved.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -638,7 +638,7 @@ DX.1–DX.15 are complete and merged. DX.15 accounts the required final qualific
 | DX.13 | Complete / merged | Candidate `be67cc8dfa7d6db91f295557f08123d705cc79ff`; [PR #3864](https://github.com/sifr-lang/sifr/pull/3864); merge `9ee1d65db9a1f1851f46032f641d39dc27460bc0` | C04/C08/C09/P01/P02/P08–P10/P12; 12 DX.13 tests, focused regressions, 31 CLI processes and guards pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3864#issuecomment-5727613414) |
 | DX.14 | Complete / merged | Candidate `2c3f23127966850e7ed961155bcee817514d56f1`; [PR #3866](https://github.com/sifr-lang/sifr/pull/3866); merge `10e917056bc26d7a7b21c1361cc9cecfb1c7afb0` | P05/P06/P11, 35 targeted Rust tests, 44 CLI invocations, native output refresh, E01–E06 enabled/disabled and 84 Q09 samples pass; guards pass; full gate deferred | [Opus: SATISFIED after bounded remediation](https://github.com/sifr-lang/sifr/pull/3866#issuecomment-5729004460) |
 | DX.15 | Complete / merged | Candidate `9ee360474655fde979dc5ddfdf33eb4dc39c9968`; [PR #3868](https://github.com/sifr-lang/sifr/pull/3868); merge `0e4b5ec59607ffdabb9d42dbd8ba49baab97137e` | Q02–Q04/Q06, final latency/resource/Q09 and all required selected gate coverage; four native targets and exact archive custody; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3868#issuecomment-5748158816) |
-| DX.16 | Documentation closure under review | Pending review and merge | Reuse DX.15 qualification; link/schema/documentation and evidence-index audit | User-requested whole-phase Opus review pending |
+| DX.16 | Blocked / needs scope | Draft [PR #3870](https://github.com/sifr-lang/sifr/pull/3870); reviewed docs `1901074b62e2aad614d285f1c35c95aa16218490` | 84 acceptance IDs / 15 merged items / 67 indexed hashes audited; documentation checks pass; trace-artifact capability remains unqualified | [Whole-phase Opus: NOT SATISFIED](https://github.com/sifr-lang/sifr/pull/3870#issuecomment-5748613670) |
 
 ## Historical Handoff — DX.1 (2026-09-16)
 
@@ -2103,25 +2103,42 @@ it does not replace the underlying Rust, native or protocol evidence.
 
 ## Current Handoff — DX.16 (2026-09-20)
 
-- **State:** documentation closure under review; DX.1–DX.15 are merged.
-  The execution table and their original evidence remain authoritative.
-- **Final implementation:** `9ee360474655fde979dc5ddfdf33eb4dc39c9968`,
-  [PR #3868](https://github.com/sifr-lang/sifr/pull/3868), with merged record
-  [PR #3869](https://github.com/sifr-lang/sifr/pull/3869). DX.16 changes only
-  documentation; it does not rerun the completed qualification or repair code.
-- **Evidence:** reuse the DX.15 qualification index and original scoped reviews.
-  The user explicitly requested one read-only whole-phase Opus review after all
-  implementation items merged. This is the sole closure review; record-only
-  updates after it require documentation checks only.
-- **Measured scope:** fixed warm-page optimized installed Linux CLI p95 is
-  46.461 ms fresh / 45.838 ms unchanged; quiet editor p95 is 2.415 ms. The
-  12 GB Linux overlap is headless; graphical-desktop evidence is from the
-  actual 32 GiB M2 Pro Mac. A literal 12 GB graphical-desktop run is unexecuted
-  under the user-approved host split. Four supported native targets qualify
-  exact package bytes without release/publication actions.
-- **Preservation:** original failed/incomplete gates, cold preparation costs,
-  canonical skips and separate optional followup issues remain unchanged.
-  Required final coverage is accounted by the original gate and focused
-  continuations, not by relabeling the original aggregate as passing.
-- **Next action:** complete the evidence/documentation audit and the authorized
-  whole-phase review, merge closure, then record the real merged state and stop.
+- **State:** blocked / needs scope; draft [PR #3870](https://github.com/sifr-lang/sifr/pull/3870)
+  is unmerged on `codex/dx16-closure`. This session changed documentation only.
+- **Review:** the single user-requested whole-phase Claude Opus review returned
+  [NOT SATISFIED](https://github.com/sifr-lang/sifr/pull/3870#issuecomment-5748613670)
+  for documentation `1901074b62e2aad614d285f1c35c95aa16218490`, base
+  `69081c6df847e5ece2cd3ae4bf690ad5718ddc7c`, and final implementation
+  `9ee360474655fde979dc5ddfdf33eb4dc39c9968`. Its immutable response is at
+  `/home/yaser5/projects/sifr/dx16-evidence/1901074b62e2aad614d285f1c35c95aa16218490/whole-phase-review.md`,
+  SHA256 `3d4170cfd132d9e8557d8c9303951a721fbfe80613056ce20975fb9b4c583e36`.
+- **Blocker:** architecture §11.1 requires `--trace-dir <dir>` for opt-in
+  versioned trace/artifact diagnostics with redaction and controlled size;
+  DX.15 requires integrated trace surfaces. The flag and capability are absent.
+  Existing `sifr trace <file>` emits frontend debug text to stdout and does not
+  satisfy the artifact-directory contract. The phase owner retained the
+  requirement: no removal, waiver or deferral permits phase completion.
+  [Bounded remediation handoff](ad-hoc-dx-trace-artifact-remediation.md) owns it.
+- **Documentation correction:** the contradictory live "DX.16 not started"
+  sentence is corrected to this blocked state. Original DX.15 historical
+  handoffs and failed/incomplete gates remain unchanged; neither prior scoped
+  approval nor this record is a whole-phase approval.
+- **Evidence:** `dx16-evidence/1901074b62e2aad614d285f1c35c95aa16218490/`
+  retains the index audit and documentation receipts: 84 acceptance IDs map to
+  owners, all 15 milestone merges are verified (including squash-tree equality),
+  all 67 DX.15 index hashes match, and 32 compiler configurations / 20 areas
+  are accounted. Mapping completeness is not proof of the missing command.
+  Documentation structure/schema, retained manifest schema, maintainability
+  guardrail and whitespace checks pass; no broad gate was rerun.
+- **Measured scope:** existing fixed warm-page CLI/editor results, four native
+  target packages, 12 GB Linux headless overlap and actual 32 GiB Mac desktop
+  overlap retain their original scopes. Literal 12 GB graphical-desktop work
+  remains unexecuted under the approved host split. No publication occurred.
+- **Followups:** [separate whole-phase observations](ad-hoc-dx16-review-followups.md)
+  preserve nonblocking findings. Remaining stale profile/source-migration prose
+  is documentation work for the resumed closer, not implementation permission.
+- **Exact next action:** stop this docs-only session. One bounded implementation
+  owner must complete the required trace-artifact surface and its focused
+  acceptance, then return exact candidate/validation evidence for closure.
+  Do not mark Phase DX complete, merge this blocked closure or start another
+  broad review while the requirement remains unsatisfied.
