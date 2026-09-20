@@ -3,6 +3,10 @@
 mod dx14_tests;
 #[cfg(test)]
 mod history_tests;
+mod housekeeping;
+#[cfg(test)]
+mod housekeeping_tests;
+pub use housekeeping::ProjectPruneReport;
 mod interface_reuse;
 mod package_context;
 #[cfg(test)]
@@ -312,41 +316,16 @@ fn check(
     (diagnostics, report)
 }
 
-/// Explicit project-only pressure cleanup. Does not inspect metadata or Cargo.
-/// All semantic contexts under this exact canonical workspace remain separately
-/// leased; dry-run and no-pressure calls never delete generations.
+/// Explicit pressure cleanup for one workspace. A deleted workspace must be
+/// named by its original absolute canonical path; its recorded owner and an
+/// exclusive namespace lease authorize orphan reclamation. Ambiguity preserves
+/// storage. No-pressure calls neither inspect nor mutate the cache.
 pub fn prune_project_cache(
     workspace: &Path,
     pressure: bool,
     dry_run: bool,
-) -> std::io::Result<usize> {
-    let cache = crate::cache_storage::root();
-    let workspace = workspace.canonicalize()?;
-    let workspace_id =
-        identity("project-workspace-v1", &workspace).map_err(std::io::Error::other)?;
-    let parent = cache.join("projects").join(workspace_id);
-    if !parent.exists() {
-        return Ok(0);
-    }
-    crate::cache_storage::directory(&parent)?;
-    let mut removed = 0;
-    for entry in std::fs::read_dir(&parent)? {
-        let entry = entry?;
-        let name = entry.file_name();
-        let Some(context) = name.to_str() else {
-            continue;
-        };
-        if context.len() != 64 || !context.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-            continue;
-        }
-        crate::cache_storage::check_owned(&entry.path())?;
-        match storage::Store::open(&cache, &workspace, context)?.prune(pressure, dry_run) {
-            Ok(count) => removed += count,
-            Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {}
-            Err(error) => return Err(error),
-        }
-    }
-    Ok(removed)
+) -> std::io::Result<ProjectPruneReport> {
+    housekeeping::prune_workspace(&crate::cache_storage::root(), workspace, pressure, dry_run)
 }
 
 fn manifestless_inputs(

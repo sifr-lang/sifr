@@ -2092,3 +2092,12 @@ resolving unrelated workspace members; actual package/source ownership and
 explicit lock-mode validation remain authoritative.
 
 The CLI opt-in `--trace-dir` sink projects existing build, project cache, metadata, frontend trace and runtime process reports into bounded redacted versioned JSON. It owns artifact lifetime and rendering, while existing driver/frontend owners retain event and timing authority. See compiler DX architecture §11.3.
+
+### Project storage housekeeping
+
+Project cache stores and detached readers lease their exact workspace namespace.
+Explicit pressure cleanup uses immutable workspace ownership records and exclusive
+orphan leases to reclaim abandoned or deleted-workspace payloads. The original
+absolute canonical path selects a deleted workspace; uncertain ownership remains
+protected. Stable namespace and live generation lock inodes preserve concurrency.
+See [the compiler DX storage policy](compiler_dx_architecture.md#73-pressure-based-cleanup).

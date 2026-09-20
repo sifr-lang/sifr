@@ -419,6 +419,41 @@ Use supported Cargo cleanup operations for Cargo-owned artifacts. Do not delete 
 
 Resource limits live in the existing profile/resource-policy authority. They are calibrated for the supported machine and recorded with provenance, not duplicated across scripts. Cache-capacity policy cannot be changed to hide a correctness or performance regression.
 
+DXF.3 implements explicit project housekeeping under `cache prune-project`.
+A zero reserve (the default), or available bytes meeting the reserve, performs
+no inspection or deletion. Under pressure, cleanup considers recognized entries
+in the exact workspace namespace, preserving its newest valid bounded history,
+leased readers and active writers. An invalid existing latest pointer protects
+finalized history rather than guessing which generation is current. Only
+writer-serialized stage lock files are reclaimable during live project cleanup;
+generation lock inodes remain permanent. Partial cache pointer scratch is owned
+by that writer. Workspace hint scratch requires a complete matching owner/context
+hint; ambiguous partial hints are preserved.
+
+For a deleted workspace, pass its **original absolute canonical path**; no
+workspace recreation or cwd switch is required. Immutable owner records bind
+that path to its device, inode and directory creation time. Missing/malformed
+records, replaced roots, symlinks, unsafe permissions and inaccessible ancestors
+do not authorize reclamation. Filesystems without directory creation-time
+support leave project persistence unavailable, with ordinary computation intact.
+An exclusive namespace lease excludes stores and detached generation readers;
+cleanup also acquires every existing context lock before removing an orphan
+context tree. Namespace owner tombstones and external namespace lock inodes stay
+stable, and unknown namespace children stay untouched. No global scan or startup
+cleanup is performed. New stores cannot reuse an old owner record for a replaced
+workspace directory; an explicit new private cache location establishes a new
+owner if needed.
+
+The project prune API and CLI `cache` report distinguish `examined_entries`,
+`eligible_entries`, and `deleted_entries`; protected recognized candidates count
+only as examined. A live candidate is a generation, stage directory, stage lock,
+or pointer/hint scratch; an orphan candidate is one whole semantic context tree.
+`eligible_generations` and `deleted_generations` count finalized live-history
+candidates separately. Dry runs report eligibility with zero deletions; no-pressure
+reports contain all zero counters. Repeated cleanup leaves only protected entries
+and reports zero additional deletions. Pressure authorizes a sweep of this exact
+scope, not a promise that it can satisfy the requested free-space reserve.
+
 ### 7.4 Trust and privacy
 
 Keep cache namespaces user-owned and reject traversal/symlink escapes at write and cleanup boundaries. Do not treat checksums as authorization. A cache hit never grants build-script, native-probe, compiler-component or runtime execution permission. Current trust and required environment checks still execute.

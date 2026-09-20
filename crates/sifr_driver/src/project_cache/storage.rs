@@ -1,6 +1,7 @@
 //! Immutable project generations. Lock order: writer, then generation lease.
 //! Readers take only a shared generation lease; GC takes writer then exclusive
-//! generation leases. Lock inodes are permanent and never deleted.
+//! generation leases. Namespace leases outlive stores through their readers.
+//! Generation and namespace lock inodes remain stable while reachable.
 use crate::cache_storage as storage;
 use serde::{Deserialize, Serialize};
 use sifr_frontend::persistence::{CompletedCheck, identity};
@@ -28,34 +29,36 @@ pub(super) struct Manifest {
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Hint {
-    schema: u32,
-    workspace: String,
-    context: String,
+pub(super) struct Hint {
+    pub(super) schema: u32,
+    pub(super) workspace: String,
+    pub(super) context: String,
     generation: String,
 }
 
 pub(super) struct Store {
     pub(super) root: PathBuf,
-    workspace_root: PathBuf,
-    workspace: String,
-    context: String,
+    pub(super) workspace_root: PathBuf,
+    pub(super) workspace: String,
+    pub(super) context: String,
+    pub(super) namespace_lease: std::sync::Arc<File>,
 }
 pub(super) struct Generation {
     pub(super) path: PathBuf,
     pub(super) manifest: Manifest,
     _lease: File,
+    _namespace_lease: std::sync::Arc<File>,
 }
-fn invalid(message: &str) -> io::Error {
+pub(super) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
-fn stamp<T: Serialize>(domain: &str, value: &T) -> io::Result<String> {
+pub(super) fn stamp<T: Serialize>(domain: &str, value: &T) -> io::Result<String> {
     identity(domain, value).map_err(io::Error::other)
 }
-fn key(value: &str) -> bool {
+pub(super) fn key(value: &str) -> bool {
     value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
-fn read(root: &Path, name: &str, limit: u64) -> io::Result<Vec<u8>> {
+pub(super) fn read(root: &Path, name: &str, limit: u64) -> io::Result<Vec<u8>> {
     storage::payload(root, Path::new(name))?;
     let file = OpenOptions::new()
         .read(true)
@@ -71,7 +74,7 @@ fn read(root: &Path, name: &str, limit: u64) -> io::Result<Vec<u8>> {
     }
     Ok(bytes)
 }
-fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
+pub(super) fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -120,7 +123,8 @@ impl Store {
         storage::directory(&cache.join("projects"))?;
         let workspace_root = workspace_root.canonicalize()?;
         let workspace = stamp("project-workspace-v1", &workspace_root)?;
-        storage::directory(&cache.join("projects").join(&workspace))?;
+        let namespace_lease =
+            super::housekeeping::open_namespace(cache, &workspace_root, &workspace)?;
         let root = cache.join("projects").join(&workspace).join(context);
         storage::directory(&root)?;
         storage::directory(&root.join("generations"))?;
@@ -129,6 +133,7 @@ impl Store {
             workspace_root,
             workspace,
             context: context.into(),
+            namespace_lease,
         })
     }
     pub(super) fn latest(&self) -> Option<Generation> {
@@ -159,7 +164,7 @@ impl Store {
             return Err(invalid("invalid generation identity"));
         }
         let parent = self.root.join("generations");
-        let lease = storage::process_entry_lock(&parent, id)?;
+        let lease = super::housekeeping::existing_lease(&parent, id)?;
         lease.try_lock_shared().map_err(io::Error::from)?;
         let path = parent.join(id);
         let bytes = read(&path, "manifest.json", MANIFEST_LIMIT)?;
@@ -205,6 +210,7 @@ impl Store {
             path,
             manifest,
             _lease: lease,
+            _namespace_lease: self.namespace_lease.clone(),
         })
     }
     pub(super) fn publish(
@@ -257,6 +263,8 @@ impl Store {
             self.point(&generation_id)?;
             return Ok(generation_id);
         }
+        // Establish the permanent reader lock before the generation is visible.
+        let _generation_lock = storage::process_entry_lock(&parent, &generation_id)?;
         let stage_name = format!("{}.stage-{}", generation_id, token());
         let stage_lease = storage::process_entry_lock(&parent, &stage_name)?;
         stage_lease.try_lock().map_err(io::Error::from)?;
@@ -311,6 +319,8 @@ impl Store {
         })?;
         let scratch = self.root.join(format!("latest.stage-{}", token()));
         write_new(&scratch, &hint)?;
+        #[cfg(test)]
+        super::tests::pause("pointer-scratch");
         fs::rename(&scratch, self.root.join("latest"))?;
         File::open(&self.root)?.sync_all()?;
         // Hint failures never invalidate the complete user-cache generation.
@@ -323,39 +333,14 @@ impl Store {
         }
         Ok(())
     }
-    /// Pressure-driven project GC. Current generation inherits all retained
-    /// records, so inactive predecessors can go without losing unused results.
-    pub(super) fn prune(&self, pressure: bool, dry_run: bool) -> io::Result<usize> {
-        if !pressure {
-            return Ok(0);
-        }
-        let writer = storage::process_entry_lock(&self.root, "writer")?;
-        writer.try_lock().map_err(io::Error::from)?;
-        let latest = self.latest();
-        let parent = self.root.join("generations");
-        let mut removed = 0;
-        for entry in fs::read_dir(&parent)? {
-            let path = entry?.path();
-            if latest.as_ref().is_some_and(|latest| latest.path == path) {
-                continue;
-            }
-            let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
-                continue;
-            };
-            if !(key(name) || name.split_once(".stage-").is_some_and(|(id, _)| key(id))) {
-                continue;
-            }
-            storage::check_owned(&path)?;
-            let lease = storage::process_entry_lock(&parent, name)?;
-            if lease.try_lock().is_err() {
-                continue;
-            }
-            if !dry_run {
-                fs::remove_dir_all(&path)?;
-            }
-            removed += 1;
-        }
-        Ok(removed)
+    /// Explicit pressure cleanup retains the latest bounded history and leased
+    /// predecessors. Evicted older records are permitted to miss.
+    pub(super) fn prune(
+        &self,
+        pressure: bool,
+        dry_run: bool,
+    ) -> io::Result<super::ProjectPruneReport> {
+        super::housekeeping::prune_store(self, pressure, dry_run)
     }
 }
 impl Generation {
