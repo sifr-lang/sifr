@@ -1,6 +1,6 @@
 # Compiler DX follow-up execution plan
 
-Status: in progress; DXF.1–7 merged and recorded; DXF.8 is next. This is the canonical scope for the
+Status: DXF.1–7 merged and recorded; DXF.8 local acceptance passed, pending scoped review and merge. This is the canonical scope for the
 user-authorized follow-up work, separate from the completed Phase DX.
 Planning baseline: `f9c0d303104fca8181e4624f49d0433779b0e964` on
 `origin/main`, verified 2026-09-20. Remote checkout was clean on
@@ -71,7 +71,7 @@ Link history rather than copying it:
 | DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | merged #3883 |
 | DXF.6 | Cache CLI/moved-workspace gaps and five documentation links | DXF.3, DXF.5; after DXF.4 | merged #3885 |
 | DXF.7 | Final affected-contract evidence reconciliation | DXF.1–6 | merged #3887 |
-| DXF.8 | Authoritative user binary/local checkout handoff | DXF.7 | queued |
+| DXF.8 | Authoritative user binary/local checkout handoff | DXF.7 | local acceptance passed |
 
 DXF.4 and DXF.5 do not technically depend on package reuse; the edges express
 the approved priority and single-owner execution order. If an item needs a
@@ -1067,8 +1067,103 @@ resolved executable, preserve IntoIterator/user changes, select the matching
 validated archive and use the existing atomic installer with a recoverable prior
 generation. It must then run its bounded local package/cache/trace smokes.
 
+
+## DXF.8 local handoff acceptance — 2026-09-20
+
+The actual Mac is arm64. Its checkout was main at
+`69081c6df847e5ece2cd3ae4bf690ad5718ddc7c`, with no tracked changes and only
+the unrelated empty untracked `IntoIterator` (SHA-256
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`).
+After fetching authoritative main, ancestry and path-overlap checks allowed a
+safe fast-forward to `066cd2af8a19dceba176f68347ec998b4cdeffb4`.
+The untracked file is unchanged. No stash, reset, cleanup or user-file overwrite.
+
+The initial login shell found no sifr: the installer-owned `~/.sifr/env`
+selected an absent temporary beta-preparation root. The actual regular binary
+`/Users/yaseralnajjar/.sifr/bin/sifr` was 0.1.0-beta.14, SHA-256
+`19259ec7d4ccefb88f9a510038a8084cb66aa957ebacafbea851c88fa86f3d72`.
+Its schema-1 receipt and complete root contained only bin/sifr, env and
+install.json; no sysroot or immutable generation. The canonical installer
+intentionally rejects this mutable layout. After explicit bounded owner
+authorization, an inventory and no-open-files check, the entire legacy root was
+renamed to the unused sibling
+`/Users/yaseralnajjar/.sifr-backup-dxf8-20260920-194600`.
+This preserves original bytes, permissions and recovery; no legacy migration
+or fallback was added to compiler/installer code.
+
+The exact retained ARM archive and canonical installer were transferred and
+verified against the DXF.7 hashes above. The unmodified installer consumed the
+local file URL and atomically selected a fresh generation in `~/.sifr`.
+No package rebuild, relabeling or publication occurred. A login shell now
+selects `/Users/yaseralnajjar/.sifr/bin/sifr`, version 0.1.0; the actual target is:
+
+```text
+/Users/yaseralnajjar/.sifr/.sifr-generations/0.1.0-aarch64-apple-darwin-38d7a7fe51bb0f3b63f15bb29c765fcdb44d227b50597070fda57b82631adfa5-.stage.dV0mkX/bin/sifr
+```
+
+Binary SHA-256:
+`873f6f4739e3c2b2832e5447da7508b734e4e445d765860fe6ec2f85a6d19580`.
+Product compiler identity:
+`d1b09914b8583f1ab7368eafd582b66321dd6826c1fe184549449c48262453b9`.
+Installed schema-2 receipt sysroot content digest:
+`7973ec48f024d811fc5bb02dfa831ad9666827d34c3010a9fc4f85c08e132528`;
+the sysroot.toml file itself hashes to
+`637352b93ca372456329622bfc2a5deb8af9efbf5bbd04a172ca5019105d1ae9`.
+Cargo.lock retains qualified SHA-256
+`89df7e65c42bf8130fde4b238912761d94b0ead638fdefe37f99be6735ce33a7`.
+
+The installer regenerated its sh/fish environment files to select the durable
+root. Existing .zshrc, .profile, .zprofile and .bashrc hashes remain unchanged;
+the old fish file is separately preserved. No unrelated shell configuration
+changed. Existing shells can source `~/.sifr/env` or open a new login shell.
+The installed source stamp remains
+`f6865cdfb8aa8d0f7d62759ec4fe313e5edc3708`; current checkout main is newer.
+DXF.7 records their package-producing-input equivalence.
+
+### Bounded local evidence and recovery
+
+Evidence root:
+`/Users/yaseralnajjar/work/sifr/dxf8-handoff-20260920`.
+A verified external copy of the evidence/logs/receipts is retained under
+`/home/yaser5/projects/sifr/dxf-evidence/dxf8-handoff-20260920/local-evidence`;
+`evidence-index.json` binds their relative paths and SHA-256 values.
+The smoke script was authored remotely, then executed locally against the
+selected installed binary and the unchanged checked-in DXF.1/6 helpers.
+
+- Full `doctor --json --verify-integrity` passed: installed package integrity,
+  metadata structural status and all 89 module records. Actual local doctor
+  selected Rust 1.98.0; no local compiler build or source test used that toolchain.
+- Real multi-module package/local dependency check, helper body edit and
+  recheck matched an independent `--no-incremental` reference: empty diagnostics,
+  interface-restored status, ten restored modules and one computed module.
+- All 34 existing isolated cache CLI calls passed, including help/JSON,
+  argument errors, reserve policy, real generations, dry-run, deletion,
+  idempotency and orphan cleanup confined to smoke-owned storage.
+- Trace off/on checks passed with identical stdout/exit status. Under umask 000,
+  the new directory/file modes are 0700/0600; the 1,207-byte schema-1 artifact
+  binds the product identity, stays within 32,768 bytes/64 reports, and excludes
+  source-path/environment sentinels. Trace SHA-256:
+  `0a27f86e3d0095a46474d04feb4de143b4ec82245d501f8436d4016511fa01cf`.
+- One inspection typo, `self version --json`, exited 2. Its preserved record
+  distinguishes this from the successful documented `self version --format json`.
+  No failed compiler smoke was hidden or retried as passing.
+
+Recovery is explicit and has not been executed: preserve the new `~/.sifr`
+by renaming it to a fresh sibling, rename the complete legacy backup back to
+`~/.sifr`, and restore
+`/Users/yaseralnajjar/work/sifr/dxf8-handoff-20260920/prior-sifr.env.fish`
+to `~/.config/fish/conf.d/sifr.env.fish`. Open a new shell. Exact legacy recovery
+also restores its known stale environment selection; it does not pretend to
+repair the old installation. Keep both generations/backups until the owner
+deliberately retires them.
+
+Only Mac ARM handoff smokes ran here. DXF.7 retains the four-platform package
+qualification; it was not rerun. No full phase gate/review, native application
+build, performance measurement, active-memory claim or graphical 12 GB claim.
+The nonblocking editor/interface-proof/history and infrastructure follow-ups
+remain with their existing linked owners; this handoff adds no new scope.
+
 ## Current handoff
 
-DXF.1–7 are merged and recorded. Stop this session. A new bounded **DXF.8 only**
-session owns actual user checkout/binary inspection and safe installation using
-the exact retained package for that host; no rebuild or publication is implied.
+DXF.8 local acceptance passed. Scoped read-only Opus review and merge remain;
+then record the merged item and archive the completed follow-up plan.
