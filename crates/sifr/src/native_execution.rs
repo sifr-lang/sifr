@@ -25,3 +25,19 @@ impl Drop for Timing {
         }
     }
 }
+
+pub(super) fn render_project_cache_report(
+    compiler: &sifr_driver::CompilerContext,
+    report: &sifr_driver::project_cache::ProjectCacheReport,
+    timings: bool,
+) {
+    use std::io::{self, Write as _};
+    if timings {
+        if let Ok(report) = serde_json::to_string(report) {
+            let _ = writeln!(io::stderr(), "[sifr-project-cache] {report}");
+        }
+        if let Some(metadata) = compiler.metadata_stats() {
+            let _ = writeln!(io::stderr(), "[sifr-metadata] {metadata}");
+        }
+    }
+}

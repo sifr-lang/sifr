@@ -17,7 +17,9 @@ struct Retained {
 /// source-bootstrap fallback. Separate stores never share decoded nominal owners.
 pub struct MetadataStore {
     input: Mutex<Box<dyn MetadataRead>>,
-    pub(super) directory: BTreeMap<RecordId, Entry>,
+    pub(super) directory: super::directory::Directory,
+    physical_decode_us: u128,
+    physical_payload_decode_us: Arc<std::sync::atomic::AtomicU64>,
     retained: Mutex<Retained>,
     pub(super) limits: Limits,
     compatibility: Compatibility,
@@ -30,6 +32,29 @@ impl MetadataStore {
         expected: Compatibility,
         limits: Limits,
     ) -> Result<Self> {
+        let size = input.seek(SeekFrom::End(0)).map_err(|e| io_error(&e))?;
+        if size > limits.file_bytes {
+            return Err(err("physical size outside bounded container limits"));
+        }
+        input.seek(SeekFrom::Start(0)).map_err(|e| io_error(&e))?;
+        let mut bytes = Vec::new();
+        input
+            .take(size.saturating_add(1))
+            .read_to_end(&mut bytes)
+            .map_err(|e| io_error(&e))?;
+        if bytes.len() as u64 != size {
+            return Err(err("physical input changed while reading"));
+        }
+        Self::open_bytes(bytes, expected, limits)
+    }
+
+    /// Open already captured immutable bytes without copying the compressed body.
+    /// This uses the same bounded decoder as the read/seek adapter.
+    pub fn open_bytes(input: Vec<u8>, expected: Compatibility, limits: Limits) -> Result<Self> {
+        let started = std::time::Instant::now();
+        let mut input = super::physical::open(input, expected, limits)?;
+        let physical_payload_decode_us = input.payload_decode_us.clone();
+        let physical_decode_us = started.elapsed().as_micros();
         let size = input.seek(SeekFrom::End(0)).map_err(|e| io_error(&e))?;
         if size < HEADER_SIZE as u64 || size > limits.file_bytes {
             return Err(err("file size outside bounded container limits"));
@@ -63,8 +88,7 @@ impl MetadataStore {
         if start > size {
             return Err(err("truncated directory"));
         }
-        let mut directory = BTreeMap::new();
-        let mut next = start;
+        let mut directory = Vec::with_capacity(count as usize);
         let mut previous = None;
         for _ in 0..count {
             let mut raw = [0; ENTRY_SIZE];
@@ -85,7 +109,7 @@ impl MetadataStore {
                 decoded_bound: u64::from_le_bytes(array(&raw, 52)?),
                 digest: array(&raw, 60)?,
             };
-            if entry.offset != next || entry.len == 0 || entry.len > limits.record_bytes {
+            if entry.len == 0 || entry.len > limits.record_bytes {
                 return Err(err("invalid payload offset or bounded length"));
             }
             if entry.decoded_bound
@@ -98,20 +122,33 @@ impl MetadataStore {
             {
                 return Err(err("invalid decoded allocation bound"));
             }
-            next = next
-                .checked_add(entry.len)
-                .ok_or_else(|| err("payload offset overflow"))?;
-            if next > size {
-                return Err(err("payload outside file bounds"));
+            directory.push((id, entry));
+        }
+        let mut next = start;
+        for group in 0..2 {
+            for (_, entry) in directory
+                .iter()
+                .filter(|(_, entry)| super::physical::payload_group(entry.kind) == group)
+            {
+                if entry.offset != next {
+                    return Err(err("noncanonical payload group offset"));
+                }
+                next = next
+                    .checked_add(entry.len)
+                    .ok_or_else(|| err("payload offset overflow"))?;
+                if next > size {
+                    return Err(err("payload outside file bounds"));
+                }
             }
-            directory.insert(id, entry);
         }
         if next != size {
             return Err(err("unindexed trailing bytes"));
         }
         Ok(Self {
             input: Mutex::new(Box::new(input)),
-            directory,
+            directory: super::directory::Directory(directory),
+            physical_decode_us,
+            physical_payload_decode_us,
             retained: Mutex::new(Retained {
                 bytes: 0,
                 records: BTreeMap::new(),
@@ -126,6 +163,16 @@ impl MetadataStore {
                 .collect(),
         })
     }
+    #[must_use]
+    pub fn physical_decode_us(&self) -> u128 {
+        self.physical_decode_us
+    }
+    #[must_use]
+    pub fn physical_payload_decode_us(&self) -> u64 {
+        self.physical_payload_decode_us
+            .load(std::sync::atomic::Ordering::Relaxed)
+    }
+
     /// Enumerate the small typed directory without reading record payloads.
     pub fn record_refs<T: Record>(&self) -> impl Iterator<Item = Ref<T>> + '_ {
         self.directory
@@ -257,8 +304,8 @@ impl MetadataStore {
             .seek(SeekFrom::Start(entry.offset))
             .map_err(|e| io_error(&e))?;
         input.read_exact(&mut bytes).map_err(|e| io_error(&e))?;
-        let digest: RecordId = Sha256::digest(&bytes).into();
-        if digest != entry.digest {
+        let digest = ring::digest::digest(&ring::digest::SHA256, &bytes);
+        if digest.as_ref() != entry.digest.as_slice() {
             return Err(err("payload digest mismatch"));
         }
         Ok(bytes)
@@ -297,9 +344,9 @@ impl MetadataStore {
 
 impl MetadataStore {
     /// Canonical full-record portability evidence. Only the producer compiler
-    /// envelope in FragmentValidation is excluded; semantic identities and every
+    /// envelope in `FragmentValidation` is excluded; semantic identities and every
     /// semantic/type/declaration/HIR/template/Rust/source field remain included.
-    /// Call validate_complete first so malformed records cannot become evidence.
+    /// Call `validate_complete` first so malformed records cannot become evidence.
     pub fn portable_payload_digest(&self) -> Result<String> {
         self.validate_complete()?;
         let mut hash = Sha256::new();
@@ -324,6 +371,13 @@ impl MetadataStore {
             hash.update((payload.len() as u64).to_le_bytes());
             hash.update(payload);
         }
-        Ok(hash.finalize().iter().map(|b| format!("{b:02x}")).collect())
+        Ok(hash
+            .finalize()
+            .iter()
+            .fold(String::with_capacity(64), |mut text, byte| {
+                use std::fmt::Write as _;
+                let _ = write!(text, "{byte:02x}");
+                text
+            }))
     }
 }

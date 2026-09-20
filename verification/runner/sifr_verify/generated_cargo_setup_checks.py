@@ -18,6 +18,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from .cargo_setup import enable_offline_cargo, prepare_cargo_cache, prepare_authoring_test_binaries, prepare_maintained_demo_cache, prepare_tooling_test_binaries, prepare_performance_binaries, prepare_generated_oracle_binary
+from .cargo_crate_setup import prepare_crate_test_binaries
 from .cargo_fixture_setup import fixture_graph_hashes, locked_fixture_manifests
 from .cargo_fixture_setup_checks import FixtureSetupPolicyTests
 from .cargo_crate_setup_checks import CrateSetupPolicyTests
@@ -52,7 +53,10 @@ class SetupPolicyTests(unittest.TestCase):
     def test_profile_order_environment_and_exact_source_namespace(self):
         env = {"CARGO_NET_OFFLINE": "true", "CARGO_HOME": "/owned/cache"}
         commands = []
-        with patch("sifr_verify.cargo_setup.subprocess.check_output", return_value=REVISION):
+        with patch("sifr_verify.cargo_setup.subprocess.check_output", return_value=REVISION), \
+             patch("sifr_verify.cargo_setup.prepare_crate_test_binaries",
+                   wraps=prepare_crate_test_binaries) as compiler_setup, \
+             patch("sifr_verify.cargo_setup.prepare_area_graphs") as area_setup:
             prepare_cargo_cache(load_profile("merge"), env,
                                 lambda args, **kw: commands.append((args, kw["env"])))
         self.assertEqual(commands[0][0], ["cargo", "fetch", "--locked"])
@@ -60,9 +64,19 @@ class SetupPolicyTests(unittest.TestCase):
                                          str(locked_fixture_manifests(load_profile("merge"))[0])])
         self.assertIn("sifr_verify.generated_cargo_setup", commands[2][0])
         self.assertEqual(commands[2][0][-1], REVISION)
-        for _, setup_env in commands:
-            self.assertNotIn("CARGO_NET_OFFLINE", setup_env)
+        compiler_env = compiler_setup.call_args.args[1]
+        self.assertIsNot(compiler_env, env)
+        self.assertIs(area_setup.call_args.args[1], compiler_env)
+        compiler_commands = 0
+        for args, setup_env in commands:
+            if setup_env is compiler_env:
+                compiler_commands += 1
+                self.assertEqual(setup_env["CARGO_NET_OFFLINE"], "true")
+                self.assertIn("--offline", args)
+            else:
+                self.assertNotIn("CARGO_NET_OFFLINE", setup_env)
             self.assertEqual(setup_env["CARGO_HOME"], "/owned/cache")
+        self.assertGreater(compiler_commands, 0)
         self.assertIn(REVISION, env["SIFR_GCQ_SHARED_ROOT"])
         self.assertEqual(env["CARGO_NET_OFFLINE"], "true")
 

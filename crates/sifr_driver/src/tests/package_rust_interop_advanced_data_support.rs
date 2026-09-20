@@ -7,11 +7,8 @@ const ADVANCED_DATA_NEGATIVE: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/negative/schema_shape_device_mismatch_rejected.sifr"
 );
 
-#[test]
-#[ignore = "generated build integration coverage runs in full validation profiles"]
-#[doc = "sifr-evidence: executes-runtime-observed"]
-fn test_build_advanced_data_crate_backed_arrow_tensor_roundtrips() {
-    let package_root = copied_scenario(
+fn prepared_runtime_scenario() -> ReusableScenario {
+    let package_root = reusable_scenario(
         "advanced_data_runtime_matrix",
         "advanced_data_runtime",
         "rust_interop_advanced_data_roundtrips",
@@ -23,6 +20,28 @@ fn test_build_advanced_data_crate_backed_arrow_tensor_roundtrips() {
             "{ADVANCED_DATA_EVIDENCE}\n\ndef main() -> Result[None, DataExchangeError]:\n    try:\n        print(verify_crate_backed_arrow_tensor_roundtrips())\n    except DataExchangeError as error:\n        raise error\n    return None\n"
         ),
     );
+    package_root
+}
+
+#[test]
+#[ignore = "explicit native preparation runs before generated-build assertions"]
+#[doc = "sifr-evidence: executes-cargo-probe"]
+fn prepare_advanced_data_native_graph() {
+    let package_root = prepared_runtime_scenario();
+    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "advanced-data-runtime");
+    let _artifact = build_cached_package_project(
+        &crate::CompilerContext::for_test(),
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("prepare exact native graph without claiming runtime assertions");
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+#[doc = "sifr-evidence: executes-runtime-observed"]
+fn test_build_advanced_data_crate_backed_arrow_tensor_roundtrips() {
+    let package_root = prepared_runtime_scenario();
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "advanced-data-runtime");
 
     let output = built_package_output(&entrypoint);
@@ -36,7 +55,7 @@ fn test_build_advanced_data_crate_backed_arrow_tensor_roundtrips() {
         "advanced-data runtime scenario must not emit stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let _ = std::fs::remove_dir_all(package_root);
+    drop(package_root);
 }
 
 #[test]

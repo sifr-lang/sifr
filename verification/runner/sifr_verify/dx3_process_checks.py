@@ -107,6 +107,23 @@ class ProcessTests(unittest.TestCase):
             self.assertEqual(live["exit_status"], 9)
             self.assertTrue(Path(live["log"]).is_file())
 
+    def test_dx15_profile_rss_roundtrip_preserves_linux_and_darwin_bytes(self):
+        from types import SimpleNamespace
+        from . import profile_reporting
+        from .reports import parse_time_file
+        expected = 7 * 1024**3
+        initial = SimpleNamespace(ru_utime=0, ru_stime=0, ru_nswap=0)
+        for host, native_rss in (("linux", expected // 1024), ("darwin", expected)):
+            with self.subTest(host=host), tempfile.TemporaryDirectory() as directory:
+                usage = SimpleNamespace(ru_utime=1, ru_stime=2, ru_nswap=0,
+                                        ru_maxrss=native_rss)
+                path = Path(directory) / "time"
+                with patch.object(profile_reporting.sys, "platform", host), \
+                     patch.object(profile_reporting.resource, "getrusage", return_value=usage):
+                    profile_reporting.write_time_file(path, start=time.monotonic(),
+                                                      usage_start=initial)
+                self.assertEqual(parse_time_file(path)["max_rss_bytes"], expected)
+
     def test_detached_observer_does_not_change_log(self):
         from .profile_reporting import Tee
         class Detached(io.StringIO):
@@ -139,6 +156,40 @@ class ProcessTests(unittest.TestCase):
             self.assertIn(b"error\xfe", result.stderr)
             time.sleep(2.1)
             self.assertFalse(marker.exists())
+
+    def test_stdin_large_and_empty_are_delivered_without_pipe_deadlock(self):
+        for data in (b"", bytes(range(256)) * 8192):
+            result = execute([sys.executable, "-c",
+                "import sys; sys.stdout.buffer.write(sys.stdin.buffer.read())"],
+                cwd=Path.cwd(), input_bytes=data, limit_bytes=3 * 1024 * 1024)
+            self.assertEqual(result.returncode, 0)
+            self.assertFalse(result.truncated)
+            self.assertEqual(result.stdout, data)
+
+    def test_audit_inventory_allows_only_regular_generated_hint(self):
+        from . import audit_fixtures
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = root / "case.sifr"
+            fixture.write_text("def main():\n    pass\n")
+            manifest = {"schema_version": 1, "area": "fixture", "fixture_root": ".",
+                        "entries": [{"id": "case", "path": "case.sifr", "category": "test",
+                                     "command": "check", "smoke": True, "expect_exit_code": 0}]}
+            with patch.object(audit_fixtures, "REPO_ROOT", root):
+                check = lambda: audit_fixtures.validate_manifest(root / "manifest.json", manifest, area="fixture")
+                hint = root / ".sifrbuildinfo"
+                hint.write_text("{}")
+                self.assertEqual(check(), [])
+                extra = root / "untracked.txt"
+                extra.write_text("unexpected")
+                self.assertTrue(any("non-fixture file" in failure for failure in check()))
+                extra.unlink()
+                hint.unlink()
+                hint.symlink_to("missing")
+                self.assertTrue(any("non-fixture file" in failure for failure in check()))
+                hint.unlink()
+                (root / "missing.sifr").write_text("def main():\n    pass\n")
+                self.assertTrue(any("fixture missing from manifest" in failure for failure in check()))
 
     def test_b10_bounded_streams_and_cancelled_owner(self):
         result = execute([sys.executable, "-c", "import os; os.write(1,b'x'*2000000); os.write(2,b'y'*2000000)"],

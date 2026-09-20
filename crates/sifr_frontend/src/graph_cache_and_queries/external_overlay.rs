@@ -1,4 +1,7 @@
-use super::*;
+use super::{
+    BTreeSet, DiagnosticCode, ExternalDefs, FrontendContext, ModuleId, RenderedDiagnostic, Stmt,
+    collect_module_exports, diagnostic_with_code,
+};
 
 impl FrontendContext {
     pub(super) fn clear_module_caches(
@@ -37,7 +40,7 @@ impl FrontendContext {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{FrontendInput, FrontendMode};
+    use crate::{FrontendInput, FrontendMode, SourcePath, SourceText};
     fn context(source: &str, defs: ExternalDefs) -> FrontendContext {
         FrontendContext::load_single_file_with_external_defs(
             FrontendInput {

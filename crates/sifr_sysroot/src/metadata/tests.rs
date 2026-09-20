@@ -234,11 +234,11 @@ fn class_scaling(signatures: usize) -> (usize, usize, u64) {
 }
 #[test]
 #[allow(clippy::print_stderr)]
-fn m16_shared_large_class_retention_is_unique_records_plus_references() {
+fn shared_large_class_retention_is_unique_records_plus_references() {
     let small = class_scaling(10);
     let large = class_scaling(1000);
     eprintln!(
-        "M16 (encoded bytes, retained records, retained bound bytes): 10 signatures {small:?}; 1000 signatures {large:?}"
+        "Shared records (encoded bytes, retained records, retained bound bytes): 10 signatures {small:?}; 1000 signatures {large:?}"
     );
     assert!(large.0 - small.0 < 1_000_000);
     assert_eq!(large.1 - small.1, 990);
@@ -246,7 +246,7 @@ fn m16_shared_large_class_retention_is_unique_records_plus_references() {
 }
 
 #[test]
-fn m16_nominal_recursion_terminates_but_structural_cycles_and_excess_depth_reject() {
+fn nominal_recursion_terminates_but_structural_cycles_and_excess_depth_reject() {
     let mut encoded = encoder();
     let recursive = Ref::<Type>::anchor(&[b"recursive"]);
     let view = Ref::<NominalView>::anchor(&[b"recursive-view"]);
@@ -290,7 +290,7 @@ fn m16_nominal_recursion_terminates_but_structural_cycles_and_excess_depth_rejec
 }
 
 #[test]
-fn m06_header_index_payload_and_reference_fuzz_seeds_fail_closed() {
+fn header_index_payload_and_reference_fuzz_seeds_fail_closed() {
     let original = encoder().finish().unwrap();
     for end in [0, 7, 8, 119, 120, original.len() - 1] {
         assert!(
@@ -298,33 +298,45 @@ fn m06_header_index_payload_and_reference_fuzz_seeds_fail_closed() {
                 .is_err()
         );
     }
-    for offset in [
-        0,
-        8,
-        12,
-        16,
-        48,
-        80,
-        112,
-        120 + 32,
-        120 + 34,
-        120 + 36,
-        120 + 44,
-        120 + 52,
-    ] {
+    for offset in [0, 8, 12, 16, 48, 80, 112, 120] {
         let mut bytes = original.clone();
         bytes[offset] ^= 0xff;
+        assert!(MetadataStore::open(Cursor::new(bytes), identity(), limits()).is_err());
+    }
+    let logical = super::physical::decode(&original, identity(), limits())
+        .unwrap()
+        .into_inner();
+    for offset in [120 + 32, 120 + 34, 120 + 36, 120 + 44, 120 + 52] {
+        // Preserve payload-frame boundaries while corrupting the logical
+        // directory, so this exercises decoder validation, not encoder checks.
+        let frame_size = zstd::zstd_safe::find_frame_compressed_size(&original[128..]).unwrap();
+        let mut prefix = zstd::bulk::decompress(
+            &original[128..128 + frame_size],
+            limits().file_bytes as usize,
+        )
+        .unwrap();
+        prefix[offset] ^= 0xff;
+        let mut bytes = original[..128].to_vec();
+        bytes.extend_from_slice(&zstd::bulk::compress(&prefix, 9).unwrap());
+        bytes.extend_from_slice(&original[128 + frame_size..]);
+        let size = bytes.len() as u64;
+        bytes[112..120].copy_from_slice(&size.to_le_bytes());
         assert!(
             MetadataStore::open(Cursor::new(bytes), identity(), limits()).is_err(),
             "offset {offset}"
         );
     }
-    let mut bytes = original.clone();
+    let mut bytes = logical;
     let count = u32::from_le_bytes(bytes[12..16].try_into().unwrap()) as usize;
     let start = 120 + count * 92;
     bytes[start] ^= 1;
+    let bytes = super::physical::encode(&bytes, limits()).unwrap();
     let store = MetadataStore::open(Cursor::new(bytes), identity(), limits()).unwrap();
-    let first = store.directory.iter().next().unwrap();
+    let first = store
+        .directory
+        .iter()
+        .min_by_key(|(_, entry)| entry.offset)
+        .unwrap();
     assert!(store.read_payload(first.1).is_err());
     let mut encoded = encoder();
     let missing = Ref::<Type>::anchor(&[b"missing"]);
@@ -342,7 +354,7 @@ fn m06_header_index_payload_and_reference_fuzz_seeds_fail_closed() {
 }
 
 #[test]
-fn m06_source_ranges_binders_and_fragment_assurance_are_checked() {
+fn source_ranges_binders_and_fragment_assurance_are_checked() {
     let mut encoded = encoder();
     let bad = encoded
         .intern(&SourceFile {
@@ -445,11 +457,10 @@ fn i05_indexed_file_relocation_and_separate_store_owners_preserve_identity() {
     std::fs::remove_dir(root).unwrap();
 }
 
-fn replace_payload(
-    mut bytes: Vec<u8>,
-    id: RecordId,
-    replacement: impl FnOnce(&mut [u8]),
-) -> Vec<u8> {
+fn replace_payload(bytes: Vec<u8>, id: RecordId, replacement: impl FnOnce(&mut [u8])) -> Vec<u8> {
+    let mut bytes = super::physical::decode(&bytes, identity(), limits())
+        .unwrap()
+        .into_inner();
     let count = u32::from_le_bytes(bytes[12..16].try_into().unwrap()) as usize;
     let index = (0..count)
         .map(|i| 120 + i * 92)
@@ -466,10 +477,10 @@ fn replace_payload(
     replacement(&mut bytes[start..start + len]);
     let digest = Sha256::digest(&bytes[start..start + len]);
     bytes[index + 60..index + 92].copy_from_slice(&digest);
-    bytes
+    super::physical::encode(&bytes, limits()).unwrap()
 }
 #[test]
-fn m06_checks_corrupt_reference_ids_even_when_payload_digest_matches() {
+fn checks_corrupt_reference_ids_even_when_payload_digest_matches() {
     let mut encoder = encoder();
     let root = encoder.intern(&Type::List(fixture::<Type>())).unwrap();
     let bytes = encoder.finish().unwrap();
@@ -490,7 +501,7 @@ fn m06_checks_corrupt_reference_ids_even_when_payload_digest_matches() {
     }
 }
 #[test]
-fn m06_mutation_corpus_never_panics_or_allocates_from_unchecked_lengths() {
+fn mutation_corpus_never_panics_or_allocates_from_unchecked_lengths() {
     let original = encoder().finish().unwrap();
     let mut state = 7_u64;
     for _ in 0..128 {
@@ -582,7 +593,7 @@ fn i06_encoded_same_name_declarations_keep_package_version_and_source_identity()
 }
 
 #[test]
-fn m16_mutually_recursive_nominal_views_stay_lazy() {
+fn mutually_recursive_nominal_views_stay_lazy() {
     let mut encoder = encoder();
     let a = Ref::<Type>::anchor(&[b"mutual-a"]);
     let b = Ref::<Type>::anchor(&[b"mutual-b"]);
@@ -625,11 +636,14 @@ fn bounded_retention_evicts_only_unreferenced_records() {
         );
     }
     let bytes = encoder.finish().unwrap();
-    let count = u32::from_le_bytes(bytes[12..16].try_into().unwrap()) as usize;
+    let logical = super::physical::decode(&bytes, identity(), limits())
+        .unwrap()
+        .into_inner();
+    let count = u32::from_le_bytes(logical[12..16].try_into().unwrap()) as usize;
     let maximum = (0..count)
         .map(|i| {
             u64::from_le_bytes(
-                bytes[120 + i * 92 + 52..120 + i * 92 + 60]
+                logical[120 + i * 92 + 52..120 + i * 92 + 60]
                     .try_into()
                     .unwrap(),
             )
@@ -714,4 +728,102 @@ fn dx8_portable_digest_preserves_semantic_payload_changes() {
     };
     assert_ne!(digest("declaration-a"), digest("declaration-b"));
     assert_eq!(digest("declaration-a"), digest("declaration-a"));
+}
+
+#[test]
+fn dx15_physical_frames_are_bounded_canonical_and_versioned() {
+    let original = encoder().finish().unwrap();
+    for expanded in [0_u64, 119, u64::MAX, limits().file_bytes + 1] {
+        let mut bytes = original.clone();
+        bytes[120..128].copy_from_slice(&expanded.to_le_bytes());
+        assert!(MetadataStore::open(Cursor::new(bytes), identity(), limits()).is_err());
+    }
+    for suffix in [vec![0], original[128..].to_vec()] {
+        let mut bytes = original.clone();
+        bytes.extend_from_slice(&suffix);
+        let size = bytes.len() as u64;
+        bytes[112..120].copy_from_slice(&size.to_le_bytes());
+        assert!(MetadataStore::open(Cursor::new(bytes), identity(), limits()).is_err());
+    }
+    let mut old = original.clone();
+    old[8..12].copy_from_slice(&1_u32.to_le_bytes());
+    assert!(MetadataStore::open(Cursor::new(old), identity(), limits()).is_err());
+    let logical = super::physical::decode(&original, identity(), limits())
+        .unwrap()
+        .into_inner();
+    assert_eq!(
+        super::physical::encode(&logical, limits()).unwrap(),
+        original
+    );
+    let mut undersized = original.clone();
+    undersized[120..128].copy_from_slice(&((logical.len() - 1) as u64).to_le_bytes());
+    assert!(MetadataStore::open(Cursor::new(undersized), identity(), limits()).is_err());
+    let mut oversized = original;
+    oversized[120..128].copy_from_slice(&((logical.len() + 1) as u64).to_le_bytes());
+    assert!(MetadataStore::open(Cursor::new(oversized), identity(), limits()).is_err());
+}
+
+#[test]
+fn dx15_self_contained_distribution_fixture_uses_a_valid_raw_zstd_frame() {
+    let encoded = MetadataEncoder::new(identity(), limits()).finish().unwrap();
+    let logical = super::physical::decode(&encoded, identity(), limits())
+        .unwrap()
+        .into_inner();
+    assert_eq!(logical.len(), 120);
+    let mut frame = vec![0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x78, 0xc1, 0x03, 0x00];
+    frame.extend_from_slice(&logical);
+    for _ in 0..2 {
+        frame.extend_from_slice(&[0x28, 0xb5, 0x2f, 0xfd, 0x20, 0x00, 0x01, 0x00, 0x00]);
+    }
+    let mut fixture = logical[..112].to_vec();
+    fixture.extend_from_slice(&((128 + frame.len()) as u64).to_le_bytes());
+    fixture.extend_from_slice(&120_u64.to_le_bytes());
+    fixture.extend_from_slice(&frame);
+    let store = MetadataStore::open_bytes(fixture, identity(), limits()).unwrap();
+    assert_eq!(store.retained_records().unwrap(), 0);
+}
+
+#[test]
+fn dx15_payload_frame_is_demand_loaded_once_without_decoding_unrequested_records() {
+    let store = store(encoder());
+    assert_eq!(store.physical_payload_decode_us(), 0);
+    assert_eq!(store.retained_records().unwrap(), 0);
+    let first = get::<SemanticExports>(&store);
+    let elapsed = store.physical_payload_decode_us();
+    assert!(elapsed > 0);
+    assert_eq!(store.retained_records().unwrap(), 1);
+    assert_eq!(store.decoded_count::<HirModule>(), 0);
+    assert_eq!(first, get::<SemanticExports>(&store));
+    assert_eq!(store.physical_payload_decode_us(), elapsed);
+}
+
+#[test]
+fn dx15_catalog_locality_preserves_authoritative_records_and_bounds() {
+    let store = store(encoder());
+    let module = get::<Module>(&store);
+    let catalog_time = store.physical_payload_decode_us();
+    assert!(catalog_time > 0);
+    let _ = get::<Text>(&store);
+    assert_eq!(
+        catalog_time,
+        store.physical_payload_decode_us(),
+        "module and name records share one physical frame"
+    );
+    assert_eq!(store.decoded_count::<SemanticExports>(), 0);
+    assert_eq!(store.decoded_count::<HirModule>(), 0);
+    assert_eq!(module, get::<Module>(&store));
+    let _ = get::<SemanticExports>(&store);
+    assert!(store.physical_payload_decode_us() > catalog_time);
+}
+
+#[test]
+fn dx15_empty_payload_frames_still_require_valid_decompression() {
+    let mut bytes = MetadataEncoder::new(identity(), limits()).finish().unwrap();
+    // Last frame declares zero content, but contains a nonempty raw block.
+    let end = bytes.len();
+    bytes[end - 3..].copy_from_slice(&[9, 0, 0]);
+    bytes.push(b'x');
+    let size = bytes.len() as u64;
+    bytes[112..120].copy_from_slice(&size.to_le_bytes());
+    assert!(MetadataStore::open_bytes(bytes, identity(), limits()).is_err());
 }

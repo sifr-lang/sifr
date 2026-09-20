@@ -21,6 +21,8 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 pub(super) struct MaterializedBinaryProject {
+    #[cfg(test)]
+    pub(super) generated_project_root: PathBuf,
     pub(super) cargo_artifact_profile: serde_json::Value,
     pub(super) native_executable: PathBuf,
     pub(super) native_libraries: Vec<PathBuf>,
@@ -378,6 +380,8 @@ pub(super) fn materialize_binary_project_at_path_with_target(
     let cargo_elapsed = cargo_start.elapsed();
 
     Ok(MaterializedBinaryProject {
+        #[cfg(test)]
+        generated_project_root: project_path.to_path_buf(),
         cargo_artifact_profile,
         native_executable: executable,
         native_libraries,

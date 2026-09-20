@@ -2,8 +2,8 @@
   "schema_version": 2,
   "audited_at": "2026-09-09",
   "source": "https://index.crates.io/{prefix}/{crate}",
-  "maintained_manifests": 132,
-  "direct_declarations": 198,
+  "maintained_manifests": 133,
+  "direct_declarations": 201,
   "packages": [
     {
       "name": "aho-corasick",
@@ -2139,6 +2139,29 @@
       ]
     },
     {
+      "name": "ring",
+      "latest_stable": "0.17.14",
+      "checksum": "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7",
+      "source_url": "https://index.crates.io/ri/ng/ring",
+      "response_sha256": "53e4f7b2aac2d09174abecf713e93395c3ff09b4a27254babcdf11fc55b49121",
+      "observed_at": "2026-09-19T15:42:21.829476+00:00",
+      "locked_releases": [
+        {
+          "version": "0.17.14",
+          "checksum": "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
+        }
+      ],
+      "declarations": [
+        {
+          "path": "crates/sifr_sysroot/Cargo.toml",
+          "table": "dependencies",
+          "alias": "ring",
+          "package": "ring",
+          "requirement": "=0.17.14"
+        }
+      ]
+    },
+    {
       "name": "rusqlite",
       "latest_stable": "0.40.2",
       "checksum": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3",
@@ -2677,6 +2700,13 @@
         },
         {
           "path": "crates/sifr_codegen/Cargo.toml",
+          "table": "dev-dependencies",
+          "alias": "tempfile",
+          "package": "tempfile",
+          "requirement": "3.27.0"
+        },
+        {
+          "path": "crates/sifr_driver/Cargo.toml",
           "table": "dev-dependencies",
           "alias": "tempfile",
           "package": "tempfile",
@@ -3479,6 +3509,13 @@
       "declarations": [
         {
           "path": "crates/sifr_rust_interop_catalog/Cargo.toml",
+          "table": "dependencies",
+          "alias": "zstd",
+          "package": "zstd",
+          "requirement": "=0.14.0"
+        },
+        {
+          "path": "crates/sifr_sysroot/Cargo.toml",
           "table": "dependencies",
           "alias": "zstd",
           "package": "zstd",

@@ -301,7 +301,7 @@ fn main() {
     if let Some(s2) = s2.clone() {
         println!("{s2}");
     }
-    let mut c = Counter::new(SifrInt::from_i64(0));
+    let mut c: Counter = Counter::new(SifrInt::from_i64(0));
     c.increment();
     c.increment();
     c.increment();

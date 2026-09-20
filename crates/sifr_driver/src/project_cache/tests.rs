@@ -36,8 +36,7 @@ fn compute(file: &Path, provider: &mut dyn SourceProvider) -> Vec<RenderedDiagno
 }
 fn run(cache: &Path, file: &Path) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
     check(
-        cache,
-        file.parent().unwrap(),
+        (cache, file.parent().unwrap()),
         file,
         &mut DiskSourceProvider::new(),
         context(),
@@ -64,14 +63,14 @@ fn store(cache: &Path, file: &Path) -> storage::Store {
     .unwrap()
 }
 #[test]
-fn dx13_p01_p02_p08_p12_completed_families() {
+fn completed_families() {
     let (_root, file, cache) = fixture();
     let (fresh, first) = run(&cache, &file);
     assert_eq!(first.status, "published");
     let (restored, second) = run(&cache, &file);
     assert_eq!(fresh, restored);
     assert_eq!(second.restored_checks, 1);
-    let generation = store(&cache, &file).latest().unwrap().unwrap();
+    let generation = store(&cache, &file).latest().unwrap();
     let record = generation.records().next().unwrap().unwrap();
     assert!(record.result.check_complete());
     assert!(!record.result.codegen_complete("any"));
@@ -103,7 +102,7 @@ fn dx13_p01_p02_p08_p12_completed_families() {
     // SourceMap allocation history does not appear in canonical payloads.
     let mut map = sifr_diagnostics::SourceMap::default();
     map.register_source("unrelated", "padding");
-    let generation = store(&cache, &file).latest().unwrap().unwrap();
+    let generation = store(&cache, &file).latest().unwrap();
     for record in generation.records() {
         let record = record.unwrap();
         let sources = record
@@ -158,14 +157,14 @@ fn dx13_c08_c09_inherited_payloads_reader_gc() {
     let (_root, file, cache) = fixture();
     run(&cache, &file);
     let store = store(&cache, &file);
-    let old = store.latest().unwrap().unwrap();
+    let old = store.latest().unwrap();
     let old_record = old.manifest.records.iter().next().unwrap().clone();
     let before = fs::read(old.path.join(&old_record)).unwrap();
     let other = file.parent().unwrap().join("other.sifr");
     fs::write(&other, "def main() -> None:\n    missing()\n").unwrap();
     let (_, published) = run(&cache, &other);
     assert_eq!(published.status, "published");
-    let latest = store.latest().unwrap().unwrap();
+    let latest = store.latest().unwrap();
     assert_eq!(latest.manifest.records.len(), 2);
     assert_eq!(
         fs::metadata(old.path.join(&old_record)).unwrap().ino(),
@@ -190,7 +189,7 @@ fn dx13_c09_corrupt_schema_references_and_winners() {
     let (_root, file, cache) = fixture();
     run(&cache, &file);
     let store = store(&cache, &file);
-    let generation = store.latest().unwrap().unwrap();
+    let generation = store.latest().unwrap();
     let record = generation.manifest.records.iter().next().unwrap();
     fs::write(generation.path.join(record), "incomplete").unwrap();
     let (actual, report) = run(&cache, &file);
@@ -217,12 +216,11 @@ fn super_record(file: &Path) -> CompletedCheck {
     CompletedCheck::capture(file, context(), &capture, &result).unwrap()
 }
 #[test]
-fn dx13_p09_cancel_transient_and_changed_input() {
+fn cancel_transient_and_changed_input() {
     let (_root, file, cache) = fixture();
     let cancel = AtomicBool::new(false);
     let (_, report) = check(
-        &cache,
-        file.parent().unwrap(),
+        (&cache, file.parent().unwrap()),
         &file,
         &mut DiskSourceProvider::new(),
         context(),
@@ -235,10 +233,9 @@ fn dx13_p09_cancel_transient_and_changed_input() {
         },
     );
     assert_eq!(report.status, "cancelled");
-    assert!(store(&cache, &file).latest().unwrap().is_none());
+    assert!(store(&cache, &file).latest().is_none());
     let (_, report) = check(
-        &cache,
-        file.parent().unwrap(),
+        (&cache, file.parent().unwrap()),
         &file,
         &mut DiskSourceProvider::new(),
         context(),
@@ -252,8 +249,7 @@ fn dx13_p09_cancel_transient_and_changed_input() {
     );
     assert_eq!(report.status, "changed-inputs");
     let (_, report) = check(
-        &cache,
-        file.parent().unwrap(),
+        (&cache, file.parent().unwrap()),
         &file,
         &mut DiskSourceProvider::new(),
         context(),
@@ -269,7 +265,7 @@ fn dx13_p09_cancel_transient_and_changed_input() {
         },
     );
     assert_eq!(report.status, "uncacheable");
-    assert!(store(&cache, &file).latest().unwrap().is_none());
+    assert!(store(&cache, &file).latest().is_none());
 }
 
 pub(super) fn pause(point: &str) {
@@ -303,7 +299,7 @@ fn dx13_process_worker() {
     let cache = std::env::var("SIFR_DX13_CACHE").unwrap();
     if std::env::var("SIFR_DX13_PAUSE").ok().as_deref() == Some("reader") {
         let store = store(Path::new(&cache), Path::new(&file));
-        let generation = store.latest().unwrap().unwrap();
+        let generation = store.latest().unwrap();
         assert!(
             generation
                 .records()
@@ -320,7 +316,7 @@ fn dx13_process_worker() {
     .unwrap();
 }
 #[test]
-fn dx13_c09_p01_p09_process_death_and_new_process_restore() {
+fn process_death_and_new_process_restore() {
     let (root, file, cache) = fixture();
     for point in ["before-rename", "after-rename"] {
         let marker = root.path().join(point);
@@ -332,7 +328,7 @@ fn dx13_c09_p01_p09_process_death_and_new_process_restore() {
         assert!(marker.exists());
         child.kill().unwrap();
         child.wait().unwrap();
-        assert!(store(&cache, &file).latest().unwrap().is_none());
+        assert!(store(&cache, &file).latest().is_none());
         store(&cache, &file).prune(true, false).unwrap();
     }
     let first = root.path().join("first.json");
@@ -379,7 +375,7 @@ fn dx13_c04_full_storage_preserves_source_outcome() {
         full["diagnostics"],
         serde_json::to_value(compute(&file, &mut DiskSourceProvider::new())).unwrap()
     );
-    assert!(store(&cache, &file).latest().unwrap().is_none());
+    assert!(store(&cache, &file).latest().is_none());
     assert_eq!(run(&cache, &file).1.status, "published");
 }
 #[test]
@@ -387,7 +383,7 @@ fn dx13_c09_concurrent_process_reader_and_gc() {
     let (root, file, cache) = fixture();
     run(&cache, &file);
     let store = store(&cache, &file);
-    let old = store.latest().unwrap().unwrap().path.clone();
+    let old = store.latest().unwrap().path.clone();
     let marker = root.path().join("reader");
     let mut reader = worker(&file, &cache, "reader", &marker);
     let deadline = Instant::now() + Duration::from_secs(15);
@@ -497,11 +493,10 @@ fn dx13_resolved_package_context_and_live_external_inventory() {
 }
 
 #[test]
-fn dx13_p09_completed_live_operation_stays_uncached() {
+fn completed_live_operation_stays_uncached() {
     let (_root, file, cache) = fixture();
     let (_, report) = check(
-        &cache,
-        file.parent().unwrap(),
+        (&cache, file.parent().unwrap()),
         &file,
         &mut DiskSourceProvider::new(),
         context(),
@@ -513,5 +508,5 @@ fn dx13_p09_completed_live_operation_stays_uncached() {
         },
     );
     assert_eq!(report.status, "external-context");
-    assert!(store(&cache, &file).latest().unwrap().is_none());
+    assert!(store(&cache, &file).latest().is_none());
 }

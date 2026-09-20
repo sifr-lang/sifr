@@ -1,5 +1,8 @@
 //! The completed checking family is deliberately shallower than typed/editor work.
-use super::*;
+use super::{
+    CanonicalDiagnostic, CapturingSourceProvider, Family, ModuleInputs, ModuleResults, Observation,
+    ResolutionResult, SemanticInputs, SourceOutcome, observations_match,
+};
 use crate::SourceProvider;
 use serde::{Deserialize, Serialize};
 use sifr_diagnostics::{RenderedDiagnostic, Severity, SourceMap};

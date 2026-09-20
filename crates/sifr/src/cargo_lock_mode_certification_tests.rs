@@ -230,10 +230,29 @@ fn test_locked_offline_sifr_commands_and_warm_cache() {
     let warm = warm.expect("warm frozen build should succeed");
     assert!(warm.build_report().cache_hit());
     assert_eq!(cold.binary_path(), warm.binary_path());
-    assert!(
-        warm_invocations.is_empty(),
-        "a warm binary cache hit must not launch Cargo: {warm_invocations:#?}"
+    // A finalized snapshot hit does not replace live native authority.
+    // Cargo still validates probes and final-build freshness under frozen mode.
+    assert_eq!(
+        warm_invocations
+            .iter()
+            .filter(|call| call.phase == "final-build")
+            .count(),
+        1,
+        "the warm request must establish Cargo freshness"
     );
+    assert!(
+        warm_invocations
+            .iter()
+            .any(|call| call.phase == "rust-probe")
+    );
+    assert!(
+        warm_invocations
+            .iter()
+            .all(|call| call.lock_mode == CargoLockMode::Frozen)
+    );
+    // The comprehensive phase/mode inventory is asserted below after the CLI
+    // check/build/run requests; this entrypoint is already package-resolved.
+    cargo_invocations.extend(warm_invocations);
 
     for mode in [
         CargoLockMode::Frozen,

@@ -35,8 +35,14 @@ pub(super) fn owners(plan: &RustInteropPlan) -> BTreeSet<String> {
 }
 
 pub(super) fn generated(source: &str) -> (sifr_codegen::CodegenResult, Arc<StdlibCompiled>) {
-    let frontend = compile_single_file_frontend(&crate::CompilerContext::for_test(), source)
+    let mut frontend = compile_single_file_frontend(&crate::CompilerContext::for_test(), source)
         .expect("application lowers");
+    // Keep the same demanded projection that the real native entrypoint owns.
+    // Codegen alone materializes a local view; the original frontend stays lazy.
+    frontend.stdlib = frontend
+        .stdlib
+        .for_codegen(std::iter::once(&frontend.lowering_result.module))
+        .expect("demanded stdlib materializes");
     let generated = codegen_single_file_frontend(&frontend).expect("application generates");
     (generated, frontend.stdlib)
 }
@@ -81,7 +87,9 @@ fn stdlib_interop_demand_additional_modules_excludes_unrelated_backends() {
             "{required}: {selected:?}"
         );
     }
-    assert!(stdlib.interop.plan.rust.declarations.len() > selected.len());
+    let inventory = crate::stdlib::metadata_inventory_for_test(&crate::CompilerContext::for_test())
+        .expect("complete independent inventory");
+    assert!(inventory.interop.plan.rust.declarations.len() > selected.len());
     // Exercise actual native resolution and its probes; unused inventory cannot
     // introduce backend validation work merely because it exists in the sysroot.
     let resolved = resolve(generated, &stdlib, DirectProbePolicy::ExecuteAll)

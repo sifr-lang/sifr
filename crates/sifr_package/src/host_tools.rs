@@ -28,9 +28,9 @@ pub const HOST_TOOL_CAPABILITIES: &[&str] = &[
 ];
 
 pub const RESERVED_TOOL_NAMESPACES: &[&str] = &[
-    "bridge", "build", "check", "doctor", "emit", "fetch", "fmt", "help", "init", "lint", "lsp",
-    "package", "publish", "python", "repair", "run", "self", "test", "trace", "tree", "vendor",
-    "tools", "version",
+    "bridge", "build", "cache", "check", "doctor", "emit", "fetch", "fmt", "help", "init", "lint",
+    "lsp", "package", "publish", "python", "repair", "run", "self", "sysroot", "test", "trace",
+    "tree", "vendor", "tools", "version",
 ];
 
 #[derive(Clone, Debug, PartialEq, Eq)]

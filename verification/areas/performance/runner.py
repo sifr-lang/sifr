@@ -278,7 +278,14 @@ def run_manifest_case(suite_name: str, case: dict[str, Any]) -> dict[str, Any]:
 
 def run_command_variant(suite_name: str, label: str, argv: list[str]) -> dict[str, Any]:
     started = time.perf_counter()
-    proc = subprocess.run(argv, cwd=REPO_ROOT, text=True, check=False)
+    environment = os.environ.copy()
+    if reference := environment.get("SIFR_PERFORMANCE_REFERENCE"):
+        # The named measurement lane owns concurrency independently of the
+        # surrounding verification profile's native-build worker selection.
+        jobs = load_profile(reference)["identity"]["execution"]["cargo_jobs"]
+        environment["CARGO_BUILD_JOBS"] = jobs
+        print(f"performance_reference={reference} cargo_jobs={jobs}", flush=True)
+    proc = subprocess.run(argv, cwd=REPO_ROOT, env=environment, text=True, check=False)
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     status = "pass" if proc.returncode == 0 else "fail"
     print(

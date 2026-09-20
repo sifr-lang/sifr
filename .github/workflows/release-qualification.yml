@@ -30,6 +30,7 @@ jobs:
       source_commit: ${{ steps.identity.outputs.source_commit }}
       version: ${{ steps.identity.outputs.version }}
       rollback_version: ${{ steps.identity.outputs.rollback_version }}
+      fixture_version: ${{ steps.package_versions.outputs.fixture_version }}
     steps:
       - name: Validate exact inputs
         id: identity
@@ -79,6 +80,27 @@ jobs:
             echo "::error::recursive submodule checkout is unresolved"
             exit 2
           fi
+
+      - name: Admit package versions before native compilation
+        id: package_versions
+        shell: bash
+        env:
+          VERSION: ${{ steps.identity.outputs.version }}
+          ROLLBACK_VERSION: ${{ steps.identity.outputs.rollback_version }}
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          from pathlib import Path
+          import sys
+
+          sys.path.insert(0, "scripts/distribution")
+          from qualify_native_package import transition_fixture_version
+
+          previous = transition_fixture_version(
+              Path.cwd(), os.environ["VERSION"], os.environ["ROLLBACK_VERSION"])
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"fixture_version={previous}\n")
+          PYTHON
 
       - name: Verify immutable qualification workflow contract
         shell: bash
@@ -408,3 +430,228 @@ jobs:
             echo "Source commit: \`${{ needs.validate.outputs.source_commit }}\`"
             echo "Version: \`${{ needs.validate.outputs.version }}\`"
           } >>"${GITHUB_STEP_SUMMARY}"
+
+  native-packages:
+    name: install and update exact native package ${{ matrix.target }}
+    # Run after collection so additional test evidence cannot enter the
+    # governed release artifact index or acquire publication authority.
+    needs:
+      - validate
+      - collect
+      - transition-assemble
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-15
+          - target: x86_64-apple-darwin
+            runner: macos-15-intel
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-24.04
+          - target: aarch64-unknown-linux-gnu
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.validate.outputs.source_commit }}
+          fetch-depth: 1
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Download exact indexed candidate packages and installer
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-*
+          path: native-inputs
+          merge-multiple: true
+          digest-mismatch: error
+
+      - name: Download exact lower-version packages and installer
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: sifr-native-transition-${{ needs.validate.outputs.fixture_version }}-${{ needs.validate.outputs.source_commit }}-*
+          path: transition-inputs
+          merge-multiple: true
+          digest-mismatch: error
+
+      - name: Prepare locked source-reference dependencies
+        shell: bash
+        run: cargo fetch --locked
+
+      - name: Qualify exact native package modes
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
+          VERSION: ${{ needs.validate.outputs.version }}
+          TARGET: ${{ matrix.target }}
+          PREVIOUS_VERSION: ${{ needs.validate.outputs.fixture_version }}
+          CARGO_BUILD_JOBS: "2"
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          python3 scripts/distribution/qualify_native_package.py \
+            --artifacts native-inputs \
+            --installer "native-inputs/sifr-installer-${VERSION}" \
+            --version "${VERSION}" \
+            --target "${TARGET}" \
+            --source-commit "${SOURCE_COMMIT}" \
+            --output "${RUNNER_TEMP}/sifr-native-qualification" \
+            --previous-version "${PREVIOUS_VERSION}" \
+            --previous-artifacts transition-inputs \
+            --previous-installer "transition-inputs/sifr-installer-${PREVIOUS_VERSION}"
+
+      - name: Bundle bounded native qualification evidence
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import tarfile
+
+          import os
+          root = Path(os.environ["RUNNER_TEMP"]) / "sifr-native-qualification"
+          if not root.is_dir():
+              raise SystemExit("native qualification did not start")
+          excluded = {"cache", "managed", "relocated", "producer-source",
+                      "generation-a", "moved-generation-a", "generation-b"}
+          paths = []
+          for path in sorted(root.rglob("*")):
+              relative = path.relative_to(root)
+              if not path.is_file() or path.is_symlink():
+                  continue
+              if any(part in excluded for part in relative.parts):
+                  continue
+              if "corpus" in relative.parts and path.name != "coverage.json":
+                  continue
+              if path.suffix in {".json", ".jsonl", ".stdout", ".stderr"}:
+                  paths.append(path)
+          manifest = [{"path": str(path.relative_to(root)),
+                       "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+                      for path in paths]
+          root.joinpath("evidence-index.json").write_text(json.dumps(manifest, indent=2) + "\n")
+          paths.append(root / "evidence-index.json")
+          with tarfile.open("native-qualification-evidence.tar.gz", "w:gz") as bundle:
+              for path in paths:
+                  bundle.add(path, arcname=path.relative_to(root), recursive=False)
+          PY
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: sifr-native-package-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-${{ matrix.target }}
+          path: native-qualification-evidence.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
+
+  transition-build:
+    name: build lower-version native fixture ${{ matrix.target }}
+    needs:
+      - validate
+      - collect
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-15
+          - target: x86_64-apple-darwin
+            runner: macos-15-intel
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-24.04
+          - target: aarch64-unknown-linux-gnu
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.validate.outputs.source_commit }}
+          fetch-depth: 1
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build exact lower-version transition fixture
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
+          VERSION: ${{ needs.validate.outputs.fixture_version }}
+          TARGET: ${{ matrix.target }}
+          BUILDER: ${{ matrix.runner }}
+          CARGO_BUILD_JOBS: "2"
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          mkdir -p dist transition-qualification
+          scripts/distribution/build_release_artifacts.sh \
+            --version "${VERSION}" \
+            --output-dir dist \
+            --cargo-build \
+            --target "${TARGET}"
+          archive="dist/sifr-${VERSION}-${TARGET}.tar.gz"
+          scripts/distribution/qualify_stable_target.py \
+            --archive "${archive}" \
+            --version "${VERSION}" \
+            --target "${TARGET}" \
+            --builder "${BUILDER}" \
+            --source-commit "${SOURCE_COMMIT}" \
+            --out-dir transition-qualification
+          cp "${archive}" "${archive}.sha256" transition-qualification/
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sifr-native-transition-${{ needs.validate.outputs.fixture_version }}-${{ needs.validate.outputs.source_commit }}-${{ matrix.target }}
+          path: transition-qualification/*
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
+
+  transition-assemble:
+    name: assemble exact lower-version fixture installer
+    needs:
+      - validate
+      - transition-build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.validate.outputs.source_commit }}
+          fetch-depth: 1
+          submodules: recursive
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: sifr-native-transition-${{ needs.validate.outputs.fixture_version }}-${{ needs.validate.outputs.source_commit }}-*
+          path: transition-artifacts
+          merge-multiple: true
+          digest-mismatch: error
+
+      - name: Generate canonical fixture installer
+        shell: bash
+        env:
+          VERSION: ${{ needs.validate.outputs.fixture_version }}
+          SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          scripts/distribution/generate_version_installer.sh \
+            --version "${VERSION}" \
+            --artifact-dir transition-artifacts \
+            --out "transition-installer/sifr-installer-${VERSION}"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sifr-native-transition-${{ needs.validate.outputs.fixture_version }}-${{ needs.validate.outputs.source_commit }}-installer
+          path: transition-installer/*
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false

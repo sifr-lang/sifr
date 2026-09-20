@@ -9,7 +9,7 @@ pub fn sha256_file(path: &Path) -> std::io::Result<String> {
 
 #[must_use]
 pub fn sha256_hex(bytes: &[u8]) -> String {
-    lower_hex(&Sha256::digest(bytes))
+    lower_hex(ring::digest::digest(&ring::digest::SHA256, bytes).as_ref())
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -159,4 +159,24 @@ fn executable_bit(metadata: &fs::Metadata) -> bool {
 #[cfg(not(unix))]
 fn executable_bit(_metadata: &fs::Metadata) -> bool {
     false
+}
+
+#[cfg(test)]
+mod backend_tests {
+    use super::*;
+    #[test]
+    fn dx15_sha256_backend_preserves_standard_and_large_input_digests() {
+        assert_eq!(
+            sha256_hex(b""),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        );
+        assert_eq!(
+            sha256_hex(b"abc"),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        for length in [1, 55, 56, 63, 64, 65, 4096, 18_664_397] {
+            let bytes = (0_u8..=255).cycle().take(length).collect::<Vec<_>>();
+            assert_eq!(sha256_hex(&bytes), lower_hex(&Sha256::digest(&bytes)));
+        }
+    }
 }

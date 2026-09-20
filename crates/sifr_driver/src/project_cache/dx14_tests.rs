@@ -37,13 +37,12 @@ fn run(
     context: SemanticInputs,
 ) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
     check(
-        cache,
-        file.parent().unwrap(),
+        (cache, file.parent().unwrap()),
         file,
         &mut DiskSourceProvider::new(),
         context,
         &AtomicBool::new(false),
-        Some((&compiler(), Default::default())),
+        Some((&compiler(), &Default::default())),
         |provider| {
             let config = file.parent().unwrap().join("sifr.toml");
             if provider.is_file(&config) {
@@ -84,7 +83,7 @@ def main() -> int:
 }
 
 #[test]
-fn dx14_p06_disk_and_memory_reuse_changed_ordinary_body() {
+fn disk_and_memory_reuse_changed_ordinary_body() {
     let (_root, file, cache) = fixture();
     assert_eq!(run(&cache, &file, inputs()).1.status, "published");
     let mut memory = frontend(&file, &mut DiskSourceProvider::new());
@@ -138,7 +137,7 @@ fn dx14_p06_disk_and_memory_reuse_changed_ordinary_body() {
 }
 
 #[test]
-fn dx14_p05_body_errors_defaults_constants_and_generics_are_conservative() {
+fn body_errors_defaults_constants_and_generics_are_conservative() {
     let cases = [
         (
             "@const_eval\ndef constant() -> int:\n    return 1\ndef value() -> int:\n    return 1\n",
@@ -233,7 +232,7 @@ def value() -> int:
 }
 
 #[test]
-fn dx14_p11_context_changes_never_restore_live_authority() {
+fn context_changes_never_restore_live_authority() {
     let (_root, file, cache) = fixture();
     assert!(run(&cache, &file, inputs()).0.is_empty());
     for kind in ["sql", "python", "component"] {
@@ -300,7 +299,7 @@ fn dx14_editor_saved_overlay_stale_and_deeper_family_boundaries() {
         &inputs().identity().unwrap(),
     )
     .unwrap();
-    let generation = store.latest().unwrap().unwrap();
+    let generation = store.latest().unwrap();
     let record = generation.records().next().unwrap().unwrap();
     let mut saved = frontend(&file, &mut DiskSourceProvider::new());
     let entry = saved.module_graph().entrypoint;
@@ -378,7 +377,7 @@ fn dx14_reconfiguration_deletion_and_unknown_effect_scope() {
         &inputs().identity().unwrap(),
     )
     .unwrap();
-    let generation = store.latest().unwrap().unwrap();
+    let generation = store.latest().unwrap();
     let record = generation.records().next().unwrap().unwrap();
     fs::remove_file(file.parent().unwrap().join("helper.sifr")).unwrap();
     let mut disk = DiskSourceProvider::new();
@@ -469,5 +468,54 @@ fn dx14_restored_interface_reports_unavailable_publication() {
             .modules
             .iter()
             .any(|module| module.action == "restored" && module.path == file)
+    );
+}
+
+#[test]
+fn dx15_workspace_owned_saved_validation_rejects_changed_disk_and_overlay() {
+    let (_root, file, cache) = fixture();
+    assert_eq!(run(&cache, &file, inputs()).1.status, "published");
+    let store = storage::Store::open(
+        &cache,
+        file.parent().unwrap(),
+        &inputs().identity().unwrap(),
+    )
+    .unwrap();
+    let generation = store.latest().unwrap();
+    let record = generation.records().next().unwrap().unwrap();
+    let open = || {
+        sifr_frontend::WorkspaceSession::open_project(ProjectRoot {
+            root: SourcePath::new(file.parent().unwrap()),
+            entrypoint: SourcePath::new(&file),
+        })
+        .unwrap()
+        .with_compiler_identity(compiler())
+    };
+    let mut saved = open();
+    assert!(
+        saved
+            .restore_saved_checks(&record, &inputs())
+            .unwrap()
+            .iter()
+            .all(|decision| decision.action == "restored")
+    );
+    let mut overlay = open();
+    let frontend = overlay.context_mut().unwrap();
+    let entry = frontend.module_graph().entrypoint;
+    frontend
+        .update_module_source(
+            entry,
+            SourceText::new("def main() -> int:\n    return \"bad\"\n"),
+            None,
+        )
+        .unwrap();
+    assert!(overlay.restore_saved_checks(&record, &inputs()).is_none());
+    let mut old_snapshot = open();
+    fs::write(&file, "def main() -> int:\n    return \"bad\"\n").unwrap();
+    assert!(
+        old_snapshot
+            .restore_saved_checks(&record, &inputs())
+            .is_none(),
+        "workspace ownership must still reobserve disk, not just validate the captured snapshot"
     );
 }

@@ -385,6 +385,20 @@ impl NativeToolchain {
         manifest: &Path,
     ) -> Result<(), String> {
         fn check(value: &toml::Value, profile: &str) -> Result<(), String> {
+            // Rustflags have higher priority than profile settings. Reject flags
+            // that disable the same language/runtime boundary in any target scope.
+            fn flags(value: &toml::Value) -> Result<(), String> {
+                if let toml::Value::Table(table) = value {
+                    for (key, value) in table {
+                        if key == "rustflags" {
+                            crate::native_profile::validate_flags(&value.to_string())?;
+                        } else {
+                            flags(value)?;
+                        }
+                    }
+                }
+                Ok(())
+            }
             if let Some(table) = value.get("profile").and_then(|v| v.get(profile)) {
                 fn boundary(value: &toml::Value) -> Result<(), String> {
                     if value
@@ -407,23 +421,6 @@ impl NativeToolchain {
                     Ok(())
                 }
                 boundary(table)?;
-            }
-            // Rustflags have higher priority than profile settings. Reject flags
-            // that disable the same language/runtime boundary in any target scope.
-            fn flags(value: &toml::Value) -> Result<(), String> {
-                match value {
-                    toml::Value::Table(table) => {
-                        for (key, value) in table {
-                            if key == "rustflags" {
-                                crate::native_profile::validate_flags(&value.to_string())?;
-                            } else {
-                                flags(value)?;
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-                Ok(())
             }
             flags(value)
         }

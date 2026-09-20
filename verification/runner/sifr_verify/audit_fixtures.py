@@ -126,7 +126,8 @@ def validate_manifest(manifest_path: Path, manifest: dict[str, Any], *, area: st
     stray_files = [
         format_repo_relative_path(path)
         for path in fixture_root.rglob("*")
-        if path.is_file() and path.suffix != ".sifr"
+        if (path.is_file() or path.is_symlink()) and path.suffix != ".sifr"
+        and not (path.name == ".sifrbuildinfo" and path.is_file() and not path.is_symlink())
     ]
     for path in sorted(stray_files):
         failures.append(f"non-fixture file under audit fixture root: {path}")

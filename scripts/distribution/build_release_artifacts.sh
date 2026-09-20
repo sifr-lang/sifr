@@ -24,6 +24,7 @@ Options:
   --sysroot-root <dir>      Source sysroot root to package (default: current repository)
   --target <triple>         Package only one release target; can repeat
   --cargo-build             Build target binaries with cargo instead of using --binary
+  --prepare-only            Compile the exact --cargo-build graph without packaging
   --help                    Show this help
 EOF
 }
@@ -32,6 +33,7 @@ VERSION=""
 OUTPUT_DIR=""
 BINARY=""
 CARGO_BUILD=0
+PREPARE_ONLY=0
 SYSROOT_ROOT="$(pwd)"
 SELECTED_TARGETS=()
 
@@ -59,6 +61,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --cargo-build)
       CARGO_BUILD=1
+      shift
+      ;;
+    --prepare-only)
+      PREPARE_ONLY=1
       shift
       ;;
     --help)
@@ -92,6 +98,11 @@ fi
 
 if [[ -z "${BINARY}" && "${CARGO_BUILD}" -eq 0 ]]; then
   echo "choose --binary for fixture packaging or --cargo-build for production builds" >&2
+  exit 2
+fi
+
+if [[ "${PREPARE_ONLY}" -eq 1 && "${CARGO_BUILD}" -ne 1 ]]; then
+  echo "--prepare-only requires --cargo-build" >&2
   exit 2
 fi
 
@@ -265,14 +276,23 @@ package_toolchain() {
   copy_sysroot_dir "stdlib/_sifr" "${package_root}/lib/sifr/stdlib/_sifr"
   copy_sysroot_dir "vendor" "${package_root}/vendor"
   write_installed_cargo_config "${package_root}"
-  copy_sysroot_file "sysroot.toml" "${package_root}/sysroot.toml"
-  local metadata_args=()
-  if [[ "${CARGO_BUILD}" -eq 0 ]]; then
-    metadata_args+=(--allow-fixture-script)
-  fi
+  # Metadata production requires a version-matched source-development snapshot.
+  # Keep its input manifest byte-identical when already compatible; the installed
+  # target and complete archive digest are written only after production.
   python3 "${SCRIPT_DIR}/metadata_artifact.py" \
-    --binary "${binary_path}" --source-root "${package_root}" \
-    --package-root "${package_root}" --target "${target}" "${metadata_args[@]}"
+    --stage-source-manifest "${SYSROOT_ROOT}/sysroot.toml" \
+    --staged-manifest "${package_root}/sysroot.toml" --version "${VERSION}"
+  # A nonempty command array also works under macOS Bash 3.2 with nounset.
+  # Empty optional arrays are considered unset by that supported interpreter.
+  local metadata_command=(
+    python3 "${SCRIPT_DIR}/metadata_artifact.py"
+    --binary "${binary_path}" --source-root "${package_root}"
+    --package-root "${package_root}" --target "${target}"
+  )
+  if [[ "${CARGO_BUILD}" -eq 0 ]]; then
+    metadata_command+=(--allow-fixture-script)
+  fi
+  "${metadata_command[@]}"
   write_sysroot_manifest "${package_root}" "${target}"
 
   COPYFILE_DISABLE=1 tar -C "${package_root}" -czf "${archive_path}" \
@@ -295,5 +315,7 @@ for target in "${SELECTED_TARGETS[@]}"; do
   else
     binary_path="${BINARY}"
   fi
-  package_toolchain "${target}" "${binary_path}"
+  if [[ "${PREPARE_ONLY}" -eq 0 ]]; then
+    package_toolchain "${target}" "${binary_path}"
+  fi
 done

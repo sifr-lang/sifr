@@ -121,7 +121,7 @@ fn dx6_process_child() {
     fs::write(report,serde_json::to_vec(&serde_json::json!({"status":"assertions-passed","compiler_identity":id.as_str(),"metadata_id":metadata.metadata_id,"path":metadata.path,"production_seconds":metadata.production_seconds,"preparation_seconds":preparation_seconds,"total_seconds":started.elapsed().as_secs_f64()})).unwrap()).unwrap();
 }
 #[test]
-fn dx6_m13_process_waiters_warm_reuse_and_distinct_configurations() {
+fn process_waiters_warm_reuse_and_distinct_configurations() {
     let scratch = Scratch::new();
     let cache = scratch.0.join("cache");
     let started = Instant::now();
@@ -191,7 +191,7 @@ fn dx6_m13_process_waiters_warm_reuse_and_distinct_configurations() {
     );
 }
 #[test]
-fn dx6_m14_killed_staged_producer_releases_waiters() {
+fn killed_staged_producer_releases_waiters() {
     let scratch = Scratch::new();
     let cache = scratch.0.join("cache");
     let mut victim = ChildRun::spawn(
@@ -233,7 +233,7 @@ fn dx6_m14_killed_staged_producer_releases_waiters() {
     }));
 }
 #[test]
-fn dx6_m14_wait_cancellation_and_cancelled_producer_retry() {
+fn wait_cancellation_and_cancelled_producer_retry() {
     let scratch = Scratch::new();
     let source = root();
     let cache = scratch.0.join("cache");
@@ -290,7 +290,7 @@ fn dx6_m14_wait_cancellation_and_cancelled_producer_retry() {
 }
 
 #[test]
-fn dx6_m14_failed_producer_releases_all_waiters() {
+fn failed_producer_releases_all_waiters() {
     let scratch = Scratch::new();
     let source = root();
     let cache = scratch.0.join("cache");

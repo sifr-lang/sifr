@@ -30,6 +30,7 @@
       "classification": "first_party_tooling",
       "targets": [
         {"name": "sifr", "kind": "bin", "classification": "first_party_tooling", "profile_assignment": "merge"},
+        {"name": "standalone_workspace_check", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "build_output_behavior", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "e2e", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "formatter_discovery", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},

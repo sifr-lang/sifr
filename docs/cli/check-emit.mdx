@@ -61,6 +61,37 @@ sifr --diagnostic-format compact check --workspace
 Use `sifr check` as your primary feedback loop during development and reserve `sifr build` for when you need an artifact. Check is substantially faster because it skips code generation and linking.
 </Tip>
 
+### Inspecting saved-source reuse
+
+Installed commands use the metadata shipped with the selected compiler.
+A matching saved-source result can restore completed diagnostics in a new
+process. Changed inputs, corrupt optional records and unsupported external
+contexts recompute through the ordinary checker.
+
+```bash
+sifr --timings check main.sifr
+sifr --no-incremental --timings check main.sifr
+sifr doctor --json
+sifr doctor --verify-integrity --json
+```
+
+Timing output goes to stderr. It reports total command time, computed/restored
+diagnostic counts, source validation and publication costs, plus metadata
+read/hash/index costs and decoded record counts. Metadata load timings describe
+this process's immutable owner; they are not a separate interval to subtract
+from total command time. Comparing tracing-enabled and disabled runs measures
+the reporting overhead.
+
+`--no-incremental` bypasses project-result reads and writes. It preserves
+installed metadata and Cargo's native caches. A missing or incompatible
+installed metadata artifact requires repairing the installation; it does not
+trigger source bootstrap. `doctor --verify-integrity` performs the more
+expensive complete package check explicitly.
+
+For offline package work, prepare dependencies with `sifr fetch` while network
+access is available, then use `sifr check --frozen`. Cache reuse does not waive
+lockfile, configuration, trust or dependency checks.
+
 ## `sifr emit` — inspect the generated Rust code
 
 `sifr emit` runs the compiler up through code generation and prints the generated Rust source to stdout. No binary is written. This is useful when you want to understand how Sifr translates a particular construct, diagnose unexpected output, or satisfy your curiosity.
@@ -153,3 +184,17 @@ sifr --diagnostic-format json --explain SIFR-TYPE-0002
 ```
 
 `--explain` works for any diagnostic code the compiler knows about and exits with code `0` on success or `2` if the code is unknown.
+
+
+A normal explicit-file check in a virtual Cargo workspace can check a standalone
+source file without resolving unrelated Cargo members. This applies only when
+the enclosing source workspace has no backend/dependency authority and the file
+has no nested Cargo package. A nested source-only manifest must have a valid
+source root that owns the checked file. It intentionally removes failures from
+unrelated broken members in that case. Actual package checks and explicit
+`--locked`, `--offline` and `--frozen` checks retain Cargo validation.
+
+
+Standalone frontend checks do not probe Cargo or rustc for an unused native
+build plan. Native builds and actual package checks retain their required
+toolchain, dependency, trust and backend validation.

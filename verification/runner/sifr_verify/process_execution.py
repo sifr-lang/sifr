@@ -6,6 +6,8 @@ budgets. Session groups are torn down even when the direct child exits first.
 from __future__ import annotations
 
 import dataclasses
+import contextlib
+import tempfile
 import os
 import selectors
 import signal
@@ -25,14 +27,30 @@ class Outcome:
     elapsed_seconds: float
 
 
+@contextlib.contextmanager
+def _input_stream(data: bytes | None):
+    if data is None:
+        yield None
+        return
+    # A regular temporary file avoids deadlocking on stdin pipe capacity while
+    # the owned child concurrently fills its bounded output pipes.
+    with tempfile.TemporaryFile() as stream:
+        stream.write(data)
+        stream.seek(0)
+        yield stream
+
+
 def execute(
     command: list[str], *, cwd: Path, env: dict[str, str] | None = None,
     deadline_seconds: float = 2400, limit_bytes: int = 1048576,
     emit: Callable[[str, bytes], None] | None = None,
+    input_bytes: bytes | None = None,
 ) -> Outcome:
     start = time.monotonic()
-    proc = subprocess.Popen(command, cwd=cwd, env=env, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, start_new_session=True)
+    with _input_stream(input_bytes) as stdin:
+        proc = subprocess.Popen(command, cwd=cwd, env=env, stdin=stdin,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                start_new_session=True)
     selector = selectors.DefaultSelector()
     assert proc.stdout is not None and proc.stderr is not None
     selector.register(proc.stdout, selectors.EVENT_READ, "stdout")

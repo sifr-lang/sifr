@@ -8105,11 +8105,13 @@ dependencies = [
 name = "sifr_sysroot"
 version = "0.0.0"
 dependencies = [
+ "ring",
  "serde",
  "serde_json",
  "sha2 0.11.0",
  "sifr_identity",
  "toml",
+ "zstd 0.14.0",
 ]
 
 [[package]]

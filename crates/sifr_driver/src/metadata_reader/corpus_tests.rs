@@ -1,7 +1,7 @@
 //! Explicit maintained-corpus tier; native assertions remain in the E2E runner.
 #[test]
 #[ignore = "explicit full metadata corpus qualification"]
-fn dx8_m03_m15_full_corpus_exact_emission() {
+fn full_corpus_exact_emission() {
     let context = crate::CompilerContext::for_test();
     let source_stdlib = crate::stdlib::compile_stdlib_uncached().unwrap();
     let semantic_target = std::env::var("SIFR_DX8_SEMANTIC_TARGET")

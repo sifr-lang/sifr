@@ -26,14 +26,14 @@ impl ResolvedSysroot {
             SysrootMode::InstalledToolchain
         }
     }
-    pub(crate) fn from_root(root: PathBuf, binary_path: &Path) -> Result<Self, SysrootError> {
+    pub(crate) fn from_root(root: &Path, binary_path: &Path) -> Result<Self, SysrootError> {
         // Resolve the selected manifest once. All paths then belong to the same
         // immutable installed generation, even when the selector changes later.
         let manifest_path = root.join("sysroot.toml").canonicalize().map_err(|error| {
             SysrootError::new(
                 SysrootErrorKind::MissingAsset,
                 binary_path.to_owned(),
-                root.clone(),
+                root.to_owned(),
                 Some(root.join("sysroot.toml")),
                 format!("cannot pin sysroot manifest: {error}"),
             )
@@ -44,7 +44,7 @@ impl ResolvedSysroot {
                 SysrootError::new(
                     SysrootErrorKind::MissingAsset,
                     binary_path.to_owned(),
-                    root.clone(),
+                    root.to_owned(),
                     Some(manifest_path.clone()),
                     "sysroot manifest has no parent",
                 )

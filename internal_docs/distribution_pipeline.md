@@ -192,10 +192,35 @@ Marketplace, site, protected-environment, or metadata-mutation authority.
 The workflow uses the governed four-runner matrix, builds with locked
 dependencies, packages through the same release artifact builder, installs and
 smokes each matching-host toolchain, and packages the recorded
-`editor_integrations/vscode` checkout without publishing it. Every upload uses
+`editor_integrations/vscode` checkout without publishing it. Canonical release-input uploads use
 the name
 `sifr-stable-candidate-<version>-<source-sha>-<target-or-kind>`,
 `overwrite: false`, and a 30-day retention period.
+
+After the canonical index is collected, the same four native runners consume
+those exact archives and generated installer. Separate transition builders
+produce older-version fixture packages from the same exact source on all four
+native targets, using the checked-in CLI crate version. Version admission
+requires that fixture version to precede the candidate and validates the
+candidate against the checked-in editor compatibility range before compilation.
+The additional package protocol installs the older package, performs an actual
+packaged version upgrade, forced downgrade and subsequent upgrade, and exercises
+same-version no-op/reinstall, transaction rollback after receipt-write failure,
+relocation, both native build profiles with cold/no-op/edit/reused observations,
+loader inspection, and full source/metadata corpus comparison. An allowlisted
+local transport supplies exact fixture bytes; the packaged updater and installer
+retain their real digest, receipt, generation, lock, and integrity validation.
+These are nonpublishing qualification versions. Older fixture packages and
+installers use the separate sifr-native-transition artifact prefix.
+
+Additional evidence uses
+`sifr-native-package-<version>-<source-sha>-<target>`, with the same immutable
+upload and 30-day retention policy. Its report binds the original archive and
+installer digests, actual host/toolchain, every command outcome, and a digest
+index for retained logs. Running it after collection keeps these test artifacts
+outside the governed publication artifact index. All four native results are
+required for DX.15 package qualification; cross-target metadata production alone
+does not count as native package execution.
 
 Editor qualification records a `marketplace_publish_plan` with status
 `planned`; it does not claim that a credentialed dry run occurred. The

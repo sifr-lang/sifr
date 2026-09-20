@@ -2072,3 +2072,12 @@ validate complete manifests, and publish atomically. Optional project storage
 failures preserve semantic results. `--no-incremental` disables this project
 family without cleaning metadata or Cargo; `cache prune-project` is scoped to
 one explicit workspace and only deletes inactive generations under pressure.
+
+
+DX.15 toolchain metadata uses private container version 4: three bounded compressed
+frames and a sorted contiguous directory, with full artifact integrity
+verification before opening and unchanged lazy semantic record validation.
+See compiler_dx_architecture.md for physical limits and compatibility rules.
+Explicit standalone-file checks in source-only virtual Cargo workspaces avoid
+resolving unrelated workspace members; actual package/source ownership and
+explicit lock-mode validation remain authoritative.

@@ -452,7 +452,7 @@ def main():\n    print(parse_json())\n",
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
     .expect("package namespace root project should build");
-    let generated_project_root = generated_project_root(artifact.binary_path());
+    let generated_project_root = generated_project_root(&artifact);
     assert!(
         !generated_project_root.join(".cargo/config.toml").exists(),
         "package-owned generated builds should not copy sysroot Cargo config"
@@ -466,13 +466,13 @@ def main():\n    print(parse_json())\n",
     let _ = std::fs::remove_dir_all(dir);
 }
 
-fn generated_project_root(binary_path: &Path) -> PathBuf {
-    binary_path
-        .parent()
-        .and_then(Path::parent)
-        .and_then(Path::parent)
-        .expect("cached binary path should be <project>/target/release/<bin>")
-        .to_path_buf()
+fn generated_project_root(artifact: &crate::CachedBinaryArtifact) -> PathBuf {
+    let root = artifact.generated_project_root();
+    assert!(
+        root.join("Cargo.toml").is_file(),
+        "configuration assertions must inspect the actual generated Cargo project"
+    );
+    root.to_path_buf()
 }
 
 #[test]
@@ -508,9 +508,8 @@ fn test_build_const_specialization_without_structural_runtime() {
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
     .expect("non-structural const specialization should build");
-    let generated =
-        std::fs::read_to_string(generated_project_root(artifact.binary_path()).join("src/main.rs"))
-            .expect("generated source should be retained");
+    let generated = std::fs::read_to_string(generated_project_root(&artifact).join("src/main.rs"))
+        .expect("generated source should be retained");
     assert!(!generated.contains("sifr_runtime::interop::structural"));
     let output = std::process::Command::new(artifact.binary_path())
         .output()

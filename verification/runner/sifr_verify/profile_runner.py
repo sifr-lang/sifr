@@ -19,6 +19,7 @@ from .profile_area_steps import AreaResultError, run_selected_area
 from .profile_commands import CommandFailed, cargo_command, run_command, uv_area_command
 from .profile_reporting import run_profile_with_report
 from .compiler_configuration_plan import configuration_plan
+from .native_test_execution import NATIVE_SUITES, run_native_configuration
 from .profiles import crate_test_mode, crate_test_suites_for_mode, load_profile, resolve_fixture_manifest
 from .step_budgets import (
     StepBudgetContext,
@@ -61,7 +62,7 @@ def timed_step(name: str, callback: Callable[[], None]) -> StepResult:
         callback()
     except CommandFailed as exc:
         status = exc.returncode
-    except (ProfileRunnerError, AreaResultError) as exc:
+    except (VerificationError, AreaResultError) as exc:
         print(f"sifr_verify: {exc}", file=sys.stderr)
         status = 2
     elapsed_ms = now_ms() - start_ms
@@ -346,8 +347,11 @@ class ProfileRunner:
             start_ms = now_ms()
             case_status = "pass"
             try:
-                run_command(command, env=self.env)
-            except CommandFailed:
+                if any(suite in NATIVE_SUITES for suite in configuration.ids):
+                    run_native_configuration(configuration, env=self.env, no_fail_fast=self.no_fail_fast)
+                else:
+                    run_command(command, env=self.env)
+            except (CommandFailed, VerificationError):
                 case_status = "fail"
                 raise
             finally:

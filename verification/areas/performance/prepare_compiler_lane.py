@@ -69,14 +69,18 @@ def main() -> None:
             "manifest_sha256": digest(installed / "sysroot.toml"),
             "archive_sha256": digest(archives[0]),
         }
+    identity = json.loads(subprocess.check_output(
+        [str(binary), "--print", "compiler-identity", "--json"], cwd=ROOT, text=True
+    ))
+    if identity.get("identity_kind") != "product" or len(identity.get("compiler_build_id", "")) != 64:
+        raise ValueError("compiler did not report its embedded product identity")
     receipt = {
         "schema_version": 1, "lane": args.lane,
         "compiler_build_profile": profile,
         "cargo_artifact_profile": artifact["profile"],
         "artifact": {"path": str(binary), "sha256": digest(binary)},
         "source_commit": source,
-        "embedded_compatibility_identity": {"status": "unavailable-before-DX.2",
-                                            "version": "0.0.0"},
+        "embedded_compatibility_identity": identity,
         "sysroot": sysroot,
         "cargo_lock_sha256": digest(ROOT / "Cargo.lock"),
         "rustc": subprocess.check_output(["rustc", "--version"], text=True).strip(),

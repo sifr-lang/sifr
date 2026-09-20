@@ -5,7 +5,7 @@ use crate::build::{
     build_cached_project_binary, build_cached_single_file_binary,
     build_rooted_entrypoint_binary_with_report, check_single_file_entrypoint,
     emit_project_entrypoint, materialize_rooted_entrypoint_rust_project,
-    resolve_package_project_entrypoint_plan, resolve_project_entrypoint_plan,
+    resolve_package_project_entrypoint_plan,
 };
 use crate::diagnostics::{CompileResult, RenderedDiagnostic};
 use sifr_frontend::SourceProvider;
@@ -112,10 +112,13 @@ pub fn check_project(
     main_file: &Path,
     provider: &mut dyn SourceProvider,
 ) -> Vec<RenderedDiagnostic> {
-    match resolve_project_entrypoint_plan(compiler, main_file, provider) {
-        Ok(project_plan) => project_plan.frontend_diagnostics(),
-        Err(errors) => errors,
-    }
+    super::entrypoint::check_frontend_entrypoint(
+        compiler,
+        RootedEntrypoint::Project {
+            main_file,
+            provider,
+        },
+    )
 }
 
 pub fn check_package_project(

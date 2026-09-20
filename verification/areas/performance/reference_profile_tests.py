@@ -340,6 +340,18 @@ class NamedReferenceTests(unittest.TestCase):
                 validate_manifest_binding(profile, path)
 
 
+    def test_named_measurement_concurrency_survives_outer_profile(self):
+        import runner
+        profile = {"identity": {"execution": {"cargo_jobs": "2"}}}
+        with patch.dict("os.environ", {
+            "SIFR_PERFORMANCE_REFERENCE": "fixed-reference", "CARGO_BUILD_JOBS": "1",
+        }), patch.object(runner, "load_profile", return_value=profile), patch.object(
+            runner.subprocess, "run", return_value=CompletedProcess([], 0)
+        ) as run:
+            result = runner.run_command_variant("representative", "producer", ["python", "measure"])
+            self.assertEqual(result["status"], "pass")
+            self.assertEqual(run.call_args.kwargs["env"]["CARGO_BUILD_JOBS"], "2")
+
     def test_checked_in_corpus_has_derivation_for_every_policy(self):
         data = Path(__file__).resolve().parent / "data"
         original = json.loads((data / "budgets.json").read_text())

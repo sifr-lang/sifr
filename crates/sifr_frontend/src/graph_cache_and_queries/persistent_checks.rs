@@ -1,5 +1,8 @@
 //! Restore only the completed diagnostics family. Rich queries still lower.
-use super::*;
+use super::{
+    Arc, BTreeSet, ExternalDefs, FileId, FrontendContext, FrontendInput, FrontendMode, ModuleId,
+    ProjectRoot, SourcePath, SourceProvider, SourceText, WorkspaceSessionTarget, module_state,
+};
 use crate::persistence::{CompletedCheck, Observation, SemanticInputs, SourceOutcome};
 
 #[derive(Clone, Debug, serde::Serialize)]
@@ -85,7 +88,9 @@ impl FrontendContext {
             .clone();
         if let crate::persistence::Family::Complete(resolution) = &mut updated.result.resolution {
             resolution.sources = current_sources;
-            resolution.observations = updated.result.inputs.observations.clone();
+            resolution
+                .observations
+                .clone_from(&updated.result.inputs.observations);
         }
         if !updated.validate(semantic, provider) {
             return None;

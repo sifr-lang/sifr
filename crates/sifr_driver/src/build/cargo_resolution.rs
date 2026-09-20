@@ -36,7 +36,7 @@ impl CargoResolutionPolicy {
             .as_ref()
             .map_err(Clone::clone)
             .and_then(sifr_sysroot::NativeToolchain::cargo_command)
-            .map_err(|error| vec![cargo_resolution_error(error.to_string())])
+            .map_err(|error| vec![cargo_resolution_error(error.clone())])
     }
 
     pub(super) fn normal() -> Self {
@@ -431,7 +431,7 @@ fn prepared_lock_path(
     let tools = policy
         .native_toolchain
         .as_ref()
-        .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
+        .map_err(|error| vec![cargo_resolution_error(error.clone())])?;
     push_cache_bytes(&mut input, tools.identity());
     push_cache_bytes(&mut input, &normalized_manifest_cache_input(project_dir)?);
     for argument in cargo_prefix_args {

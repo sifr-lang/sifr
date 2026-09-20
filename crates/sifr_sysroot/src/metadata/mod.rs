@@ -1,4 +1,4 @@
-//! Private indexed stdlib wire schema. Normal commands do not open this format yet.
+//! Private indexed stdlib wire schema. Version 4 separates directory, module/name catalog and other payload frames; normal commands validate its complete digest before opening.
 //!
 //! Every non-scalar payload reference names a typed directory record, including
 //! strings and type occurrences. Wire records never contain live HIR or `Type`.
@@ -12,6 +12,9 @@ use std::marker::PhantomData;
 
 mod container;
 mod decode;
+mod directory;
+mod physical;
+mod physical_input;
 mod store;
 mod validation;
 pub use container::{Compatibility, Limits, MetadataEncoder};

@@ -34,7 +34,7 @@ def run(binary, output):
                      if line.startswith("[sifr-project-cache] "))
         stream = result.stdout.strip() or "\n".join(
             line for line in result.stderr.splitlines()
-            if not line.startswith(("[sifr-project-cache] ", "[sifr-timing] ")))
+            if not line.startswith(("[sifr-project-cache] ", "[sifr-metadata] ", "[sifr-timing] ")))
         diagnostics = json.loads(stream)
         report["rows"].append({"label": label, "command": command,
                                "returncode": result.returncode, "cache": stats})
@@ -53,7 +53,7 @@ def run(binary, output):
                for row in reused["modules"]), reused
     fresh, disabled = invoke("body-edit-fresh", True)
     assert actual == fresh and disabled["status"] == "disabled"
-    report["cases"]["P06"] = "changed helper computed; unchanged importer check restored"
+    report["cases"]["importer-body-reuse"] = "changed helper computed; unchanged importer check restored"
 
     for label, before, after, error in [
         ("default", "def value(x: int = 1) -> int:\n    return x\n",
@@ -71,7 +71,7 @@ def run(binary, output):
         assert actual == fresh and stats["status"] != "interface-restored"
         if error:
             assert "SIFR-TYPE-" in json.dumps(actual)
-    report["cases"]["P05"] = "defaults/constants/body errors match independent fresh outcomes"
+    report["cases"]["conservative-interface-edits"] = "defaults/constants/body errors match independent fresh outcomes"
     seed = 0x5EED
     reused_count = 0
     for step in range(16):

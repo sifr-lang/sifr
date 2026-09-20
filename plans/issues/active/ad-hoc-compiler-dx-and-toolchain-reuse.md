@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.14 complete; DX.15 next
+status: in progress; DX.1–DX.14 complete; DX.15 qualification in progress
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -476,6 +476,7 @@ Complete P05, P06 and P11, plus randomized bounded edit sequences compared again
 **Scope**
 
 - Run the fixed product/user/contributor workloads on the qualified 12 GB host and supported named reference configurations.
+- Follow the user-directed host split of 2026-09-18: qualify bounded editor/Cargo resources and fixed product targets on the 12 GB Linux reference, and real desktop overlap separately on the named Mac with its actual 32 GiB hardware. Preserve the original combined 12 GB graphical-desktop scenario as not executed; neither infer a Linux pass from the Mac nor raise the Linux machine requirement.
 - Compare candidate and pinned comparable baseline, retain long-term anchors, and qualify actual percentile/resource claims with sufficient sampling.
 - Verify all supported release targets and installer/update/relocation/rollback modes using exact packaged bytes and explicit native profiles/loader behavior.
 - Complete the integrated timings/trace/doctor/cache surfaces and documentation for normal installed, source-tree, offline/prepared and error-recovery workflows.
@@ -618,7 +619,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.14 are complete and merged. DX.15–DX.16 are not started; DX.15 is the next eligible item in a new session. Intermediate validation follows the prospective policy above.
+DX.1–DX.14 are complete and merged. DX.15 implementation and final qualification are in progress in the owned remote worktree; DX.16 remains not started. Intermediate validation follows the prospective policy above.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -636,7 +637,7 @@ DX.1–DX.14 are complete and merged. DX.15–DX.16 are not started; DX.15 is th
 | DX.12 | Complete / merged | Candidate `cc2874a319feef6f96f45954b91dc3bed79cc2e8`; [PR #3862](https://github.com/sifr-lang/sifr/pull/3862); merge `3959f0168f0630802548ad2b12d3623ab71f151c` | I03, P03, P04, P07 and all five result families: 14 tests PASS; ordered-observation golden, actual resolver/package edits, real writer and LSP encoding; guards PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3862#issuecomment-5726861173) |
 | DX.13 | Complete / merged | Candidate `be67cc8dfa7d6db91f295557f08123d705cc79ff`; [PR #3864](https://github.com/sifr-lang/sifr/pull/3864); merge `9ee1d65db9a1f1851f46032f641d39dc27460bc0` | C04/C08/C09/P01/P02/P08–P10/P12; 12 DX.13 tests, focused regressions, 31 CLI processes and guards pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3864#issuecomment-5727613414) |
 | DX.14 | Complete / merged | Candidate `2c3f23127966850e7ed961155bcee817514d56f1`; [PR #3866](https://github.com/sifr-lang/sifr/pull/3866); merge `10e917056bc26d7a7b21c1361cc9cecfb1c7afb0` | P05/P06/P11, 35 targeted Rust tests, 44 CLI invocations, native output refresh, E01–E06 enabled/disabled and 84 Q09 samples pass; guards pass; full gate deferred | [Opus: SATISFIED after bounded remediation](https://github.com/sifr-lang/sifr/pull/3866#issuecomment-5729004460) |
-| DX.15 | Not started | — | — | — |
+| DX.15 | In progress: fixed-candidate qualification and required gate repairs | — | — | — |
 | DX.16 | Not started | — | — | — |
 
 ## Historical Handoff — DX.1 (2026-09-16)
@@ -1815,3 +1816,222 @@ remains the earlier baseline, not replaced by this incremental comparison.
 - **Blocker:** none for DX.14.
 - **Exact next action:** stop after this merged record. DX.15 is eligible only
   in a new bounded session; no DX.15 implementation belongs to this handoff.
+
+
+### DX.15 final gate remediation scope (unmerged)
+
+The phase-end merge facade ran once. Its failed reports and the interrupted
+continuations remain immutable under the external `dx15-evidence` directory.
+The continuation on `4f33dcbe77c6541738face6def01b5a8d34ff544` completed the
+canonical 727-fixture E2E suite, but required qualification still has failures
+and unrun configurations. Neither that result nor earlier product measurements
+constitutes a final candidate pass.
+
+The bounded repair batch preserves acceptance coverage and deadlines:
+
+- Separate exact selected SQL, native Python example, diagnostic harness and
+  release compiler preparation from timed assertions; retain all preparation
+  cost and execute the original runtime checks afterward.
+- Stage a version-matched source-development manifest before canonical metadata
+  production, then finalize the installed target/archive integrity afterward.
+  Use the same staged source inputs and release version for the complete source
+  corpus reference; retain full portable-payload equality and strict
+  producer/installed artifact identity checks. Synthetic governance fixtures now include the
+  canonical metadata envelope and its verifier dependency.
+- Use the owned process-tree executor for installed qualification, including
+  bounded stdin/output and descendant cleanup on timeout.
+- Correct stale test expectations, generated demo output and verification
+  inventory/ownership checks. Rename delivery-numbered tests without changing
+  their assertions; split oversized package tests by ownership responsibility.
+- Enroll the existing identity crate and driver bigint dependency in the strict
+  Cargo inventory, and record the driver tempfile/sysroot zstd declarations.
+  Extend the registry audit with the official ring index/checksums observed on
+  2026-09-19; preserve the original 2026-09-09 audit and existing release rows.
+  Exact owner, version, source and checksum checks remain enabled.
+- Permit only the regular generated `.sifrbuildinfo` hint in audit directories,
+  retaining rejection of unknown files and symlinked hints.
+
+These changes are necessary to finish the declared final integration checks,
+including failures that predate DX.15. They do not waive required failures or
+change numerical budgets. Compiler source changes (including test-source input
+tokens) require newly bound final products and affected performance, metadata,
+native package and desktop qualification. Earlier Mac and Linux reports remain
+historical evidence with their original candidate identities. The documented
+Mac desktop / Linux resource host split remains in effect; the literal combined
+12 GB graphical-desktop scenario is not represented as executed. The existing read-only native four-runner qualification workflow is authorized
+for unavailable target execution. Its extension consumes exact indexed archive
+bytes and same-source older-version fixture packages. It performs actual
+installation, version upgrade and forced downgrade, subsequent upgrade,
+same-version no-op/reinstall, receipt-failure rollback, relocation,
+development/release native reuse, and full source/metadata corpus comparison.
+The updater's network transport is an allowlisted local fixture; no publication
+or live channel mutation is performed. Both candidate and fixture archives and
+installers are bound to the exact source, target, version and digest. Candidate
+editor compatibility is checked before expensive native builds. Additional
+native evidence is produced after the governed artifact index, so it cannot
+change the existing publication evidence schema or acquire mutation authority.
+All four native results remain required and are not yet represented as passing.
+
+The final compiler integration repairs also restore reserved CLI namespace
+protection for `cache`/`sysroot`, make test code consume the actual lazy codegen
+projection and native generated source root, and certify warm Cargo freshness
+under the original constrained lock modes. An owned, leased test-fixture path
+lets explicit Arrow/tensor native preparation and its runtime assertion share
+the same authoritative lock path; every acquisition recopies current fixture
+bytes and serializes reset/build/capture. Production native authority and all
+original deadlines remain unchanged. Existing runner fail-fast selection stops
+at the first actionable failure; earlier exact-input passes remain reusable.
+
+The first native four-target CI run preserved passing Linux primary packages
+and exposed a macOS Bash 3.2 production-builder failure when expanding an empty
+optional array under nounset. The bounded correction constructs a nonempty
+metadata command array in both production and fixture modes, preserving the
+production prohibition on fixture-script metadata. Both failed Mac logs remain
+external evidence; all affected native package checks must pass on the repaired
+candidate. Earlier strict workspace lint repairs and their failed/passing logs
+are retained; this batch does not defer required lint cleanup to DX.16.
+
+The final ignored native suite exposed a runner safety-boundary mismatch:
+25 serial cases already exceeded the single child's 2,400-second deadline.
+The canonical isolated Cargo selection now discovers its complete ignored
+inventory and executes each exact case serially through the existing bounded
+executor. Empty, duplicate, truncated or inconsistent inventories fail before
+execution; each successful child must attest exactly one executed test. The
+same feature/target/lock/offline flags, per-child safety deadline and complete
+assertions remain required. Default fail-fast stops on the first failure;
+explicit collection still executes remaining cases and retains failure. This
+is scheduling of functional assertions, not an increased performance budget.
+The original aggregate timeout and all individual preparation costs remain
+preserved and are not reclassified as a passing aggregate invocation.
+
+The first expanded native package execution completed the real installer
+transitions and then rejected an incomplete qualification tool override:
+the Cargo event wrapper lacked its mandatory paired rustc. Qualification now
+selects both tools from the same admitted PATH and supplies the explicit pair;
+missing tools reject before native execution. Compiler toolchain authority is
+unchanged. The original CI failures are retained, and affected native profile
+and corpus checks require repaired-candidate evidence.
+
+The Python launcher self-test now uses a copy of the actual Cargo-selected
+compiler for its positive override and separately requires rejection of the
+empty mismatched fixture. The shared production resolver still validates
+every override against the prepared candidate. This corrects the remaining
+self-test fixture after strict compiler identity admission; it does not add
+a test bypass or fallback. The original failure and focused repair evidence
+remain external, and untouched package artifacts retain their original SHA.
+
+Python explicit example preparation now builds the required src/main.sifr
+entrypoint from the real package cwd and writes generated Cargo output to a
+separate owned sibling directory. The CLI package/configuration, interpreter,
+trust and native-family resolution remain authoritative; cached runtime
+execution and its assertions still run separately. Any application rebuild
+caused by the distinct generated root remains visible in execution cost.
+Focused preparation checks retain certification immutability and fail-fast
+ordering. The original missing-source CLI rejection remains preserved.
+
+Native Mac package qualification now validates the exact otool binary-name
+header separately from its dependency lines. A relocated installation beneath
+the CI checkout is not itself a source-tree library dependency. Every library
+line remains checked for missing or source-tree dependencies; unexpected
+headers and empty evidence reject. The original ARM Mac failure, eight native
+profile passes, and system-only dependency output remain preserved. Actual
+package/corpus qualification continues on the repaired final candidate.
+
+Installed metadata qualification now copies each exact corpus fixture into an
+owned manifestless temporary workspace and uses that workspace for native and
+editor inputs. Corpus files beneath the compiler checkout intentionally select
+project-mode CLI emission, including its source-listing header; they cannot be
+compared against a single-file producer contract. Source digests and complete
+emitted-byte comparisons remain required, and a temporary directory beneath a
+Sifr workspace is rejected. Both Linux original failures retain their successful
+727-case provider comparison and eight native profile observations.
+
+The native package workflow also places its complete workload under RUNNER_TEMP,
+with collection bound to that same isolated root. Its constructor rejects an
+output beneath the compiler checkout or another Sifr workspace before mutation.
+Thus plain native profile checks exercise installed standalone behavior without
+ambient source-workspace configuration, while package inputs and all compiled
+artifacts remain exactly bound. Workflow permission and publication boundaries
+are unchanged.
+
+The final SQL component checks also detected stale checked-in guest artifacts:
+DX identity integration changed 22 recorded source inputs for each SQL family.
+MySQL, PostgreSQL and SQLite components are regenerated by their existing pinned
+Rust/WASI SDK 34 and wasi-virt producers; the unrelated words component has no
+changed producer inputs. Actual generated bytes, complete provenance and
+negative mutation checks remain required. No source hash is manually waived or
+substituted. The original provenance failures and all producer timing/digest
+reports are retained. New component bytes require affected SQL execution and
+new final package identities before final qualification can complete.
+
+### DX.15 completed qualification, pending implementation review and merge
+
+The final implementation artifact source is
+`e2ab8e1f9ae815a1f8ac2ac652329d90dfc4ff0f`. Candidate
+`5127a24ee08b758efa8f9d41e3becd4ce64deb6f` changes only two acceptance
+parsers: the known `[sifr-metadata]` timing record is excluded before parsing
+diagnostic JSON. Actual error/fix/revert, dependency and interface assertions
+remain required and both protocols pass. All compiler, runtime, metadata,
+builder and workflow inputs are unchanged; original artifact receipts keep
+their original source revisions. The later architecture-summary correction
+from physical format 2 to 4 is documentation only.
+
+The original broad merge facade remains a failed historical invocation.
+Required coverage is now accounted through its unchanged-input passes and
+the affected failed/never-run continuations: all 32 selected compiler
+configurations, all 20 selected areas and the required guardrails. No second
+broad gate or create-PR gate was run. In particular:
+
+- SQL completes all 19 suites / 66 variants; Python uses the canonical complete
+  30-case report, not a partial promotion. All 81 selected ignored driver
+  cases are accounted with exact-case attestation and the original child
+  deadline. Canonical platform/sanitizer and fixture-runner skips remain
+  recorded as skips.
+- The versioned local sysroot qualification on `5127a24ee` passes all four
+  selected suites. Source preparation took 840.716 seconds; package and
+  library-test preparation took 2195.102 seconds. Structural, boundary,
+  installed-smoke and metadata-corpus scopes took 272.043, 281.363, 122.017 and
+  1018.642 seconds respectively. Structural cost includes ordinary driver
+  library compilation; these functional timings are not latency percentiles.
+  The corpus scope compares all 727 source/provider and actual installed
+  public-emission cases, then runs native fixtures, live generations and
+  missing/corrupt/incompatible artifact recovery.
+- Q02/Q03/Q06 use the qualified optimized installed Linux product and one
+  declared, randomized/interleaved set of 100+1 samples per CLI cohort. Fresh
+  p95 is 46.461 ms; unchanged p95 is 45.838 ms. Tracing and comparable pinned
+  DX.14 baseline cohorts remain separate. Quiet editor p95 is 2.415 ms over
+  100+1 same-version edits. These are warm OS-page observations, not a
+  cold-page startup claim. The canonical five-sample representative budget
+  checks pass separately and do not supply these percentile claims.
+- The 12 GB Linux headless editor/Cargo overlap completes 27 edits and eight
+  native profiles with peak summed owned RSS 825,049,088 bytes. The actual
+  32 GiB M2 Pro Mac desktop overlap completes 20 edits with peak summed owned
+  RSS 723,435,520 bytes. The declared host split and unexecuted literal 12 GB
+  graphical-desktop scenario remain explicit.
+- Q09 compares six 21-sample cohorts, excluding the declared first warmup.
+  Pre-migration/candidate median steady RSS is 135,575,552 / 65,419,264 bytes;
+  peak RSS is 136,077,312 / 100,188,160 bytes. Retained heap is
+  75,748,456 / 533,984 bytes. Empty heap increases from 73,056 to 187,152
+  bytes and is retained in the attribution. Heap samples are glibc allocator
+  observations, not exact per-object allocation accounting. The historical
+  demanded-stdlib fixture retains its package diagnostic for comparability;
+  clean E01–E06 functional acceptance passes separately in both cache modes.
+- Q04 passes native Linux x86_64/ARM64 and macOS x86_64/ARM64 in
+  [qualification run 35477213727](https://github.com/sifr-lang/sifr/actions/runs/35477213727).
+  Every target uses exact indexed package bytes for actual installation,
+  update/downgrade/reinstall, failed-update rollback, relocation, eight native
+  profile assertions, live navigation and 727 public-emission comparisons.
+  Primary and transition archive custody and digests are retained. This is
+  nonpublishing qualification, not an actual release.
+- All four semantic-target metadata corpora pass independently. Full native
+  Mac / Linux cross-produced ARM Mac portable payloads agree while their
+  distinct compiler identities remain recorded.
+
+Immutable reports and artifacts are under
+`/home/yaser5/projects/sifr/dx15-evidence/`: product, performance, native CI
+and desktop evidence under `e2ab8e1f9ae815a1f8ac2ac652329d90dfc4ff0f/`;
+parser continuation, unchanged-input proof, versioned local sysroot reports
+and archived package custody under
+`5127a24ee08b758efa8f9d41e3becd4ce64deb6f/`.
+Original failed reports are preserved. Scoped review and the implementation
+merge are still required; DX.16 remains not started.

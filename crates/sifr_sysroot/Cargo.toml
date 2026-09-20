@@ -12,6 +12,8 @@ sifr_identity.workspace = true
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
+ring = "=0.17.14"
+zstd = "=0.14.0"
 toml = { workspace = true }
 
 [lints]

@@ -124,7 +124,6 @@ pub(crate) use entrypoint::{
     check_single_file_entrypoint, compile_single_file_entrypoint_with_metadata,
     compile_single_file_frontend, emit_project_entrypoint,
     materialize_rooted_entrypoint_rust_project, resolve_package_project_entrypoint_plan,
-    resolve_project_entrypoint_plan,
 };
 pub(crate) use workspace::{
     ArtifactCacheReport, CachedArtifactEntry, PreparedArtifactCache, prepare_cached_artifact,

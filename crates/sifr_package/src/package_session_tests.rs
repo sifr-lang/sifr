@@ -392,3 +392,6 @@ impl Drop for TestPackage {
         let _ = fs::remove_dir_all(&self.path);
     }
 }
+
+#[path = "tests/standalone_ownership.rs"]
+mod standalone_ownership;

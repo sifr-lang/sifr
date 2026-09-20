@@ -1,4 +1,9 @@
-use super::*;
+use super::{
+    DiagnosticCode, DocumentVersion, FrontendContext, InvalidationReport, ModuleId,
+    ModuleSignature, QueryKind, RenderedDiagnostic, SourceText, UpdatedDocumentInfo,
+    WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceDirtyScopeReport, diagnostic_with_code,
+    module_signature, source_hash,
+};
 
 impl FrontendContext {
     pub fn update_module_source(

@@ -386,7 +386,7 @@ impl ExternalDefs {
                 .get_or_insert_with(Box::default)
                 .copy_overlay_from(methods);
         }
-        prepared.provider = self.provider.clone();
+        prepared.provider.clone_from(&self.provider);
         Ok(prepared)
     }
 

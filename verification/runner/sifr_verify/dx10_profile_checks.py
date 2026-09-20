@@ -75,8 +75,9 @@ class ProfilePlanTests(unittest.TestCase):
 
 def policy_checks():
     from .native_release_consumer_checks import NativeReleaseConsumerTests
+    from .native_test_execution_checks import NativeExecutionTests
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(cls)
-                               for cls in (ProfilePlanTests, NativeReleaseConsumerTests))
+                               for cls in (ProfilePlanTests, NativeReleaseConsumerTests, NativeExecutionTests))
     result = unittest.TextTestRunner(stream=io.StringIO()).run(suite)
     if not result.wasSuccessful():
         raise AssertionError(f"DX.10 profile seeds failed: {result.failures} {result.errors}")

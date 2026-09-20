@@ -48,7 +48,10 @@ def write_time_file(path: Path, *, start: float, usage_start: resource.struct_ru
     real_seconds = time.monotonic() - start
     user_seconds = max(0.0, usage.ru_utime - usage_start.ru_utime)
     sys_seconds = max(0.0, usage.ru_stime - usage_start.ru_stime)
-    max_rss = int(usage.ru_maxrss)
+    # Persist bytes, as the report parser and memory advisory require. Linux
+    # rusage returns KiB; Darwin returns bytes. This is the maximum child RSS,
+    # not a sum of concurrent children.
+    max_rss = int(usage.ru_maxrss) * (1024 if sys.platform.startswith("linux") else 1)
     swaps = max(0, int(usage.ru_nswap - usage_start.ru_nswap))
     path.write_text(
         f"{real_seconds:.2f} real\n"

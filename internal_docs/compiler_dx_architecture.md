@@ -183,6 +183,27 @@ Produce one indexed `stdlib.sifrmeta` for each required compiler/target-semantic
 
 The container is a private compiler format with a magic/header, explicit schema version, compatibility IDs, and a small bounded directory of sections. Directory entries contain section kind, module/record identity, offset, encoded size, decoded-size limit, and payload digest. Use fixed-width integer encodings for container offsets and a deterministic, bounded record codec. The existing `postcard` transport may encode explicit records; do not derive serialization over the entire live HIR graph merely because the serializer permits it.
 
+DX.15 physical format version 4 keeps the compatibility header and uses three
+bounded Zstandard frames: the logical header/directory, module/name catalog
+records, and remaining record payload bytes. The clear outer compatibility header must equal its decoded counterpart.
+All frame content lengths and the complete physical/expanded lengths are
+checked before allocation. The reader rejects old versions, missing/extra
+frames, trailing bytes, mismatched expansion lengths and invalid directory
+bounds. It verifies the entire installed artifact digest before opening it.
+Only the directory frame expands when opening the store. Each payload frame
+expands once on demand. Module and name validation still occurs when the
+provider opens; grouping these records avoids expanding unrelated payloads.
+Record offsets follow catalog-first then remaining-record order, with canonical
+record-ID order inside each group and exact nonoverlapping bounds. Record
+digests, canonical JSON records and all
+semantic/graph checks remain authoritative on demand. Startup physical
+decompression and index construction are measured separately; cumulative
+demanded payload decompression is exposed as physical_payload_decode_us.
+Physical expansion never itself materializes semantic, type, HIR or Rust records.
+The validated sorted directory uses contiguous entries with binary search.
+This private format has no compatibility fallback.
+
+
 | Section | Required content |
 | --- | --- |
 | Module/declaration directory | Complete public/private module inventory, canonical exports/re-exports and stable IDs |
@@ -704,7 +725,7 @@ Share immutable source/semantic/metadata values across requests. Reference-count
 
 Measure both retained and peak memory: source capture, decoding, checking, completion, project switch, old/new snapshots coexisting, and cleanup. Size guards for `HirStmt`, `HirExpr`, `Type` and high-frequency structures prevent accidental layout expansion, but do not replace allocation and lifetime measurements. Box rare large variants and intern repeated identifiers only where total memory and latency measurements support the change; a small enum with thousands of extra allocations is not automatically better.
 
-Maintain the existing 128 MiB large-session fixture cap where that contract applies and the named host-specific baselines. That cap is not a statement about total available system memory. Separately qualify the 12 GB machine with editor, normal background desktop load and bounded Cargo activity. Record effective memory/CPU/container limits, disk location and swapping pressure rather than assuming nominal RAM guarantees the workload fits.
+Maintain the existing 128 MiB large-session fixture cap where that contract applies and the named host-specific baselines. That cap is not a statement about total available system memory. The original qualification scenario combined the 12 GB machine, editor, normal background desktop load and bounded Cargo activity. On 2026-09-18 the user selected actual Mac desktop testing, so final qualification uses an explicit host split: the named 12 GB Linux reference must satisfy its fixed product latency and bounded editor/Cargo resource contracts, and the named Mac must separately run the editor/Cargo overlap under its real desktop load. Record each host’s actual hardware, effective memory/CPU/container limits, disk location, power policy and swapping pressure. The observed Mac has 32 GiB RAM; its result does not certify the original single-machine 12 GB graphical-desktop scenario, which remains recorded as not executed. This split does not raise the Linux supported-machine floor, waive its targets or apply Linux thresholds to Mac observations.
 
 DX.1 also freezes a demanded-stdlib retained-memory workload, measured with comparable optimized installed LSP binaries before and after the reader migration. Record idle/session baseline, post-open settled RSS, peak load/edit RSS, decoded module/type/body counts, attributable retained allocations and memory after close/switch. Record absolute and relative changes plus the sampling noise envelope. Historical numbers near 130 MiB are motivation, not an interchangeable baseline. DX.7/DX.8 and DX.11 must show the demanded-state mechanism removes unrelated retained stdlib structures, report the paired RSS comparison and preserve active scoped caps. An unchanged or increased RSS requires attribution and nonregression assessment rather than a claim of an unmeasured memory win. Establish any additional numeric memory target prospectively in the named benchmark policy, never by selecting the best sample after the change.
 

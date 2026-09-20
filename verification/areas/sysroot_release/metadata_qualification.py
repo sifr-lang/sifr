@@ -9,6 +9,8 @@ import re
 import shlex
 import shutil
 import sys
+import tempfile
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "verification/runner"))
@@ -16,6 +18,7 @@ sys.path.insert(0, str(ROOT / "verification/areas/developer_tooling"))
 from sifr_verify.process_execution import execute
 from lsp_protocol import LspClient, file_uri
 from lsp_protocol_smoke import initialize, open_document
+from producer_snapshot import prepare_source_snapshot
 
 
 def digest(path):
@@ -39,11 +42,11 @@ class Qualification:
 
     def run(self, name, arguments, success=True, env=None):
         command = [str(value) for value in arguments]
-        result = execute(command, cwd=self.output, env=env or self.env,
+        result = execute(command, cwd=self.workspace, env=env or self.env,
                          deadline_seconds=900, limit_bytes=16 * 1024 * 1024)
         (self.output / (name + ".stdout")).write_bytes(result.stdout)
         (self.output / (name + ".stderr")).write_bytes(result.stderr)
-        self.rows.append({"id": name, "command": command, "cwd": str(self.output),
+        self.rows.append({"id": name, "command": command, "cwd": str(self.workspace),
                           "exit_code": result.returncode, "cause": result.cause,
                           "elapsed_seconds": result.elapsed_seconds,
                           "stdout_sha256": hashlib.sha256(result.stdout).hexdigest(),
@@ -54,6 +57,20 @@ class Qualification:
         return result
 
     def installed(self):
+        # The corpus producer emits single-file Rust. Fixture paths beneath the
+        # compiler checkout instead select its real project-mode CLI contract.
+        # Always exercise installed files from a separate manifestless workspace.
+        with tempfile.TemporaryDirectory(prefix="sifr-installed-workspace-") as directory:
+            self.workspace = Path(directory).resolve()
+            assert not any((parent / "sifr.toml").exists()
+                           for parent in (self.workspace, *self.workspace.parents)), (
+                "installed qualification requires a manifestless temporary workspace")
+            self.report["workload_workspace"] = str(self.workspace)
+            self.report["workload_scope"] = "byte-identical standalone fixture copies outside a Sifr workspace"
+            self.save()
+            self._installed()
+
+    def _installed(self):
         original = self.binary.parent.parent
         first = self.output / "generation-a"
         shutil.copytree(original, first)
@@ -75,7 +92,9 @@ class Qualification:
         self.report["portable_payload_sha256"] = full["portable_payload_sha256"]
         for row in coverage["rows"]:
             name = row["fixture"]
-            source = self.corpus / (name + ".sifr")
+            source = self.workspace / (name + ".sifr")
+            shutil.copy2(self.corpus / source.name, source)
+            assert digest(source) == row["source_sha256"], ("corpus source bytes differ", name)
             expected = (self.corpus / (name + ".source.rs")).read_bytes()
             result = self.run("emit-" + name, [binary, "emit", source])
             assert result.stdout == expected, ("public emit bytes differ", name)
@@ -97,7 +116,7 @@ class Qualification:
         native_cases = ["class_mut_self", "explicit_owned_mutable_receiver",
                         "template_string_evaluation_order", "text_i18n_translation_bundles"]
         for name in native_cases:
-            self.run("native-" + name, [binary, "run", "--release", self.corpus / (name + ".sifr")])
+            self.run("native-" + name, [binary, "run", "--release", self.workspace / (name + ".sifr")])
         self.report["installed_native_cases"] = native_cases
         self.live_generations(moved)
         self.rejection_recovery(moved)
@@ -131,7 +150,7 @@ class Qualification:
         source = root / "lib/sifr/stdlib/_sifr/math.sifr"
         held = source.with_suffix(".held")
         source.rename(held)
-        case = self.output / "tiny.sifr"
+        case = self.workspace / "tiny.sifr"
         case.write_text("from sifr.math import sqrt\n\ndef main():\n    assert sqrt(4.0) == 2.0\n")
         try:
             self.run("lazy-check-without-source", [binary, "check", case])
@@ -141,16 +160,8 @@ class Qualification:
     def live_generations(self, first):
         second = self.output / "generation-b"
         shutil.copytree(first, second)
-        snapshot = self.output / "producer-source"
-        snapshot.mkdir()
-        shutil.copytree(ROOT / "stdlib", snapshot / "stdlib")
-        for relative in ("sysroot.toml", "Cargo.toml", "Cargo.lock", ".cargo/config.toml",
-                         "crates/sifr_runtime/Cargo.toml", "crates/sifr_stdlib/Cargo.toml",
-                         "crates/sifr_structural_identity/Cargo.toml"):
-            target = snapshot / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(ROOT / relative, target)
-        (snapshot / "vendor").mkdir()
+        version = tomllib.loads((first / "sysroot.toml").read_text())["sifr-version"]
+        snapshot = prepare_source_snapshot(ROOT, self.output / "producer-source", version)
         source = snapshot / "stdlib/_sifr/math.sifr"
         source.write_text("# generation B navigation marker\n" + source.read_text())
         shutil.rmtree(second / "lib/sifr/stdlib")
@@ -176,7 +187,7 @@ class Qualification:
         self.run("generation-b-integrity", [second / "bin/sifr", "doctor", "--json", "--verify-integrity"])
         selector = self.output / "current"
         selector.symlink_to(first, target_is_directory=True)
-        workspace = self.output / "workspace"
+        workspace = self.workspace / "editor"
         workspace.mkdir()
         source = workspace / "main.sifr"
         source.write_text("from sifr.math import sqrt\n\ndef main():\n    value: float = sqrt(4.0)\n")

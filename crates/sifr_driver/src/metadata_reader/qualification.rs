@@ -51,8 +51,14 @@ impl Provider {
         }))
     }
 }
-fn hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+pub(super) fn hex(bytes: &[u8]) -> String {
+    use std::fmt::Write as _;
+    bytes
+        .iter()
+        .fold(String::with_capacity(bytes.len() * 2), |mut text, byte| {
+            let _ = write!(text, "{byte:02x}");
+            text
+        })
 }
 impl crate::CompilerContext {
     /// Traverse every canonical module explicitly, including sources and codegen payloads.

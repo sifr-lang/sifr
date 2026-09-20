@@ -1,6 +1,6 @@
 use super::*;
 #[test]
-fn dx7_m01_check_demands_semantics_without_rust_or_unrelated_modules() {
+fn check_demands_semantics_without_rust_or_unrelated_modules() {
     let context = crate::CompilerContext::for_test();
     let provider = context.metadata_provider().unwrap();
     assert!(provider.loaded_semantic_modules().is_empty());
@@ -38,7 +38,7 @@ fn dx7_m01_check_demands_semantics_without_rust_or_unrelated_modules() {
     );
 }
 #[test]
-fn dx7_m02_m04_m15_source_metadata_diagnostics_and_emission_agree() {
+fn source_metadata_diagnostics_and_emission_agree() {
     let context = crate::CompilerContext::for_test();
     let source_stdlib = crate::stdlib::compile_stdlib_uncached().unwrap();
     let provider = context.metadata_provider().unwrap();
@@ -159,7 +159,7 @@ fn dx7_m02_m04_m15_source_metadata_diagnostics_and_emission_agree() {
     }
 }
 #[test]
-fn dx7_m17_failed_override_retries_and_never_reuses_another_owner() {
+fn failed_override_retries_and_never_reuses_another_owner() {
     let context = crate::CompilerContext::for_test();
     let original = context.metadata_provider().unwrap();
     let temporary = tempfile::tempdir().unwrap();
@@ -214,7 +214,7 @@ fn dx7_navigation_demand_shares_index_and_reads_only_selected_source() {
 }
 
 #[test]
-fn dx7_m17_metadata_projects_keep_failed_deleted_and_repaired_exports_isolated() {
+fn metadata_projects_keep_failed_deleted_and_repaired_exports_isolated() {
     use sifr_frontend::{
         FrontendContext, FrontendInput, FrontendMode, ModuleId, SourcePath, SourceText,
     };
@@ -374,7 +374,7 @@ fn dx7_nominal_references_share_one_complete_projection_per_store() {
 }
 
 #[test]
-fn dx8_m05_q05_complete_canonical_metadata_inventory() {
+fn metadata_structural_complete_canonical_metadata_inventory() {
     let report = crate::CompilerContext::for_test()
         .qualify_metadata()
         .unwrap();
@@ -386,7 +386,7 @@ fn dx8_m05_q05_complete_canonical_metadata_inventory() {
 }
 
 #[test]
-fn dx8_m05_full_decoded_projection_preserves_canonical_records() {
+fn metadata_structural_full_decoded_projection_preserves_canonical_records() {
     let context = crate::CompilerContext::for_test();
     let provider = context.metadata_provider().unwrap();
     let root = context.sysroot().unwrap();
@@ -404,8 +404,8 @@ fn dx8_m05_full_decoded_projection_preserves_canonical_records() {
         std::fs::copy(&provider.metadata.path, path.join("original.sifrmeta")).unwrap();
         std::fs::write(path.join("reencoded.sifrmeta"), &bytes).unwrap();
     }
-    let restored = wire::MetadataStore::open(
-        std::io::Cursor::new(bytes),
+    let restored = wire::MetadataStore::open_bytes(
+        bytes,
         provider.metadata.compatibility,
         wire::Limits::default(),
     )

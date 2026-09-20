@@ -704,6 +704,22 @@ impl WorkspaceSession {
         self.context.as_mut()
     }
 
+    /// Revalidate a saved diagnostic record through this workspace's disk
+    /// composition root. The frontend also verifies its captured source bytes;
+    /// fresh disk observations never replace a different editor overlay.
+    pub fn restore_saved_checks(
+        &mut self,
+        record: &crate::persistence::CompletedCheck,
+        inputs: &crate::persistence::SemanticInputs,
+    ) -> Option<Vec<crate::ModuleCheckDecision>> {
+        self.context.as_mut()?.restore_completed_checks(
+            record,
+            inputs,
+            &mut DiskSourceProvider::new(),
+            false,
+        )
+    }
+
     fn refresh_residency(&mut self) {
         let source_map = self.context.as_ref().map(FrontendContext::source_map);
         let module_graph = self.context.as_ref().map(FrontendContext::module_graph);

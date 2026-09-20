@@ -14,6 +14,8 @@ use std::path::{Path, PathBuf};
 
 pub(crate) struct TestRunnerExecutionOutcome {
     pub(crate) success: bool,
+    #[cfg(test)]
+    pub(crate) native_project_root: PathBuf,
     #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) cache_report: ArtifactCacheReport,
 }
@@ -306,6 +308,8 @@ pub(crate) fn execute_test_runner_project(
     Ok(TestRunnerExecutionOutcome {
         success,
         cache_report,
+        #[cfg(test)]
+        native_project_root: project_dir,
     })
 }
 

@@ -88,9 +88,5 @@ fn compiler_context() -> sifr_driver::CompilerContext {
                 .copied()
                 .unwrap_or(sifr_driver::ApplicationProfile::Release),
         )
-        .with_project_incremental(
-            PROJECT_CACHE_OPTIONS
-                .get()
-                .map_or(true, |options| options.0),
-        )
+        .with_project_incremental(PROJECT_CACHE_OPTIONS.get().is_none_or(|options| options.0))
 }
