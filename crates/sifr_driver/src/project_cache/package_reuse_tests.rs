@@ -405,11 +405,6 @@ fn assert_private_import_rejected(private_import: &str) {
 }
 
 #[test]
-fn package_private_module_edit_rejects_restored_success() {
-    assert_private_import_rejected("import dep.hidden\nfrom dep import value as other");
-}
-
-#[test]
 fn package_private_symbol_edit_rejects_restored_success() {
     assert_private_import_rejected("from dep.hidden import value as other");
 }

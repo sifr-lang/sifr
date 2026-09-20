@@ -34,9 +34,10 @@ Acceptance fixed before implementation:
 
 1. Start with a legitimate public dependency import and publish successful
    checking; make an eligible helper body edit and prove importer restoration.
-2. Independently edit the importer to import a private dependency module, and
-   to import a symbol directly from that private module. Both forms must reject
-   with package visibility diagnostic SIFR-PACKAGE-0203, naming the private module.
+2. Independently edit the importer to access a symbol directly through a private
+   dependency module using supported `from dep.hidden import value as other`
+   syntax. Require package visibility diagnostic SIFR-PACKAGE-0203, naming
+   the private module.
 3. Compare the warm/restored-history result to independent fresh checking and
    a cold empty-cache check of the same sources. Require identical diagnostics,
    zero restored checks and no restored-success status for the edited import.
@@ -44,10 +45,18 @@ Acceptance fixed before implementation:
    make another eligible body edit and prove valid importer reuse recovers.
    Historical success may be reused only after the public source is restored.
 
-Run exact nonzero selectors for each new negative and the existing small
+Run exact nonzero selector for the new negative and the existing small
 package-reuse module, after formatting/diff/file-size/HIR guardrails. Reuse the
 same Rust 1.98.1 default-feature private target, two jobs, pressure-based cleanup.
 Scoped remote Opus review covers the exact candidate; no per-item monolithic
 gate, new reuse proof class, performance qualification or next Clippy batch.
 CI admission, deferred Windows, and interrupted cold-host performance/determinism
 remain with their existing owners and are not reclassified by this item.
+
+Test-construction correction before review: bare `import dep.hidden` is an
+unsupported import form and correctly produces SIFR-IMPORT-0003. The initial
+probe at `d8a8b4b6c31c63954f0dc5849f95529be3b2870a` therefore did not exercise
+visibility and is preserved as failed evidence under
+`/home/yaser5/projects/sifr/private-import-evidence/d8a8b4b6c31c63954f0dc5849f95529be3b2870a/`.
+The supported from-import negative covers actual private module/symbol access;
+no new import grammar or product behavior is authorized.
