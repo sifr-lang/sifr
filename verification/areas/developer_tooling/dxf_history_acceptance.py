@@ -35,6 +35,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=False)
     workspace = args.output / "workspace"
     workspace.mkdir()
+    (workspace / "sifr.toml").write_text('[source]\nroot = "."\n')
     file = workspace / "main.sifr"
     helper = workspace / "helper.sifr"
     file.write_text("from helper import value\ndef main() -> int:\n    return value()\n")
@@ -46,7 +47,7 @@ def main():
             command.append("--no-incremental")
         command += ["check", str(file)]
         start = time.monotonic()
-        process = subprocess.run(command, cwd=workspace, env=env, text=True, capture_output=True)
+        process = subprocess.run(command, cwd=args.output, env=env, text=True, capture_output=True)
         elapsed = time.monotonic() - start
         (args.output / (label + ".stdout")).write_text(process.stdout)
         (args.output / (label + ".stderr")).write_text(process.stderr)
