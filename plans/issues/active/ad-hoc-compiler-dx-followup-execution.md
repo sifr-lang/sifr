@@ -1,6 +1,6 @@
 # Compiler DX follow-up execution plan
 
-Status: in progress; DXF.1–6 merged and recorded, DXF.7 next ready. This is the canonical scope for the
+Status: in progress; DXF.1–6 merged and recorded, DXF.7 in progress. This is the canonical scope for the
 user-authorized follow-up work, separate from the completed Phase DX.
 Planning baseline: `f9c0d303104fca8181e4624f49d0433779b0e964` on
 `origin/main`, verified 2026-09-20. Remote checkout was clean on
@@ -70,7 +70,7 @@ Link history rather than copying it:
 | DXF.4 | Production embedding identity audit and necessary fixes | DXF.3 (execution order) | merged #3881 |
 | DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | merged #3883 |
 | DXF.6 | Cache CLI/moved-workspace gaps and five documentation links | DXF.3, DXF.5; after DXF.4 | merged #3885 |
-| DXF.7 | Final affected-contract evidence reconciliation | DXF.1–6 | queued |
+| DXF.7 | Final affected-contract evidence reconciliation | DXF.1–6 | in progress |
 | DXF.8 | Authoritative user binary/local checkout handoff | DXF.7 | queued |
 
 DXF.4 and DXF.5 do not technically depend on package reuse; the edges express
@@ -928,3 +928,27 @@ This record-only update requires documentation checks only and no new external
 review. Blocker: **none**. Stop after merging this record. Exact next action:
 a new bounded **DXF.7** session. No DXF.7 reconciliation, release, installation
 or user-local checkout change occurred here; user-local handoff remains DXF.8.
+
+## DXF.7 reconciliation execution — 2026-09-20
+
+Execution base: `4f9fc5c0d8ac82d5a9e01c4dc4b20450ebf23e09`.
+The final source contract includes all DXF.1–6 merges. Historical DX.15 and
+item compiler receipts remain evidence for their original bytes only.
+
+Four-platform execution is required: DXF.3 changes filesystem ownership and
+DXF.5 changes Unix directory modes, and DXF.8 requires an exact Mac package.
+The existing nonpublishing release-qualification workflow supplies the canonical
+native packages, atomic installer/update/rollback, relocation, loader and metadata
+checks. Its native protocol now also consumes the same isolated cache CLI
+contract, checks private trace creation under umask 000, and executes five
+exact native source selectors for ownership, root movement and embedding.
+Source API checks are identified separately from packaged executable checks.
+There is no release/publication or user installation in this item.
+
+Linux reconciliation reuses unchanged relevant library evidence from DXF.3–6
+and frontend observations from DXF.2. Package/interface/storage tests predating
+DXF.3 require affected reruns. Changed harnesses require reruns. Final artifact
+receipts, commands, nonzero counts, source/fixture/lock/environment hashes,
+historical failures, platform evidence and scoped review are indexed externally.
+No old whole-phase gate/review or new broad performance claim is introduced.
+The final merged record will state completed coverage and remaining limits.
