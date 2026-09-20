@@ -28,6 +28,7 @@ def main():
     (workspace / "sifr.toml").write_text('[source]\nroot = "."\n')
     source = workspace / "main.sifr"
     cache = output / "cache"
+    native = cache / "native" / "artifacts"
     env = dict(os.environ, SIFR_CACHE_DIR=str(cache))
     calls = []
 
@@ -56,9 +57,9 @@ def main():
         ["cache", "inspect", "--json", "--isolated", "--no-incremental"],
     ]):
         inspected = json.loads(invoke(f"global-{placement}", arguments).stdout)
-        assert inspected == {"root": str(cache), "entries": [], "protected_roots": []}
+        assert inspected == {"root": str(native), "entries": [], "protected_roots": []}
     text = invoke("inspect-text", ["cache", "inspect"]).stdout
-    assert text == f"cache: {cache}\n"
+    assert text == f"cache: {native}\n"
     for index, arguments in enumerate([
         ["cache"], ["cache", "bogus"], ["cache", "inspect", "--reserve-bytes", "1"],
         ["cache", "prune", "--json"], ["cache", "prune-project"],
