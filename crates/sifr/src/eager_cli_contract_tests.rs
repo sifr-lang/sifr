@@ -20,6 +20,9 @@ struct Cli {
     /// Print invocation timing and selected cache root on stderr
     #[arg(long, global = true)]
     timings: bool,
+    /// Write bounded, redacted versioned diagnostics to a new trace directory
+    #[arg(long, global = true, value_name = "DIR")]
+    trace_dir: Option<PathBuf>,
     /// Compute project checks without reading or writing incremental results
     #[arg(long, global = true)]
     no_incremental: bool,
@@ -539,4 +542,39 @@ fn all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order()
         equivalent(args, false);
         equivalent(args, true);
     }
+}
+
+#[test]
+fn trace_dir_cli_contract() {
+    use clap::CommandFactory;
+    let mut help = Vec::new();
+    crate::cli_model_and_entrypoint::Cli::command()
+        .write_long_help(&mut help)
+        .unwrap();
+    assert!(
+        String::from_utf8(help)
+            .unwrap()
+            .contains("--trace-dir <DIR>")
+    );
+    for args in [
+        vec!["sifr", "--trace-dir"],
+        vec!["sifr", "check", "--trace-dir"],
+        vec!["sifr", "--trace-dir", "diagnostics", "check", "main.sifr"],
+        vec!["sifr", "check", "main.sifr", "--trace-dir", "diagnostics"],
+        vec![
+            "sifr",
+            "run",
+            "main.sifr",
+            "--",
+            "--trace-dir",
+            "program-arg",
+        ],
+    ] {
+        equivalent(&args, false);
+    }
+    assert!(
+        crate::cli_model_and_entrypoint::Cli::try_parse_from(["sifr", "check", "--trace-dir"])
+            .is_err()
+    );
+    all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order();
 }

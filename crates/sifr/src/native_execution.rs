@@ -32,6 +32,7 @@ pub(super) fn render_project_cache_report(
     timings: bool,
 ) {
     use std::io::{self, Write as _};
+    crate::trace_artifacts::project_report(compiler, report);
     if timings {
         if let Ok(report) = serde_json::to_string(report) {
             let _ = writeln!(io::stderr(), "[sifr-project-cache] {report}");

@@ -47,6 +47,7 @@ mod self_update_metadata_source;
 mod self_update_receipt;
 mod self_update_runner;
 mod sysroot_cli;
+mod trace_artifacts;
 mod trace_cli;
 mod workspace_run_selection;
 

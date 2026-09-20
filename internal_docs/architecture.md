@@ -2081,3 +2081,5 @@ See compiler_dx_architecture.md for physical limits and compatibility rules.
 Explicit standalone-file checks in source-only virtual Cargo workspaces avoid
 resolving unrelated workspace members; actual package/source ownership and
 explicit lock-mode validation remain authoritative.
+
+The CLI opt-in `--trace-dir` sink projects existing build, project cache, metadata, frontend trace and runtime process reports into bounded redacted versioned JSON. It owns artifact lifetime and rendering, while existing driver/frontend owners retain event and timing authority. See compiler DX architecture §11.3.
