@@ -42,7 +42,7 @@ fn run(
         &mut DiskSourceProvider::new(),
         context,
         &AtomicBool::new(false),
-        Some((&compiler(), &Default::default())),
+        Some((&compiler(), &Default::default(), None)),
         |provider| {
             let config = file.parent().unwrap().join("sifr.toml");
             if provider.is_file(&config) {
@@ -389,7 +389,8 @@ fn dx14_reconfiguration_deletion_and_unknown_effect_scope() {
             &inputs(),
             &mut capture,
             &compiler(),
-            Default::default()
+            Default::default(),
+            None,
         )
         .is_none()
     );

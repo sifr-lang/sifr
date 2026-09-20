@@ -29,7 +29,7 @@ pub use external_overlay::prepare_external_defs;
 mod loaders;
 mod persistent_checks;
 mod source_updates;
-pub use persistent_checks::ModuleCheckDecision;
+pub use persistent_checks::{ModuleCheckDecision, ResolvedCheckModule};
 mod reuse;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -731,8 +731,12 @@ impl FrontendContext {
         let mut edges = BTreeSet::new();
         for index in 0..self.modules.len() {
             let module = &self.modules[index];
-            let parsed =
-                sifr_syntax::parse_module(module.source.as_str(), Some(&module.module_name));
+            // A package resolver may already have canonicalized import names.
+            // Keep that same AST for dependency edges and semantic checking.
+            let parsed = module.parsed.as_deref().cloned().map_or_else(
+                || sifr_syntax::parse_module(module.source.as_str(), Some(&module.module_name)),
+                Ok,
+            );
             if let Ok(parsed) = parsed {
                 self.modules[index].signature = module_signature(parsed.suite());
                 for import in local_import_dependencies(parsed.suite(), &module_names) {

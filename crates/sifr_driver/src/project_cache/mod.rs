@@ -3,6 +3,8 @@
 mod dx14_tests;
 mod interface_reuse;
 mod package_context;
+#[cfg(test)]
+mod package_reuse_tests;
 mod storage;
 #[cfg(test)]
 mod tests;
@@ -133,7 +135,7 @@ pub fn check_saved_sources(
         provider,
         inputs,
         &AtomicBool::new(false),
-        Some((compiler.identity(), &defs)),
+        Some((compiler.identity(), &defs, package)),
         compute,
     )
 }
@@ -146,6 +148,7 @@ fn check(
     module_context: Option<(
         &sifr_identity::CompilerIdentity,
         &sifr_lowering::ExternalDefs,
+        Option<&crate::PackageEntrypoint>,
     )>,
     compute: impl FnOnce(&mut dyn SourceProvider) -> CheckComputation,
 ) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
@@ -195,7 +198,7 @@ fn check(
                         return (diagnostics, report);
                     }
                 }
-                if let Some((compiler, defs)) = module_context {
+                if let Some((compiler, defs, package)) = module_context {
                     if let Some(modules) = interface_reuse::restore(
                         &record,
                         file,
@@ -203,6 +206,7 @@ fn check(
                         &mut capture,
                         compiler,
                         defs.clone(),
+                        package,
                     ) {
                         report.status = "interface-restored".into();
                         report.restored_checks = 1;

@@ -179,3 +179,66 @@ impl FrontendContext {
         Some(context)
     }
 }
+
+/// The existing package resolver owns names and rewritten imports; original
+/// source bytes remain the authority for persistence and diagnostics.
+pub struct ResolvedCheckModule {
+    pub name: String,
+    pub source: crate::persistence::CapturedSource,
+    pub suite: sifr_python_ast::Suite,
+}
+
+impl FrontendContext {
+    /// Adapt an already resolved package closure to the existing checking
+    /// queries. This performs neither package discovery nor an alternate check.
+    pub fn from_resolved_check_modules(
+        root: ProjectRoot,
+        modules: Vec<ResolvedCheckModule>,
+        defs: ExternalDefs,
+    ) -> Option<Self> {
+        let entry = modules
+            .iter()
+            .find(|module| module.source.path == root.entrypoint.as_path())?;
+        let mut context = Self::load_single_file_with_external_defs(
+            FrontendInput {
+                path: root.entrypoint.clone(),
+                source: SourceText::new(entry.source.text.clone()),
+                mode: FrontendMode::ProjectEntrypoint,
+            },
+            defs,
+        )
+        .ok()?;
+        context.modules.clear();
+        context.module_by_id.clear();
+        let mut names = BTreeSet::new();
+        let mut paths = BTreeSet::new();
+        for module in modules {
+            if !names.insert(module.name.clone()) || !paths.insert(module.source.path.clone()) {
+                // Multiple logical aliases for one source are not represented
+                // by the current completed-check source inventory.
+                return None;
+            }
+            let id = ModuleId(u32::try_from(context.modules.len()).ok()?);
+            let parsed = sifr_syntax::parse_module(&module.source.text, Some(&module.name))
+                .ok()?
+                .with_resolved_suite(module.suite);
+            if module.source.path == root.entrypoint.as_path() {
+                context.entrypoint = id;
+            }
+            let mut state = module_state(
+                id,
+                FileId(id.as_u32()),
+                module.name,
+                SourcePath::new(module.source.path),
+                SourceText::new(module.source.text),
+                None,
+            );
+            state.parsed = Some(Arc::new(parsed));
+            context.module_by_id.insert(id, context.modules.len());
+            context.modules.push(state);
+        }
+        context.cache_target = WorkspaceSessionTarget::Project(root);
+        context.rebuild_edges();
+        Some(context)
+    }
+}
