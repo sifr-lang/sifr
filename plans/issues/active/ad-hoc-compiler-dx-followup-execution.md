@@ -1,6 +1,6 @@
 # Compiler DX follow-up execution plan
 
-Status: planned; implementation not started. This is the canonical scope for the
+Status: in progress; DXF.1 merged and recorded, DXF.2 next ready. This is the canonical scope for the
 user-authorized follow-up work, separate from the completed Phase DX.
 Planning baseline: `f9c0d303104fca8181e4624f49d0433779b0e964` on
 `origin/main`, verified 2026-09-20. Remote checkout was clean on
@@ -64,8 +64,8 @@ Link history rather than copying it:
 
 | Item | Scope | Depends on | Initial status |
 | --- | --- | --- | --- |
-| DXF.1 | Real package-project importer reuse and measurement | planning PR merged | next ready |
-| DXF.2 | Bounded record retention, observations and lookup | DXF.1 | queued |
+| DXF.1 | Real package-project importer reuse and measurement | planning PR merged | merged #3875 |
+| DXF.2 | Bounded record retention, observations and lookup | DXF.1 | next ready |
 | DXF.3 | Owner-safe abandoned/orphan storage reclamation | DXF.2 | queued |
 | DXF.4 | Production embedding identity audit and necessary fixes | DXF.3 (execution order) | queued |
 | DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | queued |
@@ -391,3 +391,101 @@ Planning validation (2026-09-20): documentation structure, all nine local
 links/anchors, eight-item structure, file-size guard (4098 files) and diff
 whitespace checks pass. Test selectors were inspected in source only. No Cargo
 tests/builds, compiler gates, implementation or Opus review ran for this plan.
+
+## DXF.1 merged record — 2026-09-20
+
+DXF.1 is closed by [PR #3875](https://github.com/sifr-lang/sifr/pull/3875).
+Execution base: `f0682eb2a9200cf8912a1eaa14311805bfbfbc36`.
+Approved implementation candidate: `c0aaf5ebb68ec371d2dc71b169c54c9867910580`.
+Implementation merge: `041f9a2aba05c83668105e2db72d74603a0470f0`.
+
+The ordinary package resolver now supplies canonical module names and rewritten
+imports to the existing frontend checking queries. The same narrow body proof
+checks edited code before restoring eligible importer diagnostics. Package,
+lock-mode, trust, source ownership/resolution, compiler, metadata, target and
+live-context authorities remain pinned. Repeated restored-success hops retain
+current source bytes and observations. Multiple logical aliases of one physical
+source conservatively miss under the existing per-path persistence inventory;
+no broader body-erasure class or alternate checker was added.
+
+### Validation and artifact identities
+
+All work ran through Tailscale SSH in
+`/home/yaser5/projects/sifr/compiler-dx-orchestration`, using Rust 1.98.1,
+default features, the existing session-owned `target`, and two Cargo jobs.
+Formatting, file-size and HIR maintainability guards passed before expensive
+acceptance; the source guard reported 4100 files under its 900-line policy.
+Python syntax and `git diff --check` passed. Pressure inspection found 24 GiB
+free with a 185 GiB target before candidate preparation; no cleanup was needed.
+
+The exact three proposed package tests passed, the existing
+`project_cache::dx14_tests::` module passed all eight tests, and the exact
+`dx13_resolved_package_context_and_live_external_inventory` test passed.
+Each selection first listed the exact nonzero expected count: **12 tests total**.
+The three named CLI harnesses all passed: new package reuse, legacy DX.14
+interface reuse, and existing DX.13 project acceptance (including its specified
+source-root override). No per-item full create-PR/merge gate or release
+qualification was run under the approved policy.
+
+The candidate evidence directory is
+`/home/yaser5/projects/sifr/dxf-evidence/c0aaf5ebb68ec371d2dc71b169c54c9867910580/`.
+Its `evidence-index.json` binds literal paths, source bytes, compiler/receipt
+identities, all raw reports, logs and the named selections.
+SHA-256: `9405a3312e8d97ca74eb5f74d513f24ffd09cff3f0fcce9f00196ad9bf26302c`.
+
+The prepared optimized installed compiler is
+`/home/yaser5/projects/sifr/dxf-evidence/c0aaf5ebb68ec371d2dc71b169c54c9867910580/product/installed/bin/sifr`;
+SHA-256: `4cc627765fc14c800883e5711d0c7825f40401d42aaf4cd00e8f67c5deaf819e`.
+Its receipt is the same directory's `product/receipt.json`;
+SHA-256: `93391ac7275ca92bf61911de45e8221b84d4b4a19706aa39f82780877c0b26ca`.
+The pre-edit baseline, its installed receipt and original probe remain under
+`/home/yaser5/projects/sifr/dxf-evidence/f0682eb2a9200cf8912a1eaa14311805bfbfbc36/`.
+
+### Measured package behavior
+
+The representative actual-package-cwd application has 11 modules, eight importer
+layers (160 wrapper functions) and a local package dependency. Each scenario used
+21 paired prepared incremental/fresh samples and one predeclared excluded
+warmup; pair order alternated. Preparation and native-build work were outside
+these warm samples.
+
+| Edit scenario | Baseline incremental median / p95 | Candidate incremental median / p95 |
+| --- | --- | --- |
+| Application helper body | 1167 / 1208 ms | 282 / 298 ms |
+| Local dependency body | 1569 / 2153 ms | 326 / 344 ms |
+
+Candidate independent fresh medians were 1082 and 1083 ms; baseline fresh medians
+were about 1077 ms. Baseline computed all 11 module checks. Candidate reports
+showed **9–10 restored and 1–2 computed**, depending on the historical record
+selected. Chained edits, independent diagnostics/exit codes and the conservative
+negative cases passed; actual native stdout was **1 then 2**.
+
+The index contains median/p95/range/coefficient-of-variation summaries for wall
+time, RSS, validation/proof and serialization/publication work. Baseline
+incremental wall CV was 2.49% / 18.94%; candidate CV was 5.55% / 4.39%.
+Median incremental RSS changed from 75324 / 78048 KiB to 49236 / 49216 KiB.
+These are descriptive observations on this Linux host, not new general budget
+or release claims. History growth remains visible and belongs to DXF.2.
+Disabled fresh reports omit module details; no zero-module computation claim
+is inferred from those unavailable counters.
+
+Historical failed preflight
+`/home/yaser5/projects/sifr/dxf-evidence/focused-preflight.log` remains failed:
+a test-fixture `Vec::insert` call was corrected before successful compilation
+and focused execution. It is not relabeled as passing. All earlier phase
+failures and evidence identities remain unchanged.
+
+### Review, follow-ups and handoff
+
+[Scoped Opus review](https://github.com/sifr-lang/sifr/pull/3875#issuecomment-5749374222)
+returned **SATISFIED**, with no blocking findings, for the exact candidate.
+External `opus-review.md` SHA-256:
+`2a6b2f5679608e40a1d7072bf02e6cf492426e116785a8b889a857053a15f28b`.
+Its nonblocking findings and their separate dispositions are recorded in
+[DXF.1 review follow-ups](ad-hoc-dxf1-package-reuse-review-followups.md).
+This record-only update changes no reviewed implementation or validation inputs
+and requires documentation checks only, without another external review.
+
+Blocker: **none**. Stop after this merged record. The next action is a new bounded
+session for **DXF.2**; no DXF.2 implementation, release/publication, or user-local
+checkout/binary change was performed here. The latter remains reserved for DXF.8.
