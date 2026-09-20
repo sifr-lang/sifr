@@ -120,7 +120,7 @@ fn compiled_stdlib_same_operation_groups_have_one_public_name() {
         let exports = compiled
             .defs
             .functions
-            .get(*module)
+            .get(module)
             .unwrap_or_else(|| panic!("{module} functions should be exported"));
         let visible = names
             .iter()

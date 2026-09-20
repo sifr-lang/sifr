@@ -261,7 +261,7 @@ fn dx14_bounded_edits_match_fresh_with_independent_error_expectations() {
     let mut seed = 0x5eed_u64;
     let mut reused = 0;
     for step in 0..24 {
-        seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+        seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1);
         let bad = step % 5 == 3;
         let source = if bad {
             "def value() -> int:

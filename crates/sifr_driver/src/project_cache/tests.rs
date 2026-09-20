@@ -158,7 +158,7 @@ fn dx13_c08_c09_inherited_payloads_reader_gc() {
     run(&cache, &file);
     let store = store(&cache, &file);
     let old = store.latest().unwrap();
-    let old_record = old.manifest.records.iter().next().unwrap().clone();
+    let old_record = old.manifest.records.first().unwrap().clone();
     let before = fs::read(old.path.join(&old_record)).unwrap();
     let other = file.parent().unwrap().join("other.sifr");
     fs::write(&other, "def main() -> None:\n    missing()\n").unwrap();
@@ -190,7 +190,7 @@ fn dx13_c09_corrupt_schema_references_and_winners() {
     run(&cache, &file);
     let store = store(&cache, &file);
     let generation = store.latest().unwrap();
-    let record = generation.manifest.records.iter().next().unwrap();
+    let record = generation.manifest.records.first().unwrap();
     fs::write(generation.path.join(record), "incomplete").unwrap();
     let (actual, report) = run(&cache, &file);
     assert_eq!(report.computed_checks, 1);

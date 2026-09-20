@@ -259,7 +259,7 @@ mod tests {
                 .unwrap()
         );
         assert_eq!(rule_count(), 2);
-        let first = ignore.rules[0].compiled.get().unwrap().as_ref().unwrap() as *const _;
+        let first = std::ptr::from_ref(ignore.rules[0].compiled.get().unwrap().as_ref().unwrap());
         assert!(
             !ignore
                 .matches_resolved_path(Path::new("keep.sifr"))
@@ -273,7 +273,7 @@ mod tests {
         assert_eq!(rule_count(), 2, "unrelated rule stays uncompiled");
         assert_eq!(
             first,
-            ignore.rules[0].compiled.get().unwrap().as_ref().unwrap() as *const _
+            std::ptr::from_ref(ignore.rules[0].compiled.get().unwrap().as_ref().unwrap())
         );
         let parents = matcher(dir.path(), "!keep.sifr\nbuild/\n", true);
         assert!(

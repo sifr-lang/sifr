@@ -236,7 +236,7 @@ fn package_authority_changes_invalidate() {
                     .insert("extra".into(), "module".into());
             }
             _ => unreachable!(),
-        };
+        }
         if !matches!(key, "compiler" | "metadata" | "target" | "source-policy") {
             context = inputs(&current);
         }

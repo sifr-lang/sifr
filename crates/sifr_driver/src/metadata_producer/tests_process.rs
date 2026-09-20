@@ -185,10 +185,12 @@ fn process_waiters_warm_reuse_and_distinct_configurations() {
     assert_ne!(a["path"], b["path"]);
     assert_ne!(a["compiler_identity"], b["compiler_identity"]);
     assert!(!a["production_seconds"].is_null() && !b["production_seconds"].is_null());
-    eprintln!(
+    writeln!(
+        std::io::stderr(),
         "DX6 process evidence {}",
         serde_json::json!({"cold":cold,"warm":warm,"distinct":[a,b],"assertions":10,"seconds":started.elapsed().as_secs_f64()})
-    );
+    )
+    .unwrap();
 }
 #[test]
 fn killed_staged_producer_releases_waiters() {

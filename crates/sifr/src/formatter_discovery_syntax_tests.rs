@@ -5,7 +5,7 @@ use sifr_frontend::DiskSourceProvider;
 fn formatter_discovery_infallible_alphabet_agrees_with_engine_validation() {
     // Exhaust the interactions between every admitted syntax operator and a
     // literal through length four, rather than just the repository's rules.
-    let alphabet = [b'a', b'/', b'*', b'?', b'!', b'.', b'-'];
+    let alphabet = *b"a/*?!.-";
     let mut patterns = vec![String::new()];
     for _ in 0..4 {
         let mut next = Vec::new();
@@ -99,8 +99,7 @@ fn formatter_discovery_still_validates_impossible_complex_rules_eagerly() {
         assert_eq!(diagnostic.len(), 1);
         let engine_error = GitignoreBuilder::new(root)
             .add_line(Some(root.join(".gitignore")), bad)
-            .err()
-            .expect("independent original engine rejects the rule");
+            .expect_err("independent original engine rejects the rule");
         assert_eq!(
             diagnostic[0].message,
             format!(

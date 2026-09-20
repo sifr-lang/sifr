@@ -37,6 +37,43 @@ impl FrontendContext {
     }
 }
 
+/// Collect direct imports at the frontend boundary; the provider follows indexed edges.
+pub(super) fn import_modules(stmts: &[Stmt]) -> Vec<String> {
+    let mut modules = BTreeSet::new();
+    for stmt in stmts {
+        match stmt {
+            Stmt::ImportFrom(import) => {
+                if let Some(module) = &import.module {
+                    modules.insert(module.to_string());
+                }
+            }
+            Stmt::Import(import) => {
+                modules.extend(import.names.iter().map(|alias| alias.name.to_string()));
+            }
+            _ => {}
+        }
+    }
+    modules.into_iter().collect()
+}
+
+/// Pin the demanded immutable baseline before lowering, export collection and
+/// editor queries share the same project-owned view.
+pub fn prepare_external_defs(
+    stmts: &[sifr_python_ast::Stmt],
+    defs: &mut ExternalDefs,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    let prepared = defs
+        .prepare_modules(&import_modules(stmts))
+        .map_err(|message| {
+            vec![diagnostic_with_code(
+                message,
+                DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
+            )]
+        })?;
+    defs.extend_baseline(&prepared);
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -171,41 +208,4 @@ mod tests {
         );
         assert!(!baseline.functions.contains_key("main"));
     }
-}
-
-/// Collect direct imports at the frontend boundary; the provider follows indexed edges.
-pub(super) fn import_modules(stmts: &[Stmt]) -> Vec<String> {
-    let mut modules = BTreeSet::new();
-    for stmt in stmts {
-        match stmt {
-            Stmt::ImportFrom(import) => {
-                if let Some(module) = &import.module {
-                    modules.insert(module.to_string());
-                }
-            }
-            Stmt::Import(import) => {
-                modules.extend(import.names.iter().map(|alias| alias.name.to_string()));
-            }
-            _ => {}
-        }
-    }
-    modules.into_iter().collect()
-}
-
-/// Pin the demanded immutable baseline before lowering, export collection and
-/// editor queries share the same project-owned view.
-pub fn prepare_external_defs(
-    stmts: &[sifr_python_ast::Stmt],
-    defs: &mut ExternalDefs,
-) -> Result<(), Vec<RenderedDiagnostic>> {
-    let prepared = defs
-        .prepare_modules(&import_modules(stmts))
-        .map_err(|message| {
-            vec![diagnostic_with_code(
-                message,
-                DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE,
-            )]
-        })?;
-    defs.extend_baseline(&prepared);
-    Ok(())
 }
