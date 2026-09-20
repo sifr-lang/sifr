@@ -21,3 +21,12 @@ Existing metadata and feature-enabled Python Clippy errors remain owned by
 [the Python qualification issue](ad-hoc-python-interop-qualification-dependencies.md).
 DX.9's supplemental run found 498 pre-existing errors and zero errors in changed
 source files. The full phase-end gate remains outstanding.
+
+## DX9-F6 actual automatic CI evidence — 2026-09-20
+
+Restored workflow admission reaches Windows native SQL qualification and exposes
+55 driver errors from the existing Unix-only storage/process APIs, after all
+16 component tests pass. Exact evidence, platform contracts and the separately
+scoped acceptance criteria are owned by
+[Windows driver portability](ad-hoc-windows-driver-portability.md).
+The CI admission fix does not disable the Windows job or claim it passed.

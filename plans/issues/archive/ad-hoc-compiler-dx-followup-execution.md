@@ -1039,7 +1039,7 @@ rebuildable target path and no longer matches that historical hash; it is not
 reused as final binary evidence. Future immutable artifact retention remains
 with the [review follow-up owner](../active/ad-hoc-dx16-review-followups.md).
 The pre-existing job-admission failure of the unchanged local-first workflow is
-recorded in [its owning issue](../active/ad-hoc-local-first-workflow-admission.md); its
+recorded in [its owning issue](ad-hoc-local-first-workflow-admission.md); its
 underlying cause remains unestablished and it is not a compiler test failure.
 
 ### Remaining limits and next owner

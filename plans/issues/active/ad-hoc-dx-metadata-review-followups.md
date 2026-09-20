@@ -160,3 +160,13 @@ hex-format findings. Native/profile-owned findings are recorded in the DX.10
 profile follow-up issue. lint-scope-report.json classifies every diagnostic
 against actual changed line ranges and reports zero new/touched-line diagnostics.
 This is a scoped result, not a passing full lint gate.
+
+## Automatic selftest registration observation — 2026-09-20
+
+Scoped CI admission review of candidate `f8164f788185e40cef32f5a8c2b7c4e5dc4a748b`
+observed that `verification/runner/sifr_verify/metadata_setup_checks.py` is not
+registered in the runner selftest aggregator. This pre-existing observation is
+separate from the new CI smoke preparation contract, whose registration is fixed
+in `05c72e32a2b66fc1414929e40b59f6c6e619e454`. The metadata owner should assess
+which existing assertions remain current before registering them; no metadata
+implementation or new phase closure requirement is included in CI admission.
