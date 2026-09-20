@@ -1,6 +1,6 @@
 # Compiler DX follow-up execution plan
 
-Status: in progress; DXF.1–4 merged and recorded, DXF.5 next ready. This is the canonical scope for the
+Status: in progress; DXF.1–5 merged and recorded, DXF.6 next ready. This is the canonical scope for the
 user-authorized follow-up work, separate from the completed Phase DX.
 Planning baseline: `f9c0d303104fca8181e4624f49d0433779b0e964` on
 `origin/main`, verified 2026-09-20. Remote checkout was clean on
@@ -68,7 +68,7 @@ Link history rather than copying it:
 | DXF.2 | Bounded record retention, observations and lookup | DXF.1 | merged #3877 |
 | DXF.3 | Owner-safe abandoned/orphan storage reclamation | DXF.2 | merged #3879 |
 | DXF.4 | Production embedding identity audit and necessary fixes | DXF.3 (execution order) | merged #3881 |
-| DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | queued |
+| DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | merged #3883 |
 | DXF.6 | Cache CLI/moved-workspace gaps and five documentation links | DXF.3, DXF.5; after DXF.4 | queued |
 | DXF.7 | Final affected-contract evidence reconciliation | DXF.1–6 | queued |
 | DXF.8 | Authoritative user binary/local checkout handoff | DXF.7 | queued |
@@ -759,3 +759,90 @@ the DXF2-F1 stale storage comment are resolved; CLI coverage remains its existin
 DXF.6 item. Stop this session after the record merges. The exact next action is
 a new bounded session for **DXF.4**. No DXF.4 implementation, release/publication,
 installation or user-local handoff occurred here.
+
+
+## DXF.5 merged record — 2026-09-20
+
+Implementation [PR #3883](https://github.com/sifr-lang/sifr/pull/3883) merged as
+`1d87adf9d68c909cec84cd54f5fb9e7ec21d9371`. Reviewed and validated candidate:
+`e2a12e316beeaa950249b18e456b614fc77cd4df`; execution base:
+`d59f38e54da462e3fa6cb5a7a125ca59276cb377`.
+
+The sink freezes final timing values and reapplies the 32768-byte bound to the
+exact serialized bytes written. Optional records are removed with per-removal
+counter updates, including counter digit growth; versioned required fields,
+outcome and redaction remain intact. Final bounding serialization is outside
+the reported timing snapshots, as is the final write. Real seek/write/truncate/
+flush failures still propagate to the existing truthful exit-code handling.
+New Unix directories are created with mode 0700 subject to further restrictive
+umask bits; permissive umask cannot grant group/other access. Files remain 0600.
+Existing directory/symlink destinations fail without chmod or overwrite.
+
+### Validation and evidence
+
+All implementation, tests, preparation and review ran in the sole remote
+`/home/yaser5/projects/sifr/compiler-dx-orchestration` worktree, using Rust
+1.98.1, ordinary defaults, the existing private target, two Cargo jobs and
+`INSTA_UPDATE=no`. Pressure inspection found about 20 GiB free with a 189 GiB
+target; the selected preparation reserve was 12 GiB. No cleanup was needed.
+
+Cheap formatting, file-size (4105 files), HIR maintainability, Python syntax and
+diff checks passed before expensive acceptance. Each exact Rust selector first
+listed exactly one test; all four passed:
+
+- `trace_artifacts::tests::trace_dir_redaction_and_size_bound`
+- `eager_cli_contract_tests::trace_dir_cli_contract`
+- `trace_artifacts::tests::final_timing_width_at_byte_boundary_truncates_truthfully`
+- `trace_artifacts::tests::trace_directory_is_private_under_permissive_umask`
+
+All use `cargo test --locked -p sifr --bin sifr` with the named filter and
+`-- --exact --list`, then `-- --exact --nocapture`. Coverage includes below/
+at/above cap, widest serialized timing/counter widths, final timing growth after
+an exact-cap first pass, counter growth 9→10, all events dropped, real read-only
+file and Linux `/dev/full` errors, redaction and destination preservation.
+The Unix mode test changes umask only in a child shell, never globally in the
+parallel test process. No Windows mode execution is claimed.
+
+The canonical `prepare_compiler_lane.py` reused existing Cargo artifacts to
+prepare this changed CLI in the optimized installed lane. Its preparation took
+687.04 seconds outside the warm observations. All **five**
+`trace_dir_acceptance.py` contracts passed against the exact receipt, including
+version/identity, modes, bounds/redaction, plain versus traced source/JSON/native/
+LSP stdout and exit codes, invalid destinations and timing attribution.
+Ten warm off/on checks had descriptive medians 42753.63 / 42725.34 µs; these
+observations do not establish a speedup or a new broad performance qualification.
+
+Evidence directory:
+`/home/yaser5/projects/sifr/dxf-evidence/e2a12e316beeaa950249b18e456b614fc77cd4df/`.
+Its `evidence-index.json` binds source bytes, commands, toolchain/environment,
+test artifact, raw logs, package preparation, installed artifact and review.
+SHA-256: `4e9c202e8fac3600a951f1caf1f9b056e7c442022e33f0ed24d94d19dc648194`.
+
+Selected compiler: that directory's `product/installed/bin/sifr`;
+SHA-256 `6fed68066766aa880f01d4aca3d2ded8024a3e88b546b1ef6419bafd1a64f6bd`.
+Receipt: `product/receipt.json`;
+SHA-256 `b40b8774b777724f3860dc9dd7e8e41a9f7ff110eedbbf33a40847e418474868`.
+No user installation, publication, release checkpoint, per-item monolithic gate,
+or unrelated contract requalification was performed. Historical failed evidence
+remains unchanged.
+
+### Review and handoff
+
+[Scoped Opus review](https://github.com/sifr-lang/sifr/pull/3883#issuecomment-5749892882)
+returned **SATISFIED**, with no blockers, for the exact candidate.
+External `opus-review.md` SHA-256:
+`e679d42ec97c87547db76230710cbfd7e00f560719a3a0b65df984941d075c18`.
+The remote
+[talk-to-claude-opus skill](../../../.cursor/skills/talk-to-claude-opus/SKILL.md)
+was used read-only with a bounded request and atomic response publication.
+Its three nonblocking observations are separately retained in
+[DXF.5 review follow-ups](ad-hoc-dxf5-trace-review-followups.md).
+The original [trace follow-up owner](ad-hoc-dx-trace-artifact-followups.md)
+now records resolution of its boundary and private-directory suggestions;
+optional labels and broader frontend-event coverage remain deferred.
+
+This record changes no reviewed implementation or validation inputs and requires
+documentation checks only, without another Opus cycle. Blocker: **none**.
+Stop after this merged record. The exact next action is a new bounded **DXF.6**
+session. No DXF.6 code or user-local checkout/binary changes occurred here;
+the latter remains DXF.8.
