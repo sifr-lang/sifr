@@ -750,6 +750,20 @@ DX.1 also freezes a demanded-stdlib retained-memory workload, measured with comp
 
 Reuse existing CLI spelling where an equivalent command already exists; converge to one surface instead of adding aliases with separate implementations. CLI flags must be covered by help/argument/JSON tests. Invocation preserves the current program-argument separator, run working-directory semantics and exit-status contract. A cache directory never becomes the user's working directory accidentally.
 
+The directory sink requires a new directory whose parent exists and writes
+`trace-v1.json` (schema version 1, at most 32 KiB and 64 owner reports).
+Existing destinations are rejected without overwriting files. The initial marker
+is `incomplete`; normal completion records the command exit status. Sink setup
+failure exits 2 before command execution; finalization failure preserves a failed
+command's status or changes success to exit 2. Abrupt termination may leave an
+incomplete marker; no completion is inferred. Owner strings, paths, source,
+environment, arguments and process output are omitted; known stage/status names
+are allowlisted. Dropped reports and omitted stages are counted. Invocation wall
+time includes setup and command preparation; measured tracing overhead includes
+sink setup, report projection and serialization work before the final write.
+Both timing fields explicitly exclude the final artifact write. Owner stage
+intervals may overlap and must not be summed; absent measurements remain absent.
+
 ### 11.2 Diagnostic categories
 
 Source diagnostics carry a Sifr code, applicable source span, related information and an explanation/fix where one is known. A failed inference/capture analysis must not create unrelated-looking cascades of `Unknown` diagnostics; dependent error state preserves the root cause.

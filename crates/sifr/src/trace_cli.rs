@@ -50,7 +50,9 @@ fn trace_entrypoint(file: &Path) -> Result<String, Vec<sifr_diagnostics::Rendere
         }
     };
     session = session.with_compiler_identity(crate::compiler_identity());
-    Ok(session.snapshot().debug.render_text())
+    let snapshot = session.snapshot();
+    crate::trace_artifacts::frontend_report(&snapshot.debug.trace);
+    Ok(snapshot.debug.render_text())
 }
 
 fn trace_project_root(file: &Path, provider: &mut dyn SourceProvider) -> ProjectRoot {
