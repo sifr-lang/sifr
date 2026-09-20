@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.15 complete; DX.16 not started
+status: in progress; DX.1–DX.15 complete; DX.16 documentation closure under review
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -638,7 +638,7 @@ DX.1–DX.15 are complete and merged. DX.15 accounts the required final qualific
 | DX.13 | Complete / merged | Candidate `be67cc8dfa7d6db91f295557f08123d705cc79ff`; [PR #3864](https://github.com/sifr-lang/sifr/pull/3864); merge `9ee1d65db9a1f1851f46032f641d39dc27460bc0` | C04/C08/C09/P01/P02/P08–P10/P12; 12 DX.13 tests, focused regressions, 31 CLI processes and guards pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3864#issuecomment-5727613414) |
 | DX.14 | Complete / merged | Candidate `2c3f23127966850e7ed961155bcee817514d56f1`; [PR #3866](https://github.com/sifr-lang/sifr/pull/3866); merge `10e917056bc26d7a7b21c1361cc9cecfb1c7afb0` | P05/P06/P11, 35 targeted Rust tests, 44 CLI invocations, native output refresh, E01–E06 enabled/disabled and 84 Q09 samples pass; guards pass; full gate deferred | [Opus: SATISFIED after bounded remediation](https://github.com/sifr-lang/sifr/pull/3866#issuecomment-5729004460) |
 | DX.15 | Complete / merged | Candidate `9ee360474655fde979dc5ddfdf33eb4dc39c9968`; [PR #3868](https://github.com/sifr-lang/sifr/pull/3868); merge `0e4b5ec59607ffdabb9d42dbd8ba49baab97137e` | Q02–Q04/Q06, final latency/resource/Q09 and all required selected gate coverage; four native targets and exact archive custody; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3868#issuecomment-5748158816) |
-| DX.16 | Not started | — | — | — |
+| DX.16 | Documentation closure under review | Pending review and merge | Reuse DX.15 qualification; link/schema/documentation and evidence-index audit | User-requested whole-phase Opus review pending |
 
 ## Historical Handoff — DX.1 (2026-09-16)
 
@@ -1738,7 +1738,7 @@ remains the earlier baseline, not replaced by this incremental comparison.
   in a new bounded session; no DX.14 implementation belongs to this handoff.
 
 
-## Current Handoff — DX.14 (2026-09-18)
+## Historical Handoff — DX.14 (2026-09-18)
 
 - **Current state:** DX.14 is complete and merged in
   [PR #3866](https://github.com/sifr-lang/sifr/pull/3866).
@@ -2099,3 +2099,29 @@ architecture-case mapping is:
 The additional `dependencies`, `external_context`, `bounded-edits` and
 `C04` keys retain their documented assertions. This mapping reconciles names;
 it does not replace the underlying Rust, native or protocol evidence.
+
+
+## Current Handoff — DX.16 (2026-09-20)
+
+- **State:** documentation closure under review; DX.1–DX.15 are merged.
+  The execution table and their original evidence remain authoritative.
+- **Final implementation:** `9ee360474655fde979dc5ddfdf33eb4dc39c9968`,
+  [PR #3868](https://github.com/sifr-lang/sifr/pull/3868), with merged record
+  [PR #3869](https://github.com/sifr-lang/sifr/pull/3869). DX.16 changes only
+  documentation; it does not rerun the completed qualification or repair code.
+- **Evidence:** reuse the DX.15 qualification index and original scoped reviews.
+  The user explicitly requested one read-only whole-phase Opus review after all
+  implementation items merged. This is the sole closure review; record-only
+  updates after it require documentation checks only.
+- **Measured scope:** fixed warm-page optimized installed Linux CLI p95 is
+  46.461 ms fresh / 45.838 ms unchanged; quiet editor p95 is 2.415 ms. The
+  12 GB Linux overlap is headless; graphical-desktop evidence is from the
+  actual 32 GiB M2 Pro Mac. A literal 12 GB graphical-desktop run is unexecuted
+  under the user-approved host split. Four supported native targets qualify
+  exact package bytes without release/publication actions.
+- **Preservation:** original failed/incomplete gates, cold preparation costs,
+  canonical skips and separate optional followup issues remain unchanged.
+  Required final coverage is accounted by the original gate and focused
+  continuations, not by relabeling the original aggregate as passing.
+- **Next action:** complete the evidence/documentation audit and the authorized
+  whole-phase review, merge closure, then record the real merged state and stop.

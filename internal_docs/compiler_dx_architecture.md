@@ -1,7 +1,7 @@
 # Compiler DX and Toolchain Reuse Architecture
 
 status: final target design  
-implementation status: DX.1 baseline/policy and DX.2 identity/toolchain context complete; DX.3–DX.16 not started
+implementation status: DX.1–DX.15 complete and qualified; DX.16 documentation closure under review
 implementation baseline: `sifr-lang/sifr@0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
 design date: 2026-09-16  
 
@@ -13,9 +13,9 @@ The target architecture requires prebuilt standard-library metadata, native arti
 
 This document owns architectural behavior and invariants. The companion implementation plan owns scope, sequencing, status, and acceptance evidence. Neither document owns a running experiment diary. Existing subsystem documents remain authoritative for language semantics, package trust, SQL and Python contracts, runtime safety, and release authorization. A planned integration must update a conflicting contract explicitly rather than bypass it.
 
-All commands and interfaces introduced below are target contracts. Their presence here does not mean they exist in the baseline repository. Naming may change only through an explicit documentation update that preserves the capabilities and ownership boundaries.
+The implemented command and ownership contracts below are qualified by the [canonical phase evidence](../plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status). The baseline comparison is historical. Naming changes must preserve capabilities and ownership boundaries.
 
-### 1.1 Current implementation boundary
+### 1.1 Historical implementation baseline
 
 The baseline has the necessary frontend, analysis, source, sysroot, codegen, package, and verification owners. It also contains the following relevant integration points:
 
@@ -872,7 +872,7 @@ Build/package preparation is reported separately but never omitted from the rele
 
 ### 14.2 Product targets
 
-The following are design acceptance targets, not measured achievements:
+The following are acceptance targets. Actual measured scopes and results are recorded in the [DX.15 qualification](../plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md#dx15-completed-qualification); the table does not extend those claims to other workloads:
 
 | Workload | Target |
 | --- | --- |
@@ -1105,7 +1105,7 @@ specializations independently of executable materialization.
 
 The declared checked-family consumers are typed HIR/codegen and semantic exports.
 Syntax, flow-analysis queries and rich editor indexes remain separate unpersisted
-families and are recomputed by their existing owners when demanded. These APIs do
-not enable cross-process reuse or write project generations: DX.13 owns those
+families and are recomputed by their existing owners when demanded. These APIs alone do
+not write project generations: the completed DX.13 adapters own cross-process
 consumers, transaction boundaries and compatibility/miss policy, and DX.14 owns
 proof-based narrowing of importer invalidation.
