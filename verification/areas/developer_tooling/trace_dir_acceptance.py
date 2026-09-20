@@ -49,6 +49,9 @@ class TraceDirectoryAcceptance(unittest.TestCase):
         elapsed = (time.perf_counter_ns() - begin) / 1000
         report = None
         if trace and (destination / "trace-v1.json").exists():
+            if os.name == "posix":
+                self.assertEqual(destination.stat().st_mode & 0o777, 0o700)
+                self.assertEqual((destination / "trace-v1.json").stat().st_mode & 0o777, 0o600)
             data = (destination / "trace-v1.json").read_bytes()
             self.assertLessEqual(len(data), 32768)
             report = json.loads(data)

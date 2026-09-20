@@ -23,17 +23,7 @@ struct Sink {
 
 pub(crate) fn start(path: &Path, command: &str, start: Instant) -> io::Result<()> {
     let preparation = Instant::now();
-    // A fresh directory is required: never overwrite user files, follow a
-    // destination symlink, or accumulate unbounded invocations in one sink.
-    std::fs::create_dir(path)?;
-    let mut options = OpenOptions::new();
-    options.write(true).create_new(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.mode(0o600);
-    }
-    let mut file = options.open(path.join("trace-v1.json"))?;
+    let mut file = create_trace_file(path)?;
     file.write_all(b"{\"schema_version\":1,\"outcome\":\"incomplete\"}\n")?;
     let sink = Sink {
         file,
@@ -46,6 +36,26 @@ pub(crate) fn start(path: &Path, command: &str, start: Instant) -> io::Result<()
     };
     SINK.set(Mutex::new(sink))
         .map_err(|_| io::Error::other("trace sink already initialized"))
+}
+
+fn create_trace_file(path: &Path) -> io::Result<File> {
+    // A fresh directory is required: never overwrite user files, follow a
+    // destination symlink, or accumulate unbounded invocations in one sink.
+    let mut directory = std::fs::DirBuilder::new();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::DirBuilderExt;
+        directory.mode(0o700);
+    }
+    directory.create(path)?;
+    let mut options = OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    options.open(path.join("trace-v1.json"))
 }
 
 fn record(make: impl FnOnce() -> Value) {
@@ -186,9 +196,29 @@ fn finish(code: i32) -> io::Result<()> {
     let mut sink = sink
         .lock()
         .map_err(|_| io::Error::other("trace sink lock poisoned"))?;
+    finish_sink(&mut sink, code)
+}
+
+fn finish_sink(sink: &mut Sink, code: i32) -> io::Result<()> {
     let finalization = Instant::now();
-    let elapsed = sink.start.elapsed();
-    let mut value = json!({
+    let mut value = report_value(sink, code);
+    // First account for serialization/truncation work, then freeze final timing
+    // values. Reapply the bound after their widths change. The final bounding
+    // serialization, like the final write itself, is outside those timestamps.
+    bounded_bytes(&mut value)?;
+    let bytes = final_bytes(
+        &mut value,
+        sink.overhead + finalization.elapsed(),
+        sink.start.elapsed(),
+    )?;
+    sink.file.rewind()?;
+    sink.file.write_all(&bytes)?;
+    sink.file.set_len(bytes.len() as u64)?;
+    sink.file.flush()
+}
+
+fn report_value(sink: &Sink, code: i32) -> Value {
+    json!({
         "schema_version": 1,
         "compiler_identity": env!("SIFR_COMPILER_BUILD_ID"),
         "command": sink.command,
@@ -196,19 +226,28 @@ fn finish(code: i32) -> io::Result<()> {
         "timing_semantics": "owner wall intervals may overlap; do not sum; unavailable stages are not inferred",
         "outcome": if code == 0 { "success" } else { "failure" },
         "exit_code": code,
-        "invocation_us_before_final_write": elapsed.as_micros(),
+        "invocation_us_before_final_write": sink.start.elapsed().as_micros(),
         "trace_overhead_us_before_final_write": sink.overhead.as_micros(),
         "final_write_included": false,
         "max_bytes": MAX_BYTES, "max_reports": MAX_REPORTS,
         "dropped_reports": sink.dropped,
         "reports": sink.reports,
-    });
-    // Bound serialized output too, including JSON framing. Omitted records are
-    // explicit; the sink never pretends it has a complete event history.
+    })
+}
+
+fn final_bytes(value: &mut Value, overhead: Duration, invocation: Duration) -> io::Result<Vec<u8>> {
+    value["trace_overhead_us_before_final_write"] = json!(overhead.as_micros());
+    value["invocation_us_before_final_write"] = json!(invocation.as_micros());
+    bounded_bytes(value)
+}
+
+// A pass removes at most MAX_REPORTS optional records; required outcome,
+// identity and timing fields survive even when every report must be omitted.
+fn bounded_bytes(value: &mut Value) -> io::Result<Vec<u8>> {
     loop {
         let bytes = serde_json::to_vec(&value)?;
         if bytes.len() <= MAX_BYTES {
-            break;
+            return Ok(bytes);
         }
         let Some(reports) = value["reports"].as_array_mut() else {
             return Err(io::Error::other("invalid trace report array"));
@@ -216,20 +255,12 @@ fn finish(code: i32) -> io::Result<()> {
         if reports.pop().is_none() {
             return Err(io::Error::other("trace header exceeds size bound"));
         }
-        sink.dropped += 1;
-        value["dropped_reports"] = json!(sink.dropped);
+        let dropped = value["dropped_reports"]
+            .as_u64()
+            .and_then(|count| count.checked_add(1))
+            .ok_or_else(|| io::Error::other("invalid trace dropped report count"))?;
+        value["dropped_reports"] = json!(dropped);
     }
-    value["trace_overhead_us_before_final_write"] =
-        json!((sink.overhead + finalization.elapsed()).as_micros());
-    value["invocation_us_before_final_write"] = json!(sink.start.elapsed().as_micros());
-    let bytes = serde_json::to_vec(&value)?;
-    if bytes.len() > MAX_BYTES {
-        return Err(io::Error::other("trace output exceeds size bound"));
-    }
-    sink.file.rewind()?;
-    sink.file.write_all(&bytes)?;
-    sink.file.set_len(bytes.len() as u64)?;
-    sink.file.flush()
 }
 
 pub(crate) fn exit(code: i32) -> ! {
@@ -249,6 +280,124 @@ pub(crate) fn exit(code: i32) -> ! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn test_sink(file: File) -> Sink {
+        Sink {
+            file,
+            start: Instant::now(),
+            command: "check".into(),
+            startup: Duration::from_micros(u64::MAX),
+            reports: Vec::new(),
+            dropped: usize::MAX - 1,
+            overhead: Duration::ZERO,
+        }
+    }
+
+    #[test]
+    fn final_timing_width_at_byte_boundary_truncates_truthfully() {
+        let widest = Duration::from_micros(u64::MAX);
+        let sink = test_sink(tempfile::tempfile().unwrap());
+        for delta in [-1_i32, 0, 1] {
+            let mut value = report_value(&sink, 7);
+            value["reports"] = json!([{"detail": ""}]);
+            final_bytes(&mut value, widest, widest).unwrap();
+            let header = serde_json::to_vec(&value).unwrap().len();
+            value["reports"][0]["detail"] =
+                json!("x".repeat((MAX_BYTES as i32 + delta) as usize - header));
+            assert_eq!(
+                serde_json::to_vec(&value).unwrap().len(),
+                (MAX_BYTES as i32 + delta) as usize
+            );
+            let bytes = final_bytes(&mut value, widest, widest).unwrap();
+            assert!(bytes.len() <= MAX_BYTES);
+            let parsed: Value = serde_json::from_slice(&bytes).unwrap();
+            assert_eq!(parsed["schema_version"], 1);
+            assert_eq!(parsed["outcome"], "failure");
+            assert_eq!(parsed["exit_code"], 7);
+            assert_eq!(parsed["trace_overhead_us_before_final_write"], u64::MAX);
+            assert_eq!(parsed["invocation_us_before_final_write"], u64::MAX);
+            assert_eq!(
+                parsed["dropped_reports"],
+                json!(sink.dropped + usize::from(delta > 0))
+            );
+            assert_eq!(
+                parsed["reports"].as_array().unwrap().len(),
+                usize::from(delta <= 0)
+            );
+        }
+
+        // The initial pass fits exactly; final timing digits alone cross the
+        // cap. The only event is dropped and the counter gains a digit.
+        let mut value = report_value(&sink, 0);
+        value["dropped_reports"] = json!(9);
+        value["reports"] = json!([{"detail": ""}]);
+        final_bytes(&mut value, Duration::ZERO, Duration::ZERO).unwrap();
+        let header = serde_json::to_vec(&value).unwrap().len();
+        value["reports"][0]["detail"] = json!("x".repeat(MAX_BYTES - header));
+        assert_eq!(bounded_bytes(&mut value).unwrap().len(), MAX_BYTES);
+        let bytes = final_bytes(&mut value, widest, widest).unwrap();
+        let parsed: Value = serde_json::from_slice(&bytes).unwrap();
+        assert!(bytes.len() < MAX_BYTES);
+        assert_eq!(parsed["dropped_reports"], 10);
+        assert_eq!(parsed["reports"], json!([]));
+        assert_eq!(parsed["outcome"], "success");
+
+        // A genuine final write error remains an error, independent of size.
+        let temporary = tempfile::NamedTempFile::new().unwrap();
+        let mut sink = test_sink(File::open(temporary.path()).unwrap());
+        assert!(finish_sink(&mut sink, 0).is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn trace_directory_is_private_under_permissive_umask() {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        const CHILD: &str = "SIFR_TRACE_PRIVATE_DIRECTORY_CHILD";
+        if std::env::var_os(CHILD).is_none() {
+            // Set umask in a child shell only, never in the multithreaded test
+            // process. The test executable and argument are passed separately.
+            let result = std::process::Command::new("sh")
+                .args(["-c", "umask 000; exec \"$1\" --exact trace_artifacts::tests::trace_directory_is_private_under_permissive_umask --nocapture", "trace-mode-test"])
+                .arg(std::env::current_exe().unwrap())
+                .env(CHILD, "1")
+                .output()
+                .unwrap();
+            assert!(
+                result.status.success(),
+                "{}",
+                String::from_utf8_lossy(&result.stderr)
+            );
+            assert!(String::from_utf8_lossy(&result.stdout).contains("1 passed"));
+            return;
+        }
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("trace");
+        let file = create_trace_file(&path).unwrap();
+        assert_eq!(
+            std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+            0o700
+        );
+        assert_eq!(file.metadata().unwrap().permissions().mode() & 0o777, 0o600);
+        assert!(create_trace_file(&path).is_err());
+
+        let existing = root.path().join("existing");
+        std::fs::create_dir(&existing).unwrap();
+        std::fs::set_permissions(&existing, std::fs::Permissions::from_mode(0o755)).unwrap();
+        assert!(create_trace_file(&existing).is_err());
+        assert_eq!(
+            std::fs::metadata(&existing).unwrap().permissions().mode() & 0o777,
+            0o755
+        );
+        assert!(!existing.join("trace-v1.json").exists());
+        let link = root.path().join("link");
+        symlink(&existing, &link).unwrap();
+        assert!(create_trace_file(&link).is_err());
+        assert_eq!(
+            std::fs::metadata(&existing).unwrap().permissions().mode() & 0o777,
+            0o755
+        );
+        assert!(!existing.join("trace-v1.json").exists());
+    }
+
     #[test]
     fn trace_dir_redaction_and_size_bound() {
         let root = tempfile::tempdir().unwrap();
