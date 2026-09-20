@@ -45,8 +45,26 @@ def qualify_dxf(owner, binary):
             and trace["outcome"] == "success", "trace bound/schema/outcome mismatch")
     require(b"private-source-sentinel" not in data and str(workspace).encode() not in data,
             "trace leaked source path")
+    source_tests = qualify_source(owner, ROOT)
+    owner.report["dxf"] = {
+        "binary_sha256": digest(binary), "archive_sha256": expected["archive_sha256"],
+        "cache_calls": len(cache_report["calls"]), "source_tests": source_tests,
+        "trace_sha256": digest(destination / "trace-v1.json"),
+        "scope": "exact-package cache CLI and Unix modes; native source ownership, root movement and embedding API",
+        "limits": "source API tests are not tests inside the packaged executable; no performance claim",
+    }
+    owner.save()
+
+
+def qualify_source(owner, root):
+    """Keep native ownership fixtures under a canonical owned temporary root."""
+    from qualify_native_package import require
+
     # Source-level API contracts are separate from exact package execution.
     # The driver test target is also used by the canonical metadata corpus.
+    temporary = owner.output / "dxf-source-tmp"
+    temporary.mkdir()
+    environment = {"TMPDIR": str(temporary)}
     selections = [
         ("sifr_driver", "project_cache::housekeeping_tests::abandoned_stages_reclaimed_live_locks_preserved"),
         ("sifr_driver", "project_cache::housekeeping_tests::orphan_prune_requires_owner_and_inactivity"),
@@ -57,18 +75,11 @@ def qualify_dxf(owner, binary):
     for index, (package, name) in enumerate(selections):
         command = ["cargo", "test", "--locked", "--offline", "-p", package,
                    "--lib", name, "--", "--exact"]
-        listed = owner.run(f"dxf-{index}-list", command + ["--list"], cwd=ROOT, deadline=2400)
+        listed = owner.run(f"dxf-{index}-list", command + ["--list"], cwd=root, env=environment, deadline=2400)
         tests = [line[:-6] for line in listed.decode().splitlines() if line.endswith(": test")]
         require(tests == [name], f"DXF selector must match exactly one test: {name}")
-        owner.run(f"dxf-{index}-run", command + ["--nocapture"], cwd=ROOT, deadline=2400)
+        owner.run(f"dxf-{index}-run", command + ["--nocapture"], cwd=root, env=environment, deadline=2400)
         owner.rows[-1]["selected_tests"] = tests
         owner.rows[-1]["selected_count"] = 1
         owner.save()
-    owner.report["dxf"] = {
-        "binary_sha256": digest(binary), "archive_sha256": expected["archive_sha256"],
-        "cache_calls": len(cache_report["calls"]), "source_tests": len(selections),
-        "trace_sha256": digest(destination / "trace-v1.json"),
-        "scope": "exact-package cache CLI and Unix modes; native source ownership, root movement and embedding API",
-        "limits": "source API tests are not tests inside the packaged executable; no performance claim",
-    }
-    owner.save()
+    return len(selections)
