@@ -27,3 +27,19 @@ CLI caller supplies its context directly; public entrypoint doc comments could
 cover the ownership contract already recorded in the architecture table.
 The test-mode CLI helper policy remains DX13-F5. No production identity defect
 was established in the verification-only diagnostic rendering harness.
+
+DXF.7 final evidence is reconciled in its
+[merged record](ad-hoc-compiler-dx-followup-execution.md#dxf7-merged-record--2026-09-20)
+and [implementation #3887](https://github.com/sifr-lang/sifr/pull/3887).
+Four native targets are covered with original failures and bounded continuations
+kept distinct. Index-link and continuation-layout suggestions from the scoped
+review are resolved in the external record; no further code review is required.
+
+Remaining optional evidence-harness maintenance: copy any historical test binary
+needed for later byte verification into its candidate-owned evidence directory.
+DXF.5’s historical `target/debug/deps/sifr-152a076181dc3f50` path was rebuilt and
+no longer matches its old recorded hash. That artifact is not reused as current
+binary evidence; its original index is preserved, and final receipts bind actual
+prepared/packaged bytes separately. This observation authorizes no unrelated
+implementation. The pre-existing automatic workflow admission failure is owned
+by [CI/verification](ad-hoc-local-first-workflow-admission.md).
