@@ -4,7 +4,7 @@ Status: deferred observations; no DXF.5 blocker or added implementation scope.
 
 Source: [scoped Opus review of PR #3883](https://github.com/sifr-lang/sifr/pull/3883#issuecomment-5749892882),
 candidate `e2a12e316beeaa950249b18e456b614fc77cd4df`, verdict **SATISFIED**.
-See the [merged record](ad-hoc-compiler-dx-followup-execution.md#dxf5-merged-record--2026-09-20)
+See the [merged record](../archive/ad-hoc-compiler-dx-followup-execution.md#dxf5-merged-record--2026-09-20)
 for validation and immutable external evidence.
 
 - Suggestion, test-harness owner: the Unix child asserts libtest stdout includes

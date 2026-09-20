@@ -6,7 +6,7 @@ Source: [scoped Opus review of PR #3875](https://github.com/sifr-lang/sifr/pull/
 Candidate `c0aaf5ebb68ec371d2dc71b169c54c9867910580`; implementation merge
 `041f9a2aba05c83668105e2db72d74603a0470f0`.
 Verdict: **SATISFIED**, no blocking findings.
-The [canonical record](ad-hoc-compiler-dx-followup-execution.md#dxf1-merged-record--2026-09-20)
+The [canonical record](../archive/ad-hoc-compiler-dx-followup-execution.md#dxf1-merged-record--2026-09-20)
 binds source, tests, prepared artifacts and exact external review evidence.
 
 | ID | Owner / disposition | Observation and bounded next action |
