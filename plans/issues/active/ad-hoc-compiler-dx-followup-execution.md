@@ -257,6 +257,55 @@ substitution, while explicit test constructors retain their old test ownership.
 If all candidates are test-only/unreachable, close with the audited call graph
 and source/cfg evidence; no gratuitous code or compiler gate is required.
 
+### DXF.4 audit and candidate
+
+Audit baseline: a4d565aa1fe8fa4b871a2494a9e3d242a665a1e5.
+The real embedding gap is public LSP run_stdio -> run_stdio_with_options ->
+CompilerIdentity::for_test(..., "embedded-lsp"). These production-callable
+entrypoints had no supplied identity/context. They now require the caller's
+CompilerContext and move it through LspServer::stdio -> Session::with_compiler ->
+LspAnalysisWorkspace::new. Existing run_stdio_with_identity (used by the CLI)
+constructs the supplied identity's context through that same route. It previously
+overwrote the default test context before running; no shipped CLI substitution
+was found. No compatibility/default identity path remains.
+
+Inventory of other literal CompilerContext::for_test* call sites outside test
+directories (source and cfg evidence, not a filename-only classification):
+
+- analysis host/lint_diagnostics.rs and host/python_interop.rs: calls are nested
+  inside cfg(test) modules. Public host/construction.rs open_project and
+  open_single_file accept the caller's context; new_with_sql_profiles clones it
+  and sets its identity on WorkspaceSession before restore/query work.
+  host/overlay_updates.rs follows the same explicit-context path. No analysis
+  production change or proposed analysis regression is warranted.
+- driver stdlib/bootstrap.rs compile_stdlib_uncached and its helper are
+  cfg(test). Production compile_stdlib/external_defs require the caller context.
+  compiler_context.rs's inline calls are in its cfg(test) tests.
+- LspAnalysisWorkspace::default was non-test and reached by Session::new.
+  It allocated a dependency-bound LSP test context; the explicit-identity server
+  replaced it before use. The default implementation is removed; the old test
+  composition now lives in cfg(test) Session::new, using with_compiler.
+- SQL MySQL/PostgreSQL/SQLite tool main.rs compiler_context helpers return test
+  contexts only inside if cfg!(test). Normal binaries instead construct the
+  embedded SIFR_COMPILER_BUILD_ID product identity; no runtime test branch.
+- driver bin/diagnostic_rendering_harness.rs has three non-cfg calls: a
+  verification-only fuzz/diagnostic fixture harness, classified internal by
+  verification/areas/coverage_matrix/data/cargo_metadata_classification.json.
+  It accepts no caller identity and is not a public embedding/CLI/LSP production
+  route. Its dependency-bound bare-test identity is intentional.
+- Remaining calls are test modules/files, reached only from their cfg(test)
+  parents or Cargo integration-test targets. The constructors themselves are
+  intentionally public to let dependent harnesses compose compiled tokens.
+
+CompilerContext::for_test_tokens extends caller tokens with the driver closure;
+CompilerIdentity::for_test sorts/deduplicates tokens and hashes configuration
+under the test-compiler-v1 domain. These are compiled dependency-bound identities,
+not a constant unsafe identity. DX13-F5's CLI helper policy remains separate.
+The LSP regression distinguishes two explicitly supplied product identities,
+preserves metadata generation/profile/incremental policy, and verifies the
+test-only constructor retains its existing test ownership. No product identity
+is synthesized by the implementation.
+
 ## DXF.5 — trace boundary behavior
 
 Owner: CLI trace sink. Account for final timing/counter serialization before

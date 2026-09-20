@@ -157,7 +157,7 @@ embeds an outer identity because it directly invokes the compiler.
 | sifr_driver::CompilerContext::new | Caller-supplied immutable identity and pinned sysroot; process-local stdlib ownership keyed by both |
 | sifr_driver::CompilerContext::for_test[_tokens]; driver unit/integration callers | Compiled driver producer closure, optionally extended by the owning harness; no installed CLI or recursive producer build |
 | sifr_analysis::AnalysisHost::open_* and internal constructors | Required compiler context propagated into the frontend session before queries; analysis tests extend driver tokens with the analysis closure |
-| sifr_lsp::run_stdio_with_identity; workspace/session | CLI product identity pinned for the session and document/project replacement; embedded library convenience entrypoint uses the compiled LSP test-family identity |
+| sifr_lsp::run_stdio / run_stdio_with_options / run_stdio_with_identity; workspace/session | Embedders supply an explicit CompilerContext to run_stdio and run_stdio_with_options; the CLI supplies its product identity through run_stdio_with_identity. Context ownership is pinned at session construction and document/project replacement; only cfg(test) Session::new composes the compiled LSP test-family identity. |
 | sifr_frontend::FrontendContext loaders and WorkspaceSession constructors | Pure-library fixture family from compiled frontend tokens; real compiler/analysis owners inject their context through consuming with_compiler_identity before use |
 | CompilerFingerprint::current | Pure-frontend fixture fingerprint; production reuse derives for_identity from its owning context |
 
