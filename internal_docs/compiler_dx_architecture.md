@@ -1,7 +1,7 @@
 # Compiler DX and Toolchain Reuse Architecture
 
 status: final target design  
-implementation status: DX.1–DX.15 merged with scoped qualification; DX.16 blocked on required trace-artifact surface
+implementation status: required implementation and trace remediation merged; DX.16 documentation closure ready for merge
 implementation baseline: `sifr-lang/sifr@0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
 design date: 2026-09-16  
 
@@ -13,7 +13,7 @@ The target architecture requires prebuilt standard-library metadata, native arti
 
 This document owns architectural behavior and invariants. The companion implementation plan owns scope, sequencing, status, and acceptance evidence. Neither document owns a running experiment diary. Existing subsystem documents remain authoritative for language semantics, package trust, SQL and Python contracts, runtime safety, and release authorization. A planned integration must update a conflicting contract explicitly rather than bypass it.
 
-The command and ownership contracts below remain required. The [canonical phase evidence](../plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status) records merged capabilities and qualification; whole-phase review identified the unimplemented `--trace-dir` surface in §11.1, which blocks closure. The baseline comparison is historical. Naming changes must preserve capabilities and ownership boundaries.
+The command and ownership contracts below remain required. The [canonical phase evidence](../plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status) records merged capabilities and qualification; whole-phase review identified the missing `--trace-dir` surface, now implemented and qualified by [remediation #3871](https://github.com/sifr-lang/sifr/pull/3871). The baseline comparison is historical. Naming changes must preserve capabilities and ownership boundaries.
 
 ### 1.1 Historical implementation baseline
 
@@ -599,8 +599,8 @@ The first restored family is the completed entrypoint checking query, including
 its whole captured import closure and canonical diagnostics. Its module result
 records resolution/diagnostics as complete and typed interface/HIR/codegen as
 pending. This is deliberately conservative: any observed source/resolution/config
-change recomputes the closure. Module interface propagation and editor-session
-restoration remain DX.14. Ordinary build/emit/editor requests compute absent
+change recomputes the closure in that initial consumer. DX.14 implements the
+interface propagation and editor restoration described below. Ordinary build/emit/editor requests compute absent
 families with their existing owners; a no-error check never supplies a fake HIR.
 The existing bounded typed codec remains available to deeper consumers.
 
@@ -731,7 +731,7 @@ DX.1 also freezes a demanded-stdlib retained-memory workload, measured with comp
 
 ## 11. Command surface, diagnostics, and observability
 
-### 11.1 Target commands
+### 11.1 Implemented commands
 
 | Surface | Contract |
 | --- | --- |
@@ -746,7 +746,10 @@ DX.1 also freezes a demanded-stdlib retained-memory workload, measured with comp
 | `sifr doctor --verify-integrity` | Read-only complete metadata and installed package/compiler digest verification |
 | `sifr doctor [--json] [--verify-integrity]` | Report selected compiler/native toolchain, sysroot/metadata identities, readiness and cache locations; full package integrity only when requested |
 | `sifr cache inspect [--json]` | Read-only size, generation, ownership and scope summary |
-| `sifr cache prune [--dry-run]` | Pressure/obsolescence-based safe reclamation; no deletion of active generations or unrelated worktrees |
+| `sifr cache prune [--dry-run] [--reserve-bytes <bytes>]` | Pressure/obsolescence-based safe reclamation; no deletion of active generations or unrelated worktrees |
+| `sifr cache prune-project <workspace> [--dry-run] [--reserve-bytes <bytes>]` | Reclaim inactive semantic generations for the exact workspace under free-space pressure |
+
+The prune reserve defaults to zero, so default invocation does not force reclamation. Set the reserve required by the planned operation; active entries remain protected.
 
 Reuse existing CLI spelling where an equivalent command already exists; converge to one surface instead of adding aliases with separate implementations. CLI flags must be covered by help/argument/JSON tests. Invocation preserves the current program-argument separator, run working-directory semantics and exit-status contract. A cache directory never becomes the user's working directory accidentally.
 
@@ -931,7 +934,7 @@ DX.12–DX.14 implement the required project persistence and interface propagati
 
 ## 16. Acceptance and failure-injection matrix
 
-This is the canonical acceptance-case inventory. The implementation plan references these IDs instead of duplicating their semantic requirements. Each case needs executable coverage and evidence; the table does not assert that coverage already exists.
+This is the canonical acceptance-case inventory. The implementation plan references these IDs instead of duplicating their semantic requirements. Each case needs executable coverage and evidence; the table defines required assertions; the canonical phase evidence records their qualified scopes.
 
 | ID | Scenario | Required outcome | Owner |
 | --- | --- | --- | --- |
@@ -1085,8 +1088,8 @@ The normative requirements above define Sifr's target architecture. Pinned repos
 The private v1 indexed schema and bounded record decoder live in
 `sifr_sysroot::metadata`. [The pinned field/site inventory](compiler_dx_metadata_consumers.md)
 documents stable-ID rules, explicit payload records, per-store shared handles and
-the forthcoming source-backed layered-view migration. This does not activate normal
-metadata production or CLI/LSP consumers; DX.6 and DX.7 retain those responsibilities.
+the layered-view migration completed in DX.7. DX.6 activates canonical metadata
+production and DX.7 activates normal CLI/LSP consumers.
 
 ### DX.12 implemented persistence-facing boundary
 

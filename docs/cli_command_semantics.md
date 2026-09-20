@@ -62,7 +62,7 @@ non-withdrawn releases.
 ## Build And Run Output
 
 Successful `sifr build` in the default human diagnostic format writes a
-stage-aware summary to stderr. The summary reports the input, mode, release
+stage-aware summary to stderr. The summary reports the input, mode, selected application profile and
 native target, measured build stages, total elapsed time, binary path, and a
 best-effort binary size when the final artifact can be read. Human progress
 output is intentionally not a stable scripting API.
@@ -70,7 +70,7 @@ output is intentionally not a stable scripting API.
 `sifr build --quiet` keeps human success output terse:
 
 ```text
-Finished release build in <duration>
+Finished development build in <duration>
 Binary: <path>
 ```
 
