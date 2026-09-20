@@ -17,6 +17,7 @@ jobs:
           submodules: recursive
       - name: Verify canonical uv pins and platform checksums
         run: |
+          python3 scripts/check_local_first_workflow.py
           python3 scripts/check_uv_toolchain.py --self-test
           python3 scripts/check_uv_toolchain.py
 
@@ -41,11 +42,10 @@ jobs:
     name: local-first-${{ matrix.profile }}
     runs-on: ubuntu-24.04
     # PRs run only create-pr for fast feedback; broader lanes run on push and manual workflows.
-    if: github.event_name != 'pull_request' || matrix.profile == 'create-pr'
     strategy:
       fail-fast: true
       matrix:
-        profile: [create-pr, merge, release]
+        profile: ${{ fromJSON(github.event_name == 'pull_request' && '["create-pr"]' || '["create-pr", "merge", "release"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
