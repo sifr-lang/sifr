@@ -39,6 +39,14 @@ impl ParsedModule {
         }
     }
 
+    /// Preserve original tokens/ranges while the package resolver supplies its
+    /// canonical import names. This does not parse or change source text.
+    #[must_use]
+    pub fn with_resolved_suite(mut self, suite: Suite) -> Self {
+        self.suite = suite;
+        self
+    }
+
     #[must_use]
     pub fn suite(&self) -> &[Stmt] {
         &self.suite

@@ -667,16 +667,29 @@ Tests must prove both semantic equivalence and reuse behavior. Merely returning 
 
 Completed saved-source diagnostics can seed the existing frontend queries after
 revalidating the same compiler, metadata, source and ordered resolver observations.
-The driver can recompute changed modules in a captured flat non-package graph
-and retain unchanged importer diagnostics. The current positive interface proof
+The driver can recompute changed modules in a captured source graph and retain
+unchanged importer diagnostics. DXF.1 extends that adapter to resolved pure
+packages from their package cwd, using the ordinary package import resolver's
+names, visibility, ownership and rewritten imports in the existing frontend
+queries. The current positive interface proof
 erases only undecorated, nongeneric, synchronous zero-argument functions with an
 explicit primitive result and one pure return expression; checking changed
 modules must still succeed. Stored interface identities are full SHA-256
 fingerprints of the structural AST hash stream, so body size does not expand
 resident signatures or graph cache keys. All other bodies, private declarations, defaults,
 constants, class declarations, ownership and unknown effects remain conservative
-dependencies. Pure package checks retain exact-context reuse; live external
-authorities retain their ordinary owner execution.
+dependencies. Package graph, lock mode, trust, compiler, metadata, target and
+source/resolver context remain exact; live external authorities retain their
+ordinary owner execution. Multiple logical aliases for the same physical source
+conservatively miss because the persisted inventory has one entry per path.
+
+Each restored-success publication carries the current captured source bytes and
+observations. The initial ancestor is an ordinary successful check. Each hop
+requires the same semantic context, the same consumed-interface projection for
+every changed source, and successful checking of changed modules and their
+required dependencies before restoring any importer. Consequently a later hop
+proves equivalence against a valid current success, not merely against an
+unverified erased body. The body-erasure class is unchanged.
 
 The editor only restores matching saved-source diagnostic facts into its captured
 generation. It does not publish overlays or claim typed HIR, flow, codegen or

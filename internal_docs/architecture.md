@@ -2067,6 +2067,12 @@ Canonical diagnostic facts remap into current source maps. DX.13 now restores
 completed saved-source checking families through that frontend contract. The
 ordinary CLI keeps deeper HIR/editor/codegen families explicit and computes them
 when requested; pure resolved package graphs also reuse checking, while dynamic SQL/Python/native contexts retain their live owner checks.
+DXF.1 also adapts the ordinary resolved pure package import closure into the
+existing frontend checking queries. Canonical package names and rewritten
+imports preserve visibility and source ownership while the same narrow body
+proof permits eligible importer reuse. Every restored-success hop checks edited
+code and persists its current source observations; package/lock/trust and
+compiler/metadata/target authority remain pinned.
 Driver-owned project generations inherit immutable records under OS leases,
 validate complete manifests, and publish atomically. Optional project storage
 failures preserve semantic results. `--no-incremental` disables this project
