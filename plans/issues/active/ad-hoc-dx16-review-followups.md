@@ -12,7 +12,7 @@ No implementation is authorized by this observation list.
 | Documentation | Resolved by DX.16: prune reserve-bytes/prune-project, profile examples and historical source-migration prose are reconciled. |
 | CLI context | Consider aligning the unreachable unset-profile fallback with the Development default. |
 | Driver cache | Explain why process-global interop-plan identity is safe while compiler identity is process-constant. |
-| Public embedding API | Review non-test constructors using test identity; shipped CLI uses the embedded identity. |
+| Public embedding API | Resolved by [DXF.4 / #3881](https://github.com/sifr-lang/sifr/pull/3881): LSP embedding requires caller context at construction; analysis/bootstrap/SQL cfg guards and the internal verification harness are audited in the canonical follow-up plan. Shipped CLI identity remains explicit. |
 | Driver formatter | Consider explicit rustfmt context/process ownership; current contract names Cargo/rustc/Sifr. |
 | Project-cache tests | Add explicit moved-workspace miss coverage; current canonical-root hashing is conservative. |
 | Documentation owners | Five pre-existing broken links in roadmap/index point to moved interop/sysroot/stdlib issues and a missing parity report. The architecture item:T match is only a Markdown-regex false positive. Exact locations are preserved in the external audit. |
@@ -20,3 +20,10 @@ No implementation is authorized by this observation list.
 
 DX.16 reconciles the command heading and acceptance preamble after the required
 trace surface was implemented. No suggestion waived a required capability.
+
+DXF.4 scoped review suggestions (optional maintenance, not new authorized scope):
+the retained run_stdio_with_identity wrapper could be consolidated if a future
+CLI caller supplies its context directly; public entrypoint doc comments could
+cover the ownership contract already recorded in the architecture table.
+The test-mode CLI helper policy remains DX13-F5. No production identity defect
+was established in the verification-only diagnostic rendering harness.
