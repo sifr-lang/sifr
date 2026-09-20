@@ -1,7 +1,7 @@
 # DX.4 fixture and inventory review follow-ups
 
 status: open; separate future work, not DX.4 blockers
-source: [merged DX.4](ad-hoc-compiler-dx-and-toolchain-reuse.md)
+source: [merged DX.4](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md)
 implementation: [PR #3846](https://github.com/sifr-lang/sifr/pull/3846)
 
 These observations do not authorize implementation in the completed DX.4 session.

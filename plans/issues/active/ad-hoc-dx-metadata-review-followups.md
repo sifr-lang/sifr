@@ -5,7 +5,7 @@ source candidate: `c7734025c242631a326901ce08c846ac42afd7ae`
 implementation: [PR #3848](https://github.com/sifr-lang/sifr/pull/3848)
 review: [Claude Opus 5, SATISFIED](https://github.com/sifr-lang/sifr/pull/3848#issuecomment-5712915895)
 
-The [canonical Phase DX](ad-hoc-compiler-dx-and-toolchain-reuse.md) remains the
+The [canonical Phase DX](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md) remains the
 scope and acceptance authority. These are prospective suggestions, not new DX.5
 closure requirements or authorization to extend the current session. The next
 owning item should assess each suggestion against its approved scope.

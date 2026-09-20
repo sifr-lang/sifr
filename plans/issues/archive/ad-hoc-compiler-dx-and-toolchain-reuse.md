@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: implementation complete; DX.16 closure ready for merge
+status: completed; DX.1–DX.16 merged; required trace remediation merged
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -95,7 +95,7 @@ The early order removes observed operational costs before adding project persist
 
 Only if an actual release is requested after DX.8, the metadata improvement may be released when its exact installed artifacts pass the existing applicable package/publication qualification. After DX.11, native/profile/editor improvements may be released on the same basis. Neither checkpoint marks Phase DX complete, advertises unimplemented project persistence, changes release authorization, or requires additional duplicate reviews/gates for unchanged evidence. They are integration and release opportunities, not optional scope decisions.
 
-DX.12–DX.15 are now merged, using the recorded checkpoint measurements and final qualification below. DX.16 is the remaining documentation-only closure and authoritative handoff. The required trace-artifact gap found in whole-phase review is now implemented and merged in #3871. The checkpoint policy does not itself authorize publication.
+DX.12–DX.15 are now merged, using the recorded checkpoint measurements and final qualification below. DX.16 documentation closure is merged in #3870. The required trace-artifact gap found in whole-phase review is implemented and merged in #3871. Phase DX is complete; publication remains separately authorized. The checkpoint policy does not itself authorize publication.
 
 ## Milestones
 
@@ -619,7 +619,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.15 and the required trace-artifact remediation are merged. The original whole-phase NOT SATISFIED review is preserved; its implementation finding is resolved by #3871 and its scoped SATISFIED review. The contradictory DX.16 status prose is corrected. DX.16 documentation closure is ready for merge; completion will be recorded only after the real merge. No requirement was waived, and original failed invocations remain preserved.
+DX.1–DX.15 and the required trace-artifact remediation are merged. The original whole-phase NOT SATISFIED review is preserved; its implementation finding is resolved by #3871 and its scoped SATISFIED review. The contradictory DX.16 status prose is corrected. DX.16 documentation closure merged in #3870 at `e4e9605a1c86a616143d37697b03078cc450aed6`; Phase DX is complete. No requirement was waived, and original failed invocations remain preserved.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -638,7 +638,7 @@ DX.1–DX.15 and the required trace-artifact remediation are merged. The origina
 | DX.13 | Complete / merged | Candidate `be67cc8dfa7d6db91f295557f08123d705cc79ff`; [PR #3864](https://github.com/sifr-lang/sifr/pull/3864); merge `9ee1d65db9a1f1851f46032f641d39dc27460bc0` | C04/C08/C09/P01/P02/P08–P10/P12; 12 DX.13 tests, focused regressions, 31 CLI processes and guards pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3864#issuecomment-5727613414) |
 | DX.14 | Complete / merged | Candidate `2c3f23127966850e7ed961155bcee817514d56f1`; [PR #3866](https://github.com/sifr-lang/sifr/pull/3866); merge `10e917056bc26d7a7b21c1361cc9cecfb1c7afb0` | P05/P06/P11, 35 targeted Rust tests, 44 CLI invocations, native output refresh, E01–E06 enabled/disabled and 84 Q09 samples pass; guards pass; full gate deferred | [Opus: SATISFIED after bounded remediation](https://github.com/sifr-lang/sifr/pull/3866#issuecomment-5729004460) |
 | DX.15 | Complete / merged | Candidate `9ee360474655fde979dc5ddfdf33eb4dc39c9968`; [PR #3868](https://github.com/sifr-lang/sifr/pull/3868); merge `0e4b5ec59607ffdabb9d42dbd8ba49baab97137e` | Q02–Q04/Q06, final latency/resource/Q09 and all required selected gate coverage; four native targets and exact archive custody; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3868#issuecomment-5748158816) |
-| DX.16 | Closure ready for merge | [PR #3870](https://github.com/sifr-lang/sifr/pull/3870); final implementation remediation `3d0f42b2ef3c83d279a45a0775b941920f4ae5e3` / [#3871](https://github.com/sifr-lang/sifr/pull/3871) | DX.15 unchanged-input qualification plus all five trace contracts and affected installed timing; docs/evidence checks | [Initial whole-phase NOT SATISFIED](https://github.com/sifr-lang/sifr/pull/3870#issuecomment-5748613670); [required remediation SATISFIED](https://github.com/sifr-lang/sifr/pull/3871#issuecomment-5748783307); stale prose corrected |
+| DX.16 | Complete / merged | Docs candidate `bebf69ef8d20635ff1ae111b3d98b5660382c786`; [PR #3870](https://github.com/sifr-lang/sifr/pull/3870); merge `e4e9605a1c86a616143d37697b03078cc450aed6`; implementation remediation [#3871](https://github.com/sifr-lang/sifr/pull/3871) | DX.15 unchanged-input qualification plus all five trace contracts and affected installed timing; docs/evidence checks | [Initial whole-phase NOT SATISFIED](https://github.com/sifr-lang/sifr/pull/3870#issuecomment-5748613670); [required remediation SATISFIED](https://github.com/sifr-lang/sifr/pull/3871#issuecomment-5748783307); stale prose corrected |
 
 ## Historical Handoff — DX.1 (2026-09-16)
 
@@ -682,7 +682,7 @@ Superseded for next-action purposes by the DX.2 handoff below; historical eviden
 - **Review:** Claude Opus 5 returned SATISFIED, no blocking findings, for the
   final candidate. [Published review](https://github.com/sifr-lang/sifr/pull/3840#issuecomment-5705061104).
   Review evidence lives outside the reviewed tree keyed by candidate SHA.
-- **Follow-ups:** [separate review observations](ad-hoc-dx-baseline-review-followups.md)
+- **Follow-ups:** [separate review observations](../active/ad-hoc-dx-baseline-review-followups.md)
   retain optional contract-driven capture and future product-policy migration,
   ambient-sysroot ownership, runner size, and direct-read diagnostic context.
   They are not DX.1 blockers or authorization for this session to implement them.
@@ -758,8 +758,8 @@ assertions and per-row source paths, hashes and original row indices.
   stdlib, regression, fuzz and ecosystem results pass. On the user's prospective
   policy change, owned SQL execution was stopped safely; full crate/E2E steps
   were not started. **No full-gate pass is claimed.**
-- **Follow-ups:** [separate identity/review observations](ad-hoc-dx2-identity-review-followups.md).
-  The [Python qualification owner](ad-hoc-python-interop-qualification-dependencies.md)
+- **Follow-ups:** [separate identity/review observations](../active/ad-hoc-dx2-identity-review-followups.md).
+  The [Python qualification owner](../active/ad-hoc-python-interop-qualification-dependencies.md)
   records the bounded prerequisite. Full final-implementation validation remains
   required at phase end; actual release checkpoints retain their qualification.
 - **Blocker:** none for DX.2 acceptance.
@@ -838,7 +838,7 @@ Superseded by the merged DX.4 handoff below; its next-action instruction is hist
   prospective phase-end policy. No full-gate pass is claimed. One full gate remains
   required on the final phase implementation; actual release qualification remains
   conditional on a release request.
-- **Follow-ups:** [separate storage/process review observations](ad-hoc-dx3-storage-process-review-followups.md).
+- **Follow-ups:** [separate storage/process review observations](../active/ad-hoc-dx3-storage-process-review-followups.md).
 - **Blocker:** none for DX.3 acceptance.
 - **Exact next action:** stop after this record update. Start DX.4 only in a new
   bounded session. Local unrelated modifications remain untouched.
@@ -917,7 +917,7 @@ Superseded by the DX.5 handoff below; do not restart DX.5 from this historical r
   create-PR/merge full gate was run or claimed. One full gate remains required on
   the final phase implementation; actual release qualification is conditional
   on a release request.
-- **Follow-ups:** [separate fixture/inventory review observations](ad-hoc-dx4-fixture-review-followups.md).
+- **Follow-ups:** [separate fixture/inventory review observations](../active/ad-hoc-dx4-fixture-review-followups.md).
 - **Blocker:** none for DX.4 acceptance.
 - **Exact next action:** stop after this record update. Start DX.5 only in a new
   bounded session. Local unrelated modifications remain untouched.
@@ -971,7 +971,7 @@ Final candidate directory: `fa8083ccfea3ec1b8d0fe8a5290c9a3d21efe834/`.
   checks and review ran on the owned Linux host; the unrelated local checkout was
   untouched. No intermediate full create-PR/merge gate was run or claimed. The
   single final-phase merge gate remains required; no release was requested.
-- **Follow-ups:** [separate nonblocking metadata review observations](ad-hoc-dx-metadata-review-followups.md)
+- **Follow-ups:** [separate nonblocking metadata review observations](../active/ad-hoc-dx-metadata-review-followups.md)
   retain encoder/decoder limit alignment, future enum/Type drift coverage and
   pressure-path accounting observations under their later owning milestones.
 - **Blocker:** none for DX.5 acceptance.
@@ -1046,7 +1046,7 @@ validation evidence; no earlier outcome is relabeled as a fresh final-candidate 
   [Published review](https://github.com/sifr-lang/sifr/pull/3850#issuecomment-5717512054)
   is keyed to the exact candidate; its original response and SHA-256 receipts
   remain outside the approved Git tree. Nonblocking observations are retained in
-  the [metadata review follow-up issue](ad-hoc-dx-metadata-review-followups.md).
+  the [metadata review follow-up issue](../active/ad-hoc-dx-metadata-review-followups.md).
 - **History/storage/policy:** the remote interruption, initial producer ordering
   failure, initial lint failures and one CLI test-harness package-boundary error
   remain historical evidence, not passes. About 202 GiB was initially free with
@@ -1146,7 +1146,7 @@ than steady. Empty allocation grows slightly in absolute terms.
 - **Review:** read-only Claude Opus 5 returned SATISFIED, no blocking findings,
   for the exact candidate. [Published review](https://github.com/sifr-lang/sifr/pull/3852#issuecomment-5719741485).
   Nonblocking observations and prior DX.6 dispositions remain in the
-  [metadata follow-up issue](ad-hoc-dx-metadata-review-followups.md).
+  [metadata follow-up issue](../active/ad-hoc-dx-metadata-review-followups.md).
 - **History/storage/policy:** earlier compile/fixture failures and superseded
   incomplete `product-e824bd` preparation remain historical, not passes.
   The first installed capture used an outside-package fixture with the repository
@@ -1275,7 +1275,7 @@ state, transient decoding and allocator high-water retention remain.
   ambient Node remains failed; the corrected pinned-toolchain run passes.
   Final [Opus review is SATISFIED, no blockers](https://github.com/sifr-lang/sifr/pull/3854#issuecomment-5722224549).
   Nonblocking observations are recorded in the
-  [metadata follow-up issue](ad-hoc-dx-metadata-review-followups.md).
+  [metadata follow-up issue](../active/ad-hoc-dx-metadata-review-followups.md).
 - **Evidence reuse/policy:** the final four-file remediation changes only
   verification files. Compiler, semantic/source/runtime/lock/vendor/installer
   and corpus inputs are unchanged from qualified product candidate
@@ -1351,7 +1351,7 @@ documentation/verification only (`baseline-reuse-final.json`).
 
 - **Review:** one read-only Opus 5 review returned
   [SATISFIED, no blockers](https://github.com/sifr-lang/sifr/pull/3856#issuecomment-5723374425). Suggestions are separate work in
-  [native reuse follow-ups](ad-hoc-native-cargo-reuse-followups.md).
+  [native reuse follow-ups](../active/ad-hoc-native-cargo-reuse-followups.md).
 - **Policy and preserved failures:** no intermediate full create-PR/merge gate
   or release qualification was run or claimed. Supplemental feature-enabled
   Clippy still reports 498 pre-existing metadata/Python errors, with zero
@@ -1445,7 +1445,7 @@ evidence, not a host-sensitive performance comparison.
   review. The final exact-candidate
   [Opus review is SATISFIED, no blockers](https://github.com/sifr-lang/sifr/pull/3858#issuecomment-5725527463).
   Suggestions, profile-agnostic inventory decisions and the size observation
-  are separate work in [DX.10 followups](ad-hoc-dx10-profile-review-followups.md).
+  are separate work in [DX.10 followups](../active/ad-hoc-dx10-profile-review-followups.md).
   External LeetCode consumer migration is recorded in
   [its owning issue #49](https://github.com/sifr-lang/leetcode/issues/49).
 - **Evidence reuse:** final d4 is verification-only relative to qualified
@@ -1573,7 +1573,7 @@ remains the earlier baseline, not replaced by this incremental comparison.
   corrects the misleading comment and tests both edit/workspace behavior.
   Final [Opus review](https://github.com/sifr-lang/sifr/pull/3860#issuecomment-5726309175) is SATISFIED without blockers.
   Suggestions are separate work in
-  [DX.11 editor review followups](ad-hoc-dx11-editor-review-followups.md).
+  [DX.11 editor review followups](../active/ad-hoc-dx11-editor-review-followups.md).
 - **Evidence:** external root
   `/home/yaser5/projects/sifr/dx11-evidence`; final candidate-keyed
   `c0d490d460ca4f8a286226da804b31744b5a0b3c/qualification-manifest.json`,
@@ -1589,7 +1589,7 @@ remains the earlier baseline, not replaced by this incremental comparison.
   retains its pre-existing SIFR-PACKAGE-0103; clean semantics are separately
   qualified by E01–E06. The heap baseline's latency noise is not a timing claim.
   DX.10 F6 remains **failed +6720 bytes**, with unchanged assertion and historical
-  artifacts in [its owning issue](ad-hoc-dx10-profile-review-followups.md).
+  artifacts in [its owning issue](../active/ad-hoc-dx10-profile-review-followups.md).
 - **Policy and next action:** no intermediate full create-pr/merge gate or
   unrequested release checkpoint ran. The phase-end full gate remains required.
   No DX.12/DX.13 persistence was implemented. Blocker: **none**.
@@ -1640,13 +1640,13 @@ remains the earlier baseline, not replaced by this incremental comparison.
   guards pass. Supplemental strict lint attempts still fail in unchanged owners;
   the complete owner-only JSON scan reports zero new/touched-line diagnostics.
   Existing failures remain recorded in the
-  [metadata follow-up issue](ad-hoc-dx-metadata-review-followups.md) and
-  [profile follow-up issue](ad-hoc-dx10-profile-review-followups.md).
+  [metadata follow-up issue](../active/ad-hoc-dx-metadata-review-followups.md) and
+  [profile follow-up issue](../active/ad-hoc-dx10-profile-review-followups.md).
   This does not claim a passing full lint or merge gate.
 - **Review:** the first completed exact-candidate
   [Opus review](https://github.com/sifr-lang/sifr/pull/3862#issuecomment-5726861173)
   is **SATISFIED**, with no blocking findings. Four suggestions are separate work
-  in [DX.12 semantic review followups](ad-hoc-dx12-semantic-review-followups.md).
+  in [DX.12 semantic review followups](../active/ad-hoc-dx12-semantic-review-followups.md).
   No remediation or second review was needed.
 - **Evidence:** external root `/home/yaser5/projects/sifr/dx12-evidence`;
   candidate-keyed `cc2874a319feef6f96f45954b91dc3bed79cc2e8/qualification-manifest.json`,
@@ -1718,7 +1718,7 @@ remains the earlier baseline, not replaced by this incremental comparison.
   [Opus review](https://github.com/sifr-lang/sifr/pull/3864#issuecomment-5727613414)
   is **SATISFIED**, with no blocking findings. No remediation or second review
   was required. Seven nonblocking observations are separate work in
-  [DX.13 project reuse followups](ad-hoc-dx13-project-review-followups.md).
+  [DX.13 project reuse followups](../active/ad-hoc-dx13-project-review-followups.md).
   Existing DX.12/metadata/profile lint ownership remains unchanged.
 - **Evidence:** external root `/home/yaser5/projects/sifr/dx13-evidence`;
   candidate-keyed `be67cc8dfa7d6db91f295557f08123d705cc79ff/qualification-manifest.json`,
@@ -1799,7 +1799,7 @@ remains the earlier baseline, not replaced by this incremental comparison.
   [Opus remediation review](https://github.com/sifr-lang/sifr/pull/3866#issuecomment-5729004460)
   is **SATISFIED**, with no blocking findings. Ten nonblocking observations
   from both reviews are separate work in
-  [DX.14 interface/editor followups](ad-hoc-dx14-interface-review-followups.md).
+  [DX.14 interface/editor followups](../active/ad-hoc-dx14-interface-review-followups.md).
 - **Evidence:** external root /home/yaser5/projects/sifr/dx14-evidence;
   candidate-keyed 2c3f23127966850e7ed961155bcee817514d56f1/qualification-manifest.json,
   SHA-256 4a3732ea151d5decd62ade500c1a6bb20ad7a7f88bc170231c6976ad35fe2c4b.
@@ -2075,7 +2075,7 @@ merge are complete as recorded below; DX.16 remains not started.
 - **Separate followups:** the report-label reconciliation is recorded below.
   Expected RSS advisory visibility and optional audit-hint/preparation-cache
   improvements are tracked in the
-  [separate verification followup issue](ad-hoc-dx15-verification-review-followups.md).
+  [separate verification followup issue](../active/ad-hoc-dx15-verification-review-followups.md).
   They are not current required failures or DX.16 implementation prerequisites.
 - **Blocker:** none. No required implementation cleanup is knowingly deferred.
   No release, Marketplace, site, channel or account action was performed.
@@ -2103,9 +2103,10 @@ it does not replace the underlying Rust, native or protocol evidence.
 
 ## Current Handoff — DX.16 (2026-09-20)
 
-- **State:** documentation closure ready for merge in
-  [PR #3870](https://github.com/sifr-lang/sifr/pull/3870), branch
-  `codex/dx16-closure`. This closer changed documentation only.
+- **State:** Phase DX complete. Documentation closure [PR #3870](https://github.com/sifr-lang/sifr/pull/3870)
+  merged 2026-09-20 09:01:41 UTC: candidate `bebf69ef8d20635ff1ae111b3d98b5660382c786`,
+  merge `e4e9605a1c86a616143d37697b03078cc450aed6`. Record branch:
+  `codex/dx16-record`. This closer changed documentation only.
 - **Whole-phase review:** the user-requested [Opus review](https://github.com/sifr-lang/sifr/pull/3870#issuecomment-5748613670)
   of implementation `9ee360474655fde979dc5ddfdf33eb4dc39c9968` and docs
   `1901074b62e2aad614d285f1c35c95aa16218490` originally returned NOT SATISFIED.
@@ -2142,11 +2143,16 @@ it does not replace the underlying Rust, native or protocol evidence.
   remains 12 GB Linux headless and actual 32 GiB Mac desktop; no literal 12 GB
   graphical-desktop execution or fresh four-target qualification is claimed for
   the trace-remediation binary. No release/publication action occurred.
-- **Followups:** [whole-phase observations](ad-hoc-dx16-review-followups.md) and
-  [trace observations](ad-hoc-dx-trace-artifact-followups.md) remain separate
+- **Followups:** [whole-phase observations](../active/ad-hoc-dx16-review-followups.md) and
+  [trace observations](../active/ad-hoc-dx-trace-artifact-followups.md) remain separate
   optional work. Documentation corrections resolve their noted stale prose;
   no optional implementation was absorbed.
 - **Blocker:** none. No further whole-phase review or repeated broad gate is
   required for this documentation-only reconciliation of approved implementation.
-- **Next action:** merge this closure, record exact candidate/merge and evidence,
-  archive the completed phase with coherent links, then stop.
+- **Closure receipts:** `/home/yaser5/projects/sifr/dx16-evidence/bebf69ef8d20635ff1ae111b3d98b5660382c786/`
+  retains `audit.json` (SHA256 `00f3998682aae9c7c8d700fa23e45a22f3ad4910d944b47aabd1a72a93239ff5`),
+  `documentation-checks.json` (SHA256 `6f954106a2861d81a508f74d254387600b1a4ad39eb6df966aadeac294f5aab2`)
+  and `closure-disposition.json`. [Published disposition](https://github.com/sifr-lang/sifr/pull/3870#issuecomment-5748825051)
+  binds the original whole-phase review, scoped remediation approval and documentation corrections.
+- **Next action:** stop after this record-only archive update. No remaining Phase DX
+  implementation or qualification is deferred; optional followups stay separately owned.

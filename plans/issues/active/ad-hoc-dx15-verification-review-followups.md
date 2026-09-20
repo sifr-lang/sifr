@@ -4,7 +4,7 @@ status: open; optional separate maintenance; not DX.15 or DX.16 acceptance block
 
 Origin: [DX.15 implementation #3868](https://github.com/sifr-lang/sifr/pull/3868)
 and [final SATISFIED scoped review](https://github.com/sifr-lang/sifr/pull/3868#issuecomment-5748158816).
-The [phase record](ad-hoc-compiler-dx-and-toolchain-reuse.md) contains the exact
+The [phase record](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md) contains the exact
 qualification and review receipts. No implementation is included in this issue.
 
 | ID | Owner | Followup and bounded acceptance |

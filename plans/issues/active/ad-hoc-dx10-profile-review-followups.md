@@ -5,7 +5,7 @@ status: open; separate owning work; not DX.10 acceptance blockers
 Origin: [DX.10 implementation #3858](https://github.com/sifr-lang/sifr/pull/3858),
 [preserved initial reviews/adjudication](https://github.com/sifr-lang/sifr/pull/3858#issuecomment-5725480175)
 and [final SATISFIED review](https://github.com/sifr-lang/sifr/pull/3858#issuecomment-5725527463).
-The phase record is [here](ad-hoc-compiler-dx-and-toolchain-reuse.md).
+The phase record is [here](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md).
 No implementation is included in this record-only issue.
 
 | ID | Owner | Followup and bounded acceptance |
@@ -81,7 +81,7 @@ F6's bounded comparison-harness correction is merged in
 `0e4b5ec59607ffdabb9d42dbd8ba49baab97137e`.
 The original failed measurements and the controlled same-location pass above
 retain their original identities and scope; no historical failure is erased.
-The [final phase record](ad-hoc-compiler-dx-and-toolchain-reuse.md) binds the
+The [final phase record](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md) binds the
 qualified continuation and SATISFIED review.
 
 The supplemental DX.12 lint observations are also resolved by the recorded
