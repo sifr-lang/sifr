@@ -171,13 +171,13 @@ fn dx13_c08_c09_inherited_payloads_reader_gc() {
         fs::metadata(latest.path.join(&old_record)).unwrap().ino()
     );
     assert_eq!(fs::read(old.path.join(&old_record)).unwrap(), before);
-    assert_eq!(store.prune(true, false).unwrap(), 0);
+    assert_eq!(store.prune(true, false).unwrap().deleted_generations, 0);
     assert!(old.path.exists());
     let mut unrelated = Command::new("sleep").arg("10").spawn().unwrap();
     drop(old);
-    assert_eq!(store.prune(false, false).unwrap(), 0);
-    assert_eq!(store.prune(true, true).unwrap(), 1);
-    let removed = store.prune(true, false).unwrap();
+    assert_eq!(store.prune(false, false).unwrap().deleted_generations, 0);
+    assert_eq!(store.prune(true, true).unwrap().eligible_generations, 1);
+    let removed = store.prune(true, false).unwrap().deleted_generations;
     unrelated.kill().unwrap();
     unrelated.wait().unwrap();
     assert_eq!(removed, 1);
@@ -277,7 +277,7 @@ pub(super) fn pause(point: &str) {
         }
     }
 }
-fn worker(file: &Path, cache: &Path, mode: &str, marker: &Path) -> Child {
+pub(super) fn worker(file: &Path, cache: &Path, mode: &str, marker: &Path) -> Child {
     Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
@@ -393,11 +393,11 @@ fn dx13_c09_concurrent_process_reader_and_gc() {
     assert!(marker.exists());
     fs::write(&file, "def main() -> None:\n    absent()\n").unwrap();
     assert_eq!(run(&cache, &file).1.status, "published");
-    assert_eq!(store.prune(true, false).unwrap(), 0);
+    assert_eq!(store.prune(true, false).unwrap().deleted_generations, 0);
     assert!(old.exists());
     reader.kill().unwrap();
     reader.wait().unwrap();
-    assert_eq!(store.prune(true, false).unwrap(), 1);
+    assert_eq!(store.prune(true, false).unwrap().deleted_generations, 1);
     assert!(!old.exists());
     assert_eq!(run(&cache, &file).1.restored_checks, 1);
 }

@@ -6,11 +6,12 @@ pub(crate) struct CacheArgs {
 }
 #[derive(clap::Subcommand)]
 enum CacheCommand {
-    /// Reclaim inactive project generations for one exact workspace under pressure
+    /// Reclaim inactive project storage; deleted workspaces require their original absolute path
     PruneProject {
         workspace: std::path::PathBuf,
         #[arg(long)]
         dry_run: bool,
+        /// Required free bytes; zero (default) performs no cleanup
         #[arg(long, default_value_t = 0)]
         reserve_bytes: u64,
     },
@@ -32,11 +33,11 @@ pub(crate) fn run(args: CacheArgs) -> i32 {
     let result = match args.command {
         CacheCommand::PruneProject { workspace, dry_run, reserve_bytes } => {
             sifr_driver::cache_storage::available_bytes().and_then(|available| {
-                let generations = sifr_driver::project_cache::prune_project_cache(
+                let report = sifr_driver::project_cache::prune_project_cache(
                     &workspace, available < reserve_bytes, dry_run)?;
                 Ok(serde_json::json!({"workspace": workspace, "dry_run": dry_run,
                     "reserve_bytes": reserve_bytes, "available_bytes": available,
-                    "eligible_generations": generations}))
+                    "pressure": available < reserve_bytes, "cache": report}))
             })
         },
         CacheCommand::Inspect { json } => match sifr_driver::cache_storage::inspect() {
