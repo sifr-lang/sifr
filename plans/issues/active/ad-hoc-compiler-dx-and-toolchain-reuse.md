@@ -1,6 +1,6 @@
 # Phase DX: Compiler Developer Experience and Toolchain Reuse
 
-status: in progress; DX.1–DX.14 complete; DX.15 qualification in progress
+status: in progress; DX.1–DX.15 complete; DX.16 not started
 design status: final  
 phase-id: DX  
 implementation baseline: `0f819c2f04bf5b2891074c55ba26369ddf4f13bd`  
@@ -95,7 +95,7 @@ The early order removes observed operational costs before adding project persist
 
 Only if an actual release is requested after DX.8, the metadata improvement may be released when its exact installed artifacts pass the existing applicable package/publication qualification. After DX.11, native/profile/editor improvements may be released on the same basis. Neither checkpoint marks Phase DX complete, advertises unimplemented project persistence, changes release authorization, or requires additional duplicate reviews/gates for unchanged evidence. They are integration and release opportunities, not optional scope decisions.
 
-Continue DX.12–DX.14 in sequence using the recorded checkpoint measurements as the comparison baseline. Measurements guide implementation and optimization of the required persistent capabilities. Final phase closure follows DX.15/DX.16; independently qualified user-visible improvements may ship at the checkpoints.
+DX.12–DX.15 are now merged, using the recorded checkpoint measurements and final qualification below. DX.16 is the remaining documentation-only closure and authoritative handoff. The checkpoint policy does not itself authorize publication.
 
 ## Milestones
 
@@ -619,7 +619,7 @@ The architecture section 16 remains the canonical semantic case inventory. This 
 
 ## Execution Status
 
-DX.1–DX.14 are complete and merged. DX.15 implementation and final qualification are in progress in the owned remote worktree; DX.16 remains not started. Intermediate validation follows the prospective policy above.
+DX.1–DX.15 are complete and merged. DX.15 accounts the required final qualification under the prospective gate policy; original failed invocations remain preserved. DX.16 remains not started and is documentation-only closure, with no known required implementation gap deferred to it.
 
 | Milestone | State | Final candidate / merged PR | Validation evidence | Review evidence |
 | --- | --- | --- | --- | --- |
@@ -637,7 +637,7 @@ DX.1–DX.14 are complete and merged. DX.15 implementation and final qualificati
 | DX.12 | Complete / merged | Candidate `cc2874a319feef6f96f45954b91dc3bed79cc2e8`; [PR #3862](https://github.com/sifr-lang/sifr/pull/3862); merge `3959f0168f0630802548ad2b12d3623ab71f151c` | I03, P03, P04, P07 and all five result families: 14 tests PASS; ordered-observation golden, actual resolver/package edits, real writer and LSP encoding; guards PASS; full gate deferred | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3862#issuecomment-5726861173) |
 | DX.13 | Complete / merged | Candidate `be67cc8dfa7d6db91f295557f08123d705cc79ff`; [PR #3864](https://github.com/sifr-lang/sifr/pull/3864); merge `9ee1d65db9a1f1851f46032f641d39dc27460bc0` | C04/C08/C09/P01/P02/P08–P10/P12; 12 DX.13 tests, focused regressions, 31 CLI processes and guards pass; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3864#issuecomment-5727613414) |
 | DX.14 | Complete / merged | Candidate `2c3f23127966850e7ed961155bcee817514d56f1`; [PR #3866](https://github.com/sifr-lang/sifr/pull/3866); merge `10e917056bc26d7a7b21c1361cc9cecfb1c7afb0` | P05/P06/P11, 35 targeted Rust tests, 44 CLI invocations, native output refresh, E01–E06 enabled/disabled and 84 Q09 samples pass; guards pass; full gate deferred | [Opus: SATISFIED after bounded remediation](https://github.com/sifr-lang/sifr/pull/3866#issuecomment-5729004460) |
-| DX.15 | In progress: fixed-candidate qualification and required gate repairs | — | — | — |
+| DX.15 | Complete / merged | Candidate `9ee360474655fde979dc5ddfdf33eb4dc39c9968`; [PR #3868](https://github.com/sifr-lang/sifr/pull/3868); merge `0e4b5ec59607ffdabb9d42dbd8ba49baab97137e` | Q02–Q04/Q06, final latency/resource/Q09 and all required selected gate coverage; four native targets and exact archive custody; evidence below | [Opus: SATISFIED](https://github.com/sifr-lang/sifr/pull/3868#issuecomment-5748158816) |
 | DX.16 | Not started | — | — | — |
 
 ## Historical Handoff — DX.1 (2026-09-16)
@@ -1818,7 +1818,10 @@ remains the earlier baseline, not replaced by this incremental comparison.
   in a new bounded session; no DX.15 implementation belongs to this handoff.
 
 
-### DX.15 final gate remediation scope (unmerged)
+### DX.15 final gate remediation history
+
+The following paragraphs preserve the working-stage observations. The completed
+qualification and merged handoff below are authoritative for current status.
 
 The phase-end merge facade ran once. Its failed reports and the interrupted
 continuations remain immutable under the external `dx15-evidence` directory.
@@ -1964,7 +1967,7 @@ substituted. The original provenance failures and all producer timing/digest
 reports are retained. New component bytes require affected SQL execution and
 new final package identities before final qualification can complete.
 
-### DX.15 completed qualification, pending implementation review and merge
+### DX.15 completed qualification
 
 The final implementation artifact source is
 `e2ab8e1f9ae815a1f8ac2ac652329d90dfc4ff0f`. Candidate
@@ -2034,4 +2037,65 @@ parser continuation, unchanged-input proof, versioned local sysroot reports
 and archived package custody under
 `5127a24ee08b758efa8f9d41e3becd4ce64deb6f/`.
 Original failed reports are preserved. Scoped review and the implementation
-merge are still required; DX.16 remains not started.
+merge are complete as recorded below; DX.16 remains not started.
+
+## Merged Handoff — DX.15 (2026-09-20)
+
+- **Item:** DX.15, including Q02–Q04 and Q06 and the required final configurations.
+- **State:** complete and merged. [Implementation PR #3868](https://github.com/sifr-lang/sifr/pull/3868)
+  merged at 2026-09-20 06:34:11 UTC. Final reviewed candidate:
+  `9ee360474655fde979dc5ddfdf33eb4dc39c9968`; merge commit:
+  `0e4b5ec59607ffdabb9d42dbd8ba49baab97137e`.
+- **Validation:** the immutable
+  `dx15-evidence/9ee360474655fde979dc5ddfdf33eb4dc39c9968/qualification-index.json`
+  has SHA256 `007655f307c57df622a7cca39aa298c64f3d826e17f59673ae0674fd048847cd`.
+  It maps all 32 selected compiler configurations and 20 selected areas,
+  required guards, focused repairs, artifact custody and explicit
+  unchanged-input reuse. This is completed required coverage through the
+  original gate and its focused continuations, not a relabeled successful
+  original aggregate command. Original failures, preparation costs and
+  canonical skips remain preserved.
+- **Artifact binding:** final `9ee360474` adds documentation only after
+  `5127a24ee` qualification. The latter adds only the two acceptance-parser
+  corrections after the `e2ab8e1f9` compiled artifacts. The index's
+  `artifact-input-equivalence.json` retains actual Git object proofs and
+  original receipt/source identities rather than claiming rebuilt artifacts.
+  The current local beta package is preserved with SHA256
+  `9c7a9c4010eee90946b946bb74ca29207af77f2ec6f5135a528fe9932f23ba5b`;
+  its complete custody report is under the `5127a24ee.../sysroot-custody/`
+  directory.
+- **Review:** [read-only Claude Opus 5: SATISFIED](https://github.com/sifr-lang/sifr/pull/3868#issuecomment-5748158816),
+  with no blocking findings. The response remains outside the reviewed tree
+  at `dx15-evidence/9ee360474655fde979dc5ddfdf33eb4dc39c9968/review-request.Tsgf6K/response.md`,
+  SHA256 `8bd196cef0661f2d0e51f59878a360eef70466f75e8e0cd37b4894a979f103a6`.
+  `review-record.json` has SHA256
+  `cd8546f934814a793ef7aa24d21d1693131902c25f0e767a75db6a4679a9ff76`.
+  Review used [phase-closure-loop](../../../.cursor/skills/phase-closure-loop/SKILL.md)
+  and [talk-to-claude-opus](../../../.cursor/skills/talk-to-claude-opus/SKILL.md).
+- **Separate followups:** the report-label reconciliation is recorded below.
+  Expected RSS advisory visibility and optional audit-hint/preparation-cache
+  improvements are tracked in the
+  [separate verification followup issue](ad-hoc-dx15-verification-review-followups.md).
+  They are not current required failures or DX.16 implementation prerequisites.
+- **Blocker:** none. No required implementation cleanup is knowingly deferred.
+  No release, Marketplace, site, channel or account action was performed.
+- **Next action:** stop this DX.15 session after the record-only update.
+  DX.16 remains not started; the authorized whole-phase closer may reconcile
+  documentation and authoritative evidence using these merged results. Do not
+  rerun unchanged gates or add implementation in that documentation-only task.
+
+The CLI acceptance reports now use descriptive case keys. Their canonical
+architecture-case mapping is:
+
+| Canonical ID | Current report case key | Protocol |
+| --- | --- | --- |
+| P01 | `process-restore` | DX.13 project acceptance |
+| P02 | `diagnostic-edits` | DX.13 project acceptance |
+| P05 | `conservative-interface-edits` | DX.14 interface acceptance |
+| P06 | `importer-body-reuse` | DX.14 interface acceptance |
+| P08 | `typed-families` | DX.13 project acceptance |
+| P10 | `reuse-disabled` | DX.13 project acceptance |
+
+The additional `dependencies`, `external_context`, `bounded-edits` and
+`C04` keys retain their documented assertions. This mapping reconciles names;
+it does not replace the underlying Rust, native or protocol evidence.
