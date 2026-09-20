@@ -4,7 +4,6 @@ The canonical native runner supplies validated archive identity and records ever
 source test command. These checks make no latency or release claim.
 """
 import json
-import os
 from pathlib import Path
 import shlex
 import sys
@@ -36,6 +35,10 @@ def qualify_dxf(owner, binary):
               cwd=workspace)
     data = (destination / "trace-v1.json").read_bytes()
     trace = json.loads(data)
+    identity = json.loads(owner.run("dxf-identity", [binary, "--print", "compiler-identity", "--json"]))
+    require(identity["identity_kind"] == "product"
+            and trace["compiler_identity"] == identity["compiler_build_id"],
+            "trace does not use the installed product identity")
     require(destination.stat().st_mode & 0o777 == 0o700, "trace directory is not private")
     require((destination / "trace-v1.json").stat().st_mode & 0o777 == 0o600, "trace file is not private")
     require(len(data) <= 32768 and trace["schema_version"] == 1
