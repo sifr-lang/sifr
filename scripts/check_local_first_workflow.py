@@ -48,6 +48,17 @@ def validate(document: dict) -> list[str]:
                and "if" not in step and not step.get("continue-on-error", False)
                for step in profile["steps"]):
         errors.append("every selected profile must execute the authoritative runner")
+    for name, preparation in (
+        ("smoke-fuzz-property", "uv run --project verification --locked python -m sifr_verify.ci_smoke_setup"),
+        ("compiler-component-targets", 'cargo fetch --locked --target "${{ matrix.target }}"'),
+        ("sql-wasi-build", "cargo fetch --locked --target wasm32-wasip2"),
+    ):
+        steps = jobs[name]["steps"]
+        commands = [step.get("run") for step in steps]
+        if preparation not in commands or commands.index(preparation) >= len(steps) - 1:
+            errors.append(f"{name}: locked preparation must precede assertions")
+        elif any(key in steps[commands.index(preparation)] for key in ("if", "continue-on-error")):
+            errors.append(f"{name}: preparation must be unconditional and blocking")
     return errors
 
 
@@ -73,6 +84,12 @@ def main() -> None:
         if step.get("name") == "Run local-first profile":
             step["if"] = "false"
     assert any("must execute" in error for error in validate(skipped))
+    unprepared = copy.deepcopy(document)
+    unprepared["jobs"]["sql-wasi-build"]["steps"] = [
+        step for step in unprepared["jobs"]["sql-wasi-build"]["steps"]
+        if step.get("run") != "cargo fetch --locked --target wasm32-wasip2"
+    ]
+    assert any("preparation must precede" in error for error in validate(unprepared))
     print("local-first admission and event/profile contracts passed (including regressions)")
 
 

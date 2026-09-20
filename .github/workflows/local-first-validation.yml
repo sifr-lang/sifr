@@ -80,6 +80,8 @@ jobs:
         with:
           version-file: verification/pyproject.toml
           checksum: 173d95a0c32d18c896c46ba6fafbf3cf9c14ab74b033f81b76c883ef492a976b
+      - name: Prepare locked smoke dependencies and compiler graphs
+        run: uv run --project verification --locked python -m sifr_verify.ci_smoke_setup
       - name: Run smoke fuzz/property checks
         run: uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
 
@@ -106,6 +108,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
         with:
           targets: ${{ matrix.target }}
+      - name: Prepare locked target dependencies
+        run: cargo fetch --locked --target "${{ matrix.target }}"
       - name: Run native compiler component qualification
         run: cargo test --locked -p sifr_compiler_component --target "${{ matrix.target }}"
       - name: Run native SQL build qualification
@@ -122,6 +126,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@ce678459e9fc7500d337468f904b95f1b5c10b5e # Rust 1.98.1
         with:
           targets: wasm32-wasip2
+      - name: Prepare locked WASI dependencies
+        run: cargo fetch --locked --target wasm32-wasip2
       - name: Run WASI SQL build qualification
         run: python verification/areas/sql_platform/tools/run_sql_build_qualification.py --target wasm32-wasip2
 
