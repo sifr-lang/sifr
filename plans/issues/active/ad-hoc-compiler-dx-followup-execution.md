@@ -1,6 +1,6 @@
 # Compiler DX follow-up execution plan
 
-Status: in progress; DXF.1–2 merged and recorded, DXF.3 next ready. This is the canonical scope for the
+Status: in progress; DXF.1–3 merged and recorded, DXF.4 next ready. This is the canonical scope for the
 user-authorized follow-up work, separate from the completed Phase DX.
 Planning baseline: `f9c0d303104fca8181e4624f49d0433779b0e964` on
 `origin/main`, verified 2026-09-20. Remote checkout was clean on
@@ -66,8 +66,8 @@ Link history rather than copying it:
 | --- | --- | --- | --- |
 | DXF.1 | Real package-project importer reuse and measurement | planning PR merged | merged #3875 |
 | DXF.2 | Bounded record retention, observations and lookup | DXF.1 | merged #3877 |
-| DXF.3 | Owner-safe abandoned/orphan storage reclamation | DXF.2 | next ready |
-| DXF.4 | Production embedding identity audit and necessary fixes | DXF.3 (execution order) | queued |
+| DXF.3 | Owner-safe abandoned/orphan storage reclamation | DXF.2 | merged #3879 |
+| DXF.4 | Production embedding identity audit and necessary fixes | DXF.3 (execution order) | next ready |
 | DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | queued |
 | DXF.6 | Cache CLI/moved-workspace gaps and five documentation links | DXF.3, DXF.5; after DXF.4 | queued |
 | DXF.7 | Final affected-contract evidence reconciliation | DXF.1–6 | queued |
@@ -587,3 +587,98 @@ Blocker: **none**. Stop after the merged record. The next action is a new bounde
 DXF.3 session for owner-safe abandoned/orphan storage reclamation. No DXF.3
 implementation or user-local checkout/binary changes were performed here;
 the latter remains DXF.8.
+
+
+## DXF.3 merged record — 2026-09-20
+
+Implementation [#3879](https://github.com/sifr-lang/sifr/pull/3879) merged as
+`a6625ff0e2f72d49f31af0e3ad1df84cd331a6d0`. Reviewed and validated candidate:
+`0bc95340dfe6a5e4e32e0824a7b62455dae24df7`, based on
+`9af5e3b8d5b0d17c37c855f144d3747a937f9466`.
+
+### Implemented boundary
+
+Explicit pressure cleanup now reclaims owned abandoned staging directories,
+writer-serialized stage lock files, cache pointer scratch and completely identified
+workspace hint scratch. Current bounded history, active readers/writers and
+permanent live generation/writer lock inodes remain protected. Immutable namespace
+owners bind canonical workspace path, device, inode and directory creation time;
+nonempty ownerless namespaces cannot be retroactively claimed.
+
+`cache prune-project` accepts the **original absolute canonical path** of a deleted
+workspace. Exclusive namespace and context-lock leases prove inactivity before
+orphan context reclamation. Stores and detached readers share the namespace lease.
+The namespace owner tombstone and external namespace lock remain stable; replaced
+roots, ambiguous ownership, symlinks, unsafe entries and other namespaces remain
+protected. There is no startup or global cleanup. Directory creation-time support
+is required for persistence; an unsupported filesystem still computes normally,
+without a claimed cache result. Recreated-root residue and filesystem qualification
+remain documented limitations, not silently waived coverage.
+
+The API/CLI distinguish examined, eligible and deleted entries, with separate
+live-generation counters. Zero reserve remains an explicit no-op. Dry-run and
+repeated-cleanup counters are tested; orphan candidates count context trees.
+[Architecture policy](../../../internal_docs/compiler_dx_architecture.md#73-pressure-based-cleanup)
+defines the exact scope and retained tombstones. Detailed CLI contract coverage
+remains DXF.6.
+
+### Validation and evidence
+
+All work, compilation and review ran in the sole remote worktree
+`/home/yaser5/projects/sifr/compiler-dx-orchestration` through Tailscale SSH, on
+Rust **1.98.1**, ordinary default features, the normal test profile, the existing
+private `target`, `CARGO_BUILD_JOBS=2` and `INSTA_UPDATE=no`. The host retained
+**21 GiB free / 187 GiB target**; the selected incremental build reserve was
+6 GiB and no size-based or other cleanup occurred.
+
+Cheap prerequisites passed: `cargo fmt --all --check`, file-size guardrails
+(4104 files; 900-line cap), HIR maintainability guardrails and `git diff --check`.
+Each exact Rust test listed exactly one selection before execution; all eight
+passed on the final implementation:
+
+- `project_cache::housekeeping_tests::abandoned_stages_reclaimed_live_locks_preserved`
+- `project_cache::housekeeping_tests::orphan_prune_requires_owner_and_inactivity`
+- `project_cache::housekeeping_tests::pressure_prune_counts_are_truthful`
+- `project_cache::tests::dx13_c09_concurrent_process_reader_and_gc`
+- `project_cache::tests::process_death_and_new_process_restore`
+- `project_cache::tests::dx13_c08_c09_inherited_payloads_reader_gc`
+- `project_cache::history_tests::eviction_preserves_active_reader_and_latest`
+- `eager_cli_contract_tests::all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order`
+
+The first seven use `-p sifr_driver --lib`; the last uses `-p sifr --bin sifr`.
+Every command uses `cargo test --locked`, then `-- --exact --list` and
+`-- --exact --nocapture`. The housekeeping tests exercise real child-process
+contention/killed writers, a detached reader and a live child reader across
+workspace deletion, unrecorded/corrupt owners, replacement directories, dangling
+and nested symlinks, unsafe permissions, dry-run parity and idempotence.
+
+External evidence:
+`/home/yaser5/projects/sifr/dxf-evidence/0bc95340dfe6a5e4e32e0824a7b62455dae24df7/`.
+`evidence-index.json` binds base/candidate, source hashes, test artifacts, exact
+selection counts, raw logs, guards and review. Earlier seven passing tests at
+`6d5c77b5c089f8e546321e50ec054f31d1986672` remain preserved; the ownerless-namespace
+refinement justified rerunning the affected selections. No full per-item gate,
+performance benchmark, release or installed-artifact qualification was run or
+claimed under the approved fast-feedback policy. No local user checkout or
+installation was changed.
+
+### Review, follow-ups and handoff
+
+[Scoped Opus review](https://github.com/sifr-lang/sifr/pull/3879#issuecomment-5749706095)
+returned **SATISFIED**, with **no blocking findings** for the final candidate.
+External `opus-review.md` SHA-256:
+`c0e5c3613cb8de2667ec886640c37d406d684ee72de83e00df93c242716ab2db`.
+The five nonblocking observations are preserved in
+[DXF.3 review follow-ups](ad-hoc-dxf3-housekeeping-review-followups.md).
+The review used the remote
+[talk-to-claude-opus skill](../../../.cursor/skills/talk-to-claude-opus/SKILL.md),
+read-only, without repeated broad validation. Its completed response was atomically
+published; an owned orphan watchdog sleep was terminated after completion to
+release the SSH output pipe. No failed or incomplete review was counted as passing.
+
+This record-only update requires documentation checks only; it changes no reviewed
+implementation or validation inputs and adds no new review cycle. DX13-F2/F3 and
+the DXF2-F1 stale storage comment are resolved; CLI coverage remains its existing
+DXF.6 item. Stop this session after the record merges. The exact next action is
+a new bounded session for **DXF.4**. No DXF.4 implementation, release/publication,
+installation or user-local handoff occurred here.

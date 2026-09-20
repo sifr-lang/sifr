@@ -9,7 +9,7 @@ the Git tree in the candidate's `dxf-evidence/opus-review.md`.
 
 | ID | Classification / owner | Finding and disposition |
 | --- | --- | --- |
-| DXF2-F1 | Suggestion / storage documentation | The `Store::prune` comment still implies all unused results survive deletion of predecessors. Eviction intentionally retains only bounded recent history. Correct this stale source comment when DXF.3 touches the storage owner; architecture documentation already states the actual contract. |
+| DXF2-F1 | Suggestion / storage documentation | Resolved by [DXF.3 / #3879](https://github.com/sifr-lang/sifr/pull/3879): `Store::prune` now describes bounded recent history, leased predecessors and safe misses for evicted records. |
 | DXF2-F2 | Suggestion / capture efficiency | Cheap rejected-candidate resolver checks add true facts to the shared capture. Deduplication and overflow bound these facts and preserve correctness, but they can add validation work. Separate optimization work may isolate these facts only with unchanged resolver/absence authority. Not an authorized proof expansion. |
 | DXF2-F3 | Suggestion / lookup cancellation and decoding | Lookup eagerly decodes the retained records before checking cancellation. The 128-record / 64 MiB cap bounds this cost; measured full retained lookup was about 21 ms. Separate work may restore finer cancellation or reduce retained decoding without weakening complete generation integrity. |
 | DXF2-F4 | Suggestion / documented reuse limits | The one-proof budget tries the newest qualifying candidate; if it fails, older candidates are not proved. This intentional bounded-work policy can miss an older reusable result; ordinary computation remains authoritative. Retain this limit in future performance/reuse claims. |
