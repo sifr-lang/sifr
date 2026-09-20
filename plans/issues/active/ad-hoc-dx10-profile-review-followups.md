@@ -15,7 +15,7 @@ No implementation is included in this record-only issue.
 | F3 | E2E runner | Select the release corpus authority by `id == e2e-run-pass` in Rust instead of positional `selections[0]`; test reordered selection records without changing the declared fixture set. |
 | F4 | driver tests / performance | Update stale `target/release` messages in the two native test helpers. Their three-parent traversal is still correct. Consider clarifying the benchmark's release-binary error to distinguish declared profile from finalized location. |
 | F5 | driver Rust probe | Consider early captured-override validation before scratch probe execution, so a rejected build does not first run its probe with that override. Generated application/probe workspace ownership is already fixed; retain that contract. |
-| F6 | performance | Investigate the preserved real-ref whole-file size non-increase failure: 6,634,688 → 6,641,408 bytes (+6720, +0.10%). `.text`/data/bss unchanged; nonallocated debug/string metadata increased. Evidence below. Preserve the existing assertion; any metadata exclusion or budget policy requires its own justified decision. Do not rerun the unchanged failed pair to seek a pass. |
+| F6 | performance | Resolved by DX.15 #3868; the original investigation and measurements remain below. Original real-ref whole-file size non-increase failure: 6,634,688 → 6,641,408 bytes (+6720, +0.10%). `.text`/data/bss unchanged; nonallocated debug/string metadata increased. Evidence below. Preserve the existing assertion; any metadata exclusion or budget policy requires its own justified decision. Do not rerun the unchanged failed pair to seek a pass. |
 | F7 | sifr-lang/leetcode | [Owning issue #49](https://github.com/sifr-lang/leetcode/issues/49): explicit generated-application profile and finalized paths in benchmark/audit consumers, independent of compiler optimization. No submodule change in DX.10. |
 | F8 | compiler architecture docs | Add one sentence explaining that generated Cargo manifests own application profile authority and generated applications/probes own their workspace; retain captured config/env/flags validation wording. |
 | F9 | runtime platform / sanitizer | Explicitly decide and inventory the application profile for `generated-binary-asan-smoke` in `sanitizer_manifest.json`. It currently uses the new dev default; exit/sanitizer-clean assertions are profile-agnostic and no named DX.10 release assertion was removed. Qualify the declared choice in the owning sanitizer workflow. |
@@ -42,7 +42,7 @@ No profile code was changed by DX.12. Exact diagnostics and changed-line
 classification are retained in /home/yaser5/projects/sifr/dx12-evidence/
 lint-scope-report.json; the scan reports zero new/touched-line diagnostics.
 
-## F6 bounded DX.15 repair under qualification
+## F6 bounded repair resolved by DX.15
 
 The original failed observation remains intact. A final-candidate comparison at
 `b46545b7541420302c9408588dc42ac2d8f777a9` also failed with the original
@@ -72,3 +72,20 @@ Evidence is under `dx15-evidence/b46545b7541420302c9408588dc42ac2d8f777a9/`:
 `size-path-attribution/`, `binary-size-controlled/`, plus
 `dx15-evidence/size-tool-controls.log`. DX.15's final gate/review/merge record
 will bind the repair to the final candidate. Other followups remain separate.
+
+### DX.15 final binding
+
+F6's bounded comparison-harness correction is merged in
+[DX.15 #3868](https://github.com/sifr-lang/sifr/pull/3868), reviewed candidate
+`9ee360474655fde979dc5ddfdf33eb4dc39c9968`, merge
+`0e4b5ec59607ffdabb9d42dbd8ba49baab97137e`.
+The original failed measurements and the controlled same-location pass above
+retain their original identities and scope; no historical failure is erased.
+The [final phase record](ad-hoc-compiler-dx-and-toolchain-reuse.md) binds the
+qualified continuation and SATISFIED review.
+
+The supplemental DX.12 lint observations are also resolved by the recorded
+strict workspace Clippy pass in
+`dx15-evidence/e2ab8e1f9ae815a1f8ac2ac652329d90dfc4ff0f/after-sql/report.json`.
+The original diagnostic report is preserved. Other followups remain separate
+and are not silently marked complete by this binding.
