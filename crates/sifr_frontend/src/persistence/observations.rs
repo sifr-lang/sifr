@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 
 /// Ordered operations are the actual resolver's observations, including absence.
 /// Directory membership is sorted; search order is never sorted.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum Observation {
     File {
@@ -61,6 +61,8 @@ pub struct CapturingSourceProvider<'a> {
     inner: &'a mut dyn SourceProvider,
     files: BTreeMap<PathBuf, Result<SourceText, SourceProviderError>>,
     observations: Vec<Observation>,
+    seen: BTreeSet<Observation>,
+    overflow: bool,
 }
 impl<'a> CapturingSourceProvider<'a> {
     pub fn new(inner: &'a mut dyn SourceProvider) -> Self {
@@ -68,7 +70,25 @@ impl<'a> CapturingSourceProvider<'a> {
             inner,
             files: BTreeMap::new(),
             observations: Vec::new(),
+            seen: BTreeSet::new(),
+            overflow: false,
         }
+    }
+    /// Preserve first-occurrence order and distinct outcomes for each operation.
+    /// Overflow disables publication, never source computation.
+    fn observe(&mut self, observation: Observation) {
+        if self.seen.contains(&observation) {
+            return;
+        }
+        if self.seen.len() == 16384 {
+            self.overflow = true;
+            return;
+        }
+        self.seen.insert(observation.clone());
+        self.observations.push(observation);
+    }
+    pub fn observations_complete(&self) -> bool {
+        !self.overflow
     }
     pub fn observations(&self) -> &[Observation] {
         &self.observations
@@ -87,7 +107,7 @@ impl<'a> CapturingSourceProvider<'a> {
     /// Replay against current authoritative inputs before publishing. A changed
     /// observation is an explicit changed-input outcome, never a reusable record.
     pub fn unchanged(&mut self) -> bool {
-        observations_match(&self.observations, self.inner)
+        !self.overflow && observations_match(&self.observations, self.inner)
     }
 }
 fn members(entries: &[SourceDirEntry]) -> Vec<DirectoryMember> {
@@ -117,7 +137,7 @@ impl SourceProvider for CapturingSourceProvider<'_> {
             .entry(path.to_owned())
             .or_insert_with(|| self.inner.read_file(path))
             .clone();
-        self.observations.push(match &value {
+        self.observe(match &value {
             Ok(text) => Observation::File {
                 path: path.to_owned(),
                 identity: CapturedSource {
@@ -135,7 +155,7 @@ impl SourceProvider for CapturingSourceProvider<'_> {
     }
     fn read_dir(&mut self, path: &Path) -> Result<Vec<SourceDirEntry>, SourceProviderError> {
         let value = self.inner.read_dir(path);
-        self.observations.push(match &value {
+        self.observe(match &value {
             Ok(entries) => Observation::Directory {
                 path: path.to_owned(),
                 entries: members(entries),
@@ -149,7 +169,7 @@ impl SourceProvider for CapturingSourceProvider<'_> {
     }
     fn is_file(&mut self, path: &Path) -> bool {
         let exists = self.inner.is_file(path);
-        self.observations.push(Observation::FileProbe {
+        self.observe(Observation::FileProbe {
             path: path.to_owned(),
             exists,
         });
@@ -157,7 +177,7 @@ impl SourceProvider for CapturingSourceProvider<'_> {
     }
     fn is_dir(&mut self, path: &Path) -> bool {
         let exists = self.inner.is_dir(path);
-        self.observations.push(Observation::DirectoryProbe {
+        self.observe(Observation::DirectoryProbe {
             path: path.to_owned(),
             exists,
         });
@@ -165,7 +185,7 @@ impl SourceProvider for CapturingSourceProvider<'_> {
     }
     fn canonicalize(&mut self, path: &Path) -> Result<PathBuf, SourceProviderError> {
         let value = self.inner.canonicalize(path);
-        self.observations.push(match &value {
+        self.observe(match &value {
             Ok(result) => Observation::Canonical {
                 path: path.to_owned(),
                 result: result.clone(),

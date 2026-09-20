@@ -10,7 +10,7 @@ use std::{
     time::Duration,
 };
 
-fn context() -> SemanticInputs {
+pub(super) fn context() -> SemanticInputs {
     SemanticInputs {
         compiler: "compiler-fixture".into(),
         metadata: "real-frontend-no-stdlib".into(),
@@ -24,7 +24,7 @@ fn context() -> SemanticInputs {
         external: BTreeMap::new(),
     }
 }
-fn compute(file: &Path, provider: &mut dyn SourceProvider) -> Vec<RenderedDiagnostic> {
+pub(super) fn compute(file: &Path, provider: &mut dyn SourceProvider) -> Vec<RenderedDiagnostic> {
     let source = provider.read_file(file).unwrap();
     let mut frontend = FrontendContext::load_single_file(FrontendInput {
         path: SourcePath::new(file),
@@ -34,7 +34,7 @@ fn compute(file: &Path, provider: &mut dyn SourceProvider) -> Vec<RenderedDiagno
     .unwrap();
     frontend.diagnostics_for_project().into_value().diagnostics
 }
-fn run(cache: &Path, file: &Path) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
+pub(super) fn run(cache: &Path, file: &Path) -> (Vec<RenderedDiagnostic>, ProjectCacheReport) {
     check(
         (cache, file.parent().unwrap()),
         file,
@@ -45,7 +45,7 @@ fn run(cache: &Path, file: &Path) -> (Vec<RenderedDiagnostic>, ProjectCacheRepor
         |provider| compute(file, provider).into(),
     )
 }
-fn fixture() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
+pub(super) fn fixture() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
     let root = tempfile::tempdir().unwrap();
     let workspace = root.path().join("workspace");
     fs::create_dir(&workspace).unwrap();
@@ -54,7 +54,7 @@ fn fixture() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
     let cache = root.path().join("cache");
     (root, file, cache)
 }
-fn store(cache: &Path, file: &Path) -> storage::Store {
+pub(super) fn store(cache: &Path, file: &Path) -> storage::Store {
     storage::Store::open(
         cache,
         file.parent().unwrap(),
@@ -209,7 +209,7 @@ fn dx13_c09_corrupt_schema_references_and_winners() {
     unknown["result"]["resolution"]["Complete"]["extra"] = true.into();
     assert!(serde_json::from_value::<CompletedCheck>(unknown).is_err());
 }
-fn super_record(file: &Path) -> CompletedCheck {
+pub(super) fn super_record(file: &Path) -> CompletedCheck {
     let mut disk = DiskSourceProvider::new();
     let mut capture = CapturingSourceProvider::new(&mut disk);
     let result = compute(file, &mut capture);

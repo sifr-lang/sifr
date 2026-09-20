@@ -1,6 +1,8 @@
 //! Driver-owned project storage behind the frontend's completed result contract.
 #[cfg(test)]
 mod dx14_tests;
+#[cfg(test)]
+mod history_tests;
 mod interface_reuse;
 mod package_context;
 #[cfg(test)]
@@ -44,6 +46,10 @@ pub struct ProjectCacheReport {
     pub validation_us: u128,
     pub serialization_us: u128,
     pub payload_bytes: usize,
+    pub retained_records: usize,
+    pub candidate_checks: usize,
+    pub interface_proofs: usize,
+    pub observation_count: usize,
     pub modules: Vec<sifr_frontend::ModuleCheckDecision>,
 }
 
@@ -162,14 +168,18 @@ fn check(
     let mut capture = CapturingSourceProvider::new(provider);
     if let Some(store) = &store {
         if let Some(generation) = store.latest() {
-            for record in generation.records().flatten() {
+            report.retained_records = generation.manifest.records.len();
+            let records: Vec<_> = generation.records().flatten().collect();
+            for record in &records {
                 if cancel.load(Ordering::Acquire) {
                     break;
                 }
+                report.candidate_checks += 1;
                 if record.result.inputs.source.path == file
                     && record.validate(&inputs, &mut capture)
                 {
                     if let Ok(diagnostics) = record.diagnostics() {
+                        report.observation_count = capture.observations().len();
                         report.status = "restored".into();
                         report.modules =
                             record.result.resolution.ready().map_or_else(Vec::new, |r| {
@@ -198,7 +208,16 @@ fn check(
                         return (diagnostics, report);
                     }
                 }
+            }
+            for record in &records {
+                if cancel.load(Ordering::Acquire) || report.interface_proofs == 1 {
+                    break;
+                }
                 if let Some((compiler, defs, package)) = module_context {
+                    if !interface_reuse::candidate(record, file, &inputs, &mut capture) {
+                        continue;
+                    }
+                    report.interface_proofs += 1;
                     if let Some(modules) = interface_reuse::restore(
                         &record,
                         file,
@@ -212,6 +231,7 @@ fn check(
                         report.restored_checks = 1;
                         report.modules = modules;
                         report.captured_sources = capture.sources().len();
+                        report.observation_count = capture.observations().len();
                         report.validation_us = validation.elapsed().as_micros();
                         let serialization = Instant::now();
                         match CompletedCheck::capture(file, inputs.clone(), &capture, &[]) {
@@ -258,6 +278,7 @@ fn check(
         })
         .collect();
     report.captured_sources = capture.sources().len();
+    report.observation_count = capture.observations().len();
     report.status = if store.is_some() {
         "miss"
     } else {

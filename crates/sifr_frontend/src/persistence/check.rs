@@ -23,7 +23,10 @@ impl CompletedCheck {
         capture: &CapturingSourceProvider<'_>,
         diagnostics: &[RenderedDiagnostic],
     ) -> Result<Self, String> {
-        if !semantic_inputs.complete() || !deterministic_diagnostics(diagnostics) {
+        if !semantic_inputs.complete()
+            || !capture.observations_complete()
+            || !deterministic_diagnostics(diagnostics)
+        {
             return Err("incomplete semantic inputs or transient diagnostic".into());
         }
         let sources = capture.sources();

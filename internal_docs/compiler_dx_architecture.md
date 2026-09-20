@@ -627,6 +627,25 @@ orphans are misses until a complete pointer exists; GC only removes inactive
 owners. Latest generations retain historical complete records, revalidated on
 every reuse, including unused records and error/fix/revert states.
 
+DXF.2 bounds each latest project manifest to the newest 128 distinct published
+records and at most 64 MiB of record payloads (each record remains at most
+16 MiB). Schema 2 stores oldest-to-newest publication order; republishing
+refreshes that record's position. Eviction removes the oldest
+records deterministically and does not modify leased predecessor generations.
+Recent A/B/A reuse is supported within these limits; evicted results safely
+miss. This is a latest-generation history cap, not a cap on all physical
+generations: pressure-driven prune still owns inactive predecessor reclamation.
+
+Lookup checks recent exact candidates first, then makes at most one expensive
+interface-proof attempt after cheap entrypoint/context/success/resolver filtering.
+Failure computes normally using the existing semantic owner. Integrity validation
+still reads every retained record; bounded proof work does not imply constant
+total storage I/O. Observation capture keeps each distinct fact once in
+first-occurrence order, including absence and differing outcomes for the same
+operation. At 16384 distinct facts it marks capture incomplete and declines
+publication while normal checking continues. No resolver authority or proof
+class is expanded.
+
 `.sifrbuildinfo` is an optional bounded hint; the user-cache pointer works in a
 read-only workspace. Compiler-owned hint names are excluded from directory
 observation identity (the actual resolver still receives unchanged entries).
