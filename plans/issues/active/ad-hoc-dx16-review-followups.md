@@ -29,7 +29,7 @@ The test-mode CLI helper policy remains DX13-F5. No production identity defect
 was established in the verification-only diagnostic rendering harness.
 
 DXF.7 final evidence is reconciled in its
-[merged record](ad-hoc-compiler-dx-followup-execution.md#dxf7-merged-record--2026-09-20)
+[merged record](../archive/ad-hoc-compiler-dx-followup-execution.md#dxf7-merged-record--2026-09-20)
 and [implementation #3887](https://github.com/sifr-lang/sifr/pull/3887).
 Four native targets are covered with original failures and bounded continuations
 kept distinct. Index-link and continuation-layout suggestions from the scoped

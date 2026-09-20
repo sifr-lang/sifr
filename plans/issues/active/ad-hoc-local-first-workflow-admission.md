@@ -22,4 +22,4 @@ No workflow repair or broad compiler gate restart was absorbed into DXF.7.
 Read-only evidence:
 `/home/yaser5/projects/sifr/dxf-evidence/f6865cdfb8aa8d0f7d62759ec4fe313e5edc3708/unrelated-workflow-failure.json`.
 The follow-up validation policy and completed affected checks are in the
-[DXF.7 record](ad-hoc-compiler-dx-followup-execution.md#dxf7-merged-record--2026-09-20).
+[DXF.7 record](../archive/ad-hoc-compiler-dx-followup-execution.md#dxf7-merged-record--2026-09-20).

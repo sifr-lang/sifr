@@ -1,6 +1,6 @@
 # Compiler DX follow-up execution plan
 
-Status: DXF.1–7 merged and recorded; DXF.8 local acceptance passed, pending scoped review and merge. This is the canonical scope for the
+Status: complete; DXF.1–8 merged and recorded. Archived after the final local handoff. This is the canonical scope for the
 user-authorized follow-up work, separate from the completed Phase DX.
 Planning baseline: `f9c0d303104fca8181e4624f49d0433779b0e964` on
 `origin/main`, verified 2026-09-20. Remote checkout was clean on
@@ -35,26 +35,26 @@ channel, account or site mutation is authorized.
 
 Link history rather than copying it:
 
-- [DX.13](ad-hoc-dx13-project-review-followups.md): F2/F3/F4 housekeeping/history
+- [DX.13](../active/ad-hoc-dx13-project-review-followups.md): F2/F3/F4 housekeeping/history
   belong to DXF.2–3; F6 prune semantics to DXF.3/6; F7 is a guardrail whenever
   that owner is touched. F1's old qualification request is superseded by the
   completed phase gate; it is not a known current failure. F5 remains separate
   unless DXF.4 establishes a production ownership problem.
-- [DX.14](ad-hoc-dx14-interface-review-followups.md): F5 package limitation is
+- [DX.14](../active/ad-hoc-dx14-interface-review-followups.md): F5 package limitation is
   DXF.1; F1/F2 bounded observations and lookup are DXF.2. Preserve F10's
   transitive proof obligation in DXF.1. F4 was a suspected lint shape, not a
   measured remaining failure. F3/F6–9 are not independent authorized expansion;
   change them only if necessary to satisfy a selected item's demonstrated defect.
-- [Trace](ad-hoc-dx-trace-artifact-followups.md): size-boundary finalization and
+- [Trace](../active/ad-hoc-dx-trace-artifact-followups.md): size-boundary finalization and
   private directory creation are DXF.5. Optional command-label/event expansion
   stays deferred. The original missing trace surface is already fixed in #3871.
-- [DX.16](ad-hoc-dx16-review-followups.md): embedding constructors, cache CLI,
+- [DX.16](../active/ad-hoc-dx16-review-followups.md): embedding constructors, cache CLI,
   moved-workspace coverage and actual broken links are DXF.4/6. Previously
   corrected command/profile/status prose is superseded, not reopened.
-- [DX.11](ad-hoc-dx11-editor-review-followups.md): push-diagnostic scheduling,
+- [DX.11](../active/ad-hoc-dx11-editor-review-followups.md): push-diagnostic scheduling,
   malformed-buffer UX, refresh override APIs and rich editor/memory work remain
   deferred. No demonstrated need makes them dependencies here.
-- [Archived phase](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md#current-handoff--dx16-2026-09-20)
+- [Archived phase](ad-hoc-compiler-dx-and-toolchain-reuse.md#current-handoff--dx16-2026-09-20)
   and [architecture](../../../internal_docs/compiler_dx_architecture.md) retain
   original performance limits, failures, skips, supported-host split and receipts.
   No new HIR/editor restoration, broad interface-proof language expansion,
@@ -71,7 +71,7 @@ Link history rather than copying it:
 | DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | merged #3883 |
 | DXF.6 | Cache CLI/moved-workspace gaps and five documentation links | DXF.3, DXF.5; after DXF.4 | merged #3885 |
 | DXF.7 | Final affected-contract evidence reconciliation | DXF.1–6 | merged #3887 |
-| DXF.8 | Authoritative user binary/local checkout handoff | DXF.7 | local acceptance passed |
+| DXF.8 | Authoritative user binary/local checkout handoff | DXF.7 | merged #3889 |
 
 DXF.4 and DXF.5 do not technically depend on package reuse; the edges express
 the approved priority and single-owner execution order. If an item needs a
@@ -559,7 +559,7 @@ returned **SATISFIED**, with no blocking findings, for the exact candidate.
 External `opus-review.md` SHA-256:
 `2a6b2f5679608e40a1d7072bf02e6cf492426e116785a8b889a857053a15f28b`.
 Its nonblocking findings and their separate dispositions are recorded in
-[DXF.1 review follow-ups](ad-hoc-dxf1-package-reuse-review-followups.md).
+[DXF.1 review follow-ups](../active/ad-hoc-dxf1-package-reuse-review-followups.md).
 This record-only update changes no reviewed implementation or validation inputs
 and requires documentation checks only, without another external review.
 
@@ -656,7 +656,7 @@ returned **SATISFIED**, with no blockers, for the final candidate.
 External `opus-review.md` SHA-256:
 `00216157dcb1dc384a2a62b196113f63186a078789cf838784f1dc2846bea8e2`.
 Five nonblocking findings are preserved in
-[DXF.2 review follow-ups](ad-hoc-dxf2-history-review-followups.md).
+[DXF.2 review follow-ups](../active/ad-hoc-dxf2-history-review-followups.md).
 This record changes no implementation/validation inputs; documentation checks
 only apply, without another external review.
 
@@ -746,7 +746,7 @@ returned **SATISFIED**, with **no blocking findings** for the final candidate.
 External `opus-review.md` SHA-256:
 `c0e5c3613cb8de2667ec886640c37d406d684ee72de83e00df93c242716ab2db`.
 The five nonblocking observations are preserved in
-[DXF.3 review follow-ups](ad-hoc-dxf3-housekeeping-review-followups.md).
+[DXF.3 review follow-ups](../active/ad-hoc-dxf3-housekeeping-review-followups.md).
 The review used the remote
 [talk-to-claude-opus skill](../../../.cursor/skills/talk-to-claude-opus/SKILL.md),
 read-only, without repeated broad validation. Its completed response was atomically
@@ -836,8 +836,8 @@ The remote
 [talk-to-claude-opus skill](../../../.cursor/skills/talk-to-claude-opus/SKILL.md)
 was used read-only with a bounded request and atomic response publication.
 Its three nonblocking observations are separately retained in
-[DXF.5 review follow-ups](ad-hoc-dxf5-trace-review-followups.md).
-The original [trace follow-up owner](ad-hoc-dx-trace-artifact-followups.md)
+[DXF.5 review follow-ups](../active/ad-hoc-dxf5-trace-review-followups.md).
+The original [trace follow-up owner](../active/ad-hoc-dx-trace-artifact-followups.md)
 now records resolution of its boundary and private-directory suggestions;
 optional labels and broader frontend-event coverage remain deferred.
 
@@ -922,7 +922,7 @@ ran read-only and published its completed response atomically outside Git.
 The completed request's orphan watchdog sleep was terminated to release its
 SSH output pipe. No incomplete review was counted as passing.
 Nonblocking observations are recorded separately in
-[DXF.6 review follow-ups](ad-hoc-dxf6-contract-review-followups.md).
+[DXF.6 review follow-ups](../active/ad-hoc-dxf6-contract-review-followups.md).
 
 This record-only update requires documentation checks only and no new external
 review. Blocker: **none**. Stop after merging this record. Exact next action:
@@ -1037,9 +1037,9 @@ external and candidate-keyed. Nonblocking index suggestions are resolved by dire
 links and explicit layout provenance. DXF.5’s historical test binary lived in a
 rebuildable target path and no longer matches that historical hash; it is not
 reused as final binary evidence. Future immutable artifact retention remains
-with the [review follow-up owner](ad-hoc-dx16-review-followups.md).
+with the [review follow-up owner](../active/ad-hoc-dx16-review-followups.md).
 The pre-existing job-admission failure of the unchanged local-first workflow is
-recorded in [its owning issue](ad-hoc-local-first-workflow-admission.md); its
+recorded in [its owning issue](../active/ad-hoc-local-first-workflow-admission.md); its
 underlying cause remains unestablished and it is not a compiler test failure.
 
 ### Remaining limits and next owner
@@ -1163,7 +1163,38 @@ build, performance measurement, active-memory claim or graphical 12 GB claim.
 The nonblocking editor/interface-proof/history and infrastructure follow-ups
 remain with their existing linked owners; this handoff adds no new scope.
 
-## Current handoff
 
-DXF.8 local acceptance passed. Scoped read-only Opus review and merge remain;
-then record the merged item and archive the completed follow-up plan.
+## DXF.8 merged record — 2026-09-20
+
+- Handoff implementation/record [#3889](https://github.com/sifr-lang/sifr/pull/3889),
+  candidate `feaaf5627e240af87a8e4ed7842547d439068c98`, base
+  `066cd2af8a19dceba176f68347ec998b4cdeffb4`, squash merge
+  `a3f9640714f37d8dfe9e0625b185310cbc432bb5`.
+- [Scoped Opus](https://github.com/sifr-lang/sifr/pull/3889#issuecomment-5751567671)
+  is SATISFIED, no blockers. Candidate-keyed external response:
+  `/home/yaser5/projects/sifr/dxf-evidence/feaaf5627e240af87a8e4ed7842547d439068c98/opus-review.md`,
+  SHA-256 `8c91752638b2d4c5e458ef7519a28e7edb5b8d04ce1f26b9c4e1d7c007f73a88`.
+- All bounded local acceptance above passed. The reviewed evidence index
+  SHA-256 is `222202bbcb3d33343312414576d3469569a4f053cf104be949b0b7bd1e3646c2`.
+  Candidate-keyed `documentation-checks.json` records 21 local links/anchors,
+  126 verified evidence file hashes, diff checks and the 4,107-file source guard.
+- Two nonblocking evidence-completeness suggestions are resolved externally:
+  `/home/yaser5/projects/sifr/dxf-evidence/dxf8-handoff-20260920/supplemental`
+  contains post-install shell/IntoIterator hashes, regenerated fish env and the
+  legacy schema-1 receipt body. Its `index.json` SHA-256 is
+  `8a72ad2a8d8eea1ebe3cc5de4dd0ec9bb6583c82175b37158bcbe0f168439787`.
+  The original reviewed index remains unchanged.
+- Cosmetic permanent-generation naming remains separately owned in
+  [DXF.8 installation follow-ups](../active/ad-hoc-dxf8-installation-review-followups.md).
+  No implementation changed during closure; no second review or compiler gate.
+
+## Final handoff
+
+All eight follow-up items are merged and recorded. The original Phase DX remains
+completed; this separate follow-up plan is now archived. The user has the exact
+qualified Mac ARM package, intact recoverable legacy backup and preserved
+IntoIterator work. The checkout can receive the subsequent documentation-only
+closure merge by the same non-overlapping fast-forward rule; installed source
+identity remains the qualified f6865cdf stamp. No open blocker or active owned
+validation/review job remains. Existing separately owned nonblocking follow-ups
+are not promoted into requirements for this completed handoff. Stop this item.
