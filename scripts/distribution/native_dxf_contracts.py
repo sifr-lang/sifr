@@ -24,7 +24,7 @@ def qualify_dxf(owner, binary):
         "candidate": owner.source, "lane": "native-exact-package",
         "target_report": str(owner.artifacts / f"qualification-{owner.target}.json"),
         "target_report_sha256": digest(owner.artifacts / f"qualification-{owner.target}.json"),
-    })
+    }, environment=owner.env)
     workspace = owner.output / "dxf-trace"
     workspace.mkdir()
     source = workspace / "private-source-sentinel.sifr"

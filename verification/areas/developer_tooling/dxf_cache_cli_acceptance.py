@@ -25,10 +25,10 @@ def main():
         "candidate": compiler_lanes.selection()["source_commit"],
         "lane": "contributor-dev", "receipt": str(receipt),
         "receipt_sha256": compiler_lanes.digest(receipt),
-    })
+    }, environment=os.environ)
 
 
-def qualify(binary, output, identity):
+def qualify(binary, output, identity, *, environment):
     """Run the same contracts after the caller validates its exact artifact."""
     binary, output = binary.resolve(), output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -37,7 +37,7 @@ def qualify(binary, output, identity):
     source = workspace / "main.sifr"
     cache = output / "cache"
     native = cache / "native" / "artifacts"
-    env = dict(os.environ, SIFR_CACHE_DIR=str(cache))
+    env = dict(environment, SIFR_CACHE_DIR=str(cache))
     calls = []
 
     def invoke(label, arguments, expected=0):
