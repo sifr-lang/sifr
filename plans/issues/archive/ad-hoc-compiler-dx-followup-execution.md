@@ -1198,3 +1198,17 @@ closure merge by the same non-overlapping fast-forward rule; installed source
 identity remains the qualified f6865cdf stamp. No open blocker or active owned
 validation/review job remains. Existing separately owned nonblocking follow-ups
 are not promoted into requirements for this completed handoff. Stop this item.
+
+
+## Post-closure affected lint reconciliation — 2026-09-21
+
+The separately authorized [affected Clippy closure](../active/ad-hoc-dxf3-housekeeping-review-followups.md#merged-lint-record--2026-09-21-europestockholm)
+merged as [#3895](https://github.com/sifr-lang/sifr/pull/3895). It qualifies the
+actual DXF.1–6 changed Rust owners and CLI inline-test configuration on Rust
+1.98.1, correcting measured production/test warnings with unchanged behavior.
+This adds new input-bound evidence; old Phase DX qualification is not reused
+as proof for changed source. The unobserved DXF3-F1 / DX14-F4 suspicions are
+resolved honestly. A distinct unchanged formatter integration-target lint
+failure remains recorded separately, so no whole-workspace clean claim is made.
+The historical phase/follow-up failures and CI performance, determinism and
+Windows limits remain intact. No release or user installation changed.
