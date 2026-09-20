@@ -1,7 +1,7 @@
 # DX.3 storage and process review follow-ups
 
 status: open; separate future work, not DX.3 blockers
-source: [merged DX.3](ad-hoc-compiler-dx-and-toolchain-reuse.md)
+source: [merged DX.3](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md)
 implementation: [PR #3844](https://github.com/sifr-lang/sifr/pull/3844)
 
 These observations do not authorize implementation in the completed DX.3 session.

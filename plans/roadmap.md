@@ -146,4 +146,4 @@ flowchart LR
 
 | Phase | Status | Architecture | Release checkpoints |
 | --- | --- | --- | --- |
-| [DX](issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md) | Required implementation and trace remediation merged ([#3871](https://github.com/sifr-lang/sifr/pull/3871)); DX.16 closure ready for merge | [Compiler DX architecture](../internal_docs/compiler_dx_architecture.md) | Final four-target package qualification recorded; publication remains separately authorized |
+| [DX](issues/archive/ad-hoc-compiler-dx-and-toolchain-reuse.md) | Complete: DX.1–DX.16 and required trace remediation merged; [closure #3870](https://github.com/sifr-lang/sifr/pull/3870) | [Compiler DX architecture](../internal_docs/compiler_dx_architecture.md) | Final four-target package qualification recorded; publication remains separately authorized |

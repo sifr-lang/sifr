@@ -1,7 +1,7 @@
 # DX.2 identity and review follow-ups
 
 status: open; separate future work, not DX.2 blockers
-source: [merged DX.2](ad-hoc-compiler-dx-and-toolchain-reuse.md)
+source: [merged DX.2](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md)
 implementation: [PR #3842](https://github.com/sifr-lang/sifr/pull/3842)
 
 These observations do not authorize implementation in the completed DX.2 session.

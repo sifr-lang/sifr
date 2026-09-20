@@ -87,7 +87,7 @@ This DX.1 batch must implement deadline-aware framing that handles queued/buffer
 coalesced and fragmented messages without waiting on an empty OS descriptor or
 blocking indefinitely on a partial frame. Add independent transport regression
 coverage for those cases and preserve the primary error through cleanup.
-Then resume the [DX.1 handoff](ad-hoc-compiler-dx-and-toolchain-reuse.md): revalidate
+Then resume the [DX.1 handoff](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md): revalidate
 the affected protocol workload with the repaired canonical client, complete the
 missing baselines and scoped review, and only then merge. DX.1 is not closed by
 this issue record. No DX.2–DX.16 implementation is authorized by this handoff.
@@ -105,5 +105,5 @@ completed the demanded-stdlib baseline (21 samples including warmup).
 Contributor baselines also completed. No timeout or protocol requirement was
 relaxed. Opus review returned
 [SATISFIED](https://github.com/sifr-lang/sifr/pull/3840#issuecomment-5705061104).
-The [DX.1 record](ad-hoc-compiler-dx-and-toolchain-reuse.md#current-handoff--dx1-2026-09-16)
+The [DX.1 record](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md#historical-handoff--dx1-2026-09-16)
 owns final evidence digests and the completed resumption record.

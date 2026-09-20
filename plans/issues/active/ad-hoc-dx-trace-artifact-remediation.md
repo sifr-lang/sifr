@@ -6,7 +6,7 @@ owner: CLI / driver observability; existing frontend trace and build-report owne
 [Whole-phase review](https://github.com/sifr-lang/sifr/pull/3870#issuecomment-5748613670)
 reviewed implementation `9ee360474655fde979dc5ddfdf33eb4dc39c9968` and docs
 `1901074b62e2aad614d285f1c35c95aa16218490`; verdict NOT SATISFIED.
-[Phase status](ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status) records the resolved finding and documentation closure.
+[Phase status](../archive/ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status) records the resolved finding and documentation closure.
 
 ## Required scope
 
