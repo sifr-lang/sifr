@@ -5,7 +5,7 @@ use std::fs;
 fn compiler() -> sifr_identity::CompilerIdentity {
     sifr_identity::CompilerIdentity::for_test(crate::compiled_input_tokens(), "dx14")
 }
-fn inputs() -> SemanticInputs {
+pub(super) fn inputs() -> SemanticInputs {
     SemanticInputs {
         compiler: compiler().as_str().into(),
         metadata: "metadata-generation".into(),
@@ -31,7 +31,7 @@ fn frontend(file: &Path, provider: &mut dyn SourceProvider) -> FrontendContext {
     .unwrap()
     .with_compiler_identity(compiler())
 }
-fn run(
+pub(super) fn run(
     cache: &Path,
     file: &Path,
     context: SemanticInputs,
@@ -56,7 +56,7 @@ fn run(
         },
     )
 }
-fn fixture() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
+pub(super) fn fixture() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
     let root = tempfile::tempdir().unwrap();
     let project = root.path().join("project");
     fs::create_dir(&project).unwrap();

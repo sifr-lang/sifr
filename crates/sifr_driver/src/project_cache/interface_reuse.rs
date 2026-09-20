@@ -4,6 +4,29 @@ use sifr_frontend::{
 };
 use std::path::Path;
 
+/// Cheap rejection only; existing frontend proof remains authoritative.
+pub(super) fn candidate(
+    record: &CompletedCheck,
+    file: &Path,
+    inputs: &SemanticInputs,
+    provider: &mut CapturingSourceProvider<'_>,
+) -> bool {
+    use sifr_frontend::persistence::{Observation, SourceOutcome, observations_match};
+    record.result.inputs.source.path == file
+        && &record.result.inputs.semantic_inputs == inputs
+        && record.result.outcome == SourceOutcome::Success
+        && record
+            .result
+            .resolution
+            .ready()
+            .is_some_and(|r| r.sources.len() >= 2)
+        && record.result.inputs.observations.iter().all(|observation| {
+            matches!(observation, Observation::File { path, .. }
+                if path.extension().is_some_and(|extension| extension == "sifr"))
+                || observations_match(std::slice::from_ref(observation), provider)
+        })
+}
+
 /// The same narrow body proof applies after current package resolution.
 /// SQL, Python and native authorities continue through their live owners.
 pub(super) fn restore(

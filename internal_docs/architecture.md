@@ -2073,6 +2073,9 @@ imports preserve visibility and source ownership while the same narrow body
 proof permits eligible importer reuse. Every restored-success hop checks edited
 code and persists its current source observations; package/lock/trust and
 compiler/metadata/target authority remain pinned.
+Driver-owned project generations retain up to 128 recent immutable records (64 MiB)
+under OS leases, with ordered observation deduplication and at most one filtered
+interface-proof attempt per lookup.
 Driver-owned project generations inherit immutable records under OS leases,
 validate complete manifests, and publish atomically. Optional project storage
 failures preserve semantic results. `--no-incremental` disables this project

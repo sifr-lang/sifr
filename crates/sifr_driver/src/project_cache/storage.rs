@@ -14,7 +14,9 @@ use std::{
 };
 const RECORD_LIMIT: u64 = 16 * 1024 * 1024;
 const MANIFEST_LIMIT: u64 = 1024 * 1024;
-const RECORD_COUNT: usize = 4096;
+// Per-generation publication history. Old generations remain under explicit prune.
+pub(super) const RECORD_COUNT: usize = 128;
+const HISTORY_BYTES: u64 = 64 * 1024 * 1024;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -22,7 +24,7 @@ pub(super) struct Manifest {
     schema: u32,
     workspace: String,
     context: String,
-    pub(super) records: BTreeSet<String>,
+    pub(super) records: Vec<String>,
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -162,14 +164,16 @@ impl Store {
         let path = parent.join(id);
         let bytes = read(&path, "manifest.json", MANIFEST_LIMIT)?;
         let manifest: Manifest = serde_json::from_slice(&bytes)?;
-        if manifest.schema != 1
+        if manifest.schema != 2
             || manifest.workspace != self.workspace
             || manifest.context != self.context
             || manifest.records.len() > RECORD_COUNT
+            || manifest.records.iter().collect::<BTreeSet<_>>().len() != manifest.records.len()
             || stamp("project-generation-v1", &manifest)? != id
         {
             return Err(invalid("incompatible project generation"));
         }
+        let mut total_bytes = 0;
         for record in &manifest.records {
             if !key(record) {
                 return Err(invalid("invalid record reference"));
@@ -177,6 +181,10 @@ impl Store {
             let bytes = read(&path, record, RECORD_LIMIT)?;
             if stamp("project-record-v1", &bytes)? != *record {
                 return Err(invalid("corrupt project record"));
+            }
+            total_bytes += bytes.len() as u64;
+            if total_bytes > HISTORY_BYTES {
+                return Err(invalid("project history byte limit"));
             }
             let record: CompletedCheck = serde_json::from_slice(&bytes)?;
             if record.schema != 1
@@ -217,12 +225,25 @@ impl Store {
             .as_ref()
             .map(|old| old.manifest.records.clone())
             .unwrap_or_default();
-        records.insert(record_id.clone());
-        if records.len() > RECORD_COUNT {
-            return Err(invalid("project record capacity reached"));
+        // Refresh publication order, then retain a deterministic recent suffix.
+        records.retain(|id| id != &record_id);
+        records.push(record_id.clone());
+        let mut retained_bytes = bytes.len() as u64;
+        let mut retained = vec![record_id.clone()];
+        if let Some(previous) = &previous {
+            for id in records[..records.len() - 1].iter().rev() {
+                let size = fs::metadata(previous.path.join(id))?.len();
+                if retained.len() == RECORD_COUNT || retained_bytes + size > HISTORY_BYTES {
+                    break;
+                }
+                retained_bytes += size;
+                retained.push(id.clone());
+            }
         }
+        retained.reverse();
+        records = retained;
         let manifest = Manifest {
-            schema: 1,
+            schema: 2,
             workspace: self.workspace.clone(),
             context: self.context.clone(),
             records,
@@ -243,7 +264,10 @@ impl Store {
         storage::directory(&stage)?;
         let result = (|| {
             if let Some(previous) = &previous {
-                for inherited in &previous.manifest.records {
+                for inherited in &manifest.records {
+                    if inherited == &record_id {
+                        continue;
+                    }
                     cancelled(cancel)?;
                     // A link is immutable. Never open an inherited destination
                     // for truncation, including when the new result is identical.
@@ -336,7 +360,7 @@ impl Store {
 }
 impl Generation {
     pub(super) fn records(&self) -> impl Iterator<Item = io::Result<CompletedCheck>> + '_ {
-        self.manifest.records.iter().map(|record| {
+        self.manifest.records.iter().rev().map(|record| {
             let bytes = read(&self.path, record, RECORD_LIMIT)?;
             if stamp("project-record-v1", &bytes)? != *record {
                 return Err(invalid("changed immutable record"));
