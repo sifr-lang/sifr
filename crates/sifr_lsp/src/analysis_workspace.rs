@@ -46,19 +46,15 @@ pub(crate) struct LspWorkspaceSymbol {
     pub(crate) uri: String,
 }
 
-impl Default for LspAnalysisWorkspace {
-    fn default() -> Self {
+impl LspAnalysisWorkspace {
+    pub(crate) fn new(compiler: sifr_driver::CompilerContext) -> Self {
         Self {
-            compiler: sifr_driver::CompilerContext::for_test_tokens(
-                crate::compiled_input_tokens(),
-                "sifr_lsp-tests",
-            ),
+            compiler,
             documents: BTreeMap::new(),
             projects: BTreeMap::new(),
         }
     }
-}
-impl LspAnalysisWorkspace {
+
     pub(crate) fn restored_check_modules(&self) -> usize {
         self.documents
             .values()

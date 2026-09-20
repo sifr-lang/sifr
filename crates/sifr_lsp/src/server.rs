@@ -12,24 +12,23 @@ use serde_json::Value;
 use sifr_analysis::WorkspaceTracePhase;
 use std::collections::BTreeMap;
 
-pub fn run_stdio() -> ServerResult<()> {
-    run_stdio_with_options(LspServerOptions::stdio())
+/// Run the embedded server with the caller's compiler and toolchain ownership.
+pub fn run_stdio(compiler: sifr_driver::CompilerContext) -> ServerResult<()> {
+    run_stdio_with_options(LspServerOptions::stdio(), compiler)
 }
 
-pub fn run_stdio_with_options(options: LspServerOptions) -> ServerResult<()> {
-    run_stdio_with_identity(
-        options,
-        sifr_identity::CompilerIdentity::for_test(crate::compiled_input_tokens(), "embedded-lsp"),
-    )
+pub fn run_stdio_with_options(
+    options: LspServerOptions,
+    compiler: sifr_driver::CompilerContext,
+) -> ServerResult<()> {
+    LspServer::stdio(options, compiler).run()
 }
 
 pub fn run_stdio_with_identity(
     options: LspServerOptions,
     identity: sifr_identity::CompilerIdentity,
 ) -> ServerResult<()> {
-    let mut server = LspServer::stdio(options);
-    server.session.set_compiler_identity(identity);
-    server.run()
+    run_stdio_with_options(options, sifr_driver::CompilerContext::new(identity))
 }
 
 struct LspServer {
@@ -41,14 +40,14 @@ struct LspServer {
 }
 
 impl LspServer {
-    fn stdio(options: LspServerOptions) -> Self {
+    fn stdio(options: LspServerOptions, compiler: sifr_driver::CompilerContext) -> Self {
         let (connection, io_threads) = Connection::stdio();
         let watchdog = ParentWatchdog::new(options.parent_pid);
         watchdog.spawn_exit_thread();
         Self {
             connection,
             io_threads,
-            session: Session::new(),
+            session: Session::with_compiler(compiler),
             watchdog,
             queued_requests: BTreeMap::new(),
         }

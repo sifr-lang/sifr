@@ -76,17 +76,21 @@ impl Session {
     pub(crate) fn compiler_context(&self) -> &sifr_driver::CompilerContext {
         &self.analysis.compiler
     }
-    pub(crate) fn set_compiler_identity(&mut self, identity: sifr_identity::CompilerIdentity) {
-        self.analysis.compiler = sifr_driver::CompilerContext::new(identity);
+    #[cfg(test)]
+    pub(crate) fn new() -> Self {
+        Self::with_compiler(sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_lsp-tests",
+        ))
     }
 
-    pub(crate) fn new() -> Self {
+    pub(crate) fn with_compiler(compiler: sifr_driver::CompilerContext) -> Self {
         Self {
             store: DocumentStore::new(),
             generations: Default::default(),
             generation: 0,
             diagnostic_clears: Default::default(),
-            analysis: LspAnalysisWorkspace::default(),
+            analysis: LspAnalysisWorkspace::new(compiler),
             queue: RequestQueue::default(),
             progress: ProgressState::default(),
             active_request: None,

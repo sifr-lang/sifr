@@ -36,3 +36,6 @@ mod compiled_identity;
 pub use compiled_identity::compiled_input_tokens;
 
 mod generation;
+
+#[cfg(test)]
+mod dxf_embedding_tests;
