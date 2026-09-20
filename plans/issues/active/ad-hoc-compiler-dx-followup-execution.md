@@ -1,6 +1,6 @@
 # Compiler DX follow-up execution plan
 
-Status: in progress; DXF.1–3 merged and recorded, DXF.4 next ready. This is the canonical scope for the
+Status: in progress; DXF.1–4 merged and recorded, DXF.5 next ready. This is the canonical scope for the
 user-authorized follow-up work, separate from the completed Phase DX.
 Planning baseline: `f9c0d303104fca8181e4624f49d0433779b0e964` on
 `origin/main`, verified 2026-09-20. Remote checkout was clean on
@@ -67,7 +67,7 @@ Link history rather than copying it:
 | DXF.1 | Real package-project importer reuse and measurement | planning PR merged | merged #3875 |
 | DXF.2 | Bounded record retention, observations and lookup | DXF.1 | merged #3877 |
 | DXF.3 | Owner-safe abandoned/orphan storage reclamation | DXF.2 | merged #3879 |
-| DXF.4 | Production embedding identity audit and necessary fixes | DXF.3 (execution order) | next ready |
+| DXF.4 | Production embedding identity audit and necessary fixes | DXF.3 (execution order) | merged #3881 |
 | DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | queued |
 | DXF.6 | Cache CLI/moved-workspace gaps and five documentation links | DXF.3, DXF.5; after DXF.4 | queued |
 | DXF.7 | Final affected-contract evidence reconciliation | DXF.1–6 | queued |
@@ -305,6 +305,34 @@ The LSP regression distinguishes two explicitly supplied product identities,
 preserves metadata generation/profile/incremental policy, and verifies the
 test-only constructor retains its existing test ownership. No product identity
 is synthesized by the implementation.
+
+### DXF.4 merged record — 2026-09-20
+
+- Implementation: [#3881](https://github.com/sifr-lang/sifr/pull/3881),
+  candidate 92b9a89c7a8fbd7791ef8a26271f294c72907e92,
+  squash merge fa74613fb44251b289ef509a4fcfa8cbee5dedfa.
+- Four exact nonzero selections passed (one test each): both required driver
+  compiler_context::tests identity tests; LSP
+  dxf_embedding_tests::production_workspace_preserves_context; LSP
+  session::tests::dx11_editor_tests::dx11_syntax_does_not_load_metadata_and_late_semantics_see_latest_overlay.
+  Proposed analysis acceptance is inapplicable because no production analysis
+  boundary needed changing.
+- cargo fmt --all --check, git diff --check, file-size and HIR maintainability
+  guards passed. Rust 1.98.1, default features, ordinary test profile, two jobs,
+  existing private target. Available space exceeded the declared 12 GiB focused
+  operation reserve; no cleanup. No compiler binary preparation or broad gate.
+- Exact commands, output counts, log hashes, inventory, storage decision and
+  review evidence are indexed at
+  /home/yaser5/projects/sifr/dxf-evidence/92b9a89c7a8fbd7791ef8a26271f294c72907e92/index.json.
+- [Scoped Opus review](https://github.com/sifr-lang/sifr/pull/3881#issuecomment-5749779273):
+  SATISFIED, no blockers; covers the same candidate and unchanged base.
+  Suggestions to consolidate the CLI identity wrapper or add entrypoint doc
+  comments are separate optional maintenance in the DX.16 follow-up record.
+  Test CLI helper policy remains DX13-F5; the internal diagnostic harness is
+  classified intentionally and is not a demonstrated production defect.
+- This record-only update requires documentation checks only; it does not
+  invalidate same-input implementation/test/review evidence. DXF.4 is complete.
+  No external blocker. Stop here; a new bounded session owns DXF.5.
 
 ## DXF.5 — trace boundary behavior
 
