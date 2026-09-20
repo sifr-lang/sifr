@@ -8,7 +8,7 @@ The two most common commands you'll reach for are `sifr run` and `sifr build`. B
 
 ## `sifr run` — compile and execute
 
-`sifr run` compiles your program and runs the resulting binary in a single step. When the compiler has a cached binary from a previous run on the same source, it skips the build phase and jumps straight to execution.
+`sifr run` compiles your program and runs the resulting binary in a single step. It reuses compatible native artifacts after checking current inputs and Cargo freshness. Ordinary build/run uses the development application profile; add `--release` for release optimization. Compiler optimization is independent.
 
 ```bash
 sifr run hello.sifr
@@ -30,6 +30,7 @@ sifr run hello.sifr -- Alice 42
 | `--locked` | Require `Cargo.lock` to be unchanged before running. |
 | `--offline` | Disable network access during dependency resolution. |
 | `--frozen` | Combine `--locked` and `--offline`. |
+| `--release` | Optimize the generated application with the release profile. |
 | `--quiet` | Suppress build phase progress output. Cache hits are always quiet. |
 
 ### Examples
@@ -73,6 +74,7 @@ sifr build hello.sifr -o dist/
 
 | Flag | Description |
 |---|---|
+| `--release` | Optimize the generated application with the release profile. |
 | `-o <DIR>` / `--output <DIR>` | Write the binary to this directory. Defaults to `.` (current directory). |
 | `--locked` | Require the package `Cargo.lock` and generated Rust resolution to remain unchanged. |
 | `--offline` | Disable network access while resolving and building package Rust dependencies. |
@@ -89,14 +91,14 @@ Compiling hello.sifr (single-file)
   Type-check   2.1ms
   Codegen      4.3ms
   Link         9.7ms
-Finished release build in 16.9ms
+Finished development build in 16.9ms
 Binary: ./hello
 ```
 
 With `--quiet`, the summary is shortened to:
 
 ```text
-Finished release build in 16.9ms
+Finished development build in 16.9ms
 Binary: ./hello
 ```
 

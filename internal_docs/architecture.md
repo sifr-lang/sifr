@@ -1976,7 +1976,7 @@ Mojo (`/Users/yaseralnajjar/work/sifr/modular/mojo`) was evaluated as a referenc
 
 ## Compiler DX migration contract
 
-[Prebuilt stdlib and toolchain reuse](compiler_dx_architecture.md) defines the compiler development-loop migration contract. Installed execution requires matching metadata after its consumer migration; source-tree production remains explicit. Optional project persistence restores existing frontend result families or misses without changing correctness. Cleanup follows owned storage pressure and obsolescence rather than target size. Functional outcomes, named performance contracts and safety deadlines remain separate. These are prospective contracts, not claims that later DX implementation increments have shipped.
+[Prebuilt stdlib and toolchain reuse](compiler_dx_architecture.md) defines the compiler development-loop migration contract. Installed execution requires matching metadata after its consumer migration; source-tree production remains explicit. Optional project persistence restores existing frontend result families or misses without changing correctness. Cleanup follows owned storage pressure and obsolescence rather than target size. Functional outcomes, named performance contracts and safety deadlines remain separate. The [canonical phase evidence](../plans/issues/active/ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status) records exact merged DX.1–DX.15 candidates and measured scopes. The required trace-artifact surface is qualified in merged remediation #3871; the phase evidence separates its affected artifact/CLI checks from reused DX.15 qualification.
 
 Generated native/test entries now live under the private persistent
 `SIFR_CACHE_DIR` (platform user-cache default), with staging on that filesystem.
@@ -1997,8 +1997,8 @@ These DX.3 primitives do not implement semantic project generations.
 DX.5 adds the private indexed stdlib wire schema in `sifr_sysroot::metadata`, with
 explicit type/declaration/binder/payload records and a bounded, shared lazy decoder.
 The [payload and consumer inventory](compiler_dx_metadata_consumers.md) owns the
-source-to-wire field classification and planned overlay/lifetime migration. Normal
-commands still use checked-source stdlib state; DX.7 owns consumer activation.
+source-to-wire field classification and the completed overlay/lifetime migration.
+Normal commands use the metadata consumers activated by DX.7.
 DX.6 adds the linked canonical source producer and shared write-through preparation
 in `sifr_driver::metadata_producer`. The CLI `sysroot build-metadata`, bare driver
 tests, verification preparation and native packaging use that same operation.

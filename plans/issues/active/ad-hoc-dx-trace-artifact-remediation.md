@@ -6,11 +6,11 @@ owner: CLI / driver observability; existing frontend trace and build-report owne
 [Whole-phase review](https://github.com/sifr-lang/sifr/pull/3870#issuecomment-5748613670)
 reviewed implementation `9ee360474655fde979dc5ddfdf33eb4dc39c9968` and docs
 `1901074b62e2aad614d285f1c35c95aa16218490`; verdict NOT SATISFIED.
-[Phase status](ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status) is blocked.
+[Phase status](ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status) records the resolved finding and documentation closure.
 
 ## Required scope
 
-[Architecture §11.1](../../../internal_docs/compiler_dx_architecture.md#111-target-commands)
+[Architecture §11.1](../../../internal_docs/compiler_dx_architecture.md#111-implemented-commands)
 requires `--trace-dir <dir>`: "Opt-in versioned trace/artifact diagnostics with
 redaction and controlled size". §11.3 requires existing timing/report owners,
 identity/cache attribution, no credentials/complete environments/user source by
@@ -32,7 +32,7 @@ whole-phase observations or another observability framework.
 
 ## Named minimal acceptance for the implementation owner
 
-These are proposed focused test names/behaviours, not tests already present or run:
+The original five named acceptance contracts are now implemented and passed as recorded below:
 
 - `trace_dir_cli_contract`: help and global argument parsing, including deferred
   command parity and missing directory argument rejection.
