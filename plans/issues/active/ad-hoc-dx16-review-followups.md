@@ -8,14 +8,14 @@ No implementation is authorized by this observation list.
 
 | Owner | Observation |
 | --- | --- |
-| CLI tests | Add cache help/argument/JSON coverage to the CLI contract matrix; current storage behaviour has library/process evidence. |
+| CLI tests | Resolved by [DXF.6 / #3885](https://github.com/sifr-lang/sifr/pull/3885): focused parser and 34 isolated process contracts cover cache help, arguments, globals, JSON and cleanup counters. |
 | Documentation | Resolved by DX.16: prune reserve-bytes/prune-project, profile examples and historical source-migration prose are reconciled. |
 | CLI context | Consider aligning the unreachable unset-profile fallback with the Development default. |
 | Driver cache | Explain why process-global interop-plan identity is safe while compiler identity is process-constant. |
 | Public embedding API | Resolved by [DXF.4 / #3881](https://github.com/sifr-lang/sifr/pull/3881): LSP embedding requires caller context at construction; analysis/bootstrap/SQL cfg guards and the internal verification harness are audited in the canonical follow-up plan. Shipped CLI identity remains explicit. |
 | Driver formatter | Consider explicit rustfmt context/process ownership; current contract names Cargo/rustc/Sifr. |
-| Project-cache tests | Add explicit moved-workspace miss coverage; current canonical-root hashing is conservative. |
-| Documentation owners | Five pre-existing broken links in roadmap/index point to moved interop/sysroot/stdlib issues and a missing parity report. The architecture item:T match is only a Markdown-regex false positive. Exact locations are preserved in the external audit. |
+| Project-cache tests | Resolved by [DXF.6 / #3885](https://github.com/sifr-lang/sifr/pull/3885): both valid and diagnostic-producing relocated sources miss and match fresh diagnostics. |
+| Documentation owners | Resolved by [DXF.6 / #3885](https://github.com/sifr-lang/sifr/pull/3885): four moved issue links target canonical archives; the absent parity report now has an honest historical reference. The architecture `item: T` match remains an inline-code false positive. |
 | DX.10 followups | Existing F8 profile-authority wording remains with its original issue. |
 
 DX.16 reconciles the command heading and acceptance preamble after the required

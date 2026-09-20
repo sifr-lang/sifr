@@ -1,6 +1,6 @@
 # Compiler DX follow-up execution plan
 
-Status: in progress; DXF.1–5 merged and recorded, DXF.6 next ready. This is the canonical scope for the
+Status: in progress; DXF.1–6 merged and recorded, DXF.7 next ready. This is the canonical scope for the
 user-authorized follow-up work, separate from the completed Phase DX.
 Planning baseline: `f9c0d303104fca8181e4624f49d0433779b0e964` on
 `origin/main`, verified 2026-09-20. Remote checkout was clean on
@@ -69,7 +69,7 @@ Link history rather than copying it:
 | DXF.3 | Owner-safe abandoned/orphan storage reclamation | DXF.2 | merged #3879 |
 | DXF.4 | Production embedding identity audit and necessary fixes | DXF.3 (execution order) | merged #3881 |
 | DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | merged #3883 |
-| DXF.6 | Cache CLI/moved-workspace gaps and five documentation links | DXF.3, DXF.5; after DXF.4 | queued |
+| DXF.6 | Cache CLI/moved-workspace gaps and five documentation links | DXF.3, DXF.5; after DXF.4 | merged #3885 |
 | DXF.7 | Final affected-contract evidence reconciliation | DXF.1–6 | queued |
 | DXF.8 | Authoritative user binary/local checkout handoff | DXF.7 | queued |
 
@@ -846,3 +846,85 @@ documentation checks only, without another Opus cycle. Blocker: **none**.
 Stop after this merged record. The exact next action is a new bounded **DXF.6**
 session. No DXF.6 code or user-local checkout/binary changes occurred here;
 the latter remains DXF.8.
+
+
+## DXF.6 merged record — 2026-09-20
+
+Implementation [PR #3885](https://github.com/sifr-lang/sifr/pull/3885) merged as
+`a89eae38aab9bb383aa608a32509c88463ea03b9`. Reviewed and validated candidate:
+`a7e45101600f89179fa1c5b2a80cb5beaa3e7d53`; execution base:
+`958774b59acc5b1fb0cb907c6ad13f61d38e5b60`. Branch: `codex/dxf6`.
+
+The eager schema sweep includes cache. The focused parser contract covers all
+three actual subcommands, help, defaults, global-option placement and malformed
+arguments. The isolated process harness checks text/JSON inspection, reserve
+zero/default no-op, native reserve failure, project dry-run byte preservation,
+truthful examined/eligible/deleted counters, latest protection, idempotence and
+explicit original-path orphan cleanup. Two real publications leave two staging
+locks and two generations: pressure examines four entries, selects three entries
+(one generation), and reports zero deletions in dry-run versus three on deletion.
+Orphan deletion counts its context entry, not individual nested generations.
+
+Moved-workspace coverage renames byte-identical sources and their hint to a new
+canonical root. Both valid and diagnostic-producing files miss and compute the
+same diagnostics as independent fresh frontend work at that root, then hit on
+repeat. No relocation reuse or production mechanism changed.
+
+Four issue links in roadmap/index now point to their canonical archives. The
+missing parity inventory report link is replaced by the existing historical
+completion record with explicit notice that the report is no longer present.
+No report was fabricated, roadmap status changed or architecture edited.
+
+### Validation and evidence
+
+All code, testing, artifact preparation and review ran in the sole remote
+`/home/yaser5/projects/sifr/compiler-dx-orchestration` worktree. Rust 1.98.1,
+default features, normal test profile, two jobs, existing private target and
+`INSTA_UPDATE=no`. About 19 GiB free exceeded the 12 GiB selected-operation
+reserve; the target was 189 GiB. No pressure cleanup was needed.
+
+Cheap checks passed: formatting, source file-size/HIR guards, documentation
+structure, 153 local Markdown links and anchors (fenced/inline code excluded),
+diff and Python syntax. Each of these Rust exact selectors first listed exactly
+one test and then passed:
+
+- `sifr --bin sifr`: `eager_cli_contract_tests::all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order`
+- `sifr --bin sifr`: `eager_cli_contract_tests::cache_cli_contract`
+- `sifr_driver --lib`: `project_cache::tests::moved_workspace_misses_without_changing_diagnostics`
+
+Use `cargo test --locked -p PACKAGE TARGET FILTER -- --exact --list`, then
+`-- --exact --nocapture`. The Rust and Markdown inputs are unchanged from the
+passing `0297d3f14d2e008b0dcfe214921b7d5513869fea` evidence; the final candidate's
+`reuse.json` binds that evidence. Subsequent changes corrected only harness
+expectations: native artifact inspection root, missing-subcommand help output,
+standalone fixture setup and publication staging-lock counters. Failed attempts
+remain preserved, not reclassified as passing.
+
+The canonical `prepare_compiler_lane.py --lane contributor-dev` prepared the
+final candidate and its receipt. All **34 isolated CLI calls** passed against
+that receipt using an output-owned `SIFR_CACHE_DIR`. This is functional evidence,
+not installed product performance or a speedup claim. No broad gate was rerun.
+
+Evidence directory:
+`/home/yaser5/projects/sifr/dxf-evidence/a7e45101600f89179fa1c5b2a80cb5beaa3e7d53/`.
+Its `evidence-index.json` binds source hashes, exact commands/logs, reused inputs,
+receipt/artifact, historical failures and scoped review. SHA-256:
+`83b4ecde6bbc94b211c98163982c93379769b9b845fc18372041503a9acea7d6`.
+Literal compiler path and hash are in `contributor/receipt.json`; acceptance
+independently records them in `cache-cli/report.json`.
+
+### Review and handoff
+
+[Scoped Claude Opus 5 review](https://github.com/sifr-lang/sifr/pull/3885#issuecomment-5750006086)
+returned **SATISFIED**, no blockers, for the exact final candidate. The remote
+[talk-to-claude-opus skill](../../../.cursor/skills/talk-to-claude-opus/SKILL.md)
+ran read-only and published its completed response atomically outside Git.
+The completed request's orphan watchdog sleep was terminated to release its
+SSH output pipe. No incomplete review was counted as passing.
+Nonblocking observations are recorded separately in
+[DXF.6 review follow-ups](ad-hoc-dxf6-contract-review-followups.md).
+
+This record-only update requires documentation checks only and no new external
+review. Blocker: **none**. Stop after merging this record. Exact next action:
+a new bounded **DXF.7** session. No DXF.7 reconciliation, release, installation
+or user-local checkout change occurred here; user-local handoff remains DXF.8.
