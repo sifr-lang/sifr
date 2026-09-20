@@ -34,7 +34,7 @@ def run(binary, output):
                      if line.startswith("[sifr-project-cache] "))
         stream = result.stdout.strip() or "\n".join(
             line for line in result.stderr.splitlines()
-            if not line.startswith(("[sifr-project-cache] ", "[sifr-timing] ")))
+            if not line.startswith(("[sifr-project-cache] ", "[sifr-metadata] ", "[sifr-timing] ")))
         diagnostics = json.loads(stream)
         report["rows"].append({"label": label, "command": command,
                                "returncode": result.returncode, "cache": stats})

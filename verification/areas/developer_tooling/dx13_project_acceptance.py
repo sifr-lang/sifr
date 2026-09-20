@@ -44,7 +44,7 @@ def run(binary, output, compiler_profile, source_root):
         assert proc.returncode == expected, (label, proc.returncode, proc.stdout, proc.stderr)
         if "check" in args:
             stream = proc.stdout.strip() or "\n".join(line for line in proc.stderr.splitlines()
-                if not line.startswith(("[sifr-project-cache] ", "[sifr-timing] ")))
+                if not line.startswith(("[sifr-project-cache] ", "[sifr-metadata] ", "[sifr-timing] ")))
             proc.diagnostics = json.loads(stream)
         return proc, stats
 
