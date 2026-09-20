@@ -1963,3 +1963,75 @@ negative mutation checks remain required. No source hash is manually waived or
 substituted. The original provenance failures and all producer timing/digest
 reports are retained. New component bytes require affected SQL execution and
 new final package identities before final qualification can complete.
+
+### DX.15 completed qualification, pending implementation review and merge
+
+The final implementation artifact source is
+`e2ab8e1f9ae815a1f8ac2ac652329d90dfc4ff0f`. Candidate
+`5127a24ee08b758efa8f9d41e3becd4ce64deb6f` changes only two acceptance
+parsers: the known `[sifr-metadata]` timing record is excluded before parsing
+diagnostic JSON. Actual error/fix/revert, dependency and interface assertions
+remain required and both protocols pass. All compiler, runtime, metadata,
+builder and workflow inputs are unchanged; original artifact receipts keep
+their original source revisions. The later architecture-summary correction
+from physical format 2 to 4 is documentation only.
+
+The original broad merge facade remains a failed historical invocation.
+Required coverage is now accounted through its unchanged-input passes and
+the affected failed/never-run continuations: all 32 selected compiler
+configurations, all 20 selected areas and the required guardrails. No second
+broad gate or create-PR gate was run. In particular:
+
+- SQL completes all 19 suites / 66 variants; Python uses the canonical complete
+  30-case report, not a partial promotion. All 81 selected ignored driver
+  cases are accounted with exact-case attestation and the original child
+  deadline. Canonical platform/sanitizer and fixture-runner skips remain
+  recorded as skips.
+- The versioned local sysroot qualification on `5127a24ee` passes all four
+  selected suites. Source preparation took 840.716 seconds; package and
+  library-test preparation took 2195.102 seconds. Structural, boundary,
+  installed-smoke and metadata-corpus scopes took 272.043, 281.363, 122.017 and
+  1018.642 seconds respectively. Structural cost includes ordinary driver
+  library compilation; these functional timings are not latency percentiles.
+  The corpus scope compares all 727 source/provider and actual installed
+  public-emission cases, then runs native fixtures, live generations and
+  missing/corrupt/incompatible artifact recovery.
+- Q02/Q03/Q06 use the qualified optimized installed Linux product and one
+  declared, randomized/interleaved set of 100+1 samples per CLI cohort. Fresh
+  p95 is 46.461 ms; unchanged p95 is 45.838 ms. Tracing and comparable pinned
+  DX.14 baseline cohorts remain separate. Quiet editor p95 is 2.415 ms over
+  100+1 same-version edits. These are warm OS-page observations, not a
+  cold-page startup claim. The canonical five-sample representative budget
+  checks pass separately and do not supply these percentile claims.
+- The 12 GB Linux headless editor/Cargo overlap completes 27 edits and eight
+  native profiles with peak summed owned RSS 825,049,088 bytes. The actual
+  32 GiB M2 Pro Mac desktop overlap completes 20 edits with peak summed owned
+  RSS 723,435,520 bytes. The declared host split and unexecuted literal 12 GB
+  graphical-desktop scenario remain explicit.
+- Q09 compares six 21-sample cohorts, excluding the declared first warmup.
+  Pre-migration/candidate median steady RSS is 135,575,552 / 65,419,264 bytes;
+  peak RSS is 136,077,312 / 100,188,160 bytes. Retained heap is
+  75,748,456 / 533,984 bytes. Empty heap increases from 73,056 to 187,152
+  bytes and is retained in the attribution. Heap samples are glibc allocator
+  observations, not exact per-object allocation accounting. The historical
+  demanded-stdlib fixture retains its package diagnostic for comparability;
+  clean E01–E06 functional acceptance passes separately in both cache modes.
+- Q04 passes native Linux x86_64/ARM64 and macOS x86_64/ARM64 in
+  [qualification run 35477213727](https://github.com/sifr-lang/sifr/actions/runs/35477213727).
+  Every target uses exact indexed package bytes for actual installation,
+  update/downgrade/reinstall, failed-update rollback, relocation, eight native
+  profile assertions, live navigation and 727 public-emission comparisons.
+  Primary and transition archive custody and digests are retained. This is
+  nonpublishing qualification, not an actual release.
+- All four semantic-target metadata corpora pass independently. Full native
+  Mac / Linux cross-produced ARM Mac portable payloads agree while their
+  distinct compiler identities remain recorded.
+
+Immutable reports and artifacts are under
+`/home/yaser5/projects/sifr/dx15-evidence/`: product, performance, native CI
+and desktop evidence under `e2ab8e1f9ae815a1f8ac2ac652329d90dfc4ff0f/`;
+parser continuation, unchanged-input proof, versioned local sysroot reports
+and archived package custody under
+`5127a24ee08b758efa8f9d41e3becd4ce64deb6f/`.
+Original failed reports are preserved. Scoped review and the implementation
+merge are still required; DX.16 remains not started.

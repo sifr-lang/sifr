@@ -2074,8 +2074,8 @@ family without cleaning metadata or Cargo; `cache prune-project` is scoped to
 one explicit workspace and only deletes inactive generations under pressure.
 
 
-DX.15 toolchain metadata uses private container version 2: a bounded compressed
-physical body and a sorted contiguous directory, with full artifact integrity
+DX.15 toolchain metadata uses private container version 4: three bounded compressed
+frames and a sorted contiguous directory, with full artifact integrity
 verification before opening and unchanged lazy semantic record validation.
 See compiler_dx_architecture.md for physical limits and compatibility rules.
 Explicit standalone-file checks in source-only virtual Cargo workspaces avoid
