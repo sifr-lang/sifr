@@ -50,8 +50,8 @@ def validate(document: dict) -> list[str]:
         errors.append("every selected profile must execute the authoritative runner")
     for name, preparation in (
         ("smoke-fuzz-property", "uv run --project verification --locked python -m sifr_verify.ci_smoke_setup"),
-        ("compiler-component-targets", 'cargo fetch --locked --target "${{ matrix.target }}"'),
-        ("sql-wasi-build", "cargo fetch --locked --target wasm32-wasip2"),
+        ("compiler-component-targets", 'cargo fetch --locked'),
+        ("sql-wasi-build", "cargo fetch --locked"),
     ):
         steps = jobs[name]["steps"]
         commands = [step.get("run") for step in steps]
@@ -87,7 +87,7 @@ def main() -> None:
     unprepared = copy.deepcopy(document)
     unprepared["jobs"]["sql-wasi-build"]["steps"] = [
         step for step in unprepared["jobs"]["sql-wasi-build"]["steps"]
-        if step.get("run") != "cargo fetch --locked --target wasm32-wasip2"
+        if step.get("run") != "cargo fetch --locked"
     ]
     assert any("preparation must precede" in error for error in validate(unprepared))
     print("local-first admission and event/profile contracts passed (including regressions)")
