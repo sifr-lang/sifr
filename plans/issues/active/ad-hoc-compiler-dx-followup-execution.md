@@ -1,6 +1,6 @@
 # Compiler DX follow-up execution plan
 
-Status: in progress; DXF.1 merged and recorded, DXF.2 next ready. This is the canonical scope for the
+Status: in progress; DXF.1–2 merged and recorded, DXF.3 next ready. This is the canonical scope for the
 user-authorized follow-up work, separate from the completed Phase DX.
 Planning baseline: `f9c0d303104fca8181e4624f49d0433779b0e964` on
 `origin/main`, verified 2026-09-20. Remote checkout was clean on
@@ -65,8 +65,8 @@ Link history rather than copying it:
 | Item | Scope | Depends on | Initial status |
 | --- | --- | --- | --- |
 | DXF.1 | Real package-project importer reuse and measurement | planning PR merged | merged #3875 |
-| DXF.2 | Bounded record retention, observations and lookup | DXF.1 | next ready |
-| DXF.3 | Owner-safe abandoned/orphan storage reclamation | DXF.2 | queued |
+| DXF.2 | Bounded record retention, observations and lookup | DXF.1 | merged #3877 |
+| DXF.3 | Owner-safe abandoned/orphan storage reclamation | DXF.2 | next ready |
 | DXF.4 | Production embedding identity audit and necessary fixes | DXF.3 (execution order) | queued |
 | DXF.5 | Trace boundary truncation and private directory | DXF.4 (execution order) | queued |
 | DXF.6 | Cache CLI/moved-workspace gaps and five documentation links | DXF.3, DXF.5; after DXF.4 | queued |
@@ -489,3 +489,101 @@ and requires documentation checks only, without another external review.
 Blocker: **none**. Stop after this merged record. The next action is a new bounded
 session for **DXF.2**; no DXF.2 implementation, release/publication, or user-local
 checkout/binary change was performed here. The latter remains reserved for DXF.8.
+
+
+## DXF.2 merged record — 2026-09-20
+
+Implementation [PR #3877](https://github.com/sifr-lang/sifr/pull/3877) merged as
+`34ab684118cd2c2a026165fc9c29118571e361fa`.
+Reviewed candidate: `94d35655a065859acdecf1aa3ee33c31a3165305`;
+base: `614e7ea23422419aef4a9257a82c7cbc6b11207e`.
+
+Schema-2 manifests retain the newest 128 distinct publications within 64 MiB
+of record payloads, evicting oldest records deterministically. Republishing
+refreshes publication order. The existing 16 MiB individual-record limit,
+complete integrity validation, immutable generations, reader leases and atomic
+publication remain in force. This caps latest-generation history, not all
+physical predecessors; explicit pressure pruning retains that ownership.
+Recent A/B/A restores remain useful; evicted history safely misses.
+
+Lookup checks recent exact candidates first, filters interface candidates
+cheaply, then attempts at most one existing frontend proof. Capture keeps each
+distinct observation once in first-occurrence order, including absence and
+conflicting outcomes; 16384 distinct facts mark capture incomplete and decline
+persistence without interrupting normal checking. No semantic proof class,
+external-context authority or cleanup mechanism was expanded.
+
+### Validation and evidence
+
+All four proposed history tests passed with exact one-test list guards.
+Existing `project_cache::tests` (12), `project_cache::dx14_tests` (8),
+`project_cache::package_reuse_tests` (3), and frontend `persistence::tests`
+(9) also passed: **36 selected tests total**. Coverage includes live-reader
+eviction/prune, subprocess contention/writer death, corrupt storage, conservative
+semantic invalidation and ordered absence/overflow. The cheap format, file-size
+(4102 files), maintainability, Python syntax, diff and documentation checks passed.
+
+The 4097-publication canonical-record stress uses the actual storage owner
+and existing explicit prune, with no thousands of CLI starts. It also verifies
+recent A/B/A and an evicted-history miss. The candidate-filter test adds 100
+unrelated canonical entrypoints and proves one successful proof attempt, then
+a type-error result equal to a fresh reference with at most one proof.
+The named history CLI harness passes five real helper edits against independent
+fresh checks: published, interface-restored, exact A restoration, equal error,
+then interface-restored recovery.
+
+| Historical inputs | Retained records | Retained payload bytes | Exact lookup, µs | Candidates / proofs / observations |
+| --- | --- | --- | --- | --- |
+| 1 | 1 | 1434 | 422 | 1 / 0 / 1 |
+| 128 | 128 | 183844 | 21669 | 1 / 0 / 1 |
+| 1024 | 128 | 184112 | 21003 | 1 / 0 / 1 |
+| 4097 | 128 | 184320 | 22137 | 1 / 0 / 1 |
+
+These are single descriptive normal-test-profile observations following
+publication, including full retained-manifest integrity reads. They are not
+controlled-host product performance qualification or a speedup claim.
+Retained-cap lookup still pays storage/decoding cost; no constant-total-I/O claim
+is made. The stress took 95.27 seconds; its ordinary-suite cost is a recorded
+nonblocking follow-up.
+
+External evidence:
+`/home/yaser5/projects/sifr/dxf-evidence/94d35655a065859acdecf1aa3ee33c31a3165305/`.
+Its `evidence-index.json` SHA-256 is
+`478e14a73f1a7496bf07b8ef9393dce67b65d7bb1916014fc832758ead3ca1c4`.
+The index binds expanded commands, environment, source/fixture/lock hashes,
+selected counts, raw logs, receipt, artifact identity, review and reuse proof.
+
+The canonical contributor preparation selected
+`/home/yaser5/projects/sifr/compiler-dx-orchestration/target/debug/sifr`,
+SHA-256 `8a5db4634d4eb566fbd75e60094c8252e4b3594133b6a3f2abecba60c08276c1`.
+Its external `contributor/receipt.json` SHA-256 is
+`4e44b47aef85a181c5405c13529401473e5a0194c29551f54a121df382b0b2ea`.
+Rust 1.98.1, ordinary defaults, two Cargo jobs and the existing private target
+were used. Free space was 24 GiB before named checks and 21–23 GiB before
+contributor preparations; the 8 GiB reserve required no cleanup.
+
+Library evidence remains under
+`/home/yaser5/projects/sifr/dxf-evidence/e2a296c9afcf4b3976eebc3ed255470b4687e0a9/`.
+The sole later change corrected the CLI harness's missing explicit legacy
+source-root fixture (`sifr.toml` plus manifestless invocation cwd); that harness
+was rerun successfully. Rust/fixture/Cargo/toolchain inputs and actual compiler
+bytes are identical, as verified in `reused-evidence.json`. The original
+failed harness log remains failed, not relabeled. All earlier historical
+failures remain unchanged. No repeated library stress, per-item monolithic
+gate, release qualification or user-local installation ran.
+
+### Review and handoff
+
+[Scoped Opus review](https://github.com/sifr-lang/sifr/pull/3877#issuecomment-5749545936)
+returned **SATISFIED**, with no blockers, for the final candidate.
+External `opus-review.md` SHA-256:
+`00216157dcb1dc384a2a62b196113f63186a078789cf838784f1dc2846bea8e2`.
+Five nonblocking findings are preserved in
+[DXF.2 review follow-ups](ad-hoc-dxf2-history-review-followups.md).
+This record changes no implementation/validation inputs; documentation checks
+only apply, without another external review.
+
+Blocker: **none**. Stop after the merged record. The next action is a new bounded
+DXF.3 session for owner-safe abandoned/orphan storage reclamation. No DXF.3
+implementation or user-local checkout/binary changes were performed here;
+the latter remains DXF.8.
