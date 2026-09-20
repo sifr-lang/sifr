@@ -397,9 +397,9 @@ fn equivalent(args: &[&str], update: bool) {
 #[test]
 fn all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order() {
     for command in [
-        "sysroot", "build", "run", "fetch", "doctor", "init", "repair", "bridge", "python",
-        "check", "tree", "package", "publish", "vendor", "fmt", "lint", "lsp", "trace", "emit",
-        "test", "tools", "self",
+        "sysroot", "cache", "build", "run", "fetch", "doctor", "init", "repair", "bridge",
+        "python", "check", "tree", "package", "publish", "vendor", "fmt", "lint", "lsp", "trace",
+        "emit", "test", "tools", "self",
     ] {
         for update in [false, true] {
             for suffix in [
@@ -577,4 +577,111 @@ fn trace_dir_cli_contract() {
             .is_err()
     );
     all_command_schemas_keep_eager_help_errors_groups_defaults_and_global_order();
+}
+
+#[test]
+fn cache_cli_contract() {
+    use clap::error::ErrorKind;
+    for command in ["inspect", "prune", "prune-project"] {
+        let help = ["sifr", "cache", command, "--help"];
+        equivalent(&help, false);
+        let error = crate::cli_model_and_entrypoint::Cli::command()
+            .try_get_matches_from(help)
+            .unwrap_err();
+        assert_eq!(error.kind(), ErrorKind::DisplayHelp);
+        let rendered = error.to_string();
+        assert!(rendered.contains(&format!("sifr cache {command}")));
+        assert!(rendered.contains("--no-incremental"));
+        if command == "inspect" {
+            assert!(rendered.contains("--json"));
+        } else {
+            assert!(rendered.contains("--reserve-bytes") && rendered.contains("[default: 0]"));
+            assert!(rendered.contains("--dry-run"));
+        }
+        let mut tail = vec!["cache", command];
+        if command == "prune-project" {
+            tail.push("workspace");
+        }
+        for position in 0..=tail.len() {
+            let mut args = vec!["sifr"];
+            args.extend_from_slice(&tail[..position]);
+            args.extend([
+                "--timings",
+                "--no-incremental",
+                "--isolated",
+                "--config",
+                "a.toml",
+                "--trace-dir",
+                "trace",
+            ]);
+            args.extend_from_slice(&tail[position..]);
+            equivalent(&args, false);
+            equivalent(&args, true);
+            let matches = crate::cli_model_and_entrypoint::Cli::command()
+                .try_get_matches_from(args)
+                .unwrap();
+            assert!(matches.get_flag("timings") && matches.get_flag("no_incremental"));
+            let leaf = matches
+                .subcommand_matches("cache")
+                .unwrap()
+                .subcommand_matches(command)
+                .unwrap();
+            if command != "inspect" {
+                assert_eq!(leaf.get_one::<u64>("reserve_bytes"), Some(&0));
+                assert!(!leaf.get_flag("dry_run"));
+            }
+        }
+    }
+    for args in [
+        vec!["sifr", "cache", "inspect", "--json"],
+        vec![
+            "sifr",
+            "cache",
+            "prune",
+            "--dry-run",
+            "--reserve-bytes",
+            "18446744073709551615",
+        ],
+        vec![
+            "sifr",
+            "cache",
+            "prune-project",
+            "workspace",
+            "--reserve-bytes",
+            "1",
+            "--dry-run",
+        ],
+    ] {
+        equivalent(&args, false);
+        assert!(crate::cli_model_and_entrypoint::Cli::try_parse_from(args).is_ok());
+    }
+    for args in [
+        vec!["sifr", "cache"],
+        vec!["sifr", "cache", "unknown"],
+        vec!["sifr", "cache", "inspect", "--reserve-bytes", "1"],
+        vec!["sifr", "cache", "prune", "--json"],
+        vec!["sifr", "cache", "prune-project"],
+        vec!["sifr", "cache", "prune-project", "workspace", "extra"],
+    ]
+    .into_iter()
+    .chain(["prune", "prune-project"].into_iter().flat_map(|command| {
+        [None, Some("bad"), Some("-1"), Some("18446744073709551616")]
+            .into_iter()
+            .map(move |value| {
+                let mut args = vec!["sifr", "cache", command];
+                if command == "prune-project" {
+                    args.push("workspace");
+                }
+                args.push("--reserve-bytes");
+                args.extend(value);
+                args
+            })
+    })) {
+        equivalent(&args, false);
+        equivalent(&args, true);
+        let error = crate::cli_model_and_entrypoint::Cli::command()
+            .try_get_matches_from(args)
+            .unwrap_err();
+        assert_eq!(error.exit_code(), 2);
+    }
 }

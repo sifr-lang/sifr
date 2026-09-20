@@ -510,3 +510,34 @@ fn completed_live_operation_stays_uncached() {
     assert_eq!(report.status, "external-context");
     assert!(store(&cache, &file).latest().is_none());
 }
+
+#[test]
+fn moved_workspace_misses_without_changing_diagnostics() {
+    let (root, file, cache) = fixture();
+    for source in [
+        "def main() -> None:\n    value: int = 1\n",
+        "def main() -> None:\n    value: int = \"bad\"\n",
+    ] {
+        fs::write(&file, source).unwrap();
+        let (_, original) = run(&cache, &file);
+        assert_eq!(original.computed_checks, 1);
+        assert_eq!(run(&cache, &file).1.restored_checks, 1);
+        let moved_root = root.path().join("moved");
+        fs::rename(file.parent().unwrap(), &moved_root).unwrap();
+        let moved_file = moved_root.join("main.sifr");
+        assert_eq!(fs::read_to_string(&moved_file).unwrap(), source);
+        // The hint moves too, but its old canonical owner cannot authorize reuse.
+        let (diagnostics, moved) = run(&cache, &moved_file);
+        assert_eq!(moved.restored_checks, 0);
+        assert_eq!(moved.computed_checks, 1);
+        assert_eq!(
+            diagnostics,
+            compute(&moved_file, &mut DiskSourceProvider::new())
+        );
+        assert_eq!(diagnostics.is_empty(), !source.contains("bad"));
+        let (again, warm) = run(&cache, &moved_file);
+        assert_eq!(again, diagnostics);
+        assert_eq!(warm.restored_checks, 1);
+        fs::rename(&moved_root, file.parent().unwrap()).unwrap();
+    }
+}
