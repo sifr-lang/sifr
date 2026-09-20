@@ -148,7 +148,7 @@ fn stdlib_interop_startup_readonly_walk_preserves_hidden_edges() {
             assert!(exprs.insert(std::ptr::from_ref(expr)));
         }
         sifr_ir::HirNode::Function(function) => functions.push(function.name.clone()),
-        _ => {}
+        sifr_ir::HirNode::Type(_) => {}
     });
     assert_eq!(types, ["_sifr.startup_a.Hidden", "_sifr.startup_b.Hidden"]);
     assert_eq!(functions, ["nested", "exposed"]);

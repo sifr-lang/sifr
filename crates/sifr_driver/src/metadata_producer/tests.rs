@@ -4,6 +4,7 @@ use super::{
     wire, *,
 };
 use sifr_identity::CompilerIdentity;
+use std::io::Write;
 use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
 use std::{
     fs,
@@ -59,7 +60,7 @@ impl Scratch {
                 let entry = entry.unwrap();
                 let dest = to.join(entry.file_name());
                 if entry.file_type().unwrap().is_dir() {
-                    copy(&entry.path(), &dest)
+                    copy(&entry.path(), &dest);
                 } else {
                     fs::copy(entry.path(), dest).unwrap();
                 }
@@ -210,13 +211,15 @@ fn dx6_canonical_inventory_producer_without_metadata() {
             debug.display()
         );
     }
-    eprintln!(
+    writeln!(
+        std::io::stderr(),
         "DX6 inventory modules={} bytes={} compiler={} producer_seconds={}",
         inputs.sources.len(),
         bytes.len(),
         identity.as_str(),
         started.elapsed().as_secs_f64()
-    );
+    )
+    .unwrap();
 }
 #[test]
 fn failure_recovery_stale_override_and_missing_entry() {
@@ -346,10 +349,12 @@ fn threads_share_one_success_and_execute_independent_assertions() {
     for value in &values[1..] {
         assert!(Arc::ptr_eq(&values[0], value));
     }
-    eprintln!(
+    writeln!(
+        std::io::stderr(),
         "DX6 threads=4 productions=1 assertions=4 seconds={}",
         started.elapsed().as_secs_f64()
-    );
+    )
+    .unwrap();
 }
 #[test]
 fn dx6_readonly_source_writable_cache_and_output_diagnostics() {
@@ -423,12 +428,14 @@ fn dx6_prepare_test_metadata() {
     )
     .unwrap();
     metadata.store.validate_complete().unwrap();
-    eprintln!(
+    writeln!(
+        std::io::stderr(),
         "DX6 prepared {}",
         serde_json::json!({"compiler_identity":context.identity().as_str(),
         "metadata_id":metadata.metadata_id,"path":metadata.path,
         "production_seconds":metadata.production_seconds,"elapsed_seconds":started.elapsed().as_secs_f64()})
-    );
+    )
+    .unwrap();
 }
 
 #[test]

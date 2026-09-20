@@ -211,6 +211,36 @@ fn python_copy_helpers_codegen_through_sifr_stdlib() {
 
 #[test]
 fn python_zero_copy_helpers_codegen_through_sifr_stdlib() {
+    // Check propagation and borrowing independently of expression parentheses.
+    fn ungroup(mut expr: &syn::Expr) -> &syn::Expr {
+        loop {
+            expr = match expr {
+                syn::Expr::Paren(paren) => &paren.expr,
+                syn::Expr::Group(group) => &group.expr,
+                _ => return expr,
+            };
+        }
+    }
+    #[derive(Default)]
+    struct PropagatedMetadataCalls(std::collections::HashSet<String>);
+    impl<'ast> syn::visit::Visit<'ast> for PropagatedMetadataCalls {
+        fn visit_expr_try(&mut self, expr: &'ast syn::ExprTry) {
+            if let syn::Expr::Call(call) = ungroup(&expr.expr)
+                && let syn::Expr::Path(function) = ungroup(&call.func)
+                && let Some(name) = function.path.get_ident()
+                && call.args.len() == 1
+                && let Some(syn::Expr::Reference(reference)) = call.args.first().map(ungroup)
+                && reference.mutability.is_none()
+                && let syn::Expr::Field(field) = ungroup(&reference.expr)
+                && matches!(&field.member, syn::Member::Unnamed(index) if index.index == 0)
+                && let syn::Expr::Path(base) = ungroup(&field.base)
+                && base.path.is_ident("raw")
+            {
+                self.0.insert(name.to_string());
+            }
+            syn::visit::visit_expr_try(self, expr);
+        }
+    }
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
     let private_code = compiled
         .code
@@ -246,36 +276,6 @@ fn python_zero_copy_helpers_codegen_through_sifr_stdlib() {
         .module_rust_code
         .get("sifr.python")
         .expect("sifr.python should generate public Rust code");
-    // Check propagation and borrowing independently of expression parentheses.
-    fn ungroup(mut expr: &syn::Expr) -> &syn::Expr {
-        loop {
-            expr = match expr {
-                syn::Expr::Paren(paren) => &paren.expr,
-                syn::Expr::Group(group) => &group.expr,
-                _ => return expr,
-            };
-        }
-    }
-    #[derive(Default)]
-    struct PropagatedMetadataCalls(std::collections::HashSet<String>);
-    impl<'ast> syn::visit::Visit<'ast> for PropagatedMetadataCalls {
-        fn visit_expr_try(&mut self, expr: &'ast syn::ExprTry) {
-            if let syn::Expr::Call(call) = ungroup(&expr.expr)
-                && let syn::Expr::Path(function) = ungroup(&call.func)
-                && let Some(name) = function.path.get_ident()
-                && call.args.len() == 1
-                && let Some(syn::Expr::Reference(reference)) = call.args.first().map(ungroup)
-                && reference.mutability.is_none()
-                && let syn::Expr::Field(field) = ungroup(&reference.expr)
-                && matches!(&field.member, syn::Member::Unnamed(index) if index.index == 0)
-                && let syn::Expr::Path(base) = ungroup(&field.base)
-                && base.path.is_ident("raw")
-            {
-                self.0.insert(name.to_string());
-            }
-            syn::visit::visit_expr_try(self, expr);
-        }
-    }
     let parsed = syn::parse_file(&public_code.rust).expect("public Python helpers must parse");
     let mut propagated = PropagatedMetadataCalls::default();
     syn::visit::Visit::visit_file(&mut propagated, &parsed);

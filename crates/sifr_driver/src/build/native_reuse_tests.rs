@@ -181,7 +181,7 @@ edition = "2024"
     let mut plan = test_dependency_plan("dx9");
     plan.cargo_vendor_mode = CargoVendorMode::PackageOwned;
     plan.retained_direct_dependencies
-        .push(format!("dx9_dependency = {{ path = {:?} }}", dependency));
+        .push(format!("dx9_dependency = {{ path = {dependency:?} }}"));
     for value in ["first", "second"] {
         std::fs::write(dependency.join("value.txt"), value).expect("changed input");
         let mut project = base_project();
@@ -294,7 +294,7 @@ pub fn value() -> i32 { unsafe { dx9_value() } }"#,
     let mut plan = test_dependency_plan("dx9");
     plan.cargo_vendor_mode = CargoVendorMode::PackageOwned;
     plan.retained_direct_dependencies
-        .push(format!("dx9_dylib = {{ path = {:?} }}", dependency));
+        .push(format!("dx9_dylib = {{ path = {dependency:?} }}"));
     let mut project = base_project();
     project.main_rs = r#"fn main() { println!("{}", dx9_dylib::value()); }"#.to_owned();
     let policy = CargoResolutionPolicy::normal();

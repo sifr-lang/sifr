@@ -22,7 +22,7 @@ pub struct ProjectPruneReport {
     pub deleted_generations: usize,
 }
 impl ProjectPruneReport {
-    fn add(&mut self, other: Self) {
+    fn add(&mut self, other: &Self) {
         self.examined_entries += other.examined_entries;
         self.eligible_entries += other.eligible_entries;
         self.deleted_entries += other.deleted_entries;
@@ -421,7 +421,7 @@ pub(super) fn prune_workspace(
                 namespace_lease: Arc::new(lease.try_clone()?),
             };
             match store.prune(true, dry_run) {
-                Ok(part) => report.add(part),
+                Ok(part) => report.add(&part),
                 Err(error) if error.kind() == io::ErrorKind::WouldBlock => {}
                 Err(error) => return Err(error),
             }

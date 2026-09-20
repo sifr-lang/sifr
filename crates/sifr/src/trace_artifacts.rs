@@ -277,6 +277,47 @@ pub(crate) fn exit(code: i32) -> ! {
     std::process::exit(code)
 }
 
+pub(crate) fn command_name(
+    command: Option<&crate::cli_model_and_entrypoint::Commands>,
+) -> &'static str {
+    use crate::cli_model_and_entrypoint::Commands;
+    match command {
+        Some(Commands::Sysroot(_)) => "sysroot",
+        Some(Commands::Cache(_)) => "cache",
+        Some(Commands::Build(_)) => "build",
+        Some(Commands::Run(_)) => "run",
+        Some(Commands::Fetch(_)) => "fetch",
+        Some(Commands::Doctor(_)) => "doctor",
+        Some(Commands::Init(_)) => "init",
+        Some(Commands::Repair(_)) => "repair",
+        Some(Commands::Bridge(_)) => "bridge",
+        Some(Commands::Python(_)) => "python",
+        Some(Commands::Check(_)) => "check",
+        Some(Commands::Tree(_)) => "tree",
+        Some(Commands::Package(_)) => "package",
+        Some(Commands::Publish(_)) => "publish",
+        Some(Commands::Vendor(_)) => "vendor",
+        Some(Commands::Fmt(_)) => "fmt",
+        Some(Commands::Lint(_)) => "lint",
+        Some(Commands::Lsp(_)) => "lsp",
+        Some(Commands::Trace(_)) => "trace",
+        Some(Commands::Emit(_)) => "emit",
+        Some(Commands::Test(_)) => "test",
+        Some(Commands::Tools(_)) => "tools",
+        Some(Commands::SelfCommand(_)) => "self",
+        Some(Commands::HostTool(_)) => "host-tool",
+        None => "metadata",
+    }
+}
+
+fn safe_identity(value: &str) -> &str {
+    if value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        value
+    } else {
+        "unavailable-or-redacted"
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -296,17 +337,13 @@ mod tests {
     fn final_timing_width_at_byte_boundary_truncates_truthfully() {
         let widest = Duration::from_micros(u64::MAX);
         let sink = test_sink(tempfile::tempfile().unwrap());
-        for delta in [-1_i32, 0, 1] {
+        for target_len in [MAX_BYTES - 1, MAX_BYTES, MAX_BYTES + 1] {
             let mut value = report_value(&sink, 7);
             value["reports"] = json!([{"detail": ""}]);
             final_bytes(&mut value, widest, widest).unwrap();
             let header = serde_json::to_vec(&value).unwrap().len();
-            value["reports"][0]["detail"] =
-                json!("x".repeat((MAX_BYTES as i32 + delta) as usize - header));
-            assert_eq!(
-                serde_json::to_vec(&value).unwrap().len(),
-                (MAX_BYTES as i32 + delta) as usize
-            );
+            value["reports"][0]["detail"] = json!("x".repeat(target_len - header));
+            assert_eq!(serde_json::to_vec(&value).unwrap().len(), target_len);
             let bytes = final_bytes(&mut value, widest, widest).unwrap();
             assert!(bytes.len() <= MAX_BYTES);
             let parsed: Value = serde_json::from_slice(&bytes).unwrap();
@@ -317,11 +354,11 @@ mod tests {
             assert_eq!(parsed["invocation_us_before_final_write"], u64::MAX);
             assert_eq!(
                 parsed["dropped_reports"],
-                json!(sink.dropped + usize::from(delta > 0))
+                json!(sink.dropped + usize::from(target_len > MAX_BYTES))
             );
             assert_eq!(
                 parsed["reports"].as_array().unwrap().len(),
-                usize::from(delta <= 0)
+                usize::from(target_len <= MAX_BYTES)
             );
         }
 
@@ -440,46 +477,5 @@ mod tests {
                 OpenOptions::new().write(true).open("/dev/full").unwrap();
             assert!(finish(0).is_err());
         }
-    }
-}
-
-pub(crate) fn command_name(
-    command: Option<&crate::cli_model_and_entrypoint::Commands>,
-) -> &'static str {
-    use crate::cli_model_and_entrypoint::Commands;
-    match command {
-        Some(Commands::Sysroot(_)) => "sysroot",
-        Some(Commands::Cache(_)) => "cache",
-        Some(Commands::Build(_)) => "build",
-        Some(Commands::Run(_)) => "run",
-        Some(Commands::Fetch(_)) => "fetch",
-        Some(Commands::Doctor(_)) => "doctor",
-        Some(Commands::Init(_)) => "init",
-        Some(Commands::Repair(_)) => "repair",
-        Some(Commands::Bridge(_)) => "bridge",
-        Some(Commands::Python(_)) => "python",
-        Some(Commands::Check(_)) => "check",
-        Some(Commands::Tree(_)) => "tree",
-        Some(Commands::Package(_)) => "package",
-        Some(Commands::Publish(_)) => "publish",
-        Some(Commands::Vendor(_)) => "vendor",
-        Some(Commands::Fmt(_)) => "fmt",
-        Some(Commands::Lint(_)) => "lint",
-        Some(Commands::Lsp(_)) => "lsp",
-        Some(Commands::Trace(_)) => "trace",
-        Some(Commands::Emit(_)) => "emit",
-        Some(Commands::Test(_)) => "test",
-        Some(Commands::Tools(_)) => "tools",
-        Some(Commands::SelfCommand(_)) => "self",
-        Some(Commands::HostTool(_)) => "host-tool",
-        None => "metadata",
-    }
-}
-
-fn safe_identity(value: &str) -> &str {
-    if value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        value
-    } else {
-        "unavailable-or-redacted"
     }
 }

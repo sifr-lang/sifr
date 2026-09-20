@@ -286,10 +286,7 @@ mod tests {
                 String::from_utf8_lossy(&result.stderr)
             );
             if mode == "stream" {
-                assert_eq!(
-                    result.stdout.iter().filter(|byte| **byte == 0).count(),
-                    9_000_000
-                );
+                assert_eq!(memchr::memchr_iter(0, &result.stdout).count(), 9_000_000);
             }
         }
     }

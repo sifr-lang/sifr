@@ -1,4 +1,4 @@
-use std::{fs, path::Path, sync::Arc};
+use std::{fmt::Write, fs, path::Path, sync::Arc};
 fn copy(from: &Path, to: &Path) {
     fs::create_dir_all(to).unwrap();
     for entry in fs::read_dir(from).unwrap() {
@@ -35,7 +35,12 @@ fn install(context: &crate::CompilerContext, dest: &Path) {
     fs::write(dest.join("sysroot.toml"), manifest).unwrap();
     let metadata = context.metadata_provider().unwrap().metadata.clone();
     fs::copy(&metadata.path, dest.join("lib/sifr/stdlib.sifrmeta")).unwrap();
-    let hex = |b: &[u8]| b.iter().map(|b| format!("{b:02x}")).collect::<String>();
+    let hex = |bytes: &[u8]| {
+        bytes.iter().fold(String::new(), |mut output, byte| {
+            write!(output, "{byte:02x}").unwrap();
+            output
+        })
+    };
     fs::write(dest.join("lib/sifr/stdlib.metadata.json"),serde_json::to_vec(&serde_json::json!({
         "schema_version":1,"compiler_identity":context.identity().as_str(),
         "semantic_target":super::selection::target(),"semantic_target_id":hex(&metadata.compatibility.semantic_target),

@@ -223,7 +223,7 @@ fn check(
                     }
                     report.interface_proofs += 1;
                     if let Some(modules) = interface_reuse::restore(
-                        &record,
+                        record,
                         file,
                         &inputs,
                         &mut capture,
