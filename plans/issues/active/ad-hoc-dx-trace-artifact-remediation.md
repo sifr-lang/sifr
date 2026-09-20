@@ -1,6 +1,6 @@
 # Required DX trace-artifact remediation
 
-status: implementation candidate; validation/review/merge pending; blocks DX.16
+status: closed; five named contracts merged; DX.16 documentation reconciliation remains separately owned
 owner: CLI / driver observability; existing frontend trace and build-report owners
 
 [Whole-phase review](https://github.com/sifr-lang/sifr/pull/3870#issuecomment-5748613670)
@@ -84,3 +84,57 @@ Commands:
 
 This remediation does not close DX.16. The docs closer must reconcile its own
 unmerged closure draft after this implementation is merged.
+
+## Merged remediation record — 2026-09-20
+
+All five named items are complete:
+`trace_dir_cli_contract`, `trace_dir_versioned_artifacts`,
+`trace_dir_redaction_and_size_bound`,
+`trace_dir_output_and_failure_contract`, and `trace_dir_timing_attribution`.
+
+- Implementation: [PR #3871](https://github.com/sifr-lang/sifr/pull/3871).
+- Reviewed and tested candidate: `3d0f42b2ef3c83d279a45a0775b941920f4ae5e3`.
+- Base: `69081c6df847e5ece2cd3ae4bf690ad5718ddc7c`.
+- Merge: `a127f03decf0b8472f43a72dca2bdf77382c43e0`.
+- [Published validation and scoped Opus review](https://github.com/sifr-lang/sifr/pull/3871#issuecomment-5748783307):
+  **SATISFIED**, no blocking findings.
+- Evidence root:
+  `/home/yaser5/projects/sifr/dx-trace-evidence/3d0f42b2ef3c83d279a45a0775b941920f4ae5e3`.
+- `validation-index.json` SHA-256:
+  `9cfe9fd62674946c3c14e8c7dbb72472ee5d40add6fdd1e1d5af31ee58c80fdc`.
+- `review.md` SHA-256:
+  `79b222a4251762510ce7d170460cda1f935f710971ab8affdb9999a2b85061d2`.
+
+Validation: two named Rust unit checks passed, including eager/deferred argument
+parity, both truncation limits, redaction, destination rejection and finalization
+write failure. All five named actual installed CLI contracts passed. The new
+optimized installed binary SHA-256 is
+`a0c8c5b3c46ec77f135baf5b2df9e0a23bbcca350b323f676983dcd2e68e3361`;
+`product/receipt.json` binds it and its newly prepared package to the candidate.
+Formatting, Python syntax, diff whitespace and the 900-line file-size guard passed.
+
+The additional focused `trace_dir_timing_attribution` protocol is at
+`/home/yaser5/projects/sifr/dx-trace-evidence/trace_dir_timing_attribution.py`.
+A single controlled-host run used the unchanged frozen edit-loop corpus, one
+warmup and 100 observations for each fresh/restored × trace-off/on condition.
+Default fresh/restored empirical p95 was **46.329 / 46.174 ms**, passing the
+existing **300 / 50 ms** targets. Trace-enabled p95 was **47.006 / 46.225 ms**,
+reported as observations rather than a newly imposed target. All functional/cache
+assertions passed, and every coefficient of variation was below 0.019.
+`cli-timing/qualification.json` preserves the full receipt and observations.
+
+No full create-PR or merge gate was restarted. Unchanged DX.15 engine/dependency/
+fixture/workflow qualification remains scoped to its original inputs. New CLI,
+package and timing evidence is explicitly bound above; no old binary-specific
+measurement was relabeled. No release or new cross-host qualification is claimed.
+The historical NOT SATISFIED review remains preserved, including its separately
+owned stale DX.16 status-prose finding.
+
+Optional findings are recorded in the
+[separate trace-artifact follow-up issue](ad-hoc-dx-trace-artifact-followups.md).
+They were not implemented or made requirements of this batch.
+
+Handoff: no implementation blocker remains. Stop this implementation session.
+The docs closer should reconcile its unmerged #3870 records with #3871 and this
+record, resolve its own stale-status finding, and perform its documentation-only
+closure. This remediation does not declare DX.16 or the whole phase complete.
