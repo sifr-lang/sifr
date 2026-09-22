@@ -1,7 +1,7 @@
 # Architecture correctness and agent workflow: current-main supersession
 
-Status: active; Preparation/F33 pending record delivery
-Baseline: main 3db97f2f7e354145224a582018cd2a978593a356 (2026-09-23)
+Status: active; Preparation/F33 complete; residual delivery open
+Audit baseline: main 3db97f2f7e354145224a582018cd2a978593a356; reconciliation assignment 2026-09-23
 Historical branch: codex/architecture-audit-closure-m12k at 46618f73f1d98ffdb77403202f645c8da8250ff6
 
 ## Authority
@@ -45,7 +45,7 @@ Rows crossing packages specify a contract handoff; delivery splits at package ow
 
 - DX9-F7 lock drift: [PR #3903](https://github.com/sifr-lang/sifr/pull/3903), merge 439b5ebd5c6917872f58288453917a2427509192. Same-root alternation and resolution tests passed for that item. Retained Emitted Rust Item 12 remains unqualified.
 - Taxonomy [issue #3898](https://github.com/sifr-lang/sifr/issues/3898) closed completed 2026-09-22 and is present on baseline main. The Emitted Rust header's blocker wording is stale; its owner updates that handoff before qualification.
-- Solo-maintainer release approval: [PR #3827](https://github.com/sifr-lang/sifr/pull/3827), merge 33639f4ee3b7079ec4da889834cae0d55d763786. The [active-named record](ad-hoc-distinct-release-reviewer-restoration.md) describes permanent supersession. Publication still needs approval of the exact protected run.
+- Solo-maintainer release approval: [PR #3827](https://github.com/sifr-lang/sifr/pull/3827), merge 33639f4ee3b7079ec4da889834cae0d55d763786. The [active-named record](ad-hoc-distinct-release-reviewer-restoration.md) describes permanent supersession. D01 owns correction of its status and links. Publication still needs approval of the exact protected run.
 - Windows native storage/process behavior stays with [Windows driver portability](ad-hoc-windows-driver-portability.md), not V04/N06.
 
 ## Historical milestone and draft disposition
@@ -95,3 +95,11 @@ The 2026-09-23 assignment prospectively approves intermediate items with named a
 Use exact crate/suite/case selection, fail fast by default and reuse compatible compiler/metadata/fixtures/Cargo target while running selected assertions. Evidence reuse needs unchanged implementation and validation inputs, not merely the same SHA: record tree, lock/submodule/config, compiler identity, command/selection, host/cache state where material, outcome and raw digest. Preserve failed/blocked/timeouts. Record-only updates need documentation checks, not broad gates or an extra external review after implementation review.
 
 Scoped review names exact base/candidate SHAs, changed paths, scope, criteria and validation; it separates in-scope blockers from follow-ups. A second review with a new mechanism-level defect requires rescope. Merge one item, record PR/SHA/evidence and stop before the next batch. One session owns its worktree, branch, index and temporary paths.
+
+## Preparation/F33 closure receipt
+
+The record-only crosswalk merged in [PR #3910](https://github.com/sifr-lang/sifr/pull/3910), merge d74a87eaa209e08986571bf027bd63342acba46c, from reviewed candidate 5888646741a98b2622437ac3b4a23980ec920fc4. The scoped [Opus review](https://github.com/sifr-lang/sifr/pull/3910#issuecomment-5785809006) returned SATISFIED with no blockers; response SHA-256 3b79c8dd77abb9d945a0d88b77bf7d62aa2ab978d4f896daf2ae54f98cd9b6ed. No implementation code or historical draft was merged.
+
+Documentation structure suite passed 1 variant/0 failures on the reviewed candidate after initializing the pinned nested editor submodule; result SHA-256 42bbe33567b2b2bbfb3484b1539a1267d8d43e2d8926acf97aff6a6d340f1db8. Lowering maintainability and Git diff checks passed. The first documentation invocation failed only because that nested submodule was uninitialized; it is preserved as setup evidence, not recast as a pass. External review and result files are under /home/yaser5/projects/sifr/architecture-prep-f33-evidence, keyed by candidate SHA.
+
+Deferred handoffs: Emitted Rust owner removes stale F7/#3898 blocker wording before its dependent qualification; D01 reconciles the active-named solo-maintainer record status and links. These are not P00 implementation changes. Next action is separately assigned X01 under the generated Rust owner. This session stops after the record-only receipt.
