@@ -110,8 +110,9 @@ Additional implementation items registered before work resumes:
 
 - **Item 10 — ordinary source to executable SQL:** prove that a real project
   and ordinary `.sifr` application source, using an actual provider component,
-  build a native binary that binds a value, fetches a row, and uses its inferred
-  type. Include `@app.query` return-path identity and ordinary `app.sql(...)`
+  build a native binary that connects to an actual test database, binds a value,
+  fetches a row, and uses its inferred type. Include `@app.query` return-path
+  identity and ordinary `app.sql(...)`
   outside a decorator: invalid SQL fails compilation; a valid query keeps its
   profile/result contract through returning, importing, and execution. Tests
   must not manually bridge `ProviderAnalysis`, `HirSqlExecution`, or
@@ -133,11 +134,23 @@ coverage owner: its current SQLite-only classification is accurate, and no
 missing MySQL/PostgreSQL implementation has been established. Do not turn it
 into an automatic provider-generalization requirement.
 
+Additional closure criteria for the later items:
+
+- [ ] Ordinary `.sifr` source builds and executes typed SQL against an actual
+  test database without a test-only bridge; decorated and standalone calls
+  preserve their profile, binding, and result contracts.
+- [ ] Runtime byte values retain binary/text identity through round trips,
+  including valid and invalid UTF-8, and encoding failures are classified
+  correctly.
+- [ ] CLI and editor preserve the same provider diagnostic identity, severity,
+  and source span, including unsupported interpolation types.
+
 ### Qualification and closer policy
 
 Intermediate implementers run the item-named tests and affected focused
 regressions, then a scoped exact-SHA Opus review and merge. They skip create-PR
-and full merge gates under the approved prospective phase policy. One final
+and full merge gates under this task's 2026-09-23 orchestration assignment;
+the Phase DX exception in AGENTS.md is separate. One final
 integration qualifier runs the full merge profile on the final merged-work
 candidate, repairs the first in-scope failure, reruns its affected checks, and
 repeats the full gate until it passes. Out-of-scope blockers go to their owning
