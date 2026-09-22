@@ -22,6 +22,7 @@ mod defaultdict_order_independent_inference;
 mod dict_augassign_checked_error;
 mod empty_plain_dict_inference;
 mod exact_int_and_fixed_width;
+mod integer_field_augassign;
 mod iteration_and_protocols;
 mod loop_const_fact_invalidation;
 mod minmax_sorted_sum;
@@ -31,5 +32,3 @@ mod slice_diagnostics;
 mod structural_records;
 mod support;
 mod task_runtime_rules_tests;
-
-mod integer_field_augassign;

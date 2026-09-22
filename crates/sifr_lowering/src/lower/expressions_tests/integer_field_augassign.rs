@@ -67,3 +67,32 @@ fn integer_field_augassign_aliases_preserve_failure_contract() {
         lower_source(&source).expect("safe aliased field operation lowers");
     }
 }
+
+#[test]
+fn integer_field_augassign_alias_nonzero_guard_preserves_invalidation() {
+    lower_source(include_str!(
+        "../../../../sifr/tests/e2e/pass/integer_field_augassign.sifr"
+    ))
+    .expect("aliased guarded fields lower inside and outside try");
+    for in_try in [false, true] {
+        let indent = if in_try { "            " } else { "        " };
+        let source = format!(
+            "type Count = int\n{}",
+            source("%", "divisor", in_try)
+                .replace(": int", ": Count")
+                .replace("divisor: Count", "mut divisor: Count")
+                .replace(
+                    &format!("{indent}self.value %= divisor"),
+                    &format!("{indent}if divisor != 0:\n{indent}    divisor = 0\n{indent}    self.value %= divisor")
+                )
+        );
+        let errors = lower_source(&source).expect_err("assignment invalidates the alias guard");
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code
+                    == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)),
+            "{errors:?}"
+        );
+    }
+}

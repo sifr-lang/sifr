@@ -89,6 +89,34 @@ checker's `collect_failures` API on touched active-source paths and both corpus
 files passes; the initial scoped invocation mistakenly included the normally
 excluded phase record and is preserved separately. No checker was changed.
 
+Initial candidate `a0c7f9a55fcfeff3867fabb49197882313852179` completed
+3 field-lowering, 58 integer-lowering, 1 field-codegen and 31 corpus-codegen
+checks; selected native E2E3/3 (signature `ee3f9b6be291eb44`) and corpus12/12
+check+run passed. The corpus selection is 0017,0025,0044,0048,0072,0102,
+0202,0212,0261,1203,1397,2002, including every original diagnostic category
+and both renamed files. `validation-a0c7f9a55.json` binds the exact inputs,
+compiler/log hashes and scope; no current full-corpus or broad-gate pass is inferred.
+
+Initial scoped Opus review returned SATISFIED/no blockers. Response:
+`review-a0c7f9a55.zaO9Hv/response.md`, SHA256
+`150041033c3d770584e3c4d9e27f89a5165d26b313ac13810dff92ac9017d027`.
+Its alias-native and module-order suggestions are addressed in the bounded
+follow-up. Missing broad Clippy evidence remains the final qualifier's task;
+the corpus's untracked compiler-created `src/.sifrbuildinfo` is retained warm.
+
+The supplementary alias-native probe first failed SIFR-PACKAGE-0710 because its
+external source was invoked from the package cwd (`integer-field-alias-native.*`).
+The corrected external cwd then exposed SIFR-INT-0005 at the guarded aliased
+divisor (`integer-field-alias-native-final.*`): nonzero guard collection had not
+resolved alias wrappers. These are preserved failures, not native passes.
+The follow-up resolves aliases in that existing proof predicate, adds continuous
+native coverage for aliased fields/divisors inside and outside try plus zero-guard
+skipping, and checks that reassignment still invalidates the proof. The same
+focused suites and selected native assertions must pass again on the new inputs.
+The initial review does not approve this changed implementation; one scoped
+remediation review remains. No full gate has run.
+
+
 
 
 ## Item12K-B38: coherent acquisition and batch qualification (2026-09-08)

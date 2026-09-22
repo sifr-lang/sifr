@@ -22,6 +22,24 @@ class Counter:
         except Error:
             assert False
 
+type Count = int
+
+class AliasedCounter:
+    value: Count
+    def __init__(self, value: Count):
+        self.value = value
+
+    def reduce(mut self, divisor: Count):
+        if divisor != 0:
+            self.value %= divisor
+
+    def divide_in_try(mut self, divisor: Count):
+        try:
+            if divisor != 0:
+                self.value //= divisor
+        except Error:
+            assert False
+
 def main():
     counter = Counter(-17)
     counter.reduce(3)
@@ -34,3 +52,11 @@ def main():
         assert counter.value == -6148914691236517206
     except Error:
         assert False
+    aliased = AliasedCounter(-17)
+    aliased.reduce(3)
+    assert aliased.value == 1
+    aliased.value = -17
+    aliased.divide_in_try(3)
+    assert aliased.value == -6
+    aliased.reduce(0)
+    assert aliased.value == -6
