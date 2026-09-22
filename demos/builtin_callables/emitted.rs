@@ -3,7 +3,7 @@ mod sifr_generated_generated_support {
     use crate::Error;
     #[expect(
         clippy::assertions_on_constants,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     pub fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
@@ -16,7 +16,7 @@ mod sifr_generated_generated_support {
     }
     #[expect(
         clippy::assertions_on_constants,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     pub fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
@@ -65,11 +65,11 @@ use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
 pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::ValueError;
-fn negate(x: SifrInt) -> SifrInt {
-    &SifrInt::from_i64(0) - &x
+fn negate(x: &SifrInt) -> SifrInt {
+    ::std::ops::Sub::sub(&SifrInt::from_i64(0), x)
 }
-fn add(x: SifrInt, y: SifrInt) -> SifrInt {
-    &x + &y
+fn add(x: &SifrInt, y: &SifrInt) -> SifrInt {
+    ::std::ops::Add::add(x, y)
 }
 #[expect(
     clippy::too_many_lines,
@@ -95,7 +95,6 @@ fn main() {
     );
     println!("{:?}", {
         let mut sifr_generated_dict_ctor = vec![("compiler".to_string(), SifrInt::from_i64(1))]
-            .clone()
             .into_iter()
             .collect::<std::collections::HashMap<_, _>>();
         sifr_generated_dict_ctor.extend(
@@ -122,9 +121,9 @@ fn main() {
         sifr_generated_sorted_values.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                 if sifr_generated_sorted_reverse {
-                    sifr_generated_sorted_right.cmp(&sifr_generated_sorted_left)
+                    sifr_generated_sorted_right.cmp(sifr_generated_sorted_left)
                 } else {
-                    sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+                    sifr_generated_sorted_left.cmp(sifr_generated_sorted_right)
                 }
             },
         );
@@ -143,7 +142,7 @@ fn main() {
             .into_iter()
             .map(|sifr_generated_sorted_value| {
                 (
-                    negate(sifr_generated_sorted_value.clone()),
+                    negate(&sifr_generated_sorted_value),
                     sifr_generated_sorted_value,
                 )
             })
@@ -178,9 +177,9 @@ fn main() {
         sifr_generated_sorted_values.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                 if sifr_generated_sorted_reverse {
-                    sifr_generated_sorted_right.cmp(&sifr_generated_sorted_left)
+                    sifr_generated_sorted_right.cmp(sifr_generated_sorted_left)
                 } else {
-                    sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+                    sifr_generated_sorted_left.cmp(sifr_generated_sorted_right)
                 }
             },
         );
@@ -204,7 +203,10 @@ fn main() {
                 .into_iter()
                 .enumerate()
                 .map(|sifr_generated_pair| (
-                    SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(10),
+                    ::std::ops::Add::add(
+                        SifrInt::from(sifr_generated_pair.0),
+                        SifrInt::from_i64(10)
+                    ),
                     sifr_generated_pair.1
                 ))
         )
@@ -242,7 +244,7 @@ fn main() {
             .map(|sifr_generated_map_item| {
                 let sifr_generated_map_arg_0 = sifr_generated_map_item.0;
                 let sifr_generated_map_arg_1 = sifr_generated_map_item.1;
-                add(sifr_generated_map_arg_0, sifr_generated_map_arg_1)
+                add(&sifr_generated_map_arg_0, &sifr_generated_map_arg_1)
             })
         )
         .collect::<Vec<_>>()

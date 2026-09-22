@@ -38,10 +38,10 @@ mod sifr_generated_generated_support {
         sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
     }
     fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
-        while &pi < &SifrInt::from(pattern.chars().count()) {
+        while pi < pattern.chars().count() {
             let pc: Option<String> = {
                 let sifr_generated_string_chars = pattern.chars().collect::<Vec<char>>();
-                let sifr_generated_string_index = pi.clone();
+                let sifr_generated_string_index = &pi;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_string_chars.len());
                 sifr_generated_string_chars
@@ -51,26 +51,26 @@ mod sifr_generated_generated_support {
             .map(|character| character.to_string());
             if let Some(pc) = pc {
                 if pc == "*" {
-                    pi = &pi + &SifrInt::from_i64(1);
-                    if &pi == &SifrInt::from(pattern.chars().count()) {
+                    pi = ::std::ops::Add::add(&pi, &SifrInt::from_i64(1));
+                    if pi == pattern.chars().count() {
                         return true;
                     }
-                    let mut j: SifrInt = ni.clone();
-                    while &j <= &SifrInt::from(name.chars().count()) {
+                    let mut j: SifrInt = ni;
+                    while j <= name.chars().count() {
                         if sifr_generated_match(name, j.clone(), pattern, pi.clone()) {
                             return true;
                         }
-                        j = &j + &SifrInt::from_i64(1);
+                        j = ::std::ops::Add::add(&j, &SifrInt::from_i64(1));
                     }
                     return false;
                 }
-                if &ni >= &SifrInt::from(name.chars().count()) {
+                if ni >= name.chars().count() {
                     return false;
                 }
                 if pc != "?" {
                     let nc: Option<String> = {
                         let sifr_generated_string_chars = name.chars().collect::<Vec<char>>();
-                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index = &ni;
                         let sifr_generated_string_index_normalized = sifr_generated_string_index
                             .normalize_index_or_len(sifr_generated_string_chars.len());
                         sifr_generated_string_chars
@@ -86,19 +86,28 @@ mod sifr_generated_generated_support {
                         return false;
                     }
                 }
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
+                ni = ::std::ops::Add::add(&ni, &SifrInt::from_i64(1));
+                pi = ::std::ops::Add::add(&pi, &SifrInt::from_i64(1));
             } else {
                 return false;
             }
         }
-        &ni == &SifrInt::from(name.chars().count())
+        ni == name.chars().count()
     }
     #[must_use]
     pub fn glob(directory: &str, pattern: &str) -> Vec<String> {
         let sifr_generated_chars_pattern: Vec<char> = pattern.chars().collect::<Vec<char>>();
-        let include_hidden: bool =
-            &SifrInt::from(sifr_generated_chars_pattern.len()) > &SifrInt::from_i64(0) && {
+        let include_hidden: bool = sifr_generated_chars_pattern.len() > SifrInt::from_i64(0) && {
+            let sifr_generated_string_index = SifrInt::from_i64(0);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_pattern.len());
+            sifr_generated_chars_pattern
+                .get(sifr_generated_string_index_normalized)
+                .copied()
+        }
+        .map(|character| character.to_string())
+        .is_some_and(|_checked_value_0| {
+            {
                 let sifr_generated_string_index = SifrInt::from_i64(0);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_pattern.len());
@@ -106,25 +115,15 @@ mod sifr_generated_generated_support {
                     .get(sifr_generated_string_index_normalized)
                     .copied()
             }
-            .map(|character| character.to_string())
-            .is_some_and(|_checked_value_0| {
-                {
-                    let sifr_generated_string_index = SifrInt::from_i64(0);
-                    let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_chars_pattern.len());
-                    sifr_generated_chars_pattern
-                        .get(sifr_generated_string_index_normalized)
-                        .copied()
-                }
-                .map(Some)
-                    == Some(Some('.'))
-            });
+            .map(Some)
+                == Some(Some('.'))
+        });
         let mut matches: Vec<String> = Vec::new();
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             let entries: Vec<String> = listdir(directory)?;
             for entry in entries.iter().cloned() {
                 let sifr_generated_chars_entry: Vec<char> = entry.chars().collect::<Vec<char>>();
-                if &SifrInt::from(sifr_generated_chars_entry.len()) == &SifrInt::from_i64(0) {
+                if sifr_generated_chars_entry.len() == SifrInt::from_i64(0) {
                     continue;
                 }
                 if !include_hidden && {
@@ -156,16 +155,14 @@ mod sifr_generated_generated_support {
             }
             Ok(())
         })();
-        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-            let e = sifr_generated_try_err.clone();
-            let _ = e.message.clone().to_string();
+        if let Err(_try_err) = sifr_generated_try_res {
             return Vec::new();
         }
         {
-            let mut sifr_generated_sorted_values = matches.iter().cloned().collect::<Vec<_>>();
+            let mut sifr_generated_sorted_values = matches;
             sifr_generated_sorted_values.sort_by(
                 |sifr_generated_sorted_left, sifr_generated_sorted_right| {
-                    sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+                    sifr_generated_sorted_left.cmp(sifr_generated_sorted_right)
                 },
             );
             sifr_generated_sorted_values
@@ -217,11 +214,13 @@ mod sifr_generated_generated_support {
     }
     fn basename(path: &str) -> String {
         let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-        let mut i: SifrInt =
-            &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
-        while &i >= &SifrInt::from_i64(0) {
+        let mut i: SifrInt = ::std::ops::Sub::sub(
+            &SifrInt::from(sifr_generated_chars_path.len()),
+            &SifrInt::from_i64(1),
+        );
+        while i >= SifrInt::from_i64(0) {
             let ch: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
                 sifr_generated_chars_path
@@ -236,7 +235,8 @@ mod sifr_generated_generated_support {
                     let sifr_generated_slice_src = &sifr_generated_chars_path;
                     let sifr_generated_slice_len = sifr_generated_slice_src.len();
                     let sifr_generated_slice_start =
-                        (&i + &SifrInt::from_i64(1)).clamp_slice_bound(sifr_generated_slice_len);
+                        ::std::ops::Add::add(&i, &SifrInt::from_i64(1))
+                            .clamp_slice_bound(sifr_generated_slice_len);
                     let sifr_generated_slice_stop = sifr_generated_slice_len;
                     String::from_iter(
                         sifr_generated_slice_src
@@ -250,24 +250,21 @@ mod sifr_generated_generated_support {
                     )
                 };
             }
-            i = &i - &SifrInt::from_i64(1);
+            i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
         }
-        {
-            let mut sifr_generated_concat: String = String::with_capacity(path.len());
-            sifr_generated_concat.push_str(path);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        }
+        path.to_string()
     }
     #[must_use]
     pub fn stem(path: &str) -> String {
         let base: String = basename(path);
         let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
-        let mut i: SifrInt =
-            &SifrInt::from(sifr_generated_chars_base.len()) - &SifrInt::from_i64(1);
-        while &i > &SifrInt::from_i64(0) {
+        let mut i: SifrInt = ::std::ops::Sub::sub(
+            &SifrInt::from(sifr_generated_chars_base.len()),
+            &SifrInt::from_i64(1),
+        );
+        while i > SifrInt::from_i64(0) {
             let ch: Option<String> = {
-                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index = &i;
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_base.len());
                 sifr_generated_chars_base
@@ -295,14 +292,9 @@ mod sifr_generated_generated_support {
                     )
                 };
             }
-            i = &i - &SifrInt::from_i64(1);
+            i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
         }
-        {
-            let mut sifr_generated_concat: String = String::with_capacity(base.len());
-            sifr_generated_concat.push_str(base.as_str());
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        }
+        base
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
@@ -334,12 +326,14 @@ mod sifr_generated_generated_support {
         let suffix: String = sifr_generated_random_suffix();
         let mut root: String = gettempdir();
         let sifr_generated_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
-        if &SifrInt::from(sifr_generated_chars_root.len()) == &SifrInt::from_i64(0) {
+        if sifr_generated_chars_root.len() == SifrInt::from_i64(0) {
             root = "/tmp".to_string();
         } else {
             let last: Option<String> = {
-                let sifr_generated_string_index =
-                    &SifrInt::from(root.chars().count()) - &SifrInt::from_i64(1);
+                let sifr_generated_string_index = ::std::ops::Sub::sub(
+                    &SifrInt::from(root.chars().count()),
+                    &SifrInt::from_i64(1),
+                );
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_root.len());
                 sifr_generated_chars_root
@@ -351,8 +345,11 @@ mod sifr_generated_generated_support {
                 && last == "/"
             {
                 return {
-                    let mut sifr_generated_concat: String =
-                        String::with_capacity(root.len() + prefix.len() + suffix.len());
+                    let mut sifr_generated_concat: String = String::with_capacity(
+                        root.len()
+                            .saturating_add(prefix.len())
+                            .saturating_add(suffix.len()),
+                    );
                     sifr_generated_concat.push_str(root.as_str());
                     sifr_generated_concat.push_str(prefix);
                     sifr_generated_concat.push_str(suffix.as_str());
@@ -361,8 +358,12 @@ mod sifr_generated_generated_support {
             }
         }
         {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(root.len() + 1usize + prefix.len() + suffix.len());
+            let mut sifr_generated_concat: String = String::with_capacity(
+                root.len()
+                    .saturating_add(1usize)
+                    .saturating_add(prefix.len())
+                    .saturating_add(suffix.len()),
+            );
             sifr_generated_concat.push_str(root.as_str());
             sifr_generated_concat.push('/');
             sifr_generated_concat.push_str(prefix);
@@ -373,10 +374,15 @@ mod sifr_generated_generated_support {
     fn sifr_generated_next_candidate(prefix: &str) -> String {
         mktemp_path(prefix)
     }
-    fn sifr_generated_collision_message(kind: &str, attempts: SifrInt) -> String {
+    fn sifr_generated_collision_message(kind: &str, attempts: &SifrInt) -> String {
         {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(9usize + kind.len() + 37usize + 9usize);
+            let mut sifr_generated_concat: String = String::with_capacity(
+                9usize
+                    .saturating_add(kind.len())
+                    .saturating_add(37usize)
+                    .saturating_add(0usize)
+                    .saturating_add(9usize),
+            );
             sifr_generated_concat.push_str("tempfile.");
             sifr_generated_concat.push_str(kind);
             sifr_generated_concat.push_str(": failed to create unique path after ");
@@ -390,20 +396,15 @@ mod sifr_generated_generated_support {
     pub fn mkstemp(prefix: &str) -> Result<String, IOError> {
         let mut attempts: SifrInt = SifrInt::from_i64(0);
         let max_attempts: SifrInt = SifrInt::from_i64(64);
-        while &attempts < &max_attempts {
+        while attempts < max_attempts {
             let path: String = sifr_generated_next_candidate(prefix);
-            let path_for_check: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(path.len());
-                sifr_generated_concat.push_str(path.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
+            let path_for_check: String = path.clone();
             if exists(&path) {
-                attempts = &attempts + &SifrInt::from_i64(1);
+                attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                 continue;
             }
             let sifr_generated_try_res: Result<Result<String, IOError>, IOError> = (|| {
-                write_text(&path, &String::new())?;
+                write_text(&path, "")?;
                 Ok(Ok(path))
             })();
             match sifr_generated_try_res {
@@ -411,9 +412,9 @@ mod sifr_generated_generated_support {
                     return sifr_generated_ret_val;
                 }
                 Err(sifr_generated_try_err) => {
-                    let e = sifr_generated_try_err.clone();
+                    let e: IOError = sifr_generated_try_err;
                     if exists(&path_for_check) {
-                        attempts = &attempts + &SifrInt::from_i64(1);
+                        attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                         continue;
                     }
                     return Err(e);
@@ -421,8 +422,8 @@ mod sifr_generated_generated_support {
             }
         }
         Err(IOError::new(sifr_generated_collision_message(
-            &"mkstemp".to_string(),
-            max_attempts.clone(),
+            "mkstemp",
+            &max_attempts,
         )))
     }
     ///# Errors
@@ -430,16 +431,11 @@ mod sifr_generated_generated_support {
     pub fn mkdtemp(prefix: &str) -> Result<String, IOError> {
         let mut attempts: SifrInt = SifrInt::from_i64(0);
         let max_attempts: SifrInt = SifrInt::from_i64(64);
-        while &attempts < &max_attempts {
+        while attempts < max_attempts {
             let path: String = sifr_generated_next_candidate(prefix);
-            let path_for_check: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(path.len());
-                sifr_generated_concat.push_str(path.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
+            let path_for_check: String = path.clone();
             if exists(&path) {
-                attempts = &attempts + &SifrInt::from_i64(1);
+                attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                 continue;
             }
             let sifr_generated_try_res: Result<Result<String, IOError>, IOError> = (|| {
@@ -451,9 +447,9 @@ mod sifr_generated_generated_support {
                     return sifr_generated_ret_val;
                 }
                 Err(sifr_generated_try_err) => {
-                    let e = sifr_generated_try_err.clone();
+                    let e: IOError = sifr_generated_try_err;
                     if exists(&path_for_check) {
-                        attempts = &attempts + &SifrInt::from_i64(1);
+                        attempts = ::std::ops::Add::add(&attempts, &SifrInt::from_i64(1));
                         continue;
                     }
                     return Err(e);
@@ -461,8 +457,8 @@ mod sifr_generated_generated_support {
             }
         }
         Err(IOError::new(sifr_generated_collision_message(
-            &"mkdtemp".to_string(),
-            max_attempts.clone(),
+            "mkdtemp",
+            &max_attempts,
         )))
     }
     #[must_use]
@@ -532,21 +528,11 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ezipfileX2eZipFile {
         #[must_use]
-        pub fn new(path: String, mode: String, compression: SifrInt) -> Self {
-            let sifr_generated_field_value_03c52d0debd70676_70617468: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(path.len());
-                sifr_generated_concat.push_str(path.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
-            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(mode.len());
-                sifr_generated_concat.push_str(mode.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
+        pub fn new(path: String, mode: String, compression: &SifrInt) -> Self {
+            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path;
+            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode;
             let sifr_generated_field_value_fb545b3ab0be00f5_636f6d7072657373696f6e: SifrInt =
-                compression.clone();
+                (*compression).clone();
             Self {
                 path: sifr_generated_field_value_03c52d0debd70676_70617468,
                 mode: sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465,
@@ -557,10 +543,7 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2ezipfileX2eZipFile {
         #[must_use]
         pub fn sifr_generated_writable_mode(&self) -> bool {
-            self.mode.clone() == "w"
-                || self.mode.clone() == "a"
-                || self.mode.clone() == "wb"
-                || self.mode.clone() == "ab"
+            self.mode == "w" || self.mode == "a" || self.mode == "wb" || self.mode == "ab"
         }
     }
     impl SifrGeneratedStdlibSifrX2ezipfileX2eZipFile {
@@ -638,7 +621,8 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ezipfileX2eZip
 )]
 fn main() {
     let base: String = {
-        let mut sifr_generated_concat: String = String::with_capacity(42usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(42usize.saturating_add(0usize));
         sifr_generated_concat.push_str("/tmp/sifr_filesystem_archive_surface_demo_");
         sifr_generated_concat.push_str(getpid().to_string().as_str());
         sifr_generated_concat
@@ -646,17 +630,18 @@ fn main() {
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let _mk: String = run_command(&format!("mkdir -p {base}"))?;
         let source: String = {
-            let mut sifr_generated_concat: String = String::with_capacity(base.len() + 9usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(base.len().saturating_add(9usize));
             sifr_generated_concat.push_str(base.as_str());
             sifr_generated_concat.push_str("/note.txt");
             sifr_generated_concat
         };
-        write_text(&source, &"hello d1".to_string())?;
+        write_text(&source, "hello d1")?;
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             let note_content: String = read_text(&source)?;
             println!("{}", {
                 let mut sifr_generated_concat: String =
-                    String::with_capacity(15usize + note_content.len());
+                    String::with_capacity(15usize.saturating_add(note_content.len()));
                 sifr_generated_concat.push_str("io.read_text = ");
                 sifr_generated_concat.push_str(note_content.as_str());
                 sifr_generated_concat
@@ -664,37 +649,41 @@ fn main() {
             Ok(())
         })();
         if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-            let e = sifr_generated_try_err.clone();
+            let e: IOError = sifr_generated_try_err;
             println!("{}", {
-                let mut sifr_generated_concat: String = String::with_capacity(20usize);
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(20usize.saturating_add(0usize));
                 sifr_generated_concat.push_str("io.read_text error: ");
-                sifr_generated_concat.push_str(e.message.clone().as_str());
+                sifr_generated_concat.push_str(e.message.as_str());
                 sifr_generated_concat
             });
         }
         let note_path: SifrGeneratedStdlibSifrX2epathlibX2ePath =
-            SifrGeneratedStdlibSifrX2epathlibX2ePath::new(source.to_string());
+            SifrGeneratedStdlibSifrX2epathlibX2ePath::new(source.clone());
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(15usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(15usize.saturating_add(0usize));
             sifr_generated_concat.push_str("pathlib.stem = ");
             sifr_generated_concat.push_str(note_path.stem().as_str());
             sifr_generated_concat
         });
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(16usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(16usize.saturating_add(0usize));
             sifr_generated_concat.push_str("glob(\"*.txt\") = ");
-            sifr_generated_concat
-                .push_str(format!("{:?}", glob(&base, &"*.txt".to_string())).as_str());
+            sifr_generated_concat.push_str(format!("{:?}", glob(&base, "*.txt")).as_str());
             sifr_generated_concat
         });
         let copied: String = {
-            let mut sifr_generated_concat: String = String::with_capacity(base.len() + 11usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(base.len().saturating_add(11usize));
             sifr_generated_concat.push_str(base.as_str());
             sifr_generated_concat.push_str("/copied.txt");
             sifr_generated_concat
         };
         let moved: String = {
-            let mut sifr_generated_concat: String = String::with_capacity(base.len() + 10usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(base.len().saturating_add(10usize));
             sifr_generated_concat.push_str(base.as_str());
             sifr_generated_concat.push_str("/moved.txt");
             sifr_generated_concat
@@ -702,7 +691,8 @@ fn main() {
         copy(&source, &copied)?;
         move_file(&copied, &moved)?;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(26usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(26usize.saturating_add(0usize));
             sifr_generated_concat.push_str("shutil.move_file exists = ");
             sifr_generated_concat.push_str(
                 SifrGeneratedStdlibSifrX2epathlibX2ePath::new(moved)
@@ -712,27 +702,28 @@ fn main() {
             );
             sifr_generated_concat
         });
-        let temp_file: String = mkstemp(&"sifr_filesystem_archive_surface_demo_".to_string())?;
-        let temp_dir: String = mkdtemp(&"sifr_filesystem_archive_surface_demo_".to_string())?;
+        let temp_file: String = mkstemp("sifr_filesystem_archive_surface_demo_")?;
+        let temp_dir: String = mkdtemp("sifr_filesystem_archive_surface_demo_")?;
         println!("{}", {
             let mut sifr_generated_concat: String =
-                String::with_capacity(19usize + temp_file.len());
+                String::with_capacity(19usize.saturating_add(temp_file.len()));
             sifr_generated_concat.push_str("tempfile.mkstemp = ");
             sifr_generated_concat.push_str(temp_file.as_str());
             sifr_generated_concat
         });
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(19usize + temp_dir.len());
+            let mut sifr_generated_concat: String =
+                String::with_capacity(19usize.saturating_add(temp_dir.len()));
             sifr_generated_concat.push_str("tempfile.mkdtemp = ");
             sifr_generated_concat.push_str(temp_dir.as_str());
             sifr_generated_concat
         });
-        let compressed: Vec<u8> = compress(&"archive sample".to_string());
+        let compressed: Vec<u8> = compress("archive sample");
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             let restored: String = decompress(&compressed)?;
             println!("{}", {
                 let mut sifr_generated_concat: String =
-                    String::with_capacity(17usize + restored.len());
+                    String::with_capacity(17usize.saturating_add(restored.len()));
                 sifr_generated_concat.push_str("gzip roundtrip = ");
                 sifr_generated_concat.push_str(restored.as_str());
                 sifr_generated_concat
@@ -740,16 +731,18 @@ fn main() {
             Ok(())
         })();
         if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-            let e = sifr_generated_try_err.clone();
+            let e: IOError = sifr_generated_try_err;
             println!("{}", {
-                let mut sifr_generated_concat: String = String::with_capacity(12usize);
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(12usize.saturating_add(0usize));
                 sifr_generated_concat.push_str("gzip error: ");
-                sifr_generated_concat.push_str(e.message.clone().as_str());
+                sifr_generated_concat.push_str(e.message.as_str());
                 sifr_generated_concat
             });
         }
         let zip_path: String = {
-            let mut sifr_generated_concat: String = String::with_capacity(base.len() + 9usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(base.len().saturating_add(9usize));
             sifr_generated_concat.push_str(base.as_str());
             sifr_generated_concat.push_str("/demo.zip");
             sifr_generated_concat
@@ -758,21 +751,22 @@ fn main() {
             SifrGeneratedStdlibSifrX2ezipfileX2eZipFile::new(
                 zip_path,
                 "a".to_string(),
-                SifrInt::from_i64(0),
+                &SifrInt::from_i64(0),
             );
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             archive.create()?;
-            archive.write(&"inside.txt".to_string(), &"inside-zip".to_string())?;
-            let inside: String = archive.read(&"inside.txt".to_string())?;
+            archive.write("inside.txt", "inside-zip")?;
+            let inside: String = archive.read("inside.txt")?;
             println!("{}", {
                 let mut sifr_generated_concat: String =
-                    String::with_capacity(15usize + inside.len());
+                    String::with_capacity(15usize.saturating_add(inside.len()));
                 sifr_generated_concat.push_str("zipfile.read = ");
                 sifr_generated_concat.push_str(inside.as_str());
                 sifr_generated_concat
             });
             println!("{}", {
-                let mut sifr_generated_concat: String = String::with_capacity(19usize);
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(19usize.saturating_add(0usize));
                 sifr_generated_concat.push_str("zipfile.namelist = ");
                 sifr_generated_concat.push_str(format!("{:?}", archive.namelist()).as_str());
                 sifr_generated_concat
@@ -780,11 +774,12 @@ fn main() {
             Ok(())
         })();
         if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-            let e = sifr_generated_try_err.clone();
+            let e: IOError = sifr_generated_try_err;
             println!("{}", {
-                let mut sifr_generated_concat: String = String::with_capacity(15usize);
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(15usize.saturating_add(0usize));
                 sifr_generated_concat.push_str("zipfile error: ");
-                sifr_generated_concat.push_str(e.message.clone().as_str());
+                sifr_generated_concat.push_str(e.message.as_str());
                 sifr_generated_concat
             });
         }
@@ -793,11 +788,12 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
+        let e: IOError = sifr_generated_try_err;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(39usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(39usize.saturating_add(0usize));
             sifr_generated_concat.push_str("filesystem_archive_surface demo error: ");
-            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
     }
@@ -806,11 +802,12 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
+        let e: IOError = sifr_generated_try_err;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(42usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(42usize.saturating_add(0usize));
             sifr_generated_concat.push_str("filesystem_archive_surface cleanup error: ");
-            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
     }

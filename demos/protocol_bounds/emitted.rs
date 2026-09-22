@@ -6,7 +6,7 @@ pub trait SifrGeneratedAdd: Sized {
 }
 impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {
     fn sifr_generated_add(self, rhs: Self) -> Self {
-        self + rhs
+        ::std::ops::Add::add(self, rhs)
     }
 }
 impl SifrGeneratedAdd for String {

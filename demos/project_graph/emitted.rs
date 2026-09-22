@@ -11,7 +11,10 @@ pub use crate::provider::answer;
 pub use ::sifr_runtime::SifrInt;
 #[must_use]
 pub fn describe() -> SifrInt {
-    &(&answer() + &crate::provider::sifr_generated_const_42415345()) - &SifrInt::from_i64(40)
+    ::std::ops::Sub::sub(
+        &::std::ops::Add::add(&answer(), &crate::provider::sifr_generated_const_42415345()),
+        &SifrInt::from_i64(40),
+    )
 }
 
 // src/provider.rs

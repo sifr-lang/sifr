@@ -102,12 +102,12 @@ fn gen_pairs(limit: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &limit {
+            while i < limit {
                 sifr_generated_yielder.suspend(i.clone()).await;
-                i = &i + &SifrInt::from_i64(1);
-                if &i < &limit {
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
+                if i < limit {
                     sifr_generated_yielder.suspend(i.clone()).await;
-                    i = &i + &SifrInt::from_i64(1);
+                    i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 }
             }
         },
@@ -117,8 +117,12 @@ fn gen_even(xs: &[SifrInt]) -> Box<dyn Iterator<Item = SifrInt>> {
     let xs = xs.to_vec();
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
-            for x in xs.iter().cloned() {
-                if &x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
+            #[expect(
+                clippy::explicit_iter_loop,
+                reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+            )]
+            for x in xs.iter() {
+                if x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == SifrInt::from_i64(0) {
                     sifr_generated_yielder.suspend(x.clone()).await;
                 }
             }
@@ -134,8 +138,8 @@ fn main() {
         SifrInt::from_i64(5),
     ];
     let squares: Box<dyn Iterator<Item = SifrInt>> = Box::new(xs.iter().cloned().filter_map(|x| {
-        if &x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
-            Some(&x * &x)
+        if x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == SifrInt::from_i64(0) {
+            Some(::std::ops::Mul::mul(&x, &x))
         } else {
             None
         }

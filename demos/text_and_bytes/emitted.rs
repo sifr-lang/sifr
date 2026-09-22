@@ -19,9 +19,7 @@ fn main() {
     let mut decode_ok: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let decoded_value_84517ef0dce4ed91: String = ::sifr_runtime::encoding::decode_text(
-            &encoded,
-            &"utf-8".to_string(),
-            &"strict".to_string(),
+            &encoded, "utf-8", "strict",
         )
         .map_err(|sifr_generated_message| ParseError {
             message: sifr_generated_message,
@@ -29,10 +27,7 @@ fn main() {
         decode_ok = decoded_value_84517ef0dce4ed91 == "sifr-bytes";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     assert!(decode_ok);
     let mut hex_ok: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
@@ -50,7 +45,7 @@ fn main() {
                 }
                 cleaned.push(ch);
             }
-            if cleaned.len() % 2 != 0 {
+            if !cleaned.len().is_multiple_of(2) {
                 return Err(ParseError {
                     message: "fromhex() arg must contain an even number of hexadecimal digits"
                         .to_string(),
@@ -67,20 +62,15 @@ fn main() {
             }
             Ok::<Vec<u8>, ParseError>(result)
         }?;
-        let decoded_hex: String = ::sifr_runtime::encoding::decode_text(
-            &parsed_hex,
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|sifr_generated_message| ParseError {
-            message: sifr_generated_message,
-        })?;
+        let decoded_hex: String =
+            ::sifr_runtime::encoding::decode_text(&parsed_hex, "utf-8", "strict").map_err(
+                |sifr_generated_message| ParseError {
+                    message: sifr_generated_message,
+                },
+            )?;
         hex_ok = decoded_hex == "sifr";
         Ok(())
     })();
-    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
-    }
+    let _ = sifr_generated_try_res;
     assert!(hex_ok);
 }

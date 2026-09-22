@@ -71,7 +71,7 @@ impl User {
 }
 impl User {
     fn display(&self) -> String {
-        format!("User({})", self.name.clone())
+        format!("User({})", self.name)
     }
 }
 impl ::std::fmt::Display for User {
@@ -81,7 +81,7 @@ impl ::std::fmt::Display for User {
 }
 impl Printable for User {
     fn display(&self) -> String {
-        User::display(self)
+        Self::display(self)
     }
 }
 #[derive(Debug, Clone, PartialEq)]
@@ -101,7 +101,7 @@ impl Product {
 }
 impl Product {
     fn display(&self) -> String {
-        format!("Product({}, ${})", self.title.clone(), self.price)
+        format!("Product({}, ${})", self.title, self.price)
     }
 }
 impl ::std::fmt::Display for Product {
@@ -111,33 +111,33 @@ impl ::std::fmt::Display for Product {
 }
 impl Printable for Product {
     fn display(&self) -> String {
-        Product::display(self)
+        Self::display(self)
     }
 }
 fn identity<T: Clone + 'static>(x: &T) -> T {
     x.clone()
 }
-fn repeat<T: Clone + 'static>(x: &T, n: SifrInt) -> Vec<T> {
+fn repeat<T: Clone + 'static>(x: &T, n: &SifrInt) -> Vec<T> {
     let mut result: Vec<T> = Vec::new();
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &n {
+    while &i < n {
         result.push(x.clone());
-        i = &i + &SifrInt::from_i64(1);
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
     }
     result
 }
-fn show(item: Box<dyn Printable>) {
+fn show(item: &dyn Printable) {
     println!("{}", item.display());
 }
 #[expect(
     clippy::approx_constant,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     println!("=== PEP 695 Generic Functions ===");
     println!("{}", identity(&SifrInt::from_i64(42)));
     println!("{}", identity(&"hello".to_string()));
-    println!("{:?}", repeat(&"x".to_string(), SifrInt::from_i64(3)));
+    println!("{:?}", repeat(&"x".to_string(), &SifrInt::from_i64(3)));
     println!("=== PEP 695 Generic Classes ===");
     let c: Container<SifrInt> = Container::new(SifrInt::from_i64(99));
     println!("{}", c.get());
@@ -146,8 +146,8 @@ fn main() {
     println!("=== Protocol Method Dispatch ===");
     let u: User = User::new("Alice".to_string());
     let pr: Product = Product::new("Widget".to_string(), 9.99_f64);
-    show(Box::new(u));
-    show(Box::new(pr));
+    show(&u);
+    show(&pr);
     println!("=== Multi-Generator Comprehensions ===");
     let matrix: Vec<Vec<SifrInt>> = vec![
         vec![
@@ -168,7 +168,11 @@ fn main() {
     ];
     let flat: Vec<SifrInt> = {
         let mut sifr_generated_list_comp = Vec::new();
-        for row in matrix.iter().cloned() {
+        #[expect(
+            clippy::explicit_iter_loop,
+            reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+        )]
+        for row in matrix.iter() {
             for x in row.iter().cloned() {
                 sifr_generated_list_comp.push(x);
             }
@@ -181,7 +185,7 @@ fn main() {
     println!("{}", sin(0.0_f64));
     println!("{}", cos(0.0_f64));
     println!("{}", fabs(-42.0_f64));
-    println!("{}", (2.0_f64 as f64).powf(10.0_f64 as f64));
+    println!("{}", 2_f64.powi(10));
     println!(
         "{:?}",
         SifrInt::from_f64_trunc(3.14_f64.round_ties_even()).ok_or_else(|| ValueError {

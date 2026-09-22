@@ -55,10 +55,10 @@ fn process(item: &Item) -> SifrInt {
 }
 fn main() {
     let n: Node = Node::new(SifrInt::from_i64(42));
-    assert_eq!(&get_node_val(&n), &SifrInt::from_i64(42));
+    assert_eq!(get_node_val(&n), SifrInt::from_i64(42));
     let p: Person = Person::new("Alice".to_string(), SifrInt::from_i64(30));
     assert_eq!(describe_person(p), "Alice");
     let it: Item = Item::new(SifrInt::from_i64(5), "urgent".to_string());
-    assert_eq!(&process(&it), &SifrInt::from_i64(5));
+    assert_eq!(process(&it), SifrInt::from_i64(5));
     println!("forward_refs: ok");
 }

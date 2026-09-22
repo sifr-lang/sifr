@@ -99,8 +99,16 @@ mod sifr_generated_generated_support {
         let iterables = iterables.to_vec();
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
-                for iterable in iterables.iter().cloned() {
-                    for item in iterable.iter().cloned() {
+                #[expect(
+                    clippy::explicit_iter_loop,
+                    reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+                )]
+                for iterable in iterables.iter() {
+                    #[expect(
+                        clippy::explicit_iter_loop,
+                        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+                    )]
+                    for item in iterable.iter() {
                         sifr_generated_yielder.suspend(item.clone()).await;
                     }
                 }
@@ -113,8 +121,8 @@ mod sifr_generated_generated_support {
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
                 let holder: Vec<T> = vec![value];
                 let mut i: SifrInt = SifrInt::from_i64(0);
-                while &i < &times {
-                    if &SifrInt::from(holder.len()) > &SifrInt::from_i64(0) {
+                while i < times {
+                    if holder.len() > SifrInt::from_i64(0) {
                         let current: Option<T> = {
                             let sifr_generated_checked_read_collection = &holder;
                             let sifr_generated_checked_read_index = SifrInt::from_i64(0);
@@ -130,7 +138,7 @@ mod sifr_generated_generated_support {
                             sifr_generated_yielder.suspend(current.clone()).await;
                         }
                     }
-                    i = &i + &SifrInt::from_i64(1);
+                    i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 }
             },
         ))
@@ -147,14 +155,15 @@ mod sifr_generated_generated_support {
                 let mut index: SifrInt = SifrInt::from_i64(0);
                 let mut next_yield: SifrInt = start.clone();
                 for value in data {
-                    if !unbounded && &index >= &stop {
+                    if !unbounded && index >= stop {
                         return;
                     }
-                    if &index == &next_yield {
+                    if index == next_yield {
                         sifr_generated_yielder.suspend(value.clone()).await;
-                        next_yield = &next_yield + &step_argument_af0b4e191da20cef;
+                        next_yield =
+                            ::std::ops::Add::add(&next_yield, &step_argument_af0b4e191da20cef);
                     }
-                    index = &index + &SifrInt::from_i64(1);
+                    index = ::std::ops::Add::add(&index, &SifrInt::from_i64(1));
                 }
             },
         ))
@@ -163,53 +172,64 @@ mod sifr_generated_generated_support {
     ///Returns the typed error produced by this operation.
     pub fn islice<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
-        start_or_stop: SifrInt,
+        start_or_stop: Option<&SifrInt>,
         slice_args: &[Option<SifrInt>],
     ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
-        if &SifrInt::from(slice_args.len()) > &SifrInt::from_i64(2) {
+        let start_or_stop: Option<SifrInt> = start_or_stop.cloned();
+        if slice_args.len() > SifrInt::from_i64(2) {
             return Err(ValueError::new(
                 "islice: expected at most stop and step after start".to_string(),
             ));
         }
         let mut actual_start: SifrInt = SifrInt::from_i64(0);
-        let mut actual_stop_value_351bdef5a4961be0: SifrInt = start_or_stop.clone();
-        let mut unbounded: bool = false;
+        let mut actual_stop_value_351bdef5a4961be0: SifrInt = SifrInt::from_i64(0);
+        let mut unbounded: bool = start_or_stop.is_none();
+        if let Some(start_or_stop) = start_or_stop.clone() {
+            actual_stop_value_351bdef5a4961be0 = start_or_stop;
+        }
         let mut actual_step_value_353dfaf5a4b331da: SifrInt = SifrInt::from_i64(1);
         let mut argument_index: SifrInt = SifrInt::from_i64(0);
-        for argument in slice_args.iter().cloned() {
-            if &argument_index == &SifrInt::from_i64(0) {
-                actual_start = start_or_stop.clone();
+        #[expect(
+            clippy::explicit_iter_loop,
+            reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+        )]
+        for argument in slice_args.iter() {
+            if argument_index == SifrInt::from_i64(0) {
+                if let Some(start_or_stop) = start_or_stop.clone() {
+                    actual_start = start_or_stop;
+                }
                 if argument.is_none() {
                     unbounded = true;
                 } else if let Some(argument) = argument.clone() {
-                    actual_stop_value_351bdef5a4961be0 = argument.clone();
+                    actual_stop_value_351bdef5a4961be0.clone_from(&argument);
+                    unbounded = false;
                 }
             } else if let Some(argument) = argument.clone() {
-                actual_step_value_353dfaf5a4b331da = argument.clone();
+                actual_step_value_353dfaf5a4b331da.clone_from(&argument);
             }
-            argument_index = &argument_index + &SifrInt::from_i64(1);
+            argument_index = ::std::ops::Add::add(&argument_index, &SifrInt::from_i64(1));
         }
-        if &actual_start < &SifrInt::from_i64(0) {
+        if actual_start < SifrInt::from_i64(0) {
             return Err(ValueError::new(
                 "islice: indices must be non-negative".to_string(),
             ));
         }
-        if !unbounded && &actual_stop_value_351bdef5a4961be0 < &SifrInt::from_i64(0) {
+        if !unbounded && actual_stop_value_351bdef5a4961be0 < SifrInt::from_i64(0) {
             return Err(ValueError::new(
                 "islice: indices must be non-negative".to_string(),
             ));
         }
-        if &actual_step_value_353dfaf5a4b331da <= &SifrInt::from_i64(0) {
+        if actual_step_value_353dfaf5a4b331da <= SifrInt::from_i64(0) {
             return Err(ValueError::new(
                 "islice: step must be greater than zero".to_string(),
             ));
         }
         Ok(sifr_generated_islice_impl(
             Box::new(data),
-            actual_start.clone(),
-            actual_stop_value_351bdef5a4961be0.clone(),
+            actual_start,
+            actual_stop_value_351bdef5a4961be0,
             unbounded,
-            actual_step_value_353dfaf5a4b331da.clone(),
+            actual_step_value_353dfaf5a4b331da,
         ))
     }
     #[must_use]
@@ -219,7 +239,7 @@ mod sifr_generated_generated_support {
                 let mut current: SifrInt = start.clone();
                 loop {
                     sifr_generated_yielder.suspend(current.clone()).await;
-                    current = &current + &step;
+                    current = ::std::ops::Add::add(&current, &step);
                 }
             },
         ))
@@ -247,7 +267,7 @@ use crate::sifr_generated_generated_support::{chain, count, islice, repeat};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ValueError;
 fn main() {
-    let chained: Box<dyn Iterator<Item = SifrInt>> = chain(&vec![
+    let chained: Box<dyn Iterator<Item = SifrInt>> = chain(&[
         vec![SifrInt::from_i64(1), SifrInt::from_i64(2)],
         vec![SifrInt::from_i64(3)],
     ]);
@@ -267,18 +287,19 @@ fn main() {
                 ]
                 .into_iter(),
             ),
-            SifrInt::from_i64(1),
-            &vec![Some(SifrInt::from_i64(5)), Some(SifrInt::from_i64(2))],
+            Some(&SifrInt::from_i64(1)),
+            &[Some(SifrInt::from_i64(5)), Some(SifrInt::from_i64(2))],
         )?;
         println!("{:?}", sliced.collect::<Vec<_>>());
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
+        let e: ValueError = sifr_generated_try_err;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(14usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(14usize.saturating_add(0usize));
             sifr_generated_concat.push_str("islice error: ");
-            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
     }

@@ -16,7 +16,7 @@ fn main() {
             .cloned()
     };
     {
-        let sifr_generated_shared_branch_value = value.clone();
+        let sifr_generated_shared_branch_value = value;
         println!("optional_indexing remove data-dependent unwrap/expect demo:");
         if let Some(value) = sifr_generated_shared_branch_value {
             println!("{value}");

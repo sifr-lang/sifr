@@ -11,15 +11,15 @@ mod sifr_generated_project_unions {
     for SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0::SifrGeneratedUnionVariant5X3aclass9X3amainX2eBird1X3a0(
-                    v,
-                ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0::SifrGeneratedUnionVariant5X3aclass8X3amainX2eCat1X3a0(
-                    v,
-                ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0::SifrGeneratedUnionVariant5X3aclass8X3amainX2eDog1X3a0(
-                    v,
-                ) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant5X3aclass9X3amainX2eBird1X3a0(v) => {
+                    write!(f, "{v}")
+                }
+                Self::SifrGeneratedUnionVariant5X3aclass8X3amainX2eCat1X3a0(v) => {
+                    write!(f, "{v}")
+                }
+                Self::SifrGeneratedUnionVariant5X3aclass8X3amainX2eDog1X3a0(v) => {
+                    write!(f, "{v}")
+                }
             }
         }
     }
@@ -27,7 +27,7 @@ mod sifr_generated_project_unions {
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Dog {
+pub struct Dog {
     name: String,
     breed: String,
 }
@@ -42,7 +42,7 @@ impl ::std::fmt::Display for Dog {
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Cat {
+pub struct Cat {
     name: String,
     color: String,
 }
@@ -57,7 +57,7 @@ impl ::std::fmt::Display for Cat {
     }
 }
 #[derive(Debug, Clone, PartialEq)]
-struct Bird {
+pub struct Bird {
     name: String,
     wingspan: f64,
 }
@@ -87,38 +87,40 @@ fn describe_pet(
     match pet {
         SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0::SifrGeneratedUnionVariant5X3aclass8X3amainX2eDog1X3a0(
             pet,
-        ) => format!("{} is a {}", pet.name.clone(), pet.breed.clone()),
+        ) => format!("{} is a {}", pet.name, pet.breed),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0::SifrGeneratedUnionVariant5X3aclass8X3amainX2eCat1X3a0(
             pet,
-        ) => format!("{} is {}", pet.name.clone(), pet.color.clone()),
+        ) => format!("{} is {}", pet.name, pet.color),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0::SifrGeneratedUnionVariant5X3aclass9X3amainX2eBird1X3a0(
             pet,
-        ) => format!("{} has wingspan {}", pet.name.clone(), pet.wingspan),
+        ) => format!("{} has wingspan {}", pet.name, pet.wingspan),
     }
 }
-fn find_value(x: Option<SifrInt>, target: SifrInt) -> String {
-    if x == Some(target.clone()) {
+fn find_value(x: Option<&SifrInt>, target: &SifrInt) -> String {
+    let x: Option<SifrInt> = x.cloned();
+    if x == Some((*target).clone()) {
         return "found".to_string();
     }
     "not found".to_string()
 }
-fn is_positive(x: Option<SifrInt>) -> bool {
+fn is_positive(x: Option<&SifrInt>) -> bool {
+    let x: Option<SifrInt> = x.cloned();
     if x > Some(SifrInt::from_i64(0)) {
         return true;
     }
     false
 }
 fn summarize(items: &[String]) -> String {
-    if !!items.is_empty() {
+    if items.is_empty() {
         return "no items".to_string();
     }
     format!("{} items", SifrInt::from(items.len()))
 }
 fn main() {
-    println!("{}", route_handler(&"GET".to_string()));
-    println!("{}", route_handler(&"POST".to_string()));
-    println!("{}", route_handler(&"PUT".to_string()));
-    println!("{}", route_handler(&"DELETE".to_string()));
+    println!("{}", route_handler("GET"));
+    println!("{}", route_handler("POST"));
+    println!("{}", route_handler("PUT"));
+    println!("{}", route_handler("DELETE"));
     println!(
         "{}", describe_pet(&
         SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0::SifrGeneratedUnionVariant5X3aclass8X3amainX2eDog1X3a0(Dog::new("Rex"
@@ -135,9 +137,9 @@ fn main() {
         .to_string(), 0.3_f64).clone()))
     );
     let v: Option<SifrInt> = Some(SifrInt::from_i64(42));
-    println!("{}", find_value(v.clone(), SifrInt::from_i64(42)));
-    println!("{}", find_value(v.clone(), SifrInt::from_i64(99)));
-    println!("{}", is_positive(v.clone()));
+    println!("{}", find_value(v.as_ref(), &SifrInt::from_i64(42)));
+    println!("{}", find_value(v.as_ref(), &SifrInt::from_i64(99)));
+    println!("{}", is_positive(v.as_ref()));
     let empty: Vec<String> = Vec::new();
     println!("{}", summarize(&empty));
     let full: Vec<String> = vec!["a".to_string(), "b".to_string(), "c".to_string()];

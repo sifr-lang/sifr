@@ -102,14 +102,14 @@ fn r#gen(flag: bool) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &SifrInt::from_i64(2) {
-                if flag && &i == &SifrInt::from_i64(0) {
+            while i < SifrInt::from_i64(2) {
+                if flag && i == SifrInt::from_i64(0) {
                     break;
                 }
                 sifr_generated_yielder.suspend(i.clone()).await;
-                i = &i + &SifrInt::from_i64(1);
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
-            if !flag && &i == &SifrInt::from_i64(2) {
+            if !flag && i == SifrInt::from_i64(2) {
                 sifr_generated_yielder.suspend(SifrInt::from_i64(99)).await;
             }
         },

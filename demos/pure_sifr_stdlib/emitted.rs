@@ -7,7 +7,7 @@ mod sifr_generated_generated_support {
     }
     fn base64_decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::base64_decode(s).map_err(|sifr_generated_bridge_error| ParseError {
-            message: sifr_generated_bridge_error.to_string(),
+            message: sifr_generated_bridge_error,
         })
     }
     fn sha256_bytes(data: &[u8]) -> Vec<u8> {
@@ -53,72 +53,72 @@ mod sifr_generated_generated_support {
                 alg,
                 data.to_vec(),
                 "md5".to_string(),
-                SifrInt::from_i64(16),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(16),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha1" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha1".to_string(),
-                SifrInt::from_i64(20),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(20),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha224" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha224".to_string(),
-                SifrInt::from_i64(28),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(28),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha256" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha256".to_string(),
-                SifrInt::from_i64(32),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(32),
+                &SifrInt::from_i64(64),
             );
         } else if alg == "sha384" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha384".to_string(),
-                SifrInt::from_i64(48),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(48),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "sha512" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "sha512".to_string(),
-                SifrInt::from_i64(64),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(64),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "blake2b" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "blake2b".to_string(),
-                SifrInt::from_i64(64),
-                SifrInt::from_i64(128),
+                &SifrInt::from_i64(64),
+                &SifrInt::from_i64(128),
             );
         } else if alg == "blake2s" {
             return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
                 alg,
                 data.to_vec(),
                 "blake2s".to_string(),
-                SifrInt::from_i64(32),
-                SifrInt::from_i64(64),
+                &SifrInt::from_i64(32),
+                &SifrInt::from_i64(64),
             );
         }
         SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
             alg,
             data.to_vec(),
             "unknown".to_string(),
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
+            &SifrInt::from_i64(0),
         )
     }
     fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
@@ -139,7 +139,7 @@ mod sifr_generated_generated_support {
         } else if algorithm == "blake2s" {
             return blake2s_bytes(data);
         }
-        Vec::new()
+        Vec::<u8>::new()
     }
     #[must_use]
     pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
@@ -158,11 +158,11 @@ mod sifr_generated_generated_support {
     }
     #[must_use]
     pub fn sha256(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-        sifr_generated_build_hash(&"sha256".to_string(), data)
+        sifr_generated_build_hash("sha256", data)
     }
     #[expect(
         clippy::approx_constant,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     pub const PI: f64 = 3.141_592_653_589_793_f64;
     #[must_use]
@@ -187,17 +187,17 @@ mod sifr_generated_project_nominals {
             algorithm: String,
             data: Vec<u8>,
             name: String,
-            digest_size: SifrInt,
-            block_size: SifrInt,
+            digest_size: &SifrInt,
+            block_size: &SifrInt,
         ) -> Self {
             let sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d: String =
                 algorithm;
             let sifr_generated_field_value_90770dc80a1c57ce_5f64617461: Vec<u8> = data;
             let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
             let sifr_generated_field_value_6344303e03c9f7c7_6469676573745f73697a65: SifrInt =
-                digest_size.clone();
+                (*digest_size).clone();
             let sifr_generated_field_value_e190162752f8783e_626c6f636b5f73697a65: SifrInt =
-                block_size.clone();
+                (*block_size).clone();
             Self {
                 algorithm: sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d,
                 data: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
@@ -230,35 +230,35 @@ pub use sifr_generated_project_nominals::ParseError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ehashlibX2eHashObject;
 #[expect(
     clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 #[expect(
     clippy::approx_constant,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     assert_eq!(
-        &SifrInt::from_i64(1) + &SifrInt::from_i64(1),
+        ::std::ops::Add::add(&SifrInt::from_i64(1), &SifrInt::from_i64(1)),
         SifrInt::from_i64(2)
     );
     assert!(true);
     let result: f64 = sqrt(9.0_f64);
     assert_eq!(result, 3.0_f64);
     assert!(PI > 3.14_f64);
-    let h: String = sha256(&vec![104_u8, 101_u8, 108_u8, 108_u8, 111_u8]).hexdigest();
+    let h: String = sha256(&[104_u8, 101_u8, 108_u8, 108_u8, 111_u8]).hexdigest();
     let _chars_h: Vec<char> = h.chars().collect::<Vec<char>>();
-    assert_eq!(&SifrInt::from(h.chars().count()), &SifrInt::from_i64(64));
-    let encoded: String = b64encode(&"Hello!".to_string());
+    assert_eq!(h.chars().count(), SifrInt::from_i64(64));
+    let encoded: String = b64encode("Hello!");
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let decoded: String = b64decode(&encoded)?;
         assert_eq!(decoded, "Hello!");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err.clone();
-        println!("base64 error: {}", err.message.clone());
+        let err: ParseError = sifr_generated_try_err;
+        println!("base64 error: {}", err.message);
         assert_eq!(
-            format!("base64 error: {}", err.message.clone()),
+            format!("base64 error: {}", err.message),
             "stdlib_migration demo: all checks passed!"
         );
     }

@@ -108,7 +108,7 @@ mod sifr_generated_generated_support {
     }
     impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {
         fn sifr_generated_add(self, rhs: Self) -> Self {
-            self + rhs
+            ::std::ops::Add::add(self, rhs)
         }
     }
     impl SifrGeneratedAdd for String {
@@ -129,14 +129,15 @@ mod sifr_generated_generated_support {
                 let mut index: SifrInt = SifrInt::from_i64(0);
                 let mut next_yield: SifrInt = start.clone();
                 for value in data {
-                    if !unbounded && &index >= &stop {
+                    if !unbounded && index >= stop {
                         return;
                     }
-                    if &index == &next_yield {
+                    if index == next_yield {
                         sifr_generated_yielder.suspend(value.clone()).await;
-                        next_yield = &next_yield + &step_argument_af0b4e191da20cef;
+                        next_yield =
+                            ::std::ops::Add::add(&next_yield, &step_argument_af0b4e191da20cef);
                     }
-                    index = &index + &SifrInt::from_i64(1);
+                    index = ::std::ops::Add::add(&index, &SifrInt::from_i64(1));
                 }
             },
         ))
@@ -145,53 +146,64 @@ mod sifr_generated_generated_support {
     ///Returns the typed error produced by this operation.
     pub fn islice<T: Clone + 'static>(
         data: Box<dyn Iterator<Item = T>>,
-        start_or_stop: SifrInt,
+        start_or_stop: Option<&SifrInt>,
         slice_args: &[Option<SifrInt>],
     ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
-        if &SifrInt::from(slice_args.len()) > &SifrInt::from_i64(2) {
+        let start_or_stop: Option<SifrInt> = start_or_stop.cloned();
+        if slice_args.len() > SifrInt::from_i64(2) {
             return Err(ValueError::new(
                 "islice: expected at most stop and step after start".to_string(),
             ));
         }
         let mut actual_start: SifrInt = SifrInt::from_i64(0);
-        let mut actual_stop_value_351bdef5a4961be0: SifrInt = start_or_stop.clone();
-        let mut unbounded: bool = false;
+        let mut actual_stop_value_351bdef5a4961be0: SifrInt = SifrInt::from_i64(0);
+        let mut unbounded: bool = start_or_stop.is_none();
+        if let Some(start_or_stop) = start_or_stop.clone() {
+            actual_stop_value_351bdef5a4961be0 = start_or_stop;
+        }
         let mut actual_step_value_353dfaf5a4b331da: SifrInt = SifrInt::from_i64(1);
         let mut argument_index: SifrInt = SifrInt::from_i64(0);
-        for argument in slice_args.iter().cloned() {
-            if &argument_index == &SifrInt::from_i64(0) {
-                actual_start = start_or_stop.clone();
+        #[expect(
+            clippy::explicit_iter_loop,
+            reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+        )]
+        for argument in slice_args.iter() {
+            if argument_index == SifrInt::from_i64(0) {
+                if let Some(start_or_stop) = start_or_stop.clone() {
+                    actual_start = start_or_stop;
+                }
                 if argument.is_none() {
                     unbounded = true;
                 } else if let Some(argument) = argument.clone() {
-                    actual_stop_value_351bdef5a4961be0 = argument.clone();
+                    actual_stop_value_351bdef5a4961be0.clone_from(&argument);
+                    unbounded = false;
                 }
             } else if let Some(argument) = argument.clone() {
-                actual_step_value_353dfaf5a4b331da = argument.clone();
+                actual_step_value_353dfaf5a4b331da.clone_from(&argument);
             }
-            argument_index = &argument_index + &SifrInt::from_i64(1);
+            argument_index = ::std::ops::Add::add(&argument_index, &SifrInt::from_i64(1));
         }
-        if &actual_start < &SifrInt::from_i64(0) {
+        if actual_start < SifrInt::from_i64(0) {
             return Err(ValueError::new(
                 "islice: indices must be non-negative".to_string(),
             ));
         }
-        if !unbounded && &actual_stop_value_351bdef5a4961be0 < &SifrInt::from_i64(0) {
+        if !unbounded && actual_stop_value_351bdef5a4961be0 < SifrInt::from_i64(0) {
             return Err(ValueError::new(
                 "islice: indices must be non-negative".to_string(),
             ));
         }
-        if &actual_step_value_353dfaf5a4b331da <= &SifrInt::from_i64(0) {
+        if actual_step_value_353dfaf5a4b331da <= SifrInt::from_i64(0) {
             return Err(ValueError::new(
                 "islice: step must be greater than zero".to_string(),
             ));
         }
         Ok(sifr_generated_islice_impl(
             Box::new(data),
-            actual_start.clone(),
-            actual_stop_value_351bdef5a4961be0.clone(),
+            actual_start,
+            actual_stop_value_351bdef5a4961be0,
             unbounded,
-            actual_step_value_353dfaf5a4b331da.clone(),
+            actual_step_value_353dfaf5a4b331da,
         ))
     }
     #[must_use]
@@ -220,7 +232,7 @@ mod sifr_generated_generated_support {
                     }
                 }
                 for item in data {
-                    if &SifrInt::from(state.len()) == &SifrInt::from_i64(0) {
+                    if state.len() == SifrInt::from_i64(0) {
                         state.push(item);
                     } else {
                         let prev: Option<T> = {
@@ -258,8 +270,7 @@ mod sifr_generated_generated_support {
                                 Ok(())
                             })(
                             );
-                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-                                let _e = sifr_generated_try_err.clone();
+                            if let Err(_try_err) = sifr_generated_try_res {
                                 return;
                             }
                         }
@@ -330,10 +341,10 @@ mod sifr_generated_generated_support {
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<String>| {
                 let mut i: SifrInt = SifrInt::from_i64(0);
-                while &i < &SifrInt::from(entries.len()) {
+                while i < entries.len() {
                     let Some(sifr_generated_checked_value_7) = ({
                         let sifr_generated_checked_read_collection = &entries;
-                        let sifr_generated_checked_read_index = i.clone();
+                        let sifr_generated_checked_read_index = &i;
                         let sifr_generated_checked_read_normalized =
                             sifr_generated_checked_read_index.normalize_index_or_len(
                                 sifr_generated_checked_read_collection.len(),
@@ -345,9 +356,9 @@ mod sifr_generated_generated_support {
                         break;
                     };
                     sifr_generated_yielder
-                        .suspend(sifr_generated_checked_value_7.clone())
+                        .suspend(sifr_generated_checked_value_7)
                         .await;
-                    i = &i + &SifrInt::from_i64(1);
+                    i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 }
             },
         ))
@@ -368,7 +379,7 @@ mod sifr_generated_generated_support {
             Ok(Ok(sifr_generated_iter_list_str(entries)))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err.clone();
+            let e: IOError = sifr_generated_try_err;
             Err(e)
         })
     }
@@ -468,39 +479,39 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2epathlibX2ePat
 pub use sifr_generated_project_nominals::ValueError;
 mod sifr_generated_project_unions {
     #[derive(Debug, Clone)]
-    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0
     {
-        SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0(
+        SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0(
             crate::sifr_generated_project_nominals::IOError,
         ),
-        SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+        SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
             crate::sifr_generated_project_nominals::ValueError,
         ),
     }
     impl From<crate::sifr_generated_project_nominals::IOError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0 {
         fn from(value: crate::sifr_generated_project_nominals::IOError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0(
                 value,
             )
         }
     }
     impl From<crate::sifr_generated_project_nominals::ValueError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0 {
         fn from(value: crate::sifr_generated_project_nominals::ValueError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
                 value,
             )
         }
     }
     impl ::std::fmt::Display
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
             }
@@ -511,9 +522,9 @@ use crate::sifr_generated_generated_support::{
     accumulate, compress, getpid, islice, run_command, takewhile, write_text,
 };
 use ::sifr_runtime::SifrInt;
-pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0;
-fn lt3(x: SifrInt) -> bool {
-    &x < &SifrInt::from_i64(3)
+pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0;
+fn lt3(x: &SifrInt) -> bool {
+    x < &SifrInt::from_i64(3)
 }
 #[expect(
     clippy::too_many_lines,
@@ -529,18 +540,19 @@ fn main() {
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let sliced: Box<dyn Iterator<Item = SifrInt>> = islice(
             Box::new(nums.clone().into_iter()),
-            SifrInt::from_i64(1),
-            &vec![Some(SifrInt::from_i64(4)), Some(SifrInt::from_i64(2))],
+            Some(&SifrInt::from_i64(1)),
+            &[Some(SifrInt::from_i64(4)), Some(SifrInt::from_i64(2))],
         )?;
         println!("{:?}", sliced.collect::<Vec<_>>());
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
+        let e: ValueError = sifr_generated_try_err;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(14usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(14usize.saturating_add(0usize));
             sifr_generated_concat.push_str("islice error: ");
-            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
     }
@@ -558,75 +570,73 @@ fn main() {
     );
     println!(
         "{:?}",
-        takewhile(
-            |sifr_generated_arg0| lt3(sifr_generated_arg0.clone()),
-            Box::new(nums.clone().into_iter())
-        )
-        .collect::<Vec<_>>()
+        takewhile(lt3, Box::new(nums.into_iter())).collect::<Vec<_>>()
     );
     let base: String = {
-        let mut sifr_generated_concat: String = String::with_capacity(29usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(29usize.saturating_add(0usize));
         sifr_generated_concat.push_str("/tmp/sifr_itertools_iterables");
         sifr_generated_concat.push_str(getpid().to_string().as_str());
         sifr_generated_concat
     };
     let sifr_generated_try_res: Result<
         (),
-        SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0,
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
     > = (|| {
         let _mk: String = run_command(&format!("mkdir -p {base}"))
             .map_err(
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0,
             )?;
-        write_text(&format!("{base}/a.txt"), &"demo".to_string())
+        write_text(&format!("{base}/a.txt"), "demo")
             .map_err(
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0,
             )?;
-        write_text(&format!("{base}/b.txt"), &"demo".to_string())
+        write_text(&format!("{base}/b.txt"), "demo")
             .map_err(
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0,
             )?;
         let root: SifrGeneratedStdlibSifrX2epathlibX2ePath = SifrGeneratedStdlibSifrX2epathlibX2ePath::new(
-            base.to_string(),
+            base.clone(),
         );
         let entries_it: Box<dyn Iterator<Item = String>> = root
             .iterdir()
             .map_err(
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0,
             )?;
         let sliced_entries: Box<dyn Iterator<Item = String>> = islice(
                 Box::new(entries_it),
-                SifrInt::from_i64(1),
+                Some(&SifrInt::from_i64(1)),
                 &Vec::<Option<SifrInt>>::new(),
             )
             .map_err(
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
             )?;
-        println!("{}", SifrInt::from(sliced_entries.collect:: < Vec < _ > > ().len()));
+        println!("{}", SifrInt::from(sliced_entries.count()));
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         match sifr_generated_try_err {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let e = sifr_generated_try_variant_error.clone();
+                let e: IOError = sifr_generated_try_variant_error;
                 println!(
                     "{}", { let mut sifr_generated_concat : String =
-                    String::with_capacity(9usize); sifr_generated_concat
-                    .push_str("ioerror: "); sifr_generated_concat.push_str(e.message
-                    .clone().to_string().as_str()); sifr_generated_concat }
+                    String::with_capacity(9usize.saturating_add(0usize));
+                    sifr_generated_concat.push_str("ioerror: "); sifr_generated_concat
+                    .push_str(e.message.as_str()); sifr_generated_concat }
                 );
             }
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a233X3a5X3aclass20X3asifrX2ebuiltinX2eIOError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let e = sifr_generated_try_variant_error.clone();
+                let e: ValueError = sifr_generated_try_variant_error;
                 println!(
                     "{}", { let mut sifr_generated_concat : String =
-                    String::with_capacity(14usize); sifr_generated_concat
-                    .push_str("islice error: "); sifr_generated_concat.push_str(e.message
-                    .clone().as_str()); sifr_generated_concat }
+                    String::with_capacity(14usize.saturating_add(0usize));
+                    sifr_generated_concat.push_str("islice error: ");
+                    sifr_generated_concat.push_str(e.message.as_str());
+                    sifr_generated_concat }
                 );
             }
         }
@@ -636,11 +646,12 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
+        let e: IOError = sifr_generated_try_err;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(17usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(17usize.saturating_add(0usize));
             sifr_generated_concat.push_str("cleanup ioerror: ");
-            sifr_generated_concat.push_str(e.message.clone().to_string().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
     }

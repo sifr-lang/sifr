@@ -1,8 +1,8 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 fn shadow_parameter(mut value: SifrInt) -> SifrInt {
-    value = &value + &SifrInt::from_i64(2);
-    value.clone()
+    value = ::std::ops::Add::add(&value, &SifrInt::from_i64(2));
+    value
 }
 fn choose_label(flag: bool) -> String {
     if flag {
@@ -12,10 +12,7 @@ fn choose_label(flag: bool) -> String {
     }
 }
 fn main() {
-    assert_eq!(
-        &shadow_parameter(SifrInt::from_i64(5)),
-        &SifrInt::from_i64(7)
-    );
+    assert_eq!(shadow_parameter(SifrInt::from_i64(5)), SifrInt::from_i64(7));
     assert_eq!(choose_label(true), "warm");
     assert_eq!(choose_label(false), "cold");
     println!("local_shadowing: ok");

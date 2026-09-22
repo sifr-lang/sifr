@@ -4,7 +4,11 @@ mod sifr_generated_generated_support {
     pub const INF: f64 = f64::INFINITY;
     #[expect(
         clippy::assertions_on_constants,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    #[expect(
+        clippy::float_cmp,
+        reason = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes"
     )]
     pub fn assert_not_almost_eq(actual: f64, expected: f64, tolerance: f64) {
         assert!(tolerance >= 0.0_f64);
@@ -15,7 +19,7 @@ mod sifr_generated_generated_support {
         if diff < 0.0_f64 {
             diff = 0.0_f64 - diff;
         }
-        if diff != diff {
+        if diff.is_nan() {
             return;
         }
         assert!(diff > tolerance);
@@ -34,7 +38,7 @@ mod sifr_generated_generated_support {
     }
     #[expect(
         clippy::assertions_on_constants,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     pub fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
@@ -47,7 +51,7 @@ mod sifr_generated_generated_support {
     }
     #[expect(
         clippy::assertions_on_constants,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     pub fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
@@ -257,11 +261,10 @@ fn parse_num(s: &str) -> Result<SifrInt, ValueError> {
 }
 fn main() {
     println!("=== Core equality/truth assertions ===");
-    assert_eq!("sifr", "sifr");
     assert_ne!("sifr", "rust");
-    assert!(&SifrInt::from_i64(2) > &SifrInt::from_i64(1));
+    assert!(SifrInt::from_i64(2) > SifrInt::from_i64(1));
     {
-        let sifr_generated_cond = &SifrInt::from_i64(1) > &SifrInt::from_i64(2);
+        let sifr_generated_cond = SifrInt::from_i64(1) > SifrInt::from_i64(2);
         assert!(!sifr_generated_cond);
     };
     println!("core assertions ok");
@@ -290,21 +293,21 @@ fn main() {
     println!("almost assertions ok");
     println!("=== Comparable assertions ===");
     assert!(
-        &SifrInt::from_i64(5) > &SifrInt::from_i64(4),
+        SifrInt::from_i64(5) > SifrInt::from_i64(4),
         "assert_gt failed: {} is not > {}",
         SifrInt::from_i64(5),
         SifrInt::from_i64(4)
     );
     assert_ge(&SifrInt::from_i64(5), &SifrInt::from_i64(5));
     assert!(
-        "a".to_string() < "b".to_string(),
+        "a" < "b".to_string().as_str(),
         "assert_lt failed: a is not < b"
     );
     assert_le(&"b".to_string(), &"b".to_string());
     println!("comparison assertions ok");
     println!("=== Result/Option adapted assertions ===");
-    assert_ok(parse_num(&"ok".to_string()).map_err(::std::convert::Into::<Error>::into));
-    assert_err(parse_num(&"bad".to_string()).map_err(::std::convert::Into::<Error>::into));
+    assert_ok(parse_num("ok").map_err(::std::convert::Into::<Error>::into));
+    assert_err(parse_num("bad").map_err(::std::convert::Into::<Error>::into));
     let maybe_name: Option<String> = Some("sifr".to_string());
     let maybe_missing: Option<String> = None;
     assert_some(maybe_name);

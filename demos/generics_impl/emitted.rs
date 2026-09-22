@@ -14,20 +14,20 @@ fn first<T: Clone + 'static>(items: &[T]) -> Option<T> {
             .cloned()
     }
 }
-fn apply(f: impl Fn(SifrInt) -> SifrInt, x: SifrInt) -> SifrInt {
-    f(x.clone())
+fn apply(f: impl Fn(SifrInt) -> SifrInt, x: &SifrInt) -> SifrInt {
+    f((*x).clone())
 }
-fn apply_twice(f: impl Fn(SifrInt) -> SifrInt, x: SifrInt) -> SifrInt {
-    f(f(x.clone()))
+fn apply_twice(f: impl Fn(SifrInt) -> SifrInt, x: &SifrInt) -> SifrInt {
+    f(f((*x).clone()))
 }
 fn double(x: SifrInt) -> SifrInt {
-    &x * &SifrInt::from_i64(2)
+    ::std::ops::Mul::mul(x, &SifrInt::from_i64(2))
 }
 fn add_one(x: SifrInt) -> SifrInt {
-    &x + &SifrInt::from_i64(1)
+    ::std::ops::Add::add(x, &SifrInt::from_i64(1))
 }
 fn square(x: SifrInt) -> SifrInt {
-    &x * &x
+    ::std::ops::Mul::mul(x.clone(), x)
 }
 fn main() {
     let a: SifrInt = identity(&SifrInt::from_i64(42));
@@ -42,7 +42,7 @@ fn main() {
     let words: Vec<String> = vec!["alpha".to_string(), "beta".to_string(), "gamma".to_string()];
     let empty_words: Vec<String> = Vec::new();
     let first_num: Option<SifrInt> = first(&nums);
-    if let Some(first_num) = first_num.clone() {
+    if let Some(first_num) = first_num {
         println!("{first_num}");
     }
     let first_word: Option<String> = first(&words);
@@ -55,8 +55,8 @@ fn main() {
     } else if let Some(missing_word) = missing_word {
         println!("{missing_word}");
     }
-    println!("{}", apply(double, SifrInt::from_i64(5)));
-    println!("{}", apply(add_one, SifrInt::from_i64(99)));
-    println!("{}", apply_twice(add_one, SifrInt::from_i64(5)));
-    println!("{}", apply_twice(square, SifrInt::from_i64(3)));
+    println!("{}", apply(double, &SifrInt::from_i64(5)));
+    println!("{}", apply(add_one, &SifrInt::from_i64(99)));
+    println!("{}", apply_twice(add_one, &SifrInt::from_i64(5)));
+    println!("{}", apply_twice(square, &SifrInt::from_i64(3)));
 }

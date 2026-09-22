@@ -2,44 +2,45 @@
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
 use ::std::collections::HashMap;
-fn sum_range(n: SifrInt) -> SifrInt {
+fn sum_range(n: &SifrInt) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {
-        total = &total + &i;
+    for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), (*n).clone(), SifrInt::from_i64(1))
+    {
+        total = ::std::ops::Add::add(&total, &i);
     }
-    total.clone()
+    total
 }
-fn fizzbuzz(n: SifrInt) {
+fn fizzbuzz(n: &SifrInt) {
     for i in SifrRange::new_known_nonzero(
         SifrInt::from_i64(1),
-        &n + &SifrInt::from_i64(1),
+        ::std::ops::Add::add(n, &SifrInt::from_i64(1)),
         SifrInt::from_i64(1),
     ) {
-        if &i.floor_mod_known_nonzero(&SifrInt::from_i64(15)) == &SifrInt::from_i64(0) {
+        if i.floor_mod_known_nonzero(&SifrInt::from_i64(15)) == SifrInt::from_i64(0) {
             println!("FizzBuzz");
         }
-        if &i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) == &SifrInt::from_i64(0)
-            && &i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) != &SifrInt::from_i64(0)
+        if i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) == SifrInt::from_i64(0)
+            && i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) != SifrInt::from_i64(0)
         {
             println!("Fizz");
         }
-        if &i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) == &SifrInt::from_i64(0)
-            && &i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) != &SifrInt::from_i64(0)
+        if i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) == SifrInt::from_i64(0)
+            && i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) != SifrInt::from_i64(0)
         {
             println!("Buzz");
         }
-        if &i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) != &SifrInt::from_i64(0)
-            && &i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) != &SifrInt::from_i64(0)
+        if i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) != SifrInt::from_i64(0)
+            && i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) != SifrInt::from_i64(0)
         {
             println!("{i}");
         }
     }
 }
-fn countdown(n: SifrInt) {
-    let mut i: SifrInt = n.clone();
-    while &i > &SifrInt::from_i64(0) {
+fn countdown(n: &SifrInt) {
+    let mut i: SifrInt = (*n).clone();
+    while i > SifrInt::from_i64(0) {
         println!("{i}");
-        i = &i - &SifrInt::from_i64(1);
+        i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
     }
     println!("Go!");
 }
@@ -57,9 +58,9 @@ static SIFR_GENERATED_SIFR_HOISTED_DICT_0: ::std::sync::LazyLock<HashMap<String,
 )]
 fn main() {
     println!("=== While Loop: Countdown ===");
-    countdown(SifrInt::from_i64(5));
+    countdown(&SifrInt::from_i64(5));
     println!("=== For Loop: Sum of 0..9 ===");
-    let s: SifrInt = sum_range(SifrInt::from_i64(10));
+    let s: SifrInt = sum_range(&SifrInt::from_i64(10));
     println!("Sum of range(10) = {s}");
     println!("=== Nested Loops: Multiplication Table ===");
     for i in SifrRange::new_known_nonzero(
@@ -72,18 +73,18 @@ fn main() {
             SifrInt::from_i64(4),
             SifrInt::from_i64(1),
         ) {
-            let product: SifrInt = &i * &j;
+            let product: SifrInt = ::std::ops::Mul::mul(&i, &j);
             println!("{i} x {j} = {product}");
         }
     }
     println!("=== Break/Continue ===");
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from_i64(10) {
-        i = &i + &SifrInt::from_i64(1);
-        if &i == &SifrInt::from_i64(3) {
+    while i < SifrInt::from_i64(10) {
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
+        if i == SifrInt::from_i64(3) {
             continue;
         }
-        if &i == &SifrInt::from_i64(7) {
+        if i == SifrInt::from_i64(7) {
             break;
         }
         println!("{i}");
@@ -106,7 +107,7 @@ fn main() {
             .get(sifr_generated_checked_read_normalized)
             .cloned()
     };
-    if let Some(first) = first.clone() {
+    if let Some(first) = first {
         println!("First: {first}");
     }
     let last: Option<SifrInt> = {
@@ -118,12 +119,16 @@ fn main() {
             .get(sifr_generated_checked_read_normalized)
             .cloned()
     };
-    if let Some(last) = last.clone() {
+    if let Some(last) = last {
         println!("Last: {last}");
     }
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for n in nums.iter().cloned() {
-        total = &total + &n;
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for n in nums.iter() {
+        total = ::std::ops::Add::add(&total, n);
     }
     println!("Sum: {total}");
     let mut fruits: Vec<String> = vec!["apple".to_string(), "banana".to_string()];
@@ -132,11 +137,11 @@ fn main() {
     println!("=== Dict ===");
     let ages = &*SIFR_GENERATED_SIFR_HOISTED_DICT_0;
     let alice_age: Option<SifrInt> = ages.get("Alice").cloned();
-    if let Some(alice_age) = alice_age.clone() {
+    if let Some(alice_age) = alice_age {
         println!("Alice is {alice_age} years old");
     }
     let bob_age: Option<SifrInt> = ages.get("Bob").cloned();
-    if let Some(bob_age) = bob_age.clone() {
+    if let Some(bob_age) = bob_age {
         println!("Bob is {bob_age} years old");
     }
     println!("=== In Operator ===");
@@ -166,8 +171,8 @@ fn main() {
     println!("=== F-Strings ===");
     let a: SifrInt = SifrInt::from_i64(7);
     let b: SifrInt = SifrInt::from_i64(8);
-    println!("{} * {} = {}", a, b, &a * &b);
-    println!("Is {} > {}? {}", a, b, &a > &b);
+    println!("{} * {} = {}", a, b, ::std::ops::Mul::mul(&a, &b));
+    println!("Is {} > {}? {}", a, b, a > b);
     println!("=== String Operations ===");
     let greeting: String = "  Hello, World!  ".to_string();
     println!("{}", greeting.trim());
@@ -177,5 +182,5 @@ fn main() {
     println!("Starts with \'sifr\': {}", lang.starts_with("sifr"));
     println!("Ends with \'lang\': {}", lang.ends_with("lang"));
     println!("=== FizzBuzz (1-15) ===");
-    fizzbuzz(SifrInt::from_i64(15));
+    fizzbuzz(&SifrInt::from_i64(15));
 }

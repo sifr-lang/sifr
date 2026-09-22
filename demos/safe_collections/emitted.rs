@@ -6,7 +6,7 @@ use ::sifr_runtime::SifrInt;
 )]
 #[expect(
     clippy::approx_constant,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     let mut items: Vec<SifrInt> = vec![
@@ -47,11 +47,11 @@ fn main() {
             {
                 sifr_generated_result = Some(SifrInt::from(sifr_generated_i));
             }
-            sifr_generated_i += 1;
+            sifr_generated_i = sifr_generated_i.saturating_add(1usize);
         }
         sifr_generated_result
     };
-    if let Some(pos) = pos.clone() {
+    if let Some(pos) = pos {
         println!("Found 'bob' at index {pos}");
     } else {
         println!("\'bob\' not found");
@@ -68,11 +68,11 @@ fn main() {
             {
                 sifr_generated_result = Some(SifrInt::from(sifr_generated_i));
             }
-            sifr_generated_i += 1;
+            sifr_generated_i = sifr_generated_i.saturating_add(1usize);
         }
         sifr_generated_result
     };
-    if let Some(missing) = missing.clone() {
+    if let Some(missing) = missing {
         println!("Found 'dave' at index {missing}");
     } else {
         println!("\'dave\' not found (safe: returned None)");
@@ -86,20 +86,20 @@ fn main() {
     ];
     let lo: Option<SifrInt> = nums.iter().cloned().min();
     let hi: Option<SifrInt> = nums.iter().cloned().max();
-    if let Some(lo) = lo.clone()
-        && let Some(hi) = hi.clone()
+    if let Some(lo) = lo
+        && let Some(hi) = hi
     {
         println!("min={lo}, max={hi}");
     }
     let empty: Vec<SifrInt> = Vec::new();
     let empty_min: Option<SifrInt> = empty.iter().cloned().min();
     let empty_max_value_4e7fb6460174a48b: Option<SifrInt> = empty.iter().cloned().max();
-    if let Some(_empty_min) = empty_min.clone() {
+    if let Some(_empty_min) = empty_min {
         println!("ERROR: min on empty should be None");
     } else {
         println!("min([]) = None (safe!)");
     }
-    if let Some(_empty_max) = empty_max_value_4e7fb6460174a48b.clone() {
+    if let Some(_empty_max) = empty_max_value_4e7fb6460174a48b {
         println!("ERROR: max on empty should be None");
     } else {
         println!("max([]) = None (safe!)");
@@ -107,7 +107,7 @@ fn main() {
     let floats: Vec<f64> = vec![3.14_f64, 1.0_f64, 2.71_f64, 0.5_f64];
     println!("sorted floats:");
     println!("{:?}", {
-        let mut sifr_generated_sorted_values = floats.iter().copied().collect::<Vec<_>>();
+        let mut sifr_generated_sorted_values = floats;
         sifr_generated_sorted_values.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                 sifr_generated_sorted_left
@@ -120,10 +120,10 @@ fn main() {
     let mut stack: Vec<SifrInt> = vec![SifrInt::from_i64(42)];
     let val1: Option<SifrInt> = stack.pop();
     let val2_value_4373ff00edde01ca: Option<SifrInt> = stack.pop();
-    if let Some(val1) = val1.clone() {
+    if let Some(val1) = val1 {
         println!("popped: {val1}");
     }
-    if let Some(_val2) = val2_value_4373ff00edde01ca.clone() {
+    if let Some(_val2) = val2_value_4373ff00edde01ca {
         println!("ERROR: pop on empty should be None");
     } else {
         println!("pop on empty = None (safe!)");

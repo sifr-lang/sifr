@@ -6,19 +6,25 @@ mod sifr_generated_generated_support {
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
     fn sifr_generated_sift_down_max<T: Clone + 'static + PartialOrd>(
-        data: &mut Vec<T>,
+        data: &mut [T],
         mut pos: SifrInt,
-        n: SifrInt,
+        n: &SifrInt,
     ) {
         let mut done: bool = false;
         while !done {
             let mut largest: SifrInt = pos.clone();
-            let left: SifrInt = &(&SifrInt::from_i64(2) * &pos) + &SifrInt::from_i64(1);
-            let right: SifrInt = &(&SifrInt::from_i64(2) * &pos) + &SifrInt::from_i64(2);
-            if &left < &n {
+            let left: SifrInt = ::std::ops::Add::add(
+                &::std::ops::Mul::mul(&SifrInt::from_i64(2), &pos),
+                &SifrInt::from_i64(1),
+            );
+            let right: SifrInt = ::std::ops::Add::add(
+                &::std::ops::Mul::mul(&SifrInt::from_i64(2), &pos),
+                &SifrInt::from_i64(2),
+            );
+            if &left < n {
                 let current_val: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
-                    let sifr_generated_checked_read_index = largest.clone();
+                    let sifr_generated_checked_read_index = &largest;
                     let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                         .normalize_index_or_len(sifr_generated_checked_read_collection.len());
                     sifr_generated_checked_read_collection
@@ -27,7 +33,7 @@ mod sifr_generated_generated_support {
                 };
                 let left_val: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
-                    let sifr_generated_checked_read_index = left.clone();
+                    let sifr_generated_checked_read_index = &left;
                     let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                         .normalize_index_or_len(sifr_generated_checked_read_collection.len());
                     sifr_generated_checked_read_collection
@@ -41,10 +47,10 @@ mod sifr_generated_generated_support {
                     largest = left;
                 }
             }
-            if &right < &n {
+            if &right < n {
                 let current_val2_value_4fa82455325b79cc: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
-                    let sifr_generated_checked_read_index = largest.clone();
+                    let sifr_generated_checked_read_index = &largest;
                     let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                         .normalize_index_or_len(sifr_generated_checked_read_collection.len());
                     sifr_generated_checked_read_collection
@@ -53,7 +59,7 @@ mod sifr_generated_generated_support {
                 };
                 let right_val: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
-                    let sifr_generated_checked_read_index = right.clone();
+                    let sifr_generated_checked_read_index = &right;
                     let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                         .normalize_index_or_len(sifr_generated_checked_read_collection.len());
                     sifr_generated_checked_read_collection
@@ -67,12 +73,12 @@ mod sifr_generated_generated_support {
                     largest = right;
                 }
             }
-            if &largest == &pos {
+            if largest == pos {
                 done = true;
             } else {
                 let tmp_pos: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
-                    let sifr_generated_checked_read_index = pos.clone();
+                    let sifr_generated_checked_read_index = &pos;
                     let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                         .normalize_index_or_len(sifr_generated_checked_read_collection.len());
                     sifr_generated_checked_read_collection
@@ -81,7 +87,7 @@ mod sifr_generated_generated_support {
                 };
                 let tmp_largest: Option<T> = {
                     let sifr_generated_checked_read_collection = &data;
-                    let sifr_generated_checked_read_index = largest.clone();
+                    let sifr_generated_checked_read_index = &largest;
                     let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                         .normalize_index_or_len(sifr_generated_checked_read_collection.len());
                     sifr_generated_checked_read_collection
@@ -91,11 +97,11 @@ mod sifr_generated_generated_support {
                 if let Some(tmp_pos) = tmp_pos
                     && let Some(tmp_largest) = tmp_largest
                 {
-                    if &SifrInt::from_i64(0) <= &pos && &pos < &SifrInt::from(data.len()) {
+                    if SifrInt::from_i64(0) <= pos && pos < data.len() {
                         {
                             let sifr_generated_assign_value = tmp_largest.clone();
                             {
-                                let sifr_generated_index_raw = pos.clone();
+                                let sifr_generated_index_raw = &pos;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(data.len());
                                 if let Some(sifr_generated_elem) =
@@ -106,11 +112,11 @@ mod sifr_generated_generated_support {
                             }
                         }
                     }
-                    if &SifrInt::from_i64(0) <= &largest && &largest < &SifrInt::from(data.len()) {
+                    if SifrInt::from_i64(0) <= largest && largest < data.len() {
                         {
                             let sifr_generated_assign_value = tmp_pos.clone();
                             {
-                                let sifr_generated_index_raw = largest.clone();
+                                let sifr_generated_index_raw = &largest;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(data.len());
                                 if let Some(sifr_generated_elem) =
@@ -126,14 +132,16 @@ mod sifr_generated_generated_support {
             }
         }
     }
-    pub fn sifr_generated_heapify_max<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
+    pub fn sifr_generated_heapify_max<T: Clone + 'static + PartialOrd>(data: &mut [T]) {
         "Convert list to a max-heap in-place. O(n) time.".to_string();
         let n: SifrInt = SifrInt::from(data.len());
-        let mut i: SifrInt =
-            &n.floor_div_known_nonzero(&SifrInt::from_i64(2)) - &SifrInt::from_i64(1);
-        while &i >= &SifrInt::from_i64(0) {
-            sifr_generated_sift_down_max(data, i.clone(), n.clone());
-            i = &i - &SifrInt::from_i64(1);
+        let mut i: SifrInt = ::std::ops::Sub::sub(
+            &n.floor_div_known_nonzero(&SifrInt::from_i64(2)),
+            &SifrInt::from_i64(1),
+        );
+        while i >= SifrInt::from_i64(0) {
+            sifr_generated_sift_down_max(data, i.clone(), &n);
+            i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
         }
     }
     pub fn sifr_generated_heappop_max<T: Clone + 'static + PartialOrd>(
@@ -142,7 +150,7 @@ mod sifr_generated_generated_support {
         "Pop and return the largest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
             .to_string();
         let n: SifrInt = SifrInt::from(heap.len());
-        if &n == &SifrInt::from_i64(0) {
+        if n == SifrInt::from_i64(0) {
             return None;
         }
         let top: Option<T> = {
@@ -156,16 +164,16 @@ mod sifr_generated_generated_support {
         };
         let last: Option<T> = {
             let sifr_generated_checked_read_collection = &heap;
-            let sifr_generated_checked_read_index = &n - &SifrInt::from_i64(1);
+            let sifr_generated_checked_read_index = ::std::ops::Sub::sub(&n, &SifrInt::from_i64(1));
             let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
                 .get(sifr_generated_checked_read_normalized)
                 .cloned()
         };
-        heap.remove(heap.len() - 1_usize);
+        heap.remove(heap.len().saturating_sub(1_usize));
         let n2: SifrInt = SifrInt::from(heap.len());
-        if &n2 > &SifrInt::from_i64(0) {
+        if n2 > SifrInt::from_i64(0) {
             if let Some(last) = last {
                 {
                     let sifr_generated_assign_value = last.clone();
@@ -181,17 +189,17 @@ mod sifr_generated_generated_support {
                     }
                 }
             }
-            sifr_generated_sift_down_max(heap, SifrInt::from_i64(0), n2.clone());
+            sifr_generated_sift_down_max(heap, SifrInt::from_i64(0), &n2);
         }
         top
     }
     pub fn sifr_generated_heapreplace_max<T: Clone + 'static + PartialOrd>(
-        heap: &mut Vec<T>,
+        heap: &mut [T],
         item: T,
     ) -> Option<T> {
         "Pop and return the largest item, then push item onto the heap.\n    Returns None if the heap is empty. O(log n) time."
             .to_string();
-        if &SifrInt::from(heap.len()) == &SifrInt::from_i64(0) {
+        if heap.len() == SifrInt::from_i64(0) {
             return None;
         }
         let top: Option<T> = {
@@ -215,7 +223,7 @@ mod sifr_generated_generated_support {
             }
         }
         let heap_len: SifrInt = SifrInt::from(heap.len());
-        sifr_generated_sift_down_max(heap, SifrInt::from_i64(0), heap_len.clone());
+        sifr_generated_sift_down_max(heap, SifrInt::from_i64(0), &heap_len);
         top
     }
 }
@@ -225,9 +233,9 @@ use crate::sifr_generated_generated_support::{
 use ::sifr_runtime::SifrInt;
 fn drain(heap: &mut Vec<SifrInt>) -> Vec<SifrInt> {
     let mut result: Vec<SifrInt> = Vec::new();
-    while &SifrInt::from(heap.len()) > &SifrInt::from_i64(0) {
+    while heap.len() > SifrInt::from_i64(0) {
         let value: Option<SifrInt> = sifr_generated_heappop_max(heap);
-        if let Some(value) = value.clone() {
+        if let Some(value) = value {
             result.push(value);
         }
     }

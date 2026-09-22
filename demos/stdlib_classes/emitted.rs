@@ -8,11 +8,16 @@ mod sifr_generated_generated_support {
         items: &[T],
     ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
-        for item in items.iter().cloned() {
-            let val: Option<SifrInt> = counts.get(&item).cloned();
-            if let Some(val) = val.clone() {
+        #[expect(
+            clippy::explicit_iter_loop,
+            reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+        )]
+        for item in items.iter() {
+            let val: Option<SifrInt> = counts.get(item).cloned();
+            if let Some(val) = val {
                 {
-                    let sifr_generated_assign_value = &val + &SifrInt::from_i64(1);
+                    let sifr_generated_assign_value =
+                        ::std::ops::Add::add(&val, &SifrInt::from_i64(1));
                     {
                         let sifr_generated_assign_key = item.clone();
                         counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
@@ -43,9 +48,9 @@ mod sifr_generated_project_nominals {
             if let Some(source) = source {
                 for key in source.keys().cloned().collect::<Vec<_>>() {
                     let value: Option<SifrInt> = source.get(&key).cloned();
-                    if let Some(value) = value.clone() {
+                    if let Some(value) = value {
                         {
-                            let sifr_generated_assign_value = value.clone();
+                            let sifr_generated_assign_value = value;
                             {
                                 let sifr_generated_assign_key = key.clone();
                                 counts
@@ -56,11 +61,16 @@ mod sifr_generated_project_nominals {
                 }
             }
             if let Some(iterable) = iterable {
-                for item in iterable.iter().cloned() {
-                    let value2_value_2127bacf1a4dd308: Option<SifrInt> = counts.get(&item).cloned();
-                    if let Some(value2) = value2_value_2127bacf1a4dd308.clone() {
+                #[expect(
+                    clippy::explicit_iter_loop,
+                    reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
+                )]
+                for item in iterable.iter() {
+                    let value2_value_2127bacf1a4dd308: Option<SifrInt> = counts.get(item).cloned();
+                    if let Some(value2) = value2_value_2127bacf1a4dd308 {
                         {
-                            let sifr_generated_assign_value = &value2 + &SifrInt::from_i64(1);
+                            let sifr_generated_assign_value =
+                                ::std::ops::Add::add(&value2, &SifrInt::from_i64(1));
                             {
                                 let sifr_generated_assign_key = item.clone();
                                 counts
@@ -87,8 +97,8 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn get(&self, key: &T, default: &SifrInt) -> SifrInt {
             let val: Option<SifrInt> = self.counts.get(key).cloned();
-            let Some(val) = val.clone() else {
-                return default.clone();
+            let Some(val) = val else {
+                return (*default).clone();
             };
             val
         }
@@ -96,9 +106,10 @@ mod sifr_generated_project_nominals {
     impl<T: ::std::hash::Hash + Eq + Clone> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         pub fn increment(&mut self, key: &T) {
             let val: Option<SifrInt> = self.counts.get(key).cloned();
-            if let Some(val) = val.clone() {
+            if let Some(val) = val {
                 {
-                    let sifr_generated_assign_value = &val + &SifrInt::from_i64(1);
+                    let sifr_generated_assign_value =
+                        ::std::ops::Add::add(&val, &SifrInt::from_i64(1));
                     {
                         let sifr_generated_assign_key = key.clone();
                         self.counts
@@ -120,7 +131,7 @@ mod sifr_generated_project_nominals {
         pub fn total(&self) -> SifrInt {
             let mut total: SifrInt = SifrInt::from_i64(0);
             for count in self.counts.values().cloned().collect::<Vec<_>>() {
-                total = &total + &count;
+                total = ::std::ops::Add::add(&total, &count);
             }
             total
         }
@@ -131,18 +142,18 @@ mod sifr_generated_project_nominals {
             let mut result: Vec<(T, SifrInt)> = Vec::new();
             for key in self.counts.keys().cloned().collect::<Vec<_>>() {
                 let count: Option<SifrInt> = self.counts.get(&key).cloned();
-                if let Some(count) = count.clone() {
-                    let entry: (T, SifrInt) = (key.clone(), count.clone());
+                if let Some(count) = count {
+                    let entry: (T, SifrInt) = (key.clone(), count);
                     result.push(entry.clone());
                 }
             }
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &SifrInt::from_i64(0) <= &i && &i < &SifrInt::from(result.len()) {
-                let mut j: SifrInt = &i + &SifrInt::from_i64(1);
-                while &SifrInt::from_i64(0) <= &j && &j < &SifrInt::from(result.len()) {
+            while SifrInt::from_i64(0) <= i && i < result.len() {
+                let mut j: SifrInt = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
+                while SifrInt::from_i64(0) <= j && j < result.len() {
                     let left: Option<(T, SifrInt)> = {
                         let sifr_generated_checked_read_collection = &result;
-                        let sifr_generated_checked_read_index = i.clone();
+                        let sifr_generated_checked_read_index = &i;
                         let sifr_generated_checked_read_normalized =
                             sifr_generated_checked_read_index.normalize_index_or_len(
                                 sifr_generated_checked_read_collection.len(),
@@ -153,7 +164,7 @@ mod sifr_generated_project_nominals {
                     };
                     let right: Option<(T, SifrInt)> = {
                         let sifr_generated_checked_read_collection = &result;
-                        let sifr_generated_checked_read_index = j.clone();
+                        let sifr_generated_checked_read_index = &j;
                         let sifr_generated_checked_read_normalized =
                             sifr_generated_checked_read_index.normalize_index_or_len(
                                 sifr_generated_checked_read_collection.len(),
@@ -164,12 +175,12 @@ mod sifr_generated_project_nominals {
                     };
                     if let Some(left) = left
                         && let Some(right) = right
-                        && right.1.clone() > left.1.clone()
+                        && right.1 > left.1
                     {
                         {
                             let sifr_generated_assign_value = right.clone();
                             {
-                                let sifr_generated_index_raw = i.clone();
+                                let sifr_generated_index_raw = &i;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -182,7 +193,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = left.clone();
                             {
-                                let sifr_generated_index_raw = j.clone();
+                                let sifr_generated_index_raw = &j;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -193,9 +204,9 @@ mod sifr_generated_project_nominals {
                             }
                         }
                     }
-                    j = &j + &SifrInt::from_i64(1);
+                    j = ::std::ops::Add::add(&j, &SifrInt::from_i64(1));
                 }
-                i = &i + &SifrInt::from_i64(1);
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
             let Some(n) = n.as_ref() else {
                 return result;
@@ -206,12 +217,12 @@ mod sifr_generated_project_nominals {
             let mut top: Vec<(T, SifrInt)> = Vec::new();
             let mut index: SifrInt = SifrInt::from_i64(0);
             while index < *n {
-                if &index >= &SifrInt::from(result.len()) {
+                if index >= result.len() {
                     return top;
                 }
                 let value: Option<(T, SifrInt)> = {
                     let sifr_generated_checked_read_collection = &result;
-                    let sifr_generated_checked_read_index = index.clone();
+                    let sifr_generated_checked_read_index = &index;
                     let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                         .normalize_index_or_len(sifr_generated_checked_read_collection.len());
                     sifr_generated_checked_read_collection
@@ -221,7 +232,7 @@ mod sifr_generated_project_nominals {
                 if let Some(value) = value {
                     top.push(value.clone());
                 }
-                index = &index + &SifrInt::from_i64(1);
+                index = ::std::ops::Add::add(&index, &SifrInt::from_i64(1));
             }
             top
         }
@@ -233,12 +244,12 @@ mod sifr_generated_project_nominals {
         pub fn keys(&self) -> Vec<T> {
             let mut result: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &SifrInt::from_i64(0) <= &i && &i < &SifrInt::from(result.len()) {
-                let mut j: SifrInt = &i + &SifrInt::from_i64(1);
-                while &SifrInt::from_i64(0) <= &j && &j < &SifrInt::from(result.len()) {
+            while SifrInt::from_i64(0) <= i && i < result.len() {
+                let mut j: SifrInt = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
+                while SifrInt::from_i64(0) <= j && j < result.len() {
                     let left: Option<T> = {
                         let sifr_generated_checked_read_collection = &result;
-                        let sifr_generated_checked_read_index = i.clone();
+                        let sifr_generated_checked_read_index = &i;
                         let sifr_generated_checked_read_normalized =
                             sifr_generated_checked_read_index.normalize_index_or_len(
                                 sifr_generated_checked_read_collection.len(),
@@ -249,7 +260,7 @@ mod sifr_generated_project_nominals {
                     };
                     let right: Option<T> = {
                         let sifr_generated_checked_read_collection = &result;
-                        let sifr_generated_checked_read_index = j.clone();
+                        let sifr_generated_checked_read_index = &j;
                         let sifr_generated_checked_read_normalized =
                             sifr_generated_checked_read_index.normalize_index_or_len(
                                 sifr_generated_checked_read_collection.len(),
@@ -265,7 +276,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = right.clone();
                             {
-                                let sifr_generated_index_raw = i.clone();
+                                let sifr_generated_index_raw = &i;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -278,7 +289,7 @@ mod sifr_generated_project_nominals {
                         {
                             let sifr_generated_assign_value = left.clone();
                             {
-                                let sifr_generated_index_raw = j.clone();
+                                let sifr_generated_index_raw = &j;
                                 let sifr_generated_index_normalized =
                                     sifr_generated_index_raw.normalize_index_or_len(result.len());
                                 if let Some(sifr_generated_elem) =
@@ -289,9 +300,9 @@ mod sifr_generated_project_nominals {
                             }
                         }
                     }
-                    j = &j + &SifrInt::from_i64(1);
+                    j = ::std::ops::Add::add(&j, &SifrInt::from_i64(1));
                 }
-                i = &i + &SifrInt::from_i64(1);
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
             result
         }
@@ -314,13 +325,12 @@ mod sifr_generated_project_nominals {
                 if let Some(a_val) = a_val {
                     let b_val_value_f4118a41fdffa885: Option<SifrInt> =
                         other.counts.get(&key).cloned();
-                    let b_count: SifrInt = b_val_value_f4118a41fdffa885
-                        .clone()
-                        .unwrap_or_else(|| SifrInt::from_i64(0));
-                    let total: SifrInt = &a_val + &b_count;
-                    if &total > &SifrInt::from_i64(0) {
+                    let b_count: SifrInt =
+                        b_val_value_f4118a41fdffa885.unwrap_or(SifrInt::from_i64(0));
+                    let total: SifrInt = ::std::ops::Add::add(&a_val, &b_count);
+                    if total > SifrInt::from_i64(0) {
                         {
-                            let sifr_generated_assign_value = total.clone();
+                            let sifr_generated_assign_value = total;
                             {
                                 let sifr_generated_assign_key = key.clone();
                                 new_counts
@@ -335,10 +345,10 @@ mod sifr_generated_project_nominals {
                 if already.is_none() {
                     let b_val2: Option<SifrInt> = other.counts.get(&key2).cloned();
                     if let Some(b_val2) = b_val2
-                        && &b_val2 > &SifrInt::from_i64(0)
+                        && b_val2 > SifrInt::from_i64(0)
                     {
                         {
-                            let sifr_generated_assign_value = b_val2.clone();
+                            let sifr_generated_assign_value = b_val2;
                             {
                                 let sifr_generated_assign_key = key2.clone();
                                 new_counts
@@ -363,13 +373,12 @@ mod sifr_generated_project_nominals {
                 if let Some(a_val) = a_val {
                     let b_val_value_f4118a41fdffa885: Option<SifrInt> =
                         other.counts.get(&key).cloned();
-                    let b_count: SifrInt = b_val_value_f4118a41fdffa885
-                        .clone()
-                        .unwrap_or_else(|| SifrInt::from_i64(0));
-                    let diff: SifrInt = &a_val - &b_count;
-                    if &diff > &SifrInt::from_i64(0) {
+                    let b_count: SifrInt =
+                        b_val_value_f4118a41fdffa885.unwrap_or(SifrInt::from_i64(0));
+                    let diff: SifrInt = ::std::ops::Sub::sub(&a_val, &b_count);
+                    if diff > SifrInt::from_i64(0) {
                         {
-                            let sifr_generated_assign_value = diff.clone();
+                            let sifr_generated_assign_value = diff;
                             {
                                 let sifr_generated_assign_key = key.clone();
                                 new_counts
@@ -401,12 +410,12 @@ fn main() {
     println!("{}", c.get(&"cherry".to_string(), &SifrInt::from_i64(0)));
     println!("{}", c.get(&"missing".to_string(), &SifrInt::from_i64(0)));
     println!("{}", c.total());
-    println!("{:?}", c.most_common(&Some(SifrInt::from_i64(2).clone())));
-    (&mut c).increment(&"banana".to_string());
-    (&mut c).increment(&"banana".to_string());
+    println!("{:?}", c.most_common(&Some(SifrInt::from_i64(2))));
+    c.increment(&"banana".to_string());
+    c.increment(&"banana".to_string());
     println!("{}", c.get(&"banana".to_string(), &SifrInt::from_i64(0)));
     println!("{}", c.total());
-    (&mut c).increment(&"date".to_string());
+    c.increment(&"date".to_string());
     println!("{}", c.get(&"date".to_string(), &SifrInt::from_i64(0)));
     println!("{}", c.total());
     let c2: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =

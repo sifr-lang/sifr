@@ -12,7 +12,7 @@ pub use crate::z_provider::value;
 pub use ::sifr_runtime::SifrInt;
 #[must_use]
 pub fn fetch() -> SifrInt {
-    &value() + &SifrInt::from_i64(1)
+    ::std::ops::Add::add(&value(), &SifrInt::from_i64(1))
 }
 
 // src/z_provider.rs

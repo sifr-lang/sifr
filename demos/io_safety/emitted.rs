@@ -98,121 +98,103 @@ pub use sifr_generated_project_nominals::IOError;
 fn demo_safe_read_write() {
     println!("=== Safe File Read/Write ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        write_text(
-            &"/tmp/sifr_io_demo.txt".to_string(),
-            &"hello from sifr".to_string(),
-        )?;
-        let content: String = read_text(&"/tmp/sifr_io_demo.txt".to_string())?;
+        write_text("/tmp/sifr_io_demo.txt", "hello from sifr")?;
+        let content: String = read_text("/tmp/sifr_io_demo.txt")?;
         println!("read: {content}");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("error: {}", e.message.clone());
+        let e: IOError = sifr_generated_try_err;
+        println!("error: {}", e.message);
     }
 }
 fn demo_file_not_found() {
     println!("=== File Not Found (no panic) ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _data: String = read_text(&"/tmp/sifr_io_demo_missing_file.txt".to_string())?;
+        let _data: String = read_text("/tmp/sifr_io_demo_missing_file.txt")?;
         println!("should not reach here");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught IOError: {}", e.message.clone());
+        let e: IOError = sifr_generated_try_err;
+        println!("caught IOError: {}", e.message);
     }
 }
 fn demo_directory_ops() {
     println!("=== Directory Operations ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        mkdir(&"/tmp/sifr_io_demo_dir".to_string())?;
-        write_text(
-            &"/tmp/sifr_io_demo_dir/test.txt".to_string(),
-            &"inside dir".to_string(),
-        )?;
-        let entries: Vec<String> = listdir(&"/tmp/sifr_io_demo_dir".to_string())?;
+        mkdir("/tmp/sifr_io_demo_dir")?;
+        write_text("/tmp/sifr_io_demo_dir/test.txt", "inside dir")?;
+        let entries: Vec<String> = listdir("/tmp/sifr_io_demo_dir")?;
         println!("entries: {}", SifrInt::from(entries.len()));
-        let content: String = read_text(&"/tmp/sifr_io_demo_dir/test.txt".to_string())?;
+        let content: String = read_text("/tmp/sifr_io_demo_dir/test.txt")?;
         println!("file in dir: {content}");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("error: {}", e.message.clone());
+        let e: IOError = sifr_generated_try_err;
+        println!("error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _bad_entries: Vec<String> = listdir(&"/tmp/sifr_io_demo_nonexistent_xyz".to_string())?;
+        let _bad_entries: Vec<String> = listdir("/tmp/sifr_io_demo_nonexistent_xyz")?;
         println!("should not reach here");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught listdir IOError: {}", e.message.clone());
+        let e: IOError = sifr_generated_try_err;
+        println!("caught listdir IOError: {}", e.message);
     }
 }
 fn demo_copy_and_cleanup() {
     println!("=== Copy and Cleanup ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        copy(
-            &"/tmp/sifr_io_demo.txt".to_string(),
-            &"/tmp/sifr_io_demo_copy.txt".to_string(),
-        )?;
-        let copy_content: String = read_text(&"/tmp/sifr_io_demo_copy.txt".to_string())?;
+        copy("/tmp/sifr_io_demo.txt", "/tmp/sifr_io_demo_copy.txt")?;
+        let copy_content: String = read_text("/tmp/sifr_io_demo_copy.txt")?;
         println!("copy: {copy_content}");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("error: {}", e.message.clone());
+        let e: IOError = sifr_generated_try_err;
+        println!("error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        remove_file(&"/tmp/sifr_io_demo.txt".to_string())?;
-        remove_file(&"/tmp/sifr_io_demo_copy.txt".to_string())?;
-        rmtree(&"/tmp/sifr_io_demo_dir".to_string())?;
+        remove_file("/tmp/sifr_io_demo.txt")?;
+        remove_file("/tmp/sifr_io_demo_copy.txt")?;
+        rmtree("/tmp/sifr_io_demo_dir")?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("cleanup error: {}", e.message.clone());
+        let e: IOError = sifr_generated_try_err;
+        println!("cleanup error: {}", e.message);
     }
 }
 fn demo_read_lines() {
     println!("=== Read Lines ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        write_text(
-            &"/tmp/sifr_io_demo_lines.txt".to_string(),
-            &"line1\nline2\nline3".to_string(),
-        )?;
-        let lines: Vec<String> = read_lines(&"/tmp/sifr_io_demo_lines.txt".to_string())?;
+        write_text("/tmp/sifr_io_demo_lines.txt", "line1\nline2\nline3")?;
+        let lines: Vec<String> = read_lines("/tmp/sifr_io_demo_lines.txt")?;
         println!("line count: {}", SifrInt::from(lines.len()));
-        remove_file(&"/tmp/sifr_io_demo_lines.txt".to_string())?;
+        remove_file("/tmp/sifr_io_demo_lines.txt")?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("error: {}", e.message.clone());
+        let e: IOError = sifr_generated_try_err;
+        println!("error: {}", e.message);
     }
 }
 fn demo_append() {
     println!("=== Append Text ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        write_text(
-            &"/tmp/sifr_io_demo_append.txt".to_string(),
-            &"first".to_string(),
-        )?;
-        append_text(
-            &"/tmp/sifr_io_demo_append.txt".to_string(),
-            &" second".to_string(),
-        )?;
-        let content: String = read_text(&"/tmp/sifr_io_demo_append.txt".to_string())?;
+        write_text("/tmp/sifr_io_demo_append.txt", "first")?;
+        append_text("/tmp/sifr_io_demo_append.txt", " second")?;
+        let content: String = read_text("/tmp/sifr_io_demo_append.txt")?;
         println!("appended: {content}");
-        remove_file(&"/tmp/sifr_io_demo_append.txt".to_string())?;
+        remove_file("/tmp/sifr_io_demo_append.txt")?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("error: {}", e.message.clone());
+        let e: IOError = sifr_generated_try_err;
+        println!("error: {}", e.message);
     }
 }
 fn demo_getcwd() {
@@ -223,8 +205,8 @@ fn demo_getcwd() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("getcwd error: {}", e.message.clone());
+        let e: IOError = sifr_generated_try_err;
+        println!("getcwd error: {}", e.message);
     }
 }
 fn main() {

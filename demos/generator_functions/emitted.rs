@@ -102,9 +102,9 @@ fn countdown(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = n.clone();
-            while &i > &SifrInt::from_i64(0) {
+            while i > SifrInt::from_i64(0) {
                 sifr_generated_yielder.suspend(i.clone()).await;
-                i = &i - &SifrInt::from_i64(1);
+                i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
             }
         },
     ))

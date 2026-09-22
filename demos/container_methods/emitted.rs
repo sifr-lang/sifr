@@ -24,9 +24,7 @@ fn main() {
     });
     println!(
         "{}",
-        mapping
-            .remove(&"missing".to_string())
-            .unwrap_or(SifrInt::from_i64(7))
+        mapping.remove("missing").unwrap_or(SifrInt::from_i64(7))
     );
     let mut seen: HashSet<SifrInt> = HashSet::from([SifrInt::from_i64(1)]);
     {
@@ -53,15 +51,15 @@ fn main() {
         SifrInt::from_i64(4),
     );
     println!("{}", {
-        let mut sifr_generated_count = 0;
-        if &pair.0 == &SifrInt::from_i64(4) {
-            sifr_generated_count += 1;
+        let mut sifr_generated_count = 0usize;
+        if pair.0 == SifrInt::from_i64(4) {
+            sifr_generated_count = sifr_generated_count.saturating_add(1usize);
         }
-        if &pair.1 == &SifrInt::from_i64(4) {
-            sifr_generated_count += 1;
+        if pair.1 == SifrInt::from_i64(4) {
+            sifr_generated_count = sifr_generated_count.saturating_add(1usize);
         }
-        if &pair.2 == &SifrInt::from_i64(4) {
-            sifr_generated_count += 1;
+        if pair.2 == SifrInt::from_i64(4) {
+            sifr_generated_count = sifr_generated_count.saturating_add(1usize);
         }
         SifrInt::from(sifr_generated_count)
     });
@@ -72,20 +70,20 @@ fn main() {
             let sifr_generated_stop = 3usize;
             let mut sifr_generated_result = None;
             if sifr_generated_result.is_none()
-                && (0usize >= sifr_generated_start && 0usize < sifr_generated_stop)
-                && &pair.0 == &SifrInt::from_i64(4)
+                && (sifr_generated_start == 0usize && 0usize < sifr_generated_stop)
+                && pair.0 == SifrInt::from_i64(4)
             {
                 sifr_generated_result = Some(SifrInt::from(0usize));
             }
             if sifr_generated_result.is_none()
                 && (1usize >= sifr_generated_start && 1usize < sifr_generated_stop)
-                && &pair.1 == &SifrInt::from_i64(4)
+                && pair.1 == SifrInt::from_i64(4)
             {
                 sifr_generated_result = Some(SifrInt::from(1usize));
             }
             if sifr_generated_result.is_none()
                 && (2usize >= sifr_generated_start && 2usize < sifr_generated_stop)
-                && &pair.2 == &SifrInt::from_i64(4)
+                && pair.2 == SifrInt::from_i64(4)
             {
                 sifr_generated_result = Some(SifrInt::from(2usize));
             }
@@ -96,38 +94,39 @@ fn main() {
             |sifr_generated_v| sifr_generated_v.to_string()
         )
     );
-    println!(
-        "{:?}",
-        if &SifrInt::from_i64(1) < &0 {
-            "alpha,beta,gamma"
-                .to_string()
+    println!("{:?}", {
+        let (sifr_generated_string_receiver, sifr_generated_string_argument_1) =
+            (&"alpha,beta,gamma".to_string(), SifrInt::from_i64(1));
+        if sifr_generated_string_argument_1 < 0 {
+            sifr_generated_string_receiver
                 .split(',')
                 .map(::std::string::ToString::to_string)
                 .collect::<Vec<String>>()
         } else {
-            "alpha,beta,gamma"
-                .to_string()
+            sifr_generated_string_receiver
                 .splitn(
-                    (SifrInt::from_i64(1) + SifrInt::from_i64(1)).clamp_slice_bound(
-                        "alpha,beta,gamma".to_string().len().saturating_add(1usize),
-                    ),
+                    ::std::ops::Add::add(sifr_generated_string_argument_1, SifrInt::from_i64(1))
+                        .clamp_slice_bound(
+                            sifr_generated_string_receiver.len().saturating_add(1usize),
+                        ),
                     ',',
                 )
                 .map(::std::string::ToString::to_string)
                 .collect::<Vec<String>>()
         }
-    );
-    println!(
-        "{}",
-        if &SifrInt::from_i64(2) < &0 {
-            "aaaa".to_string().replace('a', "b")
+    });
+    println!("{}", {
+        let (sifr_generated_string_receiver, sifr_generated_string_argument_2) =
+            (&"aaaa".to_string(), SifrInt::from_i64(2));
+        if sifr_generated_string_argument_2 < 0 {
+            sifr_generated_string_receiver.replace('a', "b")
         } else {
-            "aaaa".to_string().replacen(
+            sifr_generated_string_receiver.replacen(
                 'a',
                 "b",
-                SifrInt::from_i64(2)
-                    .clamp_slice_bound("aaaa".to_string().len().saturating_add(1usize)),
+                sifr_generated_string_argument_2
+                    .clamp_slice_bound(sifr_generated_string_receiver.len().saturating_add(1usize)),
             )
         }
-    );
+    });
 }
