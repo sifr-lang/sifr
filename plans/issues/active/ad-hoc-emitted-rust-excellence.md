@@ -2,6 +2,88 @@
 
 Status: active
 
+## Items 12D/12E/12F closure (2026-09-22)
+
+**12D, 12E and 12F are merged and complete; no blocker for this batch.**
+The phase remains active: retained Item 12, final integration qualification and
+the documentation-only whole-phase closer are separate later assignments.
+
+| Delivery | Exact reviewed candidate | Merge |
+| --- | --- | --- |
+| Sifr [PR3897](https://github.com/sifr-lang/sifr/pull/3897) | `170a71987ebd1d848dc837e57c6c328d9015f56a` | `d6e551c4b5cae186114aba2a2e2ec05d80c0e158` |
+| Corpus [PR50](https://github.com/sifr-lang/leetcode/pull/50) | `4da4f7a5ccb332b64199eda6fc545d9dcc1ae1b6` | `2947c87e670c2d33978fe985678dfefed0797939` |
+
+Both used ordinary merge policy; the Sifr merge tree equals its qualified
+candidate tree. Root base was `ced01116ee8cf225a0eb72fdbd2db467fdd0a26c`.
+Predecessor corpus PR48 also merged as
+`5b30b5fca4caa3a47d6a6bd90192ce7b57dfc9c1`, completing already-reviewed
+source delivery paired with Group 1's earlier PR3827 qualification.
+Historical failed gates and earlier unmerged checkpoints below remain evidence.
+
+- [x] **12D:** reconcile every recorded diagnostic category with the merged
+  producers and fresh focused assertions. No historical failure was assumed
+  fixed merely from ancestry.
+- [x] **12E:** integer field division/modulo follows the explicit local integer
+  failure contract; safe operations use typed exact floor semantics. Alias
+  guard collection/consumption agree, and reassignment invalidates the proof.
+  Both try contexts, signed values, values beyond i64 and guard-false skipping
+  have actual native coverage.
+- [x] **12F:** eight bindings/16 occurrences now have algorithm-specific names.
+  Exact injective transformation proof preserves every other byte and assertion.
+
+12D reconciliation covers branch-local reads/optional comparisons (0102, including
+its right-only tree level), handler capture (0017), structured exceptions (0044),
+recursive optional mutation (0025), nested assignment (0048), escaped method demand
+(0261), typed empty assertions (1203), and the previously 12B-owned reuse/borrowed
+value (0072,1397) and checked-shift receiving (2002) dependencies. Their named
+`corpus_repair_` regressions pass31/31; the last dependency's actual source
+assertions run in2002. The two renamed programs0202/0212 complete the12-case
+current native selection. This is not a claim of a fresh411-case or90-case run.
+
+Final named evidence on unchanged implementation inputs:
+4 field-lowering +58 integer-lowering +1 field-codegen +31 corpus-codegen
+tests PASS (94 total); selected E2E3/3 PASS (including the expanded alias fixture);
+the exact previously failing alias source runs successfully from its corrected cwd;
+all12 selected corpus programs pass check AND native execution. Formatting,
+file-size (4113 maintained files), HIR, diff and scoped taxonomy checks pass.
+The E2E selection remains exactly `integer_field_augassign`,
+`exact_int_floor_mod_literals` and `exact_int_nonzero_elif_and_nested_guards`;
+signature `ee3f9b6be291eb44`, rebuilt group `acf8e940e1b8ff0d`.
+Compiler SHA256:
+`3a95ab907374f262e43caf8a91da7daef4c784863825aacf28368f876bf9f566`.
+
+External evidence root:
+`/home/yaser5/projects/sifr/emitted-rust-12def-evidence`.
+`validation-170a71987.json` binds source/config/selection/log hashes;
+`remediation-native/native-matrix.json` records all24 corpus commands;
+`remediation-alias-native.json` binds the unchanged failed-probe source and its
+passing rerun. Initial `validation-a0c7f9a55.json`, failed alias probes, intermediate
+test failure, uv rejection and interrupted setup remain separate and preserved.
+
+[Initial scoped review](https://github.com/sifr-lang/sifr/pull/3897#issuecomment-5769886250)
+and [final remediation review](https://github.com/sifr-lang/sifr/pull/3897#issuecomment-5769919822)
+both returned SATISFIED/no blockers. Final response:
+`review-170a71987.jjQZJS/response.md`, SHA256
+`455a53cdb647f62762405e8c1dcb86402d4c9dbb0904eaf62393d821e5253de5`.
+Accounting: initial1, remediation1, provider retries0, create-PR/full merge gates0.
+No whole-phase review was consumed. This post-merge receipt is documentation-only
+and reuses the completed validation/review; no broad gate or additional review.
+
+The unchanged global-taxonomy failure is recorded in its separate
+[Compiler DX documentation owner3898](https://github.com/sifr-lang/sifr/issues/3898):
+`compiler_dx_architecture.md:16,960` and `architecture.md:1981`.
+It remains relevant to final qualification; no global-taxonomy pass is claimed.
+Non-blocking alias constant-fact precision and positive-count assertions are
+[separate follow-up3899](https://github.com/sifr-lang/sifr/issues/3899).
+Broad Clippy/full gates belong to final qualification. No checker, assertion,
+budget, baseline or safety contract was weakened.
+
+Next action for this worker: finish the record-only delivery and STOP.
+Do not start retained Item 12, final integration or whole-phase closure.
+The private Cargo/native/metadata caches and compiler-created corpus
+`src/.sifrbuildinfo` remain warm for an explicit later ownership handoff.
+
+
 ## Items 12D/12E/12F scoped continuation (2026-09-22)
 
 Current assignment: one intermediate batch, no retained Item 12 or whole-phase
@@ -2000,7 +2082,9 @@ It does not broaden the active item.
 | 12 | blocked: external algorithmic corpus | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
 | 12B | blocked: Python qualification dependencies | Bounded algorithmic dependency repair | Both reviews passed. Preserve the approved candidate and both failed gates until Items 12G–12J and integration Item 12K resolve qualification. |
 | 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
-| 12D | recorded, not started | Native corpus emission dependencies | Adjudicate checked-read control flow and the complete native diagnostic inventory before Item 12B closure. |
+| 12D | merged | Native corpus emission dependencies | Reconciled every diagnostic category against merged producers and current named/native evidence in PR3897; see the 2026-09-22 closure receipt. |
+| 12E | merged | Integer field augmented assignment | Exact failure contracts and safe floor/modulo lowering, including aliases and guard invalidation, qualified and merged in PR3897. |
+| 12F | merged | Algorithmic checked-result names | Eight bindings/16 occurrences renamed without other byte changes; corpus PR50 and root PR3897 are merged. |
 | 12G | merged | Dependency-checker demo path identity | Authoritative DLPack project path and computed-reference regressions merged in PR #3695; exact-SHA validation and Opus review passed. |
 | 12H | authorized: after 12G handoff | Project-wide generated-field identity | Repair declaration/consumer naming consistency across generated files. |
 | 12I | authorized: after 12H handoff | Macro-defined project support visibility | Repair cancellation task-local visibility without blanket exports. |
