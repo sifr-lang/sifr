@@ -721,3 +721,89 @@ fn display_field_named_kind_keeps_string_conversion() {
     "#,
     );
 }
+
+#[test]
+fn owned_clone_cleanup_preserves_enclosing_loop_and_branch_uses() {
+    canonical_and_compile(
+        r#"
+        pub fn collect_twice(value: String, take: bool) -> Vec<String> {
+            let mut values = Vec::new();
+            if take { values.push(value.clone()); }
+            for _ in 0..2 { values.push(value.clone()); }
+            values.push(value);
+            values
+        }
+    "#,
+    );
+}
+
+#[test]
+fn owned_optional_payload_cleanup_preserves_borrowed_shadow() {
+    canonical_and_compile(
+        r#"
+        pub fn pick(input: &Option<String>, owned: Option<String>) -> String {
+            let mut out = String::new();
+            if let Some(value) = owned { out = value.clone(); }
+            if let Some(out) = input { return out.clone(); }
+            out
+        }
+    "#,
+    );
+}
+
+#[test]
+fn terminal_field_cleanup_preserves_drop_owners_and_later_borrows() {
+    canonical_and_compile(
+        r#"
+        pub struct Owner { pub text: String }
+        impl Drop for Owner { fn drop(&mut self) { std::hint::black_box(&self.text); } }
+        pub fn read(owner: Owner) -> String {
+            let local: Owner = owner;
+            local.text.clone()
+        }
+        pub struct Plain { pub text: String }
+        pub fn twice(local: Plain) -> (String, String) {
+            (local.text.clone(), local.text.clone())
+        }
+    "#,
+    );
+}
+
+#[test]
+fn terminal_field_cleanup_does_not_guess_a_shadowed_string_contract() {
+    canonical_and_compile(
+        r#"
+        pub struct String;
+        impl String { pub fn clone(&self) -> &Self { self } }
+        pub struct Owner { pub text: String }
+        pub fn read(owner: &Owner) -> &String { owner.text.clone() }
+        pub fn observe(owner: Owner) {
+            let local: Owner = owner;
+            let _value = local.text.clone();
+            std::hint::black_box(&local);
+        }
+    "#,
+    );
+}
+
+#[test]
+fn conversion_cleanup_preserves_user_method_return_contracts() {
+    canonical_and_compile(
+        r#"
+        pub struct Source;
+        pub struct Intermediate;
+        impl Source {
+            pub fn to_owned(&self) -> Intermediate { Intermediate }
+            pub fn clone(&self) -> Intermediate { Intermediate }
+        }
+        impl Intermediate {
+            pub fn clone(&self) -> String { String::from("cloned") }
+            pub fn to_string(&self) -> String { String::from("rendered") }
+            pub fn as_str(&self) -> &'static str { "view" }
+        }
+        pub fn owned(source: &Source) -> String { source.to_owned().clone() }
+        pub fn rendered(source: &Source) -> String { source.clone().to_string() }
+        pub fn view(source: &Source) -> &'static str { source.clone().as_str() }
+    "#,
+    );
+}

@@ -205,6 +205,7 @@ impl Rewriter<'_> {
                             return None;
                         };
                         let mut nested = Rewriter {
+                            scalar_shadows: self.scalar_shadows,
                             functions: self.functions,
                             structures: self.structures,
                             self_type: self.self_type.clone(),
@@ -224,6 +225,7 @@ impl Rewriter<'_> {
             }
             syn::Expr::Block(block) => {
                 let mut nested = Rewriter {
+                    scalar_shadows: self.scalar_shadows,
                     functions: self.functions,
                     structures: self.structures,
                     self_type: self.self_type.clone(),

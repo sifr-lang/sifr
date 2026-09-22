@@ -10,6 +10,7 @@ pub(super) struct FunctionExpectationContext {
     pub owner_has_display: bool,
     pub copy_receiver_lint: bool,
     pub trait_impl: bool,
+    pub restricted_api: bool,
 }
 
 pub(super) fn refresh_function_expectations(
@@ -48,6 +49,12 @@ pub(super) fn refresh_function_expectations(
         // Source shared receivers retain their callable ABI even for Copy enums.
         add_expectation(attrs, "trivially_copy_pass_by_ref");
     }
+    if !context.trait_impl && signature.inputs.iter().any(|argument| matches!(argument,
+        syn::FnArg::Typed(argument) if matches!(argument.ty.as_ref(),
+            syn::Type::Reference(reference) if matches!(reference.elem.as_ref(),
+                syn::Type::Path(path) if path.path.segments.last().is_some_and(|segment| segment.ident == "Option"))))) {
+        add_expectation(attrs, "ref_option");
+    }
     if signature.asyncness.is_some() && !shape.has_await {
         // Eagerly evaluating an async body changes when its source effects occur.
         add_expectation(attrs, "unused_async");
@@ -59,7 +66,8 @@ pub(super) fn refresh_function_expectations(
             add_expectation(attrs, "unused_async_trait_impl");
         }
     }
-    if !context.trait_impl
+    if context.restricted_api
+        && !context.trait_impl
         && signature.asyncness.is_none()
         && signature.receiver().is_some()
         && !shape.uses_self
@@ -286,6 +294,15 @@ impl<'ast> Visit<'ast> for FunctionShape {
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        // Opaque macros such as select! can contain or generate awaits.
+        if rust_macro
+            .parse_body_with(
+                syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+            )
+            .is_err()
+        {
+            self.has_await = true;
+        }
         let first_argument_is_constant = rust_macro
             .parse_body_with(
                 syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
@@ -343,6 +360,7 @@ mod receiver_tests {
                 owner_has_display: false,
                 copy_receiver_lint: true,
                 trait_impl: false,
+                restricted_api: true,
             },
         );
         assert!(

@@ -252,7 +252,7 @@ fn factors_shared_if_let_prefix_without_invalid_let_expression() {
         "{canonical}"
     );
     assert!(
-        canonical.contains("let sifr_generated_shared_branch_value = value.clone()"),
+        canonical.contains("let sifr_generated_shared_branch_value = value;"),
         "{canonical}"
     );
     assert!(

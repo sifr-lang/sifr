@@ -6,7 +6,8 @@ use syn::visit::{self, Visit};
 
 #[derive(Clone, Default)]
 pub(super) enum Value {
-    Option,
+    Option(Box<Value>),
+    Scalar,
     Map,
     Sequence,
     Nominal(String),
@@ -71,10 +72,13 @@ fn standard_value(name: &str, path: &syn::Path) -> Value {
         _ => return Value::Unknown,
     };
     match (name, arguments) {
-        ("Option" | "::std::option::Option" | "::core::option::Option", 1) => Value::Option,
+        ("Option" | "::std::option::Option" | "::core::option::Option", 1) => {
+            Value::Option(Box::new(Value::Unknown))
+        }
         ("::std::collections::HashMap" | "::std::collections::BTreeMap", 2 | 3) => Value::Map,
         ("Vec" | "::std::vec::Vec", 1 | 2) => Value::Sequence,
         ("String" | "str" | "::std::string::String", 0) => Value::Sequence,
+        ("::sifr_runtime::SifrInt", 0) => Value::Scalar,
         _ => Value::Unknown,
     }
 }
@@ -376,7 +380,7 @@ impl Types {
                             depth + 1,
                         ),
                         Some(_) => Value::Unknown,
-                        None => standard_value(&name, &path.path),
+                        None => self.standard_kind(&name, &path.path, scope, owner, depth),
                     };
                 }
                 // Only actual prelude types have unqualified standard identity.
@@ -391,12 +395,31 @@ impl Types {
                     return Value::Unknown;
                 }
                 match parts.as_slice() {
-                    [name] => standard_value(name, &path.path),
+                    [name] => self.standard_kind(name, &path.path, scope, owner, depth),
                     _ => Value::Unknown,
                 }
             }
             _ => Value::Unknown,
         }
+    }
+
+    fn standard_kind(
+        &self,
+        name: &str,
+        path: &syn::Path,
+        scope: &str,
+        owner: Option<&str>,
+        depth: usize,
+    ) -> Value {
+        let kind = standard_value(name, path);
+        if matches!(kind, Value::Option(_))
+            && let Some(segment) = path.segments.last()
+            && let syn::PathArguments::AngleBracketed(arguments) = &segment.arguments
+            && let Some(syn::GenericArgument::Type(inner)) = arguments.args.first()
+        {
+            return Value::Option(Box::new(self.ty_at(scope, inner, owner, depth + 1)));
+        }
+        kind
     }
 
     pub(super) fn field(&self, receiver: &Value, member: &syn::Member) -> Value {

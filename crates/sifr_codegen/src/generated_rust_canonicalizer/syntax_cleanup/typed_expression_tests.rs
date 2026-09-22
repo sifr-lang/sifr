@@ -1,6 +1,18 @@
 #[cfg(test)]
 mod tests {
     #[test]
+    fn generic_receiver_cleanup_uses_declared_receiver_without_inferring_generic_arguments() {
+        let rust = clean(r#"
+            struct Sender<T> { value: T }
+            impl<T> Sender<T> { fn send(&mut self, value: T) { self.value = value; } }
+            fn run(mut sender: Sender<String>, value: String) {
+                (&mut sender).send(value);
+            }
+        "#);
+        assert!(rust.contains("sender.send(value)"), "{rust}");
+    }
+
+    #[test]
     fn mutable_receiver_cleanup_requires_declared_borrow_contract() {
         let rust = clean(r#"
             struct Owner;
@@ -94,7 +106,7 @@ mod tests {
         assert!(rust.contains("string.value.clone()"), "{rust}");
         assert!(rust.contains("integer.value.to_string()"), "{rust}");
         assert!(
-            rust.contains("let _message: String = error.message;"),
+            !rust.contains("let _message: String = error.message;"),
             "{rust}"
         );
         assert!(

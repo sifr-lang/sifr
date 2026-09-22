@@ -2,11 +2,18 @@ fn collect(items: &[syn::Item], scope: &[String], functions: &mut HashMap<String
     for item in items {
         match item {
             syn::Item::Impl(implementation)
-                if implementation.trait_.is_none() && implementation.generics.params.is_empty() =>
+                if implementation.trait_.is_none() =>
             {
                 let syn::Type::Path(owner) = implementation.self_ty.as_ref() else {
                     continue;
                 };
+                if owner.path.segments.iter().any(|segment| match &segment.arguments {
+                    syn::PathArguments::None => false,
+                    syn::PathArguments::AngleBracketed(arguments) => arguments.args.iter().any(|arg|
+                        !matches!(arg, syn::GenericArgument::Type(syn::Type::Path(path))
+                            if path.path.get_ident().is_some_and(|name| implementation.generics.type_params().any(|parameter| parameter.ident == *name)))),
+                    _ => true,
+                }) { continue; }
                 let mut path = scope.to_vec();
                 path.extend(
                     owner
@@ -17,10 +24,12 @@ fn collect(items: &[syn::Item], scope: &[String], functions: &mut HashMap<String
                 );
                 for item in &implementation.items {
                     if let syn::ImplItem::Fn(function) = item {
+                        let mut signature = function.sig.clone();
+                        signature.generics.params.extend(implementation.generics.params.iter().cloned());
                         functions.insert(
                             format!("{}::{}", path.join("::"), function.sig.ident),
                             Callable {
-                                signature: function.sig.clone(),
+                                signature,
                             },
                         );
                     }

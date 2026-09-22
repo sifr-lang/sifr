@@ -2,8 +2,6 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
     if rewrite_negated_sifr_int_literal(expression)
         || rewrite_double_negated_is_empty(expression)
         || rewrite_option_map_or_none(expression)
-        || remove_clone_before_as_str(expression)
-        || remove_message_conversion_before_as_str(expression)
         || rewrite_known_string_identity_mapper(expression)
         || remove_temporary_collection_clone(expression)
         || rewrite_borrowed_callback_arguments(expression)
@@ -18,9 +16,6 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
         return;
     }
     if rewrite_boolean_if_expression(expression) {
-        return;
-    }
-    if remove_clone_before_string_conversion(expression) {
         return;
     }
     if rewrite_known_string_error_map(expression) {
@@ -54,7 +49,6 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
         || rewrite_borrow_only_cloned_map(expression)
         || rewrite_usize_len_subtraction(expression)
         || rewrite_constructor_clone(expression)
-        || remove_redundant_owned_string_conversion(expression)
         || rewrite_redundant_generated_parent_clone(expression)
         || rewrite_generated_sort_comparison(expression)
     {
@@ -106,23 +100,6 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
     let operation = syn::Ident::new(operation, proc_macro2::Span::call_site());
     let method = syn::Ident::new(method, proc_macro2::Span::call_site());
     *expression = syn::parse_quote!(::std::ops::#operation::#method(#left, #right));
-}
-
-fn remove_clone_before_string_conversion(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(conversion) = expression else {
-        return false;
-    };
-    if conversion.method != "to_string" || !conversion.args.is_empty() {
-        return false;
-    }
-    let syn::Expr::MethodCall(clone) = conversion.receiver.as_ref() else {
-        return false;
-    };
-    if clone.method != "clone" || !clone.args.is_empty() {
-        return false;
-    }
-    conversion.receiver = clone.receiver.clone();
-    true
 }
 
 fn rewrite_owned_tuple_field_string_comparison(binary: &mut syn::ExprBinary) {
@@ -377,29 +354,6 @@ fn rewrite_constructor_clone(expression: &mut syn::Expr) -> bool {
             matches!(segment.ident.to_string().as_str(), "SifrInt" | "BigDecimal")))
     {
         *expression = clone.receiver.as_ref().clone();
-        return true;
-    }
-    false
-}
-
-fn remove_redundant_owned_string_conversion(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(outer) = expression else {
-        return false;
-    };
-    if !matches!(
-        outer.method.to_string().as_str(),
-        "clone" | "to_owned" | "to_string"
-    ) || !outer.args.is_empty()
-    {
-        return false;
-    }
-    let syn::Expr::MethodCall(inner) = outer.receiver.as_ref() else {
-        return false;
-    };
-    if matches!(inner.method.to_string().as_str(), "to_owned" | "to_string")
-        && inner.args.is_empty()
-    {
-        *expression = outer.receiver.as_ref().clone();
         return true;
     }
     false

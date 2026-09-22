@@ -296,6 +296,7 @@ fn improve_function_api(
             owner_has_display: context.owner_has_display,
             copy_receiver_lint: context.copy_receiver_lint,
             trait_impl: !context.allow_const,
+            restricted_api: !matches!(visibility, syn::Visibility::Public(_)),
         },
     );
     if matches!(visibility, syn::Visibility::Public(_)) {

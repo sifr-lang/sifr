@@ -98,44 +98,6 @@ fn rewrite_option_map_or_none(expression: &mut syn::Expr) -> bool {
     true
 }
 
-fn remove_clone_before_as_str(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(as_str) = expression else {
-        return false;
-    };
-    if as_str.method != "as_str" || !as_str.args.is_empty() {
-        return false;
-    }
-    let syn::Expr::MethodCall(clone) = as_str.receiver.as_ref() else {
-        return false;
-    };
-    if clone.method != "clone" || !clone.args.is_empty() {
-        return false;
-    }
-    as_str.receiver = clone.receiver.clone();
-    true
-}
-
-fn remove_message_conversion_before_as_str(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(as_str) = expression else {
-        return false;
-    };
-    if as_str.method != "as_str" || !as_str.args.is_empty() {
-        return false;
-    }
-    let syn::Expr::MethodCall(conversion) = as_str.receiver.as_ref() else {
-        return false;
-    };
-    if conversion.method != "to_string"
-        || !conversion.args.is_empty()
-        || !matches!(conversion.receiver.as_ref(), syn::Expr::Field(field)
-            if matches!(&field.member, syn::Member::Named(name) if name == "message"))
-    {
-        return false;
-    }
-    as_str.receiver = conversion.receiver.clone();
-    true
-}
-
 fn rewrite_known_string_identity_mapper(expression: &mut syn::Expr) -> bool {
     let syn::Expr::MethodCall(map_or_else) = expression else {
         return false;

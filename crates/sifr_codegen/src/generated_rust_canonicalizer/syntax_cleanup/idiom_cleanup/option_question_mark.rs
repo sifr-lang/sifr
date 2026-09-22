@@ -14,6 +14,7 @@ pub(super) fn rewrite(file: &mut syn::File) {
         bindings: HashMap::new(),
         declarations: HashMap::new(),
         movable: HashSet::new(),
+        pending_owned: HashSet::new(),
         clone_ambiguous: false,
         module: String::new(),
         owner: None,
@@ -27,6 +28,7 @@ struct Rewriter {
     types: Types,
     declarations: HashMap<String, usize>,
     movable: HashSet<String>,
+    pending_owned: HashSet<String>,
     clone_ambiguous: bool,
     bindings: HashMap<String, Value>,
     module: String,
@@ -37,6 +39,20 @@ struct Rewriter {
 
 impl Rewriter {
     fn bind(&mut self, pattern: &syn::Pat, kind: &Value) {
+        if let syn::Pat::TupleStruct(tuple) = pattern
+            && tuple.path.is_ident("Some")
+            && tuple.elems.len() == 1
+            && let Value::Option(inner) = kind.dereferenced()
+        {
+            let inner = if matches!(kind, Value::Reference(_)) {
+                Value::Reference(inner.clone())
+            } else {
+                *inner.clone()
+            };
+            self.bind(&tuple.elems[0], &inner);
+            return;
+        }
+
         struct Names(Vec<String>);
         impl<'ast> Visit<'ast> for Names {
             fn visit_pat_ident(&mut self, binding: &'ast syn::PatIdent) {
@@ -54,7 +70,12 @@ impl Rewriter {
         for name in names.0 {
             let count = self.declarations.entry(name.clone()).or_default();
             *count += 1;
-            if *count == 1 && direct && matches!(kind, Value::Option | Value::Map | Value::Sequence)
+            if *count == 1
+                && direct
+                && matches!(
+                    kind,
+                    Value::Option(_) | Value::Map | Value::Sequence | Value::Scalar
+                )
             {
                 self.movable.insert(name.clone());
             } else {
@@ -114,27 +135,65 @@ impl Rewriter {
                 match method.as_str() {
                     "as_ref" | "as_mut"
                         if call.args.is_empty()
-                            && matches!(receiver.dereferenced(), Value::Option) =>
+                            && matches!(receiver.dereferenced(), Value::Option(_)) =>
                     {
-                        Value::Option
+                        let Value::Option(inner) = receiver.dereferenced() else {
+                            unreachable!()
+                        };
+                        Value::Option(Box::new(Value::Reference(inner.clone())))
                     }
                     // An owned Option's valid standard Clone call returns Self.
                     // A borrowed Option may instead clone the reference when T
                     // is not Clone, so it cannot supply the same ownership fact.
-                    "clone" if call.args.is_empty() && matches!(receiver, Value::Option) => {
-                        Value::Option
+                    "clone" if call.args.is_empty() && matches!(receiver, Value::Option(_)) => {
+                        receiver
                     }
                     "get" | "get_mut"
                         if call.args.len() == 1
                             && matches!(receiver.dereferenced(), Value::Map | Value::Sequence) =>
                     {
-                        Value::Option
+                        Value::Option(Box::new(Value::Unknown))
                     }
                     _ => Value::Unknown,
                 }
             }
             _ => Value::Unknown,
         }
+    }
+
+    fn owned_condition_bindings(&self, condition: &syn::Expr) -> HashSet<String> {
+        fn collect(condition: &syn::Expr, names: &mut HashSet<String>) {
+            match condition {
+                syn::Expr::Let(expression) => {
+                    names.extend(super::super::identifier_names_in_pattern(&expression.pat))
+                }
+                syn::Expr::Binary(binary) if matches!(binary.op, syn::BinOp::And(_)) => {
+                    collect(&binary.left, names);
+                    collect(&binary.right, names);
+                }
+                syn::Expr::Paren(paren) => collect(&paren.expr, names),
+                _ => {}
+            }
+        }
+        let mut names = HashSet::new();
+        collect(condition, &mut names);
+        names.retain(|name| self.bindings.get(name).is_some_and(is_owned_clone_value));
+        names
+    }
+
+    fn clean_owned_suffix(&self, statements: &mut [syn::Stmt], candidates: &HashSet<String>) {
+        if self.local_imports || self.types.ambiguous_methods.contains("clone") {
+            return;
+        }
+        let mut owned = candidates.clone();
+        for statement in statements.iter() {
+            if let syn::Stmt::Local(local) = statement {
+                for name in super::super::identifier_names_in_pattern(&local.pat) {
+                    owned.remove(&name);
+                }
+            }
+        }
+        super::clippy_cleanup::remove_proven_owned_clone_statements(statements, &owned);
     }
 
     fn function(&mut self, signature: &syn::Signature, body: &mut syn::Block) {
@@ -158,7 +217,16 @@ impl Rewriter {
                 self.bindings.insert("self".to_owned(), value);
             }
         }
+        let pending = std::mem::replace(
+            &mut self.pending_owned,
+            self.bindings
+                .iter()
+                .filter(|(_, kind)| is_owned_clone_value(kind))
+                .map(|(name, _)| name.clone())
+                .collect(),
+        );
         self.visit_block_mut(body);
+        self.pending_owned = pending;
         if !self.types.ambiguous_methods.contains("clone") && !self.clone_ambiguous {
             super::clippy_cleanup::remove_proven_owned_clones(body, &self.movable);
         }
@@ -241,7 +309,19 @@ impl VisitMut for Rewriter {
                 }
             }
         }
-        visit_mut::visit_block_mut(self, block);
+        // Only inputs born in this block may move without enclosing liveness.
+        let incoming_owned = std::mem::take(&mut self.pending_owned);
+        self.clean_owned_suffix(&mut block.stmts, &incoming_owned);
+        for index in 0..block.stmts.len() {
+            self.visit_stmt_mut(&mut block.stmts[index]);
+            if let syn::Stmt::Local(local) = &block.stmts[index] {
+                let owned = super::super::identifier_names_in_pattern(&local.pat)
+                    .into_iter()
+                    .filter(|name| self.bindings.get(name).is_some_and(is_owned_clone_value))
+                    .collect::<HashSet<_>>();
+                self.clean_owned_suffix(&mut block.stmts[index + 1..], &owned);
+            }
+        }
         self.bindings = previous;
         self.local_types = previous_types;
         self.local_imports = previous_imports;
@@ -252,7 +332,7 @@ impl VisitMut for Rewriter {
         if local
             .init
             .as_ref()
-            .is_some_and(|init| matches!(self.expression_kind(&init.expr), Value::Option))
+            .is_some_and(|init| matches!(self.expression_kind(&init.expr), Value::Option(_)))
         {
             super::rewrite_option_let_else_with_question_mark(local);
         }
@@ -296,12 +376,13 @@ impl VisitMut for Rewriter {
 
     fn visit_expr_let_mut(&mut self, let_: &mut syn::ExprLet) {
         self.visit_expr_mut(&mut let_.expr);
-        self.bind(&let_.pat, &Value::Unknown);
+        self.bind(&let_.pat, &self.expression_kind(&let_.expr));
     }
 
     fn visit_expr_if_mut(&mut self, if_: &mut syn::ExprIf) {
         let previous = self.bindings.clone();
         self.visit_expr_mut(&mut if_.cond);
+        self.pending_owned = self.owned_condition_bindings(&if_.cond);
         self.visit_block_mut(&mut if_.then_branch);
         self.bindings = previous.clone();
         if let Some((_, branch)) = &mut if_.else_branch {
@@ -316,4 +397,11 @@ impl VisitMut for Rewriter {
         self.visit_block_mut(&mut while_.body);
         self.bindings = previous;
     }
+}
+
+fn is_owned_clone_value(kind: &Value) -> bool {
+    matches!(
+        kind,
+        Value::Option(_) | Value::Map | Value::Sequence | Value::Scalar
+    )
 }

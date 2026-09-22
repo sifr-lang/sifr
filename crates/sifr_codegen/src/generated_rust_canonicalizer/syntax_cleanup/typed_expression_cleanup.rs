@@ -15,6 +15,7 @@ pub(super) fn rewrite(file: &mut syn::File) {
 }
 
 pub(crate) struct ProjectTypeFacts {
+    scalar_shadows: std::collections::HashSet<String>,
     functions: HashMap<String, Callable>,
     structures: HashMap<String, syn::ItemStruct>,
 }
@@ -39,6 +40,7 @@ pub(super) fn collect_project_facts(files: &[syn::File]) -> ProjectTypeFacts {
     super::scoped_imports::expand(&combined, &mut functions);
     super::scoped_imports::expand(&combined, &mut structures);
     ProjectTypeFacts {
+        scalar_shadows: collect_scalar_shadows(&combined),
         functions,
         structures,
     }
@@ -46,6 +48,7 @@ pub(super) fn collect_project_facts(files: &[syn::File]) -> ProjectTypeFacts {
 
 pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts) {
     Rewriter {
+        scalar_shadows: &facts.scalar_shadows,
         functions: &facts.functions,
         structures: &facts.structures,
         self_type: None,
@@ -59,8 +62,11 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
 include!("typed_expression_facts.rs");
 include!("typed_expression_types.rs");
 include!("typed_iterator_facts.rs");
+include!("typed_field_cleanup.rs");
+include!("typed_string_cleanup.rs");
 
 struct Rewriter<'facts> {
+    scalar_shadows: &'facts std::collections::HashSet<String>,
     functions: &'facts HashMap<String, Callable>,
     structures: &'facts HashMap<String, syn::ItemStruct>,
     self_type: Option<syn::Type>,
@@ -461,6 +467,7 @@ impl VisitMut for Rewriter<'_> {
     fn visit_block_mut(&mut self, block: &mut syn::Block) {
         let outer = self.bindings.clone();
         let mut owned_locals = std::collections::HashSet::new();
+        let mut discard = Vec::new();
         for index in 0..block.stmts.len() {
             let (processed, remaining) = block.stmts.split_at_mut(index + 1);
             let statement = &mut processed[index];
@@ -477,6 +484,9 @@ impl VisitMut for Rewriter<'_> {
                 }
                 let ty = local.init.as_ref().and_then(|init| self.ty(&init.expr));
                 self.move_unused_string_copy(local, remaining, &owned_locals);
+                if self.discardable_unused_string_field(local, remaining) {
+                    discard.push(index);
+                }
                 self.bind(&local.pat, ty);
                 for name in super::identifier_names_in_pattern(&local.pat) {
                     owned_locals.remove(&name);
@@ -490,6 +500,10 @@ impl VisitMut for Rewriter<'_> {
             } else {
                 self.visit_stmt_mut(statement);
             }
+            self.remove_terminal_owned_field_clones(statement, remaining, &owned_locals);
+        }
+        for index in discard.into_iter().rev() {
+            block.stmts.remove(index);
         }
         self.bindings = outer;
     }
@@ -566,7 +580,9 @@ impl VisitMut for Rewriter<'_> {
             None
         };
         let signature = if let syn::Expr::Path(path) = call.func.as_ref() {
-            self.resolve(&path.path).map(|f| f.signature.clone())
+            self.resolve(&path.path)
+                .filter(|f| f.signature.generics.params.is_empty())
+                .map(|f| f.signature.clone())
         } else {
             None
         };
@@ -729,6 +745,7 @@ impl VisitMut for Rewriter<'_> {
 
     fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
         visit_mut::visit_expr_mut(self, expression);
+        self.rewrite_typed_string_clones(expression);
         if let Some(ty) = self.ty(expression) {
             self.rewrite_vector_collect(expression, &ty);
         }

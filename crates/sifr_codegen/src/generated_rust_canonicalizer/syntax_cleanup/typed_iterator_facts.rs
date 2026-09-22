@@ -51,6 +51,7 @@ impl Rewriter<'_> {
                     }
                     let element = self.iterator_element(&call.receiver)?;
                     let mut nested = Rewriter {
+                        scalar_shadows: self.scalar_shadows,
                         functions: self.functions,
                         structures: self.structures,
                         self_type: self.self_type.clone(),

@@ -1,3 +1,7 @@
+pub(super) fn remove_proven_owned_clone_statements(statements: &mut [syn::Stmt], owned: &HashSet<String>) {
+    remove_last_use_clones_with_owned(statements, owned, false);
+}
+
 // Ownership is supplied by the lexical resolver; unknown values never authorize a move.
 pub(super) fn remove_proven_owned_clones(body: &mut syn::Block, owned: &HashSet<String>) {
     remove_last_use_clones_with_owned(&mut body.stmts, owned, false);
@@ -430,6 +434,16 @@ fn collect_owned_pattern_names(pattern: &syn::Pat, owned: &mut HashSet<String>) 
 include!("borrowed_loop_binding.rs");
 
 impl VisitMut for LastUseCloneRemover<'_> {
+    fn visit_arm_mut(&mut self, arm: &mut syn::Arm) {
+        let mut movable = self.movable.clone();
+        for name in crate::generated_rust_canonicalizer::syntax_cleanup::identifier_names_in_pattern(&arm.pat) {
+            movable.remove(&name);
+        }
+        let mut nested = LastUseCloneRemover { movable: &movable, remaining: std::mem::take(&mut self.remaining) };
+        visit_mut::visit_arm_mut(&mut nested, arm);
+        self.remaining = nested.remaining;
+    }
+
     fn visit_block_mut(&mut self, block: &mut syn::Block) {
         let mut movable = self.movable.clone();
         for statement in &mut block.stmts {

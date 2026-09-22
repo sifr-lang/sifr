@@ -19,7 +19,7 @@ pub(crate) fn hir_unused_string_projection_receiver(
     else {
         return None;
     };
-    let crate::Type::Class { fields, .. } = object.ty() else {
+    let crate::Type::Class { fields, .. } = object.ty().resolve_alias() else {
         return None;
     };
     fields
