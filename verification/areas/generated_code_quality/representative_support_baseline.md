@@ -1,7 +1,7 @@
 # Representative support baseline provenance
 
-`data/representative_support_baseline.json` attributes the new
-`selection-7cddd09acf851f35` entry in `data/generated_quality_debt.json`.
+The JSON receipt preserves the historical provenance
+of the retired selection-7cddd09acf851f35 debt entry.
 It covers exactly the twelve representative surfaces listed in that receipt.
 It does not qualify the outstanding all-surface audit or refresh either
 existing selection. The global historical baseline SHA remains unchanged;
@@ -110,3 +110,19 @@ owners and counts, other selections, original baseline identity and resolved
 private-interface records remain unchanged. Current canonical materialization
 must match these predicted source hashes before Clippy qualification. The
 derivation is not a GCQ pass or completion of the later zero-debt audit.
+
+
+## Retained Item 12 debt retirement
+
+The retained Item 12 compiler removed the remaining producer defects. The full
+92-entry positive Clippy selection, including all twelve representatives above,
+reported zero diagnostics. The full 264-companion selection also reported zero
+diagnostics and correctly failed because its fixed debt record remained stale.
+Both remaining debt selections are now removed; the policy accepts no generated
+Clippy debt. The historical JSON receipt and failed runs remain unchanged.
+
+The retirement receipt is
+/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/fixed-debt-retirement-compiler40.json.
+It retains the removed entries, authenticates both zero-diagnostic reports, and
+checks that the twelve historical representatives belong to the positive corpus.
+Current final-candidate qualification must pass with the empty debt map.
