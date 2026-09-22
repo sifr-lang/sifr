@@ -7,6 +7,8 @@ mod catalog;
 mod catalog_advanced;
 mod catalog_metadata;
 mod catalog_semantics;
+mod catalog_sequences;
+pub use catalog_sequences::sequence_default_reference;
 mod catalog_snapshot;
 mod component;
 mod ddl_constraints;
@@ -23,8 +25,10 @@ mod parameters;
 mod raw_adapter;
 mod raw_advanced;
 mod raw_helpers;
+mod raw_sequences;
 mod raw_writes;
 mod result_analysis;
+mod schema_component;
 mod scope;
 mod semantic_helpers;
 mod semantic_json;
@@ -36,11 +40,11 @@ mod writes;
 pub use analysis::PostgresAnalysisError;
 pub use analyzer::PostgresAnalyzer;
 pub use ast::{
-    Assignment, CaseBranch, CommonTableExpression, ConflictAction, ConflictClause,
-    CreateCompositeStatement, CreateRangeStatement, CteMaterialization, Expression, ExpressionKind,
-    FromItem, JoinKind, LockStrength, LockWait, LockingClause, OrderDirection, PostgresStatement,
-    PostgresTypeName, SelectItem, SetOperator, StatementKind, SubqueryQuantifier,
-    WindowSpecification,
+    AlterSequenceStatement, Assignment, CaseBranch, CommonTableExpression, ConflictAction,
+    ConflictClause, CreateCompositeStatement, CreateRangeStatement, CteMaterialization, Expression,
+    ExpressionKind, FromItem, JoinKind, LockStrength, LockWait, LockingClause, OrderDirection,
+    PostgresStatement, PostgresTypeName, SelectItem, SetOperator, StatementKind,
+    SubqueryQuantifier, WindowSpecification,
 };
 pub use catalog::{
     CatalogCast, CatalogColumn, CatalogFunction, CatalogOperator, CatalogRelation, PostgresCatalog,

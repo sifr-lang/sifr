@@ -3,7 +3,7 @@ use sha2::{Digest, Sha256};
 use sifr_sql_contract::{DatabaseType, ObjectId, SchemaObject, SchemaObjectKind, SemanticValue};
 use sifr_sql_postgresql::{
     LibpgQueryParser, PostgresParser, PostgresStatement, PostgresTypeName, PostgresTypeRegistry,
-    StatementKind, canonical_postgres_ast_json, generated_sifr_type,
+    StatementKind, canonical_postgres_ast_json, generated_sifr_type, sequence_default_reference,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -147,18 +147,64 @@ fn normalize_object(
                 SemanticValue::Bool(required_bool(object, "unique")?),
             ),
         ]),
-        SchemaObjectKind::Sequence => BTreeMap::new(),
+        SchemaObjectKind::Sequence => sequence_semantics(object)?,
         _ => object.semantic.clone(),
     };
     Ok(())
 }
 
-fn column_semantics(
-    registry: &PostgresTypeRegistry,
+fn sequence_semantics(
     object: &SchemaObject,
 ) -> Result<BTreeMap<String, SemanticValue>, PostgresCatalogError> {
+    let mut semantic = BTreeMap::from([
+        (
+            "name".to_string(),
+            SemanticValue::Text(required_text(object, "name")?.to_string()),
+        ),
+        (
+            "data-type".to_string(),
+            SemanticValue::Text(required_text(object, "data-type")?.to_string()),
+        ),
+        (
+            "start".to_string(),
+            SemanticValue::Signed(required_signed(object, "start")?),
+        ),
+        (
+            "increment".to_string(),
+            SemanticValue::Signed(required_signed(object, "increment")?),
+        ),
+        (
+            "minimum".to_string(),
+            SemanticValue::Signed(required_signed(object, "minimum")?),
+        ),
+        (
+            "maximum".to_string(),
+            SemanticValue::Signed(required_signed(object, "maximum")?),
+        ),
+        (
+            "cache".to_string(),
+            SemanticValue::Signed(required_signed(object, "cache")?),
+        ),
+        (
+            "cycle".to_string(),
+            SemanticValue::Bool(required_bool(object, "cycle")?),
+        ),
+    ]);
+    if let Some(owner) = optional_text(object, "owned-by") {
+        semantic.insert(
+            "owned-by".to_string(),
+            SemanticValue::Text(owner.to_string()),
+        );
+    }
+    Ok(semantic)
+}
+
+fn column_semantics(
+    registry: &PostgresTypeRegistry,
+    object: &mut SchemaObject,
+) -> Result<BTreeMap<String, SemanticValue>, PostgresCatalogError> {
     let database_type = resolve_type(registry, required_text(object, "database-type-name")?)?;
-    Ok(BTreeMap::from([
+    let mut semantic = BTreeMap::from([
         (
             "name".to_string(),
             SemanticValue::Text(required_text(object, "name")?.to_string()),
@@ -176,7 +222,37 @@ fn column_semantics(
             "generated".to_string(),
             SemanticValue::Bool(required_bool(object, "generated")?),
         ),
-    ]))
+    ]);
+    let default = optional_text(object, "default-expression")
+        .unwrap_or("")
+        .trim();
+    let lower_default = default.to_ascii_lowercase();
+    if lower_default.starts_with("nextval(") || lower_default.starts_with("pg_catalog.nextval(") {
+        let statements = LibpgQueryParser
+            .parse(&format!("SELECT {default}"))
+            .map_err(|_| incomplete("parseable nextval default"))?;
+        let [
+            PostgresStatement {
+                kind: StatementKind::Select(query),
+                ..
+            },
+        ] = statements.as_slice()
+        else {
+            return Err(incomplete("single nextval default"));
+        };
+        let [target] = query.targets.as_slice() else {
+            return Err(incomplete("single nextval default target"));
+        };
+        let sequence = sequence_default_reference(&target.expression)
+            .map_err(|_| incomplete("supported nextval sequence reference"))?
+            .ok_or_else(|| incomplete("nextval sequence reference"))?;
+        semantic.insert(
+            "default-sequence".to_string(),
+            SemanticValue::Text(sequence.clone()),
+        );
+        object.dependencies.insert(ObjectId::new(sequence));
+    }
+    Ok(semantic)
 }
 
 fn enum_semantics(
@@ -646,6 +722,13 @@ fn optional_text<'a>(object: &'a SchemaObject, key: &str) -> Option<&'a str> {
 fn required_bool(object: &SchemaObject, key: &str) -> Result<bool, PostgresCatalogError> {
     match object.semantic.get(key) {
         Some(SemanticValue::Bool(value)) => Ok(*value),
+        _ => Err(incomplete(key)),
+    }
+}
+
+fn required_signed(object: &SchemaObject, key: &str) -> Result<i64, PostgresCatalogError> {
+    match object.semantic.get(key) {
+        Some(SemanticValue::Signed(value)) => Ok(*value),
         _ => Err(incomplete(key)),
     }
 }

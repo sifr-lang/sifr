@@ -36,6 +36,8 @@ CREATE TABLE accounts (
   state mood NOT NULL,
   balance numeric CHECK (balance >= 0)
 );
+CREATE SEQUENCE owned_accounts_sequence;
+ALTER SEQUENCE owned_accounts_sequence OWNED BY accounts.id;
 CREATE TABLE orders (
   id bigint PRIMARY KEY,
   account_id bigint REFERENCES accounts(id)
@@ -45,6 +47,18 @@ CREATE TABLE parity_users (
   name text NOT NULL,
   score integer CHECK (score >= 0)
 );
+CREATE SEQUENCE parity_owned_sequence AS integer INCREMENT 5
+  MINVALUE 0 MAXVALUE 1000 START 0 CACHE 3 CYCLE;
+ALTER SEQUENCE parity_owned_sequence OWNED BY parity_users.score;
+ALTER SEQUENCE parity_owned_sequence OWNED BY parity_users.id;
+CREATE SEQUENCE parity_detached_sequence AS smallint INCREMENT -2
+  MINVALUE -1000 MAXVALUE -1 START -1 OWNED BY parity_users.id;
+ALTER SEQUENCE parity_detached_sequence OWNED BY NONE;
+CREATE SEQUENCE parity_nextval_sequence;
+CREATE TABLE parity_nextval_users (
+  id bigint DEFAULT nextval('parity_nextval_sequence'::regclass)
+);
+ALTER SEQUENCE parity_nextval_sequence OWNED BY parity_nextval_users.id;
 CREATE TABLE type_samples (
   id bigint PRIMARY KEY,
   domain_values positive_id[],
@@ -89,14 +103,15 @@ def run_server(major: int) -> dict[str, Any]:
     image = f"postgres:{major}"
     ensure_image(image)
     uid = subprocess.check_output(["id", "-u"], text=True).strip()
-    name = f"sifr-schema-tool-{major}-{uid}"
-    subprocess.run(["docker", "rm", "-f", name], check=False, capture_output=True)
+    name = f"sifr-schema-tool-{major}-{uid}-{os.getpid()}"
+    started = False
     try:
         run([
             "docker", "run", "--detach", "--name", name,
             "--publish", "127.0.0.1::5432",
             "--env", f"POSTGRES_PASSWORD={PASSWORD}", image,
         ])
+        started = True
         wait_ready(name)
         psql(name, SETUP_SQL)
         port = run(["docker", "port", name, "5432/tcp"]).stdout.strip().rsplit(":", 1)[-1]
@@ -105,6 +120,7 @@ def run_server(major: int) -> dict[str, Any]:
             **os.environ,
             "SIFR_POSTGRESQL_SCHEMA_TOOL_TEST_URL": url,
             "SIFR_POSTGRESQL_SCHEMA_TOOL_TEST_MAJOR": str(major),
+            "SIFR_POSTGRESQL_MAJOR": str(major),
         }
         run([
             "cargo", "test", "--locked", "-p", "sifr_sql_postgresql_tools",
@@ -118,7 +134,8 @@ def run_server(major: int) -> dict[str, Any]:
             "status": "passed",
         }
     finally:
-        subprocess.run(["docker", "rm", "-f", name], check=False, capture_output=True)
+        if started:
+            subprocess.run(["docker", "rm", "-f", name], check=False, capture_output=True)
 
 
 def psql(container: str, sql: str) -> None:

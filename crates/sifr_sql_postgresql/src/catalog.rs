@@ -294,7 +294,6 @@ pub(crate) fn ddl_document(
     prior_objects: &BTreeMap<ObjectId, SchemaObject>,
 ) -> Result<SchemaDocument, PostgresDiagnostic> {
     let document = document.into();
-    let prior_identities = prior_objects.keys().cloned().collect::<BTreeSet<_>>();
     let mut objects = prior_objects.clone();
     let mut working_types = types.clone();
     for object in prior_objects.values() {
@@ -416,18 +415,15 @@ pub(crate) fn ddl_document(
                 )?;
             }
             StatementKind::CreateSequence(value) => {
-                add_namespace(&document, &value.name, &mut objects);
-                let identity = ObjectId::new(qualified_name(&value.name));
-                objects.insert(
-                    identity.clone(),
-                    SchemaObject {
-                        identity,
-                        kind: SchemaObjectKind::Sequence,
-                        semantic: BTreeMap::new(),
-                        dependencies: namespace_dependency(&value.name),
-                        source: Some(source_location(&document, statement)),
-                    },
-                );
+                crate::catalog_sequences::add_sequence(&document, statement, value, &mut objects)?;
+            }
+            StatementKind::AlterSequence(value) => {
+                crate::catalog_sequences::alter_sequence(
+                    &document,
+                    statement,
+                    value,
+                    &mut objects,
+                )?;
             }
             StatementKind::CreateIndex(value) => {
                 let relation = ObjectId::new(qualified_name(&value.relation));
@@ -507,7 +503,7 @@ pub(crate) fn ddl_document(
         objects: objects
             .into_iter()
             .filter_map(|(identity, object)| {
-                (!prior_identities.contains(&identity)).then_some(object)
+                (prior_objects.get(&identity) != Some(&object)).then_some(object)
             })
             .collect(),
     })
@@ -640,6 +636,18 @@ fn add_table(
             unique_sets.insert(vec![column.name.clone()]);
         }
         let mut dependencies = BTreeSet::from([table_identity.clone()]);
+        if let Some(sequence) = &column.default_sequence {
+            let sequence_id = ObjectId::new(sequence);
+            if !objects
+                .get(&sequence_id)
+                .is_some_and(|object| object.kind == SchemaObjectKind::Sequence)
+            {
+                return Err(schema_error_message(format!(
+                    "nextval default references unknown sequence '{sequence}'"
+                )));
+            }
+            dependencies.insert(sequence_id);
+        }
         if let Some((relation, _)) = &column.references {
             dependencies.insert(ObjectId::new(qualified_name(relation)));
         }
@@ -648,22 +656,31 @@ fn add_table(
             SchemaObject {
                 identity,
                 kind: SchemaObjectKind::Column,
-                semantic: BTreeMap::from([
-                    ("name".to_string(), SemanticValue::Text(column.name.clone())),
-                    (
-                        "database-type".to_string(),
-                        database_value(&ty.database_type)?,
-                    ),
-                    ("nullable".to_string(), SemanticValue::Bool(column.nullable)),
-                    (
-                        "has-default".to_string(),
-                        SemanticValue::Bool(column.has_default),
-                    ),
-                    (
-                        "generated".to_string(),
-                        SemanticValue::Bool(column.generated),
-                    ),
-                ]),
+                semantic: {
+                    let mut semantic = BTreeMap::from([
+                        ("name".to_string(), SemanticValue::Text(column.name.clone())),
+                        (
+                            "database-type".to_string(),
+                            database_value(&ty.database_type)?,
+                        ),
+                        ("nullable".to_string(), SemanticValue::Bool(column.nullable)),
+                        (
+                            "has-default".to_string(),
+                            SemanticValue::Bool(column.has_default),
+                        ),
+                        (
+                            "generated".to_string(),
+                            SemanticValue::Bool(column.generated),
+                        ),
+                    ]);
+                    if let Some(sequence) = &column.default_sequence {
+                        semantic.insert(
+                            "default-sequence".to_string(),
+                            SemanticValue::Text(sequence.clone()),
+                        );
+                    }
+                    semantic
+                },
                 dependencies,
                 source: Some(SchemaSourceLocation {
                     document: document.to_string(),

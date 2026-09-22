@@ -85,13 +85,24 @@ impl<P: PostgresParser> PostgresCompilerComponent<P> {
                     )));
                 }
                 let types = PostgresTypeRegistry::new(server_major);
-                let mut normalized = Vec::with_capacity(documents.len());
+                let mut normalized =
+                    Vec::<sifr_sql_contract::SchemaDocument>::with_capacity(documents.len());
                 let mut prior_objects = BTreeMap::<ObjectId, SchemaObject>::new();
                 for (document, source) in documents {
                     let statements = self.parser.parse(&source)?;
                     let normalized_document =
                         ddl_document(document, &statements, &types, &prior_objects)
                             .map_err(|diagnostic| PostgresAnalysisError { diagnostic })?;
+                    let updated = normalized_document
+                        .objects
+                        .iter()
+                        .map(|object| &object.identity)
+                        .collect::<BTreeSet<_>>();
+                    for previous in &mut normalized {
+                        previous
+                            .objects
+                            .retain(|object| !updated.contains(&object.identity));
+                    }
                     prior_objects.extend(
                         normalized_document
                             .objects
@@ -235,6 +246,15 @@ pub fn execute_embedded_request(
         return Err(component_diagnostic(
             "PostgreSQL component protocol major does not match the compiler",
         ));
+    }
+    if request
+        .context
+        .semantic_profile
+        .get("operation")
+        .map(String::as_str)
+        == Some(sifr_sql_contract::SCHEMA_NORMALIZATION_OPERATION)
+    {
+        return crate::schema_component::execute_schema_normalization(request);
     }
     let mut schema_artifacts = request
         .context
@@ -443,13 +463,16 @@ pub fn into_embedded_response(
     Ok(response)
 }
 
-fn into_non_query_embedded_response(
+pub(crate) fn into_non_query_embedded_response(
     server_major: u16,
     schema_identity: Option<String>,
     response: &PostgresComponentResponse,
 ) -> Result<EmbeddedAnalysisResponse, PostgresDiagnostic> {
-    let payload = serde_json::to_vec(response)
-        .map_err(|_| component_diagnostic("cannot serialize PostgreSQL component response"))?;
+    let payload = match response {
+        PostgresComponentResponse::Schema(output) => serde_json::to_vec(output),
+        _ => serde_json::to_vec(response),
+    }
+    .map_err(|_| component_diagnostic("cannot serialize PostgreSQL component response"))?;
     let (plan_kind, payload_tag, diagnostics) = match response {
         PostgresComponentResponse::Schema(_) => (
             PlanKind::Document,
@@ -573,7 +596,7 @@ fn component_error(message: impl Into<String>) -> PostgresAnalysisError {
     }
 }
 
-fn component_diagnostic(message: impl Into<String>) -> PostgresDiagnostic {
+pub(crate) fn component_diagnostic(message: impl Into<String>) -> PostgresDiagnostic {
     PostgresDiagnostic::at_sql(PostgresDiagnosticCode::UnsupportedCoreSyntax, message, 0, 1)
 }
 
