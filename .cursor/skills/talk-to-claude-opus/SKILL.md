@@ -17,7 +17,7 @@ TIMEOUT_FILE="${CLAUDE_DIR}/timed-out"
 claude \
   --permission-mode plan \
   --setting-sources project \
-  --model claude-opus-5 \
+  --model claude-opus-5-5 \
   --effort medium \
   --no-session-persistence \
   -p "$(cat <<'PROMPT'
