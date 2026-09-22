@@ -249,7 +249,7 @@ pub(super) fn lower_shadowable_builtin_call(
                 HirExpr::StringLiteral("strict".to_string())
             };
             let io_err_ty = Type::Class {
-                identity: None,
+                identity: sifr_type_system::builtin_error_identity("IOError"),
                 type_args: Vec::new(),
                 name: "IOError".to_string(),
                 fields: vec![("message".to_string(), Type::Str)].into(),
@@ -336,7 +336,7 @@ pub(super) fn lower_shadowable_builtin_call(
         // Return type: FileHandle (raises IOError on failure — used in try/except blocks)
         // FileHandle methods are defined in io.sifr; register them here for type checking.
         let io_err_ty = Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("IOError"),
             type_args: Vec::new(),
             name: "IOError".to_string(),
             fields: vec![("message".to_string(), Type::Str)].into(),

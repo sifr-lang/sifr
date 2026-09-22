@@ -41,7 +41,16 @@ impl RustEmitter {
                 {
                     return sifr_type_to_rust_type(resolved);
                 }
-                let Some(path) = self.project_nominal_path(identity.as_deref(), name) else {
+                // The root Error marker intentionally has no declaration identity
+                // in HIR. Resolve its exact built-in contract before the nominal
+                // lookup, rather than treating every identity-less class name as
+                // a builtin. Other nominal errors must carry their identity.
+                let root_identity = class
+                    .is_builtin_error_base()
+                    .then_some("sifr.builtin.Error");
+                let Some(path) =
+                    self.project_nominal_path(identity.as_deref().or(root_identity), name)
+                else {
                     return sifr_type_to_rust_type(resolved);
                 };
                 if type_args.is_empty() {
@@ -815,5 +824,44 @@ mod tests {
             .project_nominal_type_paths
             .insert("ValueError".to_string(), "crate::ValueError".to_string());
         let _ = emitter.project_nominal_path(None, "ValueError");
+    }
+    #[test]
+    fn builtin_root_error_contract_resolves_before_project_nominal_lookup() {
+        let mut emitter = RustEmitter::new();
+        emitter.project_nominal_type_paths.insert(
+            "sifr.builtin.Error".to_string(),
+            "crate::shared::Error".to_string(),
+        );
+        let root = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "Error".to_string(),
+            fields: vec![("message".to_string(), Type::Str)].into(),
+            methods: Vec::new().into(),
+            parent_class: None,
+        };
+        assert_eq!(
+            emitter.project_union_member_rust_type(&root),
+            RustType::Named("crate::shared::Error".to_string())
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "requires its canonical nominal identity")]
+    fn noncanonical_identityless_root_name_does_not_gain_builtin_identity() {
+        let mut emitter = RustEmitter::new();
+        emitter.project_nominal_type_paths.insert(
+            "sifr.builtin.Error".to_string(),
+            "crate::shared::Error".to_string(),
+        );
+        let lookalike = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "Error".to_string(),
+            fields: vec![("payload".to_string(), Type::Int)].into(),
+            methods: Vec::new().into(),
+            parent_class: None,
+        };
+        let _ = emitter.project_union_member_rust_type(&lookalike);
     }
 }

@@ -6,11 +6,13 @@ const EXPECTATION_REASON_MARKER: &str =
     "generated Rust preserves this exact typed Sifr source contract";
 const EXPECTATION_REASON: &str = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics";
 
+#[derive(Clone, Copy)]
 pub(super) struct FunctionExpectationContext {
     pub owner_has_display: bool,
     pub copy_receiver_lint: bool,
     pub trait_impl: bool,
     pub restricted_api: bool,
+    pub ref_option_lint: bool,
 }
 
 pub(super) fn refresh_function_expectations(
@@ -49,7 +51,7 @@ pub(super) fn refresh_function_expectations(
         // Source shared receivers retain their callable ABI even for Copy enums.
         add_expectation(attrs, "trivially_copy_pass_by_ref");
     }
-    if !context.trait_impl && signature.inputs.iter().any(|argument| matches!(argument,
+    if context.ref_option_lint && !context.trait_impl && signature.inputs.iter().any(|argument| matches!(argument,
         syn::FnArg::Typed(argument) if matches!(argument.ty.as_ref(),
             syn::Type::Reference(reference) if matches!(reference.elem.as_ref(),
                 syn::Type::Path(path) if path.path.segments.last().is_some_and(|segment| segment.ident == "Option"))))) {
@@ -361,6 +363,7 @@ mod receiver_tests {
                 copy_receiver_lint: true,
                 trait_impl: false,
                 restricted_api: true,
+                ref_option_lint: true,
             },
         );
         assert!(

@@ -188,12 +188,19 @@ pub(in crate::lower) fn builtin_error_type(
         let mut fields = vec![("message".to_string(), Type::Str)];
         fields.extend(extra_fields);
         Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity(name),
             type_args: Vec::new(),
             name: name.to_string(),
             fields: fields.into(),
             methods: vec![].into(),
-            parent_class: Some(parent.to_string()),
+            parent_class: Some(
+                sifr_type_system::builtin_error_identity(parent)
+                    .filter(|_| parent != "Error")
+                    .map_or_else(
+                        || parent.to_string(),
+                        |identity| format!("{identity}|Error"),
+                    ),
+            ),
         }
     })
 }
@@ -203,7 +210,7 @@ fn division_error_type(ctx: &LowerCtx) -> Type {
         .get("DivisionError")
         .cloned()
         .unwrap_or(Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("DivisionError"),
             type_args: Vec::new(),
             name: "DivisionError".to_string(),
             fields: vec![("message".to_string(), Type::Str)].into(),

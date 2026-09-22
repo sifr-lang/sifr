@@ -39,6 +39,13 @@ struct Rewriter {
 
 impl Rewriter {
     fn bind(&mut self, pattern: &syn::Pat, kind: &Value) {
+        struct Names(Vec<String>);
+        impl<'ast> Visit<'ast> for Names {
+            fn visit_pat_ident(&mut self, binding: &'ast syn::PatIdent) {
+                self.0.push(binding.ident.to_string());
+                visit::visit_pat_ident(self, binding);
+            }
+        }
         if let syn::Pat::TupleStruct(tuple) = pattern
             && tuple.path.is_ident("Some")
             && tuple.elems.len() == 1
@@ -53,13 +60,6 @@ impl Rewriter {
             return;
         }
 
-        struct Names(Vec<String>);
-        impl<'ast> Visit<'ast> for Names {
-            fn visit_pat_ident(&mut self, binding: &'ast syn::PatIdent) {
-                self.0.push(binding.ident.to_string());
-                visit::visit_pat_ident(self, binding);
-            }
-        }
         let mut names = Names(Vec::new());
         names.visit_pat(pattern);
         let direct = match pattern {
@@ -128,7 +128,7 @@ impl Rewriter {
             // unlike borrowing the Option itself. Reject competing method names.
             syn::Expr::MethodCall(call) => {
                 let method = call.method.to_string();
-                if self.local_imports || self.types.ambiguous_methods.contains(&method) {
+                if self.local_imports || self.types.method_ambiguous(&self.module, &method) {
                     return Value::Unknown;
                 }
                 let receiver = self.expression_kind(&call.receiver);
@@ -165,7 +165,7 @@ impl Rewriter {
         fn collect(condition: &syn::Expr, names: &mut HashSet<String>) {
             match condition {
                 syn::Expr::Let(expression) => {
-                    names.extend(super::super::identifier_names_in_pattern(&expression.pat))
+                    names.extend(super::super::identifier_names_in_pattern(&expression.pat));
                 }
                 syn::Expr::Binary(binary) if matches!(binary.op, syn::BinOp::And(_)) => {
                     collect(&binary.left, names);
@@ -182,7 +182,7 @@ impl Rewriter {
     }
 
     fn clean_owned_suffix(&self, statements: &mut [syn::Stmt], candidates: &HashSet<String>) {
-        if self.local_imports || self.types.ambiguous_methods.contains("clone") {
+        if self.local_imports || self.types.method_ambiguous(&self.module, "clone") {
             return;
         }
         let mut owned = candidates.clone();
@@ -227,7 +227,7 @@ impl Rewriter {
         );
         self.visit_block_mut(body);
         self.pending_owned = pending;
-        if !self.types.ambiguous_methods.contains("clone") && !self.clone_ambiguous {
+        if !self.types.method_ambiguous(&self.module, "clone") && !self.clone_ambiguous {
             super::clippy_cleanup::remove_proven_owned_clones(body, &self.movable);
         }
         self.declarations = declarations;
@@ -404,4 +404,8 @@ fn is_owned_clone_value(kind: &Value) -> bool {
         kind,
         Value::Option(_) | Value::Map | Value::Sequence | Value::Scalar
     )
+}
+
+pub(super) fn ambiguous_clone_scopes(file: &syn::File) -> HashSet<String> {
+    Types::collect(file).ambiguous_clone_scopes()
 }

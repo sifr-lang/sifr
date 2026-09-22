@@ -10,7 +10,7 @@ pub(super) fn remove_proven_owned_clones(body: &mut syn::Block, owned: &HashSet<
 
 
 
-pub(super) fn remove_needless_collected_length_bindings(statements: &mut Vec<syn::Stmt>) {
+pub(super) fn remove_needless_collected_length_bindings(statements: &mut Vec<syn::Stmt>, is_vec: impl Fn(&syn::Type) -> bool) {
     let mut index = 0;
     while index < statements.len() {
         let candidate = match &statements[index] {
@@ -20,7 +20,11 @@ pub(super) fn remove_needless_collected_length_bindings(statements: &mut Vec<syn
                     let syn::Expr::MethodCall(collect) = init.expr.as_ref() else {
                         return None;
                     };
-                    (collect.method == "collect" && collect.args.is_empty())
+                    let target = collect.turbofish.as_ref()
+                        .and_then(|arguments| arguments.args.first())
+                        .and_then(|argument| if let syn::GenericArgument::Type(ty) = argument { Some(ty) } else { None })
+                        .or_else(|| if let syn::Pat::Type(typed) = &local.pat { Some(typed.ty.as_ref()) } else { None })?;
+                    (collect.method == "collect" && collect.args.is_empty() && is_vec(target))
                         .then(|| collect.receiver.as_ref().clone())
                 });
                 name.zip(producer)

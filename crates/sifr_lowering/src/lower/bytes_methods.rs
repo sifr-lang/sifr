@@ -9,7 +9,7 @@ fn parse_error_type(ctx: &LowerCtx) -> Type {
         .get("ParseError")
         .cloned()
         .unwrap_or(Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("ParseError"),
             type_args: Vec::new(),
             name: "ParseError".to_string(),
             fields: vec![("message".to_string(), Type::Str)].into(),

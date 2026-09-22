@@ -31,6 +31,7 @@ pub const GLOBAL_RUST_NOMINAL_IDENTITIES: &[&str] = &[
     // Built-in task errors are emitted by the compiler's global error prelude.
     "sifr.builtin.CancellationError",
     "sifr.builtin.TimeoutError",
+    "sifr.builtin.ScopeFailure",
     // These are emitted by the compiler's shared CPU-offload prelude and are
     // therefore global infrastructure even when surfaced through sifr.parallel.
     "sifr.parallel.WorkerRuntimeError",
@@ -51,7 +52,7 @@ pub const CRATE_ROOT_RUST_NOMINAL_IDENTITIES: &[&str] = &[
 
 #[must_use]
 pub fn is_global_rust_nominal_identity(identity: &str) -> bool {
-    GLOBAL_RUST_NOMINAL_IDENTITIES.contains(&identity)
+    GLOBAL_RUST_NOMINAL_IDENTITIES.contains(&identity) || crate::is_builtin_error_identity(identity)
 }
 
 #[must_use]

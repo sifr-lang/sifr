@@ -807,3 +807,45 @@ fn conversion_cleanup_preserves_user_method_return_contracts() {
     "#,
     );
 }
+
+#[test]
+fn opaque_sibling_macro_does_not_hide_known_string_field_ownership() {
+    let canonical = canonical_and_compile(
+        r#"
+        mod support { std::thread_local! { static COUNT: std::cell::Cell<u64> = const { std::cell::Cell::new(0) }; } }
+        mod records {
+            #[derive(Clone)]
+            pub struct Error { pub message: String }
+        }
+        pub use records::Error;
+        pub fn run(value: Result<(), Error>) {
+            if let Err(error) = value { let _message: String = error.message; }
+        }
+    "#,
+    );
+    assert!(!canonical.contains("_message"), "{canonical}");
+}
+
+#[test]
+fn opaque_local_macro_keeps_custom_string_conversion_contract() {
+    let canonical = canonical_and_compile(
+        r#"
+        macro_rules! declare { () => {
+            struct String;
+            impl String {
+                fn clone(&self) -> Intermediate { Intermediate }
+            }
+            struct Intermediate;
+            impl Intermediate { fn to_string(&self) -> u64 { 7 } }
+        }; }
+        declare!();
+        fn run(value: String) -> u64 { value.clone().to_string() }
+    "#,
+    );
+    assert!(
+        canonical.contains("value.clone().to_string()"),
+        "{canonical}"
+    );
+}
+
+include!("standard_contract_tests.rs");

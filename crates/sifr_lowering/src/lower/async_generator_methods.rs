@@ -53,7 +53,7 @@ fn generator_close_error_type(ctx: &LowerCtx) -> Type {
         .get("GeneratorCloseError")
         .cloned()
         .unwrap_or(Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("GeneratorCloseError"),
             type_args: Vec::new(),
             name: "GeneratorCloseError".to_string(),
             fields: vec![("message".to_string(), Type::Str)].into(),

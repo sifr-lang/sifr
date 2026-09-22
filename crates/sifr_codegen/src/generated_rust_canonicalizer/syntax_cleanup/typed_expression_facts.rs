@@ -12,7 +12,7 @@ fn collect(items: &[syn::Item], scope: &[String], functions: &mut HashMap<String
                     syn::PathArguments::AngleBracketed(arguments) => arguments.args.iter().any(|arg|
                         !matches!(arg, syn::GenericArgument::Type(syn::Type::Path(path))
                             if path.path.get_ident().is_some_and(|name| implementation.generics.type_params().any(|parameter| parameter.ident == *name)))),
-                    _ => true,
+                    syn::PathArguments::Parenthesized(_) => true,
                 }) { continue; }
                 let mut path = scope.to_vec();
                 path.extend(
@@ -179,7 +179,7 @@ impl Rewriter<'_> {
         };
         let base = unreference(&left);
         if !same_type(base, unreference(&right))
-            || !(named(base, "SifrInt") || named(base, "String"))
+            || !(self.standard_named(base, "SifrInt") || self.standard_named(base, "String"))
         {
             return;
         }
@@ -221,7 +221,7 @@ impl Rewriter<'_> {
             || !clone.args.is_empty()
             || !self
                 .ty(&clone.receiver)
-                .is_some_and(|ty| named(&ty, "String"))
+                .is_some_and(|ty| self.standard_named(&ty, "String"))
         {
             return;
         }
@@ -291,7 +291,8 @@ impl Rewriter<'_> {
     }
 
     fn rewrite_vector_collect(&self, expression: &mut syn::Expr, expected: &syn::Type) {
-        let Some(target) = generic(expected, "Vec") else {
+        if !self.clone_is_unambiguous() { return; }
+        let Some(target) = self.standard_generic(expected, "Vec") else {
             return;
         };
         let syn::Expr::MethodCall(collect) = expression else {
@@ -317,7 +318,7 @@ impl Rewriter<'_> {
         let Some(source) = self.ty(&iterated.receiver) else {
             return;
         };
-        let source_element = generic(unreference(&source), "Vec").or_else(|| {
+        let source_element = self.standard_generic(unreference(&source), "Vec").or_else(|| {
             if let syn::Type::Slice(slice) = unreference(&source) {
                 Some(slice.elem.as_ref())
             } else {
@@ -331,7 +332,7 @@ impl Rewriter<'_> {
             return;
         }
         let receiver = &iterated.receiver;
-        *expression = if generic(&source, "Vec").is_some() {
+        *expression = if self.standard_generic(&source, "Vec").is_some() {
             syn::parse_quote!(#receiver.clone())
         } else {
             syn::parse_quote!(#receiver.to_vec())

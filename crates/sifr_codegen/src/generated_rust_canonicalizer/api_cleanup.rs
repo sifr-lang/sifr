@@ -11,6 +11,7 @@ use syn::visit_mut::VisitMut;
 mod const_drop;
 mod const_tuple_parameters;
 pub(super) mod const_types;
+mod exported_apis;
 
 use super::source_expectations::{
     refresh_const_expectations, refresh_function_expectations, refresh_struct_expectations,
@@ -87,11 +88,20 @@ fn improve_generated_api_items_with_project_consts(
 ) {
     let drop_types = const_types::DropTypes::for_items(items);
     publicize_public_enum_field_owners(items);
+    let exports = exported_apis::Exports::collect(items);
     loop {
         let mut before_const = const_callable_paths(items);
         before_const.extend(project_const_functions.iter().cloned());
         let before_eq = derived_eq_owners(items);
-        improve_generated_api_items_once(items, &before_const, &before_eq, source, &drop_types);
+        improve_generated_api_items_once(
+            items,
+            &before_const,
+            &before_eq,
+            source,
+            &drop_types,
+            &exports,
+            &[],
+        );
         slice_parameter_cleanup::rewrite_shared_slice_calls(items);
         let mut after_const = const_callable_paths(items);
         after_const.extend(project_const_functions.iter().cloned());
@@ -107,28 +117,35 @@ fn improve_generated_api_items_once(
     eq_owners: &HashSet<String>,
     source: &str,
     drop_types: &const_types::DropTypes,
+    exports: &exported_apis::Exports,
+    scope: &[String],
 ) {
     let display_owners = display_implementation_owners(items);
     let copy_owners = derived_copy_owners(items);
     for item in items {
         match item {
-            syn::Item::Fn(function) => improve_function_api(
-                &mut function.attrs,
-                &function.vis,
-                &mut function.sig,
-                &function.block,
-                ApiContext {
-                    allow_const: true,
-                    owner: None,
-                    owner_has_display: false,
-                    copy_receiver_lint: false,
-                    const_callables,
-                    source,
-                    drop_types,
-                },
-            ),
+            syn::Item::Fn(function) => {
+                let exported_api = exports.function(scope, &function.sig.ident);
+                improve_function_api(
+                    &mut function.attrs,
+                    &function.vis,
+                    &mut function.sig,
+                    &function.block,
+                    ApiContext {
+                        allow_const: true,
+                        exported_api,
+                        owner: None,
+                        owner_has_display: false,
+                        copy_receiver_lint: false,
+                        const_callables,
+                        source,
+                        drop_types,
+                    },
+                );
+            }
             syn::Item::Impl(item_impl) => {
                 let allow_const = item_impl.trait_.is_none();
+                let exported_owner = exports.owner(scope, &item_impl.self_ty);
                 let owner = impl_self_type_name(item_impl.self_ty.as_ref());
                 let owner_has_display = owner
                     .as_ref()
@@ -146,6 +163,8 @@ fn improve_generated_api_items_once(
                             &method.block,
                             ApiContext {
                                 allow_const,
+                                exported_api: exported_owner
+                                    && matches!(method.vis, syn::Visibility::Public(_)),
                                 owner: owner.as_deref(),
                                 owner_has_display,
                                 copy_receiver_lint: allow_const
@@ -162,12 +181,16 @@ fn improve_generated_api_items_once(
             }
             syn::Item::Mod(module) => {
                 if let Some((_, nested)) = &mut module.content {
+                    let mut child_scope = scope.to_vec();
+                    child_scope.push(module.ident.to_string());
                     improve_generated_api_items_once(
                         nested,
                         const_callables,
                         eq_owners,
                         source,
                         drop_types,
+                        exports,
+                        &child_scope,
                     );
                 }
             }
@@ -269,6 +292,7 @@ fn const_callable_paths(items: &[syn::Item]) -> HashSet<String> {
 #[derive(Clone, Copy)]
 struct ApiContext<'context> {
     allow_const: bool,
+    exported_api: bool,
     owner: Option<&'context str>,
     owner_has_display: bool,
     copy_receiver_lint: bool,
@@ -297,6 +321,7 @@ fn improve_function_api(
             copy_receiver_lint: context.copy_receiver_lint,
             trait_impl: !context.allow_const,
             restricted_api: !matches!(visibility, syn::Visibility::Public(_)),
+            ref_option_lint: !context.exported_api,
         },
     );
     if matches!(visibility, syn::Visibility::Public(_)) {

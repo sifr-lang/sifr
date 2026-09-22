@@ -15,44 +15,58 @@ pub(super) fn factor_shared_if_prefix(expression: &mut syn::Expr) {
     let syn::Expr::Block(else_block) = alternative.as_ref() else {
         return;
     };
-    let (Some(then_first), Some(else_first)) = (
-        branch.then_branch.stmts.first(),
-        else_block.block.stmts.first(),
-    ) else {
-        return;
-    };
-    if then_first.to_token_stream().to_string() != else_first.to_token_stream().to_string() {
+    let mut condition_bindings = HashSet::new();
+    if let syn::Expr::Let(condition) = branch.cond.as_ref() {
+        collect_pattern_bindings(&condition.pat, &mut condition_bindings);
+    } else if condition_contains_let(branch.cond.as_ref()) {
         return;
     }
-    let shared = then_first;
-    let then_rest = &branch.then_branch.stmts[1..];
-    let else_rest = &else_block.block.stmts[1..];
+    // Consume the complete safe prefix in one pass. Taking one statement per
+    // iteration made ordinary identical branches exhaust the fixed-point bound.
+    let shared_count = branch
+        .then_branch
+        .stmts
+        .iter()
+        .zip(&else_block.block.stmts)
+        .take_while(|(left, right)| {
+            if left.to_token_stream().to_string() != right.to_token_stream().to_string() {
+                return false;
+            }
+            let mut identifiers = HashSet::new();
+            collect_statement_identifiers(left, &mut identifiers);
+            condition_bindings.is_disjoint(&identifiers)
+        })
+        .count();
+    if shared_count == 0 {
+        return;
+    }
+    let shared = &branch.then_branch.stmts[..shared_count];
+    let then_rest = &branch.then_branch.stmts[shared_count..];
+    let else_rest = &else_block.block.stmts[shared_count..];
     if let syn::Expr::Let(let_condition) = branch.cond.as_ref() {
-        let mut condition_bindings = HashSet::new();
-        collect_pattern_bindings(&let_condition.pat, &mut condition_bindings);
-        let mut shared_identifiers = HashSet::new();
-        collect_statement_identifiers(shared, &mut shared_identifiers);
-        if !condition_bindings.is_disjoint(&shared_identifiers) {
-            return;
-        }
         let pattern = let_condition.pat.as_ref();
         let value = let_condition.expr.as_ref();
         *expression = syn::parse_quote!({
             let #value_binding = #value;
-            #shared
+            #(#shared)*
             if let #pattern = #value_binding { #(#then_rest)* } else { #(#else_rest)* }
         });
         return;
     }
-    if condition_contains_let(branch.cond.as_ref()) {
-        return;
-    }
     let condition = branch.cond.as_ref();
-    *expression = syn::parse_quote!({
-        let #binding = #condition;
-        #shared
-        if #binding { #(#then_rest)* } else { #(#else_rest)* }
-    });
+    if then_rest.is_empty() && else_rest.is_empty() {
+        // The common tail also supplies the original branch result and scope.
+        *expression = syn::parse_quote!({
+            let _ = #condition;
+            #(#shared)*
+        });
+    } else {
+        *expression = syn::parse_quote!({
+            let #binding = #condition;
+            #(#shared)*
+            if #binding { #(#then_rest)* } else { #(#else_rest)* }
+        });
+    }
 }
 
 fn condition_contains_let(condition: &syn::Expr) -> bool {

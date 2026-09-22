@@ -1,42 +1,4 @@
-/// Built-in error class names that the compiler provides.
-pub(crate) const BUILTIN_ERROR_CLASSES: &[&str] = &[
-    "Error",
-    "IOError",
-    "ParseError",
-    "ValueError",
-    "DivisionError",
-    "KeyError",
-    "JSONDecodeError",
-    "JsonIntegerRangeError",
-    "JsonLimitError",
-    "TOMLDecodeError",
-    "RegexError",
-    "FileNotFoundError",
-    "PermissionError",
-    "FileExistsError",
-    "IsADirectoryError",
-    "NotADirectoryError",
-    "DirectoryNotEmptyError",
-    "OverflowError",
-    "ArithmeticLimitError",
-    "FloatOverflowError",
-    "FloatPrecisionLossError",
-    "IndexError",
-    "AttributeError",
-    "TypeError",
-    "ZeroDivisionError",
-    "RuntimeError",
-    "NotImplementedError",
-    "DecimalConversionError",
-    "RustPanicError",
-    "TimeoutError",
-    "ScopeFailure",
-    "TaskCancelled",
-    "SecondaryError",
-    "GeneratorCloseError",
-    "WorkerRuntimeError",
-    "WorkerError",
-];
+pub(crate) use sifr_type_system::BUILTIN_ERROR_CLASSES;
 
 /// A catalog-validated builtin name. Its canonical identity is total.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

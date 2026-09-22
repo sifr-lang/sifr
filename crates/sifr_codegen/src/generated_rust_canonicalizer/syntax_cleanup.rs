@@ -21,9 +21,7 @@ mod pattern_predicates;
 mod redundant_borrow_cleanup;
 pub(super) mod scoped_imports;
 mod typed_expression_cleanup;
-mod typed_fallback_cleanup;
 
-use dead_assignment_cleanup::remove_dead_generated_assignments;
 use discardable_expression::{
     disposable_typed_unit_binding, expression_is_discardable, expression_is_literal_unit,
     simple_binding_name,
@@ -60,7 +58,6 @@ pub(super) fn canonicalize_syntax(file: &mut syn::File) {
     .visit_file_mut(file);
     idiom_cleanup::canonicalize_idioms(file, &mutating_methods);
     typed_expression_cleanup::rewrite(file);
-    typed_fallback_cleanup::canonicalize_typed_fallbacks(file);
 }
 
 pub(super) fn collect_project_scalar_borrow_plans(
@@ -133,7 +130,6 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
         );
         visit_mut::visit_item_fn_mut(self, function);
         disambiguate_similar_names_across_nested_scopes(&function.sig, &mut function.block);
-        remove_dead_generated_assignments(&mut function.block);
         normalize_tail_position(&mut function.block.stmts);
         terminate_unit_tail(&function.sig, &mut function.block.stmts);
     }
@@ -154,7 +150,6 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
         );
         visit_mut::visit_impl_item_fn_mut(self, method);
         disambiguate_similar_names_across_nested_scopes(&method.sig, &mut method.block);
-        remove_dead_generated_assignments(&mut method.block);
         normalize_tail_position(&mut method.block.stmts);
         terminate_unit_tail(&method.sig, &mut method.block.stmts);
     }

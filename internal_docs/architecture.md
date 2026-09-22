@@ -479,6 +479,11 @@ large-file check and a representative project check.
   converts those results to contextual compiler diagnostics at one boundary;
   its separate unwind catcher remains protection for unexpected compiler bugs.
   Checked assembly errors do not manufacture a panic to cross that boundary.
+  The type-system builtin-error catalog supplies canonical nominal identities
+  to lowering, constructor signatures and codegen. Builtin subtype ancestry uses
+  those identities too; the root Error marker retains its explicit base contract.
+  IO subtype handlers narrow the discriminator while retaining IOError as the
+  emitted Rust payload type.
 - Stdlib bootstrap owns one short-lived syntax-validation session for its source
   inventory. Successful complete-file parsing can establish exact support text
   as complete Rust items. Later inline assemblies reuse only that syntax identity
@@ -509,6 +514,12 @@ large-file check and a representative project check.
   unknown values, reference aliases and shadowed bindings do not authorize
   ownership transfer. Initializer deletion uses the shared conservative
   discardability contract instead of constructor or method name guesses.
+  Lexical standard-library proofs can establish inert empty values and character
+  collections; opaque or user-defined operations retain their effects. Initializer
+  motion and dead assignments use the shared format-capture parser, with unknown
+  macro expansions blocking motion. Common branch prefixes are factored as one
+  complete safe prefix, preserving condition evaluation and lexical drop order
+  without consuming one fixed-point iteration per statement.
 - Both shapes materialize through the same generated-binary-project path. Native
   build state uses local sysroot and package paths only while Cargo resolves and
   builds it. The source-only materialization boundary then replaces that local

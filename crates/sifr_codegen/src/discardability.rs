@@ -2,7 +2,9 @@
 //!
 //! Both structured-IR optimization and post-render syntax cleanup use this
 //! module. An expression is discardable only when evaluating and immediately
-//! discarding it cannot call user code, panic, allocate, or observe `Drop`.
+//! discarding it cannot call user code, panic, or observe `Drop`. Untyped
+//! expressions also exclude allocation; typed cleanup can prove standard
+//! allocation-only value construction with inert element/drop behavior.
 
 use crate::{RustExpr, RustLiteral};
 
@@ -81,16 +83,16 @@ pub(crate) fn syntax_expression_is_discardable(expression: &syn::Expr) -> bool {
         syn::Expr::Paren(paren) => syntax_expression_is_discardable(&paren.expr),
         syn::Expr::Tuple(tuple) => tuple.elems.iter().all(syntax_expression_is_discardable),
         syn::Expr::Array(array) => array.elems.iter().all(syntax_expression_is_discardable),
-        syn::Expr::Call(call)
-            if call.args.len() == 1
-                && matches!(call.func.as_ref(), syn::Expr::Path(path)
-                    if path.qself.is_none()
-                        && path.path.segments.len() == 2
-                        && path.path.segments[0].ident == "SifrInt"
-                        && path.path.segments[1].ident == "from_i64") =>
-        {
-            call.args.iter().all(syntax_expression_is_discardable)
-        }
         _ => false,
     }
+}
+
+/// Extend the shared deletion policy with a lexical standard-library effect
+/// proof. Callers must prove the receiver, result, and dispatch identity; names
+/// or a generated binding prefix alone are never such a proof.
+pub(crate) fn syntax_expression_is_discardable_with_standard_proof(
+    expression: &syn::Expr,
+    standard_proof: impl FnOnce(&syn::Expr) -> bool,
+) -> bool {
+    syntax_expression_is_discardable(expression) || standard_proof(expression)
 }

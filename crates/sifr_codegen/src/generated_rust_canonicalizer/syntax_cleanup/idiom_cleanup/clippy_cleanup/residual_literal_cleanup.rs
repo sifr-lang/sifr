@@ -77,86 +77,8 @@ fn rewrite_double_negated_is_empty(expression: &mut syn::Expr) -> bool {
     true
 }
 
-fn rewrite_option_map_or_none(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(call) = expression else {
-        return false;
-    };
-    if call.method != "map_or" || call.args.len() != 2 {
-        return false;
-    }
-    let Some(syn::Expr::Path(default)) = call.args.first() else {
-        return false;
-    };
-    if !default.path.is_ident("None") {
-        return false;
-    }
-    let Some(mapper) = call.args.iter().nth(1).cloned() else {
-        return false;
-    };
-    call.method = syn::Ident::new("and_then", call.method.span());
-    call.args = std::iter::once(mapper).collect();
-    true
-}
 
-fn rewrite_known_string_identity_mapper(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(map_or_else) = expression else {
-        return false;
-    };
-    if map_or_else.method != "map_or_else" || map_or_else.args.len() != 2 {
-        return false;
-    }
-    let syn::Expr::MethodCall(source_map) = map_or_else.receiver.as_ref() else {
-        return false;
-    };
-    let Some(syn::Expr::Closure(source_mapper)) = source_map.args.first() else {
-        return false;
-    };
-    if source_map.method != "map"
-        || source_map.args.len() != 1
-        || !matches!(source_mapper.body.as_ref(), syn::Expr::MethodCall(conversion)
-            if conversion.method == "to_string" && conversion.args.is_empty())
-    {
-        return false;
-    }
-    let Some(syn::Expr::Closure(mapper)) = map_or_else.args.iter_mut().nth(1) else {
-        return false;
-    };
-    let Some(binding) = mapper.inputs.first().and_then(simple_pattern_name) else {
-        return false;
-    };
-    if mapper.inputs.len() != 1
-        || !matches!(mapper.body.as_ref(), syn::Expr::MethodCall(conversion)
-            if conversion.method == "to_string"
-                && conversion.args.is_empty()
-                && matches!(conversion.receiver.as_ref(), syn::Expr::Path(path)
-                    if path.path.is_ident(&binding)))
-    {
-        return false;
-    }
-    let binding = syn::Ident::new(&binding, proc_macro2::Span::call_site());
-    *mapper.body = syn::parse_quote!(#binding);
-    true
-}
 
-fn remove_temporary_collection_clone(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(clone) = expression else {
-        return false;
-    };
-    if clone.method != "clone" || !clone.args.is_empty() {
-        return false;
-    }
-    let removable = matches!(clone.receiver.as_ref(), syn::Expr::Macro(vector)
-        if vector.mac.path.is_ident("vec"))
-        || matches!(clone.receiver.as_ref(), syn::Expr::Block(block)
-            if block.block.stmts.iter().any(|statement| matches!(statement,
-                syn::Stmt::Local(local) if simple_pattern_name(&local.pat)
-                    .is_some_and(|name| name.starts_with("sifr_generated_")))));
-    if !removable {
-        return false;
-    }
-    *expression = clone.receiver.as_ref().clone();
-    true
-}
 
 fn rewrite_borrowed_callback_arguments(expression: &mut syn::Expr) -> bool {
     let syn::Expr::Call(call) = expression else {
@@ -214,37 +136,4 @@ impl VisitMut for BorrowedCallbackArgumentRewriter<'_> {
     }
 
     fn visit_expr_closure_mut(&mut self, _closure: &mut syn::ExprClosure) {}
-}
-
-fn rewrite_cloned_option_identity_mapper(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(map) = expression else {
-        return false;
-    };
-    if map.method != "map_or_else" || map.args.len() != 2 {
-        return false;
-    }
-    let syn::Expr::MethodCall(cloned) = map.receiver.as_ref() else {
-        return false;
-    };
-    if cloned.method != "cloned" || !cloned.args.is_empty() {
-        return false;
-    }
-    let Some(syn::Expr::Closure(mapper)) = map.args.iter_mut().nth(1) else {
-        return false;
-    };
-    let Some(binding) = mapper.inputs.first().and_then(simple_pattern_name) else {
-        return false;
-    };
-    if mapper.inputs.len() != 1
-        || !matches!(mapper.body.as_ref(), syn::Expr::MethodCall(conversion)
-            if matches!(conversion.method.to_string().as_str(), "clone" | "to_owned" | "to_string")
-                && conversion.args.is_empty()
-                && matches!(conversion.receiver.as_ref(), syn::Expr::Path(path)
-                    if path.path.is_ident(&binding)))
-    {
-        return false;
-    }
-    let binding = syn::Ident::new(&binding, proc_macro2::Span::call_site());
-    *mapper.body = syn::parse_quote!(#binding);
-    true
 }

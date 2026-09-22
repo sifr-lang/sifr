@@ -1,27 +1,39 @@
 use std::collections::HashSet;
 use syn::visit::{self, Visit};
 
-pub(super) fn remove_dead_generated_assignments(block: &mut syn::Block) {
-    let bool_locals = bool_local_names(block);
-    clean_block(block, HashSet::new(), &bool_locals);
+pub(super) fn remove_dead_generated_assignments(
+    block: &mut syn::Block,
+    discardable: &impl Fn(&syn::Stmt) -> bool,
+) {
+    clean_block(block, HashSet::new(), discardable);
 }
 
 fn clean_block(
     block: &mut syn::Block,
     mut live: HashSet<String>,
-    bool_locals: &HashSet<String>,
+    discardable: &impl Fn(&syn::Stmt) -> bool,
 ) -> HashSet<String> {
+    // A branch-local declaration must not kill an outer binding that remains
+    // live after the branch, even when both branches shadow the same name.
+    let mut shadowed_live = HashSet::new();
+    for statement in &block.stmts {
+        if let syn::Stmt::Local(local) = statement {
+            let mut bound = HashSet::new();
+            PatternNames { names: &mut bound }.visit_pat(&local.pat);
+            shadowed_live.extend(live.intersection(&bound).cloned());
+        }
+    }
     let mut index = block.stmts.len();
     while index > 0 {
         index -= 1;
         if let syn::Stmt::Expr(syn::Expr::If(branch), _) = &mut block.stmts[index] {
-            let mut branch_live = clean_block(&mut branch.then_branch, live.clone(), bool_locals);
+            let mut branch_live = clean_block(&mut branch.then_branch, live.clone(), discardable);
             if let Some((_, alternative)) = &mut branch.else_branch {
                 if let syn::Expr::Block(alternative) = alternative.as_mut() {
                     branch_live.extend(clean_block(
                         &mut alternative.block,
                         live.clone(),
-                        bool_locals,
+                        discardable,
                     ));
                 } else {
                     branch_live.extend(expression_names(alternative));
@@ -35,14 +47,8 @@ fn clean_block(
             continue;
         }
 
-        let dead_generated_assignment =
-            simple_assignment(&block.stmts[index]).is_some_and(|(name, value)| {
-                !live.contains(&name)
-                    && (name.starts_with("sifr_generated_chars_")
-                        || (bool_locals.contains(&name)
-                            && matches!(value, syn::Expr::Lit(literal)
-                                if matches!(literal.lit, syn::Lit::Bool(_)))))
-            });
+        let dead_generated_assignment = simple_assignment(&block.stmts[index])
+            .is_some_and(|(name, _)| !live.contains(&name) && discardable(&block.stmts[index]));
         if dead_generated_assignment {
             block.stmts.remove(index);
             continue;
@@ -67,31 +73,8 @@ fn clean_block(
         }
         live.extend(statement_names(&block.stmts[index]));
     }
+    live.extend(shadowed_live);
     live
-}
-
-fn bool_local_names(block: &syn::Block) -> HashSet<String> {
-    let mut collector = BoolLocalCollector::default();
-    collector.visit_block(block);
-    collector.names
-}
-
-#[derive(Default)]
-struct BoolLocalCollector {
-    names: HashSet<String>,
-}
-
-impl<'ast> Visit<'ast> for BoolLocalCollector {
-    fn visit_local(&mut self, local: &'ast syn::Local) {
-        if let syn::Pat::Type(typed) = &local.pat
-            && matches!(typed.ty.as_ref(), syn::Type::Path(path)
-                if path.qself.is_none() && path.path.is_ident("bool"))
-            && let syn::Pat::Ident(binding) = typed.pat.as_ref()
-        {
-            self.names.insert(binding.ident.to_string());
-        }
-        visit::visit_local(self, local);
-    }
 }
 
 fn simple_assignment(statement: &syn::Stmt) -> Option<(String, &syn::Expr)> {
@@ -110,15 +93,11 @@ fn simple_assignment(statement: &syn::Stmt) -> Option<(String, &syn::Expr)> {
 }
 
 fn expression_names(expression: &syn::Expr) -> HashSet<String> {
-    let mut collector = ReferenceNames::default();
-    collector.visit_expr(expression);
-    collector.names
+    super::referenced_identifier_names_in_expr(expression)
 }
 
 fn statement_names(statement: &syn::Stmt) -> HashSet<String> {
-    let mut collector = ReferenceNames::default();
-    collector.visit_stmt(statement);
-    collector.names
+    super::statement_identifier_names(statement)
 }
 
 struct PatternNames<'names> {
@@ -129,39 +108,5 @@ impl<'ast> Visit<'ast> for PatternNames<'_> {
     fn visit_pat_ident(&mut self, binding: &'ast syn::PatIdent) {
         self.names.insert(binding.ident.to_string());
         visit::visit_pat_ident(self, binding);
-    }
-}
-
-#[derive(Default)]
-struct ReferenceNames {
-    names: HashSet<String>,
-}
-
-impl<'ast> Visit<'ast> for ReferenceNames {
-    fn visit_expr_path(&mut self, path: &'ast syn::ExprPath) {
-        if path.qself.is_none()
-            && path.path.segments.len() == 1
-            && let Some(segment) = path.path.segments.first()
-        {
-            self.names.insert(segment.ident.to_string());
-        }
-        visit::visit_expr_path(self, path);
-    }
-
-    fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        collect_token_names(rust_macro.tokens.clone(), &mut self.names);
-        visit::visit_macro(self, rust_macro);
-    }
-}
-
-fn collect_token_names(tokens: proc_macro2::TokenStream, names: &mut HashSet<String>) {
-    for token in tokens {
-        match token {
-            proc_macro2::TokenTree::Ident(identifier) => {
-                names.insert(identifier.to_string());
-            }
-            proc_macro2::TokenTree::Group(group) => collect_token_names(group.stream(), names),
-            _ => {}
-        }
     }
 }

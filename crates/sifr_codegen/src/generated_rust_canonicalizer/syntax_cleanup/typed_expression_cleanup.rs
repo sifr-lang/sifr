@@ -15,6 +15,7 @@ pub(super) fn rewrite(file: &mut syn::File) {
 }
 
 pub(crate) struct ProjectTypeFacts {
+    ambiguous_clone_scopes: std::collections::HashSet<String>,
     scalar_shadows: std::collections::HashSet<String>,
     functions: HashMap<String, Callable>,
     structures: HashMap<String, syn::ItemStruct>,
@@ -40,6 +41,7 @@ pub(super) fn collect_project_facts(files: &[syn::File]) -> ProjectTypeFacts {
     super::scoped_imports::expand(&combined, &mut functions);
     super::scoped_imports::expand(&combined, &mut structures);
     ProjectTypeFacts {
+        ambiguous_clone_scopes: super::idiom_cleanup::ambiguous_clone_scopes(&combined),
         scalar_shadows: collect_scalar_shadows(&combined),
         functions,
         structures,
@@ -48,6 +50,7 @@ pub(super) fn collect_project_facts(files: &[syn::File]) -> ProjectTypeFacts {
 
 pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts) {
     Rewriter {
+        ambiguous_clone_scopes: &facts.ambiguous_clone_scopes,
         scalar_shadows: &facts.scalar_shadows,
         functions: &facts.functions,
         structures: &facts.structures,
@@ -55,10 +58,12 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
         scope: Vec::new(),
         module_depth: 0,
         bindings: HashMap::new(),
+        discardable_assignments: HashMap::new(),
     }
     .visit_file_mut(file);
 }
 
+include!("typed_initializer_cleanup.rs");
 include!("typed_expression_facts.rs");
 include!("typed_expression_types.rs");
 include!("typed_iterator_facts.rs");
@@ -66,6 +71,7 @@ include!("typed_field_cleanup.rs");
 include!("typed_string_cleanup.rs");
 
 struct Rewriter<'facts> {
+    ambiguous_clone_scopes: &'facts std::collections::HashSet<String>,
     scalar_shadows: &'facts std::collections::HashSet<String>,
     functions: &'facts HashMap<String, Callable>,
     structures: &'facts HashMap<String, syn::ItemStruct>,
@@ -74,6 +80,7 @@ struct Rewriter<'facts> {
     module_depth: usize,
     // Unknown shadowing bindings have a None entry, never an outer type.
     bindings: HashMap<String, Option<syn::Type>>,
+    discardable_assignments: HashMap<String, bool>,
 }
 
 fn same_type(left: &syn::Type, right: &syn::Type) -> bool {
@@ -88,6 +95,11 @@ fn generic<'a>(ty: &'a syn::Type, name: &str) -> Option<&'a syn::Type> {
     let syn::Type::Path(path) = ty else {
         return None;
     };
+    // A matching final segment does not establish standard-container identity.
+    // Qualified external lookalikes must retain their declared operations.
+    if path.qself.is_some() || path.path.leading_colon.is_some() || path.path.segments.len() != 1 {
+        return None;
+    }
     let segment = path.path.segments.last()?;
     if segment.ident != name {
         return None;
@@ -250,11 +262,11 @@ impl Rewriter<'_> {
                     .as_ref()
                     .and_then(|ty| {
                         if tuple.path.is_ident("Some") {
-                            generic(unreference(ty), "Option")
+                            self.standard_generic(unreference(ty), "Option")
                         } else if tuple.path.is_ident("Ok") {
-                            generic(unreference(ty), "Result")
+                            self.standard_generic(unreference(ty), "Result")
                         } else {
-                            result_error(unreference(ty))
+                            self.standard_result_error(unreference(ty))
                         }
                     })
                     .cloned();
@@ -322,12 +334,14 @@ impl Rewriter<'_> {
     }
 
     fn expected(&mut self, expr: &mut syn::Expr, expected: &syn::Type) {
+        self.repair_borrowed_str_clone(expr, expected);
         if let syn::Expr::Block(block) = expr {
             self.expected_block(&mut block.block, expected);
+            self.rewrite_typed_string_clones(expr);
             return;
         }
         if let syn::Expr::Closure(closure) = expr
-            && let Some(inputs) = callable_inputs(expected)
+            && let Some(inputs) = self.standard_callable_inputs(expected)
             && inputs.len() == closure.inputs.len()
         {
             let outer = self.bindings.clone();
@@ -341,8 +355,10 @@ impl Rewriter<'_> {
         self.rewrite_vector_collect(expr, expected);
         if let syn::Expr::Call(call) = expr
             && matches!(call.func.as_ref(), syn::Expr::Path(path) if path.path.is_ident("Some"))
+            && !self.scalar_shadowed("Some")
+            && !self.bindings.contains_key("Some")
             && call.args.len() == 1
-            && let Some(inner) = generic(expected, "Option")
+            && let Some(inner) = self.standard_generic(expected, "Option")
         {
             self.expected(&mut call.args[0], inner);
         }
@@ -352,7 +368,14 @@ impl Rewriter<'_> {
         if target.mutability.is_some() {
             return;
         }
-        if named(&target.elem, "str") && self.ty(expr).is_some_and(|ty| named(&ty, "String")) {
+        if self.rewrite_borrowed_empty_string(expr, &target.elem) {
+            return;
+        }
+        if self.standard_named(&target.elem, "str")
+            && self
+                .ty(expr)
+                .is_some_and(|ty| self.standard_named(&ty, "String"))
+        {
             if let syn::Expr::MethodCall(conversion) = expr
                 && conversion.args.is_empty()
                 && matches!(
@@ -361,11 +384,11 @@ impl Rewriter<'_> {
                 )
                 && let Some(ty) = self.ty(&conversion.receiver)
             {
-                if named(unreference(&ty), "str") {
+                if self.standard_named(unreference(&ty), "str") {
                     *expr = *conversion.receiver.clone();
                     return;
                 }
-                if named(unreference(&ty), "String") {
+                if self.standard_named(unreference(&ty), "String") {
                     let receiver = &conversion.receiver;
                     *expr = syn::parse_quote!(#receiver.as_str());
                     return;
@@ -382,12 +405,12 @@ impl Rewriter<'_> {
             return;
         }
         if self.ty(&reference.expr).is_some_and(|ty| {
-            same_type(&ty, expected) || shared_vector_slice_coercion(&ty, expected)
+            same_type(&ty, expected) || self.standard_vector_slice_coercion(&ty, expected)
         }) {
             *expr = *reference.expr.clone();
             return;
         }
-        if named(&target.elem, "str")
+        if self.standard_named(&target.elem, "str")
             && let syn::Expr::MethodCall(conversion) = reference.expr.as_ref()
             && matches!(
                 conversion.method.to_string().as_str(),
@@ -396,9 +419,9 @@ impl Rewriter<'_> {
             && conversion.args.is_empty()
             && let Some(ty) = self.ty(&conversion.receiver)
         {
-            if named(unreference(&ty), "str") {
+            if self.standard_named(unreference(&ty), "str") {
                 *expr = *conversion.receiver.clone();
-            } else if named(unreference(&ty), "String") {
+            } else if self.standard_named(unreference(&ty), "String") {
                 let receiver = &conversion.receiver;
                 *expr = syn::parse_quote!(#receiver.as_str());
             }
@@ -436,6 +459,7 @@ impl VisitMut for Rewriter<'_> {
 
     fn visit_item_fn_mut(&mut self, function: &mut syn::ItemFn) {
         let outer = std::mem::take(&mut self.bindings);
+        let outer_assignments = std::mem::take(&mut self.discardable_assignments);
         self.scope.push(function.sig.ident.to_string());
         for input in &function.sig.inputs {
             if let syn::FnArg::Typed(input) = input {
@@ -445,10 +469,13 @@ impl VisitMut for Rewriter<'_> {
         self.visit_block_mut(&mut function.block);
         self.scope.pop();
         self.bindings = outer;
+        self.remove_proven_dead_assignments(&mut function.block);
+        self.discardable_assignments = outer_assignments;
     }
 
     fn visit_impl_item_fn_mut(&mut self, function: &mut syn::ImplItemFn) {
         let outer = std::mem::take(&mut self.bindings);
+        let outer_assignments = std::mem::take(&mut self.discardable_assignments);
         if let Some(ty) = &self.self_type
             && function.sig.receiver().is_some()
         {
@@ -462,50 +489,12 @@ impl VisitMut for Rewriter<'_> {
         }
         self.visit_block_mut(&mut function.block);
         self.bindings = outer;
+        self.remove_proven_dead_assignments(&mut function.block);
+        self.discardable_assignments = outer_assignments;
     }
 
     fn visit_block_mut(&mut self, block: &mut syn::Block) {
-        let outer = self.bindings.clone();
-        let mut owned_locals = std::collections::HashSet::new();
-        let mut discard = Vec::new();
-        for index in 0..block.stmts.len() {
-            let (processed, remaining) = block.stmts.split_at_mut(index + 1);
-            let statement = &mut processed[index];
-            if let syn::Stmt::Local(local) = statement {
-                if let Some(init) = &mut local.init {
-                    if let syn::Pat::Type(typed) = &local.pat {
-                        self.expected(&mut init.expr, &typed.ty);
-                    } else {
-                        self.visit_expr_mut(&mut init.expr);
-                    }
-                    if let Some((_, diverge)) = &mut init.diverge {
-                        self.visit_expr_mut(diverge);
-                    }
-                }
-                let ty = local.init.as_ref().and_then(|init| self.ty(&init.expr));
-                self.move_unused_string_copy(local, remaining, &owned_locals);
-                if self.discardable_unused_string_field(local, remaining) {
-                    discard.push(index);
-                }
-                self.bind(&local.pat, ty);
-                for name in super::identifier_names_in_pattern(&local.pat) {
-                    owned_locals.remove(&name);
-                    if self.bindings.get(&name).is_some_and(|ty| {
-                        ty.as_ref()
-                            .is_some_and(|ty| !matches!(ty, syn::Type::Reference(_)))
-                    }) {
-                        owned_locals.insert(name);
-                    }
-                }
-            } else {
-                self.visit_stmt_mut(statement);
-            }
-            self.remove_terminal_owned_field_clones(statement, remaining, &owned_locals);
-        }
-        for index in discard.into_iter().rev() {
-            block.stmts.remove(index);
-        }
-        self.bindings = outer;
+        self.cleanup_block(block);
     }
 
     fn visit_expr_if_mut(&mut self, branch: &mut syn::ExprIf) {
@@ -568,8 +557,8 @@ impl VisitMut for Rewriter<'_> {
             arguments.push(*binary.left.clone());
             arguments.push(*binary.right.clone());
             self.align_comparison_references(&mut arguments);
-            binary.left = Box::new(arguments[0].clone());
-            binary.right = Box::new(arguments[1].clone());
+            *binary.left = arguments[0].clone();
+            *binary.right = arguments[1].clone();
         }
     }
 
@@ -611,7 +600,8 @@ impl VisitMut for Rewriter<'_> {
             for argument in &mut call.args {
                 while let syn::Expr::Reference(reference) = argument
                     && self.ty(&reference.expr).is_some_and(|ty| {
-                        matches!(ty, syn::Type::Reference(_)) && named(unreference(&ty), "SifrInt")
+                        matches!(ty, syn::Type::Reference(_))
+                            && self.standard_named(unreference(&ty), "SifrInt")
                     })
                 {
                     *argument = *reference.expr.clone();
@@ -657,7 +647,7 @@ impl VisitMut for Rewriter<'_> {
             });
         if ty
             .as_ref()
-            .is_some_and(|ty| named(unreference(ty), "SifrInt"))
+            .is_some_and(|ty| self.standard_named(unreference(ty), "SifrInt"))
             && matches!(
                 call.method.to_string().as_str(),
                 "shl_known_valid" | "shr_known_valid"
@@ -677,7 +667,8 @@ impl VisitMut for Rewriter<'_> {
             } else if call.method == "replace"
                 && index < 2
                 && ty.as_ref().is_some_and(|ty| {
-                    named(unreference(ty), "String") || named(unreference(ty), "str")
+                    self.standard_named(unreference(ty), "String")
+                        || self.standard_named(unreference(ty), "str")
                 })
             {
                 self.expected(argument, &syn::parse_quote!(&str));
@@ -687,7 +678,7 @@ impl VisitMut for Rewriter<'_> {
                 let base = unreference(ty);
                 self.expected(argument, &syn::parse_quote!(&#base));
             } else if let Some(ty) = &ty
-                && let Some(error) = result_error(unreference(ty))
+                && let Some(error) = self.standard_result_error(unreference(ty))
                 && matches!(
                     call.method.to_string().as_str(),
                     "unwrap_or_else" | "map_err"
@@ -701,7 +692,7 @@ impl VisitMut for Rewriter<'_> {
                 self.visit_expr_mut(&mut closure.body);
                 self.bindings = outer;
             } else if let Some(ty) = &ty
-                && let Some(inner) = generic(unreference(ty), "Option")
+                && let Some(inner) = self.standard_generic(unreference(ty), "Option")
                 && ((matches!(call.method.to_string().as_str(), "map" | "and_then") && index == 0)
                     || (matches!(call.method.to_string().as_str(), "map_or" | "map_or_else")
                         && index == 1))
@@ -711,7 +702,7 @@ impl VisitMut for Rewriter<'_> {
                 let outer = self.bindings.clone();
                 self.bind(&closure.inputs[0], Some(inner.clone()));
                 self.visit_expr_mut(&mut closure.body);
-                if named(inner, "String")
+                if self.standard_named(inner, "String")
                     && let syn::Expr::MethodCall(clone) = closure.body.as_ref()
                     && clone.method == "clone"
                     && clone.args.is_empty()
@@ -723,7 +714,7 @@ impl VisitMut for Rewriter<'_> {
             } else if index == 0
                 && ty.as_ref().is_some_and(|ty| {
                     let base = unreference(ty);
-                    (named(base, "String")
+                    (self.standard_named(base, "String")
                         && matches!(
                             call.method.to_string().as_str(),
                             "contains" | "starts_with" | "ends_with" | "find"
@@ -731,9 +722,13 @@ impl VisitMut for Rewriter<'_> {
                         || (matches!(
                             call.method.to_string().as_str(),
                             "get" | "contains_key" | "remove"
-                        ) && generic(base, "HashMap").is_some_and(|ty| named(ty, "String")))
+                        ) && self
+                            .standard_generic(base, "HashMap")
+                            .is_some_and(|ty| self.standard_named(ty, "String")))
                         || (matches!(call.method.to_string().as_str(), "contains" | "remove")
-                            && generic(base, "HashSet").is_some_and(|ty| named(ty, "String")))
+                            && self
+                                .standard_generic(base, "HashSet")
+                                .is_some_and(|ty| self.standard_named(ty, "String")))
                 })
             {
                 self.expected(argument, &syn::parse_quote!(&str));
@@ -744,7 +739,17 @@ impl VisitMut for Rewriter<'_> {
     }
 
     fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
+        if !self.scalar_shadowed("vec")
+            && !self.scalar_shadowed("Vec")
+            && matches!(expression, syn::Expr::Macro(vector)
+                if vector.mac.path.is_ident("vec") && vector.mac.tokens.is_empty())
+        {
+            *expression = syn::parse_quote!(Vec::new());
+        }
+
         visit_mut::visit_expr_mut(self, expression);
+        self.rewrite_standard_option_defaults(expression);
+        self.rewrite_standard_lazy_fallback(expression);
         self.rewrite_typed_string_clones(expression);
         if let Some(ty) = self.ty(expression) {
             self.rewrite_vector_collect(expression, &ty);
@@ -770,8 +775,13 @@ impl VisitMut for Rewriter<'_> {
             && fallback.asyncness.is_none()
             && matches!(fallback.body.as_ref(), syn::Expr::Path(path) if path.qself.is_none() && path.path.is_ident("None"))
             && let Some(receiver) = self.ty(&call.receiver)
-            && ((generic(unreference(&receiver), "Option").is_some() && fallback.inputs.is_empty())
-                || (generic(unreference(&receiver), "Result").is_some()
+            && ((self
+                .standard_generic(unreference(&receiver), "Option")
+                .is_some()
+                && fallback.inputs.is_empty())
+                || (self
+                    .standard_generic(unreference(&receiver), "Result")
+                    .is_some()
                     && fallback.inputs.len() == 1
                     && matches!(
                         &fallback.inputs[0],
@@ -782,9 +792,10 @@ impl VisitMut for Rewriter<'_> {
                                 ..
                             })
                     )))
-            && let Some(value) = generic(unreference(&receiver), "Result")
-                .or_else(|| generic(unreference(&receiver), "Option"))
-            && generic(value, "Option").is_some()
+            && let Some(value) = self
+                .standard_generic(unreference(&receiver), "Result")
+                .or_else(|| self.standard_generic(unreference(&receiver), "Option"))
+            && self.standard_generic(value, "Option").is_some()
         {
             call.method = syn::Ident::new("unwrap_or", call.method.span());
             call.args[0] = syn::parse_quote!(None);
@@ -805,15 +816,16 @@ impl VisitMut for Rewriter<'_> {
             && view.args.is_empty()
             && self
                 .ty(&view.receiver)
-                .is_some_and(|ty| named(unreference(&ty), "String"))
+                .is_some_and(|ty| self.standard_named(unreference(&ty), "String"))
         {
             call.receiver = view.receiver.clone();
         }
         if call.method == "to_vec"
+            && self.clone_is_unambiguous()
             && call.args.is_empty()
             && self
                 .ty(&call.receiver)
-                .is_some_and(|ty| generic(&ty, "Vec").is_some())
+                .is_some_and(|ty| self.standard_generic(&ty, "Vec").is_some())
         {
             call.method = syn::Ident::new("clone", call.method.span());
         }
@@ -824,7 +836,7 @@ impl VisitMut for Rewriter<'_> {
             && map.args.len() == 1
             && self
                 .ty(&map.receiver)
-                .is_some_and(|ty| generic(&ty, "Option").is_some())
+                .is_some_and(|ty| self.standard_generic(&ty, "Option").is_some())
         {
             let receiver = &map.receiver;
             let mapper = &map.args[0];
@@ -834,24 +846,18 @@ impl VisitMut for Rewriter<'_> {
         }
         if call.args.is_empty()
             && call.method == "clone"
+            && self.clone_is_unambiguous()
+            && !self.scalar_shadowed("String")
+            && !self.scalar_shadowed("SifrInt")
             && matches!(
                 call.receiver.as_ref(),
-                syn::Expr::Call(_) | syn::Expr::MethodCall(_)
+                syn::Expr::Call(_) | syn::Expr::MethodCall(_) | syn::Expr::Macro(_)
             )
             && self
                 .ty(&call.receiver)
-                .is_some_and(|ty| named(&ty, "SifrInt") || named(&ty, "String"))
+                .is_some_and(|ty| self.inert_owned_type(&ty))
         {
             *expression = *call.receiver.clone();
-            return;
-        }
-        if call.args.is_empty()
-            && matches!(call.method.to_string().as_str(), "to_owned" | "to_string")
-            && self
-                .ty(&call.receiver)
-                .is_some_and(|ty| named(unreference(&ty), "String"))
-        {
-            call.method = syn::Ident::new("clone", call.method.span());
         }
     }
 

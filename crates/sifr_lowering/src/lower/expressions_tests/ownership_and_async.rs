@@ -522,7 +522,7 @@ pub(super) fn test_failure_annotation_resolves_in_function_signature() {
     assert_eq!(
         param_ty,
         &Type::Failure(Box::new(Type::Class {
-            identity: None,
+            identity: sifr_type_system::builtin_error_identity("ValueError"),
             type_args: Vec::new(),
             name: "ValueError".to_string(),
             fields: vec![("message".to_string(), Type::Str)].into(),

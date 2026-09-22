@@ -117,7 +117,13 @@ impl RustEmitter {
             }
 
             let handler_name = handler.name.as_deref().unwrap_or("_e");
-            let handler_binding = if handler_name == "_" {
+            let handler_binding = if handler.name.is_none()
+                || handler_name == "_"
+                || self
+                    .body_analysis
+                    .summary(&handler.body)
+                    .is_some_and(|summary| !summary.uses_binding(handler_name))
+            {
                 None
             } else {
                 // Every caller destructures an owned Result; this exclusive
@@ -182,7 +188,21 @@ impl RustEmitter {
                 handler_body.push(RustStmt::Let {
                     mutable: self.protected_mutable_place_roots.contains(handler_name),
                     name: handler_name.to_string(),
-                    ty: None,
+                    // IO subclasses are discriminator cases of one IOError
+                    // carrier, not standalone Rust nominal payload types.
+                    ty: if err_ty == "IOError"
+                        && handler
+                            .error_type
+                            .as_deref()
+                            .is_some_and(|name| io_error_kind_for_handler(name).is_some())
+                    {
+                        Some(crate::RustType::Named("IOError".to_string()))
+                    } else {
+                        handler
+                            .error_resolved_type
+                            .as_ref()
+                            .map(crate::sifr_type_to_rust_type)
+                    },
                     value: binding_value,
                 });
             }

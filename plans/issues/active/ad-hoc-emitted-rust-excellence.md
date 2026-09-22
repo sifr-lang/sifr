@@ -21,12 +21,13 @@ Retained source 8ad089a9458f35fcfa228e93fe44f4d69731828b is a mechanism referenc
 not an integration candidate: current ownership, macro traversal, Option,
 const-drop and project identity repairs take precedence over its obsolete paths.
 
-The pre-change algorithmic dependency scan passed all 411 native cases using the
+The pre-change algorithmic dependency scan passed all 411 source checks using the
 predecessor compiler (binary SHA256
 3a95ab907374f262e43caf8a91da7daef4c784863825aacf28368f876bf9f566),
 current merged corpus 4da4f7a, and the transferred private cache. See
 baseline-inputs.json and the immutable baseline result/taxonomy artifacts.
-This resolves the old dependency hypothesis; it does not qualify the new compiler.
+This confirms the merged source contracts pass checking; it does not qualify
+native behavior or the new compiler. Final checks and native runs are recorded separately.
 
 Named validation registration:
 

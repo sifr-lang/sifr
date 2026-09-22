@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use quote::{ToTokens, quote};
 use syn::punctuated::Punctuated;
-use syn::visit::{self, Visit};
 
 pub(super) fn rewrite_identity_constructor_closure(expression: &mut syn::Expr) {
     let syn::Expr::Closure(closure) = expression else {
@@ -138,27 +137,6 @@ fn expression_always_diverges(expression: &syn::Expr) -> bool {
     }
 }
 
-pub(super) fn rewrite_unwrap_or_default(expression: &mut syn::Expr) {
-    let syn::Expr::MethodCall(call) = expression else {
-        return;
-    };
-    if call.method != "unwrap_or" || call.args.len() != 1 {
-        return;
-    }
-    let Some(syn::Expr::Call(default)) = call.args.first() else {
-        return;
-    };
-    if !default.args.is_empty()
-        || !matches!(default.func.as_ref(), syn::Expr::Path(path)
-            if path.path.segments.last().is_some_and(|segment|
-                matches!(segment.ident.to_string().as_str(), "default" | "new")))
-    {
-        return;
-    }
-    call.method = syn::Ident::new("unwrap_or_default", call.method.span());
-    call.args.clear();
-}
-
 pub(super) fn rewrite_single_element_exclusive_range(expression: &mut syn::Expr) {
     let syn::Expr::Range(range) = expression else {
         return;
@@ -252,38 +230,7 @@ fn is_impossible_error_check(statement: &syn::Stmt, name: &str) -> bool {
 include!("initialization_cleanup.rs");
 
 fn expression_references_name(expression: &syn::Expr, name: &str) -> bool {
-    let mut collector = NamedReferenceCollector { name, found: false };
-    collector.visit_expr(expression);
-    collector.found
-}
-
-struct NamedReferenceCollector<'name> {
-    name: &'name str,
-    found: bool,
-}
-
-impl<'ast> Visit<'ast> for NamedReferenceCollector<'_> {
-    fn visit_expr_path(&mut self, path: &'ast syn::ExprPath) {
-        if path.qself.is_none() && path.path.is_ident(self.name) {
-            self.found = true;
-        }
-        visit::visit_expr_path(self, path);
-    }
-
-    fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        if macro_tokens_reference_name(rust_macro.tokens.clone(), self.name) {
-            self.found = true;
-        }
-        visit::visit_macro(self, rust_macro);
-    }
-}
-
-fn macro_tokens_reference_name(tokens: proc_macro2::TokenStream, name: &str) -> bool {
-    tokens.into_iter().any(|token| match token {
-        proc_macro2::TokenTree::Ident(identifier) => identifier == name,
-        proc_macro2::TokenTree::Group(group) => macro_tokens_reference_name(group.stream(), name),
-        _ => false,
-    })
+    super::super::identifier_collection::expression_may_reference_name(expression, name)
 }
 
 pub(super) fn rewrite_assert_comparison(rust_macro: &mut syn::Macro) {
@@ -327,15 +274,6 @@ pub(super) fn group_long_integer_literal(literal: &mut syn::LitInt) {
         grouped.push_str(literal.suffix());
     }
     *literal = syn::LitInt::new(&grouped, literal.span());
-}
-
-pub(super) fn rewrite_empty_vec(expression: &mut syn::Expr) {
-    let syn::Expr::Macro(vec_macro) = expression else {
-        return;
-    };
-    if vec_macro.mac.path.is_ident("vec") && vec_macro.mac.tokens.is_empty() {
-        *expression = syn::parse_quote!(Vec::new());
-    }
 }
 
 pub(super) fn group_long_float_literal(literal: &mut syn::LitFloat) {

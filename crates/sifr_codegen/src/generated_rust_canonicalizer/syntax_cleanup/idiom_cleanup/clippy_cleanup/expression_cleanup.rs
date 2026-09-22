@@ -1,11 +1,7 @@
 pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
     if rewrite_negated_sifr_int_literal(expression)
         || rewrite_double_negated_is_empty(expression)
-        || rewrite_option_map_or_none(expression)
-        || rewrite_known_string_identity_mapper(expression)
-        || remove_temporary_collection_clone(expression)
         || rewrite_borrowed_callback_arguments(expression)
-        || rewrite_cloned_option_identity_mapper(expression)
         || rewrite_vec_copy_extend(expression)
         || rewrite_integer_float_power(expression)
         || rewrite_generated_usize_increment(expression)
@@ -28,7 +24,6 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
     if rewrite_clone_assignment(expression)
         || rewrite_single_character_pattern(expression)
         || rewrite_unnecessary_float_cast(expression)
-        || rewrite_unnecessary_lazy_fallback(expression)
         || rewrite_generated_byte_identity_cast(expression)
         || rewrite_lossless_decimal_scale_cast(expression)
         || rewrite_even_length_remainder(expression)
@@ -595,42 +590,6 @@ fn rewrite_unnecessary_float_cast(expression: &mut syn::Expr) -> bool {
     let float = syn::LitFloat::new(&format!("{float}_f64"), literal.lit.span());
     *expression = syn::parse_quote!(#float);
     true
-}
-
-fn rewrite_unnecessary_lazy_fallback(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(call) = expression else {
-        return false;
-    };
-    if call.method != "unwrap_or_else" || call.args.len() != 1 {
-        return false;
-    }
-    let Some(syn::Expr::Closure(closure)) = call.args.first() else {
-        return false;
-    };
-    if !closure
-        .inputs
-        .iter()
-        .all(|input| matches!(input, syn::Pat::Wild(_))
-            || matches!(input, syn::Pat::Ident(binding) if binding.ident.to_string().starts_with('_')))
-        || !eager_fallback_is_safe(&closure.body)
-    {
-        return false;
-    }
-    let fallback = closure.body.as_ref().clone();
-    call.method = syn::Ident::new("unwrap_or", call.method.span());
-    call.args = std::iter::once(fallback).collect();
-    true
-}
-
-fn eager_fallback_is_safe(expression: &syn::Expr) -> bool {
-    crate::discardability::syntax_expression_is_discardable(expression)
-        || matches!(expression, syn::Expr::Path(path)
-            if path.qself.is_none()
-                && path.path.segments.len() == 2
-                && matches!(path.path.segments[0].ident.to_string().as_str(),
-                    "usize" | "isize" | "u8" | "u16" | "u32" | "u64" | "u128"
-                        | "i8" | "i16" | "i32" | "i64" | "i128")
-                && path.path.segments[1].ident == "MAX")
 }
 
 pub(super) fn remove_discardable_expression_statements(statements: &mut Vec<syn::Stmt>) {

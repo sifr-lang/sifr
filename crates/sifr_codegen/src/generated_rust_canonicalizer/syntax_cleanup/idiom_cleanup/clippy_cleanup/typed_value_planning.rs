@@ -44,7 +44,7 @@ impl Visit<'_> for TupleStringReturnCollector {
 pub(super) fn rewrite_owned_string_clones(
     signature: &syn::Signature,
     body: &mut syn::Block,
-    tuple_string_returns: &HashMap<String, Vec<bool>>,
+    _tuple_string_returns: &HashMap<String, Vec<bool>>,
 ) {
     if signature
         .receiver()
@@ -64,63 +64,6 @@ pub(super) fn rewrite_owned_string_clones(
                 .flatten()
         })
         .collect::<HashSet<_>>();
-    let mut owned_strings = signature
-        .inputs
-        .iter()
-        .filter_map(|argument| {
-            let syn::FnArg::Typed(parameter) = argument else {
-                return None;
-            };
-            if !type_is_owned_string(&parameter.ty) {
-                return None;
-            }
-            simple_pattern_name(&parameter.pat)
-        })
-        .collect::<HashSet<_>>();
-    let mut collector = OwnedStringLocalCollector {
-        tuple_string_returns,
-        names: HashSet::new(),
-        option_names: HashSet::new(),
-        tuple_string_fields: HashMap::new(),
-    };
-    collector.visit_block(body);
-    owned_strings.extend(collector.names);
-    let borrowed_option_strings = signature
-        .inputs
-        .iter()
-        .filter_map(|argument| {
-            let syn::FnArg::Typed(parameter) = argument else {
-                return None;
-            };
-            matches!(parameter.ty.as_ref(), syn::Type::Reference(reference)
-                if type_is_option_string(&reference.elem))
-            .then(|| simple_pattern_name(&parameter.pat))
-            .flatten()
-        })
-        .collect::<HashSet<_>>();
-    let mut borrowed_binding_collector = BorrowedStringBindingCollector {
-        option_roots: &borrowed_option_strings,
-        active: HashSet::new(),
-    };
-    borrowed_binding_collector.visit_block_mut(body);
-    owned_strings.retain(|name| !borrowed_parameters.contains(name));
-    OwnedStringCloneRewriter {
-        names: &owned_strings,
-        borrowed: &borrowed_parameters,
-    }
-    .visit_block_mut(body);
-    TypedStringInitializerRewriter {
-        borrowed_roots: &borrowed_parameters,
-    }
-    .visit_block_mut(body);
-
-    let mut optional_strings = OptionStringLocalCollector::default();
-    optional_strings.visit_block(body);
-    OwnedOptionStringIdentityRewriter {
-        names: &optional_strings.names,
-    }
-    .visit_block_mut(body);
-
     let mut sifr_ints = signature
         .inputs
         .iter()

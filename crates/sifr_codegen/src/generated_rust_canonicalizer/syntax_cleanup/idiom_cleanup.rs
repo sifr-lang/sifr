@@ -14,12 +14,12 @@ mod residual_cleanup;
 mod result_control_cleanup;
 mod structured_control_cleanup;
 
-use assignment_cleanup::{expression_uses_identifier, fold_assignment_conditionals};
+use assignment_cleanup::fold_assignment_conditionals;
 use borrowed_parameter_names::borrowed_parameter_names;
 pub(super) use borrowed_string_arguments::rewrite_borrow_only_string_parameters;
 use clippy_cleanup::{
-    remove_discardable_expression_statements, remove_needless_collected_length_bindings,
-    replace_unused_underscore_bindings, rewrite_clippy_expression,
+    remove_discardable_expression_statements, replace_unused_underscore_bindings,
+    rewrite_clippy_expression,
 };
 
 pub(super) fn collect_tuple_string_returns(file: &syn::File) -> HashMap<String, Vec<bool>> {
@@ -38,10 +38,10 @@ use lint_cleanup::{
     flatten_infallible_result_scaffolding, fold_delayed_initializations, fold_initial_assignments,
     fold_literal_result_bindings, fold_tail_bindings, fold_vec_push_sequences,
     group_long_float_literal, group_long_integer_literal, rewrite_assert_comparison,
-    rewrite_empty_vec, rewrite_identity_constructor_closure, rewrite_literal_result_fallback,
+    rewrite_identity_constructor_closure, rewrite_literal_result_fallback,
     rewrite_option_expression, rewrite_option_match_with_if_let,
     rewrite_result_match_with_let_else, rewrite_single_element_exclusive_range,
-    rewrite_single_value_format, rewrite_unwrap_or_default, terminate_known_unit_macro_tail,
+    rewrite_single_value_format, terminate_known_unit_macro_tail,
 };
 use residual_cleanup::{
     remove_explicit_unit_tail, remove_redundant_iterator_into_iter, rewrite_static_format_to_string,
@@ -139,15 +139,10 @@ impl VisitMut for IdiomCleanup<'_> {
         clippy_cleanup::rewrite_array_compatible_generated_vecs(&mut block.stmts);
         move_scoped_items_before_statements(&mut block.stmts);
         flatten_infallible_result_scaffolding(&mut block.stmts);
-        fold_delayed_initializations(&mut block.stmts, self.mutating_methods);
-        fold_initial_assignments(&mut block.stmts);
         fold_literal_result_bindings(&mut block.stmts);
-        fold_assignment_conditionals(&mut block.stmts, self.mutating_methods);
         clippy_cleanup::rewrite_created_boolean_conditionals(&mut block.stmts);
         fold_vec_push_sequences(&mut block.stmts);
         fold_tail_bindings(&mut block.stmts);
-        assignment_cleanup::rewrite_empty_character_cache_initializers(&mut block.stmts);
-        remove_needless_collected_length_bindings(&mut block.stmts);
         clippy_cleanup::remove_write_only_cached_strings(block);
         replace_unused_underscore_bindings(&mut block.stmts);
         remove_discardable_expression_statements(&mut block.stmts);
@@ -213,7 +208,6 @@ impl VisitMut for IdiomCleanup<'_> {
         visit_mut::visit_expr_mut(self, expression);
         remove_expression_parentheses(expression);
         rewrite_empty_string_construction(expression);
-        rewrite_empty_vec(expression);
         remove_repeated_to_string(expression);
         rewrite_empty_string_comparison(expression);
         rewrite_redundant_borrowed_method_closure(expression);
@@ -223,10 +217,6 @@ impl VisitMut for IdiomCleanup<'_> {
         rewrite_immediate_async_closure(expression);
         rewrite_result_identity_match(expression);
         rewrite_literal_result_fallback(expression);
-        make_map_or_default_lazy(expression);
-        rewrite_identity_map_or(expression);
-        make_constant_unwrap_default_eager(expression);
-        rewrite_unwrap_or_default(expression);
         remove_known_identity_conversion(expression);
         remove_redundant_iterator_into_iter(expression);
         rewrite_single_element_exclusive_range(expression);
@@ -328,23 +318,31 @@ fn flatten_nested_format_argument(
 }
 
 fn move_scoped_items_before_statements(statements: &mut Vec<syn::Stmt>) {
-    if !statements
-        .iter()
-        .any(|statement| matches!(statement, syn::Stmt::Item(_)))
-    {
-        return;
+    fn append_segment(segment: &mut Vec<syn::Stmt>, output: &mut Vec<syn::Stmt>) {
+        let (items, executable): (Vec<_>, Vec<_>) = segment
+            .drain(..)
+            .partition(|statement| matches!(statement, syn::Stmt::Item(_)));
+        output.extend(items);
+        output.extend(executable);
     }
-    let mut items = Vec::new();
-    let mut executable = Vec::new();
+    let mut output = Vec::with_capacity(statements.len());
+    let mut segment = Vec::new();
     for statement in statements.drain(..) {
-        if matches!(statement, syn::Stmt::Item(_)) {
-            items.push(statement);
+        // Macro definitions capture their definition-site lexical context.
+        // Invocations can themselves introduce textual macro definitions, so
+        // neither they nor surrounding items may cross this boundary.
+        if matches!(
+            statement,
+            syn::Stmt::Item(syn::Item::Macro(_)) | syn::Stmt::Macro(_)
+        ) {
+            append_segment(&mut segment, &mut output);
+            output.push(statement);
         } else {
-            executable.push(statement);
+            segment.push(statement);
         }
     }
-    items.extend(executable);
-    *statements = items;
+    append_segment(&mut segment, &mut output);
+    *statements = output;
 }
 
 fn rewrite_identity_error_propagation(statements: &mut [syn::Stmt]) {
@@ -656,124 +654,6 @@ fn rewrite_immediate_async_closure(expression: &mut syn::Expr) {
     *expression = syn::parse_quote!(async { #body });
 }
 
-fn make_map_or_default_lazy(expression: &mut syn::Expr) {
-    let syn::Expr::MethodCall(call) = expression else {
-        return;
-    };
-    if call.method != "map_or" || call.args.len() != 2 {
-        return;
-    }
-    let mut args = std::mem::take(&mut call.args).into_iter();
-    let Some(default) = args.next() else {
-        return;
-    };
-    let Some(mapper) = args.next() else {
-        return;
-    };
-    if !expression_may_have_effects(&default) {
-        call.args.push(default);
-        call.args.push(mapper);
-        return;
-    }
-    call.method = syn::Ident::new("map_or_else", call.method.span());
-    call.args.push(syn::parse_quote!(|| #default));
-    call.args.push(mapper);
-}
-
-fn rewrite_identity_map_or(expression: &mut syn::Expr) {
-    let syn::Expr::MethodCall(call) = expression else {
-        return;
-    };
-    if !matches!(call.method.to_string().as_str(), "map_or" | "map_or_else") || call.args.len() != 2
-    {
-        return;
-    }
-    let Some(mapper) = call.args.last() else {
-        return;
-    };
-    let syn::Expr::Closure(closure) = mapper else {
-        return;
-    };
-    let mut inputs = closure.inputs.iter();
-    let Some(syn::Pat::Ident(input)) = inputs.next() else {
-        return;
-    };
-    if inputs.next().is_some()
-        || !matches!(closure.body.as_ref(), syn::Expr::Path(path)
-            if path.qself.is_none() && path.path.is_ident(&input.ident))
-    {
-        return;
-    }
-    let replacement = if call.method == "map_or" {
-        "unwrap_or"
-    } else {
-        "unwrap_or_else"
-    };
-    call.method = syn::Ident::new(replacement, call.method.span());
-    call.args.pop();
-}
-
-fn make_constant_unwrap_default_eager(expression: &mut syn::Expr) {
-    let syn::Expr::MethodCall(call) = expression else {
-        return;
-    };
-    if call.method != "unwrap_or_else" || call.args.len() != 1 {
-        return;
-    }
-    let Some(syn::Expr::Closure(closure)) = call.args.first() else {
-        return;
-    };
-    if closure.inputs.len() > 1
-        || !crate::discardability::syntax_expression_is_discardable(&closure.body)
-    {
-        return;
-    }
-    if closure.inputs.iter().any(|input| match input {
-        syn::Pat::Wild(_) => false,
-        syn::Pat::Ident(binding) => {
-            expression_uses_identifier(&closure.body, &binding.ident.to_string())
-        }
-        _ => true,
-    }) {
-        return;
-    }
-    let default = closure.body.as_ref().clone();
-    call.method = syn::Ident::new("unwrap_or", call.method.span());
-    call.args.clear();
-    call.args.push(default);
-}
-
-// Purity alone does not justify eager evaluation: allocating defaults must stay lazy.
-fn expression_is_cheap_default(expression: &syn::Expr) -> bool {
-    match expression {
-        syn::Expr::Lit(_) | syn::Expr::Path(_) => true,
-        syn::Expr::Paren(inner) => expression_is_cheap_default(&inner.expr),
-        syn::Expr::Group(inner) => expression_is_cheap_default(&inner.expr),
-        syn::Expr::Unary(inner) => expression_is_cheap_default(&inner.expr),
-        syn::Expr::Tuple(tuple) => tuple.elems.iter().all(expression_is_cheap_default),
-        syn::Expr::Call(call) if call.args.len() == 1 => {
-            matches!(call.func.as_ref(), syn::Expr::Path(path)
-                if path.qself.is_none()
-                    && path.path.segments.len() == 2
-                    && path.path.segments[0].ident == "SifrInt"
-                    && path.path.segments[1].ident == "from_i64")
-                && call.args.iter().all(expression_is_cheap_default)
-        }
-        _ => false,
-    }
-}
-
-fn expression_may_have_effects(expression: &syn::Expr) -> bool {
-    matches!(
-        expression,
-        syn::Expr::Call(_)
-            | syn::Expr::MethodCall(_)
-            | syn::Expr::Macro(_)
-            | syn::Expr::Await(_)
-            | syn::Expr::Block(_)
-    )
-}
-
 fn remove_known_identity_conversion(expression: &mut syn::Expr) {
     let syn::Expr::MethodCall(call) = expression else {
         return;
@@ -862,4 +742,59 @@ fn parsed_format_macro(expression: &syn::Expr) -> Option<(String, Vec<syn::Expr>
         format_literal.value(),
         arguments.iter().skip(1).cloned().collect(),
     ))
+}
+
+pub(super) fn ambiguous_clone_scopes(file: &syn::File) -> HashSet<String> {
+    option_question_mark::ambiguous_clone_scopes(file)
+}
+
+pub(super) fn remove_known_vec_length_bindings(
+    statements: &mut Vec<syn::Stmt>,
+    is_vec: impl Fn(&syn::Type) -> bool,
+) {
+    clippy_cleanup::remove_needless_collected_length_bindings(statements, is_vec);
+}
+
+pub(super) fn clean_owned_suffix(statements: &mut [syn::Stmt], mut owned: HashSet<String>) {
+    for statement in statements.iter() {
+        if let syn::Stmt::Local(local) = statement {
+            for name in super::identifier_names_in_pattern(&local.pat) {
+                owned.remove(&name);
+            }
+        }
+    }
+    clippy_cleanup::remove_proven_owned_clone_statements(statements, &owned);
+}
+
+pub(super) fn rewrite_known_identity_concat(
+    expression: &mut syn::Expr,
+    owned: &HashSet<String>,
+    borrowed: &HashSet<String>,
+    capacity_is_pure: impl Fn(&syn::Expr) -> bool,
+) -> bool {
+    clippy_cleanup::rewrite_identity_string_concat(expression, owned, borrowed, capacity_is_pure)
+}
+
+// Typed callers establish effect-free initializers at their lexical declaration.
+pub(super) fn fold_proven_initializers(
+    statements: &mut Vec<syn::Stmt>,
+    references: &super::identifier_collection::InitializerReferences,
+    discardable: impl Fn(&syn::Local) -> bool,
+) {
+    struct MethodNames(HashSet<String>);
+    impl<'ast> syn::visit::Visit<'ast> for MethodNames {
+        fn visit_expr_method_call(&mut self, call: &'ast syn::ExprMethodCall) {
+            self.0.insert(call.method.to_string());
+            syn::visit::visit_expr_method_call(self, call);
+        }
+    }
+    let mut methods = MethodNames(HashSet::new());
+    for statement in statements.iter() {
+        syn::visit::Visit::visit_stmt(&mut methods, statement);
+    }
+    // Keeping mutability for unknown methods is conservative; the normal
+    // mutability pass can subsequently remove it using complete method facts.
+    fold_delayed_initializations(statements, &methods.0, &discardable, references);
+    fold_initial_assignments(statements, &discardable, references);
+    fold_assignment_conditionals(statements, &methods.0, &discardable, references);
 }

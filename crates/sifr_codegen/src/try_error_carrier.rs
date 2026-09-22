@@ -3,7 +3,7 @@ use sifr_type_system::{Type, make_union};
 
 pub(crate) fn timeout_error_type() -> Type {
     Type::Class {
-        identity: None,
+        identity: Some("sifr.builtin.TimeoutError".to_string()),
         type_args: Vec::new(),
         name: "TimeoutError".to_string(),
         fields: vec![("message".to_string(), Type::Str)].into(),

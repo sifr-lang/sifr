@@ -232,6 +232,12 @@ fn sync_generator_items() -> Vec<RustItem> {
 
 fn async_generator_items() -> Vec<RustItem> {
     vec![
+        RustItem::TypeAlias {
+            name: "__SifrAsyncGeneratorProducer<E>".to_string(),
+            ty: RustType::Named(
+                "std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), E>> + Send + 'static>>".to_string(),
+            ),
+        },
         RustItem::Struct {
             name: "AsyncGenerator<T, E>".to_string(),
             visibility: Visibility::Private,
@@ -240,7 +246,7 @@ fn async_generator_items() -> Vec<RustItem> {
                 (
                     "producer".to_string(),
                     RustType::Named(
-                        "Option<std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), E>> + Send + 'static>>>"
+                        "Option<__SifrAsyncGeneratorProducer<E>>"
                             .to_string(),
                     ),
                 ),

@@ -21,7 +21,7 @@ impl Rewriter<'_> {
                 "iter" | "iter_mut" | "into_iter" if call.args.is_empty() => {
                     let ty = self.ty(&call.receiver)?;
                     let element =
-                        generic(unreference(&ty), "Vec").or_else(|| match unreference(&ty) {
+                        self.standard_generic(unreference(&ty), "Vec").or_else(|| match unreference(&ty) {
                             syn::Type::Slice(slice) => Some(slice.elem.as_ref()),
                             _ => None,
                         })?;
@@ -51,13 +51,15 @@ impl Rewriter<'_> {
                     }
                     let element = self.iterator_element(&call.receiver)?;
                     let mut nested = Rewriter {
-                        scalar_shadows: self.scalar_shadows,
+                        ambiguous_clone_scopes: self.ambiguous_clone_scopes,
+                            scalar_shadows: self.scalar_shadows,
                         functions: self.functions,
                         structures: self.structures,
                         self_type: self.self_type.clone(),
                         scope: self.scope.clone(),
                         module_depth: self.module_depth,
                         bindings: self.bindings.clone(),
+                            discardable_assignments: HashMap::new(),
                     };
                     nested.bind(&closure.inputs[0], Some(element));
                     return nested.ty(&closure.body);
@@ -66,7 +68,7 @@ impl Rewriter<'_> {
             }
         }
         let ty = self.ty(expression)?;
-        let element = generic(unreference(&ty), "Vec")?;
+        let element = self.standard_generic(unreference(&ty), "Vec")?;
         Some(if matches!(ty, syn::Type::Reference(_)) {
             syn::parse_quote!(&#element)
         } else {

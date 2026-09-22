@@ -217,7 +217,7 @@ mod tests {
         "#,
         );
         assert!(
-            rust.contains("value.map_or_else(String::new, |value| value)"),
+            rust.contains("value.unwrap_or_else(String::new)"),
             "{rust}"
         );
         assert!(
@@ -225,4 +225,18 @@ mod tests {
             "{rust}"
         );
     }
+
+#[test]
+fn empty_string_borrow_cleanup_requires_a_string_slice_boundary() {
+    let rust = clean(r#"
+        fn borrowed(value: &str) {}
+        fn owned(value: &String) {}
+        fn main() {
+            borrowed(&String::new());
+            owned(&String::new());
+        }
+    "#);
+    assert!(rust.contains("borrowed(\"\")"), "{rust}");
+    assert!(rust.contains("owned(&String::new())"), "{rust}");
+}
 }

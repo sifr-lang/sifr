@@ -4,6 +4,11 @@
 //! and subtyping rules for the Sifr language.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
+mod builtin_errors;
+pub use builtin_errors::{
+    BUILTIN_ERROR_CLASSES, builtin_error_identity, is_builtin_error_identity,
+};
+
 mod check;
 #[cfg(test)]
 mod check_equality_capability_tests;

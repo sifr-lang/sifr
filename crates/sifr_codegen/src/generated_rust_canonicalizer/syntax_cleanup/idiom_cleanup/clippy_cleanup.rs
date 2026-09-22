@@ -18,3 +18,5 @@ include!("clippy_cleanup/write_only_collection_cleanup.rs");
 include!("clippy_cleanup/local_type_expectation.rs");
 include!("clippy_cleanup/generated_index_cleanup.rs");
 include!("clippy_cleanup/loop_cleanup.rs");
+
+include!("clippy_cleanup/typed_string_concat.rs");

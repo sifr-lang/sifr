@@ -1,7 +1,11 @@
-pub(super) fn fold_initial_assignments(statements: &mut Vec<syn::Stmt>) {
+pub(super) fn fold_initial_assignments(
+    statements: &mut Vec<syn::Stmt>,
+    discardable: &impl Fn(&syn::Local) -> bool,
+    references: &super::super::identifier_collection::InitializerReferences,
+) {
     let mut index = 0;
     while index + 1 < statements.len() {
-        let Some(name) = initializable_local_name(&statements[index]) else {
+        let Some(name) = initializable_local_name(&statements[index], discardable) else {
             index += 1;
             continue;
         };
@@ -13,8 +17,8 @@ pub(super) fn fold_initial_assignments(statements: &mut Vec<syn::Stmt>) {
             continue;
         };
         let Some(replacement) =
-            initialization_value(&statements[index + 1], &name, &statements[index])
-                .or_else(|| conditional_initial_assignment(&statements[index + 1], &name, default))
+            initialization_value(&statements[index + 1], &name, &statements[index], references)
+                .or_else(|| conditional_initial_assignment(&statements[index + 1], &name, default, references))
         else {
             index += 1;
             continue;
@@ -34,6 +38,7 @@ fn conditional_initial_assignment(
     statement: &syn::Stmt,
     name: &str,
     default: &syn::Expr,
+    references: &super::super::identifier_collection::InitializerReferences,
 ) -> Option<syn::Expr> {
     let syn::Stmt::Expr(syn::Expr::If(branch), _) = statement else {
         return None;
@@ -41,8 +46,11 @@ fn conditional_initial_assignment(
     if branch.else_branch.is_some() || branch.then_branch.stmts.len() != 1 {
         return None;
     }
-    let value = direct_assignment_value(branch.then_branch.stmts.first()?, name)?;
+    let value = direct_assignment_value(branch.then_branch.stmts.first()?, name, references)?;
     let condition = branch.cond.as_ref();
+    if references.expression(condition, name) {
+        return None;
+    }
     Some(syn::parse_quote!(if #condition { #value } else { #default }))
 }
 
@@ -101,18 +109,20 @@ pub(super) fn fold_tail_bindings(statements: &mut Vec<syn::Stmt>) {
 pub(super) fn fold_delayed_initializations(
     statements: &mut Vec<syn::Stmt>,
     mutating_methods: &HashSet<String>,
+    discardable: &impl Fn(&syn::Local) -> bool,
+    references: &super::super::identifier_collection::InitializerReferences,
 ) {
     let mut declaration_index = 0;
     while declaration_index < statements.len() {
         let Some((name, mut pattern, attrs)) =
-            movable_default_declaration(&statements[declaration_index])
+            movable_default_declaration(&statements[declaration_index], discardable)
         else {
             declaration_index += 1;
             continue;
         };
         let mut assignment_index = declaration_index + 1;
         while assignment_index < statements.len()
-            && !statement_references_name(&statements[assignment_index], &name)
+            && !references.statement(&statements[assignment_index], &name)
         {
             assignment_index += 1;
         }
@@ -124,6 +134,7 @@ pub(super) fn fold_delayed_initializations(
             &statements[assignment_index],
             &name,
             &statements[declaration_index],
+            references,
         ) else {
             declaration_index += 1;
             continue;
@@ -142,50 +153,29 @@ pub(super) fn fold_delayed_initializations(
 
 fn movable_default_declaration(
     statement: &syn::Stmt,
+    discardable: &impl Fn(&syn::Local) -> bool,
 ) -> Option<(String, syn::Pat, Vec<syn::Attribute>)> {
     let syn::Stmt::Local(local) = statement else {
         return None;
     };
     let name = simple_binding_name(&local.pat)?;
-    (is_discardable_initializer(local.init.as_ref()?.expr.as_ref())
-        || local_is_empty_collection_declaration(local))
-    .then(|| (name, local.pat.clone(), local.attrs.clone()))
+    discardable(local).then(|| (name, local.pat.clone(), local.attrs.clone()))
 }
 
-fn local_is_empty_collection_declaration(local: &syn::Local) -> bool {
-    let syn::Pat::Type(typed) = &local.pat else {
-        return false;
-    };
-    let Some(owner) = (match typed.ty.as_ref() {
-        syn::Type::Path(path) => path.path.segments.last().map(|segment| &segment.ident),
-        _ => None,
-    }) else {
-        return false;
-    };
-    if owner != "String" && owner != "Vec" {
-        return false;
-    }
-    matches!(local.init.as_ref().map(|init| init.expr.as_ref()),
-        Some(syn::Expr::Call(call))
-            if call.args.is_empty()
-                && matches!(call.func.as_ref(), syn::Expr::Path(path)
-                    if path.path.segments.len() == 2
-                        && path.path.segments[0].ident == *owner
-                        && path.path.segments[1].ident == "new"))
-}
-
-fn direct_assignment_value(statement: &syn::Stmt, name: &str) -> Option<syn::Expr> {
+fn direct_assignment_value(statement: &syn::Stmt, name: &str,
+    references: &super::super::identifier_collection::InitializerReferences,
+) -> Option<syn::Expr> {
     if let syn::Stmt::Expr(syn::Expr::Block(block), _) = statement {
         let [inner] = block.block.stmts.as_slice() else {
             return None;
         };
-        return direct_assignment_value(inner, name);
+        return direct_assignment_value(inner, name, references);
     }
     if let syn::Stmt::Expr(syn::Expr::If(branch), _) = statement {
         let [then_statement] = branch.then_branch.stmts.as_slice() else {
             return None;
         };
-        let then_value = direct_assignment_value(then_statement, name)?;
+        let then_value = direct_assignment_value(then_statement, name, references)?;
         let (_, alternative) = branch.else_branch.as_ref()?;
         if !matches!(alternative.as_ref(), syn::Expr::Block(block)
             if matches!(block.block.stmts.last(), Some(syn::Stmt::Expr(syn::Expr::Return(_), _))))
@@ -193,13 +183,14 @@ fn direct_assignment_value(statement: &syn::Stmt, name: &str) -> Option<syn::Exp
             return None;
         }
         let condition = branch.cond.as_ref();
+        if references.expression(condition, name) { return None; }
         return Some(syn::parse_quote!(if #condition { #then_value } else #alternative));
     }
     let syn::Stmt::Expr(syn::Expr::Assign(assignment), Some(_)) = statement else {
         return None;
     };
     if !matches!(assignment.left.as_ref(), syn::Expr::Path(path) if path.path.is_ident(name))
-        || expression_references_name(&assignment.right, name)
+        || references.expression(&assignment.right, name)
     {
         return None;
     }
@@ -210,8 +201,9 @@ fn initialization_value(
     statement: &syn::Stmt,
     name: &str,
     declaration: &syn::Stmt,
+    references: &super::super::identifier_collection::InitializerReferences,
 ) -> Option<syn::Expr> {
-    if let Some(value) = direct_assignment_value(statement, name) {
+    if let Some(value) = direct_assignment_value(statement, name, references) {
         return Some(value);
     }
     // SifrInt's Clone implementation has value semantics. Do not substitute
@@ -237,18 +229,13 @@ fn initialization_value(
     let syn::Expr::Reference(reference) = &call.args[0] else {
         return None;
     };
-    if expression_references_name(&reference.expr, name) {
+    if references.expression(&reference.expr, name) {
         return None;
     }
     let source = &reference.expr;
     Some(syn::parse_quote!((#source).clone()))
 }
 
-fn statement_references_name(statement: &syn::Stmt, name: &str) -> bool {
-    let mut collector = NamedReferenceCollector { name, found: false };
-    collector.visit_stmt(statement);
-    collector.found
-}
 
 fn remove_pattern_mutability(pattern: &mut syn::Pat) {
     match pattern {
@@ -259,16 +246,13 @@ fn remove_pattern_mutability(pattern: &mut syn::Pat) {
     }
 }
 
-fn initializable_local_name(statement: &syn::Stmt) -> Option<String> {
+fn initializable_local_name(
+    statement: &syn::Stmt,
+    discardable: &impl Fn(&syn::Local) -> bool,
+) -> Option<String> {
     let syn::Stmt::Local(local) = statement else {
         return None;
     };
     let name = simple_binding_name(&local.pat)?;
-    (is_discardable_initializer(local.init.as_ref()?.expr.as_ref())
-        || local_is_empty_collection_declaration(local))
-    .then_some(name)
-}
-
-fn is_discardable_initializer(expression: &syn::Expr) -> bool {
-    crate::discardability::syntax_expression_is_discardable(expression)
+    discardable(local).then_some(name)
 }
