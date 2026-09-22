@@ -95,4 +95,3 @@ The 2026-09-23 assignment prospectively approves intermediate items with named a
 Use exact crate/suite/case selection, fail fast by default and reuse compatible compiler/metadata/fixtures/Cargo target while running selected assertions. Evidence reuse needs unchanged implementation and validation inputs, not merely the same SHA: record tree, lock/submodule/config, compiler identity, command/selection, host/cache state where material, outcome and raw digest. Preserve failed/blocked/timeouts. Record-only updates need documentation checks, not broad gates or an extra external review after implementation review.
 
 Scoped review names exact base/candidate SHAs, changed paths, scope, criteria and validation; it separates in-scope blockers from follow-ups. A second review with a new mechanism-level defect requires rescope. Merge one item, record PR/SHA/evidence and stop before the next batch. One session owns its worktree, branch, index and temporary paths.
-
