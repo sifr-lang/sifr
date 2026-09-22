@@ -112,9 +112,9 @@ must match these predicted source hashes before Clippy qualification. The
 derivation is not a GCQ pass or completion of the later zero-debt audit.
 
 
-## Retained Item 12 debt retirement
+## Fixed debt retirement
 
-The retained Item 12 compiler removed the remaining producer defects. The full
+The current compiler removed the remaining producer defects. The full
 92-entry positive Clippy selection, including all twelve representatives above,
 reported zero diagnostics. The full 264-companion selection also reported zero
 diagnostics and correctly failed because its fixed debt record remained stale.

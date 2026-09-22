@@ -746,3 +746,20 @@ def computed() -> bool:
     assert!(generated.contains("effect()"), "{generated}");
     assert!(generated.contains("let _ = &effect()"), "{generated}");
 }
+
+#[test]
+fn nonempty_exit_guard_preserves_declared_endpoint_aliases() {
+    let generated = generate_rust_from_source(
+        r#"
+def endpoints(values: list[int]) -> int:
+    if not values:
+        return 0
+    left, right = 0, len(values) - 1
+    first, last = values[left], values[right]
+    return first + last
+"#,
+    );
+    assert!(!generated.contains("compile_error!"), "{generated}");
+    assert_eq!(generated.matches("let Some(").count(), 2, "{generated}");
+    assert!(!generated.contains(".unwrap()"), "{generated}");
+}

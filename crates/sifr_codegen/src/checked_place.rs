@@ -3,6 +3,8 @@ use crate::{RustEmitter, RustExpr, RustLiteral, RustStmt, Type};
 mod assignment_reads;
 mod condition_reads;
 mod control_flow;
+mod exit_guard_aliases;
+mod exit_guards;
 mod fallible_reads;
 mod nonempty_lists;
 mod option_reads;
@@ -118,7 +120,7 @@ fn condition_excludes_checked_sequence_read(
             .any(|value| condition_excludes_checked_sequence_read(value, object, index)),
         crate::HirExpr::UnaryOp { op, operand, .. } if op == "not" => {
             if checked_place_expr_token(operand).as_deref() == Some(object_token.as_str()) {
-                return is_zero(index);
+                return matches!(integer_literal(index), Some(0 | -1));
             }
             let crate::HirExpr::Compare {
                 left,
@@ -160,7 +162,7 @@ fn condition_excludes_checked_sequence_read(
                     && literal_index.zip(left_bound).is_some_and(|(index, bound)| {
                         (ops[0] == ">" && index < bound) || (ops[0] == ">=" && index <= bound)
                     }))
-                || (is_zero(index)
+                || (matches!(integer_literal(index), Some(0 | -1))
                     && is_len_of(left, &object_token)
                     && ops[0] == "=="
                     && is_zero(right))
