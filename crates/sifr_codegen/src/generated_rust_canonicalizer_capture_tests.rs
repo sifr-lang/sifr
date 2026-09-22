@@ -290,3 +290,30 @@ fn assert_native_output(output: &str, expected: &str) {
     assert!(execution.status.success());
     assert_eq!(String::from_utf8_lossy(&execution.stdout), expected);
 }
+
+#[test]
+fn local_case_normalization_preserves_fields_named_slots_and_shadowing() {
+    let source = r#"
+        struct Record { leftMax: i64 }
+        fn show(leftMax: i64) {
+            let record = Record { leftMax };
+            println!("{leftMax}:{}", record.leftMax);
+            println!("{leftMax}", leftMax = record.leftMax + 1);
+            {
+                let leftMax = 9_i64;
+                println!("{leftMax}");
+            }
+            println!("{leftMax}");
+        }
+        fn main() {
+            let leftMax = 3_i64;
+            show(leftMax);
+        }
+    "#;
+    let output = canonicalize_generated_rust_source(source).expect("case normalization");
+    assert!(!output.contains("let leftMax ="), "{output}");
+    assert!(output.contains("record.leftMax"), "{output}");
+    assert!(output.contains("leftMax = record.leftMax"), "{output}");
+    assert_native_output(&output, "3:3\n4\n9\n3\n");
+    assert_eq!(canonicalize_generated_rust_source(&output).unwrap(), output);
+}

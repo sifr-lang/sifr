@@ -35,6 +35,9 @@ pub(crate) fn names(rust_macro: &syn::Macro) -> HashSet<String> {
 }
 
 pub(super) fn rename(rust_macro: &mut syn::Macro, from: &str, to: &str) -> bool {
+    if !names(rust_macro).contains(from) {
+        return false;
+    }
     let Some(format_index) = format_argument_index(rust_macro) else {
         return false;
     };
@@ -80,7 +83,7 @@ fn format_string(rust_macro: &syn::Macro) -> Option<String> {
     Some(format_literal.value())
 }
 
-fn format_argument_index(rust_macro: &syn::Macro) -> Option<usize> {
+pub(super) fn format_argument_index(rust_macro: &syn::Macro) -> Option<usize> {
     let name = rust_macro.path.segments.last()?.ident.to_string();
     match name.as_str() {
         "format" | "format_args" | "format_args_nl" | "print" | "println" | "eprint"

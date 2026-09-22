@@ -763,3 +763,20 @@ def endpoints(values: list[int]) -> int:
     assert_eq!(generated.matches("let Some(").count(), 2, "{generated}");
     assert!(!generated.contains(".unwrap()"), "{generated}");
 }
+
+#[test]
+fn narrowed_integer_assignments_preserve_reused_payload_ownership() {
+    let generated = generate_rust_from_source(
+        r#"
+def copies(values: list[int]) -> int:
+    left = 0
+    right = 0
+    first: int | None = values[0]
+    if first is not None:
+        left = first
+        right = first
+    return left + right
+"#,
+    );
+    assert!(generated.contains("first.clone()"), "{generated}");
+}

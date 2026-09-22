@@ -220,15 +220,19 @@ impl RustEmitter {
                     let lowered_value = self.rewrite_stdlib_constant_idents_in_expr(lowered_value);
                     let lowered_value = if value_is_target_typed {
                         lowered_value
-                    } else if let Some(target_ty) = target_ty {
-                        Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
-                        self.coerce_local_value_for_target_type_for_ir(
-                            &target_ty,
-                            value,
-                            lowered_value,
-                        )?
                     } else {
-                        lowered_value
+                        let lowered_value =
+                            self.materialize_reusable_value_for_ir(value, lowered_value);
+                        if let Some(target_ty) = target_ty {
+                            Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
+                            self.coerce_local_value_for_target_type_for_ir(
+                                &target_ty,
+                                value,
+                                lowered_value,
+                            )?
+                        } else {
+                            lowered_value
+                        }
                     };
                     let mut lowered = vec![RustStmt::Assign {
                         target: crate::RustExpr::Ident(name.clone()),
