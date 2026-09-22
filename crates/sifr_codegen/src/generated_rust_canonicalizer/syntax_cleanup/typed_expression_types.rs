@@ -154,6 +154,12 @@ impl Rewriter<'_> {
                         syn::ReturnType::Default => Some(syn::parse_quote!(())),
                     };
                 }
+                if call.method == "powi"
+                    && call.args.len() == 1
+                    && (self.standard_named(base, "f64") || self.standard_named(base, "f32"))
+                {
+                    return Some(base.clone());
+                }
                 match call.method.to_string().as_str() {
                     "to_string"
                         if self.standard_named(base, "String")
@@ -244,6 +250,7 @@ impl Rewriter<'_> {
                             module_depth: self.module_depth,
                             bindings: self.bindings.clone(),
                             discardable_assignments: HashMap::new(),
+                            exact_float_comparison: false,
                         };
                         if closure.inputs.len() != 1 {
                             return None;
@@ -269,6 +276,7 @@ impl Rewriter<'_> {
                     module_depth: self.module_depth,
                     bindings: self.bindings.clone(),
                     discardable_assignments: HashMap::new(),
+                    exact_float_comparison: false,
                 };
                 for stmt in &block.block.stmts {
                     if let syn::Stmt::Local(local) = stmt {

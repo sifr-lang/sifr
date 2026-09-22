@@ -20,6 +20,7 @@ mod mutability_cleanup;
 mod pattern_predicates;
 mod redundant_borrow_cleanup;
 pub(super) mod scoped_imports;
+mod standard_macros;
 mod typed_expression_cleanup;
 
 use discardable_expression::{

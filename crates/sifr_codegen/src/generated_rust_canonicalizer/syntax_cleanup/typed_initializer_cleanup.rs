@@ -54,7 +54,13 @@ impl Rewriter<'_> {
         if self.standard_character_collection(expression, &declared) {
             return true;
         }
-        if self.standard_named(&declared, "SifrInt") && self.eager_fallback_is_safe(expression) {
+        if self.standard_named(&declared, "SifrInt")
+            && (self.eager_fallback_is_safe(expression)
+                || self.standard_collection_length_integer(expression))
+        {
+            return true;
+        }
+        if self.standard_named(&declared, "String") && self.literal_string_default(expression) {
             return true;
         }
         if (self.standard_named(&declared, "String")
@@ -139,5 +145,29 @@ impl Rewriter<'_> {
                 .get(&statement.to_token_stream().to_string())
                 == Some(&true)
         });
+    }
+}
+
+impl Rewriter<'_> {
+    fn standard_collection_length_integer(&self, expression: &syn::Expr) -> bool {
+        let syn::Expr::Call(call) = expression else {
+            return false;
+        };
+        if call.args.len() != 1
+            || !matches!(call.func.as_ref(), syn::Expr::Path(path)
+                if path.path.to_token_stream().to_string().replace(' ', "") == "SifrInt::from")
+        {
+            return false;
+        }
+        let syn::Expr::MethodCall(length) = &call.args[0] else {
+            return false;
+        };
+        length.method == "len"
+            && length.args.is_empty()
+            && matches!(length.receiver.as_ref(), syn::Expr::Path(path) if path.path.get_ident().is_some())
+            && self.ty(&length.receiver).is_some_and(|ty| {
+                self.standard_generic(unreference(&ty), "Vec").is_some()
+                    || matches!(unreference(&ty), syn::Type::Slice(_))
+            })
     }
 }

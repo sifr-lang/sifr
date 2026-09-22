@@ -13,6 +13,18 @@ fn none_display_expr() -> crate::RustExpr {
     crate::RustExpr::Literal(crate::RustLiteral::Str("None".to_string()))
 }
 
+fn none_display_fallback() -> crate::RustExpr {
+    crate::RustExpr::Closure {
+        params: vec![],
+        body: Box::new(crate::RustExpr::MethodCall {
+            receiver: Box::new(none_display_expr()),
+            method: "to_string".to_string(),
+            args: vec![],
+        }),
+        is_move: false,
+    }
+}
+
 impl RustEmitter {
     pub(crate) fn lower_formatted_value_for_ir(
         &mut self,
@@ -32,13 +44,9 @@ impl RustEmitter {
             };
             let formatted = crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                method: "map_or".to_string(),
+                method: "map_or_else".to_string(),
                 args: vec![
-                    crate::RustExpr::MethodCall {
-                        receiver: Box::new(none_display_expr()),
-                        method: "to_string".to_string(),
-                        args: vec![],
-                    },
+                    none_display_fallback(),
                     crate::RustExpr::Closure {
                         params: vec![crate::RustParam::Named {
                             name: "__v".to_string(),
@@ -257,15 +265,9 @@ impl RustEmitter {
                     format_str: "{}".to_string(),
                     args: vec![crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
-                        method: "map_or".to_string(),
+                        method: "map_or_else".to_string(),
                         args: vec![
-                            crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Literal(
-                                    crate::RustLiteral::Str("None".to_string()),
-                                )),
-                                method: "to_string".to_string(),
-                                args: vec![],
-                            },
+                            none_display_fallback(),
                             crate::RustExpr::Closure {
                                 params: vec![crate::RustParam::Named {
                                     name: "__v".to_string(),
@@ -332,15 +334,9 @@ impl RustEmitter {
                 };
                 lowered_args.push(crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
-                    method: "map_or".to_string(),
+                    method: "map_or_else".to_string(),
                     args: vec![
-                        crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(
-                                "None".to_string(),
-                            ))),
-                            method: "to_string".to_string(),
-                            args: vec![],
-                        },
+                        none_display_fallback(),
                         crate::RustExpr::Closure {
                             params: vec![crate::RustParam::Named {
                                 name: "__v".to_string(),

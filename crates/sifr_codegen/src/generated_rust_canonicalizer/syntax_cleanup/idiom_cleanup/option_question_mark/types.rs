@@ -123,8 +123,17 @@ impl Types {
                 }
                 visit::visit_block(self, block);
             }
-            fn visit_item_macro(&mut self, _: &'ast syn::ItemMacro) {
+            fn visit_item_macro(&mut self, item: &'ast syn::ItemMacro) {
                 let scope = self.1.join("::");
+                if let Some(names) = crate::generated_rust_canonicalizer::syntax_cleanup::standard_macros::task_local_static_names(&item.mac) {
+                    for name in names {
+                        let name = qualify(&scope, &name.to_string());
+                        if self.0.definitions.insert(name.clone(), Definition::Other).is_some() {
+                            self.0.ambiguous_bindings.insert(name);
+                        }
+                    }
+                    return;
+                }
                 self.0.opaque_definitions.insert(scope.clone());
                 self.0.ambiguous_import_scopes.insert(scope);
             }

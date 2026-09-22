@@ -59,6 +59,7 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
         module_depth: 0,
         bindings: HashMap::new(),
         discardable_assignments: HashMap::new(),
+        exact_float_comparison: false,
     }
     .visit_file_mut(file);
 }
@@ -81,88 +82,10 @@ struct Rewriter<'facts> {
     // Unknown shadowing bindings have a None entry, never an outer type.
     bindings: HashMap<String, Option<syn::Type>>,
     discardable_assignments: HashMap<String, bool>,
+    exact_float_comparison: bool,
 }
 
-fn same_type(left: &syn::Type, right: &syn::Type) -> bool {
-    left.to_token_stream().to_string() == right.to_token_stream().to_string()
-}
-
-fn named(ty: &syn::Type, name: &str) -> bool {
-    matches!(ty, syn::Type::Path(path) if path.path.is_ident(name))
-}
-
-fn generic<'a>(ty: &'a syn::Type, name: &str) -> Option<&'a syn::Type> {
-    let syn::Type::Path(path) = ty else {
-        return None;
-    };
-    // A matching final segment does not establish standard-container identity.
-    // Qualified external lookalikes must retain their declared operations.
-    if path.qself.is_some() || path.path.leading_colon.is_some() || path.path.segments.len() != 1 {
-        return None;
-    }
-    let segment = path.path.segments.last()?;
-    if segment.ident != name {
-        return None;
-    }
-    let syn::PathArguments::AngleBracketed(args) = &segment.arguments else {
-        return None;
-    };
-    match args.args.first()? {
-        syn::GenericArgument::Type(ty) => Some(ty),
-        _ => None,
-    }
-}
-
-fn unreference(ty: &syn::Type) -> &syn::Type {
-    if let syn::Type::Reference(reference) = ty {
-        unreference(&reference.elem)
-    } else {
-        ty
-    }
-}
-
-fn callable_inputs(ty: &syn::Type) -> Option<Vec<syn::Type>> {
-    match ty {
-        syn::Type::Reference(reference) => callable_inputs(&reference.elem),
-        syn::Type::FnPtr(function) => Some(
-            function
-                .inputs
-                .iter()
-                .map(|input| input.ty.clone())
-                .collect(),
-        ),
-        syn::Type::ImplTrait(trait_) => bound_inputs(&trait_.bounds),
-        syn::Type::TraitObject(trait_) => bound_inputs(&trait_.bounds),
-        _ => generic(ty, "Box").and_then(callable_inputs),
-    }
-}
-
-fn bound_inputs(
-    bounds: &syn::punctuated::Punctuated<syn::TypeParamBound, syn::Token![+]>,
-) -> Option<Vec<syn::Type>> {
-    bounds.iter().find_map(|bound| {
-        let syn::TypeParamBound::Trait(bound) = bound else {
-            return None;
-        };
-        let segment = bound.path.segments.last()?;
-        if !matches!(
-            segment.ident.to_string().as_str(),
-            "Fn" | "FnMut" | "FnOnce"
-        ) {
-            return None;
-        }
-        let syn::PathArguments::Parenthesized(arguments) = &segment.arguments else {
-            return None;
-        };
-        Some(
-            arguments
-                .inputs
-                .iter()
-                .map(|input| input.ty.clone())
-                .collect(),
-        )
-    })
-}
+include!("typed_type_shapes.rs");
 
 impl Rewriter<'_> {
     fn resolve(&self, path: &syn::Path) -> Option<&Callable> {
@@ -460,6 +383,7 @@ impl VisitMut for Rewriter<'_> {
     fn visit_item_fn_mut(&mut self, function: &mut syn::ItemFn) {
         let outer = std::mem::take(&mut self.bindings);
         let outer_assignments = std::mem::take(&mut self.discardable_assignments);
+        let outer_float = std::mem::take(&mut self.exact_float_comparison);
         self.scope.push(function.sig.ident.to_string());
         for input in &function.sig.inputs {
             if let syn::FnArg::Typed(input) = input {
@@ -471,11 +395,17 @@ impl VisitMut for Rewriter<'_> {
         self.bindings = outer;
         self.remove_proven_dead_assignments(&mut function.block);
         self.discardable_assignments = outer_assignments;
+        crate::generated_rust_canonicalizer::source_expectations::refresh_exact_float_expectation(
+            &mut function.attrs,
+            self.exact_float_comparison,
+        );
+        self.exact_float_comparison = outer_float;
     }
 
     fn visit_impl_item_fn_mut(&mut self, function: &mut syn::ImplItemFn) {
         let outer = std::mem::take(&mut self.bindings);
         let outer_assignments = std::mem::take(&mut self.discardable_assignments);
+        let outer_float = std::mem::take(&mut self.exact_float_comparison);
         if let Some(ty) = &self.self_type
             && function.sig.receiver().is_some()
         {
@@ -491,6 +421,11 @@ impl VisitMut for Rewriter<'_> {
         self.bindings = outer;
         self.remove_proven_dead_assignments(&mut function.block);
         self.discardable_assignments = outer_assignments;
+        crate::generated_rust_canonicalizer::source_expectations::refresh_exact_float_expectation(
+            &mut function.attrs,
+            self.exact_float_comparison,
+        );
+        self.exact_float_comparison = outer_float;
     }
 
     fn visit_block_mut(&mut self, block: &mut syn::Block) {
@@ -544,6 +479,7 @@ impl VisitMut for Rewriter<'_> {
 
     fn visit_expr_binary_mut(&mut self, binary: &mut syn::ExprBinary) {
         visit_mut::visit_expr_binary_mut(self, binary);
+        self.exact_float_comparison |= self.requires_exact_float_comparison(binary);
         if matches!(
             binary.op,
             syn::BinOp::Eq(_)
@@ -564,24 +500,24 @@ impl VisitMut for Rewriter<'_> {
 
     fn visit_expr_call_mut(&mut self, call: &mut syn::ExprCall) {
         let runtime_inputs = if let syn::Expr::Path(path) = call.func.as_ref() {
-            runtime_call_inputs(&path.path)
+            runtime_call_inputs(&path.path).or_else(|| self.standard_runtime_inputs(&path.path))
         } else {
             None
         };
         let signature = if let syn::Expr::Path(path) = call.func.as_ref() {
-            self.resolve(&path.path)
-                .filter(|f| f.signature.generics.params.is_empty())
-                .map(|f| f.signature.clone())
+            self.resolve(&path.path).map(|f| f.signature.clone())
         } else {
             None
         };
         let local_inputs = self.ty(&call.func).as_ref().and_then(callable_inputs);
         self.visit_expr_mut(&mut call.func);
         for (index, argument) in call.args.iter_mut().enumerate() {
-            if let Some(syn::FnArg::Typed(parameter)) = signature
-                .as_ref()
-                .and_then(|sig| sig.inputs.iter().nth(index))
-            {
+            if let Some(syn::FnArg::Typed(parameter)) = signature.as_ref().and_then(|sig| {
+                sig.inputs
+                    .iter()
+                    .nth(index)
+                    .filter(|input| parameter_is_concrete(input, &sig.generics))
+            }) {
                 self.expected(argument, &parameter.ty);
             } else if let Some(ty) = local_inputs
                 .as_ref()
@@ -750,6 +686,7 @@ impl VisitMut for Rewriter<'_> {
         visit_mut::visit_expr_mut(self, expression);
         self.rewrite_standard_option_defaults(expression);
         self.rewrite_standard_lazy_fallback(expression);
+        self.rewrite_standard_copy_iterator(expression);
         self.rewrite_typed_string_clones(expression);
         if let Some(ty) = self.ty(expression) {
             self.rewrite_vector_collect(expression, &ty);

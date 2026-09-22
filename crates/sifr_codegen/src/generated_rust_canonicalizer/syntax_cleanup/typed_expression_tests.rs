@@ -265,6 +265,7 @@ mod tests {
             "tokio::task_local! { static LABEL: String; }",
             "::other::task_local! { static LABEL: String; }",
             "::tokio::task_local! { unknown syntax }",
+            "::tokio::task_local! { #[unknown_attribute] static LABEL: String; }",
             "::tokio::task_local! { static String: usize; }",
         ] {
             let source = format!(
@@ -273,5 +274,78 @@ mod tests {
             let rust = clean(&source);
             assert!(rust.contains("borrowed(&String::new())"), "{rust}");
         }
+    }
+    #[test]
+    fn task_local_declaration_does_not_obscure_standard_clone_methods() {
+        let rust = clean(
+            r#"
+            ::tokio::task_local! { static LABEL: String; }
+            fn run(value: String) -> String { value.to_string() }
+        "#,
+        );
+        assert!(!rust.contains("value.to_string()"), "{rust}");
+    }
+    #[test]
+    fn exact_float_equality_has_a_scoped_language_contract() {
+        let rust = clean(
+            r#"
+            fn compare(left: f64, right: f64) -> bool { left == right }
+            fn power(value: f64) -> bool { value.powi(3) != 8.0_f64 }
+            fn zero(value: f64) -> bool { value == 0.0_f64 }
+            fn infinity(value: f64) -> bool { value == f64::INFINITY }
+            struct Custom;
+            fn custom(value: Custom) -> bool { value == 8.0_f64 }
+        "#,
+        );
+        assert_eq!(rust.matches("clippy::float_cmp").count(), 2, "{rust}");
+        assert!(rust.contains("left == right"), "{rust}");
+        assert!(rust.contains("value.powi(3) != 8.0_f64"), "{rust}");
+    }
+    #[test]
+    fn generic_calls_preserve_concrete_parameter_borrow_contracts() {
+        let rust = clean(
+            r#"
+            fn generic<T>(value: T, bound: Option<&String>) {}
+            fn run(value: &String) { generic(1_i32, Some(&value)); }
+        "#,
+        );
+        assert!(rust.contains("generic(1_i32, Some(value))"), "{rust}");
+    }
+
+    #[test]
+    fn runtime_integer_parser_uses_its_exact_string_slice_boundary() {
+        let rust = clean(
+            r#"
+            fn run(value: &str) { SifrInt::parse_decimal(&value, 100usize); }
+        "#,
+        );
+        assert!(
+            rust.contains("SifrInt::parse_decimal(value, 100usize)"),
+            "{rust}"
+        );
+        let shadowed = clean(
+            r#"
+            struct SifrInt;
+            fn run(value: &str) { SifrInt::parse_decimal(&value, 100usize); }
+        "#,
+        );
+        assert!(
+            shadowed.contains("SifrInt::parse_decimal(&value, 100usize)"),
+            "{shadowed}"
+        );
+    }
+
+    #[test]
+    fn standard_primitive_slice_iteration_uses_copy() {
+        let rust = clean(
+            r#"
+            fn run(values: &[u8], strings: &[String]) {
+                let bytes = values.iter().cloned();
+                let text = strings.iter().cloned();
+            }
+        "#,
+        );
+        assert!(rust.contains("values.iter().copied()"), "{rust}");
+        assert!(rust.contains("strings.iter().cloned()"), "{rust}");
     }
 }

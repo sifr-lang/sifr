@@ -21,10 +21,12 @@ impl Rewriter<'_> {
                 "iter" | "iter_mut" | "into_iter" if call.args.is_empty() => {
                     let ty = self.ty(&call.receiver)?;
                     let element =
-                        self.standard_generic(unreference(&ty), "Vec").or_else(|| match unreference(&ty) {
-                            syn::Type::Slice(slice) => Some(slice.elem.as_ref()),
-                            _ => None,
-                        })?;
+                        self.standard_generic(unreference(&ty), "Vec").or_else(
+                            || match unreference(&ty) {
+                                syn::Type::Slice(slice) => Some(slice.elem.as_ref()),
+                                _ => None,
+                            },
+                        )?;
                     return Some(match call.method.to_string().as_str() {
                         "iter_mut" => syn::parse_quote!(&mut #element),
                         "iter" => syn::parse_quote!(&#element),
@@ -52,14 +54,15 @@ impl Rewriter<'_> {
                     let element = self.iterator_element(&call.receiver)?;
                     let mut nested = Rewriter {
                         ambiguous_clone_scopes: self.ambiguous_clone_scopes,
-                            scalar_shadows: self.scalar_shadows,
+                        scalar_shadows: self.scalar_shadows,
                         functions: self.functions,
                         structures: self.structures,
                         self_type: self.self_type.clone(),
                         scope: self.scope.clone(),
                         module_depth: self.module_depth,
                         bindings: self.bindings.clone(),
-                            discardable_assignments: HashMap::new(),
+                        discardable_assignments: HashMap::new(),
+                        exact_float_comparison: false,
                     };
                     nested.bind(&closure.inputs[0], Some(element));
                     return nested.ty(&closure.body);
@@ -109,5 +112,54 @@ fn runtime_call_inputs(path: &syn::Path) -> Option<Vec<syn::Type>> {
             syn::parse_quote!(&str),
         ]),
         _ => None,
+    }
+}
+
+impl Rewriter<'_> {
+    fn standard_runtime_inputs(&self, path: &syn::Path) -> Option<Vec<syn::Type>> {
+        let spelling = path.to_token_stream().to_string().replace(' ', "");
+        if spelling == "::sifr_runtime::SifrInt::parse_decimal"
+            || (spelling == "SifrInt::parse_decimal" && !self.scalar_shadowed("SifrInt"))
+        {
+            return Some(vec![syn::parse_quote!(&str), syn::parse_quote!(usize)]);
+        }
+        None
+    }
+
+    fn rewrite_standard_copy_iterator(&self, expression: &mut syn::Expr) {
+        let syn::Expr::MethodCall(cloned) = expression else {
+            return;
+        };
+        if cloned.method != "cloned" || !cloned.args.is_empty() {
+            return;
+        }
+        let syn::Expr::MethodCall(iterated) = cloned.receiver.as_ref() else {
+            return;
+        };
+        if iterated.method != "iter" || !iterated.args.is_empty() {
+            return;
+        }
+        let Some(receiver) = self.ty(&iterated.receiver) else {
+            return;
+        };
+        let element = self
+            .standard_generic(unreference(&receiver), "Vec")
+            .or_else(|| {
+                if let syn::Type::Slice(slice) = unreference(&receiver) {
+                    Some(slice.elem.as_ref())
+                } else {
+                    None
+                }
+            });
+        if element.is_some_and(|ty| {
+            [
+                "bool", "char", "u8", "u16", "u32", "u64", "u128", "usize", "i8", "i16", "i32",
+                "i64", "i128", "isize", "f32", "f64",
+            ]
+            .into_iter()
+            .any(|name| self.standard_named(ty, name))
+        }) {
+            cloned.method = syn::Ident::new("copied", cloned.method.span());
+        }
     }
 }

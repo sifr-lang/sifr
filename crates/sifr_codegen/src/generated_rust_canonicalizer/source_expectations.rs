@@ -373,3 +373,20 @@ mod receiver_tests {
         );
     }
 }
+
+const EXACT_FLOAT_REASON: &str = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes";
+
+pub(super) fn refresh_exact_float_expectation(attrs: &mut Vec<syn::Attribute>, required: bool) {
+    attrs.retain(|attribute| {
+        !attribute.path().is_ident("expect")
+            || !attribute
+                .meta
+                .to_token_stream()
+                .to_string()
+                .contains(EXACT_FLOAT_REASON)
+    });
+    if required {
+        let reason = syn::LitStr::new(EXACT_FLOAT_REASON, proc_macro2::Span::call_site());
+        attrs.push(syn::parse_quote!(#[expect(clippy::float_cmp, reason = #reason)]));
+    }
+}

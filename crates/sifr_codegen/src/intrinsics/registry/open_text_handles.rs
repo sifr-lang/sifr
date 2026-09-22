@@ -97,11 +97,7 @@ fn binary_file_handle_new_expr() -> RustExpr {
         ])),
         args: vec![
             native_file_handle_new_expr(RustExpr::Ident("__handle_id".to_string())),
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__binary_mode".to_string())),
-                method: "to_string".to_string(),
-                args: vec![],
-            },
+            RustExpr::Ident("__binary_mode".to_string()),
         ],
     }
 }
