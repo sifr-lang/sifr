@@ -205,7 +205,10 @@ fn main() {
         "[(10, \"x\"), (11, \"y\")]"
     );
     assert_eq!(
-        format!("{:?}", Box::new(nums.into_iter().rev()).collect::<Vec<_>>()),
+        format!(
+            "{:?}",
+            Box::new(nums.iter().cloned().rev()).collect::<Vec<_>>()
+        ),
         "[4, 3, 2, 1]"
     );
     assert_eq!(

@@ -887,8 +887,7 @@ fn main() {
         let mut sifr_generated_concat: String =
             String::with_capacity(11usize.saturating_add(0usize));
         sifr_generated_concat.push_str("pairwise = ");
-        sifr_generated_concat
-            .push_str(format!("{:?}", pairwise(&items.into_iter().collect::<Vec<_>>())).as_str());
+        sifr_generated_concat.push_str(format!("{:?}", pairwise(&items)).as_str());
         sifr_generated_concat
     });
     let items2_value_67f5ee13abbe6207: Vec<SifrInt> = vec![
@@ -902,12 +901,8 @@ fn main() {
         SifrInt::from_i64(8),
     ];
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let bat: Vec<Vec<SifrInt>> = batched(
-            &items2_value_67f5ee13abbe6207
-                .into_iter()
-                .collect::<Vec<_>>(),
-            &SifrInt::from_i64(3),
-        )?;
+        let bat: Vec<Vec<SifrInt>> =
+            batched(&items2_value_67f5ee13abbe6207, &SifrInt::from_i64(3))?;
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(10usize.saturating_add(0usize));

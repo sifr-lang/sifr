@@ -1707,7 +1707,7 @@ fn main() {
         vec![SifrInt::from_i64(3), SifrInt::from_i64(4)],
         vec![SifrInt::from_i64(5)],
     ];
-    let flat_int: Vec<SifrInt> = flatten(&nested_int.into_iter().collect::<Vec<_>>());
+    let flat_int: Vec<SifrInt> = flatten(&nested_int);
     println!("{flat_int:?}");
     println!("=== Generic accumulate ===");
     let sums: Vec<SifrInt> = accumulate(

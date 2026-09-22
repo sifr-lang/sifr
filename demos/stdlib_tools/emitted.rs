@@ -150,7 +150,7 @@ mod sifr_generated_generated_support {
             return Vec::new();
         }
         {
-            let mut sifr_generated_sorted_values = matches.into_iter().collect::<Vec<_>>();
+            let mut sifr_generated_sorted_values = matches;
             sifr_generated_sorted_values.sort_by(
                 |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                     sifr_generated_sorted_left.cmp(sifr_generated_sorted_right)

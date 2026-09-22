@@ -2493,8 +2493,7 @@ fn main() {
         });
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _b2: Vec<Vec<SifrInt>> =
-            batched(&data.into_iter().collect::<Vec<_>>(), &SifrInt::from_i64(0))?;
+        let _b2: Vec<Vec<SifrInt>> = batched(&data, &SifrInt::from_i64(0))?;
         println!("should not reach here");
         Ok(())
     })();

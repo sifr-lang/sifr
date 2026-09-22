@@ -648,19 +648,13 @@ fn main() {
         .into_iter(),
     );
     let via_binding: Vec<SifrInt> = nums.collect::<Vec<_>>();
-    println!("{:?}", via_binding.into_iter().collect::<Vec<_>>());
+    println!("{via_binding:?}");
     let via_return: Vec<SifrInt> = adapt_to_iterable(Box::new(
         vec![SifrInt::from_i64(7), SifrInt::from_i64(8)].into_iter(),
-    ))
-    .into_iter()
-    .collect::<Vec<_>>();
-    println!("{:?}", via_return.into_iter().collect::<Vec<_>>());
+    ));
+    println!("{via_return:?}");
     let payload: Vec<u8> = vec![65u8, 90u8];
-    let byte_iter: Box<dyn Iterator<Item = u8>> = Box::new(
-        payload
-            .into_iter()
-            .map(|sifr_generated_byte| sifr_generated_byte as u8),
-    );
+    let byte_iter: Box<dyn Iterator<Item = u8>> = Box::new(payload.into_iter());
     let mapped_bytes: Vec<SifrInt> =
         Box::new(byte_iter.map(|b| ::std::ops::Add::add(SifrInt::from(b), SifrInt::from_i64(1))))
             .collect::<Vec<_>>();

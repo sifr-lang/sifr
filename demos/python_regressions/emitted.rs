@@ -2772,7 +2772,7 @@ fn main() {
         SifrInt::from(repeat(SifrInt::from_i64(7), SifrInt::from_i64(3)).count()),
         SifrInt::from_i64(3)
     );
-    let tk: Vec<SifrInt> = take(&SifrInt::from_i64(2), &ch.into_iter().collect::<Vec<_>>());
+    let tk: Vec<SifrInt> = take(&SifrInt::from_i64(2), &ch);
     assert_eq!(SifrInt::from(tk.len()), SifrInt::from_i64(2));
     println!("itertools: OK");
     assert_eq!(basename("/home/user/file.txt"), "file.txt");

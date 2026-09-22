@@ -14,7 +14,7 @@ fn main() {
         SifrInt::from_i64(20),
         SifrInt::from_i64(30),
     ];
-    println!("{}", tail_first(&nums.into_iter().collect::<Vec<_>>()));
+    println!("{}", tail_first(&nums));
     let tup: (SifrInt, SifrInt, SifrInt) = (
         SifrInt::from_i64(4),
         SifrInt::from_i64(5),

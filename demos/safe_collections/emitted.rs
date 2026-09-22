@@ -107,7 +107,7 @@ fn main() {
     let floats: Vec<f64> = vec![3.14_f64, 1.0_f64, 2.71_f64, 0.5_f64];
     println!("sorted floats:");
     println!("{:?}", {
-        let mut sifr_generated_sorted_values = floats.into_iter().collect::<Vec<_>>();
+        let mut sifr_generated_sorted_values = floats;
         sifr_generated_sorted_values.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                 sifr_generated_sorted_left
