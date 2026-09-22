@@ -22,7 +22,7 @@ Existing metadata and feature-enabled Python Clippy errors remain owned by
 DX.9's supplemental run found 498 pre-existing errors and zero errors in changed
 source files. The full phase-end gate remains outstanding.
 
-## DX9-F7 generated native root lock drift — 2026-09-22
+## DX9-F7 generated native root lock drift — closed 2026-09-22
 
 Owner: driver native storage and Cargo resolution. Retained emitted-Rust Item 12 is
 blocked on this externally owned cache contract; no DX implementation is included
@@ -56,6 +56,25 @@ Evidence: `/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/algorithm
 failed logs, `0071-stale-generated-Cargo.lock`, `0072-stale-generated-Cargo.lock`,
 and both `0071-cache-repair.log`/`0072-cache-repair.log`. The failed 411 run
 remains failed; no broad gate or review was used.
+
+Resolution: [PR #3903](https://github.com/sifr-lang/sifr/pull/3903) merged as
+`439b5ebd5c6917872f58288453917a2427509192` from final implementation candidate
+`c76312b894d86218ebcd6b27ce43fa3271388077`. The generated lock now records
+the prepared resolution identity and lock digest. A manifest or authority change
+restores or prepares the matching lock while the native family lease is held;
+the family Cargo target is retained. The existing no-stale-executable rule is
+unchanged.
+
+Acceptance evidence: the leased same-root locked alternation regression and
+six adjacent native reuse tests passed (7/7), and Cargo resolution tests passed
+(15/15). Logs: `/home/yaser5/projects/sifr/dx9-f7-evidence/native-reuse-tests.log`
+and `cargo-resolution-tests.log`. Formatting, file-size, driver maintainability
+and diff checks passed. The [scoped Opus review](https://github.com/sifr-lang/sifr/pull/3903#issuecomment-5784211177)
+returned SATISFIED with no blocking findings on the final candidate.
+
+Deferred review suggestions, outside DX9-F7 acceptance: measure actual target
+artifact reuse more directly in the test, evaluate a markerless prepared-lock
+comparison, and profile added manifest/authority hashing on hot builds.
 
 ## DX9-F6 actual automatic CI evidence — 2026-09-20
 
