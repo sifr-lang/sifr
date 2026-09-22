@@ -256,6 +256,13 @@ pub(super) fn try_lower_simple_assign_value(
     value: &HirExpr,
     borrowed_params: &HashSet<String>,
 ) -> Option<RustExpr> {
+    // Recursive simple control-flow lowering has no last-use facts. Named values
+    // that Sifr copies but Rust moves need the scoped ownership-aware path.
+    if matches!(value, HirExpr::Name { .. })
+        && crate::helpers::is_logically_copy_rust_move_type(value.ty())
+    {
+        return None;
+    }
     // Preserve TypeVar assignment behavior for borrowed params by appending `.clone()`.
     if matches!(value.ty(), Type::TypeVar(_))
         && matches!(value, HirExpr::Name { name, .. } if borrowed_params.contains(name))

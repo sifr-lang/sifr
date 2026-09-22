@@ -778,5 +778,6 @@ def copies(values: list[int]) -> int:
     return left + right
 "#,
     );
-    assert!(generated.contains("first.clone()"), "{generated}");
+    assert!(generated.contains("left = first.clone()"), "{generated}");
+    assert!(generated.contains("right = first;"), "{generated}");
 }
