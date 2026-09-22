@@ -160,7 +160,12 @@ impl RustEmitter {
             witness.borrowed = false;
             witness.option = RustExpr::MethodCall {
                 receiver: Box::new(witness.option),
-                method: "cloned".to_string(),
+                method: if witness.copy_value {
+                    "copied"
+                } else {
+                    "cloned"
+                }
+                .to_string(),
                 args: Vec::new(),
             };
         } else {

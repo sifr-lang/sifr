@@ -114,9 +114,9 @@ impl RustEmitter {
             // lookup, so neither form needs an outer checked-read witness.
             return Ok(None);
         }
-        if !matches!(object.ty().resolve_alias(), Type::Dict(_, _)) {
+        let Type::Dict(_, value_ty) = object.ty().resolve_alias() else {
             return self.checked_sequence_read_guard_for_ir(read);
-        }
+        };
         let Some(key) = checked_place_read_key(object, index) else {
             return Ok(None);
         };
@@ -153,6 +153,7 @@ impl RustEmitter {
             },
             negated: true,
             borrowed: true,
+            copy_value: crate::helpers::is_copy_type_for_codegen(value_ty),
             dependencies,
             order,
         }))

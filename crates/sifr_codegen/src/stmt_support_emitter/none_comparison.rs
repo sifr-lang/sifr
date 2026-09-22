@@ -25,7 +25,12 @@ impl RustEmitter {
         }
         let is_none = matches!(other.ty().resolve_alias(), Type::None);
         let result = RustExpr::Literal(RustLiteral::Bool(is_none == matches!(op, "is" | "==")));
-        if matches!(other, HirExpr::NoneLiteral) {
+        if matches!(other, HirExpr::NoneLiteral)
+            || matches!(other, HirExpr::Name { name, .. }
+                if self.local_binding_types.contains_key(name))
+        {
+            // Borrowing an established local place has no evaluation effects.
+            // Global names and computed operands still require evaluation.
             return Ok(Some(result));
         }
         // The type determines the comparison, not whether its operand executes.

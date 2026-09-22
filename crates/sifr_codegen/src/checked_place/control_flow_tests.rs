@@ -27,6 +27,7 @@ fn refresh_fallback_rejects_presence_removing_mutations() {
         exclusive_owner: None,
         binding: "checked".to_string(),
         borrowed: false,
+        copy_value: false,
         option: RustExpr::Ident("option".to_string()),
         dependencies: vec!["values".to_string()],
         order: 0,

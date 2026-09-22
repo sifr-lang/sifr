@@ -39,19 +39,31 @@ impl RustEmitter {
                 mutable: false,
                 name: witness.binding.clone(),
                 ty: None,
-                value: crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Deref(
-                        Box::new(crate::RustExpr::Ident(witness.binding.clone())),
-                    )))),
-                    method: "clone".to_string(),
-                    args: Vec::new(),
+                value: {
+                    let value = crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident(
+                        witness.binding.clone(),
+                    )));
+                    if witness.copy_value {
+                        value
+                    } else {
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(value))),
+                            method: "clone".to_string(),
+                            args: Vec::new(),
+                        }
+                    }
                 },
             });
             witness.borrowed = false;
             witness.exclusive_owner = None;
             witness.option = crate::RustExpr::MethodCall {
                 receiver: Box::new(witness.option),
-                method: "cloned".to_string(),
+                method: if witness.copy_value {
+                    "copied"
+                } else {
+                    "cloned"
+                }
+                .to_string(),
                 args: Vec::new(),
             };
             self.checked_place_read_witnesses.insert(key, witness);

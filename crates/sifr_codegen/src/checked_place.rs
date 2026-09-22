@@ -705,7 +705,7 @@ impl RustEmitter {
             }
             collection => collection,
         };
-        let Type::Dict(_, _) = dictionary.ty().resolve_alias() else {
+        let Type::Dict(_, value_ty) = dictionary.ty().resolve_alias() else {
             return Ok(None);
         };
         let Some(key) = checked_place_read_key(dictionary, element) else {
@@ -735,6 +735,7 @@ impl RustEmitter {
             option,
             negated,
             borrowed: true,
+            copy_value: crate::helpers::is_copy_type_for_codegen(value_ty),
             dependencies,
             order,
         }))
@@ -793,6 +794,7 @@ impl RustEmitter {
             option,
             negated: true,
             borrowed: false,
+            copy_value: crate::helpers::is_copy_type_for_codegen(read.ty()),
             dependencies,
             order,
         }))

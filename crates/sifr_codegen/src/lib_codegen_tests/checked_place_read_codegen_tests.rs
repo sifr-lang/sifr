@@ -712,3 +712,37 @@ def main():
     assert!(!generated.contains("compile_error!"), "{generated}");
     assert!(generated.contains("write!(f"), "{generated}");
 }
+
+#[test]
+fn copy_insertion_witness_is_materialized_without_clone() {
+    let generated = generate_rust_from_source(
+        r#"
+def inserted(mut values: dict[int, bool], index: int) -> bool:
+    values[index] = True
+    assert len(values) == 1
+    return values[index]
+"#,
+    );
+    assert!(generated.contains(".insert_entry("), "{generated}");
+    assert!(!generated.contains(").clone()"), "{generated}");
+}
+
+#[test]
+fn constant_none_comparison_discards_only_local_place_reads() {
+    let generated = generate_rust_from_source(
+        r#"
+def pure(value: str) -> bool:
+    return value is None
+
+def effect() -> str:
+    print("called")
+    return "value"
+
+def computed() -> bool:
+    return effect() is None
+"#,
+    );
+    assert!(!generated.contains("let _ = &value"), "{generated}");
+    assert!(generated.contains("effect()"), "{generated}");
+    assert!(generated.contains("let _ = &effect()"), "{generated}");
+}
