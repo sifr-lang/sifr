@@ -37,3 +37,130 @@ def main():
     assert optional_length(None) == 0
     assert disjunction(True, [], 0)
     assert negated(False, [], 0)
+    assert isMatch("aa", "a") == False
+    assert isMatch("aa", "a*")
+    assert isMatch("ab", ".*")
+    assert romanToInt("III") == 3
+    assert romanToInt("LVIII") == 58
+    assert romanToInt("MCMXCIV") == 1994
+    assert longestCommonPrefix(["flower", "flow", "flight"]) == "fl"
+    assert longestCommonPrefix(["dog", "racecar", "car"]) == ""
+    values: dict[str, list[int]] = {}
+    assert insert_then_read_other(values) == [1, 2]
+    totals = {"a": 1, "b": 2}
+    assert insert_with_existing_witnesses(totals) == 6
+    assert insertion_key_reassignment()
+    assert str(DictLabel()) == "new"
+    assert shadowed_loop_cache("long", ["x", "yy"]) == 14
+
+
+# LeetCode 10: Regular Expression Matching
+
+def isMatch(s: str, p: str) -> bool:
+    cache = {}
+
+    def dfs(i: int, j: int) -> bool:
+        if (i, j) in cache:
+            return cache[(i, j)]
+        if i >= len(s) and j >= len(p):
+            return True
+        if j >= len(p):
+            return False
+
+        is_match = i < len(s) and (s[i] == p[j] or p[j] == ".")
+        if (j + 1) < len(p) and p[j + 1] == "*":
+            cache[(i, j)] = dfs(i, j + 2) or (is_match and dfs(i + 1, j))
+            return cache[(i, j)]
+        if is_match:
+            cache[(i, j)] = dfs(i + 1, j + 1)
+            return cache[(i, j)]
+        cache[(i, j)] = False
+        return False
+
+    return dfs(0, 0)
+
+
+# LeetCode 13: Roman To Integer
+
+def romanToInt(s: str) -> int:
+    roman = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
+    res = 0
+    for i in range(len(s)):
+        curr = roman.get(s[i], default=0)
+        nxt = roman.get(s[i + 1], default=0) if i + 1 < len(s) else 0
+        if i + 1 < len(s) and curr < nxt:
+            res -= curr
+        else:
+            res += curr
+    return res
+
+
+# LeetCode 14: Longest Common Prefix
+# v2: Sifr-idiomatic with safe indexing
+
+def longestCommonPrefix(strs: list[str]) -> str:
+    if len(strs) == 0:
+        return ""
+    shortest = len(strs[0])
+    for s in strs:
+        if len(s) < shortest:
+            shortest = len(s)
+
+    prefix = ""
+    for i in range(shortest):
+        first_ch = strs[0][i]
+        if first_ch is None:
+            return prefix
+        ch = first_ch
+        for s in strs:
+            cur_ch = s[i]
+            if cur_ch is None:
+                return prefix
+            if cur_ch != ch:
+                return prefix
+        prefix = prefix + ch
+    return prefix
+
+
+
+def insert_then_read_other(mut values: dict[str, list[int]]) -> list[int]:
+    values["new"] = [1]
+    size = len(values)
+    assert size > 0
+    values["new"].append(2)
+    return values["new"]
+
+def insert_with_existing_witnesses(mut values: dict[str, int]) -> int:
+    if "a" not in values:
+        return 0
+    if "b" not in values:
+        return 0
+    values["c"] = 3
+    return values["a"] + values["b"] + values["c"]
+
+def insertion_key_reassignment() -> bool:
+    values: dict[int, bool] = {}
+    index = 0
+    values[index] = True
+    first = values[index]
+    index = 1
+    second: bool | None = values[index]
+    return first and second is None
+
+class DictLabel:
+    count: int
+
+    def __init__(self):
+        self.count = 1
+
+    def __str__(self) -> str:
+        values = {"prior": "old"}
+        values["new"] = "new"
+        assert len(values) == 2
+        return values["new"]
+
+def shadowed_loop_cache(text: str, values: list[str]) -> int:
+    total = len(text) + len(text)
+    for text in values:
+        total += len(text) + len(text)
+    return total

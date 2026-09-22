@@ -4,6 +4,8 @@ mod call_conventions;
 mod discarded_bindings;
 #[path = "body_analysis/last_use.rs"]
 mod last_use;
+#[path = "body_analysis/read_regions.rs"]
+mod read_regions;
 
 use crate::hir_analysis::traversal;
 use crate::{HirExpr, HirFunction, HirStmt, ModuleFuncSignatures, Type};
@@ -16,6 +18,7 @@ use std::collections::{HashMap, HashSet};
 pub(crate) struct BodySummary {
     pub(crate) mutated: HashSet<String>,
     pub(crate) proven_reads: Vec<HirExpr>,
+    atomic_proven_reads: Vec<HirExpr>,
     pub(crate) checked_read_keys: HashSet<String>,
     referenced: HashMap<String, usize>,
 }
@@ -28,6 +31,8 @@ impl BodySummary {
     fn merge(&mut self, other: &Self) {
         self.mutated.extend(other.mutated.iter().cloned());
         self.proven_reads.extend(other.proven_reads.iter().cloned());
+        self.atomic_proven_reads
+            .extend(other.atomic_proven_reads.iter().cloned());
         self.checked_read_keys
             .extend(other.checked_read_keys.iter().cloned());
         for (name, count) in &other.referenced {
@@ -136,6 +141,40 @@ impl BodyAnalysis {
         reads
     }
 
+    pub(crate) fn references_outside_checked_read(
+        &self,
+        stmt: &HirStmt,
+        owner: &str,
+        key: &str,
+    ) -> bool {
+        let Some(summary) = self.statements.get(&stmt_key(stmt)) else {
+            return true;
+        };
+        let mut witnessed_references = 0;
+        for read in &summary.proven_reads {
+            let HirExpr::Index { object, index, .. } = read else {
+                continue;
+            };
+            if crate::checked_place::checked_place_read_key(object, index).as_deref() != Some(key) {
+                continue;
+            }
+            traversal::walk_expr(read, &mut |expr| {
+                if matches!(expr, HirExpr::Name { name, .. } if name == owner) {
+                    witnessed_references += 1;
+                }
+            });
+        }
+        summary.mutated.contains(owner)
+            || summary.referenced.get(owner).copied().unwrap_or_default() > witnessed_references
+    }
+
+    pub(crate) fn atomic_proven_reads_in(&self, stmt: &HirStmt) -> Vec<HirExpr> {
+        self.statements
+            .get(&stmt_key(stmt))
+            .map(|summary| summary.atomic_proven_reads.clone())
+            .unwrap_or_default()
+    }
+
     pub(crate) fn checked_read_is_used(&self, stmts: &[HirStmt], key: &str) -> bool {
         if let Some(summary) = self.summary(stmts) {
             return summary.checked_read_keys.contains(key);
@@ -161,11 +200,13 @@ impl BodyAnalysis {
                 self.nested_captures.insert(stmt_key(stmt), nested_captures);
             }
             summary.proven_reads.sort_by_key(index_depth);
+            summary.atomic_proven_reads.sort_by_key(index_depth);
             block.merge(&summary);
             self.statements.insert(stmt_key(stmt), summary);
         }
         block = self.remove_unused_projection_summaries(stmts, block);
         block.proven_reads.sort_by_key(index_depth);
+        block.atomic_proven_reads.sort_by_key(index_depth);
         self.blocks.insert(block_key(stmts), block.clone());
         block
     }
@@ -358,6 +399,7 @@ fn direct_stmt_summary(
         }
         _ => None,
     };
+    let conditional_reads = read_regions::conditional_reads(stmt);
     walk_direct_stmt_exprs(stmt, &mut |expr| {
         traversal::walk_expr(expr, &mut |candidate| {
             if let HirExpr::Name { name, .. } = candidate {
@@ -380,6 +422,9 @@ fn direct_stmt_summary(
                 return;
             }
             summary.proven_reads.push(candidate.clone());
+            if !conditional_reads.contains(&expr_key(candidate)) {
+                summary.atomic_proven_reads.push(candidate.clone());
+            }
         });
     });
     summary

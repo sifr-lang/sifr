@@ -278,10 +278,12 @@ def dict_value(mut mapping: dict[str, int], key: str) -> int:
         generated
             .matches(".unwrap_or(__sifr_checked_value_")
             .count()
-            >= 2,
+            == 1,
         "{generated}"
     );
-    assert!(generated.matches("mapping.get(key)").count() >= 2);
+    assert_eq!(generated.matches("mapping.get(key)").count(), 1);
+    assert_eq!(generated.matches(".insert_entry(").count(), 1);
+    assert_eq!(generated.matches(".into_mut()").count(), 1);
     assert!(
         generated
             .matches("__sifr_checked_read_collection.get(")
@@ -321,9 +323,11 @@ def dict_value(mut mapping: dict[str, int], key: str) -> int:
         generated
             .matches(".unwrap_or(__sifr_checked_value_")
             .count()
-            >= 2
+            == 1
     );
-    assert!(generated.matches("mapping.get(key)").count() >= 2);
+    assert_eq!(generated.matches("mapping.get(key)").count(), 1);
+    assert_eq!(generated.matches(".insert_entry(").count(), 1);
+    assert_eq!(generated.matches(".into_mut()").count(), 1);
     assert!(!generated.contains("mapping["), "{generated}");
     assert!(!generated.contains("values["), "{generated}");
     assert!(!generated.contains("compile_error!"), "{generated}");
@@ -611,5 +615,62 @@ def revisit_pairs(mut values: list[tuple[int, int]]):
             && !inner_body[..inner_body.find("let left:").unwrap_or(inner_body.len())]
                 .contains("let Some(__sifr_checked_value_"),
         "optional reads must not produce unused loop refresh bindings: {generated}"
+    );
+}
+
+#[test]
+fn dictionary_insertion_produces_a_checked_read_witness() {
+    let generated = generate_rust_from_source(
+        r#"
+def inserted(mut values: dict[int, bool], index: int) -> bool:
+    values[index] = True
+    return values[index]
+"#,
+    );
+    assert!(generated.contains(".insert_entry("), "{generated}");
+    assert!(generated.contains(".into_mut()"), "{generated}");
+    assert!(!generated.contains("return values.get("), "{generated}");
+    assert!(!generated.contains(".unwrap()"), "{generated}");
+}
+
+#[test]
+fn range_guards_do_not_hoist_conditionally_bounded_offsets() {
+    let generated = generate_rust_from_source(
+        r#"
+def adjacent(text: str) -> int:
+    values = {"I": 1}
+    total = 0
+    for index in range(len(text)):
+        current = values.get(text[index], default=0)
+        following = values.get(text[index + 1], default=0) if index + 1 < len(text) else 0
+        total += current + following
+    return total
+"#,
+    );
+    assert_eq!(
+        generated.matches("else {\n            continue;").count(),
+        1,
+        "{generated}"
+    );
+    assert!(generated.contains(".map_or_else("), "{generated}");
+}
+
+#[test]
+fn repeated_string_loop_targets_have_separate_cache_initializers() {
+    let generated = generate_rust_from_source(
+        r#"
+def sizes(values: list[str]) -> int:
+    total = 0
+    for text in values:
+        total += len(text) + len(text)
+    for text in values:
+        total += len(text) + len(text)
+    return total
+"#,
+    );
+    assert_eq!(
+        generated.matches("let __sifr_chars_text:").count(),
+        2,
+        "{generated}"
     );
 }

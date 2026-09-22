@@ -18,6 +18,21 @@ impl RustEmitter {
         if is_simple_stmt_candidate(stmt) {
             self.lowering_stats.stmt_candidate_total += 1;
         }
+        match self.try_lower_dict_assignment_witness_for_ir(stmt, following_stmts) {
+            Ok(Some(lowered)) => {
+                self.emit_lowered_stmts(&lowered);
+                return;
+            }
+            Err(error) => {
+                self.lowering_stats.stmt_lowering_errors += 1;
+                self.push_captured_stmt(&RustStmt::Expr(RustExpr::MacroCall {
+                    name: "compile_error".to_string(),
+                    args: vec![RustExpr::Literal(RustLiteral::Str(error.to_string()))],
+                }));
+                return;
+            }
+            Ok(None) => {}
+        }
         for preparation in self.prepare_checked_place_witnesses_for_mutation(stmt, following_stmts)
         {
             self.push_captured_stmt(&preparation);

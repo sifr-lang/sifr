@@ -1,10 +1,12 @@
 use crate::{RustEmitter, RustExpr, RustLiteral, RustStmt, Type};
 
+mod assignment_reads;
 mod condition_reads;
 mod control_flow;
 mod fallible_reads;
 mod nonempty_lists;
 mod option_reads;
+mod witness_preparation;
 mod witnesses;
 
 pub(crate) use witnesses::{CheckedDictReadGuard, CheckedPlaceReadWitness, checked_place_read_key};
@@ -468,9 +470,7 @@ impl RustEmitter {
             return Ok(None);
         }
 
-        let reads = self
-            .body_analysis
-            .proven_reads_in(std::slice::from_ref(stmt));
+        let reads = self.body_analysis.atomic_proven_reads_in(stmt);
         let mut guards = Vec::new();
         let mut previous_witnesses = Vec::new();
         for read in reads {

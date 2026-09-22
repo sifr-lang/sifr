@@ -24,6 +24,7 @@ fn list_method_stmt(method: &str) -> crate::HirStmt {
 #[test]
 fn refresh_fallback_rejects_presence_removing_mutations() {
     let witness = super::super::CheckedPlaceReadWitness {
+        exclusive_owner: None,
         binding: "checked".to_string(),
         borrowed: false,
         option: RustExpr::Ident("option".to_string()),

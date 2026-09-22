@@ -10,11 +10,15 @@ impl RustEmitter {
         self.body_analysis.checked_read_is_used(stmts, key)
     }
 
-    fn checked_place_witness_is_invalidated_by_stmt(
+    pub(super) fn checked_place_witness_is_invalidated_by_stmt(
         witness: &super::CheckedPlaceReadWitness,
         stmt: &crate::HirStmt,
     ) -> bool {
-        let mut invalidated = false;
+        let mut invalidated = matches!(
+            stmt,
+            crate::HirStmt::Assign { name, .. } | crate::HirStmt::AugAssign { name, .. }
+                if witness.dependencies.contains(name)
+        );
         crate::hir_analysis::traversal::walk_stmts(
             std::slice::from_ref(stmt),
             crate::hir_analysis::traversal::TraversalConfig::LOCAL_SCOPE_ONLY,
@@ -171,50 +175,11 @@ impl RustEmitter {
         affected
     }
 
-    fn checked_place_witnesses_affected_by_stmt(
+    pub(super) fn checked_place_witnesses_affected_by_stmt(
         &self,
         stmt: &crate::HirStmt,
     ) -> Vec<(String, super::CheckedPlaceReadWitness)> {
         self.checked_place_witnesses_affected_by_stmts(std::slice::from_ref(stmt))
-    }
-
-    pub(crate) fn prepare_checked_place_witnesses_for_mutation(
-        &mut self,
-        stmt: &crate::HirStmt,
-        following: Option<&[crate::HirStmt]>,
-    ) -> Vec<RustStmt> {
-        let Some(following) = following else {
-            return Vec::new();
-        };
-        let mut preparations = Vec::new();
-        for (key, mut witness) in self.checked_place_witnesses_affected_by_stmt(stmt) {
-            if !witness.borrowed
-                || Self::checked_place_witness_is_invalidated_by_stmt(&witness, stmt)
-                || !self.checked_place_read_is_used(&key, following)
-            {
-                continue;
-            }
-            preparations.push(RustStmt::Let {
-                mutable: false,
-                name: witness.binding.clone(),
-                ty: None,
-                value: crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Deref(
-                        Box::new(crate::RustExpr::Ident(witness.binding.clone())),
-                    )))),
-                    method: "clone".to_string(),
-                    args: Vec::new(),
-                },
-            });
-            witness.borrowed = false;
-            witness.option = crate::RustExpr::MethodCall {
-                receiver: Box::new(witness.option),
-                method: "cloned".to_string(),
-                args: Vec::new(),
-            };
-            self.checked_place_read_witnesses.insert(key, witness);
-        }
-        preparations
     }
 
     pub(crate) fn checked_place_loop_condition_refreshes_for_ir(
@@ -315,6 +280,17 @@ impl RustEmitter {
         stmt: &crate::HirStmt,
         following: &[crate::HirStmt],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        if let Some(mut lowered) =
+            self.try_lower_dict_assignment_witness_for_ir(stmt, Some(following))?
+        {
+            let Some(tail) = self.try_lower_stmt_block_for_ir(following)? else {
+                return Err(crate::CodegenError::new(
+                    "dictionary assignment witness tail was not structurally lowered",
+                ));
+            };
+            lowered.extend(tail);
+            return Ok(Some(lowered));
+        }
         if self.checked_place_refresh_suppressed_depth == Some(self.stmt_block_depth)
             || self.checked_place_read_witnesses.is_empty()
         {
@@ -731,7 +707,7 @@ impl RustEmitter {
                 continue;
             };
             if checked_place_expr_token(object) != range_object_token
-                || !expr_mentions_name(index, target)
+                || !matches!(index.as_ref(), crate::HirExpr::Name { name, .. } if name == target)
             {
                 continue;
             }

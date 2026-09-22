@@ -79,6 +79,7 @@ pub(crate) struct CheckedDictReadGuard {
 
 #[derive(Clone)]
 pub(crate) struct CheckedPlaceReadWitness {
+    pub(super) exclusive_owner: Option<String>,
     pub(super) binding: String,
     pub(super) borrowed: bool,
     pub(super) option: RustExpr,
@@ -89,6 +90,7 @@ pub(crate) struct CheckedPlaceReadWitness {
 impl CheckedDictReadGuard {
     pub(super) fn witness(&self) -> CheckedPlaceReadWitness {
         CheckedPlaceReadWitness {
+            exclusive_owner: None,
             binding: self.binding.clone(),
             borrowed: self.borrowed,
             option: self.option.clone(),

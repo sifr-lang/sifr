@@ -759,11 +759,8 @@ impl RustEmitter {
                 }) else {
                     return Ok(None);
                 };
-                let target_cache_init = if char_set_loop || target.contains(',') {
-                    None
-                } else {
-                    self.string_char_cache_init_stmt_for_loop_target(target, target_ty)
-                };
+                let (outer_string_caches, target_cache_init) =
+                    self.begin_loop_target_string_cache(target, target_ty, !char_set_loop);
                 let checked_read_guards = if char_set_loop {
                     Vec::new()
                 } else {
@@ -778,6 +775,7 @@ impl RustEmitter {
                 );
                 let popped = self.loop_else_stack.pop();
                 debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
+                self.string_char_cache_vars = outer_string_caches;
                 let lowered_body_result = lowered_body_result?;
                 let Some(mut lowered_body) = lowered_body_result else {
                     return Ok(None);
