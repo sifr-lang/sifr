@@ -271,7 +271,13 @@ fn collect_scalar_shadows(file: &syn::File) -> std::collections::HashSet<String>
             visit::visit_item_mod(self, item);
             self.1.pop();
         }
-        fn visit_item_macro(&mut self, _: &'ast syn::ItemMacro) {
+        fn visit_item_macro(&mut self, item: &'ast syn::ItemMacro) {
+            if let Some(names) = task_local_static_names(&item.mac) {
+                for name in names {
+                    self.declaration(&name);
+                }
+                return;
+            }
             for name in STANDARD_VALUE_NAMES {
                 self.0
                     .insert(format!("opaque:{}::{name}", self.1.join("::")));
@@ -288,3 +294,34 @@ const STANDARD_VALUE_NAMES: &[&str] = &[
     "HashSet", "Clone", "bool", "char", "str", "u8", "u16", "u32", "u64", "u128", "usize", "i8",
     "i16", "i32", "i64", "i128", "isize", "f32", "f64",
 ];
+
+// The absolute Tokio task_local macro expands only the parsed static names;
+// unknown paths or grammar remain opaque to lexical standard-type proofs.
+fn task_local_static_names(rust_macro: &syn::Macro) -> Option<Vec<syn::Ident>> {
+    use syn::parse::Parser;
+    if rust_macro
+        .path
+        .to_token_stream()
+        .to_string()
+        .replace(' ', "")
+        != "::tokio::task_local"
+    {
+        return None;
+    }
+    let parser = |input: syn::parse::ParseStream<'_>| -> syn::Result<Vec<syn::Ident>> {
+        let mut names = Vec::new();
+        while !input.is_empty() {
+            let _attributes = input.call(syn::Attribute::parse_outer)?;
+            let _visibility = input.parse::<syn::Visibility>()?;
+            input.parse::<syn::Token![static]>()?;
+            names.push(input.parse::<syn::Ident>()?);
+            input.parse::<syn::Token![:]>()?;
+            let _ty = input.parse::<syn::Type>()?;
+            if !input.is_empty() {
+                input.parse::<syn::Token![;]>()?;
+            }
+        }
+        Ok(names)
+    };
+    parser.parse2(rust_macro.tokens.clone()).ok()
+}

@@ -2,26 +2,30 @@
 mod tests {
     #[test]
     fn generic_receiver_cleanup_uses_declared_receiver_without_inferring_generic_arguments() {
-        let rust = clean(r#"
+        let rust = clean(
+            r#"
             struct Sender<T> { value: T }
             impl<T> Sender<T> { fn send(&mut self, value: T) { self.value = value; } }
             fn run(mut sender: Sender<String>, value: String) {
                 (&mut sender).send(value);
             }
-        "#);
+        "#,
+        );
         assert!(rust.contains("sender.send(value)"), "{rust}");
     }
 
     #[test]
     fn mutable_receiver_cleanup_requires_declared_borrow_contract() {
-        let rust = clean(r#"
+        let rust = clean(
+            r#"
             struct Owner;
             impl Owner { fn change(&mut self) {} }
             fn run(mut owner: Owner, mut opaque: Other) {
                 (&mut owner).change();
                 (&mut opaque).change();
             }
-        "#);
+        "#,
+        );
         assert!(rust.contains("owner.change()"), "{rust}");
         assert!(rust.contains("(&mut opaque).change()"), "{rust}");
     }
@@ -216,27 +220,58 @@ mod tests {
             }
         "#,
         );
-        assert!(
-            rust.contains("value.unwrap_or_else(String::new)"),
-            "{rust}"
-        );
+        assert!(rust.contains("value.unwrap_or_else(String::new)"), "{rust}");
         assert!(
             rust.contains("other.map_or_else(String::new, |value| value.to_string())"),
             "{rust}"
         );
     }
 
-#[test]
-fn empty_string_borrow_cleanup_requires_a_string_slice_boundary() {
-    let rust = clean(r#"
+    #[test]
+    fn empty_string_borrow_cleanup_requires_a_string_slice_boundary() {
+        let rust = clean(
+            r#"
         fn borrowed(value: &str) {}
         fn owned(value: &String) {}
         fn main() {
             borrowed(&String::new());
             owned(&String::new());
         }
-    "#);
-    assert!(rust.contains("borrowed(\"\")"), "{rust}");
-    assert!(rust.contains("owned(&String::new())"), "{rust}");
-}
+    "#,
+        );
+        assert!(rust.contains("borrowed(\"\")"), "{rust}");
+        assert!(rust.contains("owned(&String::new())"), "{rust}");
+    }
+    #[test]
+    fn task_local_declaration_keeps_known_standard_string_contract() {
+        let rust = clean(
+            r#"
+            mod support {
+                ::tokio::task_local! {
+                    static LABEL: String;
+                    pub static VALUE: usize
+                }
+                fn borrowed(value: &str) {}
+                fn run() { borrowed(&String::new()); }
+            }
+        "#,
+        );
+        assert!(rust.contains("borrowed(\"\")"), "{rust}");
+    }
+
+    #[test]
+    fn unknown_task_local_macros_keep_their_opaque_type_contract() {
+        for declaration in [
+            "tokio::task_local! { static LABEL: String; }",
+            "::other::task_local! { static LABEL: String; }",
+            "::tokio::task_local! { unknown syntax }",
+            "::tokio::task_local! { static String: usize; }",
+        ] {
+            let source = format!(
+                "{declaration}\nfn borrowed(value: &str) {{}}\nfn run() {{ borrowed(&String::new()); }}"
+            );
+            let rust = clean(&source);
+            assert!(rust.contains("borrowed(&String::new())"), "{rust}");
+        }
+    }
 }
