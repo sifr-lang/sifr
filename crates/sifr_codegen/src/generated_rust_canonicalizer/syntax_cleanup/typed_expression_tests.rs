@@ -482,4 +482,61 @@ mod tests {
         assert!(rust.contains("pair.0.get()"), "{rust}");
     }
 
+    #[test]
+    fn imported_closed_local_traits_do_not_block_inert_clone_proofs() {
+        let rust = clean(r#"
+            mod contracts { pub trait Local { fn read(&self); } }
+            mod use_site {
+                use crate::contracts::Local;
+                fn copy(values: Vec<String>) -> Vec<String> { values.to_vec() }
+            }
+        "#);
+        assert!(rust.contains("values.clone()"), "{rust}");
+        let unknown = clean(r#"
+            mod contracts { pub trait Local: unknown::External {} }
+            mod use_site {
+                use crate::contracts::Local;
+                fn copy(values: Vec<String>) -> Vec<String> { values.to_vec() }
+            }
+        "#);
+        assert!(unknown.contains("values.to_vec()"), "{unknown}");
+        let competing = clean(r#"
+            mod contracts { pub trait Local { fn clone(&self); } }
+            mod use_site {
+                use crate::contracts::Local;
+                fn copy(values: Vec<String>) -> Vec<String> { values.to_vec() }
+            }
+        "#);
+        assert!(competing.contains("values.to_vec()"), "{competing}");
+    }
+
+    #[test]
+    fn character_pattern_requires_resolved_standard_string_receiver() {
+        let rust = clean(r#"
+            fn run(text: &str, values: HashSet<String>, opaque: Custom) {
+                text.contains("a"); values.contains("a"); opaque.contains("a");
+            }
+        "#);
+        assert!(rust.contains("text.contains('a')"), "{rust}");
+        assert!(rust.contains(r#"values.contains("a")"#), "{rust}");
+        assert!(rust.contains(r#"opaque.contains("a")"#), "{rust}");
+    }
+
+    #[test]
+    fn floating_expectations_follow_typed_operations_and_equality_names() {
+        let rust = clean(r#"
+            fn separate(a: f64, b: f64, c: f64) -> f64 { a * b + c }
+            fn midpoint(a: f64, b: f64) -> f64 { (a + b) / 2.0_f64 }
+            fn power(value: f64) -> f64 { value.powf(0.5_f64) }
+            fn custom_eq(a: f64, b: f64) -> bool { a == b }
+            fn custom_ne(a: f64, b: f64) -> bool { a != b }
+            fn check(value: f64) { assert_eq!(value, 4.0_f64); }
+            fn integer(a: i32, b: i32, c: i32) -> i32 { a * b + c }
+        "#);
+        assert_eq!(rust.matches("clippy::suboptimal_flops").count(), 2, "{rust}");
+        assert_eq!(rust.matches("clippy::manual_midpoint").count(), 1, "{rust}");
+        assert_eq!(rust.matches("clippy::float_cmp").count(), 2, "{rust}");
+        assert!(rust.contains("a * b + c") && rust.contains(".powf(0.5_f64)"), "{rust}");
+    }
+
 }

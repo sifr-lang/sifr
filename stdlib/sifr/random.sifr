@@ -331,7 +331,7 @@ def _module_random() -> Random:
     return r
 
 
-def _sync_module_random(mut generator: Random) -> None:
+def _sync_module_random(generator: Random) -> None:
     _store_state_into_module_storage(generator.getstate())
 
 

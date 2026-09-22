@@ -22,7 +22,6 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
         return;
     }
     if rewrite_clone_assignment(expression)
-        || rewrite_single_character_pattern(expression)
         || rewrite_unnecessary_float_cast(expression)
         || rewrite_generated_byte_identity_cast(expression)
         || rewrite_lossless_decimal_scale_cast(expression)
@@ -492,47 +491,6 @@ fn rewrite_clone_assignment(expression: &mut syn::Expr) -> bool {
     let left = assign.left.as_ref();
     let source = clone.receiver.as_ref();
     *expression = syn::parse_quote!(#left.clone_from(&#source));
-    true
-}
-
-fn rewrite_single_character_pattern(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(call) = expression else {
-        return false;
-    };
-    if !matches!(
-        call.method.to_string().as_str(),
-        "contains"
-            | "ends_with"
-            | "find"
-            | "rfind"
-            | "split"
-            | "split_inclusive"
-            | "split_terminator"
-            | "starts_with"
-            | "strip_prefix"
-            | "strip_suffix"
-            | "trim_end_matches"
-            | "trim_matches"
-            | "trim_start_matches"
-    ) || call.args.len() != 1
-    {
-        return false;
-    }
-    let Some(syn::Expr::Lit(literal)) = call.args.first_mut() else {
-        return false;
-    };
-    let syn::Lit::Str(text) = &literal.lit else {
-        return false;
-    };
-    let value = text.value();
-    let mut characters = value.chars();
-    let Some(character) = characters.next() else {
-        return false;
-    };
-    if characters.next().is_some() {
-        return false;
-    }
-    literal.lit = syn::Lit::Char(syn::LitChar::new(character, text.span()));
     true
 }
 

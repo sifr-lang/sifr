@@ -29,7 +29,7 @@ enum Definition {
     Struct(syn::Fields),
     Alias(syn::Type),
     Other,
-    Trait,
+    Trait { closed: bool },
     Module,
 }
 
@@ -171,6 +171,10 @@ impl Types {
     }
 
     pub(super) fn ambiguous_clone_scopes(&self) -> HashSet<String> {
+        self.ambiguous_method_scopes(&["clone"])
+    }
+
+    pub(super) fn ambiguous_method_scopes(&self, methods: &[&str]) -> HashSet<String> {
         let mut scopes = self.ambiguous_import_scopes.clone();
         scopes.insert(String::new());
         scopes.extend(
@@ -178,7 +182,11 @@ impl Types {
                 .keys()
                 .map(|key| key.rsplit_once("::").map_or("", |pair| pair.0).to_owned()),
         );
-        scopes.retain(|scope| self.method_ambiguous(scope, "clone"));
+        scopes.retain(|scope| {
+            methods
+                .iter()
+                .any(|method| self.method_ambiguous(scope, method))
+        });
         scopes
     }
 
@@ -198,7 +206,18 @@ impl Types {
                     item.ident.to_string(),
                     Definition::Alias((*item.ty).clone()),
                 )),
-                syn::Item::Trait(item) => Some((item.ident.to_string(), Definition::Trait)),
+                syn::Item::Trait(item) => Some((
+                    item.ident.to_string(),
+                    Definition::Trait {
+                        closed: item.supertraits.is_empty()
+                            && item.generics.params.is_empty()
+                            && item.generics.where_clause.is_none()
+                            && !item
+                                .items
+                                .iter()
+                                .any(|member| matches!(member, syn::TraitItem::Macro(_))),
+                    },
+                )),
                 syn::Item::Mod(item) => {
                     let child = qualify(scope, &item.ident.to_string());
                     if let Some((_, items)) = &item.content {
@@ -364,7 +383,7 @@ impl Types {
     }
 
     fn closed_import(&self, name: &str) -> bool {
-        matches!(self.definitions.get(name), Some(Definition::Struct(_) | Definition::Other | Definition::Alias(_) | Definition::Module))
+        matches!(self.definitions.get(name), Some(Definition::Struct(_) | Definition::Other | Definition::Alias(_) | Definition::Module | Definition::Trait { closed: true }))
             || name.starts_with("::std::") || name.starts_with("::core::")
             // This is the compiler-owned exact runtime nominal, not a basename
             // heuristic or authorization for arbitrary external extension traits.

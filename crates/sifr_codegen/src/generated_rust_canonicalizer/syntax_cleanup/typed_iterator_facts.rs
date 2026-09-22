@@ -55,6 +55,7 @@ impl Rewriter<'_> {
                     let mut nested = Rewriter {
                         iteration_dispatch_closed: self.iteration_dispatch_closed,
                         ambiguous_clone_scopes: self.ambiguous_clone_scopes,
+                        ambiguous_string_pattern_scopes: self.ambiguous_string_pattern_scopes,
                         scalar_shadows: self.scalar_shadows,
                         functions: self.functions,
                         structures: self.structures,
@@ -63,7 +64,7 @@ impl Rewriter<'_> {
                         module_depth: self.module_depth,
                         bindings: self.bindings.clone(),
                         discardable_assignments: HashMap::new(),
-                        exact_float_comparison: false,
+                        float_expectations: Default::default(),
                     };
                     nested.bind(&closure.inputs[0], Some(element));
                     return nested.ty(&closure.body);

@@ -1,5 +1,6 @@
 impl Rewriter<'_> {
     fn rewrite_typed_string_clones(&self, expression: &mut syn::Expr) {
+        self.rewrite_single_character_pattern(expression);
         if !self.clone_is_unambiguous() || self.scalar_shadowed("String") { return; }
         let mut owned = std::collections::HashSet::new();
         let mut borrowed = std::collections::HashSet::new();
@@ -108,4 +109,53 @@ impl Rewriter<'_> {
         *expression = syn::parse_quote!("");
         true
     }
+}
+
+impl Rewriter<'_> {
+fn rewrite_single_character_pattern(&self, expression: &mut syn::Expr) -> bool {
+    let syn::Expr::MethodCall(call) = expression else {
+        return false;
+    };
+    if self.ambiguous_string_pattern_scopes.contains(&self.scope[..self.module_depth].join("::"))
+        || !self.ty(&call.receiver).is_some_and(|ty| self.standard_named(unreference(&ty), "String")
+            || self.standard_named(unreference(&ty), "str")) {
+        return false;
+    }
+    if !matches!(
+        call.method.to_string().as_str(),
+        "contains"
+            | "ends_with"
+            | "find"
+            | "rfind"
+            | "split"
+            | "split_inclusive"
+            | "split_terminator"
+            | "starts_with"
+            | "strip_prefix"
+            | "strip_suffix"
+            | "trim_end_matches"
+            | "trim_matches"
+            | "trim_start_matches"
+    ) || call.args.len() != 1
+    {
+        return false;
+    }
+    let Some(syn::Expr::Lit(literal)) = call.args.first_mut() else {
+        return false;
+    };
+    let syn::Lit::Str(text) = &literal.lit else {
+        return false;
+    };
+    let value = text.value();
+    let mut characters = value.chars();
+    let Some(character) = characters.next() else {
+        return false;
+    };
+    if characters.next().is_some() {
+        return false;
+    }
+    literal.lit = syn::Lit::Char(syn::LitChar::new(character, text.span()));
+    true
+}
+
 }

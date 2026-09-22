@@ -362,7 +362,7 @@ impl Rewriter<'_> {
             return;
         };
         let start = match name.to_string().as_str() {
-            "write" | "writeln" => 2,
+            "write" | "writeln" | "assert" | "debug_assert" => 2,
             "format" | "print" | "println" | "eprint" | "eprintln" => 1,
             "assert_eq" | "assert_ne"
                 if arguments.len() >= 2

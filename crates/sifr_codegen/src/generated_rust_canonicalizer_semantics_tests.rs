@@ -380,11 +380,14 @@ fn folds_proven_initializers_and_preserves_unproven_constructors() {
         "{canonical}"
     );
     assert!(canonical.contains("let origin = if flag"), "{canonical}");
+    // The lexical resolver proves the inherent String::new constructor and
+    // removes its discarded empty value while transferring the owned input.
+    assert!(!canonical.contains("let mut selected"), "{canonical}");
     assert!(
-        canonical.contains("let mut selected = String::new()"),
+        canonical.contains("fn wrapped(value: String) -> String"),
         "{canonical}"
     );
-    assert!(canonical.contains("selected = value"), "{canonical}");
+    assert!(canonical.contains("\n    value\n"), "{canonical}");
 }
 
 #[test]

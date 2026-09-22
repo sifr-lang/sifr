@@ -120,9 +120,10 @@ impl Rewriter<'_> {
             && super::identifier_names_in_pattern(&local.pat)
                 .iter()
                 .all(|name| !statements_reference(remaining, name))
-            && self
-                .ty(&init.expr)
-                .is_some_and(|ty| self.inert_owned_type(&ty))
+            && self.ty(&init.expr).or_else(|| match &local.pat {
+                syn::Pat::Type(typed) => Some(*typed.ty.clone()),
+                _ => None,
+            }).is_some_and(|ty| self.inert_owned_type(&ty))
     }
 }
 

@@ -124,37 +124,4 @@ impl Rewriter<'_> {
     }
 }
 
-impl Rewriter<'_> {
-    fn requires_exact_float_comparison(&self, binary: &syn::ExprBinary) -> bool {
-        fn exact_constant(expression: &syn::Expr) -> bool {
-            match expression {
-                syn::Expr::Paren(paren) => exact_constant(&paren.expr),
-                syn::Expr::Unary(unary) if matches!(unary.op, syn::UnOp::Neg(_)) => {
-                    exact_constant(&unary.expr)
-                }
-                syn::Expr::Lit(literal) => matches!(&literal.lit, syn::Lit::Float(value)
-                    if value.base10_parse::<f64>().is_ok_and(|number| number == 0.0)),
-                syn::Expr::Path(path) => {
-                    let spelling = path.path.to_token_stream().to_string().replace(' ', "");
-                    matches!(
-                        spelling.as_str(),
-                        "f64::INFINITY"
-                            | "f64::NEG_INFINITY"
-                            | "f32::INFINITY"
-                            | "f32::NEG_INFINITY"
-                    )
-                }
-                _ => false,
-            }
-        }
-        matches!(binary.op, syn::BinOp::Eq(_) | syn::BinOp::Ne(_))
-            && !exact_constant(&binary.left)
-            && !exact_constant(&binary.right)
-            && [&binary.left, &binary.right].into_iter().all(|value| {
-                self.ty(value).is_some_and(|ty| {
-                    self.standard_named(unreference(&ty), "f64")
-                        || self.standard_named(unreference(&ty), "f32")
-                })
-            })
-    }
-}
+include!("typed_float_contracts.rs");

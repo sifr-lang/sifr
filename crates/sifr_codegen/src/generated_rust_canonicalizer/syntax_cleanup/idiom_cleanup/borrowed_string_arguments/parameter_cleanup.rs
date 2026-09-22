@@ -1,11 +1,13 @@
 pub(crate) fn rewrite_borrow_only_string_parameters(file: &mut syn::File) {
     BorrowOnlyStringParameterRewriter {
+        shared_inputs: super::super::typed_expression_cleanup::shared_string_call_inputs(file),
         retained_abis: super::super::borrowed_scalar_parameters::callable_value_abi_keys(file),
         scope: Vec::new(), owner: None, trait_implementation: false,
     }.visit_file_mut(file);
 }
 
 struct BorrowOnlyStringParameterRewriter {
+    shared_inputs: HashMap<String, Vec<bool>>,
     retained_abis: HashSet<String>,
     scope: Vec<String>,
     owner: Option<String>,
@@ -40,19 +42,21 @@ impl VisitMut for BorrowOnlyStringParameterRewriter {
         self.trait_implementation = previous_trait;
     }
     fn visit_item_fn_mut(&mut self, function: &mut syn::ItemFn) {
-        if !self.retains(&function.sig) { rewrite_string_signature(&mut function.sig, &function.block); }
+        if !self.retains(&function.sig) { self.rewrite_signature(&mut function.sig, &function.block); }
         self.scope.push(function.sig.ident.to_string());
         visit_mut::visit_item_fn_mut(self, function);
         self.scope.pop();
     }
 
     fn visit_impl_item_fn_mut(&mut self, function: &mut syn::ImplItemFn) {
-        if !self.retains(&function.sig) { rewrite_string_signature(&mut function.sig, &function.block); }
+        if !self.retains(&function.sig) { self.rewrite_signature(&mut function.sig, &function.block); }
         visit_mut::visit_impl_item_fn_mut(self, function);
     }
 }
 
-fn rewrite_string_signature(signature: &mut syn::Signature, block: &syn::Block) {
+impl BorrowOnlyStringParameterRewriter {
+fn rewrite_signature(&self, signature: &mut syn::Signature, block: &syn::Block) {
+    let context = StringCallContext::new(&self.shared_inputs, &self.scope, signature, block);
     for input in &mut signature.inputs {
         let syn::FnArg::Typed(parameter) = input else {
             continue;
@@ -65,6 +69,7 @@ fn rewrite_string_signature(signature: &mut syn::Signature, block: &syn::Block) 
         };
         let mut uses = BorrowOnlyStringUses {
             name: &name,
+            context: &context,
             seen: false,
             unsupported: false,
         };
@@ -75,8 +80,11 @@ fn rewrite_string_signature(signature: &mut syn::Signature, block: &syn::Block) 
     }
 }
 
+}
+
 struct BorrowOnlyStringUses<'name> {
     name: &'name str,
+    context: &'name StringCallContext<'name>,
     seen: bool,
     unsupported: bool,
 }
@@ -93,11 +101,25 @@ impl Visit<'_> for BorrowOnlyStringUses<'_> {
                 && expression_is_binding(&copy.receiver, self.name)
             {
                 let name = alias.ident.to_string();
-                let mut uses = BorrowOnlyStringUses { name: &name, seen: false, unsupported: false };
+                let mut uses = BorrowOnlyStringUses { name: &name, context: self.context, seen: false, unsupported: false };
                 for later in &block.stmts[index + 1..] { uses.visit_stmt(later); }
                 if uses.seen && !uses.unsupported { self.seen = true; continue; }
             }
             self.visit_stmt(statement);
+        }
+    }
+
+    fn visit_expr_call(&mut self, call: &syn::ExprCall) {
+        let inputs = self.context.inputs(call);
+        self.visit_expr(&call.func);
+        for (index, argument) in call.args.iter().enumerate() {
+            if inputs.and_then(|inputs| inputs.get(index)).copied().unwrap_or(false)
+                && matches!(argument, syn::Expr::Reference(reference)
+                    if reference.mutability.is_none() && expression_is_binding(&reference.expr, self.name)) {
+                self.seen = true;
+            } else {
+                self.visit_expr(argument);
+            }
         }
     }
 
@@ -154,12 +176,21 @@ impl Visit<'_> for BorrowOnlyStringUses<'_> {
     }
 
     fn visit_macro(&mut self, rust_macro: &syn::Macro) {
+        if !rust_macro.path.get_ident().is_some_and(|name| matches!(name.to_string().as_str(),
+            "assert" | "assert_eq" | "assert_ne" | "debug_assert" | "debug_assert_eq"
+            | "debug_assert_ne" | "print" | "println" | "eprint" | "eprintln"
+            | "format" | "format_args" | "write" | "writeln" | "vec")) {
+            self.unsupported = true;
+            return;
+        }
         if let Ok(arguments) = rust_macro.parse_body_with(
             syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
         ) {
             for argument in &arguments {
                 self.visit_expr(argument);
             }
+        } else {
+            self.unsupported = true;
         }
     }
 }

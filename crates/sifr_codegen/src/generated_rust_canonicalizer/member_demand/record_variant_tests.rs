@@ -849,3 +849,5 @@ fn opaque_local_macro_keeps_custom_string_conversion_contract() {
 }
 
 include!("standard_contract_tests.rs");
+
+include!("floating_contract_tests.rs");

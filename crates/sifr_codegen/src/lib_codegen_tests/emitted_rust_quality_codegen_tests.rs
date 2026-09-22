@@ -507,3 +507,58 @@ fn unproven_exact_integer_cannot_enter_byte_storage_codegen() {
         .is_none()
     );
 }
+
+#[test]
+fn checked_assignment_moves_only_proven_last_use_values() {
+    let generated = generate_rust_from_source(
+        r#"
+def single(mut values: list[str], own value: str) -> None:
+    try:
+        values[0] = value
+    except IndexError:
+        pass
+
+def nested(mut values: list[list[str]], own value: str) -> None:
+    try:
+        values[0][0] = value
+    except IndexError:
+        pass
+
+def reused(mut values: list[str], own value: str) -> None:
+    try:
+        values[0] = value
+    except IndexError:
+        pass
+    print(value)
+
+def borrowed(mut values: list[str], value: str) -> None:
+    try:
+        values[0] = value
+    except IndexError:
+        pass
+
+def repeated(mut values: list[str], own value: str) -> None:
+    for index in range(2):
+        try:
+            values[index] = value
+        except IndexError:
+            pass
+"#,
+    );
+    let ast = syn::parse_file(&generated).expect("generated Rust parses");
+    for item in ast.items {
+        let syn::Item::Fn(function) = item else {
+            continue;
+        };
+        let name = function.sig.ident.to_string();
+        let body = quote::ToTokens::to_token_stream(&function.block).to_string();
+        let copies = body.contains("value . clone")
+            || body.contains("value . to_owned")
+            || body.contains("(value) . clone");
+        if matches!(name.as_str(), "single" | "nested") {
+            assert!(!copies, "{name}: {body}");
+        } else if matches!(name.as_str(), "reused" | "borrowed" | "repeated") {
+            assert!(copies, "{name}: {body}");
+        }
+    }
+}

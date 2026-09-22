@@ -409,3 +409,21 @@ fn is_owned_clone_value(kind: &Value) -> bool {
 pub(super) fn ambiguous_clone_scopes(file: &syn::File) -> HashSet<String> {
     Types::collect(file).ambiguous_clone_scopes()
 }
+
+pub(super) fn ambiguous_string_pattern_scopes(file: &syn::File) -> HashSet<String> {
+    Types::collect(file).ambiguous_method_scopes(&[
+        "contains",
+        "ends_with",
+        "find",
+        "rfind",
+        "split",
+        "split_inclusive",
+        "split_terminator",
+        "starts_with",
+        "strip_prefix",
+        "strip_suffix",
+        "trim_end_matches",
+        "trim_matches",
+        "trim_start_matches",
+    ])
+}

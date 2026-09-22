@@ -20,6 +20,14 @@ impl Rewriter<'_> {
                 .bindings
                 .get(&path.path.get_ident()?.to_string())?
                 .clone(),
+            syn::Expr::Binary(binary) if matches!(binary.op, syn::BinOp::Add(_) | syn::BinOp::Sub(_) | syn::BinOp::Mul(_) | syn::BinOp::Div(_) | syn::BinOp::Rem(_)) => {
+                let left = self.ty(&binary.left)?;
+                let right = self.ty(&binary.right)?;
+                let ty = unreference(&left);
+                (same_type(ty, unreference(&right))
+                    && (self.standard_named(ty, "f64") || self.standard_named(ty, "f32")))
+                    .then(|| ty.clone())
+            }
             syn::Expr::Reference(reference) => {
                 let inner = self.ty(&reference.expr)?;
                 if reference.mutability.is_none() {
@@ -98,6 +106,15 @@ impl Rewriter<'_> {
                     return Some(syn::parse_quote!(Option<#inner>));
                 }
                 let key = path.path.to_token_stream().to_string().replace(' ', "");
+                if !self.scalar_shadowed("String")
+                    && ((key == "String::new" && call.args.is_empty())
+                        || (key == "String::from" && call.args.len() == 1
+                            && self.ty(&call.args[0]).is_some_and(|ty|
+                                self.standard_named(unreference(&ty), "str")
+                                || self.standard_named(unreference(&ty), "String")))) {
+                    return Some(syn::parse_quote!(String));
+                }
+
                 if let Some(ident) = path.path.get_ident()
                     && let Some(Some(syn::Type::FnPtr(signature))) =
                         self.bindings.get(&ident.to_string())
@@ -243,6 +260,7 @@ impl Rewriter<'_> {
                         let mut nested = Rewriter {
                             iteration_dispatch_closed: self.iteration_dispatch_closed,
                             ambiguous_clone_scopes: self.ambiguous_clone_scopes,
+                        ambiguous_string_pattern_scopes: self.ambiguous_string_pattern_scopes,
                             scalar_shadows: self.scalar_shadows,
                             functions: self.functions,
                             structures: self.structures,
@@ -251,7 +269,7 @@ impl Rewriter<'_> {
                             module_depth: self.module_depth,
                             bindings: self.bindings.clone(),
                             discardable_assignments: HashMap::new(),
-                            exact_float_comparison: false,
+                            float_expectations: Default::default(),
                         };
                         if closure.inputs.len() != 1 {
                             return None;
@@ -270,6 +288,7 @@ impl Rewriter<'_> {
                 let mut nested = Rewriter {
                     iteration_dispatch_closed: self.iteration_dispatch_closed,
                     ambiguous_clone_scopes: self.ambiguous_clone_scopes,
+                        ambiguous_string_pattern_scopes: self.ambiguous_string_pattern_scopes,
                     scalar_shadows: self.scalar_shadows,
                     functions: self.functions,
                     structures: self.structures,
@@ -278,7 +297,7 @@ impl Rewriter<'_> {
                     module_depth: self.module_depth,
                     bindings: self.bindings.clone(),
                     discardable_assignments: HashMap::new(),
-                    exact_float_comparison: false,
+                    float_expectations: Default::default(),
                 };
                 for stmt in &block.block.stmts {
                     if let syn::Stmt::Local(local) = stmt {

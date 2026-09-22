@@ -296,6 +296,7 @@ impl<'ast> Visit<'ast> for FunctionShape {
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        self.uses_self |= super::format_capture::names(rust_macro).contains("self");
         // Opaque macros such as select! can contain or generate awaits.
         if rust_macro
             .parse_body_with(
@@ -388,5 +389,39 @@ pub(super) fn refresh_exact_float_expectation(attrs: &mut Vec<syn::Attribute>, r
     if required {
         let reason = syn::LitStr::new(EXACT_FLOAT_REASON, proc_macro2::Span::call_site());
         attrs.push(syn::parse_quote!(#[expect(clippy::float_cmp, reason = #reason)]));
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+pub(super) struct FloatExpectations {
+    pub comparison: bool,
+    pub arithmetic: bool,
+    pub midpoint: bool,
+}
+
+pub(super) fn refresh_float_expectations(
+    attrs: &mut Vec<syn::Attribute>,
+    name: &syn::Ident,
+    required: FloatExpectations,
+) {
+    const ROUNDING: &str = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes";
+    // Clippy 1.98 already recognizes these names as exact equality APIs.
+    let name = name.to_string();
+    let equality_api = name == "eq" || name.starts_with("eq_") || name.ends_with("_eq");
+    refresh_exact_float_expectation(attrs, required.comparison && !equality_api);
+    attrs.retain(|attribute| {
+        !attribute.path().is_ident("expect")
+            || !attribute
+                .meta
+                .to_token_stream()
+                .to_string()
+                .contains(ROUNDING)
+    });
+    let reason = syn::LitStr::new(ROUNDING, proc_macro2::Span::call_site());
+    if required.arithmetic {
+        attrs.push(syn::parse_quote!(#[expect(clippy::suboptimal_flops, reason = #reason)]));
+    }
+    if required.midpoint {
+        attrs.push(syn::parse_quote!(#[expect(clippy::manual_midpoint, reason = #reason)]));
     }
 }

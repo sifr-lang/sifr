@@ -797,4 +797,9 @@ pub(super) fn fold_proven_initializers(
     fold_delayed_initializations(statements, &methods.0, &discardable, references);
     fold_initial_assignments(statements, &discardable, references);
     fold_assignment_conditionals(statements, &methods.0, &discardable, references);
+    clippy_cleanup::rewrite_created_boolean_conditionals(statements);
+}
+
+pub(super) fn ambiguous_string_pattern_scopes(file: &syn::File) -> HashSet<String> {
+    option_question_mark::ambiguous_string_pattern_scopes(file)
 }

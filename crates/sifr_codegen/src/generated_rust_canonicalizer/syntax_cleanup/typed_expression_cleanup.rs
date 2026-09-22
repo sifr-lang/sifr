@@ -18,6 +18,7 @@ pub(super) fn rewrite(file: &mut syn::File) {
 pub(crate) struct ProjectTypeFacts {
     iteration_dispatch_closed: bool,
     ambiguous_clone_scopes: std::collections::HashSet<String>,
+    ambiguous_string_pattern_scopes: std::collections::HashSet<String>,
     scalar_shadows: std::collections::HashSet<String>,
     functions: HashMap<String, Callable>,
     structures: HashMap<String, syn::ItemStruct>,
@@ -45,6 +46,9 @@ pub(super) fn collect_project_facts(files: &[syn::File]) -> ProjectTypeFacts {
     ProjectTypeFacts {
         iteration_dispatch_closed: iteration_dispatch_is_closed(files),
         ambiguous_clone_scopes: super::idiom_cleanup::ambiguous_clone_scopes(&combined),
+        ambiguous_string_pattern_scopes: super::idiom_cleanup::ambiguous_string_pattern_scopes(
+            &combined,
+        ),
         scalar_shadows: collect_scalar_shadows(&combined),
         functions,
         structures,
@@ -55,6 +59,7 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
     Rewriter {
         iteration_dispatch_closed: facts.iteration_dispatch_closed,
         ambiguous_clone_scopes: &facts.ambiguous_clone_scopes,
+        ambiguous_string_pattern_scopes: &facts.ambiguous_string_pattern_scopes,
         scalar_shadows: &facts.scalar_shadows,
         functions: &facts.functions,
         structures: &facts.structures,
@@ -63,7 +68,7 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
         module_depth: 0,
         bindings: HashMap::new(),
         discardable_assignments: HashMap::new(),
-        exact_float_comparison: false,
+        float_expectations: Default::default(),
     }
     .visit_file_mut(file);
 }
@@ -78,6 +83,7 @@ include!("typed_string_cleanup.rs");
 struct Rewriter<'facts> {
     iteration_dispatch_closed: bool,
     ambiguous_clone_scopes: &'facts std::collections::HashSet<String>,
+    ambiguous_string_pattern_scopes: &'facts std::collections::HashSet<String>,
     scalar_shadows: &'facts std::collections::HashSet<String>,
     functions: &'facts HashMap<String, Callable>,
     structures: &'facts HashMap<String, syn::ItemStruct>,
@@ -87,7 +93,7 @@ struct Rewriter<'facts> {
     // Unknown shadowing bindings have a None entry, never an outer type.
     bindings: HashMap<String, Option<syn::Type>>,
     discardable_assignments: HashMap<String, bool>,
-    exact_float_comparison: bool,
+    float_expectations: crate::generated_rust_canonicalizer::source_expectations::FloatExpectations,
 }
 
 include!("typed_type_shapes.rs");
@@ -388,7 +394,7 @@ impl VisitMut for Rewriter<'_> {
     fn visit_item_fn_mut(&mut self, function: &mut syn::ItemFn) {
         let outer = std::mem::take(&mut self.bindings);
         let outer_assignments = std::mem::take(&mut self.discardable_assignments);
-        let outer_float = std::mem::take(&mut self.exact_float_comparison);
+        let outer_float = std::mem::take(&mut self.float_expectations);
         self.scope.push(function.sig.ident.to_string());
         for input in &function.sig.inputs {
             if let syn::FnArg::Typed(input) = input {
@@ -400,17 +406,18 @@ impl VisitMut for Rewriter<'_> {
         self.bindings = outer;
         self.remove_proven_dead_assignments(&mut function.block);
         self.discardable_assignments = outer_assignments;
-        crate::generated_rust_canonicalizer::source_expectations::refresh_exact_float_expectation(
+        crate::generated_rust_canonicalizer::source_expectations::refresh_float_expectations(
             &mut function.attrs,
-            self.exact_float_comparison,
+            &function.sig.ident,
+            self.float_expectations,
         );
-        self.exact_float_comparison = outer_float;
+        self.float_expectations = outer_float;
     }
 
     fn visit_impl_item_fn_mut(&mut self, function: &mut syn::ImplItemFn) {
         let outer = std::mem::take(&mut self.bindings);
         let outer_assignments = std::mem::take(&mut self.discardable_assignments);
-        let outer_float = std::mem::take(&mut self.exact_float_comparison);
+        let outer_float = std::mem::take(&mut self.float_expectations);
         if let Some(ty) = &self.self_type
             && function.sig.receiver().is_some()
         {
@@ -426,11 +433,12 @@ impl VisitMut for Rewriter<'_> {
         self.bindings = outer;
         self.remove_proven_dead_assignments(&mut function.block);
         self.discardable_assignments = outer_assignments;
-        crate::generated_rust_canonicalizer::source_expectations::refresh_exact_float_expectation(
+        crate::generated_rust_canonicalizer::source_expectations::refresh_float_expectations(
             &mut function.attrs,
-            self.exact_float_comparison,
+            &function.sig.ident,
+            self.float_expectations,
         );
-        self.exact_float_comparison = outer_float;
+        self.float_expectations = outer_float;
     }
 
     fn visit_block_mut(&mut self, block: &mut syn::Block) {
@@ -486,7 +494,7 @@ impl VisitMut for Rewriter<'_> {
 
     fn visit_expr_binary_mut(&mut self, binary: &mut syn::ExprBinary) {
         visit_mut::visit_expr_binary_mut(self, binary);
-        self.exact_float_comparison |= self.requires_exact_float_comparison(binary);
+        self.float_expectations.comparison |= self.requires_exact_float_comparison(binary);
         if matches!(binary.op, syn::BinOp::Eq(_) | syn::BinOp::Ne(_))
             && [&binary.left, &binary.right].iter().all(|value| {
                 self.ty(value).is_some_and(|ty| {
@@ -722,6 +730,7 @@ impl VisitMut for Rewriter<'_> {
         self.rewrite_standard_lazy_fallback(expression);
         self.rewrite_standard_copy_iterator(expression);
         self.rewrite_typed_string_clones(expression);
+        self.record_source_float_arithmetic(expression);
         self.rewrite_inert_parent_field_clone(expression);
         if let Some(ty) = self.ty(expression) {
             self.rewrite_vector_collect(expression, &ty);
@@ -823,7 +832,10 @@ impl VisitMut for Rewriter<'_> {
             && !self.scalar_shadowed("SifrInt")
             && matches!(
                 call.receiver.as_ref(),
-                syn::Expr::Call(_) | syn::Expr::MethodCall(_) | syn::Expr::Macro(_)
+                syn::Expr::Call(_)
+                    | syn::Expr::MethodCall(_)
+                    | syn::Expr::Macro(_)
+                    | syn::Expr::Block(_)
             )
             && self
                 .ty(&call.receiver)
@@ -845,6 +857,10 @@ impl VisitMut for Rewriter<'_> {
                 Some("assert_eq" | "assert_ne")
             ) && arguments.len() >= 2
             {
+                if self.clone_is_unambiguous() {
+                    self.float_expectations.comparison |=
+                        self.requires_exact_float_operands(&arguments[0], &arguments[1]);
+                }
                 self.align_comparison_references(&mut arguments);
             }
             self.borrow_inert_macro_fields(macro_, &mut arguments);

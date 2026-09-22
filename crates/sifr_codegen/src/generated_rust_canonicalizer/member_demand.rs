@@ -201,7 +201,10 @@ fn collect_enum_variants(items: &[syn::Item]) -> HashMap<String, HashSet<String>
 fn collect_trait_methods(items: &[syn::Item]) -> HashMap<String, HashSet<String>> {
     let mut traits = HashMap::<String, HashSet<String>>::new();
     for item in items {
-        if let syn::Item::Trait(trait_) = item {
+        if let syn::Item::Trait(trait_) = item
+            && !opaque_methods::is_opaque_extension_trait(&trait_.ident.to_string())
+        {
+            // Generated opaque methods have one project-wide demand owner.
             traits.entry(trait_.ident.to_string()).or_default().extend(
                 trait_.items.iter().filter_map(|item| match item {
                     syn::TraitItem::Fn(method) => Some(method.sig.ident.to_string()),

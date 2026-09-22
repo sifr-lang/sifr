@@ -684,3 +684,71 @@ fn borrowed_projection_keeps_the_snapshot_before_sibling_mutation() {
     "#,
     );
 }
+
+#[test]
+fn string_pattern_cleanup_preserves_collection_and_custom_receivers() {
+    canonical_and_run(r#"
+        use std::collections::HashSet;
+        struct Custom;
+        impl Custom { fn contains(&self, pattern: &str) -> bool { pattern == "a" } }
+        fn main() {
+            let values: HashSet<String> = [String::from("a")].into_iter().collect();
+            assert!(values.contains("a"));
+            assert!(Custom.contains("a"));
+            let text = String::from("alpha");
+            assert!(text.contains("a"));
+        }
+    "#);
+}
+
+#[test]
+fn string_pattern_cleanup_preserves_extension_trait_dispatch() {
+    canonical_and_run(r#"
+        trait Pattern { fn contains(&self, pattern: &str) -> bool; }
+        impl Pattern for String { fn contains(&self, pattern: &str) -> bool { pattern == "absent" } }
+        fn main() {
+            let text = String::from("alpha");
+            assert!(!text.contains("a"));
+            assert!(text.contains("absent"));
+        }
+    "#);
+}
+
+#[test]
+fn implicit_self_format_capture_keeps_receiver_expectations_precise() {
+    let output = canonical_and_compile(r#"
+        #[derive(Debug)] pub struct Value;
+        impl Value { pub fn name(&self) -> String { format!("{self:?}") } }
+    "#);
+    assert!(!output.contains("clippy::unused_self"), "{output}");
+}
+
+#[test]
+fn standard_operator_ufcs_does_not_keep_unrelated_opaque_method() {
+    let output = canonical_and_compile(r#"
+        struct Value;
+        trait SifrGeneratedOpaqueExampleMethods {
+            fn keep(&self) -> i32;
+            fn sub(&self) -> i32;
+        }
+        impl SifrGeneratedOpaqueExampleMethods for Value {
+            fn keep(&self) -> i32 { 3 }
+            fn sub(&self) -> i32 { 9 }
+        }
+        fn main() {
+            assert_eq!(Value.keep(), 3);
+            assert_eq!(::std::ops::Sub::sub(7, 2), 5);
+        }
+    "#);
+    assert!(!output.contains("fn sub("), "{output}");
+}
+
+#[test]
+fn receiver_ufcs_keeps_demanded_opaque_method() {
+    canonical_and_run(r#"
+        struct Value;
+        trait SifrGeneratedOpaqueExampleMethods { fn sub(&self) -> i32; }
+        impl SifrGeneratedOpaqueExampleMethods for Value { fn sub(&self) -> i32 { 9 } }
+        fn main() { assert_eq!(Value::sub(&Value), 9); }
+    "#);
+}
