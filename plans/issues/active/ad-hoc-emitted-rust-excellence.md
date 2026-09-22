@@ -4,7 +4,7 @@ Status: active
 
 ## Retained Item 12 reconciliation (2026-09-22)
 
-Status: implementation and named qualification in progress; not merged or closed.
+Status: retained Item 12 blocked by externally owned DX.9 native Cargo reuse; not merged or closed.
 The current assignment authorizes only retained Item 12. It supersedes historical
 per-item broad-gate and one-shot limits: this intermediate implementation receives
 focused/named validation and scoped Opus review; the subsequent integration
@@ -56,6 +56,41 @@ repair that unrelated documentation. Owned taxonomy findings are corrected here.
 The tracked three-byte Untitled fixture artifact originated in c9e5aba72;
 it has no .sifr test contract and is removed under the explicit deferred row.
 No unexplained ignored fixture-root artifacts were found.
+
+### Retained Item 12 blocker handoff (2026-09-22)
+
+Implementation candidate `e7fe5cf1f19a7a09bc70a9ba8a1153000f9baf9e` on
+`codex/emitted-rust-retained12-20260922` repairs the native `0053` double move
+by routing logically copied named assignments through scoped ownership
+lowering. Compiler SHA-256
+`b27322843de1a49a8a6e9c42f633ce94ffa7223daa4aaf681e6ac9f24724d7c4`.
+The tightened codegen assignment regression and updated simple-path contract
+pass; the last full codegen invocation had 1,704 passes and one obsolete
+expectation, corrected and rerun as a passing focused test. Six focused native
+cases pass, including `0053_maximum_subarray_v2`, and the selected generated
+quality entry passes strict Clippy with zero diagnostics. Format, HIR,
+file-size and diff checks pass. No implementation review, PR or broad gate has
+run. The known untracked submodule `.sifrbuildinfo` cache remains preserved.
+
+Full native algorithmic qualification stopped after 65 passes at `0071` on a
+stale generated Cargo lock. `0071` passed after archiving only that owned lock;
+`0072` then failed the same way when the shared generated root switched back
+to a runtime dependency, and passed after archiving that lock. The exact DX.9
+mechanism and receipts are recorded in
+[native Cargo reuse follow-ups](ad-hoc-native-cargo-reuse-followups.md#dx9-f7-generated-native-root-lock-drift--2026-09-22).
+The independent read-only companion freshness check also reported seven
+stale emitted files: `extended_itertools`, `iterator_basics`,
+`iterators_and_randomness`, `pure_stdlib`, `sentinel_values`, `statistics`, and
+`text_and_patterns`. Its failed receipt is
+`/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/freshness-compiler43.log`.
+These in-scope generated outputs remain to be refreshed through the compiler
+when Item 12 resumes; none was hand-edited or updated in this blocked turn.
+The failed native runs are preserved as failures. This external driver cache
+contract blocks Item 12 full native evidence; no driver fix, acceptance bypass
+or whole-phase review belongs to this candidate. The next action is a separate
+DX owner repair, followed by Item 12 qualification on the repaired base using
+this preserved worktree and candidate. Reuse earlier passes only where their
+compiler, configuration and validation inputs remain unchanged.
 
 ## Items 12D/12E/12F closure (2026-09-22)
 
