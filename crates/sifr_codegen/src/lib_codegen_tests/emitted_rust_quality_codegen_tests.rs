@@ -697,3 +697,76 @@ def observe[T](value: T | None) -> None:
         "{generated}"
     );
 }
+
+#[test]
+fn stored_iterator_borrows_survive_later_source_uses() {
+    for construction in ["iter(values)", "filter(lambda n: n > 0, values)"] {
+        let generated = generate_rust_from_source(&format!(
+            r#"
+def retained() -> list[int]:
+    values: list[int] = [1, 2, 3]
+    pending: Iterator[int] = {construction}
+    assert next(pending) == 1
+    return list(reversed(values))
+"#
+        ));
+        assert!(!generated.contains("(values).into_iter()"), "{generated}");
+        assert!(!generated.contains("values.into_iter()"), "{generated}");
+    }
+}
+
+#[test]
+fn iterator_construction_can_consume_a_final_source_use() {
+    let generated = generate_rust_from_source(
+        r#"
+def final_source() -> list[int]:
+    values: list[int] = [1, 2, 3]
+    pending: Iterator[int] = iter(values)
+    return list(pending)
+"#,
+    );
+    assert!(
+        generated.contains("(values).into_iter()") || generated.contains("values.into_iter()"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn iterable_storage_avoids_owned_vec_round_trips() {
+    let generated = generate_rust_from_source(
+        r#"
+def adapt(own values: Iterator[int]) -> Iterable[int]:
+    return values
+
+def materialize(own values: Iterator[int]) -> list[int]:
+    stored: Iterable[int] = adapt(values)
+    return list(stored)
+"#,
+    );
+    assert!(
+        !generated.contains("into_iter().collect::<Vec<_>>()"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("values.collect::<Vec<_>>()"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn typed_bytes_iterators_preserve_reuse_without_identity_casts() {
+    let generated = generate_rust_from_source(
+        r#"
+def reused(payload: bytes) -> list[uint8]:
+    values: list[uint8] = list(iter(payload))
+    assert len(payload) > 0
+    return values
+
+def consumed(own payload: bytes) -> list[uint8]:
+    return list(iter(payload))
+"#,
+    );
+    assert!(!generated.contains(" as u8"), "{generated}");
+    assert!(generated.contains(".copied()"), "{generated}");
+    assert!(generated.contains(".into_iter()"), "{generated}");
+}

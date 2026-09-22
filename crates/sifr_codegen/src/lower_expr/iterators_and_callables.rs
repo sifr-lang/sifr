@@ -114,48 +114,10 @@ pub(super) fn try_lower_simple_iter_source_expr(iter_expr: &HirExpr) -> Option<R
                 plan.yield_mode,
             ),
         }),
-        Type::Bytes => Some(match plan.source_access_mode {
-            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_source),
-                    method: "into_iter".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "__byte".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__byte".to_string())),
-                        ty: RustType::Named("u8".to_string()),
-                    }),
-                    is_move: false,
-                }],
-            },
-            crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_source),
-                    method: "iter".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "__byte".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "__byte".to_string(),
-                        )))),
-                        ty: RustType::Named("u8".to_string()),
-                    }),
-                    is_move: false,
-                }],
-            },
-        }),
+        Type::Bytes => Some(crate::helpers::bytes_iterator_expr(
+            lowered_source,
+            plan.source_access_mode,
+        )),
         Type::Str => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(lowered_source),

@@ -170,3 +170,24 @@ fn collect_mapped_storage(
         args: Vec::new(),
     }
 }
+
+/// Bytes use u8 storage in every iterator path; iteration does not convert elements.
+pub(crate) fn bytes_iterator_expr(value: RustExpr, access: super::SourceAccessMode) -> RustExpr {
+    let iter = RustExpr::MethodCall {
+        receiver: Box::new(value),
+        method: match access {
+            super::SourceAccessMode::Consume => "into_iter",
+            super::SourceAccessMode::Preserve => "iter",
+        }
+        .to_string(),
+        args: Vec::new(),
+    };
+    match access {
+        super::SourceAccessMode::Consume => iter,
+        super::SourceAccessMode::Preserve => RustExpr::MethodCall {
+            receiver: Box::new(iter),
+            method: "copied".to_string(),
+            args: Vec::new(),
+        },
+    }
+}

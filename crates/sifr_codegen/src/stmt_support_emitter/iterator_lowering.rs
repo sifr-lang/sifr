@@ -492,48 +492,9 @@ impl RustEmitter {
                     )
                 }
             },
-            Type::Bytes => match plan.source_access_mode {
-                crate::helpers::SourceAccessMode::Consume => crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(lowered_source),
-                        method: "into_iter".to_string(),
-                        args: vec![],
-                    }),
-                    method: "map".to_string(),
-                    args: vec![crate::RustExpr::Closure {
-                        params: vec![crate::RustParam::Named {
-                            name: "__byte".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::Ident("__byte".to_string())),
-                            ty: crate::RustType::Named("u8".to_string()),
-                        }),
-                        is_move: false,
-                    }],
-                },
-                crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(lowered_source),
-                        method: "iter".to_string(),
-                        args: vec![],
-                    }),
-                    method: "map".to_string(),
-                    args: vec![crate::RustExpr::Closure {
-                        params: vec![crate::RustParam::Named {
-                            name: "__byte".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::Deref(Box::new(
-                                crate::RustExpr::Ident("__byte".to_string()),
-                            ))),
-                            ty: crate::RustType::Named("u8".to_string()),
-                        }),
-                        is_move: false,
-                    }],
-                },
-            },
+            Type::Bytes => {
+                crate::helpers::bytes_iterator_expr(lowered_source, plan.source_access_mode)
+            }
             Type::Dict(_, _) => match plan.source_access_mode {
                 crate::helpers::SourceAccessMode::Consume => crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_source),

@@ -259,6 +259,30 @@ impl BodyAnalysis {
             .get(&stmt_key(stmt))
             .cloned()
             .unwrap_or_default();
+        // A stored lazy iterator can borrow its input until the iterator is
+        // consumed or dropped, even after its final explicit next() call.
+        let stored_value = match stmt {
+            HirStmt::Let { value, .. }
+            | HirStmt::Assign { value, .. }
+            | HirStmt::FieldAssign { value, .. }
+            | HirStmt::NestedFieldAssign { value, .. }
+            | HirStmt::SubscriptAssign { value, .. } => Some(value),
+            _ => None,
+        };
+        if let Some(value) = stored_value
+            && matches!(
+                value.ty().resolve_alias(),
+                sifr_type_system::Type::Iterator(_)
+                    | sifr_type_system::Type::AsyncIterator(_, _)
+                    | sifr_type_system::Type::AsyncGenerator(_, _)
+            )
+        {
+            traversal::walk_expr(value, &mut |expr| {
+                if let HirExpr::Name { name, .. } = expr {
+                    captures.insert(name.clone());
+                }
+            });
+        }
         let mut extend_from = |body: &[HirStmt]| {
             for child in body {
                 if let Some(child_captures) = self.nested_captures.get(&stmt_key(child)) {

@@ -51,6 +51,22 @@ def main():
         cycle_marker: str = read_text(path)
         assert_true(cycle_marker == "cycle-second")
 
+        # Iterable storage eagerly drains the generator before the next statement.
+        eager: Iterable[int] = staged(path)
+        eager_marker: str = read_text(path)
+        assert_true(eager_marker == "second")
+        copied: list[int] = list(eager)
+        copied.append(99)
+        assert_true(str(list(eager)) == "[1, 2]")
+        assert_true(str(copied) == "[1, 2, 99]")
+
+        payload: bytes = b"AZ"
+        first_bytes: list[uint8] = list(iter(payload))
+        assert_true(payload == b"AZ")
+        last_bytes: list[uint8] = list(iter(payload))
+        assert_true(str(first_bytes) == "[65, 90]")
+        assert_true(str(last_bytes) == "[65, 90]")
+
         unbounded: Iterator[int] = count()
         index: int = 0
         current: int | None = None

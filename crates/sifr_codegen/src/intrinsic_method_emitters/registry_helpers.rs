@@ -330,48 +330,7 @@ fn registry_owned_iter_from_lowered(
                 })
             }
         },
-        Type::Bytes => match iter_plan.source_access_mode {
-            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
-                    method: "into_iter".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![crate::RustParam::Named {
-                        name: "__byte".to_string(),
-                        ty: crate::RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__byte".to_string())),
-                        ty: crate::RustType::Named("u8".to_string()),
-                    }),
-                    is_move: false,
-                }],
-            },
-            crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
-                    method: "iter".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![crate::RustParam::Named {
-                        name: "__byte".to_string(),
-                        ty: crate::RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "__byte".to_string(),
-                        )))),
-                        ty: crate::RustType::Named("u8".to_string()),
-                    }),
-                    is_move: false,
-                }],
-            },
-        },
+        Type::Bytes => crate::helpers::bytes_iterator_expr(lowered, iter_plan.source_access_mode),
         Type::Iterator(_) => lowered,
         Type::Range => lowered,
         Type::Str => RustExpr::MethodCall {
@@ -538,7 +497,11 @@ pub(super) fn registry_iterable_to_vec_expr_with_hint(
     } = &iter_expr
         && method == "into_iter"
         && args.is_empty()
-        && registry_expr_is_vec_like(receiver)
+        && (registry_expr_is_vec_like(receiver)
+            || matches!(
+                crate::resolve_alias_type_for_plain_call(expr.ty()),
+                Type::List(_) | Type::Iterable(_)
+            ))
     {
         return Some(*receiver.clone());
     }

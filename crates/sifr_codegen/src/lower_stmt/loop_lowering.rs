@@ -306,48 +306,9 @@ pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -
                 is_move: false,
             }],
         },
-        Type::Bytes => match iter_plan.source_access_mode {
-            crate::helpers::SourceAccessMode::Consume => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
-                    method: "into_iter".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "__byte".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__byte".to_string())),
-                        ty: RustType::Named("u8".to_string()),
-                    }),
-                    is_move: false,
-                }],
-            },
-            crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
-                    method: "iter".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "__byte".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "__byte".to_string(),
-                        )))),
-                        ty: RustType::Named("u8".to_string()),
-                    }),
-                    is_move: false,
-                }],
-            },
-        },
+        Type::Bytes => {
+            crate::helpers::bytes_iterator_expr(lowered_iter, iter_plan.source_access_mode)
+        }
         Type::Tuple(elems) if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) => {
             crate::RustEmitter::lower_homogeneous_tuple_iter_expr(
                 lowered_iter,

@@ -24,9 +24,6 @@ impl BodyAnalysis {
             };
             let stmt_referenced = stmt_summary.referenced;
             subtract_counts(&mut remaining, &stmt_referenced);
-            if let Some(captures) = self.nested_captures.get(&stmt_key(stmt)) {
-                live_nested_captures.extend(captures.iter().cloned());
-            }
             let mut occurrences = HashMap::<String, Vec<(usize, bool, bool)>>::new();
             walk_direct_stmt_exprs(stmt, &mut |expr| {
                 traversal::walk_expr(expr, &mut |candidate| {
@@ -60,6 +57,11 @@ impl BodyAnalysis {
             }
             if statement_has_last_use {
                 self.last_use_statements.insert(stmt_key(stmt));
+            }
+            // Construction may consume a source at its last use. Only later
+            // statements must account for borrows retained by the new value.
+            if let Some(captures) = self.nested_captures.get(&stmt_key(stmt)) {
+                live_nested_captures.extend(captures.iter().cloned());
             }
             let mut child_outer_live = outer_live.clone();
             child_outer_live.extend(live_nested_captures.iter().cloned());
