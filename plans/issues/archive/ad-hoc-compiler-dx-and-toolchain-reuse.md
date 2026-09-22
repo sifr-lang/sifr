@@ -2156,3 +2156,12 @@ it does not replace the underlying Rust, native or protocol evidence.
   binds the original whole-phase review, scoped remediation approval and documentation corrections.
 - **Next action:** stop after this record-only archive update. No remaining Phase DX
   implementation or qualification is deferred; optional followups stay separately owned.
+
+## Documentation Repair — Verification Taxonomy (#3898, 2026-09-22)
+
+- **State:** complete and merged in [PR #3905](https://github.com/sifr-lang/sifr/pull/3905). Documentation candidate `6ea606394bee35b3b192caf23563ab52c346e729`; merge `fe75b1dc7b50351f41b07b820b6344370bf5943b`. The repair changes only `internal_docs/compiler_dx_architecture.md` and `internal_docs/architecture.md`.
+- **Correction:** three active architecture links use a URL-encoded hyphen in the archived evidence filename. Their decoded file and section anchors are unchanged. Link labels now name the DX evidence record and measured results. The taxonomy checker itself is unchanged.
+- **Validation:** the exact `python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py` command passes. The documentation `structure` and `ga-release` suites pass through `python3 verification/areas/documentation/runner.py` after initializing this worktree's pinned nested editor submodules. `python3 scripts/check_file_size_guardrails.py` and `git diff --check` pass. All three decoded link destinations and anchors resolve; GitHub returns HTTP 200 for the encoded path. The initial documentation run failed only because the fresh worktree lacked that nested submodule; it is retained as historical setup evidence, not reclassified as a pass.
+- **Review:** [scoped Claude Opus 5.5 response](https://github.com/sifr-lang/sifr/pull/3905#issuecomment-5784311522) is SATISFIED with no blockers for the exact candidate. Original response: `/home/yaser5/projects/sifr/dx-taxonomy-evidence/6ea606394bee35b3b192caf23563ab52c346e729/scoped-opus-review.md`, SHA-256 `4ab8db53d06ffd69e28b60529cbac6364af292ae24f25c564092f70c99d2493e`.
+- **Deferred follow-up:** [checker policy for archived evidence links #3906](https://github.com/sifr-lang/sifr/issues/3906) owns the review's separate suggestion. It does not block #3898. No full create-PR or merge gate, release qualification, or new whole-phase review is claimed for this documentation repair.
+- **Next action:** stop after this record-only update; no additional DX implementation belongs to this item.

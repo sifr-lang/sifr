@@ -1,6 +1,7 @@
 use super::cargo_resolution::CargoResolutionPolicy;
 use super::materialize::tests::{base_project, test_dependency_plan};
 use super::materialize::{materialize_binary_project_at_path, materialize_binary_project_files};
+use sifr_package::CargoLockMode;
 use sifr_stdlib_manifest::CargoVendorMode;
 use std::path::{Path, PathBuf};
 
@@ -61,6 +62,84 @@ fn dx9_unchanged_materialization_preserves_input_mtimes() {
         })
         .collect();
     assert_eq!(before, after);
+    std::fs::remove_dir_all(root).expect("cleanup");
+}
+
+#[test]
+fn dx9_f7_locked_root_reconciles_alternating_runtime_dependency() {
+    let root = root("locked-manifest-drift");
+    let dependency = root.join("sifr_runtime");
+    std::fs::create_dir_all(dependency.join("src")).expect("runtime source");
+    std::fs::write(
+        dependency.join("Cargo.toml"),
+        "[package]\nname = \"sifr_runtime\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("runtime manifest");
+    std::fs::write(
+        dependency.join("src/lib.rs"),
+        "pub fn value() -> &'static str { \"runtime\" }\n",
+    )
+    .expect("runtime source");
+    let authority = root.join("authority.lock");
+    std::fs::write(&authority, "version = 4\n").expect("lock authority");
+    let policy = CargoResolutionPolicy {
+        application_profile: crate::ApplicationProfile::Release,
+        native_toolchain: CargoResolutionPolicy::resolve_native_toolchain(),
+        lock_mode: CargoLockMode::Locked,
+        cargo_vendor_mode: CargoVendorMode::PackageOwned,
+        authoritative_locks: vec![authority],
+        trusted_vendor_dirs: Vec::new(),
+    };
+    let tools = policy.native_toolchain.as_ref().expect("native toolchain");
+    let family = super::native_storage::NativeFamily::acquire(
+        tools.identity(),
+        &root.display().to_string(),
+        "",
+        "",
+    )
+    .expect("family lease");
+    let project_root = family.project(&root, "same_name").expect("editable root");
+    let target = family.target();
+    for needs_runtime in [false, true, false, true] {
+        let mut plan = test_dependency_plan("dx9-f7");
+        plan.cargo_vendor_mode = CargoVendorMode::PackageOwned;
+        if needs_runtime {
+            plan.retained_direct_dependencies
+                .push(format!("sifr_runtime = {{ path = {dependency:?} }}"));
+        }
+        let mut project = base_project();
+        project.main_rs = if needs_runtime {
+            "fn main() { println!(\"{}\", sifr_runtime::value()); }".to_owned()
+        } else {
+            "fn main() { println!(\"plain\"); }".to_owned()
+        };
+        let report = super::materialize::materialize_binary_project_at_path_with_target(
+            &project_root,
+            "same_name",
+            project,
+            &plan,
+            &policy,
+            &target,
+        )
+        .expect("locked build must reconcile the generated manifest and lock");
+        let output = std::process::Command::new(report.binary_path)
+            .output()
+            .expect("run locked executable");
+        assert!(output.status.success());
+        let expected = if needs_runtime {
+            "runtime\n"
+        } else {
+            "plain\n"
+        };
+        assert_eq!(output.stdout, expected.as_bytes());
+        let lock = std::fs::read_to_string(project_root.join("Cargo.lock"))
+            .expect("prepared generated lock");
+        assert_eq!(lock.contains("name = \"sifr_runtime\""), needs_runtime);
+        assert!(target.is_dir(), "the shared Cargo target must remain warm");
+    }
+    let family_root = family.root.clone();
+    drop(family);
+    std::fs::remove_dir_all(family_root).expect("family cleanup");
     std::fs::remove_dir_all(root).expect("cleanup");
 }
 

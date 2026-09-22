@@ -91,6 +91,35 @@ or whole-phase review belongs to this candidate. The next action is a separate
 DX owner repair, followed by Item 12 qualification on the repaired base using
 this preserved worktree and candidate. Reuse earlier passes only where their
 compiler, configuration and validation inputs remain unchanged.
+## Final integration qualifier deferred (2026-09-22)
+
+**BLOCKED before the full merge profile; no final implementation candidate.**
+At qualification start, main `58437ba07ae0220d4c3c13c8c258cb8a9b8de0be` contains merged
+12D/12E/12F ([PR3897](https://github.com/sifr-lang/sifr/pull/3897),
+`d6e551c4b5cae186114aba2a2e2ec05d80c0e158`) and its record
+([PR3900](https://github.com/sifr-lang/sifr/pull/3900),
+`58437ba07ae0220d4c3c13c8c258cb8a9b8de0be`). Retained Item 12
+implementation `e7fe5cf1f19a7a09bc70a9ba8a1153000f9baf9e` is still
+unmerged, unreviewed and without a PR. Its branch
+`codex/emitted-rust-retained12-20260922` is preserved at blocker-record
+`e1f785a2c1d6f0657ff1a2e678d0e4aefeaf9981`.
+
+The candidate's full native 411-case attempt passed 65 programs, then failed
+at `0071` as a generated native-root `Cargo.lock` fell out of sync when manifest
+dependencies changed. A separate retry of `0072` reproduced the same defect. The externally owned cause and exact logs
+are in [DX9-F7](ad-hoc-native-cargo-reuse-followups.md#dx9-f7-generated-native-root-lock-drift--2026-09-22).
+Seven generated companions also remain stale on the unmerged Item 12 branch;
+see `freshness-compiler43.log` under
+`/home/yaser5/projects/sifr/emitted-rust-retained12-evidence`. The existing
+taxonomy failure is owned by [issue3898](https://github.com/sifr-lang/sifr/issues/3898).
+These failed checks are not passing integration evidence. This qualifier ran
+zero full gates, reviews or implementation merges. Its independent worktree is
+`/home/yaser5/projects/sifr/worktrees/emitted-rust-integration-qualifier-20260922`.
+
+Next: the DX owner repairs F7, retained Item 12 completes native qualification,
+refreshes companions, receives scoped review and merges; only then can a final
+integration qualifier run the full merge profile. Whole-phase closure remains
+separate and unstarted.
 
 ## Items 12D/12E/12F closure (2026-09-22)
 
