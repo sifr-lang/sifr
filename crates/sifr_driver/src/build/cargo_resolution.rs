@@ -142,8 +142,22 @@ pub(super) fn prepare_cargo_resolution(
         }
     }
 
-    if !lock_path.is_file() {
-        let prepared_lock = prepared_lock_path(project_dir, policy, cargo_prefix_args)?;
+    let prepared_lock = prepared_lock_path(project_dir, policy, cargo_prefix_args)?;
+    let marker_path = project_dir.join(".sifr-cargo-resolution");
+    let previous_marker = match std::fs::read_to_string(&marker_path) {
+        Ok(marker) => Some(marker),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => return Err(vec![cargo_resolution_error(error.to_string())]),
+    };
+    let existing_digest = digest_file(&lock_path);
+    let expected_marker = existing_digest
+        .as_ref()
+        .map(|digest| format!("{}\n{digest}\n", prepared_lock.display()));
+    // The editable root outlives one generated manifest. A lock prepared for
+    // the previous manifest cannot be used by a later --locked Cargo build.
+    // The prepared cache key includes the normalized manifest and authorities;
+    // keep the target warm while reconciling only the generated lock.
+    if !lock_path.is_file() || previous_marker.as_deref() != expected_marker.as_deref() {
         if prepared_lock.is_file() {
             std::fs::copy(&prepared_lock, &lock_path).map_err(|error| {
                 vec![cargo_resolution_error(format!(
@@ -180,6 +194,9 @@ pub(super) fn prepare_cargo_resolution(
             lock_path.display()
         ))]
     })?;
+    let marker = format!("{}\n{initial_digest}\n", prepared_lock.display());
+    super::native_storage::write_changed(&marker_path, marker.as_bytes())
+        .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
     Ok(PreparedCargoResolution {
         lock_path,
         initial_digest: Some(initial_digest),
