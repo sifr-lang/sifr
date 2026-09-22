@@ -781,3 +781,21 @@ def copies(values: list[int]) -> int:
     assert!(generated.contains("left = first.clone()"), "{generated}");
     assert!(generated.contains("right = first;"), "{generated}");
 }
+
+#[test]
+fn indexed_list_length_keeps_the_optional_read_boundary() {
+    let generated = generate_rust_from_source(
+        r#"
+def first_row_length(rows: list[list[int]]) -> int:
+    row_count: int = len(rows)
+    if row_count == 0:
+        return 0
+    return len(rows[0])
+"#,
+    );
+    assert!(
+        generated.contains(".as_ref().map_or(0_usize, ::std::vec::Vec::len)"),
+        "{generated}"
+    );
+    assert!(!generated.contains(".cloned().len()"), "{generated}");
+}

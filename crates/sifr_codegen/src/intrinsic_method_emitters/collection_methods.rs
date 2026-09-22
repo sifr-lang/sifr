@@ -243,6 +243,15 @@ impl RustEmitter {
         )?;
         if method == "len"
             && args.is_empty()
+            && matches!(object, HirExpr::Index { object: indexed, .. }
+                if matches!(self.effective_registry_expr_ty(indexed).resolve_alias(), Type::List(_)))
+        {
+            let optional_ty = Type::Union(vec![object_ty.clone(), Type::None]);
+            return methods::lower_method(&optional_ty, method, &object_expr, &[])
+                .map(|lowered| lowered.expr);
+        }
+        if method == "len"
+            && args.is_empty()
             && matches!(object_ty, Type::Str | Type::LiteralStr(_))
         {
             return Some(self.lower_string_len_with_cache(object, object_expr));
