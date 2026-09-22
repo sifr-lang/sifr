@@ -22,6 +22,41 @@ Existing metadata and feature-enabled Python Clippy errors remain owned by
 DX.9's supplemental run found 498 pre-existing errors and zero errors in changed
 source files. The full phase-end gate remains outstanding.
 
+## DX9-F7 generated native root lock drift — 2026-09-22
+
+Owner: driver native storage and Cargo resolution. Retained emitted-Rust Item 12 is
+blocked on this externally owned cache contract; no DX implementation is included
+in the Item 12 candidate.
+
+The Item 12 native 411-case run on compiler `b27322843de1a49a8a6e9c42f633ce94ffa7223daa4aaf681e6ac9f24724d7c4`
+and source candidate `e7fe5cf1f19a7a09bc70a9ba8a1153000f9baf9e` passed its first 65
+programs. `0071_simplify_path.sifr` then failed `SIFR-RUST-CARGO-0001` before
+execution. The owned DX.9 family root at
+`target/sifr-cache/native/families/1a4a2afa0ddbdd835915cc99de2bdb82d65d20fddfd2e23457ca78fe3148a29f/roots/e56034eea35ef70c419f3ad96110cba267f1e8dea310912ab1c6e9783734eb1a`
+had a generated `Cargo.toml` with no dependencies while its retained `Cargo.lock`
+still listed `sifr_runtime`. Moving that obsolete lock to external evidence let
+`0071` pass. The next program, `0072_edit_distance.sifr`, changed the same root
+manifest to require `sifr_runtime`; its lock then contained no dependencies and
+failed with the same diagnostic. Moving that second obsolete lock let `0072`
+pass. The family metadata binds `owner_scope` to the Item 12 worktree. No other
+session owned or used this family during the observations.
+
+The editable root identity is keyed by scope and project name, while generated
+manifest dependencies change among programs in that scope. Constrained Cargo
+resolution only prepares a lock when none exists, so the retained lock and new
+manifest disagree. The DX owner should reconcile lock preparation with changes
+to the generated manifest under the family lease and add a regression that
+alternates dependency-free and runtime-dependent programs in one scope under
+locked resolution. Preserve Cargo target warmth and the no-stale-executable
+failure rule. This is a diagnosis and requested owner action, not an accepted
+Item 12 workaround or a claim of full native qualification.
+
+Evidence: `/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/algorithmic-native-compiler43-full411.log`,
+`native-full-1790108632432039626/native-matrix.json`, both `0071`/`0072`
+failed logs, `0071-stale-generated-Cargo.lock`, `0072-stale-generated-Cargo.lock`,
+and both `0071-cache-repair.log`/`0072-cache-repair.log`. The failed 411 run
+remains failed; no broad gate or review was used.
+
 ## DX9-F6 actual automatic CI evidence — 2026-09-20
 
 Restored workflow admission reaches Windows native SQL qualification and exposes
