@@ -63,6 +63,7 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
         scalar_shadows: &facts.scalar_shadows,
         functions: &facts.functions,
         structures: &facts.structures,
+        local_structures: HashMap::new(),
         self_type: None,
         scope: Vec::new(),
         module_depth: 0,
@@ -76,6 +77,7 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
 include!("typed_initializer_cleanup.rs");
 include!("typed_expression_facts.rs");
 include!("typed_control_flow_facts.rs");
+include!("typed_local_type_facts.rs");
 include!("typed_generic_calls.rs");
 include!("typed_expression_types.rs");
 include!("typed_iterator_facts.rs");
@@ -89,6 +91,7 @@ struct Rewriter<'facts> {
     scalar_shadows: &'facts std::collections::HashSet<String>,
     functions: &'facts HashMap<String, Callable>,
     structures: &'facts HashMap<String, syn::ItemStruct>,
+    local_structures: HashMap<String, Option<syn::ItemStruct>>,
     self_type: Option<syn::Type>,
     scope: Vec<String>,
     module_depth: usize,

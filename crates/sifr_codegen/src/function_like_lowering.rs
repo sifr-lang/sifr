@@ -145,6 +145,8 @@ impl RustEmitter {
             }
         }
 
+        lowered_body.extend(Self::owned_assertion_drop(func));
+
         self.current_return_type = saved_return_type;
         self.mutated_vars = saved_mutated_vars;
         self.borrowed_params = saved_borrowed_params;

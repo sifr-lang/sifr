@@ -679,3 +679,21 @@ def total() -> int:
     );
     assert!(generated.contains("= values;"), "{generated}");
 }
+
+#[test]
+fn generic_owned_optional_assertions_keep_explicit_consumption() {
+    let generated = generate_rust_from_source(
+        r#"
+def consume[T](own value: T | None) -> None:
+    assert value is not None
+
+def observe[T](value: T | None) -> None:
+    assert value is not None
+"#,
+    );
+    assert_eq!(
+        generated.matches("std::mem::drop(value)").count(),
+        1,
+        "{generated}"
+    );
+}

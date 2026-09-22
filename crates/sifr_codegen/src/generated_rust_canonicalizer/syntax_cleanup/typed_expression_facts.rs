@@ -143,6 +143,9 @@ impl Rewriter<'_> {
         if owner.qself.is_some() {
             return None;
         }
+        if local_type_name(&owner.path).is_some_and(|name| self.local_structures.contains_key(&name)) {
+            return None;
+        }
         let mut path = owner.path.clone();
         path.segments.push(syn::PathSegment::from(method.clone()));
         self.resolve(&path)
@@ -150,6 +153,7 @@ impl Rewriter<'_> {
 
     fn expected_block(&mut self, block: &mut syn::Block, expected: &syn::Type) {
         let outer = self.bindings.clone();
+        let outer_types = self.enter_local_type_scope(block);
         let returned_binding = block.stmts.last().and_then(|statement| match statement {
             syn::Stmt::Expr(syn::Expr::Path(path), None) => {
                 path.path.get_ident().map(ToString::to_string)
@@ -182,6 +186,7 @@ impl Rewriter<'_> {
             }
         }
         self.bindings = outer;
+        self.local_structures = outer_types;
     }
     fn align_comparison_references(
         &self,
@@ -261,11 +266,19 @@ impl Rewriter<'_> {
             .iter()
             .map(|segment| segment.ident.to_string())
             .collect::<Vec<_>>();
-        let structure = (0..=self.scope.len()).rev().find_map(|depth| {
-            let mut key = self.scope[..depth].to_vec();
-            key.extend(parts.iter().cloned());
-            self.structures.get(&key.join("::"))
-        })?;
+        let structure = if let Some(local) = local_type_name(&owner.path)
+            .and_then(|name| self.local_structures.get(&name)) {
+            if self.local_structures.contains_key("*") { return None; }
+            let structure = local.as_ref()?;
+            if !structure.generics.params.is_empty() { return None; }
+            structure
+        } else {
+            (0..=self.scope.len()).rev().find_map(|depth| {
+                let mut key = self.scope[..depth].to_vec();
+                key.extend(parts.iter().cloned());
+                self.structures.get(&key.join("::"))
+            })?
+        };
         let field_type = match &field.member {
             syn::Member::Named(name) => structure
                 .fields

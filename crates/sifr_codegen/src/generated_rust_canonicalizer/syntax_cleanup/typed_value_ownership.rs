@@ -24,6 +24,9 @@ impl Rewriter<'_> {
         if path.qself.is_some() {
             return false;
         }
+        if local_type_name(&path.path).is_some_and(|name| self.local_structures.contains_key(&name)) {
+            return false;
+        }
         if inside_record && path.path.is_ident("Self") {
             return true;
         }
@@ -147,6 +150,7 @@ impl Rewriter<'_> {
     }
 
     fn cleanup_block_with_fresh(&mut self, block: &mut syn::Block, mut fresh_locals: std::collections::HashSet<String>) {
+        let outer_types = self.enter_local_type_scope(block);
         self.fold_proven_initializers(block);
         let outer = self.bindings.clone();
         super::idiom_cleanup::remove_known_vec_length_bindings(&mut block.stmts, |ty| {
@@ -227,5 +231,6 @@ impl Rewriter<'_> {
             block.stmts.remove(index);
         }
         self.bindings = outer;
+        self.local_structures = outer_types;
     }
 }

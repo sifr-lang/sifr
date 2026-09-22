@@ -616,6 +616,8 @@ impl RustEmitter {
             ));
         }
 
+        lowered_body.extend(Self::owned_assertion_drop(func));
+
         self.body_analysis = saved_body_analysis;
         self.last_use_move_exprs = saved_last_use_move_exprs;
         self.current_return_type = saved_return_type;

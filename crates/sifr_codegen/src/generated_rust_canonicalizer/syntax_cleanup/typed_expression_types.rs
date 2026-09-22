@@ -1,6 +1,7 @@
 impl Rewriter<'_> {
     fn ty(&self, expression: &syn::Expr) -> Option<syn::Type> {
         match expression {
+            syn::Expr::Struct(expression) => self.local_structure_type(expression),
             syn::Expr::Match(expression) => self.match_result_type(expression),
             syn::Expr::Closure(closure) => {
                 let inputs = closure
@@ -269,6 +270,7 @@ impl Rewriter<'_> {
                             scalar_shadows: self.scalar_shadows,
                             functions: self.functions,
                             structures: self.structures,
+            local_structures: self.local_structures.clone(),
                             self_type: self.self_type.clone(),
                             scope: self.scope.clone(),
                             module_depth: self.module_depth,
@@ -297,6 +299,7 @@ impl Rewriter<'_> {
                     scalar_shadows: self.scalar_shadows,
                     functions: self.functions,
                     structures: self.structures,
+            local_structures: self.local_structures.clone(),
                     self_type: self.self_type.clone(),
                     scope: self.scope.clone(),
                     module_depth: self.module_depth,

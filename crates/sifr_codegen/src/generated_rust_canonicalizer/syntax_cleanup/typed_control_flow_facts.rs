@@ -8,6 +8,7 @@ impl Rewriter<'_> {
             scalar_shadows: self.scalar_shadows,
             functions: self.functions,
             structures: self.structures,
+            local_structures: self.local_structures.clone(),
             self_type: self.self_type.clone(),
             scope: self.scope.clone(),
             module_depth: self.module_depth,

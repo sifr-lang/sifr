@@ -321,3 +321,148 @@ fn standard_option_fallback_result_retains_owned_payload_facts() {
     let canonical = canonicalize_generated_rust_source(source).expect("typed Option fallback");
     assert!(!canonical.contains("value.clone()"), "{canonical}");
 }
+
+
+#[test]
+fn local_context_guard_fields_keep_entered_reference_contracts() {
+    let source = r#"
+        static DROPS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        struct File;
+        impl File {
+            fn enter(&self) -> &Self { self }
+            fn write(&self, text: &str) { assert_eq!(text, "works"); }
+        }
+        fn main() {
+            {
+                struct Guard { ctx: File }
+                impl Drop for Guard {
+                    fn drop(&mut self) { DROPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed); }
+                }
+                let guard = Guard { ctx: File };
+                let file = guard.ctx.enter();
+                file.write(&"works".to_string());
+            }
+            assert_eq!(DROPS.load(std::sync::atomic::Ordering::Relaxed), 1);
+        }
+    "#;
+    canonical_and_run(source);
+    let canonical = canonicalize_generated_rust_source(source).expect("local guard facts");
+    assert!(!canonical.contains(r#""works".to_string()"#), "{canonical}");
+}
+
+#[test]
+fn local_type_shadow_keeps_its_distinct_string_receiving_contract() {
+    let source = r#"
+        struct File;
+        impl File { fn write(&self, text: &str) { assert_eq!(text, "works"); } }
+        fn main() {
+            struct File;
+            impl File { fn enter(&self) -> &Self { self }
+                fn write(&self, text: &String) { assert!(text.capacity() >= 5); } }
+            struct Guard { ctx: File }
+            let guard = Guard { ctx: File };
+            let file = guard.ctx.enter();
+            file.write(&"works".to_string());
+        }
+    "#;
+    canonical_and_run(source);
+    let canonical = canonicalize_generated_rust_source(source).expect("local shadow contracts");
+    assert!(canonical.contains(r#""works".to_string()"#), "{canonical}");
+}
+
+#[test]
+fn explicit_owned_assertion_consumption_preserves_payload_drop_timing() {
+    canonical_and_run(r#"
+        #[derive(Clone)] struct Payload(std::sync::Arc<std::sync::atomic::AtomicUsize>);
+        impl Drop for Payload {
+            fn drop(&mut self) { self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst); }
+        }
+        fn consume_some<T>(value: Option<T>) { assert!(value.is_some()); std::mem::drop(value); }
+        fn consume_none<T>(value: Option<T>) { assert!(value.is_none()); std::mem::drop(value); }
+        fn main() {
+            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            consume_some(Some(Payload(drops.clone())));
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
+            drops.store(0, std::sync::atomic::Ordering::SeqCst);
+            let observed = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(usize::MAX));
+            let observed_hook = observed.clone();
+            let drops_hook = drops.clone();
+            let previous = std::panic::take_hook();
+            std::panic::set_hook(Box::new(move |_| {
+                observed_hook.store(drops_hook.load(std::sync::atomic::Ordering::SeqCst),
+                    std::sync::atomic::Ordering::SeqCst);
+            }));
+            let result = std::panic::catch_unwind(|| consume_none(Some(Payload(drops.clone()))));
+            std::panic::set_hook(previous);
+            assert!(result.is_err());
+            assert_eq!(observed.load(std::sync::atomic::Ordering::SeqCst), 0);
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
+        }
+    "#);
+}
+
+#[test]
+fn local_imports_keep_module_definitions_and_distinct_guard_contracts() {
+    for imports in [
+        "use other::File;",
+        "use other::{File as Imported}; type File = Imported;",
+        "use other::*;",
+    ] {
+        for retained in ["", "let _ = std::hint::black_box(other::File); let _ = std::hint::black_box(crate::File);"] {
+            let source = format!(r#"
+                struct File;
+                impl File {{
+                    fn enter(&self) -> &Self {{ self }}
+                    fn write(&self, text: &str) {{ assert_eq!(text, "works"); }}
+                }}
+                mod other {{
+                    pub struct File;
+                    impl File {{
+                        pub fn enter(&self) -> &Self {{ self }}
+                        pub fn write(&self, text: &String) {{ assert!(text.capacity() >= 5); }}
+                    }}
+                }}
+                fn main() {{
+                    {imports}
+                    {retained}
+                    struct Guard {{ ctx: File }}
+                    let guard: Guard = Guard {{ ctx: File }};
+                    let file = guard.ctx.enter();
+                    file.write(&"works".to_string());
+                }}
+            "#);
+            // A type alias is not a unit-struct constructor.
+            let source = if imports.contains("Imported") {
+                source.replace("ctx: File };", "ctx: Imported };")
+            } else { source };
+            canonical_and_run(&source);
+            let canonical = canonicalize_generated_rust_source(&source).expect("local import contracts");
+            assert!(canonical.contains(r#""works".to_string()"#), "{canonical}");
+        }
+    }
+}
+
+#[test]
+fn generic_and_macro_declared_local_guards_keep_distinct_contracts() {
+    for declaration in [
+        "struct Guard<T> { ctx: File, extra: T }",
+        "macro_rules! local_file { () => { struct File; impl File { fn enter(&self) -> &Self { self } fn write(&self, text: &String) { assert!(text.capacity() >= 5); } } } } local_file!(); struct Guard<T> { ctx: File, extra: T }",
+    ] {
+        let source = format!(r#"
+            struct File;
+            impl File {{
+                fn enter(&self) -> &Self {{ self }}
+                fn write(&self, text: &str) {{ assert_eq!(text, "works"); }}
+            }}
+            fn main() {{
+                {declaration}
+                let _ = std::hint::black_box(crate::File);
+                let guard: Guard<u8> = Guard {{ ctx: File, extra: 1 }};
+                let file = guard.ctx.enter();
+                file.write(&"works".to_string());
+                assert_eq!(guard.extra, 1);
+            }}
+        "#);
+        canonical_and_run(&source);
+    }
+}
