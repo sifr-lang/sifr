@@ -13,7 +13,7 @@ The target architecture requires prebuilt standard-library metadata, native arti
 
 This document owns architectural behavior and invariants. The companion implementation plan owns scope, sequencing, status, and acceptance evidence. Neither document owns a running experiment diary. Existing subsystem documents remain authoritative for language semantics, package trust, SQL and Python contracts, runtime safety, and release authorization. A planned integration must update a conflicting contract explicitly rather than bypass it.
 
-The command and ownership contracts below remain required. The [canonical phase evidence](../plans/issues/archive/ad-hoc-compiler-dx-and-toolchain-reuse.md#execution-status) records merged capabilities and qualification; whole-phase review identified the missing `--trace-dir` surface, now implemented and qualified by [remediation #3871](https://github.com/sifr-lang/sifr/pull/3871). The baseline comparison is historical. Naming changes must preserve capabilities and ownership boundaries.
+The command and ownership contracts below remain required. The [DX evidence record](../plans/issues/archive/ad%2Dhoc-compiler-dx-and-toolchain-reuse.md#execution-status) records merged capabilities and qualification; whole-phase review identified the missing `--trace-dir` surface, now implemented and qualified by [remediation #3871](https://github.com/sifr-lang/sifr/pull/3871). The baseline comparison is historical. Naming changes must preserve capabilities and ownership boundaries.
 
 ### 1.1 Historical implementation baseline
 
@@ -957,7 +957,7 @@ Build/package preparation is reported separately but never omitted from the rele
 
 ### 14.2 Product targets
 
-The following are acceptance targets. Actual measured scopes and results are recorded in the [DX.15 qualification](../plans/issues/archive/ad-hoc-compiler-dx-and-toolchain-reuse.md#dx15-completed-qualification); the table does not extend those claims to other workloads:
+The following are acceptance targets. Actual measured scopes and results are recorded in the [DX.15 measured results](../plans/issues/archive/ad%2Dhoc-compiler-dx-and-toolchain-reuse.md#dx15-completed-qualification); the table does not extend those claims to other workloads:
 
 | Workload | Target |
 | --- | --- |
