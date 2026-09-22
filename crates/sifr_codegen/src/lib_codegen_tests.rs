@@ -83,6 +83,8 @@ mod exact_integer_architecture_codegen_tests;
 #[cfg(test)]
 mod generic_inheritance_codegen_tests;
 #[cfg(test)]
+mod integer_field_augassign_codegen_tests;
+#[cfg(test)]
 mod iterators_and_generators_codegen_tests;
 #[cfg(test)]
 mod multi_module_stdlib_feature_tests;

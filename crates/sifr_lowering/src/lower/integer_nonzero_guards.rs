@@ -128,7 +128,7 @@ fn name_if_exact_int(expr: &Expr, ctx: &LowerCtx) -> Option<String> {
 }
 
 fn is_exact_int_like(ty: &Type) -> bool {
-    matches!(ty, Type::Int | Type::LiteralInt(_))
+    matches!(ty.resolve_alias(), Type::Int | Type::LiteralInt(_))
 }
 
 fn is_zero_integer_literal(expr: &Expr) -> bool {
