@@ -402,6 +402,8 @@ impl RustEmitter {
 
         if matches!(object_ty, Type::List(_) | Type::Set(_))
             && method == "contains"
+            && !matches!(object_ty, Type::List(element_ty)
+                if matches!(element_ty.resolve_alias(), Type::Str | Type::LiteralStr(_)))
             && let ([argument], [lowered_argument]) = (args, arg_exprs.as_slice())
             && matches!(argument, HirExpr::Name { name, .. }
                 if self.borrowed_params.contains(name)

@@ -8,6 +8,7 @@ mod dict;
 mod dispatch;
 mod fixed_width;
 mod list;
+pub(crate) use list::lower_string_contains;
 mod set;
 mod string;
 
@@ -96,7 +97,7 @@ fn lower_method_impl(
         (Type::List(_), "reverse") => list::lower_reverse(object, args),
         (Type::List(elem), "sort") => list::lower_sort(object, elem, args),
         (Type::List(_), "count") => list::lower_count(object, args),
-        (Type::List(_), "contains") => list::lower_contains(object, args),
+        (Type::List(elem), "contains") => list::lower_contains(object, elem, args),
         (Type::List(elem), "pop") => list::lower_pop(object, args)
             .map(|expr| crate::helpers::normalize_safe_option_result(elem, expr)),
         (Type::List(_), "remove") => list::lower_remove(object, args),

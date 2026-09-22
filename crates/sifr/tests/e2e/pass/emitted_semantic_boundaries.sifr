@@ -99,6 +99,11 @@ def main():
     assert insertion_key_reassignment()
     assert str(DictLabel()) == "new"
     assert shadowed_loop_cache("long", ["x", "yy"]) == 14
+    assert contains_borrowed_word("needle", ["hay", "needle"])
+    assert not contains_borrowed_word("missing", ["hay", "needle"])
+    assert contains_borrowed_word_method("needle", ["hay", "needle"])
+    assert contains_literal_word(["needle"])
+    assert contains_reused_local_word()
 
 
 # LeetCode 10: Regular Expression Matching
@@ -212,3 +217,20 @@ def shadowed_loop_cache(text: str, values: list[str]) -> int:
     for text in values:
         total += len(text) + len(text)
     return total
+
+
+def contains_borrowed_word(needle: str, words: list[str]) -> bool:
+    return needle in words
+
+def contains_literal_word(words: list[str]) -> bool:
+    return "needle" in words
+
+def contains_reused_local_word() -> bool:
+    needle = "needle"
+    words = ["needle"]
+    found = needle in words
+    return found and needle == "needle"
+
+
+def contains_borrowed_word_method(needle: str, words: list[str]) -> bool:
+    return words.contains(needle)

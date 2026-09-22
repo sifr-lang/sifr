@@ -70,3 +70,16 @@ async def first() -> Result[Option[int], GeneratorCloseError]:
 
     assert!(generated.contains("let mut stream:"), "{generated}");
 }
+
+#[test]
+fn string_list_membership_compares_string_views() {
+    let generated = generate_rust_from_source(
+        r#"
+def contains_word(needle: str, words: list[str]) -> bool:
+    return needle in words
+"#,
+    );
+    assert!(generated.contains("AsRef::<str>::as_ref"), "{generated}");
+    assert!(generated.contains(".iter().any("), "{generated}");
+    assert!(!generated.contains(".contains(&needle"), "{generated}");
+}

@@ -428,6 +428,18 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         args: vec![key_arg],
                     }
                 }
+                Type::List(element_ty)
+                    if matches!(element_ty.resolve_alias(), Type::Str | Type::LiteralStr(_))
+                        && matches!(
+                            crate::resolve_alias_type_for_plain_call(element.ty()),
+                            Type::Str | Type::LiteralStr(_)
+                        ) =>
+                {
+                    crate::methods::lower_string_contains(
+                        &crate::RustExpr::Paren(Box::new(lowered_collection)),
+                        &lowered_element,
+                    )
+                }
                 Type::List(_) | Type::Set(_) | Type::Range => {
                     let element_arg = if matches!(element.as_ref(), HirExpr::Name { name, .. }
                         if $emitter.borrowed_params.contains(name)
