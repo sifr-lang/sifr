@@ -9,6 +9,22 @@ impl RustEmitter {
         stmt: &crate::HirStmt,
         following: Option<&[crate::HirStmt]>,
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        if !matches!(stmt, crate::HirStmt::SubscriptAssign { .. }) || following.is_none() {
+            return Ok(None);
+        }
+        let previous = self.checked_place_read_witnesses.clone();
+        let result = self.lower_dict_assignment_witness_for_ir(stmt, following);
+        if !matches!(&result, Ok(Some(_))) {
+            self.checked_place_read_witnesses = previous;
+        }
+        result
+    }
+
+    fn lower_dict_assignment_witness_for_ir(
+        &mut self,
+        stmt: &crate::HirStmt,
+        following: Option<&[crate::HirStmt]>,
+    ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         let Some(following) = following else {
             return Ok(None);
         };
@@ -94,7 +110,10 @@ impl RustEmitter {
             args: Vec::new(),
         }));
         let entry_value = if owned && !crate::helpers::is_copy_type_for_codegen(target_ty) {
-            crate::ownership_plan::materialize_owned_value(target_ty, entry_value)
+            crate::ownership_plan::materialize_owned_value(
+                target_ty,
+                RustExpr::Paren(Box::new(entry_value)),
+            )
         } else if owned {
             entry_value
         } else {
@@ -106,7 +125,14 @@ impl RustEmitter {
         lowered.push(RustStmt::Let {
             mutable: false,
             name: guard.binding.clone(),
-            ty: None,
+            ty: Some(if owned {
+                crate::sifr_type_to_rust_type(target_ty)
+            } else {
+                crate::RustType::Ref {
+                    mutable: false,
+                    inner: Box::new(crate::sifr_type_to_rust_type(target_ty)),
+                }
+            }),
             value: RustExpr::Block {
                 stmts: vec![
                     RustStmt::Let {

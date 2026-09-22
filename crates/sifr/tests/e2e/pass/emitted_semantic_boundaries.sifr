@@ -142,6 +142,7 @@ def insertion_key_reassignment() -> bool:
     values: dict[int, bool] = {}
     index = 0
     values[index] = True
+    assert len(values) == 1
     first = values[index]
     index = 1
     second: bool | None = values[index]

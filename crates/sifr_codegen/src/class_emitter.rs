@@ -1,7 +1,9 @@
+#[path = "class_emitter/display_body.rs"]
+mod display_body;
+
 use crate::{
     RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
     Visibility, class_trait_capabilities::supports_declaration_display,
-    helpers::collect_mutated_vars_with_sigs,
 };
 use sifr_ir::{HirClass, HirFunction, HirModule};
 use sifr_type_system::{Type, class_rust_name, source_class_rust_name};
@@ -404,57 +406,6 @@ impl RustEmitter {
             }))],
             is_async: false,
         }
-    }
-
-    pub(crate) fn lower_display_body_for_custom_str(
-        &mut self,
-        str_func: &HirFunction,
-    ) -> Vec<RustStmt> {
-        let saved_display_ctx = self.emission_ctx.in_display_impl;
-        let saved_return_type = self.current_return_type.clone();
-        let saved_mutated = self.mutated_vars.clone();
-        let saved_local_binding_types = self.local_binding_types.clone();
-        let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
-        let saved_sifr_int_forced_local_bindings =
-            self.sifr_int_forced_local_bindings.borrow().clone();
-        let saved_checked_place_read_witnesses =
-            std::mem::take(&mut self.checked_place_read_witnesses);
-        let saved_nonempty_list_bindings = std::mem::take(&mut self.nonempty_list_bindings);
-        let saved_option_unwrapped_vars = std::mem::take(&mut self.option_unwrapped_vars);
-
-        self.emission_ctx.in_display_impl = true;
-        self.current_return_type = Some(str_func.return_type.clone());
-        self.mutated_vars = collect_mutated_vars_with_sigs(&str_func.body, &self.func_signatures);
-        self.local_binding_types.clear();
-        self.sifr_int_local_bindings.borrow_mut().clear();
-        self.sifr_int_forced_local_bindings.borrow_mut().clear();
-        self.register_local_body_binding_types(&str_func.body);
-
-        let mut body = Vec::new();
-        for (stmt_index, stmt) in str_func.body.iter().enumerate() {
-            let lowered = self.capture_structured_stmts(|inner| {
-                inner.emit_stmt_with_following(stmt, Some(&str_func.body[stmt_index + 1..]));
-            });
-            body.extend(lowered);
-        }
-
-        if !matches!(body.last(), Some(RustStmt::Return(_))) {
-            body.push(RustStmt::Return(Some(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
-                args: vec![RustExpr::Literal(RustLiteral::Unit)],
-            })));
-        }
-
-        self.emission_ctx.in_display_impl = saved_display_ctx;
-        self.current_return_type = saved_return_type;
-        self.mutated_vars = saved_mutated;
-        self.local_binding_types = saved_local_binding_types;
-        *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
-        *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
-        self.checked_place_read_witnesses = saved_checked_place_read_witnesses;
-        self.nonempty_list_bindings = saved_nonempty_list_bindings;
-        self.option_unwrapped_vars = saved_option_unwrapped_vars;
-        body
     }
 
     pub(crate) fn build_display_impl_for_error(class: &HirClass) -> RustItem {

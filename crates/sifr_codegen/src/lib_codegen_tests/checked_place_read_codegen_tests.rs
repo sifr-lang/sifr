@@ -674,3 +674,41 @@ def sizes(values: list[str]) -> int:
         "{generated}"
     );
 }
+
+#[test]
+fn insertion_with_prior_witnesses_parenthesizes_owned_entry_projection() {
+    let generated = generate_rust_from_source(
+        r#"
+def inserted(mut values: dict[str, int]) -> int:
+    if "old" not in values:
+        return 0
+    values["new"] = 2
+    return values["old"] + values["new"]
+"#,
+    );
+    assert!(generated.contains(".into_mut()).clone()"), "{generated}");
+    assert!(!generated.contains(".into_mut().clone()"), "{generated}");
+}
+
+#[test]
+fn display_bodies_build_their_own_checked_read_analysis() {
+    let generated = generate_rust_from_source(
+        r#"
+class Label:
+    marker: int
+    def __init__(self):
+        self.marker = 1
+    def __str__(self) -> str:
+        values = {"old": "prior"}
+        values["new"] = "new"
+        assert len(values) == 2
+        return values["new"]
+
+def main():
+    assert str(Label()) == "new"
+"#,
+    );
+    assert!(generated.contains(".insert_entry("), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+    assert!(generated.contains("write!(f"), "{generated}");
+}
