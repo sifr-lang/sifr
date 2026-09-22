@@ -44,7 +44,6 @@ pub(super) fn rewrite_clippy_expression(expression: &mut syn::Expr) {
         || rewrite_borrow_only_cloned_map(expression)
         || rewrite_usize_len_subtraction(expression)
         || rewrite_constructor_clone(expression)
-        || rewrite_redundant_generated_parent_clone(expression)
         || rewrite_generated_sort_comparison(expression)
     {
         return;
@@ -201,36 +200,6 @@ fn rewrite_even_length_remainder(expression: &mut syn::Expr) -> bool {
     }
     let value = remainder.left.as_ref();
     *expression = syn::parse_quote!(!(#value).is_multiple_of(2));
-    true
-}
-
-fn rewrite_redundant_generated_parent_clone(expression: &mut syn::Expr) -> bool {
-    let syn::Expr::MethodCall(outer) = expression else {
-        return false;
-    };
-    if outer.method != "clone" || !outer.args.is_empty() {
-        return false;
-    }
-    let syn::Expr::Field(field) = outer.receiver.as_ref() else {
-        return false;
-    };
-    let syn::Expr::MethodCall(parent_clone) = field.base.as_ref() else {
-        return false;
-    };
-    if parent_clone.method != "clone" || !parent_clone.args.is_empty() {
-        return false;
-    }
-    let generated_checked_tuple = matches!(parent_clone.receiver.as_ref(), syn::Expr::Path(path)
-        if path.path.get_ident().is_some_and(|name|
-            name.to_string().starts_with("sifr_generated_checked_value")));
-    let generated_string_field = matches!(&field.member, syn::Member::Named(name)
-        if matches!(name.to_string().as_str(), "kind" | "label" | "message" | "name"));
-    if !generated_checked_tuple && !generated_string_field {
-        return false;
-    }
-    let mut field = field.clone();
-    field.base.clone_from(&parent_clone.receiver);
-    *outer.receiver = syn::Expr::Field(field);
     true
 }
 

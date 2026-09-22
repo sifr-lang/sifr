@@ -119,31 +119,7 @@ impl RustEmitter {
             } else {
                 "{}".to_string()
             };
-            crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                method: "map_or".to_string(),
-                args: vec![
-                    crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(
-                            "None".to_string(),
-                        ))),
-                        method: "to_string".to_string(),
-                        args: vec![],
-                    },
-                    crate::RustExpr::Closure {
-                        params: vec![crate::RustParam::Named {
-                            name: "_v".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(crate::RustExpr::FormatMacro {
-                            name: "format".to_string(),
-                            format_str,
-                            args: vec![crate::RustExpr::Ident("_v".to_string())],
-                        }),
-                        is_move: false,
-                    },
-                ],
-            }
+            crate::optional_display::lower(lowered, format_str, "_v")
         } else if let HirExpr::StringLiteral(val) = expr {
             // In display contexts, string literals don't need .to_string()
             crate::RustExpr::Literal(crate::RustLiteral::Str(val.clone()))

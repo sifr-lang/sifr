@@ -53,6 +53,7 @@ impl Rewriter<'_> {
                     }
                     let element = self.iterator_element(&call.receiver)?;
                     let mut nested = Rewriter {
+                        iteration_dispatch_closed: self.iteration_dispatch_closed,
                         ambiguous_clone_scopes: self.ambiguous_clone_scopes,
                         scalar_shadows: self.scalar_shadows,
                         functions: self.functions,
@@ -127,6 +128,9 @@ impl Rewriter<'_> {
     }
 
     fn rewrite_standard_copy_iterator(&self, expression: &mut syn::Expr) {
+        if !self.iteration_dispatch_closed || !self.clone_is_unambiguous() {
+            return;
+        }
         let syn::Expr::MethodCall(cloned) = expression else {
             return;
         };
@@ -162,4 +166,32 @@ impl Rewriter<'_> {
             cloned.method = syn::Ident::new("copied", cloned.method.span());
         }
     }
+}
+
+// Extension traits can win method resolution before Vec's slice dereference.
+// Unknown imported traits are covered separately by the opaque-scope guard.
+fn iteration_dispatch_is_closed(files: &[syn::File]) -> bool {
+    struct Methods(bool);
+    impl<'ast> syn::visit::Visit<'ast> for Methods {
+        fn visit_trait_item_fn(&mut self, method: &'ast syn::TraitItemFn) {
+            self.0 |= matches!(
+                method.sig.ident.to_string().as_str(),
+                "iter" | "cloned" | "copied"
+            );
+            syn::visit::visit_trait_item_fn(self, method);
+        }
+        fn visit_item_impl(&mut self, implementation: &'ast syn::ItemImpl) {
+            if implementation.trait_.is_some() {
+                self.0 |= implementation.items.iter().any(|item|
+                    matches!(item, syn::ImplItem::Fn(method)
+                        if matches!(method.sig.ident.to_string().as_str(), "iter" | "cloned" | "copied")));
+            }
+            syn::visit::visit_item_impl(self, implementation);
+        }
+    }
+    let mut methods = Methods(false);
+    for file in files {
+        syn::visit::Visit::visit_file(&mut methods, file);
+    }
+    !methods.0
 }

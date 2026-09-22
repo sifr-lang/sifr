@@ -1,3 +1,5 @@
+include!("typed_local_transfer.rs");
+
 // Stored values with only compiler-known Clone and Drop behavior.
 impl Rewriter<'_> {
     fn inert_owned_type(&self, ty: &syn::Type) -> bool {
@@ -62,7 +64,7 @@ impl Rewriter<'_> {
             return true;
         }
         if standard
-            && matches!(name.as_str(), "Option" | "Vec" | "Box")
+            && matches!(name.as_str(), "Option" | "Vec" | "Box" | "HashSet")
             && let syn::PathArguments::AngleBracketed(arguments) = &last.arguments
             && arguments.args.len() == 1
             && let Some(syn::GenericArgument::Type(inner)) = arguments.args.first()
@@ -132,11 +134,14 @@ impl Rewriter<'_> {
             self.standard_generic(ty, "Vec").is_some() && !self.scalar_shadowed("Vec")
         });
         let mut owned_locals = std::collections::HashSet::new();
+        let mut fresh_locals = std::collections::HashSet::new();
         let mut discard = Vec::new();
         for index in 0..block.stmts.len() {
             let (processed, remaining) = block.stmts.split_at_mut(index + 1);
             let statement = &mut processed[index];
+            self.transfer_fresh_terminal_branch(statement, &fresh_locals);
             if let syn::Stmt::Local(local) = statement {
+                self.transfer_fresh_shadowed_option(local, &fresh_locals);
                 if let Some(init) = &mut local.init {
                     if let syn::Pat::Type(typed) = &local.pat {
                         self.expected(&mut init.expr, &typed.ty);
@@ -167,7 +172,21 @@ impl Rewriter<'_> {
                         .collect();
                     super::idiom_cleanup::clean_owned_suffix(remaining, owned);
                 }
+                fresh_locals.retain(|name| {
+                    !statements_reference(
+                        std::slice::from_ref(&syn::Stmt::Local(local.clone())),
+                        name,
+                    )
+                });
                 for name in super::identifier_names_in_pattern(&local.pat) {
+                    if self
+                        .bindings
+                        .get(&name)
+                        .and_then(Option::as_ref)
+                        .is_some_and(|ty| self.inert_owned_type(ty))
+                    {
+                        fresh_locals.insert(name.clone());
+                    }
                     owned_locals.remove(&name);
                     if self.bindings.get(&name).is_some_and(|ty| {
                         ty.as_ref()
@@ -178,6 +197,8 @@ impl Rewriter<'_> {
                 }
             } else {
                 self.visit_stmt_mut(statement);
+                fresh_locals
+                    .retain(|name| !statements_reference(std::slice::from_ref(statement), name));
             }
             self.remove_terminal_owned_field_clones(statement, remaining, &owned_locals);
             self.record_discardable_assignment(statement);

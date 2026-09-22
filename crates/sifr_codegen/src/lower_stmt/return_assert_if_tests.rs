@@ -231,7 +231,7 @@ fn lowers_simple_assert_with_option_name_msg() {
         RustStmt::Assert {
             msg: Some(RustExpr::MethodCall { ref method, .. }),
             ..
-        } if method == "map_or"
+        } if method == "map_or_else"
     ));
 }
 
@@ -254,7 +254,7 @@ fn lowers_simple_assert_with_alias_option_name_msg() {
         RustStmt::Assert {
             msg: Some(RustExpr::MethodCall { ref method, .. }),
             ..
-        } if method == "map_or"
+        } if method == "map_or_else"
     ));
 }
 

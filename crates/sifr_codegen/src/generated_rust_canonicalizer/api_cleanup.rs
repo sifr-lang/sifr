@@ -343,6 +343,7 @@ fn improve_function_api(
     if context.allow_const
         && signature.constness.is_none()
         && signature.asyncness.is_none()
+        && !const_drop::has_unproved_string_slice_return_coercion(signature, body)
         && const_drop::function_has_no_implicit_drop(signature, body, context.drop_types)
         && block_is_const_compatible(
             body,

@@ -482,3 +482,162 @@ fn initializer_motion_preserves_nested_condition_read() {
     "#,
     );
 }
+
+#[test]
+fn borrowed_method_receiver_preserves_custom_clone_effects() {
+    canonical_and_run(
+        r#"
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        static CLONES: AtomicUsize = AtomicUsize::new(0);
+        struct Value { value: String }
+        impl Clone for Value {
+            fn clone(&self) -> Self {
+                CLONES.fetch_add(1, Ordering::SeqCst);
+                Self { value: self.value.clone() }
+            }
+        }
+        impl Value { fn get(&self) -> &str { &self.value } }
+        fn main() {
+            let value = Value { value: String::from("kept") };
+            assert_eq!(value.clone().get(), "kept");
+            assert_eq!(CLONES.load(Ordering::SeqCst), 1);
+        }
+    "#,
+    );
+}
+
+#[test]
+fn clone_receiver_preserves_mutation_and_identity_observation() {
+    canonical_and_run(
+        r#"
+        #[derive(Clone)] struct Value { value: String }
+        impl Value {
+            fn change(&mut self) -> usize { self.value.push('!'); self.value.len() }
+            fn address(&self) -> usize { self as *const Self as usize }
+        }
+        fn main() {
+            let mut value = Value { value: String::from("kept") };
+            assert_eq!(value.clone().change(), 5);
+            assert_eq!(value.value, "kept");
+            assert_ne!(value.clone().address(), value.address());
+        }
+    "#,
+    );
+}
+#[test]
+fn fresh_optional_shadow_transfer_preserves_diverging_borrows() {
+    canonical_and_run(
+        r#"
+        fn read(input: Option<&String>) -> String {
+            let value: Option<String> = input.cloned();
+            let Some(value) = value.clone() else { return String::from("none"); };
+            value
+        }
+        fn retained(input: Option<String>) -> String {
+            let value: Option<String> = input;
+            let captured = || value.is_none();
+            let Some(value) = value.clone() else { assert!(captured()); return String::from("none"); };
+            assert!(!captured());
+            value
+        }
+        fn main() {
+            assert_eq!(read(Some(&String::from("kept"))), "kept");
+            assert_eq!(read(None), "none");
+            assert_eq!(retained(Some(String::from("kept"))), "kept");
+            assert_eq!(retained(None), "none");
+        }
+    "#,
+    );
+}
+
+#[test]
+fn inert_projection_search_retains_values_and_custom_clone_effects() {
+    canonical_and_run(
+        r#"
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        static CLONES: AtomicUsize = AtomicUsize::new(0);
+        struct Pair { key: String, value: String }
+        impl Clone for Pair {
+            fn clone(&self) -> Self {
+                CLONES.fetch_add(1, Ordering::SeqCst);
+                Self { key: self.key.clone(), value: self.value.clone() }
+            }
+        }
+        fn custom(pairs: &[Pair], name: &str) -> Option<String> {
+            for pair in pairs.iter().cloned() {
+                if pair.key == name { return Some(pair.value.clone()); }
+            }
+            None
+        }
+        fn plain(pairs: &[(String, String)], name: &str) -> Option<String> {
+            for pair in pairs.iter().cloned() {
+                if pair.0 == name { return Some(pair.1.clone()); }
+            }
+            None
+        }
+        fn main() {
+            let pairs = vec![(String::from("a"), String::from("first")), (String::from("b"), String::from("second"))];
+            assert_eq!(plain(&pairs, "b"), Some(String::from("second")));
+            assert_eq!(plain(&pairs, "c"), None);
+            assert_eq!(pairs[0].1, "first");
+            let custom_pairs = vec![Pair { key: String::from("a"), value: String::from("first") }];
+            assert_eq!(custom(&custom_pairs, "a"), Some(String::from("first")));
+            assert_eq!(CLONES.load(Ordering::SeqCst), 1);
+        }
+    "#,
+    );
+}
+
+#[test]
+fn borrowed_getter_preserves_cloned_storage_identity() {
+    canonical_and_run(
+        r#"
+        #[derive(Clone)] struct Value { value: String }
+        impl Value { fn get(&self) -> &str { &self.value } }
+        fn main() {
+            let value = Value { value: String::from("kept") };
+            assert_ne!(value.clone().get().as_ptr(), value.get().as_ptr());
+        }
+    "#,
+    );
+}
+#[test]
+fn projected_field_preserves_custom_parent_clone() {
+    canonical_and_run(
+        r#"
+        struct Value { kind: String }
+        impl Clone for Value {
+            fn clone(&self) -> Self { Self { kind: format!("{}!", self.kind) } }
+        }
+        fn main() {
+            let value = Value { kind: String::from("kept") };
+            let projected = value.clone().kind.clone();
+            assert_eq!(projected, "kept!");
+            assert_eq!(value.kind, "kept");
+        }
+    "#,
+    );
+}
+
+#[test]
+fn projection_search_preserves_custom_comparison_identity() {
+    canonical_and_run(
+        r#"
+        struct Other(*const u8);
+        impl PartialEq<Other> for String {
+            fn eq(&self, other: &Other) -> bool { self.as_ptr() != other.0 }
+        }
+        fn search(pairs: &[(String, String)], name: Other) -> Option<String> {
+            for pair in pairs.iter().cloned() {
+                if pair.0 == name { return Some(pair.1.clone()); }
+            }
+            None
+        }
+        fn main() {
+            let pairs = vec![(String::from("key"), String::from("value"))];
+            let name = Other(pairs[0].0.as_ptr());
+            assert_eq!(search(&pairs, name), Some(String::from("value")));
+        }
+    "#,
+    );
+}

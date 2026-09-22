@@ -117,6 +117,7 @@ mod nested_list_element;
 mod operator_protocol_emitters;
 mod operator_type_rendering;
 mod option_binding_mutability;
+mod optional_display;
 mod output_helpers;
 mod ownership_plan;
 mod place_emitter;

@@ -7,6 +7,7 @@ use syn::visit_mut::{self, VisitMut};
 #[derive(Clone)]
 struct Callable {
     signature: syn::Signature,
+    field_getter: bool,
 }
 
 pub(super) fn rewrite(file: &mut syn::File) {
@@ -15,6 +16,7 @@ pub(super) fn rewrite(file: &mut syn::File) {
 }
 
 pub(crate) struct ProjectTypeFacts {
+    iteration_dispatch_closed: bool,
     ambiguous_clone_scopes: std::collections::HashSet<String>,
     scalar_shadows: std::collections::HashSet<String>,
     functions: HashMap<String, Callable>,
@@ -41,6 +43,7 @@ pub(super) fn collect_project_facts(files: &[syn::File]) -> ProjectTypeFacts {
     super::scoped_imports::expand(&combined, &mut functions);
     super::scoped_imports::expand(&combined, &mut structures);
     ProjectTypeFacts {
+        iteration_dispatch_closed: iteration_dispatch_is_closed(files),
         ambiguous_clone_scopes: super::idiom_cleanup::ambiguous_clone_scopes(&combined),
         scalar_shadows: collect_scalar_shadows(&combined),
         functions,
@@ -50,6 +53,7 @@ pub(super) fn collect_project_facts(files: &[syn::File]) -> ProjectTypeFacts {
 
 pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts) {
     Rewriter {
+        iteration_dispatch_closed: facts.iteration_dispatch_closed,
         ambiguous_clone_scopes: &facts.ambiguous_clone_scopes,
         scalar_shadows: &facts.scalar_shadows,
         functions: &facts.functions,
@@ -72,6 +76,7 @@ include!("typed_field_cleanup.rs");
 include!("typed_string_cleanup.rs");
 
 struct Rewriter<'facts> {
+    iteration_dispatch_closed: bool,
     ambiguous_clone_scopes: &'facts std::collections::HashSet<String>,
     scalar_shadows: &'facts std::collections::HashSet<String>,
     functions: &'facts HashMap<String, Callable>,
@@ -464,6 +469,8 @@ impl VisitMut for Rewriter<'_> {
         self.visit_expr_mut(&mut loop_.expr);
         let outer = self.bindings.clone();
         self.bind(&loop_.pat, self.iterator_element(&loop_.expr));
+        self.borrow_inert_projection_search(loop_);
+        self.bind(&loop_.pat, self.iterator_element(&loop_.expr));
         self.visit_block_mut(&mut loop_.body);
         self.bindings = outer;
     }
@@ -555,6 +562,20 @@ impl VisitMut for Rewriter<'_> {
             .and_then(|method| method.signature.receiver())
             .is_some_and(|receiver| matches!(receiver.kind, syn::ReceiverKind::Reference(..)));
         if declared_receiver {
+            if self.clone_is_unambiguous()
+                && ty
+                    .as_ref()
+                    .and_then(|ty| self.declared_method(ty, &call.method))
+                    .is_some_and(|method| method.field_getter)
+                && let syn::Expr::MethodCall(clone) = call.receiver.as_ref()
+                && clone.method == "clone"
+                && clone.args.is_empty()
+                && self
+                    .ty(&clone.receiver)
+                    .is_some_and(|ty| self.inert_owned_type(unreference(&ty)))
+            {
+                call.receiver = clone.receiver.clone();
+            }
             let receiver = match call.receiver.as_ref() {
                 syn::Expr::Paren(paren) => paren.expr.as_ref(),
                 receiver => receiver,
@@ -629,7 +650,10 @@ impl VisitMut for Rewriter<'_> {
                 self.bindings = outer;
             } else if let Some(ty) = &ty
                 && let Some(inner) = self.standard_generic(unreference(ty), "Option")
-                && ((matches!(call.method.to_string().as_str(), "map" | "and_then") && index == 0)
+                && ((matches!(
+                    call.method.to_string().as_str(),
+                    "map" | "and_then" | "is_some_and"
+                ) && index == 0)
                     || (matches!(call.method.to_string().as_str(), "map_or" | "map_or_else")
                         && index == 1))
                 && let syn::Expr::Closure(closure) = argument
@@ -688,6 +712,7 @@ impl VisitMut for Rewriter<'_> {
         self.rewrite_standard_lazy_fallback(expression);
         self.rewrite_standard_copy_iterator(expression);
         self.rewrite_typed_string_clones(expression);
+        self.rewrite_inert_parent_field_clone(expression);
         if let Some(ty) = self.ty(expression) {
             self.rewrite_vector_collect(expression, &ty);
         }

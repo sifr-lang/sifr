@@ -1,9 +1,7 @@
 fn collect(items: &[syn::Item], scope: &[String], functions: &mut HashMap<String, Callable>) {
     for item in items {
         match item {
-            syn::Item::Impl(implementation)
-                if implementation.trait_.is_none() =>
-            {
+            syn::Item::Impl(implementation) if implementation.trait_.is_none() => {
                 let syn::Type::Path(owner) = implementation.self_ty.as_ref() else {
                     continue;
                 };
@@ -25,10 +23,14 @@ fn collect(items: &[syn::Item], scope: &[String], functions: &mut HashMap<String
                 for item in &implementation.items {
                     if let syn::ImplItem::Fn(function) = item {
                         let mut signature = function.sig.clone();
-                        signature.generics.params.extend(implementation.generics.params.iter().cloned());
+                        signature
+                            .generics
+                            .params
+                            .extend(implementation.generics.params.iter().cloned());
                         functions.insert(
                             format!("{}::{}", path.join("::"), function.sig.ident),
                             Callable {
+                                field_getter: is_shared_field_getter(function),
                                 signature,
                             },
                         );
@@ -63,6 +65,7 @@ fn collect(items: &[syn::Item], scope: &[String], functions: &mut HashMap<String
                         format!("{}::{name}", owner.join("::")),
                         Callable {
                             signature: syn::parse_quote!(fn #name(#(#parameters),*) -> #output),
+                            field_getter: false,
                         },
                     );
                 }
@@ -74,6 +77,7 @@ fn collect(items: &[syn::Item], scope: &[String], functions: &mut HashMap<String
                     path.join("::"),
                     Callable {
                         signature: function.sig.clone(),
+                        field_getter: false,
                     },
                 );
                 let nested = function
@@ -127,9 +131,17 @@ fn collect_structures(
 }
 
 impl Rewriter<'_> {
-    fn declared_method(&self, receiver: &syn::Type, method: &proc_macro2::Ident) -> Option<&Callable> {
-        let syn::Type::Path(owner) = unreference(receiver) else { return None };
-        if owner.qself.is_some() { return None; }
+    fn declared_method(
+        &self,
+        receiver: &syn::Type,
+        method: &proc_macro2::Ident,
+    ) -> Option<&Callable> {
+        let syn::Type::Path(owner) = unreference(receiver) else {
+            return None;
+        };
+        if owner.qself.is_some() {
+            return None;
+        }
         let mut path = owner.path.clone();
         path.segments.push(syn::PathSegment::from(method.clone()));
         self.resolve(&path)
@@ -291,7 +303,9 @@ impl Rewriter<'_> {
     }
 
     fn rewrite_vector_collect(&self, expression: &mut syn::Expr, expected: &syn::Type) {
-        if !self.clone_is_unambiguous() { return; }
+        if !self.clone_is_unambiguous() {
+            return;
+        }
         let Some(target) = self.standard_generic(expected, "Vec") else {
             return;
         };
@@ -318,13 +332,15 @@ impl Rewriter<'_> {
         let Some(source) = self.ty(&iterated.receiver) else {
             return;
         };
-        let source_element = self.standard_generic(unreference(&source), "Vec").or_else(|| {
-            if let syn::Type::Slice(slice) = unreference(&source) {
-                Some(slice.elem.as_ref())
-            } else {
-                None
-            }
-        });
+        let source_element = self
+            .standard_generic(unreference(&source), "Vec")
+            .or_else(|| {
+                if let syn::Type::Slice(slice) = unreference(&source) {
+                    Some(slice.elem.as_ref())
+                } else {
+                    None
+                }
+            });
         let Some(element) = source_element else {
             return;
         };
@@ -431,4 +447,26 @@ fn exclude_drop_structures(
             _ => {}
         }
     }
+}
+
+// Only a direct shared projection can ignore the identity of a cloned receiver.
+fn is_shared_field_getter(function: &syn::ImplItemFn) -> bool {
+    if function.sig.inputs.len() != 1
+        || !function.sig.receiver().is_some_and(|receiver| {
+            matches!(receiver.kind, syn::ReceiverKind::Reference(_, _, None))
+        })
+    {
+        return false;
+    }
+    let [syn::Stmt::Expr(expression, None)] = function.block.stmts.as_slice() else {
+        return false;
+    };
+    let projected = match expression {
+        syn::Expr::MethodCall(call) if call.method == "clone" && call.args.is_empty() => {
+            call.receiver.as_ref()
+        }
+        _ => return false,
+    };
+    matches!(projected, syn::Expr::Field(field)
+        if matches!(field.base.as_ref(), syn::Expr::Path(path) if path.path.is_ident("self")))
 }

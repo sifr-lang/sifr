@@ -348,4 +348,120 @@ mod tests {
         assert!(rust.contains("values.iter().copied()"), "{rust}");
         assert!(rust.contains("strings.iter().cloned()"), "{rust}");
     }
+    #[test]
+    fn optional_owned_record_receiver_uses_its_borrowed_method_directly() {
+        let rust = clean(
+            r#"
+            #[derive(Clone)] struct Value { value: String }
+            impl Value { fn get(&self) -> String { self.value.clone() } }
+            fn run(input: Option<(Value, Value)>) -> bool {
+                input.is_some_and(|pair| pair.0.clone().get() == "value")
+            }
+        "#,
+        );
+        assert!(rust.contains("pair.0.get()"), "{rust}");
+    }
+    #[test]
+    fn fresh_local_moves_only_on_its_own_terminal_path() {
+        let rust = clean(r#"
+            fn run(flag: bool) -> String {
+                let value: String = String::from("kept");
+                if flag { return value.clone(); }
+                value
+            }
+            fn shadow(input: Option<&String>) -> String {
+                let value: Option<String> = input.cloned();
+                let Some(value) = value.clone() else { return String::new(); };
+                value
+            }
+        "#);
+        assert!(!rust.contains("return value.clone()"), "{rust}");
+        assert!(rust.contains("let Some(value) = value else"), "{rust}");
+    }
+
+    #[test]
+    fn inert_projection_search_borrows_collection_elements() {
+        let rust = clean(r#"
+            fn get(pairs: &[(String, String)], name: &str) -> Option<String> {
+                for pair in pairs.iter().cloned() {
+                    if pair.0 == name { return Some(pair.1.clone()); }
+                }
+                None
+            }
+        "#);
+        assert!(rust.contains("for pair in pairs.iter()"), "{rust}");
+        assert!(!rust.contains("iter().cloned()"), "{rust}");
+        assert!(rust.contains("Some(pair.1.clone())"), "{rust}");
+    }
+
+    #[test]
+    fn fresh_terminal_transfer_rejects_aliases_and_condition_bindings() {
+        let rust = clean(r#"
+            struct Guard<'a>(&'a String);
+            fn aliased(flag: bool) -> String {
+                let value: String = String::from("kept");
+                if flag { let guard = Guard(&value); return value.clone(); }
+                value
+            }
+            fn shadowed(input: Option<&String>) -> String {
+                let value: String = String::from("outer");
+                if let Some(value) = input { return value.clone(); }
+                value
+            }
+            fn sibling(flag: bool) -> String {
+                let value: String = String::from("kept");
+                if flag { return consume(&value, value.clone()); }
+                value
+            }
+        "#);
+        assert_eq!(rust.matches("value.clone()").count(), 3, "{rust}");
+    }
+    #[test]
+    fn borrowed_field_getter_keeps_receiver_identity() {
+        let rust = clean(r#"
+            #[derive(Clone)] struct Value { value: String }
+            impl Value { fn get(&self) -> &str { &self.value } }
+            fn run(input: Value) -> usize { input.clone().get().as_ptr() as usize }
+        "#);
+        assert!(rust.contains("input.clone().get()"), "{rust}");
+    }
+    #[test]
+    fn redundant_parent_clone_requires_inert_resolved_type() {
+        let rust = clean(r#"
+            #[derive(Clone)] struct Value { value: String }
+            fn run(pair: (Value, Value)) -> String { pair.clone().0.value.clone() }
+        "#);
+        // Only the immediate projected field is certified; nested field chains
+        // remain conservative until their complete place contract is known.
+        assert!(rust.contains("pair.clone()"), "{rust}");
+        let direct = clean(r#"
+            fn run(pair: (String, String)) -> String { pair.clone().0.clone() }
+        "#);
+        assert!(!direct.contains("pair.clone()"), "{direct}");
+    }
+
+    #[test]
+    fn projection_search_preserves_competing_iteration_and_comparison() {
+        let rust = clean(r#"
+            trait Iteration { fn iter(&self) -> std::slice::Iter<'_, (String, String)>; }
+            fn run(pairs: &Vec<(String, String)>, name: &str) -> Option<String> {
+                for pair in pairs.iter().cloned() {
+                    if pair.0 == name { return Some(pair.1.clone()); }
+                }
+                None
+            }
+        "#);
+        assert!(rust.contains("pairs.iter().cloned()"), "{rust}");
+        let comparison = clean(r#"
+            struct Other;
+            fn run(pairs: &[(String, String)], name: Other) -> Option<String> {
+                for pair in pairs.iter().cloned() {
+                    if pair.0 == name { return Some(pair.1.clone()); }
+                }
+                None
+            }
+        "#);
+        assert!(comparison.contains("pairs.iter().cloned()"), "{comparison}");
+    }
+
 }

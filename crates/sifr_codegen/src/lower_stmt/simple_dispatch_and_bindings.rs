@@ -184,25 +184,7 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
         HirStmt::Assert { test, msg } => {
             let lowered_msg = if let Some(msg_expr) = msg.as_ref() {
                 Some(if is_option_like_type(msg_expr.ty()) {
-                    RustExpr::MethodCall {
-                        receiver: Box::new(try_lower_name_ident_expr(msg_expr)?),
-                        method: "map_or".to_string(),
-                        args: vec![
-                            RustExpr::Literal(RustLiteral::Str("None".to_string())),
-                            RustExpr::Closure {
-                                params: vec![RustParam::Named {
-                                    name: "_v".to_string(),
-                                    ty: RustType::Named("_".to_string()),
-                                }],
-                                body: Box::new(RustExpr::FormatMacro {
-                                    name: "format".to_string(),
-                                    format_str: "{}".to_string(),
-                                    args: vec![RustExpr::Ident("_v".to_string())],
-                                }),
-                                is_move: false,
-                            },
-                        ],
-                    }
+                    crate::optional_display::lower(try_lower_name_ident_expr(msg_expr)?, "{}", "_v")
                 } else {
                     try_lower_leaf_or_name_expr(msg_expr)?
                 })

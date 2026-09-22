@@ -368,7 +368,9 @@ impl Types {
             || name.starts_with("::std::") || name.starts_with("::core::")
             // This is the compiler-owned exact runtime nominal, not a basename
             // heuristic or authorization for arbitrary external extension traits.
-            || matches!(name, "::sifr_runtime::SifrInt" | "::sifr_runtime::SifrRange")
+            || matches!(name, "::sifr_runtime::SifrInt" | "::sifr_runtime::SifrRange"
+                | "::bigdecimal::BigDecimal" | "::rust_decimal::Decimal"
+                | "::num_bigint::BigInt" | "::num_bigint::BigUint")
     }
 
     pub(super) fn ty(&self, scope: &str, ty: &syn::Type, owner: Option<&str>) -> Value {

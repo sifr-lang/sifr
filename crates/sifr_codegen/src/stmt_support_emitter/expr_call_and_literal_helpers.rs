@@ -709,31 +709,7 @@ macro_rules! stmt_expr_literals_and_calls {
                     } else {
                         "{}".to_string()
                     };
-                    return Ok(Some(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
-                        method: "map_or".to_string(),
-                        args: vec![
-                            crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Literal(
-                                    crate::RustLiteral::Str("None".to_string()),
-                                )),
-                                method: "to_string".to_string(),
-                                args: vec![],
-                            },
-                            crate::RustExpr::Closure {
-                                params: vec![crate::RustParam::Named {
-                                    name: "__v".to_string(),
-                                    ty: crate::RustType::Named("_".to_string()),
-                                }],
-                                body: Box::new(crate::RustExpr::FormatMacro {
-                                    name: "format".to_string(),
-                                    format_str,
-                                    args: vec![crate::RustExpr::Ident("__v".to_string())],
-                                }),
-                                is_move: false,
-                            },
-                        ],
-                    }));
+                    return Ok(Some(crate::optional_display::lower(lowered_arg, format_str, "__v")));
                 }
                 return Ok(Some(crate::RustExpr::FormatMacro {
                     name: "format".to_string(),

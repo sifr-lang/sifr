@@ -294,3 +294,34 @@ const STANDARD_VALUE_NAMES: &[&str] = &[
     "HashSet", "Clone", "bool", "char", "str", "u8", "u16", "u32", "u64", "u128", "usize", "i8",
     "i16", "i32", "i64", "i128", "isize", "f32", "f64",
 ];
+
+impl Rewriter<'_> {
+    fn rewrite_inert_parent_field_clone(&self, expression: &mut syn::Expr) {
+        if !self.clone_is_unambiguous() {
+            return;
+        }
+        let syn::Expr::MethodCall(outer) = expression else {
+            return;
+        };
+        if outer.method != "clone" || !outer.args.is_empty() {
+            return;
+        }
+        let syn::Expr::Field(field) = outer.receiver.as_mut() else {
+            return;
+        };
+        let syn::Expr::MethodCall(parent) = field.base.as_ref() else {
+            return;
+        };
+        if parent.method == "clone"
+            && parent.args.is_empty()
+            && self
+                .ty(&parent.receiver)
+                .is_some_and(|ty| self.inert_owned_type(unreference(&ty)))
+            && self
+                .field_type(field)
+                .is_some_and(|ty| self.inert_owned_type(&ty))
+        {
+            field.base = parent.receiver.clone();
+        }
+    }
+}

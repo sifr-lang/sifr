@@ -341,3 +341,33 @@ fn expression_is_trivial(expression: &syn::Expr, trivial: &HashSet<String>) -> b
         _ => false,
     }
 }
+
+// Borrowing an owned String into a declared &str performs non-const Deref.
+// Expression legality alone cannot certify this receiving-type coercion.
+pub(super) fn has_unproved_string_slice_return_coercion(
+    signature: &syn::Signature,
+    body: &syn::Block,
+) -> bool {
+    struct Borrow(bool);
+    impl<'ast> syn::visit::Visit<'ast> for Borrow {
+        fn visit_expr_reference(&mut self, expression: &'ast syn::ExprReference) {
+            if !matches!(expression.expr.as_ref(), syn::Expr::Lit(_)) {
+                self.0 = true;
+            }
+        }
+        fn visit_item(&mut self, _: &'ast syn::Item) {}
+        fn visit_expr_closure(&mut self, _: &'ast syn::ExprClosure) {}
+    }
+    let syn::ReturnType::Type(_, output) = &signature.output else {
+        return false;
+    };
+    let syn::Type::Reference(reference) = output.as_ref() else {
+        return false;
+    };
+    if !matches!(reference.elem.as_ref(), syn::Type::Path(path) if path.path.is_ident("str")) {
+        return false;
+    }
+    let mut borrows = Borrow(false);
+    syn::visit::Visit::visit_block(&mut borrows, body);
+    borrows.0
+}
