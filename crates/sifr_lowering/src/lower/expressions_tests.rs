@@ -31,3 +31,5 @@ mod slice_diagnostics;
 mod structural_records;
 mod support;
 mod task_runtime_rules_tests;
+
+mod integer_field_augassign;

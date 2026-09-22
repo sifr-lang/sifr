@@ -2,6 +2,95 @@
 
 Status: active
 
+## Items 12D/12E/12F scoped continuation (2026-09-22)
+
+Current assignment: one intermediate batch, no retained Item 12 or whole-phase
+closure. Owned Linux worktree
+`/home/yaser5/projects/sifr/worktrees/emitted-rust-12def-20260922`, branch
+`codex/emitted-rust-12def-20260922`, base
+`ced01116ee8cf225a0eb72fdbd2db467fdd0a26c`.
+The current user instruction requires named/focused tests and scoped Opus review,
+then ordinary merge; create-PR and full merge gates belong to the final
+integration qualifier. Historical exhausted allowances and failures below remain
+historical evidence, not the current execution policy.
+
+Prerequisite reconciliation: the latest-stable convergence phase records
+candidate `d2bc1e0c3ca2c1fd454dc5eb4bc307abfcfa66ea`, its full merge3 pass and
+delivery in PR3827. Its corpus gitlink is exactly `8bcbe7ab7939e5c8362c10f61a80e368022cc372`.
+Corpus PR48 retained this exact head and unchanged base `7fcb9fd1eaf3e0cf9bf51e8858276b7927a83baf`.
+Its durable [exact-source remediation review](https://github.com/sifr-lang/leetcode/pull/48#issuecomment-5554470481)
+records SATISFIED, native90/90 and canonical411/411. PR48 merged as `5b30b5fca4caa3a47d6a6bd90192ce7b57dfc9c1` through
+ordinary policy to complete that already-qualified delivery. The original failed
+gates are not relabeled. Current compiler inputs have changed since those runs;
+fresh focused validation below qualifies this batch, not a reused current full gate.
+
+12D's diagnostic inventory is implemented in the merged compiler: branch-local
+checked reads and optional boundaries, exception handler capture, structured try
+carriers, keyword method demand, recursive optional mutation, nested assignment,
+borrowed value ownership and typed empty assertions all have named
+`corpus_repair_` regressions. Reconcile those mechanisms with current focused
+execution; do not reimplement historical failures.
+
+12E diagnosis: attribute augmented assignment bypasses the integer-failure
+validation used for local bindings; simple Rust lowering emits unsupported
+integer field division/modulo assignment operators. Qualify rejection of unsafe
+operations and safe floor/modulo semantics both outside and inside try closures.
+
+12F: replace eight bindings (16 declaration/reference occurrences) named
+`updated_contract_value_*` in `0202_happy_number.sifr` and
+`0212_word_search_ii.sifr` with algorithm-specific names, preserving all other
+tokens and every assertion. Historical “16 locals” counted occurrences.
+
+Named focused validation:
+- `cargo test -p sifr_codegen --lib corpus_repair_`
+- `cargo test -p sifr_lowering --lib integer_field_augassign`
+- `cargo test -p sifr_codegen --lib integer_field_augassign`
+- `cargo test -p sifr_lowering --lib exact_int` (shared alias-aware diagnostic helper)
+- `verification/runner/e2e/run_e2e_pass.sh --fixture-manifest target/integer-field-fixtures.json --sifr-jobs 2 --rust-jobs 1 --run-jobs 1 --cargo-build-jobs 2`, selecting exactly
+  `integer_field_augassign`, `exact_int_floor_mod_literals`, and
+  `exact_int_nonzero_elif_and_nested_guards`.
+- Native checks/runs of the two renamed corpus files and selected 12D mechanism
+  representatives using the candidate compiler and its canonical metadata/native
+  preparation; an integer-field semantic probe covers both statement contexts.
+- Token-equivalence proof for the two corpus renames.
+- `cargo fmt --check`, `python3 scripts/check_hir_maintainability_guardrails.py`,
+  `python3 scripts/check_file_size_guardrails.py`, taxonomy and diff checks.
+
+Evidence remains outside Git at
+`/home/yaser5/projects/sifr/emitted-rust-12def-evidence`. No gate or review pass
+is claimed at this registration checkpoint.
+
+Implementation checkpoint: the initial new failure-contract test reproduced the
+accepted unsafe field operation. A subsequent alias-positive test exposed missing
+operand alias resolution; both are corrected. Three focused lowering tests pass.
+Unsafe true division and unproven/zero floor/modulo operands are rejected equally
+inside and outside try. Proven floor/modulo field operations become typed
+`FieldAssign`/`BinOp` HIR, using existing exact-integer emission rather than Rust
+assignment traits. The shared integer diagnostic predicate resolves aliases.
+Native coverage includes signed results, a guarded divisor and values beyond i64.
+
+Corpus follow-up [PR50](https://github.com/sifr-lang/leetcode/pull/50), head
+`4da4f7a5ccb332b64199eda6fc545d9dcc1ae1b6`, contains exactly the two renamed
+files. `rename-proof.json` proves eight injective names and byte-exact equality
+after substituting only those names; assertions and evaluation order are intact.
+
+The first native-runner invocation rejected host uv0.12.5; repository-pinned
+uv0.12.10 is now installed under the owned evidence/tools directory. A subsequent
+setup-only native invocation was stopped before assertion execution to finish
+the alias correction. Neither invocation is passing native evidence.
+
+Unrelated full-taxonomy blocker: `python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py`
+rejects unchanged `internal_docs/compiler_dx_architecture.md:16,960` and
+`internal_docs/architecture.md:1981` for delivery-plan labels in DX closure links.
+These paths are byte-identical to this batch base. Compiler DX documentation owns
+the correction; orchestration accepted routing it to that owner/final qualification.
+No global-taxonomy or broad-gate pass is claimed. Scoped use of the unchanged
+checker's `collect_failures` API on touched active-source paths and both corpus
+files passes; the initial scoped invocation mistakenly included the normally
+excluded phase record and is preserved separately. No checker was changed.
+
+
+
 ## Item12K-B38: coherent acquisition and batch qualification (2026-09-08)
 
 **B38 MERGED / SCOPED QUALIFICATION COMPLETE; blocker none.**

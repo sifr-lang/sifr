@@ -1,0 +1,36 @@
+class Counter:
+    value: int
+    def __init__(self, value: int):
+        self.value = value
+
+    def reduce(mut self, divisor: int):
+        self.value %= 3
+        assert self.value == 1
+        self.value = -17
+        self.value //= 3
+        assert self.value == -6
+        try:
+            self.value = -17
+            self.value %= -3
+            assert self.value == -2
+            self.value = -17
+            self.value //= -3
+            assert self.value == 5
+            if divisor != 0:
+                self.value %= divisor
+                assert self.value == 2
+        except Error:
+            assert False
+
+def main():
+    counter = Counter(-17)
+    counter.reduce(3)
+    counter.value = 18446744073709551617
+    counter.value %= 3
+    assert counter.value == 2
+    try:
+        counter.value = -18446744073709551617
+        counter.value //= 3
+        assert counter.value == -6148914691236517206
+    except Error:
+        assert False

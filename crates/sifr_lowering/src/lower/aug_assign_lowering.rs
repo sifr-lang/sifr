@@ -81,6 +81,59 @@ pub(in crate::lower) fn lower_aug_assign(
         let field_name = attr.attr.to_string();
         let value = lower_python_context_owned_expr(&aug.value, ctx)?;
         let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
+        let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
+        if matches!(field_ty.resolve_alias(), Type::Int | Type::LiteralInt(_))
+            && matches!(aug.op, Operator::Div | Operator::FloorDiv | Operator::Mod)
+        {
+            let base_op = &op_str[..op_str.len() - 1];
+            if exact_int_augassign_requires_handling(
+                field_ty.resolve_alias(),
+                base_op,
+                &value,
+                ctx,
+                aug.value.range(),
+            ) {
+                return None;
+            }
+            let result_ty = match type_check_binary_op(
+                field_ty.resolve_alias(),
+                base_op,
+                value.ty().resolve_alias(),
+            ) {
+                Ok(ty) => ty,
+                Err((code, message)) => {
+                    ctx.error_with_code_at(code, message, aug.value.range());
+                    return None;
+                }
+            };
+            if !result_ty.is_assignable_to(&field_ty) {
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!("augmented assignment result '{result_ty}' is not assignable to field '{field_name}' of type '{field_ty}'"),
+                    aug.target.range(),
+                );
+                return None;
+            }
+            // Preserve the proven integer operation in typed HIR. Rust has no
+            // SifrInt division/remainder assignment traits, and a try closure
+            // does not implicitly receive a fallible augmented assignment.
+            let object = lower_expr(&attr.value, ctx)?;
+            return Some(HirStmt::FieldAssign {
+                object: obj_name,
+                field: field_name.clone(),
+                field_ty: field_ty.clone(),
+                value: HirExpr::BinOp {
+                    left: Box::new(HirExpr::FieldAccess {
+                        object: Box::new(object),
+                        field: field_name,
+                        ty: field_ty,
+                    }),
+                    op: base_op.to_string(),
+                    right: Box::new(value),
+                    ty: result_ty,
+                },
+            });
+        }
         return Some(HirStmt::AttributeAugAssign {
             object: obj_name,
             field: field_name,

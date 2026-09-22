@@ -70,7 +70,7 @@ fn is_integer_failure_op(op: &str) -> bool {
 }
 
 fn is_exact_int_like(ty: &Type) -> bool {
-    matches!(ty, Type::Int | Type::LiteralInt(_))
+    matches!(ty.resolve_alias(), Type::Int | Type::LiteralInt(_))
 }
 
 fn involves_fixed_width_integer(left: &Type, right: &Type) -> bool {
