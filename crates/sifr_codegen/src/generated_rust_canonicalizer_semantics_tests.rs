@@ -342,7 +342,7 @@ fn preserves_if_let_suffix_that_reads_a_shadowing_pattern_binding() {
 }
 
 #[test]
-fn folds_generated_conditional_initialization_without_losing_branch_effects() {
+fn folds_proven_initializers_and_preserves_unproven_constructors() {
     let source = r#"
         fn choose(flag: bool, nested: bool, input: &str) -> (String, Vec<i64>, i64) {
             let mut text = {
@@ -369,14 +369,22 @@ fn folds_generated_conditional_initialization_without_losing_branch_effects() {
     let canonical = canonicalize_generated_rust_source(source)
         .expect("generated replace-then-branch scaffolding should become conditional initializers");
 
-    assert!(canonical.contains("let text = if flag"), "{canonical}");
-    assert!(canonical.contains("let values = if flag"), "{canonical}");
-    assert!(canonical.contains("let origin = if flag"), "{canonical}");
+    // Syntax alone does not prove constructor/method calls discardable. Keep
+    // their evaluations; the literal integer initializer has a shared proof.
     assert!(
-        canonical.contains("const fn wrapped(value: String) -> String {\n    value\n}"),
+        canonical.contains("let mut text = input.to_string()"),
         "{canonical}"
     );
-    assert!(!canonical.contains("selected = value"), "{canonical}");
+    assert!(
+        canonical.contains("let mut values = Vec::new()"),
+        "{canonical}"
+    );
+    assert!(canonical.contains("let origin = if flag"), "{canonical}");
+    assert!(
+        canonical.contains("let mut selected = String::new()"),
+        "{canonical}"
+    );
+    assert!(canonical.contains("selected = value"), "{canonical}");
 }
 
 #[test]

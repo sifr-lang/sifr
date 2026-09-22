@@ -677,3 +677,47 @@ fn option_question_mark_rejects_competing_clone_and_opaque_imports() {
     count.visit_file(&syn::parse_file(&opaque).expect("opaque syntax"));
     assert_eq!(count.0, 0, "{opaque}");
 }
+
+#[test]
+fn borrowed_display_payload_keeps_string_conversion() {
+    let canonical = canonical_and_compile(
+        r#"
+        #[derive(Clone)]
+        pub struct TimeZone;
+        impl std::fmt::Display for TimeZone {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str("UTC")
+            }
+        }
+        pub fn label(tz: &Option<TimeZone>) -> String {
+            if let Some(tz) = tz.as_ref() {
+                let text: String = tz.to_string();
+                text
+            } else { String::new() }
+        }
+    "#,
+    );
+    assert!(canonical.contains("to_string"), "{canonical}");
+}
+
+#[test]
+fn borrowed_loop_return_preserves_owned_string_clone() {
+    canonical_and_compile(
+        r#"
+        pub fn first(values: &[String]) -> String {
+            for value in values { return value.clone(); }
+            String::new()
+        }
+    "#,
+    );
+}
+
+#[test]
+fn display_field_named_kind_keeps_string_conversion() {
+    canonical_and_compile(
+        r#"
+        pub struct Record { pub kind: i64 }
+        pub fn describe(value: &Record) -> String { value.kind.to_string() }
+    "#,
+    );
+}

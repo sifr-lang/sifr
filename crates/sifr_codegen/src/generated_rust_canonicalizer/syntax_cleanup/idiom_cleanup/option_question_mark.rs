@@ -12,6 +12,9 @@ pub(super) fn rewrite(file: &mut syn::File) {
     Rewriter {
         types: Types::collect(file),
         bindings: HashMap::new(),
+        declarations: HashMap::new(),
+        movable: HashSet::new(),
+        clone_ambiguous: false,
         module: String::new(),
         owner: None,
         local_types: HashSet::new(),
@@ -22,6 +25,9 @@ pub(super) fn rewrite(file: &mut syn::File) {
 
 struct Rewriter {
     types: Types,
+    declarations: HashMap<String, usize>,
+    movable: HashSet<String>,
+    clone_ambiguous: bool,
     bindings: HashMap<String, Value>,
     module: String,
     owner: Option<String>,
@@ -46,6 +52,14 @@ impl Rewriter {
         };
         let direct = matches!(direct, syn::Pat::Ident(binding) if binding.by_ref.is_none() && binding.subpat.is_none());
         for name in names.0 {
+            let count = self.declarations.entry(name.clone()).or_default();
+            *count += 1;
+            if *count == 1 && direct && matches!(kind, Value::Option | Value::Map | Value::Sequence)
+            {
+                self.movable.insert(name.clone());
+            } else {
+                self.movable.remove(&name);
+            }
             self.bindings
                 .insert(name, if direct { kind.clone() } else { Value::Unknown });
         }
@@ -125,6 +139,9 @@ impl Rewriter {
 
     fn function(&mut self, signature: &syn::Signature, body: &mut syn::Block) {
         let previous = std::mem::take(&mut self.bindings);
+        let declarations = std::mem::take(&mut self.declarations);
+        let movable = std::mem::take(&mut self.movable);
+        let clone_ambiguous = std::mem::replace(&mut self.clone_ambiguous, false);
         for argument in &signature.inputs {
             if let syn::FnArg::Typed(argument) = argument {
                 self.bind(&argument.pat, &self.type_kind(&argument.ty));
@@ -142,6 +159,12 @@ impl Rewriter {
             }
         }
         self.visit_block_mut(body);
+        if !self.types.ambiguous_methods.contains("clone") && !self.clone_ambiguous {
+            super::clippy_cleanup::remove_proven_owned_clones(body, &self.movable);
+        }
+        self.declarations = declarations;
+        self.movable = movable;
+        self.clone_ambiguous = clone_ambiguous;
         self.bindings = previous;
     }
 }
@@ -208,6 +231,7 @@ impl VisitMut for Rewriter {
                     }
                 }
                 self.local_imports = true;
+                self.clone_ambiguous = true;
                 Imports(&mut self.local_types).visit_use_tree(&item.tree);
                 // Unknown block globs can introduce any type spelling.
                 if matches!(&item.tree, syn::UseTree::Glob(_)) {

@@ -11,11 +11,11 @@ impl RustEmitter {
         if self.project_nominal_type_paths.is_empty() {
             return None;
         }
-        let builtin_identity = identity
-            .is_none()
-            .then(|| crate::builtin_error_identity(name))
-            .flatten();
-        let key = identity.or(builtin_identity.as_deref()).unwrap_or(name);
+        assert!(
+            identity.is_some() || crate::builtin_error_identity(name).is_none(),
+            "project union builtin error '{name}' requires its canonical nominal identity"
+        );
+        let key = identity.unwrap_or(name);
         if let Some(path) = self.project_nominal_type_paths.get(key) {
             return Some(path);
         }
@@ -806,5 +806,14 @@ mod tests {
                 _ => None,
             }
         );
+    }
+    #[test]
+    #[should_panic(expected = "requires its canonical nominal identity")]
+    fn builtin_project_member_requires_explicit_identity() {
+        let mut emitter = RustEmitter::new();
+        emitter
+            .project_nominal_type_paths
+            .insert("ValueError".to_string(), "crate::ValueError".to_string());
+        let _ = emitter.project_nominal_path(None, "ValueError");
     }
 }

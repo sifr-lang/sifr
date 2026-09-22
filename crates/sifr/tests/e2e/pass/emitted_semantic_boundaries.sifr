@@ -1,0 +1,39 @@
+class Source:
+    value: str
+    calls: int
+
+    def __init__(self):
+        self.value = "x,y,z"
+        self.calls = 0
+
+    def text(mut self) -> str:
+        self.calls = self.calls + 1
+        return self.value
+
+    def count(mut self) -> int:
+        self.calls = self.calls + 1
+        return 1
+
+def optional_length(value: str | None) -> int:
+    return len(value)
+
+def disjunction(enabled: bool, values: list[int], index: int) -> bool:
+    return enabled or values[index] > 0
+
+def negated(enabled: bool, values: list[int], index: int) -> bool:
+    return not (enabled and values[index] > 0)
+
+def main():
+    source = Source()
+    parts = source.text().split(",", source.count())
+    assert parts == ["x", "y,z"]
+    changed = source.text().replace("x", "z", source.count())
+    assert changed == "z,y,z"
+    assert source.calls == 4
+    __sifr_string_receiver: int = 1
+    assert source.text().split(",", __sifr_string_receiver) == ["x", "y,z"]
+    assert source.calls == 5
+    assert optional_length("a🦀z") == 3
+    assert optional_length(None) == 0
+    assert disjunction(True, [], 0)
+    assert negated(False, [], 0)

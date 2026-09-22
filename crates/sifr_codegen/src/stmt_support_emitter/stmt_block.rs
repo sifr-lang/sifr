@@ -10,6 +10,10 @@ impl RustEmitter {
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         let mut lowered_block = Vec::new();
         for (stmt_index, stmt) in stmts.iter().enumerate() {
+            let Some(normalized) = self.body_analysis.statement_for_lowering(stmt) else {
+                continue;
+            };
+            let stmt = normalized.as_ref();
             if let Some(lowered) =
                 self.try_lower_checked_place_mutation_tail_for_ir(stmt, &stmts[stmt_index + 1..])?
             {

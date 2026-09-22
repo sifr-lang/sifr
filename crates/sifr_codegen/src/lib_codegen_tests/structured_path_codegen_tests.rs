@@ -162,7 +162,10 @@ def main():
         "fn dfs(i: SifrInt, res: &mut Vec<Vec<SifrInt>>, subset: &mut Vec<SifrInt>, values: &[SifrInt])"
     ));
     assert!(generated.contains("dfs(SifrInt::from_i64(0), &mut res, &mut subset, &values);"));
-    assert!(generated.contains("dfs(&i + &SifrInt::from_i64(1), res, subset, values);"));
+    assert!(
+        generated
+            .contains("dfs(::std::ops::Add::add(&i, &SifrInt::from_i64(1)), res, subset, values);")
+    );
 }
 
 #[test]

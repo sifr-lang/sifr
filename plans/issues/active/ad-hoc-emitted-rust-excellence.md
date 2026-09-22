@@ -2,6 +2,60 @@
 
 Status: active
 
+## Retained Item 12 reconciliation (2026-09-22)
+
+Status: implementation and named qualification in progress; not merged or closed.
+The current assignment authorizes only retained Item 12. It supersedes historical
+per-item broad-gate and one-shot limits: this intermediate implementation receives
+focused/named validation and scoped Opus review; the subsequent integration
+qualifier owns the full merge profile, and the docs-only closer owns whole-phase
+review. No create-PR or full merge profile has run in this continuation.
+
+Exclusive custody transferred from the terminal 12D/E/F worker to this session:
+worktree /home/yaser5/projects/sifr/worktrees/emitted-rust-12def-20260922,
+new branch codex/emitted-rust-retained12-20260922, base/main
+58437ba07ae0220d4c3c13c8c258cb8a9b8de0be. The predecessor branch and evidence
+remain intact. New evidence is stored separately in
+/home/yaser5/projects/sifr/emitted-rust-retained12-evidence.
+Retained source 8ad089a9458f35fcfa228e93fe44f4d69731828b is a mechanism reference,
+not an integration candidate: current ownership, macro traversal, Option,
+const-drop and project identity repairs take precedence over its obsolete paths.
+
+The pre-change algorithmic dependency scan passed all 411 native cases using the
+predecessor compiler (binary SHA256
+3a95ab907374f262e43caf8a91da7daef4c784863825aacf28368f876bf9f566),
+current merged corpus 4da4f7a, and the transferred private cache. See
+baseline-inputs.json and the immutable baseline result/taxonomy artifacts.
+This resolves the old dependency hypothesis; it does not qualify the new compiler.
+
+Named validation registration:
+
+- Codegen library tests, including retained semantic/ownership regressions and
+  the existing rustc-compiled negative ownership contracts.
+- Driver checked_codegen_tests; focused native semantic-boundary and
+  cpython_itertools_subset fixtures, then the full positive E2E selection.
+- Generated-code quality full, every discovered entrypoint class, all 264
+  regenerated authoritative companions, and the full algorithmic selection.
+- Relevant stdlib parity, project test, Rust interop/static-program and sysroot
+  selections; exact surface-class coverage is recorded with final evidence.
+- Canonical formatting, strict workspace Clippy, file-size/HIR guards,
+  inventory validation/self-tests and documentation/taxonomy checks.
+- qualification_profile_checks.policy_checks() and
+  step_budgets.run_self_test() via PYTHONPATH=verification/runner python3,
+  covering each required SQL suite, both profile selections, runtime cold/warm
+  budgets, suite fingerprints and bounded timing receipts.
+- Coverage readiness and its canonical mutation self-test; generated-quality
+  test_failure_artifacts.py and test_source_quality_checks.py.
+
+Coverage readiness currently passes; its self-test passes 58 cases and 31 Python
+delivery mutations. SQL profile/timing checks pass. Full taxonomy still has three
+unchanged DX documentation failures owned by issue
+[#3898](https://github.com/sifr-lang/sifr/issues/3898); this continuation does not
+repair that unrelated documentation. Owned taxonomy findings are corrected here.
+The tracked three-byte Untitled fixture artifact originated in c9e5aba72;
+it has no .sifr test contract and is removed under the explicit deferred row.
+No unexplained ignored fixture-root artifacts were found.
+
 ## Items 12D/12E/12F closure (2026-09-22)
 
 **12D, 12E and 12F are merged and complete; no blocker for this batch.**

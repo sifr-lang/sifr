@@ -231,3 +231,9 @@ mod generated_support_regression_tests;
 mod compiled_identity;
 #[doc(hidden)]
 pub use compiled_identity::compiled_input_tokens;
+
+#[cfg(test)]
+mod generated_rust_canonicalizer_ownership_tests;
+
+#[cfg(test)]
+mod generated_rust_canonicalizer_control_flow_tests;

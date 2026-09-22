@@ -146,3 +146,6 @@ mod task_spawn_ownership_codegen_tests;
 mod template_string_codegen_tests;
 #[cfg(test)]
 mod union_representation_codegen_tests;
+
+#[cfg(test)]
+mod retained_semantics_codegen_tests;

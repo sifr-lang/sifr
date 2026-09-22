@@ -4,6 +4,7 @@ use super::{
     generate_rust_with_stdlib_for_module_with_project_policy, publicize_generated_module_source,
     render_import_items, render_support,
 };
+use crate::CodegenError;
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
 use crate::project_stdlib_nominals::{
     RelocatedStructuralImplementations, extract_project_stdlib_nominal_prelude,
@@ -294,7 +295,7 @@ pub(crate) fn register_imported_generic_classes(
 pub fn generate_rust_multi_with_metadata(
     modules: &[(&str, &HirModule)],
     stdlib_code: &StdlibCode,
-) -> MultiModuleCodegenResult {
+) -> Result<MultiModuleCodegenResult, CodegenError> {
     let mut files = HashMap::new();
     let mut used_stdlib_modules = HashSet::new();
     let mut required_features = HashSet::new();
@@ -440,9 +441,11 @@ pub fn generate_rust_multi_with_metadata(
     for (module_name, source) in &mut files {
         if !crate_root_modules.contains(module_name.as_str()) {
             *source = crate::import_project_prelude_bindings(&unpruned_project_prelude, source)
-                .unwrap_or_else(|error| {
-                    panic!("failed to import finalized project owners: {error}")
-                });
+                .map_err(|error| {
+                    CodegenError::new(format!(
+                        "failed to import finalized project owners: {error}"
+                    ))
+                })?;
         }
     }
     let support_imports = Renderer::new().render_file(&RustFile {
@@ -459,11 +462,15 @@ pub fn generate_rust_multi_with_metadata(
         &support_source,
         &body_consumers,
     )
-    .unwrap_or_else(|error| panic!("failed to prune generated project owners: {error}"));
+    .map_err(|error| {
+        CodegenError::new(format!("failed to prune generated project owners: {error}"))
+    })?;
     project_union_prelude = crate::import_root_bindings_in_project_nominals(&project_union_prelude)
-        .unwrap_or_else(|error| {
-            panic!("failed to import project root bindings into nominals: {error}")
-        });
+        .map_err(|error| {
+            CodegenError::new(format!(
+                "failed to import project root bindings into nominals: {error}"
+            ))
+        })?;
     if !support_source.trim().is_empty() {
         let consumers = std::iter::once(project_union_prelude.as_str())
             .chain(body_consumers.iter().copied())
@@ -471,9 +478,11 @@ pub fn generate_rust_multi_with_metadata(
         let visible_support = crate_visible_generated_support_source(&support_source, &consumers);
         let visible_support =
             crate::import_project_prelude_bindings(&project_union_prelude, &visible_support)
-                .unwrap_or_else(|error| {
-                    panic!("failed to import project prelude bindings into support: {error}")
-                });
+                .map_err(|error| {
+                    CodegenError::new(format!(
+                        "failed to import project prelude bindings into support: {error}"
+                    ))
+                })?;
         let support_names = rust_source_defined_item_names(&visible_support);
         let prelude_support_refs = crate::stdlib_filter::rust_source_referenced_item_names(
             &project_union_prelude,
@@ -483,15 +492,21 @@ pub fn generate_rust_multi_with_metadata(
             &project_union_prelude,
             &visible_support,
         )
-        .unwrap_or_else(|error| panic!("invalid generated project support trait layout: {error}"));
+        .map_err(|error| {
+            CodegenError::new(format!(
+                "invalid generated project support trait layout: {error}"
+            ))
+        })?;
         if !prelude_support_refs.is_empty() || !prelude_support_traits.is_empty() {
             project_union_prelude = crate::import_generated_support_in_project_nominals(
                 &project_union_prelude,
                 &visible_support,
             )
-            .unwrap_or_else(|error| {
-                panic!("failed to import generated project support into nominals: {error}")
-            });
+            .map_err(|error| {
+                CodegenError::new(format!(
+                    "failed to import generated project support into nominals: {error}"
+                ))
+            })?;
         }
         for (module_name, source) in &mut files {
             let module_needs_support = module_support_demands
@@ -501,9 +516,11 @@ pub fn generate_rust_multi_with_metadata(
                 crate::stdlib_filter::rust_source_referenced_item_names(source, &support_names);
             let body_support_traits =
                 crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support)
-                    .unwrap_or_else(|error| {
-                        panic!("invalid generated project support trait layout: {error}")
-                    });
+                    .map_err(|error| {
+                        CodegenError::new(format!(
+                            "invalid generated project support trait layout: {error}"
+                        ))
+                    })?;
             if module_needs_support
                 && (!body_support_refs.is_empty() || !body_support_traits.is_empty())
             {
@@ -525,14 +542,29 @@ pub fn generate_rust_multi_with_metadata(
             .join("\n\n");
     }
 
+    {
+        let mut sources = vec![("", &mut project_union_prelude)];
+        sources.extend(
+            files
+                .iter_mut()
+                .map(|(name, source)| (if name == "main" { "" } else { name.as_str() }, source)),
+        );
+        crate::generated_rust_canonicalizer::rewrite_named_project_borrows(&mut sources)
+            .map_err(CodegenError::new)?;
+    }
+
     crate::retain_generated_dependency_metadata(
         std::iter::once(project_union_prelude.as_str()).chain(files.values().map(String::as_str)),
         &mut used_stdlib_modules,
         &mut required_features,
     )
-    .unwrap_or_else(|error| panic!("failed to finalize generated project dependencies: {error}"));
+    .map_err(|error| {
+        CodegenError::new(format!(
+            "failed to finalize generated project dependencies: {error}"
+        ))
+    })?;
 
-    MultiModuleCodegenResult {
+    Ok(MultiModuleCodegenResult {
         rust_files: files,
         project_union_prelude,
         used_stdlib_modules,
@@ -544,16 +576,15 @@ pub fn generate_rust_multi_with_metadata(
                 .map(|(name, module)| (Some(*name), *module))
                 .collect::<Vec<_>>(),
         ),
-    }
+    })
 }
 
 /// Generate Rust source code for a multi-module project.
 /// Returns a map of filename -> Rust source code.
-pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, String> {
-    generate_rust_multi_with_metadata(modules, &StdlibCode::default())
-        .rust_files
-        .into_iter()
-        .collect()
+pub fn generate_rust_multi(
+    modules: &[(&str, &HirModule)],
+) -> Result<HashMap<String, String>, CodegenError> {
+    Ok(generate_rust_multi_with_metadata(modules, &StdlibCode::default())?.rust_files)
 }
 
 /// Generate a complete Rust project (Cargo.toml + main.rs content).

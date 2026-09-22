@@ -85,7 +85,8 @@ fn project_unions_have_one_crate_root_definition() {
     let generated = generate_rust_multi_with_metadata(
         &[("main", &consumer), ("provider", &provider)],
         &StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     let provider_source = &generated.rust_files["provider"];
     assert!(
         generated
@@ -121,7 +122,8 @@ fn main_owned_union_is_imported_from_the_crate_root() {
     let generated = generate_rust_multi_with_metadata(
         &[("main", &owner), ("support", &consumer)],
         &StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
 
     assert!(
         generated
@@ -155,7 +157,8 @@ fn dotted_union_user_imports_the_crate_root_definition() {
     let generated = generate_rust_multi_with_metadata(
         &[("pkg.errors", &owner), ("main", &consumer)],
         &StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
 
     assert!(
         generated.rust_files["pkg.errors"].contains(&format!("use crate::{enum_name};")),
@@ -188,7 +191,8 @@ fn root_prelude_combines_try_conversions_with_ordinary_union_traits() {
     let generated = generate_rust_multi_with_metadata(
         &[("errors", &owner), ("main", &consumer)],
         &StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     let prelude = &generated.project_union_prelude;
 
     assert!(
@@ -218,7 +222,8 @@ fn root_prelude_uses_crate_rooted_nominal_payload_paths() {
     let generated = generate_rust_multi_with_metadata(
         &[("app", &unrelated), ("errors", &errors)],
         &StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
 
     assert!(
         generated

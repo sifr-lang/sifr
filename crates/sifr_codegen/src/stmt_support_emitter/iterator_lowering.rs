@@ -406,7 +406,6 @@ impl RustEmitter {
         if matches!(source_ty, Type::Iterator(_))
             || matches!(source, HirExpr::GeneratorExpr { .. })
             || self.is_generator_call(source)
-            || Self::is_iterator_like_expr_for_ir(&lowered_source)
         {
             return Ok(Some(lowered_source));
         }
@@ -641,38 +640,6 @@ impl RustEmitter {
             };
         }
         expr
-    }
-
-    pub(crate) fn is_iterator_like_expr_for_ir(expr: &crate::RustExpr) -> bool {
-        match expr {
-            crate::RustExpr::MethodCall {
-                receiver, method, ..
-            } => {
-                matches!(
-                    method.as_str(),
-                    "into_iter"
-                        | "into_keys"
-                        | "map"
-                        | "filter"
-                        | "filter_map"
-                        | "zip"
-                        | "chain"
-                        | "enumerate"
-                        | "copied"
-                        | "cloned"
-                ) || Self::is_iterator_like_expr_for_ir(receiver)
-            }
-            crate::RustExpr::FnCall { func, args } => {
-                Self::is_iterator_like_expr_for_ir(func)
-                    || args.iter().any(Self::is_iterator_like_expr_for_ir)
-            }
-            crate::RustExpr::Paren(inner)
-            | crate::RustExpr::Try(inner)
-            | crate::RustExpr::Await(inner)
-            | crate::RustExpr::Deref(inner)
-            | crate::RustExpr::Clone(inner) => Self::is_iterator_like_expr_for_ir(inner),
-            _ => false,
-        }
     }
 
     pub(crate) fn rust_stmts_contain_await(stmts: &[RustStmt]) -> bool {

@@ -19,6 +19,10 @@ mod item_dependencies;
 mod local_name_cleanup;
 mod member_demand;
 mod method_demand;
+mod project_borrow_cleanup;
+pub(crate) use project_borrow_cleanup::rewrite_named_project_borrows;
+#[cfg(test)]
+pub(crate) use project_borrow_cleanup::rewrite_project_borrowed_string_literals;
 mod project_support_pruning;
 pub(crate) use project_support_pruning::{
     import_generated_support_in_project_nominals, import_project_prelude_bindings,
@@ -220,6 +224,7 @@ fn rewrite_format_captures(source: &str) -> Result<String, String> {
         .map_err(|error| format!("failed to reparse final generated Rust: {error}"))?;
     let before_api = api_file.to_token_stream().to_string();
     improve_generated_api_items(&mut api_file.items, &final_syntax);
+    syntax_cleanup::apply_lexical_type_cleanup(&mut api_file);
     let api_changed = api_file.to_token_stream().to_string() != before_api;
     if !shorthand_changed && !syntax_changed && !api_changed {
         return Ok(source.to_string());
@@ -248,6 +253,7 @@ fn improve_final_api_source(mut source: String) -> Result<String, String> {
         let mut file = syn::parse_file(&source)
             .map_err(|error| format!("failed to reparse final generated Rust: {error}"))?;
         improve_generated_api_items(&mut file.items, &source);
+        syntax_cleanup::apply_lexical_type_cleanup(&mut file);
         let improved = prettyplease::unparse(&file);
         if improved == source {
             return Ok(source);

@@ -84,9 +84,9 @@ fn format_argument_index(rust_macro: &syn::Macro) -> Option<usize> {
     let name = rust_macro.path.segments.last()?.ident.to_string();
     match name.as_str() {
         "format" | "format_args" | "format_args_nl" | "print" | "println" | "eprint"
-        | "eprintln" => Some(0),
-        "assert" | "write" | "writeln" => Some(1),
-        "assert_eq" | "assert_ne" => Some(2),
+        | "eprintln" | "panic" | "unreachable" | "todo" | "unimplemented" => Some(0),
+        "assert" | "debug_assert" | "write" | "writeln" => Some(1),
+        "assert_eq" | "assert_ne" | "debug_assert_eq" | "debug_assert_ne" => Some(2),
         _ => None,
     }
 }
@@ -222,5 +222,21 @@ mod tests {
                 .to_string()
                 .contains("{renamed:renamed$.renamed$}")
         );
+    }
+    #[test]
+    fn failure_and_debug_macro_families_preserve_implicit_captures() {
+        for rust_macro in [
+            syn::parse_quote!(panic!("{value}")),
+            syn::parse_quote!(unreachable!("{value}")),
+            syn::parse_quote!(todo!("{value}")),
+            syn::parse_quote!(unimplemented!("{value}")),
+            syn::parse_quote!(debug_assert!(false, "{value}")),
+            syn::parse_quote!(debug_assert_eq!(1, 2, "{value}")),
+            syn::parse_quote!(debug_assert_ne!(1, 2, "{value}")),
+        ] {
+            assert_eq!(names(&rust_macro), HashSet::from(["value".to_string()]));
+        }
+        let named: syn::Macro = syn::parse_quote!(panic!("{value}", value = 1));
+        assert!(names(&named).is_empty());
     }
 }

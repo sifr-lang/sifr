@@ -25,7 +25,7 @@ pub(super) fn fold_assignment_conditionals(
             index += 1;
             continue;
         };
-        if !expression_is_replaceable_initializer(&init_value, &name)
+        if !expression_is_replaceable_initializer(&init_value, &statements[index])
             || expression_uses_identifier(&init_value, &name)
         {
             index += 1;
@@ -60,119 +60,148 @@ pub(super) fn fold_assignment_conditionals(
     }
 }
 
-fn expression_is_replaceable_initializer(expression: &syn::Expr, binding: &str) -> bool {
-    expression_is_pure_initializer(expression)
-        || generated_local_builder_is_pure(expression)
-        || (binding.starts_with("sifr_generated_chars_") && is_character_collection(expression))
-}
-
-fn generated_local_builder_is_pure(expression: &syn::Expr) -> bool {
-    let syn::Expr::Block(block) = expression else {
-        return false;
-    };
-    let Some(syn::Stmt::Expr(syn::Expr::Path(tail), None)) = block.block.stmts.last() else {
-        return false;
-    };
-    let Some(name) = tail.path.get_ident().map(ToString::to_string) else {
-        return false;
-    };
-    if !name.starts_with("sifr_generated_") {
-        return false;
-    }
-    block.block.stmts[..block.block.stmts.len() - 1]
-        .iter()
-        .all(|statement| generated_builder_statement_is_pure(statement, &name))
-}
-
-fn generated_builder_statement_is_pure(statement: &syn::Stmt, name: &str) -> bool {
-    match statement {
-        syn::Stmt::Local(local) => {
-            simple_binding_name(&local.pat).as_deref() == Some(name)
-                && local.init.as_ref().is_some_and(|init| {
-                    init.diverge.is_none() && generated_builder_initializer_is_pure(&init.expr)
-                })
+pub(super) fn rewrite_empty_character_cache_initializers(statements: &mut [syn::Stmt]) {
+    for index in 1..statements.len() {
+        let Some(empty_string) = empty_string_local_name(&statements[index - 1]) else {
+            continue;
+        };
+        let syn::Stmt::Local(cache) = &mut statements[index] else {
+            continue;
+        };
+        if !local_has_vec_char_type(&syn::Stmt::Local(cache.clone())) {
+            continue;
         }
-        syn::Stmt::Expr(syn::Expr::MethodCall(call), Some(_)) => {
-            matches!(call.method.to_string().as_str(), "push" | "push_str")
-                && matches!(call.receiver.as_ref(), syn::Expr::Path(path)
-                    if path.qself.is_none() && path.path.is_ident(name))
-                && call.args.iter().all(expression_is_pure_initializer)
+        let Some(init) = &mut cache.init else {
+            continue;
+        };
+        if matches!(init.expr.as_ref(), syn::Expr::MethodCall(collect)
+            if collect.method == "collect" && collect.args.is_empty()
+                && matches!(collect.receiver.as_ref(), syn::Expr::MethodCall(chars)
+                    if chars.method == "chars" && chars.args.is_empty()
+                        && matches!(chars.receiver.as_ref(), syn::Expr::Path(path)
+                            if path.path.is_ident(&empty_string))))
+        {
+            *init.expr = syn::parse_quote!(Vec::new());
         }
-        _ => false,
     }
 }
 
-fn generated_builder_initializer_is_pure(expression: &syn::Expr) -> bool {
-    match expression {
-        syn::Expr::Call(call) => {
-            matches!(call.func.as_ref(), syn::Expr::Path(path)
-                if path.path.segments.last().is_some_and(|segment|
-                    matches!(segment.ident.to_string().as_str(), "new" | "with_capacity")))
-                && call.args.iter().all(expression_is_pure_initializer)
-        }
-        syn::Expr::Macro(expression_macro) => {
-            expression_macro.mac.path.is_ident("vec") && expression_macro.mac.tokens.is_empty()
-        }
-        _ => false,
-    }
+fn empty_string_local_name(statement: &syn::Stmt) -> Option<String> {
+    let syn::Stmt::Local(local) = statement else {
+        return None;
+    };
+    let init = local.init.as_ref()?;
+    let syn::Expr::Call(call) = init.expr.as_ref() else {
+        return None;
+    };
+    matches!(call.func.as_ref(), syn::Expr::Path(path)
+        if path.path.segments.len() == 2
+            && path.path.segments[0].ident == "String"
+            && path.path.segments[1].ident == "new"
+            && call.args.is_empty())
+    .then(|| assignment_pattern_name(&local.pat))
+    .flatten()
 }
 
-fn simple_binding_name(pattern: &syn::Pat) -> Option<String> {
+fn assignment_pattern_name(pattern: &syn::Pat) -> Option<String> {
     match pattern {
         syn::Pat::Ident(binding) if binding.subpat.is_none() => Some(binding.ident.to_string()),
-        syn::Pat::Type(typed) => simple_binding_name(&typed.pat),
-        syn::Pat::Paren(paren) => simple_binding_name(&paren.pat),
+        syn::Pat::Type(typed) => assignment_pattern_name(&typed.pat),
+        syn::Pat::Paren(paren) => assignment_pattern_name(&paren.pat),
         _ => None,
     }
 }
 
-fn is_character_collection(expression: &syn::Expr) -> bool {
+fn expression_is_replaceable_initializer(expression: &syn::Expr, statement: &syn::Stmt) -> bool {
+    crate::discardability::syntax_expression_is_discardable(expression)
+        || (matches!(expression, syn::Expr::Path(_)) && local_has_bool_type(statement))
+        || (local_has_string_type(statement) && is_owned_string_copy(expression))
+        || (local_has_vec_type(statement) && is_empty_vec(expression))
+        || (local_has_vec_char_type(statement) && is_chars_collection(expression))
+        || (local_has_option_type(statement)
+            && matches!(expression, syn::Expr::Path(path) if path.path.is_ident("None")))
+        || matches!(expression,
+            syn::Expr::Call(call)
+                if matches!(call.func.as_ref(), syn::Expr::Path(path)
+                    if path.path.segments.len() == 2
+                        && path.path.segments[0].ident == "SifrInt"
+                        && path.path.segments[1].ident == "from")
+                    && matches!(call.args.first(), Some(syn::Expr::MethodCall(method))
+                        if method.method == "len" && method.args.is_empty())
+                    && call.args.len() == 1)
+}
+
+fn local_has_vec_char_type(statement: &syn::Stmt) -> bool {
+    let syn::Stmt::Local(local) = statement else {
+        return false;
+    };
+    matches!(&local.pat, syn::Pat::Type(typed)
+        if matches!(typed.ty.as_ref(), syn::Type::Path(path)
+            if path.path.segments.last().is_some_and(|segment|
+                segment.ident == "Vec"
+                    && matches!(&segment.arguments, syn::PathArguments::AngleBracketed(arguments)
+                        if matches!(arguments.args.first(), Some(syn::GenericArgument::Type(
+                            syn::Type::Path(element))) if element.path.is_ident("char"))))))
+}
+
+fn is_chars_collection(expression: &syn::Expr) -> bool {
     let syn::Expr::MethodCall(collect) = expression else {
         return false;
     };
-    if collect.method != "collect" || !collect.args.is_empty() {
-        return false;
-    }
-    let syn::Expr::MethodCall(chars) = collect.receiver.as_ref() else {
-        return false;
-    };
-    chars.method == "chars"
-        && chars.args.is_empty()
-        && expression_is_pure_initializer(&chars.receiver)
+    collect.method == "collect"
+        && collect.args.is_empty()
+        && matches!(collect.receiver.as_ref(), syn::Expr::MethodCall(chars)
+            if chars.method == "chars" && chars.args.is_empty())
 }
 
-pub(super) fn expression_is_pure_initializer(expression: &syn::Expr) -> bool {
-    match expression {
-        syn::Expr::Lit(_) | syn::Expr::Path(_) => true,
-        syn::Expr::Paren(paren) => expression_is_pure_initializer(&paren.expr),
-        syn::Expr::Reference(reference) => expression_is_pure_initializer(&reference.expr),
-        syn::Expr::Unary(unary) => expression_is_pure_initializer(&unary.expr),
-        syn::Expr::MethodCall(call)
-            if call.args.is_empty()
-                && matches!(
-                    call.method.to_string().as_str(),
-                    "as_str" | "len" | "to_string" | "to_owned"
-                ) =>
-        {
-            expression_is_pure_initializer(&call.receiver)
-        }
-        syn::Expr::Call(call)
-            if call.args.is_empty()
-                && matches!(call.func.as_ref(), syn::Expr::Path(path)
-                    if path.path.segments.last().is_some_and(|segment| segment.ident == "new")) =>
-        {
-            true
-        }
-        syn::Expr::Call(call)
-            if matches!(call.func.as_ref(), syn::Expr::Path(path)
-                if path.path.segments.last().is_some_and(|segment|
-                    matches!(segment.ident.to_string().as_str(), "from" | "from_i64"))
-                    && path.path.segments.iter().rev().nth(1).is_some_and(|segment| segment.ident == "SifrInt")) =>
-        {
-            call.args.iter().all(expression_is_pure_initializer)
-        }
-        _ => false,
-    }
+fn local_has_option_type(statement: &syn::Stmt) -> bool {
+    let syn::Stmt::Local(local) = statement else {
+        return false;
+    };
+    matches!(&local.pat, syn::Pat::Type(typed)
+        if matches!(typed.ty.as_ref(), syn::Type::Path(path)
+            if path.path.segments.last().is_some_and(|segment| segment.ident == "Option")))
+}
+
+fn local_has_string_type(statement: &syn::Stmt) -> bool {
+    let syn::Stmt::Local(local) = statement else {
+        return false;
+    };
+    matches!(&local.pat, syn::Pat::Type(typed)
+        if matches!(typed.ty.as_ref(), syn::Type::Path(path) if path.path.is_ident("String")))
+}
+
+fn is_owned_string_copy(expression: &syn::Expr) -> bool {
+    matches!(expression, syn::Expr::MethodCall(call)
+        if matches!(call.method.to_string().as_str(), "clone" | "to_owned" | "to_string")
+            && call.args.is_empty()
+            && matches!(call.receiver.as_ref(), syn::Expr::Path(_) | syn::Expr::Lit(_)))
+}
+
+fn local_has_vec_type(statement: &syn::Stmt) -> bool {
+    let syn::Stmt::Local(local) = statement else {
+        return false;
+    };
+    matches!(&local.pat, syn::Pat::Type(typed)
+        if matches!(typed.ty.as_ref(), syn::Type::Path(path)
+            if path.path.segments.last().is_some_and(|segment| segment.ident == "Vec")))
+}
+
+fn is_empty_vec(expression: &syn::Expr) -> bool {
+    matches!(expression, syn::Expr::Call(call)
+        if call.args.is_empty()
+            && matches!(call.func.as_ref(), syn::Expr::Path(path)
+                if path.path.segments.len() == 2
+                    && path.path.segments[0].ident == "Vec"
+                    && path.path.segments[1].ident == "new"))
+}
+
+fn local_has_bool_type(statement: &syn::Stmt) -> bool {
+    let syn::Stmt::Local(local) = statement else {
+        return false;
+    };
+    matches!(&local.pat, syn::Pat::Type(typed)
+        if matches!(typed.ty.as_ref(), syn::Type::Path(path) if path.path.is_ident("bool")))
 }
 
 pub(super) fn expression_uses_identifier(expression: &syn::Expr, name: &str) -> bool {

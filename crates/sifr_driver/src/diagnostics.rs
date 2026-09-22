@@ -440,3 +440,55 @@ pub(crate) fn run_codegen_with_boundary<T>(
         ))),
     }
 }
+
+pub(crate) fn run_checked_codegen_with_boundary<T>(
+    context: impl Into<String>,
+    f: impl FnOnce() -> Result<T, sifr_codegen::CodegenError>,
+) -> Result<T, Box<RenderedDiagnostic>> {
+    let context = context.into();
+    run_codegen_with_boundary(context.clone(), f)?.map_err(|error| {
+        Box::new(diagnostic_with_code(
+            format!("{context}: {error}"),
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ))
+    })
+}
+
+#[cfg(test)]
+mod checked_codegen_tests {
+    use super::run_checked_codegen_with_boundary;
+
+    #[test]
+    fn checked_codegen_error_is_a_diagnostic_without_unwinding() {
+        let outcome = std::panic::catch_unwind(|| {
+            run_checked_codegen_with_boundary::<()>("project support", || {
+                Err(sifr_codegen::CodegenError::new("invalid trait layout"))
+            })
+        });
+        let diagnostic = outcome
+            .expect("checked errors must not unwind")
+            .expect_err("invalid layout must fail");
+        assert!(
+            diagnostic
+                .message
+                .contains("project support: invalid trait layout")
+        );
+        assert_eq!(
+            diagnostic.code,
+            sifr_diagnostics::DiagnosticCode::INTERNAL_COMPILER_PANIC.code()
+        );
+    }
+
+    #[test]
+    fn checked_codegen_preserves_success_and_unexpected_panic_boundary() {
+        assert_eq!(
+            run_checked_codegen_with_boundary("project", || Ok(42)).unwrap(),
+            42
+        );
+        let diagnostic = run_checked_codegen_with_boundary::<()>("project", || {
+            panic!("unexpected codegen invariant")
+        })
+        .expect_err("unexpected panic remains a compiler diagnostic");
+        assert!(diagnostic.message.contains("unexpected codegen invariant"));
+    }
+}

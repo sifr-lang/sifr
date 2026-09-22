@@ -17,6 +17,15 @@ impl From<&SifrInt> for SifrInt {
     }
 }
 
+impl From<SifrInt> for String {
+    fn from(value: SifrInt) -> Self {
+        match value {
+            SifrInt::Small(value) => value.to_string(),
+            SifrInt::Big(value) => value.to_string(),
+        }
+    }
+}
+
 impl From<i64> for SifrInt {
     fn from(value: i64) -> Self {
         Self::from_i64(value)

@@ -1,6 +1,8 @@
 use super::execution::execute_test_runner_project;
 use crate::build::finalize_test_runner_project;
-use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary, write_stderr_line};
+use crate::diagnostics::{
+    RenderedDiagnostic, run_checked_codegen_with_boundary, write_stderr_line,
+};
 use crate::project::{
     DiscoveryDiagnosticStyle, ModuleResolver, ParsedProjectModule,
     collect_project_hir_source_modules, discover_test_root_modules,
@@ -139,8 +141,8 @@ pub(crate) fn build_test_runner_project(
             .chain(&test_module_refs)
             .map(|(_, module)| *module),
     )?;
-    let generated = run_codegen_with_boundary(
-        "internal compiler panic during test-project code generation",
+    let generated = run_checked_codegen_with_boundary(
+        "internal compiler failure during test-project code generation",
         || {
             generate_rust_test_project_with_metadata(
                 &support_module_refs,

@@ -2,13 +2,21 @@ use quote::ToTokens;
 use std::collections::HashSet;
 use syn::visit::{self, Visit};
 
-const EXPECTATION_REASON: &str = "generated Rust preserves this exact typed Sifr source contract";
+const EXPECTATION_REASON_MARKER: &str =
+    "generated Rust preserves this exact typed Sifr source contract";
+const EXPECTATION_REASON: &str = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics";
+
+pub(super) struct FunctionExpectationContext {
+    pub owner_has_display: bool,
+    pub copy_receiver_lint: bool,
+    pub trait_impl: bool,
+}
 
 pub(super) fn refresh_function_expectations(
     attrs: &mut Vec<syn::Attribute>,
     signature: &syn::Signature,
     body: &syn::Block,
-    owner_has_display: bool,
+    context: FunctionExpectationContext,
 ) {
     remove_generated_expectations(attrs);
     let mut shape = FunctionShape::default();
@@ -23,7 +31,7 @@ pub(super) fn refresh_function_expectations(
     if shape.has_approximate_constant {
         add_expectation(attrs, "approx_constant");
     }
-    if signature.ident == "to_string" && owner_has_display {
+    if signature.ident == "to_string" && context.owner_has_display {
         add_expectation(attrs, "inherent_to_string_shadow_display");
     }
     if !is_snake_case(&signature.ident.to_string()) {
@@ -31,6 +39,32 @@ pub(super) fn refresh_function_expectations(
     }
     if returns_option(signature) && body_is_single_some(body) {
         add_expectation(attrs, "unnecessary_wraps");
+    }
+    if context.copy_receiver_lint
+        && signature.receiver().is_some_and(|receiver| {
+            matches!(receiver.kind, syn::ReceiverKind::Reference(_, _, None))
+        })
+    {
+        // Source shared receivers retain their callable ABI even for Copy enums.
+        add_expectation(attrs, "trivially_copy_pass_by_ref");
+    }
+    if signature.asyncness.is_some() && !shape.has_await {
+        // Eagerly evaluating an async body changes when its source effects occur.
+        add_expectation(attrs, "unused_async");
+        if context.trait_impl
+            || signature.receiver().is_some_and(|receiver| {
+                matches!(receiver.kind, syn::ReceiverKind::Reference(_, _, Some(_)))
+            })
+        {
+            add_expectation(attrs, "unused_async_trait_impl");
+        }
+    }
+    if !context.trait_impl
+        && signature.asyncness.is_none()
+        && signature.receiver().is_some()
+        && !shape.uses_self
+    {
+        add_expectation(attrs, "unused_self");
     }
     if single_character_binding_count(signature, body) > 4 {
         add_expectation(attrs, "many_single_char_names");
@@ -61,7 +95,7 @@ fn remove_generated_expectations(attrs: &mut Vec<syn::Attribute>) {
                 .meta
                 .to_token_stream()
                 .to_string()
-                .contains(EXPECTATION_REASON)
+                .contains(EXPECTATION_REASON_MARKER)
     });
 }
 
@@ -221,9 +255,22 @@ fn is_snake_case(name: &str) -> bool {
 struct FunctionShape {
     asserts_constant: bool,
     has_approximate_constant: bool,
+    has_await: bool,
+    uses_self: bool,
 }
 
 impl<'ast> Visit<'ast> for FunctionShape {
+    fn visit_expr_await(&mut self, expression: &'ast syn::ExprAwait) {
+        self.has_await = true;
+        visit::visit_expr_await(self, expression);
+    }
+    fn visit_expr_path(&mut self, expression: &'ast syn::ExprPath) {
+        if expression.path.is_ident("self") {
+            self.uses_self = true;
+        }
+        visit::visit_expr_path(self, expression);
+    }
+
     fn visit_lit_float(&mut self, literal: &'ast syn::LitFloat) {
         if let Ok(value) = literal.base10_parse::<f64>()
             && [
@@ -278,5 +325,30 @@ fn expression_is_syntactic_constant(expression: &syn::Expr) -> bool {
                 && expression_is_syntactic_constant(&binary.right)
         }
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod receiver_tests {
+    #[test]
+    fn mutable_copy_receiver_does_not_get_shared_receiver_expectation() {
+        let signature = syn::parse_quote!(fn change(&mut self));
+        let body = syn::parse_quote!({});
+        let mut attrs = Vec::new();
+        super::refresh_function_expectations(
+            &mut attrs,
+            &signature,
+            &body,
+            super::FunctionExpectationContext {
+                owner_has_display: false,
+                copy_receiver_lint: true,
+                trait_impl: false,
+            },
+        );
+        assert!(
+            !quote::quote!(#(#attrs)*)
+                .to_string()
+                .contains("trivially_copy_pass_by_ref")
+        );
     }
 }

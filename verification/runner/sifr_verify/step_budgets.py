@@ -53,12 +53,15 @@ def prepare_step_budget(
 
     suites = selected_suites(profile, name)
     binary = Path(env.get("SIFR_GCQ_BIN", repo_root / "target" / "debug" / "sifr"))
+    required_paths = required_cache_paths(repo_root, name, binary, env)
     fingerprint, eligible, ineligible_reason = input_fingerprint(
         repo_root=repo_root,
         profile_name=profile_name,
         step_name=name,
         suites=suites,
         sifr_binary=binary,
+        cache_paths=required_paths,
+        environment=env,
     )
     receipt_path = (
         repo_root
@@ -68,7 +71,6 @@ def prepare_step_budget(
         / profile_name
         / f"{name}.json"
     )
-    required_paths = required_cache_paths(repo_root, name, binary)
     if not eligible:
         state, reason = "cold", ineligible_reason
     else:
@@ -123,7 +125,7 @@ def enforce_step_budget(context: StepBudgetContext | None, elapsed_ms: int) -> i
     return 0
 
 
-def record_step_success(context: StepBudgetContext | None) -> None:
+def record_step_success(context: StepBudgetContext | None, elapsed_ms: int) -> None:
     if (
         context is None
         or context.receipt_path is None
@@ -132,11 +134,22 @@ def record_step_success(context: StepBudgetContext | None) -> None:
         or any(not cache_path_available(path) for path in context.required_cache_paths)
     ):
         return
+    observations: list[dict[str, Any]] = []
+    try:
+        previous = json.loads(context.receipt_path.read_text(encoding="utf-8"))
+        if isinstance(previous, dict) and previous.get("input_fingerprint") == context.cache_fingerprint:
+            saved = previous.get("observations")
+            if isinstance(saved, list):
+                observations = saved[-3:]
+    except (OSError, json.JSONDecodeError):
+        pass
+    observations.append({"cache_state": context.cache_state, "elapsed_ms": elapsed_ms})
     payload = {
         "schema_version": RECEIPT_SCHEMA_VERSION,
         "classifier": CACHE_CLASSIFIER,
         "step": context.name,
         "input_fingerprint": context.cache_fingerprint,
+        "observations": observations,
     }
     atomic_write_json(context.receipt_path, payload)
 
@@ -172,6 +185,8 @@ def input_fingerprint(
     step_name: str,
     suites: list[str],
     sifr_binary: Path,
+    cache_paths: tuple[Path, ...],
+    environment: dict[str, str],
 ) -> tuple[str, bool, str]:
     tracked_state = command_output(
         ["git", "status", "--porcelain", "--untracked-files=no"], repo_root
@@ -198,6 +213,12 @@ def input_fingerprint(
         "rustc": rustc_version,
         "python": sys.version,
         "sifr_binary_sha256": binary_digest,
+        "cache_paths": [str(path.resolve()) for path in cache_paths],
+        "build_environment": {
+            key: environment.get(key)
+            for key in ("RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "RUSTUP_TOOLCHAIN",
+                        "RUSTC", "CARGO_BUILD_TARGET", "SIFR_CACHE_DIR")
+        },
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return (
@@ -212,7 +233,7 @@ def input_fingerprint(
 
 
 def selected_suites(profile: dict[str, Any], step_name: str) -> list[str]:
-    area = "python_interop" if step_name == "python_interop" else step_name
+    area = step_name.removeprefix("area_")
     return [
         str(suite)
         for selection in profile.get("selected_areas", [])
@@ -222,8 +243,14 @@ def selected_suites(profile: dict[str, Any], step_name: str) -> list[str]:
 
 
 def required_cache_paths(
-    repo_root: Path, step_name: str, binary: Path
+    repo_root: Path, step_name: str, binary: Path, environment: dict[str, str]
 ) -> tuple[Path, ...]:
+    if step_name.removeprefix("area_") == "runtime_platform":
+        target = Path(environment.get("CARGO_TARGET_DIR",
+                                      repo_root / "target" / "runtime_platform" / "cargo-target"))
+        if not target.is_absolute():
+            target = repo_root / target
+        return (binary, target / "debug")
     if step_name == "python_interop":
         return (binary, repo_root / "target" / "python" / "debug")
     return (binary,)
@@ -296,7 +323,7 @@ def run_self_test() -> None:
             receipt_eligible=True,
             required_cache_paths=(required,),
         )
-        record_step_success(context)
+        record_step_success(context, 300_000)
         if classify_receipt(
             receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)
         ) != (
@@ -321,7 +348,7 @@ def run_self_test() -> None:
             "receipt-invalid",
         ):
             raise AssertionError("invalid cache receipt was not classified cold")
-        record_step_success(context)
+        record_step_success(context, 300_000)
         (required / "artifact").unlink()
         if classify_receipt(
             receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)

@@ -8,7 +8,8 @@ fn multi_module_support_has_one_private_owner_and_a_strict_size_budget() {
     let generated = generate_rust_multi_with_metadata(
         &[("main", &main), ("worker", &worker)],
         &shared_stdlib(),
-    );
+    )
+    .expect("project generation should succeed");
 
     let all_source = std::iter::once(generated.project_union_prelude.as_str())
         .chain(generated.rust_files.values().map(String::as_str))
@@ -40,7 +41,7 @@ fn multi_module_support_has_one_private_owner_and_a_strict_size_budget() {
         assert!(!source.contains("fn shared_operation"));
         assert_eq!(
             source
-                .matches("use crate::__sifr_generated_support::{shared_operation};")
+                .matches("use crate::__sifr_generated_support::shared_operation;")
                 .count(),
             1
         );
@@ -232,7 +233,8 @@ fn multi_module_project_omits_support_when_no_module_demands_it() {
     let generated = generate_rust_multi_with_metadata(
         &[("main", &main), ("worker", &worker)],
         &StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
 
     assert!(
         !generated
@@ -260,7 +262,8 @@ fn test_project_support_is_rendered_once_for_support_and_test_modules() {
         &[("support", &support)],
         &[("test_shared", &test)],
         &shared_stdlib(),
-    );
+    )
+    .expect("project generation should succeed");
 
     let all_source = std::iter::once(generated.project_union_prelude.as_str())
         .chain(generated.support_rust_files.values().map(String::as_str))

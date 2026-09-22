@@ -148,7 +148,8 @@ fn recursive_json_structural_contracts_follow_the_shared_project_owner() {
     let generated = sifr_codegen::generate_rust_multi_with_metadata(
         &[("main", &lowered.module)],
         &compiled.code,
-    );
+    )
+    .expect("project generation should succeed");
     assert_json_contract_owner(
         &generated.project_union_prelude,
         &generated.rust_files["main"],
@@ -192,7 +193,8 @@ fn recursive_json_structural_contracts_follow_the_shared_project_owner() {
         &[("alpha", &alpha), ("zeta", &zeta)],
         &[("test_root", &test_root)],
         &compiled.code,
-    );
+    )
+    .expect("project generation should succeed");
     assert_eq!(json_contract_count(&tests.project_union_prelude), 3);
     for body in tests
         .support_rust_files
@@ -209,7 +211,8 @@ fn recursive_json_structural_contracts_follow_the_shared_project_owner() {
         &[],
         &[("test_root", &test_root)],
         &compiled.code,
-    );
+    )
+    .expect("project generation should succeed");
     assert_eq!(json_contract_count(&tests_only.project_union_prelude), 3);
 }
 

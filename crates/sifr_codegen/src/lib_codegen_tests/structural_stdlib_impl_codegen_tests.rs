@@ -19,7 +19,8 @@ fn unused_import_only_stdlib_structural_impls_are_pruned_after_relocation() {
     let generated = crate::generate_rust_multi_with_metadata(
         &[("zeta", &zeta), ("main", &main), ("alpha", &alpha)],
         &json_stdlib(),
-    );
+    )
+    .expect("project generation should succeed");
     let count = generated
         .rust_files
         .values()

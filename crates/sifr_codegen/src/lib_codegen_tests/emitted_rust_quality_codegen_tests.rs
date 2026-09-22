@@ -375,10 +375,13 @@ def read_limit() -> int:
     );
 
     assert!(
-        generated.contains("&__sifr_const_4249475f4c494d4954() +"),
+        generated.contains("std::ops::Add::add(&__sifr_const_4249475f4c494d4954(),"),
         "{generated}"
     );
-    assert!(!generated.contains("&BIG_LIMIT +"), "{generated}");
+    assert!(
+        !generated.contains("std::ops::Add::add(&BIG_LIMIT,"),
+        "{generated}"
+    );
 }
 
 #[test]

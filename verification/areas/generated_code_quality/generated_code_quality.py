@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from failure_artifacts import cargo_target_for_run, preserve_clippy_output
+
 import argparse
 import dataclasses
 import functools
@@ -611,7 +613,7 @@ def gate_rustfmt(entries: list[Entry], args: argparse.Namespace) -> None:
 def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("clippy")
     run_root = TARGET_ROOT / run
-    cargo_target_dir = run_root / "cargo-target"
+    cargo_target_dir = cargo_target_for_run(run_root, shared_artifact_root())
     records = []
     try:
         check_clippy_gate_controls(
@@ -631,6 +633,7 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
                     STRICT_CLIPPY_ARGS,
                     cargo_target_dir,
                 )
+                preserve_clippy_output(run_root, entry.id, result)
                 actual = parse_clippy_diagnostics(result.stdout, crate_root_inner)
                 if result.returncode != 0 and not actual:
                     raise RuntimeError(
@@ -760,7 +763,7 @@ def authoritative_companion_entries() -> list[tuple[Path, Entry]]:
 def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("companions")
     run_root = TARGET_ROOT / run
-    cargo_target_dir = run_root / "cargo-target"
+    cargo_target_dir = cargo_target_for_run(run_root, shared_artifact_root())
     records = []
     summaries = []
     debt = load_debt(QUALITY_DEBT)
@@ -786,6 +789,7 @@ def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
                     STRICT_CLIPPY_ARGS,
                     cargo_target_dir,
                 )
+                preserve_clippy_output(run_root, entry.id, result)
                 diagnostics = parse_clippy_diagnostics(result.stdout, crate_root_inner)
                 if result.returncode != 0 and not diagnostics:
                     raise RuntimeError(

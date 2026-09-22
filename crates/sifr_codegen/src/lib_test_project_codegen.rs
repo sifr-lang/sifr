@@ -4,6 +4,7 @@ use super::{
     generate_rust_with_stdlib_for_module_with_project_policy, publicize_generated_module_source,
     render_import_items, render_support,
 };
+use crate::CodegenError;
 use crate::entrypoints::generate_rust_test_with_project_policy;
 use crate::lib_project_codegen::{
     project_nominal_type_paths, project_union_usage, register_imported_generic_classes,
@@ -34,7 +35,7 @@ pub fn generate_rust_test_project_with_metadata(
     support_modules: &[(&str, &HirModule)],
     test_modules: &[(&str, &HirModule)],
     stdlib_code: &StdlibCode,
-) -> TestProjectCodegenResult {
+) -> Result<TestProjectCodegenResult, CodegenError> {
     let mut all_modules = Vec::with_capacity(support_modules.len() + test_modules.len());
     all_modules.extend_from_slice(support_modules);
     all_modules.extend_from_slice(test_modules);
@@ -207,9 +208,11 @@ pub fn generate_rust_test_project_with_metadata(
     // the finalized prelude just as ordinary binary-project modules do.
     for source in support_rust_files.values_mut() {
         *source = crate::import_project_prelude_bindings(&unpruned_project_prelude, source)
-            .unwrap_or_else(|error| {
-                panic!("failed to import finalized test-project owners: {error}")
-            });
+            .map_err(|error| {
+                CodegenError::new(format!(
+                    "failed to import finalized test-project owners: {error}"
+                ))
+            })?;
     }
     let support_imports = Renderer::new().render_file(&RustFile {
         items: render_import_items(&rendered_support.import_needs),
@@ -229,7 +232,11 @@ pub fn generate_rust_test_project_with_metadata(
         &support_source,
         &body_consumers,
     )
-    .unwrap_or_else(|error| panic!("failed to prune generated test-project owners: {error}"));
+    .map_err(|error| {
+        CodegenError::new(format!(
+            "failed to prune generated test-project owners: {error}"
+        ))
+    })?;
     if !support_source.trim().is_empty() {
         let consumers = std::iter::once(project_union_prelude.as_str())
             .chain(body_consumers.iter().copied())
@@ -237,9 +244,11 @@ pub fn generate_rust_test_project_with_metadata(
         let visible_support = crate_visible_generated_support_source(&support_source, &consumers);
         let visible_support =
             crate::import_project_prelude_bindings(&project_union_prelude, &visible_support)
-                .unwrap_or_else(|error| {
-                    panic!("failed to import test-project prelude bindings into support: {error}")
-                });
+                .map_err(|error| {
+                    CodegenError::new(format!(
+                        "failed to import test-project prelude bindings into support: {error}"
+                    ))
+                })?;
         let support_names = rust_source_defined_item_names(&visible_support);
         let prelude_support_refs = crate::stdlib_filter::rust_source_referenced_item_names(
             &project_union_prelude,
@@ -249,26 +258,32 @@ pub fn generate_rust_test_project_with_metadata(
             &project_union_prelude,
             &visible_support,
         )
-        .unwrap_or_else(|error| {
-            panic!("invalid generated test-project support trait layout: {error}")
-        });
+        .map_err(|error| {
+            CodegenError::new(format!(
+                "invalid generated test-project support trait layout: {error}"
+            ))
+        })?;
         if !prelude_support_refs.is_empty() || !prelude_support_traits.is_empty() {
             project_union_prelude = crate::import_generated_support_in_project_nominals(
                 &project_union_prelude,
                 &visible_support,
             )
-            .unwrap_or_else(|error| {
-                panic!("failed to import generated test-project support into nominals: {error}")
-            });
+            .map_err(|error| {
+                CodegenError::new(format!(
+                    "failed to import generated test-project support into nominals: {error}"
+                ))
+            })?;
         }
         for (module_name, source) in &mut support_rust_files {
             let body_support_refs =
                 crate::stdlib_filter::rust_source_referenced_item_names(source, &support_names);
             let body_support_traits =
                 crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support)
-                    .unwrap_or_else(|error| {
-                        panic!("invalid generated test-project support trait layout: {error}")
-                    });
+                    .map_err(|error| {
+                        CodegenError::new(format!(
+                            "invalid generated test-project support trait layout: {error}"
+                        ))
+                    })?;
             if support_module_demands
                 .get(module_name)
                 .is_some_and(ModuleSupportDemand::needs_support)
@@ -315,6 +330,18 @@ pub fn generate_rust_test_project_with_metadata(
         };
     }
 
+    {
+        let mut sources = vec![("", &mut project_union_prelude)];
+        sources.extend(
+            support_rust_files
+                .iter_mut()
+                .chain(test_rust_files.iter_mut())
+                .map(|(name, source)| (if name == "main" { "" } else { name.as_str() }, source)),
+        );
+        crate::generated_rust_canonicalizer::rewrite_named_project_borrows(&mut sources)
+            .map_err(CodegenError::new)?;
+    }
+
     crate::retain_generated_dependency_metadata(
         std::iter::once(project_union_prelude.as_str())
             .chain(support_rust_files.values().map(String::as_str))
@@ -322,11 +349,13 @@ pub fn generate_rust_test_project_with_metadata(
         &mut used_stdlib_modules,
         &mut required_features,
     )
-    .unwrap_or_else(|error| {
-        panic!("failed to finalize generated test-project dependencies: {error}")
-    });
+    .map_err(|error| {
+        CodegenError::new(format!(
+            "failed to finalize generated test-project dependencies: {error}"
+        ))
+    })?;
 
-    TestProjectCodegenResult {
+    Ok(TestProjectCodegenResult {
         interop: crate::stdlib_interop_demand::application_plan(
             stdlib_code,
             &all_modules
@@ -339,5 +368,5 @@ pub fn generate_rust_test_project_with_metadata(
         project_union_prelude,
         used_stdlib_modules,
         required_features,
-    }
+    })
 }

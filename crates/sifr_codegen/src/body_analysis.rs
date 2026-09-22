@@ -1,5 +1,7 @@
 #[path = "body_analysis/call_conventions.rs"]
 mod call_conventions;
+#[path = "body_analysis/discarded_bindings.rs"]
+mod discarded_bindings;
 
 use crate::hir_analysis::traversal;
 use crate::{HirExpr, HirFunction, HirStmt, ModuleFuncSignatures, Type};
@@ -17,6 +19,10 @@ pub(crate) struct BodySummary {
 }
 
 impl BodySummary {
+    pub(crate) fn uses_binding(&self, name: &str) -> bool {
+        self.referenced.contains_key(name) || self.mutated.contains(name)
+    }
+
     fn merge(&mut self, other: &Self) {
         self.mutated.extend(other.mutated.iter().cloned());
         self.proven_reads.extend(other.proven_reads.iter().cloned());
@@ -34,6 +40,7 @@ pub(crate) struct BodyAnalysis {
     statements: HashMap<usize, BodySummary>,
     nested_captures: HashMap<usize, HashSet<String>>,
     last_use_statements: HashSet<usize>,
+    unused_projection_statements: HashMap<usize, discarded_bindings::UnusedProjection>,
 }
 
 impl BodyAnalysis {
@@ -145,6 +152,7 @@ impl BodyAnalysis {
             block.merge(&summary);
             self.statements.insert(stmt_key(stmt), summary);
         }
+        block = self.remove_unused_projection_summaries(stmts, block);
         block.proven_reads.sort_by_key(index_depth);
         self.blocks.insert(block_key(stmts), block.clone());
         block
@@ -556,6 +564,13 @@ fn collect_expr_mutation(
             if let Some(conventions) = conventions {
                 collect_signature_mutable_args(args, conventions, true, mutated);
             }
+            // Match the same builtin identity and arity as async-call emission.
+            if func == "anext"
+                && args.len() == 1
+                && let Some(name) = args.first().and_then(expression_root_name)
+            {
+                mutated.insert(name.to_string());
+            }
             if matches!(
                 canonical.rsplit('.').next(),
                 Some("heappush" | "heappop" | "heapify" | "heapreplace" | "heappushpop")
@@ -873,3 +888,7 @@ fn stmt_key(stmt: &HirStmt) -> usize {
 pub(crate) fn expr_key(expr: &HirExpr) -> usize {
     std::ptr::from_ref(expr) as usize
 }
+
+#[cfg(test)]
+#[path = "body_analysis/async_advance_tests.rs"]
+mod async_advance_tests;

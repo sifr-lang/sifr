@@ -18,7 +18,7 @@ impl __SifrCancellationCarrier {
         inner: ::sifr_runtime::cancellation::CancellationCarrier,
         fallback_abort: tokio::task::AbortHandle,
     ) -> Self {
-        let fallback = fallback_abort.clone();
+        let fallback = fallback_abort;
         let _ = inner.bind_fallback(std::sync::Arc::new(move || fallback.abort()));
         Self { inner }
     }

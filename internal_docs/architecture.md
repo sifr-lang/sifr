@@ -474,6 +474,11 @@ large-file check and a representative project check.
   visibility, symbol discovery, and dependency pruning. Each declaration is a
   separate demand owner; project relocation grants crate visibility while
   preserving its name, type, attributes, and Tokio cancellation behavior.
+- Project and test-project code generation return checked CodegenError results
+  for support-layout, canonicalization and project-assembly failures. The driver
+  converts those results to contextual compiler diagnostics at one boundary;
+  its separate unwind catcher remains protection for unexpected compiler bugs.
+  Checked assembly errors do not manufacture a panic to cross that boundary.
 - Stdlib bootstrap owns one short-lived syntax-validation session for its source
   inventory. Successful complete-file parsing can establish exact support text
   as complete Rust items. Later inline assemblies reuse only that syntax identity
@@ -498,6 +503,12 @@ large-file check and a representative project check.
   is a structured build diagnostic, never an unformatted fallback.
   Materialization repeats this fail-closed check for synthetic namespace and
   bridge files that do not exist at the earlier emit boundary.
+- Borrowed string, scalar and slice API cleanup uses declared callable facts
+  across the assembled project, with lexical module/import and callback ABI
+  boundaries. Clone removal requires proven owned bindings and terminal use;
+  unknown values, reference aliases and shadowed bindings do not authorize
+  ownership transfer. Initializer deletion uses the shared conservative
+  discardability contract instead of constructor or method name guesses.
 - Both shapes materialize through the same generated-binary-project path. Native
   build state uses local sysroot and package paths only while Cargo resolves and
   builds it. The source-only materialization boundary then replaces that local

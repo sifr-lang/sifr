@@ -178,7 +178,8 @@ def expose() -> Result[bool, ValueError | RustPanicError]:
         names: vec!["available".to_string()],
         aliases: Vec::new(),
     });
-    let output = sifr_codegen::generate_rust_multi_with_metadata(&[("main", &app)], &stdlib.code);
+    let output = sifr_codegen::generate_rust_multi_with_metadata(&[("main", &app)], &stdlib.code)
+        .expect("project generation should succeed");
     let plan = &output.interop.stdlib_demand;
     let selected = owners(plan);
     for required in [
