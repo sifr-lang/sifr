@@ -1,5 +1,30 @@
 # Ad Hoc Issue: Algorithmic Full-Corpus Pre-Existing Failures
 
+## 2026-09-23 retained Item 12 native source-contract blocker
+
+The emitted-Rust Item 12 compiler candidate
+`1be784e1a8f42e9d0c4c28f8f20fe2a04f189cc9` (binary SHA-256
+`ebfb45b1753de3187eb899d0fcd930613304d44a20a6a00558528b1979321d09`)
+ran the pinned `sifr-lang/leetcode` gitlink
+`4da4f7a5ccb332b64199eda6fc545d9dcc1ae1b6` through a strict lexical-order
+native build/run audit. The runner attempted 125 of 411 fixtures: 124 passed,
+then `0150_evaluate_reverse_polish_notation.sifr` built and ran but failed its
+final assertion (`12` actual, `22` expected). The fixture source SHA-256 is
+`611e83178ca6796f25fb198dffc845cb0c700fd1112e11b2173b3f13107868ea`.
+The failed matrix and per-case log are under
+`/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/native-full-1790118987931908092/`.
+
+The fixture names its helper `truncDiv` but implements it with
+`return dividend // divisor`. Current emitted Rust correctly uses
+`floor_div_known_nonzero`; a negative non-exact quotient therefore rounds down,
+while the assertion requires truncation toward zero. This is a source-contract
+correction in the separately owned corpus, not a compiler lowering failure.
+The corpus owner should correct `truncDiv` with integer-safe truncation toward
+zero, qualify the focused native case, and deliver the reviewed corpus commit
+and updated codebase gitlink before Item 12 resumes its full native selection.
+No corpus source, assertion, baseline, or selection was changed by the Item 12
+worker. The 124 passes are partial evidence, not full-corpus qualification.
+
 ## Status
 
 Closeout in progress for the non-blocking follow-up created from the Rust-interop

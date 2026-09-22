@@ -4,7 +4,7 @@ Status: active
 
 ## Retained Item 12 reconciliation (2026-09-22)
 
-Status: retained Item 12 blocked by externally owned DX.9 native Cargo reuse; not merged or closed.
+Status: retained Item 12 blocked by the separately owned LeetCode 0150 source contract; not merged or closed.
 The current assignment authorizes only retained Item 12. It supersedes historical
 per-item broad-gate and one-shot limits: this intermediate implementation receives
 focused/named validation and scoped Opus review; the subsequent integration
@@ -56,6 +56,41 @@ repair that unrelated documentation. Owned taxonomy findings are corrected here.
 The tracked three-byte Untitled fixture artifact originated in c9e5aba72;
 it has no .sifr test contract and is removed under the explicit deferred row.
 No unexplained ignored fixture-root artifacts were found.
+
+### Retained Item 12 continuation and blocker (2026-09-23)
+
+The DX.9 F7 Cargo-reuse repair was merged into the base. Retained Item 12
+resumed on its owned worktree and draft [PR #3908](https://github.com/sifr-lang/sifr/pull/3908).
+Implementation candidate `1be784e1a8f42e9d0c4c28f8f20fe2a04f189cc9` is
+committed and pushed; compiler SHA-256 is
+`ebfb45b1753de3187eb899d0fcd930613304d44a20a6a00558528b1979321d09`.
+The focused `0079`, `0127`, `0130`, and semantic-boundary native cases pass;
+full codegen passes 1,708/1,708. Formatting, file-size, HIR, diff, profile
+policy/step budgets, coverage readiness with its 58-case/31-mutation self-test,
+generated-quality Python policy tests, inventory, and taxonomy pass. Receipts
+are under `/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/`.
+
+The strict lexical-order 411-case native audit stopped after 124 passes at
+`0150_evaluate_reverse_polish_notation.sifr`: it built and ran, then asserted
+`12 == 22`. The fixture source calls `//` inside `truncDiv`, which floors
+negative non-exact quotients; its expected value requires truncation toward
+zero. The separately owned corpus gitlink is
+`4da4f7a5ccb332b64199eda6fc545d9dcc1ae1b6`. The
+[corpus owner record](ad-hoc-algorithmic-full-corpus-preexisting-failures.md#2026-09-23-retained-item-12-native-source-contract-blocker)
+has the source SHA, emitted shape, exact matrix and correction contract.
+No corpus file or acceptance rule was changed. The full generated-quality
+selection, waiting on the compiler Cargo lock after its inventory pass, and the
+driver checked-codegen build were stopped when this external blocker was
+confirmed; neither is passing evidence. The first quality attempt also failed
+on dependency resolution before the exact candidate was published, and that
+failure remains preserved. The full E2E selection, exact-SHA Opus review and
+merge have not run. The unrelated documentation structure check still stops on
+missing `editor_integrations/vscode/package.json`, owned by DX issue #3898.
+
+Next: the corpus owner delivers reviewed integer-safe truncation and a new
+pinned gitlink. Then rerun the failed native case and complete the named
+candidate selections, scoped Opus review, and Item 12 merge. Integration and
+whole-phase closure remain deferred.
 
 ### Retained Item 12 blocker handoff (2026-09-22)
 
