@@ -110,7 +110,7 @@ fn main() {
     assert!(
         seen.get(&SifrInt::from_i64(1))
             .is_some_and(
-                |sifr_generated_defaultdict_bucket| sifr_generated_defaultdict_bucket.contains('a')
+                |sifr_generated_defaultdict_bucket| sifr_generated_defaultdict_bucket.contains("a")
             )
     );
     let mut counts: HashMap<String, SifrInt> = HashMap::new();

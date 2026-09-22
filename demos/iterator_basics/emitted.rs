@@ -796,7 +796,7 @@ fn main() {
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         let e: ValueError = sifr_generated_try_err;
-        assert!(false, "{}", e.message.clone());
+        assert!(false, "{}", e.message);
     }
     let mut counter: Box<dyn Iterator<Item = SifrInt>> =
         count(SifrInt::from_i64(2), SifrInt::from_i64(3));

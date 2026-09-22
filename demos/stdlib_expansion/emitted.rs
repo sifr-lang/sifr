@@ -230,8 +230,8 @@ mod sifr_generated_generated_support {
         }
         quotechar
     }
-    fn sifr_generated_append_field(row: &mut Vec<String>, field: String) {
-        row.push(field);
+    fn sifr_generated_append_field(row: &mut Vec<String>, field: &str) {
+        row.push(field.to_string());
     }
     fn sifr_generated_append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
         rows.push(row);
@@ -260,7 +260,6 @@ mod sifr_generated_generated_support {
         sifr_generated_char_at(text, &SifrInt::from_i64(0))
     }
     fn sifr_generated_last_char(text: &str) -> String {
-        let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         sifr_generated_char_at(
             text,
             &::std::ops::Sub::sub(&SifrInt::from(text.chars().count()), &SifrInt::from_i64(1)),
@@ -298,7 +297,7 @@ mod sifr_generated_generated_support {
         if rows.len() == SifrInt::from_i64(0) {
             return Vec::new();
         }
-        for (index, row) in Box::new(rows.iter().cloned().enumerate().map(|sifr_generated_pair| {
+        for (index, row) in Box::new(rows.into_iter().enumerate().map(|sifr_generated_pair| {
             (
                 ::std::ops::Add::add(SifrInt::from(sifr_generated_pair.0), SifrInt::from_i64(0)),
                 sifr_generated_pair.1,
@@ -433,7 +432,7 @@ mod sifr_generated_generated_support {
                 }
             }
             if ch_value == resolved.delimiter {
-                sifr_generated_append_field(&mut row, field);
+                sifr_generated_append_field(&mut row, field.as_str());
                 field = String::new();
                 field_started = false;
                 i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
@@ -453,7 +452,7 @@ mod sifr_generated_generated_support {
                 if row.len() == SifrInt::from_i64(0) && field.is_empty() {
                     sifr_generated_append_row(&mut rows, Vec::new());
                 } else {
-                    sifr_generated_append_field(&mut row, field);
+                    sifr_generated_append_field(&mut row, field.as_str());
                     sifr_generated_append_row(&mut rows, row);
                 }
                 row = Vec::new();
@@ -468,7 +467,7 @@ mod sifr_generated_generated_support {
         }
         let _ = in_quotes;
         if row.len() > SifrInt::from_i64(0) || !field.is_empty() {
-            sifr_generated_append_field(&mut row, field);
+            sifr_generated_append_field(&mut row, field.as_str());
             sifr_generated_append_row(&mut rows, row);
         }
         rows
@@ -799,7 +798,7 @@ mod sifr_generated_generated_support {
                 {
                     if SifrInt::from_i64(0) <= pos && pos < data.len() {
                         {
-                            let sifr_generated_assign_value = tmp_sm.clone();
+                            let sifr_generated_assign_value = tmp_sm;
                             {
                                 let sifr_generated_index_raw = &pos;
                                 let sifr_generated_index_normalized =
@@ -814,7 +813,7 @@ mod sifr_generated_generated_support {
                     }
                     if SifrInt::from_i64(0) <= smallest && smallest < data.len() {
                         {
-                            let sifr_generated_assign_value = tmp_pos.clone();
+                            let sifr_generated_assign_value = tmp_pos;
                             {
                                 let sifr_generated_index_raw = &smallest;
                                 let sifr_generated_index_normalized =
@@ -863,7 +862,7 @@ mod sifr_generated_generated_support {
                         if c_val < p_val {
                             if SifrInt::from_i64(0) <= parent && parent < heap.len() {
                                 {
-                                    let sifr_generated_assign_value = c_val.clone();
+                                    let sifr_generated_assign_value = c_val;
                                     {
                                         let sifr_generated_index_raw = &parent;
                                         let sifr_generated_index_normalized =
@@ -879,7 +878,7 @@ mod sifr_generated_generated_support {
                             }
                             if SifrInt::from_i64(0) <= pos && pos < heap.len() {
                                 {
-                                    let sifr_generated_assign_value = p_val.clone();
+                                    let sifr_generated_assign_value = p_val;
                                     {
                                         let sifr_generated_index_raw = &pos;
                                         let sifr_generated_index_normalized =
@@ -954,7 +953,7 @@ mod sifr_generated_generated_support {
         if n2 > SifrInt::from_i64(0) {
             if let Some(last) = last {
                 {
-                    let sifr_generated_assign_value = last.clone();
+                    let sifr_generated_assign_value = last;
                     {
                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                         let sifr_generated_index_normalized =
@@ -1780,6 +1779,10 @@ fn add_ints(a: &SifrInt, b: &SifrInt) -> SifrInt {
     clippy::too_many_lines,
     reason = "one generated Rust function preserves one typed Sifr function"
 )]
+#[expect(
+    clippy::float_cmp,
+    reason = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes"
+)]
 fn main() {
     assert_eq!(
         sifr_generated_const_61736369695f6c6f77657263617365()
@@ -1807,16 +1810,9 @@ fn main() {
         SifrInt::from_i64(4),
         SifrInt::from_i64(5),
     ];
-    let total: SifrInt = reduce(
-        |sifr_generated_arg0, sifr_generated_arg1| {
-            add_ints(&sifr_generated_arg0, &sifr_generated_arg1)
-        },
-        &nums_r,
-        &SifrInt::from_i64(0),
-    );
+    let total: SifrInt = reduce(add_ints, &nums_r, &SifrInt::from_i64(0));
     assert_eq!(total, SifrInt::from_i64(15));
     let token: String = token_hex(&SifrInt::from_i64(8));
-    let _chars_token: Vec<char> = token.chars().collect::<Vec<char>>();
     assert_eq!(token.chars().count(), SifrInt::from_i64(16));
     let data2_value_3d7c5557a5771b75: Vec<f64> = vec![2.0_f64, 4.0_f64, 6.0_f64];
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> =
@@ -1869,19 +1865,16 @@ fn main() {
     );
     let first3: Vec<SifrInt> = take(
         &SifrInt::from_i64(3),
-        &vec![
+        &[
             SifrInt::from_i64(10),
             SifrInt::from_i64(20),
             SifrInt::from_i64(30),
             SifrInt::from_i64(40),
-        ]
-        .into_iter()
-        .collect::<Vec<_>>(),
+        ],
     );
     assert_eq!(SifrInt::from(first3.len()), SifrInt::from_i64(3));
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let filled: String = fill("hello world foo bar", &SifrInt::from_i64(12))?;
-        let _chars_filled: Vec<char> = filled.chars().collect::<Vec<char>>();
         assert!(filled.chars().count() > SifrInt::from_i64(0));
         Ok(())
     })();

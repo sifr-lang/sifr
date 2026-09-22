@@ -76,10 +76,7 @@ fn swap_pair(pair: &mut Pair) {
 fn add_points(points: &[(SifrInt, SifrInt)]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for point in points.iter().cloned() {
-        total = ::std::ops::Add::add(
-            &total,
-            &::std::ops::Add::add(&point.0.clone(), &point.1.clone()),
-        );
+        total = ::std::ops::Add::add(&total, &::std::ops::Add::add(&point.0, &point.1));
     }
     total
 }

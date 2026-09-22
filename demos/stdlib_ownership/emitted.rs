@@ -247,7 +247,7 @@ mod sifr_generated_generated_support {
                 {
                     if SifrInt::from_i64(0) <= pos && pos < data.len() {
                         {
-                            let sifr_generated_assign_value = tmp_sm.clone();
+                            let sifr_generated_assign_value = tmp_sm;
                             {
                                 let sifr_generated_index_raw = &pos;
                                 let sifr_generated_index_normalized =
@@ -262,7 +262,7 @@ mod sifr_generated_generated_support {
                     }
                     if SifrInt::from_i64(0) <= smallest && smallest < data.len() {
                         {
-                            let sifr_generated_assign_value = tmp_pos.clone();
+                            let sifr_generated_assign_value = tmp_pos;
                             {
                                 let sifr_generated_index_raw = &smallest;
                                 let sifr_generated_index_normalized =
@@ -311,7 +311,7 @@ mod sifr_generated_generated_support {
                         if c_val < p_val {
                             if SifrInt::from_i64(0) <= parent && parent < heap.len() {
                                 {
-                                    let sifr_generated_assign_value = c_val.clone();
+                                    let sifr_generated_assign_value = c_val;
                                     {
                                         let sifr_generated_index_raw = &parent;
                                         let sifr_generated_index_normalized =
@@ -327,7 +327,7 @@ mod sifr_generated_generated_support {
                             }
                             if SifrInt::from_i64(0) <= pos && pos < heap.len() {
                                 {
-                                    let sifr_generated_assign_value = p_val.clone();
+                                    let sifr_generated_assign_value = p_val;
                                     {
                                         let sifr_generated_index_raw = &pos;
                                         let sifr_generated_index_normalized =
@@ -402,7 +402,7 @@ mod sifr_generated_generated_support {
         if n2 > SifrInt::from_i64(0) {
             if let Some(last) = last {
                 {
-                    let sifr_generated_assign_value = last.clone();
+                    let sifr_generated_assign_value = last;
                     {
                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                         let sifr_generated_index_normalized =

@@ -48,7 +48,7 @@ fn get_node_val(node: &Node) -> SifrInt {
     node.value.clone()
 }
 fn describe_person(p: Person) -> String {
-    p.name.clone()
+    p.name
 }
 fn process(item: &Item) -> SifrInt {
     item.priority.clone()

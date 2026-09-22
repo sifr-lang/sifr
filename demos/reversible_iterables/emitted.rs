@@ -14,7 +14,7 @@ fn main() {
         SifrInt::from_i64(20),
         SifrInt::from_i64(30),
     ];
-    println!("{}", tail_first(&nums));
+    println!("{}", tail_first(&nums.into_iter().collect::<Vec<_>>()));
     let tup: (SifrInt, SifrInt, SifrInt) = (
         SifrInt::from_i64(4),
         SifrInt::from_i64(5),
@@ -22,7 +22,7 @@ fn main() {
     );
     let mut total: SifrInt = SifrInt::from_i64(0);
     for item in {
-        let sifr_generated_tuple_iter_src = tup.clone();
+        let sifr_generated_tuple_iter_src = &tup;
         vec![
             sifr_generated_tuple_iter_src.0.clone(),
             sifr_generated_tuple_iter_src.1.clone(),
@@ -37,9 +37,9 @@ fn main() {
         {
             let sifr_generated_tuple_iter_src = tup;
             vec![
-                sifr_generated_tuple_iter_src.0.clone(),
-                sifr_generated_tuple_iter_src.1.clone(),
-                sifr_generated_tuple_iter_src.2.clone(),
+                sifr_generated_tuple_iter_src.0,
+                sifr_generated_tuple_iter_src.1,
+                sifr_generated_tuple_iter_src.2,
             ]
             .into_iter()
         }

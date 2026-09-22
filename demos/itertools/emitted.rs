@@ -228,7 +228,7 @@ mod sifr_generated_generated_support {
                             let next_val: T = SifrGeneratedAdd::sifr_generated_add(prev, item);
                             let sifr_generated_try_res: Result<(), IndexError> = (|| {
                                 {
-                                    let sifr_generated_assign_value = next_val.clone();
+                                    let sifr_generated_assign_value = next_val;
                                     {
                                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                                         let sifr_generated_index_normalized =
@@ -389,16 +389,12 @@ fn collect_core_actual() -> Vec<bool> {
             == "[1, 2, 3]".to_string().as_str(),
         format!(
             "{:?}",
-            pairwise(
-                &vec![
-                    SifrInt::from_i64(1),
-                    SifrInt::from_i64(2),
-                    SifrInt::from_i64(3),
-                    SifrInt::from_i64(4)
-                ]
-                .into_iter()
-                .collect::<Vec<_>>()
-            )
+            pairwise(&[
+                SifrInt::from_i64(1),
+                SifrInt::from_i64(2),
+                SifrInt::from_i64(3),
+                SifrInt::from_i64(4)
+            ])
         )
         .as_str()
             == "[[1, 2], [2, 3], [3, 4]]".to_string().as_str(),
@@ -406,15 +402,13 @@ fn collect_core_actual() -> Vec<bool> {
     let mut batched_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let bat: Vec<Vec<SifrInt>> = batched(
-            &vec![
+            &[
                 SifrInt::from_i64(1),
                 SifrInt::from_i64(2),
                 SifrInt::from_i64(3),
                 SifrInt::from_i64(4),
                 SifrInt::from_i64(5),
-            ]
-            .into_iter()
-            .collect::<Vec<_>>(),
+            ],
             &SifrInt::from_i64(2),
         )?;
         batched_ok = format!("{bat:?}") == "[[1, 2], [3, 4], [5]]";
@@ -459,10 +453,8 @@ fn collect_negative_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut invalid_batch_rejected: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let sifr_generated_bad: Vec<Vec<SifrInt>> = batched(
-            &vec![SifrInt::from_i64(1)].into_iter().collect::<Vec<_>>(),
-            &SifrInt::from_i64(0),
-        )?;
+        let sifr_generated_bad: Vec<Vec<SifrInt>> =
+            batched(&[SifrInt::from_i64(1)], &SifrInt::from_i64(0))?;
         let _ = sifr_generated_bad;
         Ok(())
     })();

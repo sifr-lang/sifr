@@ -20,6 +20,10 @@ use ::sifr_runtime::SifrInt;
     clippy::approx_constant,
     reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
+#[expect(
+    clippy::float_cmp,
+    reason = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes"
+)]
 fn main() {
     assert_eq!(
         ::std::ops::Add::add(&SifrInt::from_i64(1), &SifrInt::from_i64(1)),

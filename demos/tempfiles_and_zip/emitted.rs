@@ -233,9 +233,9 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ezipfileX2eZipFile {
         #[must_use]
-        pub fn new(path: String, mode: String, compression: &SifrInt) -> Self {
-            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path;
-            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode;
+        pub fn new(path: &str, mode: &str, compression: &SifrInt) -> Self {
+            let sifr_generated_field_value_03c52d0debd70676_70617468: String = path.to_string();
+            let sifr_generated_field_value_0d3deba2c41dadb2_6d6f6465: String = mode.to_string();
             let sifr_generated_field_value_fb545b3ab0be00f5_636f6d7072657373696f6e: SifrInt =
                 (*compression).clone();
             Self {
@@ -341,8 +341,8 @@ fn main() {
         };
         let archive: SifrGeneratedStdlibSifrX2ezipfileX2eZipFile =
             SifrGeneratedStdlibSifrX2ezipfileX2eZipFile::new(
-                zip_path.clone(),
-                "a".to_string(),
+                zip_path.as_str(),
+                "a",
                 &SifrInt::from_i64(0),
             );
         archive.create()?;

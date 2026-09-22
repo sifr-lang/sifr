@@ -114,11 +114,11 @@ fn count_configurations(n: &SifrInt) -> SifrInt {
         n,
     )
 }
-fn find_root(n: &SifrInt, par: &[SifrInt]) -> SifrInt {
-    if n < &SifrInt::from_i64(0) || n >= &SifrInt::from(par.len()) {
+fn find_root(n: SifrInt, par: &[SifrInt]) -> SifrInt {
+    if n < SifrInt::from_i64(0) || n >= par.len() {
         return SifrInt::from_i64(0);
     }
-    let mut p: SifrInt = (*n).clone();
+    let mut p: SifrInt = n;
     while p >= SifrInt::from_i64(0) && p < par.len() && {
         let sifr_generated_checked_read_collection = &par;
         let sifr_generated_checked_read_index = &p;
@@ -143,11 +143,11 @@ fn find_root(n: &SifrInt, par: &[SifrInt]) -> SifrInt {
         };
         p = sifr_generated_checked_value_3;
     }
-    p.clone()
+    p
 }
 fn union_nodes(n1: &SifrInt, n2: &SifrInt, par: &mut [SifrInt], rank: &mut [SifrInt]) -> bool {
-    let left_root: SifrInt = find_root(n1, par);
-    let right_root: SifrInt = find_root(n2, par);
+    let left_root: SifrInt = find_root((*n1).clone(), par);
+    let right_root: SifrInt = find_root((*n2).clone(), par);
     if left_root < SifrInt::from_i64(0)
         || left_root >= rank.len()
         || left_root >= par.len()

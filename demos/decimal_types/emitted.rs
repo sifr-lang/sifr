@@ -35,7 +35,7 @@ fn main() {
         ::bigdecimal::RoundingMode::HalfEven,
     )
     .round_decimal_ref(&::std::ops::Add::add(
-        b.clone(),
+        b,
         BigDecimal::new(
             ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[4]),
             0,

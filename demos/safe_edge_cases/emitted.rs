@@ -1016,7 +1016,7 @@ mod sifr_generated_generated_support {
             state.index.clone(),
             state.gauss_next,
         );
-        let _ = sifr_generated_set_result;
+        let _: Result<(), ValueError> = sifr_generated_set_result;
     }
     fn sifr_generated_ensure_module_state_initialized() {
         let words: Vec<SifrInt> = random_module_state_words();
@@ -1040,9 +1040,7 @@ mod sifr_generated_generated_support {
         let _ = sifr_generated_try_res;
         r
     }
-    fn sifr_generated_sync_module_random(
-        generator: &mut SifrGeneratedStdlibSifrX2erandomX2eRandom,
-    ) {
+    fn sifr_generated_sync_module_random(generator: &SifrGeneratedStdlibSifrX2erandomX2eRandom) {
         sifr_generated_store_state_into_module_storage(&generator.getstate());
     }
     ///# Errors
@@ -1051,7 +1049,7 @@ mod sifr_generated_generated_support {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let value: Result<SifrInt, ValueError> = generator.randint(minimum, maximum);
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
         value
     }
     ///# Errors
@@ -1669,7 +1667,9 @@ mod sifr_generated_generated_support {
             ValueError,
         > = (|| {
             let canonical: String = sifr_generated_canonical_uuid_text(hex_str)?;
-            Ok(Ok(SifrGeneratedStdlibSifrX2euuidX2eUUID::new(canonical)))
+            Ok(Ok(SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
+                canonical.as_str(),
+            )))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
             let e: ValueError = sifr_generated_try_err;
@@ -2279,8 +2279,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2euuidX2eUUID {
         #[must_use]
-        pub const fn new(hex_str: String) -> Self {
-            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str;
+        pub fn new(hex_str: &str) -> Self {
+            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str.to_string();
             Self {
                 hex: sifr_generated_field_value_123cb3437a89ad57_5f686578,
             }
@@ -2493,7 +2493,8 @@ fn main() {
         });
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _b2: Vec<Vec<SifrInt>> = batched(&data.clone(), &SifrInt::from_i64(0))?;
+        let _b2: Vec<Vec<SifrInt>> =
+            batched(&data.into_iter().collect::<Vec<_>>(), &SifrInt::from_i64(0))?;
         println!("should not reach here");
         Ok(())
     })();

@@ -17,5 +17,5 @@ fn main() {
         SifrInt::from_i64(4),
         SifrInt::from_i64(6),
     ];
-    println!("{}", sum_iterable(&nums));
+    println!("{}", sum_iterable(&nums.into_iter().collect::<Vec<_>>()));
 }

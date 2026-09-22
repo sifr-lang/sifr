@@ -842,7 +842,7 @@ mod sifr_generated_generated_support {
             state.index.clone(),
             state.gauss_next,
         );
-        let _ = sifr_generated_set_result;
+        let _: Result<(), ValueError> = sifr_generated_set_result;
     }
     fn sifr_generated_ensure_module_state_initialized() {
         let words: Vec<SifrInt> = random_module_state_words();
@@ -866,9 +866,7 @@ mod sifr_generated_generated_support {
         let _ = sifr_generated_try_res;
         r
     }
-    fn sifr_generated_sync_module_random(
-        generator: &mut SifrGeneratedStdlibSifrX2erandomX2eRandom,
-    ) {
+    fn sifr_generated_sync_module_random(generator: &SifrGeneratedStdlibSifrX2erandomX2eRandom) {
         sifr_generated_store_state_into_module_storage(&generator.getstate());
     }
     ///# Errors
@@ -877,7 +875,7 @@ mod sifr_generated_generated_support {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let value: Result<SifrInt, ValueError> = generator.randint(minimum, maximum);
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
         value
     }
     fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
@@ -1778,7 +1776,7 @@ fn main() {
     } else {
         println!("min([]) -> None (safe)");
     }
-    let max_val: Option<SifrInt> = empty.iter().cloned().max();
+    let max_val: Option<SifrInt> = empty.into_iter().max();
     if let Some(max_val) = max_val {
         println!("Max value: {max_val}");
     } else {

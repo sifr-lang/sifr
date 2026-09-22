@@ -124,17 +124,17 @@ fn main() {
     println!(
         "{}", describe_pet(&
         SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0::SifrGeneratedUnionVariant5X3aclass8X3amainX2eDog1X3a0(Dog::new("Rex"
-        .to_string(), "Labrador".to_string()).clone()))
+        .to_string(), "Labrador".to_string())))
     );
     println!(
         "{}", describe_pet(&
         SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0::SifrGeneratedUnionVariant5X3aclass8X3amainX2eCat1X3a0(Cat::new("Whiskers"
-        .to_string(), "orange".to_string()).clone()))
+        .to_string(), "orange".to_string())))
     );
     println!(
         "{}", describe_pet(&
         SifrGeneratedUnion8X3asequence5X3aunion1X3a320X3a5X3aclass8X3amainX2eCat1X3a020X3a5X3aclass8X3amainX2eDog1X3a021X3a5X3aclass9X3amainX2eBird1X3a0::SifrGeneratedUnionVariant5X3aclass9X3amainX2eBird1X3a0(Bird::new("Tweety"
-        .to_string(), 0.3_f64).clone()))
+        .to_string(), 0.3_f64)))
     );
     let v: Option<SifrInt> = Some(SifrInt::from_i64(42));
     println!("{}", find_value(v.as_ref(), &SifrInt::from_i64(42)));

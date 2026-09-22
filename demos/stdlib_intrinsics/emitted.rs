@@ -1132,7 +1132,6 @@ fn demo_time() {
     });
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let parsed: String = strptime("2024-01-15 10:30:00", "%Y-%m-%d %H:%M:%S")?;
-        let _chars_parsed: Vec<char> = parsed.chars().collect::<Vec<char>>();
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(14usize.saturating_add(0usize));
@@ -1160,7 +1159,6 @@ fn demo_time() {
 fn demo_base64() {
     println!("=== base64 new intrinsics ===");
     let encoded: String = b32encode("hello world");
-    let _chars_encoded: Vec<char> = encoded.chars().collect::<Vec<char>>();
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(20usize.saturating_add(0usize));

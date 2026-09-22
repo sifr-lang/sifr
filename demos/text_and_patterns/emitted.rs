@@ -243,13 +243,9 @@ mod sifr_generated_generated_support {
             for existing in sorted_blocks.iter().cloned() {
                 if !found_insert_at {
                     let (ex_a, ex_b_value_e8565f608f1d5555, _) = existing;
-                    let comes_before: bool = if bl_a < ex_a
-                        || bl_a == ex_a && bl_b_value_c53dd39bc263efba < ex_b_value_e8565f608f1d5555
-                    {
-                        true
-                    } else {
-                        false
-                    };
+                    let comes_before: bool = bl_a < ex_a
+                        || bl_a == ex_a
+                            && bl_b_value_c53dd39bc263efba < ex_b_value_e8565f608f1d5555;
                     if comes_before {
                         insert_at.clone_from(&i);
                         found_insert_at = true;
@@ -894,8 +890,6 @@ mod sifr_generated_generated_support {
                 }
                 let mut j: SifrInt = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 let mut field_name: String = String::new();
-                let mut sifr_generated_chars_field_name: Vec<char> =
-                    field_name.chars().collect::<Vec<char>>();
                 while j < sifr_generated_chars_format_string.len() {
                     let part: Option<String> = {
                         let sifr_generated_string_index = &j;
@@ -914,10 +908,7 @@ mod sifr_generated_generated_support {
                     if part_value == "}" {
                         break;
                     }
-                    let sifr_generated_string_concat_field_name_0 = part_value;
-                    field_name.push_str(sifr_generated_string_concat_field_name_0.as_str());
-                    sifr_generated_chars_field_name
-                        .extend(sifr_generated_string_concat_field_name_0.as_str().chars());
+                    field_name.push_str(part_value.as_str());
                     j = ::std::ops::Add::add(&j, &SifrInt::from_i64(1));
                 }
                 if j >= sifr_generated_chars_format_string.len() {
@@ -925,7 +916,7 @@ mod sifr_generated_generated_support {
                         "formatter: missing closing brace".to_string(),
                     ));
                 }
-                if sifr_generated_chars_field_name.len() == SifrInt::from_i64(0) {
+                if field_name.chars().count() == SifrInt::from_i64(0) {
                     return Err(ValueError::new(
                         "formatter: empty replacement field is not supported".to_string(),
                     ));
@@ -1587,9 +1578,9 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2edifflibX2eSequenceMatcher {
         #[must_use]
-        pub const fn new(a: String, b: String) -> Self {
-            let sifr_generated_field_value_09534707b5e0a7dd_5f61: String = a;
-            let sifr_generated_field_value_09534407b5e0a2c4_5f62: String = b;
+        pub fn new(a: &str, b: &str) -> Self {
+            let sifr_generated_field_value_09534707b5e0a7dd_5f61: String = a.to_string();
+            let sifr_generated_field_value_09534407b5e0a2c4_5f62: String = b.to_string();
             Self {
                 a: sifr_generated_field_value_09534707b5e0a7dd_5f61,
                 b: sifr_generated_field_value_09534407b5e0a2c4_5f62,
@@ -1619,8 +1610,9 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2estringX2eTemplate {
         #[must_use]
-        pub const fn new(template: String) -> Self {
-            let sifr_generated_field_value_33609a5e9eb92f4b_74656d706c617465: String = template;
+        pub fn new(template: &str) -> Self {
+            let sifr_generated_field_value_33609a5e9eb92f4b_74656d706c617465: String =
+                template.to_string();
             Self {
                 template: sifr_generated_field_value_33609a5e9eb92f4b_74656d706c617465,
             }
@@ -1692,8 +1684,8 @@ mod sifr_generated_project_nominals {
         )]
         pub fn new(
             width: &SifrInt,
-            initial_indent: String,
-            subsequent_indent: String,
+            initial_indent: &str,
+            subsequent_indent: &str,
             expand_tabs: bool,
             tabsize: &SifrInt,
             replace_whitespace: bool,
@@ -1701,13 +1693,14 @@ mod sifr_generated_project_nominals {
             break_on_hyphens: bool,
             fix_sentence_endings: bool,
             max_lines: Option<&SifrInt>,
-            placeholder: String,
+            placeholder: &str,
         ) -> Self {
             let max_lines: Option<SifrInt> = max_lines.cloned();
             let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = (*width).clone();
             let sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74: String =
-                initial_indent;
-            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent;
+                initial_indent.to_string();
+            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent
+                .to_string();
             let sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273: bool =
                 expand_tabs;
             let mut safe_tabsize: SifrInt = (*tabsize).clone();
@@ -1724,7 +1717,7 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573: Option<SifrInt> =
                 max_lines;
             let sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572: String =
-                placeholder;
+                placeholder.to_string();
             Self {
                 width: sifr_generated_field_value_dbdacd932fd1e9bf_7769647468,
                 initial_indent: sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74,
@@ -1973,7 +1966,7 @@ pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X
 )]
 fn main() {
     let template: SifrGeneratedStdlibSifrX2estringX2eTemplate =
-        SifrGeneratedStdlibSifrX2estringX2eTemplate::new("Hello $name, mode=${mode}".to_string());
+        SifrGeneratedStdlibSifrX2estringX2eTemplate::new("Hello $name, mode=${mode}");
     let mut rendered_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let rendered: String = template.substitute(&{
@@ -2006,8 +1999,8 @@ fn main() {
     let wrapper: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
         SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(
             &SifrInt::from_i64(8),
-            "> ".to_string(),
-            ".. ".to_string(),
+            "> ",
+            ".. ",
             true,
             &SifrInt::from_i64(8),
             true,
@@ -2015,7 +2008,7 @@ fn main() {
             true,
             false,
             None,
-            " [...]".to_string(),
+            " [...]",
         );
     let wrapped_value_2bd4345c4f3b90ce: Vec<String> = wrapper.wrap("alpha beta gamma");
     assert_eq!(
@@ -2040,8 +2033,8 @@ fn main() {
         SifrGeneratedUnion8X3asequence5X3aunion1X3a344X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0,
     > = (|| {
         let ratio: f64 = SifrGeneratedStdlibSifrX2edifflibX2eSequenceMatcher::new(
-                "abcd".to_string(),
-                "abed".to_string(),
+                "abcd",
+                "abed",
             )
             .ratio()
             .map_err(|sifr_generated_e| match sifr_generated_e {

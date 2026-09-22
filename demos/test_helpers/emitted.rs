@@ -143,6 +143,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn variance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -178,6 +182,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn pvariance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -213,6 +221,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -268,6 +280,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn pstdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -450,9 +466,9 @@ fn main() {
             });
             assert_eq!(format!("population stdev = {pd}"), "population stdev = 2");
             {
-                let sifr_generated_lhs = m;
-                let sifr_generated_rhs = 5.0_f64;
-                let sifr_generated_tol = 0.001_f64;
+                let sifr_generated_lhs: f64 = m;
+                let sifr_generated_rhs: f64 = 5.0_f64;
+                let sifr_generated_tol: f64 = 0.001_f64;
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -460,9 +476,9 @@ fn main() {
                 );
             };
             {
-                let sifr_generated_lhs = sv;
-                let sifr_generated_rhs = 4.571_f64;
-                let sifr_generated_tol = 0.01_f64;
+                let sifr_generated_lhs: f64 = sv;
+                let sifr_generated_rhs: f64 = 4.571_f64;
+                let sifr_generated_tol: f64 = 0.01_f64;
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -470,9 +486,9 @@ fn main() {
                 );
             };
             {
-                let sifr_generated_lhs = pv;
-                let sifr_generated_rhs = 4.0_f64;
-                let sifr_generated_tol = 0.001_f64;
+                let sifr_generated_lhs: f64 = pv;
+                let sifr_generated_rhs: f64 = 4.0_f64;
+                let sifr_generated_tol: f64 = 0.001_f64;
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -480,9 +496,9 @@ fn main() {
                 );
             };
             {
-                let sifr_generated_lhs = sd;
-                let sifr_generated_rhs = 2.138_f64;
-                let sifr_generated_tol = 0.01_f64;
+                let sifr_generated_lhs: f64 = sd;
+                let sifr_generated_rhs: f64 = 2.138_f64;
+                let sifr_generated_tol: f64 = 0.01_f64;
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -490,9 +506,9 @@ fn main() {
                 );
             };
             {
-                let sifr_generated_lhs = pd;
-                let sifr_generated_rhs = 2.0_f64;
-                let sifr_generated_tol = 0.001_f64;
+                let sifr_generated_lhs: f64 = pd;
+                let sifr_generated_rhs: f64 = 2.0_f64;
+                let sifr_generated_tol: f64 = 0.001_f64;
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,

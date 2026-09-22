@@ -6,7 +6,7 @@ fn main() {
         SifrInt::from_i64(1),
         SifrInt::from_i64(2),
     ];
-    let mut rev_it: Box<dyn Iterator<Item = SifrInt>> = Box::new(nums.iter().cloned().rev());
+    let mut rev_it: Box<dyn Iterator<Item = SifrInt>> = Box::new(nums.into_iter().rev());
     println!(
         "{}",
         rev_it.next().map_or_else(

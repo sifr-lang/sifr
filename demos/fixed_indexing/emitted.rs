@@ -119,8 +119,8 @@ fn neighbor_min_cost(cost: &mut [SifrInt]) -> SifrInt {
     }
     .unwrap_or(sifr_generated_checked_value_2);
     ::std::cmp::min(
-        sifr_generated_checked_value_1.clone(),
-        sifr_generated_checked_value_2.clone(),
+        sifr_generated_checked_value_1,
+        sifr_generated_checked_value_2,
     )
 }
 fn main() {

@@ -250,7 +250,7 @@ mod sifr_generated_generated_support {
                             let next_val: T = SifrGeneratedAdd::sifr_generated_add(prev, item);
                             let sifr_generated_try_res: Result<(), IndexError> = (|| {
                                 {
-                                    let sifr_generated_assign_value = next_val.clone();
+                                    let sifr_generated_assign_value = next_val;
                                     {
                                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                                         let sifr_generated_index_normalized =

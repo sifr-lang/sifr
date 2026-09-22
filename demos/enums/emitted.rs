@@ -27,10 +27,6 @@ impl Color {
         clippy::trivially_copy_pass_by_ref,
         reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
-    #[expect(
-        clippy::unused_self,
-        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
-    )]
     fn name(&self) -> String {
         format!("{self:?}")
     }

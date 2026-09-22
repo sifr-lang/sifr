@@ -70,10 +70,7 @@ fn main() {
     let countdown: Countdown = Countdown::new(&SifrInt::from_i64(4));
     println!(
         "{:?}",
-        countdown
-            .clone()
-            .sifr_generated_iter__()
-            .collect::<Vec<_>>()
+        countdown.sifr_generated_iter__().collect::<Vec<_>>()
     );
     println!(
         "{:?}",

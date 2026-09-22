@@ -1087,7 +1087,7 @@ mod sifr_generated_generated_support {
             state.index.clone(),
             state.gauss_next,
         );
-        let _ = sifr_generated_set_result;
+        let _: Result<(), ValueError> = sifr_generated_set_result;
     }
     fn sifr_generated_ensure_module_state_initialized() {
         let words: Vec<SifrInt> = random_module_state_words();
@@ -1111,9 +1111,7 @@ mod sifr_generated_generated_support {
         let _ = sifr_generated_try_res;
         r
     }
-    fn sifr_generated_sync_module_random(
-        generator: &mut SifrGeneratedStdlibSifrX2erandomX2eRandom,
-    ) {
+    fn sifr_generated_sync_module_random(generator: &SifrGeneratedStdlibSifrX2erandomX2eRandom) {
         sifr_generated_store_state_into_module_storage(&generator.getstate());
     }
     ///# Errors
@@ -1128,7 +1126,7 @@ mod sifr_generated_generated_support {
             sifr_generated_module_random();
         let value: Result<SifrInt, ValueError> =
             generator.randrange(start, &stop, step_argument_af0b4e191da20cef);
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
         value
     }
     ///# Errors
@@ -1154,7 +1152,7 @@ mod sifr_generated_generated_support {
                 .get(sifr_generated_checked_read_normalized)
                 .cloned()
         };
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
         let Some(picked_value_9fda901c871bd7d9) = picked else {
             return Err(ValueError::new("choice: index out of range".to_string()));
         };
@@ -1196,7 +1194,7 @@ mod sifr_generated_generated_support {
             }
             i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
         Ok(result)
     }
     pub fn shuffle<T: Clone + 'static>(items: &mut [T]) {
@@ -1236,7 +1234,7 @@ mod sifr_generated_generated_support {
                 {
                     if SifrInt::from_i64(0) <= i && i < items.len() {
                         {
-                            let sifr_generated_assign_value = right.clone();
+                            let sifr_generated_assign_value = right;
                             {
                                 let sifr_generated_index_raw = &i;
                                 let sifr_generated_index_normalized =
@@ -1251,7 +1249,7 @@ mod sifr_generated_generated_support {
                     }
                     if SifrInt::from_i64(0) <= j && j < items.len() {
                         {
-                            let sifr_generated_assign_value = left.clone();
+                            let sifr_generated_assign_value = left;
                             {
                                 let sifr_generated_index_raw = j;
                                 let sifr_generated_index_normalized =
@@ -1268,7 +1266,7 @@ mod sifr_generated_generated_support {
                 i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
             }
         }
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
     }
     #[must_use]
     pub fn compare_digest(a: &str, b: &str) -> bool {

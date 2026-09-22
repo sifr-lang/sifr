@@ -150,6 +150,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::manual_midpoint,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn median(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -219,6 +223,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn variance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -254,6 +262,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -509,6 +521,10 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn quantiles(
         data: &[f64],
         n: &SifrInt,
@@ -639,6 +655,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn covariance(
         x: &[f64],
         y: &[f64],
@@ -707,6 +727,10 @@ mod sifr_generated_generated_support {
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
+    )]
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
     )]
     pub fn correlation(
         x: &[f64],
@@ -829,6 +853,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn linear_regression(
         x: &[f64],
         y: &[f64],

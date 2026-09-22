@@ -381,8 +381,8 @@ mod sifr_generated_generated_support {
         }
         quotechar
     }
-    fn sifr_generated_append_field(row: &mut Vec<String>, field: String) {
-        row.push(field);
+    fn sifr_generated_append_field(row: &mut Vec<String>, field: &str) {
+        row.push(field.to_string());
     }
     fn sifr_generated_append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
         rows.push(row);
@@ -503,7 +503,7 @@ mod sifr_generated_generated_support {
                 }
             }
             if ch_value == resolved.delimiter {
-                sifr_generated_append_field(&mut row, field);
+                sifr_generated_append_field(&mut row, field.as_str());
                 field = String::new();
                 field_started = false;
                 i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
@@ -523,7 +523,7 @@ mod sifr_generated_generated_support {
                 if row.len() == SifrInt::from_i64(0) && field.is_empty() {
                     sifr_generated_append_row(&mut rows, Vec::new());
                 } else {
-                    sifr_generated_append_field(&mut row, field);
+                    sifr_generated_append_field(&mut row, field.as_str());
                     sifr_generated_append_row(&mut rows, row);
                 }
                 row = Vec::new();
@@ -538,7 +538,7 @@ mod sifr_generated_generated_support {
         }
         let _ = in_quotes;
         if row.len() > SifrInt::from_i64(0) || !field.is_empty() {
-            sifr_generated_append_field(&mut row, field);
+            sifr_generated_append_field(&mut row, field.as_str());
             sifr_generated_append_row(&mut rows, row);
         }
         rows
@@ -1591,11 +1591,11 @@ mod sifr_generated_project_nominals {
             reason = "generated signature preserves the typed Sifr callable contract"
         )]
         pub fn new(
-            text: String,
+            text: &str,
             dialect: &Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect>,
-            delimiter: String,
-            quotechar: String,
-            escapechar: String,
+            delimiter: &str,
+            quotechar: &str,
+            escapechar: &str,
             doublequote: bool,
             skipinitialspace: bool,
             quoting: &SifrInt,
@@ -1603,16 +1603,16 @@ mod sifr_generated_project_nominals {
             let resolved_dialect: SifrGeneratedStdlibSifrX2ecsvX2eDialect =
                 sifr_generated_resolve_dialect(
                     dialect,
-                    &delimiter,
-                    &quotechar,
-                    &escapechar,
+                    delimiter,
+                    quotechar,
+                    escapechar,
                     doublequote,
                     skipinitialspace,
                     "\n",
                     quoting,
                 );
             let rows: Vec<Vec<String>> = parse_csv(
-                &text,
+                text,
                 &None,
                 resolved_dialect.delimiter.as_str(),
                 resolved_dialect.quotechar.as_str(),
@@ -1977,10 +1977,8 @@ fn main() {
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a241X3a5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
-                sifr_generated_try_variant_error,
-            ) => {
-                let _e: Error = sifr_generated_try_variant_error;
-            }
+                _try_variant_error,
+            ) => {}
             SifrGeneratedUnion8X3asequence5X3aunion1X3a241X3a5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
@@ -2020,11 +2018,11 @@ fn main() {
     assert!(d.is_some());
     if let Some(d) = d {
         let r: SifrGeneratedStdlibSifrX2ecsvX2ereader = SifrGeneratedStdlibSifrX2ecsvX2ereader::new(
-            "a|b\n1|2".to_string(),
+            "a|b\n1|2",
             &Some(d),
-            ",".to_string(),
-            "\"".to_string(),
-            String::new(),
+            ",",
+            "\"",
+            "",
             true,
             false,
             &SifrInt::from_i64(0),

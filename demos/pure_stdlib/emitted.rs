@@ -216,7 +216,7 @@ mod sifr_generated_generated_support {
                             let next_val: T = SifrGeneratedAdd::sifr_generated_add(prev, item);
                             let sifr_generated_try_res: Result<(), IndexError> = (|| {
                                 {
-                                    let sifr_generated_assign_value = next_val.clone();
+                                    let sifr_generated_assign_value = next_val;
                                     {
                                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                                         let sifr_generated_index_normalized =
@@ -623,7 +623,7 @@ mod sifr_generated_generated_support {
             state.index.clone(),
             state.gauss_next,
         );
-        let _ = sifr_generated_set_result;
+        let _: Result<(), ValueError> = sifr_generated_set_result;
     }
     fn sifr_generated_ensure_module_state_initialized() {
         let words: Vec<SifrInt> = random_module_state_words();
@@ -647,9 +647,7 @@ mod sifr_generated_generated_support {
         let _ = sifr_generated_try_res;
         r
     }
-    fn sifr_generated_sync_module_random(
-        generator: &mut SifrGeneratedStdlibSifrX2erandomX2eRandom,
-    ) {
+    fn sifr_generated_sync_module_random(generator: &SifrGeneratedStdlibSifrX2erandomX2eRandom) {
         sifr_generated_store_state_into_module_storage(&generator.getstate());
     }
     ///# Errors
@@ -664,7 +662,7 @@ mod sifr_generated_generated_support {
             sifr_generated_module_random();
         let value: Result<SifrInt, ValueError> =
             generator.randrange(start, &stop, step_argument_af0b4e191da20cef);
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
         value
     }
     #[must_use]
@@ -672,7 +670,7 @@ mod sifr_generated_generated_support {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let value: f64 = generator.gauss(mu, sigma);
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
         value
     }
     ///# Errors
@@ -727,7 +725,7 @@ mod sifr_generated_generated_support {
                 && pick_index < pool.len()
             {
                 {
-                    let sifr_generated_assign_value = last.clone();
+                    let sifr_generated_assign_value = last;
                     {
                         let sifr_generated_index_raw = pick_index;
                         let sifr_generated_index_normalized =
@@ -743,7 +741,7 @@ mod sifr_generated_generated_support {
             remaining = ::std::ops::Sub::sub(&remaining, &SifrInt::from_i64(1));
             i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
         Ok(result)
     }
     pub fn shuffle<T: Clone + 'static>(items: &mut [T]) {
@@ -783,7 +781,7 @@ mod sifr_generated_generated_support {
                 {
                     if SifrInt::from_i64(0) <= i && i < items.len() {
                         {
-                            let sifr_generated_assign_value = right.clone();
+                            let sifr_generated_assign_value = right;
                             {
                                 let sifr_generated_index_raw = &i;
                                 let sifr_generated_index_normalized =
@@ -798,7 +796,7 @@ mod sifr_generated_generated_support {
                     }
                     if SifrInt::from_i64(0) <= j && j < items.len() {
                         {
-                            let sifr_generated_assign_value = left.clone();
+                            let sifr_generated_assign_value = left;
                             {
                                 let sifr_generated_index_raw = j;
                                 let sifr_generated_index_normalized =
@@ -815,7 +813,7 @@ mod sifr_generated_generated_support {
                 i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
             }
         }
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     enum SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0
@@ -952,6 +950,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::manual_midpoint,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn median(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -1021,6 +1023,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn variance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -1056,6 +1062,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -1241,6 +1251,10 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn quantiles(
         data: &[f64],
         n: &SifrInt,
@@ -1371,6 +1385,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn covariance(
         x: &[f64],
         y: &[f64],
@@ -1439,6 +1457,10 @@ mod sifr_generated_generated_support {
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
+    )]
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
     )]
     pub fn correlation(
         x: &[f64],
@@ -1561,6 +1583,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn linear_regression(
         x: &[f64],
         y: &[f64],
@@ -2170,6 +2196,10 @@ mod sifr_generated_project_nominals {
         }
     }
     impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
+        #[expect(
+            clippy::suboptimal_flops,
+            reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+        )]
         pub fn gauss(&mut self, mu: f64, sigma: f64) -> f64 {
             let cached: Option<f64> = self.gauss_next;
             if let Some(cached) = cached {
@@ -2642,11 +2672,7 @@ fn main() {
         SifrInt::from_i64(4),
         SifrInt::from_i64(5),
     ];
-    let total: SifrInt = reduce(
-        |sifr_generated_arg0, sifr_generated_arg1| add(&sifr_generated_arg0, &sifr_generated_arg1),
-        &nums,
-        &SifrInt::from_i64(0),
-    );
+    let total: SifrInt = reduce(add, &nums, &SifrInt::from_i64(0));
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(14usize.saturating_add(0usize));
@@ -2654,11 +2680,7 @@ fn main() {
         sifr_generated_concat.push_str(total.to_string().as_str());
         sifr_generated_concat
     });
-    let product: SifrInt = reduce(
-        |sifr_generated_arg0, sifr_generated_arg1| mul(&sifr_generated_arg0, &sifr_generated_arg1),
-        &nums,
-        &SifrInt::from_i64(1),
-    );
+    let product: SifrInt = reduce(mul, &nums, &SifrInt::from_i64(1));
     println!("{}", {
         let mut sifr_generated_concat: String =
             String::with_capacity(14usize.saturating_add(0usize));

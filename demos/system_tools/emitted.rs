@@ -144,12 +144,12 @@ mod sifr_generated_generated_support {
     #[must_use]
     pub fn utf8() -> SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(
-            sifr_generated_const_454e434f44494e475f55544638(),
+            sifr_generated_const_454e434f44494e475f55544638().as_str(),
         )
     }
     fn strict_decode_handler() -> SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler {
         SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler::new(
-            sifr_generated_const_4445434f44455f4552524f52535f535452494354(),
+            sifr_generated_const_4445434f44455f4552524f52535f535452494354().as_str(),
         )
     }
     #[expect(
@@ -289,9 +289,9 @@ mod sifr_generated_generated_support {
         enc: &Option<SifrGeneratedStdlibSifrX2eencodingX2eEncoding>,
     ) -> SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         let Some(enc) = enc.as_ref() else {
-            return SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new("utf-8".to_string());
+            return SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new("utf-8");
         };
-        SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(enc.label.clone())
+        SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(enc.label.as_str())
     }
     #[expect(
         clippy::ref_option,
@@ -303,12 +303,12 @@ mod sifr_generated_generated_support {
         let Some(errors) = errors.as_ref() else {
             return strict_decode_handler();
         };
-        SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler::new(errors.name.clone())
+        SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler::new(errors.name.as_str())
     }
     fn sifr_generated_encode_errors_from_decode_errors(
         errors: &SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler,
     ) -> SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler {
-        SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler::new(errors.name.clone())
+        SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler::new(errors.name.as_str())
     }
     fn open_binary(path: &str, mode: &str) -> Result<SifrGeneratedIoBinaryFileHandle, IOError> {
         if !mode.contains(&"b".to_string()) {
@@ -543,8 +543,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         #[must_use]
-        pub const fn new(label: String) -> Self {
-            let sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c: String = label;
+        pub fn new(label: &str) -> Self {
+            let sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c: String = label.to_string();
             Self {
                 label: sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c,
             }
@@ -561,8 +561,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler {
         #[must_use]
-        pub const fn new(name: String) -> Self {
-            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
+        pub fn new(name: &str) -> Self {
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name.to_string();
             Self {
                 name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
             }
@@ -579,8 +579,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler {
         #[must_use]
-        pub const fn new(name: String) -> Self {
-            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
+        pub fn new(name: &str) -> Self {
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name.to_string();
             Self {
                 name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
             }
@@ -1014,7 +1014,6 @@ fn main() {
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let shell_out: String = run_command("echo system-tools-sample")?;
         let cwd: String = getcwd()?;
-        let _chars_cwd: Vec<char> = cwd.chars().collect::<Vec<char>>();
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(17usize.saturating_add(shell_out.len()));

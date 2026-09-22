@@ -825,14 +825,12 @@ fn main() {
     println!("{chained:?}");
     let first_two: Vec<SifrInt> = take(
         &SifrInt::from_i64(2),
-        &vec![
+        &[
             SifrInt::from_i64(10),
             SifrInt::from_i64(20),
             SifrInt::from_i64(30),
             SifrInt::from_i64(40),
-        ]
-        .into_iter()
-        .collect::<Vec<_>>(),
+        ],
     );
     println!("{first_two:?}");
     let sifr_generated_try_res: Result<(), JSONDecodeError> = (|| {

@@ -261,14 +261,12 @@ fn main() {
     let actual: Vec<String> = collect_primary_actual(&payload);
     assert_vector_eq(&actual, &expected);
     let hex_text: String = bytes_to_hex_or_empty(&[72_u8, 105_u8]);
-    let _chars_hex_text: Vec<char> = hex_text.chars().collect::<Vec<char>>();
     assert_eq!(
         (hex_text.chars().count() > SifrInt::from_i64(0)).to_string(),
         "true"
     );
     assert_eq!(hex_text, "4869");
     let roundtrip_text: String = bytes_from_hex_to_text_or_empty("48 69");
-    let _chars_roundtrip_text: Vec<char> = roundtrip_text.chars().collect::<Vec<char>>();
     assert_eq!(
         (roundtrip_text.chars().count() > SifrInt::from_i64(0)).to_string(),
         "true"

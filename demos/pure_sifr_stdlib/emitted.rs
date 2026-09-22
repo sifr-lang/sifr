@@ -236,6 +236,10 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ehashlibX2eHas
     clippy::approx_constant,
     reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
+#[expect(
+    clippy::float_cmp,
+    reason = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes"
+)]
 fn main() {
     assert_eq!(
         ::std::ops::Add::add(&SifrInt::from_i64(1), &SifrInt::from_i64(1)),
@@ -246,7 +250,6 @@ fn main() {
     assert_eq!(result, 3.0_f64);
     assert!(PI > 3.14_f64);
     let h: String = sha256(&[104_u8, 101_u8, 108_u8, 108_u8, 111_u8]).hexdigest();
-    let _chars_h: Vec<char> = h.chars().collect::<Vec<char>>();
     assert_eq!(h.chars().count(), SifrInt::from_i64(64));
     let encoded: String = b64encode("Hello!");
     let sifr_generated_try_res: Result<(), ParseError> = (|| {

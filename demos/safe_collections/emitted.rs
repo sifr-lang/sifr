@@ -85,7 +85,7 @@ fn main() {
         SifrInt::from_i64(9),
     ];
     let lo: Option<SifrInt> = nums.iter().cloned().min();
-    let hi: Option<SifrInt> = nums.iter().cloned().max();
+    let hi: Option<SifrInt> = nums.into_iter().max();
     if let Some(lo) = lo
         && let Some(hi) = hi
     {
@@ -93,7 +93,7 @@ fn main() {
     }
     let empty: Vec<SifrInt> = Vec::new();
     let empty_min: Option<SifrInt> = empty.iter().cloned().min();
-    let empty_max_value_4e7fb6460174a48b: Option<SifrInt> = empty.iter().cloned().max();
+    let empty_max_value_4e7fb6460174a48b: Option<SifrInt> = empty.into_iter().max();
     if let Some(_empty_min) = empty_min {
         println!("ERROR: min on empty should be None");
     } else {
@@ -107,7 +107,7 @@ fn main() {
     let floats: Vec<f64> = vec![3.14_f64, 1.0_f64, 2.71_f64, 0.5_f64];
     println!("sorted floats:");
     println!("{:?}", {
-        let mut sifr_generated_sorted_values = floats;
+        let mut sifr_generated_sorted_values = floats.into_iter().collect::<Vec<_>>();
         sifr_generated_sorted_values.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                 sifr_generated_sorted_left

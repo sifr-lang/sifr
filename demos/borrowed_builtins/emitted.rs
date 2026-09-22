@@ -20,7 +20,7 @@ fn main() {
     );
     println!("sum: {}", nums.iter().cloned().sum::<SifrInt>());
     assert_eq!(
-        format!("sum: {}", nums.iter().cloned().sum::<SifrInt>()),
+        format!("sum: {}", nums.into_iter().sum::<SifrInt>()),
         "sum: 15"
     );
 }

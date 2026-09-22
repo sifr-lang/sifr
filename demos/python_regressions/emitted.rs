@@ -342,7 +342,7 @@ mod sifr_generated_generated_support {
                 {
                     if SifrInt::from_i64(0) <= pos && pos < data.len() {
                         {
-                            let sifr_generated_assign_value = tmp_sm.clone();
+                            let sifr_generated_assign_value = tmp_sm;
                             {
                                 let sifr_generated_index_raw = &pos;
                                 let sifr_generated_index_normalized =
@@ -357,7 +357,7 @@ mod sifr_generated_generated_support {
                     }
                     if SifrInt::from_i64(0) <= smallest && smallest < data.len() {
                         {
-                            let sifr_generated_assign_value = tmp_pos.clone();
+                            let sifr_generated_assign_value = tmp_pos;
                             {
                                 let sifr_generated_index_raw = &smallest;
                                 let sifr_generated_index_normalized =
@@ -417,7 +417,7 @@ mod sifr_generated_generated_support {
         if n2 > SifrInt::from_i64(0) {
             if let Some(last) = last {
                 {
-                    let sifr_generated_assign_value = last.clone();
+                    let sifr_generated_assign_value = last;
                     {
                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                         let sifr_generated_index_normalized =
@@ -1481,6 +1481,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::manual_midpoint,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn median(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -1550,6 +1554,10 @@ mod sifr_generated_generated_support {
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -2548,9 +2556,9 @@ fn has_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
 )]
 fn main() {
     {
-        let sifr_generated_lhs = sqrt(4.0_f64);
-        let sifr_generated_rhs = 2.0_f64;
-        let sifr_generated_tol = 0.0001_f64;
+        let sifr_generated_lhs: f64 = sqrt(4.0_f64);
+        let sifr_generated_rhs: f64 = 2.0_f64;
+        let sifr_generated_tol: f64 = 0.0001_f64;
         assert!(
             sifr_generated_lhs == sifr_generated_rhs
                 || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -2558,9 +2566,9 @@ fn main() {
         );
     };
     {
-        let sifr_generated_lhs = sin(PI / 2.0_f64);
-        let sifr_generated_rhs = 1.0_f64;
-        let sifr_generated_tol = 0.0001_f64;
+        let sifr_generated_lhs: f64 = sin(PI / 2.0_f64);
+        let sifr_generated_rhs: f64 = 1.0_f64;
+        let sifr_generated_tol: f64 = 0.0001_f64;
         assert!(
             sifr_generated_lhs == sifr_generated_rhs
                 || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -2568,9 +2576,9 @@ fn main() {
         );
     };
     {
-        let sifr_generated_lhs = cos(0.0_f64);
-        let sifr_generated_rhs = 1.0_f64;
-        let sifr_generated_tol = 0.0001_f64;
+        let sifr_generated_lhs: f64 = cos(0.0_f64);
+        let sifr_generated_rhs: f64 = 1.0_f64;
+        let sifr_generated_tol: f64 = 0.0001_f64;
         assert!(
             sifr_generated_lhs == sifr_generated_rhs
                 || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -2597,9 +2605,9 @@ fn main() {
         (|| {
             let m_val: f64 = mean(&data)?;
             {
-                let sifr_generated_lhs = m_val;
-                let sifr_generated_rhs = 3.0_f64;
-                let sifr_generated_tol = 0.0001_f64;
+                let sifr_generated_lhs: f64 = m_val;
+                let sifr_generated_rhs: f64 = 3.0_f64;
+                let sifr_generated_tol: f64 = 0.0001_f64;
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -2608,9 +2616,9 @@ fn main() {
             };
             let med_val: f64 = median(&data)?;
             {
-                let sifr_generated_lhs = med_val;
-                let sifr_generated_rhs = 3.0_f64;
-                let sifr_generated_tol = 0.0001_f64;
+                let sifr_generated_lhs: f64 = med_val;
+                let sifr_generated_rhs: f64 = 3.0_f64;
+                let sifr_generated_tol: f64 = 0.0001_f64;
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -2619,9 +2627,9 @@ fn main() {
             };
             let sd_val: f64 = stdev(&data)?;
             {
-                let sifr_generated_lhs = sd_val;
-                let sifr_generated_rhs = 1.5811_f64;
-                let sifr_generated_tol = 0.001_f64;
+                let sifr_generated_lhs: f64 = sd_val;
+                let sifr_generated_rhs: f64 = 1.5811_f64;
+                let sifr_generated_tol: f64 = 0.001_f64;
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -2706,7 +2714,6 @@ fn main() {
         let wrapped: Vec<String> = wrap("Hello World", &SifrInt::from_i64(5))?;
         assert_eq!(SifrInt::from(wrapped.len()), SifrInt::from_i64(2));
         let filled: String = fill("Hello World", &SifrInt::from_i64(5))?;
-        let _chars_filled: Vec<char> = filled.chars().collect::<Vec<char>>();
         assert!(filled.chars().count() > SifrInt::from_i64(0));
         println!("textwrap: OK");
         Ok(())
@@ -2765,7 +2772,7 @@ fn main() {
         SifrInt::from(repeat(SifrInt::from_i64(7), SifrInt::from_i64(3)).count()),
         SifrInt::from_i64(3)
     );
-    let tk: Vec<SifrInt> = take(&SifrInt::from_i64(2), &ch);
+    let tk: Vec<SifrInt> = take(&SifrInt::from_i64(2), &ch.into_iter().collect::<Vec<_>>());
     assert_eq!(SifrInt::from(tk.len()), SifrInt::from_i64(2));
     println!("itertools: OK");
     assert_eq!(basename("/home/user/file.txt"), "file.txt");

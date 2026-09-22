@@ -150,7 +150,7 @@ mod sifr_generated_generated_support {
             state.index.clone(),
             state.gauss_next,
         );
-        let _ = sifr_generated_set_result;
+        let _: Result<(), ValueError> = sifr_generated_set_result;
     }
     fn sifr_generated_ensure_module_state_initialized() {
         let words: Vec<SifrInt> = random_module_state_words();
@@ -174,16 +174,14 @@ mod sifr_generated_generated_support {
         let _ = sifr_generated_try_res;
         r
     }
-    fn sifr_generated_sync_module_random(
-        generator: &mut SifrGeneratedStdlibSifrX2erandomX2eRandom,
-    ) {
+    fn sifr_generated_sync_module_random(generator: &SifrGeneratedStdlibSifrX2erandomX2eRandom) {
         sifr_generated_store_state_into_module_storage(&generator.getstate());
     }
     pub fn seed(seed_value: Option<&SifrInt>) {
         let seed_value: Option<SifrInt> = seed_value.cloned();
-        let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
+        let generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             SifrGeneratedStdlibSifrX2erandomX2eRandom::new(seed_value.as_ref());
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
     }
     #[must_use]
     pub fn getstate() -> SifrGeneratedStdlibSifrX2erandomX2eRandomState {
@@ -198,7 +196,7 @@ mod sifr_generated_generated_support {
         let mut probe: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(&SifrInt::from_i64(0)));
         let result: Result<(), ValueError> = probe.setstate(state);
-        sifr_generated_sync_module_random(&mut probe);
+        sifr_generated_sync_module_random(&probe);
         result
     }
     ///# Errors
@@ -207,7 +205,7 @@ mod sifr_generated_generated_support {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let value: Result<SifrInt, ValueError> = generator.randint(minimum, maximum);
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
         value
     }
     #[must_use]
@@ -215,7 +213,7 @@ mod sifr_generated_generated_support {
         let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom =
             sifr_generated_module_random();
         let value: f64 = generator.random();
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
         value
     }
 }
@@ -531,6 +529,10 @@ use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2erandomX2eRandom;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2erandomX2eRandomState;
 pub use sifr_generated_project_nominals::ValueError;
+#[expect(
+    clippy::float_cmp,
+    reason = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes"
+)]
 fn main() {
     let mut rng: SifrGeneratedStdlibSifrX2erandomX2eRandom =
         SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(&SifrInt::from_i64(77)));

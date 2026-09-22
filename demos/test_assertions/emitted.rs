@@ -6,10 +6,6 @@ mod sifr_generated_generated_support {
         clippy::assertions_on_constants,
         reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
-    #[expect(
-        clippy::float_cmp,
-        reason = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes"
-    )]
     pub fn assert_not_almost_eq(actual: f64, expected: f64, tolerance: f64) {
         assert!(tolerance >= 0.0_f64);
         if actual == expected {
@@ -32,9 +28,11 @@ mod sifr_generated_generated_support {
     }
     pub fn assert_some<T: Clone + 'static>(value: Option<T>) {
         assert!(value.is_some());
+        ::std::mem::drop(value);
     }
     pub fn assert_none<T: Clone + 'static>(value: Option<T>) {
         assert!(value.is_none());
+        ::std::mem::drop(value);
     }
     #[expect(
         clippy::assertions_on_constants,
@@ -259,6 +257,10 @@ fn parse_num(s: &str) -> Result<SifrInt, ValueError> {
     }
     Ok(SifrInt::from_i64(10))
 }
+#[expect(
+    clippy::float_cmp,
+    reason = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes"
+)]
 fn main() {
     println!("=== Core equality/truth assertions ===");
     assert_ne!("sifr", "rust");
@@ -270,9 +272,9 @@ fn main() {
     println!("core assertions ok");
     println!("=== Almost-equality semantics ===");
     {
-        let sifr_generated_lhs = 0.1_f64 + 0.2_f64;
-        let sifr_generated_rhs = 0.3_f64;
-        let sifr_generated_tol = 0.0001_f64;
+        let sifr_generated_lhs: f64 = 0.1_f64 + 0.2_f64;
+        let sifr_generated_rhs: f64 = 0.3_f64;
+        let sifr_generated_tol: f64 = 0.0001_f64;
         assert!(
             sifr_generated_lhs == sifr_generated_rhs
                 || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
@@ -280,9 +282,9 @@ fn main() {
         );
     };
     {
-        let sifr_generated_lhs = INF;
-        let sifr_generated_rhs = INF;
-        let sifr_generated_tol = 0.0_f64;
+        let sifr_generated_lhs: f64 = INF;
+        let sifr_generated_rhs: f64 = INF;
+        let sifr_generated_tol: f64 = 0.0_f64;
         assert!(
             sifr_generated_lhs == sifr_generated_rhs
                 || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,

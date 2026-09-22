@@ -247,8 +247,9 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eioX2eStringIO {
         #[must_use]
-        pub const fn new(initial: String) -> Self {
-            let sifr_generated_field_value_b60ec91c25cb3d78_5f627566666572: String = initial;
+        pub fn new(initial: &str) -> Self {
+            let sifr_generated_field_value_b60ec91c25cb3d78_5f627566666572: String =
+                initial.to_string();
             let sifr_generated_field_value_d0bd94583b33fdec_5f637572736f72: SifrInt =
                 SifrInt::from_i64(0);
             let sifr_generated_field_value_8bc7f577e5ffacda_5f636c6f736564: bool = false;
@@ -511,8 +512,7 @@ mod sifr_generated_project_nominals {
                     let mut sifr_generated_v = left;
                     sifr_generated_v.extend(data.iter().copied());
                     sifr_generated_v
-                }
-                .clone();
+                };
                 sifr_generated_v.extend(right.iter().copied());
                 sifr_generated_v
             };
@@ -586,7 +586,7 @@ fn main() {
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let mut sio: SifrGeneratedStdlibSifrX2eioX2eStringIO =
-            SifrGeneratedStdlibSifrX2eioX2eStringIO::new("sample".to_string());
+            SifrGeneratedStdlibSifrX2eioX2eStringIO::new("sample");
         sio.write("1")?;
         let _seek: SifrInt = sio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
         let text_value: String = sio.read(&None)?;

@@ -38,6 +38,10 @@ impl Point {
     }
 }
 impl Point {
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     fn distance(&self, other: &Self) -> f64 {
         let dx: f64 = self.x - other.x;
         let dy: f64 = self.y - other.y;

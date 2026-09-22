@@ -581,8 +581,8 @@ mod sifr_generated_project_nominals {
         )]
         pub fn new(
             width: &SifrInt,
-            initial_indent: String,
-            subsequent_indent: String,
+            initial_indent: &str,
+            subsequent_indent: &str,
             expand_tabs: bool,
             tabsize: &SifrInt,
             replace_whitespace: bool,
@@ -590,13 +590,14 @@ mod sifr_generated_project_nominals {
             break_on_hyphens: bool,
             fix_sentence_endings: bool,
             max_lines: Option<&SifrInt>,
-            placeholder: String,
+            placeholder: &str,
         ) -> Self {
             let max_lines: Option<SifrInt> = max_lines.cloned();
             let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = (*width).clone();
             let sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74: String =
-                initial_indent;
-            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent;
+                initial_indent.to_string();
+            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent
+                .to_string();
             let sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273: bool =
                 expand_tabs;
             let mut safe_tabsize: SifrInt = (*tabsize).clone();
@@ -613,7 +614,7 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573: Option<SifrInt> =
                 max_lines;
             let sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572: String =
-                placeholder;
+                placeholder.to_string();
             Self {
                 width: sifr_generated_field_value_dbdacd932fd1e9bf_7769647468,
                 initial_indent: sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74,
@@ -669,8 +670,8 @@ fn main() {
     let wrapper: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
         SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(
             &SifrInt::from_i64(8),
-            String::new(),
-            String::new(),
+            "",
+            "",
             true,
             &SifrInt::from_i64(8),
             true,
@@ -678,15 +679,15 @@ fn main() {
             false,
             false,
             None,
-            " [...]".to_string(),
+            " [...]",
         );
     let lines: Vec<String> = wrapper.wrap("alpha-beta gamma");
     assert_eq!(format!("{lines:?}"), "[\"alpha-beta\", \"gamma\"]");
     let keep_ws: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
         SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(
             &SifrInt::from_i64(10),
-            String::new(),
-            String::new(),
+            "",
+            "",
             true,
             &SifrInt::from_i64(8),
             true,
@@ -694,7 +695,7 @@ fn main() {
             true,
             false,
             None,
-            " [...]".to_string(),
+            " [...]",
         );
     assert_eq!(format!("{:?}", keep_ws.wrap("a  b")), "[\"a  b\"]");
     let text: String = "<a href=\"x\">\'ok\' & done</a>".to_string();

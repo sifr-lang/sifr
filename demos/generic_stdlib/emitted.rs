@@ -151,7 +151,7 @@ mod sifr_generated_generated_support {
                 {
                     if SifrInt::from_i64(0) <= pos && pos < data.len() {
                         {
-                            let sifr_generated_assign_value = tmp_sm.clone();
+                            let sifr_generated_assign_value = tmp_sm;
                             {
                                 let sifr_generated_index_raw = &pos;
                                 let sifr_generated_index_normalized =
@@ -166,7 +166,7 @@ mod sifr_generated_generated_support {
                     }
                     if SifrInt::from_i64(0) <= smallest && smallest < data.len() {
                         {
-                            let sifr_generated_assign_value = tmp_pos.clone();
+                            let sifr_generated_assign_value = tmp_pos;
                             {
                                 let sifr_generated_index_raw = &smallest;
                                 let sifr_generated_index_normalized =
@@ -226,7 +226,7 @@ mod sifr_generated_generated_support {
         if n2 > SifrInt::from_i64(0) {
             if let Some(last) = last {
                 {
-                    let sifr_generated_assign_value = last.clone();
+                    let sifr_generated_assign_value = last;
                     {
                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                         let sifr_generated_index_normalized =
@@ -505,7 +505,7 @@ mod sifr_generated_generated_support {
                             let next_val: T = SifrGeneratedAdd::sifr_generated_add(prev, item);
                             let sifr_generated_try_res: Result<(), IndexError> = (|| {
                                 {
-                                    let sifr_generated_assign_value = next_val.clone();
+                                    let sifr_generated_assign_value = next_val;
                                     {
                                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                                         let sifr_generated_index_normalized =
@@ -791,7 +791,7 @@ mod sifr_generated_generated_support {
             state.index.clone(),
             state.gauss_next,
         );
-        let _ = sifr_generated_set_result;
+        let _: Result<(), ValueError> = sifr_generated_set_result;
     }
     fn sifr_generated_ensure_module_state_initialized() {
         let words: Vec<SifrInt> = random_module_state_words();
@@ -815,9 +815,7 @@ mod sifr_generated_generated_support {
         let _ = sifr_generated_try_res;
         r
     }
-    fn sifr_generated_sync_module_random(
-        generator: &mut SifrGeneratedStdlibSifrX2erandomX2eRandom,
-    ) {
+    fn sifr_generated_sync_module_random(generator: &SifrGeneratedStdlibSifrX2erandomX2eRandom) {
         sifr_generated_store_state_into_module_storage(&generator.getstate());
     }
     pub fn shuffle<T: Clone + 'static>(items: &mut [T]) {
@@ -857,7 +855,7 @@ mod sifr_generated_generated_support {
                 {
                     if SifrInt::from_i64(0) <= i && i < items.len() {
                         {
-                            let sifr_generated_assign_value = right.clone();
+                            let sifr_generated_assign_value = right;
                             {
                                 let sifr_generated_index_raw = &i;
                                 let sifr_generated_index_normalized =
@@ -872,7 +870,7 @@ mod sifr_generated_generated_support {
                     }
                     if SifrInt::from_i64(0) <= j && j < items.len() {
                         {
-                            let sifr_generated_assign_value = left.clone();
+                            let sifr_generated_assign_value = left;
                             {
                                 let sifr_generated_index_raw = j;
                                 let sifr_generated_index_normalized =
@@ -889,7 +887,7 @@ mod sifr_generated_generated_support {
                 i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
             }
         }
-        sifr_generated_sync_module_random(&mut generator);
+        sifr_generated_sync_module_random(&generator);
     }
 }
 mod sifr_generated_project_nominals {
@@ -1689,22 +1687,18 @@ fn main() {
     println!("=== Generic take ===");
     let first3_int: Vec<SifrInt> = take(
         &SifrInt::from_i64(3),
-        &vec![
+        &[
             SifrInt::from_i64(10),
             SifrInt::from_i64(20),
             SifrInt::from_i64(30),
             SifrInt::from_i64(40),
             SifrInt::from_i64(50),
-        ]
-        .into_iter()
-        .collect::<Vec<_>>(),
+        ],
     );
     println!("{first3_int:?}");
     let first2_str: Vec<String> = take(
         &SifrInt::from_i64(2),
-        &vec!["hello".to_string(), "world".to_string(), "foo".to_string()]
-            .into_iter()
-            .collect::<Vec<_>>(),
+        &["hello".to_string(), "world".to_string(), "foo".to_string()],
     );
     println!("{first2_str:?}");
     println!("=== Generic flatten ===");
@@ -1713,7 +1707,7 @@ fn main() {
         vec![SifrInt::from_i64(3), SifrInt::from_i64(4)],
         vec![SifrInt::from_i64(5)],
     ];
-    let flat_int: Vec<SifrInt> = flatten(&nested_int);
+    let flat_int: Vec<SifrInt> = flatten(&nested_int.into_iter().collect::<Vec<_>>());
     println!("{flat_int:?}");
     println!("=== Generic accumulate ===");
     let sums: Vec<SifrInt> = accumulate(

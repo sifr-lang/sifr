@@ -202,11 +202,11 @@ mod sifr_generated_generated_support {
             sifr_generated_split_inline_option(token);
         let _chars_inline_name: Vec<char> = inline_name.chars().collect::<Vec<char>>();
         let _chars_inline_value: Vec<char> = inline_value.chars().collect::<Vec<char>>();
-        let _ = inline_value;
-        let mut lookup_name: String = token.to_string();
-        if inline_has_value {
-            lookup_name = inline_name;
-        }
+        let lookup_name: String = if inline_has_value {
+            inline_name
+        } else {
+            token.to_string()
+        };
         #[expect(
             clippy::explicit_iter_loop,
             reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
@@ -487,7 +487,7 @@ mod sifr_generated_generated_support {
         true
     }
     fn sifr_generated_is_private_ipv4_value(value: &SifrInt) -> bool {
-        let private_hit: bool = if sifr_generated_in_ipv4_range(
+        let private_hit: bool = sifr_generated_in_ipv4_range(
             value,
             &SifrInt::from_i64(0),
             &SifrInt::from_i64(16_777_215),
@@ -541,12 +541,7 @@ mod sifr_generated_generated_support {
                 &SifrInt::from_i64(4_026_531_840),
                 &SifrInt::from_i64(4_294_967_295),
             ) || value
-                == &SifrInt::from_i64(4_294_967_295)))))))))))))
-        {
-            true
-        } else {
-            false
-        };
+                == &SifrInt::from_i64(4_294_967_295)))))))))))));
         if private_hit {
             if value == &SifrInt::from_i64(3_221_225_481) {
                 return false;
@@ -626,13 +621,11 @@ mod sifr_generated_generated_support {
         if !is_valid_ipv4(addr) {
             return Err(
                 SifrGeneratedStdlibSifrX2eipaddressX2eAddressValueError::new(
-                    "invalid IPv4 address".to_string(),
+                    "invalid IPv4 address",
                 ),
             );
         }
-        Ok(SifrGeneratedStdlibSifrX2eipaddressX2eIPv4Address::new(
-            addr.to_owned(),
-        ))
+        Ok(SifrGeneratedStdlibSifrX2eipaddressX2eIPv4Address::new(addr))
     }
     fn uuid4() -> String {
         ::sifr_stdlib::uuid::uuid4()
@@ -997,7 +990,7 @@ mod sifr_generated_generated_support {
     }
     #[must_use]
     pub fn uuid4_obj() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid4())
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid4().as_str())
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
@@ -1009,7 +1002,9 @@ mod sifr_generated_generated_support {
             ValueError,
         > = (|| {
             let canonical: String = sifr_generated_canonical_uuid_text(hex_str)?;
-            Ok(Ok(SifrGeneratedStdlibSifrX2euuidX2eUUID::new(canonical)))
+            Ok(Ok(SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
+                canonical.as_str(),
+            )))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
             let e: ValueError = sifr_generated_try_err;
@@ -1039,21 +1034,22 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec {
         #[must_use]
         pub fn new(
-            name: String,
-            dest: String,
-            kind: String,
-            default_value: String,
-            nargs: String,
-            type_name: String,
+            name: &str,
+            dest: &str,
+            kind: &str,
+            default_value: &str,
+            nargs: &str,
+            type_name: &str,
         ) -> Self {
-            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
-            let sifr_generated_field_value_a5eb0667427cce95_64657374: String = dest;
-            let sifr_generated_field_value_ef9c96d721673243_6b696e64: String = kind;
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name.to_string();
+            let sifr_generated_field_value_a5eb0667427cce95_64657374: String = dest.to_string();
+            let sifr_generated_field_value_ef9c96d721673243_6b696e64: String = kind.to_string();
             let sifr_generated_field_value_c029ceb935ca1970_64656661756c745f76616c7565: String =
-                default_value;
+                default_value.to_string();
             let sifr_generated_field_value_c4fccdff6d365b00_6e61726773: String =
-                sifr_generated_normalize_nargs(&nargs);
-            let sifr_generated_field_value_c23e4d7df5c6ddd5_747970655f6e616d65: String = type_name;
+                sifr_generated_normalize_nargs(nargs);
+            let sifr_generated_field_value_c23e4d7df5c6ddd5_747970655f6e616d65: String =
+                type_name.to_string();
             Self {
                 name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
                 dest: sifr_generated_field_value_a5eb0667427cce95_64657374,
@@ -1175,13 +1171,9 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2eargparseX2eNamespace {
         #[must_use]
         pub fn get(&self, name: &str, default: &str) -> String {
-            #[expect(
-                clippy::explicit_iter_loop,
-                reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
-            )]
-            for (key, value) in self.str_values.iter() {
-                if key == name {
-                    return value.clone();
+            for (key, value) in self.str_values.iter().cloned() {
+                if key == *name {
+                    return value;
                 }
             }
             default.to_string()
@@ -1255,8 +1247,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser {
         #[must_use]
-        pub fn new(prog: String) -> Self {
-            let sifr_generated_field_value_68bfad6e66c74136_5f70726f67: String = prog;
+        pub fn new(prog: &str) -> Self {
+            let sifr_generated_field_value_68bfad6e66c74136_5f70726f67: String = prog.to_string();
             let sifr_generated_field_value_fe08c9a04e4710ae_5f7370656373: Vec<
                 SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec,
             > = Vec::new();
@@ -1299,12 +1291,12 @@ mod sifr_generated_project_nominals {
             }
             let spec: SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec =
                 SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec::new(
-                    name.to_owned(),
-                    resolved_dest,
-                    kind,
-                    default.to_owned(),
-                    nargs.to_owned(),
-                    type_name.to_owned(),
+                    name,
+                    resolved_dest.as_str(),
+                    kind.as_str(),
+                    default,
+                    nargs,
+                    type_name,
                 );
             self.specs.push(spec);
         }
@@ -1670,7 +1662,7 @@ mod sifr_generated_project_nominals {
                     > = self.sifr_generated_find_subparser(&command_name);
                     if let Some(subparser_specs) = subparser_specs {
                         ns.set(self.subparsers_dest.as_str(), &command_name);
-                        let mut subparser: Self = Self::new(command_name);
+                        let mut subparser: Self = Self::new(command_name.as_str());
                         subparser.specs = subparser_specs;
                         let child_ns: SifrGeneratedStdlibSifrX2eargparseX2eNamespace = subparser
                             .parse_args(&{
@@ -2081,8 +2073,9 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eipaddressX2eAddressValueError {
         #[must_use]
-        pub const fn new(message: String) -> Self {
-            let sifr_generated_field_value_546401b5d2a8d2a4_6d657373616765: String = message;
+        pub fn new(message: &str) -> Self {
+            let sifr_generated_field_value_546401b5d2a8d2a4_6d657373616765: String =
+                message.to_string();
             Self {
                 message: sifr_generated_field_value_546401b5d2a8d2a4_6d657373616765,
             }
@@ -2108,11 +2101,11 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eipaddressX2eIPv4Address {
         #[must_use]
-        pub fn new(addr: String) -> Self {
-            let mut normalized_text: String = addr.clone();
+        pub fn new(addr: &str) -> Self {
+            let mut normalized_text: String = addr.to_string();
             let mut normalized_value: SifrInt = ::std::ops::Neg::neg(&SifrInt::from_i64(1));
-            if is_valid_ipv4(&addr) {
-                let parsed: SifrInt = sifr_generated_ip_to_int_raw(&addr);
+            if is_valid_ipv4(addr) {
+                let parsed: SifrInt = sifr_generated_ip_to_int_raw(addr);
                 normalized_value.clone_from(&parsed);
                 normalized_text = int_to_ip(&parsed);
             }
@@ -2160,8 +2153,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2euuidX2eUUID {
         #[must_use]
-        pub const fn new(hex_str: String) -> Self {
-            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str;
+        pub fn new(hex_str: &str) -> Self {
+            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str.to_string();
             Self {
                 hex: sifr_generated_field_value_123cb3437a89ad57_5f686578,
             }
@@ -2248,7 +2241,7 @@ pub use sifr_generated_project_nominals::ValueError;
 )]
 fn main() {
     let mut parser: SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser =
-        SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("e2-demo".to_string());
+        SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("e2-demo");
     parser.add_argument("--strict", "strict", "store_true", "");
     parser.add_argument("--mode", "mode", "store", "safe");
     parser.add_argument("entry", "entry", "store", "demo.sifr");

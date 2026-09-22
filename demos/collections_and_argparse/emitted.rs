@@ -196,11 +196,11 @@ mod sifr_generated_generated_support {
             sifr_generated_split_inline_option(token);
         let _chars_inline_name: Vec<char> = inline_name.chars().collect::<Vec<char>>();
         let _chars_inline_value: Vec<char> = inline_value.chars().collect::<Vec<char>>();
-        let _ = inline_value;
-        let mut lookup_name: String = token.to_string();
-        if inline_has_value {
-            lookup_name = inline_name;
-        }
+        let lookup_name: String = if inline_has_value {
+            inline_name
+        } else {
+            token.to_string()
+        };
         #[expect(
             clippy::explicit_iter_loop,
             reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
@@ -237,21 +237,22 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec {
         #[must_use]
         pub fn new(
-            name: String,
-            dest: String,
-            kind: String,
-            default_value: String,
-            nargs: String,
-            type_name: String,
+            name: &str,
+            dest: &str,
+            kind: &str,
+            default_value: &str,
+            nargs: &str,
+            type_name: &str,
         ) -> Self {
-            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
-            let sifr_generated_field_value_a5eb0667427cce95_64657374: String = dest;
-            let sifr_generated_field_value_ef9c96d721673243_6b696e64: String = kind;
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name.to_string();
+            let sifr_generated_field_value_a5eb0667427cce95_64657374: String = dest.to_string();
+            let sifr_generated_field_value_ef9c96d721673243_6b696e64: String = kind.to_string();
             let sifr_generated_field_value_c029ceb935ca1970_64656661756c745f76616c7565: String =
-                default_value;
+                default_value.to_string();
             let sifr_generated_field_value_c4fccdff6d365b00_6e61726773: String =
-                sifr_generated_normalize_nargs(&nargs);
-            let sifr_generated_field_value_c23e4d7df5c6ddd5_747970655f6e616d65: String = type_name;
+                sifr_generated_normalize_nargs(nargs);
+            let sifr_generated_field_value_c23e4d7df5c6ddd5_747970655f6e616d65: String =
+                type_name.to_string();
             Self {
                 name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
                 dest: sifr_generated_field_value_a5eb0667427cce95_64657374,
@@ -373,13 +374,9 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2eargparseX2eNamespace {
         #[must_use]
         pub fn get(&self, name: &str, default: &str) -> String {
-            #[expect(
-                clippy::explicit_iter_loop,
-                reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner emitted-Rust quality; remove when direct IntoIterator preserves the same source lifetime"
-            )]
-            for (key, value) in self.str_values.iter() {
-                if key == name {
-                    return value.clone();
+            for (key, value) in self.str_values.iter().cloned() {
+                if key == *name {
+                    return value;
                 }
             }
             default.to_string()
@@ -477,8 +474,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser {
         #[must_use]
-        pub fn new(prog: String) -> Self {
-            let sifr_generated_field_value_68bfad6e66c74136_5f70726f67: String = prog;
+        pub fn new(prog: &str) -> Self {
+            let sifr_generated_field_value_68bfad6e66c74136_5f70726f67: String = prog.to_string();
             let sifr_generated_field_value_fe08c9a04e4710ae_5f7370656373: Vec<
                 SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec,
             > = Vec::new();
@@ -541,12 +538,12 @@ mod sifr_generated_project_nominals {
             }
             let spec: SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec =
                 SifrGeneratedStdlibSifrX2eargparseX2eArgumentSpec::new(
-                    name.to_owned(),
-                    resolved_dest,
-                    kind,
-                    default.to_owned(),
-                    nargs.to_owned(),
-                    type_name.to_owned(),
+                    name,
+                    resolved_dest.as_str(),
+                    kind.as_str(),
+                    default,
+                    nargs,
+                    type_name,
                 );
             self.specs.push(spec);
         }
@@ -907,7 +904,7 @@ mod sifr_generated_project_nominals {
                     > = self.sifr_generated_find_subparser(&command_name);
                     if let Some(subparser_specs) = subparser_specs {
                         ns.set(self.subparsers_dest.as_str(), &command_name);
-                        let mut subparser: Self = Self::new(command_name);
+                        let mut subparser: Self = Self::new(command_name.as_str());
                         subparser.specs = subparser_specs;
                         let child_ns: SifrGeneratedStdlibSifrX2eargparseX2eNamespace = subparser
                             .parse_args(&{
@@ -1425,10 +1422,10 @@ fn main() {
         &SifrInt::from_i64(1)
     );
     let mut parser: SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser =
-        SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("sifr".to_string());
+        SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("sifr");
     parser.add_subparsers("cmd");
     let mut run_parser: SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser =
-        SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("run".to_string());
+        SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("run");
     run_parser.add_argument_typed("--strict", "strict", "store_true", "", "1", "str");
     run_parser.add_argument_typed("--level", "level", "store", "0", "1", "int");
     run_parser.add_argument_typed("--custom-level", "custom_level", "store", "0", "1", "int");

@@ -15,8 +15,8 @@ fn get_sum(items: &[SifrInt]) -> SifrInt {
     }
     total
 }
-fn consume_and_reverse(items: &[SifrInt]) -> Vec<SifrInt> {
-    Box::new(items.iter().cloned().rev()).collect::<Vec<_>>()
+fn consume_and_reverse(items: Vec<SifrInt>) -> Vec<SifrInt> {
+    Box::new(items.into_iter().rev()).collect::<Vec<_>>()
 }
 fn add_lengths(a: &[SifrInt], b: &[SifrInt]) -> SifrInt {
     ::std::ops::Add::add(&SifrInt::from(a.len()), &SifrInt::from(b.len()))
@@ -49,7 +49,7 @@ fn main() {
         SifrInt::from_i64(2),
         SifrInt::from_i64(3),
     ];
-    let result: Vec<SifrInt> = consume_and_reverse(&items);
+    let result: Vec<SifrInt> = consume_and_reverse(items);
     println!("{result:?}");
     let nums: Vec<SifrInt> = vec![
         SifrInt::from_i64(1),

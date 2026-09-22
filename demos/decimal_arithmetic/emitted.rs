@@ -303,7 +303,7 @@ fn main() {
             ::bigdecimal::RoundingMode::HalfEven
         )
         .round_decimal_ref(&::std::ops::Add::add(
-            precise.clone(),
+            precise,
             BigDecimal::new(
                 ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[0]),
                 0

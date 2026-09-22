@@ -631,17 +631,15 @@ mod sifr_generated_generated_support {
                 let mut hr: SifrInt = SifrInt::from_i64(0);
                 let mut mn: SifrInt = SifrInt::from_i64(0);
                 let mut sc: SifrInt = SifrInt::from_i64(0);
-                for (i, v) in Box::new(parts.iter().cloned().enumerate().map(
-                    |sifr_generated_pair| {
-                        (
-                            ::std::ops::Add::add(
-                                SifrInt::from(sifr_generated_pair.0),
-                                SifrInt::from_i64(0),
-                            ),
-                            sifr_generated_pair.1,
-                        )
-                    },
-                )) {
+                for (i, v) in Box::new(parts.into_iter().enumerate().map(|sifr_generated_pair| {
+                    (
+                        ::std::ops::Add::add(
+                            SifrInt::from(sifr_generated_pair.0),
+                            SifrInt::from_i64(0),
+                        ),
+                        sifr_generated_pair.1,
+                    )
+                })) {
                     if i == SifrInt::from_i64(0) {
                         yr.clone_from(&v);
                     }
@@ -785,14 +783,14 @@ mod sifr_generated_generated_support {
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid3_text(&namespace.to_str(), name))
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid3_text(&namespace.to_str(), name).as_str())
     }
     #[must_use]
     pub fn uuid5(
         namespace: &SifrGeneratedStdlibSifrX2euuidX2eUUID,
         name: &str,
     ) -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid5_text(&namespace.to_str(), name))
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(uuid5_text(&namespace.to_str(), name).as_str())
     }
     #[must_use]
     #[expect(
@@ -800,9 +798,7 @@ mod sifr_generated_generated_support {
         reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner emitted-Rust quality; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     pub fn NAMESPACE_DNS() -> SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        SifrGeneratedStdlibSifrX2euuidX2eUUID::new(
-            "6ba7b810-9dad-11d1-80b4-00c04fd430c8".to_string(),
-        )
+        SifrGeneratedStdlibSifrX2euuidX2eUUID::new("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
     }
 }
 mod sifr_generated_project_nominals {
@@ -1114,8 +1110,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2euuidX2eUUID {
         #[must_use]
-        pub const fn new(hex_str: String) -> Self {
-            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str;
+        pub fn new(hex_str: &str) -> Self {
+            let sifr_generated_field_value_123cb3437a89ad57_5f686578: String = hex_str.to_string();
             Self {
                 hex: sifr_generated_field_value_123cb3437a89ad57_5f686578,
             }

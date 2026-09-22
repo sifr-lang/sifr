@@ -238,7 +238,7 @@ mod sifr_generated_generated_support {
             return Vec::new();
         }
         {
-            let mut sifr_generated_sorted_values = matches;
+            let mut sifr_generated_sorted_values = matches.into_iter().collect::<Vec<_>>();
             sifr_generated_sorted_values.sort_by(
                 |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                     sifr_generated_sorted_left.cmp(sifr_generated_sorted_right)
@@ -375,7 +375,6 @@ mod sifr_generated_generated_support {
         })
     }
     pub trait SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods {
-        fn sub(&self, replacement: &str, text: &str) -> Result<String, RegexError>;
         fn findall(&self, text: &str) -> Result<Vec<String>, RegexError>;
     }
     fn compile_pattern(
@@ -644,14 +643,6 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedOpaqueSifrStdlibSifrX2eregexX2eCompiledPatternMethods
         for SifrGeneratedStdlibSifrX2eregexX2eCompiledPattern
     {
-        fn sub(&self, replacement: &str, text: &str) -> Result<String, RegexError> {
-            ::sifr_stdlib::regex::compiled_pattern_replace(self, replacement, text).map_err(
-                |sifr_generated_bridge_error| RegexError {
-                    message: sifr_generated_bridge_error.to_string(),
-                    detail: sifr_generated_bridge_error.to_string(),
-                },
-            )
-        }
         fn findall(&self, text: &str) -> Result<Vec<String>, RegexError> {
             ::sifr_stdlib::regex::compiled_pattern_findall(self, text).map_err(
                 |sifr_generated_bridge_error| RegexError {
@@ -687,7 +678,7 @@ mod sifr_generated_project_nominals {
             {
                 let mut sifr_generated_concat: String =
                     String::with_capacity(0usize.saturating_add(0usize));
-                sifr_generated_concat.push_str(self.matched.clone().as_str());
+                sifr_generated_concat.push_str(self.matched.as_str());
                 sifr_generated_concat.push_str("");
                 sifr_generated_concat
             }
@@ -751,7 +742,7 @@ mod sifr_generated_project_nominals {
             })();
             sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
                 let e: RegexError = sifr_generated_try_err;
-                Err(RegexError::new(e.message.clone()))
+                Err(RegexError::new(e.message))
             })
         }
     }

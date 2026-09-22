@@ -22,21 +22,12 @@ fn main() {
     }
     println!("{remaining_total}");
     let mut pair_total: SifrInt = SifrInt::from_i64(0);
-    for (i, value) in Box::new(
-        values
-            .iter()
-            .cloned()
-            .enumerate()
-            .map(|sifr_generated_pair| {
-                (
-                    ::std::ops::Add::add(
-                        SifrInt::from(sifr_generated_pair.0),
-                        SifrInt::from_i64(0),
-                    ),
-                    sifr_generated_pair.1,
-                )
-            }),
-    ) {
+    for (i, value) in Box::new(values.into_iter().enumerate().map(|sifr_generated_pair| {
+        (
+            ::std::ops::Add::add(SifrInt::from(sifr_generated_pair.0), SifrInt::from_i64(0)),
+            sifr_generated_pair.1,
+        )
+    })) {
         pair_total = ::std::ops::Add::add(&::std::ops::Add::add(&pair_total, &i), &value);
     }
     println!("{pair_total}");

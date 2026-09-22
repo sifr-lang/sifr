@@ -115,6 +115,10 @@ mod sifr_generated_generated_support {
         clippy::float_cmp,
         reason = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes"
     )]
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: Sifr float arithmetic preserves source IEEE-754 rounding, overflow and signed zero; owner arithmetic; remove when the source contract changes"
+    )]
     pub fn median_grouped(
         data: &[f64],
         interval: f64,
@@ -777,8 +781,8 @@ mod sifr_generated_project_nominals {
         )]
         pub fn new(
             width: &SifrInt,
-            initial_indent: String,
-            subsequent_indent: String,
+            initial_indent: &str,
+            subsequent_indent: &str,
             expand_tabs: bool,
             tabsize: &SifrInt,
             replace_whitespace: bool,
@@ -786,13 +790,14 @@ mod sifr_generated_project_nominals {
             break_on_hyphens: bool,
             fix_sentence_endings: bool,
             max_lines: Option<&SifrInt>,
-            placeholder: String,
+            placeholder: &str,
         ) -> Self {
             let max_lines: Option<SifrInt> = max_lines.cloned();
             let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = (*width).clone();
             let sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74: String =
-                initial_indent;
-            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent;
+                initial_indent.to_string();
+            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent
+                .to_string();
             let sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273: bool =
                 expand_tabs;
             let mut safe_tabsize: SifrInt = (*tabsize).clone();
@@ -809,7 +814,7 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573: Option<SifrInt> =
                 max_lines;
             let sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572: String =
-                placeholder;
+                placeholder.to_string();
             Self {
                 width: sifr_generated_field_value_dbdacd932fd1e9bf_7769647468,
                 initial_indent: sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74,
@@ -939,8 +944,8 @@ fn main() {
     let wrapper: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
         SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(
             &SifrInt::from_i64(12),
-            String::new(),
-            String::new(),
+            "",
+            "",
             true,
             &SifrInt::from_i64(8),
             true,
@@ -948,7 +953,7 @@ fn main() {
             true,
             false,
             Some(&SifrInt::from_i64(2)),
-            "...".to_string(),
+            "...",
         );
     let wrapped_value_2bd4345c4f3b90ce: Vec<String> =
         wrapper.wrap("alpha beta gamma delta epsilon");
@@ -959,8 +964,8 @@ fn main() {
     let sentence_wrapper: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
         SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(
             &SifrInt::from_i64(40),
-            String::new(),
-            String::new(),
+            "",
+            "",
             true,
             &SifrInt::from_i64(8),
             true,
@@ -968,7 +973,7 @@ fn main() {
             true,
             true,
             None,
-            " [...]".to_string(),
+            " [...]",
         );
     let filled: String = sentence_wrapper.fill("Hello. World. Done!");
     assert_eq!(

@@ -36,8 +36,8 @@ fn fizzbuzz(n: &SifrInt) {
         }
     }
 }
-fn countdown(n: &SifrInt) {
-    let mut i: SifrInt = (*n).clone();
+fn countdown(n: SifrInt) {
+    let mut i: SifrInt = n;
     while i > SifrInt::from_i64(0) {
         println!("{i}");
         i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
@@ -58,7 +58,7 @@ static SIFR_GENERATED_SIFR_HOISTED_DICT_0: ::std::sync::LazyLock<HashMap<String,
 )]
 fn main() {
     println!("=== While Loop: Countdown ===");
-    countdown(&SifrInt::from_i64(5));
+    countdown(SifrInt::from_i64(5));
     println!("=== For Loop: Sum of 0..9 ===");
     let s: SifrInt = sum_range(&SifrInt::from_i64(10));
     println!("Sum of range(10) = {s}");

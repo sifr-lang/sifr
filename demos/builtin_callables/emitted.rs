@@ -97,15 +97,11 @@ fn main() {
         let mut sifr_generated_dict_ctor = vec![("compiler".to_string(), SifrInt::from_i64(1))]
             .into_iter()
             .collect::<std::collections::HashMap<_, _>>();
-        sifr_generated_dict_ctor.extend(
-            {
-                let mut sifr_generated_registry_dict_literal = ::std::collections::HashMap::new();
-                sifr_generated_registry_dict_literal
-                    .insert("demo".to_string(), SifrInt::from_i64(2));
-                sifr_generated_registry_dict_literal
-            }
-            .clone(),
-        );
+        sifr_generated_dict_ctor.extend({
+            let mut sifr_generated_registry_dict_literal = ::std::collections::HashMap::new();
+            sifr_generated_registry_dict_literal.insert("demo".to_string(), SifrInt::from_i64(2));
+            sifr_generated_registry_dict_literal
+        });
         sifr_generated_dict_ctor
     });
     println!("=== helpers ===");
@@ -114,9 +110,7 @@ fn main() {
             SifrInt::from_i64(3),
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
-        ]
-        .into_iter()
-        .collect::<Vec<_>>();
+        ];
         let sifr_generated_sorted_reverse = false;
         sifr_generated_sorted_values.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {
@@ -134,9 +128,7 @@ fn main() {
             SifrInt::from_i64(3),
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
-        ]
-        .into_iter()
-        .collect::<Vec<_>>();
+        ];
         let sifr_generated_sorted_reverse = false;
         let mut sifr_generated_sorted_pairs = sifr_generated_sorted_values
             .into_iter()
@@ -170,9 +162,7 @@ fn main() {
             SifrInt::from_i64(3),
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
-        ]
-        .into_iter()
-        .collect::<Vec<_>>();
+        ];
         let sifr_generated_sorted_reverse = true;
         sifr_generated_sorted_values.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {

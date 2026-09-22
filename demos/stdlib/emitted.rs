@@ -590,17 +590,15 @@ mod sifr_generated_generated_support {
                 let mut hr: SifrInt = SifrInt::from_i64(0);
                 let mut mn: SifrInt = SifrInt::from_i64(0);
                 let mut sc: SifrInt = SifrInt::from_i64(0);
-                for (i, v) in Box::new(parts.iter().cloned().enumerate().map(
-                    |sifr_generated_pair| {
-                        (
-                            ::std::ops::Add::add(
-                                SifrInt::from(sifr_generated_pair.0),
-                                SifrInt::from_i64(0),
-                            ),
-                            sifr_generated_pair.1,
-                        )
-                    },
-                )) {
+                for (i, v) in Box::new(parts.into_iter().enumerate().map(|sifr_generated_pair| {
+                    (
+                        ::std::ops::Add::add(
+                            SifrInt::from(sifr_generated_pair.0),
+                            SifrInt::from_i64(0),
+                        ),
+                        sifr_generated_pair.1,
+                    )
+                })) {
                     if i == SifrInt::from_i64(0) {
                         yr.clone_from(&v);
                     }
@@ -978,13 +976,9 @@ mod sifr_generated_generated_support {
             for existing in sorted_blocks.iter().cloned() {
                 if !found_insert_at {
                     let (ex_a, ex_b_value_e8565f608f1d5555, _) = existing;
-                    let comes_before: bool = if bl_a < ex_a
-                        || bl_a == ex_a && bl_b_value_c53dd39bc263efba < ex_b_value_e8565f608f1d5555
-                    {
-                        true
-                    } else {
-                        false
-                    };
+                    let comes_before: bool = bl_a < ex_a
+                        || bl_a == ex_a
+                            && bl_b_value_c53dd39bc263efba < ex_b_value_e8565f608f1d5555;
                     if comes_before {
                         insert_at.clone_from(&i);
                         found_insert_at = true;
@@ -1352,7 +1346,7 @@ mod sifr_generated_generated_support {
         true
     }
     fn sifr_generated_is_private_ipv4_value(value: &SifrInt) -> bool {
-        let private_hit: bool = if sifr_generated_in_ipv4_range(
+        let private_hit: bool = sifr_generated_in_ipv4_range(
             value,
             &SifrInt::from_i64(0),
             &SifrInt::from_i64(16_777_215),
@@ -1406,12 +1400,7 @@ mod sifr_generated_generated_support {
                 &SifrInt::from_i64(4_026_531_840),
                 &SifrInt::from_i64(4_294_967_295),
             ) || value
-                == &SifrInt::from_i64(4_294_967_295)))))))))))))
-        {
-            true
-        } else {
-            false
-        };
+                == &SifrInt::from_i64(4_294_967_295)))))))))))));
         if private_hit {
             if value == &SifrInt::from_i64(3_221_225_481) {
                 return false;
@@ -2777,7 +2766,6 @@ fn main() {
     assert!(isnan(NAN));
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let cwd: String = getcwd()?;
-        let _chars_cwd: Vec<char> = cwd.chars().collect::<Vec<char>>();
         assert!(cwd.chars().count() > SifrInt::from_i64(0));
         Ok(())
     })();
@@ -2824,13 +2812,10 @@ fn main() {
         println!("error: {}", e.message);
     }
     let id: String = uuid4();
-    let _chars_id: Vec<char> = id.chars().collect::<Vec<char>>();
     assert!(id.chars().count() > SifrInt::from_i64(0));
     let sys: String = system();
-    let _chars_sys_value_83aa7b308a4fdc45: Vec<char> = sys.chars().collect::<Vec<char>>();
     assert!(sys.chars().count() > SifrInt::from_i64(0));
     let arch: String = machine();
-    let _chars_arch_value_27b041ed1c99580c: Vec<char> = arch.chars().collect::<Vec<char>>();
     assert!(arch.chars().count() > SifrInt::from_i64(0));
     let p: String = join_path("/usr", "local");
     assert_eq!(p, "/usr/local");

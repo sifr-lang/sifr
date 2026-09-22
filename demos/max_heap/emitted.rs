@@ -99,7 +99,7 @@ mod sifr_generated_generated_support {
                 {
                     if SifrInt::from_i64(0) <= pos && pos < data.len() {
                         {
-                            let sifr_generated_assign_value = tmp_largest.clone();
+                            let sifr_generated_assign_value = tmp_largest;
                             {
                                 let sifr_generated_index_raw = &pos;
                                 let sifr_generated_index_normalized =
@@ -114,7 +114,7 @@ mod sifr_generated_generated_support {
                     }
                     if SifrInt::from_i64(0) <= largest && largest < data.len() {
                         {
-                            let sifr_generated_assign_value = tmp_pos.clone();
+                            let sifr_generated_assign_value = tmp_pos;
                             {
                                 let sifr_generated_index_raw = &largest;
                                 let sifr_generated_index_normalized =
@@ -176,7 +176,7 @@ mod sifr_generated_generated_support {
         if n2 > SifrInt::from_i64(0) {
             if let Some(last) = last {
                 {
-                    let sifr_generated_assign_value = last.clone();
+                    let sifr_generated_assign_value = last;
                     {
                         let sifr_generated_index_raw = SifrInt::from_i64(0);
                         let sifr_generated_index_normalized =
@@ -212,7 +212,7 @@ mod sifr_generated_generated_support {
                 .cloned()
         };
         {
-            let sifr_generated_assign_value = item.clone();
+            let sifr_generated_assign_value = item;
             {
                 let sifr_generated_index_raw = SifrInt::from_i64(0);
                 let sifr_generated_index_normalized =
