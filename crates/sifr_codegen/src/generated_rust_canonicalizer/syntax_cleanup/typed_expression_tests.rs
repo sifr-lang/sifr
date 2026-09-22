@@ -107,7 +107,8 @@ mod tests {
             }
         "#,
         );
-        assert!(rust.contains("string.value.clone()"), "{rust}");
+        // The resolved String projection is borrowed by the assertion macro.
+        assert!(rust.contains("assert_eq!(string.value, \"\")"), "{rust}");
         assert!(rust.contains("integer.value.to_string()"), "{rust}");
         assert!(
             !rust.contains("let _message: String = error.message;"),
@@ -462,6 +463,23 @@ mod tests {
             }
         "#);
         assert!(comparison.contains("pairs.iter().cloned()"), "{comparison}");
+    }
+
+    #[test]
+    fn borrowed_tuple_projections_avoid_cloning_their_inert_owner() {
+        let rust = clean(r#"
+            #[derive(Clone)] struct Value { value: String }
+            impl Value { fn get(&self) -> String { self.value.clone() } }
+            fn run(values: &[(Value, Value)], text: Option<(String, String)>) {
+                assert!({
+                    let collection = values;
+                    collection.get(0usize).cloned()
+                }.is_some_and(|pair| pair.clone().0.get() == "kept"));
+                assert!(text.is_some_and(|pair| pair.clone().1 == "kept"));
+            }
+        "#);
+        assert!(!rust.contains("pair.clone()"), "{rust}");
+        assert!(rust.contains("pair.0.get()"), "{rust}");
     }
 
 }

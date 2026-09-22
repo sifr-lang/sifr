@@ -643,7 +643,6 @@ pub(super) fn remove_macro_argument_clones(
         _ => return,
     };
     for argument in arguments.iter_mut().skip(start) {
-        MacroBorrowedFieldCloneRemover.visit_expr_mut(argument);
         if let syn::Expr::MethodCall(clone) = argument
             && clone.method == "clone"
             && clone.args.is_empty()
@@ -651,22 +650,6 @@ pub(super) fn remove_macro_argument_clones(
             *argument = clone.receiver.as_ref().clone();
         }
     }
-}
-
-struct MacroBorrowedFieldCloneRemover;
-
-impl VisitMut for MacroBorrowedFieldCloneRemover {
-    fn visit_expr_field_mut(&mut self, field: &mut syn::ExprField) {
-        visit_mut::visit_expr_field_mut(self, field);
-        if let syn::Expr::MethodCall(clone) = field.base.as_ref()
-            && clone.method == "clone"
-            && clone.args.is_empty()
-        {
-            field.base = clone.receiver.clone();
-        }
-    }
-
-    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
 }
 
 struct SharedSelfBorrowRewriter;

@@ -325,3 +325,113 @@ impl Rewriter<'_> {
         }
     }
 }
+
+impl Rewriter<'_> {
+    // Rust borrows an equality operand or an owned-field getter's receiver.
+    // Traverse only places and inert Clone calls; arbitrary expressions retain
+    // their evaluation and custom Clone/Drop implementations remain barriers.
+    fn borrow_inert_place(&self, expression: &mut syn::Expr) {
+        if !self.clone_is_unambiguous() {
+            return;
+        }
+        match expression {
+            syn::Expr::MethodCall(call)
+                if call.method == "clone"
+                    && call.args.is_empty()
+                    && self
+                        .ty(&call.receiver)
+                        .is_some_and(|ty| self.inert_owned_type(unreference(&ty))) =>
+            {
+                *expression = *call.receiver.clone();
+                self.borrow_inert_place(expression);
+            }
+            syn::Expr::Field(field) => self.borrow_inert_place(&mut field.base),
+            syn::Expr::Paren(paren) => self.borrow_inert_place(&mut paren.expr),
+            _ => {}
+        }
+    }
+}
+
+impl Rewriter<'_> {
+    fn borrow_inert_macro_fields(
+        &self,
+        macro_: &syn::Macro,
+        arguments: &mut syn::punctuated::Punctuated<syn::Expr, syn::Token![,]>,
+    ) {
+        let Some(name) = macro_.path.get_ident() else {
+            return;
+        };
+        let start = match name.to_string().as_str() {
+            "write" | "writeln" => 2,
+            "format" | "print" | "println" | "eprint" | "eprintln" => 1,
+            "assert_eq" | "assert_ne"
+                if arguments.len() >= 2
+                    && arguments
+                        .iter()
+                        .take(2)
+                        .all(|argument| self.standard_format_value(argument)) =>
+            {
+                0
+            }
+            _ => return,
+        };
+        let original: Vec<_> = arguments.iter().cloned().collect();
+        for (index, argument) in arguments.iter_mut().enumerate().skip(start) {
+            if !self.standard_format_value(argument) {
+                continue;
+            }
+            // A later argument may mutate the owner while a formatting borrow
+            // remains live. Keep the copy when another argument references it.
+            if original.iter().enumerate().any(|(other_index, other)| {
+                other_index != index && !borrowed_place_keeps_sibling_access(argument, other)
+            }) {
+                continue;
+            }
+            self.borrow_inert_place(argument);
+        }
+    }
+
+    fn standard_format_value(&self, expression: &syn::Expr) -> bool {
+        self.ty(expression).is_some_and(|ty| {
+            [
+                "String", "str", "SifrInt", "bool", "char", "u8", "u16", "u32", "u64", "u128",
+                "usize", "i8", "i16", "i32", "i64", "i128", "isize", "f32", "f64",
+            ]
+            .iter()
+            .any(|name| self.standard_named(unreference(&ty), name))
+        })
+    }
+}
+
+fn cloned_place_root(expression: &syn::Expr) -> Option<String> {
+    match expression {
+        syn::Expr::MethodCall(call) if call.method == "clone" && call.args.is_empty() => {
+            cloned_place_root(&call.receiver)
+        }
+        syn::Expr::Field(field) => cloned_place_root(&field.base),
+        syn::Expr::Paren(paren) => cloned_place_root(&paren.expr),
+        syn::Expr::Path(path) => path.path.get_ident().map(ToString::to_string),
+        _ => None,
+    }
+}
+
+// A clone can be a snapshot taken before the next operand mutates its owner.
+// Direct places only read that owner; calls, mutable references and opaque
+// expressions that mention it cannot certify the same borrowed lifetime.
+fn borrowed_place_keeps_sibling_access(value: &syn::Expr, sibling: &syn::Expr) -> bool {
+    fn shared_place(expression: &syn::Expr) -> bool {
+        match expression {
+            syn::Expr::Path(_) | syn::Expr::Lit(_) => true,
+            syn::Expr::Field(field) => shared_place(&field.base),
+            syn::Expr::Paren(paren) => shared_place(&paren.expr),
+            syn::Expr::Reference(reference) if reference.mutability.is_none() => {
+                shared_place(&reference.expr)
+            }
+            _ => false,
+        }
+    }
+    cloned_place_root(value).is_none_or(|root| {
+        !statements_reference(&[syn::Stmt::Expr(sibling.clone(), None)], &root)
+            || shared_place(sibling)
+    })
+}

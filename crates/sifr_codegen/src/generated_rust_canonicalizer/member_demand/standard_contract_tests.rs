@@ -641,3 +641,46 @@ fn projection_search_preserves_custom_comparison_identity() {
     "#,
     );
 }
+
+#[test]
+fn borrowed_projection_comparison_preserves_custom_parent_clone() {
+    canonical_and_run(
+        r#"
+        struct Value { kind: String }
+        impl Clone for Value {
+            fn clone(&self) -> Self { Self { kind: format!("{}!", self.kind) } }
+        }
+        fn main() {
+            let value = Value { kind: String::from("kept") };
+            assert!(value.clone().kind == "kept!");
+            assert_eq!(value.kind, "kept");
+            let pair = (String::from("key"), String::from("value"));
+            assert!(pair.clone().1 == "value");
+            assert_eq!(pair.0, "key");
+        }
+    "#,
+    );
+}
+
+#[test]
+fn borrowed_projection_keeps_the_snapshot_before_sibling_mutation() {
+    canonical_and_run(
+        r#"
+        #[derive(Clone)] struct Value { text: String }
+        fn replace(value: &mut Value) -> String {
+            value.text = String::from("after");
+            String::from("before")
+        }
+        fn main() {
+            let mut value = Value { text: String::from("before") };
+            let equal = value.clone().text == replace(&mut value);
+            assert!(equal);
+            assert_eq!(value.text, "after");
+            let mut formatted = Value { text: String::from("before") };
+            let output = format!("{} {}", formatted.clone().text, replace(&mut formatted));
+            assert_eq!(output, "before before");
+            assert_eq!(formatted.text, "after");
+        }
+    "#,
+    );
+}

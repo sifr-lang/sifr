@@ -487,6 +487,23 @@ impl VisitMut for Rewriter<'_> {
     fn visit_expr_binary_mut(&mut self, binary: &mut syn::ExprBinary) {
         visit_mut::visit_expr_binary_mut(self, binary);
         self.exact_float_comparison |= self.requires_exact_float_comparison(binary);
+        if matches!(binary.op, syn::BinOp::Eq(_) | syn::BinOp::Ne(_))
+            && [&binary.left, &binary.right].iter().all(|value| {
+                self.ty(value).is_some_and(|ty| {
+                    self.standard_named(unreference(&ty), "String")
+                        || self.standard_named(unreference(&ty), "str")
+                })
+            })
+        {
+            let left = *binary.left.clone();
+            let right = *binary.right.clone();
+            if borrowed_place_keeps_sibling_access(&left, &right) {
+                self.borrow_inert_place(&mut binary.left);
+            }
+            if borrowed_place_keeps_sibling_access(&right, &left) {
+                self.borrow_inert_place(&mut binary.right);
+            }
+        }
         if matches!(
             binary.op,
             syn::BinOp::Eq(_)
@@ -562,19 +579,12 @@ impl VisitMut for Rewriter<'_> {
             .and_then(|method| method.signature.receiver())
             .is_some_and(|receiver| matches!(receiver.kind, syn::ReceiverKind::Reference(..)));
         if declared_receiver {
-            if self.clone_is_unambiguous()
-                && ty
-                    .as_ref()
-                    .and_then(|ty| self.declared_method(ty, &call.method))
-                    .is_some_and(|method| method.field_getter)
-                && let syn::Expr::MethodCall(clone) = call.receiver.as_ref()
-                && clone.method == "clone"
-                && clone.args.is_empty()
-                && self
-                    .ty(&clone.receiver)
-                    .is_some_and(|ty| self.inert_owned_type(unreference(&ty)))
+            if ty
+                .as_ref()
+                .and_then(|ty| self.declared_method(ty, &call.method))
+                .is_some_and(|method| method.field_getter)
             {
-                call.receiver = clone.receiver.clone();
+                self.borrow_inert_place(&mut call.receiver);
             }
             let receiver = match call.receiver.as_ref() {
                 syn::Expr::Paren(paren) => paren.expr.as_ref(),
@@ -837,6 +847,7 @@ impl VisitMut for Rewriter<'_> {
             {
                 self.align_comparison_references(&mut arguments);
             }
+            self.borrow_inert_macro_fields(macro_, &mut arguments);
             macro_.tokens = arguments.to_token_stream();
         }
     }
