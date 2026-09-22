@@ -799,3 +799,23 @@ def first_row_length(rows: list[list[int]]) -> int:
     );
     assert!(!generated.contains(".cloned().len()"), "{generated}");
 }
+
+#[test]
+fn checked_indexed_list_length_uses_the_unwrapped_row() {
+    let generated = generate_rust_from_source(
+        r#"
+def first_row_length(rows: list[list[str]]) -> Result[int, Error]:
+    try:
+        if len(rows) == 0 or len(rows[0]) == 0:
+            return 0
+        return len(rows[0])
+    except Error as error:
+        raise error
+"#,
+    );
+    assert!(generated.contains("__sifr_checked_value_"), "{generated}");
+    assert!(
+        !generated.contains(".as_ref().map_or(0_usize, ::std::vec::Vec::len)"),
+        "{generated}"
+    );
+}

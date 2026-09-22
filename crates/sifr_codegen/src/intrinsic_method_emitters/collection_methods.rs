@@ -243,6 +243,7 @@ impl RustEmitter {
         )?;
         if method == "len"
             && args.is_empty()
+            && !indexed_list_receiver_is_checked_value(&object_expr)
             && matches!(object, HirExpr::Index { object: indexed, .. }
                 if matches!(self.effective_registry_expr_ty(indexed).resolve_alias(), Type::List(_)))
         {
@@ -709,5 +710,25 @@ impl RustEmitter {
                 None
             }
         }
+    }
+}
+
+fn indexed_list_receiver_is_checked_value(expr: &RustExpr) -> bool {
+    match expr {
+        RustExpr::Paren(inner) => indexed_list_receiver_is_checked_value(inner),
+        RustExpr::Block {
+            stmts,
+            expr: Some(value),
+        } => {
+            let RustExpr::Ident(name) = value.as_ref() else {
+                return false;
+            };
+            stmts.iter().any(|stmt| {
+                matches!(stmt, crate::RustStmt::LetElse { pattern, .. }
+                    if pattern.strip_prefix("Some(").and_then(|part| part.strip_suffix(')'))
+                        == Some(name.as_str()))
+            })
+        }
+        _ => false,
     }
 }
