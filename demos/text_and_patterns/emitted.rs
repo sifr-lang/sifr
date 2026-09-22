@@ -636,7 +636,7 @@ mod sifr_generated_generated_support {
                         j = ::std::ops::Add::add(&j, &SifrInt::from_i64(1));
                         continue;
                     };
-                    let part_value: String = part_value_03b1250debc64fd4;
+                    let part_value: String = part_value_03b1250debc64fd4.clone();
                     if part_value == "}" {
                         break;
                     }

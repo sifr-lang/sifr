@@ -742,11 +742,11 @@ mod sifr_generated_generated_support {
                             .get(sifr_generated_checked_read_normalized)
                             .cloned()
                     };
-                    let Some(current_value_2a2e8a5afcc8d89a) = current else {
+                    let Some(current_value_2a2e8a5afcc8d89a_binding) = current else {
                         return;
                     };
                     let mut next_position: SifrInt = ::std::ops::Add::add(
-                        &current_value_2a2e8a5afcc8d89a,
+                        &current_value_2a2e8a5afcc8d89a_binding,
                         &SifrInt::from_i64(1),
                     );
                     let sifr_generated_try_res: Result<(), IndexError> = (|| {

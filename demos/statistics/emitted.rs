@@ -567,19 +567,22 @@ mod sifr_generated_generated_support {
                     n_float_value_15c49f18b6cbd018,
                 ))
             })();
-            let (i_float, m_float_value_b0fecb9ab83ca525, n_float_value_15c49f18b6cbd018) =
-                match sifr_generated_try_res {
-                    Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
-                    Err(sifr_generated_try_err) => {
-                        let error: SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError =
-                            sifr_generated_try_err;
-                        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                            error.message,
-                        ));
-                    }
-                };
-            let idx_f: f64 =
-                i_float * m_float_value_b0fecb9ab83ca525 / n_float_value_15c49f18b6cbd018;
+            let (
+                i_float,
+                m_float_value_b0fecb9ab83ca525_binding,
+                n_float_value_15c49f18b6cbd018_binding,
+            ) = match sifr_generated_try_res {
+                Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
+                Err(sifr_generated_try_err) => {
+                    let error: SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError =
+                        sifr_generated_try_err;
+                    return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                        error.message,
+                    ));
+                }
+            };
+            let idx_f: f64 = i_float * m_float_value_b0fecb9ab83ca525_binding
+                / n_float_value_15c49f18b6cbd018_binding;
             let mut idx: SifrInt = SifrInt::from_i64(0);
             let sifr_generated_try_res: Result<(), ValueError> = (|| {
                 let converted_idx: SifrInt =
