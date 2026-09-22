@@ -71,7 +71,7 @@ impl RustEmitter {
             || matches!(stmt, HirStmt::Let { name, .. } if self.hoistable_static_dict_locals.contains(name))
             || matches!(stmt, HirStmt::Let { name, .. } if self.string_char_cache_loop_local_names.contains(name))
             || stmt_needs_performance_lowering(stmt)
-            || self.body_analysis.aggregate_statement_has_last_use(stmt);
+            || self.body_analysis.owned_value_statement_has_last_use(stmt);
         if !should_bypass_simple_lowering {
             if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result_and_bindings(
                 stmt,
@@ -234,7 +234,7 @@ impl RustEmitter {
             } else if let Some(clone_expr) = lowered_value {
                 clone_expr
             } else {
-                if !self.body_analysis.aggregate_statement_has_last_use(stmt)
+                if !self.body_analysis.owned_value_statement_has_last_use(stmt)
                     && let Some(lowered) = self.lower_rendered_expr_for_ir(value)?
                 {
                     self.coerce_local_value_for_target_type_for_ir(&effective_ty, value, lowered)?
@@ -252,6 +252,10 @@ impl RustEmitter {
             } else {
                 RustStmt::Let {
                     mutable: self.mutated_vars.contains(name)
+                        || crate::stmt_support_emitter::should_force_mutable_binding(
+                            &effective_ty,
+                            &self.recursive_fields,
+                        )
                         || matches!(
                             &effective_ty,
                             Type::Alias { name: alias_name, .. }
@@ -341,7 +345,7 @@ impl RustEmitter {
             };
             let lowered_value = if let Some(lowered) = checked_option_value {
                 lowered
-            } else if !self.body_analysis.aggregate_statement_has_last_use(stmt)
+            } else if !self.body_analysis.owned_value_statement_has_last_use(stmt)
                 && let Some(lowered) = self.lower_rendered_expr_for_ir(value)?
             {
                 if let Some(target_ty) = target_ty.clone() {

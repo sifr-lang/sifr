@@ -43,15 +43,12 @@ impl RustEmitter {
         let Some(lowered_iterable) = self.lower_stmt_expr_for_ir(iterable)? else {
             return Ok(None);
         };
-        let Some(iter) =
+        let iter =
             crate::intrinsic_method_emitters::registry_iterable_to_owned_iter_expr_from_lowered(
                 iterable,
                 None,
                 lowered_iterable,
-            )
-        else {
-            return Ok(None);
-        };
+            );
         let filtered = crate::RustExpr::MethodCall {
             receiver: Box::new(iter),
             method: "filter".to_string(),
@@ -303,12 +300,19 @@ impl RustEmitter {
     ) -> crate::RustExpr {
         let tuple_binding = "__sifr_tuple_iter_src".to_string();
         let bound_value = match source_access_mode {
-            crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_source))),
-                method: "clone".to_string(),
-                args: vec![],
+            crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(lowered_source),
             },
             crate::helpers::SourceAccessMode::Consume => lowered_source,
+        };
+        let yield_mode = if matches!(
+            source_access_mode,
+            crate::helpers::SourceAccessMode::Consume
+        ) {
+            crate::helpers::YieldMode::Move
+        } else {
+            yield_mode
         };
         let tuple_items = (0..tuple_len)
             .map(|index| {
@@ -411,7 +415,14 @@ impl RustEmitter {
         }
 
         if let Type::Class { name, methods, .. } = source_ty {
+            let shared_iter = Self::class_method_signature_for_iter_for_ir(methods, "__iter__")
+                .is_some_and(|signature| {
+                    signature.params.is_empty()
+                        && signature.receiver
+                            == Some(sifr_type_system::ReceiverConvention::SharedBorrow)
+                });
             let class_source = match plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Preserve if shared_iter => lowered_source.clone(),
                 crate::helpers::SourceAccessMode::Preserve => crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_source.clone()))),
                     method: "clone".to_string(),

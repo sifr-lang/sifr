@@ -226,7 +226,7 @@ def text_length() -> Result[int, ProbeError]:
         text: str = load_text()
     except ProbeError as error:
         raise error
-    return len(text)
+    return len(text[:])
 "#,
     );
 

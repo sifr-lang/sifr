@@ -263,7 +263,7 @@ def parse_name(template: str) -> int:
                 break
             name = name + part
             i += 1
-        if len(name) == 0:
+        if len(name[:]) == 0:
             return 0
     return 1
 "#,

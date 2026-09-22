@@ -9,9 +9,9 @@ def count_text(enabled: bool, flag: bool) -> int:
     if enabled:
         if flag:
             text: str = "left"
-            selected = len(text)
+            selected = len(text[:])
         text: str = "right"
-        selected += len(text)
+        selected += len(text[:])
     return selected
 "#,
     );
@@ -34,9 +34,9 @@ def count_text(enabled: bool) -> int:
     if enabled:
         if (value := 1) > 0:
             text: str = "left"
-            selected = len(text)
+            selected = len(text[:])
         text: str = "right"
-        selected += len(text)
+        selected += len(text[:])
     return selected
 "#,
     );
@@ -58,13 +58,13 @@ def count_text(value: int | str | float) -> int:
     selected: int = 0
     if isinstance(value, int):
         text: str = "int"
-        selected = len(text)
+        selected = len(text[:])
     elif isinstance(value, str):
         text: str = "string"
-        selected = len(text)
+        selected = len(text[:])
     else:
         text: str = "float"
-        selected = len(text)
+        selected = len(text[:])
     return selected
 "#,
     );

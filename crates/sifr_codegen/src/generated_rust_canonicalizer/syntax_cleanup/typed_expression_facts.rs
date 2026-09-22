@@ -23,6 +23,7 @@ fn collect(items: &[syn::Item], scope: &[String], functions: &mut HashMap<String
                 for item in &implementation.items {
                     if let syn::ImplItem::Fn(function) = item {
                         let mut signature = function.sig.clone();
+                        resolve_signature_self(&mut signature, owner, scope);
                         signature
                             .generics
                             .params
@@ -472,13 +473,13 @@ fn is_shared_field_getter(function: &syn::ImplItemFn) -> bool {
 }
 
 
-pub(super) fn shared_string_call_inputs(file: &syn::File) -> HashMap<String, Vec<bool>> {
+pub(super) fn shared_string_call_inputs(file: &syn::File) -> Option<HashMap<String, Vec<bool>>> {
     let facts = collect_project_facts(std::slice::from_ref(file));
     if facts.scalar_shadows.iter().any(|name| matches!(name.as_str(), "str" | "String")
         || name.ends_with("::str") || name.ends_with("::String")) {
-        return HashMap::new();
+        return None;
     }
-    facts.functions.into_iter().map(|(name, callable)| {
+    Some(facts.functions.into_iter().map(|(name, callable)| {
         let inputs = callable.signature.inputs.iter().map(|input| {
             matches!(input, syn::FnArg::Typed(parameter)
                 if matches!(parameter.ty.as_ref(), syn::Type::Reference(reference)
@@ -486,5 +487,5 @@ pub(super) fn shared_string_call_inputs(file: &syn::File) -> HashMap<String, Vec
                     && matches!(reference.elem.as_ref(), syn::Type::Path(path) if path.path.is_ident("str"))))
         }).collect();
         (name, inputs)
-    }).collect()
+    }).collect())
 }

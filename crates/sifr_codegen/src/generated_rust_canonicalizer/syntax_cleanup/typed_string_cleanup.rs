@@ -1,6 +1,12 @@
 impl Rewriter<'_> {
     fn rewrite_typed_string_clones(&self, expression: &mut syn::Expr) {
         self.rewrite_single_character_pattern(expression);
+        if let syn::Expr::MethodCall(view) = expression
+            && view.method == "as_str" && view.args.is_empty()
+            && self.ty(&view.receiver).is_some_and(|ty| self.standard_named(unreference(&ty), "str")) {
+            *expression = *view.receiver.clone();
+            return;
+        }
         if !self.clone_is_unambiguous() || self.scalar_shadowed("String") { return; }
         let mut owned = std::collections::HashSet::new();
         let mut borrowed = std::collections::HashSet::new();

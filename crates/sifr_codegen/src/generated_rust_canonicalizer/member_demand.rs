@@ -16,7 +16,7 @@ mod record_variant_tests;
 use generic_cleanup::{
     prune_item_members, prune_unconstrained_impl_generics, prune_unused_aggregate_type_parameters,
 };
-use macro_arguments::MacroArguments;
+pub(super) use macro_arguments::MacroArguments;
 use private_field_effects::retain_effectful_initializers;
 pub(super) use private_field_effects::type_has_trivial_drop;
 use wildcards::rewrite_exhaustive_enum_wildcards;

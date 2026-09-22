@@ -128,18 +128,36 @@ impl Rewriter<'_> {
 }
 
 impl Rewriter<'_> {
+    fn owned_pattern_bindings(&self, patterns: impl IntoIterator<Item = syn::Pat>) -> std::collections::HashSet<String> {
+        if !self.clone_is_unambiguous() { return std::collections::HashSet::new(); }
+        patterns.into_iter().flat_map(|pattern| super::identifier_names_in_pattern(&pattern))
+            .filter(|name| self.bindings.get(name).and_then(Option::as_ref)
+                .is_some_and(|ty| self.inert_owned_type(ty))).collect()
+    }
+
+    fn owned_function_inputs(&self, signature: &syn::Signature) -> std::collections::HashSet<String> {
+        self.owned_pattern_bindings(signature.inputs.iter().filter_map(|input| match input {
+            syn::FnArg::Typed(parameter) => Some(*parameter.pat.clone()),
+            syn::FnArg::Receiver(_) => None,
+        }))
+    }
+
     fn cleanup_block(&mut self, block: &mut syn::Block) {
+        self.cleanup_block_with_fresh(block, std::collections::HashSet::new());
+    }
+
+    fn cleanup_block_with_fresh(&mut self, block: &mut syn::Block, mut fresh_locals: std::collections::HashSet<String>) {
         self.fold_proven_initializers(block);
         let outer = self.bindings.clone();
         super::idiom_cleanup::remove_known_vec_length_bindings(&mut block.stmts, |ty| {
             self.standard_generic(ty, "Vec").is_some() && !self.scalar_shadowed("Vec")
         });
         let mut owned_locals = std::collections::HashSet::new();
-        let mut fresh_locals = std::collections::HashSet::new();
         let mut discard = Vec::new();
         for index in 0..block.stmts.len() {
             let (processed, remaining) = block.stmts.split_at_mut(index + 1);
             let statement = &mut processed[index];
+            let fresh_before = fresh_locals.clone();
             self.transfer_fresh_terminal_branch(statement, &fresh_locals);
             if let syn::Stmt::Local(local) = statement {
                 self.transfer_fresh_shadowed_option(local, &fresh_locals);
@@ -201,7 +219,8 @@ impl Rewriter<'_> {
                 fresh_locals
                     .retain(|name| !statements_reference(std::slice::from_ref(statement), name));
             }
-            self.remove_terminal_owned_field_clones(statement, remaining, &owned_locals);
+            let field_owners = owned_locals.union(&fresh_before).cloned().collect();
+            self.remove_terminal_owned_field_clones(statement, remaining, &field_owners);
             self.record_discardable_assignment(statement);
         }
         for index in discard.into_iter().rev() {

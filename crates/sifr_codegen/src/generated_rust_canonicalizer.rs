@@ -789,6 +789,15 @@ struct QualifiedModuleReferenceCollector<'scope> {
 }
 
 impl<'ast> Visit<'ast> for QualifiedModuleReferenceCollector<'_> {
+    fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        self.visit_path(&rust_macro.path);
+        if let Some(arguments) = member_demand::MacroArguments::parse(rust_macro) {
+            arguments.visit(self);
+        } else {
+            self.opaque_tokens(rust_macro.tokens.clone());
+        }
+    }
+
     fn visit_path(&mut self, path: &'ast syn::Path) {
         let segments = path.segments.iter().collect::<Vec<_>>();
         for pair in segments.windows(2) {
@@ -800,6 +809,33 @@ impl<'ast> Visit<'ast> for QualifiedModuleReferenceCollector<'_> {
             }
         }
         visit::visit_path(self, path);
+    }
+}
+
+impl QualifiedModuleReferenceCollector<'_> {
+    fn opaque_tokens(&mut self, tokens: proc_macro2::TokenStream) {
+        use proc_macro2::TokenTree;
+        let tokens: Vec<_> = tokens.into_iter().collect();
+        for window in tokens.windows(4) {
+            if let [
+                TokenTree::Ident(module),
+                TokenTree::Punct(first),
+                TokenTree::Punct(second),
+                TokenTree::Ident(name),
+            ] = window
+                && module == self.module_name
+                && first.as_char() == ':'
+                && second.as_char() == ':'
+                && self.definitions.contains(&name.to_string())
+            {
+                self.roots.insert(name.to_string());
+            }
+        }
+        for token in tokens {
+            if let TokenTree::Group(group) = token {
+                self.opaque_tokens(group.stream());
+            }
+        }
     }
 }
 

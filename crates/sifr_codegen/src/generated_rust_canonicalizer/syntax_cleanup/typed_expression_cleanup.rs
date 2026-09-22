@@ -75,6 +75,8 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
 
 include!("typed_initializer_cleanup.rs");
 include!("typed_expression_facts.rs");
+include!("typed_control_flow_facts.rs");
+include!("typed_generic_calls.rs");
 include!("typed_expression_types.rs");
 include!("typed_iterator_facts.rs");
 include!("typed_field_cleanup.rs");
@@ -401,7 +403,8 @@ impl VisitMut for Rewriter<'_> {
                 self.bind(&input.pat, Some(*input.ty.clone()));
             }
         }
-        self.visit_block_mut(&mut function.block);
+        let owned_inputs = self.owned_function_inputs(&function.sig);
+        self.cleanup_block_with_fresh(&mut function.block, owned_inputs);
         self.scope.pop();
         self.bindings = outer;
         self.remove_proven_dead_assignments(&mut function.block);
@@ -429,7 +432,8 @@ impl VisitMut for Rewriter<'_> {
                 self.bind(&input.pat, Some(*input.ty.clone()));
             }
         }
-        self.visit_block_mut(&mut function.block);
+        let owned_inputs = self.owned_function_inputs(&function.sig);
+        self.cleanup_block_with_fresh(&mut function.block, owned_inputs);
         self.bindings = outer;
         self.remove_proven_dead_assignments(&mut function.block);
         self.discardable_assignments = outer_assignments;
@@ -479,7 +483,8 @@ impl VisitMut for Rewriter<'_> {
         self.bind(&loop_.pat, self.iterator_element(&loop_.expr));
         self.borrow_inert_projection_search(loop_);
         self.bind(&loop_.pat, self.iterator_element(&loop_.expr));
-        self.visit_block_mut(&mut loop_.body);
+        let owned_pattern = self.owned_pattern_bindings([*loop_.pat.clone()]);
+        self.cleanup_block_with_fresh(&mut loop_.body, owned_pattern);
         self.bindings = outer;
     }
 
@@ -537,7 +542,8 @@ impl VisitMut for Rewriter<'_> {
             None
         };
         let signature = if let syn::Expr::Path(path) = call.func.as_ref() {
-            self.resolve(&path.path).map(|f| f.signature.clone())
+            self.resolve(&path.path)
+                .map(|f| self.instantiate_call_signature(&f.signature, call))
         } else {
             None
         };

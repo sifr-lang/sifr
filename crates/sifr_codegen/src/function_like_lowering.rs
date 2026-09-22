@@ -88,7 +88,7 @@ impl RustEmitter {
                 self.lowering_stats.stmt_candidate_total += 1;
             }
             let simple_lowered = if stmt_needs_performance_lowering(stmt)
-                || self.body_analysis.aggregate_statement_has_last_use(stmt)
+                || self.body_analysis.owned_value_statement_has_last_use(stmt)
                 || Self::stmt_defines_nonempty_list(stmt)
                 || matches!(stmt, HirStmt::Let { name, .. } if self.string_char_cache_loop_local_names.contains(name))
             {

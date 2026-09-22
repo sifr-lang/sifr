@@ -479,6 +479,8 @@ impl RustEmitter {
             conventions
         };
 
+        let saved_body_analysis = std::mem::take(&mut self.body_analysis);
+        let saved_last_use_move_exprs = std::mem::take(&mut self.last_use_move_exprs);
         let saved_return_type = self.current_return_type.clone();
         let saved_mutated_vars = self.mutated_vars.clone();
         let saved_borrowed_params = self.borrowed_params.clone();
@@ -592,6 +594,19 @@ impl RustEmitter {
             .extend(sifr_int_captured_forced_locals);
         self.register_local_body_binding_types(&func.body);
 
+        let excluded_moves = self
+            .borrowed_params
+            .iter()
+            .chain(&self.mut_borrowed_params)
+            .chain(lexical_captures.iter().map(|capture| &capture.name))
+            .cloned()
+            .collect();
+        (self.body_analysis, self.last_use_move_exprs) =
+            crate::body_analysis::BodyAnalysis::build_with_borrowed(
+                func,
+                &self.func_signatures,
+                &excluded_moves,
+            );
         let mut lowered_body = Vec::new();
         for (stmt_index, body_stmt) in func.body.iter().enumerate() {
             lowered_body.extend(self.lower_stmt_strict_for_function_with_following(
@@ -601,6 +616,8 @@ impl RustEmitter {
             ));
         }
 
+        self.body_analysis = saved_body_analysis;
+        self.last_use_move_exprs = saved_last_use_move_exprs;
         self.current_return_type = saved_return_type;
         self.mutated_vars = saved_mutated_vars;
         self.borrowed_params = saved_borrowed_params;

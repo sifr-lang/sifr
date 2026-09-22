@@ -25,6 +25,7 @@ pub(crate) fn string_cache_uses_in_stmts(stmts: &[crate::HirStmt]) -> HashSet<St
         &mut |_| {},
         &mut |expr| collect_string_cache_uses(expr, &mut used),
     );
+    collect_string_len_calls_in_stmts(stmts, &mut used);
     used
 }
 
@@ -36,19 +37,6 @@ pub(crate) fn collect_string_cache_uses(expr: &HirExpr, used: &mut HashSet<Strin
             }
         }
         HirExpr::Slice { object, .. } if matches!(object.ty().resolve_alias(), Type::Str) => {
-            if let HirExpr::Name { name, .. } = object.as_ref() {
-                used.insert(name.clone());
-            }
-        }
-        HirExpr::MethodCall {
-            object,
-            method,
-            args,
-            ..
-        } if method == "len"
-            && args.is_empty()
-            && matches!(object.ty().resolve_alias(), Type::Str | Type::LiteralStr(_)) =>
-        {
             if let HirExpr::Name { name, .. } = object.as_ref() {
                 used.insert(name.clone());
             }
@@ -232,14 +220,38 @@ pub(crate) fn collect_repeated_string_len_uses(
                 condition, body, ..
             } => {
                 collect_string_len_calls_in_expr(condition, used);
-                collect_string_len_calls_in_stmts(body, used);
+                collect_repeated_body_string_lengths(body, used);
             }
             crate::HirStmt::For { body, .. } | crate::HirStmt::AsyncFor { body, .. } => {
-                collect_string_len_calls_in_stmts(body, used);
+                collect_repeated_body_string_lengths(body, used);
             }
             _ => {}
         },
         &mut |_| {},
+    );
+}
+
+// A body-local binding is fresh on every iteration; a single length read of it
+// is not a repeated scan of the same string. Nested loops are considered by the
+// outer walker independently, so their reads still qualify an enclosing binding.
+fn collect_repeated_body_string_lengths(stmts: &[crate::HirStmt], used: &mut HashSet<String>) {
+    let mut local_names = HashSet::new();
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut |stmt| {
+            if let crate::HirStmt::Let { name, .. } = stmt {
+                local_names.insert(name.clone());
+            }
+        },
+        &mut |_| {},
+    );
+    let mut lengths = HashSet::new();
+    collect_string_len_calls_in_stmts(stmts, &mut lengths);
+    used.extend(
+        lengths
+            .into_iter()
+            .filter(|name| !local_names.contains(name)),
     );
 }
 

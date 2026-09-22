@@ -1,6 +1,7 @@
 // Initializer deletion needs lexical type/effect proof, not a method spelling.
 impl Rewriter<'_> {
     fn fold_proven_initializers(&mut self, block: &mut syn::Block) {
+        self.fold_inert_string_choices(block);
         let outer = self.bindings.clone();
         let mut proven = std::collections::HashSet::new();
         let mut rejected = std::collections::HashSet::new();
@@ -171,3 +172,5 @@ impl Rewriter<'_> {
             })
     }
 }
+
+include!("typed_string_choices.rs");

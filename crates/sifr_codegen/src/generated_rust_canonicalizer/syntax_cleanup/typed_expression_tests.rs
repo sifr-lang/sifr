@@ -539,4 +539,25 @@ mod tests {
         assert!(rust.contains("a * b + c") && rust.contains(".powf(0.5_f64)"), "{rust}");
     }
 
+
+    #[test]
+    fn generic_callback_borrows_follow_concrete_other_arguments() {
+        let rust = clean(r#"
+            fn fold<T, U>(callback: impl Fn(&U, &T) -> U, values: &[T], initial: &U) -> U { todo!() }
+            fn add(left: &i64, right: &i64) -> i64 { *left + *right }
+            fn run(values: Vec<i64>) {
+                fold(|left, right| add(&left, &right), &values, &0_i64);
+            }
+        "#);
+        assert!(rust.contains("fold(add, &values, &0_i64)"), "{rust}");
+        let opaque = clean(r#"
+            fn fold<T, U>(callback: impl Fn(&U, &T) -> U, values: &[T], initial: &U) -> U { todo!() }
+            fn add(left: &i64, right: &i64) -> i64 { *left + *right }
+            fn run(values: ExternalCollection) {
+                fold(|left, right| add(&left, &right), &values, &0_i64);
+            }
+        "#);
+        assert!(opaque.contains("add(&left, &right)"), "{opaque}");
+    }
+
 }

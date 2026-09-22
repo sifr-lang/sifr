@@ -5,6 +5,7 @@ struct StringCallContext<'a> {
     scope: Vec<String>,
     shadowed: HashSet<String>,
     local_import: bool,
+    clone_unambiguous: bool,
 }
 
 impl<'a> StringCallContext<'a> {
@@ -28,7 +29,7 @@ impl<'a> StringCallContext<'a> {
         bindings.visit_block(block);
         let mut scope = modules.to_vec();
         scope.push(signature.ident.to_string());
-        Self { inputs, modules, scope, shadowed: bindings.names, local_import: bindings.local_import }
+        Self { inputs, modules, scope, shadowed: bindings.names, local_import: bindings.local_import, clone_unambiguous: false }
     }
 
     fn inputs(&self, call: &syn::ExprCall) -> Option<&Vec<bool>> {

@@ -35,7 +35,7 @@ fn loop_moves_preserve_labeled_repetition_and_later_borrows() {
     "#;
     let canonical = canonicalize_generated_rust_source(source).expect("labeled repeat liveness");
     assert!(
-        canonical.contains("output.push(value.clone())"),
+        canonical.contains("output.push(value.to_string())"),
         "{canonical}"
     );
 }

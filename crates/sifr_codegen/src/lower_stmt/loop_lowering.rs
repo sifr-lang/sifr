@@ -349,50 +349,22 @@ pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -
             },
         },
         Type::Tuple(elems) if !elems.is_empty() && elems.iter().all(|elem| elem == &elems[0]) => {
-            let tuple_binding = "__sifr_tuple_iter_src".to_string();
-            let tuple_items = (0..elems.len())
-                .map(|index| {
-                    let field_expr = RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident(tuple_binding.clone())),
-                        field: index.to_string(),
-                    };
-                    match iter_plan.yield_mode {
-                        crate::helpers::YieldMode::Copy | crate::helpers::YieldMode::Move => {
-                            field_expr
-                        }
-                        crate::helpers::YieldMode::Clone | crate::helpers::YieldMode::Borrow => {
-                            RustExpr::MethodCall {
-                                receiver: Box::new(field_expr),
-                                method: "clone".to_string(),
-                                args: vec![],
-                            }
-                        }
-                    }
-                })
-                .collect();
-            RustExpr::Block {
-                stmts: vec![RustStmt::Let {
-                    mutable: false,
-                    name: tuple_binding,
-                    ty: None,
-                    value: match iter_plan.source_access_mode {
-                        crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Paren(Box::new(lowered_iter))),
-                            method: "clone".to_string(),
-                            args: vec![],
-                        },
-                        crate::helpers::SourceAccessMode::Consume => lowered_iter,
-                    },
-                }],
-                expr: Some(Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Vec(tuple_items)),
-                    method: "into_iter".to_string(),
-                    args: vec![],
-                })),
-            }
+            crate::RustEmitter::lower_homogeneous_tuple_iter_expr(
+                lowered_iter,
+                elems.len(),
+                iter_plan.source_access_mode,
+                iter_plan.yield_mode,
+            )
         }
         Type::Class { name, methods, .. } => {
+            let shared_iter =
+                class_method_signature(methods, "__iter__").is_some_and(|signature| {
+                    signature.params.is_empty()
+                        && signature.receiver
+                            == Some(sifr_type_system::ReceiverConvention::SharedBorrow)
+                });
             let class_source = match iter_plan.source_access_mode {
+                crate::helpers::SourceAccessMode::Preserve if shared_iter => lowered_iter.clone(),
                 crate::helpers::SourceAccessMode::Preserve => RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Paren(Box::new(lowered_iter.clone()))),
                     method: "clone".to_string(),

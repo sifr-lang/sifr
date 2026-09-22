@@ -124,7 +124,7 @@ impl RustEmitter {
                             return Ok(None);
                         };
                         lowered
-                    } else if !self.body_analysis.aggregate_statement_has_last_use(stmt)
+                    } else if !self.body_analysis.owned_value_statement_has_last_use(stmt)
                         && let Some(lowered) = self.lower_rendered_expr_for_ir(value)?
                     {
                         lowered
@@ -207,7 +207,7 @@ impl RustEmitter {
                     let value_is_target_typed = checked_option_value.is_some();
                     let lowered_value = if let Some(lowered) = checked_option_value {
                         lowered
-                    } else if !self.body_analysis.aggregate_statement_has_last_use(stmt)
+                    } else if !self.body_analysis.owned_value_statement_has_last_use(stmt)
                         && let Some(lowered) = self.lower_rendered_expr_for_ir(value)?
                     {
                         lowered

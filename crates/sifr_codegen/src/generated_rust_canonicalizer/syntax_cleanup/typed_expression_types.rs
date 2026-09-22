@@ -1,6 +1,7 @@
 impl Rewriter<'_> {
     fn ty(&self, expression: &syn::Expr) -> Option<syn::Type> {
         match expression {
+            syn::Expr::Match(expression) => self.match_result_type(expression),
             syn::Expr::Closure(closure) => {
                 let inputs = closure
                     .inputs
@@ -233,6 +234,10 @@ impl Rewriter<'_> {
                     "as_ref" if self.standard_generic(base, "Option").is_some() => {
                         let inner = self.standard_generic(base, "Option")?;
                         Some(syn::parse_quote!(Option<&#inner>))
+                    }
+                    "unwrap_or" | "unwrap_or_else" if call.args.len() == 1 => {
+                        self.standard_generic(base, "Option")
+                            .or_else(|| self.standard_generic(base, "Result")).cloned()
                     }
                     "cloned" => {
                         let syn::Type::Reference(inner) = self.standard_generic(base, "Option")?

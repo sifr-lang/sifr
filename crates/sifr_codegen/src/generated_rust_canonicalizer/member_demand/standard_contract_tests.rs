@@ -717,8 +717,9 @@ fn string_pattern_cleanup_preserves_extension_trait_dispatch() {
 #[test]
 fn implicit_self_format_capture_keeps_receiver_expectations_precise() {
     let output = canonical_and_compile(r#"
-        #[derive(Debug)] pub struct Value;
-        impl Value { pub fn name(&self) -> String { format!("{self:?}") } }
+        #[derive(Debug, Clone, Copy)] enum Value { Present }
+        impl Value { fn name(&self) -> String { format!("{self:?}") } }
+        fn main() { assert_eq!(Value::Present.name(), "Present"); }
     "#);
     assert!(!output.contains("clippy::unused_self"), "{output}");
 }

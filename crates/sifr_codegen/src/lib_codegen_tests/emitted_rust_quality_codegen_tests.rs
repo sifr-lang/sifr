@@ -562,3 +562,120 @@ def repeated(mut values: list[str], own value: str) -> None:
         }
     }
 }
+
+#[test]
+fn fresh_loop_string_length_does_not_allocate_a_character_cache() {
+    let generated = generate_rust_from_source(
+        r#"
+def widths(count: int) -> int:
+    total: int = 0
+    for index in range(count):
+        text: str = "a🦀"
+        text = text + "z"
+        total += len(text)
+    return total
+"#,
+    );
+    assert!(!generated.contains("__sifr_chars_text"), "{generated}");
+    assert!(generated.contains("text.chars().count()"), "{generated}");
+}
+
+#[test]
+fn inner_loop_lengths_keep_a_cache_for_the_enclosing_fresh_string() {
+    let generated = generate_rust_from_source(
+        r#"
+def widths(count: int) -> int:
+    total: int = 0
+    for index in range(count):
+        text: str = "a🦀z"
+        cursor: int = 0
+        while cursor < len(text):
+            cursor += 1
+        total += cursor
+    return total
+"#,
+    );
+    assert!(generated.contains("__sifr_chars_text"), "{generated}");
+    assert!(!generated.contains("text.chars().count()"), "{generated}");
+}
+
+#[test]
+fn bigdecimal_owned_boundary_moves_only_the_last_use() {
+    let generated = generate_rust_from_source(
+        r#"
+def value() -> bigdecimal:
+    number: bigdecimal = BigDecimal("2.5")
+    first: bigdecimal = number + BigDecimal("1")
+    return first + number
+
+def borrowed(number: bigdecimal) -> bigdecimal:
+    return number + BigDecimal("1")
+"#,
+    );
+    assert!(generated.contains("number.clone()"), "{generated}");
+    assert!(!generated.contains("first.clone()"), "{generated}");
+}
+
+#[test]
+fn shared_custom_iterator_borrows_a_reused_receiver() {
+    let generated = generate_rust_from_source(
+        r#"
+class Values:
+    start: int
+    def __init__(self, start: int):
+        self.start = start
+    def __iter__(self) -> Iterator[int]:
+        return iter([self.start])
+
+def total() -> int:
+    values: Values = Values(7)
+    copied: list[int] = list(values)
+    total: int = len(copied)
+    for item in values:
+        total += item
+    return total + values.start
+"#,
+    );
+    assert!(!generated.contains("values.clone()"), "{generated}");
+    assert!(generated.contains("values.__iter__()"), "{generated}");
+}
+
+#[test]
+fn nested_function_terminal_local_moves_after_a_loop() {
+    let generated = generate_rust_from_source(
+        r#"
+def outer(start: int) -> int:
+    def advance(seed: int) -> int:
+        position: int = seed
+        while position < 4:
+            position += 1
+        return position
+    return advance(start)
+"#,
+    );
+    assert!(!generated.contains("position.clone()"), "{generated}");
+}
+
+#[test]
+fn tuple_iteration_preserves_reused_storage_and_moves_consumed_fields() {
+    let generated = generate_rust_from_source(
+        r#"
+def total() -> int:
+    values: tuple[int, int] = (3, 5)
+    total: int = 0
+    for item in values:
+        total += item
+    for item in reversed(values):
+        total += item
+    return total
+"#,
+    );
+    assert!(!generated.contains("values.clone()"), "{generated}");
+    assert!(generated.contains("= &values"), "{generated}");
+    assert_eq!(
+        generated.matches("__sifr_tuple_iter_src.1.clone()").count(),
+        1,
+        "{generated}"
+    );
+    assert!(generated.contains("= values;"), "{generated}");
+}
