@@ -6,6 +6,21 @@ Owner: SQL compiler, schema tools, and verification
 
 ## P0 execution and custody reconciliation (2026-09-23)
 
+P0 delivery: [PR #3909](https://github.com/sifr-lang/sifr/pull/3909) merged as
+`a8fc98b8965cc5628bf5120dbe9ac816d231695a`. The final merged head was
+`5c4e2f8b8625bcdb3d897ec52064499cc93b4862`; its base merge imported only
+unrelated architecture-record changes. The [scoped Opus review](https://github.com/sifr-lang/sifr/pull/3909#issuecomment-5785802594)
+returned `SATISFIED`, no blockers, on exact documentation candidate
+`bce5a2d21ecad5ae935a2d2943ba333d838a640f`. Its response SHA-256 is
+`3bb591a30db92bb72afa17ecc5ea48c4197e3ca2cd13945c087fc60e3ad02222`.
+The later SQL-record edit `3e0e598bf3cdf7393d4b8b48edb006753bbfe7bb`
+only clarified non-blocking review suggestions; the phase-closure-loop does
+not require another external review for documentation-only edits. Final-head
+`git diff --check`, file-size guardrails (4113 files), and nine Markdown links
+(no missing relative targets) passed. No SQL or full Sifr gate ran. P0 has no
+blocker; Item 1 is the next bounded implementation item. This delivery receipt
+is record-only and was checked as documentation, with no further external review.
+
 This is the current execution authority. The 2026-09-07 orchestration below is
 retained as a historical plan and failure record. Its pending external blockers,
 checkout path, proposed delivery route, and per-item broad-gate rule are
