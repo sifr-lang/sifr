@@ -2,6 +2,79 @@
 
 Status: active
 
+## Item 12S focused repair and Item 12T successor (2026-09-23)
+
+**Item 12S needs new scope; Item 12R and retained Item 12 remain unmerged.**
+Draft [PR #3946](https://github.com/sifr-lang/sifr/pull/3946), branch
+`codex/emitted-rust-item12r-20260923`, preserves Item 12S candidate
+`56cffe143cad4c8e4fb2c147622a622c834967a0` on top of the reviewed
+Item 12R/0297 candidate `154146c16c376126b54613119c0c9d2cb713b0c3`.
+The Item 12S change builds constructor-local body analysis, restores the
+previous analysis after method emission, and routes general `if`/`for` through
+the canonical structured block lowering contract when specialized lowering
+declines. It adds a codegen regression with general control before and after
+deferred `self` materialization. The unchanged 0304 fixture now emits its
+constructor `for`; only its first general `if` remains a production-path
+`compile_error!`. No fixture, fallback, dependency, lockfile, or unrelated
+worktree changed. PR #3946 stays draft and **must not merge** on this evidence.
+
+The focused constructor regression passes. Full `sifr_codegen --lib` passes
+**1,721/1,721**; a separate constructor native probe exercises nonempty and
+empty inputs with assertions after pre/post materialization and passes.
+`cargo fmt --all --check`, HIR and file-size guardrails (4,218 files), and
+diff hygiene pass. Candidate-keyed external evidence is in
+`/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/`:
+
+| Evidence | Result | SHA-256 |
+| --- | --- | --- |
+| `codegen-full-item12s.log` | PASS 1,721/1,721 | `dd1f4e2ba19c7bfc3e3884475642f9f901b2e1a2982117a80569165a9d84a553` |
+| `constructor-structured-direct-probe.log` | native PASS, both assertions | `8fa88f50be0a753b59fca9ff470158d4f4a29c0457e14c790d980f9b793f8f85` |
+| `native0304-item12s-56cffe143.log` | FAIL, one general `If`; no `For` error | `101e92e54b14fb5cf9c16365d238f8f1578c3ce0a71e1a56ac2e46108939fa78` |
+| `alias-if-item12s-56cffe143.log` | FAIL, same mechanism in an ordinary function | `1cd25dbfa017f3def9ea306f71a465b49e80be93f5ebe5f52401dfd95793cc53` |
+
+The reduced ordinary-function source is
+`constructor-structured-alias-probe.sifr` (SHA-256
+`ac19d1dd1bc8354ec98f3c8799d0609d5a4ad56bc20c56529d3c9902280f3c33`):
+`size = len(values); if size > 0: value = values[0]` fails with the same
+structured `If` compile error. Direct `len(values)` constructor control
+passes. The remaining defect is therefore a checked-index proof gap for a
+stable local length alias, independent of constructor analysis. The current
+`condition_supports_checked_sequence_read` recognizes direct `len(object)`
+but has no proof that `rows` or `size` equals that length. Do not bypass the
+index safety contract or relabel the failed 0304 run as a corpus pass.
+
+### Item 12T: Stable length-alias checked-index proof
+
+- State: pending, bounded successor to Item 12S; prerequisite for resuming
+  Item 12R qualification and retained Item 12 implementation merge. Start
+  from preserved candidate `56cffe143`; retain all prior review and failed
+  or partial receipts.
+- Scope: prove a local alias of `len(collection)` only while the binding and
+  collection remain stable, including shadowing and mutation invalidation.
+  Apply that proof to checked indexed reads under general `if` control. Keep
+  out-of-range behavior panic-free and preserve existing error/option and
+  constructor-field semantics. Do not change the 0304 source, add a fallback,
+  or weaken checked-read guards.
+- Focused acceptance: codegen and native regressions for the ordinary-function
+  reduced source with empty/nonempty inputs and mutation/shadowing negatives;
+  constructor emitted-Rust shape and native execution of unchanged
+  `0304_range_sum_query_2d_immutable.sifr` with all three original assertions.
+  Rerun affected checked-place, constructor, structured-control, and full
+  codegen tests.
+- Qualification: after the focused repair, resume Item 12R's required
+  411-case native and source selections, generated-quality, E2E, stdlib,
+  project, Rust interop, sysroot, core-language, strict Clippy, formatting,
+  file-size/HIR, and profile/inventory checks on one exact candidate. Obtain
+  a fresh scoped read-only `claude-opus-5-5` review of the changed candidate
+  before merging PR #3946. The phase-approved intermediate policy skips
+  create-PR and the full merge gate; final integration owns that gate.
+
+No scoped review or broad Item 12R qualification was run on `56cffe143`:
+0304 native failed first. The initial 194 native passes and 182 incomplete
+source case timings from `154146c16` remain historical, not a pass of the
+411-case selections. Next: assign Item 12T; preserve PR #3946 unmerged until
+its exact candidate meets the focused and remaining named acceptance.
+
 ## Item 12R native qualification blocker and Item 12S successor (2026-09-23)
 
 **Item 12R and retained Item 12 remain unmerged.** Draft
