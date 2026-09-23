@@ -1,0 +1,10 @@
+class Base:
+    def expect(self) -> int:
+        return 7
+
+class Derived(Base):
+    pass
+
+def main():
+    derived: Derived = Derived()
+    assert derived.expect() == 7

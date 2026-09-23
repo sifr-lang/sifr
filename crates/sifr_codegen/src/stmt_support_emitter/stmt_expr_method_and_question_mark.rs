@@ -357,11 +357,11 @@ macro_rules! stmt_expr_method_call {
                     }
                 }
             }
-            let lowered_method = crate::RustExpr::MethodCall {
-                receiver: Box::new(lowered_object.clone()),
-                method: method.clone(),
-                args: lowered_args,
-            };
+            let lowered_method = crate::RustExpr::from_source_method(
+                lowered_object.clone(),
+                method.clone(),
+                lowered_args,
+            );
             let lowered_method = unwrap_compiler_verified_nonempty_pop_result_for_ir(
                 &effective_object_ty,
                 method,

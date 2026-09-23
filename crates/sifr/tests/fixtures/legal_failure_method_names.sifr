@@ -1,0 +1,38 @@
+class Carrier:
+    value: int
+
+    def __init__(self, value: int):
+        self.value = value
+
+    def unwrap(self) -> int:
+        return self.value
+
+    def expect(self, offset: int) -> int:
+        return self.value + offset
+
+class GenericBox[T]:
+    value: T
+
+    def __init__(self, value: T):
+        self.value = value
+
+    def unwrap(self) -> T:
+        return self.value
+
+class Unwrappable(Protocol):
+    def unwrap(self) -> int:
+        pass
+
+def through_protocol(own value: Unwrappable) -> int:
+    return value.unwrap()
+
+def identity(value: int) -> int:
+    return value
+
+def main():
+    box: Carrier = Carrier(4)
+    assert identity(box.unwrap()) == 4
+    assert box.expect(3) == 7
+    generic: GenericBox[int] = GenericBox(9)
+    assert generic.unwrap() == 9
+    assert through_protocol(Carrier(5)) == 5

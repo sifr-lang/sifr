@@ -276,7 +276,8 @@ fn collect_expr_identifiers(expr: &RustExpr, names: &mut HashSet<String>) {
         }
         RustExpr::Verbatim(source) => collect_text_identifiers(source, names),
         RustExpr::Literal(_) => {}
-        RustExpr::MethodCall { receiver, args, .. } => {
+        RustExpr::MethodCall { receiver, args, .. }
+        | RustExpr::SourceMethodCall { receiver, args, .. } => {
             collect_expr_identifiers(receiver, names);
             collect_exprs(args, names);
         }

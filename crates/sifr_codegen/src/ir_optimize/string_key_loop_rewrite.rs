@@ -179,6 +179,11 @@ fn expr_uses_name_only_as_set_key(
             receiver,
             method,
             args,
+        }
+        | RustExpr::SourceMethodCall {
+            receiver,
+            method,
+            args,
         } => {
             if method == "clone" && args.is_empty() {
                 return expr_uses_name_only_as_set_key(receiver, name, allow_direct, found);

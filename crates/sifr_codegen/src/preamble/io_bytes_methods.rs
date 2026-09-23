@@ -450,6 +450,7 @@ mod tests {
             RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => 0,
             RustExpr::Verbatim(_) => 1,
             RustExpr::MethodCall { receiver, args, .. }
+            | RustExpr::SourceMethodCall { receiver, args, .. }
             | RustExpr::FnCall {
                 func: receiver,
                 args,

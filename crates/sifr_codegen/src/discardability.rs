@@ -26,6 +26,7 @@ pub(crate) fn rust_ir_expression_is_discardable(expression: &RustExpr) -> bool {
         | RustExpr::Ident(_)
         | RustExpr::Path(_)
         | RustExpr::MethodCall { .. }
+        | RustExpr::SourceMethodCall { .. }
         | RustExpr::FnCall { .. }
         | RustExpr::MacroCall { .. }
         | RustExpr::FormatMacro { .. }

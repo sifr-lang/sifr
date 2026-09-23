@@ -186,6 +186,13 @@ pub enum RustExpr {
         method: String,
         args: Vec<RustExpr>,
     },
+    /// A call whose method name is resolved from a Sifr source expression.
+    /// Source methods may legally be named `unwrap` or `expect`.
+    SourceMethodCall {
+        receiver: Box<RustExpr>,
+        method: String,
+        args: Vec<RustExpr>,
+    },
     FnCall {
         func: Box<RustExpr>,
         args: Vec<RustExpr>,
@@ -278,6 +285,29 @@ pub enum RustExpr {
         start: Box<RustExpr>,
         end: Box<RustExpr>,
     },
+}
+
+impl RustExpr {
+    /// Keep source-resolved method names distinct from compiler-owned Rust calls.
+    pub(crate) fn from_source_method(
+        receiver: RustExpr,
+        method: String,
+        args: Vec<RustExpr>,
+    ) -> Self {
+        if matches!(method.as_str(), "unwrap" | "expect") {
+            Self::SourceMethodCall {
+                receiver: Box::new(receiver),
+                method,
+                args,
+            }
+        } else {
+            Self::MethodCall {
+                receiver: Box::new(receiver),
+                method,
+                args,
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
