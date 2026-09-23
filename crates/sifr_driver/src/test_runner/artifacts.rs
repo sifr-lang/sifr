@@ -68,12 +68,13 @@ pub(crate) fn try_generate_test_runner_cargo_plan(
     stdlib_modules: &HashSet<String>,
     required_features: &HashSet<StdlibFeature>,
     interop: &InteropBuildPlan,
+    requested_vendor_mode: CargoVendorMode,
 ) -> Result<TestRunnerCargoPlan, SysrootError> {
     let dependency_plan = try_generate_sysroot_dependency_plan(
         stdlib_modules,
         required_features,
         interop,
-        CargoVendorMode::SysrootOnly,
+        requested_vendor_mode,
     )?;
     let cargo_toml =
         generate_dependency_cargo_toml_with_interop("sifr_tests", &dependency_plan, interop);

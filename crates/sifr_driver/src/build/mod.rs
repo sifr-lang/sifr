@@ -10,6 +10,7 @@ mod entrypoint_resolution;
 mod entrypoint_single_file;
 mod entrypoint_stages;
 mod materialize;
+mod native_link_policy;
 #[cfg(test)]
 mod native_reuse_tests;
 pub(crate) mod native_storage;
@@ -131,3 +132,10 @@ pub(crate) use workspace::{
 
 #[cfg(test)]
 pub(crate) use workspace::create_invocation_workspace;
+
+pub(crate) use cargo_invocation_trace::record_cargo_invocation;
+pub(crate) use cargo_resolution::CargoResolutionPolicy;
+pub(crate) use cargo_resolution::{cargo_lock_mode_diagnostic, prepare_cargo_resolution};
+pub(crate) use entrypoint_resolution::package_cargo_resolution_policy;
+pub(crate) use native_link_policy::validate_test_native_link_evidence;
+pub(crate) use rust_interop_sqlx_offline::configure_hermetic_build_environment;

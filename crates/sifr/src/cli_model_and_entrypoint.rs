@@ -1,5 +1,5 @@
 pub(crate) use super::bridge_cli::BridgeCommands;
-use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt, cmd_test};
+use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt};
 use super::cli_lock_modes::lock_mode_from_flags;
 use super::deferred_cli_args::DeferredArgs;
 use super::diagnostic_rendering_and_run::{
@@ -13,6 +13,7 @@ use super::lint_cli::{LintArgs, cmd_lint};
 use super::python_cli::{PythonArgs, cmd_python};
 use super::self_update_cli::{SelfArgs, cmd_self};
 use super::sysroot_cli::{PrintKind, cmd_doctor, cmd_print};
+use super::test_cli::cmd_test;
 use super::trace_cli::cmd_trace;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity};
@@ -487,8 +488,15 @@ fn run_cli(cli: Cli) -> i32 {
         })) => cmd_emit(&file, diagnostic_format),
         Commands::Test(crate::deferred_cli_args::DeferredArgs(crate::command_args::Test {
             release: _,
+            locked,
+            offline,
+            frozen,
             dir,
-        })) => cmd_test(&dir, diagnostic_format),
+        })) => cmd_test(
+            &dir,
+            lock_mode_from_flags(locked, offline, frozen),
+            diagnostic_format,
+        ),
         Commands::Tools(crate::deferred_cli_args::DeferredArgs(crate::command_args::Tools {
             command,
         })) => match command {

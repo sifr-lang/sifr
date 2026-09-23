@@ -19,7 +19,7 @@ use sifr_driver::{
     PackageEntrypoint, build_cached_project, build_cached_single_file,
     build_package_project_report, build_project_report, build_single_file_report,
     check_package_project_completion, check_project, check_single_file, compile, emit_project,
-    materialize_package_project, materialize_project, materialize_single_file, run_tests,
+    materialize_package_project, materialize_project, materialize_single_file,
 };
 use sifr_format::config::{EffectiveFormatConfig, FormatConfigOverrides, effective_format_config};
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
@@ -410,27 +410,6 @@ pub(super) fn emit_success_message(diagnostic_format: DiagnosticFormat, message:
         DiagnosticFormat::Compact => {
             let _ = writeln!(io::stderr(), "0 errors, 0 warnings, 0 notes");
         }
-    }
-}
-
-pub(super) fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
-    let mut provider = DiskSourceProvider::new();
-    let run_result = match run_with_panic_boundary(
-        "internal compiler panic during test command execution",
-        || run_tests(&crate::compiler_context(), dir, &mut provider),
-    ) {
-        Ok(result) => result,
-        Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
-    };
-    match run_result {
-        Ok(success) => {
-            if success {
-                EXIT_SUCCESS
-            } else {
-                EXIT_USER_DIAGNOSTIC
-            }
-        }
-        Err(errors) => render_diagnostics(&errors, diagnostic_format),
     }
 }
 

@@ -10,7 +10,7 @@ pub fn capture_cargo_invocations<T>(operation: impl FnOnce() -> T) -> (T, Vec<Ca
     sifr_package::capture_cargo_invocations(operation)
 }
 
-pub(super) fn record_cargo_invocation(
+pub(crate) fn record_cargo_invocation(
     phase: &'static str,
     lock_mode: CargoLockMode,
     command: &Command,

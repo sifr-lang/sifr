@@ -5,7 +5,7 @@ use crate::stdlib::StdlibCompiled;
 use sifr_stdlib_manifest::CargoVendorMode;
 use std::path::{Path, PathBuf};
 
-pub(super) fn package_cargo_resolution_policy(
+pub(crate) fn package_cargo_resolution_policy(
     entrypoint: Option<&PackageEntrypoint>,
     stdlib: &StdlibCompiled,
     prepare_native: bool,

@@ -3,6 +3,7 @@ use crate::cli_model_and_entrypoint::{
     Cli, Commands, DiagnosticFormat, EXIT_SUCCESS, EXIT_USER_DIAGNOSTIC,
 };
 use crate::diagnostic_rendering_and_run::{cmd_build, cmd_run};
+use crate::test_cli::cmd_test;
 use clap::Parser;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::DiskSourceProvider;
@@ -76,6 +77,34 @@ impl Drop for CurrentDirGuard {
 }
 
 #[test]
+fn test_lock_flags_parse_and_normalize_without_collapsing_frozen() {
+    for (flags, expected) in [
+        (vec![], CargoLockMode::Normal),
+        (vec!["--locked"], CargoLockMode::Locked),
+        (vec!["--offline"], CargoLockMode::Offline),
+        (vec!["--frozen"], CargoLockMode::Frozen),
+        (vec!["--locked", "--offline"], CargoLockMode::Frozen),
+    ] {
+        let mut args = vec!["sifr", "test", "."];
+        args.extend(flags);
+        let cli = Cli::try_parse_from(args).expect("test lock flags should parse");
+        let Commands::Test(crate::deferred_cli_args::DeferredArgs(crate::command_args::Test {
+            locked,
+            offline,
+            frozen,
+            ..
+        })) = cli.command.expect("test command should be present")
+        else {
+            panic!("expected parsed test command");
+        };
+        assert_eq!(
+            crate::cli_lock_modes::lock_mode_from_flags(locked, offline, frozen),
+            expected
+        );
+    }
+}
+
+#[test]
 fn build_lock_flags_parse_and_normalize_without_collapsing_frozen() {
     for (flags, expected) in [
         (vec![], CargoLockMode::Normal),
@@ -117,7 +146,7 @@ fn build_lock_flags_parse_and_normalize_without_collapsing_frozen() {
 }
 
 #[test]
-fn constrained_modes_reject_manifestless_check_build_and_run() {
+fn constrained_modes_reject_manifestless_check_build_run_and_test() {
     let scenario = Scenario::empty("manifestless");
     std::fs::write(
         scenario.root.join("main.sifr"),
@@ -165,6 +194,16 @@ fn constrained_modes_reject_manifestless_check_build_and_run() {
                 )
             }),
         ),
+        (
+            "test",
+            Box::new(|| {
+                cmd_test(
+                    Path::new("."),
+                    CargoLockMode::Frozen,
+                    DiagnosticFormat::Compact,
+                )
+            }),
+        ),
     ] {
         let (exit_code, diagnostics) = crate::diagnostic_test_sink::capture(operation);
         assert_eq!(exit_code, EXIT_USER_DIAGNOSTIC);
@@ -179,6 +218,53 @@ fn constrained_modes_reject_manifestless_check_build_and_run() {
             "{command} must reject the manifestless lock mode: {diagnostic:#?}"
         );
     }
+}
+
+#[test]
+fn sifr_test_modes_use_package_resolution_and_final_test_trace() {
+    let scenario = Scenario::copy("test-modes");
+    std::fs::write(
+        scenario.root.join("test_policy.sifr"),
+        "def test_policy():\n    assert 2 + 2 == 4\n",
+    )
+    .expect("package test source");
+    let mut source_lock = std::fs::read(scenario.root.join("Cargo.lock")).expect("package lock");
+    let _cwd = CurrentDirGuard::enter(&scenario.root);
+    let mut saw_generated_resolution = false;
+    for mode in [
+        CargoLockMode::Normal,
+        CargoLockMode::Locked,
+        CargoLockMode::Offline,
+        CargoLockMode::Frozen,
+    ] {
+        let (exit, invocations) = sifr_driver::capture_cargo_invocations(|| {
+            cmd_test(Path::new("."), mode, DiagnosticFormat::Compact)
+        });
+        assert_eq!(exit, EXIT_SUCCESS, "{mode:?} test must run");
+        saw_generated_resolution |= invocations
+            .iter()
+            .any(|invocation| invocation.phase == "resolution" && invocation.lock_mode == mode);
+        assert!(invocations.iter().any(|invocation| {
+            invocation.phase == "final-test"
+                && invocation.lock_mode == mode
+                && mode
+                    .cargo_arg()
+                    .is_none_or(|flag| invocation.args.iter().any(|arg| arg == flag))
+        }));
+        let current_lock = std::fs::read(scenario.root.join("Cargo.lock")).expect("package lock");
+        if mode == CargoLockMode::Normal {
+            source_lock = current_lock;
+        } else {
+            assert_eq!(
+                current_lock, source_lock,
+                "{mode:?} must retain the source lock"
+            );
+        }
+    }
+    assert!(
+        saw_generated_resolution,
+        "constrained test mode prepares Cargo resolution"
+    );
 }
 
 #[test]
