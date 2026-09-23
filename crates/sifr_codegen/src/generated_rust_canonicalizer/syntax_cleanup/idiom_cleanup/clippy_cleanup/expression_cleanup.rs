@@ -490,6 +490,13 @@ fn rewrite_clone_assignment(expression: &mut syn::Expr) -> bool {
     }
     let left = assign.left.as_ref();
     let source = clone.receiver.as_ref();
+    // `x.clone_from(&x)` borrows the same binding mutably and immutably.
+    // Keep the original assignment so its clone and write still occur in order.
+    if matches!((left, source), (syn::Expr::Path(target), syn::Expr::Path(value))
+        if target.path.get_ident().is_some_and(|name| Some(name) == value.path.get_ident()))
+    {
+        return false;
+    }
     *expression = syn::parse_quote!(#left.clone_from(&#source));
     true
 }

@@ -832,3 +832,26 @@ fn retains_only_concretely_instantiated_generated_trait_impls() {
         "{canonical}"
     );
 }
+
+#[test]
+fn preserves_self_clone_assignment_without_aliasing_clone_from() {
+    let source = r#"
+        fn assign(mut skip: String, self_source: bool) -> String {
+            let take = String::from("fresh");
+            if self_source {
+                skip = skip.clone();
+            } else {
+                skip = take.clone();
+                println!("{take}");
+            }
+            skip
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("self-clone assignment must remain valid Rust");
+
+    assert!(canonical.contains("skip = skip.clone();"), "{canonical}");
+    assert!(!canonical.contains("skip.clone_from(&skip)"), "{canonical}");
+    assert!(canonical.contains("skip.clone_from(&take)"), "{canonical}");
+}
