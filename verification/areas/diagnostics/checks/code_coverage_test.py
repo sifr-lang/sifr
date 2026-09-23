@@ -188,11 +188,42 @@ active_entry!("{entry_code}", "TYPE", "summary", Severity::Error,
         self.assertIn("registry entry is not active: SIFR-TYPE-0003", errors)
         self.assertIn("SIFR-TYPE-0003: owner module does not exist: sifr_lint::removed_owner", errors)
 
+    def test_registry_severity_drift_is_rejected(self) -> None:
+        source = self.registry().replace(
+            '"TYPE", "summary", Severity::Error,',
+            '"TYPE", "summary", Severity::Warning,',
+        )
+        self.assertIn(
+            "SIFR-TYPE-0002: registry severity differs from constant",
+            code_coverage.registry_integrity_errors(source),
+        )
+
     def test_missing_fixture_and_unknown_active_constant_are_rejected(self) -> None:
         errors = code_coverage.registry_integrity_errors(self.registry(
             active="UNKNOWN", fixture="crates/sifr_lint/src/missing.rs"))
         self.assertIn("unknown active constant: UNKNOWN", errors)
         self.assertIn("SIFR-TYPE-0002: representative fixture does not exist: crates/sifr_lint/src/missing.rs", errors)
+
+    def test_fixture_symbol_resolution_follows_declared_modules(self) -> None:
+        valid = (
+            "crates/sifr_lowering/src/lower/expressions_tests.rs::"
+            "test_fixed_width_literal_assignment_out_of_range_has_int_code",
+            "crates/sifr_driver/src/build/rust_interop_tests.rs::"
+            "package_rust_interop_rejects_untrusted_build_script",
+        )
+        for fixture in valid:
+            with self.subTest(fixture=fixture):
+                self.assertTrue(code_coverage.fixture_file_exists(fixture))
+        self.assertFalse(code_coverage.fixture_file_exists(
+            "crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001"
+        ))
+        self.assertIn(
+            "SIFR-TYPE-0002: representative fixture does not exist: "
+            "crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001",
+            code_coverage.registry_integrity_errors(self.registry(
+                fixture="crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001"
+            )),
+        )
 
     def test_catalog_fixture_drift_is_rejected(self) -> None:
         code = "SIFR-TYPE-0002"

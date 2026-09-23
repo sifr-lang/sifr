@@ -3,8 +3,8 @@
 
 from __future__ import annotations
 
-import pathlib
 from collections import Counter
+import pathlib
 import re
 import subprocess
 import sys
@@ -212,7 +212,7 @@ def registry_integrity_errors(text: str) -> list[str]:
             errors.append(f"{code}: representative fixture does not exist: {fixture}")
         for owner in owners.split(" / "):
             parts = owner.split("::")
-            if not parts or not re.fullmatch(r"sifr_[a-z_]+|sifr", parts[0]):
+            if not re.fullmatch(r"sifr_[a-z_]+|sifr", parts[0]):
                 errors.append(f"{code}: invalid owner module: {owner}")
                 continue
             source = ROOT / "crates" / parts[0] / "src"
@@ -224,9 +224,33 @@ def registry_integrity_errors(text: str) -> list[str]:
     return errors
 
 
+PATH_MOD_RE = re.compile(
+    r'^\s*#\[path\s*=\s*"([^"]+)"\]\s*\n\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+\w+\s*;',
+    re.MULTILINE,
+)
+
+
 def fixture_file_exists(fixture: str) -> bool:
-    path_part = fixture.split("::", 1)[0]
-    return (ROOT / path_part).exists()
+    path_part, separator, symbol = fixture.partition("::")
+    path = ROOT / path_part
+    if not separator:
+        return path.exists()
+    if not path.is_file() or not re.fullmatch(r"[A-Za-z_]\w*", symbol):
+        return False
+    sources = [read_rust_with_local_sources(path), path.read_text(encoding="utf-8")]
+    seen = {path.resolve()}
+    pending = [path]
+    while pending:
+        current = pending.pop()
+        for relative in PATH_MOD_RE.findall(current.read_text(encoding="utf-8")):
+            included = (current.parent / relative).resolve()
+            if not included.is_file() or included in seen:
+                continue
+            seen.add(included)
+            sources.append(read_rust_with_local_sources(included))
+            pending.append(included)
+    return any(re.search(r"\b(?:fn|mod)\s+" + re.escape(symbol) + r"\b", source)
+               for source in sources)
 
 
 def main() -> int:
