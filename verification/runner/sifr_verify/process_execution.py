@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
+import math
 import os
 import selectors
 import signal
@@ -28,6 +29,38 @@ class Outcome:
     elapsed_seconds: float
 
 
+SAFETY_DEADLINE_ENV = "SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC"
+
+
+def deadline_environment(env: dict[str, str] | None, seconds: float | str = 2400) -> tuple[dict[str, str], float]:
+    """Keep one process safety deadline across nested commands and lock waits."""
+    child_env = dict(os.environ if env is None else env)
+    if isinstance(seconds, bool):
+        raise ValueError("safety deadline duration must be finite and positive")
+    try:
+        duration = float(seconds)
+    except (TypeError, ValueError) as error:
+        raise ValueError("safety deadline duration must be finite and positive") from error
+    if not math.isfinite(duration) or duration <= 0:
+        raise ValueError("safety deadline duration must be finite and positive")
+    deadline = time.monotonic() + duration
+    if not math.isfinite(deadline):
+        raise ValueError("safety deadline must be finite")
+    inherited = child_env.get(SAFETY_DEADLINE_ENV)
+    if inherited is not None:
+        if isinstance(inherited, bool):
+            raise ValueError("absolute safety deadline must be finite and positive")
+        try:
+            inherited_deadline = float(inherited)
+        except (TypeError, ValueError) as error:
+            raise ValueError("absolute safety deadline must be finite and positive") from error
+        if not math.isfinite(inherited_deadline) or inherited_deadline <= 0:
+            raise ValueError("absolute safety deadline must be finite and positive")
+        deadline = min(deadline, inherited_deadline)
+    child_env[SAFETY_DEADLINE_ENV] = repr(deadline)
+    return child_env, deadline
+
+
 @contextlib.contextmanager
 def _input_stream(data: bytes | None):
     if data is None:
@@ -43,7 +76,7 @@ def _input_stream(data: bytes | None):
 
 def execute(
     command: list[str], *, cwd: Path, env: dict[str, str] | None = None,
-    deadline_seconds: float = 2400, limit_bytes: int = 1048576,
+    deadline_seconds: float | str = 2400, limit_bytes: int = 1048576,
     emit: Callable[[str, bytes], None] | None = None,
     input_bytes: bytes | None = None,
 ) -> Outcome:
@@ -53,12 +86,14 @@ def execute(
         raise RuntimeError("verification subprocesses require the main thread")
 
     start = time.monotonic()
+    child_env, deadline = deadline_environment(env, deadline_seconds)
     streams = {"stdout": bytearray(), "stderr": bytearray()}
     truncated = False
     cause = "exit"
     cancelled = False
     previous = {}
     proc: subprocess.Popen[bytes] | None = None
+    group_killed = False
     selector: selectors.BaseSelector | None = None
 
     def cancel(signum, frame):
@@ -66,6 +101,10 @@ def execute(
         cancelled = True
 
     def kill_group(pid: int):
+        nonlocal group_killed
+        if group_killed:
+            return
+        group_killed = True
         try:
             os.killpg(pid, signal.SIGTERM)
             time.sleep(0.25)
@@ -81,24 +120,33 @@ def execute(
         # still restores every handler that was installed successfully.
         for sig in (signal.SIGINT, signal.SIGTERM):
             previous[sig] = signal.signal(sig, cancel)
-        with _input_stream(input_bytes) as stdin:
-            proc = subprocess.Popen(command, cwd=cwd, env=env, stdin=stdin,
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                    start_new_session=True)
+        if cancelled or time.monotonic() >= deadline:
+            cause = "cancelled" if cancelled else "safety_deadline"
+            code = 130 if cancelled else 124
+        else:
+            with _input_stream(input_bytes) as stdin:
+                proc = subprocess.Popen(command, cwd=cwd, env=child_env, stdin=stdin,
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                        start_new_session=True)
         # Ownership begins at spawn. Selector, registration and user callback
         # failures all pass through the same group teardown and child wait.
+        if proc is None:
+            return Outcome(code, cause, b"", b"", False, time.monotonic() - start)
         selector = selectors.DefaultSelector()
         assert proc.stdout is not None and proc.stderr is not None
         selector.register(proc.stdout, selectors.EVENT_READ, "stdout")
         selector.register(proc.stderr, selectors.EVENT_READ, "stderr")
         while selector.get_map() or proc.poll() is None:
-            if cancelled or time.monotonic() - start >= deadline_seconds:
+            if cancelled or time.monotonic() >= deadline:
                 cause = "cancelled" if cancelled else "safety_deadline"
                 kill_group(proc.pid)
+                # An escaped descendant can retain a pipe indefinitely. On a
+                # safety outcome, keep the bytes already read and close our ends.
+                break
             # A direct child may abandon grandchildren that inherited its pipes.
             if proc.poll() is not None:
                 kill_group(proc.pid)
-            for key, _ in selector.select(0.05):
+            for key, _ in selector.select(min(0.05, max(0, deadline - time.monotonic()))):
                 data = os.read(key.fileobj.fileno(), 65536)
                 if not data:
                     selector.unregister(key.fileobj)
