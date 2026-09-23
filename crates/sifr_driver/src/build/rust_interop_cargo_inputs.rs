@@ -1,40 +1,48 @@
 use super::rust_interop::PackageRustInteropContext;
-use super::rust_interop_digest::{
-    digest_file, digest_path, fnv1a64_hex, normalized_path_string, push_cache_bytes,
-};
+use super::rust_interop_digest::{digest_file, digest_path_checked, normalized_path_string};
 use super::sysroot_interop::SysrootRustInteropTrust;
 use sifr_codegen::{RustBridgeSourceDigest, RustInteropCargoInputs};
-use sifr_package::{TrustPolicy, digest_package_graph, digest_package_source_map};
-use std::collections::{BTreeMap, HashMap};
+use sifr_identity::IdentityEncoder;
+use sifr_package::{TrustPolicy, digest_package_graph, digest_package_source_snapshot};
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 pub(super) fn bridge_source_digests(
     context: &PackageRustInteropContext,
     package: &sifr_package::SifrPackageMetadata,
-) -> Vec<RustBridgeSourceDigest> {
+) -> Result<Vec<RustBridgeSourceDigest>, String> {
     let mut digests = package
         .manifest
         .rust
         .bridges
         .iter()
-        .map(|bridge_root| RustBridgeSourceDigest {
-            package_id: context.package_id.0.clone(),
-            bridge_root: normalized_path_string(bridge_root),
-            digest: digest_path(&package.package_root.join(bridge_root)),
+        .map(|bridge_root| {
+            Ok(RustBridgeSourceDigest {
+                package_id: context.package_id.0.clone(),
+                bridge_root: normalized_path_string(bridge_root),
+                digest: digest_path_checked(&package.package_root.join(bridge_root)).map_err(
+                    |error| {
+                        format!(
+                            "unreadable Rust bridge source {}: {error}",
+                            bridge_root.display()
+                        )
+                    },
+                )?,
+            })
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, String>>()?;
     digests.sort_by(|left, right| {
         (&left.package_id, &left.bridge_root).cmp(&(&right.package_id, &right.bridge_root))
     });
-    digests
+    Ok(digests)
 }
 
 pub(super) fn cargo_inputs(
     resolution: &super::cargo_resolution::CargoResolutionPolicy,
     context: &PackageRustInteropContext,
     package: &sifr_package::SifrPackageMetadata,
-) -> RustInteropCargoInputs {
+) -> Result<RustInteropCargoInputs, String> {
     if let Some(trust) = context
         .sysroot_trust
         .as_ref()
@@ -43,11 +51,12 @@ pub(super) fn cargo_inputs(
         return sysroot_cargo_inputs(resolution, trust, &package.manifest.trust);
     }
     let graph_digest = digest_package_graph(&context.graph);
-    let source_map_digest = digest_package_source_map(&context.source_map);
+    let source_map_digest = digest_package_source_snapshot(&context.source_map)
+        .map_err(|error| format!("unreadable package source snapshot: {error}"))?;
     let trust_policy_digest = trust_policy_digest(&package.manifest.trust);
     let mut declared_build_env = package.manifest.trust.build_env.clone();
     declared_build_env.sort();
-    RustInteropCargoInputs {
+    Ok(RustInteropCargoInputs {
         package_id: context.package_id.0.clone(),
         cargo_metadata_digest: None,
         sqlx_offline_metadata_digest: None,
@@ -80,7 +89,7 @@ pub(super) fn cargo_inputs(
             .map(|tools| tools.rustc_version().to_owned()),
         trust_policy_digest,
         declared_build_env,
-    }
+    })
 }
 
 pub(super) fn combined_cargo_inputs(
@@ -119,16 +128,19 @@ fn sysroot_cargo_inputs(
     resolution: &super::cargo_resolution::CargoResolutionPolicy,
     trust: &SysrootRustInteropTrust,
     policy: &TrustPolicy,
-) -> RustInteropCargoInputs {
+) -> Result<RustInteropCargoInputs, String> {
     let trust_policy_digest = trust_policy_digest(policy);
     let mut declared_build_env = policy.build_env.clone();
     declared_build_env.sort();
-    RustInteropCargoInputs {
+    Ok(RustInteropCargoInputs {
         package_id: format!("sifr-sysroot-stdlib@{}", trust.toolchain_id),
-        cargo_metadata_digest: Some(sysroot_metadata_digest(trust)),
+        cargo_metadata_digest: Some(sysroot_metadata_digest(trust)?),
         sqlx_offline_metadata_digest: None,
         package_graph_digest: Some(trust.sysroot_content_sha256.clone()),
-        package_source_map_digest: Some(digest_path(&trust.stdlib_private_sources)),
+        package_source_map_digest: Some(
+            digest_path_checked(&trust.stdlib_private_sources)
+                .map_err(|error| format!("unreadable sysroot private sources: {error}"))?,
+        ),
         cargo_lock_digest: digest_file(&trust.cargo_lock),
         target_triple: std::env::var("SIFR_TARGET").ok().or_else(|| {
             resolution
@@ -156,7 +168,7 @@ fn sysroot_cargo_inputs(
             .map(|tools| tools.rustc_version().to_owned()),
         trust_policy_digest,
         declared_build_env,
-    }
+    })
 }
 
 pub(super) fn generated_bridge_module_path(module_name: Option<&str>) -> Vec<String> {
@@ -347,7 +359,43 @@ fn combined_cargo_inputs_digest(
     primary: &RustInteropCargoInputs,
     secondary: &RustInteropCargoInputs,
 ) -> String {
-    combined_digest(&[&format!("{primary:?}"), &format!("{secondary:?}")])
+    let mut identity = IdentityEncoder::new("combined-rust-cargo-inputs-v2");
+    encode_cargo_inputs(&mut identity, "primary", primary);
+    encode_cargo_inputs(&mut identity, "secondary", secondary);
+    identity.finish()
+}
+
+fn encode_cargo_inputs(identity: &mut IdentityEncoder, side: &str, input: &RustInteropCargoInputs) {
+    identity.field("side", side.as_bytes());
+    identity.field("package-id", input.package_id.as_bytes());
+    for (name, value) in [
+        ("metadata", &input.cargo_metadata_digest),
+        ("sqlx", &input.sqlx_offline_metadata_digest),
+        ("graph", &input.package_graph_digest),
+        ("source-map", &input.package_source_map_digest),
+        ("lock", &input.cargo_lock_digest),
+        ("target", &input.target_triple),
+        ("panic", &input.panic_strategy),
+        ("cargo-version", &input.cargo_version),
+        ("rustc-version", &input.rustc_version),
+    ] {
+        identity.field(name, &[u8::from(value.is_some())]);
+        if let Some(value) = value {
+            identity.field(name, value.as_bytes());
+        }
+    }
+    identity.field("profile", input.cargo_profile.as_bytes());
+    identity.field("trust", input.trust_policy_digest.as_bytes());
+    encode_values(identity, "feature", &input.target_features);
+    identity.field(
+        "setting-count",
+        &(input.profile_codegen_settings.len() as u64).to_be_bytes(),
+    );
+    for (name, value) in &input.profile_codegen_settings {
+        identity.field("setting-name", name.as_bytes());
+        identity.field("setting-value", value.as_bytes());
+    }
+    encode_values(identity, "build-env", &input.declared_build_env);
 }
 
 fn combine_optional_digest(left: Option<String>, right: Option<String>) -> Option<String> {
@@ -359,25 +407,52 @@ fn combine_optional_digest(left: Option<String>, right: Option<String>) -> Optio
 }
 
 fn combined_digest(parts: &[&str]) -> String {
-    let mut bytes = Vec::new();
+    let mut identity = IdentityEncoder::new("combined-rust-input-v2");
+    identity.field("count", &(parts.len() as u64).to_be_bytes());
     for part in parts {
-        push_cache_bytes(&mut bytes, part);
+        identity.field("part", part.as_bytes());
     }
-    fnv1a64_hex(&bytes)
+    identity.finish()
 }
 
-fn sysroot_metadata_digest(trust: &SysrootRustInteropTrust) -> String {
-    let mut bytes = Vec::new();
-    push_cache_bytes(&mut bytes, &trust.sysroot_root.display().to_string());
-    push_cache_bytes(&mut bytes, &trust.toolchain_id);
-    push_cache_bytes(&mut bytes, &trust.sysroot_content_sha256);
-    push_cache_bytes(&mut bytes, &digest_path(&trust.stdlib_private_sources));
-    push_cache_bytes(&mut bytes, &digest_path(&trust.stdlib_crate));
-    push_cache_bytes(&mut bytes, &digest_path(&trust.runtime_crate));
-    if let Some(lock_digest) = digest_file(&trust.cargo_lock) {
-        push_cache_bytes(&mut bytes, &lock_digest);
+fn sysroot_metadata_digest(trust: &SysrootRustInteropTrust) -> Result<String, String> {
+    let mut identity = IdentityEncoder::new("sysroot-rust-metadata-v2");
+    identity.field(
+        "root",
+        normalized_path_string(&trust.sysroot_root).as_bytes(),
+    );
+    identity.field("package-id", trust.package_id.0.as_bytes());
+    identity.field("toolchain", trust.toolchain_id.as_bytes());
+    identity.field("content", trust.sysroot_content_sha256.as_bytes());
+    identity.field(
+        "vendor-path",
+        normalized_path_string(&trust.vendor_dir).as_bytes(),
+    );
+    identity.field(
+        "lock-path",
+        normalized_path_string(&trust.cargo_lock).as_bytes(),
+    );
+    for (name, path) in [
+        ("private-sources", &trust.stdlib_private_sources),
+        ("stdlib-crate", &trust.stdlib_crate),
+        ("runtime-crate", &trust.runtime_crate),
+    ] {
+        identity.field("tree-path", normalized_path_string(path).as_bytes());
+        identity.field(
+            name,
+            digest_path_checked(path)
+                .map_err(|error| format!("unreadable sysroot {name}: {error}"))?
+                .as_bytes(),
+        );
     }
-    fnv1a64_hex(&bytes)
+    let lock = digest_file(&trust.cargo_lock).ok_or_else(|| {
+        format!(
+            "unreadable sysroot Cargo lock: {}",
+            trust.cargo_lock.display()
+        )
+    })?;
+    identity.field("cargo-lock", lock.as_bytes());
+    Ok(identity.finish())
 }
 
 fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
@@ -447,24 +522,35 @@ fn target_features() -> Vec<String> {
     features
 }
 
-fn trust_policy_digest(trust: &TrustPolicy) -> String {
-    let mut entries = BTreeMap::new();
-    entries.insert("rust-build-scripts", trust.rust_build_scripts.clone());
-    entries.insert("rust-proc-macros", trust.rust_proc_macros.clone());
-    entries.insert("native-links", trust.native_links.clone());
-    entries.insert("unsafe-rust-bridges", trust.unsafe_rust_bridges.clone());
-    entries.insert("build-env", trust.build_env.clone());
-    entries.insert("rust-no-panic", trust.rust_no_panic.clone());
-    entries.insert("rust-panic-abort", trust.rust_panic_abort.clone());
-    let mut bytes = Vec::new();
-    for (key, mut values) in entries {
-        values.sort();
-        push_cache_bytes(&mut bytes, key);
-        for value in values {
-            push_cache_bytes(&mut bytes, &value);
-        }
+fn encode_values(identity: &mut IdentityEncoder, name: &str, values: &[String]) {
+    identity.field(name, &(values.len() as u64).to_be_bytes());
+    for value in values {
+        identity.field(name, value.as_bytes());
     }
-    fnv1a64_hex(&bytes)
+}
+
+fn trust_policy_digest(trust: &TrustPolicy) -> String {
+    let mut identity = IdentityEncoder::new("rust-trust-policy-v2");
+    for (name, values) in [
+        ("security-capabilities", &trust.security_capabilities),
+        ("native", &trust.native),
+        ("build-scripts", &trust.build_scripts),
+        ("proc-macros", &trust.proc_macros),
+        ("python", &trust.python),
+        ("python-native", &trust.python_native),
+        ("rust-build-scripts", &trust.rust_build_scripts),
+        ("rust-proc-macros", &trust.rust_proc_macros),
+        ("native-links", &trust.native_links),
+        ("unsafe-rust-bridges", &trust.unsafe_rust_bridges),
+        ("build-env", &trust.build_env),
+        ("rust-no-panic", &trust.rust_no_panic),
+        ("rust-panic-abort", &trust.rust_panic_abort),
+    ] {
+        let mut values = values.clone();
+        values.sort();
+        encode_values(&mut identity, name, &values);
+    }
+    identity.finish()
 }
 
 #[cfg(test)]
@@ -572,6 +658,158 @@ mod tests {
             combined.package_source_map_digest,
             secondary.package_source_map_digest
         );
+    }
+
+    #[test]
+    fn sysroot_metadata_identity_binds_authority_and_tree_payloads() {
+        use super::super::sysroot_interop::SysrootRustInteropTrust;
+        use std::fs;
+        let root = tempfile::tempdir().unwrap();
+        let private = root.path().join("private");
+        let stdlib = root.path().join("stdlib");
+        let runtime = root.path().join("runtime");
+        let lock = root.path().join("Cargo.lock");
+        for path in [&private, &stdlib, &runtime] {
+            fs::create_dir(path).unwrap();
+            fs::write(path.join("lib.rs"), b"original").unwrap();
+        }
+        fs::write(&lock, b"lock").unwrap();
+        let trust = SysrootRustInteropTrust {
+            package_id: sifr_package::SifrPackageId("sysroot".into()),
+            sysroot_root: root.path().to_path_buf(),
+            stdlib_private_sources: private.clone(),
+            stdlib_crate: stdlib.clone(),
+            runtime_crate: runtime.clone(),
+            cargo_lock: lock.clone(),
+            vendor_dir: root.path().join("vendor"),
+            toolchain_id: "toolchain".into(),
+            sysroot_content_sha256: "content".into(),
+        };
+        let baseline = super::sysroot_metadata_digest(&trust).unwrap();
+        let mut changed = trust.clone();
+        changed.package_id.0.push('x');
+        assert_ne!(baseline, super::sysroot_metadata_digest(&changed).unwrap());
+        changed = trust.clone();
+        changed.vendor_dir.push("other");
+        assert_ne!(baseline, super::sysroot_metadata_digest(&changed).unwrap());
+        let other_lock = root.path().join("other.lock");
+        fs::copy(&lock, &other_lock).unwrap();
+        changed = trust.clone();
+        changed.cargo_lock = other_lock;
+        assert_ne!(baseline, super::sysroot_metadata_digest(&changed).unwrap());
+        let other_stdlib = root.path().join("other-stdlib");
+        fs::create_dir(&other_stdlib).unwrap();
+        fs::write(other_stdlib.join("lib.rs"), b"original").unwrap();
+        changed = trust.clone();
+        changed.stdlib_crate = other_stdlib;
+        assert_ne!(baseline, super::sysroot_metadata_digest(&changed).unwrap());
+        let other_runtime = root.path().join("other-runtime");
+        fs::create_dir(&other_runtime).unwrap();
+        fs::write(other_runtime.join("lib.rs"), b"original").unwrap();
+        changed = trust.clone();
+        changed.runtime_crate = other_runtime;
+        assert_ne!(baseline, super::sysroot_metadata_digest(&changed).unwrap());
+        let other_private = root.path().join("other-private");
+        fs::create_dir(&other_private).unwrap();
+        fs::write(other_private.join("lib.rs"), b"original").unwrap();
+        changed = trust.clone();
+        changed.stdlib_private_sources = other_private;
+        assert_ne!(baseline, super::sysroot_metadata_digest(&changed).unwrap());
+        let mut changed = trust.clone();
+        changed.toolchain_id.push('x');
+        assert_ne!(baseline, super::sysroot_metadata_digest(&changed).unwrap());
+        changed = trust.clone();
+        changed.sysroot_content_sha256.push('x');
+        assert_ne!(baseline, super::sysroot_metadata_digest(&changed).unwrap());
+        changed = trust.clone();
+        changed.sysroot_root = root.path().join("other-root");
+        assert_ne!(baseline, super::sysroot_metadata_digest(&changed).unwrap());
+        for path in [&private, &stdlib, &runtime] {
+            fs::write(path.join("lib.rs"), b"changed").unwrap();
+            assert_ne!(baseline, super::sysroot_metadata_digest(&trust).unwrap());
+            fs::write(path.join("lib.rs"), b"original").unwrap();
+        }
+        fs::write(&lock, b"").unwrap();
+        assert_ne!(baseline, super::sysroot_metadata_digest(&trust).unwrap());
+        fs::remove_file(&lock).unwrap();
+        assert!(super::sysroot_metadata_digest(&trust).is_err());
+        fs::remove_dir_all(&private).unwrap();
+        assert!(super::sysroot_metadata_digest(&trust).is_err());
+    }
+
+    #[test]
+    fn combined_cargo_identity_binds_every_field_and_option_state() {
+        let primary = cargo_inputs_fixture("primary", Some("source"));
+        let secondary = cargo_inputs_fixture("secondary", Some("source"));
+        let original = super::combined_cargo_inputs_digest(&primary, &secondary);
+        let mut cases = Vec::new();
+        macro_rules! mutate {
+            ($field:ident, $value:expr) => {{
+                let mut changed = secondary.clone();
+                changed.$field = $value;
+                cases.push((stringify!($field), changed));
+            }};
+        }
+        mutate!(package_id, "other".into());
+        mutate!(cargo_metadata_digest, Some("other".into()));
+        mutate!(sqlx_offline_metadata_digest, Some("other".into()));
+        mutate!(package_graph_digest, Some("other".into()));
+        mutate!(package_source_map_digest, Some("other".into()));
+        mutate!(cargo_lock_digest, Some("other".into()));
+        mutate!(target_triple, Some("other".into()));
+        mutate!(target_features, vec!["feature".into()]);
+        mutate!(cargo_profile, "debug".into());
+        mutate!(panic_strategy, Some("abort".into()));
+        mutate!(profile_codegen_settings, vec![("opt".into(), "3".into())]);
+        mutate!(cargo_version, Some("other".into()));
+        mutate!(rustc_version, Some("other".into()));
+        mutate!(trust_policy_digest, "other".into());
+        mutate!(declared_build_env, vec!["FLAG".into()]);
+        for (name, changed) in cases {
+            assert_ne!(
+                original,
+                super::combined_cargo_inputs_digest(&primary, &changed),
+                "{name}"
+            );
+        }
+        let mut absent = secondary.clone();
+        absent.package_source_map_digest = None;
+        let absent_digest = super::combined_cargo_inputs_digest(&primary, &absent);
+        absent.package_source_map_digest = Some(String::new());
+        assert_ne!(
+            absent_digest,
+            super::combined_cargo_inputs_digest(&primary, &absent)
+        );
+    }
+
+    #[test]
+    fn trust_policy_identity_binds_all_declared_fields() {
+        let original = sifr_package::TrustPolicy::default();
+        let baseline = super::trust_policy_digest(&original);
+        macro_rules! changed {
+            ($field:ident) => {{
+                let mut policy = original.clone();
+                policy.$field.push("value".into());
+                assert_ne!(
+                    baseline,
+                    super::trust_policy_digest(&policy),
+                    stringify!($field)
+                );
+            }};
+        }
+        changed!(security_capabilities);
+        changed!(native);
+        changed!(build_scripts);
+        changed!(proc_macros);
+        changed!(python);
+        changed!(python_native);
+        changed!(rust_build_scripts);
+        changed!(rust_proc_macros);
+        changed!(native_links);
+        changed!(unsafe_rust_bridges);
+        changed!(build_env);
+        changed!(rust_no_panic);
+        changed!(rust_panic_abort);
     }
 
     fn cargo_inputs_fixture(

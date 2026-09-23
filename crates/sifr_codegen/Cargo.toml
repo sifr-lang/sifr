@@ -10,6 +10,7 @@ license = { workspace = true }
 [dependencies]
 # Wired early for diagnostic registry migration; compiler emission migration uses this dependency.
 sifr_diagnostics = { workspace = true }
+sifr_identity = { workspace = true }
 sifr_ir = { workspace = true }
 sifr_stdlib_manifest = { workspace = true }
 sifr_structural_identity = { workspace = true }
