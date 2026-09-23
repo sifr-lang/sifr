@@ -395,7 +395,12 @@ fn lower_sifr_type(ty: &SifrType) -> Result<Type, QueryContractError> {
         | SifrType::IpNetwork
         | SifrType::MacAddress => nominal_type(
             sql_value_identity(ty)
-                .expect("closed SQL value identity")
+                .ok_or_else(|| {
+                    QueryContractError::new(
+                        QueryContractErrorKind::InvalidTemplate,
+                        format!("unsupported SQL value identity: {ty:?}"),
+                    )
+                })?
                 .frontend_identity,
             Vec::new(),
         ),
