@@ -11,6 +11,7 @@ use crate::diagnostics::{RenderedDiagnostic, write_stderr, write_stderr_line};
 use crate::project::namespace_module_files;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_stdlib_manifest::SysrootDependencyPlan;
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
@@ -18,6 +19,8 @@ pub(crate) struct TestRunnerExecutionOutcome {
     pub(crate) success: bool,
     #[cfg(test)]
     pub(crate) native_project_root: PathBuf,
+    #[cfg(test)]
+    pub(crate) final_workspace_root: PathBuf,
     #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) cache_report: ArtifactCacheReport,
 }
@@ -92,6 +95,7 @@ pub(crate) fn execute_test_runner_project(
     );
     {
         let src_dir = project_dir.join("src");
+        let mut current_files = BTreeSet::new();
         std::fs::create_dir_all(&src_dir).map_err(|error| {
             vec![crate::diagnostics::diagnostic_with_code(
                 format!("failed to create test directory: {error}"),
@@ -125,6 +129,7 @@ pub(crate) fn execute_test_runner_project(
             .map(|(path, code)| (path.clone(), code));
         for (module_path, code) in support_files.chain(bridge_files) {
             let output_path = src_dir.join(&module_path);
+            current_files.insert(output_path.clone());
             if let Some(parent) = output_path.parent() {
                 std::fs::create_dir_all(parent).map_err(|error| {
                     vec![crate::diagnostics::diagnostic_with_code(
@@ -151,6 +156,7 @@ pub(crate) fn execute_test_runner_project(
 
         for namespace_file in namespace_module_files(&generated_project.support_module_names) {
             let output_path = src_dir.join(&namespace_file.path);
+            current_files.insert(output_path.clone());
             if let Some(parent) = output_path.parent() {
                 std::fs::create_dir_all(parent).map_err(|error| {
                     vec![crate::diagnostics::diagnostic_with_code(
@@ -180,6 +186,7 @@ pub(crate) fn execute_test_runner_project(
                 })?;
         }
 
+        current_files.insert(src_dir.join("lib.rs"));
         crate::build::native_storage::write_changed(&src_dir.join("lib.rs"), test_lib.as_bytes())
             .map_err(|error| {
             vec![crate::diagnostics::diagnostic_with_code(
@@ -187,6 +194,8 @@ pub(crate) fn execute_test_runner_project(
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]
         })?;
+        crate::build::native_storage::remove_stale(&src_dir, &current_files)
+            .map_err(test_io_error)?;
     }
 
     crate::build::native_storage::write_changed(
@@ -347,6 +356,8 @@ pub(crate) fn execute_test_runner_project(
         cache_report,
         #[cfg(test)]
         native_project_root: project_dir,
+        #[cfg(test)]
+        final_workspace_root: entry.workspace_root().to_path_buf(),
     })
 }
 
@@ -481,6 +492,139 @@ mod tests {
                     .expect("prepared lock")
             );
         }
+        std::fs::remove_dir_all(scope).expect("owned scope cleanup");
+    }
+
+    #[test]
+    fn test_runner_mutable_root_and_final_snapshot_stay_distinct() {
+        let scope = std::env::temp_dir().join(format!(
+            "sifr-test-native-storage-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&scope).expect("owned scope");
+        let mut project = GeneratedTestRunnerProject {
+            application_profile: crate::ApplicationProfile::Test,
+            cargo_resolution: crate::build::CargoResolutionPolicy::normal(),
+            interop: sifr_codegen::InteropBuildPlan::default(),
+            cache_scope: scope.clone(),
+            support_module_names: vec!["retired".into()],
+            support_rust_files: HashMap::from([(
+                "retired".into(),
+                "pub fn value() -> u32 { 42 }".into(),
+            )]),
+            bridge_rust_files: Default::default(),
+            all_rust_code: "#[test] fn storage_case() { assert_eq!(retired::value(), 42); }".into(),
+            all_stdlib_modules: HashSet::new(),
+            all_required_features: HashSet::new(),
+        };
+        let first = super::execute_test_runner_project(&project).expect("first test build");
+        assert!(first.success);
+        let first_entry = first.final_workspace_root.clone();
+        let first_manifest = std::fs::read(first_entry.join("test_executables.json"))
+            .expect("final executable manifest");
+        let first_executables: Vec<PathBuf> =
+            serde_json::from_slice(&first_manifest).expect("manifest paths");
+        let first_hashes: Vec<_> = first_executables
+            .iter()
+            .map(|path| sifr_sysroot::sha256_file(&first_entry.join(path)).expect("executable"))
+            .collect();
+        assert!(first.native_project_root.join("Cargo.lock").is_file());
+        assert!(first.native_project_root.join("src/retired.rs").is_file());
+        assert!(!first_entry.join("Cargo.lock").exists());
+        assert!(!first_entry.join("target").exists());
+        assert!(!first_entry.join("src").exists());
+
+        project.support_module_names.clear();
+        project.support_rust_files.clear();
+        project
+            .all_required_features
+            .insert(StdlibFeature::SerdeJson);
+        project.all_rust_code = "#[test] fn storage_case() { assert_eq!(6 * 7, 42); }".into();
+        let second = super::execute_test_runner_project(&project).expect("changed test build");
+        assert!(second.success);
+        assert_eq!(first.native_project_root, second.native_project_root);
+        assert!(!second.native_project_root.join("src/retired.rs").exists());
+        assert_ne!(first_entry, second.final_workspace_root);
+        assert!(!second.final_workspace_root.join("Cargo.lock").exists());
+        assert!(!second.final_workspace_root.join("target").exists());
+        assert!(!second.final_workspace_root.join("src").exists());
+        assert_eq!(
+            std::fs::read(first_entry.join("test_executables.json")).expect("first manifest"),
+            first_manifest
+        );
+        for (path, hash) in first_executables.iter().zip(first_hashes) {
+            let executable = first_entry.join(path);
+            assert_eq!(
+                sifr_sysroot::sha256_file(&executable).expect("first executable"),
+                hash
+            );
+            assert!(
+                std::process::Command::new(executable)
+                    .current_dir(&scope)
+                    .status()
+                    .expect("run finalized first test")
+                    .success()
+            );
+        }
+        std::fs::remove_dir_all(scope).expect("owned scope cleanup");
+    }
+
+    #[test]
+    fn test_runner_same_key_concurrency_publishes_one_snapshot() {
+        let scope = std::env::temp_dir().join(format!(
+            "sifr-test-same-key-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&scope).expect("owned scope");
+        let project = GeneratedTestRunnerProject {
+            application_profile: crate::ApplicationProfile::Test,
+            cargo_resolution: crate::build::CargoResolutionPolicy::normal(),
+            interop: sifr_codegen::InteropBuildPlan::default(),
+            cache_scope: scope.clone(),
+            support_module_names: Vec::new(),
+            support_rust_files: HashMap::new(),
+            bridge_rust_files: Default::default(),
+            all_rust_code: "#[test] fn concurrent_case() { assert_eq!(2 + 2, 4); }".into(),
+            all_stdlib_modules: HashSet::new(),
+            all_required_features: HashSet::new(),
+        };
+        let barrier = std::sync::Barrier::new(3);
+        let outcomes = std::thread::scope(|threads| {
+            let handles: Vec<_> = (0..3)
+                .map(|_| {
+                    let barrier = &barrier;
+                    let project = &project;
+                    threads.spawn(move || {
+                        barrier.wait();
+                        super::execute_test_runner_project(project).expect("concurrent test build")
+                    })
+                })
+                .collect();
+            handles
+                .into_iter()
+                .map(|handle| handle.join().expect("test thread"))
+                .collect::<Vec<_>>()
+        });
+        assert!(outcomes.iter().all(|outcome| outcome.success));
+        assert!(outcomes.iter().all(|outcome| {
+            outcome.final_workspace_root == outcomes[0].final_workspace_root
+                && outcome.native_project_root == outcomes[0].native_project_root
+        }));
+        assert_eq!(
+            outcomes
+                .iter()
+                .filter(|outcome| !outcome.cache_report.cache_hit())
+                .count(),
+            1
+        );
         std::fs::remove_dir_all(scope).expect("owned scope cleanup");
     }
 
