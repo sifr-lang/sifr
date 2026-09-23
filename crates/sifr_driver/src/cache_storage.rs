@@ -375,6 +375,7 @@ pub fn available_bytes() -> io::Result<u64> {
 
 pub(crate) fn new_private_file(path: &Path) -> io::Result<File> {
     OpenOptions::new()
+        .read(true)
         .write(true)
         .create_new(true)
         .mode(0o600)

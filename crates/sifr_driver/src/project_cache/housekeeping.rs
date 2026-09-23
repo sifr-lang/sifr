@@ -117,6 +117,14 @@ fn safe_path(path: &Path) -> bool {
             .all(|part| cache_storage::real_directory(part))
         && cache_storage::check_owned(path).is_ok()
 }
+#[cfg(unix)]
+fn safe_workspace_path(path: &Path) -> bool {
+    safe_path(path)
+}
+#[cfg(windows)]
+fn safe_workspace_path(path: &Path) -> bool {
+    crate::windows_storage_security::safe_workspace(path).is_ok()
+}
 fn safe_tree(path: &Path) -> bool {
     if cache_storage::check_owned(path).is_err() {
         return false;
@@ -271,7 +279,7 @@ pub(super) fn prune_store(
     // Workspace scratch shares the directory with other semantic contexts.
     // Only a complete matching hint proves which writer owns it; partial or
     // foreign scratch stays untouched. No generic directory cleanup is allowed.
-    if safe_path(&store.workspace_root) {
+    if safe_workspace_path(&store.workspace_root) {
         for entry in fs::read_dir(&store.workspace_root)? {
             let entry = entry?;
             let name = entry.file_name();
@@ -348,7 +356,7 @@ pub(super) fn prune_workspace(
             "deleted workspace requires its original absolute canonical path",
         ));
     }
-    if !orphan && !safe_path(workspace) {
+    if !orphan && !safe_workspace_path(workspace) {
         return Ok(report);
     }
     let workspace = if orphan {
@@ -439,6 +447,5 @@ fn file_identity(path: &Path) -> io::Result<(u64, u64)> {
 }
 #[cfg(windows)]
 fn file_identity(path: &Path) -> io::Result<(u64, u64)> {
-    let file = fs::File::open(path)?;
-    crate::windows_storage_security::file_identity(&file)
+    crate::windows_storage_security::path_identity(path)
 }

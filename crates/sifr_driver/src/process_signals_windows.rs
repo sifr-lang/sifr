@@ -9,6 +9,7 @@ static USERS: Mutex<usize> = Mutex::new(0);
 
 pub(crate) struct Guard;
 
+#[allow(unsafe_code)]
 unsafe extern "system" fn cancel(event: u32) -> i32 {
     match event {
         CTRL_C_EVENT => CANCELLED.store(libc::SIGINT, Ordering::Relaxed),
