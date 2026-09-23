@@ -2,7 +2,7 @@
 //! infer an empty external inventory from the absence of a cached observation.
 use crate::PackageEntrypoint;
 
-pub(super) fn identity(entrypoint: &PackageEntrypoint) -> Option<String> {
+pub(super) fn identity(entrypoint: &PackageEntrypoint) -> Result<Option<String>, String> {
     if entrypoint.python_runtime.is_some()
         || !entrypoint
             .graph
@@ -21,24 +21,23 @@ pub(super) fn identity(entrypoint: &PackageEntrypoint) -> Option<String> {
                 || manifest.python != Default::default()
         })
     {
-        return None;
+        return Ok(None);
     }
     // Package owners already resolved manifests, source inclusion, versions,
     // aliases, trust and lock/feature selection for this invocation. Bind the
     // complete deterministic projections too, not only their legacy short hashes.
-    sifr_frontend::persistence::identity(
+    let graph_digest = sifr_package::digest_package_graph(&entrypoint.graph)?;
+    let source_map_digest = sifr_package::digest_package_source_map(&entrypoint.source_map)?;
+    let identity = sifr_frontend::persistence::identity(
         "resolved-pure-package-v1",
         &(
             &entrypoint.package_id.0,
-            sifr_package::digest_package_graph(&entrypoint.graph)
-                .ok()?
-                .hex,
-            sifr_package::digest_package_source_map(&entrypoint.source_map)
-                .ok()?
-                .hex,
+            graph_digest.hex,
+            source_map_digest.hex,
             format!("{:?}", (&entrypoint.graph, &entrypoint.source_map)),
             entrypoint.lock_mode.as_str(),
         ),
     )
-    .ok()
+    .map_err(|error| format!("could not serialize resolved package context: {error}"))?;
+    Ok(Some(identity))
 }

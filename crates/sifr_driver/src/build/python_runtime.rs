@@ -47,7 +47,6 @@ fn certification_identity<T: Serialize>(certifications: &[T]) -> Result<String, 
 }
 
 impl PackagePythonRuntime {
-    #[must_use]
     pub fn from_probe(
         request: &sifr_package::PythonEnvironmentProbeRequest,
         probe: &sifr_package::PythonEnvironmentProbe,

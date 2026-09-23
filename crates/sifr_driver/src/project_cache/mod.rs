@@ -78,17 +78,30 @@ pub fn check_saved_sources(
             },
         );
     }
-    let package_context = package.map(package_context::identity);
-    if matches!(package_context, Some(None)) {
-        return (
-            compute(provider).diagnostics,
-            ProjectCacheReport {
-                status: "external-context".into(),
-                computed_checks: 1,
-                ..Default::default()
-            },
-        );
-    }
+    let package_context = match package.map(package_context::identity) {
+        Some(Err(_)) => {
+            return (
+                compute(provider).diagnostics,
+                ProjectCacheReport {
+                    status: "identity-unavailable".into(),
+                    computed_checks: 1,
+                    ..Default::default()
+                },
+            );
+        }
+        Some(Ok(None)) => {
+            return (
+                compute(provider).diagnostics,
+                ProjectCacheReport {
+                    status: "external-context".into(),
+                    computed_checks: 1,
+                    ..Default::default()
+                },
+            );
+        }
+        Some(Ok(Some(identity))) => Some(identity),
+        None => None,
+    };
     // Resolve/pin required installed metadata even on a project-cache hit.
     let metadata = match compiler.metadata_provider() {
         Ok(metadata) => metadata,
@@ -136,9 +149,7 @@ pub fn check_saved_sources(
             );
         }
     };
-    inputs.package_and_lock = package_context
-        .flatten()
-        .unwrap_or_else(|| "manifestless-owner-v1".into());
+    inputs.package_and_lock = package_context.unwrap_or_else(|| "manifestless-owner-v1".into());
     let defs = match crate::stdlib_external_defs(compiler) {
         Ok(defs) => defs,
         Err(errors) => {
@@ -264,7 +275,8 @@ fn check(
                                         }
                                     }
                                     Err(_) => {
-                                        report.status = "interface-restored-uncacheable".into();
+                                        report.status =
+                                            "interface-restored-serialization-unavailable".into();
                                     }
                                 }
                             }
@@ -329,7 +341,7 @@ fn check(
                         report.status = "write-unavailable".into();
                     }
                 }
-                Err(_) => report.status = "uncacheable".into(),
+                Err(_) => report.status = "serialization-unavailable".into(),
             },
             Ok(_) => report.status = "changed-inputs".into(),
             Err(_) => report.status = "uncacheable".into(),

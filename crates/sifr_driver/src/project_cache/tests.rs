@@ -454,7 +454,7 @@ fn dx13_resolved_package_context_and_live_external_inventory() {
         python_runtime: None,
         lock_mode: CargoLockMode::Normal,
     };
-    let first = package_context::identity(&entry).unwrap();
+    let first = package_context::identity(&entry).unwrap().unwrap();
     entry
         .graph
         .packages
@@ -463,7 +463,7 @@ fn dx13_resolved_package_context_and_live_external_inventory() {
         .manifest
         .source_features
         .insert("feature".into(), "module".into());
-    assert_ne!(package_context::identity(&entry).unwrap(), first);
+    assert_ne!(package_context::identity(&entry).unwrap().unwrap(), first);
     entry
         .graph
         .packages
@@ -473,7 +473,7 @@ fn dx13_resolved_package_context_and_live_external_inventory() {
         .python
         .requires_imports
         .push("live_environment".into());
-    assert!(package_context::identity(&entry).is_none());
+    assert!(package_context::identity(&entry).unwrap().is_none());
     entry
         .graph
         .packages
@@ -489,7 +489,7 @@ fn dx13_resolved_package_context_and_live_external_inventory() {
         .manifest
         .rust
         .direct_crate_bindings = true;
-    assert!(package_context::identity(&entry).is_none());
+    assert!(package_context::identity(&entry).unwrap().is_none());
 }
 
 #[test]

@@ -4,7 +4,6 @@ use serde::Serialize;
 use std::fs;
 use std::io;
 
-#[must_use]
 pub fn digest_package_source_map(source_map: &PackageSourceMap) -> Result<GraphDigest, String> {
     let canonical = CanonicalSourceMap::from(source_map);
     digest_serializable("package-source-map", &canonical)
