@@ -19,7 +19,8 @@ The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/p
 | X02 | Existing Emitted Rust owner, including retained Item 12; F02-F04 and codegen part of F32; open after X01. | Contextual Result failures at every public emission boundary, no partial output, origin-aware exhaustive IR/final-source validation, trusted macro/bridge policy, diagnostic and fixture checks. |
 | V01 | Compiler/performance qualification owner; F05; fail-closed admission merged, live qualification blocked by shared-host CPU policy. | Compatible reference selected before long work, controlled-clock freshness boundary tests, host/toolchain admission and actual selected reference check. Old Mac capture is expired; Linux reference is host-specific. |
 | V02 | Verification runner owner; F06; merged in [PR #3921](https://github.com/sifr-lang/sifr/pull/3921), receipt below. | One Python-interop area ID across selection, receipt, export and required cache paths; mutated suite/cache inputs alter identity and cold classification. |
-| V03 | Verification guard owner; F24-F25; open. | Site-level filesystem effects and semantic parser exceptions. Negative tests insert a read in a listed file, an alias, a byte read, a new crate/bin and an aliased parse in mixed test/production source. |
+| V03 | Verification guard owner; F24; open. | Complete relevant Rust target roots and classify filesystem effects at site/symbol level as semantic input, build identity, tooling input or output effect. Detect builder reads and filesystem writes/mutations. Negative tests insert a new read in an already-listed file, an alias-only read, a byte read, a new crate/bin source, and representative builder/write sites. |
+| V03b | Semantic parser guard owner; F25; open after V03. | Detect aliased parse, parse_module_raw and parse_module_suite calls, and adjudicate existing parse-and-lower sites. Separate production from test-only code, including mixed files and cross-file module gating; negative tests cover aliased parse in mixed test/production source. |
 | V04 | Verification process owner; F26-F27; open. | Worker-thread setup, selector and callback errors leave no child; absolute deadlines cover nested work and lock waits; distinguish native exit 124, timeout and cancellation. Preserve useful descendant/terminal behavior. |
 | N01 | Driver test orchestration, with existing [DX9-F3](ad-hoc-native-cargo-reuse-followups.md); F15-F16; open. | Supported normal/locked/offline/frozen build/test parity, alternating dependencies in one owned root, same-key concurrency and immutable final output. No implicit Python-test expansion. |
 | N02 | Package graph and driver identity owners; F07-F08; open. | Versioned framed persisted identities bind every semantic field; serialization failure cannot publish reusable success. Test absent/empty/unreadable/error distinctions at consumers. |
@@ -77,12 +78,14 @@ Historical M1-M12 drafts #3553-#3564 remain open on the unmerged stack at this r
 | M12K (no PR) | Controlled-host reference attempt blocked; V01 is early prerequisite. |
 | M13 #3571 | Historical branch review is not current-main closure; Q01 owns final integration and whole-phase review. |
 
+The unmerged [V03 draft PR #3923](https://github.com/sifr-lang/sifr/pull/3923) at candidate 45eaf9a43b217c75fe2c34ee7a6068da0d85f7cb is historical evidence only. Its second scoped review found new mechanism-level F24 and F25 omissions and required this F24/F25 split. V03 selectively ports the filesystem guard; V03b owns parser work on a separate next item. The unrelated TypeScript-Go LSP guard failure remains with E01.
+
 Old draft status is historical candidate pending selective port or owner-approved closure, not approved for merge. Closing drafts is a separate repository action. Preserve failed/partial logs without relabeling.
 
 ## Order, gates and evidence
 
 1. P00, then urgent X01.
-2. Validation prerequisites V01-V04 and D01 guard/registry pieces; runner negative tests precede reliance on later green evidence.
+2. Validation prerequisites V01-V03b, V04 and D01 guard/registry pieces; runner negative tests precede reliance on later green evidence.
 3. Native/cache N01-N06; N01 depends on merged DX9-F7 behavior, N06 uses DX9-F5 ownership, and N02 establishes identities before warm-consumer claims.
 4. X02 with generated Rust owner after X01, updating diagnostics/fixtures/materialization together.
 5. C01, then C02.
