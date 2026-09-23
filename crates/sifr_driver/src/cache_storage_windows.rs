@@ -92,7 +92,7 @@ pub(crate) fn seal(root: &Path) -> io::Result<()> {
         & windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_REPARSE_POINT
         != 0
     {
-        return Ok(());
+        return Err(invalid("reparse-point staged payload"));
     }
     security::seal(root)?;
     if metadata.is_dir() {
@@ -118,8 +118,7 @@ pub(crate) fn entry_lock(parent: &Path, key: &str) -> io::Result<File> {
     open_entry_lock(parent, key, true)
 }
 
-/// Project semantic readers/writers have no mutable native child owner. Keep
-/// their leases CLOEXEC so unrelated subprocesses cannot prolong retention.
+/// Project semantic readers/writers do not pass their lock handle to children.
 pub(crate) fn process_entry_lock(parent: &Path, key: &str) -> io::Result<File> {
     open_entry_lock(parent, key, false)
 }
@@ -151,6 +150,9 @@ fn open_entry_lock(parent: &Path, key: &str, inherit: bool) -> io::Result<File> 
     Ok(file)
 }
 
+/// The native child can retain this handle identity; Windows byte-range locks
+/// remain process-owned. Job ownership terminates native descendants if their
+/// compiler owner dies, before GC can reuse the entry.
 #[allow(unsafe_code)]
 fn inherit_lease(file: &File) -> io::Result<()> {
     use windows_sys::Win32::Foundation::{HANDLE_FLAG_INHERIT, SetHandleInformation};
@@ -415,6 +417,8 @@ mod tests {
         assert!(status.success());
         assert!(directory(&alias).is_err());
         assert!(payload(&root, Path::new("junction")).is_err());
+        assert!(seal(&alias).is_err());
+        assert!(security::no_reparse(&root.join("missing/../owned")).is_err());
         fs::remove_dir(&alias).unwrap();
 
         security::test_grant_world(&root.join("owned")).unwrap();
@@ -439,6 +443,7 @@ mod tests {
                 "--nocapture",
             ])
             .env("SIFR_WINDOWS_PRUNE_ROOT", temp.path().join("cache"))
+            .env("SIFR_CACHE_DIR", temp.path().join("cache"))
             .output()
             .unwrap();
         assert!(
