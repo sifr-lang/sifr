@@ -89,6 +89,31 @@ pub(crate) fn build_report(report: &sifr_driver::BuildReport) {
     });
 }
 
+fn safe_project_cache_status(value: &str) -> &str {
+    match value {
+        value @ ("disabled"
+        | "external-context"
+        | "identity-unavailable"
+        | "metadata-unavailable"
+        | "policy-unavailable"
+        | "restored"
+        | "interface-restored"
+        | "interface-restored-write-unavailable"
+        | "interface-restored-serialization-unavailable"
+        | "interface-restored-changed-inputs"
+        | "interface-restored-uncacheable"
+        | "miss"
+        | "unavailable"
+        | "cancelled"
+        | "published"
+        | "write-unavailable"
+        | "serialization-unavailable"
+        | "changed-inputs"
+        | "uncacheable") => value,
+        _ => "unrecognized-redacted",
+    }
+}
+
 pub(crate) fn project_report(
     compiler: &sifr_driver::CompilerContext,
     report: &sifr_driver::project_cache::ProjectCacheReport,
@@ -96,10 +121,7 @@ pub(crate) fn project_report(
     record(|| {
         json!({
             "owner": "ProjectCacheReport",
-            "status": match report.status.as_str() {
-            value @ ("disabled" | "external-context" | "metadata-unavailable" | "restored" | "interface-restored" | "interface-restored-write-unavailable" | "interface-restored-changed-inputs" | "interface-restored-uncacheable" | "miss" | "unavailable" | "cancelled" | "published" | "write-unavailable" | "changed-inputs" | "uncacheable") => value,
-            _ => "unrecognized-redacted",
-        },
+            "status": safe_project_cache_status(&report.status),
         "restored_checks": report.restored_checks,
             "computed_checks": report.computed_checks,
             "captured_sources": report.captured_sources,
@@ -330,6 +352,32 @@ mod tests {
             reports: Vec::new(),
             dropped: usize::MAX - 1,
             overhead: Duration::ZERO,
+        }
+    }
+
+    #[test]
+    fn project_cache_serialization_statuses_remain_distinct_in_trace() {
+        for status in [
+            "identity-unavailable",
+            "policy-unavailable",
+            "serialization-unavailable",
+            "interface-restored-serialization-unavailable",
+        ] {
+            let projected = json!({"status": safe_project_cache_status(status)});
+            assert_eq!(projected["status"], status);
+        }
+    }
+
+    #[test]
+    fn project_cache_unknown_status_is_redacted_in_trace() {
+        for status in [
+            "",
+            "secret-user-source",
+            "serialization-unavailable: /private/path",
+        ] {
+            let projected = json!({"status": safe_project_cache_status(status)});
+            assert_eq!(projected["status"], "unrecognized-redacted");
+            assert!(!projected.to_string().contains(status) || status.is_empty());
         }
     }
 
