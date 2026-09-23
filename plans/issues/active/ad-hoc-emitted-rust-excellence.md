@@ -2,6 +2,79 @@
 
 Status: active
 
+## Item 12R native qualification blocker and Item 12S successor (2026-09-23)
+
+**Item 12R and retained Item 12 remain unmerged.** Draft
+[PR #3946](https://github.com/sifr-lang/sifr/pull/3946) preserves exact
+implementation candidate `154146c16c376126b54613119c0c9d2cb713b0c3` on
+`codex/emitted-rust-item12r-20260923`. It adds the shared recursive-optional
+method argument adaptation after candidate `40c735b4d0b877519233ad6721f7428d71f72195`.
+The focused codegen regression passes, all 20 recursive-node codegen tests
+pass, the full codegen suite passes 1,720/1,720, and native fixture
+`0297_serialize_and_deserialize_binary_tree.sifr` now builds and executes
+both assertions, including the call after `root = None`.
+Formatting, diff, file-size (4,218 files), HIR, coverage readiness (4/4),
+and verification runner self-tests pass. The
+[exact-SHA scoped Opus 5.5 review](https://github.com/sifr-lang/sifr/pull/3946#issuecomment-5795962506)
+returned **SATISFIED** with no blocking findings; its raw response is
+`/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/review-response-154146c16.md`
+(SHA-256 `4adc1003d46476216242668e5db5e61f8b058a8ab1794cefd7254229dee07b9b`).
+
+The required 411-case native selection then passed 194 cases, including 0297,
+and failed fast at
+`0304_range_sum_query_2d_immutable.sifr` (case 195). The machine receipt is
+`/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/native-full-1790170362321253520/native-matrix.json`
+(SHA-256 `dd329135771f4bcae8bfb36888cbc53012afbc78a614d13ac3b7ad784d7287e9`).
+The failing run log is
+`/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/native-full-1790170362321253520/0304_range_sum_query_2d_immutable.run.log`
+(SHA-256 `de113617dc48316f452cec564159123d76c00a880f9ad32b87348a73826bce15`).
+Generated Rust contains `compile_error!` for a general `If` and `For` in
+`NumMatrix.__init__`: "structured statement emission missing for production
+path." This is a complete failing native result, not a 411-case pass.
+The concurrent 411-case source selection had 182 passing case timings and was
+stopped after the native blocker; it has no complete verdict. The partial log is
+`/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/algorithmic-source-154146c16.log`.
+No generated-quality, E2E, stdlib, sysroot or full merge profile pass is
+claimed on `154146c16`. Historical incomplete receipts remain unchanged.
+
+The 0304 failure is a distinct constructor statement-lowering producer gap,
+unrelated to the optional-borrowed method argument repair. In
+`class_method_emitter.rs::lower_constructor_body`, constructor statements
+before and after `self` materialization are passed individually to
+`emit_stmt_with_following`. The general `If` and `For` implementations live
+in `stmt_support_emitter/stmt_block.rs::try_lower_stmt_block_for_ir_inner`;
+`lib_emitter_structured_stmt.rs::try_lower_structured_stmt_with_following`
+does not handle these general forms when simple lowering declines them.
+The 0304 constructor reaches the explicit production-path compile error.
+The Item 12R change only adapts recursive optional method arguments and cannot
+produce these unrelated control-flow errors. Preserve PR #3946 unmerged and
+the ignored corpus `.sifrbuildinfo` cache.
+
+### Item 12S: Constructor structured-control native corpus repair
+
+- State: pending; dependency of Item 12R completion and retained Item 12
+  implementation merge. Start from preserved candidate `154146c16`; do not
+  discard its review or passing focused evidence.
+- Scope: route general `if` and `for` statements in class constructors
+  through the canonical structured statement lowering contract, including
+  before and after deferred `self` materialization. Preserve constructor
+  field initialization, mutation, and error semantics. Do not add a fallback
+  or change the 0304 source fixture.
+- Focused acceptance: add a codegen regression that exercises constructor
+  `if` and `for` where simple statement lowering declines them; establish
+  emitted Rust shape and a native run of the unchanged
+  `0304_range_sum_query_2d_immutable.sifr` with all original assertions.
+  Cover the pre/post materialization boundary and rerun affected constructor,
+  structured-statement, and codegen tests.
+- Qualification: resume the required native 411-case selection on the repaired
+  compiler, then the remaining named Item 12R source, generated-quality, E2E,
+  stdlib, project, Rust interop, sysroot, core-language, strict Clippy,
+  formatting, file-size/HIR and profile/inventory checks. Preserve complete
+  and partial historical results. Obtain a fresh exact-candidate scoped
+  review for changed implementation before merging PR #3946. The
+  phase-approved intermediate policy still skips create-PR and the full merge
+  gate; the final integration qualifier owns the latter.
+
 ## Retained Item 12R: project-wide borrowed-value calls (2026-09-23)
 
 **Needs implementation; retained Item 12 is not merged or closed.** This
