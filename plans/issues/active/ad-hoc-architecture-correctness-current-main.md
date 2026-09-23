@@ -78,6 +78,8 @@ Historical M1-M12 drafts #3553-#3564 remain open on the unmerged stack at this r
 | M12K (no PR) | Controlled-host reference attempt blocked; V01 is early prerequisite. |
 | M13 #3571 | Historical branch review is not current-main closure; Q01 owns final integration and whole-phase review. |
 
+V03 scans every Rust source beneath each Cargo workspace member and manifest-declared target path, including build scripts, bins, examples, benches and tests. Non-member demos Rust reference material is outside the Cargo target graph and this guard.
+
 The unmerged [V03 draft PR #3923](https://github.com/sifr-lang/sifr/pull/3923) at candidate 45eaf9a43b217c75fe2c34ee7a6068da0d85f7cb is historical evidence only. Its second scoped review found new mechanism-level F24 and F25 omissions and required this F24/F25 split. V03 selectively ports the filesystem guard; V03b owns parser work on a separate next item. The unrelated TypeScript-Go LSP guard failure remains with E01.
 
 Old draft status is historical candidate pending selective port or owner-approved closure, not approved for merge. Closing drafts is a separate repository action. Preserve failed/partial logs without relabeling.

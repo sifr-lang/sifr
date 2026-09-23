@@ -1607,8 +1607,22 @@
     {
       "path": "crates/sifr/src/trace_artifacts.rs",
       "symbol": "create_trace_file",
+      "operation": "dir-create",
+      "site": "directory.create(path)?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/trace_artifacts.rs",
+      "symbol": "create_trace_file",
       "operation": "open-write",
       "site": "options.open(path.join(\"trace-v1.json\"))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/trace_artifacts.rs",
+      "symbol": "finish_sink",
+      "operation": "set_len",
+      "site": "sink.file.set_len(bytes.len() as u64)?;",
       "classification": "output-effect"
     },
     {
@@ -5736,6 +5750,20 @@
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_probe_identity_tests.rs",
+      "symbol": "shared_cargo_target_rejects_a_different_probe_contract",
+      "operation": "open-write",
+      "site": ".open(path)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_identity_tests.rs",
+      "symbol": "shared_cargo_target_rejects_a_different_probe_contract",
+      "operation": "set_times",
+      "site": ".set_times(FileTimes::new().set_modified(old))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_identity_tests.rs",
       "symbol": "copy_vendor_tree",
       "operation": "create_dir_all",
       "site": "fs::create_dir_all(destination).expect(\"create test vendor directory\");",
@@ -6528,6 +6556,13 @@
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
       "symbol": "storage_child",
+      "operation": "set_len",
+      "site": "file.set_len(21 * 1024 * 1024 * 1024).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "storage_child",
       "operation": "write",
       "site": "std::fs::write(pending.workspace_root().join(\"payload\"), b\"current\").unwrap();",
       "classification": "output-effect"
@@ -6762,6 +6797,13 @@
       "operation": "is_dir",
       "site": "Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => {}",
       "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/cache_storage.rs",
+      "symbol": "directory",
+      "operation": "dir-create",
+      "site": "match builder.create(&current) {",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/cache_storage.rs",
@@ -7112,6 +7154,13 @@
       "operation": "canonicalize",
       "site": ".canonicalize()",
       "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/metadata_producer/tests.rs",
+      "symbol": "new",
+      "operation": "dir-create",
+      "site": "fs::DirBuilder::new().mode(0o700).create(&path).unwrap();",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/metadata_producer/tests.rs",
