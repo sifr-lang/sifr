@@ -2005,6 +2005,15 @@ ownership is scoped to live operations, and staged payload permissions are
 sealed before publication independently of the user's umask.
 These DX.3 primitives do not implement semantic project generations.
 
+Windows driver portability is tracked in the
+[active W1/W2/W3 issue](../plans/issues/active/ad-hoc-windows-driver-portability.md).
+The real `sifr_driver` crate includes its storage and process modules
+unconditionally, so native Windows acceptance requires one coupled W1+W2
+implementation candidate preserving both safety contracts. W3 separately
+qualifies the integrated native SQL build and unchanged compiler-component
+tests; the merged W1-only blocker record #3980 is failed dependency evidence,
+not a Windows pass.
+
 DX.5 adds the private indexed stdlib wire schema in `sifr_sysroot::metadata`, with
 explicit type/declaration/binder/payload records and a bounded, shared lazy decoder.
 The [payload and consumer inventory](compiler_dx_metadata_consumers.md) owns the
