@@ -243,9 +243,15 @@ fn column_semantics(
         let [target] = query.targets.as_slice() else {
             return Err(incomplete("single nextval default target"));
         };
-        let sequence = sequence_default_reference(&target.expression)
+        sequence_default_reference(&target.expression)
             .map_err(|_| incomplete("supported nextval sequence reference"))?
             .ok_or_else(|| incomplete("nextval sequence reference"))?;
+        // pg_get_expr may shorten a regclass name according to the session search_path.
+        // pg_depend keeps the referenced sequence's actual namespace and identity.
+        let sequence = optional_text(object, "default-sequence-identity")
+            .filter(|identity| !identity.is_empty())
+            .ok_or_else(|| incomplete("nextval default sequence dependency"))?
+            .to_string();
         semantic.insert(
             "default-sequence".to_string(),
             SemanticValue::Text(sequence.clone()),

@@ -102,7 +102,11 @@ explicit sequence and `nextval` default or an identity column. A direct
 `nextval('name'::regclass)` default retains its canonical sequence identity
 and dependency separately from the column's `has-default` flag. Identity
 columns retain their own identity-column object; internal identity sequences
-do not appear as user sequences.
+do not appear as user sequences. For live pulls, the referenced sequence
+identity comes from PostgreSQL dependency metadata rather than the spelling
+pg_get_expr renders using the session search_path. Direct nextval defaults
+with quoted sequence names or uppercase letters are outside the current
+normalization boundary and produce an incomplete catalog diagnostic.
 
 ALTER SEQUENCE accepts one OWNED BY option, including NONE. Mixed ALTER
 options are rejected in full and remain opaque to migration reflection.

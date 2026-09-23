@@ -1,5 +1,10 @@
-use super::*;
+use super::{PostgresParseError, RawAdapter};
 use crate::ast::{ColumnDefinition, CreateTableStatement, TableConstraint};
+use crate::raw_helpers::{
+    name_list, object, object_field, optional_array, optional_object_field, relation_name,
+    string_field, tagged, type_name,
+};
+use serde_json::{Map, Value};
 
 impl RawAdapter<'_> {
     pub(super) fn create_table(

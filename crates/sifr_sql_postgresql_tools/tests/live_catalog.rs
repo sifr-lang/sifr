@@ -150,6 +150,32 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
             "public.serial_users_id_seq".to_string()
         ))
     );
+    let path_sensitive_column = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new(
+            "public.path_sensitive_users.id",
+        ))
+        .expect("non-public nextval default column");
+    assert_eq!(
+        path_sensitive_column.semantic.get("default-sequence"),
+        Some(&sifr_sql_contract::SemanticValue::Text(
+            "sequence_scope.path_sensitive_sequence".to_string()
+        ))
+    );
+    assert!(
+        path_sensitive_column
+            .dependencies
+            .contains(&sifr_sql_contract::ObjectId::new(
+                "sequence_scope.path_sensitive_sequence"
+            ))
+    );
+    assert!(
+        !path_sensitive_column
+            .dependencies
+            .contains(&sifr_sql_contract::ObjectId::new(
+                "public.path_sensitive_sequence"
+            ))
+    );
     let catalog = PostgresCatalog::from_schema(&schema, PostgresTypeRegistry::new(major))
         .expect("pulled schema must load in the compiler catalog");
     let analyzer = PostgresAnalyzer::new(LibpgQueryParser, catalog);

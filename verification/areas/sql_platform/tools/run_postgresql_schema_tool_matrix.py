@@ -60,6 +60,13 @@ CREATE TABLE parity_nextval_users (
 );
 ALTER SEQUENCE parity_nextval_sequence OWNED BY parity_nextval_users.id;
 CREATE TABLE serial_users (id serial PRIMARY KEY);
+CREATE SCHEMA sequence_scope;
+CREATE SEQUENCE public.path_sensitive_sequence;
+CREATE SEQUENCE sequence_scope.path_sensitive_sequence;
+CREATE TABLE public.path_sensitive_users (
+  id bigint DEFAULT nextval('sequence_scope.path_sensitive_sequence'::regclass)
+);
+ALTER ROLE postgres SET search_path = sequence_scope, public;
 CREATE TABLE type_samples (
   id bigint PRIMARY KEY,
   domain_values positive_id[],

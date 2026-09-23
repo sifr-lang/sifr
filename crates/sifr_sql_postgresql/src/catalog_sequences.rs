@@ -176,12 +176,12 @@ fn validate_owner(
         ));
     }
     let identity = format!("{namespace}.{relation}.{column}");
-    if !objects
+    if objects
         .get(&ObjectId::new(&identity))
-        .is_some_and(|object| object.kind == SchemaObjectKind::Column)
-        || !objects
+        .is_none_or(|object| object.kind != SchemaObjectKind::Column)
+        || objects
             .get(&ObjectId::new(format!("{namespace}.{relation}")))
-            .is_some_and(|object| object.kind == SchemaObjectKind::Table)
+            .is_none_or(|object| object.kind != SchemaObjectKind::Table)
     {
         return Err(schema_error_message(format!(
             "sequence owner '{identity}' is not a table column"

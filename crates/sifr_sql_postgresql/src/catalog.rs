@@ -638,9 +638,9 @@ fn add_table(
         let mut dependencies = BTreeSet::from([table_identity.clone()]);
         if let Some(sequence) = &column.default_sequence {
             let sequence_id = ObjectId::new(sequence);
-            if !objects
+            if objects
                 .get(&sequence_id)
-                .is_some_and(|object| object.kind == SchemaObjectKind::Sequence)
+                .is_none_or(|object| object.kind != SchemaObjectKind::Sequence)
             {
                 return Err(schema_error_message(format!(
                     "nextval default references unknown sequence '{sequence}'"

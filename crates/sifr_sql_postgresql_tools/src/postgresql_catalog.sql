@@ -58,7 +58,21 @@ catalog_objects AS (
                'generated', a.attgenerated <> '' OR a.attidentity <> '',
                'identity', a.attidentity,
                'position', a.attnum,
-               'default-expression', COALESCE(pg_catalog.pg_get_expr(d.adbin, d.adrelid, true), '')
+               'default-expression', COALESCE(pg_catalog.pg_get_expr(d.adbin, d.adrelid, true), ''),
+               'default-sequence-identity', COALESCE((
+                   SELECT sequence_n.nspname || '.' || sequence_c.relname
+                   FROM pg_catalog.pg_depend default_dependency
+                   JOIN pg_catalog.pg_class sequence_c
+                     ON sequence_c.oid = default_dependency.refobjid
+                    AND sequence_c.relkind = 'S'
+                   JOIN pg_catalog.pg_namespace sequence_n
+                     ON sequence_n.oid = sequence_c.relnamespace
+                   WHERE default_dependency.classid = 'pg_catalog.pg_attrdef'::regclass
+                     AND default_dependency.objid = d.oid
+                     AND default_dependency.refclassid = 'pg_catalog.pg_class'::regclass
+                     AND default_dependency.deptype = 'n'
+                   LIMIT 1
+               ), '')
            ), jsonb_build_array(r.identity)
     FROM relations r
     JOIN pg_catalog.pg_attribute a ON a.attrelid = r.oid
