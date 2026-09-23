@@ -632,3 +632,39 @@ def invertTree(root: TreeNode | None) -> TreeNode | None:
         "{rust}"
     );
 }
+
+#[test]
+fn constructor_general_if_and_for_cross_self_materialization() {
+    let rust = generate_rust_from_source(
+        r#"
+class Counter:
+    total: int
+
+    def __init__(self, values: list[int]):
+        running = 0
+        if len(values) > 0:
+            first = values[0]
+            if first is not None:
+                running = first
+        for i in range(len(values)):
+            value = values[i]
+            if value is not None:
+                running += value
+        self.total = running
+        if self.total > 0:
+            self.total += 1
+        for i in range(2):
+            self.total += i
+"#,
+    );
+    assert!(!rust.contains("compile_error!"), "{rust}");
+    let materialization = rust.find("let mut __sifr_self").expect("self materializes");
+    let before = &rust[..materialization];
+    let after = &rust[materialization..];
+    assert!(before.contains("if "), "{rust}");
+    assert!(before.contains("for "), "{rust}");
+    assert!(after.contains("if "), "{rust}");
+    assert!(after.contains("for "), "{rust}");
+    assert!(after.contains("__sifr_self.total"), "{rust}");
+    syn::parse_file(&rust).expect("emitted Rust parses");
+}

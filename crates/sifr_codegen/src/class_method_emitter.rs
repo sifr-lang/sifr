@@ -593,6 +593,8 @@ impl RustEmitter {
         module_public: bool,
         uses_python_error_bridge: bool,
     ) -> RustItem {
+        let saved_body_analysis = std::mem::take(&mut self.body_analysis);
+        let saved_last_use_move_exprs = std::mem::take(&mut self.last_use_move_exprs);
         let saved_return_type = self.current_return_type.clone();
         let saved_mutated_vars = self.mutated_vars.clone();
         let saved_borrowed_params = self.borrowed_params.clone();
@@ -672,6 +674,10 @@ impl RustEmitter {
             }
         }
         self.register_local_body_binding_types(&method.body);
+        if method.method_kind == MethodKind::Regular && method.name == "new" {
+            (self.body_analysis, self.last_use_move_exprs) =
+                crate::body_analysis::BodyAnalysis::build(method, &self.func_signatures);
+        }
 
         let visibility = if module_public {
             Visibility::Pub
@@ -755,6 +761,8 @@ impl RustEmitter {
             }
         }
 
+        self.body_analysis = saved_body_analysis;
+        self.last_use_move_exprs = saved_last_use_move_exprs;
         self.current_return_type = saved_return_type;
         self.mutated_vars = saved_mutated_vars;
         self.borrowed_params = saved_borrowed_params;

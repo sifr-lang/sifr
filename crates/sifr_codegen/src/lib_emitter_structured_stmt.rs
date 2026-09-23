@@ -457,6 +457,14 @@ impl RustEmitter {
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
+        if matches!(stmt, HirStmt::If { .. } | HirStmt::For { .. }) {
+            if let Some(lowered) = self.try_lower_stmt_block_for_ir(std::slice::from_ref(stmt))? {
+                self.emit_lowered_stmts(&lowered);
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                return Ok(true);
+            }
+        }
         if self.try_lower_structured_with_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
