@@ -82,7 +82,7 @@ pub(crate) fn write_changed(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
 
 /// Remove stale generated files after rewriting the current inventory. Retain
 /// byte-identical files and their mtimes so Cargo can prove no-op freshness.
-pub(super) fn remove_stale(
+pub(crate) fn remove_stale(
     root: &Path,
     current: &std::collections::BTreeSet<PathBuf>,
 ) -> std::io::Result<()> {
