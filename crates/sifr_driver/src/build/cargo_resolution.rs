@@ -16,22 +16,22 @@ type RegistryEntry = (String, String, String, String);
 type RegistryCompatibilityFamily = (String, String, String);
 
 #[derive(Clone, Debug)]
-pub(super) struct CargoResolutionPolicy {
-    pub(super) application_profile: crate::ApplicationProfile,
-    pub(super) native_toolchain: Result<sifr_sysroot::NativeToolchain, String>,
-    pub(super) lock_mode: CargoLockMode,
-    pub(super) cargo_vendor_mode: CargoVendorMode,
-    pub(super) authoritative_locks: Vec<PathBuf>,
-    pub(super) trusted_vendor_dirs: Vec<PathBuf>,
+pub(crate) struct CargoResolutionPolicy {
+    pub(crate) application_profile: crate::ApplicationProfile,
+    pub(crate) native_toolchain: Result<sifr_sysroot::NativeToolchain, String>,
+    pub(crate) lock_mode: CargoLockMode,
+    pub(crate) cargo_vendor_mode: CargoVendorMode,
+    pub(crate) authoritative_locks: Vec<PathBuf>,
+    pub(crate) trusted_vendor_dirs: Vec<PathBuf>,
 }
 
 impl CargoResolutionPolicy {
-    pub(super) fn resolve_native_toolchain() -> Result<sifr_sysroot::NativeToolchain, String> {
+    pub(crate) fn resolve_native_toolchain() -> Result<sifr_sysroot::NativeToolchain, String> {
         let cwd =
             std::env::current_dir().map_err(|_| "cannot resolve native invocation directory")?;
         sifr_sysroot::NativeToolchain::resolve_at(&cwd)
     }
-    pub(super) fn cargo_command(&self) -> Result<Command, Vec<RenderedDiagnostic>> {
+    pub(crate) fn cargo_command(&self) -> Result<Command, Vec<RenderedDiagnostic>> {
         self.native_toolchain
             .as_ref()
             .map_err(Clone::clone)
@@ -39,7 +39,7 @@ impl CargoResolutionPolicy {
             .map_err(|error| vec![cargo_resolution_error(error.clone())])
     }
 
-    pub(super) fn normal() -> Self {
+    pub(crate) fn normal() -> Self {
         Self {
             application_profile: crate::ApplicationProfile::Release,
             native_toolchain: Self::resolve_native_toolchain(),
@@ -54,7 +54,7 @@ impl CargoResolutionPolicy {
         matches!(self.cargo_vendor_mode, CargoVendorMode::SysrootOnly)
     }
 
-    pub(super) fn normal_seed_cache_fragment(&self) -> Option<String> {
+    pub(crate) fn normal_seed_cache_fragment(&self) -> Option<String> {
         if self.lock_mode != CargoLockMode::Normal || self.authoritative_locks.is_empty() {
             return None;
         }
@@ -81,13 +81,13 @@ impl CargoResolutionPolicy {
     }
 }
 
-pub(super) struct PreparedCargoResolution {
+pub(crate) struct PreparedCargoResolution {
     lock_path: PathBuf,
     initial_digest: Option<String>,
     lock_mode: CargoLockMode,
 }
 
-pub(super) fn prepare_cargo_resolution(
+pub(crate) fn prepare_cargo_resolution(
     project_dir: &Path,
     policy: &CargoResolutionPolicy,
     cargo_prefix_args: &[String],
@@ -236,7 +236,7 @@ fn cache_prepared_lock(
 }
 
 impl PreparedCargoResolution {
-    pub(super) fn assert_unchanged(&self) -> Result<(), Vec<RenderedDiagnostic>> {
+    pub(crate) fn assert_unchanged(&self) -> Result<(), Vec<RenderedDiagnostic>> {
         if self.lock_mode == CargoLockMode::Normal {
             return Ok(());
         }
@@ -256,7 +256,7 @@ impl PreparedCargoResolution {
     }
 }
 
-pub(super) fn cargo_lock_mode_diagnostic(
+pub(crate) fn cargo_lock_mode_diagnostic(
     context: &str,
     stderr: &str,
 ) -> Option<RenderedDiagnostic> {

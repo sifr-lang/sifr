@@ -26,12 +26,10 @@ pub(crate) fn finalize_test_runner_project(
         python_runtime: None,
     };
     let (generated, context) = attach_stdlib_rust_interop(generated, None, stdlib);
-    let mut policy = super::cargo_resolution::CargoResolutionPolicy::normal();
-    policy.application_profile = project.application_profile;
     let generated = apply_package_rust_interop_metadata_with_resolution(
         generated,
         context,
-        &policy,
+        &project.cargo_resolution,
         super::rust_interop_probe_policy::DirectProbePolicy::DeferTrustedSysroot,
     )?;
     let generated = format_generated_binary_project(generated)?;
@@ -51,6 +49,7 @@ pub(crate) fn finalize_test_runner_project(
     }
     Ok(GeneratedTestRunnerProject {
         application_profile: project.application_profile,
+        cargo_resolution: project.cargo_resolution,
         cache_scope: project.cache_scope,
         support_module_names: generated.support_modules.keys().cloned().collect(),
         support_rust_files: generated.support_modules.into_iter().collect(),

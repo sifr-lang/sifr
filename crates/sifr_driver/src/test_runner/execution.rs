@@ -3,7 +3,9 @@ use super::artifacts::{
 };
 use super::orchestrator::GeneratedTestRunnerProject;
 use crate::build::{
-    ArtifactCacheReport, PreparedArtifactCache, prepare_cached_artifact, sysroot_cargo_config_args,
+    ArtifactCacheReport, PreparedArtifactCache, cargo_lock_mode_diagnostic,
+    configure_hermetic_build_environment, prepare_cached_artifact, prepare_cargo_resolution,
+    record_cargo_invocation, sysroot_cargo_config_args, validate_test_native_link_evidence,
 };
 use crate::diagnostics::{RenderedDiagnostic, write_stderr, write_stderr_line};
 use crate::project::namespace_module_files;
@@ -23,19 +25,24 @@ pub(crate) struct TestRunnerExecutionOutcome {
 pub(crate) fn execute_test_runner_project(
     generated_project: &GeneratedTestRunnerProject,
 ) -> Result<TestRunnerExecutionOutcome, Vec<RenderedDiagnostic>> {
-    let native_toolchain = std::env::current_dir()
-        .map_err(|_| "cannot resolve invocation directory".to_owned())
-        .and_then(|cwd| sifr_sysroot::NativeToolchain::resolve_at(&cwd))
+    let cargo_resolution = &generated_project.cargo_resolution;
+    let native_toolchain = cargo_resolution
+        .native_toolchain
+        .as_ref()
         .map_err(|error| {
             vec![crate::diagnostics::diagnostic_with_code(
-                error,
+                error.clone(),
                 DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
             )]
         })?;
+    native_toolchain
+        .validate_configuration()
+        .map_err(test_io_error)?;
     let mut cargo_plan = try_generate_test_runner_cargo_plan(
         &generated_project.all_stdlib_modules,
         &generated_project.all_required_features,
         &generated_project.interop,
+        cargo_resolution.cargo_vendor_mode,
     )
     .map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
@@ -57,12 +64,18 @@ pub(crate) fn execute_test_runner_project(
     cache_key.push_str(generated_project.application_profile.policy_identity());
     cache_key.push_str("\n[native-toolchain]\n");
     cache_key.push_str(native_toolchain.identity());
+    cache_key.push_str("\n[resolution-policy]\n");
+    cache_key.push_str(cargo_resolution.lock_mode.as_str());
+    if let Some(seed) = cargo_resolution.normal_seed_cache_fragment() {
+        cache_key.push_str(&seed);
+    }
     let family = crate::build::native_storage::NativeFamily::acquire(
         native_toolchain.identity(),
         &format!(
-            "{:?}:{}",
+            "{:?}:{}:{:?}",
             cargo_plan.dependency_plan.cargo_vendor_mode,
-            cargo_plan.dependency_plan.sysroot_root.display()
+            cargo_plan.dependency_plan.sysroot_root.display(),
+            cargo_resolution.normal_seed_cache_fragment()
         ),
         "",
         &format!("{:?}", generated_project.interop.rust.trust_requirements),
@@ -187,14 +200,17 @@ pub(crate) fn execute_test_runner_project(
             &project_dir.join("Cargo.toml"),
         )
         .map_err(test_io_error)?;
+    let cargo_prefix_args = sysroot_cargo_config_args(&cargo_plan.dependency_plan);
+    let prepared_resolution =
+        prepare_cargo_resolution(&project_dir, cargo_resolution, &cargo_prefix_args)?;
     write_stderr_line(&format!(
         "application profile: {} ({})",
         generated_project.application_profile.name(),
         generated_project.application_profile.policy_identity()
     ));
-    let mut command = native_toolchain.cargo_command().map_err(test_io_error)?;
+    let mut command = cargo_resolution.cargo_command()?;
     command
-        .args(sysroot_cargo_config_args(&cargo_plan.dependency_plan))
+        .args(&cargo_prefix_args)
         .args([
             "test",
             "--no-run",
@@ -207,14 +223,35 @@ pub(crate) fn execute_test_runner_project(
     generated_project
         .application_profile
         .configure(&mut command);
+    if let Some(argument) = cargo_resolution.lock_mode.cargo_arg() {
+        command.arg(argument);
+    }
+    configure_hermetic_build_environment(&mut command);
+    record_cargo_invocation("final-test", cargo_resolution.lock_mode, &command);
     let output = crate::process_execution::output(&mut command).map_err(test_io_error)?;
     write_stderr(&String::from_utf8_lossy(&output.stderr));
+    validate_test_native_link_evidence(
+        &output.stdout,
+        &generated_project.interop,
+        &cargo_plan.dependency_plan,
+    )?;
     if !output.status.success() {
+        let mut stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+        for line in String::from_utf8_lossy(&output.stdout).lines() {
+            if let Ok(event) = serde_json::from_str::<serde_json::Value>(line)
+                && let Some(rendered) = event["message"]["rendered"].as_str()
+            {
+                stderr.push_str(rendered);
+            }
+        }
+        if let Some(diagnostic) = cargo_lock_mode_diagnostic("cargo test", &stderr) {
+            return Err(vec![diagnostic]);
+        }
         return Err(test_io_error(format!(
-            "cargo test preparation failed: {}",
-            String::from_utf8_lossy(&output.stdout)
+            "cargo test preparation failed: {stderr}"
         )));
     }
+    prepared_resolution.assert_unchanged()?;
     for event in String::from_utf8_lossy(&output.stdout)
         .lines()
         .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
@@ -379,9 +416,79 @@ mod tests {
     use std::path::PathBuf;
 
     #[test]
+    fn test_runner_cargo_modes_use_build_resolution_and_trace_policy() {
+        use sifr_package::CargoLockMode;
+        use sifr_stdlib_manifest::CargoVendorMode;
+
+        let scope = std::env::temp_dir().join(format!(
+            "sifr-test-cargo-policy-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock")
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&scope).expect("owned scope");
+        let mut project = GeneratedTestRunnerProject {
+            application_profile: crate::ApplicationProfile::Test,
+            cargo_resolution: crate::build::CargoResolutionPolicy::normal(),
+            interop: sifr_codegen::InteropBuildPlan::default(),
+            cache_scope: scope.clone(),
+            support_module_names: Vec::new(),
+            support_rust_files: HashMap::new(),
+            bridge_rust_files: Default::default(),
+            all_rust_code: "#[test] fn policy_case() { assert_eq!(2 + 2, 4); }".into(),
+            all_stdlib_modules: HashSet::new(),
+            all_required_features: HashSet::new(),
+        };
+        let (normal, invocations) = crate::build::capture_cargo_invocations(|| {
+            super::execute_test_runner_project(&project)
+        });
+        let normal = normal.expect("normal test preparation");
+        assert!(normal.success);
+        assert!(
+            invocations
+                .iter()
+                .any(|item| item.phase == "final-test" && item.lock_mode == CargoLockMode::Normal)
+        );
+        let authority = scope.join("authority.lock");
+        std::fs::copy(normal.native_project_root.join("Cargo.lock"), &authority)
+            .expect("normal Cargo lock authority");
+        for mode in [
+            CargoLockMode::Locked,
+            CargoLockMode::Offline,
+            CargoLockMode::Frozen,
+        ] {
+            project.cargo_resolution.lock_mode = mode;
+            project.cargo_resolution.cargo_vendor_mode = CargoVendorMode::SysrootOnly;
+            project.cargo_resolution.authoritative_locks = vec![authority.clone()];
+            let (result, invocations) = crate::build::capture_cargo_invocations(|| {
+                super::execute_test_runner_project(&project)
+            });
+            let outcome = result.expect("constrained test preparation");
+            assert!(outcome.success);
+            assert!(invocations.iter().any(|item| {
+                item.phase == "final-test"
+                    && item.lock_mode == mode
+                    && item
+                        .args
+                        .iter()
+                        .any(|arg| arg == mode.cargo_arg().expect("mode flag"))
+            }));
+            assert_eq!(
+                std::fs::read(&authority).expect("authority"),
+                std::fs::read(outcome.native_project_root.join("Cargo.lock"))
+                    .expect("prepared lock")
+            );
+        }
+        std::fs::remove_dir_all(scope).expect("owned scope cleanup");
+    }
+
+    #[test]
     fn test_runner_cache_key_uses_sysroot_dependency_plan_inputs() {
         let mut generated_project = GeneratedTestRunnerProject {
             application_profile: crate::ApplicationProfile::Test,
+            cargo_resolution: crate::build::CargoResolutionPolicy::normal(),
             interop: sifr_codegen::InteropBuildPlan::default(),
             cache_scope: PathBuf::from("/tmp/sifr-tests"),
             support_module_names: Vec::new(),

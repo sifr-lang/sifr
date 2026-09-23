@@ -6,15 +6,19 @@ use super::cargo_manifest::{
 use super::cargo_resolution::{
     CargoResolutionPolicy, cargo_lock_mode_diagnostic, prepare_cargo_resolution,
 };
+#[cfg(test)]
+use super::native_link_policy::sysroot_trusted_native_links;
+use super::native_link_policy::{
+    should_validate_native_link_evidence, trusted_native_links, validate_native_link_evidence,
+};
 use super::project_codegen::GeneratedBinaryProject;
 use super::report::BuildSysrootReport;
 use super::rust_interop_sqlx_offline::configure_hermetic_build_environment;
 use super::{CachedArtifactEntry, PreparedArtifactCache, prepare_cached_artifact};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
-use sifr_codegen::RustInteropTrustRequirementKind;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_stdlib_manifest::{CargoVendorMode, SysrootCrate, SysrootDependencyPlan};
+use sifr_stdlib_manifest::{CargoVendorMode, SysrootDependencyPlan};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
@@ -686,93 +690,6 @@ fn run_cargo_build(
     let libraries = super::native_storage::runtime_libraries(&output.stdout, target)
         .map_err(|error| vec![cargo_build_error(error.to_string())])?;
     Ok((executable, libraries, cargo_artifact_profile))
-}
-
-fn trusted_native_links(
-    generated_project: &GeneratedBinaryProject,
-    dependency_plan: &SysrootDependencyPlan,
-) -> BTreeSet<String> {
-    let mut trusted = generated_project
-        .interop
-        .rust
-        .trust_requirements
-        .iter()
-        .filter(|requirement| {
-            requirement.trusted && requirement.kind == RustInteropTrustRequirementKind::NativeLinks
-        })
-        .map(|requirement| requirement.required_entry.clone())
-        .collect::<BTreeSet<_>>();
-    if let Some(python_runtime) = &generated_project.python_runtime {
-        trusted.extend(python_runtime.trusted_native_link_names());
-    }
-    trusted.extend(sysroot_trusted_native_links(dependency_plan));
-    trusted
-}
-
-fn sysroot_trusted_native_links(dependency_plan: &SysrootDependencyPlan) -> BTreeSet<String> {
-    let tls_selected = dependency_plan.crates.iter().any(|dependency| {
-        matches!(
-            dependency.krate,
-            SysrootCrate::SifrRuntime | SysrootCrate::SifrStdlib
-        ) && (dependency.features.contains("tls") || dependency.features.contains("http"))
-    });
-    if tls_selected {
-        return BTreeSet::from(["aws_lc_0_44_0_crypto".to_string()]);
-    }
-    BTreeSet::new()
-}
-
-fn should_validate_native_link_evidence(generated_project: &GeneratedBinaryProject) -> bool {
-    let rust = &generated_project.interop.rust;
-    !rust.declarations.is_empty()
-        || !rust.resolved_targets.is_empty()
-        || !rust.trust_requirements.is_empty()
-        || !rust.probe_plan.probes.is_empty()
-        || !rust.bridge_sources.is_empty()
-        || rust.cargo_inputs.is_some()
-}
-
-fn validate_native_link_evidence(
-    stdout: &[u8],
-    trusted_native_links: &BTreeSet<String>,
-) -> Result<(), Vec<RenderedDiagnostic>> {
-    for line in String::from_utf8_lossy(stdout).lines() {
-        let Ok(value) = serde_json::from_str::<serde_json::Value>(line) else {
-            continue;
-        };
-        if value.get("reason").and_then(serde_json::Value::as_str) != Some("build-script-executed")
-        {
-            continue;
-        }
-        let Some(linked_libs) = value
-            .get("linked_libs")
-            .and_then(serde_json::Value::as_array)
-        else {
-            continue;
-        };
-        for linked_lib in linked_libs {
-            let Some(linked_lib) = linked_lib.as_str() else {
-                continue;
-            };
-            let link_name = normalized_link_name(linked_lib);
-            if !trusted_native_links.contains(&link_name) {
-                return Err(vec![crate::diagnostics::diagnostic_with_code(
-                    format!(
-                        "untrusted native link evidence `{link_name}` emitted by Rust build script"
-                    ),
-                    DiagnosticCode::RUST_TRUST_MISSING,
-                )]);
-            }
-        }
-    }
-    Ok(())
-}
-
-fn normalized_link_name(linked_lib: &str) -> String {
-    linked_lib
-        .rsplit_once('=')
-        .map_or(linked_lib, |(_, name)| name)
-        .to_string()
 }
 
 fn namespace_module_file_path(module_name: &str) -> PathBuf {

@@ -32,7 +32,7 @@ const FILE_QUERY_MACROS: &[&str] = &[
 type WorkspaceRootCacheKey = (PathBuf, String);
 type WorkspaceRootCache = Mutex<BTreeMap<WorkspaceRootCacheKey, Option<PathBuf>>>;
 
-pub(super) fn configure_hermetic_build_environment(command: &mut std::process::Command) {
+pub(crate) fn configure_hermetic_build_environment(command: &mut std::process::Command) {
     command.env("SQLX_OFFLINE", "true");
     command.env_remove("DATABASE_URL");
 }

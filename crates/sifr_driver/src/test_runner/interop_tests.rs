@@ -65,6 +65,7 @@ fn stdlib_interop_test_project_materializes_selected_contracts() {
         &project.all_stdlib_modules,
         &project.all_required_features,
         &project.interop,
+        project.cargo_resolution.cargo_vendor_mode,
     )
     .expect("materialize resolved Cargo demand");
     assert!(plan.cargo_toml.contains("sifr_stdlib"));
@@ -110,6 +111,7 @@ fn stdlib_interop_test_project_empty_demand_stays_empty() {
         &project.all_stdlib_modules,
         &project.all_required_features,
         &project.interop,
+        project.cargo_resolution.cargo_vendor_mode,
     )
     .expect("empty Cargo plan");
     assert!(!plan.cargo_toml.contains("sifr_stdlib"));
