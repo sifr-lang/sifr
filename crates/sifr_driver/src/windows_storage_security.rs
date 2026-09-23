@@ -15,9 +15,10 @@ use windows_sys::Win32::Security::Authorization::{
 };
 use windows_sys::Win32::Security::{
     ACCESS_ALLOWED_ACE, ACE_HEADER, ACL, DACL_SECURITY_INFORMATION, EqualSid, GetAce,
-    GetSecurityDescriptorDacl, GetTokenInformation, OWNER_SECURITY_INFORMATION,
+    GetSecurityDescriptorDacl, GetTokenInformation, IsWellKnownSid, OWNER_SECURITY_INFORMATION,
     PROTECTED_DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR, PSID, SECURITY_ATTRIBUTES,
-    TOKEN_QUERY, TOKEN_USER, TokenUser,
+    TOKEN_OWNER, TOKEN_QUERY, TOKEN_USER, TokenOwner, TokenUser, WinBuiltinAdministratorsSid,
+    WinLocalSystemSid,
 };
 use windows_sys::Win32::Storage::FileSystem::{
     CREATE_NEW, CreateDirectoryW, CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_REPARSE_POINT,
@@ -40,7 +41,14 @@ struct Owner {
 impl Owner {
     fn sid(&self) -> PSID {
         // SAFETY: GetTokenInformation initialized this buffer as TOKEN_USER.
-        unsafe { (*(self.bytes.as_ptr().cast::<TOKEN_USER>())).User.Sid }
+        unsafe {
+            self.bytes
+                .as_ptr()
+                .cast::<TOKEN_USER>()
+                .read_unaligned()
+                .User
+                .Sid
+        }
     }
 }
 impl Drop for Owner {
@@ -105,7 +113,7 @@ fn private_descriptor() -> io::Result<Descriptor> {
     };
     // Protected DACL: only the actual token owner has full access. Children
     // inherit the owner-only grant; no ambient Users/Everyone ACL is retained.
-    let sddl = format!("D:P(A;OICI;FA;;;{sid})");
+    let sddl = format!("O:{sid}D:P(A;OICI;FA;;;{sid})");
     let wide = wide(OsStr::new(&sddl));
     // SAFETY: the SDDL string is null terminated; Windows allocates the result.
     let mut descriptor = std::ptr::null_mut();
@@ -292,7 +300,46 @@ pub(crate) fn seal(path: &Path) -> io::Result<()> {
     }
     let actual_descriptor = Descriptor(actual_descriptor);
     // SAFETY: both SID pointers remain valid for this comparison.
-    if actual_owner.is_null() || unsafe { EqualSid(owner.sid(), actual_owner) } == 0 {
+    let mut owner_len = 0;
+    // SAFETY: the token is live. This first call obtains the required size.
+    unsafe {
+        GetTokenInformation(
+            owner.token,
+            TokenOwner,
+            std::ptr::null_mut(),
+            0,
+            &raw mut owner_len,
+        )
+    };
+    if owner_len < std::mem::size_of::<TOKEN_OWNER>() as u32 {
+        return Err(io::Error::last_os_error());
+    }
+    let mut owner_bytes = vec![0; owner_len as usize];
+    // SAFETY: the buffer is large enough to hold the token default owner.
+    if unsafe {
+        GetTokenInformation(
+            owner.token,
+            TokenOwner,
+            owner_bytes.as_mut_ptr().cast(),
+            owner_len,
+            &raw mut owner_len,
+        )
+    } == 0
+    {
+        return Err(io::Error::last_os_error());
+    }
+    // SAFETY: successful token query initialized TOKEN_OWNER in this buffer.
+    let default_sid = unsafe {
+        owner_bytes
+            .as_ptr()
+            .cast::<TOKEN_OWNER>()
+            .read_unaligned()
+            .Owner
+    };
+    if actual_owner.is_null()
+        || unsafe { EqualSid(owner.sid(), actual_owner) } == 0
+            && unsafe { EqualSid(default_sid, actual_owner) } == 0
+    {
         return Err(denied("foreign-owned staged payload"));
     }
     let descriptor = private_descriptor()?;
@@ -320,8 +367,10 @@ pub(crate) fn seal(path: &Path) -> io::Result<()> {
         SetNamedSecurityInfoW(
             wide.as_ptr().cast_mut(),
             SE_FILE_OBJECT,
-            DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
-            std::ptr::null_mut(),
+            OWNER_SECURITY_INFORMATION
+                | DACL_SECURITY_INFORMATION
+                | PROTECTED_DACL_SECURITY_INFORMATION,
+            owner.sid(),
             std::ptr::null_mut(),
             dacl,
             std::ptr::null_mut(),
@@ -361,19 +410,24 @@ pub(crate) fn durable_rename(source: &Path, destination: &Path) -> io::Result<()
     if fs::symlink_metadata(destination).is_ok() {
         check(destination)?;
     }
+    let directory = fs::symlink_metadata(source)?.is_dir();
     let source = wide(source.as_os_str());
-    let destination = wide(destination.as_os_str());
-    // SAFETY: the source and destination names are null terminated and live
-    // through this synchronous durable same-volume publication.
-    if unsafe {
-        MoveFileExW(
-            source.as_ptr(),
-            destination.as_ptr(),
-            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH,
-        )
-    } == 0
-    {
-        return Err(io::Error::last_os_error());
+    let destination_name = wide(destination.as_os_str());
+    // Directory winners must never be replaced. A competing complete winner
+    // is validated by the caller after this reports AlreadyExists.
+    let flags = if directory {
+        MOVEFILE_WRITE_THROUGH
+    } else {
+        MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH
+    };
+    // SAFETY: both names are terminated and live through the synchronous move.
+    if unsafe { MoveFileExW(source.as_ptr(), destination_name.as_ptr(), flags) } == 0 {
+        let error = io::Error::last_os_error();
+        if directory && fs::symlink_metadata(destination).is_ok() {
+            check(destination)?;
+            return Err(io::Error::new(io::ErrorKind::AlreadyExists, error));
+        }
+        return Err(error);
     }
     Ok(())
 }
@@ -446,4 +500,116 @@ pub(crate) fn file_identity(file: &File) -> io::Result<(u64, u64)> {
     let index =
         (u64::from(information.nFileIndexHigh) << 32) | u64::from(information.nFileIndexLow);
     Ok((u64::from(information.dwVolumeSerialNumber), index))
+}
+
+pub(crate) fn path_identity(path: &Path) -> io::Result<(u64, u64)> {
+    use windows_sys::Win32::Storage::FileSystem::FILE_FLAG_BACKUP_SEMANTICS;
+    no_reparse(path)?;
+    let wide = wide(path.as_os_str());
+    // SAFETY: the path is terminated and the returned handle is transferred to File.
+    let handle = unsafe {
+        CreateFileW(
+            wide.as_ptr(),
+            GENERIC_READ,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            std::ptr::null(),
+            windows_sys::Win32::Storage::FileSystem::OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+            std::ptr::null_mut(),
+        )
+    };
+    if handle == INVALID_HANDLE_VALUE {
+        return Err(io::Error::last_os_error());
+    }
+    // SAFETY: CreateFileW returned a unique owned handle.
+    let file = unsafe { File::from_raw_handle(handle) };
+    use std::os::windows::fs::MetadataExt;
+    if file.metadata()?.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+        return Err(denied("reparse-point workspace identity"));
+    }
+    file_identity(&file)
+}
+
+/// Caller-owned workspaces keep ordinary Windows ACLs, including privileged
+/// SYSTEM/Administrators grants. Reject writable grants to other principals.
+pub(crate) fn safe_workspace(path: &Path) -> io::Result<()> {
+    use windows_sys::Win32::Foundation::{GENERIC_ALL, GENERIC_WRITE};
+    use windows_sys::Win32::Storage::FileSystem::{
+        DELETE, FILE_ADD_FILE, FILE_APPEND_DATA, FILE_DELETE_CHILD, FILE_WRITE_ATTRIBUTES,
+        FILE_WRITE_DATA, WRITE_DAC, WRITE_OWNER,
+    };
+    no_reparse(path)?;
+    if !fs::symlink_metadata(path)?.is_dir() {
+        return Err(denied("workspace is not a directory"));
+    }
+    let owner = owner()?;
+    let wide = wide(path.as_os_str());
+    let mut actual_owner: PSID = std::ptr::null_mut();
+    let mut dacl: *mut ACL = std::ptr::null_mut();
+    let mut descriptor: PSECURITY_DESCRIPTOR = std::ptr::null_mut();
+    // SAFETY: Windows fills the requested pointers within the returned descriptor.
+    let result = unsafe {
+        GetNamedSecurityInfoW(
+            wide.as_ptr(),
+            SE_FILE_OBJECT,
+            OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+            &raw mut actual_owner,
+            std::ptr::null_mut(),
+            &raw mut dacl,
+            std::ptr::null_mut(),
+            &raw mut descriptor,
+        )
+    };
+    if result != 0 {
+        return Err(io::Error::from_raw_os_error(result as i32));
+    }
+    let _descriptor = Descriptor(descriptor);
+    // SAFETY: all SID and ACE pointers belong to the live security descriptor.
+    unsafe {
+        if actual_owner.is_null()
+            || EqualSid(owner.sid(), actual_owner) == 0
+                && IsWellKnownSid(actual_owner, WinBuiltinAdministratorsSid) == 0
+        {
+            return Err(denied("foreign workspace owner"));
+        }
+        if dacl.is_null() {
+            return Err(denied("unrestricted workspace DACL"));
+        }
+        let write_mask = GENERIC_ALL
+            | GENERIC_WRITE
+            | DELETE
+            | FILE_ADD_FILE
+            | FILE_APPEND_DATA
+            | FILE_DELETE_CHILD
+            | FILE_WRITE_ATTRIBUTES
+            | FILE_WRITE_DATA
+            | WRITE_DAC
+            | WRITE_OWNER;
+        for index in 0..(*dacl).AceCount {
+            let mut ace = std::ptr::null_mut();
+            if GetAce(dacl, u32::from(index), &raw mut ace) == 0 {
+                return Err(io::Error::last_os_error());
+            }
+            let header = &*ace.cast::<ACE_HEADER>();
+            if header.AceFlags & 0x08 != 0 {
+                continue; // INHERIT_ONLY_ACE does not grant access to this workspace.
+            }
+            if header.AceType == 0 {
+                let allow = &*ace.cast::<ACCESS_ALLOWED_ACE>();
+                let sid = (&raw const allow.SidStart).cast_mut().cast();
+                if allow.Mask & write_mask != 0
+                    && EqualSid(owner.sid(), sid) == 0
+                    && IsWellKnownSid(sid, WinBuiltinAdministratorsSid) == 0
+                    && IsWellKnownSid(sid, WinLocalSystemSid) == 0
+                {
+                    return Err(denied(
+                        "workspace ACL grants another principal write access",
+                    ));
+                }
+            } else if header.AceType != 1 {
+                return Err(denied("unrecognized workspace ACL grant"));
+            }
+        }
+    }
+    Ok(())
 }

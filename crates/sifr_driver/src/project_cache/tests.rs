@@ -637,8 +637,79 @@ fn windows_portability_concurrent_writer_gc_abandoned_stage_and_winner() {
     writer.wait().unwrap();
     store.prune(true, false).unwrap();
     assert!(store.latest().is_none());
+    assert!(
+        fs::read_dir(store.root.join("generations"))
+            .unwrap()
+            .all(|entry| !entry
+                .unwrap()
+                .file_name()
+                .to_string_lossy()
+                .contains(".stage-")),
+        "abandoned generation stage survived GC"
+    );
     assert_eq!(run(&cache, &file).1.status, "published");
     let winner = store.latest().unwrap();
     assert!(winner.records().all(|record| record.is_ok()));
     assert_eq!(store.prune(true, false).unwrap().deleted_generations, 0);
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_portability_workspace_identity_alias_and_orphan_prune() {
+    let (root, file, cache) = fixture();
+    assert_eq!(run(&cache, &file).1.status, "published");
+    let store = store(&cache, &file);
+    let context = store.root.clone();
+    let workspace = file.parent().unwrap().to_path_buf();
+    let outside = root.path().join("outside");
+    fs::create_dir(&outside).unwrap();
+    fs::write(outside.join("keep"), "intact").unwrap();
+
+    let alias = context.join("latest.stage-10-20");
+    let status = Command::new("cmd")
+        .args(["/C", "mklink", "/J"])
+        .arg(&alias)
+        .arg(&outside)
+        .status()
+        .unwrap();
+    assert!(status.success());
+    store.prune(true, false).unwrap();
+    assert_eq!(fs::read_to_string(outside.join("keep")).unwrap(), "intact");
+    fs::remove_dir(&alias).unwrap();
+    drop(store);
+
+    let workspace_alias = root.path().join("workspace-alias");
+    let status = Command::new("cmd")
+        .args(["/C", "mklink", "/J"])
+        .arg(&workspace_alias)
+        .arg(&workspace)
+        .status()
+        .unwrap();
+    assert!(status.success());
+    assert_eq!(
+        housekeeping::prune_workspace(&cache, &workspace_alias, true, false)
+            .unwrap()
+            .deleted_entries,
+        0
+    );
+    fs::remove_dir(&workspace_alias).unwrap();
+
+    let moved = root.path().join("moved-workspace");
+    fs::rename(&workspace, &moved).unwrap();
+    fs::create_dir(&workspace).unwrap();
+    assert_eq!(
+        housekeeping::prune_workspace(&cache, &workspace, true, false)
+            .unwrap()
+            .deleted_entries,
+        0
+    );
+    assert!(context.exists());
+    fs::remove_dir(&workspace).unwrap();
+    assert_eq!(
+        housekeeping::prune_workspace(&cache, &workspace, true, false)
+            .unwrap()
+            .deleted_entries,
+        1
+    );
+    assert!(!context.exists());
 }

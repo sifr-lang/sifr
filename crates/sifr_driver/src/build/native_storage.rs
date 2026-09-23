@@ -1,6 +1,6 @@
 //! Cargo owns freshness. The family lease covers generated-source mutation,
 //! Cargo execution and capture, including same-named root output paths.
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
@@ -84,8 +84,58 @@ pub(crate) fn publication_lock(path: &Path) -> std::io::Result<File> {
     Ok(lease)
 }
 
+/// Generated files in the owned cache need its strict ACL. Caller-owned
+/// output trees retain their ambient directory policy while rejecting aliases.
+fn checked_generated_path(path: &Path) -> std::io::Result<()> {
+    if path.starts_with(crate::cache_storage::root()) {
+        return crate::cache_storage::check_owned(path);
+    }
+    #[cfg(windows)]
+    {
+        let absolute = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            std::env::current_dir()?.join(path)
+        };
+        crate::windows_storage_security::no_reparse(&absolute)
+    }
+    #[cfg(unix)]
+    {
+        if std::fs::symlink_metadata(path)?.file_type().is_symlink() {
+            return Err(std::io::Error::other("generated path is a symlink"));
+        }
+        Ok(())
+    }
+}
+
+fn read_generated_file(path: &Path) -> std::io::Result<File> {
+    checked_generated_path(path)?;
+    let mut options = OpenOptions::new();
+    options.read(true).write(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.custom_flags(libc::O_NOFOLLOW);
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::{MetadataExt, OpenOptionsExt};
+        options.custom_flags(windows_sys::Win32::Storage::FileSystem::FILE_FLAG_OPEN_REPARSE_POINT);
+        let file = options.open(path)?;
+        if file.metadata()?.file_attributes()
+            & windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_REPARSE_POINT
+            != 0
+        {
+            return Err(std::io::Error::other("generated path is a reparse point"));
+        }
+        return Ok(file);
+    }
+    #[cfg(unix)]
+    options.open(path)
+}
+
 pub(crate) fn write_changed(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
-    let mut file = match crate::cache_storage::read_write_private_file(path) {
+    let mut file = match read_generated_file(path) {
         Ok(file) => file,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             crate::cache_storage::new_private_file(path)?
@@ -111,7 +161,7 @@ pub(crate) fn remove_stale(
 ) -> std::io::Result<()> {
     for entry in std::fs::read_dir(root)? {
         let entry = entry?;
-        crate::cache_storage::check_owned(&entry.path())?;
+        checked_generated_path(&entry.path())?;
         if entry.file_type()?.is_dir() {
             remove_stale(&entry.path(), current)?;
         } else if !current.contains(&entry.path()) {

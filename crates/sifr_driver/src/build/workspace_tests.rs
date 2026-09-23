@@ -283,3 +283,53 @@ fn dx3_pressure_cleanup_is_owned_and_preserves_active_candidate() {
         "foreign owner accepted"
     );
 }
+
+#[cfg(windows)]
+#[test]
+fn windows_portability_intact_concurrent_winner_is_adopted() {
+    let temp = tempfile::tempdir().unwrap();
+    let cache = temp.path().join("cache");
+    let result = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "build::workspace::tests::windows_portability_winner_child",
+            "--nocapture",
+        ])
+        .env("SIFR_CACHE_DIR", &cache)
+        .output()
+        .unwrap();
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_portability_winner_child() {
+    if std::env::var_os("SIFR_CACHE_DIR").is_none() {
+        return;
+    }
+    let scope = std::env::current_dir().unwrap();
+    let required = [Path::new("payload")];
+    let prepared =
+        prepare_cached_artifact("fixture", "w1-winner", &scope, "one", &required).unwrap();
+    let PreparedArtifactCache::Miss(pending) = prepared else {
+        panic!("fresh candidate expected")
+    };
+    std::fs::write(pending.workspace_root().join("payload"), b"winner").unwrap();
+    let winner = pending.final_root.clone();
+    crate::cache_storage::directory(&winner).unwrap();
+    for name in ["artifact_cache.json", "payload"] {
+        let bytes = std::fs::read(pending.workspace_root().join(name)).unwrap();
+        let mut file = crate::cache_storage::new_private_file(&winner.join(name)).unwrap();
+        std::io::Write::write_all(&mut file, &bytes).unwrap();
+        file.sync_all().unwrap();
+    }
+    let staging = pending.workspace_root().to_path_buf();
+    let entry = pending.commit(&required).unwrap();
+    assert_eq!(entry.workspace_root(), winner);
+    assert_eq!(std::fs::read(winner.join("payload")).unwrap(), b"winner");
+    assert!(!staging.exists());
+}

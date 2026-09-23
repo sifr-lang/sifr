@@ -432,18 +432,73 @@ mod tests {
     #[test]
     fn windows_portability_pressure_prune_protects_leases_and_winners() {
         let temp = tempfile::tempdir().unwrap();
-        let family = temp.path().join("native").join("artifacts").join("family");
+        let result = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "cache_storage::tests::windows_portability_prune_child",
+                "--nocapture",
+            ])
+            .env("SIFR_WINDOWS_PRUNE_ROOT", temp.path().join("cache"))
+            .output()
+            .unwrap();
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+    }
+
+    #[test]
+    fn windows_portability_prune_child() {
+        use std::io::Write;
+        let Some(root) = std::env::var_os("SIFR_WINDOWS_PRUNE_ROOT") else {
+            return;
+        };
+        let root = PathBuf::from(root);
+        let family = root.join("native/artifacts/family");
         directory(&family).unwrap();
-        let key = "a".repeat(64);
-        let path = family.join(&key);
-        directory(&path).unwrap();
-        let lock = entry_lock(&family, &key).unwrap();
-        lock.try_lock().unwrap();
-        assert!(check_owned(&path).is_ok());
-        // Pruning's lock contract is exercised without changing the global
-        // cache root environment used by unrelated tests.
-        assert!(entry_lock(&family, &key).unwrap().try_lock().is_err());
-        drop(lock);
-        assert!(entry_lock(&family, &key).unwrap().try_lock().is_ok());
+        let scope = owner_scope().unwrap();
+        let winner_key = "a".repeat(64);
+        let active_key = "b".repeat(64);
+        let abandoned_key = "c".repeat(64);
+        let winner = family.join(&winner_key);
+        let active = family.join(format!("{active_key}.stage-1"));
+        let abandoned = family.join(format!("{abandoned_key}.stage-1"));
+        for path in [&winner, &active, &abandoned] {
+            directory(path).unwrap();
+            let bytes = serde_json::to_vec(&serde_json::json!({"scope": scope})).unwrap();
+            let mut marker = new_private_file(&path.join("artifact_cache.json")).unwrap();
+            marker.write_all(&bytes).unwrap();
+            marker.sync_all().unwrap();
+        }
+        let lease = entry_lock(&family, &active_key).unwrap();
+        lease.try_lock().unwrap();
+        let report = inspect().unwrap();
+        assert!(
+            report
+                .entries
+                .iter()
+                .any(|item| item.path == winner && item.protected)
+        );
+        assert!(
+            report
+                .entries
+                .iter()
+                .any(|item| item.path == active && item.protected)
+        );
+        assert!(
+            report
+                .entries
+                .iter()
+                .any(|item| item.path == abandoned && !item.protected)
+        );
+        prune(u64::MAX, 0, false).unwrap();
+        assert!(winner.is_dir());
+        assert!(active.is_dir());
+        assert!(!abandoned.exists());
+        drop(lease);
+        prune(u64::MAX, 0, false).unwrap();
+        assert!(winner.is_dir());
+        assert!(!active.exists());
     }
 }
