@@ -433,6 +433,16 @@ def mergeChildren(own first: TreeNode | None, own second: TreeNode | None) -> Tr
 "#,
     );
 
+    let canonical = crate::canonicalize_generated_rust_source(&rust_code)
+        .expect("narrowed optional tree code should canonicalize");
+    assert!(
+        !canonical.contains("Add::add(&&"),
+        "borrowed constructor arithmetic must keep the borrow around the sum: {canonical}"
+    );
+    assert!(
+        canonical.contains("&::std::ops::Add::add(&first.val, &second.val)"),
+        "narrowed integer fields should be borrowed once and evaluated in order: {canonical}"
+    );
     assert!(
         rust_code.contains("let Some(mut first) = first else"),
         "simple let-else lowering must make an owned recursive class mutable before taking child fields:\n{rust_code}"

@@ -369,7 +369,13 @@ fn rewrite_borrowed_argument(argument: &mut syn::Expr, borrowed_bindings: &HashS
         }
     }
     let value = argument.clone();
-    *argument = syn::parse_quote!(&#value);
+    // Borrow the whole arithmetic result. Without parentheses the parsed
+    // reference binds only to the left operand of a binary expression.
+    *argument = if matches!(value, syn::Expr::Binary(_)) {
+        syn::parse_quote!(&(#value))
+    } else {
+        syn::parse_quote!(&#value)
+    };
 }
 
 fn expression_is_borrowed_binding(
