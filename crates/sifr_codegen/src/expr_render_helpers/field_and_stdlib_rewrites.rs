@@ -62,6 +62,15 @@ impl RustEmitter {
         let effective_base_object_ty = option_inner_object_ty
             .clone()
             .unwrap_or_else(|| effective_object_ty.clone());
+        if option_inner_object_ty.is_some()
+            && let Some(projected) = self.try_lower_optional_class_field_access(
+                &effective_base_object_ty,
+                field,
+                &lowered_object,
+            )
+        {
+            return projected;
+        }
         let mut lowered_object = lowered_object;
         if option_inner_object_ty.is_some() {
             let option_expr = if matches!(object, HirExpr::Name { .. })

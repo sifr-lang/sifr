@@ -107,6 +107,46 @@ def walk(own root: TreeNode | None) -> list[int]:
 }
 
 #[test]
+fn test_optional_list_pop_class_fields_project_through_present_value() {
+    let rust_code = generate_rust_from_source(
+        r#"class TreeNode:
+    val: int
+    left: TreeNode | None
+    right: TreeNode | None
+
+    def __init__(self, val: int, left: TreeNode | None = None, right: TreeNode | None = None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def children(own mut nodes: list[TreeNode]) -> int:
+    node = nodes.pop(0)
+    left: TreeNode | None = node.left
+    right: TreeNode | None = node.right
+    if left is not None:
+        return left.val
+    if right is not None:
+        return right.val
+    return 0
+"#,
+    );
+
+    assert!(
+        rust_code.contains(".as_ref().and_then(|sifr_generated_optional_field_value|"),
+        "optional class field reads must project through a present value:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains(".left.as_deref().cloned()")
+            && rust_code.contains(".right.as_deref().cloned()"),
+        "recursive children must preserve their optional value shape:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains(".clone().left.take()") && !rust_code.contains(".clone().right.take()"),
+        "an optional receiver must not be used as a class value:\n{rust_code}"
+    );
+}
+
+#[test]
 fn test_mutually_recursive_local_binding_is_mutable_for_child_moves() {
     let rust_code = generate_rust_from_source(
         r#"class Branch:
