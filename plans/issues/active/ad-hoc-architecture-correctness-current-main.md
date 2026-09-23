@@ -150,6 +150,10 @@ Focused validation on that tree: `cargo test -p sifr_codegen --lib ir_validate::
 
 Deferred follow-ups remain separate: inherited `super()` native const emission fails for unrelated method names too ([#3915](https://github.com/sifr-lang/sifr/issues/3915)); generic source-class `unwrap`/`expect` result typing in the pre-existing canonicalizer needs its own owner ([#3917](https://github.com/sifr-lang/sifr/issues/3917)). The reviewer also noted an unproven raw operator-method fallback path that fails closed if reached. X02 and retained Emitted Rust Item 12 preserve their existing scope and evidence. X01 ends here; the next batch requires separate assignment.
 
+## X01 coverage registry follow-up (2026-09-23)
+
+The SQL phase Item 2 named `coverage_matrix_readiness.py` check fails on the current main base `30136206c94ee03784c9db93b2544de72116be88`: `sifr: target lacks classification: test:legal_failure_method_names`. X01 introduced this test target in [PR #3916](https://github.com/sifr-lang/sifr/pull/3916), but its target classification was not added to `verification/areas/coverage_matrix/data/cargo_metadata_classification.json`. The exact failed log is `/home/yaser5/projects/sifr/sql-item2-evidence-20260923/coverage-matrix-readiness.log` (SHA-256 `48e8f082a5454db9a0a2de170c80c531231a94ccf8fb396dabde8b4d0a0a1e3d`). The architecture correctness owner must classify this target under the appropriate merge profile and rerun readiness. SQL Item 2 does not absorb this unrelated registry repair or claim a readiness pass.
+
 ## Preparation/F33 closure receipt
 
 The record-only crosswalk merged in [PR #3910](https://github.com/sifr-lang/sifr/pull/3910), merge d74a87eaa209e08986571bf027bd63342acba46c, from reviewed candidate 5888646741a98b2622437ac3b4a23980ec920fc4. The scoped [Opus review](https://github.com/sifr-lang/sifr/pull/3910#issuecomment-5785809006) returned SATISFIED with no blockers; response SHA-256 3b79c8dd77abb9d945a0d88b77bf7d62aa2ab978d4f896daf2ae54f98cd9b6ed. No implementation code or historical draft was merged.
