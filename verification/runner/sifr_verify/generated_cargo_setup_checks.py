@@ -106,6 +106,7 @@ class SetupPolicyTests(unittest.TestCase):
              patch("sifr_verify.profile_runner.load_profile", return_value=profile):
             runner = ProfileRunner("merge", [])
             with patch.object(runner, "prepare_step_budget", return_value=None), \
+                 patch.object(runner, "admit_performance_reference"), \
                  patch.object(runner, "prepare_cargo_cache", side_effect=CommandFailed(101)), \
                  patch.object(runner, "run_guardrail") as guard, \
                  patch("sifr_verify.profile_runner.enable_profile_offline_cargo") as offline:

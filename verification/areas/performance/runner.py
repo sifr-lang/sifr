@@ -18,6 +18,9 @@ if str(AREA_ROOT) not in sys.path:
 
 from host_control import profile_control_mode  # noqa: E402
 from reference_profiles import ReferenceProfileError, load_profile  # noqa: E402
+from reference_admission import admit_reference  # noqa: E402
+from check_trend_policy import TrendPolicyError  # noqa: E402
+from check_budgets import BudgetError  # noqa: E402
 
 DATA_ROOT = AREA_ROOT / "data"
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
@@ -71,6 +74,12 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("performance area does not support --bless")
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     selected = select_suites(manifest, set(args.suite))
+    if any(suite["name"] in {"rules", "smoke", "representative", "full"} for suite in selected):
+        try:
+            profile = admit_reference(os.environ.get("SIFR_PERFORMANCE_REFERENCE", ""))
+        except (ReferenceProfileError, TrendPolicyError, BudgetError, ValueError, OSError, KeyError) as error:
+            raise SystemExit(f"performance qualification unavailable: {error}") from error
+        print(f"performance_reference_admitted={profile['name']}", flush=True)
 
     print("Running performance verification area", flush=True)
     print(f"  manifest={MANIFEST_PATH.relative_to(REPO_ROOT)}", flush=True)

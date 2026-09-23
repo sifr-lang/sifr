@@ -104,6 +104,16 @@ class ProfileRunner:
 
     def run(self) -> int:
         self.print_header()
+        if any(
+            area["area"] == "performance"
+            and set(area["suites"]).intersection({"rules", "smoke", "representative", "full"})
+            for area in self.profile["selected_areas"]
+        ):
+            admission = self.execute_step(
+                "performance_reference_admission", self.admit_performance_reference
+            )
+            if admission:
+                return admission
         early = {"hir-maintainability", "file-size", "source-crate-dependency-direction",
                  "submodule-ownership", "stdlib-manifest-schema"}
         failed = 0
@@ -187,6 +197,10 @@ class ProfileRunner:
         if budget_status == 0:
             record_step_success(budget)
         return budget_status
+
+    def admit_performance_reference(self) -> None:
+        script = REPO_ROOT / "verification/areas/performance/reference_admission.py"
+        run_command([sys.executable, str(script)], env=self.env)
 
     def prepare_cargo_cache(self) -> None:
         try:
