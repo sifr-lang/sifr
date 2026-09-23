@@ -57,14 +57,17 @@
               "argv": [
                 "cargo",
                 "run",
+                "--manifest-path",
+                "<REPO>/Cargo.toml",
                 "-q",
                 "-p",
                 "sifr",
                 "--",
                 "test",
-                "demos/mode_consistency"
+                "."
               ],
-              "expected_exit": 0
+              "expected_exit": 0,
+              "cwd": "demos/mode_consistency"
             }
           ],
           "assertions": [
@@ -134,14 +137,17 @@
               "argv": [
                 "cargo",
                 "run",
+                "--manifest-path",
+                "<REPO>/Cargo.toml",
                 "-q",
                 "-p",
                 "sifr",
                 "--",
                 "test",
-                "demos/mode_consistency/negative_cases/type_error_project"
+                "."
               ],
-              "expected_exit": 1
+              "expected_exit": 1,
+              "cwd": "demos/mode_consistency/negative_cases/type_error_project"
             }
           ],
           "assertions": [
