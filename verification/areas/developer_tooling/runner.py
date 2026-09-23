@@ -41,6 +41,8 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
         ),
     ],
     "static": [
+        ("direct-filesystem-effects", [sys.executable, str(AREA_ROOT / "check_direct_filesystem_effects.py")]),
+        ("direct-filesystem-effects-self-test", [sys.executable, str(AREA_ROOT / "check_direct_filesystem_effects.py"), "--self-test"]),
         ("tooling-rules-lock", [sys.executable, str(AREA_ROOT / "check_tooling_rules_lock.py")]),
         ("tooling-rules-lock-self-test", [sys.executable, str(AREA_ROOT / "check_tooling_rules_lock.py"), "--self-test"]),
         ("tooling-dependency-boundaries", [sys.executable, str(AREA_ROOT / "check_tooling_dependency_boundaries.py")]),

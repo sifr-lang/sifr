@@ -19,7 +19,8 @@ The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/p
 | X02 | Existing Emitted Rust owner, including retained Item 12; F02-F04 and codegen part of F32; open after X01. | Contextual Result failures at every public emission boundary, no partial output, origin-aware exhaustive IR/final-source validation, trusted macro/bridge policy, diagnostic and fixture checks. |
 | V01 | Compiler/performance qualification owner; F05; fail-closed admission merged, live qualification blocked by shared-host CPU policy. | Compatible reference selected before long work, controlled-clock freshness boundary tests, host/toolchain admission and actual selected reference check. Old Mac capture is expired; Linux reference is host-specific. |
 | V02 | Verification runner owner; F06; merged in [PR #3921](https://github.com/sifr-lang/sifr/pull/3921), receipt below. | One Python-interop area ID across selection, receipt, export and required cache paths; mutated suite/cache inputs alter identity and cold classification. |
-| V03 | Verification guard owner; F24-F25; open. | Site-level filesystem effects and semantic parser exceptions. Negative tests insert a read in a listed file, an alias, a byte read, a new crate/bin and an aliased parse in mixed test/production source. |
+| V03 | Verification guard owner; F24; open. | Complete relevant Rust target roots and classify filesystem effects at site/symbol level as semantic input, build identity, tooling input or output effect. Detect builder reads and filesystem writes/mutations. Negative tests insert a new read in an already-listed file, an alias-only read, a byte read, a new crate/bin source, and representative builder/write sites. |
+| V03b | Semantic parser guard owner; F25; open after V03. | Detect aliased parse, parse_module_raw and parse_module_suite calls, and adjudicate existing parse-and-lower sites. Separate production from test-only code, including mixed files and cross-file module gating; negative tests cover aliased parse in mixed test/production source. |
 | V04 | Verification process owner; F26-F27; open. | Worker-thread setup, selector and callback errors leave no child; absolute deadlines cover nested work and lock waits; distinguish native exit 124, timeout and cancellation. Preserve useful descendant/terminal behavior. |
 | N01 | Driver test orchestration, with existing [DX9-F3](ad-hoc-native-cargo-reuse-followups.md); F15-F16; open. | Supported normal/locked/offline/frozen build/test parity, alternating dependencies in one owned root, same-key concurrency and immutable final output. No implicit Python-test expansion. |
 | N02 | Package graph and driver identity owners; F07-F08; open. | Versioned framed persisted identities bind every semantic field; serialization failure cannot publish reusable success. Test absent/empty/unreadable/error distinctions at consumers. |
@@ -77,12 +78,16 @@ Historical M1-M12 drafts #3553-#3564 remain open on the unmerged stack at this r
 | M12K (no PR) | Controlled-host reference attempt blocked; V01 is early prerequisite. |
 | M13 #3571 | Historical branch review is not current-main closure; Q01 owns final integration and whole-phase review. |
 
+V03 scans every Rust source beneath each Cargo workspace member and manifest-declared target path, including build scripts, bins, examples, benches and tests. Non-member demos Rust reference material is outside the Cargo target graph and this guard.
+
+The unmerged [V03 draft PR #3923](https://github.com/sifr-lang/sifr/pull/3923) at candidate 45eaf9a43b217c75fe2c34ee7a6068da0d85f7cb is historical evidence only. Its second scoped review found new mechanism-level F24 and F25 omissions and required this F24/F25 split. V03 selectively ports the filesystem guard; V03b owns parser work on a separate next item. The unrelated TypeScript-Go LSP guard failure remains with E01.
+
 Old draft status is historical candidate pending selective port or owner-approved closure, not approved for merge. Closing drafts is a separate repository action. Preserve failed/partial logs without relabeling.
 
 ## Order, gates and evidence
 
 1. P00, then urgent X01.
-2. Validation prerequisites V01-V04 and D01 guard/registry pieces; runner negative tests precede reliance on later green evidence.
+2. Validation prerequisites V01-V03b, V04 and D01 guard/registry pieces; runner negative tests precede reliance on later green evidence.
 3. Native/cache N01-N06; N01 depends on merged DX9-F7 behavior, N06 uses DX9-F5 ownership, and N02 establishes identities before warm-consumer claims.
 4. X02 with generated Rust owner after X01, updating diagnostics/fixtures/materialization together.
 5. C01, then C02.
@@ -95,6 +100,16 @@ The 2026-09-23 assignment prospectively approves intermediate items with named a
 Use exact crate/suite/case selection, fail fast by default and reuse compatible compiler/metadata/fixtures/Cargo target while running selected assertions. Evidence reuse needs unchanged implementation and validation inputs, not merely the same SHA: record tree, lock/submodule/config, compiler identity, command/selection, host/cache state where material, outcome and raw digest. Preserve failed/blocked/timeouts. Record-only updates need documentation checks, not broad gates or an extra external review after implementation review.
 
 Scoped review names exact base/candidate SHAs, changed paths, scope, criteria and validation; it separates in-scope blockers from follow-ups. A second review with a new mechanism-level defect requires rescope. Merge one item, record PR/SHA/evidence and stop before the next batch. One session owns its worktree, branch, index and temporary paths.
+
+## V03/F24 rescope attempt (2026-09-23)
+
+Draft [PR #3925](https://github.com/sifr-lang/sifr/pull/3925) is unmerged. Branch codex/architecture-v03-f24-rescope-20260923 began at main 30136206c94ee03784c9db93b2544de72116be88. The latest implementation candidate is 3d0ca988480ce1f2593b08e99d3f12ddb843cb8e (tree 7726609bd19818699394d8bee85f442c5379ff81). It selectively ports the historical filesystem guard, inventories 2,623 sites, detects builder opens and common filesystem mutations, and separates F25 into V03b. No parser guard work was ported.
+
+Focused checks on that tree passed: direct filesystem self-test (log SHA-256 8fa490515a807532f428fbe8fbef1de198850a48156fd4e318782e22aada6c20), inventory scan (d59f452809363c7316497393a53386c2ae1a5e227735679731ca50714a0b340c), documentation structure after pinned nested editor submodule initialization (d4e12f1bf8c85008bd1a0a66e6e112756b9cd5f9eb8696b1dfc81f7e6638cab0), 900-line file-size guardrail (06f18ed54c0fa6a16c0c2748f474f7904f025cdd960835b745eb106a777d77f8), and diff check (empty log e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855). The full merge profile is deferred to Q01 and has not run.
+
+The first scoped Opus review on a80c52cbf55ab575cc1652524ba0aeb7d6fd34a4 returned NOT SATISFIED (response SHA-256 8ccfe1198f9fb5ba3477044b9f62467261eebe6821ff9c02971a45b986c4b690): File::options, DirBuilder::create and handle set_len/set_times/set_permissions escaped. Their correction and focused regressions passed. The second scoped Opus review on 3d0ca988480ce1f2593b08e99d3f12ddb843cb8e again returned NOT SATISFIED (response SHA-256 8788cc83611bee714f9752d808c3f8f047c36b88db5eeb7ffb03b794af3ad265) with a new mechanism-level omission: symlink creation through std::os::unix::fs and std::os::windows::fs, including direct and aliased imports, is not inventoried. Production crates/sifr_runtime/src/python/loader.rs has one such site. Under the phase-closure-loop rule, the second-review mechanism finding requires rescope; do not merge this candidate or claim F24 closed. Raw validation and review evidence is under /home/yaser5/projects/sifr/architecture-v03-f24-evidence, keyed by candidate SHA. The exact next action is a separately assigned F24 rescope covering these OS-specific filesystem mutation roots and a fresh scoped review.
+
+V01 shared-host policy qualification remains blocked with its owner. The unrelated DX.10 fixture inventory mismatch and TypeScript-Go LSP guard failure remain with their recorded owners. V03b/F25 remains the separate next parser item.
 
 ## V02/F06 delivery receipt (2026-09-23)
 
