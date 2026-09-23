@@ -1,7 +1,7 @@
 //! Owned generated-entry storage. Locks are never unlinked: their inode is the lease.
 use crate::windows_storage_security as security;
 use std::fs::{self, File, OpenOptions};
-use std::io;
+use std::io::{self, Read};
 use std::os::windows::fs::{MetadataExt, OpenOptionsExt};
 use std::os::windows::io::AsRawHandle;
 use std::path::{Component, Path, PathBuf};
@@ -184,8 +184,16 @@ pub struct CacheEntryInspection {
 }
 
 fn size(path: &Path) -> io::Result<u64> {
+    security::no_reparse(path)?;
     let meta = fs::symlink_metadata(path)?;
-    check_owned(path)?;
+    if meta.file_attributes()
+        & windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_REPARSE_POINT
+        != 0
+    {
+        return Err(invalid("reparse-point cache payload"));
+    }
+    // Staging may contain a producer-created child with the token default
+    // owner. Acquire its lease and seal it before any destructive pruning.
     if meta.is_file() {
         return Ok(meta.len());
     }
@@ -194,6 +202,26 @@ fn size(path: &Path) -> io::Result<u64> {
         total += size(&child?.path())?;
     }
     Ok(total)
+}
+
+fn same_scope(path: &Path, scope: &Path) -> bool {
+    let Ok(marker) = read_private_file(&path.join("artifact_cache.json")) else {
+        return false;
+    };
+    if !marker
+        .metadata()
+        .is_ok_and(|metadata| metadata.len() <= 16 * 1024)
+    {
+        return false;
+    }
+    let mut bytes = Vec::new();
+    if marker.take(16 * 1024 + 1).read_to_end(&mut bytes).is_err() || bytes.len() > 16 * 1024 {
+        return false;
+    }
+    serde_json::from_slice::<serde_json::Value>(&bytes)
+        .ok()
+        .and_then(|value| value["scope"].as_str().map(PathBuf::from))
+        .is_some_and(|owner| owner == scope)
 }
 
 /// Restrict pruning to completed generated entries and staging in known native
@@ -239,11 +267,7 @@ pub fn inspect() -> io::Result<CacheInspection> {
                         )
                         .open(family.join(lock_path))
                 });
-                let same_scope = fs::read(path.join("artifact_cache.json"))
-                    .ok()
-                    .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-                    .and_then(|value| value["scope"].as_str().map(PathBuf::from))
-                    .is_some_and(|owner| owner == scope);
+                let same_scope = same_scope(&path, &scope);
                 let protected =
                     !same_scope || lock.as_ref().map_or(true, |file| file.try_lock().is_err());
                 entries.push(CacheEntryInspection {
@@ -264,11 +288,7 @@ pub fn inspect() -> io::Result<CacheInspection> {
         {
             continue;
         }
-        let same_scope = fs::read(entry.path.join("artifact_cache.json"))
-            .ok()
-            .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-            .and_then(|value| value["scope"].as_str().map(PathBuf::from))
-            .is_some_and(|owner| owner == scope);
+        let same_scope = same_scope(&entry.path, &scope);
         if !same_scope {
             continue;
         }
@@ -329,6 +349,7 @@ pub fn prune(
         }
         check_owned(&entry.path)?;
         if !dry_run {
+            seal(&entry.path)?;
             fs::remove_dir_all(&entry.path)?;
         }
         reclaimed += entry.bytes;
@@ -476,6 +497,8 @@ mod tests {
             marker.write_all(&bytes).unwrap();
             marker.sync_all().unwrap();
         }
+        // A killed writer can leave a child before its final recursive seal.
+        fs::write(abandoned.join("unfinished"), b"partial").unwrap();
         let lease = entry_lock(&family, &active_key).unwrap();
         lease.try_lock().unwrap();
         let report = inspect().unwrap();

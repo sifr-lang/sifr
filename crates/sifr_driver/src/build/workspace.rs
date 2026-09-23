@@ -340,7 +340,11 @@ fn write_cache_metadata(
             DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
         )]
     })?;
-    std::fs::write(workspace_root.join(ARTIFACT_CACHE_METADATA_FILE), content).map_err(|error| {
+    super::native_storage::write_changed(
+        &workspace_root.join(ARTIFACT_CACHE_METADATA_FILE),
+        content.as_bytes(),
+    )
+    .map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
             format!("failed to write generated artifact cache metadata: {error}"),
             DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
