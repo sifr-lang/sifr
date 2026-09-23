@@ -9,6 +9,7 @@ import unittest
 from unittest.mock import patch
 
 import code_coverage
+import code_baseline_coverage
 
 
 class ReferenceIdentityTests(unittest.TestCase):
@@ -92,6 +93,7 @@ active_entry!("SIFR-TYPE-0002", Severity::Error, "crates/sifr_sql_mysql/src/anal
         with (
             patch.object(code_coverage, "non_test_compiler_sources", return_value=[source_path]),
             patch.object(code_coverage, "read_rust_with_local_sources", side_effect=read_source),
+            patch.object(code_coverage, "registry_integrity_errors", return_value=[]),
             redirect_stderr(stderr),
         ):
             result = code_coverage.main()
@@ -153,6 +155,92 @@ active_entry!("SIFR-TYPE-0002", Severity::Error, "crates/sifr_sql_mysql/src/anal
         )
         self.assertEqual(result, 1)
         self.assertIn("is active but has no non-test compiler-source", errors)
+
+
+class RegistryIntegrityTests(unittest.TestCase):
+    def registry(self, *, constant="TYPE_MISMATCH", code="SIFR-TYPE-0002",
+                 active="TYPE_MISMATCH", entry_code="SIFR-TYPE-0002",
+                 owner="sifr_lint", fixture="crates/sifr_lint/src/lib.rs") -> str:
+        return f'''
+pub const {constant}: Self = Self::new("{code}", Severity::Error);
+ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[DiagnosticCode::{active}];
+active_entry!("{entry_code}", "TYPE", "summary", Severity::Error,
+    "{fixture}", "message", "{owner}", [], []);
+'''
+
+    def test_current_registry_is_consistent(self) -> None:
+        text = code_coverage.read_rust_with_local_sources(code_coverage.CODES_RS)
+        self.assertEqual(code_coverage.registry_integrity_errors(text), [])
+
+    def test_duplicate_identity_and_active_entry_are_rejected(self) -> None:
+        source = self.registry()
+        constant = 'pub const OTHER: Self = Self::new("SIFR-TYPE-0002", Severity::Error);'
+        entry = 'active_entry!("SIFR-TYPE-0002", "TYPE", "summary", Severity::Error, '
+        entry += '"crates/sifr_lint/src/lib.rs", "message", "sifr_lint", [], []);'
+        errors = code_coverage.registry_integrity_errors(source + constant + entry)
+        self.assertIn("duplicate code identity: SIFR-TYPE-0002", errors)
+        self.assertIn("duplicate active registry entry: SIFR-TYPE-0002", errors)
+
+    def test_active_entry_and_owner_drift_are_rejected(self) -> None:
+        errors = code_coverage.registry_integrity_errors(self.registry(
+            entry_code="SIFR-TYPE-0003", owner="sifr_lint::removed_owner"))
+        self.assertIn("active code missing registry entry: SIFR-TYPE-0002", errors)
+        self.assertIn("registry entry is not active: SIFR-TYPE-0003", errors)
+        self.assertIn("SIFR-TYPE-0003: owner module does not exist: sifr_lint::removed_owner", errors)
+
+    def test_registry_severity_drift_is_rejected(self) -> None:
+        source = self.registry().replace(
+            '"TYPE", "summary", Severity::Error,',
+            '"TYPE", "summary", Severity::Warning,',
+        )
+        self.assertIn(
+            "SIFR-TYPE-0002: registry severity differs from constant",
+            code_coverage.registry_integrity_errors(source),
+        )
+
+    def test_missing_fixture_and_unknown_active_constant_are_rejected(self) -> None:
+        errors = code_coverage.registry_integrity_errors(self.registry(
+            active="UNKNOWN", fixture="crates/sifr_lint/src/missing.rs"))
+        self.assertIn("unknown active constant: UNKNOWN", errors)
+        self.assertIn("SIFR-TYPE-0002: representative fixture does not exist: crates/sifr_lint/src/missing.rs", errors)
+
+    def test_fixture_symbol_resolution_follows_declared_modules(self) -> None:
+        valid = (
+            "crates/sifr_lowering/src/lower/expressions_tests.rs::"
+            "test_fixed_width_literal_assignment_out_of_range_has_int_code",
+            "crates/sifr_driver/src/build/rust_interop_tests.rs::"
+            "package_rust_interop_rejects_untrusted_build_script",
+        )
+        for fixture in valid:
+            with self.subTest(fixture=fixture):
+                self.assertTrue(code_coverage.fixture_file_exists(fixture))
+        self.assertFalse(code_coverage.fixture_file_exists(
+            "crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001"
+        ))
+        self.assertIn(
+            "SIFR-TYPE-0002: representative fixture does not exist: "
+            "crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001",
+            code_coverage.registry_integrity_errors(self.registry(
+                fixture="crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001"
+            )),
+        )
+
+    def test_catalog_fixture_drift_is_rejected(self) -> None:
+        code = "SIFR-TYPE-0002"
+        catalog = {"schema_version": 1, "codes": [{
+            "code": code, "constant": "TYPE_MISMATCH", "severity": "Error",
+            "stability": "stable", "owner": "compiler/core-language",
+            "docs_link": f"docs/errors/{code}.mdx", "renderer_support": ["json"],
+            "machine_applicable": False, "suggestion_applicability": "none",
+            "representative_fixture": "crates/sifr_lint/src/wrong.rs",
+        }]}
+        errors = []
+        with patch.object(code_baseline_coverage, "load_json", return_value=catalog):
+            code_baseline_coverage.validate_catalog(errors, {code: {
+                "constant": "TYPE_MISMATCH", "severity": "Error",
+                "fixture": "crates/sifr_lint/src/lib.rs",
+            }})
+        self.assertIn(f"{code}: catalog representative fixture does not match registry", errors)
 
 
 if __name__ == "__main__":

@@ -621,7 +621,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "INT",
         "JSON or web-safe integer serialization boundary is missing or unsafe.",
         Severity::Error,
-        "crates/sifr_frontend/src/const_specialization.rs",
+        "verification/areas/diagnostics/fixtures/diagnostics/int_json_boundary_policy/main.sifr",
         "integer JSON boundary policy is unsafe at {path}: {boundary}",
         "sifr_frontend::const_specialization",
         [

@@ -1033,7 +1033,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001",
+      "representative_fixture": "crates/sifr_driver/src/tests/panic_boundary.rs::test_run_codegen_with_boundary_reports_string_panic_as_internal_compiler_panic",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1609,7 +1609,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/manifest/metadata.rs::tests",
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/package_library_diagnostic_rules_cases/main.sifr",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1625,7 +1625,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/manifest/sifr.rs::tests",
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/package_missing_sifr_manifest/src/main.sifr",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1641,7 +1641,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/manifest/metadata.rs::tests",
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/package_misplaced_cargo_sifr_metadata/src/main.sifr",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1689,7 +1689,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/cargo/metadata.rs::tests",
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/package_library_diagnostic_rules_cases/main.sifr",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2025,7 +2025,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/package_projection_tests.rs::repair_check_reports_missing_manifest_pointer_0703",
+      "representative_fixture": "crates/sifr_package/src/package_projection_tests.rs::cargo_projection_repair_check_reports_missing_manifest_pointer_0703",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2041,7 +2041,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/package_projection_tests.rs::repair_check_reports_missing_required_include_0704",
+      "representative_fixture": "crates/sifr_package/src/package_projection_tests.rs::cargo_projection_repair_check_reports_missing_required_include_0704",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2057,7 +2057,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/package_projection_tests.rs::repair_regenerates_missing_pure_marker",
+      "representative_fixture": "crates/sifr_package/src/package_projection_tests.rs::cargo_projection_repair_regenerates_missing_pure_marker",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2793,7 +2793,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/build/rust_interop_contract_tests.rs::package_rust_interop_opaque_close_policy_requires_close_method_contract",
+      "representative_fixture": "crates/sifr_driver/src/build/rust_interop_opaque_contract_tests.rs::package_rust_interop_opaque_close_policy_requires_close_method_contract",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2877,7 +2877,7 @@
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": ["human", "json", "compact"],
-      "representative_fixture": "crates/sifr_frontend/src/slot_table_tests.rs::non_result_slot_uses_signature_diagnostic",
+      "representative_fixture": "crates/sifr_driver/src/tests/handler_descriptors.rs::owned_handler_requires_exact_self_output_at_the_descriptor",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
