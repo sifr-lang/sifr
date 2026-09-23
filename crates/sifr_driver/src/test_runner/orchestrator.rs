@@ -21,6 +21,7 @@ use std::path::{Path, PathBuf};
 
 pub(crate) struct GeneratedTestRunnerProject {
     pub(crate) application_profile: crate::ApplicationProfile,
+    pub(crate) cargo_resolution: crate::build::CargoResolutionPolicy,
     pub(crate) interop: sifr_codegen::InteropBuildPlan,
     pub(crate) cache_scope: PathBuf,
     pub(crate) support_module_names: Vec<String>,
@@ -36,6 +37,15 @@ pub fn run_tests(
     test_dir: &Path,
     provider: &mut dyn SourceProvider,
 ) -> Result<bool, Vec<RenderedDiagnostic>> {
+    run_tests_with_package(compiler, test_dir, None, provider)
+}
+
+pub fn run_tests_with_package(
+    compiler: &crate::CompilerContext,
+    test_dir: &Path,
+    package: Option<&crate::build::PackageEntrypoint>,
+    provider: &mut dyn SourceProvider,
+) -> Result<bool, Vec<RenderedDiagnostic>> {
     let test_files_by_module = discover_test_root_modules(test_dir, provider);
 
     if test_files_by_module.is_empty() {
@@ -48,15 +58,31 @@ pub fn run_tests(
         test_files_by_module.len()
     ));
 
-    let generated_project =
-        build_test_runner_project(compiler, test_dir, &test_files_by_module, provider)?;
+    let generated_project = build_test_runner_project_with_package(
+        compiler,
+        test_dir,
+        &test_files_by_module,
+        package,
+        provider,
+    )?;
     execute_test_runner_project(&generated_project).map(|outcome| outcome.success)
 }
 
+#[cfg(test)]
 pub(crate) fn build_test_runner_project(
     compiler: &crate::CompilerContext,
     test_dir: &Path,
     test_files_by_module: &BTreeMap<String, PathBuf>,
+    provider: &mut dyn SourceProvider,
+) -> Result<GeneratedTestRunnerProject, Vec<RenderedDiagnostic>> {
+    build_test_runner_project_with_package(compiler, test_dir, test_files_by_module, None, provider)
+}
+
+fn build_test_runner_project_with_package(
+    compiler: &crate::CompilerContext,
+    test_dir: &Path,
+    test_files_by_module: &BTreeMap<String, PathBuf>,
+    package: Option<&crate::build::PackageEntrypoint>,
     provider: &mut dyn SourceProvider,
 ) -> Result<GeneratedTestRunnerProject, Vec<RenderedDiagnostic>> {
     let test_roots: BTreeSet<String> = test_files_by_module.keys().cloned().collect();
@@ -174,9 +200,15 @@ pub(crate) fn build_test_runner_project(
         all_rust_code.push_str(rust_source);
         all_rust_code.push('\n');
     }
+    let mut cargo_resolution =
+        package.map_or_else(crate::build::CargoResolutionPolicy::normal, |entrypoint| {
+            crate::build::package_cargo_resolution_policy(Some(entrypoint), &stdlib_compiled, true)
+        });
+    cargo_resolution.application_profile = compiler.application_profile();
     finalize_test_runner_project(
         GeneratedTestRunnerProject {
             application_profile: compiler.application_profile(),
+            cargo_resolution,
             interop: generated.interop,
             cache_scope: test_dir.to_path_buf(),
             support_module_names,

@@ -490,6 +490,17 @@ mod tests {
         assert!(human.contains("  = suggestion: replace value with safer expression"));
         assert!(!human.contains('\r'));
         assert!(json.contains("\\r"));
+        let payload: serde_json::Value = serde_json::from_str(&json).expect("rendered JSON parses");
+        let spans = payload["diagnostics"][0]["spans"]
+            .as_array()
+            .expect("diagnostic spans are an array");
+        assert_eq!(spans.len(), 2);
+        assert_eq!(spans[0]["is_primary"], true);
+        assert_eq!(spans[1]["is_primary"], false);
+        assert_eq!(spans[1]["label"], "related span");
+        assert_eq!(spans[1]["file"], "main.sifr");
+        assert_eq!(spans[1]["line"], 2);
+        assert_eq!(spans[1]["column"], 5);
     }
 
     #[test]

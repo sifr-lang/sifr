@@ -189,6 +189,8 @@ def validate_catalog(errors: list[str], active: dict[str, dict[str, str]]) -> di
         registry = active[code]
         if entry.get("constant") != registry["constant"]:
             errors.append(f"{code}: catalog constant does not match registry")
+        if entry.get("representative_fixture") != registry["fixture"]:
+            errors.append(f"{code}: catalog representative fixture does not match registry")
         if entry.get("severity") != registry["severity"]:
             errors.append(f"{code}: catalog severity does not match registry")
     return by_code

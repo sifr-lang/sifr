@@ -218,6 +218,28 @@ class FixtureTests(unittest.TestCase):
         (self.root / names[0]).unlink()
         self.assertEqual(compare(before, inventory(self.root))["removed"], [names[0]])
 
+    def test_r08_diagnostic_registry_and_manifest_mutations_invalidate_evidence(self):
+        from .fixture_inventory import inventory, compare
+        import subprocess
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        names = [
+            "crates/sifr_diagnostics/src/codes/registry.rs",
+            "verification/areas/diagnostics/manifest.json",
+            "verification/areas/diagnostics/data/code_catalog.json",
+            "verification/areas/diagnostics/data/code_baseline_coverage.json",
+        ]
+        for name in names:
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("original")
+        before = inventory(self.root)
+        self.assertEqual({entry["path"] for entry in before["inputs"]}, set(names))
+        for name in names:
+            path = self.root / name
+            path.write_text("mutated")
+            self.assertEqual(compare(before, inventory(self.root))["changed"], [name])
+            path.write_text("original")
+
     def test_r08_submodule_identity_dirty_assets_and_additions(self):
         from .fixture_inventory import inventory, compare
         import subprocess

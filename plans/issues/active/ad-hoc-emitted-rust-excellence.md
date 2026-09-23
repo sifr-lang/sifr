@@ -2,129 +2,81 @@
 
 Status: active
 
-## Retained Item 12 reconciliation (2026-09-22)
+## Retained Item 12R: project-wide borrowed-value calls (2026-09-23)
 
-Status: retained Item 12 qualification in progress on the corrected LeetCode pin; not merged or closed.
-The current assignment authorizes only retained Item 12. It supersedes historical
-per-item broad-gate and one-shot limits: this intermediate implementation receives
-focused/named validation and scoped Opus review; the subsequent integration
-qualifier owns the full merge profile, and the docs-only closer owns whole-phase
-review. No create-PR or full merge profile has run in this continuation.
+**Needs implementation; retained Item 12 is not merged or closed.** This
+bounded sub-item is the explicit rescope required by the second Item 12
+implementation review. Draft [PR #3908](https://github.com/sifr-lang/sifr/pull/3908)
+remains at candidate `e9aed40593c86fd02a2b68853ea4bf2025a20135` on
+`codex/emitted-rust-retained12-20260922`. Its compiler SHA-256 is
+`e803baedda8fbaa646355b702f78ae79841002de7b7be37f0f8f2b042a979490`.
+No Item 12 implementation merge, create-PR gate, full merge gate or whole-phase
+review occurred.
 
-Exclusive custody transferred from the terminal 12D/E/F worker to this session:
-worktree /home/yaser5/projects/sifr/worktrees/emitted-rust-12def-20260922,
-new branch codex/emitted-rust-retained12-20260922, base/main
-58437ba07ae0220d4c3c13c8c258cb8a9b8de0be. The predecessor branch and evidence
-remain intact. New evidence is stored separately in
-/home/yaser5/projects/sifr/emitted-rust-retained12-evidence.
-Retained source 8ad089a9458f35fcfa228e93fe44f4d69731828b is a mechanism reference,
-not an integration candidate: current ownership, macro traversal, Option,
-const-drop and project identity repairs take precedence over its obsolete paths.
+The exact-SHA scoped Opus review returned **NOT SATISFIED**. In
+`borrowed_value_parameters.rs`, the file-local pass changes an exported
+`Box<dyn Protocol>` parameter to `&dyn Protocol`, while a call from another
+generated module still passes `Box<Concrete>`. The reviewer reproduced rustc
+E0308 in a two-module project; a control project without the cross-module call
+built and ran. The same planning boundary applies to exported owned
+`Option<T>` parameters. The complete read-only review is at
+`/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/item12-scoped-review-e9aed405.md`
+with SHA-256
+`c497a7e3e2fed0c2f63b7541cf10611bd319480bb13ec764c68b8232f8685e91`.
+The prior review of `32450102408070ffcf4209a352e98979a4916e1f`
+also returned NOT SATISFIED for a different mechanism. The
+phase-closure-loop skill requires stopping and rescoping when a second
+review finds a new mechanism-level defect; Item 12R is that rescope, with
+one fresh exact-candidate scoped review after its implementation.
 
-The pre-change algorithmic dependency scan passed all 411 source checks using the
-predecessor compiler (binary SHA256
-3a95ab907374f262e43caf8a91da7daef4c784863825aacf28368f876bf9f566),
-current merged corpus 4da4f7a, and the transferred private cache. See
-baseline-inputs.json and the immutable baseline result/taxonomy artifacts.
-This confirms the merged source contracts pass checking; it does not qualify
-native behavior or the new compiler. Final checks and native runs are recorded separately.
+Item 12R scope and acceptance:
 
-Named validation registration:
+- Carry borrowed-value signature plans across generated project modules and
+  rewrite importing call sites consistently. A plan must not change an exported
+  signature unless every applicable caller can receive the matching argument
+  form. Preserve the existing protocol and optional-value semantics.
+- Add a project codegen regression and a native two-module run for an exported
+  protocol-typed `own` parameter called from an importing module. Exercise the
+  exported optional-value case and a same-module control. Verify emitted
+  signature and call shape as well as rustc/native output.
+- Rerun focused borrowed-value/codegen, driver project and checked-codegen,
+  legal method-name and native semantic regressions. Regenerate companions
+  through the compiler if output changes; check freshness. Run the named full
+  generated-quality, E2E and 411-case source/native selections, relevant stdlib
+  parity, project, Rust interop, sysroot and core-language suites, plus strict
+  Clippy, formatting, file-size/HIR and profile/inventory checks on the final
+  candidate. Use the phase-approved intermediate-item policy: no create-PR or
+  full merge profile here.
+- Obtain a new scoped read-only Opus review using
+  `--model claude-opus-5-5` on the exact repaired SHA, then merge the Item 12
+  implementation PR only after named evidence and review agree. Record its
+  merge and validation here; final integration qualification and the
+  documentation-only whole-phase closer remain separate assignments.
 
-- Codegen library tests, including retained semantic/ownership regressions and
-  the existing rustc-compiled negative ownership contracts.
-- Driver checked_codegen_tests; focused native semantic-boundary and
-  cpython_itertools_subset fixtures, then the full positive E2E selection.
-- Generated-code quality full, every discovered entrypoint class, all 264
-  regenerated authoritative companions, and the full algorithmic selection.
-- Relevant stdlib parity, project test, Rust interop/static-program and sysroot
-  selections; exact surface-class coverage is recorded with final evidence.
-- Canonical formatting, strict workspace Clippy, file-size/HIR guards,
-  inventory validation/self-tests and documentation/taxonomy checks.
-- qualification_profile_checks.policy_checks() and
-  step_budgets.run_self_test() via PYTHONPATH=verification/runner python3,
-  covering each required SQL suite, both profile selections, runtime cold/warm
-  budgets, suite fingerprints and bounded timing receipts.
-- Coverage readiness and its canonical mutation self-test; generated-quality
-  test_failure_artifacts.py and test_source_quality_checks.py.
+On the rejected `e9aed405` candidate, codegen passed 1,716/1,716,
+focused native passed 10/10, `legal_failure_method_names` passed 3/3,
+E2E passed 729/729, demo freshness, strict workspace Clippy, formatting,
+file-size (4,209 files), HIR, diff and profile/step-budget checks passed.
+Receipts are under
+`/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/`, keyed by
+`e9aed405`. The running full generated-quality, algorithmic source and
+algorithmic native selections were terminated after the blocking review;
+their receipts retain 70, 116 and 35 completed cases respectively and remain
+failed/incomplete, not passing evidence. The checked-codegen Cargo test build
+was also stopped before its two assertions ran. The separate
+coverage-readiness failure for missing `test:legal_failure_method_names`
+classification belongs to
+[architecture correctness](ad-hoc-architecture-correctness-current-main.md),
+and must be fixed by that owner before global readiness can pass. The
+reviewer's protocol-method and callable probes were already ill-typed before
+this pass; they are follow-up findings, not Item 12R acceptance.
 
-Coverage readiness currently passes; its self-test passes 58 cases and 31 Python
-delivery mutations. SQL profile/timing checks pass. Full taxonomy still has three
-unchanged DX documentation failures owned by issue
-[#3898](https://github.com/sifr-lang/sifr/issues/3898); this continuation does not
-repair that unrelated documentation. Owned taxonomy findings are corrected here.
-The tracked three-byte Untitled fixture artifact originated in c9e5aba72;
-it has no .sifr test contract and is removed under the explicit deferred row.
-No unexplained ignored fixture-root artifacts were found.
+Next: assign one Item 12R implementer with exclusive custody of the preserved
+candidate worktree and a new branch/evidence identity. Do not start final
+integration or whole-phase closure until Item 12R is merged. The historical
+integration blocker record below remains an accurate receipt for its date,
+not the current status.
 
-### Retained Item 12 continuation and blocker (2026-09-23)
-
-The external 0150 blocker is resolved by reviewed corpus [PR #51](https://github.com/sifr-lang/leetcode/pull/51) and codebase gitlink [PR #3914](https://github.com/sifr-lang/sifr/pull/3914). Main `1170491ceccf3b205d5b7228c950afcbf28a1aed` pins corpus `cbe3a55465159ae9467a7a25cc89e0066ed84db2`; the retained Item 12 branch integrates that main through `488389f48e0ad4962badc63ade9a304bf272b345`. The unchanged Item 12 compiler, SHA-256 `ebfb45b1753de3187eb899d0fcd930613304d44a20a6a00558528b1979321d09`, passes the corrected 0150 fixture natively. Full 411-case and remaining named selections are in progress; the historical failed 124/125 audit below remains a failure receipt. The pinned `editor_integrations` and nested `vscode` submodules were initialized in this owned worktree; documentation structure now passes. No full create-PR or merge gate has run in this intermediate batch.
-
-The DX.9 F7 Cargo-reuse repair was merged into the base. Retained Item 12
-resumed on its owned worktree and draft [PR #3908](https://github.com/sifr-lang/sifr/pull/3908).
-Implementation candidate `1be784e1a8f42e9d0c4c28f8f20fe2a04f189cc9` is
-committed and pushed; compiler SHA-256 is
-`ebfb45b1753de3187eb899d0fcd930613304d44a20a6a00558528b1979321d09`.
-The focused `0079`, `0127`, `0130`, and semantic-boundary native cases pass;
-full codegen passes 1,708/1,708. Formatting, file-size, HIR, diff, profile
-policy/step budgets, coverage readiness with its 58-case/31-mutation self-test,
-generated-quality Python policy tests, inventory, and taxonomy pass. Receipts
-are under `/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/`.
-
-The strict lexical-order 411-case native audit stopped after 124 passes at
-`0150_evaluate_reverse_polish_notation.sifr`: it built and ran, then asserted
-`12 == 22`. The fixture source calls `//` inside `truncDiv`, which floors
-negative non-exact quotients; its expected value requires truncation toward
-zero. The separately owned corpus gitlink is
-`4da4f7a5ccb332b64199eda6fc545d9dcc1ae1b6`. The
-[corpus owner record](ad-hoc-algorithmic-full-corpus-preexisting-failures.md#2026-09-23-retained-item-12-native-source-contract-blocker)
-has the source SHA, emitted shape, exact matrix and correction contract.
-No corpus file or acceptance rule was changed. The full generated-quality
-selection, waiting on the compiler Cargo lock after its inventory pass, and the
-driver checked-codegen build were stopped when this external blocker was
-confirmed; neither is passing evidence. The first quality attempt also failed
-on dependency resolution before the exact candidate was published, and that
-failure remains preserved. The full E2E selection, exact-SHA Opus review and
-merge have not run. The unrelated documentation structure check still stops on
-missing `editor_integrations/vscode/package.json`, owned by DX issue #3898.
-
-Next: complete the named candidate selections, scoped Opus review, and Item 12 merge. Integration qualification and whole-phase closure remain separate later work.
-
-### Retained Item 12 blocker handoff (2026-09-22)
-
-Implementation candidate `e7fe5cf1f19a7a09bc70a9ba8a1153000f9baf9e` on
-`codex/emitted-rust-retained12-20260922` repairs the native `0053` double move
-by routing logically copied named assignments through scoped ownership
-lowering. Compiler SHA-256
-`b27322843de1a49a8a6e9c42f633ce94ffa7223daa4aaf681e6ac9f24724d7c4`.
-The tightened codegen assignment regression and updated simple-path contract
-pass; the last full codegen invocation had 1,704 passes and one obsolete
-expectation, corrected and rerun as a passing focused test. Six focused native
-cases pass, including `0053_maximum_subarray_v2`, and the selected generated
-quality entry passes strict Clippy with zero diagnostics. Format, HIR,
-file-size and diff checks pass. No implementation review, PR or broad gate has
-run. The known untracked submodule `.sifrbuildinfo` cache remains preserved.
-
-Full native algorithmic qualification stopped after 65 passes at `0071` on a
-stale generated Cargo lock. `0071` passed after archiving only that owned lock;
-`0072` then failed the same way when the shared generated root switched back
-to a runtime dependency, and passed after archiving that lock. The exact DX.9
-mechanism and receipts are recorded in
-[native Cargo reuse follow-ups](ad-hoc-native-cargo-reuse-followups.md#dx9-f7-generated-native-root-lock-drift--2026-09-22).
-The independent read-only companion freshness check also reported seven
-stale emitted files: `extended_itertools`, `iterator_basics`,
-`iterators_and_randomness`, `pure_stdlib`, `sentinel_values`, `statistics`, and
-`text_and_patterns`. Its failed receipt is
-`/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/freshness-compiler43.log`.
-These in-scope generated outputs remain to be refreshed through the compiler
-when Item 12 resumes; none was hand-edited or updated in this blocked turn.
-The failed native runs are preserved as failures. This external driver cache
-contract blocks Item 12 full native evidence; no driver fix, acceptance bypass
-or whole-phase review belongs to this candidate. The next action is a separate
-DX owner repair, followed by Item 12 qualification on the repaired base using
-this preserved worktree and candidate. Reuse earlier passes only where their
-compiler, configuration and validation inputs remain unchanged.
 ## Final integration qualifier deferred (2026-09-22)
 
 **BLOCKED before the full merge profile; no final implementation candidate.**

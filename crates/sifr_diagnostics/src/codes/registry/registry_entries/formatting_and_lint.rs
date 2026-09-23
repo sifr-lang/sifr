@@ -22,7 +22,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         Severity::Warning,
         "crates/sifr_lint/src/lib.rs::unknown_and_unused_suppressions_are_reported",
         "unknown Sifr policy rule id '{rule}'",
-        "sifr_lint::suppressions",
+        "sifr_lint",
         [arg!("rule")],
         ["rule"]
     ),
@@ -33,7 +33,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         Severity::Warning,
         "crates/sifr_lint/src/lib.rs::unknown_and_unused_suppressions_are_reported",
         "unused Sifr suppression for policy rule '{rule}'",
-        "sifr_lint::suppressions",
+        "sifr_lint",
         [arg!("rule")],
         ["rule"]
     ),
@@ -44,7 +44,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         Severity::Warning,
         "crates/sifr_lint/src/lib.rs::blanket_suppression_is_reported",
         "sifr suppression must list explicit policy rule ids",
-        "sifr_lint::suppressions",
+        "sifr_lint",
         [arg!("rule")],
         ["rule"]
     ),
@@ -55,7 +55,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         Severity::Warning,
         "crates/sifr_lint/src/lib.rs::suppression_only_suppresses_matching_policy_rule",
         "line has trailing whitespace",
-        "sifr_lint::rules::trailing_whitespace",
+        "sifr_lint",
         [arg!("rule")],
         ["rule"]
     ),

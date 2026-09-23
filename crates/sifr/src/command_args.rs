@@ -283,6 +283,15 @@ pub(crate) struct Test {
     /// Optimize the generated application using the release profile
     #[arg(long)]
     pub(crate) release: bool,
+    /// Require Cargo.lock to be unchanged
+    #[arg(long)]
+    pub(crate) locked: bool,
+    /// Disable network access
+    #[arg(long)]
+    pub(crate) offline: bool,
+    /// Combine --locked and --offline
+    #[arg(long)]
+    pub(crate) frozen: bool,
     /// Directory containing test files (default: current directory)
     #[arg(default_value = ".")]
     pub(crate) dir: PathBuf,

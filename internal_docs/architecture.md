@@ -546,6 +546,13 @@ large-file check and a representative project check.
   trusted resolver and shared field/bridge finalization as native binaries.
   The resolved plan feeds Cargo dependencies and cache identity; generated
   bridge files are materialized with the support modules before Cargo tests run.
+  For package tests, the test runner uses the binary build's Cargo resolution
+  policy, including authoritative locks, package-owned vendor selection,
+  declared native environment, sysroot configuration, hermetic SQLx settings,
+  native-link evidence checks, and Cargo invocation tracing. Manifestless tests
+  retain normal sysroot-only resolution; constrained test modes require a
+  package Cargo.lock. The generated test workspace keeps its mutable Cargo
+  target warm while each run checks Cargo before using finalized executables.
 - Stdlib bootstrap retains the complete checked HIR and interop inventory.
   Completed bootstrap HIR moves into shared immutable storage after module
   emission. `StdlibEmissionCode` exposes only emission metadata; bootstrap
@@ -556,9 +563,8 @@ large-file check and a representative project check.
   selected declarations through the existing contract builder. Definitions-only
   editor lookups project from the same success/error cache without copying the
   compiled code bundle; the global checked inventory remains retained.
-  Test-project assembly retains its selected metadata, but the existing test
-  runner Cargo consumer still uses an empty interop plan; executing those
-  contracts remains a separate integration obligation.
+  Test-project assembly passes its selected interop metadata to the Cargo
+  consumer and materializes generated bridge files before test compilation.
   Code generation selects application interop demand by canonical module and
   declaration identity, following reexports, private calls, signatures and
   nominal/structural types. A required class owns its complete methods,

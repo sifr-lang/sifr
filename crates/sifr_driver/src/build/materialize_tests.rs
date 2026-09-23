@@ -5,6 +5,7 @@ use super::{
 };
 use crate::build::project_codegen::GeneratedBinaryProject;
 use crate::build::python_runtime::PackagePythonRuntime;
+use crate::build::validate_test_native_link_evidence;
 use sifr_codegen::{
     InteropBuildPlan, RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration,
     RustInteropTrustRequirement, RustInteropTrustRequirementKind,
@@ -209,6 +210,31 @@ fn native_link_evidence_policy_skips_non_rust_interop_projects() {
             evidence: "links=ssl".to_string(),
         });
     assert!(should_validate_native_link_evidence(&project));
+}
+
+#[test]
+fn test_native_link_policy_uses_the_same_trust_contract_as_build() {
+    let plan = test_dependency_plan("test-native-links");
+    let mut interop = InteropBuildPlan::default();
+    let untrusted = br#"{"reason":"build-script-executed","linked_libs":["dylib=ssl"]}"#;
+    validate_test_native_link_evidence(untrusted, &interop, &plan)
+        .expect("non-interop tests do not validate build-script links");
+    interop
+        .rust
+        .trust_requirements
+        .push(RustInteropTrustRequirement {
+            canonical_target_path: "openssl::ssl".to_string(),
+            kind: RustInteropTrustRequirementKind::NativeLinks,
+            trusted: true,
+            required_entry: "ssl".to_string(),
+            evidence: "links=ssl".to_string(),
+        });
+    validate_test_native_link_evidence(untrusted, &interop, &plan)
+        .expect("declared native link is trusted in tests");
+    let unexpected = br#"{"reason":"build-script-executed","linked_libs":["dylib=zlib"]}"#;
+    let diagnostics = validate_test_native_link_evidence(unexpected, &interop, &plan)
+        .expect_err("undeclared native link must be rejected in tests");
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
 }
 
 #[test]

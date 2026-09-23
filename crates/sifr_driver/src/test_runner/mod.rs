@@ -6,7 +6,7 @@ mod orchestrator;
 
 pub(crate) use orchestrator::GeneratedTestRunnerProject;
 
-pub use orchestrator::run_tests;
+pub use orchestrator::{run_tests, run_tests_with_package};
 
 #[cfg(test)]
 pub(crate) use artifacts::{compose_test_runner_lib, generate_test_runner_cargo_toml};

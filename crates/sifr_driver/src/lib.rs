@@ -69,7 +69,7 @@ pub use stdlib::{
     external_defs as stdlib_external_defs, sysroot_probe as stdlib_tooling_sysroot_probe,
     sysroot_status as stdlib_tooling_sysroot_status, tooling_sources as stdlib_tooling_sources,
 };
-pub use test_runner::run_tests;
+pub use test_runner::{run_tests, run_tests_with_package};
 pub use workspace::{SifrWorkspaceConfig, WorkspaceRoot, find_workspace_root};
 
 #[cfg(test)]
