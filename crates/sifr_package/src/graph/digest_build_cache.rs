@@ -22,7 +22,7 @@ pub struct PackageBuildCacheInputs {
 #[must_use]
 pub fn digest_package_build_cache_inputs(inputs: &PackageBuildCacheInputs) -> GraphDigest {
     let canonical = CanonicalPackageBuildCacheInputs::from(inputs);
-    digest_serializable(&canonical)
+    digest_serializable("package-build-cache-inputs", &canonical)
 }
 
 #[must_use]
@@ -31,7 +31,7 @@ pub fn digest_python_environment_probe(
     probe: &PythonEnvironmentProbe,
 ) -> GraphDigest {
     let canonical = CanonicalPythonEnvironmentProbe { request, probe };
-    digest_serializable(&canonical)
+    digest_serializable("python-environment-probe", &canonical)
 }
 
 /// Stable identity for authoring artifacts that depend on the selected

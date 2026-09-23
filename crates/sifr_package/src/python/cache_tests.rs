@@ -67,3 +67,58 @@ fn python_probe_digest_includes_resolved_distribution_versions_and_abi() {
     assert_ne!(package_key(&first), package_key(&distribution_changed));
     assert_ne!(package_key(&first), package_key(&abi_changed));
 }
+
+#[test]
+fn python_probe_identity_binds_each_request_and_observation_field() {
+    let request = request();
+    let probe = valid_probe();
+    let original = digest_python_environment_probe(&request, &probe);
+    let check_request = |modify: fn(&mut crate::PythonEnvironmentProbeRequest)| {
+        let mut next = request.clone();
+        modify(&mut next);
+        assert_ne!(original, digest_python_environment_probe(&next, &probe));
+    };
+    check_request(|x| x.venv_root = "/other".into());
+    check_request(|x| x.interpreter = "/other/python".into());
+    check_request(|x| x.pyproject = Some("".into()));
+    check_request(|x| x.pyproject = Some("pyproject.toml".into()));
+    check_request(|x| x.lock = Some("".into()));
+    check_request(|x| x.lock = Some("uv.lock".into()));
+    check_request(|x| x.required_imports.push("numpy".into()));
+    check_request(|x| x.declared_imports.clear());
+    check_request(|x| x.native_imports.push("numpy".into()));
+
+    let check_probe = |modify: fn(&mut crate::PythonEnvironmentProbe)| {
+        let mut next = probe.clone();
+        modify(&mut next);
+        assert_ne!(original, digest_python_environment_probe(&request, &next));
+    };
+    check_probe(|x| x.implementation_name = "PyPy".into());
+    check_probe(|x| x.implementation_version = "3.15".into());
+    check_probe(|x| x.cpython_version_tuple.push(8));
+    check_probe(|x| x.executable = "/other/python".into());
+    check_probe(|x| x.sys_prefix = "/other".into());
+    check_probe(|x| x.sys_base_prefix = "/other".into());
+    check_probe(|x| x.site_packages.push("/other/site".into()));
+    check_probe(|x| x.sys_path.push("/other".into()));
+    check_probe(|x| x.soabi = None);
+    check_probe(|x| x.extension_suffixes.push(".pyd".into()));
+    check_probe(|x| x.pointer_width = 32);
+    check_probe(|x| x.platform = "linux".into());
+    check_probe(|x| x.machine = "x86_64".into());
+    check_probe(|x| x.libpython = None);
+    check_probe(|x| x.free_threaded = true);
+    check_probe(|x| x.imports[0].root = "other".into());
+    check_probe(|x| x.imports[0].ok = false);
+    check_probe(|x| x.imports[0].origin = Some("/other".into()));
+    check_probe(|x| {
+        x.imports[0].distributions.push(PythonDistributionProbe {
+            name: "pkg".into(),
+            version: "1".into(),
+        })
+    });
+    check_probe(|x| x.imports[0].error = Some("error".into()));
+    check_probe(|x| x.native_imports.push(x.imports[0].clone()));
+    check_probe(|x| x.pyproject_digest = Some("digest".into()));
+    check_probe(|x| x.uv_lock_digest = Some("digest".into()));
+}

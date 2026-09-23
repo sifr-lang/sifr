@@ -1,14 +1,14 @@
 use crate::diag::PackageDiagnostic;
 use crate::manifest::metadata::CargoSifrMetadata;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct CargoPackageId(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct CargoDependency {
     pub name: String,
     pub package: Option<String>,
@@ -18,14 +18,14 @@ pub struct CargoDependency {
     pub uses_workspace: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct CargoResolveEdge {
     pub from: CargoPackageId,
     pub dependency_name: String,
     pub to: CargoPackageId,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct CargoTarget {
     pub name: String,
     pub kind: BTreeSet<String>,
@@ -33,7 +33,7 @@ pub struct CargoTarget {
     pub src_path: PathBuf,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct CargoPackage {
     pub id: CargoPackageId,
     pub name: String,
@@ -47,7 +47,7 @@ pub struct CargoPackage {
     pub sifr_metadata: Option<CargoSifrMetadata>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct CargoMetadata {
     pub packages: Vec<CargoPackage>,
     pub resolve_edges: Vec<CargoResolveEdge>,
@@ -58,7 +58,7 @@ pub struct CargoMetadata {
     pub workspace_sifr: CargoWorkspaceSifrMetadata,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct NormalizedCargoMetadata {
     pub packages: BTreeMap<CargoPackageId, CargoPackage>,
     pub resolve_edges: Vec<CargoResolveEdge>,
@@ -69,7 +69,7 @@ pub struct NormalizedCargoMetadata {
     pub workspace_sifr: CargoWorkspaceSifrMetadata,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct CargoWorkspaceSifrMetadata {
     pub tools_package: Option<String>,
 }

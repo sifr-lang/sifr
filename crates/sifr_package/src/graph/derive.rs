@@ -1,3 +1,4 @@
+use serde::Serialize;
 mod source_validation;
 
 use source_validation::{validate_pure_markers, validate_sql_schema_sources};
@@ -14,10 +15,10 @@ use sifr_frontend::SourceProvider;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct SifrPackageId(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SifrPackageGraph {
     pub packages: BTreeMap<SifrPackageId, SifrPackageMetadata>,
     pub cargo_edges: BTreeMap<SifrPackageId, BTreeSet<SifrPackageId>>,
@@ -26,7 +27,7 @@ pub struct SifrPackageGraph {
     pub classifications: BTreeMap<CargoPackageId, PackageClassification>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SifrPackageMetadata {
     pub package_id: SifrPackageId,
     pub cargo_package_id: CargoPackageId,
@@ -40,7 +41,7 @@ pub struct SifrPackageMetadata {
     pub aliases: BTreeMap<String, CargoSifrAliasMetadata>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct BackendCrateMetadata {
     pub cargo_package_id: CargoPackageId,
     pub dependency_name: String,
@@ -54,7 +55,7 @@ pub struct BackendCrateMetadata {
     pub has_proc_macro: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub enum PackageClassification {
     SifrSource(SifrPackageId),
     RustBackedSifr(SifrPackageId),

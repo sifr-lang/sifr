@@ -1,5 +1,6 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
+use serde::Serialize;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -17,13 +18,13 @@ const MISPLACED_COMPILER_KEYS: &[&str] = &[
     "edition",
 ];
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct CargoSifrMetadata {
     pub manifest: PathBuf,
     pub aliases: BTreeMap<String, CargoSifrAliasMetadata>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct CargoSifrAliasMetadata {
     pub dependency: String,
     pub import: String,
