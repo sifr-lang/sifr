@@ -239,22 +239,25 @@ test-fixture directory repair. The first full LSP run had 79 passes and
 was absent and the host uv was older than the pinned fixture version.
 After preparing the local fixture environment with cached uv 0.12.10,
 the affected Python declaration group passed 24/24 through the compiled
-LSP test harness. The full named LSP command has not been rerun under
-that corrected environment. Driver, frontend, analysis, and LSP logs are
-under `/home/yaser5/projects/sifr/sql-item3-*.log`; the failing runs
-remain evidence, not passes. Both diagnostic coverage scripts, formatting,
-HIR and driver maintainability checks, the file-size guard (4133 files),
-and `git diff --check` passed.
+LSP test harness. The full named LSP command then passed 92/92 with that environment,
+and the diagnostics crate passed 32/32. Driver, frontend, analysis, LSP,
+and diagnostics logs are under `/home/yaser5/projects/sifr/sql-item3-*.log`;
+the earlier failed runs remain evidence, not passes. Both diagnostic
+coverage scripts, formatting, HIR and driver maintainability checks,
+the file-size guard (4133 files), and `git diff --check` passed.
 
-The host had 3.9 GiB available on its root volume, which was at 100%,
-with other sessions actively compiling. The compatible 58 GiB Cargo target
-is owned by the prior Item 2 worktree and is not available for this
-session to clean; this worktree has no obsolete artifacts of its own.
-Starting more Cargo compilation with that headroom could exhaust the
-shared volume. The remaining named checks are
-`cargo test --locked -p sifr_diagnostics`, the diagnostics baseline
-runner, the full corrected-environment `cargo test --locked -p sifr_lsp`,
-and workspace Clippy. After capacity is restored, run these selections
+The host initially had 3.9 GiB available on its root volume, which was
+at 100%, with other sessions actively compiling. It briefly recovered
+to 12 GiB, then fell to about 6 GiB during the diagnostics baseline
+runner's compiler preparation. This session stopped only its own runner
+before the shared volume was exhausted. That run's 179 reported variants
+were prerequisite-blocked by the interrupted compiler preparation
+(exit 130); no baseline assertion ran and no baseline pass is claimed.
+The log is `/home/yaser5/projects/sifr/sql-item3-diagnostics-baselines.log`.
+The compatible 58 GiB Cargo target is owned by the prior Item 2 worktree
+and is not available for this session to clean; this worktree has no
+obsolete artifacts of its own. The remaining named checks are the
+diagnostics baseline runner and workspace Clippy. After capacity is restored, run these selections
 and any affected focused regressions on the candidate, complete the scoped
 exact-SHA Opus review, then merge and replace this handoff with a delivery
 receipt. No create-PR or full merge gate is claimed for this intermediate
