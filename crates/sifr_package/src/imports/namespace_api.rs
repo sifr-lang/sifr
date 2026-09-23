@@ -1,18 +1,19 @@
 use crate::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::imports::source_map::DottedModulePath;
+use serde::Serialize;
 use sifr_frontend::SourceProvider;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct NamespaceApi {
     pub namespace: DottedModulePath,
     pub public_symbols: BTreeMap<String, PublicSymbolOrigin>,
     pub public_child_namespaces: BTreeMap<String, DottedModulePath>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub enum PublicSymbolOrigin {
     DirectDefinition {
         file_path: PathBuf,

@@ -2,6 +2,7 @@ use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::manifest::sifr::validate_relative_path;
 use semver::Version;
+use serde::Serialize;
 use sifr_compiler_component::{
     ComponentIdentity, ComponentRegistration, DiagnosticCodeDeclaration, DiagnosticLifecycle,
     DiagnosticRegistry, DiagnosticRegistryOwner, ProtocolRange,
@@ -9,7 +10,7 @@ use sifr_compiler_component::{
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct CompilerComponentConfig {
     pub kind: String,
     pub artifact: PathBuf,

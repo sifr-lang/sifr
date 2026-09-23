@@ -10,27 +10,28 @@ use crate::manifest::sifr_fields::{
     validate_edition,
 };
 use crate::manifest::sql_profiles::{SqlConfig, parse_sql_config};
+use serde::Serialize;
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
 mod load;
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct SifrPackageName(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct SifrEdition(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct CompilerRequirement(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct PackageSourceRoot(pub PathBuf);
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct ImportRoot(pub String);
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct TrustPolicy {
     pub security_capabilities: Vec<String>,
     pub native: Vec<String>,
@@ -47,7 +48,7 @@ pub struct TrustPolicy {
     pub rust_panic_abort: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct PythonConfig {
     pub venv: Option<PathBuf>,
     pub pyproject: Option<PathBuf>,
@@ -66,13 +67,13 @@ impl PythonConfig {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct RustInteropConfig {
     pub bridges: Vec<PathBuf>,
     pub direct_crate_bindings: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SifrManifest {
     pub package_name: SifrPackageName,
     pub edition: SifrEdition,

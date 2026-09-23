@@ -1,15 +1,16 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
+use serde::Serialize;
 use std::collections::BTreeMap;
 use std::path::Path;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SifrScript {
     pub command: String,
     pub args: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub enum SifrDependency {
     Version(String),
     Table(BTreeMap<String, String>),

@@ -6,14 +6,15 @@ use crate::graph::derive::{
 };
 use crate::manifest::package_sections::SifrDependency;
 use crate::manifest::sifr::ImportRoot;
+use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct DirectDependencyScope {
     pub imports: BTreeMap<ImportRoot, ScopedImport>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct ScopedImport {
     pub import_root: ImportRoot,
     pub target_export_root: ImportRoot,
@@ -23,7 +24,7 @@ pub struct ScopedImport {
     pub source: ScopedImportSource,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub enum ScopedImportSource {
     Export,
     Alias { alias: String },
