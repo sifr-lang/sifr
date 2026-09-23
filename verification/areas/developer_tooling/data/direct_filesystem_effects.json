@@ -5848,6 +5848,13 @@
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_probe_identity_tests.rs",
+      "symbol": "shared_cargo_target_rejects_a_different_probe_contract",
+      "operation": "set_modified",
+      "site": ".set_times(FileTimes::new().set_modified(old))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_probe_identity_tests.rs",
       "symbol": "copy_vendor_tree",
       "operation": "create_dir_all",
       "site": "fs::create_dir_all(destination).expect(\"create test vendor directory\");",
@@ -7902,6 +7909,13 @@
       "symbol": "parent_module_file",
       "operation": "is_file",
       "site": "if provider.is_file(&candidate) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project/discovery.rs",
+      "symbol": "discover_project_sifr_files",
+      "operation": "read_dir",
+      "site": "if let Ok(entries) = provider.read_dir(project_dir) {",
       "classification": "semantic-input"
     },
     {
@@ -12967,6 +12981,13 @@
     },
     {
       "path": "crates/sifr_format/src/lib.rs",
+      "symbol": "collect_sifr_files_inner",
+      "operation": "read_dir",
+      "site": "for entry in provider.read_dir(path).map_err(|err| {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_format/src/lib.rs",
       "symbol": "write_source",
       "operation": "write",
       "site": "fs::write(path, source).map_err(|err| {",
@@ -13099,6 +13120,13 @@
       "classification": "tooling-input"
     },
     {
+      "path": "crates/sifr_frontend/src/graph_cache_and_queries/loaders.rs",
+      "symbol": "load_project_with_external_defs_and_auxiliary_sources",
+      "operation": "read_dir",
+      "site": "for entry in provider.read_dir(project_dir).map_err(|error| {",
+      "classification": "build-identity"
+    },
+    {
       "path": "crates/sifr_frontend/src/graph_cache_and_queries/reuse.rs",
       "symbol": "parse_module",
       "operation": "metadata",
@@ -13212,6 +13240,13 @@
     },
     {
       "path": "crates/sifr_frontend/src/persistence/observations.rs",
+      "symbol": "read_dir",
+      "operation": "read_dir",
+      "site": "let value = self.inner.read_dir(path);",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_frontend/src/persistence/observations.rs",
       "symbol": "is_file",
       "operation": "is_file",
       "site": "let exists = self.inner.is_file(path);",
@@ -13229,6 +13264,13 @@
       "symbol": "canonicalize",
       "operation": "canonicalize",
       "site": "let value = self.inner.canonicalize(path);",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_frontend/src/persistence/observations.rs",
+      "symbol": "observations_match",
+      "operation": "read_dir",
+      "site": ".read_dir(path)",
       "classification": "semantic-input"
     },
     {
@@ -13269,6 +13311,13 @@
     {
       "path": "crates/sifr_frontend/src/persistence/tests.rs",
       "symbol": "dx12_observation_golden_and_order_roundtrip",
+      "operation": "read_dir",
+      "site": "capture.read_dir(Path::new(\"/workspace/src\")).unwrap();",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_frontend/src/persistence/tests.rs",
+      "symbol": "dx12_observation_golden_and_order_roundtrip",
       "operation": "canonicalize",
       "site": ".canonicalize(Path::new(\"/workspace/src/helper.sifr\"))",
       "classification": "semantic-input"
@@ -13292,6 +13341,13 @@
       "symbol": "absence_and_higher_priority_candidates",
       "operation": "is_file",
       "site": "assert!(!capture.is_file(Path::new(\"/src/missing.sifr\")));",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_frontend/src/persistence/tests.rs",
+      "symbol": "file_set_and_configuration_invalidation",
+      "operation": "read_dir",
+      "site": "capture.read_dir(Path::new(\"/src\")).unwrap();",
       "classification": "semantic-input"
     },
     {
@@ -13597,6 +13653,13 @@
     },
     {
       "path": "crates/sifr_frontend/src/source_provider.rs",
+      "symbol": "read_dir",
+      "operation": "read_dir",
+      "site": "let mut entries = match self.inner.read_dir(path) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_frontend/src/source_provider.rs",
       "symbol": "is_file",
       "operation": "is_file",
       "site": "self.overlays.contains_key(path) || self.inner.is_file(path)",
@@ -13614,6 +13677,13 @@
       "symbol": "canonicalize",
       "operation": "canonicalize",
       "site": "self.inner.canonicalize(path)",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_frontend/src/source_provider.rs",
+      "symbol": "read_dir",
+      "operation": "read_dir",
+      "site": "match self.inner.read_dir(path) {",
       "classification": "semantic-input"
     },
     {
@@ -13649,6 +13719,20 @@
       "symbol": "overlay_provider_synthesizes_nested_directories",
       "operation": "is_dir",
       "site": "assert!(provider.is_dir(&root));",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_frontend/src/source_provider.rs",
+      "symbol": "overlay_provider_synthesizes_nested_directories",
+      "operation": "read_dir",
+      "site": "let root_entries = provider.read_dir(&root).expect(\"overlay root is readable\");",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_frontend/src/source_provider.rs",
+      "symbol": "overlay_provider_synthesizes_nested_directories",
+      "operation": "read_dir",
+      "site": ".read_dir(&root.join(\"pkg\"))",
       "classification": "semantic-input"
     },
     {
@@ -14968,6 +15052,13 @@
       "classification": "semantic-input"
     },
     {
+      "path": "crates/sifr_package/src/imports/source_map/discovery.rs",
+      "symbol": "discover_modules_recursive",
+      "operation": "read_dir",
+      "site": "let entries = provider.read_dir(directory).map_err(|error| {",
+      "classification": "semantic-input"
+    },
+    {
       "path": "crates/sifr_package/src/imports/source_map.rs",
       "symbol": "module_for_file",
       "operation": "canonicalize",
@@ -15091,6 +15182,13 @@
       "symbol": "discover_app_targets",
       "operation": "is_file",
       "site": "if provider.is_file(&main) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_package/src/ops/session_targets.rs",
+      "symbol": "collect_bin_targets",
+      "operation": "read_dir",
+      "site": "let Ok(entries) = provider.read_dir(current) else {",
       "classification": "semantic-input"
     },
     {

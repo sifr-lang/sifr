@@ -21,10 +21,10 @@ WRITE_FUNCTIONS = ("write", "copy", "rename", "remove_file", "remove_dir",
                    "hard_link", "soft_link")
 FS_FUNCTIONS = READ_FUNCTIONS + WRITE_FUNCTIONS
 PATH_METHODS = ("is_file", "is_dir", "exists", "try_exists", "metadata",
-                "canonicalize", "read_link", "symlink_metadata", "is_symlink")
+                "canonicalize", "read_link", "read_dir", "symlink_metadata", "is_symlink")
 FILE_FUNCTIONS = ("open", "create", "create_new")
-METHOD_WRITES = ("set_len", "set_times", "set_permissions", "sync_all", "sync_data")
-OS_FUNCTIONS = {"unix": ("symlink", "chown", "lchown"),
+METHOD_WRITES = ("set_len", "set_times", "set_modified", "set_permissions", "sync_all", "sync_data")
+OS_FUNCTIONS = {"unix": ("symlink", "chown", "lchown", "fchown"),
                 "windows": ("symlink_file", "symlink_dir")}
 WRITE_OPERATIONS = (set(WRITE_FUNCTIONS) | set(METHOD_WRITES) |
                     set(OS_FUNCTIONS["unix"]) | set(OS_FUNCTIONS["windows"]) |
@@ -283,7 +283,7 @@ def sites(root: Path) -> list[dict[str, str]]:
             if "new" in line and any(operation == "dir-builder" and regex.search(line)
                    for operation, regex in rules):
                 builder = "directory"
-            if builder and re.search(r"\.(?:write|append|create|create_new|truncate)\s*\(\s*true\s*\)", line):
+            if builder and re.search(r"\.(?:write|append|create|create_new|truncate)\s*\(\s*(?!false\s*\))[^)]*\)", line):
                 builder_writes = True
             hits = []
             for operation, regex in rules:
@@ -354,7 +354,9 @@ def self_test() -> None:
             'fn new(path: std::path::PathBuf, permissions: std::fs::Permissions) { let _ = path.set_permissions(permissions); }\n',
             'fn new() { let _ = std::fs::exists("x"); }\n',
             'fn new(path: std::path::PathBuf) { let _ = path.symlink_metadata(); }\n',
+            'fn new(path: std::path::PathBuf) { let _ = path.read_dir(); }\n',
             'fn new() { let _ = std::os::unix::fs::symlink("x", "y"); }\n',
+            'fn new() { let _ = std::os::unix::fs::fchown(0, None, None); }\n',
             'fn new() { let _ = std::os::windows::fs::symlink_file("x", "y"); }\n',
             'fn new() { let _ = std::os::windows::fs::symlink_dir("x", "y"); }\n',
             'use std::os::unix::fs::symlink; fn new() { let _ = symlink("x", "y"); }\n',
@@ -362,10 +364,14 @@ def self_test() -> None:
             'use std::os::unix::fs as unix_disk; fn new() { let _ = unix_disk::symlink("x", "y"); }\n',
             'use std::{os::unix::fs::{symlink as link}}; fn new() { let _ = link("x", "y"); }\n',
             'fn new(file: std::fs::File) { let _ = file.sync_all(); }\n',
+            'fn new(file: std::fs::File) { let _ = file.set_modified(std::time::SystemTime::now()); }\n',
+            'fn new(write: bool) { let _ = std::fs::OpenOptions::new().write(write).open("x"); }\n',
         )
         for addition in mutations:
             source.write_text(seed + addition)
             assert compare(sites(root), baseline), addition
+            if ".write(write)" in addition:
+                assert any(site["operation"] == "open-write" for site in sites(root)), addition
             if "symlink" in addition and "symlink_metadata" not in addition:
                 assert any(site["operation"].startswith("symlink") and
                            site["classification"] == "output-effect"
