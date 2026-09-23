@@ -174,7 +174,7 @@ macro_rules! stmt_expr_wrappers_range_index {
                     Type::Str => $emitter.lower_string_index_option_with_cache(
                         object,
                         crate::RustExpr::Ident("__v".to_string()),
-                        lowered_index,
+                        crate::RustEmitter::clone_non_copy_name_expr_for_ir(index, lowered_index),
                     ),
                     _ => return Ok(None),
                 };

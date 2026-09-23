@@ -668,3 +668,30 @@ class Counter:
     assert!(after.contains("__sifr_self.total"), "{rust}");
     syn::parse_file(&rust).expect("emitted Rust parses");
 }
+
+#[test]
+fn optional_string_index_loop_retains_non_copy_index() {
+    let rust = generate_rust_from_source(
+        r#"
+def scan(text: str | None) -> str:
+    result = ""
+    j = 0
+    while j < 3:
+        first = text[j]
+        second = text[j]
+        if first is not None:
+            result += first
+        if second is not None:
+            result += second
+        j += 1
+    return result
+"#,
+    );
+    assert!(!rust.contains("compile_error!"), "{rust}");
+    assert!(rust.contains(".as_ref().and_then("), "{rust}");
+    assert!(
+        rust.matches("let __sifr_string_index = j.clone();").count() >= 2,
+        "{rust}"
+    );
+    assert!(!rust.contains("let __sifr_string_index = j;"), "{rust}");
+}
