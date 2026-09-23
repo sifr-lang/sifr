@@ -35,6 +35,7 @@
         {"name": "e2e", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "formatter_discovery", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "host_tool_cli", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "legal_failure_method_names", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "python_read_only_cli", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "runtime_observability_boundary", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "sysroot_cli", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
