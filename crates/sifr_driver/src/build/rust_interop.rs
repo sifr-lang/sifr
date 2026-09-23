@@ -225,14 +225,23 @@ impl<'a> RustInteropResolver<'a> {
         generated.interop.rust.probe_plan = RustBridgeProbePlan {
             probes: std::mem::take(&mut self.probes),
         };
-        generated.interop.rust.bridge_sources = bridge_source_digests(self.context, package);
-        let mut cargo_input = cargo_inputs(self.cargo_resolution, self.context, package);
+        let identity_error = |reason: String| {
+            vec![diagnostic_with_code(
+                format!("Rust interop cache authority failed: {reason}"),
+                DiagnosticCode::RUST_CARGO_METADATA,
+            )]
+        };
+        generated.interop.rust.bridge_sources =
+            bridge_source_digests(self.context, package).map_err(identity_error)?;
+        let mut cargo_input =
+            cargo_inputs(self.cargo_resolution, self.context, package).map_err(identity_error)?;
         if let Some(trust) = &self.context.sysroot_trust {
             if trust.package_id != self.context.package_id {
                 if let Some(sysroot_package) = self.context.graph.packages.get(&trust.package_id) {
                     cargo_input = combined_cargo_inputs(
                         cargo_input,
-                        cargo_inputs(self.cargo_resolution, self.context, sysroot_package),
+                        cargo_inputs(self.cargo_resolution, self.context, sysroot_package)
+                            .map_err(identity_error)?,
                     );
                 }
             }
@@ -246,7 +255,8 @@ impl<'a> RustInteropResolver<'a> {
         );
         cargo_input.sqlx_offline_metadata_digest = combined_sqlx_offline_metadata_digest(
             sqlx_backend_roots.iter().map(std::path::PathBuf::as_path),
-        );
+        )
+        .map_err(identity_error)?;
         generated.interop.rust.cargo_inputs = Some(cargo_input);
         inject_package_bridge_aliases(generated);
         Ok(())

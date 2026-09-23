@@ -1,8 +1,9 @@
-use super::rust_interop_digest::{digest_file, digest_path, fnv1a64_hex, push_cache_bytes};
+use super::rust_interop_digest::{digest_file, digest_path};
 use super::rust_interop_probe::PendingRustBridgeProbe;
 use super::rust_interop_probe_paths::normalize_cargo_target_dir;
 use super::rust_interop_sqlx_offline::sqlx_offline_metadata_digest;
 use super::workspace::artifact_cache_root;
+use sifr_identity::IdentityEncoder;
 use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -13,19 +14,19 @@ const RUST_BRIDGE_PROBE_CACHE_DIR: &str = "rust_bridge_probes";
 
 #[derive(Default)]
 pub(super) struct ProbeCacheKeyCache {
-    sqlx_metadata_by_backend_root: BTreeMap<PathBuf, Option<String>>,
+    sqlx_metadata_by_backend_root: BTreeMap<PathBuf, Result<Option<String>, String>>,
 }
 
 impl ProbeCacheKeyCache {
-    fn sqlx_metadata_digest(&mut self, backend_root: &Path) -> Option<String> {
+    fn sqlx_metadata_digest(&mut self, backend_root: &Path) -> Result<Option<String>, String> {
         self.sqlx_metadata_digest_with(backend_root, sqlx_offline_metadata_digest)
     }
 
     fn sqlx_metadata_digest_with(
         &mut self,
         backend_root: &Path,
-        inspect: impl FnOnce(&Path) -> Option<String>,
-    ) -> Option<String> {
+        inspect: impl FnOnce(&Path) -> Result<Option<String>, String>,
+    ) -> Result<Option<String>, String> {
         self.sqlx_metadata_by_backend_root
             .entry(backend_root.to_path_buf())
             .or_insert_with(|| inspect(backend_root))
@@ -75,54 +76,91 @@ pub(super) fn probe_cache_key(
     probe_manifest: &str,
     probe_source: &str,
     cache: &mut ProbeCacheKeyCache,
-) -> String {
-    let mut input = Vec::new();
-    for value in [
-        "sifr-rust-bridge-probe-cache-v1",
-        &probe.backend.cargo_package_id.0,
-        &probe.backend.dependency_name,
-        &probe.backend.cargo_package_name,
-        &probe.backend.cargo_version,
-        probe.backend.cargo_source.as_deref().unwrap_or("<path>"),
-        &probe.backend.cargo_manifest_path.display().to_string(),
-        &probe.path.dotted(),
-        probe_manifest,
-        probe_source,
-        if probe.cargo_resolution.lock_mode == sifr_package::CargoLockMode::Normal {
-            "normal"
-        } else {
-            "lock-constrained"
-        },
-        &cached_digest_path(backend_root),
-        &nearest_lock_digest(backend_root),
-        &cached_digest_path(&probe.sysroot_runtime_crate),
-        &optional_vendor_identity(
-            probe
-                .cargo_resolution
-                .uses_sysroot_vendor()
-                .then_some(probe.sysroot_vendor_dir.as_deref())
-                .flatten(),
+) -> Result<String, String> {
+    let mut input = IdentityEncoder::new("rust-bridge-probe-cache-v2");
+    for (name, value) in [
+        ("package-id", probe.backend.cargo_package_id.0.as_str()),
+        ("dependency", probe.backend.dependency_name.as_str()),
+        ("cargo-package", probe.backend.cargo_package_name.as_str()),
+        ("cargo-version", probe.backend.cargo_version.as_str()),
+        (
+            "manifest-path",
+            &probe.backend.cargo_manifest_path.display().to_string(),
+        ),
+        ("target-path", &probe.path.dotted()),
+        ("manifest", probe_manifest),
+        ("source", probe_source),
+        ("backend-tree", &cached_digest_path(backend_root)),
+        ("nearest-lock", &nearest_lock_digest(backend_root)),
+        (
+            "sysroot-runtime-tree",
+            &cached_digest_path(&probe.sysroot_runtime_crate),
+        ),
+        (
+            "vendor",
+            &optional_vendor_identity(
+                probe
+                    .cargo_resolution
+                    .uses_sysroot_vendor()
+                    .then_some(probe.sysroot_vendor_dir.as_deref())
+                    .flatten(),
+            ),
         ),
     ] {
-        push_cache_bytes(&mut input, value);
+        input.field(name, value.as_bytes());
     }
-    push_cache_bytes(
-        &mut input,
-        probe
-            .cargo_resolution
-            .native_toolchain
-            .as_ref()
-            .map_or("<unavailable>", |tools| tools.identity()),
+    input.field(
+        "cargo-source-present",
+        &[u8::from(probe.backend.cargo_source.is_some())],
     );
-    if let Some(seed) = probe.cargo_resolution.normal_seed_cache_fragment() {
-        push_cache_bytes(&mut input, "normal-authority-seed");
-        push_cache_bytes(&mut input, &seed);
+    if let Some(source) = &probe.backend.cargo_source {
+        input.field("cargo-source", source.as_bytes());
     }
-    if let Some(metadata_digest) = cache.sqlx_metadata_digest(backend_root) {
-        push_cache_bytes(&mut input, "sqlx-offline-metadata");
-        push_cache_bytes(&mut input, &metadata_digest);
+    input.field(
+        "lock-mode",
+        probe.cargo_resolution.lock_mode.as_str().as_bytes(),
+    );
+    input.field(
+        "vendor-mode",
+        format!("{:?}", probe.cargo_resolution.cargo_vendor_mode).as_bytes(),
+    );
+    input.field(
+        "vendor-path-present",
+        &[u8::from(probe.sysroot_vendor_dir.is_some())],
+    );
+    if let Some(path) = &probe.sysroot_vendor_dir {
+        input.field("vendor-path", path.to_string_lossy().as_bytes());
     }
-    fnv1a64_hex(&input)
+    input.field(
+        "authority-count",
+        &(probe.cargo_resolution.authoritative_locks.len() as u64).to_be_bytes(),
+    );
+    for path in &probe.cargo_resolution.authoritative_locks {
+        input.field("authority-path", path.to_string_lossy().as_bytes());
+        let digest = digest_file(path);
+        input.field("authority-readable", &[u8::from(digest.is_some())]);
+        if let Some(digest) = digest {
+            input.field("authority-digest", digest.as_bytes());
+        }
+    }
+    input.field(
+        "toolchain-present",
+        &[u8::from(probe.cargo_resolution.native_toolchain.is_ok())],
+    );
+    if let Ok(tools) = &probe.cargo_resolution.native_toolchain {
+        input.field("toolchain", tools.identity().as_bytes());
+    }
+    let seed = probe.cargo_resolution.normal_seed_cache_fragment();
+    input.field("seed-present", &[u8::from(seed.is_some())]);
+    if let Some(seed) = seed {
+        input.field("seed", seed.as_bytes());
+    }
+    let metadata = cache.sqlx_metadata_digest(backend_root)?;
+    input.field("sqlx-present", &[u8::from(metadata.is_some())]);
+    if let Some(metadata) = metadata {
+        input.field("sqlx", metadata.as_bytes());
+    }
+    Ok(input.finish())
 }
 
 fn cached_digest_path(path: &Path) -> String {
@@ -191,30 +229,30 @@ mod tests {
         assert_eq!(
             cache.sqlx_metadata_digest_with(clean_root, |_| {
                 clean_inspections += 1;
-                None
+                Ok(None)
             }),
-            None
+            Ok(None)
         );
         assert_eq!(
             cache.sqlx_metadata_digest_with(clean_root, |_| {
                 clean_inspections += 1;
-                Some("changed".to_string())
+                Ok(Some("changed".to_string()))
             }),
-            None
+            Ok(None)
         );
         assert_eq!(
             cache.sqlx_metadata_digest_with(sqlx_root, |_| {
                 sqlx_inspections += 1;
-                Some("sqlx-digest".to_string())
+                Ok(Some("sqlx-digest".to_string()))
             }),
-            Some("sqlx-digest".to_string())
+            Ok(Some("sqlx-digest".to_string()))
         );
         assert_eq!(
             cache.sqlx_metadata_digest_with(sqlx_root, |_| {
                 sqlx_inspections += 1;
-                None
+                Ok(None)
             }),
-            Some("sqlx-digest".to_string())
+            Ok(Some("sqlx-digest".to_string()))
         );
         assert_eq!(clean_inspections, 1);
         assert_eq!(sqlx_inspections, 1);

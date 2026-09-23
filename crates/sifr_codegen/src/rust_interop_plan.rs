@@ -682,73 +682,54 @@ fn push_probe(out: &mut String, probe: &RustBridgeProbe) {
 }
 
 fn push_bridge_source(out: &mut String, bridge_source: &RustBridgeSourceDigest) {
-    out.push_str("bridge_source=");
-    out.push_str(&bridge_source.package_id);
-    out.push(':');
-    out.push_str(&bridge_source.bridge_root);
-    out.push(':');
-    out.push_str(&bridge_source.digest);
+    let mut identity = sifr_identity::IdentityEncoder::new("rust-bridge-source-record-v2");
+    identity.field("package", bridge_source.package_id.as_bytes());
+    identity.field("root", bridge_source.bridge_root.as_bytes());
+    identity.field("digest", bridge_source.digest.as_bytes());
+    out.push_str("bridge_source_v2=");
+    out.push_str(&identity.finish());
 }
 
 fn push_cargo_inputs(out: &mut String, cargo: &RustInteropCargoInputs) {
-    out.push_str("rust.cargo.package=");
-    out.push_str(&cargo.package_id);
-    out.push('\n');
-    out.push_str("rust.cargo.metadata_digest=");
-    out.push_str(cargo.cargo_metadata_digest.as_deref().unwrap_or("<none>"));
-    out.push('\n');
-    out.push_str("rust.cargo.sqlx_offline_metadata_digest=");
-    out.push_str(
-        cargo
-            .sqlx_offline_metadata_digest
-            .as_deref()
-            .unwrap_or("<none>"),
-    );
-    out.push('\n');
-    out.push_str("rust.cargo.graph_digest=");
-    out.push_str(cargo.package_graph_digest.as_deref().unwrap_or("<none>"));
-    out.push('\n');
-    out.push_str("rust.cargo.source_map_digest=");
-    out.push_str(
-        cargo
-            .package_source_map_digest
-            .as_deref()
-            .unwrap_or("<none>"),
-    );
-    out.push('\n');
-    out.push_str("rust.cargo.lock_digest=");
-    out.push_str(cargo.cargo_lock_digest.as_deref().unwrap_or("<none>"));
-    out.push('\n');
-    out.push_str("rust.cargo.target=");
-    out.push_str(cargo.target_triple.as_deref().unwrap_or("<host>"));
-    out.push('\n');
-    out.push_str("rust.cargo.features=");
-    out.push_str(&cargo.target_features.join(","));
-    out.push('\n');
-    out.push_str("rust.cargo.profile=");
-    out.push_str(&cargo.cargo_profile);
-    out.push('\n');
-    out.push_str("rust.cargo.panic=");
-    out.push_str(cargo.panic_strategy.as_deref().unwrap_or("<default>"));
-    out.push('\n');
-    for (name, value) in &cargo.profile_codegen_settings {
-        out.push_str("rust.cargo.profile_setting=");
-        out.push_str(name);
-        out.push('=');
-        out.push_str(value);
-        out.push('\n');
+    let mut identity = sifr_identity::IdentityEncoder::new("rust-interop-cargo-inputs-v2");
+    identity.field("package", cargo.package_id.as_bytes());
+    for (name, value) in [
+        ("metadata", &cargo.cargo_metadata_digest),
+        ("sqlx", &cargo.sqlx_offline_metadata_digest),
+        ("graph", &cargo.package_graph_digest),
+        ("source-map", &cargo.package_source_map_digest),
+        ("lock", &cargo.cargo_lock_digest),
+        ("target", &cargo.target_triple),
+        ("panic", &cargo.panic_strategy),
+        ("cargo-version", &cargo.cargo_version),
+        ("rustc-version", &cargo.rustc_version),
+    ] {
+        identity.field(name, &[u8::from(value.is_some())]);
+        if let Some(value) = value {
+            identity.field(name, value.as_bytes());
+        }
     }
-    out.push_str("rust.cargo.cargo_version=");
-    out.push_str(cargo.cargo_version.as_deref().unwrap_or("<unknown>"));
-    out.push('\n');
-    out.push_str("rust.cargo.rustc_version=");
-    out.push_str(cargo.rustc_version.as_deref().unwrap_or("<unknown>"));
-    out.push('\n');
-    out.push_str("rust.cargo.trust_policy=");
-    out.push_str(&cargo.trust_policy_digest);
-    out.push('\n');
-    out.push_str("rust.cargo.build_env=");
-    out.push_str(&cargo.declared_build_env.join(","));
+    identity.field("profile", cargo.cargo_profile.as_bytes());
+    identity.field("trust", cargo.trust_policy_digest.as_bytes());
+    for (name, values) in [
+        ("feature", &cargo.target_features),
+        ("build-env", &cargo.declared_build_env),
+    ] {
+        identity.field(name, &(values.len() as u64).to_be_bytes());
+        for value in values {
+            identity.field(name, value.as_bytes());
+        }
+    }
+    identity.field(
+        "setting-count",
+        &(cargo.profile_codegen_settings.len() as u64).to_be_bytes(),
+    );
+    for (name, value) in &cargo.profile_codegen_settings {
+        identity.field("setting-name", name.as_bytes());
+        identity.field("setting-value", value.as_bytes());
+    }
+    out.push_str("rust.cargo.v2=");
+    out.push_str(&identity.finish());
     out.push('\n');
 }
 
@@ -811,3 +792,7 @@ mod rust_interop_plan_demand_tests;
 #[cfg(test)]
 #[path = "rust_interop_plan_tests.rs"]
 mod rust_interop_plan_tests;
+
+#[cfg(test)]
+#[path = "rust_interop_plan_identity_tests.rs"]
+mod identity_tests;

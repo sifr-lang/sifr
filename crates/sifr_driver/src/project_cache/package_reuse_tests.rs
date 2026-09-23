@@ -281,6 +281,45 @@ fn package_authority_changes_invalidate() {
 }
 
 #[test]
+fn package_warm_consumer_checks_source_map_authority_and_source_states() {
+    let root = fixture();
+    let entry = package(root.path());
+    assert_eq!(
+        run(root.path(), &entry, inputs(&entry)).1.status,
+        "published"
+    );
+
+    let mut changed_authority = entry.clone();
+    *changed_authority
+        .source_map
+        .roots
+        .values_mut()
+        .next()
+        .unwrap() = root.path().join("other-source-root");
+    let (_, authority_report) = run(root.path(), &changed_authority, inputs(&changed_authority));
+    assert_eq!(authority_report.restored_checks, 0);
+
+    let file = root.path().join("app/src/helper.sifr");
+    fs::write(&file, "").unwrap();
+    let (actual, empty_report) = run(root.path(), &entry, inputs(&entry));
+    assert_eq!(empty_report.restored_checks, 0);
+    assert_eq!(actual, fresh(&entry, &mut DiskSourceProvider::new()));
+
+    fs::remove_file(&file).unwrap();
+    let (actual, absent_report) = run(root.path(), &entry, inputs(&entry));
+    assert_eq!(absent_report.restored_checks, 0);
+    assert_eq!(actual, fresh(&entry, &mut DiskSourceProvider::new()));
+
+    #[cfg(unix)]
+    {
+        std::os::unix::fs::symlink(root.path().join("missing.sifr"), &file).unwrap();
+        let (actual, unreadable_report) = run(root.path(), &entry, inputs(&entry));
+        assert_eq!(unreadable_report.restored_checks, 0);
+        assert_eq!(actual, fresh(&entry, &mut DiskSourceProvider::new()));
+    }
+}
+
+#[test]
 fn package_chained_restore_matches_fresh() {
     let root = fixture();
     let entry = package(root.path());
