@@ -4,7 +4,7 @@ Status: active
 
 ## Retained Item 12 reconciliation (2026-09-22)
 
-Status: retained Item 12 blocked by the separately owned LeetCode 0150 source contract; not merged or closed.
+Status: retained Item 12 qualification in progress on the corrected LeetCode pin; not merged or closed.
 The current assignment authorizes only retained Item 12. It supersedes historical
 per-item broad-gate and one-shot limits: this intermediate implementation receives
 focused/named validation and scoped Opus review; the subsequent integration
@@ -59,6 +59,8 @@ No unexplained ignored fixture-root artifacts were found.
 
 ### Retained Item 12 continuation and blocker (2026-09-23)
 
+The external 0150 blocker is resolved by reviewed corpus [PR #51](https://github.com/sifr-lang/leetcode/pull/51) and codebase gitlink [PR #3914](https://github.com/sifr-lang/sifr/pull/3914). Main `1170491ceccf3b205d5b7228c950afcbf28a1aed` pins corpus `cbe3a55465159ae9467a7a25cc89e0066ed84db2`; the retained Item 12 branch integrates that main through `488389f48e0ad4962badc63ade9a304bf272b345`. The unchanged Item 12 compiler, SHA-256 `ebfb45b1753de3187eb899d0fcd930613304d44a20a6a00558528b1979321d09`, passes the corrected 0150 fixture natively. Full 411-case and remaining named selections are in progress; the historical failed 124/125 audit below remains a failure receipt. The pinned `editor_integrations` and nested `vscode` submodules were initialized in this owned worktree; documentation structure now passes. No full create-PR or merge gate has run in this intermediate batch.
+
 The DX.9 F7 Cargo-reuse repair was merged into the base. Retained Item 12
 resumed on its owned worktree and draft [PR #3908](https://github.com/sifr-lang/sifr/pull/3908).
 Implementation candidate `1be784e1a8f42e9d0c4c28f8f20fe2a04f189cc9` is
@@ -87,10 +89,7 @@ failure remains preserved. The full E2E selection, exact-SHA Opus review and
 merge have not run. The unrelated documentation structure check still stops on
 missing `editor_integrations/vscode/package.json`, owned by DX issue #3898.
 
-Next: the corpus owner delivers reviewed integer-safe truncation and a new
-pinned gitlink. Then rerun the failed native case and complete the named
-candidate selections, scoped Opus review, and Item 12 merge. Integration and
-whole-phase closure remain deferred.
+Next: complete the named candidate selections, scoped Opus review, and Item 12 merge. Integration qualification and whole-phase closure remain separate later work.
 
 ### Retained Item 12 blocker handoff (2026-09-22)
 
@@ -2233,7 +2232,7 @@ It does not broaden the active item.
 | 10A | merged | Module-scoped builtin error shadow identities | Project support demand preserves user-defined and builtin error identities per module, without crate-wide suppression or dangling generated paths. |
 | 11 | merged | Portable and secure generated projects | Reviewed candidate `78c28c1e4c42bd85d685d3a3cffdf132fcdfcc40` is preserved and merged through Item 11A after its consumed gate's stale companions were regenerated. |
 | 11A | merged | Generated-companion freshness and Item 11 integration | The reviewed Item 11 candidate and all 15 compiler-regenerated companions are merged through a separately bounded review and gate without rerunning Item 11's consumed gate. |
-| 12 | blocked: external algorithmic corpus | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
+| 12 | qualification in progress | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
 | 12B | blocked: Python qualification dependencies | Bounded algorithmic dependency repair | Both reviews passed. Preserve the approved candidate and both failed gates until Items 12G–12J and integration Item 12K resolve qualification. |
 | 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
 | 12D | merged | Native corpus emission dependencies | Reconciled every diagnostic category against merged producers and current named/native evidence in PR3897; see the 2026-09-22 closure receipt. |
