@@ -78,17 +78,30 @@ pub fn check_saved_sources(
             },
         );
     }
-    let package_context = package.map(package_context::identity);
-    if matches!(package_context, Some(None)) {
-        return (
-            compute(provider).diagnostics,
-            ProjectCacheReport {
-                status: "external-context".into(),
-                computed_checks: 1,
-                ..Default::default()
-            },
-        );
-    }
+    let package_context = match package.map(package_context::identity) {
+        Some(Err(_)) => {
+            return (
+                compute(provider).diagnostics,
+                ProjectCacheReport {
+                    status: "identity-unavailable".into(),
+                    computed_checks: 1,
+                    ..Default::default()
+                },
+            );
+        }
+        Some(Ok(None)) => {
+            return (
+                compute(provider).diagnostics,
+                ProjectCacheReport {
+                    status: "external-context".into(),
+                    computed_checks: 1,
+                    ..Default::default()
+                },
+            );
+        }
+        Some(Ok(Some(identity))) => Some(identity),
+        None => None,
+    };
     // Resolve/pin required installed metadata even on a project-cache hit.
     let metadata = match compiler.metadata_provider() {
         Ok(metadata) => metadata,
@@ -123,10 +136,20 @@ pub fn check_saved_sources(
                 .filter(|path| !path.as_os_str().is_empty())
                 .unwrap_or(Path::new("."))
         });
-    let mut inputs = manifestless_inputs(compiler, &metadata.metadata.metadata_id, file);
-    inputs.package_and_lock = package_context
-        .flatten()
-        .unwrap_or_else(|| "manifestless-owner-v1".into());
+    let mut inputs = match manifestless_inputs(compiler, &metadata.metadata.metadata_id, file) {
+        Ok(inputs) => inputs,
+        Err(_) => {
+            return (
+                compute(provider).diagnostics,
+                ProjectCacheReport {
+                    status: "policy-unavailable".into(),
+                    computed_checks: 1,
+                    ..Default::default()
+                },
+            );
+        }
+    };
+    inputs.package_and_lock = package_context.unwrap_or_else(|| "manifestless-owner-v1".into());
     let defs = match crate::stdlib_external_defs(compiler) {
         Ok(defs) => defs,
         Err(errors) => {
@@ -182,7 +205,9 @@ fn check(
                 if record.result.inputs.source.path == file
                     && record.validate(&inputs, &mut capture)
                 {
-                    if let Ok(diagnostics) = record.diagnostics() {
+                    if let (Ok(diagnostics), Ok(bytes)) =
+                        (record.diagnostics(), serde_json::to_vec(&record))
+                    {
                         report.observation_count = capture.observations().len();
                         report.status = "restored".into();
                         report.modules =
@@ -206,8 +231,7 @@ fn check(
                             .resolution
                             .ready()
                             .map_or(0, |resolution| resolution.sources.len());
-                        report.payload_bytes =
-                            serde_json::to_vec(&record).map_or(0, |bytes| bytes.len());
+                        report.payload_bytes = bytes.len();
                         report.validation_us = validation.elapsed().as_micros();
                         return (diagnostics, report);
                     }
@@ -242,10 +266,18 @@ fn check(
                             Ok(updated)
                                 if !cancel.load(Ordering::Acquire) && capture.unchanged() =>
                             {
-                                report.payload_bytes =
-                                    serde_json::to_vec(&updated).map_or(0, |bytes| bytes.len());
-                                if store.publish(&updated, cancel).is_err() {
-                                    report.status = "interface-restored-write-unavailable".into();
+                                match serde_json::to_vec(&updated) {
+                                    Ok(bytes) => {
+                                        report.payload_bytes = bytes.len();
+                                        if store.publish(&updated, cancel).is_err() {
+                                            report.status =
+                                                "interface-restored-write-unavailable".into();
+                                        }
+                                    }
+                                    Err(_) => {
+                                        report.status =
+                                            "interface-restored-serialization-unavailable".into();
+                                    }
                                 }
                             }
                             Ok(_) => {
@@ -300,14 +332,17 @@ fn check(
     let serialization = Instant::now();
     if let Some(store) = &store {
         match CompletedCheck::capture(file, inputs, &capture, &diagnostics) {
-            Ok(record) if capture.unchanged() => {
-                report.payload_bytes = serde_json::to_vec(&record).map_or(0, |bytes| bytes.len());
-                if store.publish(&record, cancel).is_ok() {
-                    report.status = "published".into();
-                } else {
-                    report.status = "write-unavailable".into();
+            Ok(record) if capture.unchanged() => match serde_json::to_vec(&record) {
+                Ok(bytes) => {
+                    report.payload_bytes = bytes.len();
+                    if store.publish(&record, cancel).is_ok() {
+                        report.status = "published".into();
+                    } else {
+                        report.status = "write-unavailable".into();
+                    }
                 }
-            }
+                Err(_) => report.status = "serialization-unavailable".into(),
+            },
             Ok(_) => report.status = "changed-inputs".into(),
             Err(_) => report.status = "uncacheable".into(),
         }
@@ -328,26 +363,32 @@ pub fn prune_project_cache(
     housekeeping::prune_workspace(&crate::cache_storage::root(), workspace, pressure, dry_run)
 }
 
+fn saved_check_policy(file: &Path, cwd: &Path) -> Result<String, String> {
+    identity("saved-check-policy-v1", &(file.parent(), cwd))
+        .map_err(|error| format!("could not serialize saved-check policy: {error}"))
+}
+
 fn manifestless_inputs(
     compiler: &crate::CompilerContext,
     metadata: &str,
     file: &Path,
-) -> SemanticInputs {
-    let cwd = std::env::current_dir().unwrap_or_default();
+) -> Result<SemanticInputs, String> {
+    let cwd = std::env::current_dir()
+        .map_err(|error| format!("could not read saved-check working directory: {error}"))?;
+    let policy = saved_check_policy(file, &cwd)?;
 
-    SemanticInputs {
+    Ok(SemanticInputs {
         compiler: compiler.identity().as_str().into(),
         metadata: metadata.into(),
         target: format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS),
-        workspace_and_source_policy: identity("saved-check-policy-v1", &(file.parent(), &cwd))
-            .unwrap_or_default(),
+        workspace_and_source_policy: policy,
         package_and_lock: "manifestless-owner-v1".into(),
         language_options: "ordinary-check-defaults-v1".into(),
         diagnostic_policy: "canonical-source-diagnostics-v1".into(),
         components: BTreeMap::new(),
         required_external: Default::default(),
         external: BTreeMap::new(),
-    }
+    })
 }
 
 /// Restore saved diagnostic facts into an already captured editor generation.
@@ -378,7 +419,9 @@ pub fn restore_editor_checks(
     let Ok(metadata) = compiler.metadata_provider() else {
         return Vec::new();
     };
-    let inputs = manifestless_inputs(compiler, &metadata.metadata.metadata_id, file);
+    let Ok(inputs) = manifestless_inputs(compiler, &metadata.metadata.metadata_id, file) else {
+        return Vec::new();
+    };
     let Ok(context) = inputs.identity() else {
         return Vec::new();
     };

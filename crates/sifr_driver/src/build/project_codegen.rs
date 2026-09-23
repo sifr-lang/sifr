@@ -522,12 +522,16 @@ mod tests {
             copy_performed: false,
         };
         let mut first = PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
-        first.set_arrow_certifications(vec![certification("Int64Array")]);
+        first
+            .set_arrow_certifications(vec![certification("Int64Array")])
+            .expect("certification identity");
         let first = apply_package_runtime_metadata(base_project(), Some(first))
             .expect("metadata should apply")
             .cache_key_fragment;
         let mut second = PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
-        second.set_arrow_certifications(vec![certification("StringArray")]);
+        second
+            .set_arrow_certifications(vec![certification("StringArray")])
+            .expect("certification identity");
         let second = apply_package_runtime_metadata(base_project(), Some(second))
             .expect("metadata should apply")
             .cache_key_fragment;

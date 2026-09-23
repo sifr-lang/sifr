@@ -315,13 +315,13 @@ fn package_identity_domains_and_all_build_key_fields_are_distinct() {
         features: vec!["feature".into()],
         selectors: vec!["package".into()],
     };
-    let original = digest_package_build_cache_inputs(&baseline);
+    let original = digest_package_build_cache_inputs(&baseline).unwrap();
     assert_eq!(original.algorithm, "sha256-framed-v1");
     assert_eq!(original.hex.len(), 64);
     let change = |modify: fn(&mut PackageBuildCacheInputs)| {
         let mut next = baseline.clone();
         modify(&mut next);
-        assert_ne!(original, digest_package_build_cache_inputs(&next));
+        assert_ne!(original, digest_package_build_cache_inputs(&next).unwrap());
     };
     change(|x| x.cargo_lock_digest = None);
     change(|x| x.cargo_metadata_digest = Some(String::new()));
@@ -360,11 +360,11 @@ fn normalized_cargo_identity_binds_all_resolved_field_groups() {
         workspace_root: "/ws".into(),
         workspace_sifr: Default::default(),
     };
-    let original = digest_graph_inputs(&baseline);
+    let original = digest_graph_inputs(&baseline).unwrap();
     let check = |modify: fn(&mut NormalizedCargoMetadata)| {
         let mut next = baseline.clone();
         modify(&mut next);
-        assert_ne!(original, digest_graph_inputs(&next));
+        assert_ne!(original, digest_graph_inputs(&next).unwrap());
     };
     check(|x| x.packages.values_mut().next().test_unwrap("package").name = "other".into());
     check(|x| {
@@ -444,11 +444,11 @@ fn normalized_cargo_identity_binds_all_resolved_field_groups() {
 #[test]
 fn package_graph_identity_binds_manifest_scopes_and_classification() {
     let baseline = package_graph(TrustPolicy::default(), vec![]);
-    let original = digest_package_graph(&baseline);
+    let original = digest_package_graph(&baseline).unwrap();
     let check = |modify: fn(&mut SifrPackageGraph)| {
         let mut next = baseline.clone();
         modify(&mut next);
-        assert_ne!(original, digest_package_graph(&next));
+        assert_ne!(original, digest_package_graph(&next).unwrap());
     };
     check(|x| {
         x.packages
@@ -677,4 +677,20 @@ fn backend(name: &str) -> BackendCrateMetadata {
         has_build_script: false,
         has_proc_macro: false,
     }
+}
+
+#[cfg(unix)]
+#[test]
+fn package_graph_non_utf8_path_cannot_hash_as_empty_payload() {
+    use std::os::unix::ffi::OsStringExt;
+
+    let mut graph = package_graph(TrustPolicy::default(), vec![]);
+    graph
+        .packages
+        .values_mut()
+        .next()
+        .test_unwrap("package")
+        .package_root = PathBuf::from(std::ffi::OsString::from_vec(b"/invalid-\xff".to_vec()));
+    let error = digest_package_graph(&graph).test_expect_err("non-UTF-8 path must fail");
+    assert!(error.contains("could not serialize package-graph identity"));
 }
