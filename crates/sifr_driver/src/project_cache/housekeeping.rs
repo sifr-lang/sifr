@@ -79,11 +79,12 @@ pub(super) fn open_namespace(cache: &Path, workspace: &Path, id: &str) -> io::Re
         return Err(invalid("unrecorded project namespace ownership"));
     }
     let metadata = fs::metadata(workspace)?;
+    let (device, inode) = file_identity(workspace)?;
     let expected = Owner {
         schema: 1,
         workspace: workspace.into(),
-        device: file_identity(workspace)?.0,
-        inode: file_identity(workspace)?.1,
+        device,
+        inode,
         created_ns: created_ns(&metadata)?,
     };
     // Immutable owner records are never replaced. A competing creator may leave
@@ -311,6 +312,10 @@ fn definitely_absent(path: &Path) -> bool {
     let mut current = PathBuf::new();
     for part in path.components() {
         current.push(part);
+        #[cfg(windows)]
+        if matches!(part, Component::Prefix(_)) {
+            continue;
+        }
         match fs::symlink_metadata(&current) {
             Ok(_meta) if cache_storage::real_directory(&current) => {}
             Err(error) if error.kind() == io::ErrorKind::NotFound => return true,
