@@ -71,9 +71,11 @@ serialization regression. The [PR #3975 blocker comment](https://github.com/sifr
 records this attribution; no Windows fix SHA or passing SQL Windows
 qualification exists from this retriage.
 
-The 2026-09-23 assignment authorizes a safety-preserving Windows remediation,
-but this seven-module contract is larger than one reviewable batch. Execute one
-bounded owner item at a time, retaining the existing acceptance above:
+The 2026-09-23 assignment authorizes a safety-preserving Windows remediation.
+The W1 storage and W2 process contracts below remain distinct ownership areas,
+but their implementation and native acceptance must share one coupled W1+W2
+candidate because the real Windows crate compiles both areas unconditionally.
+Retain the existing acceptance above:
 
 1. **W1 — Windows secure storage.** Implement the shared Windows equivalents
    across `cache_storage.rs`, `project_cache/housekeeping.rs`,
@@ -86,13 +88,15 @@ bounded owner item at a time, retaining the existing acceptance above:
    failure injection and intact published winners on Windows. Rerun affected
    Unix storage contracts. A compile-only `cfg` branch or permissive fallback
    does not satisfy W1.
-2. **W2 — Windows process ownership.** After W1, implement Windows cancellation
-   and process-tree lifetime in `process_signals.rs` and
+2. **W2 — Windows process ownership.** In the same candidate as W1,
+   implement Windows cancellation and process-tree lifetime in `process_signals.rs` and
    `process_execution.rs`. Preserve bounded output, deadline and cancellation
    causes, partial output, normal user-program streaming, and cleanup of
    descendants holding pipes. Run focused Windows cancellation, timeout,
    descendant, cleanup and concurrency cases plus affected Unix process cases.
-3. **W3 — integrated Windows qualification.** After W1 and W2, run the unchanged
+3. **W3 — integrated Windows qualification.** After the coupled W1+W2
+   candidate passes its named native Windows storage, metadata and process tests
+   plus affected Unix storage and process contracts, run the unchanged
    16 compiler-component tests and actual Windows native SQL clean,
    incremental, locked, offline and reproducible qualification on the exact
    candidate. Record the Windows job, candidate SHA and raw outcome; rerun
@@ -126,3 +130,36 @@ adjudication**, not implemented or validated. The owner must authorize either
 W2 process portability before W1's native acceptance, or one coupled W1+W2
 Windows candidate with bounded reviews before W3. Keep the Windows SQL CI
 blocker attributed to driver portability until W3 passes on an exact candidate.
+
+## 2026-09-23 W1+W2 coupled implementation rescope after PR #3980
+
+[Merged PR #3980](https://github.com/sifr-lang/sifr/pull/3980) recorded a
+**failed W1-only validation dependency**, not a storage implementation or a
+Windows pass. Its candidate `987dd680f254a3bddcbbe65eb36f62c15491492b`
+merged as `d54d333dd265c7c40916d4548e6d747d8082b762`. The W1-only
+blocker above remains historical evidence. This rescope selects the coupled
+option from that adjudication. `sifr_driver::lib` includes the
+storage and process modules without Windows cfg gates, so neither W1-only nor
+W2-only code can compile the real crate and execute native acceptance while
+the other area retains its Windows errors.
+
+The next implementation item is **one coupled W1+W2 candidate** covering all
+seven driver source areas in the SQL Item 3 inventory and their owning helpers.
+It must preserve the complete W1 private ownership/ACL, no-reparse traversal,
+identity/lease, atomic publication and durability contract, and the complete W2
+process-tree, cancellation/deadline, bounded capture, partial-output, normal
+streaming and descendant cleanup contract. Review the storage and process
+changes within this candidate as bounded areas; do not declare either area
+accepted until the real crate and both sets of native tests execute. Run W1's
+Windows malicious-alias, owner/ACL, concurrent reader/writer/GC, abandoned-stage,
+failure-injection and published-winner tests; run W2's Windows cancellation,
+timeout, descendant, cleanup and concurrency tests; rerun affected Unix storage,
+metadata and process contracts. A cfg exclusion, stub or permissive fallback
+does not satisfy either contract.
+
+**W3 remains a separate integrated qualification item** after the coupled
+implementation candidate. It runs the unchanged 16 compiler-component tests and
+the actual Windows native SQL clean, incremental, locked, offline and
+reproducible qualification on the exact candidate, records the job, SHA and raw
+outcome, and reruns affected Unix contracts. Neither #3980 nor this docs-only
+rescope supplies a Windows test pass or clears the SQL CI blocker.
