@@ -562,8 +562,7 @@ def largestNumber(mut nums: list[int]) -> str:
         "canonicalization discarded the int-to-str conversion: {rust}"
     );
     assert!(
-        rust.contains("values.push(n.to_string())")
-            || rust.contains("values.push(format!("),
+        rust.contains("values.push(n.to_string())") || rust.contains("values.push(format!("),
         "the list element must be a converted string: {rust}"
     );
 }
