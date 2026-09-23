@@ -53,7 +53,7 @@ pub(super) fn cargo_inputs(
     {
         return sysroot_cargo_inputs(resolution, trust, &package.manifest.trust);
     }
-    let graph_digest = digest_package_graph(&context.graph);
+    let graph_digest = digest_package_graph(&context.graph)?;
     let source_map_digest = digest_package_source_snapshot(&context.source_map)
         .map_err(|error| format!("unreadable package source snapshot: {error}"))?;
     let trust_policy_digest = trust_policy_digest(&package.manifest.trust);

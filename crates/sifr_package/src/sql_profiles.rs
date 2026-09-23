@@ -257,7 +257,14 @@ pub(crate) fn resolve_provider_identity(
             format!("provider package version is not exact semantic versioning: {error}"),
         )
     })?;
-    let graph_digest = digest_package_graph(graph);
+    let graph_digest = digest_package_graph(graph).map_err(|error| {
+        profile_error(
+            &owner.cargo_package_id,
+            owner.sifr_manifest.clone(),
+            &key,
+            error,
+        )
+    })?;
     Ok(ProviderIdentity {
         package_id: provider_package.package_id.0.clone(),
         package_version,

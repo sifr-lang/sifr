@@ -454,7 +454,7 @@ fn dx13_resolved_package_context_and_live_external_inventory() {
         python_runtime: None,
         lock_mode: CargoLockMode::Normal,
     };
-    let first = package_context::identity(&entry).unwrap();
+    let first = package_context::identity(&entry).unwrap().unwrap();
     entry
         .graph
         .packages
@@ -463,7 +463,7 @@ fn dx13_resolved_package_context_and_live_external_inventory() {
         .manifest
         .source_features
         .insert("feature".into(), "module".into());
-    assert_ne!(package_context::identity(&entry).unwrap(), first);
+    assert_ne!(package_context::identity(&entry).unwrap().unwrap(), first);
     entry
         .graph
         .packages
@@ -473,7 +473,7 @@ fn dx13_resolved_package_context_and_live_external_inventory() {
         .python
         .requires_imports
         .push("live_environment".into());
-    assert!(package_context::identity(&entry).is_none());
+    assert!(package_context::identity(&entry).unwrap().is_none());
     entry
         .graph
         .packages
@@ -489,7 +489,7 @@ fn dx13_resolved_package_context_and_live_external_inventory() {
         .manifest
         .rust
         .direct_crate_bindings = true;
-    assert!(package_context::identity(&entry).is_none());
+    assert!(package_context::identity(&entry).unwrap().is_none());
 }
 
 #[test]
@@ -540,4 +540,75 @@ fn moved_workspace_misses_without_changing_diagnostics() {
         assert_eq!(warm.restored_checks, 1);
         fs::rename(&moved_root, file.parent().unwrap()).unwrap();
     }
+}
+
+#[cfg(unix)]
+#[test]
+fn saved_check_policy_distinguishes_missing_empty_and_unserializable_paths() {
+    use std::os::unix::ffi::OsStringExt;
+
+    let cwd = Path::new("/workspace");
+    let absent = saved_check_policy(Path::new(""), cwd).unwrap();
+    let empty = saved_check_policy(Path::new("main.sifr"), cwd).unwrap();
+    assert_ne!(absent, empty);
+    let invalid = std::ffi::OsString::from_vec(b"/invalid-\xff/main.sifr".to_vec());
+    let error = saved_check_policy(Path::new(&invalid), cwd).unwrap_err();
+    assert!(error.contains("could not serialize saved-check policy"));
+}
+
+#[cfg(unix)]
+#[test]
+fn non_utf8_record_serialization_disables_publication() {
+    use std::os::unix::ffi::OsStringExt;
+
+    let (_root, file, cache) = fixture();
+    let invalid_name = std::ffi::OsString::from_vec(b"invalid-\xff.sifr".to_vec());
+    let invalid_file = file.with_file_name(invalid_name);
+    struct Synthetic;
+    impl SourceProvider for Synthetic {
+        fn read_file(
+            &mut self,
+            _path: &Path,
+        ) -> Result<SourceText, sifr_frontend::SourceProviderError> {
+            Ok(SourceText::new("def main() -> None:\n    pass\n"))
+        }
+        fn read_dir(
+            &mut self,
+            _path: &Path,
+        ) -> Result<Vec<sifr_frontend::SourceDirEntry>, sifr_frontend::SourceProviderError>
+        {
+            Ok(Vec::new())
+        }
+        fn is_file(&mut self, _path: &Path) -> bool {
+            true
+        }
+        fn is_dir(&mut self, _path: &Path) -> bool {
+            false
+        }
+        fn canonicalize(
+            &mut self,
+            path: &Path,
+        ) -> Result<std::path::PathBuf, sifr_frontend::SourceProviderError> {
+            Ok(path.to_path_buf())
+        }
+    }
+    let (diagnostics, report) = check(
+        (&cache, file.parent().unwrap()),
+        &invalid_file,
+        &mut Synthetic,
+        context(),
+        &AtomicBool::new(false),
+        None,
+        |provider| {
+            provider.read_file(&invalid_file).unwrap();
+            CheckComputation {
+                diagnostics: Vec::new(),
+                reusable: true,
+            }
+        },
+    );
+    assert!(diagnostics.is_empty());
+    assert_eq!(report.status, "serialization-unavailable");
+    assert_eq!(report.payload_bytes, 0);
+    assert!(store(&cache, &file).latest().is_none());
 }

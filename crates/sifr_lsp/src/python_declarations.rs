@@ -427,7 +427,15 @@ fn resolve_package_python_environment_inner(
     let request = sifr_package::PythonEnvironmentProbeRequest::from(&resolved);
     let probe = sifr_package::probe_python_environment(&request)
         .map_err(|error| vec![sifr_driver::render_package_diagnostic(error)])?;
-    let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
+    let digest = sifr_package::digest_python_environment_probe(&request, &probe)
+        .map_err(|error| {
+            vec![diagnostic_with_code(
+                DiagnosticCode::PYENV_PROBE_FAILED,
+                error,
+                "check Python environment paths".to_string(),
+            )]
+        })?
+        .hex;
     let mut runtime = PackagePythonRuntime::from_probe(
         &request,
         &probe,
@@ -435,7 +443,14 @@ fn resolve_package_python_environment_inner(
         resolved.required_imports,
         resolved.trusted_imports,
         resolved.trusted_native_imports,
-    );
+    )
+    .map_err(|error| {
+        vec![diagnostic_with_code(
+            DiagnosticCode::PYENV_PROBE_FAILED,
+            error,
+            "check Python environment paths".to_string(),
+        )]
+    })?;
     let mut diagnostics = Vec::new();
     let binding_path = package_root.join(sifr_package::PYTHON_BINDINGS_FILE);
     if binding_path.is_file() {
@@ -464,8 +479,16 @@ fn resolve_package_python_environment_inner(
             Ok(artifact) => {
                 match sifr_driver::validate_certification_distributions(&runtime, &artifact) {
                     Ok(()) => {
-                        runtime.set_arrow_certifications(artifact.arrow);
-                        runtime.set_dlpack_certifications(artifact.dlpack);
+                        if let Err(error) = runtime
+                            .set_arrow_certifications(artifact.arrow)
+                            .and_then(|()| runtime.set_dlpack_certifications(artifact.dlpack))
+                        {
+                            diagnostics.push(diagnostic_with_code(
+                                DiagnosticCode::PYZC_INVALID_DECLARATION,
+                                error,
+                                "rerun `sifr python certify --check`".to_string(),
+                            ));
+                        }
                     }
                     Err(reason) => diagnostics.push(diagnostic_with_code(
                         DiagnosticCode::PYZC_INVALID_DECLARATION,

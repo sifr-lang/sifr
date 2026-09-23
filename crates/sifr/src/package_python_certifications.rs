@@ -28,8 +28,19 @@ pub(super) fn load_into_runtime(
                 );
                 return Err(EXIT_USER_DIAGNOSTIC);
             }
-            runtime.set_arrow_certifications(artifact.arrow);
-            runtime.set_dlpack_certifications(artifact.dlpack);
+            if let Err(error) = runtime
+                .set_arrow_certifications(artifact.arrow)
+                .and_then(|()| runtime.set_dlpack_certifications(artifact.dlpack))
+            {
+                render_diagnostics(
+                    &[diagnostic_with_code(
+                        error,
+                        sifr_diagnostics::DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    )],
+                    diagnostic_format,
+                );
+                return Err(EXIT_USER_DIAGNOSTIC);
+            }
             Ok(())
         }
         Err(reason) => {
