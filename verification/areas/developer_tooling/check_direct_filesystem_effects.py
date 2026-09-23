@@ -169,7 +169,7 @@ def sites(root: Path) -> list[dict[str, str]]:
     for path in source_paths(root):
         rel = path.relative_to(root).as_posix()
         raw = path.read_text(encoding="utf-8")
-        if not any(token in raw for token in ("fs::", "File::open", ".is_file(", ".is_dir(", ".exists(", ".try_exists(", ".metadata(", ".canonicalize(", ".read_link(")):
+        if not any(token in raw for token in ("std::fs", "fs::", "File::open", ".is_file(", ".is_dir(", ".exists(", ".try_exists(", ".metadata(", ".canonicalize(", ".read_link(")):
             continue
         code = rust_code(raw)
         original_lines = raw.splitlines()
@@ -191,10 +191,11 @@ def sites(root: Path) -> list[dict[str, str]]:
 
 def compare(found: list[dict[str, str]], expected: list[dict[str, str]]) -> list[str]:
     def key(item: dict[str, str]) -> tuple[str, ...]:
-        return tuple(item[field] for field in ("path", "symbol", "operation", "site", "classification"))
+        return tuple(item[field] for field in ("path", "symbol", "operation", "site"))
     actual = Counter(map(key, found))
     baseline = Counter(map(key, expected))
-    failures = []
+    failures = [f"invalid effect classification: {item.get('path')}" for item in expected
+                if item.get("classification") not in CLASSIFICATIONS]
     for item, count in sorted((actual - baseline).items()):
         failures.append(f"unclassified filesystem effect ({count}): {item[0]}::{item[1]} {item[2]} {item[3]}")
     for item, count in sorted((baseline - actual).items()):
@@ -221,6 +222,8 @@ def self_test() -> None:
         for addition in mutations:
             source.write_text('use std::fs;\nfn old() { let _ = fs::read_to_string("x"); }\n' + addition)
             assert compare(sites(root), baseline), addition
+        source.write_text('use std::fs as disk;\nfn alias_only() { let _ = disk::read("x"); }\n')
+        assert any(site["operation"] == "read" for site in sites(root)), "alias-only file escaped"
         source.write_text('use std::fs;\nfn old() { let _ = fs::read_to_string("x"); }\n')
         (root / "crates/demo/src/bin/new.rs").write_text('fn main() { let _ = std::fs::read("x"); }\n')
         assert compare(sites(root), baseline)

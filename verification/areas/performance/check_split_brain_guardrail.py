@@ -51,7 +51,9 @@ SYNTAX_PARSE_IMPORT_PATTERN = re.compile(
 SYNTAX_PARSE_IMPORT_LABEL = "sifr_syntax parse_module import"
 SYNTAX_WILDCARD_IMPORT_PATTERN = re.compile(r"\buse\s+sifr_syntax::\*\s*;")
 SYNTAX_WILDCARD_IMPORT_LABEL = "sifr_syntax wildcard import"
-SYNTAX_CRATE_ALIAS_PATTERN = re.compile(r"\buse\s+sifr_syntax\s+as\s+(\w+)\s*;")
+SYNTAX_CRATE_ALIAS_PATTERN = re.compile(
+    r"\buse\s+sifr_syntax(?:\s+as\s+(\w+)\s*;|::\{\s*self\s+as\s+(\w+)[^}]*\}\s*;)"
+)
 
 
 def is_approved(path: Path) -> bool:
@@ -85,7 +87,8 @@ def violations_text(path: Path, text: str) -> list[str]:
     ]
     rules.append((SYNTAX_PARSE_IMPORT_LABEL, SYNTAX_PARSE_IMPORT_PATTERN))
     rules.append((SYNTAX_WILDCARD_IMPORT_LABEL, SYNTAX_WILDCARD_IMPORT_PATTERN))
-    for alias in SYNTAX_CRATE_ALIAS_PATTERN.findall(text):
+    for plain_alias, braced_alias in SYNTAX_CRATE_ALIAS_PATTERN.findall(text):
+        alias = plain_alias or braced_alias
         rules.append(
             (
                 f"sifr_syntax alias-qualified parse_module ({alias})",
@@ -206,6 +209,15 @@ def run_self_test() -> None:
     if not violations([seeded]):
         seeded.unlink()
         raise SystemExit("split-brain guardrail self-test failed: mixed-source alias escaped")
+    seeded.write_text(
+        "#[cfg(test)]\nmod tests { fn fixture() { let _ = sifr_syntax::parse_module(source, None); } }\n"
+        "use sifr_syntax::{self as syntax};\n"
+        "fn production() { let _ = syntax::parse_module(source, None); }\n",
+        encoding="utf-8",
+    )
+    if not violations([seeded]):
+        seeded.unlink()
+        raise SystemExit("split-brain guardrail self-test failed: braced crate alias escaped")
     seeded.unlink()
     print("split-brain guardrail self-test: PASS")
 
