@@ -4,9 +4,8 @@ use super::storage::{Hint, Store, invalid, key, read, stamp, write_new};
 use crate::cache_storage;
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{self, File, OpenOptions},
+    fs::{self, File},
     io,
-    os::unix::fs::{MetadataExt, OpenOptionsExt},
     path::{Component, Path, PathBuf},
     sync::Arc,
 };
@@ -83,8 +82,8 @@ pub(super) fn open_namespace(cache: &Path, workspace: &Path, id: &str) -> io::Re
     let expected = Owner {
         schema: 1,
         workspace: workspace.into(),
-        device: metadata.dev(),
-        inode: metadata.ino(),
+        device: file_identity(workspace)?.0,
+        inode: file_identity(workspace)?.1,
         created_ns: created_ns(&metadata)?,
     };
     // Immutable owner records are never replaced. A competing creator may leave
@@ -112,9 +111,9 @@ pub(super) fn open_namespace(cache: &Path, workspace: &Path, id: &str) -> io::Re
 /// Check existing ancestors without creating directories or following aliases.
 fn safe_path(path: &Path) -> bool {
     path.is_absolute()
-        && path.ancestors().all(|part| {
-            fs::symlink_metadata(part).is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())
-        })
+        && path
+            .ancestors()
+            .all(|part| cache_storage::real_directory(part))
         && cache_storage::check_owned(path).is_ok()
 }
 fn safe_tree(path: &Path) -> bool {
@@ -138,11 +137,7 @@ pub(super) fn existing_lease(parent: &Path, name: &str) -> io::Result<File> {
     }
     let path = locks.join(name);
     cache_storage::check_owned(&path)?;
-    let lease = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .custom_flags(libc::O_NOFOLLOW)
-        .open(path)?;
+    let lease = cache_storage::read_write_private_file(&path)?;
     if !lease.metadata()?.is_file() {
         return Err(invalid("unsafe lock file"));
     }
@@ -151,7 +146,7 @@ pub(super) fn existing_lease(parent: &Path, name: &str) -> io::Result<File> {
 fn lock_tree(path: &Path, leases: &mut Vec<File>) -> io::Result<()> {
     for entry in fs::read_dir(path)? {
         let entry = entry?;
-        if entry.file_type()?.is_dir() {
+        if cache_storage::real_directory(&entry.path()) {
             if entry.file_name() == ".locks" {
                 for lock in fs::read_dir(entry.path())? {
                     let lock = lock?;
@@ -317,7 +312,7 @@ fn definitely_absent(path: &Path) -> bool {
     for part in path.components() {
         current.push(part);
         match fs::symlink_metadata(&current) {
-            Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => {}
+            Ok(_meta) if cache_storage::real_directory(&current) => {}
             Err(error) if error.kind() == io::ErrorKind::NotFound => return true,
             _ => return false,
         }
@@ -383,8 +378,7 @@ pub(super) fn prune_workspace(
     }
     if !orphan
         && !fs::metadata(&workspace).is_ok_and(|m| {
-            m.dev() == owner.device
-                && m.ino() == owner.inode
+            file_identity(&workspace).ok() == Some((owner.device, owner.inode))
                 && created_ns(&m).ok() == Some(owner.created_ns)
         })
     {
@@ -430,4 +424,16 @@ pub(super) fn prune_workspace(
     // Keep owner.json and the external namespace lock as a stable tombstone.
     // Never recursively remove another workspace or guess at unrecorded owners.
     Ok(report)
+}
+
+#[cfg(unix)]
+fn file_identity(path: &Path) -> io::Result<(u64, u64)> {
+    use std::os::unix::fs::MetadataExt;
+    let metadata = fs::metadata(path)?;
+    Ok((metadata.dev(), metadata.ino()))
+}
+#[cfg(windows)]
+fn file_identity(path: &Path) -> io::Result<(u64, u64)> {
+    let file = fs::File::open(path)?;
+    crate::windows_storage_security::file_identity(&file)
 }

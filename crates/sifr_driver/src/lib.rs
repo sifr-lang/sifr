@@ -9,13 +9,18 @@
 
 mod application_profile;
 mod build;
+#[cfg_attr(windows, path = "cache_storage_windows.rs")]
 pub mod cache_storage;
+#[cfg(windows)]
+mod windows_storage_security;
 pub use application_profile::ApplicationProfile;
 mod compiler_context;
 pub mod metadata_producer;
 mod metadata_reader;
 pub use metadata_reader::{StdlibNavigation, StdlibNavigationSymbol, decode_project_results};
+#[cfg_attr(windows, path = "process_execution_windows.rs")]
 pub mod process_execution;
+#[cfg_attr(windows, path = "process_signals_windows.rs")]
 mod process_signals;
 pub use compiler_context::CompilerContext;
 mod diagnostics;
