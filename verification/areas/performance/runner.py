@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     if any(suite["name"] in {"rules", "smoke", "representative", "full"} for suite in selected):
         try:
             profile = admit_reference(os.environ.get("SIFR_PERFORMANCE_REFERENCE", ""))
-        except (ReferenceProfileError, TrendPolicyError, BudgetError, ValueError, OSError) as error:
+        except (ReferenceProfileError, TrendPolicyError, BudgetError, ValueError, OSError, KeyError) as error:
             raise SystemExit(f"performance qualification unavailable: {error}") from error
         print(f"performance_reference_admitted={profile['name']}", flush=True)
 
