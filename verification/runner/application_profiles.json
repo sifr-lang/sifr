@@ -347,6 +347,7 @@
         "inference_void_return.sifr",
         "inheritance_basic.sifr",
         "inheritance_transitive_assignability.sifr",
+        "integer_field_augassign.sifr",
         "intrinsics_block_test.sifr",
         "io_safety_error_paths.sifr",
         "ipc_payload_require_serializable_basic.sifr",
