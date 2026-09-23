@@ -21,6 +21,7 @@ APPROVED_PREFIXES = (
     Path("crates/sifr_lowering/src"),
 )
 PARSERS = ("sifr_syntax", "sifr_python_parser", "ruff_python_parser")
+RAW_PARSERS = ("sifr_python_parser", "ruff_python_parser")
 ENTRYPOINTS = ("parse_module", "parse_module_raw", "parse_module_suite")
 OTHER_FORBIDDEN = (
     "parse_unchecked", "parse_module_with_diagnostics", "lower_module_with_externals",
@@ -205,6 +206,12 @@ def violations_text(path: Path, text: str, *, test_only: bool = False) -> list[s
     if any(rel.is_relative_to(prefix) for prefix in APPROVED_PREFIXES): return []
     code = scrub(text)
     ranges = inline_test_ranges(text, code)
+    # Raw parser crates expose more than parse_module. Any production reference
+    # outside the owning frontend/lowering crates is a rival parser boundary.
+    for raw_parser in RAW_PARSERS:
+        for reference in re.finditer(rf"\b{raw_parser}\b", code):
+            if not within(reference.start(), ranges):
+                return [f"{rel}:{text.count(chr(10), 0, reference.start()) + 1} forbidden production {raw_parser} reference"]
     crates, imported, wildcard = import_bindings(code, ranges)
     allowed = ALLOWED_SITES.get(rel, {})
     remaining = Counter({line: ALLOWED_COUNTS.get(rel, {}).get(line, 1) for line in allowed})
@@ -218,8 +225,6 @@ def violations_text(path: Path, text: str, *, test_only: bool = False) -> list[s
             if name in ENTRYPOINTS and qualifier not in crates: continue
             if name in OTHER_FORBIDDEN and qualifier not in {*crates, "sifr_lowering", "sifr_frontend"}: continue
         elif name not in OTHER_FORBIDDEN and name not in imported and not (wildcard and name in ENTRYPOINTS):
-            continue
-        elif name in OTHER_FORBIDDEN and name not in {"lower_module", "lower_frontend_module"}:
             continue
         start = text.rfind("\n", 0, match.start()) + 1
         end = text.find("\n", match.start())
@@ -260,6 +265,17 @@ def run_self_test() -> None:
             mixed = f'''#[cfg(test)]\nmod tests {{ use sifr_syntax::{name} as parse; fn fixture() {{ parse(src, None); }} }}\nuse sifr_syntax::{name} as semantic_parse;\nfn prod() {{ semantic_parse(src, None); }}\n'''
             assert violations_text(owner, mixed), f"mixed production {name} alias escaped"
         assert violations_text(owner, "use sifr_python_parser::parse_module as parse; use sifr_lowering::lower_module; fn prod() { let parsed = parse(src); lower_module(parsed.suite()); }")
+        for raw_parser in RAW_PARSERS:
+            for entry in ("parse", "parse_suite", "parse_unchecked"):
+                assert violations_text(owner, f"use {raw_parser}::{entry} as p; fn prod() {{ p(src); }}"), (raw_parser, entry)
+            mixed_raw = f"#[cfg(test)]\nmod tests {{ use {raw_parser}::parse; fn fixture() {{ parse(src); }} }}\nuse {raw_parser}::Parsed; fn prod() {{ {raw_parser}::parse(src); }}"
+            assert violations_text(owner, mixed_raw), raw_parser
+        for owner_crate, entry in (
+            ("sifr_syntax", "parse_unchecked"),
+            ("sifr_syntax", "parse_module_with_diagnostics"),
+            ("sifr_lowering", "lower_module_with_externals"),
+        ):
+            assert violations_text(owner, f"use {owner_crate}::{entry}; fn prod() {{ {entry}(src); }}"), entry
         assert not violations_text(owner, '#[cfg(test)]\nmod tests { use sifr_syntax::parse_module_raw as parse; fn fixture() { parse(src, None); } }')
         assert not violations_text(owner, 'let s = "sifr_syntax::parse_module(x, None)"; // parse_module_raw(x, None)')
         owner.write_text('#[cfg(test)]\n#[path = "fixture.rs"]\nmod fixture;\n')
