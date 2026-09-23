@@ -255,7 +255,8 @@ impl<'a> RustInteropResolver<'a> {
         );
         cargo_input.sqlx_offline_metadata_digest = combined_sqlx_offline_metadata_digest(
             sqlx_backend_roots.iter().map(std::path::PathBuf::as_path),
-        );
+        )
+        .map_err(identity_error)?;
         generated.interop.rust.cargo_inputs = Some(cargo_input);
         inject_package_bridge_aliases(generated);
         Ok(())

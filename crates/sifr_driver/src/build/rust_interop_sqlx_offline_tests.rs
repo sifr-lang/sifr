@@ -450,7 +450,7 @@ fn workspace_metadata_and_workspace_dependency_renames_are_resolved() {
     );
     assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
     assert!(
-        sqlx_offline_metadata_digest(&fixture.0).is_some(),
+        sqlx_offline_metadata_digest(&fixture.0).unwrap().is_some(),
         "workspace-root metadata must participate in cache identity"
     );
 }
@@ -465,7 +465,7 @@ fn explicit_offline_directory_disengages_conservative_preflight() {
     .expect("offline directory policy should be written");
 
     assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
-    assert_eq!(sqlx_offline_metadata_digest(&fixture.0), None);
+    assert_eq!(sqlx_offline_metadata_digest(&fixture.0), Ok(None));
 }
 
 #[test]
@@ -476,6 +476,7 @@ fn complete_metadata_directory_participates_in_cache_identity() {
     bridge_fixture.write_metadata_for(SqlxFixture::query(), SqlxFixture::query());
     let before =
         combined_sqlx_offline_metadata_digest([fixture.0.as_path(), bridge_fixture.0.as_path()])
+            .expect("metadata tree should be readable")
             .expect("metadata digest should exist");
     let path = bridge_fixture.metadata_path(SqlxFixture::query());
     let source = std::fs::read_to_string(&path).expect("metadata should be readable");
@@ -486,7 +487,40 @@ fn complete_metadata_directory_participates_in_cache_identity() {
     .expect("metadata describe mutation should be written");
     let after =
         combined_sqlx_offline_metadata_digest([fixture.0.as_path(), bridge_fixture.0.as_path()])
+            .expect("metadata tree should still be readable")
             .expect("metadata digest should still exist");
+    assert_ne!(before, after);
+}
+
+#[test]
+fn metadata_identity_distinguishes_absent_empty_and_unreadable_tree() {
+    let fixture = SqlxFixture::new();
+    assert_eq!(sqlx_offline_metadata_digest(&fixture.0), Ok(None));
+    std::fs::create_dir(fixture.0.join(".sqlx")).expect("empty metadata root should exist");
+    let empty = sqlx_offline_metadata_digest(&fixture.0)
+        .expect("empty metadata root should be readable")
+        .expect("empty metadata root has an identity");
+    fixture.write_metadata_for(SqlxFixture::query(), SqlxFixture::query());
+    let before = sqlx_offline_metadata_digest(&fixture.0)
+        .expect("metadata root should be readable")
+        .expect("metadata identity should exist");
+    assert_ne!(empty, before);
+    let broken = fixture.0.join(".sqlx/unreadable.json");
+    std::os::unix::fs::symlink(fixture.0.join("missing.json"), &broken)
+        .expect("unreadable entry should be created");
+    assert!(sqlx_offline_metadata_digest(&fixture.0).is_err());
+    let path = fixture.metadata_path(SqlxFixture::query());
+    let source = std::fs::read_to_string(&path).expect("metadata should be readable");
+    std::fs::write(
+        &path,
+        source.replace("\"describe\":null", "\"describe\":{\"columns\":[]}"),
+    )
+    .expect("metadata mutation should be written");
+    assert!(sqlx_offline_metadata_digest(&fixture.0).is_err());
+    std::fs::remove_file(broken).expect("unreadable entry should be removed");
+    let after = sqlx_offline_metadata_digest(&fixture.0)
+        .expect("repaired metadata root should be readable")
+        .expect("metadata identity should exist");
     assert_ne!(before, after);
 }
 

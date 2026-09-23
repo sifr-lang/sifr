@@ -98,7 +98,8 @@ pub(super) fn execute_direct_cargo_probe(
         .native_toolchain
         .as_ref()
         .map_err(|error| probe_io_failure(error.clone()))?;
-    let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source, cache);
+    let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source, cache)
+        .map_err(probe_io_failure)?;
     let cache_file = probe_cache_file(&cache_key, &invocation_cwd);
     validate_probe_sqlx_offline_metadata(probe, backend_root)?;
     let tools = probe

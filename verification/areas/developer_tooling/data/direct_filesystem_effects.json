@@ -6372,6 +6372,41 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
+      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(fixture.0.join(\".sqlx\")).expect(\"empty metadata root should exist\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
+      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
+      "operation": "read_to_string",
+      "site": "let source = std::fs::read_to_string(&path).expect(\"metadata should be readable\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
+      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(broken).expect(\"unreadable entry should be removed\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
+      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(fixture.0.join(\"missing.json\"), &broken)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
+      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_driver/src/build/rust_interop_tests.rs",
       "symbol": "package_rust_interop_rejects_shared_bridge_crate_importing_generated_bridge_types",
       "operation": "create_dir_all",

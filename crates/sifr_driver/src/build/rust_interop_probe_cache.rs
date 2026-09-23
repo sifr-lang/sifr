@@ -14,19 +14,19 @@ const RUST_BRIDGE_PROBE_CACHE_DIR: &str = "rust_bridge_probes";
 
 #[derive(Default)]
 pub(super) struct ProbeCacheKeyCache {
-    sqlx_metadata_by_backend_root: BTreeMap<PathBuf, Option<String>>,
+    sqlx_metadata_by_backend_root: BTreeMap<PathBuf, Result<Option<String>, String>>,
 }
 
 impl ProbeCacheKeyCache {
-    fn sqlx_metadata_digest(&mut self, backend_root: &Path) -> Option<String> {
+    fn sqlx_metadata_digest(&mut self, backend_root: &Path) -> Result<Option<String>, String> {
         self.sqlx_metadata_digest_with(backend_root, sqlx_offline_metadata_digest)
     }
 
     fn sqlx_metadata_digest_with(
         &mut self,
         backend_root: &Path,
-        inspect: impl FnOnce(&Path) -> Option<String>,
-    ) -> Option<String> {
+        inspect: impl FnOnce(&Path) -> Result<Option<String>, String>,
+    ) -> Result<Option<String>, String> {
         self.sqlx_metadata_by_backend_root
             .entry(backend_root.to_path_buf())
             .or_insert_with(|| inspect(backend_root))
@@ -76,7 +76,7 @@ pub(super) fn probe_cache_key(
     probe_manifest: &str,
     probe_source: &str,
     cache: &mut ProbeCacheKeyCache,
-) -> String {
+) -> Result<String, String> {
     let mut input = IdentityEncoder::new("rust-bridge-probe-cache-v2");
     for (name, value) in [
         ("package-id", probe.backend.cargo_package_id.0.as_str()),
@@ -155,12 +155,12 @@ pub(super) fn probe_cache_key(
     if let Some(seed) = seed {
         input.field("seed", seed.as_bytes());
     }
-    let metadata = cache.sqlx_metadata_digest(backend_root);
+    let metadata = cache.sqlx_metadata_digest(backend_root)?;
     input.field("sqlx-present", &[u8::from(metadata.is_some())]);
     if let Some(metadata) = metadata {
         input.field("sqlx", metadata.as_bytes());
     }
-    input.finish()
+    Ok(input.finish())
 }
 
 fn cached_digest_path(path: &Path) -> String {
@@ -229,30 +229,30 @@ mod tests {
         assert_eq!(
             cache.sqlx_metadata_digest_with(clean_root, |_| {
                 clean_inspections += 1;
-                None
+                Ok(None)
             }),
-            None
+            Ok(None)
         );
         assert_eq!(
             cache.sqlx_metadata_digest_with(clean_root, |_| {
                 clean_inspections += 1;
-                Some("changed".to_string())
+                Ok(Some("changed".to_string()))
             }),
-            None
+            Ok(None)
         );
         assert_eq!(
             cache.sqlx_metadata_digest_with(sqlx_root, |_| {
                 sqlx_inspections += 1;
-                Some("sqlx-digest".to_string())
+                Ok(Some("sqlx-digest".to_string()))
             }),
-            Some("sqlx-digest".to_string())
+            Ok(Some("sqlx-digest".to_string()))
         );
         assert_eq!(
             cache.sqlx_metadata_digest_with(sqlx_root, |_| {
                 sqlx_inspections += 1;
-                None
+                Ok(None)
             }),
-            Some("sqlx-digest".to_string())
+            Ok(Some("sqlx-digest".to_string()))
         );
         assert_eq!(clean_inspections, 1);
         assert_eq!(sqlx_inspections, 1);

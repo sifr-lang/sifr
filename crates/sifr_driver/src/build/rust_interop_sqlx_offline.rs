@@ -1,8 +1,9 @@
 use self::cfg_filter::{has_cfg_attribute, item_has_cfg_attribute};
-use super::rust_interop_digest::digest_path;
+use super::rust_interop_digest::digest_path_checked;
 use super::rust_interop_probe::{PendingRustBridgeProbe, ProbeExecutionFailure};
 use super::rust_interop_sqlx_modules::reachable_rust_modules;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_identity::IdentityEncoder;
 use sifr_sysroot::sha256_hex;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -55,13 +56,13 @@ pub(super) fn validate_probe_sqlx_offline_metadata(
     })
 }
 
-pub(super) fn sqlx_offline_metadata_digest(backend_root: &Path) -> Option<String> {
+pub(super) fn sqlx_offline_metadata_digest(backend_root: &Path) -> Result<Option<String>, String> {
     combined_sqlx_offline_metadata_digest([backend_root])
 }
 
 pub(super) fn combined_sqlx_offline_metadata_digest<'a>(
     backend_roots: impl IntoIterator<Item = &'a Path>,
-) -> Option<String> {
+) -> Result<Option<String>, String> {
     let mut identities = BTreeMap::new();
     for backend_root in backend_roots {
         let Some(metadata_roots) = sqlx_metadata_roots(backend_root) else {
@@ -69,23 +70,28 @@ pub(super) fn combined_sqlx_offline_metadata_digest<'a>(
         };
         for metadata_root in metadata_roots {
             if metadata_root.is_dir() {
-                identities
-                    .entry(metadata_root.clone())
-                    .or_insert_with(|| digest_path(&metadata_root));
+                if !identities.contains_key(&metadata_root) {
+                    let digest = digest_path_checked(&metadata_root).map_err(|error| {
+                        format!(
+                            "unreadable SQLx offline metadata tree '{}': {error}",
+                            metadata_root.display()
+                        )
+                    })?;
+                    identities.insert(metadata_root, digest);
+                }
             }
         }
     }
     if identities.is_empty() {
-        return None;
+        return Ok(None);
     }
-    let mut bytes = Vec::new();
+    let mut identity = IdentityEncoder::new("combined-sqlx-offline-metadata-v2");
+    identity.field("root-count", &(identities.len() as u64).to_be_bytes());
     for (path, digest) in identities {
-        bytes.extend_from_slice(path.to_string_lossy().as_bytes());
-        bytes.push(0);
-        bytes.extend_from_slice(digest.as_bytes());
-        bytes.push(0);
+        identity.field("root-path", path.to_string_lossy().as_bytes());
+        identity.field("root-digest", digest.as_bytes());
     }
-    Some(sha256_hex(&bytes))
+    Ok(Some(identity.finish()))
 }
 
 pub(super) fn validate_sqlx_offline_metadata(backend_root: &Path) -> Result<(), String> {
