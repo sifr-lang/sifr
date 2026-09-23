@@ -334,7 +334,7 @@ impl NativeToolchain {
     #[must_use]
     pub fn with_declared_environment(mut self, names: impl IntoIterator<Item = String>) -> Self {
         let names: std::collections::BTreeSet<_> = names.into_iter().collect();
-        let mut hash = IdentityEncoder::new("declared-native-environment-v1");
+        let mut hash = IdentityEncoder::new("declared-native-environment-v2");
         hash.field("toolchain", self.identity.as_bytes());
         for name in names {
             let value = self
@@ -342,15 +342,26 @@ impl NativeToolchain {
                 .iter()
                 .find(|(key, _)| key == name.as_str())
                 .map(|(_, value)| value.clone());
-            hash.field(
-                &name,
-                value
-                    .as_ref()
-                    .map_or(b"<unset>", |value| value.as_encoded_bytes()),
-            );
+            hash.field("environment-name", name.as_bytes());
+            hash.field("environment-present", &[u8::from(value.is_some())]);
+            if let Some(value) = &value {
+                hash.field("environment-value", value.as_encoded_bytes());
+            }
             self.environment.insert(name, value);
         }
         self.identity = hash.finish();
+        self
+    }
+    #[cfg(test)]
+    pub(crate) fn with_test_execution_environment(
+        mut self,
+        name: &str,
+        value: Option<&str>,
+    ) -> Self {
+        self.execution_environment.retain(|(key, _)| key != name);
+        if let Some(value) = value {
+            self.execution_environment.push((name.into(), value.into()));
+        }
         self
     }
     pub fn validate_configuration(&self) -> Result<(), String> {
