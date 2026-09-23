@@ -158,8 +158,14 @@ impl AnalysisHost {
             .diagnostics_for_module(module)
             .into_value()
             .diagnostics;
+        let sql_diagnostics = self.sql_provider_diagnostics(file)?;
+        if sql_diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == sifr_diagnostics::DiagnosticCode::SQL_PROFILE_IMPORT.code()
+        }) {
+            return Ok(self.result(AnalysisQueryKind::Diagnostics, sql_diagnostics));
+        }
         diagnostics.extend(self.lint_diagnostics(file)?);
-        diagnostics.extend(self.sql_provider_diagnostics(file)?);
+        diagnostics.extend(sql_diagnostics);
         Ok(self.result(AnalysisQueryKind::Diagnostics, diagnostics))
     }
 

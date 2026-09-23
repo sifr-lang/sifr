@@ -192,6 +192,9 @@ fn package_query_declarations_emit_non_empty_compatibility_artifact() {
     );
 }
 
+#[path = "sql_profiles_discovery_tests.rs"]
+mod sql_profiles_discovery_tests;
+
 #[test]
 fn sql_discovery_requires_imported_profile_namespaces() {
     let fixture = profile_fixture_with_components(
