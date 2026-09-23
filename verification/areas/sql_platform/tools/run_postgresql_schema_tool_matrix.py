@@ -59,6 +59,7 @@ CREATE TABLE parity_nextval_users (
   id bigint DEFAULT nextval('parity_nextval_sequence'::regclass)
 );
 ALTER SEQUENCE parity_nextval_sequence OWNED BY parity_nextval_users.id;
+CREATE TABLE serial_users (id serial PRIMARY KEY);
 CREATE TABLE type_samples (
   id bigint PRIMARY KEY,
   domain_values positive_id[],

@@ -111,7 +111,9 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
     );
     let nextval_sequence = schema
         .objects
-        .get(&sifr_sql_contract::ObjectId::new("public.parity_nextval_sequence"))
+        .get(&sifr_sql_contract::ObjectId::new(
+            "public.parity_nextval_sequence",
+        ))
         .expect("owned nextval sequence");
     assert_eq!(
         nextval_sequence.semantic.get("owned-by"),
@@ -119,9 +121,35 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
             "public.parity_nextval_users.id".to_string()
         ))
     );
-    assert!(nextval_sequence.dependencies.contains(
-        &sifr_sql_contract::ObjectId::new("public.parity_nextval_users.id")
-    ));
+    assert!(
+        nextval_sequence
+            .dependencies
+            .contains(&sifr_sql_contract::ObjectId::new(
+                "public.parity_nextval_users.id"
+            ))
+    );
+    let serial_sequence = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new(
+            "public.serial_users_id_seq",
+        ))
+        .expect("SERIAL implementation sequence remains explicit");
+    assert_eq!(
+        serial_sequence.semantic.get("owned-by"),
+        Some(&sifr_sql_contract::SemanticValue::Text(
+            "public.serial_users.id".to_string()
+        ))
+    );
+    let serial_column = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new("public.serial_users.id"))
+        .expect("SERIAL column");
+    assert_eq!(
+        serial_column.semantic.get("default-sequence"),
+        Some(&sifr_sql_contract::SemanticValue::Text(
+            "public.serial_users_id_seq".to_string()
+        ))
+    );
     let catalog = PostgresCatalog::from_schema(&schema, PostgresTypeRegistry::new(major))
         .expect("pulled schema must load in the compiler catalog");
     let analyzer = PostgresAnalyzer::new(LibpgQueryParser, catalog);
@@ -215,7 +243,7 @@ fn ddl_parity_schema(provider: ProviderIdentity, major: u16) -> sifr_sql_contrac
                     id bigint DEFAULT nextval('parity_nextval_sequence'::regclass)\
                  ); \
                  ALTER SEQUENCE parity_nextval_sequence OWNED BY parity_nextval_users.id;"
-                .to_string(),
+                    .to_string(),
             )],
         },
     );
