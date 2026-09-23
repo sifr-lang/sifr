@@ -197,7 +197,7 @@ pub(crate) fn no_reparse(path: &Path) -> io::Result<()> {
                     )));
                 }
             }
-            Err(error) if error.kind() == io::ErrorKind::NotFound => break,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
             Err(error) => return Err(error),
         }
     }
