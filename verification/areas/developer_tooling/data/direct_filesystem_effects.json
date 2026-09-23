@@ -24,10 +24,31 @@
     },
     {
       "path": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
-      "symbol": "constrained_modes_reject_manifestless_check_build_and_run",
+      "symbol": "constrained_modes_reject_manifestless_check_build_run_and_test",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
+      "symbol": "sifr_test_modes_use_package_resolution_and_final_test_trace",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
+      "symbol": "sifr_test_modes_use_package_resolution_and_final_test_trace",
+      "operation": "read",
+      "site": "let mut source_lock = std::fs::read(scenario.root.join(\"Cargo.lock\")).expect(\"package lock\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
+      "symbol": "sifr_test_modes_use_package_resolution_and_final_test_trace",
+      "operation": "read",
+      "site": "let current_lock = std::fs::read(scenario.root.join(\"Cargo.lock\")).expect(\"package lock\");",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
@@ -1651,6 +1672,20 @@
       "symbol": "no_op_plan_skips_download_and_lock",
       "operation": "exists",
       "site": ".exists()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/test_cli.rs",
+      "symbol": "cmd_test",
+      "operation": "canonicalize",
+      "site": "let canonical_dir = match fs::canonicalize(dir) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/test_cli.rs",
+      "symbol": "cmd_test",
+      "operation": "canonicalize",
+      "site": "let root = fs::canonicalize(&package.package_root).ok()?;",
       "classification": "semantic-input"
     },
     {
@@ -9400,6 +9435,146 @@
       "symbol": "execute_test_runner_project",
       "operation": "write",
       "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_cargo_modes_use_build_resolution_and_trace_policy",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&scope).expect(\"owned scope\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_cargo_modes_use_build_resolution_and_trace_policy",
+      "operation": "copy",
+      "site": "std::fs::copy(normal.native_project_root.join(\"Cargo.lock\"), &authority)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_cargo_modes_use_build_resolution_and_trace_policy",
+      "operation": "read",
+      "site": "std::fs::read(&authority).expect(\"authority\"),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_cargo_modes_use_build_resolution_and_trace_policy",
+      "operation": "read",
+      "site": "std::fs::read(outcome.native_project_root.join(\"Cargo.lock\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_cargo_modes_use_build_resolution_and_trace_policy",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(scope).expect(\"owned scope cleanup\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&scope).expect(\"owned scope\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "read",
+      "site": "let first_manifest = std::fs::read(first_entry.join(\"test_executables.json\"))",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "is_file",
+      "site": "assert!(first.native_project_root.join(\"Cargo.lock\").is_file());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "is_file",
+      "site": "assert!(first.native_project_root.join(\"src/retired.rs\").is_file());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "exists",
+      "site": "assert!(!first_entry.join(\"Cargo.lock\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "exists",
+      "site": "assert!(!first_entry.join(\"target\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "exists",
+      "site": "assert!(!first_entry.join(\"src\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "exists",
+      "site": "assert!(!second.native_project_root.join(\"src/retired.rs\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "exists",
+      "site": "assert!(!second.final_workspace_root.join(\"Cargo.lock\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "exists",
+      "site": "assert!(!second.final_workspace_root.join(\"target\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "exists",
+      "site": "assert!(!second.final_workspace_root.join(\"src\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "read",
+      "site": "std::fs::read(first_entry.join(\"test_executables.json\")).expect(\"first manifest\"),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_mutable_root_and_final_snapshot_stay_distinct",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(scope).expect(\"owned scope cleanup\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_same_key_concurrency_publishes_one_snapshot",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&scope).expect(\"owned scope\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/test_runner/execution.rs",
+      "symbol": "test_runner_same_key_concurrency_publishes_one_snapshot",
+      "operation": "remove_dir_all",
+      "site": "std::fs::remove_dir_all(scope).expect(\"owned scope cleanup\");",
       "classification": "output-effect"
     },
     {
