@@ -70,14 +70,16 @@ pub(super) fn combined_sqlx_offline_metadata_digest<'a>(
         };
         for metadata_root in metadata_roots {
             if metadata_root.is_dir() {
-                if !identities.contains_key(&metadata_root) {
-                    let digest = digest_path_checked(&metadata_root).map_err(|error| {
+                if let std::collections::btree_map::Entry::Vacant(entry) =
+                    identities.entry(metadata_root)
+                {
+                    let digest = digest_path_checked(entry.key()).map_err(|error| {
                         format!(
                             "unreadable SQLx offline metadata tree '{}': {error}",
-                            metadata_root.display()
+                            entry.key().display()
                         )
                     })?;
-                    identities.insert(metadata_root, digest);
+                    entry.insert(digest);
                 }
             }
         }
