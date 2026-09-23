@@ -24,6 +24,14 @@ allowed relative to that compiler. The current candidate cannot become its own
 reference. Each profile binds an approved full-manifest receipt, baseline,
 shared-policy budgets and measured identity in one atomically published JSON.
 
+Before a verification profile prepares Cargo, it checks that an explicitly
+selected reference is fresh, structurally valid, and comparable with the live
+host and toolchain. An absent, expired, or incompatible reference stops
+qualification with an explicit unavailable result. The same admission runs
+when a benchmark suite is invoked directly. The `frontend-syntax-guardrails`
+suite does not require a reference. The historical Mac trend remains expired and is not
+a substitute for a selected profile.
+
 When a verification profile selects this performance area, the named reference
 owns its measurement Cargo concurrency. The area explicitly sets and reports
 the reference's `cargo_jobs` for its producer and budget checks, even when the

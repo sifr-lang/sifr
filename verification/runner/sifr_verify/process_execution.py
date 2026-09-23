@@ -5,13 +5,14 @@ budgets. Session groups are torn down even when the direct child exits first.
 """
 from __future__ import annotations
 
-import dataclasses
 import contextlib
-import tempfile
+import dataclasses
 import os
 import selectors
 import signal
 import subprocess
+import tempfile
+import threading
 import time
 from pathlib import Path
 from typing import Callable
@@ -46,43 +47,57 @@ def execute(
     emit: Callable[[str, bytes], None] | None = None,
     input_bytes: bytes | None = None,
 ) -> Outcome:
+    # signal.signal is main-thread-only. Reject before creating a process that
+    # this thread could not own through cancellation and cleanup.
+    if threading.current_thread() is not threading.main_thread():
+        raise RuntimeError("verification subprocesses require the main thread")
+
     start = time.monotonic()
-    with _input_stream(input_bytes) as stdin:
-        proc = subprocess.Popen(command, cwd=cwd, env=env, stdin=stdin,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                start_new_session=True)
-    selector = selectors.DefaultSelector()
-    assert proc.stdout is not None and proc.stderr is not None
-    selector.register(proc.stdout, selectors.EVENT_READ, "stdout")
-    selector.register(proc.stderr, selectors.EVENT_READ, "stderr")
     streams = {"stdout": bytearray(), "stderr": bytearray()}
     truncated = False
     cause = "exit"
     cancelled = False
     previous = {}
+    proc: subprocess.Popen[bytes] | None = None
+    selector: selectors.BaseSelector | None = None
+
     def cancel(signum, frame):
         nonlocal cancelled
         cancelled = True
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        previous[sig] = signal.signal(sig, cancel)
-    def kill_group():
+
+    def kill_group(pid: int):
         try:
-            os.killpg(proc.pid, signal.SIGTERM)
+            os.killpg(pid, signal.SIGTERM)
             time.sleep(0.25)
         except ProcessLookupError:
             pass
         try:
-            os.killpg(proc.pid, signal.SIGKILL)
+            os.killpg(pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
+
     try:
+        # A partial signal setup has no child to clean up; the finally block
+        # still restores every handler that was installed successfully.
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            previous[sig] = signal.signal(sig, cancel)
+        with _input_stream(input_bytes) as stdin:
+            proc = subprocess.Popen(command, cwd=cwd, env=env, stdin=stdin,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    start_new_session=True)
+        # Ownership begins at spawn. Selector, registration and user callback
+        # failures all pass through the same group teardown and child wait.
+        selector = selectors.DefaultSelector()
+        assert proc.stdout is not None and proc.stderr is not None
+        selector.register(proc.stdout, selectors.EVENT_READ, "stdout")
+        selector.register(proc.stderr, selectors.EVENT_READ, "stderr")
         while selector.get_map() or proc.poll() is None:
             if cancelled or time.monotonic() - start >= deadline_seconds:
                 cause = "cancelled" if cancelled else "safety_deadline"
-                kill_group()
+                kill_group(proc.pid)
             # A direct child may abandon grandchildren that inherited its pipes.
             if proc.poll() is not None:
-                kill_group()
+                kill_group(proc.pid)
             for key, _ in selector.select(0.05):
                 data = os.read(key.fileobj.fileno(), 65536)
                 if not data:
@@ -97,11 +112,22 @@ def execute(
                     emit(key.data, data[:remaining])
         code = proc.wait()
     finally:
-        kill_group()
-        proc.wait()
-        selector.close()
-        for sig, handler in previous.items():
-            signal.signal(sig, handler)
+        try:
+            if proc is not None:
+                kill_group(proc.pid)
+                proc.wait()
+        finally:
+            try:
+                if selector is not None:
+                    selector.close()
+                if proc is not None:
+                    if proc.stdout is not None:
+                        proc.stdout.close()
+                    if proc.stderr is not None:
+                        proc.stderr.close()
+            finally:
+                for sig, handler in previous.items():
+                    signal.signal(sig, handler)
     if cause != "exit":
         code = 130 if cause == "cancelled" else 124
     return Outcome(code, cause, bytes(streams["stdout"]), bytes(streams["stderr"]),

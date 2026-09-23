@@ -1,7 +1,9 @@
 use crate::{RustExpr, RustLiteral, RustType};
 
-mod mutability_and_clone_rewrites;
-pub(crate) use mutability_and_clone_rewrites::*;
+mod clone_rewrites;
+pub(crate) use clone_rewrites::*;
+mod mutability_rewrites;
+pub(crate) use mutability_rewrites::*;
 mod canonical_control_flow;
 mod clone_chain_rewrite;
 mod compiler_generated_mutating_methods;

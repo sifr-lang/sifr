@@ -256,11 +256,7 @@ impl RustEmitter {
                     ty,
                     object_expr.clone(),
                     self.is_deque_data_field(object),
-                    crate::RustExpr::MethodCall {
-                        receiver: Box::new(object_expr),
-                        method: method.clone(),
-                        args: arg_exprs,
-                    },
+                    crate::RustExpr::from_source_method(object_expr, method.clone(), arg_exprs),
                 ))
             }
             HirExpr::ConstructorCall {

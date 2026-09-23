@@ -42,7 +42,7 @@ def main() -> int:
 
     try:
         if args.self_test:
-            run_self_test()
+            run_self_test(args.reference_profile)
             print("performance trend policy self-test passed")
             return 0
 
@@ -497,9 +497,12 @@ def has_metadata_deferral(field: str, deferrals: list[dict[str, Any]]) -> bool:
     )
 
 
-def run_self_test() -> None:
+def run_self_test(reference_profile: str = "") -> None:
     manifest = load_json(DEFAULT_MANIFEST)
-    trend_baselines = load_json(DEFAULT_TREND_BASELINES)
+    trend_baselines = (
+        load_profile(reference_profile)["baseline"]
+        if reference_profile else load_json(DEFAULT_TREND_BASELINES)
+    )
     policy = load_json(DEFAULT_POLICY)
     validate_trend_policy(
         manifest, trend_baselines, policy, manifest_path=DEFAULT_MANIFEST

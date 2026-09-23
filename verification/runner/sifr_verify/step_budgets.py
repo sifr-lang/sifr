@@ -13,6 +13,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 CACHE_CLASSIFIER = "successful-input-receipt"
 RECEIPT_SCHEMA_VERSION = 1
@@ -29,6 +30,7 @@ class StepBudgetContext:
     receipt_path: Path | None = None
     receipt_eligible: bool = False
     required_cache_paths: tuple[Path, ...] = ()
+    area_id: str | None = None
 
 
 def prepare_step_budget(
@@ -51,13 +53,15 @@ def prepare_step_budget(
             enforcement=enforcement,
         )
 
-    suites = selected_suites(profile, name)
+    area_id = selected_area_id(name)
+    suites = selected_suites(profile, area_id)
     binary = Path(env.get("SIFR_GCQ_BIN", repo_root / "target" / "debug" / "sifr"))
-    required_paths = required_cache_paths(repo_root, name, binary, env)
+    required_paths = required_cache_paths(repo_root, area_id, binary, env)
     fingerprint, eligible, ineligible_reason = input_fingerprint(
         repo_root=repo_root,
         profile_name=profile_name,
         step_name=name,
+        area_id=area_id,
         suites=suites,
         sifr_binary=binary,
         cache_paths=required_paths,
@@ -69,7 +73,7 @@ def prepare_step_budget(
         / "verification"
         / "cache-receipts"
         / profile_name
-        / f"{name}.json"
+        / f"{area_id or name}.json"
     )
     if not eligible:
         state, reason = "cold", ineligible_reason
@@ -90,9 +94,10 @@ def prepare_step_budget(
         receipt_path=receipt_path,
         receipt_eligible=eligible,
         required_cache_paths=required_paths,
+        area_id=area_id,
     )
     env["SIFR_VERIFY_STEP_CACHE_STATE"] = state
-    if name == "python_interop":
+    if area_id == "python_interop":
         env["SIFR_PYTHON_INTEROP_CACHE_STATE"] = state
     print(
         f"[sifr-lane-step-cache] name={name} state={state} reason={reason} fingerprint={fingerprint[:16]}"
@@ -148,6 +153,7 @@ def record_step_success(context: StepBudgetContext | None, elapsed_ms: int) -> N
         "schema_version": RECEIPT_SCHEMA_VERSION,
         "classifier": CACHE_CLASSIFIER,
         "step": context.name,
+        "area": context.area_id,
         "input_fingerprint": context.cache_fingerprint,
         "observations": observations,
     }
@@ -183,6 +189,7 @@ def input_fingerprint(
     repo_root: Path,
     profile_name: str,
     step_name: str,
+    area_id: str | None,
     suites: list[str],
     sifr_binary: Path,
     cache_paths: tuple[Path, ...],
@@ -206,6 +213,7 @@ def input_fingerprint(
     payload = {
         "profile": profile_name,
         "step": step_name,
+        "area": area_id,
         "source_commit": source_commit,
         "tracked_state": tracked_state,
         "suites": suites,
@@ -232,26 +240,33 @@ def input_fingerprint(
     )
 
 
-def selected_suites(profile: dict[str, Any], step_name: str) -> list[str]:
-    area = step_name.removeprefix("area_")
+def selected_area_id(step_name: str) -> str | None:
+    # Profile steps carry an area_ prefix; area selections and caches use the
+    # manifest identifier. Keep this translation at one boundary.
+    return step_name.removeprefix("area_") if step_name.startswith("area_") else None
+
+
+def selected_suites(profile: dict[str, Any], area_id: str | None) -> list[str]:
+    if area_id is None:
+        return []
     return [
         str(suite)
         for selection in profile.get("selected_areas", [])
-        if isinstance(selection, dict) and selection.get("area") == area
+        if isinstance(selection, dict) and selection.get("area") == area_id
         for suite in selection.get("suites", [])
     ]
 
 
 def required_cache_paths(
-    repo_root: Path, step_name: str, binary: Path, environment: dict[str, str]
+    repo_root: Path, area_id: str | None, binary: Path, environment: dict[str, str]
 ) -> tuple[Path, ...]:
-    if step_name.removeprefix("area_") == "runtime_platform":
+    if area_id == "runtime_platform":
         target = Path(environment.get("CARGO_TARGET_DIR",
                                       repo_root / "target" / "runtime_platform" / "cargo-target"))
         if not target.is_absolute():
             target = repo_root / target
         return (binary, target / "debug")
-    if step_name == "python_interop":
+    if area_id == "python_interop":
         return (binary, repo_root / "target" / "python" / "debug")
     return (binary,)
 
@@ -359,6 +374,78 @@ def run_self_test() -> None:
             raise AssertionError(
                 "missing cache artifacts did not invalidate the receipt"
             )
+        # Exercise the profile step spelling rather than the area spelling.
+        # The selected suites must enter the receipt identity and the Python
+        # cache must be required before an old successful receipt is warm.
+        binary = root / "target" / "debug" / "sifr"
+        binary.parent.mkdir(parents=True)
+        binary.write_bytes(b"compiler")
+        (root / "Cargo.lock").write_text("lock", encoding="utf-8")
+        python_cache = root / "target" / "python" / "debug"
+        python_cache.mkdir(parents=True)
+        (python_cache / "artifact").write_text("cached", encoding="utf-8")
+        profile = {
+            "step_budgets": {
+                "area_python_interop": {
+                    "warm_budget_ms": 600_000,
+                    "cold_budget_ms": 1_200_000,
+                    "enforcement": "blocking",
+                }
+            },
+            "selected_areas": [
+                {"area": "python_interop", "suites": ["tier1"]}
+            ],
+        }
+        env = {"SIFR_GCQ_BIN": str(binary)}
+
+        def stable_command(command: list[str], _cwd: Path) -> str:
+            if command[:2] == ["git", "status"]:
+                return ""
+            return "fixed-input"
+
+        with patch(__name__ + ".command_output", side_effect=stable_command):
+            first = prepare_step_budget(
+                repo_root=root, profile=profile, profile_name="create-pr",
+                name="area_python_interop", env=env,
+            )
+            assert first is not None
+            if first.area_id != "python_interop" or first.receipt_path is None:
+                raise AssertionError("Python interop area identity was not normalized")
+            if first.receipt_path.name != "python_interop.json":
+                raise AssertionError("Python interop receipt used the step prefix")
+            if first.required_cache_paths != (binary, python_cache):
+                raise AssertionError("Python interop cache paths were not selected")
+            if (first.cache_state, env.get("SIFR_PYTHON_INTEROP_CACHE_STATE")) != ("cold", "cold"):
+                raise AssertionError("cold Python interop state was not exported")
+            record_step_success(first, 900_000)
+            warm = prepare_step_budget(
+                repo_root=root, profile=profile, profile_name="create-pr",
+                name="area_python_interop", env=env,
+            )
+            assert warm is not None
+            if (warm.cache_state, env.get("SIFR_PYTHON_INTEROP_CACHE_STATE")) != ("warm", "warm"):
+                raise AssertionError("warm Python interop state was not exported")
+            profile["selected_areas"][0]["suites"] = ["tier2"]
+            changed = prepare_step_budget(
+                repo_root=root, profile=profile, profile_name="create-pr",
+                name="area_python_interop", env=env,
+            )
+            assert changed is not None
+            if changed.cache_fingerprint == warm.cache_fingerprint or (
+                changed.cache_state, changed.cache_reason
+            ) != ("cold", "input-changed"):
+                raise AssertionError("changed Python interop suites reused a receipt")
+            profile["selected_areas"][0]["suites"] = ["tier1"]
+            (python_cache / "artifact").unlink()
+            missing = prepare_step_budget(
+                repo_root=root, profile=profile, profile_name="create-pr",
+                name="area_python_interop", env=env,
+            )
+            assert missing is not None
+            if (missing.cache_state, missing.cache_reason) != (
+                "cold", "required-cache-missing"
+            ) or env.get("SIFR_PYTHON_INTEROP_CACHE_STATE") != "cold":
+                raise AssertionError("missing Python interop cache was classified warm")
         output = io.StringIO()
         with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
             overrun_status = enforce_step_budget(context, 1_200_001)

@@ -63,6 +63,119 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
     ]);
     assert_eq!(kinds.intersection(&expected).count(), expected.len());
     assert_eq!(schema.dialect.server_version, major.to_string());
+    assert!(
+        schema
+            .objects
+            .contains_key(&sifr_sql_contract::ObjectId::new("public.audit_sequence"))
+    );
+    let owned_sequence = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new(
+            "public.owned_accounts_sequence",
+        ))
+        .expect("explicit owned sequence");
+    assert_eq!(
+        owned_sequence.semantic.get("owned-by"),
+        Some(&sifr_sql_contract::SemanticValue::Text(
+            "public.accounts.id".to_string()
+        ))
+    );
+    assert!(
+        owned_sequence
+            .dependencies
+            .contains(&sifr_sql_contract::ObjectId::new("public.accounts.id"))
+    );
+    assert!(
+        !schema
+            .objects
+            .contains_key(&sifr_sql_contract::ObjectId::new("public.accounts_id_seq"))
+    );
+    let nextval_column = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new(
+            "public.parity_nextval_users.id",
+        ))
+        .expect("nextval default column");
+    assert_eq!(
+        nextval_column.semantic.get("default-sequence"),
+        Some(&sifr_sql_contract::SemanticValue::Text(
+            "public.parity_nextval_sequence".to_string()
+        ))
+    );
+    assert!(
+        nextval_column
+            .dependencies
+            .contains(&sifr_sql_contract::ObjectId::new(
+                "public.parity_nextval_sequence"
+            ))
+    );
+    let nextval_sequence = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new(
+            "public.parity_nextval_sequence",
+        ))
+        .expect("owned nextval sequence");
+    assert_eq!(
+        nextval_sequence.semantic.get("owned-by"),
+        Some(&sifr_sql_contract::SemanticValue::Text(
+            "public.parity_nextval_users.id".to_string()
+        ))
+    );
+    assert!(
+        nextval_sequence
+            .dependencies
+            .contains(&sifr_sql_contract::ObjectId::new(
+                "public.parity_nextval_users.id"
+            ))
+    );
+    let serial_sequence = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new(
+            "public.serial_users_id_seq",
+        ))
+        .expect("SERIAL implementation sequence remains explicit");
+    assert_eq!(
+        serial_sequence.semantic.get("owned-by"),
+        Some(&sifr_sql_contract::SemanticValue::Text(
+            "public.serial_users.id".to_string()
+        ))
+    );
+    let serial_column = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new("public.serial_users.id"))
+        .expect("SERIAL column");
+    assert_eq!(
+        serial_column.semantic.get("default-sequence"),
+        Some(&sifr_sql_contract::SemanticValue::Text(
+            "public.serial_users_id_seq".to_string()
+        ))
+    );
+    let path_sensitive_column = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new(
+            "public.path_sensitive_users.id",
+        ))
+        .expect("non-public nextval default column");
+    assert_eq!(
+        path_sensitive_column.semantic.get("default-sequence"),
+        Some(&sifr_sql_contract::SemanticValue::Text(
+            "sequence_scope.path_sensitive_sequence".to_string()
+        ))
+    );
+    assert!(
+        path_sensitive_column
+            .dependencies
+            .contains(&sifr_sql_contract::ObjectId::new(
+                "sequence_scope.path_sensitive_sequence"
+            ))
+    );
+    assert!(
+        !path_sensitive_column
+            .dependencies
+            .contains(&sifr_sql_contract::ObjectId::new(
+                "public.path_sensitive_sequence"
+            ))
+    );
     let catalog = PostgresCatalog::from_schema(&schema, PostgresTypeRegistry::new(major))
         .expect("pulled schema must load in the compiler catalog");
     let analyzer = PostgresAnalyzer::new(LibpgQueryParser, catalog);
@@ -98,32 +211,43 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
         generated.contains("composite_values: SqlArray[composites__public__postal_address | None]")
     );
     assert!(generated.contains("value: Range[Numeric]"));
-    if major == 18 {
-        let live = parity_schema(schema);
-        let ddl = ddl_parity_schema(provider());
+    {
+        let live = parity_schema(schema, major);
+        let ddl = parity_schema(ddl_parity_schema(provider(), major), major);
         build_schema_artifacts(&authority(ddl.clone())).expect("DDL schema artifacts");
         let differences = semantic_diff(&ddl, &live);
         assert!(differences.is_empty(), "{differences:#?}");
     }
 }
 
-fn parity_schema(mut schema: sifr_sql_contract::SchemaIr) -> sifr_sql_contract::SchemaIr {
+fn parity_schema(
+    mut schema: sifr_sql_contract::SchemaIr,
+    major: u16,
+) -> sifr_sql_contract::SchemaIr {
     schema.objects.retain(|identity, _| {
         identity.as_str() == "public"
             || identity.as_str() == "public.parity_users"
             || identity.as_str().starts_with("public.parity_users.")
             || identity.as_str().starts_with("public.parity_users_")
-            || identity.as_str() == "public.parity_user_view"
-            || identity.as_str().starts_with("public.parity_user_view.")
+            || identity.as_str() == "public.parity_owned_sequence"
+            || identity.as_str() == "public.parity_detached_sequence"
+            || identity.as_str() == "public.parity_nextval_sequence"
+            || identity.as_str() == "public.parity_nextval_users"
+            || identity
+                .as_str()
+                .starts_with("public.parity_nextval_users.")
+            || (major == 18
+                && (identity.as_str() == "public.parity_user_view"
+                    || identity.as_str().starts_with("public.parity_user_view.")))
     });
     schema
 }
 
-fn ddl_parity_schema(provider: ProviderIdentity) -> sifr_sql_contract::SchemaIr {
+fn ddl_parity_schema(provider: ProviderIdentity, major: u16) -> sifr_sql_contract::SchemaIr {
     let response = PostgresCompilerComponent::new(LibpgQueryParser).execute(
         PostgresComponentRequest::NormalizeSchema {
             provider: provider.clone(),
-            server_major: 18,
+            server_major: major,
             documents: vec![(
                 "parity.sql".to_string(),
                 "CREATE TABLE parity_users (\
@@ -132,7 +256,19 @@ fn ddl_parity_schema(provider: ProviderIdentity) -> sifr_sql_contract::SchemaIr 
                     score integer CHECK (score >= 0)\
                  ); \
                  CREATE VIEW parity_user_view AS \
-                    SELECT id, name, score FROM parity_users;"
+                    SELECT id, name, score FROM parity_users; \
+                 CREATE SEQUENCE parity_owned_sequence AS integer INCREMENT 5 \
+                    MINVALUE 0 MAXVALUE 1000 START 0 CACHE 3 CYCLE; \
+                 ALTER SEQUENCE parity_owned_sequence OWNED BY parity_users.score; \
+                 ALTER SEQUENCE parity_owned_sequence OWNED BY parity_users.id; \
+                 CREATE SEQUENCE parity_detached_sequence AS smallint INCREMENT -2 \
+                    MINVALUE -1000 MAXVALUE -1 START -1 OWNED BY parity_users.id; \
+                 ALTER SEQUENCE parity_detached_sequence OWNED BY NONE; \
+                 CREATE SEQUENCE parity_nextval_sequence; \
+                 CREATE TABLE parity_nextval_users (\
+                    id bigint DEFAULT nextval('parity_nextval_sequence'::regclass)\
+                 ); \
+                 ALTER SEQUENCE parity_nextval_sequence OWNED BY parity_nextval_users.id;"
                     .to_string(),
             )],
         },

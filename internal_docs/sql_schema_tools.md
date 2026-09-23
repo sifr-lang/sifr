@@ -82,6 +82,40 @@ The adapter uses the same structured `DatabaseType` values and property names as
 the declarative DDL normalizer. Generated domain and composite annotations come
 from the provider type registry. An unrepresentable type is an error.
 
+The PostgreSQL adapter keeps explicit sequences, including sequences with an
+`OWNED BY` column dependency. It records that column as the `owned-by` semantic
+field and as a dependency. The adapter excludes only sequences with PostgreSQL
+internal ownership (`pg_depend.deptype = 'i'`) that points to a column with
+a nonempty `attidentity`. It does not exclude user sequence ownership
+(`pg_depend.deptype = 'a'`) or unrelated internal dependencies. The DDL normalizer applies
+the same rule to `CREATE SEQUENCE ... OWNED BY` and `ALTER SEQUENCE ... OWNED
+BY`. It parses the sequence data type, bounds, start, increment, cache, and cycle
+options. Omitted options use PostgreSQL defaults for the data type and increment
+direction. PostgreSQL parser components can omit zero or negative scalar fields
+from JSON. In that case, the adapter reads the integer token at the parser's
+source location. It also accepts the integer and Boolean cycle nodes used by
+PostgreSQL 13 through 18. The parser matrix locks this behavior. Unsupported
+options are errors. Duplicate CREATE SEQUENCE is rejected. IF NOT EXISTS
+preserves the existing object and IF EXISTS allows a missing ALTER target.
+The supported DDL boundary excludes SERIAL pseudo-types; schemas must use an
+explicit sequence and `nextval` default or an identity column. A direct
+`nextval('name'::regclass)` default retains its canonical sequence identity
+and dependency separately from the column's `has-default` flag. Identity
+columns retain their own identity-column object; internal identity sequences
+do not appear as user sequences. For live pulls, the referenced sequence
+identity comes from PostgreSQL dependency metadata rather than the spelling
+pg_get_expr renders using the session search_path. Direct nextval defaults
+with quoted sequence names or uppercase letters are outside the current
+normalization boundary and produce an incomplete catalog diagnostic.
+
+ALTER SEQUENCE accepts one OWNED BY option, including NONE. Mixed ALTER
+options are rejected in full and remain opaque to migration reflection.
+Reassigning or removing ownership replaces the prior column dependency.
+Schema documents are applied in order and updates retain one final object
+definition attributed to the modifying document. The same update delta is
+used by migration reflection. PostgreSQL 13–18 component artifacts execute
+schema requests through this normalizer in the capability-free host.
+
 Pull compares the live graph with the checked snapshot. If no snapshot exists,
 it compares with the selected source authority. It prints the semantic diff and
 flushes standard output before any write. A non-empty diff returns status 2.

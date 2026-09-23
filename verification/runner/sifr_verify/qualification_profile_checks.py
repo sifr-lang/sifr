@@ -12,7 +12,7 @@ from .profiles import (
     required_sql_platform_suites,
     validate_selected_area_suites,
 )
-from .step_budgets import StepBudgetContext, record_step_success, required_cache_paths, selected_suites
+from .step_budgets import StepBudgetContext, record_step_success, required_cache_paths, selected_area_id, selected_suites
 
 
 def policy_checks() -> None:
@@ -33,8 +33,8 @@ def policy_checks() -> None:
                 raise AssertionError(f"{name} accepted missing SQL suite {missing}")
         for area in ("runtime_platform", "python_interop"):
             direct = selected_suites(profile, area)
-            prefixed = selected_suites(profile, f"area_{area}")
-            if not direct or prefixed != direct:
+            canonical = selected_area_id(f"area_{area}")
+            if not direct or canonical != area or selected_suites(profile, None):
                 raise AssertionError(f"budget fingerprint lost {area} suite selection")
 
     runtime_budget = load_profile("create-pr")["step_budgets"]["area_runtime_platform"]
@@ -44,7 +44,7 @@ def policy_checks() -> None:
     root = Path("/qualification")
     binary = root / "target/debug/sifr"
     expected = (binary, root / "custom-target/debug")
-    actual = required_cache_paths(root, "area_runtime_platform", binary,
+    actual = required_cache_paths(root, "runtime_platform", binary,
                                   {"CARGO_TARGET_DIR": "custom-target"})
     if actual != expected:
         raise AssertionError("runtime receipt does not bind its effective Cargo target")

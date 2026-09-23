@@ -216,6 +216,11 @@ impl Renderer {
                 receiver,
                 method,
                 args,
+            }
+            | RustExpr::SourceMethodCall {
+                receiver,
+                method,
+                args,
             } => {
                 let receiver =
                     if matches!(receiver.as_ref(), RustExpr::Ref { .. } | RustExpr::Deref(_)) {

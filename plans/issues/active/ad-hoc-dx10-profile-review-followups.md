@@ -89,3 +89,17 @@ strict workspace Clippy pass in
 `dx15-evidence/e2ab8e1f9ae815a1f8ac2ac652329d90dfc4ff0f/after-sql/report.json`.
 The original diagnostic report is preserved. Other followups remain separate
 and are not silently marked complete by this binding.
+
+## 2026-09-23 profile inventory observation
+
+An optional verification-runner self-test on main-derived base
+`787d3ad8d471ad35fd409b76887014c5b3fe334c` failed before V01 changes
+were involved: `PYTHONPATH=verification/runner python3 -m sifr_verify --self-test`
+reports a DX.10 `test_b11_release_corpus_and_retained_native_selection`
+fixture-list mismatch. The tracked `integer_field_augassign.sifr` E2E pass fixture
+appears in the filesystem inventory but is absent from the retained release
+selection. This record does not alter the selection or classify the run as
+passing. Raw log: `/home/yaser5/projects/sifr/architecture-v01-evidence/runner-selftest.log`
+(SHA-256 `afb3334bfbfd6b38f695b1feac51c61ca78cc0c961d181bf6f74dd5b0f6d9ab5`).
+The verification-runner owner should reconcile the fixture inventory and
+rerun that exact self-test.

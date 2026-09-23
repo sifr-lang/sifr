@@ -256,6 +256,33 @@ impl RustEmitter {
                     args,
                 }
             }
+            crate::RustExpr::SourceMethodCall {
+                receiver,
+                method,
+                args,
+            } => {
+                let receiver = self.rewrite_stdlib_constant_idents_in_expr(*receiver);
+                let receiver_class = self.rust_expr_class_name(&receiver);
+                let args = args
+                    .into_iter()
+                    .enumerate()
+                    .map(|(idx, arg)| {
+                        let arg = self.rewrite_stdlib_constant_idents_in_expr(arg);
+                        if receiver_class.as_ref().is_some_and(|class_name| {
+                            self.method_param_lowers_to_sifr_int_result(class_name, &method, idx)
+                        }) {
+                            self.coerce_result_int_expr_to_sifr_int_value(arg)
+                        } else {
+                            arg
+                        }
+                    })
+                    .collect();
+                crate::RustExpr::SourceMethodCall {
+                    receiver: Box::new(receiver),
+                    method,
+                    args,
+                }
+            }
             crate::RustExpr::FnCall { func, args } => {
                 let func = self.rewrite_stdlib_constant_idents_in_expr(*func);
                 let args = if let Some(func_name) = rust_expr_identifier_path(&func) {
