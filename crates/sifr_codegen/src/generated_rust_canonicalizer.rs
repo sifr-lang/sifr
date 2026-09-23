@@ -83,16 +83,18 @@ pub fn canonicalize_generated_rust_project(
 pub fn canonicalize_generated_rust_project_with_names(
     sources: &BTreeMap<String, String>,
 ) -> Result<CanonicalProjectWithNames, String> {
+    let preserve_exported = sources.len() > 1;
     let fields = field_name_cleanup::canonicalize_fields(sources)?;
     let names = identifier_canonicalizer::project_name_map(&fields)?;
     let canonical = fields
         .into_iter()
         .map(|(module, source)| {
-            canonicalize_source_with_names(&source, &names).map(|source| (module, source))
+            canonicalize_source_with_names(&source, &names, preserve_exported)
+                .map(|source| (module, source))
         })
         .collect::<Result<BTreeMap<_, _>, _>>()?;
     Ok((
-        support_import_cleanup::refresh_support_imports(canonical)?,
+        support_import_cleanup::refresh_support_imports(canonical, preserve_exported)?,
         names,
     ))
 }
@@ -100,16 +102,20 @@ pub fn canonicalize_generated_rust_project_with_names(
 fn canonicalize_source_with_names(
     source: &str,
     names: &BTreeMap<String, String>,
+    preserve_exported: bool,
 ) -> Result<String, String> {
     let structurally_pruned = prune_closed_generated_binary(source)?;
     let source = structurally_pruned.as_deref().unwrap_or(source);
     let canonical = identifier_canonicalizer::canonicalize_identifiers(source, names)?;
-    canonicalize_named_source(canonical)
+    canonicalize_named_source(canonical, preserve_exported)
 }
 
-fn canonicalize_named_source(mut canonical: String) -> Result<String, String> {
+fn canonicalize_named_source(
+    mut canonical: String,
+    preserve_exported: bool,
+) -> Result<String, String> {
     for _ in 0..16 {
-        let rewritten = rewrite_format_captures(&canonical)?;
+        let rewritten = rewrite_format_captures(&canonical, preserve_exported)?;
         let structurally_pruned = prune_closed_generated_binary(&rewritten)?;
         let next = structurally_pruned.unwrap_or(rewritten);
         if next == canonical {
@@ -216,11 +222,11 @@ impl<'ast> Visit<'ast> for FallibleControlUse {
     }
 }
 
-fn rewrite_format_captures(source: &str) -> Result<String, String> {
+fn rewrite_format_captures(source: &str, preserve_exported: bool) -> Result<String, String> {
     let mut file = syn::parse_file(source)
         .map_err(|error| format!("failed to parse canonical generated Rust: {error}"))?;
     let shorthand_changed = field_name_cleanup::compact_shorthand(&mut file);
-    let syntax_changed = canonicalize_syntax_to_fixed_point(&mut file)?;
+    let syntax_changed = canonicalize_syntax_to_fixed_point(&mut file, preserve_exported)?;
     let final_syntax = prettyplease::unparse(&file);
     let mut api_file = syn::parse_file(&final_syntax)
         .map_err(|error| format!("failed to reparse final generated Rust: {error}"))?;
@@ -235,11 +241,14 @@ fn rewrite_format_captures(source: &str) -> Result<String, String> {
     improve_final_api_source(first_api_source)
 }
 
-fn canonicalize_syntax_to_fixed_point(file: &mut syn::File) -> Result<bool, String> {
+fn canonicalize_syntax_to_fixed_point(
+    file: &mut syn::File,
+    preserve_exported: bool,
+) -> Result<bool, String> {
     let mut changed = false;
     for _ in 0..4 {
         let before = file.to_token_stream().to_string();
-        canonicalize_syntax(file);
+        canonicalize_syntax(file, preserve_exported);
         if file.to_token_stream().to_string() == before {
             let mut format_rewriter = FormatCaptureRewriter { changed: false };
             format_rewriter.visit_file_mut(file);

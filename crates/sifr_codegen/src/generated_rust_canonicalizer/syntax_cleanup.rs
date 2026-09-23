@@ -41,10 +41,10 @@ use mutability_cleanup::{
 pub(super) use pattern_predicates::is_wildcard_result_pattern;
 use pattern_predicates::{is_none_pattern, is_wildcard_option_pattern};
 
-pub(super) fn canonicalize_syntax(file: &mut syn::File) {
+pub(super) fn canonicalize_syntax(file: &mut syn::File, preserve_exported: bool) {
     idiom_cleanup::rewrite_borrow_only_string_parameters(file);
     borrowed_scalar_parameters::rewrite_borrow_only_scalar_parameters(file);
-    borrowed_value_parameters::rewrite_borrow_only_value_parameters(file);
+    borrowed_value_parameters::rewrite_borrow_only_value_parameters(file, preserve_exported);
     redundant_borrow_cleanup::remove_redundant_local_call_borrows(file);
     super::api_cleanup::rewrite_slice_parameter_apis(file);
     identity_conversion_cleanup::remove_known_sifr_int_identity_conversions(file);

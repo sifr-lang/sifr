@@ -12,9 +12,9 @@ enum BorrowKind {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct BorrowPlan(Vec<(usize, BorrowKind)>);
 
-pub(super) fn rewrite_borrow_only_value_parameters(file: &mut syn::File) {
+pub(super) fn rewrite_borrow_only_value_parameters(file: &mut syn::File, preserve_exported: bool) {
     let shared_trait_methods = shared_trait_methods(file);
-    let mut plans = collect_plans(file, &shared_trait_methods);
+    let mut plans = collect_plans(file, &shared_trait_methods, preserve_exported);
     super::scoped_imports::expand(file, &mut plans);
     SignatureRewriter {
         plans: &plans,
@@ -36,7 +36,7 @@ pub(super) fn collect_project_plans(files: &[syn::File]) -> HashMap<String, Borr
     let mut ambiguous = HashSet::new();
     for file in files {
         let methods = shared_trait_methods(file);
-        for (key, plan) in collect_plans(file, &methods) {
+        for (key, plan) in collect_plans(file, &methods, false) {
             plans
                 .entry(key.clone())
                 .and_modify(|known| {
@@ -101,6 +101,7 @@ impl Visit<'_> for SharedTraitMethodCollector {
 fn collect_plans(
     file: &syn::File,
     shared_trait_methods: &HashSet<(String, String)>,
+    preserve_exported: bool,
 ) -> HashMap<String, BorrowPlan> {
     let mut collector = PlanCollector {
         plans: HashMap::new(),
@@ -108,6 +109,7 @@ fn collect_plans(
         modules: Vec::new(),
         owner: None,
         trait_implementation: false,
+        preserve_exported,
         shared_trait_methods,
     };
     collector.visit_file(file);
@@ -123,6 +125,7 @@ struct PlanCollector<'facts> {
     modules: Vec<String>,
     owner: Option<String>,
     trait_implementation: bool,
+    preserve_exported: bool,
     shared_trait_methods: &'facts HashSet<(String, String)>,
 }
 
@@ -150,12 +153,16 @@ impl Visit<'_> for PlanCollector<'_> {
     }
 
     fn visit_item_fn(&mut self, function: &syn::ItemFn) {
-        self.collect_signature(&function.sig, &function.block);
+        if !self.preserve_exported || matches!(function.vis, syn::Visibility::Inherited) {
+            self.collect_signature(&function.sig, &function.block);
+        }
         visit::visit_item_fn(self, function);
     }
 
     fn visit_impl_item_fn(&mut self, function: &syn::ImplItemFn) {
-        self.collect_signature(&function.sig, &function.block);
+        if !self.preserve_exported || matches!(function.vis, syn::Visibility::Inherited) {
+            self.collect_signature(&function.sig, &function.block);
+        }
         visit::visit_impl_item_fn(self, function);
     }
 }
@@ -689,7 +696,7 @@ mod tests {
                 assert!(through_protocol(Box::new(Carrier::new())) == 5);
             }
         };
-        rewrite_borrow_only_value_parameters(&mut file);
+        rewrite_borrow_only_value_parameters(&mut file, false);
         let rust = prettyplease::unparse(&file);
         assert!(
             rust.contains("fn through_protocol(value: &dyn Unwrappable)"),

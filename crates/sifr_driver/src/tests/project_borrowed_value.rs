@@ -34,18 +34,23 @@ def read_optional(value: str | None) -> str:
 
 def forwarded_optional(own value: str | None) -> str:
     return read_optional(value)
+
+def outer(own value: str | None) -> str:
+    return forwarded_optional(value)
 "#,
     )
     .expect("helper source should be written");
     std::fs::write(
         &main_file,
-        r#"from helper import Carrier, through_protocol, same_module, forwarded_optional
+        r#"from helper import Carrier, through_protocol, same_module, forwarded_optional, outer
 
 def main():
     print(through_protocol(Carrier(3)))
     print(same_module())
     print(forwarded_optional("hello"))
     print(forwarded_optional(None))
+    print(outer("chain"))
+    print(outer(None))
 "#,
     )
     .expect("main source should be written");
@@ -80,6 +85,18 @@ def main():
             && compact.contains("forwarded_optional(&None)"),
         "{rust_source}"
     );
+    assert!(
+        compact.contains("outer(value:&Option<String>)"),
+        "{rust_source}"
+    );
+    assert!(
+        compact.contains("outer(&Some(") && compact.contains("outer(&None)"),
+        "{rust_source}"
+    );
+    assert!(
+        compact.contains("forwarded_optional(value)"),
+        "{rust_source}"
+    );
 
     let binary = build_project(
         &crate::CompilerContext::for_test(),
@@ -94,7 +111,7 @@ def main():
     assert!(output.status.success(), "{output:?}");
     assert_eq!(
         String::from_utf8_lossy(&output.stdout),
-        "3\n2\nHELLO\nnone\n"
+        "3\n2\nHELLO\nnone\nCHAIN\nnone\n"
     );
     let _ = std::fs::remove_dir_all(dir);
 }

@@ -35,13 +35,34 @@ pub(crate) fn rewrite_named_project_borrows(
     for file in &mut files {
         syntax_cleanup::apply_local_scalar_borrow_plans(file);
     }
+    loop {
+        let value_borrows = syntax_cleanup::collect_project_value_borrow_plans(&files);
+        if value_borrows.is_empty() {
+            break;
+        }
+        let before = files
+            .iter()
+            .map(quote::ToTokens::to_token_stream)
+            .map(|tokens| tokens.to_string())
+            .collect::<Vec<_>>();
+        for file in &mut files {
+            syntax_cleanup::apply_project_value_borrow_plans(file, &value_borrows);
+        }
+        if files
+            .iter()
+            .map(quote::ToTokens::to_token_stream)
+            .map(|tokens| tokens.to_string())
+            .collect::<Vec<_>>()
+            == before
+        {
+            return Err("generated project value borrow plans made no progress".to_string());
+        }
+    }
     let shared_slices = api_cleanup::collect_project_shared_slice_params(&files);
-    let value_borrows = syntax_cleanup::collect_project_value_borrow_plans(&files);
     let scalar_borrows = syntax_cleanup::collect_project_scalar_borrow_plans(&files);
     let mutability_facts = syntax_cleanup::collect_project_mutability_facts(&files);
     for file in &mut files {
         api_cleanup::rewrite_project_shared_slice_calls(file, &shared_slices);
-        syntax_cleanup::apply_project_value_borrow_plans(file, &value_borrows);
         syntax_cleanup::apply_project_scalar_borrow_plans(file, &scalar_borrows);
         syntax_cleanup::apply_project_mutability_facts(file, &mutability_facts);
     }
@@ -86,14 +107,16 @@ mod tests {
                 value.as_ref().map_or(0, String::len)
             }
             pub fn optional(value: Option<String>) -> usize { optional_read(&value) }
+            pub fn outer(value: Option<String>) -> usize { optional(value) }
             pub fn local() -> i64 { through(Box::new(Carrier(2))) }
         "#
         .to_string();
         let mut main = r#"
-            use crate::helper::{through as imported_through, optional};
+            use crate::helper::{through as imported_through, optional, outer};
             fn main() {
                 assert_eq!(imported_through(Box::new(helper::Carrier(3))), 3);
                 assert_eq!(optional(Some("abc".to_string())), 3);
+                assert_eq!(outer(Some("abcd".to_string())), 4);
                 assert_eq!(helper::local(), 2);
             }
         "#
@@ -115,6 +138,7 @@ mod tests {
             "{main}"
         );
         assert!(main_compact.contains("optional(&Some("), "{main}");
+        assert!(main_compact.contains("outer(&Some("), "{main}");
         assert!(helper_compact.contains("through(&Carrier(2))"), "{helper}");
         assert!(
             helper_compact.contains("pubfnthrough(value:&dynUnwrappable)"),
@@ -124,6 +148,11 @@ mod tests {
             helper_compact.contains("pubfnoptional(value:&Option<String>)"),
             "{helper}"
         );
+        assert!(
+            helper_compact.contains("pubfnouter(value:&Option<String>)"),
+            "{helper}"
+        );
+        assert!(helper_compact.contains("optional(value)"), "{helper}");
         assert!(
             !main_compact.contains("imported_through(Box::new("),
             "{main}"

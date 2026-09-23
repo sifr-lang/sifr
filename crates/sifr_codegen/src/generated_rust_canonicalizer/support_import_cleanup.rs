@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 pub(super) fn refresh_support_imports(
     mut sources: BTreeMap<String, String>,
+    preserve_exported: bool,
 ) -> Result<BTreeMap<String, String>, String> {
     for _ in 0..16 {
         let refreshed = refresh_once(sources.clone())?;
@@ -16,7 +17,8 @@ pub(super) fn refresh_support_imports(
                 if sources.get(&module) == Some(&source) {
                     Ok((module, source))
                 } else {
-                    super::canonicalize_named_source(source).map(|source| (module, source))
+                    super::canonicalize_named_source(source, preserve_exported)
+                        .map(|source| (module, source))
                 }
             })
             .collect::<Result<_, _>>()?;

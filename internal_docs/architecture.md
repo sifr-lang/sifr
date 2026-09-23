@@ -498,6 +498,9 @@ large-file check and a representative project check.
   project metadata, inline stdlib, and bridge fragments have been assembled,
   the complete file is parsed as a `syn` Rust syntax tree for demand pruning,
   identifier canonicalization, and syntax/API cleanup before its final render.
+  Project assembly resolves borrow-only value signatures and importing calls
+  across all modules to a fixed point. Later per-file cleanup does not newly
+  borrow exported project signatures.
   No regex or unchecked text-pattern rewrite decides Rust semantics; the only
   source-range substitutions are identifiers whose spans and spellings were
   validated by that parsed tree, which preserves comments and literals. At
