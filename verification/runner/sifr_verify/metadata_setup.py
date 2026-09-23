@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-import subprocess
 import sys
 import tempfile
 
@@ -57,6 +56,8 @@ def build_and_prepare(command, env, executor=execute, runner=execute, validator=
     validator(binary, False)
     # No guessed target/debug path or host/target substitution. The canonical CLI
     # retains its own compiled target and identity; it reports the durable cache key.
+    sys.stdout.flush()
+    sys.stderr.flush()
     def relay(stream, data):
         output = sys.stderr.buffer if stream == "stderr" else sys.stdout.buffer
         output.write(data)
@@ -64,8 +65,10 @@ def build_and_prepare(command, env, executor=execute, runner=execute, validator=
     with tempfile.TemporaryDirectory(prefix="sifr-metadata-preparation-") as directory:
         result = runner([str(binary), "sysroot", "build-metadata", "--source-root", str(REPO_ROOT),
                          "--output", str(Path(directory) / "stdlib.sifrmeta")], env=env,
-                        cwd=REPO_ROOT, emit=relay,
+                        cwd=REPO_ROOT, emit=relay, limit_bytes=16 * 1024 * 1024,
                         deadline_seconds=env.get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400"))
+    if getattr(result, "truncated", False):
+        raise ValueError("metadata producer output exceeded the bounded capture limit")
     if result.returncode:
         error = CommandFailed(result.returncode, getattr(result, "cause", None))
         error.outcome = result
@@ -83,5 +86,5 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (ValueError, OSError, CommandFailed, subprocess.CalledProcessError) as error:
+    except (ValueError, OSError, CommandFailed) as error:
         raise SystemExit(f"metadata preparation failed: {error}") from error

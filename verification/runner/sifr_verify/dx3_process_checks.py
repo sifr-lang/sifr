@@ -321,21 +321,64 @@ class ProcessTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0)
             self.assertIn(b"safety_deadline", result.stdout)
 
+    def test_f27_standalone_metadata_helper_honors_expired_deadline(self):
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1])
+        env[SAFETY_DEADLINE_ENV] = repr(time.monotonic() - 1)
+        result = subprocess.run(
+            [sys.executable, "-m", "sifr_verify.metadata_setup", "--", "cargo", "build"],
+            cwd=Path.cwd(), env=env, capture_output=True, timeout=2,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(b"exit code 124 cause=safety_deadline", result.stderr)
+
+    def test_f27_per_process_default_does_not_limit_whole_step(self):
+        from .profile_runner import ProfileRunner
+        from .step_budgets import StepBudgetContext
+        runner = ProfileRunner("create-pr", [])
+        runner.env["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"] = ".2"
+        runner.prepare_step_budget = lambda name: StepBudgetContext(name, 1000, "advisory")
+        def step():
+            for _ in range(2):
+                run_command([sys.executable, "-c", "import time; time.sleep(.12)"],
+                            env=runner.env)
+        with contextlib.redirect_stdout(io.StringIO()):
+            status = runner.execute_step("fixture", step)
+        self.assertEqual(status, 0)
+        self.assertNotIn(SAFETY_DEADLINE_ENV, runner.env)
+
     def test_f27_step_deadline_covers_successive_commands(self):
         from .profile_runner import ProfileRunner
         from .step_budgets import StepBudgetContext
         runner = ProfileRunner("create-pr", [])
-        runner.env["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"] = ".3"
+        runner.env["SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS"] = ".3"
         runner.prepare_step_budget = lambda name: StepBudgetContext(name, 1000, "advisory")
         def step():
+            self.assertEqual(os.environ[SAFETY_DEADLINE_ENV], runner.env[SAFETY_DEADLINE_ENV])
             run_command([sys.executable, "-c", "import time; time.sleep(.12)"],
                         env=runner.env)
             run_command([sys.executable, "-c", "import time; time.sleep(10)"],
-                        env=runner.env)
+                        env=os.environ.copy())
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             status = runner.execute_step("fixture", step)
         self.assertEqual(status, 124)
         self.assertNotIn(SAFETY_DEADLINE_ENV, runner.env)
+        self.assertNotIn(SAFETY_DEADLINE_ENV, os.environ)
+
+    def test_f27_escaped_pipe_holder_cannot_extend_deadline(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            program = (
+                "import os,time; "
+                "child=os.fork(); "
+                "os.setsid() if child==0 else None; "
+                "time.sleep(1) if child==0 else os.write(1,b'terminal output')"
+            )
+            started = time.monotonic()
+            result = execute([sys.executable, "-c", program], cwd=Path(temporary),
+                             deadline_seconds=.2)
+            self.assertEqual((result.returncode, result.cause), (124, "safety_deadline"))
+            self.assertEqual(result.stdout, b"terminal output")
+            self.assertLess(time.monotonic() - started, .8)
 
     def test_f27_lock_wait_uses_absolute_deadline(self):
         with tempfile.TemporaryDirectory() as temporary:

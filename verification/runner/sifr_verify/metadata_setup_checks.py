@@ -27,6 +27,7 @@ class MetadataSetupTests(unittest.TestCase):
     def test_exact_cargo_artifact_is_prepared_without_identity_override(self):
         runner = Mock()
         runner.return_value.returncode = 0
+        runner.return_value.truncated = False
         env = {"CARGO_TARGET_DIR": "/owned/target"}
         build_and_prepare(["cargo", "build", "--release"], env,
             self.executor([self.artifact("/test/ignored", True), self.artifact("/exact/compiler")]), runner, Mock())

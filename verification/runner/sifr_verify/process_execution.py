@@ -140,6 +140,9 @@ def execute(
             if cancelled or time.monotonic() >= deadline:
                 cause = "cancelled" if cancelled else "safety_deadline"
                 kill_group(proc.pid)
+                # An escaped descendant can retain a pipe indefinitely. On a
+                # safety outcome, keep the bytes already read and close our ends.
+                break
             # A direct child may abandon grandchildren that inherited its pipes.
             if proc.poll() is not None:
                 kill_group(proc.pid)
