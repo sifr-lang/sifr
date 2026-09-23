@@ -16,7 +16,7 @@ impl Entry {
     }
 }
 fn chain_text(entry: Option<&Entry>) -> String {
-    let Some(entry) = entry.as_ref() else {
+    let Some(entry) = entry else {
         return ".".to_string();
     };
     let next_entry: Option<&Entry> = entry.next.as_deref();
@@ -30,7 +30,7 @@ fn chain_text(entry: Option<&Entry>) -> String {
     }
 }
 fn second_value(entry: Option<&Entry>) -> SifrInt {
-    let Some(entry) = entry.as_ref() else {
+    let Some(entry) = entry else {
         return SifrInt::from_i64(0);
     };
     let next_entry: Option<&Entry> = entry.next.as_deref();

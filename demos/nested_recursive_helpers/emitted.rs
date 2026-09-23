@@ -17,7 +17,7 @@ impl Entry {
 }
 fn collect_values(root: Option<&Entry>) -> String {
     fn visit(node: Option<&Entry>, values: &mut Vec<SifrInt>) {
-        let Some(node) = node.as_ref() else {
+        let Some(node) = node else {
             return;
         };
         values.push(node.value.clone());
