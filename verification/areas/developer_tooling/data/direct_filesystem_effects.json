@@ -1026,6 +1026,13 @@
     {
       "path": "crates/sifr/src/python_binding_cli.rs",
       "symbol": "validate_output_destination",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() || !metadata.is_file() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/python_binding_cli.rs",
+      "symbol": "validate_output_destination",
       "operation": "is_file",
       "site": "if metadata.file_type().is_symlink() || !metadata.is_file() {",
       "classification": "tooling-input"
@@ -1047,6 +1054,13 @@
     {
       "path": "crates/sifr/src/python_binding_cli.rs",
       "symbol": "validate_output_ancestors",
+      "operation": "is_symlink",
+      "site": "Ok(metadata) if metadata.file_type().is_symlink() => {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/python_binding_cli.rs",
+      "symbol": "validate_output_ancestors",
       "operation": "is_dir",
       "site": "Ok(metadata) if !metadata.is_dir() => {",
       "classification": "tooling-input"
@@ -1056,6 +1070,13 @@
       "symbol": "package_typing_sources",
       "operation": "symlink_metadata",
       "site": "let metadata = std::fs::symlink_metadata(&candidate).map_err(|error| {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/python_binding_cli.rs",
+      "symbol": "package_typing_sources",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() || !metadata.is_file() {",
       "classification": "tooling-input"
     },
     {
@@ -1098,6 +1119,13 @@
       "symbol": "validated_fixture",
       "operation": "symlink_metadata",
       "site": "let metadata = std::fs::symlink_metadata(&candidate).map_err(|error| {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/src/python_cli.rs",
+      "symbol": "validated_fixture",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() || !metadata.is_file() {",
       "classification": "tooling-input"
     },
     {
@@ -1175,6 +1203,13 @@
       "symbol": "rejects_symlink_fixture",
       "operation": "write",
       "site": "fs::write(&target, \"{}\\n\").expect(\"write target\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/self_update_metadata_source.rs",
+      "symbol": "rejects_symlink_fixture",
+      "operation": "symlink",
+      "site": "symlink(&target, &link).expect(\"create symlink\");",
       "classification": "output-effect"
     },
     {
@@ -1320,6 +1355,13 @@
     {
       "path": "crates/sifr/src/self_update_receipt.rs",
       "symbol": "dx8_receipt_discovers_selected_immutable_generation",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(&binary, stable_bin.join(\"sifr\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/self_update_receipt.rs",
+      "symbol": "dx8_receipt_discovers_selected_immutable_generation",
       "operation": "write",
       "site": "fs::write(generation.join(\"sysroot.toml\"), \"\").unwrap();",
       "classification": "output-effect"
@@ -1343,6 +1385,13 @@
       "symbol": "rejects_binary_at_sysroot_root",
       "operation": "write",
       "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/src/self_update_receipt.rs",
+      "symbol": "accepts_symlinked_current_executable_using_same_file_metadata",
+      "operation": "symlink",
+      "site": "symlink(&binary, &symlink_path).expect(\"create symlink\");",
       "classification": "output-effect"
     },
     {
@@ -1673,6 +1722,13 @@
       "operation": "exists",
       "site": "assert!(!existing.join(\"trace-v1.json\").exists());",
       "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr/src/trace_artifacts.rs",
+      "symbol": "trace_directory_is_private_under_permissive_umask",
+      "operation": "symlink",
+      "site": "symlink(&existing, &link).unwrap();",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr/src/trace_artifacts.rs",
@@ -2678,6 +2734,13 @@
     {
       "path": "crates/sifr/tests/python_read_only_cli.rs",
       "symbol": "application",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(&shared_venv, package.root.join(\".venv\"))",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/python_read_only_cli.rs",
+      "symbol": "application",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
@@ -2841,6 +2904,13 @@
       "symbol": "collect_snapshot",
       "operation": "symlink_metadata",
       "site": "let metadata = std::fs::symlink_metadata(&path).expect(\"snapshot metadata should exist\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/python_read_only_cli.rs",
+      "symbol": "collect_snapshot",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() {",
       "classification": "tooling-input"
     },
     {
@@ -3079,14 +3149,14 @@
       "symbol": "load",
       "operation": "read_to_string",
       "site": "let raw = std::fs::read_to_string(&manifest_path)",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr/tests/validation_suite_support/manifest.rs",
       "symbol": "manifest_path",
       "operation": "is_file",
       "site": "if !path.is_file() {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr/tests/validation_suite_support/runner.rs",
@@ -3770,6 +3840,13 @@
     {
       "path": "crates/sifr_compiler_component/src/cache.rs",
       "symbol": "put",
+      "operation": "sync_all",
+      "site": "file.sync_all().map_err(cache_io_error)?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_component/src/cache.rs",
+      "symbol": "put",
       "operation": "rename",
       "site": "fs::rename(&temporary, &final_path).map_err(cache_io_error)?;",
       "classification": "output-effect"
@@ -4150,14 +4227,14 @@
       "symbol": "normal_generated_resolution_seeds_existing_package_selection_without_source_mutation",
       "operation": "read_to_string",
       "site": "let generated = std::fs::read_to_string(fixture.0.join(\"Cargo.lock\")).expect(\"generated lock\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
       "symbol": "normal_generated_resolution_seeds_existing_package_selection_without_source_mutation",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(&policy.authoritative_locks[0]).expect(\"original lock\"),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
@@ -4178,28 +4255,28 @@
       "symbol": "normal_generated_resolution_preserves_an_existing_generated_lock",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(fixture.0.join(\"Cargo.lock\")).expect(\"generated lock\"),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
       "symbol": "normal_generated_resolution_without_authority_does_not_invent_a_lock",
       "operation": "exists",
       "site": "assert!(!fixture.0.join(\"Cargo.lock\").exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
       "symbol": "normal_generated_resolution_rejects_invalid_authority_without_fresh_resolution",
       "operation": "exists",
       "site": "assert!(!fixture.0.join(\"Cargo.lock\").exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
       "symbol": "normal_generated_vendor_resolution_keeps_the_vendor_inventory_authoritative",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(fixture.0.join(\"Cargo.lock\")).expect(\"vendor seed\"),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
@@ -4220,7 +4297,7 @@
       "symbol": "dx9_changed_authority_reseeds_a_reused_generated_root",
       "operation": "read_to_string",
       "site": "let generated = std::fs::read_to_string(&lock).expect(\"seed\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
@@ -4234,7 +4311,7 @@
       "symbol": "dx9_changed_authority_reseeds_a_reused_generated_root",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(&lock).expect(\"retained pins\"),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
@@ -4248,14 +4325,14 @@
       "symbol": "dx9_changed_authority_reseeds_a_reused_generated_root",
       "operation": "read_to_string",
       "site": "let actual = std::fs::read_to_string(&lock).expect(\"new generated selection\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
       "symbol": "dx9_changed_authority_reseeds_a_reused_generated_root",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(&policy.authoritative_locks[0]).expect(\"source authority\"),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/entrypoint_resolution.rs",
@@ -4409,7 +4486,7 @@
       "symbol": "test_cached_project_binary_reuses_workspace_for_unchanged_input",
       "operation": "exists",
       "site": "assert!(first.binary_path().exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/entrypoint_tests.rs",
@@ -4486,7 +4563,7 @@
       "symbol": "project_field_identity_materializes_bridged_records_and_errors",
       "operation": "read_to_string",
       "site": "let left = std::fs::read_to_string(root.join(\"src/sifr_generated_bridge/left.rs\"))",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_field_identity_tests.rs",
@@ -4500,21 +4577,21 @@
       "symbol": "source_materialization_writes_a_complete_uncompiled_cargo_project",
       "operation": "is_file",
       "site": "assert!(project_path.join(\"Cargo.toml\").is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_tests.rs",
       "symbol": "source_materialization_writes_a_complete_uncompiled_cargo_project",
       "operation": "read_to_string",
       "site": "let main_rs = std::fs::read_to_string(project_path.join(\"src/main.rs\"))",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_tests.rs",
       "symbol": "source_materialization_writes_a_complete_uncompiled_cargo_project",
       "operation": "exists",
       "site": "assert!(!project_path.join(\"target\").exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_tests.rs",
@@ -4556,21 +4633,21 @@
       "symbol": "rematerialization_removes_stale_generated_sources_but_preserves_target",
       "operation": "exists",
       "site": "assert!(!stale_source.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_tests.rs",
       "symbol": "rematerialization_removes_stale_generated_sources_but_preserves_target",
       "operation": "is_file",
       "site": "assert!(target_marker.is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_tests.rs",
       "symbol": "rematerialization_removes_stale_generated_sources_but_preserves_target",
       "operation": "is_file",
       "site": "assert!(project_path.join(\"src/main.rs\").is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_tests.rs",
@@ -4584,7 +4661,7 @@
       "symbol": "python_native_loader_materialization_preserves_selection_and_removes_stale_path",
       "operation": "read_to_string",
       "site": "let script = std::fs::read_to_string(local.join(\"build.rs\")).expect(\"loader script\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_tests.rs",
@@ -4598,21 +4675,21 @@
       "symbol": "python_native_loader_materialization_preserves_selection_and_removes_stale_path",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(portable.join(\"build.rs\")).expect(\"published loader script\"),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_tests.rs",
       "symbol": "python_native_loader_materialization_preserves_selection_and_removes_stale_path",
       "operation": "read_to_string",
       "site": "let loader = std::fs::read_to_string(local.join(\"build.rs\")).expect(\"generic runtime loader\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_tests.rs",
       "symbol": "python_native_loader_materialization_preserves_selection_and_removes_stale_path",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(portable.join(\"build.rs\")).expect(\"generic published loader\"),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/materialize_tests.rs",
@@ -4633,14 +4710,14 @@
       "symbol": "dx9_unchanged_materialization_preserves_input_mtimes",
       "operation": "metadata",
       "site": "std::fs::metadata(p)",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/native_reuse_tests.rs",
       "symbol": "dx9_unchanged_materialization_preserves_input_mtimes",
       "operation": "metadata",
       "site": "std::fs::metadata(p)",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/native_reuse_tests.rs",
@@ -4682,14 +4759,14 @@
       "symbol": "dx9_f7_locked_root_reconciles_alternating_runtime_dependency",
       "operation": "read_to_string",
       "site": "let lock = std::fs::read_to_string(project_root.join(\"Cargo.lock\"))",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/native_reuse_tests.rs",
       "symbol": "dx9_f7_locked_root_reconciles_alternating_runtime_dependency",
       "operation": "is_dir",
       "site": "assert!(target.is_dir(), \"the shared Cargo target must remain warm\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/native_reuse_tests.rs",
@@ -4948,6 +5025,13 @@
       "symbol": "collect_bundle",
       "operation": "symlink_metadata",
       "site": "let metadata = std::fs::symlink_metadata(source)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_storage.rs",
+      "symbol": "collect_bundle",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() {",
       "classification": "build-identity"
     },
     {
@@ -5277,42 +5361,42 @@
       "symbol": "collect_unsafe_bridge_files",
       "operation": "is_file",
       "site": "if path.is_file() {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_bridge_audit.rs",
       "symbol": "collect_unsafe_bridge_files",
       "operation": "read_to_string",
       "site": "let Ok(source) = fs::read_to_string(path) else {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_bridge_audit.rs",
       "symbol": "collect_unsafe_bridge_files",
       "operation": "read_dir",
       "site": "let Ok(read_dir) = fs::read_dir(path) else {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_bridge_audit.rs",
       "symbol": "collect_async_runtime_bridge_violations",
       "operation": "is_file",
       "site": "if path.is_file() {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_bridge_audit.rs",
       "symbol": "collect_async_runtime_bridge_violations",
       "operation": "read_to_string",
       "site": "let Ok(source) = fs::read_to_string(path) else {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_bridge_audit.rs",
       "symbol": "collect_async_runtime_bridge_violations",
       "operation": "read_dir",
       "site": "let Ok(read_dir) = fs::read_dir(path) else {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_bridge_audit.rs",
@@ -5382,21 +5466,21 @@
       "symbol": "first_generated_bridge_import",
       "operation": "read_dir",
       "site": "let Ok(entries) = fs::read_dir(&path) else {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
       "symbol": "first_generated_bridge_import",
       "operation": "is_dir",
       "site": "if path.is_dir() {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
       "symbol": "first_generated_bridge_import",
       "operation": "read_to_string",
       "site": "let Ok(source) = fs::read_to_string(&path) else {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
@@ -5571,7 +5655,7 @@
       "symbol": "temp_package_root",
       "operation": "exists",
       "site": "if root.exists() {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_contract_tests.rs",
@@ -5774,14 +5858,14 @@
       "symbol": "copy_vendor_tree",
       "operation": "read_dir",
       "site": "for entry in fs::read_dir(source).expect(\"read test vendor source\") {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_probe_identity_tests.rs",
       "symbol": "copy_vendor_tree",
       "operation": "is_dir",
       "site": "if entry.file_type().expect(\"vendor entry type\").is_dir() {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_probe_identity_tests.rs",
@@ -5795,7 +5879,7 @@
       "symbol": "vendored_probe_preserves_compiler_dependency_freshness",
       "operation": "canonicalize",
       "site": ".canonicalize()",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_probe_identity_tests.rs",
@@ -5837,14 +5921,14 @@
       "symbol": "reachable_rust_modules",
       "operation": "canonicalize",
       "site": "let Some(canonical_root) = fs::canonicalize(backend_root).ok() else {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_sqlx_modules.rs",
       "symbol": "reachable_rust_modules",
       "operation": "read_to_string",
       "site": "let Ok(source) = fs::read_to_string(&canonical_source) else {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_sqlx_modules.rs",
@@ -5871,6 +5955,13 @@
       "path": "crates/sifr_driver/src/build/rust_interop_sqlx_modules.rs",
       "symbol": "is_regular_file",
       "operation": "is_file",
+      "site": ".is_ok_and(|metadata| metadata.is_file() && !metadata.file_type().is_symlink())",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_modules.rs",
+      "symbol": "is_regular_file",
+      "operation": "is_symlink",
       "site": ".is_ok_and(|metadata| metadata.is_file() && !metadata.file_type().is_symlink())",
       "classification": "build-identity"
     },
@@ -5991,7 +6082,7 @@
       "symbol": "complete_metadata_directory_participates_in_cache_identity",
       "operation": "read_to_string",
       "site": "let source = std::fs::read_to_string(&path).expect(\"metadata should be readable\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
@@ -6180,7 +6271,7 @@
       "symbol": "temp_package_root",
       "operation": "exists",
       "site": "if root.exists() {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_tests.rs",
@@ -6465,6 +6556,13 @@
     {
       "path": "crates/sifr_driver/src/build/workspace.rs",
       "symbol": "commit",
+      "operation": "sync_all",
+      "site": ".and_then(|file| file.sync_all())",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace.rs",
+      "symbol": "commit",
       "operation": "is_file",
       "site": "if absolute.is_file() {",
       "classification": "build-identity"
@@ -6479,9 +6577,23 @@
     {
       "path": "crates/sifr_driver/src/build/workspace.rs",
       "symbol": "commit",
+      "operation": "sync_all",
+      "site": ".and_then(|file| file.sync_all())",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace.rs",
+      "symbol": "commit",
       "operation": "open",
       "site": "std::fs::File::open(&self.staging_root)",
       "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace.rs",
+      "symbol": "commit",
+      "operation": "sync_all",
+      "site": ".and_then(|file| file.sync_all())",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace.rs",
@@ -6572,7 +6684,7 @@
       "symbol": "storage_child",
       "operation": "exists",
       "site": "old_path.exists(),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
@@ -6593,28 +6705,28 @@
       "symbol": "storage_child",
       "operation": "exists",
       "site": "assert!(old_path.exists(), \"size alone caused cleanup\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
       "symbol": "storage_child",
       "operation": "exists",
       "site": "assert!(old_path.exists(), \"dry run changed storage\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
       "symbol": "storage_child",
       "operation": "exists",
       "site": "!old_path.exists(),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
       "symbol": "storage_child",
       "operation": "exists",
       "site": "current.workspace_root().exists(),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
@@ -6670,7 +6782,7 @@
       "symbol": "wait_ready",
       "operation": "exists",
       "site": "while !path.exists() {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
@@ -6684,35 +6796,35 @@
       "symbol": "dx3_killed_writers_readers_and_cross_filesystem",
       "operation": "metadata",
       "site": "std::fs::metadata(&root).unwrap().dev(),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
       "symbol": "dx3_killed_writers_readers_and_cross_filesystem",
       "operation": "metadata",
       "site": "std::fs::metadata(\"/dev/shm\").unwrap().dev()",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
       "symbol": "dx3_killed_writers_readers_and_cross_filesystem",
       "operation": "read_to_string",
       "site": "let entry = PathBuf::from(std::fs::read_to_string(&ready).unwrap());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
       "symbol": "dx3_killed_writers_readers_and_cross_filesystem",
       "operation": "read_to_string",
       "site": "let pid = std::fs::read_to_string(ready.with_extension(\"pid\")).unwrap();",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
       "symbol": "dx3_killed_writers_readers_and_cross_filesystem",
       "operation": "read_to_string",
       "site": "let path = PathBuf::from(std::fs::read_to_string(root.join(\"reader.ready\")).unwrap());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/build/workspace_tests.rs",
@@ -6754,6 +6866,13 @@
       "symbol": "dx3_rejects_traversal_symlinks_and_invalid_winner",
       "operation": "write",
       "site": "std::fs::write(staging.join(\"payload\"), b\"ready\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/workspace_tests.rs",
+      "symbol": "dx3_rejects_traversal_symlinks_and_invalid_winner",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(\"/tmp\", root.join(\"escape\")).unwrap();",
       "classification": "output-effect"
     },
     {
@@ -6801,6 +6920,13 @@
     {
       "path": "crates/sifr_driver/src/cache_storage.rs",
       "symbol": "directory",
+      "operation": "is_symlink",
+      "site": "Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => {}",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/cache_storage.rs",
+      "symbol": "directory",
       "operation": "dir-create",
       "site": "match builder.create(&current) {",
       "classification": "output-effect"
@@ -6814,9 +6940,23 @@
     },
     {
       "path": "crates/sifr_driver/src/cache_storage.rs",
+      "symbol": "check_owned",
+      "operation": "is_symlink",
+      "site": "if meta.file_type().is_symlink()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/cache_storage.rs",
       "symbol": "seal",
       "operation": "symlink_metadata",
       "site": "let metadata = fs::symlink_metadata(root)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/cache_storage.rs",
+      "symbol": "seal",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() {",
       "classification": "build-identity"
     },
     {
@@ -6866,6 +7006,13 @@
       "symbol": "size",
       "operation": "symlink_metadata",
       "site": "let meta = fs::symlink_metadata(path)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/cache_storage.rs",
+      "symbol": "size",
+      "operation": "is_symlink",
+      "site": "if meta.file_type().is_symlink() {",
       "classification": "build-identity"
     },
     {
@@ -6997,6 +7144,13 @@
     {
       "path": "crates/sifr_driver/src/metadata_producer/ensure.rs",
       "symbol": "ensure_with_hook",
+      "operation": "sync_all",
+      "site": "file.sync_all().map_err(fail)?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/metadata_producer/ensure.rs",
+      "symbol": "ensure_with_hook",
       "operation": "rename",
       "site": "fs::rename(&staging, &path).map_err(fail)?;",
       "classification": "output-effect"
@@ -7007,6 +7161,13 @@
       "operation": "open",
       "site": "File::open(&root).and_then(|f| f.sync_all()).map_err(fail)?;",
       "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/metadata_producer/ensure.rs",
+      "symbol": "ensure_with_hook",
+      "operation": "sync_all",
+      "site": "File::open(&root).and_then(|f| f.sync_all()).map_err(fail)?;",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/metadata_producer/ensure.rs",
@@ -7025,6 +7186,13 @@
     {
       "path": "crates/sifr_driver/src/metadata_producer/ensure.rs",
       "symbol": "publish_output",
+      "operation": "sync_all",
+      "site": "file.sync_all().map_err(fail)?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/metadata_producer/ensure.rs",
+      "symbol": "publish_output",
       "operation": "rename",
       "site": "fs::rename(&stage, &output).map_err(fail)?;",
       "classification": "output-effect"
@@ -7035,6 +7203,13 @@
       "operation": "open",
       "site": "File::open(&parent)",
       "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/metadata_producer/ensure.rs",
+      "symbol": "publish_output",
+      "operation": "sync_all",
+      "site": ".and_then(|f| f.sync_all())",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/metadata_producer/ensure.rs",
@@ -7396,6 +7571,13 @@
     {
       "path": "crates/sifr_driver/src/metadata_producer/tests_process.rs",
       "symbol": "dx6_process_child",
+      "operation": "sync_all",
+      "site": "events.sync_all().unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/metadata_producer/tests_process.rs",
+      "symbol": "dx6_process_child",
       "operation": "write",
       "site": "fs::write(report,serde_json::to_vec(&serde_json::json!({\"status\":\"assertions-passed\",\"compiler_identity\":id.as_str(),\"metadata_id\":metadata.metadata_id,\"path\":metadata.path,\"production_seconds\":metadata.production_seconds,\"preparation_seconds\":preparation_seconds,\"total_seconds\":started.elapsed().as_secs_f64()})).unwrap()).unwrap();",
       "classification": "output-effect"
@@ -7557,6 +7739,20 @@
     {
       "path": "crates/sifr_driver/src/metadata_reader/generation_tests.rs",
       "symbol": "installed_relocation_and_generation_switch_pin_all_sources",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(&moved, &selector).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/metadata_reader/generation_tests.rs",
+      "symbol": "installed_relocation_and_generation_switch_pin_all_sources",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(&second, &pending).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/metadata_reader/generation_tests.rs",
+      "symbol": "installed_relocation_and_generation_switch_pin_all_sources",
       "operation": "rename",
       "site": "fs::rename(&pending, &selector).unwrap();",
       "classification": "output-effect"
@@ -7566,6 +7762,13 @@
       "symbol": "installed_relocation_and_generation_switch_pin_all_sources",
       "operation": "write",
       "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/metadata_reader/generation_tests.rs",
+      "symbol": "installed_relocation_and_generation_switch_pin_all_sources",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(&moved, &pending).unwrap();",
       "classification": "output-effect"
     },
     {
@@ -7706,7 +7909,7 @@
       "symbol": "run",
       "operation": "is_file",
       "site": "if provider.is_file(&config) {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/dx14_tests.rs",
@@ -7748,7 +7951,7 @@
       "symbol": "disk_and_memory_reuse_changed_ordinary_body",
       "operation": "metadata",
       "site": "memory.diagnostics_for_module(main).metadata().cache_status,",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/dx14_tests.rs",
@@ -7776,14 +7979,14 @@
       "symbol": "dx14_editor_saved_overlay_stale_and_deeper_family_boundaries",
       "operation": "metadata",
       "site": "saved.diagnostics_for_module(entry).metadata().cache_status,",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/dx14_tests.rs",
       "symbol": "dx14_editor_saved_overlay_stale_and_deeper_family_boundaries",
       "operation": "metadata",
       "site": "saved.lower_module(entry).metadata().cache_status,",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/dx14_tests.rs",
@@ -7846,7 +8049,7 @@
       "symbol": "history_over_4096_keeps_publishing_and_recent_aba",
       "operation": "metadata",
       "site": ".map(|id| fs::metadata(generation.path.join(id)).unwrap().len())",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/history_tests.rs",
@@ -7874,28 +8077,28 @@
       "symbol": "eviction_preserves_active_reader_and_latest",
       "operation": "exists",
       "site": "assert!(old_path.exists() && latest_path.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/history_tests.rs",
       "symbol": "eviction_preserves_active_reader_and_latest",
       "operation": "exists",
       "site": "assert!(old_path.exists() && latest_path.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/history_tests.rs",
       "symbol": "eviction_preserves_active_reader_and_latest",
       "operation": "exists",
       "site": "assert!(!old_path.exists() && latest_path.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/history_tests.rs",
       "symbol": "eviction_preserves_active_reader_and_latest",
       "operation": "exists",
       "site": "assert!(!old_path.exists() && latest_path.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/history_tests.rs",
@@ -7923,14 +8126,14 @@
       "symbol": "observation_compaction_preserves_ordered_absence",
       "operation": "is_file",
       "site": "assert!(!capture.is_file(&absent));",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/history_tests.rs",
       "symbol": "observation_compaction_preserves_ordered_absence",
       "operation": "is_file",
       "site": "assert!(capture.is_file(&file));",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/history_tests.rs",
@@ -7944,14 +8147,14 @@
       "symbol": "observation_compaction_preserves_ordered_absence",
       "operation": "is_file",
       "site": "assert!(capture.is_file(&absent));",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/history_tests.rs",
       "symbol": "observation_compaction_preserves_ordered_absence",
       "operation": "is_file",
       "site": "capture.is_file(&file.with_file_name(format!(\"absent{index}\")));",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
@@ -7984,6 +8187,13 @@
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
       "symbol": "open_namespace",
+      "operation": "symlink_metadata",
+      "site": "if namespace.join(\"owner.json\").symlink_metadata().is_err()",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
+      "symbol": "open_namespace",
       "operation": "read_dir",
       "site": "&& fs::read_dir(&namespace)?.next().is_some()",
       "classification": "build-identity"
@@ -8006,6 +8216,13 @@
       "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
       "symbol": "safe_path",
       "operation": "is_dir",
+      "site": "fs::symlink_metadata(part).is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
+      "symbol": "safe_path",
+      "operation": "is_symlink",
       "site": "fs::symlink_metadata(part).is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())",
       "classification": "build-identity"
     },
@@ -8089,8 +8306,22 @@
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
       "symbol": "prune_store",
+      "operation": "symlink_metadata",
+      "site": "if key(name) && latest.is_none() && store.root.join(\"latest\").symlink_metadata().is_ok() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
+      "symbol": "prune_store",
       "operation": "read_dir",
       "site": "for entry in fs::read_dir(&locks)? {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
+      "symbol": "prune_store",
+      "operation": "symlink_metadata",
+      "site": "if parent.join(name).symlink_metadata().is_ok()",
       "classification": "build-identity"
     },
     {
@@ -8123,6 +8354,13 @@
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
+      "symbol": "definitely_absent",
+      "operation": "is_symlink",
+      "site": "Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => {}",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
       "symbol": "prune_workspace",
       "operation": "canonicalize",
       "site": "workspace.canonicalize()?",
@@ -8147,14 +8385,14 @@
       "symbol": "wait",
       "operation": "exists",
       "site": "while !marker.exists() && Instant::now() < deadline {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "wait",
       "operation": "exists",
       "site": "assert!(marker.exists(), \"worker reached its real lock boundary\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
@@ -8168,14 +8406,14 @@
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "metadata",
       "site": "let writer_inode = fs::metadata(&writer_lock).unwrap().ino();",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "metadata",
       "site": "let live_inode = fs::metadata(&live_lock).unwrap().ino();",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
@@ -8189,6 +8427,13 @@
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "write",
       "site": "fs::write(&outside, \"preserve\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
+      "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
+      "operation": "symlink",
+      "site": "symlink(&outside, &alias).unwrap();",
       "classification": "output-effect"
     },
     {
@@ -8210,84 +8455,98 @@
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "exists",
       "site": "assert!(!abandoned.exists() && !abandoned_lock.exists() && !scratch.exists() && !hint.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "exists",
       "site": "assert!(!abandoned.exists() && !abandoned_lock.exists() && !scratch.exists() && !hint.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "exists",
       "site": "assert!(!abandoned.exists() && !abandoned_lock.exists() && !scratch.exists() && !hint.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "exists",
       "site": "assert!(!abandoned.exists() && !abandoned_lock.exists() && !scratch.exists() && !hint.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "exists",
       "site": "assert!(latest.path.exists() && live.exists() && unknown_hint.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "exists",
       "site": "assert!(latest.path.exists() && live.exists() && unknown_hint.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "exists",
       "site": "assert!(latest.path.exists() && live.exists() && unknown_hint.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "metadata",
       "site": "assert_eq!(fs::metadata(&live_lock).unwrap().ino(), live_inode);",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "metadata",
       "site": "assert_eq!(fs::metadata(&writer_lock).unwrap().ino(), writer_inode);",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "read_to_string",
       "site": "assert_eq!(fs::read_to_string(&outside).unwrap(), \"preserve\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
+      "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
+      "operation": "symlink_metadata",
+      "site": "assert!(alias.symlink_metadata().unwrap().file_type().is_symlink());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
+      "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
+      "operation": "is_symlink",
+      "site": "assert!(alias.symlink_metadata().unwrap().file_type().is_symlink());",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "exists",
       "site": "assert!(!live.exists() && !live_lock.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "exists",
       "site": "assert!(!live.exists() && !live_lock.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
@@ -8301,7 +8560,7 @@
       "symbol": "abandoned_stages_reclaimed_live_locks_preserved",
       "operation": "metadata",
       "site": "assert_eq!(fs::metadata(&writer_lock).unwrap().ino(), writer_inode);",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
@@ -8315,14 +8574,14 @@
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "exists",
       "site": "assert!(context.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "read",
       "site": "let owner = fs::read(&owner_path).unwrap();",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
@@ -8350,7 +8609,7 @@
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "canonicalize",
       "site": "let unknown_id = identity(\"project-workspace-v1\", &unknown.canonicalize().unwrap()).unwrap();",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
@@ -8371,14 +8630,14 @@
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "exists",
       "site": "assert!(unknown_namespace.join(\"unclaimed\").exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "exists",
       "site": "assert!(!unknown_namespace.join(\"owner.json\").exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
@@ -8392,6 +8651,13 @@
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "remove_dir",
       "site": "fs::remove_dir(&workspace).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
+      "symbol": "orphan_prune_requires_owner_and_inactivity",
+      "operation": "symlink",
+      "site": "symlink(root.path().join(\"missing\"), &workspace).unwrap();",
       "classification": "output-effect"
     },
     {
@@ -8425,9 +8691,16 @@
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "orphan_prune_requires_owner_and_inactivity",
+      "operation": "symlink",
+      "site": "symlink(&foreign, &nested_alias).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
+      "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "read_to_string",
       "site": "fs::read_to_string(foreign.join(\"keep\")).unwrap(),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
@@ -8441,56 +8714,56 @@
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "metadata",
       "site": "let before = fs::metadata(",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "exists",
       "site": "assert!(context.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "exists",
       "site": "assert!(!context.exists() && other_store.root.exists() && owner_path.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "exists",
       "site": "assert!(!context.exists() && other_store.root.exists() && owner_path.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "exists",
       "site": "assert!(!context.exists() && other_store.root.exists() && owner_path.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "orphan_prune_requires_owner_and_inactivity",
       "operation": "metadata",
       "site": "fs::metadata(",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "pressure_prune_counts_are_truthful",
       "operation": "exists",
       "site": "assert!(!cache.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "pressure_prune_counts_are_truthful",
       "operation": "exists",
       "site": "assert!(!empty.root.join(\".locks\").exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
@@ -8511,14 +8784,14 @@
       "symbol": "pressure_prune_counts_are_truthful",
       "operation": "exists",
       "site": "assert!(path.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping_tests.rs",
       "symbol": "pressure_prune_counts_are_truthful",
       "operation": "exists",
       "site": "assert!(unsafe_path.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
@@ -8581,7 +8854,7 @@
       "symbol": "package_chained_restore_matches_fresh",
       "operation": "read_to_string",
       "site": "text: fs::read_to_string(root.path().join(\"app/src/helper.sifr\")).unwrap(),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
@@ -8602,7 +8875,7 @@
       "symbol": "assert_private_import_rejected",
       "operation": "read_to_string",
       "site": "let public_source = fs::read_to_string(&middle).unwrap();",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
@@ -8616,7 +8889,7 @@
       "symbol": "assert_private_import_rejected",
       "operation": "exists",
       "site": "assert!(!cold_cache.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
@@ -8658,6 +8931,13 @@
       "symbol": "write_new",
       "operation": "open-write",
       "site": ".open(path)?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "write_new",
+      "operation": "sync_all",
+      "site": "file.sync_all()",
       "classification": "output-effect"
     },
     {
@@ -8705,6 +8985,13 @@
     {
       "path": "crates/sifr_driver/src/project_cache/storage.rs",
       "symbol": "publish",
+      "operation": "sync_all",
+      "site": "File::open(&stage)?.sync_all()?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "publish",
       "operation": "rename",
       "site": "fs::rename(&stage, &destination)?;",
       "classification": "output-effect"
@@ -8715,6 +9002,13 @@
       "operation": "open",
       "site": "File::open(&parent)?.sync_all()?;",
       "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "publish",
+      "operation": "sync_all",
+      "site": "File::open(&parent)?.sync_all()?;",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/storage.rs",
@@ -8743,6 +9037,13 @@
       "operation": "open",
       "site": "File::open(&self.root)?.sync_all()?;",
       "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "point",
+      "operation": "sync_all",
+      "site": "File::open(&self.root)?.sync_all()?;",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/storage.rs",
@@ -11745,7 +12046,7 @@
       "symbol": "test_build_project_imports_generic_function_metadata_through_facade",
       "operation": "exists",
       "site": "assert!(binary.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
@@ -11780,7 +12081,7 @@
       "symbol": "test_build_project_shares_union_identity_across_modules",
       "operation": "exists",
       "site": "assert!(binary.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
@@ -11857,7 +12158,7 @@
       "symbol": "test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct",
       "operation": "exists",
       "site": "assert!(binary.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
@@ -11927,7 +12228,7 @@
       "symbol": "test_build_project_keeps_same_basename_union_identities_distinct",
       "operation": "exists",
       "site": "assert!(binary.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
@@ -12039,7 +12340,7 @@
       "symbol": "test_build_project_canonicalizes_imported_parent_ancestry",
       "operation": "exists",
       "site": "assert!(binary.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
@@ -12172,7 +12473,7 @@
       "symbol": "test_build_project_specializes_inferred_generic_returns",
       "operation": "exists",
       "site": "assert!(binary.exists());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
@@ -13659,6 +13960,20 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_lsp/src/notifications/tests/python_declaration_tests.rs",
+      "symbol": "link_directory",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(source, destination).expect(\"link Python interpreter\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/notifications/tests/python_declaration_tests.rs",
+      "symbol": "link_directory",
+      "operation": "symlink_dir",
+      "site": "std::os::windows::fs::symlink_dir(source, destination).expect(\"link Python environment\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_lsp/src/python_declarations.rs",
       "symbol": "resolve_package_python_environment",
       "operation": "is_file",
@@ -13733,6 +14048,13 @@
       "symbol": "hash_python_bridge_inputs",
       "operation": "read",
       "site": "Ok(kind) if kind.is_file() => match std::fs::read(&path) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_lsp/src/python_declarations.rs",
+      "symbol": "hash_python_bridge_inputs",
+      "operation": "is_symlink",
+      "site": "kind.is_symlink().hash(hasher);",
       "classification": "semantic-input"
     },
     {
@@ -13831,6 +14153,13 @@
       "symbol": "dx11_nonexistent_overlay_alias_has_one_physical_owner",
       "operation": "create_dir",
       "site": "std::fs::create_dir(&real).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/dx11_editor_tests.rs",
+      "symbol": "dx11_nonexistent_overlay_alias_has_one_physical_owner",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(&real, &alias).unwrap();",
       "classification": "output-effect"
     },
     {
@@ -14275,6 +14604,20 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_lsp/src/session/tests/python_declaration_tests.rs",
+      "symbol": "link_directory",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(source, destination).expect(\"link Python interpreter\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_lsp/src/session/tests/python_declaration_tests.rs",
+      "symbol": "link_directory",
+      "operation": "symlink_dir",
+      "site": "std::os::windows::fs::symlink_dir(source, destination).expect(\"link Python environment\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_lsp/src/session/tests/python_package_ownership_tests.rs",
       "symbol": "sifr_only_package_does_not_adopt_an_ancestor_cargo_workspace",
       "operation": "write",
@@ -14522,6 +14865,13 @@
     {
       "path": "crates/sifr_package/src/host_tools/fingerprint.rs",
       "symbol": "hash_path_package",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_package/src/host_tools/fingerprint.rs",
+      "symbol": "hash_path_package",
       "operation": "is_dir",
       "site": "if metadata.is_dir() {",
       "classification": "tooling-input"
@@ -14545,6 +14895,13 @@
       "symbol": "write_host_tool_lock",
       "operation": "open-write",
       "site": ".open(&temporary)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/host_tools/lock.rs",
+      "symbol": "write_host_tool_lock",
+      "operation": "sync_all",
+      "site": "file.sync_all().map_err(|error| {",
       "classification": "output-effect"
     },
     {
@@ -14916,21 +15273,21 @@
       "symbol": "init_lib_creates_canonical_src_layout_and_cargo_projection",
       "operation": "is_file",
       "site": "assert!(package.join(\"src/__init__.sifr\").is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "init_lib_creates_canonical_src_layout_and_cargo_projection",
       "operation": "is_file",
       "site": "assert!(package.join(\"src/lib.rs\").is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "init_lib_creates_canonical_src_layout_and_cargo_projection",
       "operation": "read_to_string",
       "site": "let cargo = fs::read_to_string(package.join(\"Cargo.toml\")).test_unwrap(\"Cargo.toml exists\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
@@ -14951,28 +15308,28 @@
       "symbol": "projection_repair_generates_canonical_python_bridge_inventory",
       "operation": "is_file",
       "site": "assert!(inventory.is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "projection_repair_generates_canonical_python_bridge_inventory",
       "operation": "read_to_string",
       "site": "let cargo = fs::read_to_string(package.join(\"Cargo.toml\")).test_unwrap(\"Cargo.toml exists\");",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "cargo_projection_init_bin_creates_main_target_without_manifest_bin_table",
       "operation": "is_file",
       "site": "assert!(package.join(\"src/main.sifr\").is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "cargo_projection_init_bin_creates_main_target_without_manifest_bin_table",
       "operation": "read_to_string",
       "site": "!fs::read_to_string(package.join(\"sifr.toml\"))",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
@@ -14986,7 +15343,7 @@
       "symbol": "cargo_projection_repair_check_reports_missing_required_include_0704",
       "operation": "read_to_string",
       "site": "let cargo = fs::read_to_string(package.join(\"Cargo.toml\"))",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
@@ -15007,56 +15364,56 @@
       "symbol": "cargo_projection_repair_regenerates_missing_pure_marker",
       "operation": "is_file",
       "site": "assert!(package.join(\"src/lib.rs\").is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "rust_bridge_projection_repair_writes_managed_projection_without_touching_user_bridge",
       "operation": "is_file",
       "site": "assert!(package.join(\"src/lib.rs\").is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "rust_bridge_projection_repair_writes_managed_projection_without_touching_user_bridge",
       "operation": "is_file",
       "site": "assert!(package.join(\"src/bridges/mod.rs\").is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "rust_bridge_projection_repair_writes_managed_projection_without_touching_user_bridge",
       "operation": "is_file",
       "site": "assert!(package.join(\"src/__sifr_bridge/mod.rs\").is_file());",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "rust_bridge_projection_repair_writes_managed_projection_without_touching_user_bridge",
       "operation": "read_to_string",
       "site": "fs::read_to_string(package.join(\"src/bridges/tokenizer.rs\"))",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "rust_bridge_projection_repair_writes_managed_projection_without_touching_user_bridge",
       "operation": "read_to_string",
       "site": "fs::read_to_string(package.join(\"src/lib.rs\"))",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "rust_bridge_projection_repair_writes_managed_projection_without_touching_user_bridge",
       "operation": "read_to_string",
       "site": "fs::read_to_string(package.join(\"src/bridges/mod.rs\"))",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
       "symbol": "rust_bridge_projection_repair_writes_managed_projection_without_touching_user_bridge",
       "operation": "read_to_string",
       "site": "fs::read_to_string(package.join(\"Cargo.toml\"))",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
@@ -15070,7 +15427,7 @@
       "symbol": "rust_bridge_projection_conflict_does_not_overwrite_user_authored_mod_rs",
       "operation": "read_to_string",
       "site": "fs::read_to_string(package.join(\"src/bridges/mod.rs\")).test_unwrap(\"read conflict\"),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_package/src/package_projection_tests.rs",
@@ -15539,14 +15896,14 @@
       "symbol": "user_bridge_files",
       "operation": "read_dir",
       "site": "let Ok(entries) = fs::read_dir(package_root.join(bridge_root)) else {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_package/src/projection_bridge.rs",
       "symbol": "user_bridge_files",
       "operation": "is_file",
       "site": ".filter(|path| path.is_file())",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_package/src/python/arrow_certification.rs",
@@ -15586,6 +15943,13 @@
     {
       "path": "crates/sifr_package/src/python/arrow_certification.rs",
       "symbol": "validate_python_certifications",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() || !metadata.is_file() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_package/src/python/arrow_certification.rs",
+      "symbol": "validate_python_certifications",
       "operation": "is_file",
       "site": "if metadata.file_type().is_symlink() || !metadata.is_file() {",
       "classification": "semantic-input"
@@ -15616,6 +15980,13 @@
       "symbol": "validate_fixture",
       "operation": "symlink_metadata",
       "site": "let metadata = std::fs::symlink_metadata(&fixture)",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_package/src/python/arrow_certification.rs",
+      "symbol": "validate_fixture",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() || !metadata.is_file() {",
       "classification": "semantic-input"
     },
     {
@@ -15929,6 +16300,13 @@
     {
       "path": "crates/sifr_package/src/python/binding_authoring_tests.rs",
       "symbol": "binding_artifact_rejects_symlinked_typing_sources_and_outputs",
+      "operation": "symlink",
+      "site": "symlink(outside.join(\"math.pyi\"), root.join(\"typing/math.pyi\")).test_unwrap(\"typing symlink\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/python/binding_authoring_tests.rs",
+      "symbol": "binding_artifact_rejects_symlinked_typing_sources_and_outputs",
       "operation": "remove_file",
       "site": "fs::remove_file(root.join(\"typing/math.pyi\")).test_unwrap(\"remove typing symlink\");",
       "classification": "output-effect"
@@ -15945,6 +16323,13 @@
       "symbol": "binding_artifact_rejects_symlinked_typing_sources_and_outputs",
       "operation": "remove_file",
       "site": "fs::remove_file(root.join(\"src/math_python.sifr\")).test_unwrap(\"remove generated source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/python/binding_authoring_tests.rs",
+      "symbol": "binding_artifact_rejects_symlinked_typing_sources_and_outputs",
+      "operation": "symlink",
+      "site": "symlink(",
       "classification": "output-effect"
     },
     {
@@ -15999,6 +16384,13 @@
     {
       "path": "crates/sifr_package/src/python/binding_validation.rs",
       "symbol": "regular_package_file",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() || !metadata.is_file() {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_package/src/python/binding_validation.rs",
+      "symbol": "regular_package_file",
       "operation": "is_file",
       "site": "if metadata.file_type().is_symlink() || !metadata.is_file() {",
       "classification": "semantic-input"
@@ -16033,6 +16425,13 @@
     },
     {
       "path": "crates/sifr_package/src/python/bridge_inventory/filesystem.rs",
+      "symbol": "discover_source_paths",
+      "operation": "is_symlink",
+      "site": "Ok(metadata) if metadata.file_type().is_symlink() => {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_package/src/python/bridge_inventory/filesystem.rs",
       "symbol": "symlinked_bridge_component",
       "operation": "symlink_metadata",
       "site": "match fs::symlink_metadata(&current) {",
@@ -16040,9 +16439,23 @@
     },
     {
       "path": "crates/sifr_package/src/python/bridge_inventory/filesystem.rs",
+      "symbol": "symlinked_bridge_component",
+      "operation": "is_symlink",
+      "site": "Ok(metadata) if metadata.file_type().is_symlink() => return Some(current),",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_package/src/python/bridge_inventory/filesystem.rs",
       "symbol": "collect_python_paths",
       "operation": "read_dir",
       "site": "let entries = match fs::read_dir(directory) {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_package/src/python/bridge_inventory/filesystem.rs",
+      "symbol": "collect_python_paths",
+      "operation": "is_symlink",
+      "site": "if file_type.is_symlink() {",
       "classification": "semantic-input"
     },
     {
@@ -16082,6 +16495,13 @@
     },
     {
       "path": "crates/sifr_package/src/python/bridge_inventory_symlink_tests.rs",
+      "symbol": "symbolic_link_bridge_source_is_rejected",
+      "operation": "symlink",
+      "site": "symlink(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/python/bridge_inventory_symlink_tests.rs",
       "symbol": "symbolic_link_bridge_root_is_rejected",
       "operation": "remove_dir_all",
       "site": "fs::remove_dir_all(fixture.root.join(\"src/python_bridges\"))",
@@ -16089,9 +16509,23 @@
     },
     {
       "path": "crates/sifr_package/src/python/bridge_inventory_symlink_tests.rs",
+      "symbol": "symbolic_link_bridge_root_is_rejected",
+      "operation": "symlink",
+      "site": "symlink(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/python/bridge_inventory_symlink_tests.rs",
       "symbol": "symbolic_link_bridge_ancestor_is_rejected",
       "operation": "remove_dir_all",
       "site": "fs::remove_dir_all(fixture.root.join(\"src\")).test_unwrap(\"remove canonical source root\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/python/bridge_inventory_symlink_tests.rs",
+      "symbol": "symbolic_link_bridge_ancestor_is_rejected",
+      "operation": "symlink",
+      "site": "symlink(fixture.root.join(\"outside_src\"), fixture.root.join(\"src\"))",
       "classification": "output-effect"
     },
     {
@@ -16498,6 +16932,13 @@
       "symbol": "dx9_python_loader_rejects_real_alternate_same_basename_library",
       "operation": "copy",
       "site": "std::fs::copy(&actual, &copy).expect(\"copy actual CPython library\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_runtime/src/python/loader.rs",
+      "symbol": "dx9_python_loader_rejects_real_alternate_same_basename_library",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(copy.file_name().expect(\"basename\"), directory.join(soname))",
       "classification": "output-effect"
     },
     {
@@ -16930,6 +17371,20 @@
     {
       "path": "crates/sifr_sql_tool/src/transaction.rs",
       "symbol": "write_files_atomically",
+      "operation": "symlink_metadata",
+      "site": ".symlink_metadata()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/transaction.rs",
+      "symbol": "write_files_atomically",
+      "operation": "is_symlink",
+      "site": ".is_ok_and(|metadata| metadata.file_type().is_symlink())",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/transaction.rs",
+      "symbol": "write_files_atomically",
       "operation": "rename",
       "site": "fs::rename(output_directory, &backup)",
       "classification": "output-effect"
@@ -16961,6 +17416,20 @@
       "operation": "remove_dir_all",
       "site": "fs::remove_dir_all(&backup)",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/transaction.rs",
+      "symbol": "reject_project_symlinks",
+      "operation": "symlink_metadata",
+      "site": ".symlink_metadata()",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_sql_tool/src/transaction.rs",
+      "symbol": "reject_project_symlinks",
+      "operation": "is_symlink",
+      "site": ".is_ok_and(|metadata| metadata.file_type().is_symlink())",
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_sql_tool/tests/migration_artifacts.rs",
@@ -17310,21 +17779,21 @@
       "symbol": "load_stdlib_sources_from_sysroot",
       "operation": "read_to_string",
       "site": "let loaded = std::fs::read_to_string(&path).map_err(|error| {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/src/sources.rs",
       "symbol": "load_stdlib_tooling_sources_from_sysroot",
       "operation": "read_to_string",
       "site": "let loaded = std::fs::read_to_string(&path).map_err(|error| {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/src/sources.rs",
       "symbol": "validate_module_files",
       "operation": "read_dir",
       "site": "let entries = std::fs::read_dir(root).map_err(|error| {",
-      "classification": "build-identity"
+      "classification": "semantic-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/src/sources.rs",
@@ -17443,28 +17912,28 @@
       "symbol": "vendored_base64_packages_cover_vendored_and_first_party_lock_edges",
       "operation": "read_dir",
       "site": "for entry in fs::read_dir(&vendor_root).test_unwrap(\"vendor directory must be readable\") {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
       "symbol": "vendored_base64_packages_cover_vendored_and_first_party_lock_edges",
       "operation": "is_dir",
       "site": ".is_dir()",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
       "symbol": "vendored_base64_packages_cover_vendored_and_first_party_lock_edges",
       "operation": "is_file",
       "site": "if !manifest_path.is_file() {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
       "symbol": "vendored_base64_packages_cover_vendored_and_first_party_lock_edges",
       "operation": "read_to_string",
       "site": "let manifest = fs::read_to_string(&manifest_path).unwrap_or_else(|error| {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
@@ -17527,63 +17996,70 @@
       "symbol": "root",
       "operation": "canonicalize",
       "site": ".canonicalize()",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs",
       "symbol": "read_toml",
       "operation": "read_to_string",
       "site": "fs::read_to_string(path).unwrap_or_else(|error| panic!(\"{}: {error}\", path.display()));",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs",
       "symbol": "maintained_paths",
       "operation": "is_file",
       "site": "root.join(path).is_file(),",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs",
       "symbol": "owner_declares",
       "operation": "is_file",
       "site": "if candidate.is_file() {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
       "symbol": "selected_release",
       "operation": "read",
       "site": "fs::read(directory.join(\".cargo-checksum.json\")).map_err(|error| error.to_string())?;",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
       "symbol": "selected_release",
       "operation": "symlink_metadata",
       "site": "if fs::symlink_metadata(&path)",
-      "classification": "build-identity"
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
+      "symbol": "selected_release",
+      "operation": "is_symlink",
+      "site": ".is_symlink()",
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
       "symbol": "family",
       "operation": "read_dir",
       "site": "for entry in fs::read_dir(root.join(\"vendor\")).map_err(|error| error.to_string())? {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
       "symbol": "family",
       "operation": "is_dir",
       "site": ".is_dir()",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
       "symbol": "family",
       "operation": "is_file",
       "site": "if !path.join(\"Cargo.toml\").is_file() {",
-      "classification": "build-identity"
+      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_syntax/src/syntax_matrix_tests.rs",
@@ -17637,6 +18113,13 @@
     {
       "path": "crates/sifr_sysroot/src/digest.rs",
       "symbol": "collect_entries",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() && !policy.follow_symlinks {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_sysroot/src/digest.rs",
+      "symbol": "collect_entries",
       "operation": "is_file",
       "site": "if !metadata.is_file() || !included(path, policy) {",
       "classification": "semantic-input"
@@ -17653,6 +18136,13 @@
       "symbol": "collect",
       "operation": "symlink_metadata",
       "site": "let metadata = fs::symlink_metadata(path)?;",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_sysroot/src/integrity.rs",
+      "symbol": "collect",
+      "operation": "is_symlink",
+      "site": "if metadata.file_type().is_symlink() {",
       "classification": "semantic-input"
     },
     {

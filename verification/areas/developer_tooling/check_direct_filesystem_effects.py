@@ -15,16 +15,20 @@ import tomllib
 ROOT = Path(__file__).resolve().parents[3]
 INVENTORY = Path(__file__).with_name("data") / "direct_filesystem_effects.json"
 READ_FUNCTIONS = ("read_to_string", "read_dir", "read_link", "symlink_metadata",
-                  "try_exists", "canonicalize", "metadata", "read")
+                  "try_exists", "exists", "canonicalize", "metadata", "read")
 WRITE_FUNCTIONS = ("write", "copy", "rename", "remove_file", "remove_dir",
                    "remove_dir_all", "create_dir", "create_dir_all", "set_permissions",
                    "hard_link", "soft_link")
 FS_FUNCTIONS = READ_FUNCTIONS + WRITE_FUNCTIONS
 PATH_METHODS = ("is_file", "is_dir", "exists", "try_exists", "metadata",
-                "canonicalize", "read_link")
+                "canonicalize", "read_link", "symlink_metadata", "is_symlink")
 FILE_FUNCTIONS = ("open", "create", "create_new")
-METHOD_WRITES = ("set_len", "set_times", "set_permissions")
-WRITE_OPERATIONS = set(WRITE_FUNCTIONS) | set(METHOD_WRITES) | {"create", "create_new", "open-write", "dir-create"}
+METHOD_WRITES = ("set_len", "set_times", "set_permissions", "sync_all", "sync_data")
+OS_FUNCTIONS = {"unix": ("symlink", "chown", "lchown"),
+                "windows": ("symlink_file", "symlink_dir")}
+WRITE_OPERATIONS = (set(WRITE_FUNCTIONS) | set(METHOD_WRITES) |
+                    set(OS_FUNCTIONS["unix"]) | set(OS_FUNCTIONS["windows"]) |
+                    {"create", "create_new", "open-write", "dir-create"})
 
 CLASSIFICATIONS = {"semantic-input", "build-identity", "tooling-input", "output-effect"}
 FUNCTION = re.compile(r"\bfn\s+(\w+)")
@@ -142,34 +146,82 @@ def source_paths(root: Path) -> list[Path]:
     return sorted(paths)
 
 
+def imported_paths(code: str) -> list[tuple[str, str]]:
+    """Expand Rust use trees so grouped and aliased std imports share one rule."""
+    def split_items(value: str) -> list[str]:
+        pieces = []
+        depth = 0
+        start = 0
+        for index, char in enumerate(value):
+            if char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+            elif char == "," and depth == 0:
+                pieces.append(value[start:index])
+                start = index + 1
+        pieces.append(value[start:])
+        return pieces
+
+    def expand(value: str, prefix: str = "") -> list[tuple[str, str]]:
+        value = value.strip()
+        if not value:
+            return []
+        opening = value.find("{")
+        if opening >= 0:
+            closing = value.rfind("}")
+            if closing < opening or value[closing + 1:].strip():
+                return []
+            base = prefix + value[:opening].strip()
+            return [item for part in split_items(value[opening + 1:closing])
+                    for item in expand(part, base)]
+        match = re.fullmatch(r"([:\w\s]+?)(?:\s+as\s+(\w+))?", value)
+        if not match:
+            return []
+        path = re.sub(r"\s+", "", prefix + match[1]).removeprefix("::")
+        if path.endswith("::self"):
+            path = path[:-6]
+        return [(path, match[2] or path.rsplit("::", 1)[-1])]
+
+    return [item for match in re.finditer(r"\buse\s+(.+?);", code, re.S)
+            for item in expand(match[1])]
+
+
 def patterns(code: str) -> list[tuple[str, re.Pattern[str]]]:
-    aliases = {"fs", "std::fs"}
-    for match in re.finditer(r"\buse\s+std::fs\s+as\s+(\w+)\s*;", code):
-        aliases.add(match[1])
-    for match in re.finditer(r"\buse\s+std::fs::\{[^}]*\bself\s+as\s+(\w+)[^}]*\}", code, re.S):
-        aliases.add(match[1])
+    imported = imported_paths(code)
+    aliases = {"fs", "std::fs"} | {alias for path, alias in imported if path == "std::fs"}
+    direct = {operation: set() for operation in FS_FUNCTIONS}
+    for path, alias in imported:
+        if path.startswith("std::fs::"):
+            operation = path.removeprefix("std::fs::")
+            if operation in direct:
+                direct[operation].add(alias)
     results = []
     for alias in sorted(aliases, key=len, reverse=True):
         for operation in FS_FUNCTIONS:
             results.append((operation, re.compile(rf"(?<![:\w]){re.escape(alias)}\s*::\s*{operation}\s*\(")))
-    for match in re.finditer(r"\buse\s+std::fs::(?:\{([^}]*)\}|(\w+)(?:\s+as\s+(\w+))?)\s*;", code, re.S):
-        items = match[1] or (match[2] + (" as " + match[3] if match[3] else ""))
-        for item in items.split(","):
-            part = re.fullmatch(r"\s*(\w+)(?:\s+as\s+(\w+))?\s*", item)
-            if part and part[1] in FS_FUNCTIONS:
-                results.append((part[1], re.compile(rf"(?<![:\w]){re.escape(part[2] or part[1])}\s*\(")))
+    for operation, names in direct.items():
+        for name in names:
+            results.append((operation, re.compile(rf"(?<![:\w]){re.escape(name)}\s*\(")))
+    for platform, operations in OS_FUNCTIONS.items():
+        root = f"std::os::{platform}::fs"
+        os_aliases = {root} | {alias for path, alias in imported if path == root}
+        for alias in os_aliases:
+            for operation in operations:
+                results.append((operation, re.compile(rf"(?<![:\w]){re.escape(alias)}\s*::\s*{operation}\s*\(")))
+        for path, alias in imported:
+            if path in {f"{root}::{operation}" for operation in operations}:
+                operation = path.rsplit("::", 1)[-1]
+                results.append((operation, re.compile(rf"(?<![:\w]){re.escape(alias)}\s*\(")))
     for operation in PATH_METHODS:
         results.append((operation, re.compile(rf"\.\s*{operation}\s*\(")))
     file_aliases = {"File", "std::fs::File"}
     options_aliases = {"OpenOptions", "std::fs::OpenOptions"}
     directory_aliases = {"DirBuilder", "std::fs::DirBuilder"}
-    for match in re.finditer(r"\buse\s+std::fs::(?:\{([^}]*)\}|(File|OpenOptions|DirBuilder)(?:\s+as\s+(\w+))?)\s*;", code, re.S):
-        items = match[1] or (match[2] + (" as " + match[3] if match[3] else ""))
-        for item in items.split(","):
-            part = re.fullmatch(r"\s*(File|OpenOptions|DirBuilder)(?:\s+as\s+(\w+))?\s*", item)
-            if part:
-                ({"File": file_aliases, "OpenOptions": options_aliases,
-                 "DirBuilder": directory_aliases}[part[1]]).add(part[2] or part[1])
+    for path, alias in imported:
+        if path in {"std::fs::File", "std::fs::OpenOptions", "std::fs::DirBuilder"}:
+            ({"File": file_aliases, "OpenOptions": options_aliases,
+              "DirBuilder": directory_aliases}[path.rsplit("::", 1)[-1]]).add(alias)
     for alias in aliases:
         file_aliases.add(f"{alias}::File")
         options_aliases.add(f"{alias}::OpenOptions")
@@ -189,11 +241,14 @@ def patterns(code: str) -> list[tuple[str, re.Pattern[str]]]:
 
 
 def classify(path: str, operation: str) -> str:
+    """Seed a new inventory; checked-in rows may adjudicate each read site."""
     if operation in WRITE_OPERATIONS:
         return "output-effect"
+    if "/tests/" in path or "_tests.rs" in path:
+        return "tooling-input"
     if "/build/" in path or "/cargo/" in path or "cache" in path or "identity" in path or "manifest" in path or "projection" in path:
         return "build-identity"
-    if any(part in path for part in ("/bin/", "/tests/", "_tests.rs", "/format/", "/lint/", "/lsp/", "host_tool", "cli.rs")):
+    if any(part in path for part in ("/bin/", "/format/", "/lint/", "/lsp/", "host_tool", "cli.rs")):
         return "tooling-input"
     return "semantic-input"
 
@@ -206,6 +261,10 @@ def sites(root: Path) -> list[dict[str, str]]:
         code = rust_code(raw)
         original_lines = raw.splitlines()
         rules = patterns(code)
+        aliased_operations = {
+            path.rsplit("::", 1)[-1] for path, alias in imported_paths(code)
+            if path.rsplit("::", 1)[-1] != alias
+        }
         current_symbol = "<module>"
         # A builder's final open can be on another line. Track its chain, not
         # just the line containing OpenOptions::new().
@@ -217,18 +276,20 @@ def sites(root: Path) -> list[dict[str, str]]:
                 current_symbol = function[1]
                 builder = None
                 builder_writes = False
-            if any(operation == "open-options" and regex.search(line)
+            if ("options" in line or "new" in line) and any(operation == "open-options" and regex.search(line)
                    for operation, regex in rules):
                 builder = "options"
                 builder_writes = False
-            if any(operation == "dir-builder" and regex.search(line)
+            if "new" in line and any(operation == "dir-builder" and regex.search(line)
                    for operation, regex in rules):
                 builder = "directory"
             if builder and re.search(r"\.(?:write|append|create|create_new|truncate)\s*\(\s*true\s*\)", line):
                 builder_writes = True
             hits = []
             for operation, regex in rules:
-                if operation not in {"open-options", "dir-builder"}:
+                if operation not in {"open-options", "dir-builder"} and (
+                    operation in line or operation in aliased_operations
+                ):
                     hits.extend((match.start(), operation) for match in regex.finditer(line))
             if builder == "options":
                 hits.extend((match.start(), "open-write" if builder_writes else "open")
@@ -254,9 +315,9 @@ def compare(found: list[dict[str, str]], expected: list[dict[str, str]]) -> list
     baseline = Counter(map(key, expected))
     failures = [f"invalid effect classification: {item.get('path')}" for item in expected
                 if item.get("classification") not in CLASSIFICATIONS]
-    failures.extend(f"effect classification drift: {item.get('path')}::{item.get('symbol')} {item.get('operation')}"
-                    for item in expected if item.get("classification") !=
-                    classify(item.get("path", ""), item.get("operation", "")))
+    failures.extend(f"filesystem mutation must be an output-effect: {item.get('path')}::{item.get('symbol')} {item.get('operation')}"
+                    for item in expected if item.get("operation") in WRITE_OPERATIONS
+                    and item.get("classification") != "output-effect")
     for item, count in sorted((actual - baseline).items()):
         failures.append(f"unclassified filesystem effect ({count}): {item[0]}::{item[1]} {item[2]} {item[3]}")
     for item, count in sorted((baseline - actual).items()):
@@ -276,6 +337,8 @@ def self_test() -> None:
         source.write_text(seed)
         baseline = sites(root)
         assert len(baseline) == 1
+        manually_classified = [dict(baseline[0], classification="build-identity")]
+        assert not compare(baseline, manually_classified), "read-site adjudication is lost"
         mutations = (
             'fn new() { let _ = fs::read_to_string("y"); }\n',
             'fn new() { let _ = fs::read("x"); }\n',
@@ -289,10 +352,24 @@ def self_test() -> None:
             'fn new(file: std::fs::File) { let _ = file.set_len(0); }\n',
             'fn new(file: std::fs::File) { let _ = file.set_times(std::fs::FileTimes::new()); }\n',
             'fn new(path: std::path::PathBuf, permissions: std::fs::Permissions) { let _ = path.set_permissions(permissions); }\n',
+            'fn new() { let _ = std::fs::exists("x"); }\n',
+            'fn new(path: std::path::PathBuf) { let _ = path.symlink_metadata(); }\n',
+            'fn new() { let _ = std::os::unix::fs::symlink("x", "y"); }\n',
+            'fn new() { let _ = std::os::windows::fs::symlink_file("x", "y"); }\n',
+            'fn new() { let _ = std::os::windows::fs::symlink_dir("x", "y"); }\n',
+            'use std::os::unix::fs::symlink; fn new() { let _ = symlink("x", "y"); }\n',
+            'use std::os::unix::fs::symlink as link; fn new() { let _ = link("x", "y"); }\n',
+            'use std::os::unix::fs as unix_disk; fn new() { let _ = unix_disk::symlink("x", "y"); }\n',
+            'use std::{os::unix::fs::{symlink as link}}; fn new() { let _ = link("x", "y"); }\n',
+            'fn new(file: std::fs::File) { let _ = file.sync_all(); }\n',
         )
         for addition in mutations:
             source.write_text(seed + addition)
             assert compare(sites(root), baseline), addition
+            if "symlink" in addition and "symlink_metadata" not in addition:
+                assert any(site["operation"].startswith("symlink") and
+                           site["classification"] == "output-effect"
+                           for site in sites(root)), addition
         alias_only = 'use std::fs as disk;\nfn alias_only() { let _ = disk::read("x"); }\n'
         source.write_text(alias_only)
         assert len(sites(root)) == 1, "alias-only source escaped"
