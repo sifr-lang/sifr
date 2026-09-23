@@ -1,7 +1,9 @@
 //! Owned generated-entry storage. Locks are never unlinked: their inode is the lease.
+use crate::windows_storage_security as security;
 use std::fs::{self, File, OpenOptions};
 use std::io;
-use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
+use std::os::windows::fs::{MetadataExt, OpenOptionsExt};
+use std::os::windows::io::AsRawHandle;
 use std::path::{Component, Path, PathBuf};
 
 pub(crate) fn owner_scope() -> io::Result<PathBuf> {
@@ -17,23 +19,10 @@ pub fn root() -> PathBuf {
     if let Some(root) = std::env::var_os("SIFR_CACHE_DIR") {
         return PathBuf::from(root);
     }
-    let home = std::env::var_os("HOME")
+    std::env::var_os("LOCALAPPDATA")
         .map(PathBuf::from)
-        .unwrap_or_default();
-    if cfg!(target_os = "macos") {
-        home.join("Library/Caches/sifr")
-    } else {
-        std::env::var_os("XDG_CACHE_HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| home.join(".cache"))
-            .join("sifr")
-    }
-}
-
-#[allow(unsafe_code)]
-fn uid() -> u32 {
-    // SAFETY: geteuid has no arguments, pointers, or preconditions.
-    unsafe { libc::geteuid() }
+        .unwrap_or_default()
+        .join("sifr")
 }
 
 fn invalid(message: impl Into<String>) -> io::Error {
@@ -65,61 +54,47 @@ pub(crate) fn directory(path: &Path) -> io::Result<()> {
             return Err(invalid("cache path traversal"));
         }
         current.push(part);
+        // Drive prefixes are not independently accessible paths.
+        if matches!(part, Component::Prefix(_)) {
+            continue;
+        }
         match fs::symlink_metadata(&current) {
-            Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => {}
+            Ok(meta) if meta.is_dir() => security::no_reparse(&current)?,
             Ok(_) => {
                 return Err(invalid(format!(
                     "unsafe cache directory {}",
                     current.display()
                 )));
             }
-            Err(e) if e.kind() == io::ErrorKind::NotFound => {
-                let mut builder = fs::DirBuilder::new();
-                std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
-                match builder.create(&current) {
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {
+                match security::create_directory(&current) {
                     Ok(()) => {}
-                    Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
-                    Err(e) => return Err(e),
+                    Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
+                    Err(error) => return Err(error),
                 }
                 check_owned(&current)?;
             }
-            Err(e) => return Err(e),
+            Err(error) => return Err(error),
         }
     }
     check_owned(path)
 }
 
 pub(crate) fn check_owned(path: &Path) -> io::Result<()> {
-    let meta = fs::symlink_metadata(path)?;
-    if meta.file_type().is_symlink()
-        || meta.uid() != uid()
-        || meta.permissions().mode() & 0o022 != 0
-    {
-        return Err(invalid(format!(
-            "cache entry is symlink, foreign-owned, or writable by others: {}",
-            path.display()
-        )));
-    }
-    Ok(())
+    security::check(path)
 }
 
 /// Seal producer-created payloads without relying on the ambient umask.
 /// Symlinks are never followed; required paths still reject them at use.
 pub(crate) fn seal(root: &Path) -> io::Result<()> {
     let metadata = fs::symlink_metadata(root)?;
-    if metadata.uid() != uid() {
-        return Err(invalid(format!(
-            "foreign-owned staged payload: {}",
-            root.display()
-        )));
-    }
-    if metadata.file_type().is_symlink() {
+    if metadata.file_attributes()
+        & windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_REPARSE_POINT
+        != 0
+    {
         return Ok(());
     }
-    fs::set_permissions(
-        root,
-        fs::Permissions::from_mode(metadata.permissions().mode() & !0o022),
-    )?;
+    security::seal(root)?;
     if metadata.is_dir() {
         for entry in fs::read_dir(root)? {
             seal(&entry?.path())?;
@@ -153,16 +128,21 @@ fn open_entry_lock(parent: &Path, key: &str, inherit: bool) -> io::Result<File> 
     relative(Path::new(key))?;
     let locks = parent.join(".locks");
     directory(&locks)?;
-    let file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .truncate(false)
-        .mode(0o600)
-        .custom_flags(libc::O_NOFOLLOW)
-        .open(locks.join(key))?;
-    let meta = file.metadata()?;
-    if meta.uid() != uid() || meta.permissions().mode() & 0o022 != 0 || !meta.is_file() {
+    let path = locks.join(key);
+    let file = match security::create_file(&path) {
+        Ok(file) => file,
+        Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {
+            check_owned(&path)?;
+            OpenOptions::new()
+                .read(true)
+                .write(true)
+                .custom_flags(windows_sys::Win32::Storage::FileSystem::FILE_FLAG_OPEN_REPARSE_POINT)
+                .open(&path)?
+        }
+        Err(error) => return Err(error),
+    };
+    check_owned(&path)?;
+    if !file.metadata()?.is_file() {
         return Err(invalid("unsafe cache ownership lock"));
     }
     if inherit {
@@ -173,10 +153,16 @@ fn open_entry_lock(parent: &Path, key: &str, inherit: bool) -> io::Result<File> 
 
 #[allow(unsafe_code)]
 fn inherit_lease(file: &File) -> io::Result<()> {
-    use std::os::fd::AsRawFd;
-    // SAFETY: the descriptor is live. Keep the lease in native descendants so
-    // a killed writer cannot make its still-running Cargo workspace pruneable.
-    if unsafe { libc::fcntl(file.as_raw_fd(), libc::F_SETFD, 0) } < 0 {
+    use windows_sys::Win32::Foundation::{HANDLE_FLAG_INHERIT, SetHandleInformation};
+    // SAFETY: the File retains this live handle for the lifetime of the lease.
+    if unsafe {
+        SetHandleInformation(
+            file.as_raw_handle(),
+            HANDLE_FLAG_INHERIT,
+            HANDLE_FLAG_INHERIT,
+        )
+    } == 0
+    {
         return Err(io::Error::last_os_error());
     }
     Ok(())
@@ -197,12 +183,7 @@ pub struct CacheEntryInspection {
 
 fn size(path: &Path) -> io::Result<u64> {
     let meta = fs::symlink_metadata(path)?;
-    if meta.uid() != uid() {
-        return Err(invalid("foreign-owned cache payload"));
-    }
-    if meta.file_type().is_symlink() {
-        return Ok(meta.len());
-    }
+    check_owned(path)?;
     if meta.is_file() {
         return Ok(meta.len());
     }
@@ -251,7 +232,9 @@ pub fn inspect() -> io::Result<CacheInspection> {
                     OpenOptions::new()
                         .read(true)
                         .write(true)
-                        .custom_flags(libc::O_NOFOLLOW)
+                        .custom_flags(
+                            windows_sys::Win32::Storage::FileSystem::FILE_FLAG_OPEN_REPARSE_POINT,
+                        )
                         .open(family.join(lock_path))
                 });
                 let same_scope = fs::read(path.join("artifact_cache.json"))
@@ -352,59 +335,107 @@ pub fn prune(
 }
 
 /// Available space on the selected destination filesystem.
-#[allow(unsafe_code)]
-#[allow(
-    clippy::useless_conversion,
-    reason = "statvfs block counts are u32 on macOS and u64 on Linux"
-)]
 pub fn available_bytes() -> io::Result<u64> {
-    use std::os::unix::ffi::OsStrExt;
     let root = root();
     directory(&root)?;
-    let path = std::ffi::CString::new(root.as_os_str().as_bytes())
-        .map_err(|_| invalid("NUL in cache path"))?;
-    let mut stats = std::mem::MaybeUninit::<libc::statvfs>::uninit();
-    // SAFETY: the C path is terminated and the output points to initialized-size storage.
-    if unsafe { libc::statvfs(path.as_ptr(), stats.as_mut_ptr()) } != 0 {
-        return Err(io::Error::last_os_error());
-    }
-    // SAFETY: statvfs succeeded and initialized the structure.
-    let stats = unsafe { stats.assume_init() };
-    Ok(u64::from(stats.f_bavail) * stats.f_frsize)
+    security::available_bytes(&root)
 }
 
 pub(crate) fn new_private_file(path: &Path) -> io::Result<File> {
-    OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .mode(0o600)
-        .custom_flags(libc::O_NOFOLLOW)
-        .open(path)
+    security::create_file(path)
 }
 pub(crate) fn read_private_file(path: &Path) -> io::Result<File> {
-    OpenOptions::new()
-        .read(true)
-        .custom_flags(libc::O_NOFOLLOW)
-        .open(path)
+    security::open_read(path)
 }
 pub(crate) fn read_write_private_file(path: &Path) -> io::Result<File> {
-    OpenOptions::new()
+    check_owned(path)?;
+    let file = OpenOptions::new()
         .read(true)
         .write(true)
-        .custom_flags(libc::O_NOFOLLOW)
-        .open(path)
+        .custom_flags(windows_sys::Win32::Storage::FileSystem::FILE_FLAG_OPEN_REPARSE_POINT)
+        .open(path)?;
+    if file.metadata()?.file_attributes()
+        & windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_REPARSE_POINT
+        != 0
+    {
+        return Err(invalid("reparse-point storage file"));
+    }
+    Ok(file)
 }
 pub(crate) fn publish(source: &Path, destination: &Path) -> io::Result<()> {
-    fs::rename(source, destination)?;
-    let parent = destination
-        .parent()
-        .ok_or_else(|| invalid("missing publication parent"))?;
-    File::open(parent)?.sync_all()
+    security::durable_rename(source, destination)
 }
 pub(crate) fn sync_stage(path: &Path) -> io::Result<()> {
-    File::open(path)?.sync_all()
+    // Every staged file is sync_all'd before MoveFileExW WRITE_THROUGH
+    // publishes the directory. Verify the stage still has a safe owner.
+    check_owned(path)
 }
 
 pub(crate) fn real_directory(path: &Path) -> bool {
-    fs::symlink_metadata(path).is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())
+    fs::symlink_metadata(path).is_ok_and(|m| {
+        m.is_dir()
+            && m.file_attributes()
+                & windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_REPARSE_POINT
+                == 0
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn windows_portability_private_acl_alias_and_lock_identity() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("private");
+        directory(&root).unwrap();
+        let file = new_private_file(&root.join("owned")).unwrap();
+        file.sync_all().unwrap();
+        check_owned(&root).unwrap();
+        check_owned(&root.join("owned")).unwrap();
+
+        let lock = entry_lock(&root, "lease").unwrap();
+        lock.try_lock().unwrap();
+        let contender = entry_lock(&root, "lease").unwrap();
+        assert!(contender.try_lock().is_err());
+        let index = security::file_identity(&lock).unwrap();
+        drop(lock);
+        contender.try_lock().unwrap();
+        assert_eq!(security::file_identity(&contender).unwrap(), index);
+        drop(contender);
+
+        let outside = temp.path().join("outside");
+        fs::create_dir(&outside).unwrap();
+        let alias = root.join("junction");
+        let status = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(&alias)
+            .arg(&outside)
+            .status()
+            .unwrap();
+        assert!(status.success());
+        assert!(directory(&alias).is_err());
+        assert!(payload(&root, Path::new("junction")).is_err());
+        fs::remove_dir(&alias).unwrap();
+
+        security::test_grant_world(&root.join("owned")).unwrap();
+        assert!(check_owned(&root.join("owned")).is_err());
+    }
+
+    #[test]
+    fn windows_portability_pressure_prune_protects_leases_and_winners() {
+        let temp = tempfile::tempdir().unwrap();
+        let family = temp.path().join("native").join("artifacts").join("family");
+        directory(&family).unwrap();
+        let key = "a".repeat(64);
+        let path = family.join(&key);
+        directory(&path).unwrap();
+        let lock = entry_lock(&family, &key).unwrap();
+        lock.try_lock().unwrap();
+        assert!(check_owned(&path).is_ok());
+        // Pruning's lock contract is exercised without changing the global
+        // cache root environment used by unrelated tests.
+        assert!(entry_lock(&family, &key).unwrap().try_lock().is_err());
+        drop(lock);
+        assert!(entry_lock(&family, &key).unwrap().try_lock().is_ok());
+    }
 }

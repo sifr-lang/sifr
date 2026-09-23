@@ -1,9 +1,8 @@
 use super::{Result, production::Inputs, wire};
 use sifr_identity::CompilerIdentity;
-use std::os::unix::fs::OpenOptionsExt;
 use std::{
     collections::BTreeMap,
-    fs::{self, File, OpenOptions},
+    fs::{self, File},
     io::{Read, Write},
     path::{Path, PathBuf},
     sync::{
@@ -189,13 +188,7 @@ pub(super) fn ensure_with_hook(
     if staging.exists() {
         fs::remove_file(&staging).map_err(fail)?;
     }
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .mode(0o600)
-        .custom_flags(libc::O_NOFOLLOW)
-        .open(&staging)
-        .map_err(fail)?;
+    let mut file = crate::cache_storage::new_private_file(&staging).map_err(fail)?;
     file.write_all(&bytes).map_err(fail)?;
     file.sync_all().map_err(fail)?;
     cancelled(cancel)?;
@@ -206,8 +199,7 @@ pub(super) fn ensure_with_hook(
         ));
     }
     cancelled(cancel)?;
-    fs::rename(&staging, &path).map_err(fail)?;
-    File::open(&root).and_then(|f| f.sync_all()).map_err(fail)?;
+    crate::cache_storage::publish(&staging, &path).map_err(fail)?;
     hook(Stage::Published)?;
     lock.unlock().map_err(fail)?;
     let prepared = Arc::new(PreparedMetadata {
@@ -251,14 +243,11 @@ impl PreparedMetadata {
                     "prepared metadata changed before output publication; retry preparation",
                 ));
             }
-            let mut file=OpenOptions::new().write(true).create_new(true).mode(0o600).custom_flags(libc::O_NOFOLLOW).open(&stage).map_err(|error|fail(format!("cannot create metadata output in {}: {error}; select a writable output directory",parent.display())))?;
+            let mut file=crate::cache_storage::new_private_file(&stage).map_err(|error|fail(format!("cannot create metadata output in {}: {error}; select a writable output directory",parent.display())))?;
             owns_stage = true;
             file.write_all(&bytes).map_err(fail)?;
             file.sync_all().map_err(fail)?;
-            fs::rename(&stage, &output).map_err(fail)?;
-            File::open(&parent)
-                .and_then(|f| f.sync_all())
-                .map_err(fail)?;
+            crate::cache_storage::publish(&stage, &output).map_err(fail)?;
             Ok(())
         })();
         if result.is_err() && owns_stage {
