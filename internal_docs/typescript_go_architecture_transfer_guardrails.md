@@ -42,19 +42,16 @@ as a non-semantic exception. Path probes are listed alongside content and
 directory reads so the source provider can track successful and failed lookup dependencies
 without treating probes as source content reads.
 
-Inventory coverage is deliberately broader than semantic source ownership. The
-checker scans complete Rust files under its six declared crate `src` roots,
-including inline `#[cfg(test)]` modules and platform-specific code on every host.
-Its existing path filter excludes `source_provider.rs`, `tests` and `bin`
-directories, `tests.rs`, and `*_tests.rs`; it does not parse conditional blocks.
-Inline-test reads and probes therefore remain listed as test effects, as with
-the self-update runner fixtures below. Their non-semantic classification is not
-an exclusion for production code in the same file. A future production read in
-such a file still needs its own ownership adjudication.
+Inventory coverage is broader than semantic source ownership. The V03 guard
+`verification/areas/developer_tooling/check_direct_filesystem_effects.py`
+derives first-party Rust targets from workspace member manifests, including bin
+and explicit target paths. Its checked-in inventory records each effect by path,
+enclosing symbol, operation, source site, and ownership class: semantic input,
+build identity, tooling input, or output effect. It includes inline tests and
+platform-specific code on every host. A new effect in an already-listed file
+requires its own classification.
 
-The checker enforces path membership, not exact line numbers or ownership
-classifications. The row descriptions remain the ownership record; adding a
-path does not grant a blanket exception to every read in that file. Line
+Line
 references for the 12K-B7 additions below use main
 `f11e1cd7eef16a02063555bccc9fd8e19287833b`: 22 matching lines across six paths,
 17 production and five inline-test lines. The SQL manifest line contains two

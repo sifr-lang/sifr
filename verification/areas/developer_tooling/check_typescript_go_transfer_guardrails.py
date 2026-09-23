@@ -39,17 +39,6 @@ DIAGNOSTIC_CANONICALIZATION = (
 )
 PERF_MANIFEST = REPO_ROOT / "verification" / "areas" / "performance" / "data" / "benchmark_manifest.json"
 SOURCE_DEP_GUARD = REPO_ROOT / "scripts" / "check_source_crate_dependency_direction.py"
-DIRECT_FS_PATTERN = re.compile(
-    r"(?:std::fs::|fs::)(?:read_to_string|read_dir)|\.is_file\(\)|\.is_dir\(\)"
-)
-DIRECT_FS_SCAN_ROOTS = [
-    REPO_ROOT / "crates" / "sifr" / "src",
-    REPO_ROOT / "crates" / "sifr_driver" / "src",
-    REPO_ROOT / "crates" / "sifr_frontend" / "src",
-    REPO_ROOT / "crates" / "sifr_format" / "src",
-    REPO_ROOT / "crates" / "sifr_lint" / "src",
-    REPO_ROOT / "crates" / "sifr_package" / "src",
-]
 SOURCE_PROVIDER_BOUNDARY = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "source_provider.rs"
 
 REQUIRED_DOC_SNIPPETS = [
@@ -217,37 +206,6 @@ def validate_doc(text: str, failures: list[str]) -> None:
     for snippet in REQUIRED_DOC_SNIPPETS:
         stable_snippet = re.sub(r":\d+$", "", snippet) if snippet.startswith("crates/") else snippet
         require(stable_snippet in text, f"transfer guardrail doc missing snippet: {stable_snippet}", failures)
-
-
-def is_production_source(path: Path) -> bool:
-    if path == SOURCE_PROVIDER_BOUNDARY:
-        return False
-    relative_parts = path.relative_to(REPO_ROOT).parts
-    if "tests" in relative_parts or "bin" in relative_parts:
-        return False
-    name = path.name
-    return not (name.endswith("_tests.rs") or name == "tests.rs")
-
-
-def direct_fs_sites() -> list[tuple[str, int, str]]:
-    sites: list[tuple[str, int, str]] = []
-    for root in DIRECT_FS_SCAN_ROOTS:
-        for path in sorted(root.rglob("*.rs")):
-            if not is_production_source(path):
-                continue
-            for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-                if DIRECT_FS_PATTERN.search(line):
-                    sites.append((path.relative_to(REPO_ROOT).as_posix(), line_number, line.strip()))
-    return sites
-
-
-def validate_direct_fs_inventory(text: str, failures: list[str]) -> None:
-    for path, line_number, source_line in direct_fs_sites():
-        require(
-            path in text,
-            f"transfer direct-read/probe inventory missing {path}:{line_number}: {source_line}",
-            failures,
-        )
 
 
 def validate_source_maps(text: str, failures: list[str]) -> None:
@@ -607,10 +565,6 @@ def run_self_test() -> None:
         validate_doc(incomplete_doc.read_text(encoding="utf-8"), failures)
     if not failures:
         raise SystemExit("transfer guardrail self-test failed: incomplete doc passed")
-    failures = []
-    validate_direct_fs_inventory("WorkspaceSession only\n", failures)
-    if not failures:
-        raise SystemExit("transfer guardrail self-test failed: incomplete inventory passed")
     host = "completion_symbols workspace_import_symbols"
     tests = (
         "project_symbol_index_refreshes_dirty_module_buckets_only"
@@ -644,7 +598,6 @@ def main() -> int:
     failures: list[str] = []
     doc_text = DOC.read_text(encoding="utf-8")
     validate_doc(doc_text, failures)
-    validate_direct_fs_inventory(doc_text, failures)
     validate_source_maps(SOURCE_MAPS.read_text(encoding="utf-8"), failures)
     validate_lsp_current_state(failures)
     validate_lsp_budget_reality(failures)

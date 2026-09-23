@@ -20,6 +20,8 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
     "typescript-go-transfer": [
         ("typescript-go-transfer", [sys.executable, str(AREA_ROOT / "check_typescript_go_transfer_guardrails.py")]),
         ("typescript-go-transfer-self-test", [sys.executable, str(AREA_ROOT / "check_typescript_go_transfer_guardrails.py"), "--self-test"]),
+        ("direct-filesystem-effects", [sys.executable, str(AREA_ROOT / "check_direct_filesystem_effects.py")]),
+        ("direct-filesystem-effects-self-test", [sys.executable, str(AREA_ROOT / "check_direct_filesystem_effects.py"), "--self-test"]),
     ],
     "diagnostic-rules": [
         ("diagnostic-presentation", [sys.executable, str(AREA_ROOT / "check_diagnostic_presentation_rules.py")]),
