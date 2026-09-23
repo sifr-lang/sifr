@@ -218,7 +218,66 @@ These were not blocking findings for the reviewed Item 2 candidate. This
 record-only delivery update requires documentation checks, not another Sifr
 gate or external review.
 
-### Item 3 blocked handoff (2026-09-23)
+### Item 3 delivery receipt (2026-09-23)
+
+Status: merged; Item 4 is the next bounded implementation item. [PR #3975](https://github.com/sifr-lang/sifr/pull/3975)
+merged as `8bd81fcddd2226daf98a38c6e58e32a4d4ae4680` from exact reviewed
+candidate `ddce80ca0655bc5b724d585a092b1de61a0260fe` on base
+`1e973c029a2af05aaddaec47f17f17735b277df5`. Main advanced only through
+an unrelated emitted-Rust record before merge; no Item 3 source or validation
+input changed. The older blocked handoff below remains historical failure
+evidence, not qualification of its earlier candidate.
+
+The shared pre-lowering discovery now reports SIFR-SQL-0009 for configured but
+unimported profiles before an undefined-name diagnostic hides the SQL use.
+CLI and editor consume the same profile authority and renderer. Imported aliases,
+shadowing, unrelated decorators, actual `app.sql` calls, package checks and
+editor reloads have executed regressions. The code catalog, baseline, renderer
+metadata, diagnostic page and navigation are registered.
+
+Exact-candidate selected validation passed: driver `sql_profiles_tests` 9/9
+(including the three new discovery cases), frontend `sql_queries` 4/4, analysis
+64/64, LSP 92/92, diagnostics 32/32, diagnostic code coverage and baseline
+coverage scripts, workspace Clippy, formatting, HIR and driver maintainability,
+file-size guard (4136 files under 900 lines), and `git diff --check`. Logs are
+`/home/yaser5/projects/sifr/sql-item3-{driver,frontend,analysis,lsp,diagnostics,clippy}-ddce80c.log`;
+workspace Clippy log SHA-256 is
+`d00f4754be4d44fbf6763d6546fe33a2e3af51ace882d2c68474e60398ef4684`.
+The first Clippy attempt before worktree submodule setup and the earlier N02
+Clippy failure remain failed evidence; this candidate's later Clippy pass does
+not rewrite them.
+
+The named diagnostics baseline run passed 84 variants before `cargo package`
+failed in an archive fixture because this new worktree lacked the
+`editor_integrations` submodule. That first run stopped by fail-fast and is
+preserved at `/home/yaser5/projects/sifr/sql-item3-baselines-ddce80c.log`
+(SHA-256 `051087f669ee5c9263deaf4a61efa2e17572abe779ae8d1be84ea41cf87eeab8`).
+After initializing that submodule and proving direct `cargo package --list`,
+the runner's `--rerun-failures` selection passed the remaining 95/95 cases with
+zero failures. Combined selected evidence covers all 179/179 variants; rerun
+log `/home/yaser5/projects/sifr/sql-item3-baselines-rerun-ddce80c.log`
+(SHA-256 `356bbb3d2836f8a8e6f72d51255eab696eb668d7a4d6d5fac9259c5effaeb2ce`).
+No implementation source changed during fixture preparation or rerun.
+
+The [scoped exact-candidate Opus review](https://github.com/sifr-lang/sifr/pull/3975#issuecomment-5802469149)
+returned **SATISFIED** with no blocking findings. Response SHA-256:
+`1800d6225dc0208a3ece1ff074b3558a7474335a67dc07b1b3a903aa7e2e7be1`.
+Deferred, separate suggestions: broaden local-binding recognition for configured
+name collisions; simplify the unused binding value; exercise editor registry
+construction in a fixture; correct generic generated “Why It Happens” prose;
+avoid docs.json key-order churn; and decide whether the common-SQL contract list
+should enumerate this driver-owned diagnostic. None was a blocking finding or
+silently added to Item 4.
+
+No create-PR or full merge gate ran locally for this intermediate item under
+the phase policy; the final integration qualifier owns the full merge profile.
+PR CI independently reported missing `SIFR_PERFORMANCE_REFERENCE` admission and
+an out-of-scope Windows build failure in untouched Architecture project-cache
+storage. The latter was routed to the Architecture owner. Neither is claimed
+as a local gate pass. This record-only delivery update needs documentation
+checks, not another SQL gate or external review.
+
+### Historical Item 3 blocked handoff (2026-09-23)
 
 Status: blocked by out-of-scope Architecture N02 workspace Clippy failures;
 implementation is unqualified, unreviewed, and unmerged. The earlier host
