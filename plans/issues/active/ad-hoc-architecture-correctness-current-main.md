@@ -117,6 +117,31 @@ On Linux x86_64 with rustc/Cargo 1.98.1, exact `sifr_driver --lib` selections pa
 
 The read-only scoped Opus review returned **SATISFIED** with no blocking findings (response SHA-256 `821ffa57b916360a9fb0c153a51bbf51c394c7f85be1878948a409d8267d6d5c`). The full response is outside the reviewed tree at `/home/yaser5/projects/sifr/architecture-n02b2-lock-identity-evidence/ef9c304c75582c0dd0b10addf7f83f18539b0f87-review.md`. Nonblocking review notes suggested a more specific diagnostic for non-file lock candidates, weighed the trusted-vendor rescan cost against concurrent-mutation detection, and noted an `authority-readable` field name; a pre-existing non-prepare normal-seed fragment still encodes unreadable authority by error kind while actual preparation fails closed. These are follow-ups, not N02b2 acceptance gaps. The intermediate-phase policy defers the full merge profile to Q01. This item ends here; N02c requires a separate assignment.
 
+## N02b/N02b2 strict Clippy blocker found by emitted-Rust Item 12R (2026-09-23)
+
+On emitted-Rust Item 12R integration candidate
+`a998e53ac6ad5cee96a0fae452f25e5077193bde`, the exact
+`cargo clippy --locked -p sifr_driver --lib -- -D warnings` command failed
+with two diagnostics unchanged from merged main
+`ca093afb2c745633b18f5b0b503bf8b73121d08f`:
+
+- N02b2/F07 [PR #3954](https://github.com/sifr-lang/sifr/pull/3954)
+  introduced a module-scope `normalized_manifest_cache_input` import at
+  `crates/sifr_driver/src/build/cargo_resolution.rs:15` that is used only
+  by tests. Strict Clippy reports `unused_imports`.
+- N02b/F07 [PR #3951](https://github.com/sifr-lang/sifr/pull/3951)
+  introduced `contains_key` followed by `insert` at
+  `crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:73`.
+  Strict Clippy reports `clippy::map_entry`. Repair must retain the
+  fallible metadata digest only when the key is absent.
+
+The raw evidence is
+`/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/clippy-driver-a998e53ac.log`
+(SHA-256
+`c87b6999a55a8ff9c7ac2faaa3e5d509b8105d891a7772294e8ca5a18586f642`).
+Both diagnostics block Item 12R final strict validation and implementation
+merge. The Item 12R worker made no code change for these external failures.
+
 ## N02b/F07 driver and bridge persisted identity delivery receipt (2026-09-23)
 
 [PR #3951](https://github.com/sifr-lang/sifr/pull/3951) merged as `603f56cfd889d66ae1f276448083aee4b3cfb22c` from published final candidate `af8cd5773b35bca02dab533f1db2ae07d3b7cdff` (base `62ff95089bf1b120214c9978442eeef9b32979d4`). The tested local candidate `41e47ac66a7a4e06fe02a989c674461892b2fb40` and published candidate share tree `3aa980c8b313b3fb9df901315f04171d7dd23b23`; the GitHub connector recreated commit metadata because the host had no push credentials. Driver bridge trees, sysroot metadata, trust policy, combined Cargo inputs, probe markers and codegen bridge/Cargo fragments now use versioned, domain-framed SHA-256 identities over their semantic fields. Required bridge and sysroot source trees and the final SQLx metadata tree fail closed on unreadable input. The Rust interop final warm key binds the package source snapshot (source-map authority and module bytes); the pure-package project cache continues to validate current authority and source observations. Cargo still runs before final native reuse, and the DX9-F7 alternating-dependency regression passed. Prepared-lock and unchanged-lock identities remain in N02b2; N02c/F08 serialization, N03 environment encoding and N04 probe-input/symlink/memoization work are not claimed.

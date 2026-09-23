@@ -4,7 +4,7 @@ Status: active
 
 ## Retained Item 12R: project-wide borrowed-value calls (2026-09-23)
 
-**Implementation candidate blocked by external project-workspace validation;
+**Implementation candidate blocked by architecture-owned strict Clippy diagnostics;
 retained Item 12 is not merged or closed.** This bounded sub-item was the
 explicit rescope required by the second Item 12 implementation review. Draft [PR #3908](https://github.com/sifr-lang/sifr/pull/3908)
 remains at candidate `e9aed40593c86fd02a2b68853ea4bf2025a20135` on
@@ -52,6 +52,51 @@ Item 12R scope and acceptance:
   implementation PR only after named evidence and review agree. Record its
   merge and validation here; final integration qualification and the
   documentation-only whole-phase closer remain separate assignments.
+
+### Item 12R resumed validation blocker (2026-09-23)
+
+The preserved [PR #3946](https://github.com/sifr-lang/sifr/pull/3946) candidate
+`a998e53ac6ad5cee96a0fae452f25e5077193bde` merged current main
+`ca093afb2c745633b18f5b0b503bf8b73121d08f`, including the
+[DX.10-F12 repair](ad-hoc-dx10-profile-review-followups.md#f12-project-workspace-test-command-package-root--2026-09-23).
+The exact `project_workspace/frontend_mode_parity` area selection passed both
+rows (2/2), and the companion `core_language/hir_analysis_behaviors`
+selection passed three rows (3/3). Their candidate-keyed machine receipts
+are `project-frontend_mode_parity-a998e53ac.json` and
+`core-hir-a998e53ac.json` under
+`/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/`. The
+`claude-opus-5-5` read-only scoped integration review returned **SATISFIED**
+with no blockers on this exact candidate:
+`review-response-a998e53ac.md`, SHA-256
+`4457e1bbfef684de278e811887f39db64f5f1523827b17b1583f3331c75dd0c6`.
+It confirmed the borrowed-value implementation had not changed after the
+previous satisfied review and that the F12 merge preserved the acceptance
+behavior.
+
+The focused strict check
+`cargo clippy --locked -p sifr_driver --lib -- -D warnings` exited 101 with
+two diagnostics already present on merged main: unused import
+`normalized_manifest_cache_input` at
+`crates/sifr_driver/src/build/cargo_resolution.rs:15`, introduced by
+architecture N02b2/F07 [PR #3954](https://github.com/sifr-lang/sifr/pull/3954),
+and `clippy::map_entry` at
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:73`, introduced
+by architecture N02b/F07 [PR #3951](https://github.com/sifr-lang/sifr/pull/3951).
+The raw `clippy-driver-a998e53ac.log` SHA-256 is
+`c87b6999a55a8ff9c7ac2faaa3e5d509b8105d891a7772294e8ca5a18586f642`.
+Both are outside Item 12R borrowed-value scope and are recorded in the
+[architecture owner issue](ad-hoc-architecture-correctness-current-main.md).
+No generated-quality, 411-case source/native, remaining area selection,
+create-PR gate, full merge gate, or implementation merge was claimed on this
+candidate. The `leetcode` corpus has an ignored `.sifrbuildinfo` cache;
+preserve it until ownership is reconciled.
+
+Next: the architecture owner repairs both strict-Clippy diagnostics and merges
+that bounded fix; then resume Item 12R on an integrated candidate, rerun
+affected and still-required named validation, obtain a fresh scoped review if
+implementation, fixtures, workflows or schemas changed, and merge PR #3946.
+The earlier DX.10-F12 blocker below remains historical evidence, not the
+current blocker.
 
 ### Item 12R validation blocker (2026-09-23)
 
