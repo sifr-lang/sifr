@@ -1,5 +1,6 @@
 use std::{fmt::Write as _, path::PathBuf};
 
+use serde::Serialize;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{LoweringOptions, PythonTrustPolicy};
 
@@ -40,8 +41,12 @@ pub(super) struct EmbeddedPythonBridgeSource {
     pub package_prefix: String,
 }
 
+fn certification_identity<T: Serialize>(certifications: &[T]) -> Result<String, String> {
+    serde_json::to_string(certifications)
+        .map_err(|error| format!("could not serialize Python certifications: {error}"))
+}
+
 impl PackagePythonRuntime {
-    #[must_use]
     pub fn from_probe(
         request: &sifr_package::PythonEnvironmentProbeRequest,
         probe: &sifr_package::PythonEnvironmentProbe,
@@ -49,10 +54,10 @@ impl PackagePythonRuntime {
         required_import_roots: Vec<String>,
         trusted_import_roots: Vec<String>,
         trusted_native_roots: Vec<String>,
-    ) -> Self {
+    ) -> Result<Self, String> {
         let authoring_environment_digest =
-            sifr_package::digest_python_authoring_environment_probe(request, probe).hex;
-        Self {
+            sifr_package::digest_python_authoring_environment_probe(request, probe)?.hex;
+        Ok(Self {
             venv_root: request.venv_root.clone(),
             interpreter: request.interpreter.clone(),
             executable: probe.executable.clone(),
@@ -77,7 +82,7 @@ impl PackagePythonRuntime {
             dlpack_certification_identity: String::new(),
             binding_identity: String::new(),
             start_async_loop: false,
-        }
+        })
     }
 
     #[must_use]
@@ -103,10 +108,10 @@ impl PackagePythonRuntime {
     pub fn set_arrow_certifications(
         &mut self,
         certifications: Vec<sifr_package::ArrowCertification>,
-    ) {
-        self.arrow_certification_identity =
-            serde_json::to_string(&certifications).unwrap_or_default();
+    ) -> Result<(), String> {
+        self.arrow_certification_identity = certification_identity(&certifications)?;
         self.arrow_certifications = certifications;
+        Ok(())
     }
 
     #[must_use]
@@ -126,10 +131,10 @@ impl PackagePythonRuntime {
     pub fn set_dlpack_certifications(
         &mut self,
         certifications: Vec<sifr_package::DlpackCertification>,
-    ) {
-        self.dlpack_certification_identity =
-            serde_json::to_string(&certifications).unwrap_or_default();
+    ) -> Result<(), String> {
+        self.dlpack_certification_identity = certification_identity(&certifications)?;
         self.dlpack_certifications = certifications;
+        Ok(())
     }
 
     #[must_use]
@@ -548,7 +553,8 @@ mod tests {
             vec!["numpy".to_string()],
             vec!["numpy".to_string()],
             Vec::new(),
-        );
+        )
+        .expect("probe identity");
         let rendered = render_python_runtime_prelude(&metadata);
 
         assert!(rendered.contains("native_import_roots: vec![\"numpy\".to_string()]"));
@@ -631,5 +637,17 @@ mod tests {
             .expect_err("missing main should fail");
 
         assert!(error.contains("no main function"));
+    }
+    #[test]
+    fn certification_identity_reports_serialization_failure() {
+        struct Fails;
+        impl serde::Serialize for Fails {
+            fn serialize<S: serde::Serializer>(&self, _serializer: S) -> Result<S::Ok, S::Error> {
+                Err(serde::ser::Error::custom("injected serialization failure"))
+            }
+        }
+        assert_eq!(certification_identity::<String>(&[]).unwrap(), "[]");
+        let error = certification_identity(&[Fails]).unwrap_err();
+        assert!(error.contains("injected serialization failure"));
     }
 }

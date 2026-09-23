@@ -38,13 +38,15 @@ pub(super) fn restore(
     defs: sifr_lowering::ExternalDefs,
     package: Option<&crate::PackageEntrypoint>,
 ) -> Option<Vec<ModuleCheckDecision>> {
-    let package_identity = package.map(super::package_context::identity);
-    if package_identity.as_ref().is_some_and(Option::is_none)
-        || package_identity
-            .flatten()
-            .as_deref()
-            .unwrap_or("manifestless-owner-v1")
-            != inputs.package_and_lock
+    let package_identity = if let Some(package) = package {
+        Some(super::package_context::identity(package).ok()??)
+    } else {
+        None
+    };
+    if package_identity
+        .as_deref()
+        .unwrap_or("manifestless-owner-v1")
+        != inputs.package_and_lock
         || &record.result.inputs.semantic_inputs != inputs
         || record.result.inputs.source.path != file
         || record.result.resolution.ready()?.sources.len() < 2

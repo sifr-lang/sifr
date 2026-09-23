@@ -58,7 +58,9 @@ fn python_probe_digest_includes_resolved_distribution_versions_and_abi() {
         digest_python_environment_probe(&request, &abi_changed)
     );
     let package_key = |probe| {
-        let python_probe_digest = digest_python_environment_probe(&request, probe).hex;
+        let python_probe_digest = digest_python_environment_probe(&request, probe)
+            .unwrap()
+            .hex;
         digest_package_build_cache_inputs(&PackageBuildCacheInputs {
             python_probe_digest: Some(python_probe_digest),
             ..PackageBuildCacheInputs::default()

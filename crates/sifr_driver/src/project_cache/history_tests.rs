@@ -15,7 +15,12 @@ fn publish(store: &storage::Store, file: &Path, index: usize) {
     let mut capture = CapturingSourceProvider::new(&mut disk);
     capture.read_file(file).unwrap();
     let record = CompletedCheck::capture(file, tests::context(), &capture, &[]).unwrap();
-    store.publish(&record, &AtomicBool::new(false)).unwrap();
+    store
+        .publish(
+            &serde_json::to_vec(&record).unwrap(),
+            &AtomicBool::new(false),
+        )
+        .unwrap();
 }
 #[test]
 fn history_over_4096_keeps_publishing_and_recent_aba() {
@@ -128,7 +133,12 @@ fn candidate_filter_bounds_proofs_without_false_hits() {
         let mut capture = CapturingSourceProvider::new(&mut disk);
         capture.read_file(&other).unwrap();
         let irrelevant = CompletedCheck::capture(&other, inputs.clone(), &capture, &[]).unwrap();
-        store.publish(&irrelevant, &AtomicBool::new(false)).unwrap();
+        store
+            .publish(
+                &serde_json::to_vec(&irrelevant).unwrap(),
+                &AtomicBool::new(false),
+            )
+            .unwrap();
     }
     let helper = file.parent().unwrap().join("helper.sifr");
     fs::write(&helper, "def value() -> int:\n    return 2\n").unwrap();

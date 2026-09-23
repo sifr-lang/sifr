@@ -213,16 +213,11 @@ impl Store {
             _namespace_lease: self.namespace_lease.clone(),
         })
     }
-    pub(super) fn publish(
-        &self,
-        record: &CompletedCheck,
-        cancel: &AtomicBool,
-    ) -> io::Result<String> {
+    pub(super) fn publish(&self, bytes: &[u8], cancel: &AtomicBool) -> io::Result<String> {
         cancelled(cancel)?;
         let writer = storage::process_entry_lock(&self.root, "writer")?;
         writer.try_lock().map_err(io::Error::from)?;
         let previous = self.latest();
-        let bytes = serde_json::to_vec(record)?;
         if bytes.len() as u64 > RECORD_LIMIT {
             return Err(invalid("project result exceeds limit"));
         }
@@ -287,7 +282,7 @@ impl Store {
                 }
             }
             if !stage.join(&record_id).exists() {
-                write_new(&stage.join(&record_id), &bytes)?;
+                write_new(&stage.join(&record_id), bytes)?;
             }
             write_new(
                 &stage.join("manifest.json"),

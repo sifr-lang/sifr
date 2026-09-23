@@ -20,11 +20,10 @@ pub struct GraphDigest {
 pub(in crate::graph) fn digest_serializable<T: Serialize>(
     domain: &'static str,
     value: &T,
-) -> GraphDigest {
-    // Serialization failure handling belongs to N02/F08. The concrete package
-    // projections here contain only infallibly serializable values.
-    let bytes = serde_json::to_vec(value).unwrap_or_default();
-    digest_bytes(domain, &bytes)
+) -> Result<GraphDigest, String> {
+    let bytes = serde_json::to_vec(value)
+        .map_err(|error| format!("could not serialize {domain} identity: {error}"))?;
+    Ok(digest_bytes(domain, &bytes))
 }
 
 pub(in crate::graph) fn digest_bytes(domain: &'static str, payload: &[u8]) -> GraphDigest {
