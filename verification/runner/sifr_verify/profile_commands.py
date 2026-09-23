@@ -12,9 +12,11 @@ from .paths import REPO_ROOT
 class CommandFailed(Exception):
     """A subprocess returned a non-zero exit code."""
 
-    def __init__(self, returncode: int) -> None:
-        super().__init__(f"command failed with exit code {returncode}")
+    def __init__(self, returncode: int, cause: str | None = None) -> None:
+        detail = f" cause={cause}" if cause is not None else ""
+        super().__init__(f"command failed with exit code {returncode}{detail}")
         self.returncode = returncode
+        self.cause = cause
 
 
 def run_command(command: list[str], *, env: dict[str, str] | None = None) -> Outcome:
@@ -27,12 +29,12 @@ def run_command(command: list[str], *, env: dict[str, str] | None = None) -> Out
             line, pending[stream] = pending[stream].split("\n", 1)
             sys.stdout.write(f"[child:{stream}] {json.dumps(line, ensure_ascii=True)}\n")
     outcome = execute(command, cwd=REPO_ROOT, env=env, emit=emit,
-                      deadline_seconds=float((env or {}).get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400")))
+                      deadline_seconds=(env or {}).get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400"))
     for stream, text in pending.items():
         if text:
             sys.stdout.write(f"[child:{stream}] {json.dumps(text, ensure_ascii=True)}\n")
     if outcome.returncode != 0:
-        error = CommandFailed(outcome.returncode)
+        error = CommandFailed(outcome.returncode, outcome.cause)
         error.outcome = outcome
         raise error
     return outcome

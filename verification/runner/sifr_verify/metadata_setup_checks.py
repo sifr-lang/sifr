@@ -26,13 +26,15 @@ class MetadataSetupTests(unittest.TestCase):
 
     def test_exact_cargo_artifact_is_prepared_without_identity_override(self):
         runner = Mock()
+        runner.return_value.returncode = 0
         env = {"CARGO_TARGET_DIR": "/owned/target"}
         build_and_prepare(["cargo", "build", "--release"], env,
             self.executor([self.artifact("/test/ignored", True), self.artifact("/exact/compiler")]), runner, Mock())
         args, kwargs = runner.call_args
         self.assertEqual(args[0][:3], ["/exact/compiler", "sysroot", "build-metadata"])
         self.assertNotIn("--target", args[0])
-        self.assertEqual(kwargs["env"], env)
+        self.assertEqual(kwargs["env"]["CARGO_TARGET_DIR"], env["CARGO_TARGET_DIR"])
+        self.assertIn("SIFR_VERIFY_SAFETY_DEADLINE_MONOTONIC", kwargs["env"])
         self.assertFalse(Path(args[0][-1]).exists())
 
     def test_build_failure_or_ambiguous_artifact_never_launches_producer(self):

@@ -1,5 +1,6 @@
 """DX.3 real subprocess failure injection: R01-R03 and B10."""
 import contextlib
+import fcntl
 import json
 from unittest.mock import patch
 import io
@@ -14,7 +15,7 @@ import time
 import unittest
 
 from . import process_execution
-from .process_execution import execute
+from .process_execution import SAFETY_DEADLINE_ENV, execute
 from .profile_commands import run_command, CommandFailed
 
 
@@ -279,6 +280,96 @@ class ProcessTests(unittest.TestCase):
             self.assertIn(b"partial\xff", result.stdout)
             self.assertIn(b"error\xfe", result.stderr)
             time.sleep(2.1)
+            self.assertFalse(marker.exists())
+
+    def test_f27_native_exit_124_is_distinct_from_deadline_and_cancellation(self):
+        native = execute([sys.executable, "-c", "raise SystemExit(124)"], cwd=Path.cwd())
+        self.assertEqual((native.returncode, native.cause), (124, "exit"))
+        expired = execute([sys.executable, "-c", "import time; time.sleep(10)"],
+                          cwd=Path.cwd(), deadline_seconds=.1)
+        self.assertEqual((expired.returncode, expired.cause), (124, "safety_deadline"))
+        self.assertLess(expired.elapsed_seconds, 1)
+
+    def test_f27_invalid_deadlines_rejected_before_spawn(self):
+        invalid = ("0", "-1", "nan", "inf", "-inf", "bad", True)
+        with patch.object(process_execution.subprocess, "Popen", side_effect=AssertionError("spawned")) as spawn:
+            for value in invalid:
+                with self.subTest(value=value), self.assertRaises(ValueError):
+                    execute([sys.executable, "-c", "pass"], cwd=Path.cwd(),
+                            deadline_seconds=value)
+                with self.subTest(absolute=value), self.assertRaises(ValueError):
+                    execute([sys.executable, "-c", "pass"], cwd=Path.cwd(),
+                            env={SAFETY_DEADLINE_ENV: value})
+        spawn.assert_not_called()
+
+    def test_f27_absolute_deadline_bounds_standalone_helper(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            env = os.environ.copy()
+            env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1])
+            env[SAFETY_DEADLINE_ENV] = repr(time.monotonic() + .35)
+            script = (
+                "from pathlib import Path; import sys; "
+                "from sifr_verify.process_execution import execute; "
+                "r=execute([sys.executable,'-c','import time; time.sleep(10)'],"
+                "cwd=Path.cwd(),deadline_seconds=30); "
+                "print(r.cause, flush=True)"
+            )
+            started = time.monotonic()
+            result = subprocess.run([sys.executable, "-c", script], cwd=temporary,
+                                    env=env, capture_output=True, timeout=2)
+            self.assertLess(time.monotonic() - started, 1.5)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn(b"safety_deadline", result.stdout)
+
+    def test_f27_step_deadline_covers_successive_commands(self):
+        from .profile_runner import ProfileRunner
+        from .step_budgets import StepBudgetContext
+        runner = ProfileRunner("create-pr", [])
+        runner.env["SIFR_VERIFY_SAFETY_DEADLINE_SECONDS"] = ".3"
+        runner.prepare_step_budget = lambda name: StepBudgetContext(name, 1000, "advisory")
+        def step():
+            run_command([sys.executable, "-c", "import time; time.sleep(.12)"],
+                        env=runner.env)
+            run_command([sys.executable, "-c", "import time; time.sleep(10)"],
+                        env=runner.env)
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            status = runner.execute_step("fixture", step)
+        self.assertEqual(status, 124)
+        self.assertNotIn(SAFETY_DEADLINE_ENV, runner.env)
+
+    def test_f27_lock_wait_uses_absolute_deadline(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            lock = Path(temporary) / "held.lock"
+            with lock.open("w") as owner:
+                fcntl.flock(owner, fcntl.LOCK_EX)
+                program = (
+                    "import fcntl,sys; "
+                    "f=open(sys.argv[1],'w'); "
+                    "fcntl.flock(f, fcntl.LOCK_EX); print('acquired',flush=True)"
+                )
+                result = execute([sys.executable, "-c", program, str(lock)],
+                                 cwd=Path.cwd(), deadline_seconds=.2)
+            self.assertEqual((result.returncode, result.cause), (124, "safety_deadline"))
+            self.assertNotIn(b"acquired", result.stdout)
+            self.assertLess(result.elapsed_seconds, 1)
+
+    def test_f27_ignored_term_and_pipe_retaining_descendant_are_bounded(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary) / "escaped"
+            program = (
+                "import os,signal,time; from pathlib import Path; "
+                "child=os.fork(); "
+                "signal.signal(signal.SIGTERM,signal.SIG_IGN); "
+                "time.sleep(2) if child==0 else os.write(1,b'terminal output'); "
+                f"Path({str(marker)!r}).write_text('escaped') if child==0 else None"
+            )
+            started = time.monotonic()
+            result = execute([sys.executable, "-c", program], cwd=Path.cwd(),
+                             deadline_seconds=.5)
+            self.assertEqual((result.returncode, result.cause), (0, "exit"))
+            self.assertEqual(result.stdout, b"terminal output")
+            self.assertLess(time.monotonic() - started, 1.5)
+            time.sleep(2)
             self.assertFalse(marker.exists())
 
     def test_stdin_large_and_empty_are_delivered_without_pipe_deadlock(self):

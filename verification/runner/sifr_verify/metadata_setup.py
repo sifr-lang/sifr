@@ -9,13 +9,14 @@ import tempfile
 
 from scripts.distribution.metadata_artifact import require_native_binary
 from .paths import REPO_ROOT
-from .process_execution import execute
+from .process_execution import deadline_environment, execute
 from .profile_commands import CommandFailed
 
 
-def build_and_prepare(command, env, executor=execute, runner=subprocess.run, validator=require_native_binary):
+def build_and_prepare(command, env, executor=execute, runner=execute, validator=require_native_binary):
     if command[:2] != ["cargo", "build"]:
         raise ValueError("metadata preparation requires an explicit Cargo build")
+    env, _ = deadline_environment(env, env.get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400"))
     artifacts = set()
     pending = {"stdout": "", "stderr": ""}
     def line(stream, text):
@@ -42,22 +43,33 @@ def build_and_prepare(command, env, executor=execute, runner=subprocess.run, val
             line(stream, text)
     outcome = executor([*command, "--message-format=json-render-diagnostics"],
                        cwd=REPO_ROOT, env=env, emit=emit,
-                       deadline_seconds=float(env.get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400")))
+                       deadline_seconds=env.get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400"))
     for stream, text in pending.items():
         if text:
             line(stream, text)
     if outcome.returncode:
-        raise CommandFailed(outcome.returncode)
+        error = CommandFailed(outcome.returncode, getattr(outcome, "cause", None))
+        error.outcome = outcome
+        raise error
     if len(artifacts) != 1:
         raise ValueError("Cargo must report exactly one source compiler artifact for metadata preparation")
     binary = Path(artifacts.pop())
     validator(binary, False)
     # No guessed target/debug path or host/target substitution. The canonical CLI
     # retains its own compiled target and identity; it reports the durable cache key.
+    def relay(stream, data):
+        output = sys.stderr.buffer if stream == "stderr" else sys.stdout.buffer
+        output.write(data)
+        output.flush()
     with tempfile.TemporaryDirectory(prefix="sifr-metadata-preparation-") as directory:
         result = runner([str(binary), "sysroot", "build-metadata", "--source-root", str(REPO_ROOT),
                          "--output", str(Path(directory) / "stdlib.sifrmeta")], env=env,
-                        cwd=REPO_ROOT, check=True)
+                        cwd=REPO_ROOT, emit=relay,
+                        deadline_seconds=env.get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400"))
+    if result.returncode:
+        error = CommandFailed(result.returncode, getattr(result, "cause", None))
+        error.outcome = result
+        raise error
     return result
 
 
