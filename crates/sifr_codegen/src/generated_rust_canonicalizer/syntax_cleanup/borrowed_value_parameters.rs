@@ -10,7 +10,7 @@ enum BorrowKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct BorrowPlan(Vec<(usize, BorrowKind)>);
+pub(crate) struct BorrowPlan(Vec<(usize, BorrowKind)>);
 
 pub(super) fn rewrite_borrow_only_value_parameters(file: &mut syn::File) {
     let shared_trait_methods = shared_trait_methods(file);
@@ -24,6 +24,45 @@ pub(super) fn rewrite_borrow_only_value_parameters(file: &mut syn::File) {
     .visit_file_mut(file);
     CallRewriter {
         plans: &plans,
+        modules: Vec::new(),
+        owner: None,
+        binding_types: HashMap::new(),
+    }
+    .visit_file_mut(file);
+}
+
+pub(super) fn collect_project_plans(files: &[syn::File]) -> HashMap<String, BorrowPlan> {
+    let mut plans = HashMap::new();
+    let mut ambiguous = HashSet::new();
+    for file in files {
+        let methods = shared_trait_methods(file);
+        for (key, plan) in collect_plans(file, &methods) {
+            plans
+                .entry(key.clone())
+                .and_modify(|known| {
+                    if *known != plan {
+                        ambiguous.insert(key.clone());
+                    }
+                })
+                .or_insert(plan);
+        }
+    }
+    plans.retain(|key, _| !ambiguous.contains(key));
+    for file in files {
+        super::scoped_imports::expand(file, &mut plans);
+    }
+    plans
+}
+
+pub(super) fn apply_project_plans(file: &mut syn::File, plans: &HashMap<String, BorrowPlan>) {
+    SignatureRewriter {
+        plans,
+        modules: Vec::new(),
+        owner: None,
+    }
+    .visit_file_mut(file);
+    CallRewriter {
+        plans,
         modules: Vec::new(),
         owner: None,
         binding_types: HashMap::new(),

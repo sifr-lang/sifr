@@ -61,6 +61,19 @@ pub(super) fn canonicalize_syntax(file: &mut syn::File) {
     typed_expression_cleanup::rewrite(file);
 }
 
+pub(super) fn collect_project_value_borrow_plans(
+    files: &[syn::File],
+) -> std::collections::HashMap<String, borrowed_value_parameters::BorrowPlan> {
+    borrowed_value_parameters::collect_project_plans(files)
+}
+
+pub(super) fn apply_project_value_borrow_plans(
+    file: &mut syn::File,
+    plans: &std::collections::HashMap<String, borrowed_value_parameters::BorrowPlan>,
+) {
+    borrowed_value_parameters::apply_project_plans(file, plans);
+}
+
 pub(super) fn collect_project_scalar_borrow_plans(
     files: &[syn::File],
 ) -> std::collections::HashMap<String, borrowed_scalar_parameters::ScalarBorrowPlan> {

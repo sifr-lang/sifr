@@ -13,6 +13,7 @@ mod imported_attached_apis;
 mod inheritance_metadata;
 mod package_project_build_check;
 mod panic_boundary;
+mod project_borrowed_value;
 mod project_build_check;
 mod project_error_exports;
 mod project_generic_identity;

@@ -36,10 +36,12 @@ pub(crate) fn rewrite_named_project_borrows(
         syntax_cleanup::apply_local_scalar_borrow_plans(file);
     }
     let shared_slices = api_cleanup::collect_project_shared_slice_params(&files);
+    let value_borrows = syntax_cleanup::collect_project_value_borrow_plans(&files);
     let scalar_borrows = syntax_cleanup::collect_project_scalar_borrow_plans(&files);
     let mutability_facts = syntax_cleanup::collect_project_mutability_facts(&files);
     for file in &mut files {
         api_cleanup::rewrite_project_shared_slice_calls(file, &shared_slices);
+        syntax_cleanup::apply_project_value_borrow_plans(file, &value_borrows);
         syntax_cleanup::apply_project_scalar_borrow_plans(file, &scalar_borrows);
         syntax_cleanup::apply_project_mutability_facts(file, &mutability_facts);
     }
@@ -67,4 +69,64 @@ pub(crate) fn rewrite_named_project_borrows(
         **source = prettyplease::unparse(&file);
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::rewrite_named_project_borrows;
+
+    #[test]
+    fn project_value_borrows_rewrite_imported_and_local_calls() {
+        let mut helper = r#"
+            pub trait Unwrappable { fn unwrap(&self) -> i64; }
+            pub struct Carrier(i64);
+            impl Unwrappable for Carrier { fn unwrap(&self) -> i64 { self.0 } }
+            pub fn through(value: Box<dyn Unwrappable>) -> i64 { value.unwrap() }
+            fn optional_read(value: &Option<String>) -> usize {
+                value.as_ref().map_or(0, String::len)
+            }
+            pub fn optional(value: Option<String>) -> usize { optional_read(&value) }
+            pub fn local() -> i64 { through(Box::new(Carrier(2))) }
+        "#
+        .to_string();
+        let mut main = r#"
+            use crate::helper::{through as imported_through, optional};
+            fn main() {
+                assert_eq!(imported_through(Box::new(helper::Carrier(3))), 3);
+                assert_eq!(optional(Some("abc".to_string())), 3);
+                assert_eq!(helper::local(), 2);
+            }
+        "#
+        .to_string();
+
+        rewrite_named_project_borrows(&mut [("", &mut main), ("helper", &mut helper)])
+            .expect("project borrow rewrite");
+
+        let main_compact = main
+            .chars()
+            .filter(|ch| !ch.is_whitespace())
+            .collect::<String>();
+        let helper_compact = helper
+            .chars()
+            .filter(|ch| !ch.is_whitespace())
+            .collect::<String>();
+        assert!(
+            main_compact.contains("imported_through(&helper::Carrier(3))"),
+            "{main}"
+        );
+        assert!(main_compact.contains("optional(&Some("), "{main}");
+        assert!(helper_compact.contains("through(&Carrier(2))"), "{helper}");
+        assert!(
+            helper_compact.contains("pubfnthrough(value:&dynUnwrappable)"),
+            "{helper}"
+        );
+        assert!(
+            helper_compact.contains("pubfnoptional(value:&Option<String>)"),
+            "{helper}"
+        );
+        assert!(
+            !main_compact.contains("imported_through(Box::new("),
+            "{main}"
+        );
+    }
 }
