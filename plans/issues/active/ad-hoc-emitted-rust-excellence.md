@@ -2,6 +2,81 @@
 
 Status: active
 
+## Retained Item 12R: project-wide borrowed-value calls (2026-09-23)
+
+**Needs implementation; retained Item 12 is not merged or closed.** This
+bounded sub-item is the explicit rescope required by the second Item 12
+implementation review. Draft [PR #3908](https://github.com/sifr-lang/sifr/pull/3908)
+remains at candidate `e9aed40593c86fd02a2b68853ea4bf2025a20135` on
+`codex/emitted-rust-retained12-20260922`. Its compiler SHA-256 is
+`e803baedda8fbaa646355b702f78ae79841002de7b7be37f0f8f2b042a979490`.
+No Item 12 implementation merge, create-PR gate, full merge gate or whole-phase
+review occurred.
+
+The exact-SHA scoped Opus review returned **NOT SATISFIED**. In
+`borrowed_value_parameters.rs`, the file-local pass changes an exported
+`Box<dyn Protocol>` parameter to `&dyn Protocol`, while a call from another
+generated module still passes `Box<Concrete>`. The reviewer reproduced rustc
+E0308 in a two-module project; a control project without the cross-module call
+built and ran. The same planning boundary applies to exported owned
+`Option<T>` parameters. The complete read-only review is at
+`/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/item12-scoped-review-e9aed405.md`
+with SHA-256
+`c497a7e3e2fed0c2f63b7541cf10611bd319480bb13ec764c68b8232f8685e91`.
+The prior review of `32450102408070ffcf4209a352e98979a4916e1f`
+also returned NOT SATISFIED for a different mechanism. The
+phase-closure-loop skill requires stopping and rescoping when a second
+review finds a new mechanism-level defect; Item 12R is that rescope, with
+one fresh exact-candidate scoped review after its implementation.
+
+Item 12R scope and acceptance:
+
+- Carry borrowed-value signature plans across generated project modules and
+  rewrite importing call sites consistently. A plan must not change an exported
+  signature unless every applicable caller can receive the matching argument
+  form. Preserve the existing protocol and optional-value semantics.
+- Add a project codegen regression and a native two-module run for an exported
+  protocol-typed `own` parameter called from an importing module. Exercise the
+  exported optional-value case and a same-module control. Verify emitted
+  signature and call shape as well as rustc/native output.
+- Rerun focused borrowed-value/codegen, driver project and checked-codegen,
+  legal method-name and native semantic regressions. Regenerate companions
+  through the compiler if output changes; check freshness. Run the named full
+  generated-quality, E2E and 411-case source/native selections, relevant stdlib
+  parity, project, Rust interop, sysroot and core-language suites, plus strict
+  Clippy, formatting, file-size/HIR and profile/inventory checks on the final
+  candidate. Use the phase-approved intermediate-item policy: no create-PR or
+  full merge profile here.
+- Obtain a new scoped read-only Opus review using
+  `--model claude-opus-5-5` on the exact repaired SHA, then merge the Item 12
+  implementation PR only after named evidence and review agree. Record its
+  merge and validation here; final integration qualification and the
+  documentation-only whole-phase closer remain separate assignments.
+
+On the rejected `e9aed405` candidate, codegen passed 1,716/1,716,
+focused native passed 10/10, `legal_failure_method_names` passed 3/3,
+E2E passed 729/729, demo freshness, strict workspace Clippy, formatting,
+file-size (4,209 files), HIR, diff and profile/step-budget checks passed.
+Receipts are under
+`/home/yaser5/projects/sifr/emitted-rust-retained12-evidence/`, keyed by
+`e9aed405`. The running full generated-quality, algorithmic source and
+algorithmic native selections were terminated after the blocking review;
+their receipts retain 70, 116 and 35 completed cases respectively and remain
+failed/incomplete, not passing evidence. The checked-codegen Cargo test build
+was also stopped before its two assertions ran. The separate
+coverage-readiness failure for missing `test:legal_failure_method_names`
+classification belongs to
+[architecture correctness](ad-hoc-architecture-correctness-current-main.md),
+and must be fixed by that owner before global readiness can pass. The
+reviewer's protocol-method and callable probes were already ill-typed before
+this pass; they are follow-up findings, not Item 12R acceptance.
+
+Next: assign one Item 12R implementer with exclusive custody of the preserved
+candidate worktree and a new branch/evidence identity. Do not start final
+integration or whole-phase closure until Item 12R is merged. The historical
+integration blocker record below remains an accurate receipt for its date,
+not the current status.
+
 ## Final integration qualifier deferred (2026-09-22)
 
 **BLOCKED before the full merge profile; no final implementation candidate.**
