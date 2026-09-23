@@ -709,3 +709,43 @@ fn test_nested_copy_parameter_is_not_registered_as_borrowed() {
         "default borrow syntax must not classify Copy nested parameters as borrowed storage:\n{rust_code}"
     );
 }
+
+#[test]
+fn test_recursive_option_method_argument_uses_borrowed_view() {
+    let rust_code = generate_rust_from_source(
+        r#"class Node:
+    value: int
+    next: Node | None
+
+    def __init__(self, value: int, next: Node | None = None):
+        self.value = value
+        self.next = next
+
+class Reader:
+    def value(self, node: Node | None) -> int:
+        if node is None:
+            return 0
+        return node.value
+
+def main():
+    reader = Reader()
+    root: Node | None = Node(7)
+    assert reader.value(root) == 7
+    root = None
+    assert reader.value(root) == 0
+"#,
+    );
+
+    assert!(
+        rust_code.contains("node: Option<&Node>"),
+        "recursive optional method parameter must use its borrowed ABI:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("reader.value(root.as_ref())"),
+        "owned optional arguments in nested assertions must use borrowed views:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("reader.value(&root)"),
+        "the method must not borrow the outer Option container:\n{rust_code}"
+    );
+}
