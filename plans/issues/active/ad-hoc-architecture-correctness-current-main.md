@@ -57,6 +57,7 @@ Rows crossing packages specify a contract handoff; delivery splits at package ow
 - Taxonomy [issue #3898](https://github.com/sifr-lang/sifr/issues/3898) closed completed 2026-09-22 and is present on baseline main. The Emitted Rust header's blocker wording is stale; its owner updates that handoff before qualification.
 - Solo-maintainer release approval: [PR #3827](https://github.com/sifr-lang/sifr/pull/3827), merge 33639f4ee3b7079ec4da889834cae0d55d763786. The [active-named record](ad-hoc-distinct-release-reviewer-restoration.md) describes permanent supersession. D01 owns correction of its status and links. Publication still needs approval of the exact protected run.
 - Windows native storage/process behavior stays with [Windows driver portability](ad-hoc-windows-driver-portability.md), not V04/N06.
+- SQL Item 3 [PR #3975](https://github.com/sifr-lang/sifr/pull/3975), merged as `8bd81fcddd2226daf98a38c6e58e32a4d4ae4680`, had Windows CI pass 16 component cases, then failed with 55 pre-existing `sifr_driver` portability errors across seven modules (including `process_signals.rs`, omitted from the earlier inventory). N02c/F08 serialization changed no Unix-only storage operations. The Windows owner has [W1 secure storage, W2 process ownership and W3 integrated SQL qualification](ad-hoc-windows-driver-portability.md#2026-09-23-sql-item-3-ci-retriage-and-delivery-split) as separate sequential acceptance items; no Windows fix or passing qualification is claimed.
 
 ## Historical milestone and draft disposition
 
