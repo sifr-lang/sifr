@@ -114,11 +114,9 @@ impl PendingCachedArtifact {
                     .map_err(storage_error)?;
             }
         }
-        std::fs::File::open(&self.staging_root)
-            .and_then(|file| file.sync_all())
-            .map_err(storage_error)?;
+        crate::cache_storage::sync_stage(&self.staging_root).map_err(storage_error)?;
 
-        match std::fs::rename(&self.staging_root, &self.final_root) {
+        match crate::cache_storage::publish(&self.staging_root, &self.final_root) {
             Ok(()) => {
                 self.lease.lock_shared().map_err(storage_error)?;
                 if !valid_entry(&self.final_root, &metadata, required_paths) {

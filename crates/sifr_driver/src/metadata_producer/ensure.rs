@@ -103,6 +103,7 @@ pub(super) fn ensure_with_hook(
         .concat(),
     );
     let root = cache.join("metadata");
+    crate::cache_storage::directory(cache).map_err(fail)?;
     crate::cache_storage::directory(&root).map_err(fail)?;
     let path = root.join(format!("{key}.sifrmeta"));
     cancelled(cancel)?;
@@ -221,6 +222,18 @@ impl PreparedMetadata {
             .parent()
             .filter(|p| !p.as_os_str().is_empty())
             .unwrap_or_else(|| Path::new("."));
+        #[cfg(windows)]
+        let parent = {
+            let requested = if parent == Path::new(".") {
+                std::env::current_dir().map_err(fail)?
+            } else if parent.is_absolute() {
+                parent.to_path_buf()
+            } else {
+                std::env::current_dir().map_err(fail)?.join(parent)
+            };
+            crate::windows_storage_security::no_reparse(&requested).map_err(fail)?;
+            requested
+        };
         let parent=parent.canonicalize().map_err(|error|fail(format!("metadata output parent {} is unavailable: {error}; select an existing writable directory",parent.display())))?;
         let name = output
             .file_name()

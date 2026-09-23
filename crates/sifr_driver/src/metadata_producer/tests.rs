@@ -5,6 +5,7 @@ use super::{
 };
 use sifr_identity::CompilerIdentity;
 use std::io::Write;
+#[cfg(unix)]
 use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
 use std::{
     fs,
@@ -26,7 +27,9 @@ fn root() -> PathBuf {
 fn identity(configuration: &str) -> CompilerIdentity {
     CompilerIdentity::for_test(crate::compiled_input_tokens(), configuration)
 }
-const TARGET: &str = if cfg!(target_os = "macos") {
+const TARGET: &str = if cfg!(windows) {
+    "x86_64-pc-windows-msvc"
+} else if cfg!(target_os = "macos") {
     if cfg!(target_arch = "aarch64") {
         "aarch64-apple-darwin"
     } else {
@@ -50,7 +53,10 @@ impl Scratch {
                 .as_nanos(),
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));
+        #[cfg(unix)]
         fs::DirBuilder::new().mode(0o700).create(&path).unwrap();
+        #[cfg(windows)]
+        fs::create_dir(&path).unwrap();
         Self(path.canonicalize().unwrap())
     }
     fn source(&self) -> PathBuf {
@@ -86,6 +92,7 @@ impl Scratch {
         dest
     }
 }
+#[cfg(unix)]
 fn permissions(path: &Path, readonly: bool) {
     if path.is_dir() {
         if !readonly {
@@ -109,6 +116,7 @@ fn permissions(path: &Path, readonly: bool) {
 }
 impl Drop for Scratch {
     fn drop(&mut self) {
+        #[cfg(unix)]
         permissions(&self.0, false);
         fs::remove_dir_all(&self.0).unwrap();
     }
@@ -356,6 +364,7 @@ fn threads_share_one_success_and_execute_independent_assertions() {
     )
     .unwrap();
 }
+#[cfg(unix)]
 #[test]
 fn dx6_readonly_source_writable_cache_and_output_diagnostics() {
     let scratch = Scratch::new();
@@ -478,4 +487,42 @@ fn portable_records_ignore_only_the_producer_envelope() {
         a.compatibility.stdlib_inputs,
         changed.compatibility.stdlib_inputs
     );
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_portability_metadata_staged_failure_and_output_acl() {
+    let scratch = Scratch::new();
+    let cache = scratch.0.join("cache");
+    let source = root();
+    let id = identity("windows-stage-recovery");
+    let cancel = AtomicBool::new(false);
+    let failure = ensure_with_hook(&id, &source, TARGET, &cache, &cancel, |stage| {
+        if stage == Stage::Staged {
+            Err(wire::MetadataError("injected staged failure".into()))
+        } else {
+            Ok(())
+        }
+    });
+    assert!(failure.err().unwrap().0.contains("injected staged failure"));
+    let staging = fs::read_dir(cache.join("metadata"))
+        .unwrap()
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .find(|path| {
+            path.extension()
+                .is_some_and(|extension| extension == "stage")
+        })
+        .unwrap();
+    crate::cache_storage::check_owned(&staging).unwrap();
+    let prepared = ensure_development_metadata(&id, &source, TARGET, &cache, &cancel).unwrap();
+    assert!(!staging.exists());
+    let output = scratch.0.join("output.sifrmeta");
+    prepared.publish_output(&output).unwrap();
+    crate::cache_storage::check_owned(&output).unwrap();
+    let intact = fs::read(&output).unwrap();
+    crate::windows_storage_security::test_grant_world(&output).unwrap();
+    assert!(prepared.publish_output(&output).is_err());
+    assert_eq!(fs::read(&output).unwrap(), intact);
+    crate::windows_storage_security::seal(&output).unwrap();
 }

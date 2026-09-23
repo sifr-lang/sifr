@@ -419,6 +419,14 @@ mod tests {
 
         security::test_grant_world(&root.join("owned")).unwrap();
         assert!(check_owned(&root.join("owned")).is_err());
+        security::seal(&root.join("owned")).unwrap();
+
+        let system_root = PathBuf::from(std::env::var_os("WINDIR").unwrap());
+        assert!(system_root.is_dir());
+        assert!(
+            check_owned(&system_root).is_err(),
+            "foreign Windows owner accepted"
+        );
     }
 
     #[test]

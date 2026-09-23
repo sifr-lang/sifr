@@ -4,7 +4,7 @@ mod dx14_tests;
 #[cfg(test)]
 mod history_tests;
 mod housekeeping;
-#[cfg(test)]
+#[cfg(all(test, unix))]
 mod housekeeping_tests;
 pub use housekeeping::ProjectPruneReport;
 mod interface_reuse;

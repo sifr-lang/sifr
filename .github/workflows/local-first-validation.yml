@@ -124,9 +124,13 @@ jobs:
             "process_execution::tests::windows_portability_cancellation_and_scoped_concurrency",
             "process_execution::tests::windows_portability_bounded_capture_and_normal_streaming",
             "project_cache::tests::process_death_and_new_process_restore",
+            "project_cache::tests::windows_portability_concurrent_writer_gc_abandoned_stage_and_winner",
             "project_cache::tests::dx13_c04_full_storage_preserves_source_outcome",
             "project_cache::tests::dx13_c09_concurrent_process_reader_and_gc",
-            "project_cache::tests::dx13_c09_corrupt_schema_references_and_winners"
+            "project_cache::tests::dx13_c09_corrupt_schema_references_and_winners",
+            "metadata_producer::tests::windows_portability_metadata_staged_failure_and_output_acl",
+            "metadata_producer::tests::failure_recovery_stale_override_and_missing_entry",
+            "metadata_producer::tests::threads_share_one_success_and_execute_independent_assertions"
           )
           foreach ($case in $cases) {
             cargo test --locked -p sifr_driver --lib --target "${{ matrix.target }}" "$case" -- --exact

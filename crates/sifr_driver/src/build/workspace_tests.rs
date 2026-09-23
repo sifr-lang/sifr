@@ -16,6 +16,7 @@ fn storage_child() {
     if mode == "pressure" {
         // This helper is a dedicated subprocess, so its permissive umask cannot
         // leak into the parent harness or other tests.
+        #[cfg(unix)]
         #[allow(unsafe_code)]
         unsafe {
             libc::umask(0o002);
@@ -259,8 +260,11 @@ fn dx3_rejects_traversal_symlinks_and_invalid_winner() {
         },
     };
     assert!(pending.commit(&[Path::new("payload")]).is_err());
-    std::os::unix::fs::symlink("/tmp", root.join("escape")).unwrap();
-    assert!(crate::cache_storage::directory(&root.join("escape")).is_err());
+    #[cfg(unix)]
+    {
+        std::os::unix::fs::symlink("/tmp", root.join("escape")).unwrap();
+        assert!(crate::cache_storage::directory(&root.join("escape")).is_err());
+    }
     std::fs::remove_dir_all(root).unwrap();
 }
 

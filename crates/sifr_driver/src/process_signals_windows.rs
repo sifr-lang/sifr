@@ -58,3 +58,11 @@ impl Drop for Guard {
 pub(crate) fn test_cancel() {
     CANCELLED.store(libc::SIGINT, Ordering::Relaxed);
 }
+
+#[cfg(test)]
+pub(crate) fn test_active() -> bool {
+    *USERS
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        > 0
+}

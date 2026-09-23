@@ -2,6 +2,7 @@ use super::*;
 use sifr_frontend::{
     DiskSourceProvider, FrontendContext, FrontendInput, FrontendMode, SourcePath, SourceText,
 };
+#[cfg(unix)]
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::{
     fs,
@@ -129,6 +130,7 @@ fn completed_families() {
         assert_eq!(remapped, record.diagnostics().unwrap());
     }
 }
+#[cfg(unix)]
 #[test]
 fn dx13_c04_unavailable_readonly_and_hintless() {
     let (_root, file, cache) = fixture();
@@ -152,6 +154,7 @@ fn dx13_c04_unavailable_readonly_and_hintless() {
     assert_eq!(report.status, "write-unavailable");
     fs::set_permissions(&store.root, fs::Permissions::from_mode(0o700)).unwrap();
 }
+#[cfg(unix)]
 #[test]
 fn dx13_c08_c09_inherited_payloads_reader_gc() {
     let (_root, file, cache) = fixture();
@@ -401,6 +404,7 @@ fn dx13_c09_concurrent_process_reader_and_gc() {
     assert!(!old.exists());
     assert_eq!(run(&cache, &file).1.restored_checks, 1);
 }
+#[cfg(unix)]
 #[test]
 fn dx13_c04_readonly_workspace_publishes_without_hint() {
     let (_root, file, cache) = fixture();
@@ -611,4 +615,30 @@ fn non_utf8_record_serialization_disables_publication() {
     assert_eq!(report.status, "serialization-unavailable");
     assert_eq!(report.payload_bytes, 0);
     assert!(store(&cache, &file).latest().is_none());
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_portability_concurrent_writer_gc_abandoned_stage_and_winner() {
+    let (root, file, cache) = fixture();
+    let marker = root.path().join("before-rename");
+    let mut writer = worker(&file, &cache, "before-rename", &marker);
+    let deadline = Instant::now() + Duration::from_secs(15);
+    while !marker.exists() && Instant::now() < deadline {
+        thread::sleep(Duration::from_millis(10));
+    }
+    assert!(marker.exists(), "writer did not stage a generation");
+    let store = store(&cache, &file);
+    assert!(
+        store.prune(true, false).is_err(),
+        "GC ignored the live writer lease"
+    );
+    writer.kill().unwrap();
+    writer.wait().unwrap();
+    store.prune(true, false).unwrap();
+    assert!(store.latest().is_none());
+    assert_eq!(run(&cache, &file).1.status, "published");
+    let winner = store.latest().unwrap();
+    assert!(winner.records().all(|record| record.is_ok()));
+    assert_eq!(store.prune(true, false).unwrap().deleted_generations, 0);
 }

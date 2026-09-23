@@ -388,6 +388,7 @@ pub(crate) fn read_private_file(path: &Path) -> io::Result<File> {
         .open(path)
 }
 pub(crate) fn read_write_private_file(path: &Path) -> io::Result<File> {
+    check_owned(path)?;
     OpenOptions::new()
         .read(true)
         .write(true)

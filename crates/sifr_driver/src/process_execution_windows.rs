@@ -361,6 +361,24 @@ mod tests {
                 print!("streamed");
                 io::stdout().flush().unwrap();
             }
+            "cancel-run" => {
+                let trigger = std::thread::spawn(|| {
+                    let started = Instant::now();
+                    while !crate::process_signals::test_active() {
+                        assert!(started.elapsed() < Duration::from_secs(5));
+                        std::thread::sleep(Duration::from_millis(10));
+                    }
+                    crate::process_signals::test_cancel();
+                });
+                let error = output_with_deadline(
+                    &mut self_command("hold", Path::new(&marker)),
+                    Duration::from_secs(5),
+                )
+                .unwrap_err();
+                trigger.join().unwrap();
+                assert_eq!(error.kind(), io::ErrorKind::Interrupted);
+                assert_eq!(failure_exit_code(&error), 128 + libc::SIGINT);
+            }
             other => panic!("unknown process test mode: {other}"),
         }
     }
@@ -369,11 +387,9 @@ mod tests {
     fn windows_portability_timeout_partial_output_and_descendant_cleanup() {
         let root = tempfile::tempdir().unwrap();
         let marker = root.path().join("escaped");
-        let error = output_with_deadline(
-            &mut self_command("hold", &marker),
-            Duration::from_millis(150),
-        )
-        .unwrap_err();
+        let error =
+            output_with_deadline(&mut self_command("hold", &marker), Duration::from_secs(1))
+                .unwrap_err();
         assert_eq!(error.kind(), io::ErrorKind::TimedOut);
         let failure = error
             .get_ref()
@@ -403,16 +419,12 @@ mod tests {
     fn windows_portability_cancellation_and_scoped_concurrency() {
         let root = tempfile::tempdir().unwrap();
         let marker = root.path().join("escaped");
-        let trigger = std::thread::spawn(|| {
-            std::thread::sleep(Duration::from_millis(150));
-            crate::process_signals::test_cancel();
-        });
-        let error =
-            output_with_deadline(&mut self_command("hold", &marker), Duration::from_secs(5))
-                .unwrap_err();
-        trigger.join().unwrap();
-        assert_eq!(error.kind(), io::ErrorKind::Interrupted);
-        assert_eq!(failure_exit_code(&error), 128 + libc::SIGINT);
+        let result = self_command("cancel-run", &marker).output().unwrap();
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
         std::thread::sleep(Duration::from_millis(2200));
         assert!(!marker.exists());
         let workers: Vec<_> = (0..2)

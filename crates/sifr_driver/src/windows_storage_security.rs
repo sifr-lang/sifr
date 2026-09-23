@@ -5,7 +5,7 @@ use std::fs::{self, File};
 use std::io;
 use std::os::windows::ffi::OsStrExt;
 use std::os::windows::io::FromRawHandle;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use windows_sys::Win32::Foundation::{
     CloseHandle, GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE, LocalFree,
 };
@@ -130,6 +130,10 @@ fn attributes(descriptor: &Descriptor) -> SECURITY_ATTRIBUTES {
     }
 }
 pub(crate) fn create_directory(path: &Path) -> io::Result<()> {
+    no_reparse(
+        path.parent()
+            .ok_or_else(|| denied("missing directory parent"))?,
+    )?;
     let descriptor = private_descriptor()?;
     let attrs = attributes(&descriptor);
     let path = wide(path.as_os_str());
@@ -140,6 +144,7 @@ pub(crate) fn create_directory(path: &Path) -> io::Result<()> {
     Ok(())
 }
 pub(crate) fn create_file(path: &Path) -> io::Result<File> {
+    no_reparse(path.parent().ok_or_else(|| denied("missing file parent"))?)?;
     let descriptor = private_descriptor()?;
     let attrs = attributes(&descriptor);
     let path = wide(path.as_os_str());
@@ -167,7 +172,13 @@ pub(crate) fn no_reparse(path: &Path) -> io::Result<()> {
     }
     let mut current = PathBuf::new();
     for component in path.components() {
+        if matches!(component, Component::CurDir | Component::ParentDir) {
+            return Err(denied("storage path traversal"));
+        }
         current.push(component);
+        if matches!(component, Component::Prefix(_)) {
+            continue;
+        }
         match fs::symlink_metadata(&current) {
             Ok(meta) => {
                 use std::os::windows::fs::MetadataExt;
