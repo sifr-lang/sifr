@@ -118,3 +118,26 @@ fn loop_carried_collection_mutation_expires_length_alias_proof() {
             .contains_key("size")
     );
 }
+
+#[test]
+fn stable_length_alias_exit_guard_lowers_checked_index_let() {
+    let generated = generate_rust_from_source(
+        r#"
+def first_len(matrix: list[list[int]]) -> int:
+    n = len(matrix)
+    if n == 0:
+        return 0
+    first_row = matrix[0]
+    if first_row is None:
+        return 0
+    return len(first_row)
+"#,
+    );
+    assert!(
+        generated.contains("let Some(__sifr_checked_value_"),
+        "{generated}"
+    );
+    assert!(generated.contains("let first_row"), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+    assert!(!generated.contains("matrix.as_slice()["), "{generated}");
+}

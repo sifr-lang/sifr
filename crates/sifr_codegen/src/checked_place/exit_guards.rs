@@ -88,6 +88,8 @@ impl RustEmitter {
         {
             return Ok(None);
         }
+        let length_aliases = self.body_analysis.stable_length_aliases(condition).clone();
+        let empty_aliases = std::collections::HashMap::new();
         let mut reads = self
             .body_analysis
             .proven_reads_in(following_stmts)
@@ -103,9 +105,30 @@ impl RustEmitter {
             };
             let prefix_proves_exact_length =
                 self.existing_prefix_witness_excludes_read(condition, object, index);
+            // Only an indexed let consumes the stable-alias exit proof here.
+            // Other expression forms retain their existing checked-read lowering.
+            let aliases_for_read = if following_stmts.iter().any(|stmt| {
+                matches!(stmt, crate::HirStmt::Let {
+                    value: crate::HirExpr::Index {
+                        object: let_object,
+                        index: let_index,
+                        ..
+                    },
+                    ..
+                } if checked_place_read_key(let_object, let_index)
+                    == checked_place_read_key(object, index))
+            }) {
+                &length_aliases
+            } else {
+                &empty_aliases
+            };
             if matches!(object.ty().resolve_alias(), Type::Dict(_, _))
-                || !(condition_excludes_checked_sequence_read(condition, object, index)
-                    || prefix_proves_exact_length)
+                || !(condition_excludes_checked_sequence_read(
+                    condition,
+                    object,
+                    index,
+                    aliases_for_read,
+                ) || prefix_proves_exact_length)
             {
                 continue;
             }
@@ -132,7 +155,12 @@ impl RustEmitter {
                 continue;
             }
             condition_fully_replaced &= prefix_proves_exact_length
-                || condition_only_excludes_checked_sequence_read(condition, object, index);
+                || condition_only_excludes_checked_sequence_read(
+                    condition,
+                    object,
+                    index,
+                    aliases_for_read,
+                );
             guards.push(guard);
         }
         if guards.is_empty() {

@@ -91,8 +91,9 @@ fn condition_excludes_checked_sequence_read(
     condition: &crate::HirExpr,
     object: &crate::HirExpr,
     index: &crate::HirExpr,
+    length_aliases: &std::collections::HashMap<String, String>,
 ) -> bool {
-    fn is_len_of(candidate: &crate::HirExpr, object_token: &str) -> bool {
+    let is_len_of = |candidate: &crate::HirExpr, object_token: &str| {
         matches!(
             candidate,
             crate::HirExpr::MethodCall {
@@ -103,8 +104,9 @@ fn condition_excludes_checked_sequence_read(
             } if method == "len"
                 && args.is_empty()
                 && checked_place_expr_token(object).as_deref() == Some(object_token)
-        )
-    }
+        ) || matches!(candidate, crate::HirExpr::Name { name, .. }
+            if length_aliases.get(name).is_some_and(|collection| collection == object_token))
+    };
 
     fn is_zero(candidate: &crate::HirExpr) -> bool {
         matches!(candidate, crate::HirExpr::IntLiteral(0))
@@ -126,9 +128,9 @@ fn condition_excludes_checked_sequence_read(
         return false;
     };
     match condition {
-        crate::HirExpr::BoolOp { op, values, .. } if op == "or" => values
-            .iter()
-            .any(|value| condition_excludes_checked_sequence_read(value, object, index)),
+        crate::HirExpr::BoolOp { op, values, .. } if op == "or" => values.iter().any(|value| {
+            condition_excludes_checked_sequence_read(value, object, index, length_aliases)
+        }),
         crate::HirExpr::UnaryOp { op, operand, .. } if op == "not" => {
             if checked_place_expr_token(operand).as_deref() == Some(object_token.as_str()) {
                 return matches!(integer_literal(index), Some(0 | -1));
@@ -186,12 +188,15 @@ fn condition_only_excludes_checked_sequence_read(
     condition: &crate::HirExpr,
     object: &crate::HirExpr,
     index: &crate::HirExpr,
+    length_aliases: &std::collections::HashMap<String, String>,
 ) -> bool {
     match condition {
-        crate::HirExpr::BoolOp { op, values, .. } if op == "or" && !values.is_empty() => values
-            .iter()
-            .all(|value| condition_only_excludes_checked_sequence_read(value, object, index)),
-        _ => condition_excludes_checked_sequence_read(condition, object, index),
+        crate::HirExpr::BoolOp { op, values, .. } if op == "or" && !values.is_empty() => {
+            values.iter().all(|value| {
+                condition_only_excludes_checked_sequence_read(value, object, index, length_aliases)
+            })
+        }
+        _ => condition_excludes_checked_sequence_read(condition, object, index, length_aliases),
     }
 }
 
