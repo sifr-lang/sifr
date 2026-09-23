@@ -218,6 +218,84 @@ These were not blocking findings for the reviewed Item 2 candidate. This
 record-only delivery update requires documentation checks, not another Sifr
 gate or external review.
 
+### Item 3 blocked handoff (2026-09-23)
+
+Status: blocked by out-of-scope Architecture N02 workspace Clippy failures;
+implementation is unqualified, unreviewed, and unmerged. The earlier host
+disk-pressure pause remains recorded below. The isolated candidate is
+`6987b7eebe1830b7ffae3a462fb073f4b6de16d5` on
+`codex/sql-profile-discovery-item3-20260923`, based on main
+`e6799f20c5f6014c1f6fc77651edf91257a78b08`. It adds shared
+pre-lowering SQL profile discovery for the CLI and editor, the
+SIFR-SQL-0009 diagnostic and page, catalog and baseline registration, and
+regressions for decorators, aliases, source spans, standalone SQL calls,
+package checks, and editor reloads. This is a preservation receipt, not
+acceptance of the candidate.
+
+Selected evidence on this candidate: the frontend SQL suite passed 4/4; the
+analysis crate passed 64/64; the driver profile selection passed its nine
+cases across the initial runs and the exact failed-case rerun after a
+test-fixture directory repair. The first full LSP run had 79 passes and
+13 Python declaration fixture failures because its virtual environment
+was absent and the host uv was older than the pinned fixture version.
+After preparing the local fixture environment with cached uv 0.12.10,
+the affected Python declaration group passed 24/24 through the compiled
+LSP test harness. The full named LSP command then passed 92/92 with that environment,
+and the diagnostics crate passed 32/32. Driver, frontend, analysis, LSP,
+and diagnostics logs are under `/home/yaser5/projects/sifr/sql-item3-*.log`;
+the earlier failed runs remain evidence, not passes. Both diagnostic
+coverage scripts, formatting, HIR and driver maintainability checks,
+the file-size guard (4133 files), and `git diff --check` passed.
+
+The host initially had 3.9 GiB available on its root volume, which was
+at 100%, with other sessions actively compiling. It briefly recovered
+to 12 GiB, then fell to about 6 GiB during the diagnostics baseline
+runner's compiler preparation. This session stopped only its own runner
+before the shared volume was exhausted. That run's 179 reported variants
+were prerequisite-blocked by the interrupted compiler preparation
+(exit 130); no baseline assertion ran and no baseline pass is claimed.
+The log is `/home/yaser5/projects/sifr/sql-item3-diagnostics-baselines.log`.
+The compatible 58 GiB Cargo target is owned by the prior Item 2 worktree
+and is not available for this session to clean; this worktree has no
+obsolete artifacts of its own. At that pause, the remaining named checks
+were the diagnostics baseline runner and workspace Clippy. The planned next
+steps were to run those selections and affected focused regressions, complete
+the scoped exact-SHA Opus review, then merge and replace this handoff with a
+delivery receipt. No create-PR or full merge gate is claimed for this intermediate
+item.
+
+#### Item 3 continuation after disk recovery (2026-09-23)
+
+The source commit was rebased without overlapping paths onto main
+`a2af90c56c391834e5390b0a8d7f2597d5f2f1f4`. Its exact implementation
+candidate is `e0ecc97b0760c3aa534f00e60f05db5830c001a8` on the preserved
+`codex/sql-profile-discovery-item3-delivery-20260923` branch. The prior
+handoff branch remains separate. No Item 3 implementation source changed.
+
+With the pinned cached uv 0.12.10 and the inactive warm Item 2 Cargo target,
+the named diagnostics baseline runner passed all 179 variants with zero
+failures. Evidence: `/home/yaser5/projects/sifr/sql-item3-baselines-rebased.log`
+(SHA-256 `acc70d3fe011057271143918826a2ae3575b19b3f7ac395896aa892d38b3d37b`).
+A first invocation with host uv 0.12.5 was rejected before running assertions;
+it is not counted as a pass.
+
+The named `cargo clippy --workspace -- -D warnings` failed on two
+out-of-scope paths introduced by merged Architecture N02 work:
+`crates/sifr_driver/src/build/cargo_resolution.rs:15` has an unused
+`normalized_manifest_cache_input` import (N02b2/F07, PR #3954), and
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:73` triggers
+`clippy::map_entry` (N02b/F07, PR #3951). Neither path is changed by
+Item 3. Evidence: `/home/yaser5/projects/sifr/sql-item3-clippy-rebased.log`
+(SHA-256 `7e0d5d2ee86de9307971ad5bdbb96cec367f3aa57552d244c7fda3d394cc6e0e`,
+exit 101). The architecture owner has been notified through orchestration;
+this SQL item does not patch N02 code or claim a Clippy pass.
+
+After the owning repair lands, rebase the preserved implementation candidate,
+run workspace Clippy and the focused driver tests affected by the changed
+main base, then obtain a scoped exact-candidate Opus review and merge. The
+previous Item 3 named tests and documentation checks are preserved above.
+No Item 3 PR, review, create-PR gate, or full merge gate is claimed.
+
 ### Historical Item 2 blocked handoff (2026-09-23)
 
 Item 2 implementation candidate `a934ce756236be15a06e699f11a9203b3b3054b9` is preserved in `codex/sql-generated-identities-item2-20260923` from main `30136206c94ee03784c9db93b2544de72116be88`, but is not qualified, reviewed, or merged. Its named coverage readiness check fails on the pre-existing unclassified `sifr: test:legal_failure_method_names` target from architecture correctness X01. The failure log is `/home/yaser5/projects/sifr/sql-item2-evidence-20260923/coverage-matrix-readiness.log` (SHA-256 `48e8f082a5454db9a0a2de170c80c531231a94ccf8fb396dabde8b4d0a0a1e3d`); the owning issue records the repair. No SQL Item 2 registry workaround, review, PR, or merge is claimed. Resume only after the owner fixes the registry and readiness passes on the resulting base.

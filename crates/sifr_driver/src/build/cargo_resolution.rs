@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 #[path = "cargo_resolution_identity.rs"]
 mod identity;
-use identity::{checked_authorities, normalized_manifest_cache_input, prepared_lock_path};
+use identity::{checked_authorities, prepared_lock_path};
 static PREPARED_LOCK_NONCE: AtomicU64 = AtomicU64::new(0);
 type RegistryEntry = (String, String, String, String);
 type RegistryCompatibilityFamily = (String, String, String);
@@ -561,11 +561,11 @@ fn cargo_resolution_error(message: impl Into<String>) -> RenderedDiagnostic {
 
 #[cfg(test)]
 mod tests {
+    use super::identity::normalized_manifest_cache_input;
     use super::{
-        CargoResolutionPolicy, CargoVendorMode, PREPARED_LOCK_NONCE,
-        normalized_manifest_cache_input, registry_entries, registry_version_compatibility_family,
-        seed_lockfile_for_resolution, seed_lockfile_from_authorities,
-        validate_authoritative_registry_entries,
+        CargoResolutionPolicy, CargoVendorMode, PREPARED_LOCK_NONCE, registry_entries,
+        registry_version_compatibility_family, seed_lockfile_for_resolution,
+        seed_lockfile_from_authorities, validate_authoritative_registry_entries,
     };
     use sifr_package::CargoLockMode;
     use std::collections::BTreeSet;
