@@ -102,3 +102,27 @@ The Linux execution host had 20 GiB free with another session actively using
 its separate Cargo target at retriage. It had no installed Windows Rust target
 and no Windows runtime for the required safety tests. No target cleanup or
 cross-target build was attempted, and the SQL owner’s target was untouched.
+
+## 2026-09-23 W1 native-test dependency blocker
+
+W1 was inspected on `origin/main` `9da86125c` in an isolated worktree, with no
+implementation changes or passing W1 claim. The available native Windows host is
+the `windows-2025` job in `.github/workflows/local-first-validation.yml`. That
+job compiles the complete `sifr_driver` crate before its storage and metadata
+tests can execute. `crates/sifr_driver/src/lib.rs` unconditionally includes both
+`process_execution.rs` and `process_signals.rs`, which still contain the 14
+Windows compile errors assigned to W2 in the SQL Item 3 inventory above.
+Consequently, even a complete W1-only storage patch cannot compile the real
+crate on Windows or execute the required W1 malicious-alias, owner/ACL,
+concurrent lease/GC, abandoned-stage, failure and winner cases. A standalone
+`cache_storage` harness would leave the project-generation, metadata and probe
+publication paths untested; stubbing W2 in the product would not satisfy the
+safety contract.
+
+The Linux host has no Windows runtime or installed Windows Rust target. At this
+audit it had 16-18 GiB free and no active Cargo process; no target was cleaned,
+and the SQL worker's target was untouched. W1 is **needs dependency/scope
+adjudication**, not implemented or validated. The owner must authorize either
+W2 process portability before W1's native acceptance, or one coupled W1+W2
+Windows candidate with bounded reviews before W3. Keep the Windows SQL CI
+blocker attributed to driver portability until W3 passes on an exact candidate.
