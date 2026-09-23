@@ -102,7 +102,18 @@ fn package_python_runtime_from_resolved(
             return Err(EXIT_USER_DIAGNOSTIC);
         }
     };
-    let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
+    let digest = sifr_package::digest_python_environment_probe(&request, &probe)
+        .map_err(|error| {
+            render_diagnostics(
+                &[diagnostic_with_code(
+                    error,
+                    sifr_diagnostics::DiagnosticCode::PYENV_PROBE_FAILED,
+                )],
+                diagnostic_format,
+            );
+            EXIT_USER_DIAGNOSTIC
+        })?
+        .hex;
     let mut runtime = sifr_driver::PackagePythonRuntime::from_probe(
         &request,
         &probe,
@@ -110,7 +121,17 @@ fn package_python_runtime_from_resolved(
         resolved.required_imports,
         resolved.trusted_imports,
         resolved.trusted_native_imports,
-    );
+    )
+    .map_err(|error| {
+        render_diagnostics(
+            &[diagnostic_with_code(
+                error,
+                sifr_diagnostics::DiagnosticCode::PYENV_PROBE_FAILED,
+            )],
+            diagnostic_format,
+        );
+        EXIT_USER_DIAGNOSTIC
+    })?;
     let package_root = graph
         .packages
         .get(package_id)

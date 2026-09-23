@@ -541,3 +541,17 @@ fn moved_workspace_misses_without_changing_diagnostics() {
         fs::rename(&moved_root, file.parent().unwrap()).unwrap();
     }
 }
+
+#[cfg(unix)]
+#[test]
+fn saved_check_policy_distinguishes_missing_empty_and_unserializable_paths() {
+    use std::os::unix::ffi::OsStringExt;
+
+    let cwd = Path::new("/workspace");
+    let absent = saved_check_policy(Path::new(""), cwd).unwrap();
+    let empty = saved_check_policy(Path::new("main.sifr"), cwd).unwrap();
+    assert_ne!(absent, empty);
+    let invalid = std::ffi::OsString::from_vec(b"/invalid-\xff/main.sifr".to_vec());
+    let error = saved_check_policy(Path::new(&invalid), cwd).unwrap_err();
+    assert!(error.contains("could not serialize saved-check policy"));
+}

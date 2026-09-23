@@ -238,7 +238,9 @@ fn verification_python_runtime(roots: &[&str]) -> crate::PackagePythonRuntime {
     };
     let probe = sifr_package::probe_python_environment(&request)
         .expect("locked Python interop environment should probe");
-    let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
+    let digest = sifr_package::digest_python_environment_probe(&request, &probe)
+        .expect("probe identity")
+        .hex;
     crate::PackagePythonRuntime::from_probe(
         &request,
         &probe,
@@ -247,4 +249,5 @@ fn verification_python_runtime(roots: &[&str]) -> crate::PackagePythonRuntime {
         roots,
         Vec::new(),
     )
+    .expect("authoring identity")
 }

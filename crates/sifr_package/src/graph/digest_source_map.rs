@@ -5,7 +5,7 @@ use std::fs;
 use std::io;
 
 #[must_use]
-pub fn digest_package_source_map(source_map: &PackageSourceMap) -> GraphDigest {
+pub fn digest_package_source_map(source_map: &PackageSourceMap) -> Result<GraphDigest, String> {
     let canonical = CanonicalSourceMap::from(source_map);
     digest_serializable("package-source-map", &canonical)
 }
@@ -36,14 +36,15 @@ pub fn digest_package_source_snapshot(source_map: &PackageSourceMap) -> io::Resu
             })
         })
         .collect::<io::Result<Vec<_>>>()?;
-    Ok(digest_serializable(
+    digest_serializable(
         "package-source-snapshot",
         &CanonicalSourceSnapshot {
             source_map: CanonicalSourceMap::from(source_map),
             modules,
             ambiguous_modules,
         },
-    ))
+    )
+    .map_err(io::Error::other)
 }
 
 #[derive(Serialize)]

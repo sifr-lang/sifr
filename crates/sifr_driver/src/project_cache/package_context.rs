@@ -30,8 +30,12 @@ pub(super) fn identity(entrypoint: &PackageEntrypoint) -> Option<String> {
         "resolved-pure-package-v1",
         &(
             &entrypoint.package_id.0,
-            sifr_package::digest_package_graph(&entrypoint.graph).hex,
-            sifr_package::digest_package_source_map(&entrypoint.source_map).hex,
+            sifr_package::digest_package_graph(&entrypoint.graph)
+                .ok()?
+                .hex,
+            sifr_package::digest_package_source_map(&entrypoint.source_map)
+                .ok()?
+                .hex,
             format!("{:?}", (&entrypoint.graph, &entrypoint.source_map)),
             entrypoint.lock_mode.as_str(),
         ),

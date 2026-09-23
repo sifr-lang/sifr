@@ -20,7 +20,9 @@ pub struct PackageBuildCacheInputs {
 }
 
 #[must_use]
-pub fn digest_package_build_cache_inputs(inputs: &PackageBuildCacheInputs) -> GraphDigest {
+pub fn digest_package_build_cache_inputs(
+    inputs: &PackageBuildCacheInputs,
+) -> Result<GraphDigest, String> {
     let canonical = CanonicalPackageBuildCacheInputs::from(inputs);
     digest_serializable("package-build-cache-inputs", &canonical)
 }
@@ -29,7 +31,7 @@ pub fn digest_package_build_cache_inputs(inputs: &PackageBuildCacheInputs) -> Gr
 pub fn digest_python_environment_probe(
     request: &PythonEnvironmentProbeRequest,
     probe: &PythonEnvironmentProbe,
-) -> GraphDigest {
+) -> Result<GraphDigest, String> {
     let canonical = CanonicalPythonEnvironmentProbe { request, probe };
     digest_serializable("python-environment-probe", &canonical)
 }
@@ -41,7 +43,7 @@ pub fn digest_python_environment_probe(
 pub fn digest_python_authoring_environment_probe(
     request: &PythonEnvironmentProbeRequest,
     probe: &PythonEnvironmentProbe,
-) -> GraphDigest {
+) -> Result<GraphDigest, String> {
     let mut request = request.clone();
     request.required_imports.clear();
     request.declared_imports.clear();
