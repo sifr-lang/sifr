@@ -1,12 +1,177 @@
 use crate::{SqlEditorDocumentView, SqlQueryDeclaration};
+use ruff_text_size::{Ranged as _, TextRange};
 use sifr_ir::{
     HirExpr, HirModule, HirStmt, visit_hir_function_exprs_mut, visit_hir_stmts_exprs_mut,
+};
+use sifr_python_ast::{
+    Expr, Stmt,
+    visitor::{self, Visitor},
 };
 use sifr_sql_contract::{
     IntegerSign, IntegerWidth, SifrType, sql_value_type_for_frontend_identity,
 };
 use sifr_type_system::{FixedIntType, Type};
 use std::collections::{BTreeMap, BTreeSet};
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MissingSqlProfileImport {
+    pub profile_name: String,
+    pub function_name: String,
+    pub range: TextRange,
+    pub surface: &'static str,
+}
+
+/// Inspect source bindings before lowering, which would otherwise report an
+/// undefined decorator receiver before SQL discovery can identify the profile.
+#[must_use]
+pub fn missing_sql_profile_imports(
+    suite: &[Stmt],
+    configured_profiles: &BTreeSet<String>,
+) -> Vec<MissingSqlProfileImport> {
+    let mut bindings = BTreeMap::<String, Option<String>>::new();
+    let mut missing = Vec::new();
+    for statement in suite {
+        match statement {
+            Stmt::ImportFrom(import) => {
+                let schema_import = import.level == 0
+                    && import
+                        .module
+                        .as_ref()
+                        .is_some_and(|name| name.as_str() == "sifr.sql.schemas");
+                for alias in &import.names {
+                    let original = alias.name.as_str();
+                    let local = alias.asname.as_ref().map_or(original, |name| name.as_str());
+                    let profile = (schema_import && configured_profiles.contains(original))
+                        .then(|| original.to_string());
+                    bindings.insert(local.to_string(), profile);
+                }
+            }
+            Stmt::Import(import) => {
+                for alias in &import.names {
+                    let local = alias.asname.as_ref().map_or_else(
+                        || alias.name.as_str().split('.').next().unwrap_or_default(),
+                        |name| name.as_str(),
+                    );
+                    bindings.insert(local.to_string(), None);
+                }
+            }
+            Stmt::Assign(assign) => {
+                for target in &assign.targets {
+                    if let Expr::Name(name) = target {
+                        bindings.insert(name.id.to_string(), None);
+                    }
+                }
+            }
+            Stmt::AnnAssign(assign) => {
+                if assign.value.is_some()
+                    && let Expr::Name(name) = assign.target.as_ref()
+                {
+                    bindings.insert(name.id.to_string(), None);
+                }
+            }
+            Stmt::FunctionDef(function) => {
+                for decorator in &function.decorator_list {
+                    let Expr::Attribute(attribute) = &decorator.expression else {
+                        continue;
+                    };
+                    if attribute.attr.as_str() != "query" {
+                        continue;
+                    }
+                    let Expr::Name(receiver) = attribute.value.as_ref() else {
+                        continue;
+                    };
+                    let name = receiver.id.as_str();
+                    if configured_profiles.contains(name) && !bindings.contains_key(name) {
+                        missing.push(MissingSqlProfileImport {
+                            profile_name: name.to_string(),
+                            function_name: function.name.to_string(),
+                            range: decorator.expression.range(),
+                            surface: "query decorator",
+                        });
+                    }
+                }
+                let mut local_bindings = BTreeSet::new();
+                for parameter in function
+                    .parameters
+                    .posonlyargs
+                    .iter()
+                    .chain(&function.parameters.args)
+                    .chain(&function.parameters.kwonlyargs)
+                {
+                    local_bindings.insert(parameter.parameter.name.to_string());
+                }
+                for statement in &function.body {
+                    match statement {
+                        Stmt::Assign(assign) => {
+                            for target in &assign.targets {
+                                if let Expr::Name(name) = target {
+                                    local_bindings.insert(name.id.to_string());
+                                }
+                            }
+                        }
+                        Stmt::AnnAssign(assign) => {
+                            if let Expr::Name(name) = assign.target.as_ref() {
+                                local_bindings.insert(name.id.to_string());
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                let mut calls = MissingSqlCallVisitor {
+                    configured_profiles,
+                    bindings: &bindings,
+                    local_bindings,
+                    function_name: function.name.as_str(),
+                    missing: &mut missing,
+                };
+                for statement in &function.body {
+                    calls.visit_stmt(statement);
+                }
+                bindings.insert(function.name.to_string(), None);
+            }
+            Stmt::ClassDef(class) => {
+                bindings.insert(class.name.to_string(), None);
+            }
+            _ => {}
+        }
+    }
+    missing
+}
+
+struct MissingSqlCallVisitor<'a> {
+    configured_profiles: &'a BTreeSet<String>,
+    bindings: &'a BTreeMap<String, Option<String>>,
+    local_bindings: BTreeSet<String>,
+    function_name: &'a str,
+    missing: &'a mut Vec<MissingSqlProfileImport>,
+}
+
+impl<'a> Visitor<'a> for MissingSqlCallVisitor<'_> {
+    fn visit_expr(&mut self, expression: &'a Expr) {
+        if let Expr::Call(call) = expression
+            && let Expr::Attribute(attribute) = call.func.as_ref()
+            && attribute.attr.as_str() == "sql"
+            && let Expr::Name(receiver) = attribute.value.as_ref()
+        {
+            let name = receiver.id.as_str();
+            if self.configured_profiles.contains(name)
+                && !self.bindings.contains_key(name)
+                && !self.local_bindings.contains(name)
+                && !self.missing.iter().any(|item| {
+                    item.profile_name == name && item.function_name == self.function_name
+                })
+            {
+                self.missing.push(MissingSqlProfileImport {
+                    profile_name: name.to_string(),
+                    function_name: self.function_name.to_string(),
+                    range: call.func.range(),
+                    surface: "SQL constructor",
+                });
+            }
+        }
+        visitor::walk_expr(self, expression);
+    }
+}
 
 pub fn sql_query_declarations(
     module: &HirModule,

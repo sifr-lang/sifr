@@ -2062,6 +2062,16 @@
       "suggestion_rendering_fixture": null
     },
     {
+      "baseline_fixture_id": "common_sql_rules_cases",
+      "code": "SIFR-SQL-0009",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
       "baseline_fixture_id": "e2e_stdlib_defaultdict_keyword_constructor",
       "code": "SIFR-STDLIB-0001",
       "deferral": null,

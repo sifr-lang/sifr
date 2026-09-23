@@ -112,7 +112,10 @@ pub use report::{
     MaterializedRustProjectReport, PythonDeclarationCheck, PythonEnvironmentCheck,
     PythonInteropCheckReport, PythonTargetCheck, PythonTargetCheckStatus,
 };
-pub use sql_profiles::{PreparedSqlProfiles, load_sql_editor_profiles, prepare_sql_profiles};
+pub use sql_profiles::{
+    PreparedSqlProfiles, load_sql_editor_profiles, prepare_sql_profiles,
+    sql_profile_import_diagnostics, sql_profile_import_diagnostics_for_names,
+};
 pub use sql_query_signatures::{QUERY_SIGNATURE_ARTIFACT_NAME, emit_query_signature_artifact};
 pub(crate) use test_runner_interop::finalize_test_runner_project;
 
