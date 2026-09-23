@@ -1,10 +1,64 @@
 use super::{
     CheckedDictReadGuard, CheckedPlaceFailureKind, RustEmitter, RustStmt, Type,
-    checked_place_read_key, condition_excludes_checked_sequence_read,
+    checked_place_expr_token, checked_place_read_key, condition_excludes_checked_sequence_read,
     condition_only_excludes_checked_sequence_read,
 };
 
 impl RustEmitter {
+    // A prior checked read of sequence[n - 1] proves len(sequence) >= n.
+    // On that path, an early `if len(sequence) == n: return ...` is exactly
+    // the absent branch for a later read of sequence[n].
+    fn existing_prefix_witness_excludes_read(
+        &self,
+        condition: &crate::HirExpr,
+        object: &crate::HirExpr,
+        index: &crate::HirExpr,
+    ) -> bool {
+        let crate::HirExpr::IntLiteral(position) = index else {
+            return false;
+        };
+        let Some(previous) = position.checked_sub(1) else {
+            return false;
+        };
+        if previous < 0 {
+            return false;
+        }
+        let Some(previous_key) =
+            checked_place_read_key(object, &crate::HirExpr::IntLiteral(previous))
+        else {
+            return false;
+        };
+        if !self
+            .checked_place_read_witnesses
+            .contains_key(&previous_key)
+        {
+            return false;
+        }
+        let Some(object_token) = checked_place_expr_token(object) else {
+            return false;
+        };
+        let crate::HirExpr::Compare {
+            left,
+            ops,
+            comparators,
+            ..
+        } = condition
+        else {
+            return false;
+        };
+        if ops.as_slice() != ["=="] || comparators.len() != 1 {
+            return false;
+        }
+        let is_length = |candidate: &crate::HirExpr| {
+            matches!(candidate, crate::HirExpr::MethodCall { object: length_object, method, args, .. }
+                if method == "len" && args.is_empty()
+                    && checked_place_expr_token(length_object).as_deref() == Some(object_token.as_str()))
+        };
+        let is_position = |candidate: &crate::HirExpr| matches!(candidate, crate::HirExpr::IntLiteral(value) if value == position);
+        (is_length(left) && is_position(&comparators[0]))
+            || (is_position(left) && is_length(&comparators[0]))
+    }
+
     pub(crate) fn try_lower_checked_sequence_exit_guards_for_ir(
         &mut self,
         stmt: &crate::HirStmt,
@@ -47,8 +101,11 @@ impl RustEmitter {
             let crate::HirExpr::Index { object, index, .. } = &read else {
                 continue;
             };
+            let prefix_proves_exact_length =
+                self.existing_prefix_witness_excludes_read(condition, object, index);
             if matches!(object.ty().resolve_alias(), Type::Dict(_, _))
-                || !condition_excludes_checked_sequence_read(condition, object, index)
+                || !(condition_excludes_checked_sequence_read(condition, object, index)
+                    || prefix_proves_exact_length)
             {
                 continue;
             }
@@ -74,8 +131,8 @@ impl RustEmitter {
             {
                 continue;
             }
-            condition_fully_replaced &=
-                condition_only_excludes_checked_sequence_read(condition, object, index);
+            condition_fully_replaced &= prefix_proves_exact_length
+                || condition_only_excludes_checked_sequence_read(condition, object, index);
             guards.push(guard);
         }
         if guards.is_empty() {

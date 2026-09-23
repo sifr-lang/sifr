@@ -351,6 +351,17 @@ impl VisitMut for LoopBindingUseRewriter<'_> {
             *expression = reference.expr.as_ref().clone();
             return;
         }
+        let syn::Expr::MethodCall(call) = expression else {
+            return;
+        };
+        if matches!(call.method.to_string().as_str(), "to_owned" | "to_vec")
+            && call.args.is_empty()
+            && matches!(call.receiver.as_ref(), syn::Expr::Path(path)
+                if path.path.get_ident().is_some_and(|name|
+                    self.owned.contains(&name.to_string()) || self.borrowed.contains(&name.to_string())))
+        {
+            call.method = syn::Ident::new("clone", call.method.span());
+        }
     }
 
     fn visit_item_mut(&mut self, _item: &mut syn::Item) {}

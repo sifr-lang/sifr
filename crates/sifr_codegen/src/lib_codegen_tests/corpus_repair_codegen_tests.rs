@@ -566,3 +566,40 @@ def largestNumber(mut nums: list[int]) -> str:
         "the list element must be a converted string: {rust}"
     );
 }
+
+#[test]
+fn tuple_string_key_iteration_keeps_owned_clone_shape() {
+    let source = r#"
+def collectKeys(entries: list[tuple[str, int]]) -> list[str]:
+    tokens: list[str] = []
+    for key, value in entries:
+        tokens.append(key)
+    return tokens
+"#;
+    let rust = canonical(source);
+    assert!(rust.contains("tokens.push(key.clone())"), "{rust}");
+    assert!(!rust.contains("tokens.push(key.to_owned())"), "{rust}");
+}
+
+#[test]
+fn sequential_length_exits_prove_second_element_read() {
+    let source = r#"
+def firstTwo(nums: list[int]) -> int:
+    if len(nums) == 0:
+        return 0
+    if len(nums) == 1:
+        return nums[0]
+    first: int = nums[0]
+    second: int = nums[1]
+    return first + second
+"#;
+    let rust = canonical(source);
+    assert!(
+        !rust.contains("structured statement emission missing"),
+        "{rust}"
+    );
+    assert!(
+        rust.contains("let Some(sifr_generated_checked_value_"),
+        "{rust}"
+    );
+}
