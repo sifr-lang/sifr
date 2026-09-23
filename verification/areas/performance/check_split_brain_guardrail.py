@@ -25,8 +25,13 @@ CALLABLE_ROOTS = PARSERS + ("sifr_lowering", "sifr_frontend")
 RAW_PARSERS = ("sifr_python_parser", "ruff_python_parser")
 ENTRYPOINTS = ("parse_module", "parse_module_raw", "parse_module_suite")
 OTHER_FORBIDDEN = (
-    "parse_unchecked", "parse_module_with_diagnostics", "lower_module_with_externals",
-    "lower_module", "lower_frontend_module",
+    "parse_unchecked", "parse_module_with_diagnostics", "lower_frontend_module",
+    "lower_module", "lower_module_with_externals",
+    "lower_module_with_externals_and_name",
+    "lower_module_with_externals_name_and_options",
+    "lower_module_sysroot_public_stdlib",
+    "lower_module_sysroot_public_stdlib_with_externals",
+    "lower_module_sysroot_private_declaration_with_externals",
 )
 # Each line is an individually adjudicated production site. Source inspection here
 # does not establish an independent Sifr semantic result. Bootstrap is the one
@@ -53,6 +58,8 @@ ALLOWED_SITES: dict[Path, dict[str, str]] = {
     },
     Path("crates/sifr_driver/src/stdlib/bootstrap.rs"): {
         "let parsed = match parse_module_raw(stdlib_source.source.as_str(), Some(&source_name)) {": "canonical stdlib compile input",
+        "lower_module_sysroot_public_stdlib_with_externals(suite, stdlib_defs)": "canonical public stdlib lowering",
+        "lower_module_sysroot_private_declaration_with_externals(suite, stdlib_defs)": "canonical private stdlib declaration lowering",
     },
 }
 # Two formatter calls share a line shape; the count still fixes their number.
@@ -230,7 +237,7 @@ def violations_text(path: Path, text: str, *, test_only: bool = False) -> list[s
             continue
         qualifier, name = match.groups()
         if qualifier:
-            if qualifier not in roots:
+            if qualifier not in roots and name not in OTHER_FORBIDDEN and name not in imported:
                 continue
         elif name not in OTHER_FORBIDDEN and name not in imported and not (wildcard and name in ENTRYPOINTS):
             continue
@@ -284,6 +291,11 @@ def run_self_test() -> None:
             ("sifr_syntax", "parse_module_with_diagnostics"),
             ("sifr_lowering", "lower_module_with_externals"),
             ("sifr_lowering", "lower_module"),
+            ("sifr_lowering", "lower_module_with_externals_and_name"),
+            ("sifr_lowering", "lower_module_with_externals_name_and_options"),
+            ("sifr_lowering", "lower_module_sysroot_public_stdlib"),
+            ("sifr_lowering", "lower_module_sysroot_public_stdlib_with_externals"),
+            ("sifr_lowering", "lower_module_sysroot_private_declaration_with_externals"),
             ("sifr_frontend", "lower_frontend_module"),
         ):
             for snippet in (
@@ -296,6 +308,14 @@ def run_self_test() -> None:
                 f"use {owner_crate}::*; fn prod() {{ {entry}(src); }}",
             ):
                 assert violations_text(owner, snippet), (entry, snippet)
+        for qualified in (
+            "self::parse_unchecked(src)",
+            "super::lower_module(src)",
+            "crate::lower_module_with_externals(src, defs)",
+            "helpers::lower_module_sysroot_public_stdlib(src)",
+        ):
+            assert violations_text(owner, f"fn prod() {{ {qualified}; }}"), qualified
+        assert violations_text(owner, "use sifr_syntax::parse_module; fn prod() { self::parse_module(src, None); }")
         assert not violations_text(owner, '#[cfg(test)]\nmod tests { use sifr_syntax::parse_module_raw as parse; fn fixture() { parse(src, None); } }')
         assert not violations_text(owner, 'let s = "sifr_syntax::parse_module(x, None)"; // parse_module_raw(x, None)')
         owner.write_text('#[cfg(test)]\n#[path = "fixture.rs"]\nmod fixture;\n')
