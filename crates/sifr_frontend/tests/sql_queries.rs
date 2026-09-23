@@ -54,6 +54,73 @@ fn production_query_compiler_resolves_profiles_and_lowers_normal_sifr_types() {
 }
 
 #[test]
+fn standard_sql_values_keep_one_input_and_output_identity() {
+    let (registry, _) = registry_and_codecs();
+    let compiler = SqlQueryCompiler::new(&registry);
+    for database in [
+        DatabaseType::Date,
+        DatabaseType::LocalTime { precision: 6 },
+        DatabaseType::OffsetTime { precision: 6 },
+        DatabaseType::LocalDateTime { precision: 6 },
+        DatabaseType::Instant { precision: 6 },
+        DatabaseType::Uuid,
+        DatabaseType::Json { binary: true },
+        DatabaseType::IpAddress,
+        DatabaseType::IpNetwork,
+        DatabaseType::MacAddress,
+    ] {
+        let value = sifr_sql_contract::canonical_read_type(&database).unwrap();
+        let identity =
+            sifr_sql_contract::sql_value_identity(&value).expect("standard SQL value identity");
+        let codec = codec_contract(
+            "postgresql.standard-value.v1",
+            database.clone(),
+            value.clone(),
+        );
+        let codecs = CodecRegistry::for_profile("postgresql-18", [codec.clone()]).unwrap();
+        let mut input = query_input(&codecs, Cardinality::AT_MOST_ONE);
+        input.parameter_types = vec![value.clone()];
+        input.analysis.parameters[0] = ProviderParameter {
+            slot: 0,
+            database_type: database.clone(),
+            nullability: Nullability::NonNull,
+            codec: codec.identity.clone(),
+        };
+        input.analysis.result_fields[0] = ProviderResultField {
+            name: "value".to_string(),
+            sifr_type: value,
+            database_type: database.clone(),
+            nullability: Nullability::NonNull,
+            codec: codec.identity,
+            source_object: Some(ObjectId::new("public.users.id")),
+        };
+        let compiled = compiler.compile(input).expect("standard value query");
+        let Type::Class {
+            identity: Some(parameter_identity),
+            ..
+        } = &compiled.hir.parameters[0].ty
+        else {
+            panic!("standard SQL parameter must be nominal");
+        };
+        assert_eq!(
+            parameter_identity, identity.frontend_identity,
+            "{database:?}"
+        );
+        let Type::StructuralRecord(row) = &compiled.hir.row_type else {
+            panic!("standard value query must return a row");
+        };
+        let Type::Class {
+            identity: Some(result_identity),
+            ..
+        } = row.field("value").expect("value field").ty()
+        else {
+            panic!("standard SQL result must be nominal");
+        };
+        assert_eq!(result_identity, identity.frontend_identity, "{database:?}");
+    }
+}
+
+#[test]
 fn binding_keeps_capture_order_and_execution_round_trips_effects_and_cardinality() {
     let (registry, codecs) = registry_and_codecs();
     let compiler = SqlQueryCompiler::new(&registry);

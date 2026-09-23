@@ -328,6 +328,26 @@ fn validate_type(
             }
             Ok(())
         }
+        ClosedType::Nominal {
+            identity,
+            arguments,
+        } => {
+            if identity.is_empty()
+                || identity.len() > 160
+                || !identity
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_'))
+            {
+                return Err(envelope_error("nominal type identity is invalid"));
+            }
+            if arguments.len() > limits.max_type_width {
+                return Err(limit_error("nominal type argument width limit exceeded"));
+            }
+            for argument in arguments {
+                validate_type(argument, depth + 1, limits)?;
+            }
+            Ok(())
+        }
         ClosedType::Record { fields } => {
             if fields.len() > limits.max_type_width {
                 return Err(limit_error("record type width limit exceeded"));
