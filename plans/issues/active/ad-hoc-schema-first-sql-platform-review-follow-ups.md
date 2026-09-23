@@ -218,6 +218,48 @@ These were not blocking findings for the reviewed Item 2 candidate. This
 record-only delivery update requires documentation checks, not another Sifr
 gate or external review.
 
+### Item 3 resource-blocked handoff (2026-09-23)
+
+Status: blocked by host disk pressure; implementation is unqualified, unreviewed,
+and unmerged. The isolated candidate is
+`6987b7eebe1830b7ffae3a462fb073f4b6de16d5` on
+`codex/sql-profile-discovery-item3-20260923`, based on main
+`e6799f20c5f6014c1f6fc77651edf91257a78b08`. It adds shared
+pre-lowering SQL profile discovery for the CLI and editor, the
+SIFR-SQL-0009 diagnostic and page, catalog and baseline registration, and
+regressions for decorators, aliases, source spans, standalone SQL calls,
+package checks, and editor reloads. This is a preservation receipt, not
+acceptance of the candidate.
+
+Selected evidence on this candidate: the frontend SQL suite passed 4/4; the
+analysis crate passed 64/64; the driver profile selection passed its nine
+cases across the initial runs and the exact failed-case rerun after a
+test-fixture directory repair. The first full LSP run had 79 passes and
+13 Python declaration fixture failures because its virtual environment
+was absent and the host uv was older than the pinned fixture version.
+After preparing the local fixture environment with cached uv 0.12.10,
+the affected Python declaration group passed 24/24 through the compiled
+LSP test harness. The full named LSP command has not been rerun under
+that corrected environment. Driver, frontend, analysis, and LSP logs are
+under `/home/yaser5/projects/sifr/sql-item3-*.log`; the failing runs
+remain evidence, not passes. Both diagnostic coverage scripts, formatting,
+HIR and driver maintainability checks, the file-size guard (4133 files),
+and `git diff --check` passed.
+
+The host had 3.9 GiB available on its root volume, which was at 100%,
+with other sessions actively compiling. The compatible 58 GiB Cargo target
+is owned by the prior Item 2 worktree and is not available for this
+session to clean; this worktree has no obsolete artifacts of its own.
+Starting more Cargo compilation with that headroom could exhaust the
+shared volume. The remaining named checks are
+`cargo test --locked -p sifr_diagnostics`, the diagnostics baseline
+runner, the full corrected-environment `cargo test --locked -p sifr_lsp`,
+and workspace Clippy. After capacity is restored, run these selections
+and any affected focused regressions on the candidate, complete the scoped
+exact-SHA Opus review, then merge and replace this handoff with a delivery
+receipt. No create-PR or full merge gate is claimed for this intermediate
+item.
+
 ### Historical Item 2 blocked handoff (2026-09-23)
 
 Item 2 implementation candidate `a934ce756236be15a06e699f11a9203b3b3054b9` is preserved in `codex/sql-generated-identities-item2-20260923` from main `30136206c94ee03784c9db93b2544de72116be88`, but is not qualified, reviewed, or merged. Its named coverage readiness check fails on the pre-existing unclassified `sifr: test:legal_failure_method_names` target from architecture correctness X01. The failure log is `/home/yaser5/projects/sifr/sql-item2-evidence-20260923/coverage-matrix-readiness.log` (SHA-256 `48e8f082a5454db9a0a2de170c80c531231a94ccf8fb396dabde8b4d0a0a1e3d`); the owning issue records the repair. No SQL Item 2 registry workaround, review, PR, or merge is claimed. Resume only after the owner fixes the registry and readiness passes on the resulting base.
