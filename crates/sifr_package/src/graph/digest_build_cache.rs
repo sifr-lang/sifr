@@ -49,7 +49,11 @@ pub fn digest_python_authoring_environment_probe(
     let mut probe = probe.clone();
     probe.imports.clear();
     probe.native_imports.clear();
-    digest_python_environment_probe(&request, &probe)
+    let canonical = CanonicalPythonEnvironmentProbe {
+        request: &request,
+        probe: &probe,
+    };
+    digest_serializable("python-authoring-environment-probe", &canonical)
 }
 
 #[derive(Serialize)]

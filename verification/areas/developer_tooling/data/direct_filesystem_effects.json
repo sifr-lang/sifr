@@ -14856,6 +14856,34 @@
       "classification": "build-identity"
     },
     {
+      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
+      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&root).test_unwrap(\"create temporary source root\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
+      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
+      "operation": "write",
+      "site": "std::fs::write(&file, b\"\").test_unwrap(\"write empty source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
+      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(&file).test_unwrap(\"remove temporary source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
+      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
+      "operation": "remove_dir",
+      "site": "std::fs::remove_dir(&root).test_unwrap(\"remove temporary root\");",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_package/src/cargo_backend_integration_tests/compiler_components.rs",
       "symbol": "package_component_resolution_checks_exact_identity_and_artifact_hash",
       "operation": "create_dir_all",
@@ -14923,6 +14951,13 @@
       "symbol": "validate_sql_schema_sources",
       "operation": "canonicalize",
       "site": "let canonical_source = provider.canonicalize(&path).map_err(|error| {",
+      "classification": "semantic-input"
+    },
+    {
+      "path": "crates/sifr_package/src/graph/digest_source_map.rs",
+      "symbol": "digest_package_source_snapshot",
+      "operation": "read",
+      "site": "contents: fs::read(&module.file_path)?,",
       "classification": "semantic-input"
     },
     {

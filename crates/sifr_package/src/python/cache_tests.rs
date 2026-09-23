@@ -122,3 +122,18 @@ fn python_probe_identity_binds_each_request_and_observation_field() {
     check_probe(|x| x.pyproject_digest = Some("digest".into()));
     check_probe(|x| x.uv_lock_digest = Some("digest".into()));
 }
+
+#[test]
+fn authoring_probe_domain_is_distinct_from_empty_full_probe() {
+    let mut request = request();
+    request.required_imports.clear();
+    request.declared_imports.clear();
+    request.native_imports.clear();
+    let mut probe = valid_probe();
+    probe.imports.clear();
+    probe.native_imports.clear();
+    assert_ne!(
+        digest_python_authoring_environment_probe(&request, &probe),
+        digest_python_environment_probe(&request, &probe),
+    );
+}
