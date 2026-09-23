@@ -499,8 +499,12 @@ mod tests {
         }
         // A killed writer can leave a child before its final recursive seal.
         fs::write(abandoned.join("unfinished"), b"partial").unwrap();
+        let winner_lease = entry_lock(&family, &winner_key).unwrap();
+        drop(winner_lease);
         let lease = entry_lock(&family, &active_key).unwrap();
         lease.try_lock().unwrap();
+        let abandoned_lease = entry_lock(&family, &abandoned_key).unwrap();
+        drop(abandoned_lease);
         let report = inspect().unwrap();
         assert!(
             report
