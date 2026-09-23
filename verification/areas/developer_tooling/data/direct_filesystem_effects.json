@@ -4057,13 +4057,6 @@
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution.rs",
       "symbol": "prepare_cargo_resolution",
-      "operation": "is_file",
-      "site": "if !authoritative.is_file() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/cargo_resolution.rs",
-      "symbol": "prepare_cargo_resolution",
       "operation": "read_to_string",
       "site": "let previous_marker = match std::fs::read_to_string(&marker_path) {",
       "classification": "build-identity"
@@ -4143,13 +4136,6 @@
       "symbol": "read_lock_table",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(path)",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/cargo_resolution.rs",
-      "symbol": "normalized_manifest_cache_input",
-      "operation": "read_to_string",
-      "site": "let source = std::fs::read_to_string(&manifest_path).map_err(|error| {",
       "classification": "build-identity"
     },
     {
@@ -4234,6 +4220,223 @@
       "symbol": "drop",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&self.0);",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "trusted_vendor_identity",
+      "operation": "read_dir",
+      "site": "let mut entries = fs::read_dir(root)?",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "trusted_vendor_identity",
+      "operation": "is_dir",
+      "site": "let is_dir = entry.is_dir();",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "normalized_manifest_cache_input",
+      "operation": "read_to_string",
+      "site": "let source = fs::read_to_string(&manifest_path).map_err(|error| {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "normalize_path_dependency_identities",
+      "operation": "metadata",
+      "site": "match fs::metadata(&dependency_root) {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "normalize_path_dependency_identities",
+      "operation": "is_file",
+      "site": "Ok(metadata) if metadata.is_file() => continue,",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "source_path_fields_are_not_dependency_manifests",
+      "operation": "create_dir",
+      "site": "fs::create_dir(root.path().join(\"src\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "source_path_fields_are_not_dependency_manifests",
+      "operation": "write",
+      "site": "fs::write(root.path().join(\"src/main.rs\"), \"fn main() {}\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "source_path_fields_are_not_dependency_manifests",
+      "operation": "write",
+      "site": "fs::write(root.path().join(\"Cargo.toml\"),",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "prepared_key_binds_resolution_policy_and_authorities",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "prepared_key_binds_resolution_policy_and_authorities",
+      "operation": "write",
+      "site": "fs::write(&first, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "prepared_key_binds_resolution_policy_and_authorities",
+      "operation": "write",
+      "site": "fs::write(&second, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "prepared_key_binds_resolution_policy_and_authorities",
+      "operation": "write",
+      "site": "fs::write(&second, \"version = 3\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "prepared_key_binds_resolution_policy_and_authorities",
+      "operation": "write",
+      "site": "fs::write(&second, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "prepared_key_binds_resolution_policy_and_authorities",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&first).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "prepared_key_binds_resolution_policy_and_authorities",
+      "operation": "write",
+      "site": "fs::write(&first, \"\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "prepared_key_binds_resolution_policy_and_authorities",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&first).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "prepared_key_binds_resolution_policy_and_authorities",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(root.path().join(\"missing\"), &first).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "unchanged_check_revalidates_authority_and_trusted_vendor_payload",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "unchanged_check_revalidates_authority_and_trusted_vendor_payload",
+      "operation": "write",
+      "site": "fs::write(&generated, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "unchanged_check_revalidates_authority_and_trusted_vendor_payload",
+      "operation": "write",
+      "site": "fs::write(&authority, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "unchanged_check_revalidates_authority_and_trusted_vendor_payload",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&vendor).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "unchanged_check_revalidates_authority_and_trusted_vendor_payload",
+      "operation": "write",
+      "site": "fs::write(&authority, \"version = 3\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "unchanged_check_revalidates_authority_and_trusted_vendor_payload",
+      "operation": "write",
+      "site": "fs::write(&authority, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "unchanged_check_revalidates_authority_and_trusted_vendor_payload",
+      "operation": "create_dir",
+      "site": "fs::create_dir(vendor.join(\"new-crate\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "trusted_vendor_inventory_binds_payload_and_unreadable_states",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&vendor).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "trusted_vendor_inventory_binds_payload_and_unreadable_states",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&crate_dir).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "trusted_vendor_inventory_binds_payload_and_unreadable_states",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "trusted_vendor_inventory_binds_payload_and_unreadable_states",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "trusted_vendor_inventory_binds_payload_and_unreadable_states",
+      "operation": "write",
+      "site": "fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "trusted_vendor_inventory_binds_payload_and_unreadable_states",
+      "operation": "remove_file",
+      "site": "fs::remove_file(crate_dir.join(\"Cargo.toml\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_identity.rs",
+      "symbol": "trusted_vendor_inventory_binds_payload_and_unreadable_states",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(root.path().join(\"missing\"), crate_dir.join(\"Cargo.toml\"))",
       "classification": "output-effect"
     },
     {
@@ -4329,6 +4532,34 @@
     },
     {
       "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
+      "symbol": "normal_seed_identity_distinguishes_absent_empty_and_unreadable_authority",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(authority).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
+      "symbol": "normal_seed_identity_distinguishes_absent_empty_and_unreadable_authority",
+      "operation": "write",
+      "site": "std::fs::write(authority, \"\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
+      "symbol": "normal_seed_identity_distinguishes_absent_empty_and_unreadable_authority",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(authority).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
+      "symbol": "normal_seed_identity_distinguishes_absent_empty_and_unreadable_authority",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(fixture.0.join(\"missing\"), authority).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
       "symbol": "dx9_changed_authority_reseeds_a_reused_generated_root",
       "operation": "read_to_string",
       "site": "let generated = std::fs::read_to_string(&lock).expect(\"seed\");",
@@ -4370,10 +4601,38 @@
       "classification": "tooling-input"
     },
     {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
+      "symbol": "constrained_resolution_rejects_changed_missing_and_unreadable_lock_payload",
+      "operation": "write",
+      "site": "std::fs::write(&lock_path, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
+      "symbol": "constrained_resolution_rejects_changed_missing_and_unreadable_lock_payload",
+      "operation": "write",
+      "site": "std::fs::write(&lock_path, \"\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
+      "symbol": "constrained_resolution_rejects_changed_missing_and_unreadable_lock_payload",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(&lock_path).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/cargo_resolution_normal_tests.rs",
+      "symbol": "constrained_resolution_rejects_changed_missing_and_unreadable_lock_payload",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(fixture.0.join(\"missing.lock\"), &lock_path).unwrap();",
+      "classification": "output-effect"
+    },
+    {
       "path": "crates/sifr_driver/src/build/entrypoint_resolution.rs",
       "symbol": "nearest_ancestor_file",
-      "operation": "is_file",
-      "site": ".find(|candidate| candidate.is_file())",
+      "operation": "symlink_metadata",
+      "site": "candidate.symlink_metadata(),",
       "classification": "build-identity"
     },
     {
@@ -5519,13 +5778,6 @@
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
-      "symbol": "nearest_ancestor_file",
-      "operation": "is_file",
-      "site": "if candidate.is_file() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
       "symbol": "profile_codegen_settings",
       "operation": "read_to_string",
       "site": "let Ok(source) = fs::read_to_string(&cargo_toml) else {",
@@ -5541,34 +5793,6 @@
     {
       "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
       "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
-      "operation": "copy",
-      "site": "fs::copy(&lock, &other_lock).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
-      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
-      "operation": "create_dir",
-      "site": "fs::create_dir(&other_private).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
-      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
-      "operation": "create_dir",
-      "site": "fs::create_dir(&other_runtime).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
-      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
-      "operation": "create_dir",
-      "site": "fs::create_dir(&other_stdlib).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
-      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
       "operation": "create_dir",
       "site": "fs::create_dir(path).unwrap();",
       "classification": "output-effect"
@@ -5576,22 +5800,8 @@
     {
       "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
       "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
-      "operation": "remove_dir_all",
-      "site": "fs::remove_dir_all(&private).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
-      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
-      "operation": "remove_file",
-      "site": "fs::remove_file(&lock).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
-      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
       "operation": "write",
-      "site": "fs::write(&lock, b\"\").unwrap();",
+      "site": "fs::write(path.join(\"lib.rs\"), b\"original\").unwrap();",
       "classification": "output-effect"
     },
     {
@@ -5604,8 +5814,29 @@
     {
       "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
       "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
+      "operation": "copy",
+      "site": "fs::copy(&lock, &other_lock).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&other_stdlib).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
       "operation": "write",
-      "site": "fs::write(other_private.join(\"lib.rs\"), b\"original\").unwrap();",
+      "site": "fs::write(other_stdlib.join(\"lib.rs\"), b\"original\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&other_runtime).unwrap();",
       "classification": "output-effect"
     },
     {
@@ -5618,8 +5849,15 @@
     {
       "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
       "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&other_private).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
       "operation": "write",
-      "site": "fs::write(other_stdlib.join(\"lib.rs\"), b\"original\").unwrap();",
+      "site": "fs::write(other_private.join(\"lib.rs\"), b\"original\").unwrap();",
       "classification": "output-effect"
     },
     {
@@ -5640,7 +5878,63 @@
       "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
       "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
       "operation": "write",
-      "site": "fs::write(path.join(\"lib.rs\"), b\"original\").unwrap();",
+      "site": "fs::write(&lock, b\"\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&lock).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "sysroot_metadata_identity_binds_authority_and_tree_payloads",
+      "operation": "remove_dir_all",
+      "site": "fs::remove_dir_all(&private).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "package_lock_digest_distinguishes_absent_empty_payload_and_unreadable",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&package).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "package_lock_digest_distinguishes_absent_empty_payload_and_unreadable",
+      "operation": "write",
+      "site": "fs::write(&lock, \"\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "package_lock_digest_distinguishes_absent_empty_payload_and_unreadable",
+      "operation": "write",
+      "site": "fs::write(&lock, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "package_lock_digest_distinguishes_absent_empty_payload_and_unreadable",
+      "operation": "write",
+      "site": "fs::write(&nearer, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "package_lock_digest_distinguishes_absent_empty_payload_and_unreadable",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&nearer).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs",
+      "symbol": "package_lock_digest_distinguishes_absent_empty_payload_and_unreadable",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(root.path().join(\"missing\"), &nearer).unwrap();",
       "classification": "output-effect"
     },
     {
@@ -5806,16 +6100,114 @@
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
-      "symbol": "digest_file",
-      "operation": "read",
-      "site": "fs::read(path).ok().map(|bytes| fnv1a64_hex(&bytes))",
+      "symbol": "digest_file_checked",
+      "operation": "symlink_metadata",
+      "site": "match fs::symlink_metadata(path) {",
       "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "digest_file_checked",
+      "operation": "read",
+      "site": "let bytes = fs::read(path)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "nearest_lock_digest_checked",
+      "operation": "symlink_metadata",
+      "site": "match fs::symlink_metadata(&lock) {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "collect_digest_entries",
+      "operation": "metadata",
+      "site": "let metadata = fs::metadata(path)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "collect_digest_entries",
+      "operation": "is_file",
+      "site": "if metadata.is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "collect_digest_entries",
+      "operation": "read",
+      "site": "entries.push((relative_path_string(root, path), fs::read(path)?));",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "collect_digest_entries",
+      "operation": "is_dir",
+      "site": "if !metadata.is_dir() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "collect_digest_entries",
+      "operation": "read_dir",
+      "site": "for entry in fs::read_dir(path)? {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "lock_identity_distinguishes_absent_empty_payload_and_unreadable",
+      "operation": "write",
+      "site": "fs::write(&lock, \"\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "lock_identity_distinguishes_absent_empty_payload_and_unreadable",
+      "operation": "write",
+      "site": "fs::write(&lock, \"version = 4\\n\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "lock_identity_distinguishes_absent_empty_payload_and_unreadable",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&lock).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "lock_identity_distinguishes_absent_empty_payload_and_unreadable",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(root.path().join(\"missing\"), &lock).unwrap();",
+      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
       "symbol": "bridge_tree_identity_distinguishes_states_and_payload",
       "operation": "create_dir",
       "site": "fs::create_dir(&source).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "bridge_tree_identity_distinguishes_states_and_payload",
+      "operation": "write",
+      "site": "fs::write(source.join(\"a.rs\"), b\"a\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "bridge_tree_identity_distinguishes_states_and_payload",
+      "operation": "write",
+      "site": "fs::write(source.join(\"a.rs\"), b\"b\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
+      "symbol": "bridge_tree_identity_distinguishes_states_and_payload",
+      "operation": "remove_file",
+      "site": "fs::remove_file(source.join(\"a.rs\")).unwrap();",
       "classification": "output-effect"
     },
     {
@@ -5835,65 +6227,9 @@
     {
       "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
       "symbol": "bridge_tree_identity_distinguishes_states_and_payload",
-      "operation": "remove_file",
-      "site": "fs::remove_file(source.join(\"a.rs\")).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
-      "symbol": "bridge_tree_identity_distinguishes_states_and_payload",
       "operation": "symlink",
       "site": "std::os::unix::fs::symlink(source.join(\"missing.rs\"), source.join(\"unreadable.rs\"))",
       "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
-      "symbol": "bridge_tree_identity_distinguishes_states_and_payload",
-      "operation": "write",
-      "site": "fs::write(source.join(\"a.rs\"), b\"a\").unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
-      "symbol": "bridge_tree_identity_distinguishes_states_and_payload",
-      "operation": "write",
-      "site": "fs::write(source.join(\"a.rs\"), b\"b\").unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
-      "symbol": "collect_digest_entries",
-      "operation": "is_dir",
-      "site": "if !metadata.is_dir() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
-      "symbol": "collect_digest_entries",
-      "operation": "is_file",
-      "site": "if metadata.is_file() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
-      "symbol": "collect_digest_entries",
-      "operation": "metadata",
-      "site": "let metadata = fs::metadata(path)?;",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
-      "symbol": "collect_digest_entries",
-      "operation": "read",
-      "site": "entries.push((relative_path_string(root, path), fs::read(path)?));",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_digest.rs",
-      "symbol": "collect_digest_entries",
-      "operation": "read_dir",
-      "site": "for entry in fs::read_dir(path)? {",
-      "classification": "build-identity"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_opaque_contract_tests.rs",
@@ -5992,13 +6328,6 @@
       "operation": "open-write",
       "site": ".open(path)",
       "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_probe_cache.rs",
-      "symbol": "nearest_ancestor_file",
-      "operation": "is_file",
-      "site": "if candidate.is_file() {",
-      "classification": "build-identity"
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_probe_features.rs",
@@ -6303,6 +6632,41 @@
     },
     {
       "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
+      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
+      "operation": "create_dir",
+      "site": "std::fs::create_dir(fixture.0.join(\".sqlx\")).expect(\"empty metadata root should exist\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
+      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(fixture.0.join(\"missing.json\"), &broken)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
+      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
+      "operation": "read_to_string",
+      "site": "let source = std::fs::read_to_string(&path).expect(\"metadata should be readable\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
+      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
+      "operation": "write",
+      "site": "std::fs::write(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
+      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(broken).expect(\"unreadable entry should be removed\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
       "symbol": "new",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(root.join(\"src\")).expect(\"source directory should exist\");",
@@ -6369,41 +6733,6 @@
       "symbol": "drop",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(workspace.unwrap_or(&self.0));",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
-      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
-      "operation": "create_dir",
-      "site": "std::fs::create_dir(fixture.0.join(\".sqlx\")).expect(\"empty metadata root should exist\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
-      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
-      "operation": "read_to_string",
-      "site": "let source = std::fs::read_to_string(&path).expect(\"metadata should be readable\");",
-      "classification": "tooling-input"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
-      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
-      "operation": "remove_file",
-      "site": "std::fs::remove_file(broken).expect(\"unreadable entry should be removed\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
-      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
-      "operation": "symlink",
-      "site": "std::os::unix::fs::symlink(fixture.0.join(\"missing.json\"), &broken)",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/rust_interop_sqlx_offline_tests.rs",
-      "symbol": "metadata_identity_distinguishes_absent_empty_and_unreadable_tree",
-      "operation": "write",
-      "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
@@ -9103,6 +9432,27 @@
     },
     {
       "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
+      "symbol": "package_warm_consumer_checks_source_map_authority_and_source_states",
+      "operation": "write",
+      "site": "fs::write(&file, \"\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
+      "symbol": "package_warm_consumer_checks_source_map_authority_and_source_states",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&file).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
+      "symbol": "package_warm_consumer_checks_source_map_authority_and_source_states",
+      "operation": "symlink",
+      "site": "std::os::unix::fs::symlink(root.path().join(\"missing.sifr\"), &file).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
       "symbol": "package_chained_restore_matches_fresh",
       "operation": "read_to_string",
       "site": "text: fs::read_to_string(root.path().join(\"app/src/helper.sifr\")).unwrap(),",
@@ -9148,27 +9498,6 @@
       "symbol": "assert_private_import_rejected",
       "operation": "write",
       "site": "fs::write(&middle, public_source).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
-      "symbol": "package_warm_consumer_checks_source_map_authority_and_source_states",
-      "operation": "remove_file",
-      "site": "fs::remove_file(&file).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
-      "symbol": "package_warm_consumer_checks_source_map_authority_and_source_states",
-      "operation": "symlink",
-      "site": "std::os::unix::fs::symlink(root.path().join(\"missing.sifr\"), &file).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/package_reuse_tests.rs",
-      "symbol": "package_warm_consumer_checks_source_map_authority_and_source_states",
-      "operation": "write",
-      "site": "fs::write(&file, \"\").unwrap();",
       "classification": "output-effect"
     },
     {
@@ -15255,34 +15584,6 @@
       "classification": "build-identity"
     },
     {
-      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
-      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
-      "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(&root).test_unwrap(\"create temporary source root\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
-      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
-      "operation": "write",
-      "site": "std::fs::write(&file, b\"\").test_unwrap(\"write empty source\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
-      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
-      "operation": "remove_file",
-      "site": "std::fs::remove_file(&file).test_unwrap(\"remove temporary source\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
-      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
-      "operation": "remove_dir",
-      "site": "std::fs::remove_dir(&root).test_unwrap(\"remove temporary root\");",
-      "classification": "output-effect"
-    },
-    {
       "path": "crates/sifr_package/src/cargo_backend_integration_tests/compiler_components.rs",
       "symbol": "package_component_resolution_checks_exact_identity_and_artifact_hash",
       "operation": "create_dir_all",
@@ -15308,6 +15609,34 @@
       "symbol": "package_component_resolution_checks_exact_identity_and_artifact_hash",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(root).test_unwrap(\"component fixture should be removable\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
+      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&root).test_unwrap(\"create temporary source root\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
+      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
+      "operation": "write",
+      "site": "std::fs::write(&file, b\"\").test_unwrap(\"write empty source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
+      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
+      "operation": "remove_file",
+      "site": "std::fs::remove_file(&file).test_unwrap(\"remove temporary source\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_package/src/cargo_backend_integration_tests.rs",
+      "symbol": "package_source_consumer_distinguishes_absent_empty_and_unreadable",
+      "operation": "remove_dir",
+      "site": "std::fs::remove_dir(&root).test_unwrap(\"remove temporary root\");",
       "classification": "output-effect"
     },
     {

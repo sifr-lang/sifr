@@ -1,6 +1,6 @@
 use super::cargo_invocation_trace::record_cargo_invocation;
-use super::rust_interop_digest::{digest_file, fnv1a64_hex, push_cache_bytes};
-use super::workspace::artifact_cache_root;
+use super::rust_interop_digest::digest_file_checked;
+
 use crate::diagnostics::{RenderedDiagnostic, diagnostic_with_code};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_package::{CargoLockMode, cargo::lock_modes::cargo_lock_failure_reason};
@@ -10,7 +10,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-const PREPARED_RESOLUTION_DIR: &str = "cargo_resolution";
+#[path = "cargo_resolution_identity.rs"]
+mod identity;
+use identity::{checked_authorities, normalized_manifest_cache_input, prepared_lock_path};
 static PREPARED_LOCK_NONCE: AtomicU64 = AtomicU64::new(0);
 type RegistryEntry = (String, String, String, String);
 type RegistryCompatibilityFamily = (String, String, String);
@@ -53,38 +55,20 @@ impl CargoResolutionPolicy {
     pub(super) const fn uses_sysroot_vendor(&self) -> bool {
         matches!(self.cargo_vendor_mode, CargoVendorMode::SysrootOnly)
     }
-
-    pub(crate) fn normal_seed_cache_fragment(&self) -> Option<String> {
-        if self.lock_mode != CargoLockMode::Normal || self.authoritative_locks.is_empty() {
-            return None;
-        }
-        // Keep old unconstrained/locked cache identities intact. Only normal
-        // generated workspaces with a seed have changed resolution semantics.
-        let mut input = Vec::new();
-        push_cache_bytes(&mut input, "normal-authority-seed-v2");
-        push_cache_bytes(
-            &mut input,
-            self.native_toolchain
-                .as_ref()
-                .map_or("<unavailable>", |tools| tools.identity()),
-        );
-        push_cache_bytes(&mut input, &format!("{:?}", self.cargo_vendor_mode));
-        // Order is significant: earlier authorities override later ones.
-        for lock in &self.authoritative_locks {
-            push_cache_bytes(&mut input, &lock.to_string_lossy());
-            push_cache_bytes(
-                &mut input,
-                &digest_file(lock).unwrap_or_else(|| "<unreadable-lock>".to_string()),
-            );
-        }
-        Some(fnv1a64_hex(&input))
-    }
 }
 
 pub(crate) struct PreparedCargoResolution {
     lock_path: PathBuf,
     initial_digest: Option<String>,
     lock_mode: CargoLockMode,
+    authority_check: Option<PreparedAuthorityCheck>,
+}
+
+struct PreparedAuthorityCheck {
+    project_dir: PathBuf,
+    policy: CargoResolutionPolicy,
+    cargo_prefix_args: Vec<String>,
+    prepared_lock: PathBuf,
 }
 
 pub(crate) fn prepare_cargo_resolution(
@@ -93,6 +77,7 @@ pub(crate) fn prepare_cargo_resolution(
     cargo_prefix_args: &[String],
 ) -> Result<PreparedCargoResolution, Vec<RenderedDiagnostic>> {
     let lock_path = project_dir.join("Cargo.lock");
+    checked_authorities(&policy.authoritative_locks)?;
     if policy.lock_mode == CargoLockMode::Normal {
         // A generated workspace must start from the package's resolved pins,
         // just as Cargo does in the original workspace. Normal mode may still
@@ -123,23 +108,20 @@ pub(crate) fn prepare_cargo_resolution(
                 .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
         }
         return Ok(PreparedCargoResolution {
-            initial_digest: digest_file(&lock_path),
+            initial_digest: digest_file_checked(&lock_path).map_err(|error| {
+                vec![cargo_resolution_error(format!(
+                    "unreadable generated Cargo lockfile: {error}"
+                ))]
+            })?,
             lock_path,
             lock_mode: policy.lock_mode,
+            authority_check: None,
         });
     }
     if policy.authoritative_locks.is_empty() {
         return Err(vec![cargo_resolution_error(
             "locked Rust interop Cargo resolution has no authoritative package or sysroot lockfile",
         )]);
-    }
-    for authoritative in &policy.authoritative_locks {
-        if !authoritative.is_file() {
-            return Err(vec![cargo_resolution_error(format!(
-                "authoritative Cargo lockfile '{}' is missing",
-                authoritative.display()
-            ))]);
-        }
     }
 
     let prepared_lock = prepared_lock_path(project_dir, policy, cargo_prefix_args)?;
@@ -149,7 +131,11 @@ pub(crate) fn prepare_cargo_resolution(
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
         Err(error) => return Err(vec![cargo_resolution_error(error.to_string())]),
     };
-    let existing_digest = digest_file(&lock_path);
+    let existing_digest = digest_file_checked(&lock_path).map_err(|error| {
+        vec![cargo_resolution_error(format!(
+            "unreadable generated Cargo lockfile: {error}"
+        ))]
+    })?;
     let expected_marker = existing_digest
         .as_ref()
         .map(|digest| format!("{}\n{digest}\n", prepared_lock.display()));
@@ -188,12 +174,18 @@ pub(crate) fn prepare_cargo_resolution(
         &policy.authoritative_locks,
         &policy.trusted_vendor_dirs,
     )?;
-    let initial_digest = digest_file(&lock_path).ok_or_else(|| {
-        vec![cargo_resolution_error(format!(
-            "prepared Cargo lockfile '{}' is unreadable",
-            lock_path.display()
-        ))]
-    })?;
+    let initial_digest = digest_file_checked(&lock_path)
+        .map_err(|error| {
+            vec![cargo_resolution_error(format!(
+                "unreadable prepared Cargo lockfile: {error}"
+            ))]
+        })?
+        .ok_or_else(|| {
+            vec![cargo_resolution_error(format!(
+                "prepared Cargo lockfile '{}' is unreadable",
+                lock_path.display()
+            ))]
+        })?;
     let marker = format!("{}\n{initial_digest}\n", prepared_lock.display());
     super::native_storage::write_changed(&marker_path, marker.as_bytes())
         .map_err(|error| vec![cargo_resolution_error(error.to_string())])?;
@@ -201,6 +193,12 @@ pub(crate) fn prepare_cargo_resolution(
         lock_path,
         initial_digest: Some(initial_digest),
         lock_mode: policy.lock_mode,
+        authority_check: Some(PreparedAuthorityCheck {
+            project_dir: project_dir.to_path_buf(),
+            policy: policy.clone(),
+            cargo_prefix_args: cargo_prefix_args.to_vec(),
+            prepared_lock,
+        }),
     })
 }
 
@@ -240,11 +238,25 @@ impl PreparedCargoResolution {
         if self.lock_mode == CargoLockMode::Normal {
             return Ok(());
         }
+        if let Some(check) = &self.authority_check {
+            let current_key =
+                prepared_lock_path(&check.project_dir, &check.policy, &check.cargo_prefix_args)?;
+            if current_key != check.prepared_lock {
+                return Err(vec![cargo_resolution_error(
+                    "Cargo resolution authority changed while building",
+                )]);
+            }
+        }
         // Cargo's standalone `--offline` mode can update a source lockfile.
         // Generated interop projects are stricter: their prepared lock is a
         // validated cache artifact, so every constrained mode keeps it
         // byte-identical.
-        let current = digest_file(&self.lock_path);
+        let current = digest_file_checked(&self.lock_path).map_err(|error| {
+            vec![cargo_resolution_error(format!(
+                "unreadable prepared Cargo lockfile {}: {error}",
+                self.lock_path.display()
+            ))]
+        })?;
         if current == self.initial_digest {
             return Ok(());
         }
@@ -435,92 +447,6 @@ fn registry_version_compatibility_family(version: &str) -> String {
         format!("minor:{major}.{minor}")
     } else {
         format!("patch:{major}.{minor}.{patch}")
-    }
-}
-
-fn prepared_lock_path(
-    project_dir: &Path,
-    policy: &CargoResolutionPolicy,
-    cargo_prefix_args: &[String],
-) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
-    let mut input = Vec::new();
-    push_cache_bytes(&mut input, "sifr-cargo-resolution-v8");
-    let tools = policy
-        .native_toolchain
-        .as_ref()
-        .map_err(|error| vec![cargo_resolution_error(error.clone())])?;
-    push_cache_bytes(&mut input, tools.identity());
-    push_cache_bytes(&mut input, &normalized_manifest_cache_input(project_dir)?);
-    for argument in cargo_prefix_args {
-        push_cache_bytes(&mut input, argument);
-    }
-    for lock in &policy.authoritative_locks {
-        push_cache_bytes(
-            &mut input,
-            &digest_file(lock).unwrap_or_else(|| "<missing>".to_string()),
-        );
-    }
-    for vendor_dir in &policy.trusted_vendor_dirs {
-        push_cache_bytes(&mut input, &vendor_dir.display().to_string());
-    }
-    Ok(artifact_cache_root()
-        .join(PREPARED_RESOLUTION_DIR)
-        .join(fnv1a64_hex(&input))
-        .join("Cargo.lock"))
-}
-
-fn normalized_manifest_cache_input(project_dir: &Path) -> Result<String, Vec<RenderedDiagnostic>> {
-    let manifest_path = project_dir.join("Cargo.toml");
-    let source = std::fs::read_to_string(&manifest_path).map_err(|error| {
-        vec![cargo_resolution_error(format!(
-            "failed to read generated Cargo manifest: {error}"
-        ))]
-    })?;
-    let mut manifest = source
-        .parse::<toml::Table>()
-        .map(toml::Value::Table)
-        .map_err(|error| {
-            vec![cargo_resolution_error(format!(
-                "failed to parse generated Cargo manifest: {error}"
-            ))]
-        })?;
-    normalize_path_dependency_identities(&mut manifest, project_dir);
-    toml::to_string(&manifest).map_err(|error| {
-        vec![cargo_resolution_error(format!(
-            "failed to normalize generated Cargo manifest: {error}"
-        ))]
-    })
-}
-
-fn normalize_path_dependency_identities(value: &mut toml::Value, project_dir: &Path) {
-    match value {
-        toml::Value::Table(table) => {
-            for (key, nested) in table {
-                if key == "path" {
-                    if let Some(path) = nested.as_str() {
-                        let dependency_root = if Path::new(path).is_absolute() {
-                            PathBuf::from(path)
-                        } else {
-                            project_dir.join(path)
-                        };
-                        let dependency_manifest = dependency_root.join("Cargo.toml");
-                        if let Some(digest) = digest_file(&dependency_manifest) {
-                            *nested = toml::Value::String(format!(
-                                "sifr-path-dependency-manifest:{digest}"
-                            ));
-                            continue;
-                        }
-                    }
-                }
-                normalize_path_dependency_identities(nested, project_dir);
-            }
-        }
-        toml::Value::Array(values) => {
-            for nested in values {
-                normalize_path_dependency_identities(nested, project_dir);
-            }
-        }
-        _ => {}
     }
 }
 

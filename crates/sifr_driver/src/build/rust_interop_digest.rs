@@ -26,18 +26,40 @@ pub(super) fn digest_path(path: &Path) -> String {
     })
 }
 
-// Lock digests remain with the separate N02b2 prepared/unchanged-lock batch.
-pub(super) fn digest_file(path: &Path) -> Option<String> {
-    fs::read(path).ok().map(|bytes| fnv1a64_hex(&bytes))
+/// A missing file is distinct from an empty file. An existing unreadable path
+/// cannot authorize reuse of a previously prepared or final artifact.
+pub(super) fn digest_file_checked(path: &Path) -> io::Result<Option<String>> {
+    match fs::symlink_metadata(path) {
+        Ok(_) => {}
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error),
+    }
+    let bytes = fs::read(path)?;
+    let mut identity = IdentityEncoder::new("cargo-input-file-v2");
+    identity.field("contents", &bytes);
+    Ok(Some(identity.finish()))
 }
 
-pub(super) fn fnv1a64_hex(bytes: &[u8]) -> String {
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
-    for byte in bytes {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+pub(super) fn digest_lock_file_checked(path: &Path) -> io::Result<Option<String>> {
+    let Some(payload) = digest_file_checked(path)? else {
+        return Ok(None);
+    };
+    let mut identity = IdentityEncoder::new("cargo-lock-authority-v2");
+    identity.field("path", path.as_os_str().as_encoded_bytes());
+    identity.field("contents", payload.as_bytes());
+    Ok(Some(identity.finish()))
+}
+
+pub(super) fn nearest_lock_digest_checked(start: &Path) -> io::Result<Option<String>> {
+    for ancestor in start.ancestors() {
+        let lock = ancestor.join("Cargo.lock");
+        match fs::symlink_metadata(&lock) {
+            Ok(_) => return digest_lock_file_checked(&lock),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error),
+        }
     }
-    format!("{hash:016x}")
+    Ok(None)
 }
 
 pub(super) fn relative_path_string(root: &Path, path: &Path) -> String {
@@ -81,8 +103,30 @@ pub(super) fn push_cache_bytes(out: &mut Vec<u8>, value: &str) {
 
 #[cfg(test)]
 mod tests {
-    use super::digest_path_checked;
+    use super::{digest_file_checked, digest_path_checked, nearest_lock_digest_checked};
     use std::fs;
+
+    #[test]
+    fn lock_identity_distinguishes_absent_empty_payload_and_unreadable() {
+        let root = tempfile::tempdir().unwrap();
+        let lock = root.path().join("Cargo.lock");
+        assert_eq!(digest_file_checked(&lock).unwrap(), None);
+        fs::write(&lock, "").unwrap();
+        let empty = digest_file_checked(&lock).unwrap().unwrap();
+        assert_eq!(
+            nearest_lock_digest_checked(root.path()).unwrap(),
+            Some(super::digest_lock_file_checked(&lock).unwrap().unwrap())
+        );
+        fs::write(&lock, "version = 4\n").unwrap();
+        assert_ne!(empty, digest_file_checked(&lock).unwrap().unwrap());
+        #[cfg(unix)]
+        {
+            fs::remove_file(&lock).unwrap();
+            std::os::unix::fs::symlink(root.path().join("missing"), &lock).unwrap();
+            assert!(digest_file_checked(&lock).is_err());
+            assert!(nearest_lock_digest_checked(root.path()).is_err());
+        }
+    }
 
     #[test]
     fn bridge_tree_identity_distinguishes_states_and_payload() {

@@ -1,4 +1,6 @@
-use super::rust_interop_digest::{digest_file, digest_path};
+use super::rust_interop_digest::{
+    digest_lock_file_checked, digest_path, nearest_lock_digest_checked,
+};
 use super::rust_interop_probe::PendingRustBridgeProbe;
 use super::rust_interop_probe_paths::normalize_cargo_target_dir;
 use super::rust_interop_sqlx_offline::sqlx_offline_metadata_digest;
@@ -77,7 +79,15 @@ pub(super) fn probe_cache_key(
     probe_source: &str,
     cache: &mut ProbeCacheKeyCache,
 ) -> Result<String, String> {
-    let mut input = IdentityEncoder::new("rust-bridge-probe-cache-v2");
+    let mut input = IdentityEncoder::new("rust-bridge-probe-cache-v3");
+    let nearest_lock = nearest_lock_digest(backend_root)?;
+    let vendor_identity = optional_vendor_identity(
+        probe
+            .cargo_resolution
+            .uses_sysroot_vendor()
+            .then_some(probe.sysroot_vendor_dir.as_deref())
+            .flatten(),
+    )?;
     for (name, value) in [
         ("package-id", probe.backend.cargo_package_id.0.as_str()),
         ("dependency", probe.backend.dependency_name.as_str()),
@@ -91,21 +101,12 @@ pub(super) fn probe_cache_key(
         ("manifest", probe_manifest),
         ("source", probe_source),
         ("backend-tree", &cached_digest_path(backend_root)),
-        ("nearest-lock", &nearest_lock_digest(backend_root)),
+        ("nearest-lock", &nearest_lock),
         (
             "sysroot-runtime-tree",
             &cached_digest_path(&probe.sysroot_runtime_crate),
         ),
-        (
-            "vendor",
-            &optional_vendor_identity(
-                probe
-                    .cargo_resolution
-                    .uses_sysroot_vendor()
-                    .then_some(probe.sysroot_vendor_dir.as_deref())
-                    .flatten(),
-            ),
-        ),
+        ("vendor", &vendor_identity),
     ] {
         input.field(name, value.as_bytes());
     }
@@ -137,7 +138,12 @@ pub(super) fn probe_cache_key(
     );
     for path in &probe.cargo_resolution.authoritative_locks {
         input.field("authority-path", path.to_string_lossy().as_bytes());
-        let digest = digest_file(path);
+        let digest = digest_lock_file_checked(path).map_err(|error| {
+            format!(
+                "unreadable authoritative Cargo lock '{}': {error}",
+                path.display()
+            )
+        })?;
         input.field("authority-readable", &[u8::from(digest.is_some())]);
         if let Some(digest) = digest {
             input.field("authority-digest", digest.as_bytes());
@@ -177,9 +183,9 @@ fn cached_digest_path(path: &Path) -> String {
     digest_path(path)
 }
 
-fn optional_vendor_identity(vendor_dir: Option<&Path>) -> String {
+fn optional_vendor_identity(vendor_dir: Option<&Path>) -> Result<String, String> {
     let Some(vendor_dir) = vendor_dir else {
-        return "<no-sysroot-vendor>".to_string();
+        return Ok("<no-sysroot-vendor>".to_string());
     };
     nearest_lock_digest(vendor_dir)
 }
@@ -191,22 +197,15 @@ fn probe_cache_root(configured: Option<OsString>, invocation_cwd: &Path) -> Path
     )
 }
 
-fn nearest_lock_digest(path: &Path) -> String {
-    nearest_ancestor_file(path, "Cargo.lock")
-        .and_then(|lock| digest_file(&lock))
-        .unwrap_or_else(|| "<no-cargo-lock>".to_string())
-}
-
-fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
-    let mut current = Some(start);
-    while let Some(path) = current {
-        let candidate = path.join(file_name);
-        if candidate.is_file() {
-            return Some(candidate);
-        }
-        current = path.parent();
-    }
-    None
+fn nearest_lock_digest(path: &Path) -> Result<String, String> {
+    nearest_lock_digest_checked(path)
+        .map_err(|error| {
+            format!(
+                "unreadable nearest Cargo lock '{}': {error}",
+                path.display()
+            )
+        })
+        .map(|digest| digest.unwrap_or_else(|| "<no-cargo-lock>".to_string()))
 }
 
 #[cfg(test)]

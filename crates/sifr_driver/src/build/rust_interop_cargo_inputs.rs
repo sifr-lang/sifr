@@ -1,5 +1,8 @@
 use super::rust_interop::PackageRustInteropContext;
-use super::rust_interop_digest::{digest_file, digest_path_checked, normalized_path_string};
+use super::rust_interop_digest::{
+    digest_lock_file_checked, digest_path_checked, nearest_lock_digest_checked,
+    normalized_path_string,
+};
 use super::sysroot_interop::SysrootRustInteropTrust;
 use sifr_codegen::{RustBridgeSourceDigest, RustInteropCargoInputs};
 use sifr_identity::IdentityEncoder;
@@ -62,7 +65,7 @@ pub(super) fn cargo_inputs(
         sqlx_offline_metadata_digest: None,
         package_graph_digest: Some(graph_digest.hex),
         package_source_map_digest: Some(source_map_digest.hex),
-        cargo_lock_digest: cargo_lock_digest(&package.package_root),
+        cargo_lock_digest: cargo_lock_digest(&package.package_root)?,
         target_triple: std::env::var("SIFR_TARGET").ok().or_else(|| {
             resolution
                 .native_toolchain
@@ -141,7 +144,7 @@ fn sysroot_cargo_inputs(
             digest_path_checked(&trust.stdlib_private_sources)
                 .map_err(|error| format!("unreadable sysroot private sources: {error}"))?,
         ),
-        cargo_lock_digest: digest_file(&trust.cargo_lock),
+        cargo_lock_digest: Some(required_lock_digest(&trust.cargo_lock)?),
         target_triple: std::env::var("SIFR_TARGET").ok().or_else(|| {
             resolution
                 .native_toolchain
@@ -351,8 +354,15 @@ fn skip_raw_string(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> bool
     true
 }
 
-fn cargo_lock_digest(package_root: &Path) -> Option<String> {
-    nearest_ancestor_file(package_root, "Cargo.lock").and_then(|path| digest_file(&path))
+fn cargo_lock_digest(package_root: &Path) -> Result<Option<String>, String> {
+    nearest_lock_digest_checked(package_root)
+        .map_err(|error| format!("unreadable package Cargo lock: {error}"))
+}
+
+fn required_lock_digest(path: &Path) -> Result<String, String> {
+    digest_lock_file_checked(path)
+        .map_err(|error| format!("unreadable Cargo lock '{}': {error}", path.display()))?
+        .ok_or_else(|| format!("missing Cargo lock '{}'", path.display()))
 }
 
 fn combined_cargo_inputs_digest(
@@ -445,24 +455,9 @@ fn sysroot_metadata_digest(trust: &SysrootRustInteropTrust) -> Result<String, St
                 .as_bytes(),
         );
     }
-    let lock = digest_file(&trust.cargo_lock).ok_or_else(|| {
-        format!(
-            "unreadable sysroot Cargo lock: {}",
-            trust.cargo_lock.display()
-        )
-    })?;
+    let lock = required_lock_digest(&trust.cargo_lock)?;
     identity.field("cargo-lock", lock.as_bytes());
     Ok(identity.finish())
-}
-
-fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
-    for ancestor in start.ancestors() {
-        let candidate = ancestor.join(file_name);
-        if candidate.is_file() {
-            return Some(candidate);
-        }
-    }
-    None
 }
 
 fn profile_codegen_settings(package_root: &Path, profile: &str) -> Vec<(String, String)> {
@@ -735,6 +730,32 @@ mod tests {
         assert!(super::sysroot_metadata_digest(&trust).is_err());
         fs::remove_dir_all(&private).unwrap();
         assert!(super::sysroot_metadata_digest(&trust).is_err());
+    }
+
+    #[test]
+    fn package_lock_digest_distinguishes_absent_empty_payload_and_unreadable() {
+        use std::fs;
+        let root = tempfile::tempdir().unwrap();
+        let package = root.path().join("package");
+        fs::create_dir(&package).unwrap();
+        let lock = root.path().join("Cargo.lock");
+        assert_eq!(super::cargo_lock_digest(&package).unwrap(), None);
+        fs::write(&lock, "").unwrap();
+        let empty = super::cargo_lock_digest(&package).unwrap().unwrap();
+        fs::write(&lock, "version = 4\n").unwrap();
+        assert_ne!(empty, super::cargo_lock_digest(&package).unwrap().unwrap());
+        let nearer = package.join("Cargo.lock");
+        fs::write(&nearer, "version = 4\n").unwrap();
+        assert_ne!(
+            super::cargo_lock_digest(&package).unwrap(),
+            super::cargo_lock_digest(root.path()).unwrap()
+        );
+        #[cfg(unix)]
+        {
+            fs::remove_file(&nearer).unwrap();
+            std::os::unix::fs::symlink(root.path().join("missing"), &nearer).unwrap();
+            assert!(super::cargo_lock_digest(&package).is_err());
+        }
     }
 
     #[test]

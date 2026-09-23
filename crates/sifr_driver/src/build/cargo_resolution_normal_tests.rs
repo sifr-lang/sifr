@@ -1,4 +1,7 @@
-use super::{CargoResolutionPolicy, PREPARED_LOCK_NONCE, prepare_cargo_resolution};
+use super::digest_file_checked;
+use super::{
+    CargoResolutionPolicy, PREPARED_LOCK_NONCE, PreparedCargoResolution, prepare_cargo_resolution,
+};
 use sifr_package::CargoLockMode;
 use sifr_stdlib_manifest::CargoVendorMode;
 use std::path::PathBuf;
@@ -159,6 +162,28 @@ fn normal_seed_cache_identity_tracks_ordered_authorities_without_resetting_other
 }
 
 #[test]
+fn normal_seed_identity_distinguishes_absent_empty_and_unreadable_authority() {
+    let fixture = Fixture::new();
+    let policy = fixture.policy(PACKAGE_LOCK);
+    let original = policy.normal_seed_cache_fragment().unwrap();
+    let authority = &policy.authoritative_locks[0];
+    std::fs::remove_file(authority).unwrap();
+    let absent = policy.normal_seed_cache_fragment().unwrap();
+    assert_ne!(original, absent);
+    assert!(prepare_cargo_resolution(&fixture.0, &policy, &[]).is_err());
+    std::fs::write(authority, "").unwrap();
+    let empty = policy.normal_seed_cache_fragment().unwrap();
+    assert_ne!(absent, empty);
+    #[cfg(unix)]
+    {
+        std::fs::remove_file(authority).unwrap();
+        std::os::unix::fs::symlink(fixture.0.join("missing"), authority).unwrap();
+        assert_ne!(empty, policy.normal_seed_cache_fragment().unwrap());
+        assert!(prepare_cargo_resolution(&fixture.0, &policy, &[]).is_err());
+    }
+}
+
+#[test]
 fn dx9_changed_authority_reseeds_a_reused_generated_root() {
     let fixture = Fixture::new();
     let policy = fixture.policy(PACKAGE_LOCK);
@@ -182,4 +207,27 @@ fn dx9_changed_authority_reseeds_a_reused_generated_root() {
         std::fs::read_to_string(&policy.authoritative_locks[0]).expect("source authority"),
         changed
     );
+}
+
+#[test]
+fn constrained_resolution_rejects_changed_missing_and_unreadable_lock_payload() {
+    let fixture = Fixture::new();
+    let lock_path = fixture.0.join("Cargo.lock");
+    std::fs::write(&lock_path, "version = 4\n").unwrap();
+    let prepared = PreparedCargoResolution {
+        initial_digest: digest_file_checked(&lock_path).unwrap(),
+        lock_path: lock_path.clone(),
+        lock_mode: CargoLockMode::Locked,
+        authority_check: None,
+    };
+    prepared.assert_unchanged().unwrap();
+    std::fs::write(&lock_path, "").unwrap();
+    assert!(prepared.assert_unchanged().is_err());
+    std::fs::remove_file(&lock_path).unwrap();
+    assert!(prepared.assert_unchanged().is_err());
+    #[cfg(unix)]
+    {
+        std::os::unix::fs::symlink(fixture.0.join("missing.lock"), &lock_path).unwrap();
+        assert!(prepared.assert_unchanged().is_err());
+    }
 }
