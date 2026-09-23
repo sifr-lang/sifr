@@ -3,7 +3,7 @@
 ## 2026-09-23 retained Item 12 corpus source-contract correction
 
 The retained emitted-Rust Item 12 native audit stopped at
-`0150_evaluate_reverse_polish_notation.sifr` after 124 passing fixtures: its
+`0150_evaluate_reverse_polish_notation.sifr` after 124 passing fixtures (124/125 attempted): its
 `truncDiv` helper used floor division, so the existing negative nonexact
 expression produced 12 instead of the asserted 22. The old pinned corpus commit
 was `4da4f7a5ccb332b64199eda6fc545d9dcc1ae1b6` and the failing source
@@ -29,8 +29,13 @@ The new fixture source SHA-256 is
 The focused exit receipt, compiler/source hashes, fixture count, and
 scoped Opus approval keyed by reviewed commit are retained outside the repository at
 `/home/yaser5/projects/sifr/corpus-0150-evidence-20260923/`.
-The review found no blocking issue. Item 12 can resume its full 411-case native
-selection; that selection is not yet qualified by this focused repair.
+The corpus review found no blocking issue. The codebase gitlink and owner
+record are delivered in [PR #3914](https://github.com/sifr-lang/sifr/pull/3914).
+A second scoped Opus review approved gitlink/record candidate
+`2ec601b74e050dd34f4644aabc316dc006496017` with no blocking findings;
+its SHA-keyed response is in the same evidence directory. Item 12 can resume
+its full 411-case native selection; that selection is not yet qualified by
+this focused repair.
 
 ## Status
 
