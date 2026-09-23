@@ -695,3 +695,21 @@ def scan(text: str | None) -> str:
     );
     assert!(!rust.contains("let __sifr_string_index = j;"), "{rust}");
 }
+
+#[test]
+fn generated_set_of_string_windows_counts_distinct_values() {
+    let rust = canonical(
+        r#"
+def unique_windows(text: str, width: int) -> int:
+    return len(set(text[i:i + width] for i in range(len(text) - width + 1)))
+"#,
+    );
+    assert!(
+        rust.contains("collect::<std::collections::HashSet<_>>().len()"),
+        "{rust}"
+    );
+    assert!(
+        !rust.contains(".filter_map(") || !rust.contains(".count()"),
+        "{rust}"
+    );
+}

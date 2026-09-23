@@ -129,6 +129,33 @@ fn collected_set_length_preserves_distinct_element_semantics() {
 }
 
 #[test]
+fn direct_collected_set_length_preserves_distinct_element_semantics() {
+    let canonical = canonicalize_generated_rust_source(
+        r#"
+        pub fn unique_length(values: Vec<i64>) -> usize {
+            values.into_iter().collect::<std::collections::HashSet<_>>().len()
+        }
+        pub fn sequence_length(values: Vec<i64>) -> usize {
+            values.into_iter().collect::<Vec<_>>().len()
+        }
+    "#,
+    )
+    .expect("collection cardinality");
+    assert!(
+        canonical.contains("collect::<std::collections::HashSet<_>>().len()"),
+        "{canonical}"
+    );
+    assert!(
+        !canonical.contains("collect::<std::collections::HashSet<_>>().count()"),
+        "{canonical}"
+    );
+    assert!(
+        canonical.contains("values.into_iter().count()"),
+        "{canonical}"
+    );
+}
+
+#[test]
 fn typed_string_cleanup_preserves_capacity_effects_and_shadowed_bindings() {
     let canonical = canonicalize_generated_rust_source(r#"
         struct Other;

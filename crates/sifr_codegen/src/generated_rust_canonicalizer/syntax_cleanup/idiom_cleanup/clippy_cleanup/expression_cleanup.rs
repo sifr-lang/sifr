@@ -408,6 +408,21 @@ fn rewrite_collected_query(expression: &mut syn::Expr) -> bool {
         return false;
     }
     if query.method == "len" && query.args.is_empty() {
+        let is_vec = collect
+            .turbofish
+            .as_ref()
+            .and_then(|fish| fish.args.first())
+            .is_some_and(|argument| matches!(argument,
+                syn::GenericArgument::Type(syn::Type::Path(ty))
+                    if ty.path.segments.len() == 1 && ty.path.segments[0].ident == "Vec"
+                    || ty.path.segments.len() == 3
+                        && ty.path.segments[0].ident == "std"
+                        && ty.path.segments[1].ident == "vec"
+                        && ty.path.segments[2].ident == "Vec"
+            ));
+        if !is_vec {
+            return false;
+        }
         let producer = collect.receiver.as_ref();
         *expression = syn::parse_quote!((#producer).count());
         return true;
