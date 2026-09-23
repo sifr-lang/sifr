@@ -9,14 +9,138 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 
+from . import process_execution
 from .process_execution import execute
 from .profile_commands import run_command, CommandFailed
 
 
 class ProcessTests(unittest.TestCase):
+    def test_f26_worker_thread_is_rejected_before_spawn(self):
+        failures = []
+        def worker():
+            try:
+                execute([sys.executable, "-c", "pass"], cwd=Path.cwd())
+            except RuntimeError as error:
+                failures.append(str(error))
+        with patch.object(process_execution.subprocess, "Popen", side_effect=AssertionError("spawned")) as spawn:
+            thread = threading.Thread(target=worker)
+            thread.start()
+            thread.join(timeout=2)
+        self.assertFalse(thread.is_alive())
+        spawn.assert_not_called()
+        self.assertEqual(failures, ["verification subprocesses require the main thread"])
+
+    def test_f26_signal_setup_failure_is_before_spawn(self):
+        original_signal = signal.signal
+        original_interrupt = signal.getsignal(signal.SIGINT)
+        calls = 0
+        def fail_second_registration(sig, handler):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                raise RuntimeError("signal setup failed")
+            return original_signal(sig, handler)
+        with patch.object(process_execution.signal, "signal", side_effect=fail_second_registration), \
+             patch.object(process_execution.subprocess, "Popen", side_effect=AssertionError("spawned")) as spawn:
+            with self.assertRaisesRegex(RuntimeError, "signal setup failed"):
+                execute([sys.executable, "-c", "pass"], cwd=Path.cwd())
+        spawn.assert_not_called()
+        self.assertEqual(signal.getsignal(signal.SIGINT), original_interrupt)
+
+    def _assert_f26_error_kills_descendants(self, failure_point):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            ready = root / "ready"
+            marker = root / "escaped"
+            program = (
+                "import os,time\nfrom pathlib import Path\n"
+                "if os.fork() == 0:\n"
+                f"    Path({str(ready)!r}).write_text('ready')\n"
+                "    time.sleep(0.8)\n"
+                f"    Path({str(marker)!r}).write_text('escaped')\n"
+                "else:\n"
+                "    print('ready', flush=True)\n"
+                "    time.sleep(5)\n"
+            )
+            original_spawn = subprocess.Popen
+            spawned = []
+            def record_spawn(*args, **kwargs):
+                proc = original_spawn(*args, **kwargs)
+                spawned.append(proc)
+                return proc
+            def fail_after_descendant(*_args):
+                limit = time.monotonic() + 2
+                while not ready.exists() and time.monotonic() < limit:
+                    time.sleep(0.01)
+                self.assertTrue(ready.exists(), "descendant did not start")
+                raise RuntimeError("injected setup or callback failure")
+            class BrokenSelector:
+                def __init__(self, fail_on):
+                    self.registered = 0
+                    self.fail_on = fail_on
+                    self.closed = False
+                def register(self, *_args):
+                    self.registered += 1
+                    if self.registered == self.fail_on:
+                        fail_after_descendant()
+                def close(self):
+                    self.closed = True
+            broken_selector = BrokenSelector(2 if failure_point == "selector_second_register" else 1)
+            with patch.object(process_execution.subprocess, "Popen", side_effect=record_spawn):
+                if failure_point == "selector_create":
+                    selector = patch.object(process_execution.selectors, "DefaultSelector",
+                                            side_effect=fail_after_descendant)
+                elif failure_point in ("selector_register", "selector_second_register"):
+                    selector = patch.object(process_execution.selectors, "DefaultSelector",
+                                            return_value=broken_selector)
+                else:
+                    selector = contextlib.nullcontext()
+                with selector:
+                    with self.assertRaisesRegex(RuntimeError, "injected setup or callback failure"):
+                        execute([sys.executable, "-c", program], cwd=Path.cwd(),
+                                emit=fail_after_descendant if failure_point == "callback" else None)
+            self.assertEqual(len(spawned), 1)
+            self.assertIsNotNone(spawned[0].poll(), "direct child survived")
+            self.assertTrue(spawned[0].stdout.closed)
+            self.assertTrue(spawned[0].stderr.closed)
+            if failure_point in ("selector_register", "selector_second_register"):
+                self.assertTrue(broken_selector.closed)
+            time.sleep(1)
+            self.assertFalse(marker.exists(), "descendant survived")
+
+    def test_f26_selector_creation_failure_cleans_group(self):
+        self._assert_f26_error_kills_descendants("selector_create")
+
+    def test_f26_selector_registration_failure_cleans_group(self):
+        self._assert_f26_error_kills_descendants("selector_register")
+
+    def test_f26_second_selector_registration_failure_cleans_group(self):
+        self._assert_f26_error_kills_descendants("selector_second_register")
+
+    def test_f26_callback_failure_cleans_group(self):
+        self._assert_f26_error_kills_descendants("callback")
+
+    def test_f26_normal_exit_retains_output_and_cleans_descendant(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary) / "escaped"
+            program = (
+                "import os,time\nfrom pathlib import Path\n"
+                "if os.fork() == 0:\n"
+                "    time.sleep(0.8)\n"
+                f"    Path({str(marker)!r}).write_text('escaped')\n"
+                "else:\n"
+                "    os.write(1,b'terminal output')\n"
+            )
+            outcome = execute([sys.executable, "-c", program], cwd=Path.cwd())
+            self.assertEqual((outcome.returncode, outcome.cause), (0, "exit"))
+            self.assertEqual(outcome.stdout, b"terminal output")
+            time.sleep(1)
+            self.assertFalse(marker.exists())
+
     def test_b10_profile_bounds_nested_cargo(self):
         from .profile_runner import ProfileRunner
         runner = ProfileRunner("create-pr", [])
