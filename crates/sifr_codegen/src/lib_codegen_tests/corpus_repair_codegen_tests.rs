@@ -603,3 +603,32 @@ def firstTwo(nums: list[int]) -> int:
         "{rust}"
     );
 }
+
+#[test]
+fn corpus_repair_borrowed_recursive_option_binding_materializes_owned_node() {
+    let rust = generate_rust_from_source(
+        r#"
+class TreeNode:
+    def __init__(self, value: int, left: TreeNode | None, right: TreeNode | None):
+        self.value = value
+        self.left = left
+        self.right = right
+
+def invertTree(root: TreeNode | None) -> TreeNode | None:
+    if root is None:
+        return None
+    node = root
+    return node
+"#,
+    );
+    assert!(
+        rust.contains("fn invertTree(root: Option<&TreeNode>)"),
+        "{rust}"
+    );
+    assert!(rust.contains("let Some(root) = root else"), "{rust}");
+    assert!(!rust.contains("root.as_ref()"), "{rust}");
+    assert!(
+        rust.contains("let node: TreeNode = root.clone();"),
+        "{rust}"
+    );
+}

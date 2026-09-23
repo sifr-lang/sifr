@@ -531,8 +531,8 @@ def nextNode(node: LinkedNode | None) -> LinkedNode | None:
     );
 
     assert!(
-        rust_code.contains("let Some(node) = node.as_ref() else"),
-        "shared recursive options must narrow through an immutable borrowed binding:\n{rust_code}"
+        rust_code.contains("let Some(node) = node else"),
+        "shared recursive Option<&Node> must narrow without an extra reference:\n{rust_code}"
     );
     assert!(
         !rust_code.contains("let Some(mut node) = node else"),

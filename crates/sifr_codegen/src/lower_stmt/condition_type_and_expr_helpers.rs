@@ -43,7 +43,28 @@ pub(super) fn option_binding_value_expr(
     bindings: SimpleStmtBindings<'_>,
 ) -> RustExpr {
     let base = RustExpr::Ident(option_var.to_string());
-    if bindings.borrowed_params.contains(option_var)
+    // Recursive optional parameters use Option<&Node> as their Rust ABI, so
+    // pattern matching the value already yields a borrowed node. Calling
+    // as_ref() here would produce &&Node and clone only the reference.
+    let recursive_borrowed_view = bindings.borrowed_params.contains(option_var)
+        && bindings
+            .local_binding_types
+            .get(option_var)
+            .is_some_and(|ty| {
+                let Some(inner) = ty.optional_member_type() else {
+                    return false;
+                };
+                let Type::Class { name, .. } = inner.resolve_alias() else {
+                    return false;
+                };
+                bindings
+                    .recursive_fields
+                    .iter()
+                    .any(|(class_name, _)| class_name == name)
+            });
+    if recursive_borrowed_view {
+        base
+    } else if bindings.borrowed_params.contains(option_var)
         || bindings.mut_borrowed_params.contains(option_var)
     {
         RustExpr::MethodCall {
