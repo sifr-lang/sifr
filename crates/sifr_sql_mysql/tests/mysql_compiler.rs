@@ -331,3 +331,37 @@ fn mysql_independently_normalizes_portable_requirement_sources() {
     );
     assert!(normalized.capabilities.contains("sql.query.select"));
 }
+
+#[test]
+fn claimed_mysql_sql_values_keep_canonical_bind_contracts() {
+    use sifr_sql_contract::{
+        BindCompatibility, DatabaseType, InputType, Nullability, ParameterType, bind_compatibility,
+        canonical_read_type,
+    };
+    let codecs = sifr_sql_mysql::mysql_codec_registry(SUPPORTED_MYSQL_SERIES[0])
+        .expect("MySQL codec registry");
+    for database in [
+        DatabaseType::Date,
+        DatabaseType::LocalTime { precision: 0 },
+        DatabaseType::LocalDateTime { precision: 0 },
+        DatabaseType::Instant { precision: 0 },
+        DatabaseType::Json { binary: true },
+    ] {
+        let value = canonical_read_type(&database).expect("canonical MySQL value");
+        let compatibility = bind_compatibility(
+            &InputType {
+                value,
+                nullability: Nullability::NonNull,
+            },
+            &ParameterType {
+                database: database.clone(),
+                nullability: Nullability::NonNull,
+            },
+            &codecs,
+        );
+        assert!(
+            !matches!(compatibility, BindCompatibility::Rejected(_)),
+            "{database:?}: {compatibility:?}"
+        );
+    }
+}

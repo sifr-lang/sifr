@@ -24,10 +24,14 @@ impl ToSql for PostgresParameter {
                 output.extend_from_slice(value);
                 Ok(IsNull::No)
             }
-            OwnedSqlValue::Encoded { payload, .. } => {
+            OwnedSqlValue::Encoded {
+                type_identity,
+                payload,
+            } if type_identity == &format!("postgresql.oid.{}", ty.oid()) => {
                 output.extend_from_slice(payload);
                 Ok(IsNull::No)
             }
+            OwnedSqlValue::Encoded { .. } => Err(codec_error()),
             OwnedSqlValue::Sequence(values) if matches!(ty.kind(), Kind::Array(_)) => values
                 .iter()
                 .cloned()
@@ -284,6 +288,47 @@ mod tests {
     #![allow(clippy::expect_used)]
 
     use super::*;
+
+    #[test]
+    fn standard_sql_values_keep_their_wire_identity_when_rebound() {
+        for (ty, bytes) in [
+            (Type::DATE, vec![0, 0, 0, 1]),
+            (Type::TIME, vec![0, 0, 0, 0, 0, 0, 0, 1]),
+            (Type::TIMETZ, vec![0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]),
+            (Type::TIMESTAMP, vec![0, 0, 0, 0, 0, 0, 0, 1]),
+            (Type::TIMESTAMPTZ, vec![0, 0, 0, 0, 0, 0, 0, 1]),
+            (Type::UUID, vec![0; 16]),
+            (Type::JSONB, b"\x01{}".to_vec()),
+            (Type::INET, vec![2, 32, 0, 4, 127, 0, 0, 1]),
+            (Type::CIDR, vec![2, 24, 1, 4, 127, 0, 0, 0]),
+            (Type::MACADDR, vec![0; 6]),
+        ] {
+            let value = decode_value(&ty, Some(RawPostgresValue(bytes.clone())))
+                .expect("built-in SQL value should decode");
+            let OwnedSqlValue::Encoded { type_identity, .. } = &value else {
+                panic!("built-in SQL value should retain wire identity");
+            };
+            assert_eq!(type_identity, &format!("postgresql.oid.{}", ty.oid()));
+            let mut output = BytesMut::new();
+            PostgresParameter(value)
+                .to_sql(&ty, &mut output)
+                .expect("decoded SQL value should encode for its original type");
+            assert_eq!(output.as_ref(), bytes);
+        }
+    }
+
+    #[test]
+    fn encoded_sql_values_reject_a_different_target_identity() {
+        let value = OwnedSqlValue::Encoded {
+            type_identity: format!("postgresql.oid.{}", Type::UUID.oid()),
+            payload: Arc::from([0_u8; 16]),
+        };
+        assert!(
+            PostgresParameter(value)
+                .to_sql(&Type::DATE, &mut BytesMut::new())
+                .is_err()
+        );
+    }
 
     #[test]
     fn malformed_wire_values_are_typed_errors_without_panics() {

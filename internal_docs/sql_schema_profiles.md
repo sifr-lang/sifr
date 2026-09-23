@@ -164,6 +164,15 @@ original qualified database identity. Generated source uses a collision-free
 internal class name such as `enums__public__status`; the compiler-known metadata
 exposes that type as `enums.public.status`.
 
+
+Generated scalar annotations and their imports share one closed SQL value identity
+table. The table also names the frontend identity used for query inputs and
+results. Generated modules import `Enum` explicitly from `enum`, and import
+date/time, UUID, JSON, and SQL network or temporal wrapper names from their
+declaring Sifr modules. The generator rejects an annotation without an import
+or local declaration. Nullable and container annotations are checked
+recursively. No `SqlEnum` class is required; generated enums extend `Enum`.
+
 A sidecar `ProfileModuleMetadata` contains the nominal identity, profile and
 schema fingerprints, compiler-known exports, generated types, and complete
 schema-symbol index.

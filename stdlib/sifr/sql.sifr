@@ -25,6 +25,26 @@ class CalendarInterval:
     pass
 
 
+class OffsetTime:
+    pass
+
+
+class Instant:
+    pass
+
+
+class IPAddress:
+    pass
+
+
+class IPNetwork:
+    pass
+
+
+class MacAddress:
+    pass
+
+
 class SqlArray[T]:
     pass
 

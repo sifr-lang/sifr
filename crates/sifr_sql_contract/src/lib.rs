@@ -26,6 +26,7 @@ mod requirement;
 mod schema;
 mod slice;
 mod sql_type;
+mod value_identity;
 
 pub use bind::{
     BindCompatibility, BindRejection, EncodeCheck, InputType, ParameterType, bind_compatibility,
@@ -64,6 +65,7 @@ pub use fragment_batches::{
 pub use generated::{
     COMPILER_KNOWN_PROFILE_EXPORTS, GeneratedProfileModule, GeneratedSchemaType,
     ProfileModuleMetadata, SchemaWitnessMetadata, generate_profile_module,
+    generated_sifr_type_name,
 };
 pub use identifier::{
     decode_generated_identifier, decode_generated_path, encode_generated_identifier,
@@ -131,3 +133,8 @@ pub const SCHEMA_IR_FORMAT_VERSION: u32 = 1;
 mod compiled_identity;
 #[doc(hidden)]
 pub use compiled_identity::compiled_input_tokens;
+
+pub use value_identity::{
+    SQL_VALUE_IDENTITIES, SqlValueIdentity, sql_value_identity,
+    sql_value_type_for_frontend_identity,
+};

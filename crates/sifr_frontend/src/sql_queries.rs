@@ -7,6 +7,7 @@ use sifr_sql_contract::{
     Cardinality, CodecRegistry, EffectContract, FetchMethod, ProfileModuleRegistry,
     ProviderAnalysis, QueryAdapter, QueryContractError, QueryContractErrorKind, QueryEffect,
     QueryOrigin, QueryTemplateContract, QueryTemplateDraft, RegisteredProfileModule, SifrType,
+    sql_value_identity,
 };
 use sifr_type_system::{FixedIntType, StructuralRecordType, Type};
 
@@ -354,7 +355,6 @@ fn lower_sifr_type(ty: &SifrType) -> Result<Type, QueryContractError> {
         SifrType::ExactInteger => Type::Int,
         SifrType::Decimal => Type::Decimal,
         SifrType::BigDecimal => Type::BigDecimal,
-        SifrType::Numeric => nominal_type("sifr.sql.Numeric", Vec::new()),
         SifrType::Float => Type::Float,
         SifrType::Str => Type::Str,
         SifrType::Bytes => Type::Bytes,
@@ -382,17 +382,28 @@ fn lower_sifr_type(ty: &SifrType) -> Result<Type, QueryContractError> {
                 .map(lower_sifr_type)
                 .collect::<Result<Vec<_>, _>>()?,
         ),
-        SifrType::Date => nominal_type("sifr.datetime.date", Vec::new()),
-        SifrType::LocalTime => nominal_type("sifr.datetime.time", Vec::new()),
-        SifrType::OffsetTime => nominal_type("sifr.datetime.offset_time", Vec::new()),
-        SifrType::LocalDateTime => nominal_type("sifr.datetime.datetime", Vec::new()),
-        SifrType::Instant => nominal_type("sifr.datetime.instant", Vec::new()),
-        SifrType::CalendarInterval => nominal_type("sifr.sql.CalendarInterval", Vec::new()),
-        SifrType::Uuid => nominal_type("sifr.uuid.UUID", Vec::new()),
-        SifrType::JsonValue => nominal_type("sifr.json.JsonValue", Vec::new()),
-        SifrType::IpAddress => nominal_type("sifr.ipaddress.IPAddress", Vec::new()),
-        SifrType::IpNetwork => nominal_type("sifr.ipaddress.IPNetwork", Vec::new()),
-        SifrType::MacAddress => nominal_type("sifr.sql.MacAddress", Vec::new()),
+        SifrType::Numeric
+        | SifrType::Date
+        | SifrType::LocalTime
+        | SifrType::OffsetTime
+        | SifrType::LocalDateTime
+        | SifrType::Instant
+        | SifrType::CalendarInterval
+        | SifrType::Uuid
+        | SifrType::JsonValue
+        | SifrType::IpAddress
+        | SifrType::IpNetwork
+        | SifrType::MacAddress => nominal_type(
+            sql_value_identity(ty)
+                .ok_or_else(|| {
+                    QueryContractError::new(
+                        QueryContractErrorKind::InvalidTemplate,
+                        format!("unsupported SQL value identity: {ty:?}"),
+                    )
+                })?
+                .frontend_identity,
+            Vec::new(),
+        ),
     })
 }
 

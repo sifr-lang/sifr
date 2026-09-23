@@ -220,6 +220,40 @@ async fn dedicated_workers_execute_decode_reset_and_reuse() {
 }
 
 #[tokio::test(flavor = "current_thread")]
+async fn standard_text_encoded_sql_values_round_trip_through_sqlite() {
+    let directory = tempfile::tempdir().expect("directory");
+    let pool = open_pool(profile(&directory.path().join("values.sqlite3")))
+        .expect("pool")
+        .verify_schema()
+        .await
+        .expect("verification");
+    let mut connection = pool.acquire().await.expect("connection");
+    let selected = connection.profile();
+    for value in [
+        "2026-09-23",
+        "12:34:56.123456",
+        "2026-09-23T12:34:56.123456",
+        "2026-09-23T12:34:56.123456Z",
+        r#"{"ready":true}"#,
+    ] {
+        let rows = connection
+            .fetch_all(
+                request(
+                    Arc::clone(&selected),
+                    "SELECT ? AS value",
+                    vec![OwnedSqlValue::Text(value.to_string())],
+                    true,
+                ),
+                ExecutionOptions::default(),
+            )
+            .await
+            .expect("query value round trip");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].values(), &[OwnedSqlValue::Text(value.to_string())]);
+    }
+}
+
+#[tokio::test(flavor = "current_thread")]
 async fn one_row_fetches_report_cardinality_before_collection_limits() {
     let directory = tempfile::tempdir().expect("directory");
     let pool = open_pool(profile(&directory.path().join("cardinality.sqlite3")))
