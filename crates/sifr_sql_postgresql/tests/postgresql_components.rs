@@ -99,7 +99,62 @@ fn every_checked_in_component_executes_in_the_capability_free_host() {
         );
         assert!(run.response.plan.diagnostics.is_empty());
         assert!(!run.response.plan.operations.is_empty());
+        exercise_sequence_schema_component(&mut host, major, &bytes);
     }
+}
+
+fn exercise_sequence_schema_component(host: &mut ComponentHost, major: u16, bytes: &[u8]) {
+    use sifr_sql_contract::{
+        ObjectId, SchemaDocumentKind, SchemaSourceInput, SemanticValue, SessionContract,
+        schema_normalization_from_response, schema_normalization_request,
+        schema_source_fingerprint,
+    };
+    let mut registration = component_registration(major).unwrap();
+    registration.identity.processor = format!("sifr.sql.postgresql.v{major}.schema");
+    let sources = [
+        ("01.sql", "CREATE TABLE owners (first bigint, second bigint); CREATE SEQUENCE seq AS integer INCREMENT -2 MINVALUE -1000 MAXVALUE -1 START -1 OWNED BY owners.first; CREATE SEQUENCE detached;"),
+        ("02.sql", "ALTER SEQUENCE seq OWNED BY owners.second; ALTER SEQUENCE detached OWNED BY owners.first;"),
+        ("03.sql", "ALTER SEQUENCE detached OWNED BY NONE;"),
+    ].into_iter().map(|(document, sql)| SchemaSourceInput {
+        document: document.to_string(), kind: SchemaDocumentKind::SqlDdl,
+        fingerprint: schema_source_fingerprint(sql.as_bytes()), contents: sql.as_bytes().to_vec(),
+    }).collect::<Vec<_>>();
+    let request = schema_normalization_request(
+        &registration,
+        "0.0.0",
+        "app.Schema",
+        &major.to_string(),
+        &SessionContract::default(),
+        &Default::default(),
+        &sources,
+    )
+    .unwrap();
+    let run = host
+        .analyze(&registration, bytes, &request)
+        .unwrap_or_else(|error| panic!("PostgreSQL {major} schema component failed: {error}"));
+    assert!(run.response.plan.diagnostics.is_empty());
+    let output =
+        schema_normalization_from_response(support::provider(), &sources, &run.response).unwrap();
+    let sequence = &output.schema.objects[&ObjectId::new("public.seq")];
+    assert_eq!(
+        sequence.semantic.get("owned-by"),
+        Some(&SemanticValue::Text("public.owners.second".to_string()))
+    );
+    assert!(
+        !sequence
+            .dependencies
+            .contains(&ObjectId::new("public.owners.first"))
+    );
+    assert_eq!(
+        sequence.semantic.get("increment"),
+        Some(&SemanticValue::Signed(-2))
+    );
+    let detached = &output.schema.objects[&ObjectId::new("public.detached")];
+    assert!(!detached.semantic.contains_key("owned-by"));
+    assert_eq!(
+        detached.dependencies,
+        [ObjectId::new("public")].into_iter().collect()
+    );
 }
 
 fn schema_output_fingerprint(schema: &sifr_sql_contract::SchemaIr) -> String {

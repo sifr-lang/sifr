@@ -29,6 +29,7 @@ pub enum StatementKind {
     CreateView(CreateViewStatement),
     CreateIndex(CreateIndexStatement),
     CreateSequence(CreateSequenceStatement),
+    AlterSequence(AlterSequenceStatement),
     CreateFunction(CreateFunctionStatement),
 }
 
@@ -394,6 +395,7 @@ pub struct ColumnDefinition {
     pub ty: PostgresTypeName,
     pub nullable: bool,
     pub has_default: bool,
+    pub default_sequence: Option<String>,
     pub generated: bool,
     pub identity_generation: Option<String>,
     pub primary_key: bool,
@@ -473,6 +475,31 @@ pub struct CreateIndexStatement {
 #[serde(deny_unknown_fields)]
 pub struct CreateSequenceStatement {
     pub name: Vec<String>,
+    pub if_not_exists: bool,
+    pub data_type: SequenceDataType,
+    pub increment: i64,
+    pub minimum: Option<i64>,
+    pub maximum: Option<i64>,
+    pub start: Option<i64>,
+    pub cache: i64,
+    pub cycle: bool,
+    pub owned_by: Option<Vec<String>>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum SequenceDataType {
+    SmallInt,
+    Integer,
+    BigInt,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AlterSequenceStatement {
+    pub name: Vec<String>,
+    pub if_exists: bool,
+    pub owned_by: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
