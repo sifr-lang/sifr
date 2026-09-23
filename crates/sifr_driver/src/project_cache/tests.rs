@@ -351,8 +351,25 @@ fn process_death_and_new_process_restore() {
     let fresh: serde_json::Value = serde_json::from_slice(&fs::read(first).unwrap()).unwrap();
     let restored: serde_json::Value = serde_json::from_slice(&fs::read(second).unwrap()).unwrap();
     assert_eq!(fresh["diagnostics"], restored["diagnostics"]);
-    assert_eq!(fresh["report"]["computed_checks"], 1);
-    assert_eq!(restored["report"]["restored_checks"], 1);
+    assert_eq!(fresh["report"]["computed_checks"], 1, "fresh={fresh}");
+    assert_eq!(
+        fresh["report"]["status"], "published",
+        "fresh={fresh}; restored={restored}"
+    );
+    let reopened = storage::Store::open(
+        &cache,
+        file.parent().unwrap(),
+        &context().identity().unwrap(),
+    )
+    .unwrap_or_else(|error| panic!("reopen: {error}; fresh={fresh}; restored={restored}"));
+    assert!(
+        reopened.latest().is_some(),
+        "fresh={fresh}; restored={restored}"
+    );
+    assert_eq!(
+        restored["report"]["restored_checks"], 1,
+        "fresh={fresh}; restored={restored}"
+    );
 }
 
 #[test]
