@@ -38,7 +38,8 @@ The crosswalk uses F01-F34 in the supplied final recommendations (/home/yaser5/p
 | H01 | Fuzz/property owner; F28; open. | Real guided execution plus semantic normalization, narrowing, ownership, incremental/full and deterministic-codegen properties; separate build/tool/timeout/findings and minimized seeds. |
 | H02 | Typed lowering and unsafe bridge owners, split by subsystem; F29; open. | Semantic dispatch classification, strict decline and ABI/lifetime/alias/ownership/callback runtime contracts. Regex counts are not acceptance. |
 | H03 | Maintainability/flow owner; F30; open. | Current normalized ratchets and API/fan-out evidence; flow equivalence and resource measurements before removal. |
-| D01 | Documentation/registry owners; F31 and non-codegen F32; open, updated with each structural delivery. | Alias/target-aware maps, current API/path/link checks, negative registry and diagnostic-reference tests; historical receipts preserved. |
+| D01a | Diagnostic and verification registry prerequisite; non-codegen F32; open before N01-N06. | Active code identity, owner-module and fixture references, related-span JSON, verification mutation inventory and negative drift tests. Do not change codegen diagnostics or historical numeric codes. |
+| D01b | Documentation owner; F31 and final current maps; open after structural delivery. | Alias/target-aware maps, current API/path/link checks, active-named release-record status and links; historical receipts preserved. |
 | Q01 | Final integration qualifier; all retained criteria; open after required owner merges. | Exact-candidate full merge profile, companion freshness, compatible performance reference and owner handoffs; whole-phase review and separate docs-only closure. |
 
 Rows crossing packages specify a contract handoff; delivery splits at package ownership boundaries. Do not use this record to absorb another active issue.
@@ -79,7 +80,7 @@ Historical M1-M12 drafts #3553-#3564 remain open on the unmerged stack at this r
 | M12K (no PR) | Controlled-host reference attempt blocked; V01 is early prerequisite. |
 | M13 #3571 | Historical branch review is not current-main closure; Q01 owns final integration and whole-phase review. |
 
-V03 scans every Rust source beneath each Cargo workspace member and manifest-declared target path, including build scripts, bins, examples, benches and tests. Non-member demos Rust reference material is outside the Cargo target graph and this guard.
+V03 scans every Rust source beneath each Cargo workspace member and manifest-declared target path, including build scripts, bins, examples, benches and tests. Four demos (`demos/csv`, `demos/parse_safety`, `demos/shutil`, `demos/stdlib_intrinsics`) are Cargo workspace members and are covered. Rust reference material in non-member demos remains outside this guard.
 
 The unmerged [V03 draft PR #3923](https://github.com/sifr-lang/sifr/pull/3923) at candidate 45eaf9a43b217c75fe2c34ee7a6068da0d85f7cb is historical evidence only. Its second scoped review found new mechanism-level F24 and F25 omissions and required this F24/F25 split. The unmerged [F24 draft PR #3925](https://github.com/sifr-lang/sifr/pull/3925) ended at candidate 3d0ca988480ce1f2593b08e99d3f12ddb843cb8e after its second review found the OS symlink API boundary missing. V03 selectively ported and completed the filesystem guard in PR #3926; V03b completed parser work separately in PR #3929. The unrelated TypeScript-Go LSP guard failure remains with E01.
 
@@ -88,12 +89,12 @@ The unmerged [V03b draft PR #3928](https://github.com/sifr-lang/sifr/pull/3928) 
 ## Order, gates and evidence
 
 1. P00, then urgent X01.
-2. Validation prerequisites V01-V03b, V04 and D01 guard/registry pieces; runner negative tests precede reliance on later green evidence.
+2. Validation prerequisites V01-V03b, V04 and D01a registry guardrails; runner negative tests precede reliance on later green evidence.
 3. Native/cache N01-N06; N01 depends on merged DX9-F7 behavior, N06 uses DX9-F5 ownership, and N02 establishes identities before warm-consumer claims.
 4. X02 with generated Rust owner after X01, updating diagnostics/fixtures/materialization together.
 5. C01, then C02.
 6. E01 before Python fast-hit reorder, E02 after C01, E03 after E01-E02. E04 independently completes before editor closure.
-7. H01-H03 and D01 current documentation/registry completion.
+7. H01-H03 and D01b current documentation completion.
 8. Q01 exact-candidate integration, owner handoff audit, whole-phase review and closure. Release qualification only on an actual request.
 
 The 2026-09-23 assignment prospectively approves intermediate items with named acceptance tests, focused regressions and scoped Opus review, without per-item create-PR/full merge gates. Q01 runs one full merge profile on final merged work; repair the first in-scope cause, rerun failed/affected checks and the full gate until it passes. The whole-phase closer edits docs only and returns needs-implementation for defects. Other owners retain their own recorded rules.

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pathlib
+from collections import Counter
 import re
 import subprocess
 import sys
@@ -163,6 +164,66 @@ def parse_registry() -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
     return code_to_constant, active_code_to_constant, active_fixtures
 
 
+
+def registry_integrity_errors(text: str) -> list[str]:
+    """Keep active identities, owner modules, and fixture declarations in lockstep."""
+    errors: list[str] = []
+    declarations = re.findall(
+        rf"pub const ([A-Z0-9_]+): Self\s*=\s*Self::new\(\"({CODE_RE})\",\s*Severity::([A-Za-z]+)\)",
+        text,
+    )
+    active_block = re.search(
+        r"ACTIVE_DIAGNOSTIC_CODES:\s*&\[DiagnosticCode\]\s*=\s*&\[(?P<body>.*?)\];",
+        text,
+        re.S,
+    )
+    if active_block is None:
+        return ["missing ACTIVE_DIAGNOSTIC_CODES"]
+    active_names = diagnostic_constant_references(active_block.group("body"))
+    entries = re.findall(
+        rf'active_entry!\(\s*"({CODE_RE})"\s*,\s*"[^"]+"\s*,\s*"(?:\\.|[^"\\])*"'
+        rf'\s*,\s*Severity::([A-Za-z]+)\s*,\s*"([^"]+)"\s*,\s*"(?:\\.|[^"\\])*"\s*,\s*"([^"]+)"',
+        text,
+        re.S,
+    )
+    for label, values in (
+        ("constant", [name for name, _, _ in declarations]),
+        ("code identity", [code for _, code, _ in declarations]),
+        ("active constant", active_names),
+        ("active registry entry", [code for code, _, _, _ in entries]),
+    ):
+        for value, count in Counter(values).items():
+            if count > 1:
+                errors.append(f"duplicate {label}: {value}")
+    constants = {name: (code, severity) for name, code, severity in declarations}
+    active_codes = {constants[name][0] for name in active_names if name in constants}
+    for name in sorted(set(active_names) - set(constants)):
+        errors.append(f"unknown active constant: {name}")
+    entry_codes = {code for code, _, _, _ in entries}
+    for code in sorted(active_codes - entry_codes):
+        errors.append(f"active code missing registry entry: {code}")
+    for code in sorted(entry_codes - active_codes):
+        errors.append(f"registry entry is not active: {code}")
+    severity_by_code = {code: severity for _, code, severity in declarations}
+    for code, severity, fixture, owners in entries:
+        if code in severity_by_code and severity != severity_by_code[code]:
+            errors.append(f"{code}: registry severity differs from constant")
+        if not fixture_file_exists(fixture):
+            errors.append(f"{code}: representative fixture does not exist: {fixture}")
+        for owner in owners.split(" / "):
+            parts = owner.split("::")
+            if not parts or not re.fullmatch(r"sifr_[a-z_]+|sifr", parts[0]):
+                errors.append(f"{code}: invalid owner module: {owner}")
+                continue
+            source = ROOT / "crates" / parts[0] / "src"
+            module = pathlib.Path(*parts[1:]) if len(parts) > 1 else pathlib.Path("lib")
+            if not (source / module).with_suffix(".rs").is_file() and not (
+                source / module / "mod.rs"
+            ).is_file():
+                errors.append(f"{code}: owner module does not exist: {owner}")
+    return errors
+
+
 def fixture_file_exists(fixture: str) -> bool:
     path_part = fixture.split("::", 1)[0]
     return (ROOT / path_part).exists()
@@ -171,6 +232,7 @@ def fixture_file_exists(fixture: str) -> bool:
 def main() -> int:
     errors: list[str] = []
     code_to_constant, active_code_to_constant, active_fixtures = parse_registry()
+    errors.extend(registry_integrity_errors(read_rust_with_local_sources(CODES_RS)))
     active_constants = set(active_code_to_constant.values())
     all_constants = set(code_to_constant.values())
 
