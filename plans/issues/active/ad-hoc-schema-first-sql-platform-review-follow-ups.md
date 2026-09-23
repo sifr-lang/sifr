@@ -159,7 +159,66 @@ git diff --check, the file-size guard (4125 files), and 14 Markdown
 link targets with no missing relative paths. No additional SQL gate or
 external review is required for the documentation receipt.
 
-### Item 2 blocked handoff (2026-09-23)
+### Item 2 delivery receipt (2026-09-23)
+
+Status: merged; Item 3 is the next bounded implementation item. [PR #3950](https://github.com/sifr-lang/sifr/pull/3950)
+merged as `83e2fd502bb47e6f0f0cbc54bbe3b023ead7b90b`. Its exact reviewed
+implementation candidate was `95f4ae8f962944ada081ff41d8d422c7d61e37e9`,
+ported from the preserved source onto main
+`4734ffa03bebf926753221244ca118ff6b760583`. Main advanced through
+unrelated package and record paths before merge; no Item 2 path overlapped.
+The historical blocked handoff below remains failed evidence, not a pass.
+Architecture owner [PR #3940](https://github.com/sifr-lang/sifr/pull/3940)
+removed its coverage-registry prerequisite before this candidate was tested.
+
+The closed SQL value mapping now drives generated imports and annotations,
+frontend input and result identities, and component hole descriptors. Generated
+source lowers and type-checks through the ordinary frontend, including a
+missing-import mutation. Provider bind and runtime codec regressions cover
+claimed canonical values, nullable and container forms. A mapping miss in
+frontend lowering returns a typed query-contract error. All six PostgreSQL,
+three MySQL, and one SQLite components were rebuilt from the current
+producer-input closures, with source and artifact hashes recorded in the
+receipt. Explicit Enum imports, the public API reference, and SqlEnum
+reference wording are included.
+
+Fresh selected validation on the final candidate content:
+
+| Check | Result |
+| --- | --- |
+| Contract crate, frontend SQL suite, driver profile suite, public API reference | Passed; four frontend SQL cases, six driver profile cases, one public API case. |
+| PostgreSQL parser matrix and compiler qualification | PostgreSQL 13–18 native suites and all six rebuilt capability-free components passed; compiler qualification passed. |
+| Strict coverage readiness | Passed after the external registry repair. |
+| Focused frontend hole descriptor, PostgreSQL generated profiles, MySQL/SQLite claimed values, PostgreSQL/MySQL codecs, SQLite value round trip | Passed. |
+| Workspace Clippy, formatting, HIR, driver, file-size, diff, component provenance and artifact hashes | Passed; file-size guard checked 4132 files against 900 lines. |
+
+The evidence receipt is
+`/home/yaser5/projects/sifr/sql-item2-resume-evidence-20260923/item2-95f4ae8f9-receipt.json`
+(SHA-256 `bc9a6bf83590ce6e1a9e164fa7d2e5d414f3ae3ee566443822f31803a8125e7d`).
+It names the exact logs, source digests, and all ten component content hashes.
+The first Cargo setup attempt lacked initialized submodules; the first
+component build lacked the pinned SDK environment; and the first workspace
+Clippy run rejected a data-dependent `expect`. These were not counted as
+passes. The Clippy repair was followed by the affected frontend and driver
+checks and a passing workspace Clippy rerun. No create-PR or full merge gate
+ran for this intermediate item; the final integration qualifier owns that
+gate under the current phase policy.
+
+The [exact-candidate scoped Opus review](https://github.com/sifr-lang/sifr/pull/3950#issuecomment-5791393941)
+returned `SATISFIED` with no blocking findings on
+`95f4ae8f962944ada081ff41d8d422c7d61e37e9`. Its response SHA-256 is
+`ce419dac1b3a6c311a189d48278687c5417c232bd720e50add7376b38dcf17ea`.
+Deferred suggestions: return a typed error instead of the currently unreachable
+closed-mapping panic if a future variant is omitted; align PostgreSQL embedded
+plan result metadata with nominal row identities if a semantic consumer is
+introduced; consider a protocol-major bump for third-party components after
+the new nominal protocol variant; tidy the architecture paragraph line breaks;
+and extend PostgreSQL provider bind regressions to CalendarInterval and Numeric.
+These were not blocking findings for the reviewed Item 2 candidate. This
+record-only delivery update requires documentation checks, not another Sifr
+gate or external review.
+
+### Historical Item 2 blocked handoff (2026-09-23)
 
 Item 2 implementation candidate `a934ce756236be15a06e699f11a9203b3b3054b9` is preserved in `codex/sql-generated-identities-item2-20260923` from main `30136206c94ee03784c9db93b2544de72116be88`, but is not qualified, reviewed, or merged. Its named coverage readiness check fails on the pre-existing unclassified `sifr: test:legal_failure_method_names` target from architecture correctness X01. The failure log is `/home/yaser5/projects/sifr/sql-item2-evidence-20260923/coverage-matrix-readiness.log` (SHA-256 `48e8f082a5454db9a0a2de170c80c531231a94ccf8fb396dabde8b4d0a0a1e3d`); the owning issue records the repair. No SQL Item 2 registry workaround, review, PR, or merge is claimed. Resume only after the owner fixes the registry and readiness passes on the resulting base.
 
