@@ -585,6 +585,26 @@ pub(super) fn registry_call_callable_with_owned_args(
             emitter.consuming_value_conversion_for_ir(param_ty, arg_ty, lowered_arg.clone());
         let option_value_adapted = adapted_arg != lowered_arg;
         lowered_arg = adapted_arg;
+        if convention.is_shared_borrow()
+            && emitter.recursive_option_borrowed_type(param_ty).is_some()
+        {
+            lowered_args.push(if arg_is_option {
+                RustExpr::MethodCall {
+                    receiver: Box::new(lowered_arg),
+                    method: "as_ref".to_string(),
+                    args: vec![],
+                }
+            } else {
+                RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(lowered_arg),
+                    }],
+                }
+            });
+            continue;
+        }
         if param_is_option && !arg_is_option {
             lowered_arg = RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec!["Some".to_string()])),

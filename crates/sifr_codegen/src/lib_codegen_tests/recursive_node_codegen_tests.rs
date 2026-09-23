@@ -759,3 +759,47 @@ def main():
         "the method must not borrow the outer Option container:\n{rust_code}"
     );
 }
+
+#[test]
+fn test_recursive_optional_map_callback_uses_borrowed_option_view() {
+    let rust_code = generate_rust_from_source(
+        r#"class Node:
+    value: int
+    next: Node | None
+
+    def __init__(self, value: int, next: Node | None = None):
+        self.value = value
+        self.next = next
+
+def show(node: Node | None) -> str:
+    if node is None:
+        return "None"
+    return str(node.value) + show(node.next)
+
+def render_present(nodes: list[Node]) -> list[str]:
+    return sorted(map(show, nodes))
+
+def render_optional(nodes: list[Node | None]) -> list[str]:
+    return sorted(map(show, nodes))
+
+def main():
+    assert render_present([Node(2), Node(1)]) == ["1None", "2None"]
+    optional_nodes: list[Node | None] = []
+    optional_nodes.append(None)
+    assert render_optional(optional_nodes) == ["None"]
+    assert show(Node(3)) == "3None"
+    assert show(None) == "None"
+"#,
+    );
+
+    assert!(
+        rust_code.contains("fn show(node: Option<&Node>)"),
+        "{rust_code}"
+    );
+    assert!(rust_code.contains("show(Some(&__map_item))"), "{rust_code}");
+    assert!(
+        rust_code.contains("show(__map_item.as_ref())"),
+        "{rust_code}"
+    );
+    assert!(!rust_code.contains("show(&Some("), "{rust_code}");
+}

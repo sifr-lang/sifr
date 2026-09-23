@@ -275,14 +275,7 @@ pub(super) fn lowers_map_builtin_call_with_typed_lambda() {
 
 #[test]
 pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
-    let node_ty = Type::Class {
-        identity: None,
-        type_args: Vec::new(),
-        name: "TreeNode".to_string(),
-        fields: vec![].into(),
-        methods: vec![].into(),
-        parent_class: None,
-    };
+    let node_ty = Type::Str;
     let optional_node_ty = Type::Union(vec![node_ty.clone(), Type::None]);
     let expr = HirExpr::IteratorCall {
         op: HirIteratorOp::Map,

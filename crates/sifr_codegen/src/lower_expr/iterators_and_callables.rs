@@ -171,6 +171,15 @@ pub(super) fn lower_simple_map_callable_expr(
     if param_types.len() != 1 || conventions.len() != 1 {
         return Some(lowered_callable);
     }
+    // The signature-aware lowering must decide whether a recursive optional
+    // class parameter expects Option<&T> or &Option<T>.
+    if conventions[0].is_shared_borrow()
+        && param_types[0]
+            .optional_member_type()
+            .is_some_and(|inner| matches!(inner.resolve_alias(), Type::Class { .. }))
+    {
+        return None;
+    }
     let iter_elem_ty =
         resolve_alias_type(unwrap_simple_iter_source_expr(iter).ty()).iterable_element_type()?;
     let adapted_arg = adapt_simple_map_callable_arg(
