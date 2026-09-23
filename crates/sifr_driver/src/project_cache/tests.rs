@@ -555,3 +555,60 @@ fn saved_check_policy_distinguishes_missing_empty_and_unserializable_paths() {
     let error = saved_check_policy(Path::new(&invalid), cwd).unwrap_err();
     assert!(error.contains("could not serialize saved-check policy"));
 }
+
+#[cfg(unix)]
+#[test]
+fn non_utf8_record_serialization_disables_publication() {
+    use std::os::unix::ffi::OsStringExt;
+
+    let (_root, file, cache) = fixture();
+    let invalid_name = std::ffi::OsString::from_vec(b"invalid-\xff.sifr".to_vec());
+    let invalid_file = file.with_file_name(invalid_name);
+    struct Synthetic;
+    impl SourceProvider for Synthetic {
+        fn read_file(
+            &mut self,
+            _path: &Path,
+        ) -> Result<SourceText, sifr_frontend::SourceProviderError> {
+            Ok(SourceText::new("def main() -> None:\n    pass\n"))
+        }
+        fn read_dir(
+            &mut self,
+            _path: &Path,
+        ) -> Result<Vec<sifr_frontend::SourceDirEntry>, sifr_frontend::SourceProviderError>
+        {
+            Ok(Vec::new())
+        }
+        fn is_file(&mut self, _path: &Path) -> bool {
+            true
+        }
+        fn is_dir(&mut self, _path: &Path) -> bool {
+            false
+        }
+        fn canonicalize(
+            &mut self,
+            path: &Path,
+        ) -> Result<std::path::PathBuf, sifr_frontend::SourceProviderError> {
+            Ok(path.to_path_buf())
+        }
+    }
+    let (diagnostics, report) = check(
+        (&cache, file.parent().unwrap()),
+        &invalid_file,
+        &mut Synthetic,
+        context(),
+        &AtomicBool::new(false),
+        None,
+        |provider| {
+            provider.read_file(&invalid_file).unwrap();
+            CheckComputation {
+                diagnostics: Vec::new(),
+                reusable: true,
+            }
+        },
+    );
+    assert!(diagnostics.is_empty());
+    assert_eq!(report.status, "serialization-unavailable");
+    assert_eq!(report.payload_bytes, 0);
+    assert!(store(&cache, &file).latest().is_none());
+}
