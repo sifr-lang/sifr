@@ -4,9 +4,9 @@ Status: active
 
 ## Retained Item 12R: project-wide borrowed-value calls (2026-09-23)
 
-**Needs implementation; retained Item 12 is not merged or closed.** This
-bounded sub-item is the explicit rescope required by the second Item 12
-implementation review. Draft [PR #3908](https://github.com/sifr-lang/sifr/pull/3908)
+**Implementation candidate blocked by external project-workspace validation;
+retained Item 12 is not merged or closed.** This bounded sub-item was the
+explicit rescope required by the second Item 12 implementation review. Draft [PR #3908](https://github.com/sifr-lang/sifr/pull/3908)
 remains at candidate `e9aed40593c86fd02a2b68853ea4bf2025a20135` on
 `codex/emitted-rust-retained12-20260922`. Its compiler SHA-256 is
 `e803baedda8fbaa646355b702f78ae79841002de7b7be37f0f8f2b042a979490`.
@@ -53,6 +53,14 @@ Item 12R scope and acceptance:
   merge and validation here; final integration qualification and the
   documentation-only whole-phase closer remain separate assignments.
 
+### Item 12R validation blocker (2026-09-23)
+
+**Blocked by [DX.10-F12](ad-hoc-dx10-profile-review-followups.md#f12-project-workspace-test-command-package-root--2026-09-23); Item 12R and retained Item 12 remain unmerged.** The preserved implementation is draft [PR #3946](https://github.com/sifr-lang/sifr/pull/3946), branch `codex/emitted-rust-item12r-20260923`, candidate `d9e79b869d2071433c8a01a980754e3977628b2d`. It carries project-wide borrowed signature/call planning, the native two-module protocol/optional/transitive regression, and the run-pass inventory update. The exact-candidate read-only Opus 5.5 review is **SATISFIED** at `/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/review-response-d9e79b869.md` (SHA-256 `8d8b0a80184771343656feb901d248e5fd5166db6b86619574304536a14a5c4b`).
+
+At that candidate, codegen 1,717/1,717, driver native 1/1, checked-codegen 2/2, driver project 10 passed with 7 preexisting ignored, legal failure names 3/3, E2E 729/729, demo freshness, coverage readiness 4/4, strict Clippy, formatting, HIR, file-size, profile inventory and self-test passed. Receipts keyed by `d9e79b869` are under `/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/`. The blocking named `project_workspace/frontend_mode_parity` selection failed: its `positive_test` row runs `cargo run -q -p sifr -- test demos/mode_consistency` from the repository root; the CLI selects the root `sifr.toml` package and rejects the nested demo with SIFR-RUST-CARGO-0001, “sifr test directory must be inside one Sifr package.” Exact machine receipt: `project-frontend_mode_parity-d9e79b869.json`, selection digest `22811269c4511bf5d6ac8359589fe3782217d3d269a7c6b0779ed144709ca2b3`, input digest `6c2acd10d66e2e31229930b2a53e5a9dbe6bc5a6f6cf73788b61b33852c3ed96`. The manifest command and `crates/sifr/src/test_cli.rs` are unchanged from this item's base. This command/package-root contract belongs to project-workspace verification, outside borrowed-value codegen.
+
+After the failure, the in-flight full generated-quality and 411-case source selections were terminated with exit 143; their partial cases are not acceptance passes. Native 411 and remaining named area selections did not run. No create-PR gate, full merge gate, implementation merge or whole-phase review occurred. Next: repair DX.10-F12 in its owning scope, then resume Item 12R on a fresh exact candidate with affected and still-required named validation before merging. Preserve the prior rejected Item 12 reviews and receipts below as historical evidence.
+
 On the rejected `e9aed405` candidate, codegen passed 1,716/1,716,
 focused native passed 10/10, `legal_failure_method_names` passed 3/3,
 E2E passed 729/729, demo freshness, strict workspace Clippy, formatting,
@@ -71,8 +79,8 @@ and must be fixed by that owner before global readiness can pass. The
 reviewer's protocol-method and callable probes were already ill-typed before
 this pass; they are follow-up findings, not Item 12R acceptance.
 
-Next: assign one Item 12R implementer with exclusive custody of the preserved
-candidate worktree and a new branch/evidence identity. Do not start final
+Next: repair DX.10-F12 in its owning scope, then resume Item 12R with
+exclusive custody of the preserved candidate worktree. Do not start final
 integration or whole-phase closure until Item 12R is merged. The historical
 integration blocker record below remains an accurate receipt for its date,
 not the current status.
