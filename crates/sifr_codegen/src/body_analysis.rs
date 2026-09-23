@@ -4,6 +4,8 @@ mod call_conventions;
 mod discarded_bindings;
 #[path = "body_analysis/last_use.rs"]
 mod last_use;
+#[path = "body_analysis/length_aliases.rs"]
+mod length_aliases;
 #[path = "body_analysis/read_regions.rs"]
 mod read_regions;
 
@@ -48,6 +50,7 @@ pub(crate) struct BodyAnalysis {
     nested_captures: HashMap<usize, HashSet<String>>,
     last_use_statements: HashSet<usize>,
     unused_projection_statements: HashMap<usize, discarded_bindings::UnusedProjection>,
+    stable_length_aliases: HashMap<usize, HashMap<String, String>>,
 }
 
 impl BodyAnalysis {
@@ -66,6 +69,11 @@ impl BodyAnalysis {
         let mut analysis = Self::default();
         let call_param_conventions = collect_call_param_conventions(&func.body, func_signatures);
         analysis.analyze_block(&func.body, &call_param_conventions);
+        analysis.collect_stable_length_aliases(
+            &func.body,
+            &HashMap::new(),
+            &call_param_conventions,
+        );
         let mut defined = func
             .params
             .iter()

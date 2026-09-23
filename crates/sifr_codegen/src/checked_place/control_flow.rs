@@ -499,12 +499,18 @@ impl RustEmitter {
         let present_hir = if negated { else_body } else { then_body };
         let absent_hir = if negated { then_body } else { else_body };
         let mut guards = Vec::new();
+        let length_aliases = self.body_analysis.stable_length_aliases(condition).clone();
         for read in self.body_analysis.proven_reads_in(present_hir) {
             let crate::HirExpr::Index { object, index, .. } = &read else {
                 continue;
             };
             if matches!(object.ty().resolve_alias(), Type::Dict(_, _))
-                || !condition_supports_checked_sequence_read(condition, object, index)
+                || !condition_supports_checked_sequence_read(
+                    condition,
+                    object,
+                    index,
+                    &length_aliases,
+                )
             {
                 continue;
             }
@@ -563,12 +569,18 @@ impl RustEmitter {
             return Ok(Vec::new());
         }
         let mut guards = Vec::new();
+        let length_aliases = self.body_analysis.stable_length_aliases(condition).clone();
         for read in self.body_analysis.proven_reads_in(body) {
             let crate::HirExpr::Index { object, index, .. } = &read else {
                 continue;
             };
             if matches!(object.ty().resolve_alias(), Type::Dict(_, _))
-                || !condition_supports_checked_sequence_read(condition, object, index)
+                || !condition_supports_checked_sequence_read(
+                    condition,
+                    object,
+                    index,
+                    &length_aliases,
+                )
             {
                 continue;
             }

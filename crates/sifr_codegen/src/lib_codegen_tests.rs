@@ -87,6 +87,8 @@ mod integer_field_augassign_codegen_tests;
 #[cfg(test)]
 mod iterators_and_generators_codegen_tests;
 #[cfg(test)]
+mod length_alias_codegen_tests;
+#[cfg(test)]
 mod multi_module_stdlib_feature_tests;
 #[cfg(test)]
 mod native_async_cleanup_codegen_tests;

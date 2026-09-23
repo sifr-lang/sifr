@@ -18,18 +18,24 @@ fn condition_supports_checked_sequence_read(
     condition: &crate::HirExpr,
     object: &crate::HirExpr,
     index: &crate::HirExpr,
+    length_aliases: &std::collections::HashMap<String, String>,
 ) -> bool {
     if let crate::HirExpr::BoolOp { op, values, .. } = condition {
         return match op.as_str() {
             "or" => {
                 !values.is_empty()
-                    && values
-                        .iter()
-                        .all(|value| condition_supports_checked_sequence_read(value, object, index))
+                    && values.iter().all(|value| {
+                        condition_supports_checked_sequence_read(
+                            value,
+                            object,
+                            index,
+                            length_aliases,
+                        )
+                    })
             }
-            "and" => values
-                .iter()
-                .any(|value| condition_supports_checked_sequence_read(value, object, index)),
+            "and" => values.iter().any(|value| {
+                condition_supports_checked_sequence_read(value, object, index, length_aliases)
+            }),
             _ => false,
         };
     }
@@ -67,6 +73,11 @@ fn condition_supports_checked_sequence_read(
                 && args.is_empty()
                 && checked_place_expr_token(len_object).as_deref()
                     == Some(object_token.as_str()) =>
+            {
+                mentions_length = true;
+            }
+            crate::HirExpr::Name { name, .. }
+                if length_aliases.get(name) == Some(&object_token) =>
             {
                 mentions_length = true;
             }
@@ -365,6 +376,7 @@ impl RustEmitter {
         else_expr: &crate::HirExpr,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
         let mut guards = Vec::new();
+        let length_aliases = self.body_analysis.stable_length_aliases(condition).clone();
         let mut previous_witnesses = Vec::new();
         for read in crate::hir_analysis::queries::collection_reads_in_condition(then_expr) {
             let crate::HirExpr::Index {
@@ -374,7 +386,12 @@ impl RustEmitter {
                 continue;
             };
             if crate::helpers::is_option_type(ty)
-                || !condition_supports_checked_sequence_read(condition, object, index)
+                || !condition_supports_checked_sequence_read(
+                    condition,
+                    object,
+                    index,
+                    &length_aliases,
+                )
             {
                 continue;
             }
