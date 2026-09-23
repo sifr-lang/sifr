@@ -537,3 +537,33 @@ fn corpus_repair_structured_exception_proven_nested_read_uses_typed_carrier() {
             .is_none()
     );
 }
+
+#[test]
+fn integer_string_conversion_survives_list_append_and_sort() {
+    let source = r#"
+def repeatKey(value: str) -> str:
+    return value + value
+
+def largestNumber(mut nums: list[int]) -> str:
+    values = []
+    for n in nums:
+        values.append(str(n))
+    values = sorted(values, key=repeatKey)
+    return "".join(values)
+"#;
+    let raw = generate_rust_from_source(source);
+    assert!(
+        !raw.contains("values.push(n.clone())"),
+        "the producer discarded the int-to-str conversion: {raw}"
+    );
+    let rust = canonical(source);
+    assert!(
+        !rust.contains("values.push(n.clone())"),
+        "canonicalization discarded the int-to-str conversion: {rust}"
+    );
+    assert!(
+        rust.contains("values.push(n.to_string())")
+            || rust.contains("values.push(format!("),
+        "the list element must be a converted string: {rust}"
+    );
+}
