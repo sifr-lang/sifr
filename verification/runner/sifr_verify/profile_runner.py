@@ -16,6 +16,7 @@ from .cargo_setup import (
 from .errors import VerificationError
 from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area
+from .process_execution import SAFETY_DEADLINE_ENV, deadline_environment
 from .profile_commands import CommandFailed, cargo_command, run_command, uv_area_command
 from .profile_reporting import run_profile_with_report
 from .compiler_configuration_plan import configuration_plan
@@ -61,6 +62,7 @@ def timed_step(name: str, callback: Callable[[], None]) -> StepResult:
     try:
         callback()
     except CommandFailed as exc:
+        print(f"sifr_verify: {exc}", file=sys.stderr)
         status = exc.returncode
     except (VerificationError, AreaResultError) as exc:
         print(f"sifr_verify: {exc}", file=sys.stderr)
@@ -187,7 +189,28 @@ class ProfileRunner:
 
     def execute_step(self, name: str, callback: Callable[[], None]) -> int:
         budget = self.prepare_step_budget(name)
-        result = timed_step(name, callback)
+        step_seconds = self.env.get("SIFR_VERIFY_STEP_SAFETY_DEADLINE_SECONDS")
+        if step_seconds is None:
+            result = timed_step(name, callback)
+        else:
+            _, deadline = deadline_environment(self.env, step_seconds)
+            previous_deadline = self.env.get(SAFETY_DEADLINE_ENV)
+            previous_process_deadline = os.environ.get(SAFETY_DEADLINE_ENV)
+            self.env[SAFETY_DEADLINE_ENV] = repr(deadline)
+            # Some setup adapters copy os.environ directly. Carry the same
+            # bounded step deadline through those commands as well.
+            os.environ[SAFETY_DEADLINE_ENV] = repr(deadline)
+            try:
+                result = timed_step(name, callback)
+            finally:
+                if previous_deadline is None:
+                    self.env.pop(SAFETY_DEADLINE_ENV, None)
+                else:
+                    self.env[SAFETY_DEADLINE_ENV] = previous_deadline
+                if previous_process_deadline is None:
+                    os.environ.pop(SAFETY_DEADLINE_ENV, None)
+                else:
+                    os.environ[SAFETY_DEADLINE_ENV] = previous_process_deadline
         if result.status != 0:
             self.functional_exit_status = result.status
             return result.status

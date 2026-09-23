@@ -159,6 +159,10 @@ git diff --check, the file-size guard (4125 files), and 14 Markdown
 link targets with no missing relative paths. No additional SQL gate or
 external review is required for the documentation receipt.
 
+### Item 2 blocked handoff (2026-09-23)
+
+Item 2 implementation candidate `a934ce756236be15a06e699f11a9203b3b3054b9` is preserved in `codex/sql-generated-identities-item2-20260923` from main `30136206c94ee03784c9db93b2544de72116be88`, but is not qualified, reviewed, or merged. Its named coverage readiness check fails on the pre-existing unclassified `sifr: test:legal_failure_method_names` target from architecture correctness X01. The failure log is `/home/yaser5/projects/sifr/sql-item2-evidence-20260923/coverage-matrix-readiness.log` (SHA-256 `48e8f082a5454db9a0a2de170c80c531231a94ccf8fb396dabde8b4d0a0a1e3d`); the owning issue records the repair. No SQL Item 2 registry workaround, review, PR, or merge is claimed. Resume only after the owner fixes the registry and readiness passes on the resulting base.
+
 ### Delivery order and implementation boundaries
 
 One implementer owns one item and one isolated worktree at a time. Complete
