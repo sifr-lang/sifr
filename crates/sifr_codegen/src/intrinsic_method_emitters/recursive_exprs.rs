@@ -331,7 +331,7 @@ impl RustEmitter {
                 if let Some(lowered) = self.try_lower_dict_indexed_list_element_expr(expr) {
                     return Some(lowered);
                 }
-                if let Some((alias_name, key_ty, value_ty)) =
+                if let Some((alias_name, key_ty, _value_ty)) =
                     registry_defaultdict_alias_parts(object.ty())
                 {
                     let lowered_object = self.try_lower_registry_expr_strict(object)?;
@@ -345,13 +345,10 @@ impl RustEmitter {
                         method: "or_insert".to_string(),
                         args: vec![registry_defaultdict_default_expr(alias_name)],
                     };
-                    let value_expr = match crate::resolve_alias_type_for_plain_call(value_ty) {
-                        Type::Int => crate::RustExpr::Deref(Box::new(entry_expr)),
-                        _ => crate::RustExpr::MethodCall {
-                            receiver: Box::new(entry_expr),
-                            method: "clone".to_string(),
-                            args: vec![],
-                        },
+                    let value_expr = crate::RustExpr::MethodCall {
+                        receiver: Box::new(entry_expr),
+                        method: "clone".to_string(),
+                        args: vec![],
                     };
                     if crate::helpers::is_option_type(ty) {
                         return Some(value_expr);

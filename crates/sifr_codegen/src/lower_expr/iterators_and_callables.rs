@@ -460,7 +460,7 @@ pub(super) fn try_lower_simple_defaultdict_index_expr(
     if !alias_name.starts_with("__sifr_defaultdict_") {
         return None;
     }
-    let Type::Dict(key_ty, value_ty) = body.resolve_alias() else {
+    let Type::Dict(key_ty, _value_ty) = body.resolve_alias() else {
         return None;
     };
     let lowered_object = try_lower_leaf_or_name_expr(object)?;
@@ -501,12 +501,9 @@ pub(super) fn try_lower_simple_defaultdict_index_expr(
         method: "or_insert".to_string(),
         args: vec![default_expr],
     };
-    Some(match resolve_alias_type(value_ty.as_ref()) {
-        Type::Int => RustExpr::Deref(Box::new(entry_expr)),
-        _ => RustExpr::MethodCall {
-            receiver: Box::new(entry_expr),
-            method: "clone".to_string(),
-            args: vec![],
-        },
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(entry_expr),
+        method: "clone".to_string(),
+        args: vec![],
     })
 }
