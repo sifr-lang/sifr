@@ -484,3 +484,37 @@ fn schema_options() -> SqliteSchemaOptions {
         extensions: BTreeSet::new(),
     }
 }
+
+#[test]
+fn claimed_sqlite_sql_values_keep_canonical_bind_contracts() {
+    use sifr_sql_contract::{
+        BindCompatibility, DatabaseType, InputType, Nullability, ParameterType, bind_compatibility,
+        canonical_read_type,
+    };
+    let codecs = sifr_sql_sqlite::sqlite_codec_registry(SUPPORTED_SQLITE_SERIES[0])
+        .expect("SQLite codec registry");
+    for database in [
+        DatabaseType::Date,
+        DatabaseType::LocalTime { precision: 0 },
+        DatabaseType::LocalDateTime { precision: 0 },
+        DatabaseType::Instant { precision: 0 },
+        DatabaseType::Json { binary: true },
+    ] {
+        let value = canonical_read_type(&database).expect("canonical SQLite value");
+        let compatibility = bind_compatibility(
+            &InputType {
+                value,
+                nullability: Nullability::NonNull,
+            },
+            &ParameterType {
+                database: database.clone(),
+                nullability: Nullability::NonNull,
+            },
+            &codecs,
+        );
+        assert!(
+            !matches!(compatibility, BindCompatibility::Rejected(_)),
+            "{database:?}: {compatibility:?}"
+        );
+    }
+}

@@ -193,6 +193,7 @@
       "targets": [
         {"name": "sifr_sql_postgresql", "kind": "rlib", "classification": "first_party_compiler", "profile_assignment": "merge"},
         {"name": "postgresql_compiler", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "postgresql_generated_profiles", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "postgresql_components", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "postgresql_properties", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "postgresql_regressions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},

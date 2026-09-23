@@ -29,10 +29,22 @@ pub enum ClosedType {
     Str,
     Bytes,
     None,
-    Optional { item: Box<Self> },
-    Tuple { items: Vec<Self> },
-    List { item: Box<Self> },
-    Record { fields: Vec<RecordField> },
+    Optional {
+        item: Box<Self>,
+    },
+    Tuple {
+        items: Vec<Self>,
+    },
+    List {
+        item: Box<Self>,
+    },
+    Nominal {
+        identity: String,
+        arguments: Vec<Self>,
+    },
+    Record {
+        fields: Vec<RecordField>,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

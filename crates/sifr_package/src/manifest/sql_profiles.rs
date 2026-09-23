@@ -1,3 +1,4 @@
+use serde::Serialize;
 mod profile;
 mod requirements;
 
@@ -10,14 +11,14 @@ use sifr_sql_contract::{PoolingMode, SchemaEvidence, SchemaStrictness, SessionCo
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 pub enum SchemaSourceKind {
     SqlDdl,
     ProviderMetadata,
     GeneratedDefinitions,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SqlProfileConfig {
     pub provider: String,
     pub family: String,
@@ -32,7 +33,7 @@ pub struct SqlProfileConfig {
     pub accepted_signers: BTreeSet<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SqlRequirementProviderConfig {
     pub provider: String,
     pub source: PathBuf,
@@ -43,13 +44,13 @@ pub struct SqlRequirementProviderConfig {
     pub character_set: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SqlRequirementConfig {
     pub capabilities: BTreeSet<String>,
     pub providers: BTreeMap<String, SqlRequirementProviderConfig>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct SqlConfig {
     pub profiles: BTreeMap<String, SqlProfileConfig>,
     pub requirements: BTreeMap<String, SqlRequirementConfig>,

@@ -188,11 +188,20 @@ fn run_command(
     let argv = command
         .argv
         .iter()
-        .map(|value| value.replace("<TMP>", &tmp_dir.display().to_string()))
+        .map(|value| {
+            value
+                .replace("<TMP>", &tmp_dir.display().to_string())
+                .replace("<REPO>", &repo_root.display().to_string())
+        })
         .collect::<Vec<_>>();
     let mut child = Command::new(&argv[0]);
     child.args(&argv[1..]);
-    child.current_dir(repo_root);
+    child.current_dir(
+        command
+            .cwd
+            .as_ref()
+            .map_or_else(|| repo_root.to_path_buf(), |cwd| repo_root.join(cwd)),
+    );
     let output = child
         .output()
         .map_err(|err| format!("failed to execute '{}': {err}", argv.join(" ")))?;

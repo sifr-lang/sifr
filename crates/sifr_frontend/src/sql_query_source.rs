@@ -2,7 +2,9 @@ use crate::{SqlEditorDocumentView, SqlQueryDeclaration};
 use sifr_ir::{
     HirExpr, HirModule, HirStmt, visit_hir_function_exprs_mut, visit_hir_stmts_exprs_mut,
 };
-use sifr_sql_contract::{IntegerSign, IntegerWidth, SifrType};
+use sifr_sql_contract::{
+    IntegerSign, IntegerWidth, SifrType, sql_value_type_for_frontend_identity,
+};
 use sifr_type_system::{FixedIntType, Type};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -154,6 +156,29 @@ pub(crate) fn sql_contract_type(ty: &Type) -> Result<SifrType, String> {
         },
         Type::Class {
             identity: Some(identity),
+            type_args,
+            ..
+        } if identity == "sifr.sql.SqlArray" && type_args.len() == 1 => SifrType::SqlArray {
+            element: Box::new(sql_contract_type(&type_args[0])?),
+        },
+        Type::Class {
+            identity: Some(identity),
+            type_args,
+            ..
+        } if (identity == "sifr.sql.Range" || identity == "sifr.sql.MultiRange")
+            && type_args.len() == 1 =>
+        {
+            SifrType::Range {
+                element: Box::new(sql_contract_type(&type_args[0])?),
+                multirange: identity == "sifr.sql.MultiRange",
+            }
+        }
+        Type::Class {
+            identity: Some(identity),
+            ..
+        } if let Some(value_type) = sql_value_type_for_frontend_identity(identity) => value_type,
+        Type::Class {
+            identity: Some(identity),
             ..
         }
         | Type::Newtype {
@@ -172,4 +197,55 @@ pub(crate) fn sql_contract_type(ty: &Type) -> Result<SifrType, String> {
             ));
         }
     })
+}
+
+#[cfg(test)]
+mod sql_value_identity_tests {
+    use super::sql_contract_type;
+    use sifr_sql_contract::{SQL_VALUE_IDENTITIES, SifrType};
+    use sifr_type_system::Type;
+    use std::collections::BTreeSet;
+
+    fn nominal(identity: &str, type_args: Vec<Type>) -> Type {
+        Type::Class {
+            identity: Some(identity.to_string()),
+            type_args,
+            name: identity.rsplit('.').next().unwrap_or(identity).to_string(),
+            fields: Vec::new().into(),
+            methods: Vec::new().into(),
+            parent_class: None,
+        }
+    }
+
+    #[test]
+    fn standard_sql_value_inputs_keep_their_canonical_contract() {
+        for value in SQL_VALUE_IDENTITIES {
+            let source = nominal(value.frontend_identity, Vec::new());
+            assert_eq!(sql_contract_type(&source), Ok(value.sifr_type.clone()));
+            let alias = Type::Alias {
+                name: format!("AliasFor{}", value.annotation),
+                type_args: Vec::new(),
+                body: Box::new(source.clone()),
+            };
+            assert_eq!(sql_contract_type(&alias), Ok(value.sifr_type.clone()));
+            assert_eq!(
+                sql_contract_type(&Type::Union(vec![source.clone(), Type::None])),
+                Ok(SifrType::Union {
+                    members: BTreeSet::from([value.sifr_type.clone(), SifrType::None]),
+                })
+            );
+            assert_eq!(
+                sql_contract_type(&Type::List(Box::new(source.clone()))),
+                Ok(SifrType::List {
+                    element: Box::new(value.sifr_type.clone()),
+                })
+            );
+            assert_eq!(
+                sql_contract_type(&nominal("sifr.sql.SqlArray", vec![source])),
+                Ok(SifrType::SqlArray {
+                    element: Box::new(value.sifr_type.clone()),
+                })
+            );
+        }
+    }
 }

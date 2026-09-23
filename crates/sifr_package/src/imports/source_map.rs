@@ -2,6 +2,7 @@ use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId};
 use crate::imports::namespace_api::NamespaceApi;
 use crate::manifest::sifr::ImportRoot;
+use serde::Serialize;
 use sifr_frontend::SourceProvider;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -20,7 +21,7 @@ pub struct PackageSourceMap {
     pub fatal_diagnostics: Vec<PackageDiagnostic>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct DottedModulePath(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

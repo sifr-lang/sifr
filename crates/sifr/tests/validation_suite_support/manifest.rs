@@ -29,6 +29,7 @@ pub(crate) struct Row {
 pub(crate) struct CommandSpec {
     pub(crate) id: String,
     pub(crate) argv: Vec<String>,
+    pub(crate) cwd: Option<PathBuf>,
     pub(crate) expected_exit: i32,
     pub(crate) parallel_group: Option<String>,
 }

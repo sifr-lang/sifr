@@ -162,7 +162,7 @@ fn profile_provider_resolves_to_locked_package_and_component_identity() {
         profile
             .provider
             .package_graph_digest
-            .starts_with("fnv1a64:")
+            .starts_with("sha256-framed-v1:")
     );
     let mut wrong_provider = profile.provider.clone();
     wrong_provider.package_id = "different@1.0.0#registry".to_string();

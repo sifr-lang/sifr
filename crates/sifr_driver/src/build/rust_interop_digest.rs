@@ -1,21 +1,65 @@
+use sifr_identity::IdentityEncoder;
 use std::fs;
+use std::io;
 use std::path::Path;
 
-pub(super) fn digest_path(path: &Path) -> String {
+/// A bridge authority must be readable in full before it can identify reusable output.
+pub(super) fn digest_path_checked(path: &Path) -> io::Result<String> {
     let mut entries = Vec::new();
-    collect_digest_entries(path, path, &mut entries);
+    collect_digest_entries(path, path, &mut entries)?;
     entries.sort_by(|left, right| left.0.cmp(&right.0));
-    let mut digest_input = Vec::new();
+    let mut identity = IdentityEncoder::new("rust-bridge-source-tree-v2");
     for (relative, file_bytes) in entries {
-        push_cache_bytes(&mut digest_input, &relative);
-        digest_input.extend_from_slice(&file_bytes);
-        digest_input.push(0);
+        identity.field("path", relative.as_bytes());
+        identity.field("contents", &file_bytes);
     }
-    fnv1a64_hex(&digest_input)
+    Ok(identity.finish())
 }
 
-pub(super) fn digest_file(path: &Path) -> Option<String> {
-    fs::read(path).ok().map(|bytes| fnv1a64_hex(&bytes))
+/// Probe-only snapshots still run Cargo before accepting a successful probe.
+pub(super) fn digest_path(path: &Path) -> String {
+    digest_path_checked(path).unwrap_or_else(|error| {
+        let mut identity = IdentityEncoder::new("rust-bridge-source-unreadable-v2");
+        identity.field("path", normalized_path_string(path).as_bytes());
+        identity.field("error", error.kind().to_string().as_bytes());
+        identity.finish()
+    })
+}
+
+/// A missing file is distinct from an empty file. An existing unreadable path
+/// cannot authorize reuse of a previously prepared or final artifact.
+pub(super) fn digest_file_checked(path: &Path) -> io::Result<Option<String>> {
+    match fs::symlink_metadata(path) {
+        Ok(_) => {}
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error),
+    }
+    let bytes = fs::read(path)?;
+    let mut identity = IdentityEncoder::new("cargo-input-file-v2");
+    identity.field("contents", &bytes);
+    Ok(Some(identity.finish()))
+}
+
+pub(super) fn digest_lock_file_checked(path: &Path) -> io::Result<Option<String>> {
+    let Some(payload) = digest_file_checked(path)? else {
+        return Ok(None);
+    };
+    let mut identity = IdentityEncoder::new("cargo-lock-authority-v2");
+    identity.field("path", path.as_os_str().as_encoded_bytes());
+    identity.field("contents", payload.as_bytes());
+    Ok(Some(identity.finish()))
+}
+
+pub(super) fn nearest_lock_digest_checked(start: &Path) -> io::Result<Option<String>> {
+    for ancestor in start.ancestors() {
+        let lock = ancestor.join("Cargo.lock");
+        match fs::symlink_metadata(&lock) {
+            Ok(_) => return digest_lock_file_checked(&lock),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error),
+        }
+    }
+    Ok(None)
 }
 
 pub(super) fn relative_path_string(root: &Path, path: &Path) -> String {
@@ -30,31 +74,81 @@ pub(super) fn normalized_path_string(path: &Path) -> String {
         .join("/")
 }
 
-pub(super) fn fnv1a64_hex(bytes: &[u8]) -> String {
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
-    for byte in bytes {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+fn collect_digest_entries(
+    root: &Path,
+    path: &Path,
+    entries: &mut Vec<(String, Vec<u8>)>,
+) -> io::Result<()> {
+    let metadata = fs::metadata(path)?;
+    if metadata.is_file() {
+        entries.push((relative_path_string(root, path), fs::read(path)?));
+        return Ok(());
     }
-    format!("{hash:016x}")
-}
-
-fn collect_digest_entries(root: &Path, path: &Path, entries: &mut Vec<(String, Vec<u8>)>) {
-    if path.is_file() {
-        if let Ok(bytes) = fs::read(path) {
-            entries.push((relative_path_string(root, path), bytes));
-        }
-        return;
+    if !metadata.is_dir() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "unsupported bridge source",
+        ));
     }
-    let Ok(read_dir) = fs::read_dir(path) else {
-        return;
-    };
-    for entry in read_dir.flatten() {
-        collect_digest_entries(root, &entry.path(), entries);
+    for entry in fs::read_dir(path)? {
+        collect_digest_entries(root, &entry?.path(), entries)?;
     }
+    Ok(())
 }
 
 pub(super) fn push_cache_bytes(out: &mut Vec<u8>, value: &str) {
     out.extend_from_slice(value.as_bytes());
     out.push(0xff);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{digest_file_checked, digest_path_checked, nearest_lock_digest_checked};
+    use std::fs;
+
+    #[test]
+    fn lock_identity_distinguishes_absent_empty_payload_and_unreadable() {
+        let root = tempfile::tempdir().unwrap();
+        let lock = root.path().join("Cargo.lock");
+        assert_eq!(digest_file_checked(&lock).unwrap(), None);
+        fs::write(&lock, "").unwrap();
+        let empty = digest_file_checked(&lock).unwrap().unwrap();
+        assert_eq!(
+            nearest_lock_digest_checked(root.path()).unwrap(),
+            Some(super::digest_lock_file_checked(&lock).unwrap().unwrap())
+        );
+        fs::write(&lock, "version = 4\n").unwrap();
+        assert_ne!(empty, digest_file_checked(&lock).unwrap().unwrap());
+        #[cfg(unix)]
+        {
+            fs::remove_file(&lock).unwrap();
+            std::os::unix::fs::symlink(root.path().join("missing"), &lock).unwrap();
+            assert!(digest_file_checked(&lock).is_err());
+            assert!(nearest_lock_digest_checked(root.path()).is_err());
+        }
+    }
+
+    #[test]
+    fn bridge_tree_identity_distinguishes_states_and_payload() {
+        let root = tempfile::tempdir().unwrap();
+        let source = root.path().join("bridge");
+        assert!(digest_path_checked(&source).is_err());
+        fs::create_dir(&source).unwrap();
+        let empty = digest_path_checked(&source).unwrap();
+        fs::write(source.join("a.rs"), b"a").unwrap();
+        let first = digest_path_checked(&source).unwrap();
+        assert_ne!(empty, first);
+        fs::write(source.join("a.rs"), b"b").unwrap();
+        assert_ne!(first, digest_path_checked(&source).unwrap());
+        fs::remove_file(source.join("a.rs")).unwrap();
+        fs::create_dir(source.join("a.rs")).unwrap();
+        assert_ne!(first, digest_path_checked(&source).unwrap());
+        fs::remove_dir(source.join("a.rs")).unwrap();
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(source.join("missing.rs"), source.join("unreadable.rs"))
+                .unwrap();
+            assert!(digest_path_checked(&source).is_err());
+        }
+    }
 }

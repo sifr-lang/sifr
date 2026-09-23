@@ -21,13 +21,50 @@ No implementation is included in this record-only issue.
 | F9 | runtime platform / sanitizer | Explicitly decide and inventory the application profile for `generated-binary-asan-smoke` in `sanitizer_manifest.json`. It currently uses the new dev default; exit/sanitizer-clean assertions are profile-agnostic and no named DX.10 release assertion was removed. Qualify the declared choice in the owning sanitizer workflow. |
 | F10 | core language / project workspace | Classify the roughly 12 literal behavior-matrix `sifr build/run` argv in the two `data/validation_suites/manifest.json` files. They execute through the generic command path, and their assertions are profile-agnostic; document the default-dev choice or explicitly qualify a different profile. These were outside the 10 declared literal producer rows in the remediation inventory. |
 | F11 | differential runner infrastructure | Make focused generated-suite tests importable consistently from the repo root as well as their `checks/` directory. Current directory-scoped invocation passes; no oracle or runtime assertion change. |
-| F12 | project workspace validation / CLI package resolution | Repair the `frontend_mode_parity` positive `sifr test` command/package-root mismatch while preserving the nested demo package and test semantics. Validate the matching negative `sifr test` row and companion core-language behavior matrix; see failure and named checks below. |
+| F12 | project workspace validation / CLI package resolution | Resolved by [#3957](https://github.com/sifr-lang/sifr/pull/3957): the positive and negative `frontend_mode_parity` test rows and companion core-language test select their nested packages. Original failure, acceptance, and final binding are below. |
 
 ## F12 project-workspace test command package root — 2026-09-23
 
 Discovered while validating emitted-Rust Item 12R candidate `d9e79b869d2071433c8a01a980754e3977628b2d` ([draft PR #3946](https://github.com/sifr-lang/sifr/pull/3946)). The exact `project_workspace/frontend_mode_parity` selection exited 1. Its `positive_test` command in `verification/areas/project_workspace/data/validation_suites/manifest.json` is `cargo run -q -p sifr -- test demos/mode_consistency`, executed at repository root. Both root and demo have `sifr.toml`; `test_cli.rs` resolves the root package and emits SIFR-RUST-CARGO-0001, “sifr test directory must be inside one Sifr package.” The expected exit is 0. This is a command working-directory/package-root contract defect; the manifest and `crates/sifr/src/test_cli.rs` are unchanged by Item 12R. The receipt is `/home/yaser5/projects/sifr/emitted-rust-item12r-evidence/project-frontend_mode_parity-d9e79b869.json` (selection digest `22811269c4511bf5d6ac8359589fe3782217d3d269a7c6b0779ed144709ca2b3`; validation-input digest `6c2acd10d66e2e31229930b2a53e5a9dbe6bc5a6f6cf73788b61b33852c3ed96`). Item 12R is blocked on this owner repair; its broad checks were stopped, not passed.
 
 Bounded acceptance: make the positive `sifr test` row select its intended demo package, preserve the negative `sifr test` row's error semantics, and inspect the companion `verification/areas/core_language/data/validation_suites/manifest.json` for the same root/argv contract. Keep F10's build/run profile classification separate. Run the exact `project_workspace/frontend_mode_parity` area selection, the matching core-language validation-suite selection if it shares the command, and `cargo test --locked -p sifr --test validation_suites test_validation_suite_matrix -- --ignored --nocapture` with the suite filter set for each affected matrix. Then return Item 12R for its remaining named validation; do not treat this issue record as an implementation repair.
+
+
+### F12 final binding
+
+The bounded repair is merged in [#3957](https://github.com/sifr-lang/sifr/pull/3957),
+reviewed candidate `fa474ed47829cac069118978ee6417045d3913b4`, merge
+`22cb59a766781c181e919d15bf97810f7c1a69cb`. The runner now accepts a
+per-command working directory and repository-root argument token. The three
+nested test fixtures have valid Cargo/Sifr package manifests; their empty
+`[workspace]` tables intentionally keep them separate from the root Cargo
+workspace. The positive project test and companion core-language test pass,
+and the negative project test reports the asserted `SIFR-TYPE-0002`. The
+literal build/run commands and F10 profile classification were not changed.
+
+The exact `project_workspace/frontend_mode_parity` area selection passed two
+rows and `core_language/hir_analysis_behaviors` passed three rows. Each area
+adapter ran `cargo test --locked -p sifr --test validation_suites
+test_validation_suite_matrix -- --ignored --nocapture` with its own manifest
+and suite filter, so the required crate selections executed on the reviewed
+candidate. `cargo fmt --check`, `python3 scripts/check_file_size_guardrails.py`,
+and `git diff --check` passed. Evidence is under
+`/home/yaser5/projects/sifr/dx10-f12-evidence/`: `project-area-final.log`,
+`core-area.log`, and the candidate-keyed `review.md`. The
+[Opus review](https://github.com/sifr-lang/sifr/pull/3957#issuecomment-5793350364)
+returned SATISFIED with no blocking findings. The first F12 failure receipt
+and this repair's earlier failed runs remain preserved; they are not counted
+as passing. The Phase DX intermediate-item exception omitted full create-PR
+and merge gates. The two pressure cleanups are recorded in
+`pressure-cleanup.log` and `pressure-cleanup-2.log`.
+
+Deferred review followups remain separate from F12: verification-runner
+hardening can constrain future `cwd` values to repo-relative paths; fixture
+maintenance can avoid leaving ignored `Cargo.lock` and `.sifrbuildinfo` in a
+reused worktree; and the performance owner should check
+`perf.build.project.branch_paths` and `perf.check.project.mode_consistency`
+when refreshing baselines because those demos now have package manifests.
+Item 12R can resume its remaining named validation on its own candidate.
 
 F6 evidence is on
 `yaser5@yaser.tailaa73b4.ts.net:/home/yaser5/projects/sifr/dx10-evidence/`:

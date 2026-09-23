@@ -74,5 +74,10 @@ fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
     start
         .ancestors()
         .map(|ancestor| ancestor.join(file_name))
-        .find(|candidate| candidate.is_file())
+        .find(|candidate| {
+            !matches!(
+                candidate.symlink_metadata(),
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound
+            )
+        })
 }

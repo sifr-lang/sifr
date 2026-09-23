@@ -1,25 +1,25 @@
 {
   "artifacts": [
     {
-      "core_sha256": "9d83b09c437ceb7886a08705da2bcc277e028f365729c778d853684c5ede93b3",
+      "core_sha256": "baf05a5c240b7022392ebae00e1c930339bdac73692a0e3432982da67ae86762",
       "path": "components/mysql-8.4.wasm",
       "series": "8.4",
-      "sha256": "2f7164b32e9312b633d1fa4fbac6b8da6b9153ea5ea2305e8ab666603d019114",
-      "size_bytes": 1518757
+      "sha256": "5a6ce79eea703d8411eb9026304ca3b92f7e971e20bae6c4e0fb7d4619e9f862",
+      "size_bytes": 1524633
     },
     {
-      "core_sha256": "9d83b09c437ceb7886a08705da2bcc277e028f365729c778d853684c5ede93b3",
+      "core_sha256": "baf05a5c240b7022392ebae00e1c930339bdac73692a0e3432982da67ae86762",
       "path": "components/mysql-9.7.wasm",
       "series": "9.7",
-      "sha256": "2f7164b32e9312b633d1fa4fbac6b8da6b9153ea5ea2305e8ab666603d019114",
-      "size_bytes": 1518757
+      "sha256": "5a6ce79eea703d8411eb9026304ca3b92f7e971e20bae6c4e0fb7d4619e9f862",
+      "size_bytes": 1524633
     },
     {
-      "core_sha256": "9d83b09c437ceb7886a08705da2bcc277e028f365729c778d853684c5ede93b3",
+      "core_sha256": "baf05a5c240b7022392ebae00e1c930339bdac73692a0e3432982da67ae86762",
       "path": "components/mysql-26.7.wasm",
       "series": "26.7",
-      "sha256": "2f7164b32e9312b633d1fa4fbac6b8da6b9153ea5ea2305e8ab666603d019114",
-      "size_bytes": 1518757
+      "sha256": "5a6ce79eea703d8411eb9026304ca3b92f7e971e20bae6c4e0fb7d4619e9f862",
+      "size_bytes": 1524633
     }
   ],
   "parser_generator": {
@@ -28,9 +28,7 @@
   },
   "protocol_major": 1,
   "provenance": {
-    "build_environment": {
-      "CARGO_BUILD_JOBS": "1"
-    },
+    "build_environment": {},
     "family": "mysql",
     "rust": {
       "cargo_sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
@@ -45,7 +43,7 @@
     "schema_version": 1,
     "source_inputs": {
       ".cargo/config.toml": "d4c924aa9aef68df597f232d9d301a62ea6e12c497c17154cccf875a66c4bbf5",
-      "Cargo.lock": "89df7e65c42bf8130fde4b238912761d94b0ead638fdefe37f99be6735ce33a7",
+      "Cargo.lock": "94a06da8ddacddd42c2b587de02594dead8997c744b1f1768a9abbd0ec15154a",
       "Cargo.toml": "2ab707b9a0c6f2f3ba4b6fbf35f0aeeab9236f765fd9efe3b1b9b87a6c919b5d",
       "crates/sifr_compiler_component/Cargo.toml": "56f2b6427a88f761119fea2449d47a73d2a5ea3cfbde21e669241d48a00ee695",
       "crates/sifr_compiler_component/build.rs": "2fbb1c185edfcfdced9597884b5a66477085e52a80ac17872bf8bd38944f4bac",
@@ -56,10 +54,10 @@
       "crates/sifr_compiler_component/src/fingerprint.rs": "cae6162c9e4caeb9fe90afe5b7c7784f82f8221a2bbf46c4e079b10d71267a2d",
       "crates/sifr_compiler_component/src/host.rs": "4e82d3a868211617eba4ae5ba691c0c96ceab883e995572e98b44e62b3c9bea3",
       "crates/sifr_compiler_component/src/lib.rs": "3c321ce61cfc8b93642f6fde84e553315db43a30ed5a07b8bf47789ad515a5f0",
-      "crates/sifr_compiler_component/src/protocol.rs": "c4ef10a3614fad4bfcc120be52655eea5c96a0fc2a30a4ba8a26406917d18792",
+      "crates/sifr_compiler_component/src/protocol.rs": "c9299dea7d18a7494f843a4d8f623d6da02a23a6093a61fd891522a8989aae63",
       "crates/sifr_compiler_component/src/registration.rs": "83e850ef98600af7058f1b44c9acdd8c34fc31364f6b2ebdae7bfa6b1bb0dce6",
       "crates/sifr_compiler_component/src/tests.rs": "dfebccaeeb25487175168bcd4a5bf28fc9401edb4c923808f3a4b2f691f8593f",
-      "crates/sifr_compiler_component/src/validation.rs": "ede95af5b3f196a48f44dbab02c7d9f2b061e84f3c1c92c22980dd13b9940829",
+      "crates/sifr_compiler_component/src/validation.rs": "342e3cc5ef89daa93250141077ef7714c889b8f4e268ebb0f25e82fc0aface82",
       "crates/sifr_compiler_component/wit/compiler-component.wit": "782c579c390c73463ea739f1a4777a4629d598ab29737fcce719bbdc7deea30f",
       "crates/sifr_diagnostics/Cargo.toml": "dd8b736b856652232030927ee0b62f0058d0e6c8f4963a544a2a79a0bf4c0cc7",
       "crates/sifr_diagnostics/build.rs": "4027598a9029b41581af3d65d62490f97033cd42a17d2cb91a39a94db9b9968d",
@@ -75,21 +73,21 @@
       "crates/sifr_diagnostics/src/codes/registry/registry_entries/calls_flow_and_protocols.rs": "e45c9f98327a5e452ad9f82909ca0a37e0eaffdc776a7c9bc2b90866b391660f",
       "crates/sifr_diagnostics/src/codes/registry/registry_entries/common_sql.rs": "ed5af2ea86b1c2080a03b9cd1acf8fed9ce7e37e550811ca0d8444b089289c39",
       "crates/sifr_diagnostics/src/codes/registry/registry_entries/compiler_components.rs": "b986e10c8918d7f402bdfd62a857cdde5578d05b751c80d725ab9f7fc14f3c46",
-      "crates/sifr_diagnostics/src/codes/registry/registry_entries/formatting_and_lint.rs": "ea462a7a712718cb8092a390f96fcadd148b5645cc1b2fa86c04f6ed9c12e976",
-      "crates/sifr_diagnostics/src/codes/registry/registry_entries/metaprogramming.rs": "2b70fa9b721ff580b9ef0e73342fae3afb9855196befd6c270dcf7168d1bd0da",
-      "crates/sifr_diagnostics/src/codes/registry/registry_entries/package.rs": "c9990092707505688fefdaa1fa16b7b8f37c2f3f1b5c74a4a2174fdcdf425fb3",
-      "crates/sifr_diagnostics/src/codes/registry/registry_entries/parsing_names_and_types.rs": "ef8f024b32cdf693113c3c241fca0b891003adc0effe6f2134897513a022bc17",
-      "crates/sifr_diagnostics/src/codes/registry/registry_entries/project_and_backend.rs": "4eed409ec50af75ab84d8513e0018b80eb8c6c549d38435a53a34b9d621a8caf",
+      "crates/sifr_diagnostics/src/codes/registry/registry_entries/formatting_and_lint.rs": "8b2fcf67fe7cfba074727f8acc4ba4acfeba7f302cb389ce6bdeebbed96f83e2",
+      "crates/sifr_diagnostics/src/codes/registry/registry_entries/metaprogramming.rs": "23023dcebb6b7423e2328b080ab092e092e9f12934e56daa7ddc073b97742181",
+      "crates/sifr_diagnostics/src/codes/registry/registry_entries/package.rs": "f4f29cd169101a2c4484c3de82d5dbb9e2f8bfcb2df94ca1195524d36acf5b08",
+      "crates/sifr_diagnostics/src/codes/registry/registry_entries/parsing_names_and_types.rs": "eeef172e517307c822987b707fe18abc2a21f02be1272ec1705a88d0fe241a55",
+      "crates/sifr_diagnostics/src/codes/registry/registry_entries/project_and_backend.rs": "5d330b40f9e2c6ac8569626070cf2014ac295aa462903cbf8aa1f03e8755cde1",
       "crates/sifr_diagnostics/src/codes/registry/registry_entries/python_interop.rs": "203798d2caecde8e670be4bf3b04db7ccad1c13f0d3b8f85203741e96768984a",
       "crates/sifr_diagnostics/src/codes/registry/registry_entries/reserved.rs": "8b8b2b4925785fc0d5f339eb2838c6365cb77444183ed45545c19858f9e8eacd",
-      "crates/sifr_diagnostics/src/codes/registry/registry_entries/rust_interop.rs": "9d0ad1699fbfe970615bea160ef59cbfe282d6980598333e02e8edf951a210b9",
+      "crates/sifr_diagnostics/src/codes/registry/registry_entries/rust_interop.rs": "629d8b2848a1ddc030b247b70f5fcb9e6a9763ca94134d68513d5cfd319209dd",
       "crates/sifr_diagnostics/src/codes/registry/sql.rs": "4558e7f04f3670d98bd6c8476f5354f6230c7ea1184f40b86bbb51568794ca67",
       "crates/sifr_diagnostics/src/codes/registry_tests.rs": "14c3afdf58479eeaa23f5b54e676a85eb100e4850b16a8e775c9db9e160f285f",
       "crates/sifr_diagnostics/src/compiled_identity.rs": "78e8059a4ab18cb29931f74e080c2baf06ff5cb67f5c0002a6a2720d39e395c2",
       "crates/sifr_diagnostics/src/lib.rs": "b7e9d1a81fbb8753652daefdae6443721fce7d735874965ceb64422c8de2c0a5",
       "crates/sifr_diagnostics/src/model/mod.rs": "7f00a806491464aed2de95ca90a9ccd986d44b0979bf023b3c999cd2fefda572",
       "crates/sifr_diagnostics/src/render/mod.rs": "85b1c8e8ed7ba98cbb9bcbd9a60a5da2f8413d855f6adecfbded6cad6c1d49ae",
-      "crates/sifr_diagnostics/src/render/presentation.rs": "fc7422f487ddc62e1f787e77ddbb9893baf2081917320b2638ceff4e35298e0e",
+      "crates/sifr_diagnostics/src/render/presentation.rs": "134326ebe579753b657488eb18d960f2a1ec34f77e6505a72642b5787659ef14",
       "crates/sifr_diagnostics/src/schema/mod.rs": "d47217278c30e5d97ed9af350a76d5e6d9f4e4813c16eaaaf35405398bab6b18",
       "crates/sifr_diagnostics/src/source_map/mod.rs": "4e67c65a411bc57a93c88b738e4e63904b546f946f04e358bf4ffe26a881fcfe",
       "crates/sifr_identity/Cargo.toml": "2dbc6cb0740da134ebcc9e2c7a3e4a77c3a9a923c5215854bd242c8b61d6cffc",
@@ -114,9 +112,9 @@
       "crates/sifr_sql_contract/src/fingerprint.rs": "d60e5982fa1c9a76c01a0f267323cbb0d545f38014a493b09cdf76d6c8fe7530",
       "crates/sifr_sql_contract/src/fragment.rs": "42ccfdb87abab4c6f6a15dd90862429659149231ae5199fb64956c1a194099d7",
       "crates/sifr_sql_contract/src/fragment_batches.rs": "95f67dcb7fc35f75974f5a43eba46cf8f571431c675186e00f2a43165e41f519",
-      "crates/sifr_sql_contract/src/generated.rs": "f00d2340ca2cf0ba931b8deb662cfae0aa06ac77643429b92fd6dfa0663a73e3",
+      "crates/sifr_sql_contract/src/generated.rs": "430caf1384cd763bd31b1a4d9d3f4552bbb6763279795e472bccc01668676f47",
       "crates/sifr_sql_contract/src/identifier.rs": "9739fa3013fa7f96b765bb0476a12948333367e2b28c0b1ffd0e15d87706aece",
-      "crates/sifr_sql_contract/src/lib.rs": "34ee2ee978ecae310a323ff81dd1b589e3f0a3cdda1b6406152b1c1e95e112fe",
+      "crates/sifr_sql_contract/src/lib.rs": "add75389e009549e39f802da512ef78bf61d27009bae7b80a488af7adef11445",
       "crates/sifr_sql_contract/src/migration/compiler.rs": "aba55d86890ce5797f84d39a6f375d40b87f66f184f2772e0a15aa4918a7c78c",
       "crates/sifr_sql_contract/src/migration/graph.rs": "44f35258a55d09eadcb990b12d6952a049626138e5da2f0a6f303cdb7cd2f979",
       "crates/sifr_sql_contract/src/migration/mod.rs": "3e3c01d8ff5bd8b1e4a26a54ac03e42c83c0041dd871f2c0e6ecdf850172ebe4",
@@ -133,6 +131,7 @@
       "crates/sifr_sql_contract/src/schema.rs": "fc0cfcf10a8b619851f48f5e6cc7a5a8ddc44e8c922f90a54f9932149a055fb1",
       "crates/sifr_sql_contract/src/slice.rs": "8679b0e44f1524392d187b6188d2ccd573a19fb178f95dec9a54633f634c71e6",
       "crates/sifr_sql_contract/src/sql_type.rs": "025f5694825ffa8d94695cbee9fe09bfde9b1279cbee9a5b47a9aab5ffaea673",
+      "crates/sifr_sql_contract/src/value_identity.rs": "5cf38cde29f010a0d468b02ba8221771d0ad0ee35152b95b51162d08e7322d67",
       "crates/sifr_sql_mysql/Cargo.toml": "b25b99f5f0dc28815087eec5fe614b915a507aea57aa60cef8514eb29f5e6129",
       "crates/sifr_sql_mysql/build.rs": "f6a70e74ec4e40e3a47897c9f9ad363516363977c98b720539ee6e7075d00cb6",
       "crates/sifr_sql_mysql/src/analyzer.rs": "a41374d607d577c955793b041232a5a8ef361cac6375af79ffd54abea2b52985",
@@ -167,7 +166,7 @@
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "3dba57fa3e71aa7ab2afa391b8addf7fefac53c0d98bedf65dbd0d4b180c5acd",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "446351d5bcd2b2baa9e2391a8ccfd89e6f3c79e25d102b2134e30aa498115368",
+    "source_sha256": "50b28f09f8d77bd0ff707424329a60464468d263d915bb0cebd88b253979f2ef",
     "tools": {
       "virtualizer": {
         "binary_sha256": "a167d733ba795283f2ef3c8fe9bf4987b58bae02745091bdbc9a9f80c6fd0db6",
