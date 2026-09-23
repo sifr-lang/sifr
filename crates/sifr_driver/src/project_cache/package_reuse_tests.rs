@@ -11,7 +11,7 @@ fn inputs(package: &crate::PackageEntrypoint) -> SemanticInputs {
         metadata: "metadata".into(),
         target: "test-target".into(),
         workspace_and_source_policy: "actual-package-owner".into(),
-        package_and_lock: package_context::identity(package).unwrap(),
+        package_and_lock: package_context::identity(package).unwrap().unwrap(),
         language_options: "default".into(),
         diagnostic_policy: "canonical".into(),
         components: BTreeMap::new(),
@@ -265,7 +265,10 @@ fn package_authority_changes_invalidate() {
             }
             _ => unreachable!(),
         }
-        assert!(package_context::identity(&current).is_none(), "{kind}");
+        assert!(
+            package_context::identity(&current).unwrap().is_none(),
+            "{kind}"
+        );
     }
     // Current source ownership and resolver failures cannot be bypassed by the
     // old success record, even if a caller retains its old semantic token.
@@ -446,4 +449,22 @@ fn assert_private_import_rejected(private_import: &str) {
 #[test]
 fn package_private_symbol_edit_rejects_restored_success() {
     assert_private_import_rejected("from dep.hidden import value as other");
+}
+
+#[cfg(unix)]
+#[test]
+fn package_serialization_failure_disables_saved_check_reuse() {
+    use std::os::unix::ffi::OsStringExt;
+
+    let root = fixture();
+    let mut entrypoint = package(root.path());
+    assert!(package_context::identity(&entrypoint).unwrap().is_some());
+    entrypoint
+        .graph
+        .packages
+        .values_mut()
+        .next()
+        .unwrap()
+        .package_root = PathBuf::from(std::ffi::OsString::from_vec(b"/invalid-\xff".to_vec()));
+    assert!(package_context::identity(&entrypoint).is_err());
 }

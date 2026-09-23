@@ -1,4 +1,4 @@
-use super::native_context::NativeToolchain;
+use super::native_context::{NativeBuildContext, NativeToolchain};
 use std::os::unix::fs::PermissionsExt;
 use std::{
     fs,
@@ -169,6 +169,38 @@ fn native_context_digests_executable_content_not_only_version_text() {
     .unwrap();
     assert_eq!(changed.cargo_version(), original.cargo_version());
     assert_ne!(changed.identity(), original.identity());
+}
+
+#[test]
+fn declared_environment_absent_empty_and_literal_unset_have_distinct_build_ids() {
+    let fixture = Fixture::new();
+    let toolchain = fixture.tools();
+    let name = "SIFR_N03_DECLARED_ENV_TEST";
+    let build_id = |value: Option<&str>| {
+        let toolchain = toolchain
+            .clone()
+            .with_test_execution_environment(name, value)
+            .with_declared_environment([name.to_owned()]);
+        NativeBuildContext {
+            target: toolchain.target().to_owned(),
+            toolchain,
+            profile: "dev".into(),
+            flags_id: "flags".into(),
+            features_id: "features".into(),
+            resolution_id: "resolution".into(),
+            python_loader_id: None,
+            trust_policy_id: "trust".into(),
+            destination: fixture.root.join("binary"),
+        }
+        .identity()
+    };
+    let absent = build_id(None);
+    let empty = build_id(Some(""));
+    let literal_unset = build_id(Some("<unset>"));
+    assert_ne!(absent, empty);
+    assert_ne!(absent, literal_unset);
+    assert_ne!(empty, literal_unset);
+    assert_eq!(literal_unset, build_id(Some("<unset>")));
 }
 
 #[test]
