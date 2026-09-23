@@ -740,7 +740,8 @@ pub(super) fn append_recursive_capture_args_to_expr(
                 }
             }
         }
-        RustExpr::MethodCall { receiver, args, .. } => {
+        RustExpr::MethodCall { receiver, args, .. }
+        | RustExpr::SourceMethodCall { receiver, args, .. } => {
             append_recursive_capture_args_to_expr(receiver, fn_name, capture_names);
             for arg in args {
                 append_recursive_capture_args_to_expr(arg, fn_name, capture_names);

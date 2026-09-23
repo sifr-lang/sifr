@@ -158,6 +158,7 @@ fn simplify_expr(expr: &mut RustExpr) -> usize {
     let mut changed = match expr {
         RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::Verbatim(_) => 0,
         RustExpr::MethodCall { receiver, args, .. }
+        | RustExpr::SourceMethodCall { receiver, args, .. }
         | RustExpr::FnCall {
             func: receiver,
             args,

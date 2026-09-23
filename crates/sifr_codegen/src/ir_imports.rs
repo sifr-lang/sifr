@@ -263,7 +263,8 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
                 mark_symbol(first, needs);
             }
         }
-        RustExpr::MethodCall { receiver, args, .. } => {
+        RustExpr::MethodCall { receiver, args, .. }
+        | RustExpr::SourceMethodCall { receiver, args, .. } => {
             collect_expr(receiver, needs);
             for arg in args {
                 collect_expr(arg, needs);

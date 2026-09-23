@@ -291,6 +291,12 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
                 validate_expr(arg, issues, in_function);
             }
         }
+        RustExpr::SourceMethodCall { receiver, args, .. } => {
+            validate_expr(receiver, issues, in_function);
+            for arg in args {
+                validate_expr(arg, issues, in_function);
+            }
+        }
         RustExpr::FnCall { func, args } => {
             if let RustExpr::Path(path) = func.as_ref() {
                 let joined = path.join("::");
@@ -680,6 +686,53 @@ mod tests {
             issue.kind == IrValidationKind::ForbiddenFailureDischarge
                 && issue.message.contains("panic!")
         }));
+    }
+
+    #[test]
+    fn permits_source_methods_named_like_failure_discharge() {
+        for method in ["unwrap", "expect"] {
+            let source_call = RustExpr::SourceMethodCall {
+                receiver: Box::new(RustExpr::Ident("value".to_string())),
+                method: method.to_string(),
+                args: vec![],
+            };
+            let items = vec![RustItem::Fn {
+                name: "source_method".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![],
+                ret: None,
+                body: vec![RustStmt::Expr(source_call)],
+                is_async: false,
+            }];
+            assert!(validate_items(&items).is_empty(), "{method}");
+        }
+    }
+
+    #[test]
+    fn rejects_compiler_owned_method_extraction() {
+        for method in ["unwrap", "expect"] {
+            let items = vec![RustItem::Fn {
+                name: "internal_extraction".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![],
+                ret: None,
+                body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("value".to_string())),
+                    method: method.to_string(),
+                    args: vec![],
+                })],
+                is_async: false,
+            }];
+            let issues = validate_items(&items);
+            assert!(
+                issues
+                    .iter()
+                    .any(|issue| { issue.kind == IrValidationKind::ForbiddenFailureDischarge }),
+                "{method}"
+            );
+        }
     }
 
     #[test]
