@@ -187,3 +187,62 @@ fn lockfile_less_project_defers_sql_profiles_and_preserves_disk_analysis() {
     assert!(!dir.join("Cargo.lock").exists());
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[test]
+fn configured_profile_import_diagnostic_tracks_editor_edits() {
+    let missing = "@app.query
+def query(user_id: int) -> Template:
+    return app.sql(t\"SELECT {user_id}\")
+";
+    let mut host = AnalysisHost::open_single_file(
+        &sifr_driver::CompilerContext::for_test_tokens(
+            crate::compiled_input_tokens(),
+            "sifr_analysis-tests",
+        ),
+        single_file_input(missing),
+    )
+    .expect("host should load");
+    host.sql_editor_runtime.configure_profile_for_test("app");
+    let file = host.files()[0];
+    let initial = host
+        .diagnostics(file)
+        .expect("initial diagnostics")
+        .into_value();
+    assert_eq!(initial.len(), 1);
+    assert_eq!(
+        initial[0].code,
+        sifr_diagnostics::DiagnosticCode::SQL_PROFILE_IMPORT.code()
+    );
+    assert_eq!(initial[0].spans[0].line, Some(1));
+
+    let imported = format!("from sifr.sql.schemas import app\n{missing}");
+    host.update_document(file, DocumentVersion::new(1), SourceText::new(imported))
+        .expect("import edit");
+    let after_import = host
+        .diagnostics(file)
+        .expect("import diagnostics")
+        .into_value();
+    assert!(
+        after_import.iter().all(|diagnostic| {
+            diagnostic.code != sifr_diagnostics::DiagnosticCode::SQL_PROFILE_IMPORT.code()
+        }),
+        "{after_import:?}"
+    );
+
+    let unrelated = "@cache.query
+def query() -> int:
+    return 1
+";
+    host.update_document(file, DocumentVersion::new(2), SourceText::new(unrelated))
+        .expect("unrelated decorator edit");
+    let after_unrelated = host
+        .diagnostics(file)
+        .expect("unrelated diagnostics")
+        .into_value();
+    assert!(
+        after_unrelated.iter().all(|diagnostic| {
+            diagnostic.code != sifr_diagnostics::DiagnosticCode::SQL_PROFILE_IMPORT.code()
+        }),
+        "{after_unrelated:?}"
+    );
+}

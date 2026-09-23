@@ -11,7 +11,7 @@ use sifr_sql_contract::{
     ProfileModuleRegistry, SchemaRequirement, SchemaRequirementRegistry, generate_profile_module,
     schema_context_artifact, schema_normalization_from_response, schema_normalization_request,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::path::Path;
 
@@ -27,6 +27,68 @@ pub struct PreparedSqlProfiles {
     registry: ProfileModuleRegistry,
     requirements: SchemaRequirementRegistry,
     initialization_diagnostics: Vec<RenderedDiagnostic>,
+}
+
+/// The CLI and editor use the same parsed-source profile discovery and
+/// diagnostic renderer. Parsing failures remain owned by ordinary frontend
+/// diagnostics, so they do not create a second SQL error.
+#[must_use]
+pub fn sql_profile_import_diagnostics(
+    source: &str,
+    display_path: &str,
+    profiles: &PreparedSqlProfiles,
+) -> Vec<RenderedDiagnostic> {
+    let configured = profiles
+        .registry()
+        .entries()
+        .map(|(name, _)| name.to_string())
+        .collect();
+    sql_profile_import_diagnostics_for_names(source, display_path, &configured)
+}
+
+/// Diagnose configured SQL profile uses from a caller's resolved profile set.
+#[must_use]
+pub fn sql_profile_import_diagnostics_for_names(
+    source: &str,
+    display_path: &str,
+    configured: &BTreeSet<String>,
+) -> Vec<RenderedDiagnostic> {
+    if configured.is_empty() {
+        return Vec::new();
+    }
+    let Ok(suite) = sifr_frontend::parse_source(source, Some(display_path)) else {
+        return Vec::new();
+    };
+    sql_profile_import_diagnostics_for_suite(&suite, source, display_path, configured)
+}
+
+pub(super) fn sql_profile_import_diagnostics_for_suite(
+    suite: &[sifr_python_ast::Stmt],
+    source: &str,
+    display_path: &str,
+    configured: &BTreeSet<String>,
+) -> Vec<RenderedDiagnostic> {
+    sifr_frontend::missing_sql_profile_imports(suite, configured)
+        .into_iter()
+        .map(|missing| {
+            crate::project::diagnostic_with_source_range_help(
+                sifr_diagnostics::DiagnosticCode::SQL_PROFILE_IMPORT,
+                display_path,
+                source,
+                missing.range,
+                "SQL profile '{profile}' is configured, but its {surface} on function '{function}' has no schema-profile import",
+                &[
+                    ("profile", sifr_diagnostics::DiagnosticArg::String(missing.profile_name.clone())),
+                    ("function", sifr_diagnostics::DiagnosticArg::String(missing.function_name)),
+                    ("surface", sifr_diagnostics::DiagnosticArg::String(missing.surface.to_string())),
+                ],
+                crate::project::SourceDiagnosticExtras {
+                    notes: &[],
+                    help: Some(format!("Add 'from sifr.sql.schemas import {}'.", missing.profile_name)),
+                },
+            )
+        })
+        .collect()
 }
 
 impl PreparedSqlProfiles {

@@ -3525,6 +3525,22 @@
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-SQL-0009",
+      "constant": "SQL_PROFILE_IMPORT",
+      "docs_link": "docs/errors/SIFR-SQL-0009.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/sql-platform",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/build/sql_profiles_discovery_tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
     }
   ],
   "generated_from": "crates/sifr_diagnostics/src/codes/registry.rs",

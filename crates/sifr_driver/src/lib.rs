@@ -42,6 +42,7 @@ pub use build::{
     emit_query_signature_artifact, generate_dependency_cargo_toml, inspect_python_target,
     load_sql_editor_profiles, materialize_package_project, materialize_project,
     materialize_single_file, prepare_sql_profiles, probe_python_interop_plan,
+    sql_profile_import_diagnostics, sql_profile_import_diagnostics_for_names,
     sysroot_cargo_config_args, try_generate_standalone_dependency_plan,
     validate_binding_distributions, validate_certification_distributions,
     validate_protocol_certifications_for_plan,
