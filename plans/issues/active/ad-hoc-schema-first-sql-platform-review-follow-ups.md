@@ -77,6 +77,88 @@ current producer inputs, and run its named checks and focused regressions on
 the new candidate. The original bundled PR #3647 is a comparison source only;
 its unfinished branch and old component binaries are not merge inputs.
 
+### Item 1 delivery receipt (2026-09-23)
+
+Status: merged; Item 2 is the next bounded implementation item. [PR #3913](https://github.com/sifr-lang/sifr/pull/3913)
+merged as 92a09d29b87975df6dc49f713a41e13974853c9e. The exact final
+implementation candidate was 408c1c80860d41f2b659a2010161631434d7905c,
+ported from the preserved source onto base
+bcb749b1c2dcb33ae4a6a1f88671395b3b7cd043. Main advanced before
+merge through unrelated code and records; no Item 1 SQL path changed.
+The old bundled branch, components, and missing historical logs supplied no
+validation pass for this delivery.
+
+The item now preserves explicit sequence parameters, ownership changes,
+direct nextval defaults, and identity columns across DDL and live catalogs.
+It rejects mixed ALTER options, duplicate CREATE without IF NOT EXISTS,
+and SERIAL pseudo-types in DDL. It preserves live SERIAL as an explicit
+owned sequence and default. A live pull obtains a direct nextval sequence
+identity from the catalog dependency, avoiding the name that pg_get_expr
+may shorten under search_path. The new live fixture puts equal sequence
+names in public and sequence_scope and tests the latter under
+search_path = sequence_scope, public on PostgreSQL 13 through 18.
+Only internal identity sequences are excluded.
+
+Fresh validation on candidate 408c1c80860d41f2b659a2010161631434d7905c:
+
+| Selected check | Result |
+| --- | --- |
+| PostgreSQL compiler qualification and its self-test | Both passed. |
+| PostgreSQL compiler regression suite | 16 passed, including ownership, multi-document, duplicate CREATE, nextval, SERIAL boundary, and migration reflection cases. |
+| PostgreSQL parser matrix | PostgreSQL 13–18 native suites passed; all six rebuilt components executed sequence schema requests in the capability-free host. |
+| PostgreSQL tools crate | Passed, including migration qualification and schema artifact checks. |
+| PostgreSQL live schema tool matrix | PostgreSQL 13–18 Docker catalog parity passed with the search_path collision and live SERIAL fixture. |
+| Workspace Clippy, formatting, HIR/driver/file-size guards, diff check | Passed; file-size guard checked 4118 files against the 900-line limit. |
+
+The source closure SHA-256 in the checked-in component manifest is
+6f2973bc360b632069d98410d53e44319ebf1d970b3fc723acb4657b0b8f92a2.
+The rebuilt component content hashes are:
+
+| PostgreSQL major | Component SHA-256 |
+| --- | --- |
+| 13 | 496ca4fcefbf0edbc15d6ae062105ed8aabb3880a231d7e61921036b5708d107 |
+| 14 | 2c357d62571a361925737371375e76edf05a3e80367c101985505efebaf575cd |
+| 15 | 06ed03c75ea045dca5b518e6170c774fe1c69c30c5c03292222601001cbab868 |
+| 16 | 432c3b5f2fd5304abc5941b8a556cf2fc8333454389f2c5b2559935686194b94 |
+| 17 | a02a0ce42d0ffa4be14be2948d4739333465065ad5564f03af47d21f96ed1da1 |
+| 18 | dad9544055509edb342704f4cbd7f68bc8dedc18ff53a6dfc41799f73e84d567 |
+
+The evidence receipt is
+/home/yaser5/projects/sifr/sql-item1-evidence-20260923/item1-408c1c808-receipt.json
+(SHA-256 a15c81b9eb24c63a4824d3a6c6968501e5a528ac596e0c20a77a81cec49fc042).
+It names exact commands, log hashes, Docker image digests, compiler source
+and component hashes, and review responses. A provisional Clippy failure
+and a later tools test interrupted before assertions remain recorded as
+failures or incomplete runs; neither is treated as a pass.
+
+The [first scoped Opus review](https://github.com/sifr-lang/sifr/pull/3913#issuecomment-5787393655)
+returned NOT SATISFIED on f7d8df92aabba04a9415ab297f34a6ada02c6c9d
+because pg_get_expr could shorten a non-public sequence name and live
+normalization then guessed public. Its response SHA-256 is
+42f4c2fa70f2ec1efa6760e33bed0f83f27ab1c805025ef95a0e7ab818cfc8fa.
+After the catalog dependency repair and six-major regression, the
+[final exact-SHA review](https://github.com/sifr-lang/sifr/pull/3913#issuecomment-5787394498)
+returned SATISFIED with no blockers on 408c1c80860d41f2b659a2010161631434d7905c.
+Its response SHA-256 is
+0194056dc19697c0630af3f4bf8eadc0912aebfb90c40ad295511807f1032a76.
+No create-PR or full merge gate ran for this intermediate item under
+the current phase execution policy; the final integration qualifier owns
+that gate.
+
+Deferred review suggestions, outside the completed Item 1 boundary:
+direct nextval defaults with quoted or uppercase sequence names produce
+an explicit incomplete-catalog diagnostic (documented in
+internal_docs/sql_schema_tools.md); composite defaults beginning with
+nextval have a DDL/live asymmetry and need a separate SQL normalization
+decision; future dependency ordering must account for the cycle between
+an owned sequence and its defaulting column. A default referencing a
+sequence in a namespace excluded from the live pull yields an unknown
+sequence diagnostic. None was a blocking finding for Item 1, and they
+are not silently added to Item 2. This record-only update passed
+git diff --check, the file-size guard (4125 files), and 14 Markdown
+link targets with no missing relative paths. No additional SQL gate or
+external review is required for the documentation receipt.
+
 ### Delivery order and implementation boundaries
 
 One implementer owns one item and one isolated worktree at a time. Complete
