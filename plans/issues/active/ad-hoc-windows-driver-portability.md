@@ -1,6 +1,6 @@
 # Windows driver portability blocks native SQL CI qualification
 
-Status: open; coupled W1+W2 draft needs implementation after second review; W3 unqualified
+Status: open; W1+W2 editable-root draft blocked by Windows formatter prerequisite; W3 unqualified
 Owner: driver storage/process execution and Windows platform support
 Related: [DX9-F6](ad-hoc-native-cargo-reuse-followups.md)
 
@@ -223,3 +223,47 @@ implementation; it does not reverse the selected W1/W2 test pass and does not
 qualify SQL clean/reused/locked/offline/reproducible builds. Route it to the SQL
 Item 4/W3 owner using the raw job log above. W3 remains open, and there is no
 merged W1/W2 SHA to coordinate with [SQL PR #3975](https://github.com/sifr-lang/sifr/pull/3975).
+
+## 2026-09-24 W1+W2 editable-root native dependency blocker
+
+[Draft PR #3993](https://github.com/sifr-lang/sifr/pull/3993) selectively ports
+unmerged #3983 onto main and implements the bounded cache-owned editable-root
+policy. Its exact implementation candidate is
+`722ddd4543d83871b6dec5e0a36f935acf42cc1b` on base
+`3a319f4aabff59f669511bc80351e86499087194`. Nested generated parents
+now use the private cache directory creator when under `SIFR_CACHE_DIR`, while
+caller-owned output roots retain ambient directory permissions and alias
+checks. The new child-process test sets Unix umask `0o002`, materializes nested
+modules twice, removes stale generated source, and runs the test runner twice.
+It passed on Unix. Five preserved process and 17 affected storage/materialize/
+workspace/project-cache/metadata/SQLx-marker/test-runner cases passed, as did
+two additional caller-owned materialization cases. Formatting, diff, file-size,
+HIR and driver maintainability checks passed. The Unix logs and exclusive
+target handoff audit are preserved under
+`/home/yaser5/projects/sifr/windows-w12-editable-root-evidence/`.
+
+[Windows run 35955579797, job 107493084457](https://github.com/sifr-lang/sifr/actions/runs/35955579797/job/107493084457)
+on exact candidate `722ddd4543d83871b6dec5e0a36f935acf42cc1b` passed all 16 native
+compiler-component cases and 14 selected W1/W2 cases before the new nested
+materialization case failed. Its first generated `build.rs` formatting call
+stopped in the pre-existing `build/rust_formatter.rs` path: Windows rustfmt
+rejected `--config-path NUL` with "unable to find a config file for the given
+path: `NUL`". The materializer never reached the nested-directory assertion;
+three later selected W1/W2 cases did not run, and SQL W3 was skipped. The full
+raw job log is preserved outside Git at
+`/home/yaser5/projects/sifr/windows-w12-editable-root-evidence/windows-job-107493084457.log`.
+The automatic create-PR profile also stopped during setup because
+`SIFR_PERFORMANCE_REFERENCE` was not selected; this intermediate item uses its
+named tests under the phase exception, not that broad gate.
+
+The formatter's Windows empty-config path is a **separate prerequisite owner**.
+It is outside the bounded cache-owned directory and W1/W2 process patch. Do
+not bypass rustfmt in the required native test or absorb the formatter repair
+into PR #3993. Have a separate formatter item make the canonical formatter
+invocation work on Windows, then rerun the exact native nested materialize/
+test-runner case and the affected W1/W2 Windows selection on the resulting
+candidate. Only after passing native acceptance should this successor receive
+a fresh scoped Opus review. PR #3993 remains draft and unmerged; no new review
+verdict, accepted W1/W2 SHA, or W3 qualification exists from this attempt.
+The separate PostgreSQL C portability failure and SQL Item 4 handoff above
+remain unchanged.

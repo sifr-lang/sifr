@@ -2086,6 +2086,10 @@ directory, including materialized modules and test-runner support modules.
 Stale-source traversal validates those entries against the same policy. Caller
 provided output roots retain ambient directory permissions and reject aliases;
 they do not acquire the cache's private directory policy.
+Native Windows acceptance of this boundary is pending a separate formatter
+prerequisite: the generated-source formatter currently passes `--config-path
+NUL`, which rustfmt rejects on Windows before nested materialization starts.
+The W1/W2 cache-owned policy is therefore still an unmerged draft.
 
 The DX.10 application policy selects development for ordinary `sifr build` and
 `sifr run`, development-derived test for `sifr test`, and explicit release via
